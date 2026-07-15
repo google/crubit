@@ -40,9 +40,8 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c :: U") alignas(4)
   // `unions_golden::repr_c::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
   U& operator=(const U&) = delete;
-  U(::crubit::UnsafeRelocateTag, U&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  U(::crubit::UnsafeRelocateTag, U&& value);
+
   ::std::uint32_t x;
   ::std::uint32_t y;
 
@@ -74,9 +73,8 @@ U final {
   // Clone::clone_from
   ::unions::repr_c_clone::U& operator=(const U&);
 
-  U(::crubit::UnsafeRelocateTag, U&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  U(::crubit::UnsafeRelocateTag, U&& value);
+
   ::std::uint32_t x;
 
  private:
@@ -104,9 +102,8 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
   // `unions_golden::repr_c_drop::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
   U& operator=(const U&) = delete;
-  U(::crubit::UnsafeRelocateTag, U&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  U(::crubit::UnsafeRelocateTag, U&& value);
+
   ::std::int32_t* x;
 
  private:
@@ -132,9 +129,8 @@ __attribute__((packed)) U final {
   // `unions_golden::repr_c_packed::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
   U& operator=(const U&) = delete;
-  U(::crubit::UnsafeRelocateTag, U&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  U(::crubit::UnsafeRelocateTag, U&& value);
+
   ::std::uint32_t x;
   ::std::uint32_t y;
 
@@ -162,9 +158,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_rust :: U") alignas(4)
   // `unions_golden::repr_rust::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
   U& operator=(const U&) = delete;
-  U(::crubit::UnsafeRelocateTag, U&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  U(::crubit::UnsafeRelocateTag, U&& value);
 
   void set_x(::std::uint32_t x);
 
@@ -209,9 +203,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // Clone::clone_from
   ::unions::repr_rust_clone::U& operator=(const U&);
 
-  U(::crubit::UnsafeRelocateTag, U&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  U(::crubit::UnsafeRelocateTag, U&& value);
 
   void set_x(::std::uint32_t x);
 
@@ -247,9 +239,7 @@ U final {
   // `unions_golden::repr_rust_drop::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
   U& operator=(const U&) = delete;
-  U(::crubit::UnsafeRelocateTag, U&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  U(::crubit::UnsafeRelocateTag, U&& value);
 
   void set_x(::std::int32_t* x);
 
@@ -282,9 +272,8 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // `unions_golden::repr_rust_packed::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
   U& operator=(const U&) = delete;
-  U(::crubit::UnsafeRelocateTag, U&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  U(::crubit::UnsafeRelocateTag, U&& value);
+
   struct {
     ::std::uint32_t value;
   } x;
@@ -311,6 +300,9 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<U>);
 static_assert(::std::is_trivially_move_constructible_v<::unions::repr_c::U>);
 static_assert(::std::is_trivially_move_assignable_v<::unions::repr_c::U>);
+inline ::unions::repr_c::U::U(::crubit::UnsafeRelocateTag, U&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, x));
   static_assert(0 == offsetof(U, y));
@@ -363,6 +355,9 @@ inline ::unions::repr_c_clone::U& ::unions::repr_c_clone::U::operator=(
   }
   return *this;
 }
+inline ::unions::repr_c_clone::U::U(::crubit::UnsafeRelocateTag, U&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, x));
 }
@@ -414,6 +409,9 @@ inline ::unions::repr_c_drop::U& ::unions::repr_c_drop::U::operator=(
   crubit::MemSwap(*this, other);
   return *this;
 }
+inline ::unions::repr_c_drop::U::U(::crubit::UnsafeRelocateTag, U&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, x));
 }
@@ -432,6 +430,9 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::unions::repr_c_packed::U>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::unions::repr_c_packed::U>);
+inline ::unions::repr_c_packed::U::U(::crubit::UnsafeRelocateTag, U&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, x));
   static_assert(0 == offsetof(U, y));
@@ -459,6 +460,10 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<U>);
 static_assert(::std::is_trivially_move_constructible_v<::unions::repr_rust::U>);
 static_assert(::std::is_trivially_move_assignable_v<::unions::repr_rust::U>);
+inline ::unions::repr_rust::U::U(::crubit::UnsafeRelocateTag, U&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_set_ux(::unions::repr_rust::U&, ::std::uint32_t);
 }
@@ -544,6 +549,10 @@ inline ::unions::repr_rust_clone::U& ::unions::repr_rust_clone::U::operator=(
   }
   return *this;
 }
+inline ::unions::repr_rust_clone::U::U(::crubit::UnsafeRelocateTag, U&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_set_ux(::unions::repr_rust_clone::U&,
                                       ::std::uint32_t);
@@ -612,6 +621,10 @@ inline ::unions::repr_rust_drop::U& ::unions::repr_rust_drop::U::operator=(
   crubit::MemSwap(*this, other);
   return *this;
 }
+inline ::unions::repr_rust_drop::U::U(::crubit::UnsafeRelocateTag, U&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_set_ux(::unions::repr_rust_drop::U&,
                                       ::std::int32_t*);
@@ -647,6 +660,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::unions::repr_rust_packed::U>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::unions::repr_rust_packed::U>);
+inline ::unions::repr_rust_packed::U::U(::crubit::UnsafeRelocateTag,
+                                        U&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void U::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(U, x));
   static_assert(0 == offsetof(U, y));

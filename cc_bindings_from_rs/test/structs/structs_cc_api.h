@@ -53,9 +53,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Clone` trait
   StructFloat(const StructFloat&) = delete;
   StructFloat& operator=(const StructFloat&) = delete;
-  StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::structs::abi_classification::StructFloat create(float f);
@@ -101,9 +99,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Clone` trait
   StructInteger(const StructInteger&) = delete;
   StructInteger& operator=(const StructInteger&) = delete;
-  StructInteger(::crubit::UnsafeRelocateTag, StructInteger&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  StructInteger(::crubit::UnsafeRelocateTag, StructInteger&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::structs::abi_classification::StructInteger create(::std::int32_t i);
@@ -145,9 +141,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Clone` trait
   StructMemory(const StructMemory&) = delete;
   StructMemory& operator=(const StructMemory&) = delete;
-  StructMemory(::crubit::UnsafeRelocateTag, StructMemory&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  StructMemory(::crubit::UnsafeRelocateTag, StructMemory&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::structs::abi_classification::StructMemory create(::std::int32_t i);
@@ -192,9 +186,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `structs_golden::default_repr::Point` doesn't implement the `Clone` trait
   Point(const Point&) = delete;
   Point& operator=(const Point&) = delete;
-  Point(::crubit::UnsafeRelocateTag, Point&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Point(::crubit::UnsafeRelocateTag, Point&& value);
+
   union {
     ::std::int32_t x;
   };
@@ -234,9 +227,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   DisplayStruct(const DisplayStruct&) = delete;
   DisplayStruct& operator=(const DisplayStruct&) = delete;
-  DisplayStruct(::crubit::UnsafeRelocateTag, DisplayStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  DisplayStruct(::crubit::UnsafeRelocateTag, DisplayStruct&& value);
+
   // AbslStringify and std::ostream support via std::fmt::Display
   template <typename Sink, typename Str = rs::alloc::string::String>
   friend void AbslStringify(Sink& sink, const DisplayStruct& self) {
@@ -296,9 +288,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Clone` trait
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
-  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
 
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
@@ -332,9 +322,7 @@ struct
   // implement the `Clone` trait
   AField(const AField&) = delete;
   AField& operator=(const AField&) = delete;
-  AField(::crubit::UnsafeRelocateTag, AField&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  AField(::crubit::UnsafeRelocateTag, AField&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   ::std::int32_t operator_() const;
@@ -369,9 +357,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // implement the `Clone` trait
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
-  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
+
   union {
     float const** mut_const_ptr;
   };
@@ -408,9 +395,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   Point(const Point&) = delete;
   Point& operator=(const Point&) = delete;
-  Point(::crubit::UnsafeRelocateTag, Point&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Point(::crubit::UnsafeRelocateTag, Point&& value);
+
   union {
     ::std::int32_t x;
   };
@@ -448,9 +434,8 @@ Point final {
   // `structs_golden::repr_c::Point` doesn't implement the `Clone` trait
   Point(const Point&) = delete;
   Point& operator=(const Point&) = delete;
-  Point(::crubit::UnsafeRelocateTag, Point&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Point(::crubit::UnsafeRelocateTag, Point&& value);
+
   union {
     ::std::int32_t x;
   };
@@ -490,9 +475,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // doesn't implement the `Clone` trait
   StructFloat(const StructFloat&) = delete;
   StructFloat& operator=(const StructFloat&) = delete;
-  StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value);
 
  private:
   union {
@@ -545,9 +528,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ::structs::struct_by_float_passing_with_no_thunk::StructFloat& operator=(
       const StructFloat&);
 
-  StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value);
 
  private:
   union {
@@ -596,9 +577,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Clone` trait
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
-  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::structs::unsupported_types::SomeStruct create(rs_std::char_ x);
@@ -647,9 +626,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `structs_golden::zst_fields::ZstFields` doesn't implement the `Clone` trait
   ZstFields(const ZstFields&) = delete;
   ZstFields& operator=(const ZstFields&) = delete;
-  ZstFields(::crubit::UnsafeRelocateTag, ZstFields&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  ZstFields(::crubit::UnsafeRelocateTag, ZstFields&& value);
+
   union {
     ::std::int32_t value;
   };
@@ -709,6 +687,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::structs::abi_classification::StructFloat>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::structs::abi_classification::StructFloat>);
+inline ::structs::abi_classification::StructFloat::StructFloat(
+    ::crubit::UnsafeRelocateTag, StructFloat&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     float, ::structs::abi_classification::StructFloat* __ret_ptr);
@@ -760,6 +743,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::structs::abi_classification::StructInteger>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::structs::abi_classification::StructInteger>);
+inline ::structs::abi_classification::StructInteger::StructInteger(
+    ::crubit::UnsafeRelocateTag, StructInteger&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::structs::abi_classification::StructInteger* __ret_ptr);
@@ -811,6 +799,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::structs::abi_classification::StructMemory>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::structs::abi_classification::StructMemory>);
+inline ::structs::abi_classification::StructMemory::StructMemory(
+    ::crubit::UnsafeRelocateTag, StructMemory&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::structs::abi_classification::StructMemory* __ret_ptr);
@@ -867,6 +860,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::structs::default_repr::Point>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::structs::default_repr::Point>);
+inline ::structs::default_repr::Point::Point(::crubit::UnsafeRelocateTag,
+                                             Point&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void Point::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Point, x));
   static_assert(4 == offsetof(Point, y));
@@ -906,6 +903,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::structs::display::DisplayStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::structs::display::DisplayStruct>);
+inline ::structs::display::DisplayStruct::DisplayStruct(
+    ::crubit::UnsafeRelocateTag, DisplayStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 extern "C" void
 __crubit_thunk_ToString_uto_ustring_ustructs_ugolden_x0000003a_x0000003adisplay_x0000003a_x0000003aDisplayStruct(
     ::structs::display::DisplayStruct const&,
@@ -949,6 +950,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::structs::interior_mutability::SomeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::structs::interior_mutability::SomeStruct>);
+inline ::structs::interior_mutability::SomeStruct::SomeStruct(
+    ::crubit::UnsafeRelocateTag, SomeStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, field));
 }
@@ -967,6 +972,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::structs::keyword_named_fields_and_methods::AField>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::structs::keyword_named_fields_and_methods::AField>);
+inline ::structs::keyword_named_fields_and_methods::AField::AField(
+    ::crubit::UnsafeRelocateTag, AField&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_operator(
     ::structs::keyword_named_fields_and_methods::AField const&);
@@ -1004,6 +1014,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct>);
+inline ::structs::nested_ptr_type_mutability_qualifiers::SomeStruct::SomeStruct(
+    ::crubit::UnsafeRelocateTag, SomeStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, mut_const_ptr));
   static_assert(8 == offsetof(SomeStruct, const_mut_ptr));
@@ -1027,6 +1041,10 @@ inline Point::~Point() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003anon_ucpp_umovable_x0000003a_x0000003aPoint(
           *this);
+}
+inline ::structs::non_cpp_movable::Point::Point(::crubit::UnsafeRelocateTag,
+                                                Point&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
 }
 inline void Point::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Point, x));
@@ -1067,6 +1085,10 @@ static_assert(::std::is_trivially_destructible_v<Point>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::structs::repr_c::Point>);
 static_assert(::std::is_trivially_move_assignable_v<::structs::repr_c::Point>);
+inline ::structs::repr_c::Point::Point(::crubit::UnsafeRelocateTag,
+                                       Point&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void Point::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Point, x));
   static_assert(4 == offsetof(Point, y));
@@ -1106,6 +1128,10 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<
         ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat>);
+inline ::structs::struct_by_float_passing_with_no_cc_definition::StructFloat::
+    StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void StructFloat::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructFloat, __field0));
   static_assert(8 == offsetof(StructFloat, __field1));
@@ -1199,6 +1225,10 @@ structs::struct_by_float_passing_with_no_thunk::StructFloat::operator=(
   }
   return *this;
 }
+inline ::structs::struct_by_float_passing_with_no_thunk::StructFloat::
+    StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void StructFloat::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructFloat, __field0));
   static_assert(8 == offsetof(StructFloat, __field1));
@@ -1277,6 +1307,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::structs::unsupported_types::SomeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::structs::unsupported_types::SomeStruct>);
+inline ::structs::unsupported_types::SomeStruct::SomeStruct(
+    ::crubit::UnsafeRelocateTag, SomeStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     rs_std::char_, ::structs::unsupported_types::SomeStruct* __ret_ptr);
@@ -1307,6 +1342,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::structs::zst_fields::ZstFields>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::structs::zst_fields::ZstFields>);
+inline ::structs::zst_fields::ZstFields::ZstFields(::crubit::UnsafeRelocateTag,
+                                                   ZstFields&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void ZstFields::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ZstFields, value));
 }

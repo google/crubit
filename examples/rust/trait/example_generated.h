@@ -42,9 +42,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct") alignas(
   // assignment operator.
   MyStruct(const MyStruct&) = default;
   MyStruct& operator=(const MyStruct&) = default;
-  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
 
   static ::example_crate::MyStruct new_(::std::int32_t x);
 
@@ -99,6 +97,11 @@ static_assert(::std::is_trivially_move_assignable_v<::example_crate::MyStruct>);
 static_assert(
     ::std::is_trivially_copy_constructible_v<::example_crate::MyStruct>);
 static_assert(::std::is_trivially_copy_assignable_v<::example_crate::MyStruct>);
+inline ::example_crate::MyStruct::MyStruct(::crubit::UnsafeRelocateTag,
+                                           MyStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::example_crate::MyStruct* __ret_ptr);

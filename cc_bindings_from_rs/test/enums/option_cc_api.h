@@ -60,9 +60,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
   // Clone::clone_from
   ::option::CloneNoDefault& operator=(const CloneNoDefault&);
 
-  CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value);
+
   union {
     ::std::uint8_t val;
   };
@@ -87,9 +86,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
   // assignment operator.
   CopyNoDefault(const CopyNoDefault&) = default;
   CopyNoDefault& operator=(const CopyNoDefault&) = default;
-  CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value);
+
   union {
     ::std::uint8_t val;
   };
@@ -116,9 +114,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
   // `option_golden::HasDefault` doesn't implement the `Clone` trait
   HasDefault(const HasDefault&) = delete;
   HasDefault& operator=(const HasDefault&) = delete;
-  HasDefault(::crubit::UnsafeRelocateTag, HasDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  HasDefault(::crubit::UnsafeRelocateTag, HasDefault&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::HasDefault new_(rs_std::StrRef s);
@@ -153,9 +149,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
   // `option_golden::HasNoDefault` doesn't implement the `Clone` trait
   HasNoDefault(const HasNoDefault&) = delete;
   HasNoDefault& operator=(const HasNoDefault&) = delete;
-  HasNoDefault(::crubit::UnsafeRelocateTag, HasNoDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  HasNoDefault(::crubit::UnsafeRelocateTag, HasNoDefault&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::HasNoDefault new_(rs_std::StrRef s);
@@ -234,9 +228,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
   // assignment operator.
   LessThan20U8(const LessThan20U8&) = default;
   LessThan20U8& operator=(const LessThan20U8&) = default;
-  LessThan20U8(::crubit::UnsafeRelocateTag, LessThan20U8&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  LessThan20U8(::crubit::UnsafeRelocateTag, LessThan20U8&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static rs_std::Option<::option::LessThan20U8> new_(::std::uint8_t value);
@@ -277,9 +269,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
   // `option_golden::OptZst` doesn't implement the `Clone` trait
   OptZst(const OptZst&) = delete;
   OptZst& operator=(const OptZst&) = delete;
-  OptZst(::crubit::UnsafeRelocateTag, OptZst&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  OptZst(::crubit::UnsafeRelocateTag, OptZst&& value);
 
  private:
   // Field type has been replaced with a blob of bytes: Failed to format type
@@ -307,10 +297,7 @@ OptionWithSizeTypes final {
   // `option_golden::OptionWithSizeTypes` doesn't implement the `Clone` trait
   OptionWithSizeTypes(const OptionWithSizeTypes&) = delete;
   OptionWithSizeTypes& operator=(const OptionWithSizeTypes&) = delete;
-  OptionWithSizeTypes(::crubit::UnsafeRelocateTag,
-                      OptionWithSizeTypes&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  OptionWithSizeTypes(::crubit::UnsafeRelocateTag, OptionWithSizeTypes&& value);
 
  private:
   // Field type has been replaced with a blob of bytes: b/491106325 - isize and
@@ -387,9 +374,7 @@ struct alignas(8)
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<rs_std::Option<::std::int32_t const*>,
                                        ::std::int32_t const*>;
   constexpr Option() = default;
@@ -398,26 +383,19 @@ struct alignas(8)
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::std::int32_t const*, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::std::int32_t const*, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::std::int32_t const*, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::std::int32_t const*, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   ~Option() noexcept = default;
 
  private:
@@ -456,9 +434,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type =
       rs_std::OptionBase<rs_std::Option<::std::int32_t>, ::std::int32_t>;
   constexpr Option() = default;
@@ -466,25 +442,18 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
     requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   ~Option() noexcept = default;
 
  private:
@@ -526,9 +495,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<rs_std::Option<::option::CloneNoDefault>,
                                        ::option::CloneNoDefault>;
   constexpr Option() = default;
@@ -537,26 +504,19 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::option::CloneNoDefault, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::option::CloneNoDefault, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::option::CloneNoDefault, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::option::CloneNoDefault, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   ~Option() noexcept = default;
 
  private:
@@ -601,9 +561,7 @@ OptCloneNoDefault final {
   // Clone::clone_from
   ::option::OptCloneNoDefault& operator=(const OptCloneNoDefault&);
 
-  OptCloneNoDefault(::crubit::UnsafeRelocateTag, OptCloneNoDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  OptCloneNoDefault(::crubit::UnsafeRelocateTag, OptCloneNoDefault&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptCloneNoDefault new_(::std::uint8_t x);
@@ -634,9 +592,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<rs_std::Option<::option::CopyNoDefault>,
                                        ::option::CopyNoDefault>;
   constexpr Option() = default;
@@ -645,26 +601,19 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::option::CopyNoDefault, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::option::CopyNoDefault, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::option::CopyNoDefault, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::option::CopyNoDefault, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   ~Option() noexcept = default;
 
  private:
@@ -707,9 +656,7 @@ OptCopyNoDefault final {
   // assignment operator.
   OptCopyNoDefault(const OptCopyNoDefault&) = default;
   OptCopyNoDefault& operator=(const OptCopyNoDefault&) = default;
-  OptCopyNoDefault(::crubit::UnsafeRelocateTag, OptCopyNoDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  OptCopyNoDefault(::crubit::UnsafeRelocateTag, OptCopyNoDefault&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptCopyNoDefault new_(::std::uint8_t x);
@@ -738,9 +685,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Option& operator=(const Option&) = delete;
   Option(Option&&);
   rs_std::Option<::option::HasDefault>& operator=(Option&&);
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<rs_std::Option<::option::HasDefault>,
                                        ::option::HasDefault>;
   constexpr Option() = default;
@@ -749,26 +694,19 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::option::HasDefault, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::option::HasDefault, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::option::HasDefault, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::option::HasDefault, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   constexpr ~Option() noexcept;
 
  private:
@@ -813,9 +751,7 @@ OptDefaultWithDrop final {
   // `option_golden::OptDefaultWithDrop` doesn't implement the `Clone` trait
   OptDefaultWithDrop(const OptDefaultWithDrop&) = delete;
   OptDefaultWithDrop& operator=(const OptDefaultWithDrop&) = delete;
-  OptDefaultWithDrop(::crubit::UnsafeRelocateTag, OptDefaultWithDrop&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  OptDefaultWithDrop(::crubit::UnsafeRelocateTag, OptDefaultWithDrop&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptDefaultWithDrop new_(rs_std::StrRef s);
@@ -844,9 +780,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Option& operator=(const Option&) = delete;
   Option(Option&&);
   rs_std::Option<::option::HasNoDefault>& operator=(Option&&);
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<rs_std::Option<::option::HasNoDefault>,
                                        ::option::HasNoDefault>;
   constexpr Option() = default;
@@ -855,26 +789,19 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::option::HasNoDefault, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::option::HasNoDefault, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::option::HasNoDefault, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::option::HasNoDefault, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   constexpr ~Option() noexcept;
 
  private:
@@ -920,9 +847,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   OptNoDefaultWithDrop(const OptNoDefaultWithDrop&) = delete;
   OptNoDefaultWithDrop& operator=(const OptNoDefaultWithDrop&) = delete;
   OptNoDefaultWithDrop(::crubit::UnsafeRelocateTag,
-                       OptNoDefaultWithDrop&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                       OptNoDefaultWithDrop&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptNoDefaultWithDrop new_(rs_std::StrRef s);
@@ -956,9 +881,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<rs_std::Option<::option::HasOptions>,
                                        ::option::HasOptions>;
   constexpr Option() = default;
@@ -967,26 +890,19 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::option::HasOptions, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::option::HasOptions, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::option::HasOptions, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::option::HasOptions, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   ~Option() noexcept = default;
 
  private:
@@ -1027,9 +943,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
   // `option_golden::HasHasOptions` doesn't implement the `Clone` trait
   HasHasOptions(const HasHasOptions&) = delete;
   HasHasOptions& operator=(const HasHasOptions&) = delete;
-  HasHasOptions(::crubit::UnsafeRelocateTag, HasHasOptions&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  HasHasOptions(::crubit::UnsafeRelocateTag, HasHasOptions&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::HasHasOptions new_(::std::uint8_t value);
@@ -1060,9 +974,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<rs_std::Option<::option::LessThan20U8>,
                                        ::option::LessThan20U8>;
   constexpr Option() = default;
@@ -1071,26 +983,19 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::option::LessThan20U8, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<Option, ::option::LessThan20U8, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::option::LessThan20U8, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::option::LessThan20U8, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   ~Option() noexcept = default;
 
  private:
@@ -1132,9 +1037,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type =
       rs_std::OptionBase<rs_std::Option<rs_std::Option<::option::LessThan20U8>>,
                          rs_std::Option<::option::LessThan20U8>>;
@@ -1144,28 +1047,21 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   template <typename U>
     requires(rs_std::OptionForwardConstructible<
              Option, rs_std::Option<::option::LessThan20U8>, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(rs_std::OptionForwardConstructible<
              Option, rs_std::Option<::option::LessThan20U8>, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<
              rs_std::Option<::option::LessThan20U8>, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<
              rs_std::Option<::option::LessThan20U8>, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   ~Option() noexcept = default;
 
  private:
@@ -1206,9 +1102,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type =
       rs_std::OptionBase<rs_std::Option<::std::uint32_t>, ::std::uint32_t>;
   constexpr Option() = default;
@@ -1216,25 +1110,18 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
     requires(rs_std::OptionForwardConstructible<Option, ::std::uint32_t, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(rs_std::OptionForwardConstructible<Option, ::std::uint32_t, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::std::uint32_t, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::std::uint32_t, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   ~Option() noexcept = default;
 
  private:
@@ -1273,9 +1160,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type =
       rs_std::OptionBase<rs_std::Option<::std::uint8_t>, ::std::uint8_t>;
   constexpr Option() = default;
@@ -1283,25 +1168,18 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
     requires(rs_std::OptionForwardConstructible<Option, ::std::uint8_t, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(rs_std::OptionForwardConstructible<Option, ::std::uint8_t, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::std::uint8_t, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::std::uint8_t, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   ~Option() noexcept = default;
 
  private:
@@ -1342,9 +1220,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
   // `option_golden::HasOptions` doesn't implement the `Clone` trait
   HasOptions(const HasOptions&) = delete;
   HasOptions& operator=(const HasOptions&) = delete;
-  HasOptions(::crubit::UnsafeRelocateTag, HasOptions&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  HasOptions(::crubit::UnsafeRelocateTag, HasOptions&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::HasOptions new_(::std::uint8_t value);
@@ -1393,9 +1269,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<
       rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>,
       crubit::type_identity_t<void(void*, void*)>*>;
@@ -1405,28 +1279,21 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   template <typename U>
     requires(rs_std::OptionForwardConstructible<
              Option, crubit::type_identity_t<void(void*, void*)>*, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(rs_std::OptionForwardConstructible<
              Option, crubit::type_identity_t<void(void*, void*)>*, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<
              crubit::type_identity_t<void(void*, void*)>*, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<
              crubit::type_identity_t<void(void*, void*)>*, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   ~Option() noexcept = default;
 
  private:
@@ -1469,9 +1336,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: ZStream") alignas(8)
   // `option_golden::ZStream` doesn't implement the `Clone` trait
   ZStream(const ZStream&) = delete;
   ZStream& operator=(const ZStream&) = delete;
-  ZStream(::crubit::UnsafeRelocateTag, ZStream&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  ZStream(::crubit::UnsafeRelocateTag, ZStream&& value);
+
   union {
     rs_std::Option<crubit::type_identity_t<void(void*, void*)>*> zfree;
   };
@@ -1499,9 +1365,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::Result<::std::int32_t, ::rs::alloc::string::String>& operator=(
       const Result&);
 
-  Result(::crubit::UnsafeRelocateTag, Result&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Result(::crubit::UnsafeRelocateTag, Result&& value);
 
  public:
   using base_type = rs_std::ResultBase<
@@ -1509,32 +1373,22 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       ::std::int32_t, ::rs::alloc::string::String>;
   template <typename U>
     requires(rs_std::ResultForwardConstructible<Result, ::std::int32_t, U>)
-  explicit constexpr Result(U&& ok) noexcept
-      : base_type(::std::forward<U>(ok)) {}
+  explicit constexpr Result(U&& ok) noexcept;
   template <typename U>
     requires(rs_std::ResultForwardConstructible<Result, ::std::int32_t, U>)
-  constexpr Result& operator=(U&& ok) noexcept {
-    base_type::operator=(::std::forward<U>(ok));
-    return *this;
-  }
+  constexpr Result& operator=(U&& ok) noexcept;
   template <typename F>
     requires(
         rs_std::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
-  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
-      : base_type(::std::move(err)) {}
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
   template <typename F>
     requires(
         rs_std::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
-  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
-    base_type::operator=(::std::move(err));
-    return *this;
-  }
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
   template <typename... Args>
-  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
   template <typename... Args>
-  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept
-      : base_type(u, ::std::forward<Args>(args)...) {}
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
   ~Result() noexcept;
 
  private:
@@ -1586,9 +1440,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&);
   rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
   operator=(Option&&);
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<
       rs_std::Option<
           rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
@@ -1600,29 +1452,22 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     requires(rs_std::OptionForwardConstructible<
              Option,
              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(rs_std::OptionForwardConstructible<
              Option,
              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<
              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<
              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   constexpr ~Option() noexcept;
 
  private:
@@ -1671,9 +1516,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Result(Result&&) = delete;
   rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>&
   operator=(Result&&) = delete;
-  Result(::crubit::UnsafeRelocateTag, Result&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Result(::crubit::UnsafeRelocateTag, Result&& value);
 
  public:
   using base_type = rs_std::ResultBase<
@@ -1682,33 +1525,23 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   template <typename U>
     requires(
         rs_std::ResultForwardConstructible<Result, ::option::HasNoDefault, U>)
-  explicit constexpr Result(U&& ok) noexcept
-      : base_type(::std::forward<U>(ok)) {}
+  explicit constexpr Result(U&& ok) noexcept;
   template <typename U>
     requires(
         rs_std::ResultForwardConstructible<Result, ::option::HasNoDefault, U>)
-  constexpr Result& operator=(U&& ok) noexcept {
-    base_type::operator=(::std::forward<U>(ok));
-    return *this;
-  }
+  constexpr Result& operator=(U&& ok) noexcept;
   template <typename F>
     requires(
         rs_std::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
-  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
-      : base_type(::std::move(err)) {}
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
   template <typename F>
     requires(
         rs_std::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
-  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
-    base_type::operator=(::std::move(err));
-    return *this;
-  }
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
   template <typename... Args>
-  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
   template <typename... Args>
-  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept
-      : base_type(u, ::std::forward<Args>(args)...) {}
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
   ~Result() noexcept;
 
  private:
@@ -1757,9 +1590,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::Option<
       rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>&
   operator=(Option&&);
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<
       rs_std::Option<
           rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>,
@@ -1773,35 +1604,28 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
             Option,
             rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
             U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(
         rs_std::OptionForwardConstructible<
             Option,
             rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
             U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(
         rs_std::OptionFromStdOptional<
             rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
             Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(
         rs_std::OptionFromStdOptional<
             rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
             Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   constexpr ~Option() noexcept;
 
  private:
@@ -1851,9 +1675,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Result(Result&&) = default;
   Result& operator=(Result&&) = default;
 
-  Result(::crubit::UnsafeRelocateTag, Result&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Result(::crubit::UnsafeRelocateTag, Result&& value);
 
  public:
   using base_type =
@@ -1864,33 +1686,23 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   template <typename U>
     requires(rs_std::ResultForwardConstructible<
              Result, rs_std::Option<::std::int32_t>, U>)
-  explicit constexpr Result(U&& ok) noexcept
-      : base_type(::std::forward<U>(ok)) {}
+  explicit constexpr Result(U&& ok) noexcept;
   template <typename U>
     requires(rs_std::ResultForwardConstructible<
              Result, rs_std::Option<::std::int32_t>, U>)
-  constexpr Result& operator=(U&& ok) noexcept {
-    base_type::operator=(::std::forward<U>(ok));
-    return *this;
-  }
+  constexpr Result& operator=(U&& ok) noexcept;
   template <typename F>
     requires(rs_std::ResultUnexpectedConstructible<
              rs_std::Option<::std::int32_t>, F>)
-  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
-      : base_type(::std::move(err)) {}
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
   template <typename F>
     requires(rs_std::ResultUnexpectedConstructible<
              rs_std::Option<::std::int32_t>, F>)
-  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
-    base_type::operator=(::std::move(err));
-    return *this;
-  }
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
   template <typename... Args>
-  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
   template <typename... Args>
-  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept
-      : base_type(u, ::std::forward<Args>(args)...) {}
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
   ~Result() noexcept = default;
 
  private:
@@ -1952,9 +1764,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
                                 rs_std::Option<::std::int32_t>>>&
   operator=(const Result&);
 
-  Result(::crubit::UnsafeRelocateTag, Result&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Result(::crubit::UnsafeRelocateTag, Result&& value);
 
  public:
   using base_type = rs_std::ResultBase<
@@ -1972,40 +1782,30 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
              rs_std::Option<
                  rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
              U>)
-  explicit constexpr Result(U&& ok) noexcept
-      : base_type(::std::forward<U>(ok)) {}
+  explicit constexpr Result(U&& ok) noexcept;
   template <typename U>
     requires(rs_std::ResultForwardConstructible<
              Result,
              rs_std::Option<
                  rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
              U>)
-  constexpr Result& operator=(U&& ok) noexcept {
-    base_type::operator=(::std::forward<U>(ok));
-    return *this;
-  }
+  constexpr Result& operator=(U&& ok) noexcept;
   template <typename F>
     requires(rs_std::ResultUnexpectedConstructible<
              rs_std::Result<rs_std::Option<::std::int32_t>,
                             rs_std::Option<::std::int32_t>>,
              F>)
-  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
-      : base_type(::std::move(err)) {}
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
   template <typename F>
     requires(rs_std::ResultUnexpectedConstructible<
              rs_std::Result<rs_std::Option<::std::int32_t>,
                             rs_std::Option<::std::int32_t>>,
              F>)
-  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
-    base_type::operator=(::std::move(err));
-    return *this;
-  }
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
   template <typename... Args>
-  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
   template <typename... Args>
-  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept
-      : base_type(u, ::std::forward<Args>(args)...) {}
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
   ~Result() noexcept;
 
  private:
@@ -2091,9 +1891,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
                      rs_std::Result<rs_std::Option<::std::int32_t>,
                                     rs_std::Option<::std::int32_t>>>>&
   operator=(Option&&);
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<
       rs_std::Option<
           rs_std::Result<rs_std::Option<rs_std::Result<
@@ -2115,7 +1913,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
                             rs_std::Result<rs_std::Option<::std::int32_t>,
                                            rs_std::Option<::std::int32_t>>>,
              U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(rs_std::OptionForwardConstructible<
              Option,
@@ -2124,10 +1922,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
                             rs_std::Result<rs_std::Option<::std::int32_t>,
                                            rs_std::Option<::std::int32_t>>>,
              U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<
              rs_std::Result<rs_std::Option<rs_std::Result<
@@ -2135,7 +1930,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
                             rs_std::Result<rs_std::Option<::std::int32_t>,
                                            rs_std::Option<::std::int32_t>>>,
              Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<
              rs_std::Result<rs_std::Option<rs_std::Result<
@@ -2143,13 +1938,9 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
                             rs_std::Result<rs_std::Option<::std::int32_t>,
                                            rs_std::Option<::std::int32_t>>>,
              Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   constexpr ~Option() noexcept;
 
  private:
@@ -2225,6 +2016,10 @@ inline ::option::CloneNoDefault& ::option::CloneNoDefault::operator=(
   }
   return *this;
 }
+inline ::option::CloneNoDefault::CloneNoDefault(::crubit::UnsafeRelocateTag,
+                                                CloneNoDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void CloneNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CloneNoDefault, val));
 }
@@ -2241,6 +2036,10 @@ static_assert(::std::is_trivially_move_assignable_v<::option::CopyNoDefault>);
 static_assert(
     ::std::is_trivially_copy_constructible_v<::option::CopyNoDefault>);
 static_assert(::std::is_trivially_copy_assignable_v<::option::CopyNoDefault>);
+inline ::option::CopyNoDefault::CopyNoDefault(::crubit::UnsafeRelocateTag,
+                                              CopyNoDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void CopyNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CopyNoDefault, val));
 }
@@ -2278,6 +2077,11 @@ inline ::option::HasDefault& ::option::HasDefault::operator=(
   crubit::MemSwap(*this, other);
   return *this;
 }
+inline ::option::HasDefault::HasDefault(::crubit::UnsafeRelocateTag,
+                                        HasDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
                                    ::option::HasDefault* __ret_ptr);
@@ -2311,6 +2115,11 @@ static_assert(::std::is_trivially_destructible_v<HasHasOptions>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::option::HasHasOptions>);
 static_assert(::std::is_trivially_move_assignable_v<::option::HasHasOptions>);
+inline ::option::HasHasOptions::HasHasOptions(::crubit::UnsafeRelocateTag,
+                                              HasHasOptions&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::HasHasOptions* __ret_ptr);
@@ -2340,6 +2149,11 @@ inline HasNoDefault::~HasNoDefault() {
       __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aHasNoDefault(
           *this);
 }
+inline ::option::HasNoDefault::HasNoDefault(::crubit::UnsafeRelocateTag,
+                                            HasNoDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
                                    ::option::HasNoDefault* __ret_ptr);
@@ -2373,6 +2187,11 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<HasOptions>);
 static_assert(::std::is_trivially_move_constructible_v<::option::HasOptions>);
 static_assert(::std::is_trivially_move_assignable_v<::option::HasOptions>);
+inline ::option::HasOptions::HasOptions(::crubit::UnsafeRelocateTag,
+                                        HasOptions&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::HasOptions* __ret_ptr);
@@ -2534,6 +2353,11 @@ static_assert(::std::is_trivially_move_constructible_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_move_assignable_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_copy_constructible_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_copy_assignable_v<::option::LessThan20U8>);
+inline ::option::LessThan20U8::LessThan20U8(::crubit::UnsafeRelocateTag,
+                                            LessThan20U8&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
     ::std::uint8_t, rs_std::Option<::option::LessThan20U8>* __ret_ptr);
@@ -2593,6 +2417,11 @@ inline ::option::OptCloneNoDefault& ::option::OptCloneNoDefault::operator=(
   }
   return *this;
 }
+inline ::option::OptCloneNoDefault::OptCloneNoDefault(
+    ::crubit::UnsafeRelocateTag, OptCloneNoDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::OptCloneNoDefault* __ret_ptr);
@@ -2621,6 +2450,11 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::option::OptCopyNoDefault>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::option::OptCopyNoDefault>);
+inline ::option::OptCopyNoDefault::OptCopyNoDefault(::crubit::UnsafeRelocateTag,
+                                                    OptCopyNoDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::OptCopyNoDefault* __ret_ptr);
@@ -2650,6 +2484,11 @@ inline OptDefaultWithDrop::~OptDefaultWithDrop() {
       __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aOptDefaultWithDrop(
           *this);
 }
+inline ::option::OptDefaultWithDrop::OptDefaultWithDrop(
+    ::crubit::UnsafeRelocateTag, OptDefaultWithDrop&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
                                    ::option::OptDefaultWithDrop* __ret_ptr);
@@ -2679,6 +2518,11 @@ inline OptNoDefaultWithDrop::~OptNoDefaultWithDrop() {
       __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aOptNoDefaultWithDrop(
           *this);
 }
+inline ::option::OptNoDefaultWithDrop::OptNoDefaultWithDrop(
+    ::crubit::UnsafeRelocateTag, OptNoDefaultWithDrop&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
                                    ::option::OptNoDefaultWithDrop* __ret_ptr);
@@ -2722,6 +2566,9 @@ inline ::option::OptZst::OptZst() {
 static_assert(::std::is_trivially_destructible_v<OptZst>);
 static_assert(::std::is_trivially_move_constructible_v<::option::OptZst>);
 static_assert(::std::is_trivially_move_assignable_v<::option::OptZst>);
+inline ::option::OptZst::OptZst(::crubit::UnsafeRelocateTag, OptZst&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void OptZst::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OptZst, val));
 }
@@ -2736,6 +2583,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::option::OptionWithSizeTypes>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::option::OptionWithSizeTypes>);
+inline ::option::OptionWithSizeTypes::OptionWithSizeTypes(
+    ::crubit::UnsafeRelocateTag, OptionWithSizeTypes&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void OptionWithSizeTypes::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OptionWithSizeTypes, uval));
   static_assert(16 == offsetof(OptionWithSizeTypes, ival));
@@ -2749,6 +2600,10 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<ZStream>);
 static_assert(::std::is_trivially_move_constructible_v<::option::ZStream>);
 static_assert(::std::is_trivially_move_assignable_v<::option::ZStream>);
+inline ::option::ZStream::ZStream(::crubit::UnsafeRelocateTag,
+                                  ZStream&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void ZStream::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ZStream, zfree));
 }
@@ -2865,6 +2720,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Option<::std::int32_t const*>>);
 static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Option<::std::int32_t const*>>);
+inline rs_std::Option<::std::int32_t const*>::Option(
+    ::crubit::UnsafeRelocateTag, Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Option<::std::int32_t const*>>);
 inline constexpr ::std::uint64_t rs_std::Option<::std::int32_t const*>::tag()
@@ -2893,6 +2752,34 @@ rs_std::Option<::std::int32_t const*>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::std::int32_t const*>, ::std::int32_t const*, U>)
+inline rs_std::Option<::std::int32_t const*>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::std::int32_t const*>, ::std::int32_t const*, U>)
+inline rs_std::Option<::std::int32_t const*>&
+rs_std::Option<::std::int32_t const*>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::std::int32_t const*, Opt>)
+inline rs_std::Option<::std::int32_t const*>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::std::int32_t const*, Opt>)
+inline rs_std::Option<::std::int32_t const*>&
+rs_std::Option<::std::int32_t const*>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::std::int32_t const*>::Option(::std::in_place_t ip,
+                                                     Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -2906,6 +2793,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<rs_std::Option<::std::int32_t>>);
 static_assert(
     ::std::is_trivially_move_assignable_v<rs_std::Option<::std::int32_t>>);
+inline rs_std::Option<::std::int32_t>::Option(::crubit::UnsafeRelocateTag,
+                                              Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Option<::std::int32_t>>);
 inline constexpr ::std::uint32_t rs_std::Option<::std::int32_t>::tag()
@@ -2934,6 +2825,34 @@ rs_std::Option<::std::int32_t>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
+                                              ::std::int32_t, U>)
+inline rs_std::Option<::std::int32_t>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
+                                              ::std::int32_t, U>)
+inline rs_std::Option<::std::int32_t>&
+rs_std::Option<::std::int32_t>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
+inline rs_std::Option<::std::int32_t>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
+inline rs_std::Option<::std::int32_t>&
+rs_std::Option<::std::int32_t>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::std::int32_t>::Option(::std::in_place_t ip,
+                                              Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -2969,6 +2888,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Option<::option::CloneNoDefault>>);
 static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Option<::option::CloneNoDefault>>);
+inline rs_std::Option<::option::CloneNoDefault>::Option(
+    ::crubit::UnsafeRelocateTag, Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Option<::option::CloneNoDefault>>);
 inline constexpr ::std::uint8_t rs_std::Option<::option::CloneNoDefault>::tag()
@@ -2996,6 +2919,36 @@ rs_std::Option<::option::CloneNoDefault>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::option::CloneNoDefault>, ::option::CloneNoDefault,
+           U>)
+inline rs_std::Option<::option::CloneNoDefault>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::option::CloneNoDefault>, ::option::CloneNoDefault,
+           U>)
+inline rs_std::Option<::option::CloneNoDefault>&
+rs_std::Option<::option::CloneNoDefault>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::option::CloneNoDefault, Opt>)
+inline rs_std::Option<::option::CloneNoDefault>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::option::CloneNoDefault, Opt>)
+inline rs_std::Option<::option::CloneNoDefault>&
+rs_std::Option<::option::CloneNoDefault>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::option::CloneNoDefault>::Option(::std::in_place_t ip,
+                                                        Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3009,6 +2962,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Option<::option::CopyNoDefault>>);
 static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Option<::option::CopyNoDefault>>);
+inline rs_std::Option<::option::CopyNoDefault>::Option(
+    ::crubit::UnsafeRelocateTag, Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Option<::option::CopyNoDefault>>);
 inline constexpr ::std::uint8_t rs_std::Option<::option::CopyNoDefault>::tag()
@@ -3036,6 +2993,34 @@ rs_std::Option<::option::CopyNoDefault>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::option::CopyNoDefault>, ::option::CopyNoDefault, U>)
+inline rs_std::Option<::option::CopyNoDefault>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::option::CopyNoDefault>, ::option::CopyNoDefault, U>)
+inline rs_std::Option<::option::CopyNoDefault>&
+rs_std::Option<::option::CopyNoDefault>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::option::CopyNoDefault, Opt>)
+inline rs_std::Option<::option::CopyNoDefault>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::option::CopyNoDefault, Opt>)
+inline rs_std::Option<::option::CopyNoDefault>&
+rs_std::Option<::option::CopyNoDefault>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::option::CopyNoDefault>::Option(::std::in_place_t ip,
+                                                       Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3048,6 +3033,10 @@ inline rs_std::Option<::option::HasDefault>&
 rs_std::Option<::option::HasDefault>::operator=(Option&& other) {
   crubit::MemSwap(*this, other);
   return *this;
+}
+inline rs_std::Option<::option::HasDefault>::Option(::crubit::UnsafeRelocateTag,
+                                                    Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
 }
 inline constexpr rs_std::Option<::option::HasDefault>::~Option() noexcept {
   this->reset();
@@ -3078,6 +3067,34 @@ rs_std::Option<::option::HasDefault>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::option::HasDefault>, ::option::HasDefault, U>)
+inline rs_std::Option<::option::HasDefault>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::option::HasDefault>, ::option::HasDefault, U>)
+inline rs_std::Option<::option::HasDefault>&
+rs_std::Option<::option::HasDefault>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::option::HasDefault, Opt>)
+inline rs_std::Option<::option::HasDefault>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::option::HasDefault, Opt>)
+inline rs_std::Option<::option::HasDefault>&
+rs_std::Option<::option::HasDefault>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::option::HasDefault>::Option(::std::in_place_t ip,
+                                                    Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3091,6 +3108,10 @@ inline rs_std::Option<::option::HasNoDefault>&
 rs_std::Option<::option::HasNoDefault>::operator=(Option&& other) {
   crubit::MemSwap(*this, other);
   return *this;
+}
+inline rs_std::Option<::option::HasNoDefault>::Option(
+    ::crubit::UnsafeRelocateTag, Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
 }
 inline constexpr rs_std::Option<::option::HasNoDefault>::~Option() noexcept {
   this->reset();
@@ -3121,6 +3142,34 @@ rs_std::Option<::option::HasNoDefault>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::option::HasNoDefault>, ::option::HasNoDefault, U>)
+inline rs_std::Option<::option::HasNoDefault>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::option::HasNoDefault>, ::option::HasNoDefault, U>)
+inline rs_std::Option<::option::HasNoDefault>&
+rs_std::Option<::option::HasNoDefault>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::option::HasNoDefault, Opt>)
+inline rs_std::Option<::option::HasNoDefault>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::option::HasNoDefault, Opt>)
+inline rs_std::Option<::option::HasNoDefault>&
+rs_std::Option<::option::HasNoDefault>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::option::HasNoDefault>::Option(::std::in_place_t ip,
+                                                      Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3130,6 +3179,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Option<::option::HasOptions>>);
 static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Option<::option::HasOptions>>);
+inline rs_std::Option<::option::HasOptions>::Option(::crubit::UnsafeRelocateTag,
+                                                    Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Option<::option::HasOptions>>);
 inline constexpr ::std::uint8_t rs_std::Option<::option::HasOptions>::tag()
@@ -3157,6 +3210,34 @@ rs_std::Option<::option::HasOptions>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::option::HasOptions>, ::option::HasOptions, U>)
+inline rs_std::Option<::option::HasOptions>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::option::HasOptions>, ::option::HasOptions, U>)
+inline rs_std::Option<::option::HasOptions>&
+rs_std::Option<::option::HasOptions>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::option::HasOptions, Opt>)
+inline rs_std::Option<::option::HasOptions>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::option::HasOptions, Opt>)
+inline rs_std::Option<::option::HasOptions>&
+rs_std::Option<::option::HasOptions>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::option::HasOptions>::Option(::std::in_place_t ip,
+                                                    Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3170,6 +3251,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Option<::option::LessThan20U8>>);
 static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Option<::option::LessThan20U8>>);
+inline rs_std::Option<::option::LessThan20U8>::Option(
+    ::crubit::UnsafeRelocateTag, Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Option<::option::LessThan20U8>>);
 inline constexpr ::std::uint8_t rs_std::Option<::option::LessThan20U8>::tag()
@@ -3197,6 +3282,34 @@ rs_std::Option<::option::LessThan20U8>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::option::LessThan20U8>, ::option::LessThan20U8, U>)
+inline rs_std::Option<::option::LessThan20U8>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<::option::LessThan20U8>, ::option::LessThan20U8, U>)
+inline rs_std::Option<::option::LessThan20U8>&
+rs_std::Option<::option::LessThan20U8>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::option::LessThan20U8, Opt>)
+inline rs_std::Option<::option::LessThan20U8>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::option::LessThan20U8, Opt>)
+inline rs_std::Option<::option::LessThan20U8>&
+rs_std::Option<::option::LessThan20U8>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::option::LessThan20U8>::Option(::std::in_place_t ip,
+                                                      Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3210,6 +3323,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Option<rs_std::Option<::option::LessThan20U8>>>);
 static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Option<rs_std::Option<::option::LessThan20U8>>>);
+inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::Option(
+    ::crubit::UnsafeRelocateTag, Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Option<rs_std::Option<::option::LessThan20U8>>>);
 inline constexpr ::std::uint8_t
@@ -3239,6 +3356,42 @@ rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator=(
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<rs_std::Option<::option::LessThan20U8>>,
+           rs_std::Option<::option::LessThan20U8>, U>)
+inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::Option(
+    U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<rs_std::Option<::option::LessThan20U8>>,
+           rs_std::Option<::option::LessThan20U8>, U>)
+inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>&
+rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator=(
+    U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<rs_std::Option<::option::LessThan20U8>,
+                                         Opt>)
+inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::Option(
+    Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<rs_std::Option<::option::LessThan20U8>,
+                                         Opt>)
+inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>&
+rs_std::Option<rs_std::Option<::option::LessThan20U8>>::operator=(
+    Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<rs_std::Option<::option::LessThan20U8>>::Option(
+    ::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3289,6 +3442,11 @@ operator=(Option&& other) {
   crubit::MemSwap(*this, other);
   return *this;
 }
+inline rs_std::
+    Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::Option(
+        ::crubit::UnsafeRelocateTag, Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline constexpr rs_std::Option<rs_std::Result<
     ::std::int32_t, ::rs::alloc::string::String>>::~Option() noexcept {
   this->reset();
@@ -3324,6 +3482,47 @@ operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<
+               rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+           rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, U>)
+inline rs_std::Option<rs_std::Result<
+    ::std::int32_t, ::rs::alloc::string::String>>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<
+               rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+           rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, U>)
+inline rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
+operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<
+           rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, Opt>)
+inline rs_std::Option<rs_std::Result<
+    ::std::int32_t, ::rs::alloc::string::String>>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<
+           rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, Opt>)
+inline rs_std::Option<
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
+operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::
+    Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::Option(
+        ::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3342,6 +3541,11 @@ rs_std::Option<
                    ::rs::alloc::string::String>>::operator=(Option&& other) {
   crubit::MemSwap(*this, other);
   return *this;
+}
+inline rs_std::Option<
+    rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>::
+    Option(::crubit::UnsafeRelocateTag, Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
 }
 inline constexpr rs_std::Option<rs_std::Result<
     ::option::HasNoDefault, ::rs::alloc::string::String>>::~Option() noexcept {
@@ -3379,6 +3583,55 @@ operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<rs_std::Result<::option::HasNoDefault,
+                                         ::rs::alloc::string::String>>,
+           rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
+           U>)
+inline rs_std::Option<
+    rs_std::Result<::option::HasNoDefault,
+                   ::rs::alloc::string::String>>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<rs_std::Result<::option::HasNoDefault,
+                                         ::rs::alloc::string::String>>,
+           rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
+           U>)
+inline rs_std::Option<
+    rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>&
+rs_std::Option<
+    rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>::
+operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<
+           rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
+           Opt>)
+inline rs_std::Option<
+    rs_std::Result<::option::HasNoDefault,
+                   ::rs::alloc::string::String>>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<
+           rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
+           Opt>)
+inline rs_std::Option<
+    rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>&
+rs_std::Option<
+    rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>::
+operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<
+    rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>::
+    Option(::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3456,6 +3709,13 @@ rs_std::Option<rs_std::Result<
   crubit::MemSwap(*this, other);
   return *this;
 }
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+    Option(::crubit::UnsafeRelocateTag, Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline constexpr rs_std::Option<rs_std::Result<
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
     rs_std::Result<rs_std::Option<::std::int32_t>,
@@ -3503,6 +3763,86 @@ operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<
+               rs_std::Result<rs_std::Option<rs_std::Result<
+                                  ::std::int32_t, ::rs::alloc::string::String>>,
+                              rs_std::Result<rs_std::Option<::std::int32_t>,
+                                             rs_std::Option<::std::int32_t>>>>,
+           rs_std::Result<rs_std::Option<rs_std::Result<
+                              ::std::int32_t, ::rs::alloc::string::String>>,
+                          rs_std::Result<rs_std::Option<::std::int32_t>,
+                                         rs_std::Option<::std::int32_t>>>,
+           U>)
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<
+               rs_std::Result<rs_std::Option<rs_std::Result<
+                                  ::std::int32_t, ::rs::alloc::string::String>>,
+                              rs_std::Result<rs_std::Option<::std::int32_t>,
+                                             rs_std::Option<::std::int32_t>>>>,
+           rs_std::Result<rs_std::Option<rs_std::Result<
+                              ::std::int32_t, ::rs::alloc::string::String>>,
+                          rs_std::Result<rs_std::Option<::std::int32_t>,
+                                         rs_std::Option<::std::int32_t>>>,
+           U>)
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>&
+rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<
+           rs_std::Result<rs_std::Option<rs_std::Result<
+                              ::std::int32_t, ::rs::alloc::string::String>>,
+                          rs_std::Result<rs_std::Option<::std::int32_t>,
+                                         rs_std::Option<::std::int32_t>>>,
+           Opt>)
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::Option(Opt&&
+                                                                 value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<
+           rs_std::Result<rs_std::Option<rs_std::Result<
+                              ::std::int32_t, ::rs::alloc::string::String>>,
+                          rs_std::Result<rs_std::Option<::std::int32_t>,
+                                         rs_std::Option<::std::int32_t>>>,
+           Opt>)
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>&
+rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>>::
+    Option(::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3516,6 +3856,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<rs_std::Option<::std::uint32_t>>);
 static_assert(
     ::std::is_trivially_move_assignable_v<rs_std::Option<::std::uint32_t>>);
+inline rs_std::Option<::std::uint32_t>::Option(::crubit::UnsafeRelocateTag,
+                                               Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Option<::std::uint32_t>>);
 inline constexpr ::std::uint32_t rs_std::Option<::std::uint32_t>::tag()
@@ -3544,6 +3888,34 @@ rs_std::Option<::std::uint32_t>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::uint32_t>,
+                                              ::std::uint32_t, U>)
+inline rs_std::Option<::std::uint32_t>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::uint32_t>,
+                                              ::std::uint32_t, U>)
+inline rs_std::Option<::std::uint32_t>&
+rs_std::Option<::std::uint32_t>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::std::uint32_t, Opt>)
+inline rs_std::Option<::std::uint32_t>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::std::uint32_t, Opt>)
+inline rs_std::Option<::std::uint32_t>&
+rs_std::Option<::std::uint32_t>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::std::uint32_t>::Option(::std::in_place_t ip,
+                                               Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3557,6 +3929,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<rs_std::Option<::std::uint8_t>>);
 static_assert(
     ::std::is_trivially_move_assignable_v<rs_std::Option<::std::uint8_t>>);
+inline rs_std::Option<::std::uint8_t>::Option(::crubit::UnsafeRelocateTag,
+                                              Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Option<::std::uint8_t>>);
 inline constexpr ::std::uint8_t rs_std::Option<::std::uint8_t>::tag()
@@ -3584,6 +3960,34 @@ rs_std::Option<::std::uint8_t>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::uint8_t>,
+                                              ::std::uint8_t, U>)
+inline rs_std::Option<::std::uint8_t>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::uint8_t>,
+                                              ::std::uint8_t, U>)
+inline rs_std::Option<::std::uint8_t>&
+rs_std::Option<::std::uint8_t>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::std::uint8_t, Opt>)
+inline rs_std::Option<::std::uint8_t>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::std::uint8_t, Opt>)
+inline rs_std::Option<::std::uint8_t>&
+rs_std::Option<::std::uint8_t>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::std::uint8_t>::Option(::std::in_place_t ip,
+                                              Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3597,6 +4001,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>>);
 static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>>);
+inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
+    ::crubit::UnsafeRelocateTag, Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>>);
 inline constexpr ::std::uint64_t rs_std::Option<
@@ -3627,6 +4035,42 @@ rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::operator=(
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>,
+           crubit::type_identity_t<void(void*, void*)>*, U>)
+inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
+    U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<
+           rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>,
+           crubit::type_identity_t<void(void*, void*)>*, U>)
+inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>&
+rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::operator=(
+    U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<
+           crubit::type_identity_t<void(void*, void*)>*, Opt>)
+inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
+    Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<
+           crubit::type_identity_t<void(void*, void*)>*, Opt>)
+inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>&
+rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::operator=(
+    Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
+    ::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3660,6 +4104,10 @@ rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
   }
   return *this;
 }
+inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
+    ::crubit::UnsafeRelocateTag, Result&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline rs_std::Result<::std::int32_t,
                       ::rs::alloc::string::String>::~Result() noexcept {
   this->Reset();
@@ -3682,10 +4130,55 @@ rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::set_tag(
   }
 }
 
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::std::int32_t, ::rs::alloc::string::String>,
+           ::std::int32_t, U>)
+inline constexpr rs_std::Result<
+    ::std::int32_t, ::rs::alloc::string::String>::Result(U&& ok) noexcept
+    : base_type(::std::forward<U>(ok)) {}
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::std::int32_t, ::rs::alloc::string::String>,
+           ::std::int32_t, U>)
+inline constexpr rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
+    U&& ok) noexcept {
+  base_type::operator=(::std::forward<U>(ok));
+  return *this;
+}
+template <typename F>
+  requires(
+      rs_std::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
+inline constexpr rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::
+    Result(rs_std::unexpected<F>&& err) noexcept
+    : base_type(::std::move(err)) {}
+template <typename F>
+  requires(
+      rs_std::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
+inline constexpr rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&
+rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
+    rs_std::unexpected<F>&& err) noexcept {
+  base_type::operator=(::std::move(err));
+  return *this;
+}
+template <typename... Args>
+inline constexpr rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::
+    Result(::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+template <typename... Args>
+inline constexpr rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::
+    Result(rs_std::unexpect_t u, Args&&... args) noexcept
+    : base_type(u, ::std::forward<Args>(args)...) {}
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
+inline rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>::
+    Result(::crubit::UnsafeRelocateTag, Result&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline rs_std::Result<::option::HasNoDefault,
                       ::rs::alloc::string::String>::~Result() noexcept {
   this->Reset();
@@ -3709,6 +4202,53 @@ rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>::set_tag(
   }
 }
 
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
+           ::option::HasNoDefault, U>)
+inline constexpr rs_std::Result<
+    ::option::HasNoDefault,
+    ::rs::alloc::string::String>::Result(U&& ok) noexcept
+    : base_type(::std::forward<U>(ok)) {}
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
+           ::option::HasNoDefault, U>)
+inline constexpr rs_std::Result<::option::HasNoDefault,
+                                ::rs::alloc::string::String>&
+rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>::operator=(
+    U&& ok) noexcept {
+  base_type::operator=(::std::forward<U>(ok));
+  return *this;
+}
+template <typename F>
+  requires(
+      rs_std::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
+inline constexpr rs_std::Result<
+    ::option::HasNoDefault,
+    ::rs::alloc::string::String>::Result(rs_std::unexpected<F>&& err) noexcept
+    : base_type(::std::move(err)) {}
+template <typename F>
+  requires(
+      rs_std::ResultUnexpectedConstructible<::rs::alloc::string::String, F>)
+inline constexpr rs_std::Result<::option::HasNoDefault,
+                                ::rs::alloc::string::String>&
+rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>::operator=(
+    rs_std::unexpected<F>&& err) noexcept {
+  base_type::operator=(::std::move(err));
+  return *this;
+}
+template <typename... Args>
+inline constexpr rs_std::
+    Result<::option::HasNoDefault, ::rs::alloc::string::String>::Result(
+        ::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+template <typename... Args>
+inline constexpr rs_std::
+    Result<::option::HasNoDefault, ::rs::alloc::string::String>::Result(
+        rs_std::unexpect_t u, Args&&... args) noexcept
+    : base_type(u, ::std::forward<Args>(args)...) {}
+
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
@@ -3725,6 +4265,12 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<rs_std::Result<
         rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>>);
+inline rs_std::Result<
+    rs_std::Option<::std::int32_t>,
+    rs_std::Option<::std::int32_t>>::Result(::crubit::UnsafeRelocateTag,
+                                            Result&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Result<
         rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>>);
@@ -3746,6 +4292,57 @@ inline constexpr void rs_std::Result<
     __storage[0 + i] = __bytes[i];
   }
 }
+
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<rs_std::Option<::std::int32_t>,
+                          rs_std::Option<::std::int32_t>>,
+           rs_std::Option<::std::int32_t>, U>)
+inline constexpr rs_std::Result<
+    rs_std::Option<::std::int32_t>,
+    rs_std::Option<::std::int32_t>>::Result(U&& ok) noexcept
+    : base_type(::std::forward<U>(ok)) {}
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<rs_std::Option<::std::int32_t>,
+                          rs_std::Option<::std::int32_t>>,
+           rs_std::Option<::std::int32_t>, U>)
+inline constexpr rs_std::Result<rs_std::Option<::std::int32_t>,
+                                rs_std::Option<::std::int32_t>>&
+rs_std::Result<rs_std::Option<::std::int32_t>,
+               rs_std::Option<::std::int32_t>>::operator=(U&& ok) noexcept {
+  base_type::operator=(::std::forward<U>(ok));
+  return *this;
+}
+template <typename F>
+  requires(
+      rs_std::ResultUnexpectedConstructible<rs_std::Option<::std::int32_t>, F>)
+inline constexpr rs_std::Result<rs_std::Option<::std::int32_t>,
+                                rs_std::Option<::std::int32_t>>::
+    Result(rs_std::unexpected<F>&& err) noexcept
+    : base_type(::std::move(err)) {}
+template <typename F>
+  requires(
+      rs_std::ResultUnexpectedConstructible<rs_std::Option<::std::int32_t>, F>)
+inline constexpr rs_std::Result<rs_std::Option<::std::int32_t>,
+                                rs_std::Option<::std::int32_t>>&
+rs_std::Result<rs_std::Option<::std::int32_t>, rs_std::Option<::std::int32_t>>::
+operator=(rs_std::unexpected<F>&& err) noexcept {
+  base_type::operator=(::std::move(err));
+  return *this;
+}
+template <typename... Args>
+inline constexpr rs_std::Result<
+    rs_std::Option<::std::int32_t>,
+    rs_std::Option<::std::int32_t>>::Result(::std::in_place_t ip,
+                                            Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+template <typename... Args>
+inline constexpr rs_std::Result<
+    rs_std::Option<::std::int32_t>,
+    rs_std::Option<::std::int32_t>>::Result(rs_std::unexpect_t u,
+                                            Args&&... args) noexcept
+    : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif
 
@@ -3803,6 +4400,13 @@ rs_std::Result<
 inline rs_std::Result<
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
     rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::
+    Result(::crubit::UnsafeRelocateTag, Result&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+inline rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
                    rs_std::Option<::std::int32_t>>>::~Result() noexcept {
   this->Reset();
 }
@@ -3827,6 +4431,84 @@ inline constexpr void rs_std::Result<
     __storage[0 + i] = __bytes[i];
   }
 }
+
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<rs_std::Option<rs_std::Result<
+                              ::std::int32_t, ::rs::alloc::string::String>>,
+                          rs_std::Result<rs_std::Option<::std::int32_t>,
+                                         rs_std::Option<::std::int32_t>>>,
+           rs_std::Option<
+               rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+           U>)
+inline constexpr rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::Result(U&& ok) noexcept
+    : base_type(::std::forward<U>(ok)) {}
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<rs_std::Option<rs_std::Result<
+                              ::std::int32_t, ::rs::alloc::string::String>>,
+                          rs_std::Result<rs_std::Option<::std::int32_t>,
+                                         rs_std::Option<::std::int32_t>>>,
+           rs_std::Option<
+               rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+           U>)
+inline constexpr rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>&
+rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::
+operator=(U&& ok) noexcept {
+  base_type::operator=(::std::forward<U>(ok));
+  return *this;
+}
+template <typename F>
+  requires(rs_std::ResultUnexpectedConstructible<
+           rs_std::Result<rs_std::Option<::std::int32_t>,
+                          rs_std::Option<::std::int32_t>>,
+           F>)
+inline constexpr rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::
+    Result(rs_std::unexpected<F>&& err) noexcept
+    : base_type(::std::move(err)) {}
+template <typename F>
+  requires(rs_std::ResultUnexpectedConstructible<
+           rs_std::Result<rs_std::Option<::std::int32_t>,
+                          rs_std::Option<::std::int32_t>>,
+           F>)
+inline constexpr rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>&
+rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::
+operator=(rs_std::unexpected<F>&& err) noexcept {
+  base_type::operator=(::std::move(err));
+  return *this;
+}
+template <typename... Args>
+inline constexpr rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::
+    Result(::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+template <typename... Args>
+inline constexpr rs_std::Result<
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+    rs_std::Result<rs_std::Option<::std::int32_t>,
+                   rs_std::Option<::std::int32_t>>>::
+    Result(rs_std::unexpect_t u, Args&&... args) noexcept
+    : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif
 

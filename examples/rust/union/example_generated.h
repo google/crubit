@@ -39,9 +39,8 @@ ReprCUnion final {
   // `example_crate_golden::ReprCUnion` doesn't implement the `Clone` trait
   ReprCUnion(const ReprCUnion&) = delete;
   ReprCUnion& operator=(const ReprCUnion&) = delete;
-  ReprCUnion(::crubit::UnsafeRelocateTag, ReprCUnion&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  ReprCUnion(::crubit::UnsafeRelocateTag, ReprCUnion&& value);
+
   ::std::int32_t a;
   double b;
 
@@ -70,6 +69,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::example_crate::ReprCUnion>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::example_crate::ReprCUnion>);
+inline ::example_crate::ReprCUnion::ReprCUnion(::crubit::UnsafeRelocateTag,
+                                               ReprCUnion&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void ReprCUnion::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ReprCUnion, a));
   static_assert(0 == offsetof(ReprCUnion, b));

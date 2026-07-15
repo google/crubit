@@ -54,9 +54,8 @@ CStruct final {
   // assignment operator.
   CStruct(const CStruct&) = default;
   CStruct& operator=(const CStruct&) = default;
-  CStruct(::crubit::UnsafeRelocateTag, CStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CStruct(::crubit::UnsafeRelocateTag, CStruct&& value);
+
   union {
     ::std::int32_t field;
   };
@@ -83,9 +82,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // assignment operator.
   HasFnPtrField(const HasFnPtrField&) = default;
   HasFnPtrField& operator=(const HasFnPtrField&) = default;
-  HasFnPtrField(::crubit::UnsafeRelocateTag, HasFnPtrField&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  HasFnPtrField(::crubit::UnsafeRelocateTag, HasFnPtrField&& value);
 
   static ::function_pointers::HasFnPtrField with_add_ten();
 
@@ -166,6 +163,10 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::function_pointers::CStruct>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::function_pointers::CStruct>);
+inline ::function_pointers::CStruct::CStruct(::crubit::UnsafeRelocateTag,
+                                             CStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void CStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CStruct, field));
 }
@@ -184,6 +185,11 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::function_pointers::HasFnPtrField>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::function_pointers::HasFnPtrField>);
+inline ::function_pointers::HasFnPtrField::HasFnPtrField(
+    ::crubit::UnsafeRelocateTag, HasFnPtrField&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_with_uadd_uten(
     ::function_pointers::HasFnPtrField* __ret_ptr);

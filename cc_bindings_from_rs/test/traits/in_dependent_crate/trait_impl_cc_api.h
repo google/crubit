@@ -43,9 +43,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
   // `trait_impl_golden::MyStruct` doesn't implement the `Clone` trait
   MyStruct(const MyStruct&) = delete;
   MyStruct& operator=(const MyStruct&) = delete;
-  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
 
   static ::trait_impl::MyStruct new_(::std::int32_t x);
 
@@ -75,9 +73,8 @@ NotImplemented final {
   // `trait_impl_golden::NotImplemented` doesn't implement the `Clone` trait
   NotImplemented(const NotImplemented&) = delete;
   NotImplemented& operator=(const NotImplemented&) = delete;
-  NotImplemented(::crubit::UnsafeRelocateTag, NotImplemented&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  NotImplemented(::crubit::UnsafeRelocateTag, NotImplemented&& value);
+
   union {
     ::rs::alloc::string::String foo;
   };
@@ -106,6 +103,11 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<MyStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::trait_impl::MyStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::trait_impl::MyStruct>);
+inline ::trait_impl::MyStruct::MyStruct(::crubit::UnsafeRelocateTag,
+                                        MyStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::trait_impl::MyStruct* __ret_ptr);
@@ -134,6 +136,10 @@ inline NotImplemented::~NotImplemented() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_utrait_uimpl_ugolden_x0000003a_x0000003aNotImplemented(
           *this);
+}
+inline ::trait_impl::NotImplemented::NotImplemented(::crubit::UnsafeRelocateTag,
+                                                    NotImplemented&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
 }
 inline void NotImplemented::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NotImplemented, foo));

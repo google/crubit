@@ -39,9 +39,7 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   // `example_crate_golden::ReprRustUnion` doesn't implement the `Clone` trait
   ReprRustUnion(const ReprRustUnion&) = delete;
   ReprRustUnion& operator=(const ReprRustUnion&) = delete;
-  ReprRustUnion(::crubit::UnsafeRelocateTag, ReprRustUnion&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  ReprRustUnion(::crubit::UnsafeRelocateTag, ReprRustUnion&& value);
 
   void set_a(::std::int32_t a);
 
@@ -80,6 +78,11 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::example_crate::ReprRustUnion>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::example_crate::ReprRustUnion>);
+inline ::example_crate::ReprRustUnion::ReprRustUnion(
+    ::crubit::UnsafeRelocateTag, ReprRustUnion&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_set_ua(::example_crate::ReprRustUnion&,
                                       ::std::int32_t);

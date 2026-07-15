@@ -51,9 +51,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocSource") alignas(
   // Clone::clone_from
   ::from::CloneAllocSource& operator=(const CloneAllocSource&);
 
-  CloneAllocSource(::crubit::UnsafeRelocateTag, CloneAllocSource&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CloneAllocSource(::crubit::UnsafeRelocateTag, CloneAllocSource&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::from::CloneAllocSource create(rs_std::StrRef s);
@@ -87,9 +85,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocType") alignas(8)
   // Clone::clone_from
   ::from::CloneAllocType& operator=(const CloneAllocType&);
 
-  CloneAllocType(::crubit::UnsafeRelocateTag, CloneAllocType&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CloneAllocType(::crubit::UnsafeRelocateTag, CloneAllocType&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   rs_std::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
@@ -124,9 +120,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopySource") alignas(4)
   // assignment operator.
   CloneCopySource(const CloneCopySource&) = default;
   CloneCopySource& operator=(const CloneCopySource&) = default;
-  CloneCopySource(::crubit::UnsafeRelocateTag, CloneCopySource&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CloneCopySource(::crubit::UnsafeRelocateTag, CloneCopySource&& value);
+
   explicit operator ::from::CloneCopyType();
 
   union {
@@ -157,9 +152,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopyType") alignas(4)
   // assignment operator.
   CloneCopyType(const CloneCopyType&) = default;
   CloneCopyType& operator=(const CloneCopyType&) = default;
-  CloneCopyType(::crubit::UnsafeRelocateTag, CloneCopyType&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CloneCopyType(::crubit::UnsafeRelocateTag, CloneCopyType&& value);
+
   explicit CloneCopyType(::from::CloneCopySource value);
 
   union {
@@ -187,9 +181,7 @@ CollidingConstructor final {
   CollidingConstructor(const CollidingConstructor&) = delete;
   CollidingConstructor& operator=(const CollidingConstructor&) = delete;
   CollidingConstructor(::crubit::UnsafeRelocateTag,
-                       CollidingConstructor&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                       CollidingConstructor&& value);
 
   // Error generating bindings for implementation
   // `<from_golden::CollidingConstructor as std::convert::From<u64>>` defined at
@@ -226,9 +218,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopA") alignas(4)
   // `from_golden::LoopA` doesn't implement the `Clone` trait
   LoopA(const LoopA&) = delete;
   LoopA& operator=(const LoopA&) = delete;
-  LoopA(::crubit::UnsafeRelocateTag, LoopA&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  LoopA(::crubit::UnsafeRelocateTag, LoopA&& value);
+
   explicit operator ::from::LoopB();
 
   explicit LoopA(::from::LoopB value);
@@ -259,9 +250,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopB") alignas(4)
   // `from_golden::LoopB` doesn't implement the `Clone` trait
   LoopB(const LoopB&) = delete;
   LoopB& operator=(const LoopB&) = delete;
-  LoopB(::crubit::UnsafeRelocateTag, LoopB&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  LoopB(::crubit::UnsafeRelocateTag, LoopB&& value);
+
   explicit operator ::from::LoopA();
 
   explicit LoopB(::from::LoopA value);
@@ -295,9 +285,8 @@ NoCloneCopyDropSource final {
   NoCloneCopyDropSource(const NoCloneCopyDropSource&) = delete;
   NoCloneCopyDropSource& operator=(const NoCloneCopyDropSource&) = delete;
   NoCloneCopyDropSource(::crubit::UnsafeRelocateTag,
-                        NoCloneCopyDropSource&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                        NoCloneCopyDropSource&& value);
+
   explicit operator ::from::NoCloneCopyDropType();
 
   union {
@@ -328,10 +317,8 @@ NoCloneCopyDropType final {
   // `from_golden::NoCloneCopyDropType` doesn't implement the `Clone` trait
   NoCloneCopyDropType(const NoCloneCopyDropType&) = delete;
   NoCloneCopyDropType& operator=(const NoCloneCopyDropType&) = delete;
-  NoCloneCopyDropType(::crubit::UnsafeRelocateTag,
-                      NoCloneCopyDropType&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  NoCloneCopyDropType(::crubit::UnsafeRelocateTag, NoCloneCopyDropType&& value);
+
   explicit NoCloneCopyDropType(::from::NoCloneCopyDropSource value);
 
   union {
@@ -363,9 +350,8 @@ NoCloneDefaultSource final {
   NoCloneDefaultSource(const NoCloneDefaultSource&) = delete;
   NoCloneDefaultSource& operator=(const NoCloneDefaultSource&) = delete;
   NoCloneDefaultSource(::crubit::UnsafeRelocateTag,
-                       NoCloneDefaultSource&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                       NoCloneDefaultSource&& value);
+
   explicit operator ::from::NoCloneDefaultType();
 
   union {
@@ -396,9 +382,8 @@ NoCloneDefaultType final {
   // `from_golden::NoCloneDefaultType` doesn't implement the `Clone` trait
   NoCloneDefaultType(const NoCloneDefaultType&) = delete;
   NoCloneDefaultType& operator=(const NoCloneDefaultType&) = delete;
-  NoCloneDefaultType(::crubit::UnsafeRelocateTag, NoCloneDefaultType&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  NoCloneDefaultType(::crubit::UnsafeRelocateTag, NoCloneDefaultType&& value);
+
   explicit NoCloneDefaultType(::from::NoCloneDefaultSource value);
 
   union {
@@ -424,9 +409,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
   // `from_golden::NotFfiSafe` doesn't implement the `Clone` trait
   NotFfiSafe(const NotFfiSafe&) = delete;
   NotFfiSafe& operator=(const NotFfiSafe&) = delete;
-  NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::from::NotFfiSafe create();
@@ -461,9 +444,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
   // `from_golden::Opaque` doesn't implement the `Clone` trait
   Opaque(const Opaque&) = delete;
   Opaque& operator=(const Opaque&) = delete;
-  Opaque(::crubit::UnsafeRelocateTag, Opaque&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Opaque(::crubit::UnsafeRelocateTag, Opaque&& value);
+
   explicit operator ::std::int32_t();
 
   explicit operator ::std::int64_t();
@@ -497,9 +479,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   // `from_golden::OpaqueRef` doesn't implement the `Clone` trait
   OpaqueRef(const OpaqueRef&) = delete;
   OpaqueRef& operator=(const OpaqueRef&) = delete;
-  OpaqueRef(::crubit::UnsafeRelocateTag, OpaqueRef&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  OpaqueRef(::crubit::UnsafeRelocateTag, OpaqueRef&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::from::OpaqueRef create(rs_std::StrRef s);
@@ -561,6 +541,11 @@ inline ::from::CloneAllocSource& ::from::CloneAllocSource::operator=(
   }
   return *this;
 }
+inline ::from::CloneAllocSource::CloneAllocSource(::crubit::UnsafeRelocateTag,
+                                                  CloneAllocSource&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef,
                                       ::from::CloneAllocSource* __ret_ptr);
@@ -639,6 +624,11 @@ inline ::from::CloneAllocType& ::from::CloneAllocType::operator=(
   }
   return *this;
 }
+inline ::from::CloneAllocType::CloneAllocType(::crubit::UnsafeRelocateTag,
+                                              CloneAllocType&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" rs_std::StrRef __crubit_thunk_get_uvalue(
     ::from::CloneAllocType const&);
@@ -675,6 +665,10 @@ static_assert(::std::is_trivially_move_assignable_v<::from::CloneCopySource>);
 static_assert(
     ::std::is_trivially_copy_constructible_v<::from::CloneCopySource>);
 static_assert(::std::is_trivially_copy_assignable_v<::from::CloneCopySource>);
+inline ::from::CloneCopySource::CloneCopySource(::crubit::UnsafeRelocateTag,
+                                                CloneCopySource&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aCloneCopySource_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
@@ -713,6 +707,10 @@ static_assert(::std::is_trivially_move_constructible_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_move_assignable_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_copy_constructible_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_copy_assignable_v<::from::CloneCopyType>);
+inline ::from::CloneCopyType::CloneCopyType(::crubit::UnsafeRelocateTag,
+                                            CloneCopyType&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneCopyType_ufrom_ugolden_x0000003a_x0000003aCloneCopySource(
@@ -737,6 +735,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::from::CollidingConstructor>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::from::CollidingConstructor>);
+inline ::from::CollidingConstructor::CollidingConstructor(
+    ::crubit::UnsafeRelocateTag, CollidingConstructor&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCollidingConstructor_uusize(
@@ -759,6 +761,9 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<LoopA>);
 static_assert(::std::is_trivially_move_constructible_v<::from::LoopA>);
 static_assert(::std::is_trivially_move_assignable_v<::from::LoopA>);
+inline ::from::LoopA::LoopA(::crubit::UnsafeRelocateTag, LoopA&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopA_ufrom_ugolden_x0000003a_x0000003aLoopB(
@@ -795,6 +800,9 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<LoopB>);
 static_assert(::std::is_trivially_move_constructible_v<::from::LoopB>);
 static_assert(::std::is_trivially_move_assignable_v<::from::LoopB>);
+inline ::from::LoopB::LoopB(::crubit::UnsafeRelocateTag, LoopB&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopB_ufrom_ugolden_x0000003a_x0000003aLoopA(
@@ -833,6 +841,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneCopyDropSource>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneCopyDropSource>);
+inline ::from::NoCloneCopyDropSource::NoCloneCopyDropSource(
+    ::crubit::UnsafeRelocateTag, NoCloneCopyDropSource&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType(
@@ -861,6 +873,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneCopyDropType>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneCopyDropType>);
+inline ::from::NoCloneCopyDropType::NoCloneCopyDropType(
+    ::crubit::UnsafeRelocateTag, NoCloneCopyDropType&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource(
@@ -896,6 +912,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneDefaultSource>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneDefaultSource>);
+inline ::from::NoCloneDefaultSource::NoCloneDefaultSource(
+    ::crubit::UnsafeRelocateTag, NoCloneDefaultSource&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
@@ -934,6 +954,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneDefaultType>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneDefaultType>);
+inline ::from::NoCloneDefaultType::NoCloneDefaultType(
+    ::crubit::UnsafeRelocateTag, NoCloneDefaultType&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
@@ -957,6 +981,11 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<NotFfiSafe>);
 static_assert(::std::is_trivially_move_constructible_v<::from::NotFfiSafe>);
 static_assert(::std::is_trivially_move_assignable_v<::from::NotFfiSafe>);
+inline ::from::NotFfiSafe::NotFfiSafe(::crubit::UnsafeRelocateTag,
+                                      NotFfiSafe&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::from::NotFfiSafe* __ret_ptr);
 }
@@ -989,6 +1018,9 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<Opaque>);
 static_assert(::std::is_trivially_move_constructible_v<::from::Opaque>);
 static_assert(::std::is_trivially_move_assignable_v<::from::Opaque>);
+inline ::from::Opaque::Opaque(::crubit::UnsafeRelocateTag, Opaque&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 namespace __crubit_internal {
 extern "C" ::std::int32_t
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui32(
@@ -1059,6 +1091,11 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<OpaqueRef>);
 static_assert(::std::is_trivially_move_constructible_v<::from::OpaqueRef>);
 static_assert(::std::is_trivially_move_assignable_v<::from::OpaqueRef>);
+inline ::from::OpaqueRef::OpaqueRef(::crubit::UnsafeRelocateTag,
+                                    OpaqueRef&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef,
                                       ::from::OpaqueRef* __ret_ptr);

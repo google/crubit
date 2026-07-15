@@ -38,9 +38,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   // `never_golden::NeverStruct` doesn't implement the `Clone` trait
   NeverStruct(const NeverStruct&) = delete;
   NeverStruct& operator=(const NeverStruct&) = delete;
-  NeverStruct(::crubit::UnsafeRelocateTag, NeverStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  NeverStruct(::crubit::UnsafeRelocateTag, NeverStruct&& value);
 
   [[noreturn]] static void associated_fn_never_return();
 
@@ -78,6 +76,11 @@ inline ::never::NeverStruct::NeverStruct() {
 static_assert(::std::is_trivially_destructible_v<NeverStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::never::NeverStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::never::NeverStruct>);
+inline ::never::NeverStruct::NeverStruct(::crubit::UnsafeRelocateTag,
+                                         NeverStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" [[noreturn]] void __crubit_thunk_associated_ufn_unever_ureturn();
 }

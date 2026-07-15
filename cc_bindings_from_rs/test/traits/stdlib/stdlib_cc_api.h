@@ -53,9 +53,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
   // Clone::clone_from
   ::stdlib::MyStruct& operator=(const MyStruct&);
 
-  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
 
   static ::stdlib::MyStruct new_(::std::int32_t x);
 
@@ -95,9 +93,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   NonCloneableIterator(const NonCloneableIterator&) = delete;
   NonCloneableIterator& operator=(const NonCloneableIterator&) = delete;
   NonCloneableIterator(::crubit::UnsafeRelocateTag,
-                       NonCloneableIterator&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                       NonCloneableIterator&& value);
 
   static ::stdlib::NonCloneableIterator new_(::std::int32_t x);
   template <typename TAdaptedSelf_ = NonCloneableIterator>
@@ -128,9 +124,8 @@ NonCloneableValue final {
   // `stdlib_golden::NonCloneableValue` doesn't implement the `Clone` trait
   NonCloneableValue(const NonCloneableValue&) = delete;
   NonCloneableValue& operator=(const NonCloneableValue&) = delete;
-  NonCloneableValue(::crubit::UnsafeRelocateTag, NonCloneableValue&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  NonCloneableValue(::crubit::UnsafeRelocateTag, NonCloneableValue&& value);
+
   union {
     ::std::int32_t x;
   };
@@ -153,9 +148,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(8)
   // `stdlib_golden::RefIterator` doesn't implement the `Clone` trait
   RefIterator(const RefIterator&) = delete;
   RefIterator& operator=(const RefIterator&) = delete;
-  RefIterator(::crubit::UnsafeRelocateTag, RefIterator&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  RefIterator(::crubit::UnsafeRelocateTag, RefIterator&& value);
 
   static ::stdlib::RefIterator new_(
       rs_std::SliceRef<const ::std::int32_t> slice);
@@ -290,6 +283,11 @@ inline ::stdlib::MyStruct& ::stdlib::MyStruct::operator=(
   }
   return *this;
 }
+inline ::stdlib::MyStruct::MyStruct(::crubit::UnsafeRelocateTag,
+                                    MyStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::stdlib::MyStruct* __ret_ptr);
@@ -324,6 +322,11 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::stdlib::NonCloneableIterator>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::stdlib::NonCloneableIterator>);
+inline ::stdlib::NonCloneableIterator::NonCloneableIterator(
+    ::crubit::UnsafeRelocateTag, NonCloneableIterator&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::stdlib::NonCloneableIterator* __ret_ptr);
@@ -349,6 +352,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::stdlib::NonCloneableValue>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::stdlib::NonCloneableValue>);
+inline ::stdlib::NonCloneableValue::NonCloneableValue(
+    ::crubit::UnsafeRelocateTag, NonCloneableValue&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void NonCloneableValue::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NonCloneableValue, x));
 }
@@ -361,6 +368,11 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<RefIterator>);
 static_assert(::std::is_trivially_move_constructible_v<::stdlib::RefIterator>);
 static_assert(::std::is_trivially_move_assignable_v<::stdlib::RefIterator>);
+inline ::stdlib::RefIterator::RefIterator(::crubit::UnsafeRelocateTag,
+                                          RefIterator&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::SliceRef<const ::std::int32_t>,
                                    ::stdlib::RefIterator* __ret_ptr);

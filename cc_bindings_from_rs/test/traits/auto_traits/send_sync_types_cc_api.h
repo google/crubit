@@ -42,9 +42,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   NeitherSendNorSync(const NeitherSendNorSync&) = delete;
   NeitherSendNorSync& operator=(const NeitherSendNorSync&) = delete;
-  NeitherSendNorSync(::crubit::UnsafeRelocateTag, NeitherSendNorSync&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  NeitherSendNorSync(::crubit::UnsafeRelocateTag, NeitherSendNorSync&& value);
+
   union {
     ::std::int32_t __field0;
   };
@@ -73,9 +72,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `send_sync_types_golden::SendAndSync` doesn't implement the `Clone` trait
   SendAndSync(const SendAndSync&) = delete;
   SendAndSync& operator=(const SendAndSync&) = delete;
-  SendAndSync(::crubit::UnsafeRelocateTag, SendAndSync&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  SendAndSync(::crubit::UnsafeRelocateTag, SendAndSync&& value);
+
   union {
     ::std::int32_t __field0;
   };
@@ -102,9 +100,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   SendButNotSync(const SendButNotSync&) = delete;
   SendButNotSync& operator=(const SendButNotSync&) = delete;
-  SendButNotSync(::crubit::UnsafeRelocateTag, SendButNotSync&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  SendButNotSync(::crubit::UnsafeRelocateTag, SendButNotSync&& value);
+
   union {
     ::std::int32_t __field0;
   };
@@ -131,9 +128,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   SyncButNotSend(const SyncButNotSend&) = delete;
   SyncButNotSend& operator=(const SyncButNotSend&) = delete;
-  SyncButNotSend(::crubit::UnsafeRelocateTag, SyncButNotSend&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  SyncButNotSend(::crubit::UnsafeRelocateTag, SyncButNotSend&& value);
+
   union {
     ::std::int32_t __field0;
   };
@@ -153,6 +149,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::send_sync_types::NeitherSendNorSync>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::send_sync_types::NeitherSendNorSync>);
+inline ::send_sync_types::NeitherSendNorSync::NeitherSendNorSync(
+    ::crubit::UnsafeRelocateTag, NeitherSendNorSync&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void NeitherSendNorSync::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NeitherSendNorSync, __field0));
 }
@@ -167,6 +167,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::send_sync_types::SendAndSync>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::send_sync_types::SendAndSync>);
+inline ::send_sync_types::SendAndSync::SendAndSync(::crubit::UnsafeRelocateTag,
+                                                   SendAndSync&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void SendAndSync::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SendAndSync, __field0));
 }
@@ -181,6 +185,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::send_sync_types::SendButNotSync>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::send_sync_types::SendButNotSync>);
+inline ::send_sync_types::SendButNotSync::SendButNotSync(
+    ::crubit::UnsafeRelocateTag, SendButNotSync&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void SendButNotSync::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SendButNotSync, __field0));
 }
@@ -195,6 +203,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::send_sync_types::SyncButNotSend>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::send_sync_types::SyncButNotSend>);
+inline ::send_sync_types::SyncButNotSend::SyncButNotSend(
+    ::crubit::UnsafeRelocateTag, SyncButNotSend&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void SyncButNotSend::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SyncButNotSend, __field0));
 }

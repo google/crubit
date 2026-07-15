@@ -45,9 +45,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   NonFreezeType(const NonFreezeType&) = delete;
   NonFreezeType& operator=(const NonFreezeType&) = delete;
-  NonFreezeType(::crubit::UnsafeRelocateTag, NonFreezeType&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  NonFreezeType(::crubit::UnsafeRelocateTag, NonFreezeType&& value);
 
   //  # Safety
   //
@@ -83,9 +81,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // assignment operator.
   SomeStruct(const SomeStruct&) = default;
   SomeStruct& operator=(const SomeStruct&) = default;
-  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
 
   void mut_self_and_mut_ref(::std::int32_t& __param_1);
 
@@ -139,6 +135,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::aliasing_references::NonFreezeType>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::aliasing_references::NonFreezeType>);
+inline ::aliasing_references::NonFreezeType::NonFreezeType(
+    ::crubit::UnsafeRelocateTag, NonFreezeType&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" ::std::int32_t& $(__anon1) __crubit_thunk_as_umut_uunchecked(
     ::aliasing_references::NonFreezeType const&);
@@ -187,6 +188,11 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::aliasing_references::SomeStruct>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::aliasing_references::SomeStruct>);
+inline ::aliasing_references::SomeStruct::SomeStruct(
+    ::crubit::UnsafeRelocateTag, SomeStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_mut_uself_uand_umut_uref(
     ::aliasing_references::SomeStruct&, ::std::int32_t&);

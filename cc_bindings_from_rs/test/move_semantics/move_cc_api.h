@@ -42,9 +42,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   // assignment operator.
   Copyable(const Copyable&) = default;
   Copyable& operator=(const Copyable&) = default;
-  Copyable(::crubit::UnsafeRelocateTag, Copyable&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Copyable(::crubit::UnsafeRelocateTag, Copyable&& value);
 
   static ::move::Copyable from_byte(::std::uint8_t byte);
 
@@ -76,9 +74,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
   // `move_golden::Foo` doesn't implement the `Clone` trait
   Foo(const Foo&) = delete;
   Foo& operator=(const Foo&) = delete;
-  Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Foo(::crubit::UnsafeRelocateTag, Foo&& value);
 
   static ::move::Foo from_byte(::std::uint8_t byte);
 
@@ -118,6 +114,11 @@ static_assert(::std::is_trivially_move_constructible_v<::move::Copyable>);
 static_assert(::std::is_trivially_move_assignable_v<::move::Copyable>);
 static_assert(::std::is_trivially_copy_constructible_v<::move::Copyable>);
 static_assert(::std::is_trivially_copy_assignable_v<::move::Copyable>);
+inline ::move::Copyable::Copyable(::crubit::UnsafeRelocateTag,
+                                  Copyable&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
                                           ::move::Copyable* __ret_ptr);
@@ -168,6 +169,10 @@ inline ::move::Foo& ::move::Foo::operator=(Foo&& other) {
   crubit::MemSwap(*this, other);
   return *this;
 }
+inline ::move::Foo::Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
                                           ::move::Foo* __ret_ptr);

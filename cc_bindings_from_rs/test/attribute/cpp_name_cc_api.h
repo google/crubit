@@ -40,9 +40,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
   // `cpp_name_golden::Original` doesn't implement the `Clone` trait
   Replaced(const Replaced&) = delete;
   Replaced& operator=(const Replaced&) = delete;
-  Replaced(::crubit::UnsafeRelocateTag, Replaced&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Replaced(::crubit::UnsafeRelocateTag, Replaced&& value);
 
   // CRUBIT_ANNOTATE: cpp_name=create
   static ::cpp_name::Replaced create();
@@ -64,6 +62,11 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<Replaced>);
 static_assert(::std::is_trivially_move_constructible_v<::cpp_name::Replaced>);
 static_assert(::std::is_trivially_move_assignable_v<::cpp_name::Replaced>);
+inline ::cpp_name::Replaced::Replaced(::crubit::UnsafeRelocateTag,
+                                      Replaced&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::cpp_name::Replaced* __ret_ptr);
 }

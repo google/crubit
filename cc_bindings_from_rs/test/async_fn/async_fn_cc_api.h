@@ -63,9 +63,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: async_fn_golden :: NotCppMovable") alignas(
   // `async_fn_golden::NotCppMovable` doesn't implement the `Clone` trait
   NotCppMovable(const NotCppMovable&) = delete;
   NotCppMovable& operator=(const NotCppMovable&) = delete;
-  NotCppMovable(::crubit::UnsafeRelocateTag, NotCppMovable&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  NotCppMovable(::crubit::UnsafeRelocateTag, NotCppMovable&& value);
+
   union {
     ::std::int32_t __field0;
   };
@@ -90,9 +89,8 @@ StructWithDrop final {
   // `async_fn_golden::StructWithDrop` doesn't implement the `Clone` trait
   StructWithDrop(const StructWithDrop&) = delete;
   StructWithDrop& operator=(const StructWithDrop&) = delete;
-  StructWithDrop(::crubit::UnsafeRelocateTag, StructWithDrop&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  StructWithDrop(::crubit::UnsafeRelocateTag, StructWithDrop&& value);
+
   union {
     ::std::int32_t field;
   };
@@ -177,6 +175,10 @@ inline NotCppMovable::~NotCppMovable() {
       __crubit_thunk_Drop_udrop_uasync_ufn_ugolden_x0000003a_x0000003aNotCppMovable(
           *this);
 }
+inline ::async_fn::NotCppMovable::NotCppMovable(::crubit::UnsafeRelocateTag,
+                                                NotCppMovable&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void NotCppMovable::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NotCppMovable, __field0));
 }
@@ -214,6 +216,10 @@ inline ::async_fn::StructWithDrop& ::async_fn::StructWithDrop::operator=(
     StructWithDrop&& other) {
   crubit::MemSwap(*this, other);
   return *this;
+}
+inline ::async_fn::StructWithDrop::StructWithDrop(::crubit::UnsafeRelocateTag,
+                                                  StructWithDrop&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
 }
 inline void StructWithDrop::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithDrop, field));

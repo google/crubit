@@ -1483,7 +1483,8 @@ pub fn generate_adt<'tcx>(
         .generate_move_ctor_and_assignment_operator(core.clone())
         .unwrap_or_else(|err| err.explicitly_deleted);
 
-    let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
+    let relocating_ctor_snippets =
+        generate_relocating_ctor(db, &core.cc_short_name, &core.cc_fully_qualified_name);
 
     let mut member_function_names = HashSet::<String>::new();
     let impl_items_snippets = core
@@ -2960,10 +2961,18 @@ pub(crate) fn generate_fields<'tcx>(
 pub(crate) fn generate_relocating_ctor<'tcx>(
     db: &BindingsGenerator<'tcx>,
     adt_cc_name: &Ident,
+    cc_fully_qualified_name: &TokenStream,
 ) -> ApiSnippets<'tcx> {
-    let mut main_api = CcSnippet::with_include(
+    let main_api = CcSnippet::with_include(
         quote! {
-            #adt_cc_name(::crubit::UnsafeRelocateTag, #adt_cc_name&& value) {
+            #adt_cc_name(::crubit::UnsafeRelocateTag, #adt_cc_name&& value); __NEWLINE__
+        },
+        // For `::crubit::UnsafeRelocateTag`
+        db.support_header("internal/slot.h"),
+    );
+    let cc_details = CcSnippet::with_include(
+        quote! {
+            inline #cc_fully_qualified_name::#adt_cc_name(::crubit::UnsafeRelocateTag, #adt_cc_name&& value) {
                 // This is a bit tricky. Note that the lifetime of `this` has already begun,
                 // so memcpy is only being used to copy the object representation.
                 //
@@ -2975,13 +2984,12 @@ pub(crate) fn generate_relocating_ctor<'tcx>(
                 //
                 // So while `memcpy` doesn't usually work, it does here.
                 ::std::memcpy(this, &value, sizeof(value));
-            }
+            } __NEWLINE__
         },
-        db.support_header("internal/slot.h"),
+        // For `std::memcpy`
+        CcInclude::cstring(),
     );
-    // We include this for `std::memcpy`.
-    main_api.prereqs.includes.insert(CcInclude::cstring());
-    main_api.into_main_api()
+    ApiSnippets { main_api, cc_details, ..Default::default() }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

@@ -49,9 +49,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Clone::clone_from
   ::tuple_structs::CloneNoDefault& operator=(const CloneNoDefault&);
 
-  CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value);
 
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
@@ -79,9 +77,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // assignment operator.
   CopyNoDefault(const CopyNoDefault&) = default;
   CopyNoDefault& operator=(const CopyNoDefault&) = default;
-  CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::CopyNoDefault create(::std::int32_t value);
@@ -115,9 +111,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const DefaultAndCloneNoUnpin&);
 
   DefaultAndCloneNoUnpin(::crubit::UnsafeRelocateTag,
-                         DefaultAndCloneNoUnpin&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                         DefaultAndCloneNoUnpin&& value);
+
   union {
     ::std::int32_t value;
   };
@@ -143,9 +138,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   DefaultNoCopyNoClone(const DefaultNoCopyNoClone&) = delete;
   DefaultNoCopyNoClone& operator=(const DefaultNoCopyNoClone&) = delete;
   DefaultNoCopyNoClone(::crubit::UnsafeRelocateTag,
-                       DefaultNoCopyNoClone&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                       DefaultNoCopyNoClone&& value);
+
   union {
     ::std::int32_t value;
   };
@@ -172,9 +166,7 @@ DontMoveMe final {
   // `tuple_structs_golden::DontMoveMe` doesn't implement the `Clone` trait
   DontMoveMe(const DontMoveMe&) = delete;
   DontMoveMe& operator=(const DontMoveMe&) = delete;
-  DontMoveMe(::crubit::UnsafeRelocateTag, DontMoveMe&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  DontMoveMe(::crubit::UnsafeRelocateTag, DontMoveMe&& value);
 
  private:
   // Field type has been replaced with a blob of bytes: Generic types are not
@@ -205,9 +197,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructOnePrivateArg& operator=(const TupleStructOnePrivateArg&) =
       default;
   TupleStructOnePrivateArg(::crubit::UnsafeRelocateTag,
-                           TupleStructOnePrivateArg&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                           TupleStructOnePrivateArg&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructOnePrivateArg create(::std::int32_t arg);
@@ -247,9 +237,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructOnePublicArg(const TupleStructOnePublicArg&) = default;
   TupleStructOnePublicArg& operator=(const TupleStructOnePublicArg&) = default;
   TupleStructOnePublicArg(::crubit::UnsafeRelocateTag,
-                          TupleStructOnePublicArg&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                          TupleStructOnePublicArg&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructOnePublicArg create(::std::int32_t arg);
@@ -291,9 +279,7 @@ struct
       const TupleStructOnePublicArgOnePrivateArg&) = default;
   TupleStructOnePublicArgOnePrivateArg(
       ::crubit::UnsafeRelocateTag,
-      TupleStructOnePublicArgOnePrivateArg&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+      TupleStructOnePublicArgOnePrivateArg&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructOnePublicArgOnePrivateArg create(
@@ -335,9 +321,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructTwoPrivateArgs& operator=(const TupleStructTwoPrivateArgs&) =
       default;
   TupleStructTwoPrivateArgs(::crubit::UnsafeRelocateTag,
-                            TupleStructTwoPrivateArgs&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                            TupleStructTwoPrivateArgs&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructTwoPrivateArgs create(
@@ -385,9 +369,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructTwoPublicArgs& operator=(const TupleStructTwoPublicArgs&) =
       default;
   TupleStructTwoPublicArgs(::crubit::UnsafeRelocateTag,
-                           TupleStructTwoPublicArgs&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                           TupleStructTwoPublicArgs&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructTwoPublicArgs create(
@@ -434,9 +416,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructWithCloneNoDefault& operator=(
       const TupleStructWithCloneNoDefault&) = delete;
   TupleStructWithCloneNoDefault(::crubit::UnsafeRelocateTag,
-                                TupleStructWithCloneNoDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                                TupleStructWithCloneNoDefault&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructWithCloneNoDefault create(
@@ -479,9 +459,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructWithCppImmovableType& operator=(
       const TupleStructWithCppImmovableType&) = delete;
   TupleStructWithCppImmovableType(::crubit::UnsafeRelocateTag,
-                                  TupleStructWithCppImmovableType&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                                  TupleStructWithCppImmovableType&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructWithCppImmovableType create(
@@ -534,9 +512,7 @@ struct
       const TupleStructWithDefaultAndCloneNoUnpin&) = delete;
   TupleStructWithDefaultAndCloneNoUnpin(
       ::crubit::UnsafeRelocateTag,
-      TupleStructWithDefaultAndCloneNoUnpin&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+      TupleStructWithDefaultAndCloneNoUnpin&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin create();
@@ -580,10 +556,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructWithDefaultNoCopyNoClone& operator=(
       const TupleStructWithDefaultNoCopyNoClone&) = delete;
   TupleStructWithDefaultNoCopyNoClone(
-      ::crubit::UnsafeRelocateTag,
-      TupleStructWithDefaultNoCopyNoClone&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+      ::crubit::UnsafeRelocateTag, TupleStructWithDefaultNoCopyNoClone&& value);
+
   union {
     ::tuple_structs::DefaultNoCopyNoClone __field0;
   };
@@ -615,9 +589,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructWithNoDefault(const TupleStructWithNoDefault&) = delete;
   TupleStructWithNoDefault& operator=(const TupleStructWithNoDefault&) = delete;
   TupleStructWithNoDefault(::crubit::UnsafeRelocateTag,
-                           TupleStructWithNoDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                           TupleStructWithNoDefault&& value);
+
   union {
     ::tuple_structs::CopyNoDefault __field0;
   };
@@ -648,9 +621,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructWithNonExhaustiveCtor& operator=(
       const TupleStructWithNonExhaustiveCtor&) = default;
   TupleStructWithNonExhaustiveCtor(::crubit::UnsafeRelocateTag,
-                                   TupleStructWithNonExhaustiveCtor&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                                   TupleStructWithNonExhaustiveCtor&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructWithNonExhaustiveCtor create(
@@ -685,9 +656,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(Tuple&&) = default;
   Tuple& operator=(Tuple&&) = default;
 
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
   Tuple(std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int32_t, ::std::int32_t>() && noexcept;
@@ -724,9 +693,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   TupleStructWithTupleFieldType& operator=(
       const TupleStructWithTupleFieldType&) = default;
   TupleStructWithTupleFieldType(::crubit::UnsafeRelocateTag,
-                                TupleStructWithTupleFieldType&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                                TupleStructWithTupleFieldType&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructWithTupleFieldType create(
@@ -801,6 +768,10 @@ operator=(const CloneNoDefault& other) {
   }
   return *this;
 }
+inline ::tuple_structs::CloneNoDefault::CloneNoDefault(
+    ::crubit::UnsafeRelocateTag, CloneNoDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void CloneNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CloneNoDefault, value));
 }
@@ -819,6 +790,11 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::tuple_structs::CopyNoDefault>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::tuple_structs::CopyNoDefault>);
+inline ::tuple_structs::CopyNoDefault::CopyNoDefault(
+    ::crubit::UnsafeRelocateTag, CopyNoDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::CopyNoDefault* __ret_ptr);
@@ -881,6 +857,10 @@ inline ::tuple_structs::DefaultAndCloneNoUnpin& ::tuple_structs::
   }
   return *this;
 }
+inline ::tuple_structs::DefaultAndCloneNoUnpin::DefaultAndCloneNoUnpin(
+    ::crubit::UnsafeRelocateTag, DefaultAndCloneNoUnpin&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void DefaultAndCloneNoUnpin::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(DefaultAndCloneNoUnpin, value));
 }
@@ -905,6 +885,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::DefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::DefaultNoCopyNoClone>);
+inline ::tuple_structs::DefaultNoCopyNoClone::DefaultNoCopyNoClone(
+    ::crubit::UnsafeRelocateTag, DefaultNoCopyNoClone&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void DefaultNoCopyNoClone::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(DefaultNoCopyNoClone, value));
 }
@@ -924,6 +908,10 @@ inline DontMoveMe::~DontMoveMe() {
       __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aDontMoveMe(
           *this);
 }
+inline ::tuple_structs::DontMoveMe::DontMoveMe(::crubit::UnsafeRelocateTag,
+                                               DontMoveMe&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void DontMoveMe::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(DontMoveMe, value));
 }
@@ -942,6 +930,11 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::tuple_structs::TupleStructOnePrivateArg>);
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructOnePrivateArg>);
+inline ::tuple_structs::TupleStructOnePrivateArg::TupleStructOnePrivateArg(
+    ::crubit::UnsafeRelocateTag, TupleStructOnePrivateArg&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::TupleStructOnePrivateArg* __ret_ptr);
@@ -981,6 +974,11 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::tuple_structs::TupleStructOnePublicArg>);
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructOnePublicArg>);
+inline ::tuple_structs::TupleStructOnePublicArg::TupleStructOnePublicArg(
+    ::crubit::UnsafeRelocateTag, TupleStructOnePublicArg&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::TupleStructOnePublicArg* __ret_ptr);
@@ -1021,6 +1019,13 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::tuple_structs::TupleStructOnePublicArgOnePrivateArg>);
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructOnePublicArgOnePrivateArg>);
+inline ::tuple_structs::TupleStructOnePublicArgOnePrivateArg::
+    TupleStructOnePublicArgOnePrivateArg(
+        ::crubit::UnsafeRelocateTag,
+        TupleStructOnePublicArgOnePrivateArg&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
@@ -1066,6 +1071,11 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::tuple_structs::TupleStructTwoPrivateArgs>);
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructTwoPrivateArgs>);
+inline ::tuple_structs::TupleStructTwoPrivateArgs::TupleStructTwoPrivateArgs(
+    ::crubit::UnsafeRelocateTag, TupleStructTwoPrivateArgs&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
@@ -1118,6 +1128,11 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::tuple_structs::TupleStructTwoPublicArgs>);
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructTwoPublicArgs>);
+inline ::tuple_structs::TupleStructTwoPublicArgs::TupleStructTwoPublicArgs(
+    ::crubit::UnsafeRelocateTag, TupleStructTwoPublicArgs&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
@@ -1171,6 +1186,12 @@ inline TupleStructWithCloneNoDefault::~TupleStructWithCloneNoDefault() {
       __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCloneNoDefault(
           *this);
 }
+inline ::tuple_structs::TupleStructWithCloneNoDefault::
+    TupleStructWithCloneNoDefault(::crubit::UnsafeRelocateTag,
+                                  TupleStructWithCloneNoDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::TupleStructWithCloneNoDefault* __ret_ptr);
@@ -1213,6 +1234,12 @@ inline TupleStructWithCppImmovableType::~TupleStructWithCppImmovableType() {
       __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCppImmovableType(
           *this);
 }
+inline ::tuple_structs::TupleStructWithCppImmovableType::
+    TupleStructWithCppImmovableType(::crubit::UnsafeRelocateTag,
+                                    TupleStructWithCppImmovableType&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
@@ -1265,6 +1292,13 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin>);
+inline ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin::
+    TupleStructWithDefaultAndCloneNoUnpin(
+        ::crubit::UnsafeRelocateTag,
+        TupleStructWithDefaultAndCloneNoUnpin&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin* __ret_ptr);
@@ -1302,6 +1336,12 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithDefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::TupleStructWithDefaultNoCopyNoClone>);
+inline ::tuple_structs::TupleStructWithDefaultNoCopyNoClone::
+    TupleStructWithDefaultNoCopyNoClone(
+        ::crubit::UnsafeRelocateTag,
+        TupleStructWithDefaultNoCopyNoClone&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void
 TupleStructWithDefaultNoCopyNoClone::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TupleStructWithDefaultNoCopyNoClone, __field0));
@@ -1317,6 +1357,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::TupleStructWithNoDefault>);
+inline ::tuple_structs::TupleStructWithNoDefault::TupleStructWithNoDefault(
+    ::crubit::UnsafeRelocateTag, TupleStructWithNoDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void TupleStructWithNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TupleStructWithNoDefault, __field0));
 }
@@ -1347,6 +1391,12 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::tuple_structs::TupleStructWithNonExhaustiveCtor>);
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructWithNonExhaustiveCtor>);
+inline ::tuple_structs::TupleStructWithNonExhaustiveCtor::
+    TupleStructWithNonExhaustiveCtor(::crubit::UnsafeRelocateTag,
+                                     TupleStructWithNonExhaustiveCtor&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
@@ -1394,6 +1444,12 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::tuple_structs::TupleStructWithTupleFieldType>);
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructWithTupleFieldType>);
+inline ::tuple_structs::TupleStructWithTupleFieldType::
+    TupleStructWithTupleFieldType(::crubit::UnsafeRelocateTag,
+                                  TupleStructWithTupleFieldType&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     void**, ::tuple_structs::TupleStructWithTupleFieldType* __ret_ptr);
@@ -1456,6 +1512,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
+inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
+    ::crubit::UnsafeRelocateTag, Tuple&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
     std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept {
   std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 0),

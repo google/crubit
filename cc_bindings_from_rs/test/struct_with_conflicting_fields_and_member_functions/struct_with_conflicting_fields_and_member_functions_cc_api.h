@@ -41,9 +41,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // implement the `Clone` trait
   X(const X&) = delete;
   X& operator=(const X&) = delete;
-  X(::crubit::UnsafeRelocateTag, X&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  X(::crubit::UnsafeRelocateTag, X&& value);
 
   ::std::int32_t a() const;
 
@@ -76,6 +74,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::struct_with_conflicting_fields_and_member_functions::X>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::struct_with_conflicting_fields_and_member_functions::X>);
+inline ::struct_with_conflicting_fields_and_member_functions::X::X(
+    ::crubit::UnsafeRelocateTag, X&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_a(
     ::struct_with_conflicting_fields_and_member_functions::X const&);

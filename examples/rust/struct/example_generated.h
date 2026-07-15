@@ -41,9 +41,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Struct") alignas(4)
   // Clone::clone_from
   ::example_crate::Struct& operator=(const Struct&);
 
-  Struct(::crubit::UnsafeRelocateTag, Struct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Struct(::crubit::UnsafeRelocateTag, Struct&& value);
+
   union {
     ::std::int32_t a;
   };
@@ -95,6 +94,10 @@ inline ::example_crate::Struct& ::example_crate::Struct::operator=(
             *this, other);
   }
   return *this;
+}
+inline ::example_crate::Struct::Struct(::crubit::UnsafeRelocateTag,
+                                       Struct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
 }
 inline void Struct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Struct, a));

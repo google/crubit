@@ -44,9 +44,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
   // assignment operator.
   ArrayStruct(const ArrayStruct&) = default;
   ArrayStruct& operator=(const ArrayStruct&) = default;
-  ArrayStruct(::crubit::UnsafeRelocateTag, ArrayStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  ArrayStruct(::crubit::UnsafeRelocateTag, ArrayStruct&& value);
+
   union {
     ::std::array<::std::int32_t, 2> array;
   };
@@ -72,9 +71,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
   // `arrays_golden::HasDrop` doesn't implement the `Clone` trait
   HasDrop(const HasDrop&) = delete;
   HasDrop& operator=(const HasDrop&) = delete;
-  HasDrop(::crubit::UnsafeRelocateTag, HasDrop&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  HasDrop(::crubit::UnsafeRelocateTag, HasDrop&& value);
 
   static ::arrays::HasDrop new_(::std::int32_t x);
 
@@ -102,9 +99,8 @@ HasDropAndDefault final {
   // `arrays_golden::HasDropAndDefault` doesn't implement the `Clone` trait
   HasDropAndDefault(const HasDropAndDefault&) = delete;
   HasDropAndDefault& operator=(const HasDropAndDefault&) = delete;
-  HasDropAndDefault(::crubit::UnsafeRelocateTag, HasDropAndDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  HasDropAndDefault(::crubit::UnsafeRelocateTag, HasDropAndDefault&& value);
+
   union {
     ::std::int32_t x;
   };
@@ -195,9 +191,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(Tuple&&) = default;
   Tuple& operator=(Tuple&&) = default;
 
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
   Tuple(std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int32_t, ::std::int32_t>() && noexcept;
@@ -230,6 +224,10 @@ static_assert(::std::is_trivially_move_constructible_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_copy_constructible_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_copy_assignable_v<::arrays::ArrayStruct>);
+inline ::arrays::ArrayStruct::ArrayStruct(::crubit::UnsafeRelocateTag,
+                                          ArrayStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void ArrayStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ArrayStruct, array));
 }
@@ -249,6 +247,11 @@ inline HasDrop::~HasDrop() {
       __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDrop(
           *this);
 }
+inline ::arrays::HasDrop::HasDrop(::crubit::UnsafeRelocateTag,
+                                  HasDrop&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::arrays::HasDrop* __ret_ptr);
@@ -296,6 +299,10 @@ inline ::arrays::HasDropAndDefault& ::arrays::HasDropAndDefault::operator=(
     HasDropAndDefault&& other) {
   crubit::MemSwap(*this, other);
   return *this;
+}
+inline ::arrays::HasDropAndDefault::HasDropAndDefault(
+    ::crubit::UnsafeRelocateTag, HasDropAndDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
 }
 inline void HasDropAndDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasDropAndDefault, x));
@@ -505,6 +512,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
+inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
+    ::crubit::UnsafeRelocateTag, Tuple&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
     std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept {
   std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 0),

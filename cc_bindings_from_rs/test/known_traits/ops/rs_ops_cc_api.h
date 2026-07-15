@@ -43,9 +43,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyInt") alignas(4)
   // assignment operator.
   MyInt(const MyInt&) = default;
   MyInt& operator=(const MyInt&) = default;
-  MyInt(::crubit::UnsafeRelocateTag, MyInt&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyInt(::crubit::UnsafeRelocateTag, MyInt&& value);
 
   static ::rs_ops::MyInt new_(::std::int32_t value);
 
@@ -134,6 +132,10 @@ static_assert(::std::is_trivially_move_constructible_v<::rs_ops::MyInt>);
 static_assert(::std::is_trivially_move_assignable_v<::rs_ops::MyInt>);
 static_assert(::std::is_trivially_copy_constructible_v<::rs_ops::MyInt>);
 static_assert(::std::is_trivially_copy_assignable_v<::rs_ops::MyInt>);
+inline ::rs_ops::MyInt::MyInt(::crubit::UnsafeRelocateTag, MyInt&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, ::rs_ops::MyInt* __ret_ptr);
 }

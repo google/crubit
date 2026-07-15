@@ -45,9 +45,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct") alignas(8)
   // `no_std_golden::NoStdStruct` doesn't implement the `Clone` trait
   NoStdStruct(const NoStdStruct&) = delete;
   NoStdStruct& operator=(const NoStdStruct&) = delete;
-  NoStdStruct(::crubit::UnsafeRelocateTag, NoStdStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  NoStdStruct(::crubit::UnsafeRelocateTag, NoStdStruct&& value);
 
   static ::no_std::NoStdStruct new_(::std::int32_t x, float y);
 
@@ -77,6 +75,11 @@ inline NoStdStruct::~NoStdStruct() {
       __crubit_thunk_Drop_udrop_uno_ustd_ugolden_x0000003a_x0000003aNoStdStruct(
           *this);
 }
+inline ::no_std::NoStdStruct::NoStdStruct(::crubit::UnsafeRelocateTag,
+                                          NoStdStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, float,
                                    ::no_std::NoStdStruct* __ret_ptr);

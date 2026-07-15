@@ -52,9 +52,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ::traits::AssociatedTypeStruct& operator=(const AssociatedTypeStruct&);
 
   AssociatedTypeStruct(::crubit::UnsafeRelocateTag,
-                       AssociatedTypeStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                       AssociatedTypeStruct&& value);
 
  private:
   union {
@@ -95,9 +93,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
   // `traits_golden::LifetimeStruct` doesn't implement the `Clone` trait
   LifetimeStruct(const LifetimeStruct&) = delete;
   LifetimeStruct& operator=(const LifetimeStruct&) = delete;
-  LifetimeStruct(::crubit::UnsafeRelocateTag, LifetimeStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  LifetimeStruct(::crubit::UnsafeRelocateTag, LifetimeStruct&& value);
 
  private:
   union {
@@ -129,9 +125,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
   // assignment operator.
   MyStruct(const MyStruct&) = default;
   MyStruct& operator=(const MyStruct&) = default;
-  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
 
   static ::traits::MyStruct new_(::std::int32_t x);
 
@@ -159,9 +153,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2") alignas(4)
   // assignment operator.
   MyStruct2(const MyStruct2&) = default;
   MyStruct2& operator=(const MyStruct2&) = default;
-  MyStruct2(::crubit::UnsafeRelocateTag, MyStruct2&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyStruct2(::crubit::UnsafeRelocateTag, MyStruct2&& value);
 
  private:
   union {
@@ -196,9 +188,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructWithAssociatedConst& operator=(const StructWithAssociatedConst&) =
       default;
   StructWithAssociatedConst(::crubit::UnsafeRelocateTag,
-                            StructWithAssociatedConst&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                            StructWithAssociatedConst&& value);
+
   union {
     ::std::int32_t x;
   };
@@ -231,9 +222,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(Tuple&&) = default;
   Tuple& operator=(Tuple&&) = default;
 
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
   Tuple(std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int32_t, ::std::int32_t>() && noexcept;
@@ -260,9 +249,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
   // assignment operator.
   Foo(const Foo&) = default;
   Foo& operator=(const Foo&) = default;
-  Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Foo(::crubit::UnsafeRelocateTag, Foo&& value);
 
   static ::traits::Foo new_(::std::int32_t x, ::std::int32_t y);
 
@@ -426,6 +413,10 @@ operator=(const AssociatedTypeStruct& other) {
   }
   return *this;
 }
+inline ::traits::AssociatedTypeStruct::AssociatedTypeStruct(
+    ::crubit::UnsafeRelocateTag, AssociatedTypeStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void AssociatedTypeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(AssociatedTypeStruct, a));
   static_assert(24 == offsetof(AssociatedTypeStruct, b));
@@ -451,6 +442,10 @@ static_assert(::std::is_trivially_move_constructible_v<::traits::Foo>);
 static_assert(::std::is_trivially_move_assignable_v<::traits::Foo>);
 static_assert(::std::is_trivially_copy_constructible_v<::traits::Foo>);
 static_assert(::std::is_trivially_copy_assignable_v<::traits::Foo>);
+inline ::traits::Foo::Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, ::std::int32_t,
                                    ::traits::Foo* __ret_ptr);
@@ -474,6 +469,10 @@ static_assert(::std::is_trivially_destructible_v<LifetimeStruct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::traits::LifetimeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::traits::LifetimeStruct>);
+inline ::traits::LifetimeStruct::LifetimeStruct(::crubit::UnsafeRelocateTag,
+                                                LifetimeStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void LifetimeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LifetimeStruct, x));
 }
@@ -498,6 +497,11 @@ static_assert(::std::is_trivially_move_constructible_v<::traits::MyStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::traits::MyStruct>);
 static_assert(::std::is_trivially_copy_constructible_v<::traits::MyStruct>);
 static_assert(::std::is_trivially_copy_assignable_v<::traits::MyStruct>);
+inline ::traits::MyStruct::MyStruct(::crubit::UnsafeRelocateTag,
+                                    MyStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::traits::MyStruct* __ret_ptr);
@@ -532,6 +536,10 @@ static_assert(::std::is_trivially_move_constructible_v<::traits::MyStruct2>);
 static_assert(::std::is_trivially_move_assignable_v<::traits::MyStruct2>);
 static_assert(::std::is_trivially_copy_constructible_v<::traits::MyStruct2>);
 static_assert(::std::is_trivially_copy_assignable_v<::traits::MyStruct2>);
+inline ::traits::MyStruct2::MyStruct2(::crubit::UnsafeRelocateTag,
+                                      MyStruct2&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void MyStruct2::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct2, y));
 }
@@ -569,6 +577,10 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::traits::StructWithAssociatedConst>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::traits::StructWithAssociatedConst>);
+inline ::traits::StructWithAssociatedConst::StructWithAssociatedConst(
+    ::crubit::UnsafeRelocateTag, StructWithAssociatedConst&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void StructWithAssociatedConst::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithAssociatedConst, x));
 }
@@ -594,6 +606,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
+inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
+    ::crubit::UnsafeRelocateTag, Tuple&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
     std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept {
   std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 0),

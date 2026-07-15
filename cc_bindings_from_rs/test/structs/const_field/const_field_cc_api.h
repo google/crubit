@@ -56,9 +56,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Result(Result&&) = default;
   Result& operator=(Result&&) = default;
 
-  Result(::crubit::UnsafeRelocateTag, Result&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Result(::crubit::UnsafeRelocateTag, Result&& value);
 
  public:
   using base_type = rs_std::ResultBase<
@@ -67,31 +65,21 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   template <typename U>
     requires(rs_std::ResultForwardConstructible<Result,
                                                 ::struct_with_const_field, U>)
-  explicit constexpr Result(U&& ok) noexcept
-      : base_type(::std::forward<U>(ok)) {}
+  explicit constexpr Result(U&& ok) noexcept;
   template <typename U>
     requires(rs_std::ResultForwardConstructible<Result,
                                                 ::struct_with_const_field, U>)
-  constexpr Result& operator=(U&& ok) noexcept {
-    base_type::operator=(::std::forward<U>(ok));
-    return *this;
-  }
+  constexpr Result& operator=(U&& ok) noexcept;
   template <typename F>
     requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
-  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept
-      : base_type(::std::move(err)) {}
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
   template <typename F>
     requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
-  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
-    base_type::operator=(::std::move(err));
-    return *this;
-  }
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
   template <typename... Args>
-  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
   template <typename... Args>
-  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept
-      : base_type(u, ::std::forward<Args>(args)...) {}
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
   ~Result() noexcept = default;
 
  private:
@@ -168,6 +156,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               rs_std::Result<::struct_with_const_field, ::std::uint8_t>>);
 static_assert(::std::is_trivially_move_assignable_v<
               rs_std::Result<::struct_with_const_field, ::std::uint8_t>>);
+inline rs_std::Result<::struct_with_const_field, ::std::uint8_t>::Result(
+    ::crubit::UnsafeRelocateTag, Result&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<::struct_with_const_field, ::std::uint8_t>>);
 inline constexpr ::std::uint8_t rs_std::Result<
@@ -187,6 +179,47 @@ rs_std::Result<::struct_with_const_field, ::std::uint8_t>::set_tag(
     __storage[0 + i] = __bytes[i];
   }
 }
+
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::struct_with_const_field, ::std::uint8_t>,
+           ::struct_with_const_field, U>)
+inline constexpr rs_std::Result<::struct_with_const_field,
+                                ::std::uint8_t>::Result(U&& ok) noexcept
+    : base_type(::std::forward<U>(ok)) {}
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::struct_with_const_field, ::std::uint8_t>,
+           ::struct_with_const_field, U>)
+inline constexpr rs_std::Result<::struct_with_const_field, ::std::uint8_t>&
+rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator=(
+    U&& ok) noexcept {
+  base_type::operator=(::std::forward<U>(ok));
+  return *this;
+}
+template <typename F>
+  requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
+inline constexpr rs_std::Result<::struct_with_const_field, ::std::uint8_t>::
+    Result(rs_std::unexpected<F>&& err) noexcept
+    : base_type(::std::move(err)) {}
+template <typename F>
+  requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
+inline constexpr rs_std::Result<::struct_with_const_field, ::std::uint8_t>&
+rs_std::Result<::struct_with_const_field, ::std::uint8_t>::operator=(
+    rs_std::unexpected<F>&& err) noexcept {
+  base_type::operator=(::std::move(err));
+  return *this;
+}
+template <typename... Args>
+inline constexpr rs_std::Result<::struct_with_const_field,
+                                ::std::uint8_t>::Result(::std::in_place_t ip,
+                                                        Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+template <typename... Args>
+inline constexpr rs_std::Result<::struct_with_const_field,
+                                ::std::uint8_t>::Result(rs_std::unexpect_t u,
+                                                        Args&&... args) noexcept
+    : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif
 

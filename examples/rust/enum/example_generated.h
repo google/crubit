@@ -45,9 +45,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
   // assignment operator.
   Color(const Color&) = default;
   Color& operator=(const Color&) = default;
-  Color(::crubit::UnsafeRelocateTag, Color&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Color(::crubit::UnsafeRelocateTag, Color&& value);
 
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
@@ -98,6 +96,10 @@ static_assert(::std::is_trivially_move_constructible_v<::example_crate::Color>);
 static_assert(::std::is_trivially_move_assignable_v<::example_crate::Color>);
 static_assert(::std::is_trivially_copy_constructible_v<::example_crate::Color>);
 static_assert(::std::is_trivially_copy_assignable_v<::example_crate::Color>);
+inline ::example_crate::Color::Color(::crubit::UnsafeRelocateTag,
+                                     Color&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void Color::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Color, __opaque_blob_of_bytes));
 }

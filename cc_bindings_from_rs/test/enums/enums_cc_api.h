@@ -60,9 +60,7 @@ QrError final {
   // assignment operator.
   QrError(const QrError&) = default;
   QrError& operator=(const QrError&) = default;
-  QrError(::crubit::UnsafeRelocateTag, QrError&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  QrError(::crubit::UnsafeRelocateTag, QrError&& value);
 
   bool is_data_too_long() const;
 
@@ -126,9 +124,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // assignment operator.
   StructuredQrError(const StructuredQrError&) = default;
   StructuredQrError& operator=(const StructuredQrError&) = default;
-  StructuredQrError(::crubit::UnsafeRelocateTag, StructuredQrError&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  StructuredQrError(::crubit::UnsafeRelocateTag, StructuredQrError&& value);
 
   bool operator==(::enums::qr_error::StructuredQrError const& other) const;
 
@@ -172,9 +168,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `enums_golden::repr_128::ReprI128` doesn't implement the `Clone` trait
   ReprI128(const ReprI128&) = delete;
   ReprI128& operator=(const ReprI128&) = delete;
-  ReprI128(::crubit::UnsafeRelocateTag, ReprI128&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  ReprI128(::crubit::UnsafeRelocateTag, ReprI128&& value);
 
   bool is_min_i128() const;
 
@@ -213,9 +207,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `enums_golden::repr_128::ReprU128` doesn't implement the `Clone` trait
   ReprU128(const ReprU128&) = delete;
   ReprU128& operator=(const ReprU128&) = delete;
-  ReprU128(::crubit::UnsafeRelocateTag, ReprU128&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  ReprU128(::crubit::UnsafeRelocateTag, ReprU128&& value);
 
   bool is_max_u128() const;
 
@@ -281,9 +273,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   // `enums_golden::repr_c::MyEnum` doesn't implement the `Clone` trait
   MyEnum(const MyEnum&) = delete;
   MyEnum& operator=(const MyEnum&) = delete;
-  MyEnum(::crubit::UnsafeRelocateTag, MyEnum&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyEnum(::crubit::UnsafeRelocateTag, MyEnum&& value);
+
   struct alignas(0) __crubit_E_struct {
    public:
     ::rs::alloc::string::String __field0;
@@ -392,9 +383,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ReprCWithExtremeDiscriminants& operator=(
       const ReprCWithExtremeDiscriminants&) = delete;
   ReprCWithExtremeDiscriminants(::crubit::UnsafeRelocateTag,
-                                ReprCWithExtremeDiscriminants&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                                ReprCWithExtremeDiscriminants&& value);
 
   bool is_minus_one() const;
 
@@ -456,9 +445,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ReprCWithSingleNoPayloadVariant& operator=(
       const ReprCWithSingleNoPayloadVariant&) = delete;
   ReprCWithSingleNoPayloadVariant(::crubit::UnsafeRelocateTag,
-                                  ReprCWithSingleNoPayloadVariant&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                                  ReprCWithSingleNoPayloadVariant&& value);
 
   bool is_single_variant() const;
 
@@ -513,9 +500,8 @@ CloneActiveVariant final {
   ::enums::repr_c_clone_active_variant::CloneActiveVariant& operator=(
       const CloneActiveVariant&);
 
-  CloneActiveVariant(::crubit::UnsafeRelocateTag, CloneActiveVariant&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CloneActiveVariant(::crubit::UnsafeRelocateTag, CloneActiveVariant&& value);
+
   struct alignas(0) __crubit_A_struct {
    public:
     ::std::int32_t __field0;
@@ -585,9 +571,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Clone::clone_from
   ::enums::repr_c_clone_counter::CloneCount& operator=(const CloneCount&);
 
-  CloneCount(::crubit::UnsafeRelocateTag, CloneCount&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CloneCount(::crubit::UnsafeRelocateTag, CloneCount&& value);
+
   struct alignas(0) __crubit_A_struct {
    public:
     ::std::int32_t* p;
@@ -645,9 +630,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `enums_golden::repr_c_drop::DropMe` doesn't implement the `Clone` trait
   DropMe(const DropMe&) = delete;
   DropMe& operator=(const DropMe&) = delete;
-  DropMe(::crubit::UnsafeRelocateTag, DropMe&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  DropMe(::crubit::UnsafeRelocateTag, DropMe&& value);
+
   struct alignas(0) __crubit_A_struct {
    public:
     ::std::int32_t __field0;
@@ -716,9 +700,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   IntReprEnumWithNoPayload(const IntReprEnumWithNoPayload&) = delete;
   IntReprEnumWithNoPayload& operator=(const IntReprEnumWithNoPayload&) = delete;
   IntReprEnumWithNoPayload(::crubit::UnsafeRelocateTag,
-                           IntReprEnumWithNoPayload&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                           IntReprEnumWithNoPayload&& value);
 
   bool is_no_payload1() const;
 
@@ -767,9 +749,7 @@ struct
   IntReprWithSingleNoPayloadVariant& operator=(
       const IntReprWithSingleNoPayloadVariant&) = delete;
   IntReprWithSingleNoPayloadVariant(::crubit::UnsafeRelocateTag,
-                                    IntReprWithSingleNoPayloadVariant&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                                    IntReprWithSingleNoPayloadVariant&& value);
 
   bool is_single_variant() const;
 
@@ -809,9 +789,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   NegReprIntEnum(const NegReprIntEnum&) = delete;
   NegReprIntEnum& operator=(const NegReprIntEnum&) = delete;
-  NegReprIntEnum(::crubit::UnsafeRelocateTag, NegReprIntEnum&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  NegReprIntEnum(::crubit::UnsafeRelocateTag, NegReprIntEnum&& value);
 
   bool is_minus_one() const;
 
@@ -869,9 +847,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `enums_golden::repr_rust::RustReprEnum` doesn't implement the `Clone` trait
   RustReprEnum(const RustReprEnum&) = delete;
   RustReprEnum& operator=(const RustReprEnum&) = delete;
-  RustReprEnum(::crubit::UnsafeRelocateTag, RustReprEnum&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  RustReprEnum(::crubit::UnsafeRelocateTag, RustReprEnum&& value);
 
   ::std::int32_t get_variant_number() const;
 
@@ -937,9 +913,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       const RustReprWithNamingConflictBetweenCtorsAndMethods&) = delete;
   RustReprWithNamingConflictBetweenCtorsAndMethods(
       ::crubit::UnsafeRelocateTag,
-      RustReprWithNamingConflictBetweenCtorsAndMethods&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+      RustReprWithNamingConflictBetweenCtorsAndMethods&& value);
 
   //  Presence of this function tests the scenario where `MakeNoPayloadVariant`
   //  is a name of:
@@ -1007,9 +981,7 @@ RustReprWithSingleTuplePayloadVariant final {
       const RustReprWithSingleTuplePayloadVariant&) = delete;
   RustReprWithSingleTuplePayloadVariant(
       ::crubit::UnsafeRelocateTag,
-      RustReprWithSingleTuplePayloadVariant&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+      RustReprWithSingleTuplePayloadVariant&& value);
 
   ::std::int32_t get_single_item_from_tuple_payload() const;
 
@@ -1125,6 +1097,11 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::enums::qr_error::QrError>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::enums::qr_error::QrError>);
+inline ::enums::qr_error::QrError::QrError(::crubit::UnsafeRelocateTag,
+                                           QrError&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_is_udata_utoo_ulong(
     ::enums::qr_error::QrError const&);
@@ -1280,6 +1257,11 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::enums::qr_error::StructuredQrError>);
 static_assert(::std::is_trivially_copy_assignable_v<
               ::enums::qr_error::StructuredQrError>);
+inline ::enums::qr_error::StructuredQrError::StructuredQrError(
+    ::crubit::UnsafeRelocateTag, StructuredQrError&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError(
@@ -1329,6 +1311,11 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::enums::repr_128::ReprI128>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::enums::repr_128::ReprI128>);
+inline ::enums::repr_128::ReprI128::ReprI128(::crubit::UnsafeRelocateTag,
+                                             ReprI128&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_is_umin_ui128(
     ::enums::repr_128::ReprI128 const&);
@@ -1372,6 +1359,11 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::enums::repr_128::ReprU128>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::enums::repr_128::ReprU128>);
+inline ::enums::repr_128::ReprU128::ReprU128(::crubit::UnsafeRelocateTag,
+                                             ReprU128&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_is_umax_uu128(
     ::enums::repr_128::ReprU128 const&);
@@ -1462,6 +1454,10 @@ inline ::enums::repr_c::MyEnum& ::enums::repr_c::MyEnum::operator=(
   crubit::MemSwap(*this, other);
   return *this;
 }
+inline ::enums::repr_c::MyEnum::MyEnum(::crubit::UnsafeRelocateTag,
+                                       MyEnum&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void MyEnum::__crubit_field_offset_assertions() {
   static_assert(8 == offsetof(MyEnum, E));
   static_assert(8 == offsetof(MyEnum, A));
@@ -1515,6 +1511,12 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::enums::repr_c::ReprCWithExtremeDiscriminants>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_c::ReprCWithExtremeDiscriminants>);
+inline ::enums::repr_c::ReprCWithExtremeDiscriminants::
+    ReprCWithExtremeDiscriminants(::crubit::UnsafeRelocateTag,
+                                  ReprCWithExtremeDiscriminants&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_is_uminus_uone(
     ::enums::repr_c::ReprCWithExtremeDiscriminants const&);
@@ -1569,6 +1571,12 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::enums::repr_c::ReprCWithSingleNoPayloadVariant>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_c::ReprCWithSingleNoPayloadVariant>);
+inline ::enums::repr_c::ReprCWithSingleNoPayloadVariant::
+    ReprCWithSingleNoPayloadVariant(::crubit::UnsafeRelocateTag,
+                                    ReprCWithSingleNoPayloadVariant&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_is_usingle_uvariant(
     ::enums::repr_c::ReprCWithSingleNoPayloadVariant const&);
@@ -1674,6 +1682,11 @@ inline ::enums::repr_c_clone_active_variant::CloneActiveVariant& ::enums::
   }
   return *this;
 }
+inline ::enums::repr_c_clone_active_variant::CloneActiveVariant::
+    CloneActiveVariant(::crubit::UnsafeRelocateTag,
+                       CloneActiveVariant&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void CloneActiveVariant::__crubit_field_offset_assertions() {
   static_assert(4 == offsetof(CloneActiveVariant, A));
   static_assert(4 == offsetof(CloneActiveVariant, B));
@@ -1761,6 +1774,10 @@ inline ::enums::repr_c_clone_counter::CloneCount& ::enums::
   }
   return *this;
 }
+inline ::enums::repr_c_clone_counter::CloneCount::CloneCount(
+    ::crubit::UnsafeRelocateTag, CloneCount&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void CloneCount::__crubit_field_offset_assertions() {
   static_assert(8 == offsetof(CloneCount, A));
   static_assert(0 == offsetof(CloneCount::__crubit_A_struct, p));
@@ -1829,6 +1846,10 @@ inline ::enums::repr_c_drop::DropMe& ::enums::repr_c_drop::DropMe::operator=(
   crubit::MemSwap(*this, other);
   return *this;
 }
+inline ::enums::repr_c_drop::DropMe::DropMe(::crubit::UnsafeRelocateTag,
+                                            DropMe&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void DropMe::__crubit_field_offset_assertions() {
   static_assert(8 == offsetof(DropMe, A));
   static_assert(8 == offsetof(DropMe, B));
@@ -1864,6 +1885,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::enums::repr_int::IntReprEnumWithNoPayload>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_int::IntReprEnumWithNoPayload>);
+inline ::enums::repr_int::IntReprEnumWithNoPayload::IntReprEnumWithNoPayload(
+    ::crubit::UnsafeRelocateTag, IntReprEnumWithNoPayload&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_is_uno_upayload1(
     ::enums::repr_int::IntReprEnumWithNoPayload const&);
@@ -1903,6 +1929,13 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::enums::repr_int::IntReprWithSingleNoPayloadVariant>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_int::IntReprWithSingleNoPayloadVariant>);
+inline ::enums::repr_int::IntReprWithSingleNoPayloadVariant::
+    IntReprWithSingleNoPayloadVariant(
+        ::crubit::UnsafeRelocateTag,
+        IntReprWithSingleNoPayloadVariant&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_is_usingle_uvariant(
     ::enums::repr_int::IntReprWithSingleNoPayloadVariant const&);
@@ -1937,6 +1970,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::enums::repr_int::NegReprIntEnum>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::enums::repr_int::NegReprIntEnum>);
+inline ::enums::repr_int::NegReprIntEnum::NegReprIntEnum(
+    ::crubit::UnsafeRelocateTag, NegReprIntEnum&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_is_uminus_uone(
     ::enums::repr_int::NegReprIntEnum const&);
@@ -2001,6 +2039,11 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::enums::repr_rust::RustReprEnum>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::enums::repr_rust::RustReprEnum>);
+inline ::enums::repr_rust::RustReprEnum::RustReprEnum(
+    ::crubit::UnsafeRelocateTag, RustReprEnum&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_get_uvariant_unumber(
     ::enums::repr_rust::RustReprEnum const&);
@@ -2045,6 +2088,13 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<
         ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods>);
+inline ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::
+    RustReprWithNamingConflictBetweenCtorsAndMethods(
+        ::crubit::UnsafeRelocateTag,
+        RustReprWithNamingConflictBetweenCtorsAndMethods&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_MakeNoPayloadVariant(
     ::enums::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods*
@@ -2151,6 +2201,13 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant>);
+inline ::enums::repr_rust::RustReprWithSingleTuplePayloadVariant::
+    RustReprWithSingleTuplePayloadVariant(
+        ::crubit::UnsafeRelocateTag,
+        RustReprWithSingleTuplePayloadVariant&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" ::std::int32_t
 __crubit_thunk_get_usingle_uitem_ufrom_utuple_upayload(

@@ -44,9 +44,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   MyStruct(const MyStruct&) = delete;
   MyStruct& operator=(const MyStruct&) = delete;
-  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
 
   static ::partial_eq::basic_test::MyStruct new_(::std::uintptr_t val);
 
@@ -82,9 +80,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Clone` trait
   MyStruct(const MyStruct&) = delete;
   MyStruct& operator=(const MyStruct&) = delete;
-  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
 
   static ::partial_eq::tuple_collision::MyStruct new_(::std::uintptr_t val);
 
@@ -127,9 +123,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   MyStruct(const MyStruct&) = delete;
   MyStruct& operator=(const MyStruct&) = delete;
-  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
 
   static ::partial_eq::usize_rhs::MyStruct new_(::std::uintptr_t val);
 
@@ -162,9 +156,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(Tuple&&) = default;
   Tuple& operator=(Tuple&&) = default;
 
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
   Tuple(std::tuple<::std::uintptr_t, bool>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uintptr_t, bool>() && noexcept;
@@ -187,6 +179,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::partial_eq::basic_test::MyStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::partial_eq::basic_test::MyStruct>);
+inline ::partial_eq::basic_test::MyStruct::MyStruct(::crubit::UnsafeRelocateTag,
+                                                    MyStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
     ::std::uintptr_t, ::partial_eq::basic_test::MyStruct* __ret_ptr);
@@ -230,6 +227,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::partial_eq::tuple_collision::MyStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::partial_eq::tuple_collision::MyStruct>);
+inline ::partial_eq::tuple_collision::MyStruct::MyStruct(
+    ::crubit::UnsafeRelocateTag, MyStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
     ::std::uintptr_t, ::partial_eq::tuple_collision::MyStruct* __ret_ptr);
@@ -274,6 +276,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::partial_eq::usize_rhs::MyStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::partial_eq::usize_rhs::MyStruct>);
+inline ::partial_eq::usize_rhs::MyStruct::MyStruct(::crubit::UnsafeRelocateTag,
+                                                   MyStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
     ::std::uintptr_t, ::partial_eq::usize_rhs::MyStruct* __ret_ptr);
@@ -321,6 +328,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::rs_std::Tuple<::std::uintptr_t, bool>>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_std::Tuple<::std::uintptr_t, bool>>);
+inline ::rs_std::Tuple<::std::uintptr_t, bool>::Tuple(
+    ::crubit::UnsafeRelocateTag, Tuple&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline rs_std::Tuple<::std::uintptr_t, bool>::Tuple(
     std::tuple<::std::uintptr_t, bool>&& tuple) noexcept {
   std::construct_at(reinterpret_cast<::std::uintptr_t*>(storage_ + 0),

@@ -44,9 +44,7 @@ AliasOfExportedStruct final {
   AliasOfExportedStruct(const AliasOfExportedStruct&) = delete;
   AliasOfExportedStruct& operator=(const AliasOfExportedStruct&) = delete;
   AliasOfExportedStruct(::crubit::UnsafeRelocateTag,
-                        AliasOfExportedStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                        AliasOfExportedStruct&& value);
 
   static ::uses::AliasOfExportedStruct create(::std::int32_t field);
 
@@ -77,9 +75,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
   // `uses_golden::Original` doesn't implement the `Clone` trait
   Original(const Original&) = delete;
   Original& operator=(const Original&) = delete;
-  Original(::crubit::UnsafeRelocateTag, Original&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Original(::crubit::UnsafeRelocateTag, Original&& value);
+
   union {
     ::std::int32_t field;
   };
@@ -110,9 +107,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
   // `uses_golden::OtherPublicName` doesn't implement the `Clone` trait
   OtherPublicName(const OtherPublicName&) = delete;
   OtherPublicName& operator=(const OtherPublicName&) = delete;
-  OtherPublicName(::crubit::UnsafeRelocateTag, OtherPublicName&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  OtherPublicName(::crubit::UnsafeRelocateTag, OtherPublicName&& value);
+
   union {
     ::std::int32_t __field0;
   };
@@ -182,6 +178,11 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::uses::AliasOfExportedStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::uses::AliasOfExportedStruct>);
+inline ::uses::AliasOfExportedStruct::AliasOfExportedStruct(
+    ::crubit::UnsafeRelocateTag, AliasOfExportedStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::std::int32_t,
                                       ::uses::AliasOfExportedStruct* __ret_ptr);
@@ -215,6 +216,10 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<Original>);
 static_assert(::std::is_trivially_move_constructible_v<::uses::Original>);
 static_assert(::std::is_trivially_move_assignable_v<::uses::Original>);
+inline ::uses::Original::Original(::crubit::UnsafeRelocateTag,
+                                  Original&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void Original::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Original, field));
 }
@@ -234,6 +239,10 @@ static_assert(::std::is_trivially_destructible_v<OtherPublicName>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::uses::OtherPublicName>);
 static_assert(::std::is_trivially_move_assignable_v<::uses::OtherPublicName>);
+inline ::uses::OtherPublicName::OtherPublicName(::crubit::UnsafeRelocateTag,
+                                                OtherPublicName&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void OtherPublicName::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OtherPublicName, __field0));
 }

@@ -39,9 +39,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Bar") alignas(4)
   // `uses_reexport_golden::Bar` doesn't implement the `Clone` trait
   Bar(const Bar&) = delete;
   Bar& operator=(const Bar&) = delete;
-  Bar(::crubit::UnsafeRelocateTag, Bar&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Bar(::crubit::UnsafeRelocateTag, Bar&& value);
 
  private:
   union {
@@ -66,9 +64,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Foo") alignas(4)
   // `uses_reexport_golden::Foo` doesn't implement the `Clone` trait
   Foo(const Foo&) = delete;
   Foo& operator=(const Foo&) = delete;
-  Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Foo(::crubit::UnsafeRelocateTag, Foo&& value);
 
   static ::uses_reexport::Foo create();
 
@@ -106,9 +102,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G") alignas(4)
   // `uses_reexport_golden::G` doesn't implement the `Clone` trait
   G(const G&) = delete;
   G& operator=(const G&) = delete;
-  G(::crubit::UnsafeRelocateTag, G&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  G(::crubit::UnsafeRelocateTag, G&& value);
+
   union {
     ::std::int32_t field;
   };
@@ -135,9 +130,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX") alignas(4)
   // `uses_reexport_golden::InnerX` doesn't implement the `Clone` trait
   InnerX(const InnerX&) = delete;
   InnerX& operator=(const InnerX&) = delete;
-  InnerX(::crubit::UnsafeRelocateTag, InnerX&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  InnerX(::crubit::UnsafeRelocateTag, InnerX&& value);
+
   union {
     ::std::int32_t field;
   };
@@ -164,9 +158,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: X1") alignas(4)
   // `uses_reexport_golden::X1` doesn't implement the `Clone` trait
   X1(const X1&) = delete;
   X1& operator=(const X1&) = delete;
-  X1(::crubit::UnsafeRelocateTag, X1&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  X1(::crubit::UnsafeRelocateTag, X1&& value);
 
  private:
   union {
@@ -198,6 +190,9 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<Bar>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::Bar>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::Bar>);
+inline ::uses_reexport::Bar::Bar(::crubit::UnsafeRelocateTag, Bar&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void Bar::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Bar, i));
 }
@@ -210,6 +205,10 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<Foo>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::Foo>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::Foo>);
+inline ::uses_reexport::Foo::Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::uses_reexport::Foo* __ret_ptr);
 }
@@ -252,6 +251,9 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<G>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::G>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::G>);
+inline ::uses_reexport::G::G(::crubit::UnsafeRelocateTag, G&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void G::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(G, field));
 }
@@ -269,6 +271,10 @@ static_assert(::std::is_trivially_destructible_v<InnerX>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::uses_reexport::InnerX>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::InnerX>);
+inline ::uses_reexport::InnerX::InnerX(::crubit::UnsafeRelocateTag,
+                                       InnerX&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void InnerX::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(InnerX, field));
 }
@@ -291,6 +297,9 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<X1>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::X1>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::X1>);
+inline ::uses_reexport::X1::X1(::crubit::UnsafeRelocateTag, X1&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void X1::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(X1, x));
 }

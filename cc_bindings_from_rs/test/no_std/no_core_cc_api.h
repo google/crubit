@@ -44,9 +44,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test") alignas(8)
   // `no_core_golden::Test` doesn't implement the `Clone` trait
   Test(const Test&) = delete;
   Test& operator=(const Test&) = delete;
-  Test(::crubit::UnsafeRelocateTag, Test&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Test(::crubit::UnsafeRelocateTag, Test&& value);
 
   static ::no_core::Test new_();
 
@@ -77,6 +75,10 @@ inline Test::~Test() {
       __crubit_thunk_Drop_udrop_uno_ucore_ugolden_x0000003a_x0000003aTest(
           *this);
 }
+inline ::no_core::Test::Test(::crubit::UnsafeRelocateTag, Test&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::no_core::Test* __ret_ptr);
 }

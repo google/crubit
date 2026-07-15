@@ -49,9 +49,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyOrd") alignas(4)
   // `compare_golden::MyOrd` doesn't implement the `Clone` trait
   MyOrd(const MyOrd&) = delete;
   MyOrd& operator=(const MyOrd&) = delete;
-  MyOrd(::crubit::UnsafeRelocateTag, MyOrd&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyOrd(::crubit::UnsafeRelocateTag, MyOrd&& value);
 
   bool operator==(::compare::MyOrd const& other) const;
 
@@ -82,9 +80,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyUnordered") alignas(4)
   // `compare_golden::MyUnordered` doesn't implement the `Clone` trait
   MyUnordered(const MyUnordered&) = delete;
   MyUnordered& operator=(const MyUnordered&) = delete;
-  MyUnordered(::crubit::UnsafeRelocateTag, MyUnordered&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyUnordered(::crubit::UnsafeRelocateTag, MyUnordered&& value);
 
   bool operator==(::compare::MyUnordered const& other) const;
 
@@ -128,9 +124,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
 
-  Option(::crubit::UnsafeRelocateTag, Option&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type =
       rs_std::OptionBase<rs_std::Option<::std::int32_t>, ::std::int32_t>;
   constexpr Option() = default;
@@ -138,25 +132,18 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
     requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
-  Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+  Option(U&& value) noexcept;
   template <typename U>
     requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
-  Option& operator=(U&& value) noexcept {
-    base_type::operator=(::std::forward<U>(value));
-    return *this;
-  }
+  Option& operator=(U&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
-  Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+  Option(Opt&& value) noexcept;
   template <typename Opt>
     requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
-  Option& operator=(Opt&& value) noexcept {
-    base_type::operator=(::std::forward<Opt>(value));
-    return *this;
-  }
+  Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-      : base_type(ip, ::std::forward<Args>(args)...) {}
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
   ~Option() noexcept = default;
 
  private:
@@ -200,9 +187,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyPartialOrd") alignas(4)
   // `compare_golden::MyPartialOrd` doesn't implement the `Clone` trait
   MyPartialOrd(const MyPartialOrd&) = delete;
   MyPartialOrd& operator=(const MyPartialOrd&) = delete;
-  MyPartialOrd(::crubit::UnsafeRelocateTag, MyPartialOrd&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyPartialOrd(::crubit::UnsafeRelocateTag, MyPartialOrd&& value);
 
   bool operator==(::compare::MyPartialOrd const& other) const;
 
@@ -226,6 +211,10 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<MyOrd>);
 static_assert(::std::is_trivially_move_constructible_v<::compare::MyOrd>);
 static_assert(::std::is_trivially_move_assignable_v<::compare::MyOrd>);
+inline ::compare::MyOrd::MyOrd(::crubit::UnsafeRelocateTag, MyOrd&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyOrd_ucompare_ugolden_x0000003a_x0000003aMyOrd(
@@ -270,6 +259,11 @@ static_assert(::std::is_trivially_destructible_v<MyPartialOrd>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::compare::MyPartialOrd>);
 static_assert(::std::is_trivially_move_assignable_v<::compare::MyPartialOrd>);
+inline ::compare::MyPartialOrd::MyPartialOrd(::crubit::UnsafeRelocateTag,
+                                             MyPartialOrd&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyPartialOrd_ucompare_ugolden_x0000003a_x0000003aMyPartialOrd(
@@ -317,6 +311,11 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<MyUnordered>);
 static_assert(::std::is_trivially_move_constructible_v<::compare::MyUnordered>);
 static_assert(::std::is_trivially_move_assignable_v<::compare::MyUnordered>);
+inline ::compare::MyUnordered::MyUnordered(::crubit::UnsafeRelocateTag,
+                                           MyUnordered&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyUnordered_ucompare_ugolden_x0000003a_x0000003aMyUnordered(
@@ -385,6 +384,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<rs_std::Option<::std::int32_t>>);
 static_assert(
     ::std::is_trivially_move_assignable_v<rs_std::Option<::std::int32_t>>);
+inline rs_std::Option<::std::int32_t>::Option(::crubit::UnsafeRelocateTag,
+                                              Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 static_assert(
     ::std::is_trivially_destructible_v<rs_std::Option<::std::int32_t>>);
 inline constexpr ::std::uint32_t rs_std::Option<::std::int32_t>::tag()
@@ -413,6 +416,34 @@ rs_std::Option<::std::int32_t>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
+                                              ::std::int32_t, U>)
+inline rs_std::Option<::std::int32_t>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
+                                              ::std::int32_t, U>)
+inline rs_std::Option<::std::int32_t>&
+rs_std::Option<::std::int32_t>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
+inline rs_std::Option<::std::int32_t>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
+inline rs_std::Option<::std::int32_t>&
+rs_std::Option<::std::int32_t>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<::std::int32_t>::Option(::std::in_place_t ip,
+                                              Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
 

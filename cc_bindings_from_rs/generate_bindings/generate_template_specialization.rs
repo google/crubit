@@ -303,29 +303,22 @@ impl<'tcx> OptionApiGenerator<'tcx> {
 
                 template <typename U>
                   requires(rs_std::OptionForwardConstructible<Option, #arg_ty, U>)
-                Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {}
+                Option(U&& value) noexcept;
 
                 template <typename U>
                   requires(rs_std::OptionForwardConstructible<Option, #arg_ty, U>)
-                Option& operator=(U&& value) noexcept {
-                    base_type::operator=(::std::forward<U>(value));
-                    return *this;
-                }
+                Option& operator=(U&& value) noexcept;
 
                 template <typename Opt>
                   requires(rs_std::OptionFromStdOptional<#arg_ty, Opt>)
-                Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {}
+                Option(Opt&& value) noexcept;
 
                 template <typename Opt>
                   requires(rs_std::OptionFromStdOptional<#arg_ty, Opt>)
-                Option& operator=(Opt&& value) noexcept {
-                    base_type::operator=(::std::forward<Opt>(value));
-                    return *this;
-                }
+                Option& operator=(Opt&& value) noexcept;
 
                 template <typename... Args>
-                explicit Option(::std::in_place_t ip, Args&&... args) noexcept
-                    : base_type(ip, ::std::forward<Args>(args)...) {}
+                explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
 
                 #drop
 
@@ -368,6 +361,32 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                     base_type::operator=(::std::nullopt);
                     return *this;
                 } __NEWLINE__
+
+                template <typename U>
+                  requires(rs_std::OptionForwardConstructible<#full_self_ty, #arg_ty, U>)
+                inline #full_self_ty::Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {} __NEWLINE__
+
+                template <typename U>
+                  requires(rs_std::OptionForwardConstructible<#full_self_ty, #arg_ty, U>)
+                inline #full_self_ty& #full_self_ty::operator=(U&& value) noexcept {
+                    base_type::operator=(::std::forward<U>(value));
+                    return *this;
+                } __NEWLINE__
+
+                template <typename Opt>
+                  requires(rs_std::OptionFromStdOptional<#arg_ty, Opt>)
+                inline #full_self_ty::Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {} __NEWLINE__
+
+                template <typename Opt>
+                  requires(rs_std::OptionFromStdOptional<#arg_ty, Opt>)
+                inline #full_self_ty& #full_self_ty::operator=(Opt&& value) noexcept {
+                    base_type::operator=(::std::forward<Opt>(value));
+                    return *this;
+                } __NEWLINE__
+
+                template <typename... Args>
+                inline #full_self_ty::Option(::std::in_place_t ip, Args&&... args) noexcept
+                    : base_type(ip, ::std::forward<Args>(args)...) {} __NEWLINE__
             },
             prereqs,
         };
@@ -483,33 +502,25 @@ impl<'tcx> ResultApiGenerator<'tcx> {
 
                 template <typename U>
                   requires(rs_std::ResultForwardConstructible<Result, #ok_ty_cpp, U>)
-                explicit constexpr Result(U&& ok) noexcept : base_type(::std::forward<U>(ok)) {}
+                explicit constexpr Result(U&& ok) noexcept;
 
                 template <typename U>
                   requires(rs_std::ResultForwardConstructible<Result, #ok_ty_cpp, U>)
-                constexpr Result& operator=(U&& ok) noexcept {
-                    base_type::operator=(::std::forward<U>(ok));
-                    return *this;
-                }
+                constexpr Result& operator=(U&& ok) noexcept;
 
                 template <typename F>
                   requires(rs_std::ResultUnexpectedConstructible<#err_ty_cpp, F>)
-                explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept : base_type(::std::move(err)) {}
+                explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
 
                 template <typename F>
                   requires(rs_std::ResultUnexpectedConstructible<#err_ty_cpp, F>)
-                constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept {
-                    base_type::operator=(::std::move(err));
-                    return *this;
-                }
+                constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
 
                 template <typename... Args>
-                explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept
-                    : base_type(ip, ::std::forward<Args>(args)...) {}
+                explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
 
                 template <typename... Args>
-                explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept
-                    : base_type(u, ::std::forward<Args>(args)...) {}
+                explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
 
                 #drop
 
@@ -549,7 +560,37 @@ impl<'tcx> ResultApiGenerator<'tcx> {
         let cc_details = CcSnippet {
             tokens: quote! {
                 #drop_details __NEWLINE__
-                #tag_method_cc_details
+                #tag_method_cc_details __NEWLINE__
+
+                template <typename U>
+                  requires(rs_std::ResultForwardConstructible<#full_self_ty, #ok_ty_cpp, U>)
+                inline constexpr #full_self_ty::Result(U&& ok) noexcept : base_type(::std::forward<U>(ok)) {} __NEWLINE__
+
+                template <typename U>
+                  requires(rs_std::ResultForwardConstructible<#full_self_ty, #ok_ty_cpp, U>)
+                inline constexpr #full_self_ty& #full_self_ty::operator=(U&& ok) noexcept {
+                    base_type::operator=(::std::forward<U>(ok));
+                    return *this;
+                } __NEWLINE__
+
+                template <typename F>
+                  requires(rs_std::ResultUnexpectedConstructible<#err_ty_cpp, F>)
+                inline constexpr #full_self_ty::Result(rs_std::unexpected<F>&& err) noexcept : base_type(::std::move(err)) {} __NEWLINE__
+
+                template <typename F>
+                  requires(rs_std::ResultUnexpectedConstructible<#err_ty_cpp, F>)
+                inline constexpr #full_self_ty& #full_self_ty::operator=(rs_std::unexpected<F>&& err) noexcept {
+                    base_type::operator=(::std::move(err));
+                    return *this;
+                } __NEWLINE__
+
+                template <typename... Args>
+                inline constexpr #full_self_ty::Result(::std::in_place_t ip, Args&&... args) noexcept
+                    : base_type(ip, ::std::forward<Args>(args)...) {} __NEWLINE__
+
+                template <typename... Args>
+                inline constexpr #full_self_ty::Result(rs_std::unexpect_t u, Args&&... args) noexcept
+                    : base_type(u, ::std::forward<Args>(args)...) {} __NEWLINE__
             },
             prereqs,
         };
@@ -695,7 +736,8 @@ fn specialize_tuple<'tcx>(
     let move_ctor_and_assignment_snippets = db
         .generate_move_ctor_and_assignment_operator(core.clone())
         .unwrap_or_else(|err| err.explicitly_deleted);
-    let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
+    let relocating_ctor_snippets =
+        generate_relocating_ctor(db, &core.cc_short_name, &core.cc_fully_qualified_name);
     let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
 
     let ApiSnippets { main_api, cc_details, rs_details } = [
@@ -877,7 +919,8 @@ fn specialize_vec<'tcx>(
     let move_ctor_and_assignment_snippets = db
         .generate_move_ctor_and_assignment_operator(core.clone())
         .unwrap_or_else(|err| err.explicitly_deleted);
-    let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
+    let relocating_ctor_snippets =
+        generate_relocating_ctor(db, &core.cc_short_name, &core.cc_fully_qualified_name);
 
     let qualified_name = cc_fully_qualified_name.to_string();
     let name = escape_non_identifier_chars(&qualified_name);
@@ -1232,7 +1275,8 @@ fn specialize_result<'tcx>(
     let move_ctor_and_assignment_snippets = db
         .generate_move_ctor_and_assignment_operator(core.clone())
         .unwrap_or_else(|err| err.explicitly_deleted);
-    let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
+    let relocating_ctor_snippets =
+        generate_relocating_ctor(db, &core.cc_short_name, &core.cc_fully_qualified_name);
 
     let ApiSnippets { main_api, cc_details, rs_details } = [
         copy_ctor_and_assignment_snippets,
@@ -1460,7 +1504,8 @@ fn specialize_option<'tcx>(
         .generate_move_ctor_and_assignment_operator(core.clone())
         .unwrap_or_else(|err| err.explicitly_deleted);
 
-    let relocating_ctor_snippets = generate_relocating_ctor(db, &core.cc_short_name);
+    let relocating_ctor_snippets =
+        generate_relocating_ctor(db, &core.cc_short_name, &core.cc_fully_qualified_name);
 
     let ApiSnippets { main_api, cc_details, rs_details } = [
         copy_ctor_and_assignment_snippets,

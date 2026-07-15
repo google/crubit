@@ -61,9 +61,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // the `Clone` trait
   Foo(const Foo&) = delete;
   Foo& operator=(const Foo&) = delete;
-  Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Foo(::crubit::UnsafeRelocateTag, Foo&& value);
 
   static ::modules::impl_in_separate_private_module::Foo create(
       ::std::int32_t i);
@@ -148,6 +146,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::modules::impl_in_separate_private_module::Foo>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::modules::impl_in_separate_private_module::Foo>);
+inline ::modules::impl_in_separate_private_module::Foo::Foo(
+    ::crubit::UnsafeRelocateTag, Foo&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::modules::impl_in_separate_private_module::Foo* __ret_ptr);

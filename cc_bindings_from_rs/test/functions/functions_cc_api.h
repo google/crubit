@@ -137,9 +137,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // implement the `Clone` trait
   MyStruct(const MyStruct&) = delete;
   MyStruct& operator=(const MyStruct&) = delete;
-  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
 
   static ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct new_(
       ::std::int32_t x);
@@ -200,9 +198,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // implement the `Clone` trait
   CppMovable(const CppMovable&) = delete;
   CppMovable& operator=(const CppMovable&) = delete;
-  CppMovable(::crubit::UnsafeRelocateTag, CppMovable&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CppMovable(::crubit::UnsafeRelocateTag, CppMovable&& value);
 
   static ::functions::generic_fn_tests::ctor_trait_tests::CppMovable new_(
       ::std::int32_t value);
@@ -539,6 +535,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>);
+inline ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct::MyStruct(
+    ::crubit::UnsafeRelocateTag, MyStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct
 __crubit_thunk_new(::std::int32_t);
@@ -612,6 +613,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::functions::generic_fn_tests::ctor_trait_tests::CppMovable>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::functions::generic_fn_tests::ctor_trait_tests::CppMovable>);
+inline ::functions::generic_fn_tests::ctor_trait_tests::CppMovable::CppMovable(
+    ::crubit::UnsafeRelocateTag, CppMovable&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
     ::std::int32_t,

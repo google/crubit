@@ -49,9 +49,8 @@ struct
       const NonTriviallyDestructable&);
 
   NonTriviallyDestructable(::crubit::UnsafeRelocateTag,
-                           NonTriviallyDestructable&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                           NonTriviallyDestructable&& value);
+
   union {
     ::std::int32_t field;
   };
@@ -129,6 +128,11 @@ non_trivially_destructible::NonTriviallyDestructable::operator=(
             *this, other);
   }
   return *this;
+}
+inline ::non_trivially_destructible::NonTriviallyDestructable::
+    NonTriviallyDestructable(::crubit::UnsafeRelocateTag,
+                             NonTriviallyDestructable&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
 }
 inline void NonTriviallyDestructable::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NonTriviallyDestructable, field));

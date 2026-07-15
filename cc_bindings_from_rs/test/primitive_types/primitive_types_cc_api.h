@@ -54,9 +54,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   Types(const Types&) = delete;
   Types& operator=(const Types&) = delete;
-  Types(::crubit::UnsafeRelocateTag, Types&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Types(::crubit::UnsafeRelocateTag, Types&& value);
+
   union {
     crubit::type_identity_t<void(::std::int8_t)>* i8_func;
   };
@@ -245,9 +244,8 @@ StructWithCVoidPointerMember final {
   StructWithCVoidPointerMember& operator=(const StructWithCVoidPointerMember&) =
       delete;
   StructWithCVoidPointerMember(::crubit::UnsafeRelocateTag,
-                               StructWithCVoidPointerMember&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                               StructWithCVoidPointerMember&& value);
+
   union {
     const void* ptr_const;
   };
@@ -313,6 +311,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::primitive_types::field_types::Types>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::primitive_types::field_types::Types>);
+inline ::primitive_types::field_types::Types::Types(::crubit::UnsafeRelocateTag,
+                                                    Types&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void Types::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Types, i8_func));
   static_assert(8 == offsetof(Types, c_char_func));
@@ -567,6 +569,11 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<
         ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember>);
+inline ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember::
+    StructWithCVoidPointerMember(::crubit::UnsafeRelocateTag,
+                                 StructWithCVoidPointerMember&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void StructWithCVoidPointerMember::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithCVoidPointerMember, ptr_const));
   static_assert(8 == offsetof(StructWithCVoidPointerMember, ptr_mut));

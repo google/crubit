@@ -53,9 +53,8 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
   Vec(Vec&&);
   rs_std::Vec<::std::int32_t>& operator=(Vec&&);
-  Vec(::crubit::UnsafeRelocateTag, Vec&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Vec(::crubit::UnsafeRelocateTag, Vec&& value);
+
   ~Vec() noexcept;
   ::std::int32_t* data() noexcept;
   ::std::int32_t const* data() const noexcept;
@@ -91,9 +90,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: StructWithVec") alignas(8)
   // `vec_golden::StructWithVec` doesn't implement the `Clone` trait
   StructWithVec(const StructWithVec&) = delete;
   StructWithVec& operator=(const StructWithVec&) = delete;
-  StructWithVec(::crubit::UnsafeRelocateTag, StructWithVec&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  StructWithVec(::crubit::UnsafeRelocateTag, StructWithVec&& value);
 
   static ::vec::StructWithVec new_(::std::int32_t val);
 
@@ -124,9 +121,8 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
   Vec(Vec&&);
   rs_std::Vec<::std::uint8_t>& operator=(Vec&&);
-  Vec(::crubit::UnsafeRelocateTag, Vec&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Vec(::crubit::UnsafeRelocateTag, Vec&& value);
+
   ~Vec() noexcept;
   ::std::uint8_t* data() noexcept;
   ::std::uint8_t const* data() const noexcept;
@@ -161,6 +157,11 @@ inline StructWithVec::~StructWithVec() {
       __crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aStructWithVec(
           *this);
 }
+inline ::vec::StructWithVec::StructWithVec(::crubit::UnsafeRelocateTag,
+                                           StructWithVec&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::vec::StructWithVec* __ret_ptr);
@@ -251,6 +252,11 @@ inline rs_std::Vec<::std::int32_t>& rs_std::Vec<::std::int32_t>::operator=(
   crubit::MemSwap(*this, other);
   return *this;
 }
+inline rs_std::Vec<::std::int32_t>::Vec(::crubit::UnsafeRelocateTag,
+                                        Vec&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 extern "C" void
 __crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
     void* vec) noexcept;
@@ -340,6 +346,11 @@ inline rs_std::Vec<::std::uint8_t>& rs_std::Vec<::std::uint8_t>::operator=(
   crubit::MemSwap(*this, other);
   return *this;
 }
+inline rs_std::Vec<::std::uint8_t>::Vec(::crubit::UnsafeRelocateTag,
+                                        Vec&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 extern "C" void
 __crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
     void* vec) noexcept;

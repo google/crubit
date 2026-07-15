@@ -40,9 +40,7 @@ MyStruct final {
   // `trait_definition_golden::MyStruct` doesn't implement the `Clone` trait
   MyStruct(const MyStruct&) = delete;
   MyStruct& operator=(const MyStruct&) = delete;
-  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
 
  private:
   union {
@@ -81,6 +79,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::trait_definition::MyStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::trait_definition::MyStruct>);
+inline ::trait_definition::MyStruct::MyStruct(::crubit::UnsafeRelocateTag,
+                                              MyStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, y));
 }

@@ -53,9 +53,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(8)
   // assignment operator.
   CustomIndex(const CustomIndex&) = default;
   CustomIndex& operator=(const CustomIndex&) = default;
-  CustomIndex(::crubit::UnsafeRelocateTag, CustomIndex&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  CustomIndex(::crubit::UnsafeRelocateTag, CustomIndex&& value);
 
   static ::rs_index::CustomIndex new_(::std::uintptr_t index);
 
@@ -84,9 +82,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Id") alignas(4)
   // `rs_index_golden::Id` doesn't implement the `Clone` trait
   Id(const Id&) = delete;
   Id& operator=(const Id&) = delete;
-  Id(::crubit::UnsafeRelocateTag, Id&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Id(::crubit::UnsafeRelocateTag, Id&& value);
 
   static ::rs_index::Id new_(::std::int32_t id);
 
@@ -112,9 +108,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   // `rs_index_golden::IntPair` doesn't implement the `Clone` trait
   IntPair(const IntPair&) = delete;
   IntPair& operator=(const IntPair&) = delete;
-  IntPair(::crubit::UnsafeRelocateTag, IntPair&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  IntPair(::crubit::UnsafeRelocateTag, IntPair&& value);
 
   static ::rs_index::IntPair new_(::std::int32_t x, ::std::int32_t y);
 
@@ -173,9 +167,8 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
   Vec(Vec&&);
   rs_std::Vec<::rs::alloc::string::String>& operator=(Vec&&);
-  Vec(::crubit::UnsafeRelocateTag, Vec&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Vec(::crubit::UnsafeRelocateTag, Vec&& value);
+
   ~Vec() noexcept;
   ::rs::alloc::string::String* data() noexcept;
   ::rs::alloc::string::String const* data() const noexcept;
@@ -212,9 +205,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(8)
   // `rs_index_golden::Map` doesn't implement the `Clone` trait
   Map(const Map&) = delete;
   Map& operator=(const Map&) = delete;
-  Map(::crubit::UnsafeRelocateTag, Map&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Map(::crubit::UnsafeRelocateTag, Map&& value);
 
   static ::rs_index::Map new_(::std::uintptr_t row_size,
                               ::std::uintptr_t col_size);
@@ -257,6 +248,11 @@ static_assert(::std::is_trivially_move_assignable_v<::rs_index::CustomIndex>);
 static_assert(
     ::std::is_trivially_copy_constructible_v<::rs_index::CustomIndex>);
 static_assert(::std::is_trivially_copy_assignable_v<::rs_index::CustomIndex>);
+inline ::rs_index::CustomIndex::CustomIndex(::crubit::UnsafeRelocateTag,
+                                            CustomIndex&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uintptr_t,
                                    ::rs_index::CustomIndex* __ret_ptr);
@@ -279,6 +275,10 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<Id>);
 static_assert(::std::is_trivially_move_constructible_v<::rs_index::Id>);
 static_assert(::std::is_trivially_move_assignable_v<::rs_index::Id>);
+inline ::rs_index::Id::Id(::crubit::UnsafeRelocateTag, Id&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, ::rs_index::Id* __ret_ptr);
 }
@@ -300,6 +300,11 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<IntPair>);
 static_assert(::std::is_trivially_move_constructible_v<::rs_index::IntPair>);
 static_assert(::std::is_trivially_move_assignable_v<::rs_index::IntPair>);
+inline ::rs_index::IntPair::IntPair(::crubit::UnsafeRelocateTag,
+                                    IntPair&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, ::std::int32_t,
                                    ::rs_index::IntPair* __ret_ptr);
@@ -383,6 +388,10 @@ inline Map::~Map() {
       __crubit_thunk_Drop_udrop_urs_uindex_ugolden_x0000003a_x0000003aMap(
           *this);
 }
+inline ::rs_index::Map::Map(::crubit::UnsafeRelocateTag, Map&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uintptr_t, ::std::uintptr_t,
                                    ::rs_index::Map* __ret_ptr);
@@ -480,6 +489,11 @@ rs_std::Vec<::rs::alloc::string::String>::operator=(Vec&& other) {
   crubit::MemSwap(*this, other);
   return *this;
 }
+inline rs_std::Vec<::rs::alloc::string::String>::Vec(
+    ::crubit::UnsafeRelocateTag, Vec&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 extern "C" void
 __crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
     void* vec) noexcept;

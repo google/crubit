@@ -49,9 +49,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsEnum") alignas(
   // assignment operator.
   LeafRsEnum(const LeafRsEnum&) = default;
   LeafRsEnum& operator=(const LeafRsEnum&) = default;
-  LeafRsEnum(::crubit::UnsafeRelocateTag, LeafRsEnum&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  LeafRsEnum(::crubit::UnsafeRelocateTag, LeafRsEnum&& value);
 
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
@@ -82,9 +80,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
   // assignment operator.
   LeafRsType(const LeafRsType&) = default;
   LeafRsType& operator=(const LeafRsType&) = default;
-  LeafRsType(::crubit::UnsafeRelocateTag, LeafRsType&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  LeafRsType(::crubit::UnsafeRelocateTag, LeafRsType&& value);
 
  private:
   union {
@@ -136,6 +132,10 @@ static_assert(::std::is_trivially_move_assignable_v<::leaf_rs_lib::LeafRsEnum>);
 static_assert(
     ::std::is_trivially_copy_constructible_v<::leaf_rs_lib::LeafRsEnum>);
 static_assert(::std::is_trivially_copy_assignable_v<::leaf_rs_lib::LeafRsEnum>);
+inline ::leaf_rs_lib::LeafRsEnum::LeafRsEnum(::crubit::UnsafeRelocateTag,
+                                             LeafRsEnum&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void LeafRsEnum::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LeafRsEnum, __opaque_blob_of_bytes));
 }
@@ -164,6 +164,10 @@ static_assert(::std::is_trivially_move_assignable_v<::leaf_rs_lib::LeafRsType>);
 static_assert(
     ::std::is_trivially_copy_constructible_v<::leaf_rs_lib::LeafRsType>);
 static_assert(::std::is_trivially_copy_assignable_v<::leaf_rs_lib::LeafRsType>);
+inline ::leaf_rs_lib::LeafRsType::LeafRsType(::crubit::UnsafeRelocateTag,
+                                             LeafRsType&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void LeafRsType::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LeafRsType, field));
 }

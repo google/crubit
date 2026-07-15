@@ -48,9 +48,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(8)
   // assignment operator.
   TypeWithStr(const TypeWithStr&) = default;
   TypeWithStr& operator=(const TypeWithStr&) = default;
-  TypeWithStr(::crubit::UnsafeRelocateTag, TypeWithStr&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  TypeWithStr(::crubit::UnsafeRelocateTag, TypeWithStr&& value);
 
   static ::str::TypeWithStr create(rs_std::StrRef s);
 
@@ -96,6 +94,11 @@ static_assert(::std::is_trivially_move_constructible_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_move_assignable_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_constructible_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_assignable_v<::str::TypeWithStr>);
+inline ::str::TypeWithStr::TypeWithStr(::crubit::UnsafeRelocateTag,
+                                       TypeWithStr&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef,
                                       ::str::TypeWithStr* __ret_ptr);

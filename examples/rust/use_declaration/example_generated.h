@@ -38,9 +38,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") alignas(4)
   // `example_crate_golden::Type` doesn't implement the `Clone` trait
   Type(const Type&) = delete;
   Type& operator=(const Type&) = delete;
-  Type(::crubit::UnsafeRelocateTag, Type&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  Type(::crubit::UnsafeRelocateTag, Type&& value);
+
   union {
     ::std::int32_t x;
   };
@@ -80,6 +79,9 @@ inline ::example_crate::Type::Type() {
 static_assert(::std::is_trivially_destructible_v<Type>);
 static_assert(::std::is_trivially_move_constructible_v<::example_crate::Type>);
 static_assert(::std::is_trivially_move_assignable_v<::example_crate::Type>);
+inline ::example_crate::Type::Type(::crubit::UnsafeRelocateTag, Type&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void Type::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Type, x));
 }

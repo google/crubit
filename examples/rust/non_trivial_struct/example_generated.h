@@ -42,9 +42,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   NonTrivialStruct(const NonTrivialStruct&) = delete;
   NonTrivialStruct& operator=(const NonTrivialStruct&) = delete;
-  NonTrivialStruct(::crubit::UnsafeRelocateTag, NonTrivialStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  NonTrivialStruct(::crubit::UnsafeRelocateTag, NonTrivialStruct&& value);
+
   union {
     ::std::int32_t a;
   };
@@ -88,6 +87,10 @@ inline ::example_crate::NonTrivialStruct& ::example_crate::NonTrivialStruct::
 operator=(NonTrivialStruct&& other) {
   crubit::MemSwap(*this, other);
   return *this;
+}
+inline ::example_crate::NonTrivialStruct::NonTrivialStruct(
+    ::crubit::UnsafeRelocateTag, NonTrivialStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
 }
 inline void NonTrivialStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NonTrivialStruct, a));

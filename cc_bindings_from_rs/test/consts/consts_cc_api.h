@@ -75,9 +75,7 @@ TyWithAssocConsts final {
   // `consts_golden::TyWithAssocConsts` doesn't implement the `Clone` trait
   TyWithAssocConsts(const TyWithAssocConsts&) = delete;
   TyWithAssocConsts& operator=(const TyWithAssocConsts&) = delete;
-  TyWithAssocConsts(::crubit::UnsafeRelocateTag, TyWithAssocConsts&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  TyWithAssocConsts(::crubit::UnsafeRelocateTag, TyWithAssocConsts&& value);
   static constexpr ::std::int32_t ASSOC_42 = INT32_C(42);
 
  private:
@@ -100,6 +98,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::consts::TyWithAssocConsts>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::consts::TyWithAssocConsts>);
+inline ::consts::TyWithAssocConsts::TyWithAssocConsts(
+    ::crubit::UnsafeRelocateTag, TyWithAssocConsts&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void TyWithAssocConsts::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TyWithAssocConsts, __field0));
 }

@@ -54,9 +54,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ContainerWithInherentBegin& operator=(const ContainerWithInherentBegin&) =
       delete;
   ContainerWithInherentBegin(::crubit::UnsafeRelocateTag,
-                             ContainerWithInherentBegin&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                             ContainerWithInherentBegin&& value);
 
   ::std::int32_t begin() const;
 
@@ -93,9 +91,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ContainerWithRefIntoIter(const ContainerWithRefIntoIter&) = delete;
   ContainerWithRefIntoIter& operator=(const ContainerWithRefIntoIter&) = delete;
   ContainerWithRefIntoIter(::crubit::UnsafeRelocateTag,
-                           ContainerWithRefIntoIter&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                           ContainerWithRefIntoIter&& value);
 
   // Error generating bindings for struct
   // `into_iterator_rust_golden::ContainerWithRefIntoIter` defined at
@@ -128,9 +124,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   MoveOnlyIterator(const MoveOnlyIterator&) = delete;
   MoveOnlyIterator& operator=(const MoveOnlyIterator&) = delete;
-  MoveOnlyIterator(::crubit::UnsafeRelocateTag, MoveOnlyIterator&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MoveOnlyIterator(::crubit::UnsafeRelocateTag, MoveOnlyIterator&& value);
   template <typename TAdaptedSelf_ = MoveOnlyIterator>
   inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
@@ -164,9 +158,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   MoveOnlyPayload(const MoveOnlyPayload&) = delete;
   MoveOnlyPayload& operator=(const MoveOnlyPayload&) = delete;
-  MoveOnlyPayload(::crubit::UnsafeRelocateTag, MoveOnlyPayload&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MoveOnlyPayload(::crubit::UnsafeRelocateTag, MoveOnlyPayload&& value);
 
   ::std::int32_t mutating_method();
 
@@ -195,10 +187,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Clone` trait
   MyContainerIntoIter(const MyContainerIntoIter&) = delete;
   MyContainerIntoIter& operator=(const MyContainerIntoIter&) = delete;
-  MyContainerIntoIter(::crubit::UnsafeRelocateTag,
-                      MyContainerIntoIter&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyContainerIntoIter(::crubit::UnsafeRelocateTag, MyContainerIntoIter&& value);
   template <typename TAdaptedSelf_ = MyContainerIntoIter>
   inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
@@ -235,9 +224,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   MyContainerIter(const MyContainerIter&) = delete;
   MyContainerIter& operator=(const MyContainerIter&) = delete;
-  MyContainerIter(::crubit::UnsafeRelocateTag, MyContainerIter&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyContainerIter(::crubit::UnsafeRelocateTag, MyContainerIter&& value);
   template <typename TAdaptedSelf_ = MyContainerIter>
   inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
@@ -270,9 +257,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Clone` trait
   MyContainerIterMut(const MyContainerIterMut&) = delete;
   MyContainerIterMut& operator=(const MyContainerIterMut&) = delete;
-  MyContainerIterMut(::crubit::UnsafeRelocateTag, MyContainerIterMut&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyContainerIterMut(::crubit::UnsafeRelocateTag, MyContainerIterMut&& value);
   template <typename TAdaptedSelf_ = MyContainerIterMut>
   inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
@@ -304,9 +289,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `into_iterator_rust_golden::MyIterator` doesn't implement the `Clone` trait
   MyIterator(const MyIterator&) = delete;
   MyIterator& operator=(const MyIterator&) = delete;
-  MyIterator(::crubit::UnsafeRelocateTag, MyIterator&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyIterator(::crubit::UnsafeRelocateTag, MyIterator&& value);
   template <typename TAdaptedSelf_ = MyIterator>
   inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
@@ -337,9 +320,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   SimpleIntoIter(const SimpleIntoIter&) = delete;
   SimpleIntoIter& operator=(const SimpleIntoIter&) = delete;
-  SimpleIntoIter(::crubit::UnsafeRelocateTag, SimpleIntoIter&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  SimpleIntoIter(::crubit::UnsafeRelocateTag, SimpleIntoIter&& value);
   template <typename TAdaptedSelf_ = SimpleIntoIter>
   inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
@@ -482,9 +463,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   MyContainer(const MyContainer&) = delete;
   MyContainer& operator=(const MyContainer&) = delete;
-  MyContainer(::crubit::UnsafeRelocateTag, MyContainer&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  MyContainer(::crubit::UnsafeRelocateTag, MyContainer&& value);
   template <typename TAdaptedSelf_ = MyContainer>
   inline ::into_iterator_rust::MyContainerIntoIter into_iter() &&;
   template <typename TAdaptedSelf_ = MyContainer>
@@ -542,6 +521,12 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::ContainerWithInherentBegin>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::ContainerWithInherentBegin>);
+inline ::into_iterator_rust::ContainerWithInherentBegin::
+    ContainerWithInherentBegin(::crubit::UnsafeRelocateTag,
+                               ContainerWithInherentBegin&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_begin(
     ::into_iterator_rust::ContainerWithInherentBegin const&);
@@ -564,6 +549,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::ContainerWithRefIntoIter>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::ContainerWithRefIntoIter>);
+inline ::into_iterator_rust::ContainerWithRefIntoIter::ContainerWithRefIntoIter(
+    ::crubit::UnsafeRelocateTag, ContainerWithRefIntoIter&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void ContainerWithRefIntoIter::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ContainerWithRefIntoIter, iter));
 }
@@ -578,6 +567,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MoveOnlyIterator>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::MoveOnlyIterator>);
+inline ::into_iterator_rust::MoveOnlyIterator::MoveOnlyIterator(
+    ::crubit::UnsafeRelocateTag, MoveOnlyIterator&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void MoveOnlyIterator::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MoveOnlyIterator, val));
   static_assert(4 == offsetof(MoveOnlyIterator, count));
@@ -593,6 +586,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MoveOnlyPayload>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::MoveOnlyPayload>);
+inline ::into_iterator_rust::MoveOnlyPayload::MoveOnlyPayload(
+    ::crubit::UnsafeRelocateTag, MoveOnlyPayload&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_mutating_umethod(
     ::into_iterator_rust::MoveOnlyPayload&);
@@ -615,6 +613,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MyContainer>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::into_iterator_rust::MyContainer>);
+inline ::into_iterator_rust::MyContainer::MyContainer(
+    ::crubit::UnsafeRelocateTag, MyContainer&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
@@ -701,6 +703,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MyContainerIntoIter>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::MyContainerIntoIter>);
+inline ::into_iterator_rust::MyContainerIntoIter::MyContainerIntoIter(
+    ::crubit::UnsafeRelocateTag, MyContainerIntoIter&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void MyContainerIntoIter::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyContainerIntoIter, index));
   static_assert(8 == offsetof(MyContainerIntoIter, data));
@@ -716,6 +722,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MyContainerIter>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::MyContainerIter>);
+inline ::into_iterator_rust::MyContainerIter::MyContainerIter(
+    ::crubit::UnsafeRelocateTag, MyContainerIter&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void MyContainerIter::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyContainerIter, data));
 }
@@ -730,6 +740,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MyContainerIterMut>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::MyContainerIterMut>);
+inline ::into_iterator_rust::MyContainerIterMut::MyContainerIterMut(
+    ::crubit::UnsafeRelocateTag, MyContainerIterMut&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void MyContainerIterMut::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyContainerIterMut, data));
 }
@@ -744,6 +758,10 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::into_iterator_rust::MyIterator>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::into_iterator_rust::MyIterator>);
+inline ::into_iterator_rust::MyIterator::MyIterator(::crubit::UnsafeRelocateTag,
+                                                    MyIterator&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void MyIterator::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyIterator, value));
 }
@@ -758,6 +776,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::SimpleIntoIter>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::SimpleIntoIter>);
+inline ::into_iterator_rust::SimpleIntoIter::SimpleIntoIter(
+    ::crubit::UnsafeRelocateTag, SimpleIntoIter&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void SimpleIntoIter::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SimpleIntoIter, val));
 }

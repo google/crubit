@@ -44,9 +44,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
   // `rust_lib_golden::FooService` doesn't implement the `Clone` trait
   FooService(const FooService&) = delete;
   FooService& operator=(const FooService&) = delete;
-  FooService(::crubit::UnsafeRelocateTag, FooService&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  FooService(::crubit::UnsafeRelocateTag, FooService&& value);
 
   bool handle_request(const ::foo_service::FooRequest* req,
                       ::foo_service::FooResponse* rsp);
@@ -104,6 +102,11 @@ inline ::rust_lib::FooService& ::rust_lib::FooService::operator=(
   crubit::MemSwap(*this, other);
   return *this;
 }
+inline ::rust_lib::FooService::FooService(::crubit::UnsafeRelocateTag,
+                                          FooService&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_handle_urequest(::rust_lib::FooService&,
                                                const ::foo_service::FooRequest*,

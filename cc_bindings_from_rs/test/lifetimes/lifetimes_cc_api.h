@@ -47,9 +47,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // assignment operator.
   StructWithLifetime(const StructWithLifetime&) = default;
   StructWithLifetime& operator=(const StructWithLifetime&) = default;
-  StructWithLifetime(::crubit::UnsafeRelocateTag, StructWithLifetime&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  StructWithLifetime(::crubit::UnsafeRelocateTag, StructWithLifetime&& value);
 
   static ::lifetimes::StructWithLifetime from_ref(
       ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
@@ -108,9 +106,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructWithLifetimeAndDropGlue& operator=(
       const StructWithLifetimeAndDropGlue&) = delete;
   StructWithLifetimeAndDropGlue(::crubit::UnsafeRelocateTag,
-                                StructWithLifetimeAndDropGlue&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                                StructWithLifetimeAndDropGlue&& value);
 
   static ::lifetimes::StructWithLifetimeAndDropGlue make_static_42();
 
@@ -159,6 +155,11 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::lifetimes::StructWithLifetime>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::lifetimes::StructWithLifetime>);
+inline ::lifetimes::StructWithLifetime::StructWithLifetime(
+    ::crubit::UnsafeRelocateTag, StructWithLifetime&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_uref(
     ::std::int32_t const* $a crubit_nonnull,
@@ -304,6 +305,12 @@ inline StructWithLifetimeAndDropGlue::~StructWithLifetimeAndDropGlue() {
       __crubit_thunk_Drop_udrop_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetimeAndDropGlue_x0000003c_x00000027_u_x0000003e(
           *this);
 }
+inline ::lifetimes::StructWithLifetimeAndDropGlue::
+    StructWithLifetimeAndDropGlue(::crubit::UnsafeRelocateTag,
+                                  StructWithLifetimeAndDropGlue&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_ustatic_u42(
     ::lifetimes::StructWithLifetimeAndDropGlue* __ret_ptr);

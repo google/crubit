@@ -44,9 +44,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
-  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
 
   static ::std::int32_t extract_int(::rs_default::derived_impl::SomeStruct s);
 
@@ -82,9 +80,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Clone` trait
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
-  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
 
   static ::std::int32_t extract_int(::rs_default::explicit_impl::SomeStruct s);
 
@@ -122,9 +118,7 @@ StructWithoutDefault final {
   StructWithoutDefault(const StructWithoutDefault&) = delete;
   StructWithoutDefault& operator=(const StructWithoutDefault&) = delete;
   StructWithoutDefault(::crubit::UnsafeRelocateTag,
-                       StructWithoutDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                       StructWithoutDefault&& value);
 
  private:
   union {
@@ -155,9 +149,7 @@ StructWithFieldWithNoDefault final {
   StructWithFieldWithNoDefault& operator=(const StructWithFieldWithNoDefault&) =
       delete;
   StructWithFieldWithNoDefault(::crubit::UnsafeRelocateTag,
-                               StructWithFieldWithNoDefault&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+                               StructWithFieldWithNoDefault&& value);
 
   static ::std::int32_t extract_int(
       ::rs_default::field_with_no_default::StructWithFieldWithNoDefault s);
@@ -195,9 +187,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // trait
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
-  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
+
   union {
     ::std::int32_t __field0;
   };
@@ -230,9 +221,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `Clone` trait
   SomeStruct(const SomeStruct&) = delete;
   SomeStruct& operator=(const SomeStruct&) = delete;
-  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-    ::std::memcpy(this, &value, sizeof(value));
-  }
+  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
 
   ::std::int32_t extract_int() const;
 
@@ -269,6 +258,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::derived_impl::SomeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::derived_impl::SomeStruct>);
+inline ::rs_default::derived_impl::SomeStruct::SomeStruct(
+    ::crubit::UnsafeRelocateTag, SomeStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::derived_impl::SomeStruct*);
@@ -305,6 +299,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::explicit_impl::SomeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::explicit_impl::SomeStruct>);
+inline ::rs_default::explicit_impl::SomeStruct::SomeStruct(
+    ::crubit::UnsafeRelocateTag, SomeStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::explicit_impl::SomeStruct*);
@@ -345,6 +344,12 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<
         ::rs_default::field_with_no_default::StructWithFieldWithNoDefault>);
+inline ::rs_default::field_with_no_default::StructWithFieldWithNoDefault::
+    StructWithFieldWithNoDefault(::crubit::UnsafeRelocateTag,
+                                 StructWithFieldWithNoDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::field_with_no_default::StructWithFieldWithNoDefault*);
@@ -367,6 +372,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::field_with_no_default::StructWithoutDefault>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::field_with_no_default::StructWithoutDefault>);
+inline ::rs_default::field_with_no_default::StructWithoutDefault::
+    StructWithoutDefault(::crubit::UnsafeRelocateTag,
+                         StructWithoutDefault&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void StructWithoutDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithoutDefault, __field0));
 }
@@ -385,6 +395,10 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::no_impl::SomeStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::rs_default::no_impl::SomeStruct>);
+inline ::rs_default::no_impl::SomeStruct::SomeStruct(
+    ::crubit::UnsafeRelocateTag, SomeStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void SomeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SomeStruct, __field0));
 }
@@ -411,6 +425,11 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::transparent_struct::SomeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::transparent_struct::SomeStruct>);
+inline ::rs_default::transparent_struct::SomeStruct::SomeStruct(
+    ::crubit::UnsafeRelocateTag, SomeStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::transparent_struct::SomeStruct const&);
