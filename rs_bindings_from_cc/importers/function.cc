@@ -934,6 +934,16 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   // `!return_type.ok()` and returning early if `!errors.empty()`.
   CHECK_OK(return_type);
 
+  // We should unify FunctionDecl* generated from friend declarations with the
+  // correct enclosing record.
+  std::optional<ItemId> adl_enclosing_record;
+  if (function_decl->getFriendObjectKind() != clang::Decl::FOK_None) {
+    if (auto* enclosing_record = clang::dyn_cast_or_null<clang::CXXRecordDecl>(
+            function_decl->getLexicalDeclContext())) {
+      adl_enclosing_record = ictx_.GenerateItemId(enclosing_record);
+    }
+  }
+
   auto name_info = function_decl->getNameInfo();
   return Func{
       .cc_name = translated_name->cc_identifier,
@@ -962,6 +972,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
           ictx_.ConvertSourceLocation(function_decl->getBeginLoc(), &name_info),
       .id = ictx_.GenerateItemId(function_decl),
       .enclosing_item_id = *std::move(enclosing_item_id),
+      .adl_enclosing_record = adl_enclosing_record,
       .lifetime_inputs = std::move(lifetime_inputs),
   };
 }
