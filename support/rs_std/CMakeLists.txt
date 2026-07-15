@@ -20,137 +20,104 @@ crubit_support_annotations
 crubit_support_internal_bindings_support
 )
 
-add_library(crubit_support_rs_std_dyn_callable STATIC
-"dyn_callable.h"
-)
-set_target_properties(crubit_support_rs_std_dyn_callable PROPERTIES LINKER_LANGUAGE CXX)
+add_library(crubit_support_rs_std_dyn_callable INTERFACE)
 
-target_include_directories(crubit_support_rs_std_dyn_callable PUBLIC
+target_include_directories(crubit_support_rs_std_dyn_callable INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
-target_link_libraries(crubit_support_rs_std_dyn_callable PUBLIC
+target_link_libraries(crubit_support_rs_std_dyn_callable INTERFACE
 absl::core_headers
 absl::nullability
 absl::any_invocable
 crubit_support_bridge_cpp
 )
 
-add_library(crubit_support_rs_std_dyn_erased_future_cc STATIC
-"dyn_erased_future.h"
-)
-set_target_properties(crubit_support_rs_std_dyn_erased_future_cc PROPERTIES LINKER_LANGUAGE CXX)
+add_library(crubit_support_rs_std_dyn_erased_future_cc INTERFACE)
 
-target_include_directories(crubit_support_rs_std_dyn_erased_future_cc PUBLIC
+target_include_directories(crubit_support_rs_std_dyn_erased_future_cc INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
-target_link_libraries(crubit_support_rs_std_dyn_erased_future_cc PUBLIC
+target_link_libraries(crubit_support_rs_std_dyn_erased_future_cc INTERFACE
 crubit_support_rs_std_waker
 )
 
-add_library(crubit_support_rs_std_iterator_adapter STATIC
-"iterator_adapter.h"
-)
-set_target_properties(crubit_support_rs_std_iterator_adapter PROPERTIES LINKER_LANGUAGE CXX)
+add_library(crubit_support_rs_std_iterator_adapter INTERFACE)
 
-target_include_directories(crubit_support_rs_std_iterator_adapter PUBLIC
+target_include_directories(crubit_support_rs_std_iterator_adapter INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
-target_link_libraries(crubit_support_rs_std_iterator_adapter PUBLIC
+target_link_libraries(crubit_support_rs_std_iterator_adapter INTERFACE
 crubit_support_rs_std_traits
 )
 
-add_library(crubit_support_rs_std_lossy_formatter_for_bindings STATIC
-"lossy_formatter_for_bindings.h"
-)
-set_target_properties(crubit_support_rs_std_lossy_formatter_for_bindings PROPERTIES LINKER_LANGUAGE CXX)
+add_library(crubit_support_rs_std_lossy_formatter_for_bindings INTERFACE)
 
-target_include_directories(crubit_support_rs_std_lossy_formatter_for_bindings PUBLIC
+target_include_directories(crubit_support_rs_std_lossy_formatter_for_bindings INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
-add_library(crubit_support_rs_std_option STATIC
-"option.h"
-)
-set_target_properties(crubit_support_rs_std_option PROPERTIES LINKER_LANGUAGE CXX)
+add_library(crubit_support_rs_std_option INTERFACE)
 
-target_include_directories(crubit_support_rs_std_option PUBLIC
+target_include_directories(crubit_support_rs_std_option INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
-target_link_libraries(crubit_support_rs_std_option PUBLIC
+target_link_libraries(crubit_support_rs_std_option INTERFACE
 crubit_support_internal_bindings_support
 )
 
-add_library(crubit_support_rs_std_result STATIC
-"result.h"
-)
-set_target_properties(crubit_support_rs_std_result PROPERTIES LINKER_LANGUAGE CXX)
+add_library(crubit_support_rs_std_result INTERFACE)
 
-target_include_directories(crubit_support_rs_std_result PUBLIC
+target_include_directories(crubit_support_rs_std_result INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
-target_link_libraries(crubit_support_rs_std_result PUBLIC
+target_link_libraries(crubit_support_rs_std_result INTERFACE
 crubit_support_internal_bindings_support
 )
 
-add_library(crubit_support_rs_std_slice_ref STATIC
-"slice_ref.h"
-)
-set_target_properties(crubit_support_rs_std_slice_ref PROPERTIES LINKER_LANGUAGE CXX)
+add_library(crubit_support_rs_std_slice_ref INTERFACE)
 
-target_include_directories(crubit_support_rs_std_slice_ref PUBLIC
+target_include_directories(crubit_support_rs_std_slice_ref INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
-target_link_libraries(crubit_support_rs_std_slice_ref PUBLIC
+target_link_libraries(crubit_support_rs_std_slice_ref INTERFACE
 crubit_support_annotations
 crubit_support_internal_bindings_support
 )
 
-add_library(crubit_support_rs_std_str_ref STATIC
-"str_ref.h"
-)
-set_target_properties(crubit_support_rs_std_str_ref PROPERTIES LINKER_LANGUAGE CXX)
+add_library(crubit_support_rs_std_str_ref INTERFACE)
 
-target_include_directories(crubit_support_rs_std_str_ref PUBLIC
+target_include_directories(crubit_support_rs_std_str_ref INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
-target_link_libraries(crubit_support_rs_std_str_ref PUBLIC
+target_link_libraries(crubit_support_rs_std_str_ref INTERFACE
 crubit_support_rs_std_slice_ref
 crubit_support_annotations_internal
 crubit_support_internal_bindings_support
 crubit_support_rs_std_internal_is_utf8
 )
 
-add_library(crubit_support_rs_std_traits STATIC
-"traits.h"
-)
-set_target_properties(crubit_support_rs_std_traits PROPERTIES LINKER_LANGUAGE CXX)
+add_library(crubit_support_rs_std_traits INTERFACE)
 
-target_include_directories(crubit_support_rs_std_traits PUBLIC
+target_include_directories(crubit_support_rs_std_traits INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
-add_library(crubit_support_rs_std_tuple STATIC
-"tuple.h"
-)
-set_target_properties(crubit_support_rs_std_tuple PROPERTIES LINKER_LANGUAGE CXX)
+add_library(crubit_support_rs_std_tuple INTERFACE)
 
-target_include_directories(crubit_support_rs_std_tuple PUBLIC
+target_include_directories(crubit_support_rs_std_tuple INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
-add_library(crubit_support_rs_std_vec STATIC
-"vec.h"
-)
-set_target_properties(crubit_support_rs_std_vec PROPERTIES LINKER_LANGUAGE CXX)
+add_library(crubit_support_rs_std_vec INTERFACE)
 
-target_include_directories(crubit_support_rs_std_vec PUBLIC
+target_include_directories(crubit_support_rs_std_vec INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
