@@ -31,7 +31,6 @@ pub struct SomeRustSubclass;
 
 impl BaseTrait for SomeRustSubclass {
     fn rust_method1(&self, this: &base::ExampleBase) -> ffi_11::c_int {
-        // SAFETY: `this` is a valid pointer to a `ExampleBase` object of the appropriate lifetime.
-        unsafe { base::ExampleBase::Method2(this) * 42 }
+        base::ExampleBase::Method2(this) * 42
     }
 }

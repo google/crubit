@@ -30,6 +30,7 @@ rust_library(
         ":test_helpers",
         "//support/public:cc_std",
     ],
+    proc_macro_deps = ["//support:crubit_annotate"],
 )
 
 cc_bindings_from_rust(

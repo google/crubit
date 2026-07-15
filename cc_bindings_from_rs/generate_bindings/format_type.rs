@@ -220,7 +220,12 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
         if !result_str.contains(&placeholder) {
             continue;
         }
-        let snippet = format_ty_for_cc(db, ty, TypeLocation::NestedBridgeable)?;
+        let snippet = db.format_ty_for_cc(ty, TypeLocation::Other).map_err(|err| {
+            let err = err.to_string().replace('\n', "\n  ");
+            anyhow!(
+                "`{ty}` has no layout-compatible C++ type, but is used as a generic parameter\n  {err}"
+            )
+        })?;
         let tokens = snippet.into_tokens(prereqs);
         result_str = result_str.replace(&placeholder, &tokens.to_string());
     }

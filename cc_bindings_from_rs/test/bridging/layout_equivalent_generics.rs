@@ -158,3 +158,28 @@ pub fn create_status_with_secret_alias() -> private_mod_with_specialization::MyS
 pub fn is_ok_secret(status: MyStatusOr<private_mod::SecretInt>) -> bool {
     status.has_value
 }
+
+#[crubit_annotate::cpp_convertible(
+    cpp_type = "crubit::test::SomeCppType",
+    include_path = "cc_bindings_from_rs/test/bridging/cc_generics.h",
+    rust_to_cpp_converter = "no_op_void_converter",
+    cpp_to_rust_converter = "no_op_void_converter"
+)]
+#[repr(C)]
+pub struct ByValueBridged {
+    pub x: i32,
+}
+
+// Safety: no other no_op_void_converter functions exist.
+#[unsafe(no_mangle)]
+pub extern "C" fn no_op_void_converter(_: *const std::ffi::c_void, _: *mut std::ffi::c_void) {
+    unimplemented!()
+}
+
+pub fn accept_optional_by_value_bridged(opt: MyOptional<ByValueBridged>) -> i32 {
+    if opt.has_value {
+        opt.value.x
+    } else {
+        -1
+    }
+}

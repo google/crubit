@@ -35,6 +35,10 @@ struct MyIntBoolPair {
   bool second;
 };
 
+struct SomeCppType {
+  int x;
+};
+
 }  // namespace test
 }  // namespace crubit
 

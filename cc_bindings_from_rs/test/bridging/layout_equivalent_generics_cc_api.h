@@ -23,6 +23,13 @@
 namespace layout_equivalent_generics {
 
 // Error generating bindings for struct
+// `layout_equivalent_generics_golden::ByValueBridged` defined at
+// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=169:
+// Type bindings for layout_equivalent_generics_golden::ByValueBridged
+// suppressed due to being mapped to an existing C++ type
+// (crubit::test::SomeCppType)
+
+// Error generating bindings for struct
 // `layout_equivalent_generics_golden::MyOptional` defined at
 // cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=12:
 // Type bindings for layout_equivalent_generics_golden::MyOptional suppressed
@@ -57,6 +64,16 @@ using MyStatusAlias CRUBIT_INTERNAL_RUST_TYPE(
 ::std::int32_t accept_optional_by_value(
     crubit::test::MyOptional<::std::int32_t> opt);
 
+// Error generating bindings for function
+// `layout_equivalent_generics_golden::accept_optional_by_value_bridged` defined
+// at
+// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=179:
+// Error handling parameter #0 of type
+// `layout_equivalent_generics_golden::MyOptional<layout_equivalent_generics_golden::ByValueBridged>`:
+// `layout_equivalent_generics_golden::ByValueBridged` has no layout-compatible
+// C++ type, but is used as a generic parameter
+//   Bridged types must appear in a bridgeable type location
+
 // CRUBIT_ANNOTATE: must_bind=
 bool accept_status(crubit::test::MyStatus status);
 
@@ -80,6 +97,8 @@ crubit::test::MyStatus create_status_with_secret_alias();
 
 // CRUBIT_ANNOTATE: must_bind=
 bool is_ok_secret(crubit::test::MyStatus status);
+
+extern "C" void no_op_void_converter(const void* __param_0, void* __param_1);
 
 // CRUBIT_ANNOTATE: must_bind=
 crubit::test::MyOptional<::std::int32_t> return_optional_by_value(
