@@ -1,3 +1,4 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
@@ -71,5 +72,22 @@ crubit_cc_test(
     deps = [
         ":bindings_support",
         "//testing/base/public:gunit_main",
+    ],
+)
+
+cc_library(
+    name = "cpp_config",
+    hdrs = ["cpp_config.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+bzl_library(
+    name = "rust_config_bzl",
+    srcs = ["rust_config.bzl"],
+    visibility = [
+        "//visibility:public",
     ],
 )
