@@ -6,6 +6,10 @@ load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
 )
+load(
+    "//rs_bindings_from_cc/test/golden:golden_test.bzl",
+    "golden_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -33,6 +37,13 @@ cc_library(
     deps = [
         ":my_cc_proto",
     ],
+)
+
+golden_test(
+    name = "golden_test",
+    cc_library = "my_proto_api",
+    golden_cc = "my_proto_api.golden.cc",
+    golden_rs = "my_proto_api.golden.rs",
 )
 
 crubit_rust_test(
