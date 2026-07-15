@@ -6,6 +6,7 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
     "rust_proc_macro",
+    "rust_static_library",
     "rust_test",
 )
 load("//common/bazel_support:external_binaries.bzl", "EXTERNAL_BINARIES")
@@ -487,4 +488,9 @@ crubit_rust_test(
     deps = [
         "@crate_index//:googletest",
     ],
+)
+
+rust_static_library(
+    name = "include_allocator_symbols",
+    srcs = ["empty.rs"],
 )

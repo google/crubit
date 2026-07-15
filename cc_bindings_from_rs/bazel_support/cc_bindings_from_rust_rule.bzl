@@ -560,6 +560,7 @@ private_common_attrs = {
             "//support/rs_std:vec",
             "//support/rs_std:iterator_adapter",
             "//support/rs_std:dyn_erased_future_cc",
+            "//common:include_allocator_symbols"
         ],
     ),
     "_process_wrapper": attr.label(
