@@ -7,7 +7,7 @@
 
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
-load("@@//rs_bindings_from_cc/bazel_support:generate_bindings.bzl", "escape_cpp_target_name")
+load("@rules_crubit//rs_bindings_from_cc/bazel_support:generate_bindings.bzl", "escape_cpp_target_name")
 
 def compile_cc(
         ctx,

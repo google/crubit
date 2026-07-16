@@ -53,9 +53,9 @@ load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 # buildifier: disable=bzl-visibility
 load("@rules_rust//rust/private:providers.bzl", "BuildInfo", "CrateInfo", "DepInfo", "DepVariantInfo")
 load("@bazel_skylib//lib:collections.bzl", "collections")
-load("@@//rs_bindings_from_cc/bazel_support:providers.bzl", "AdditionalRustSrcsProviderInfo", "RustBindingsFromCcInfo")
+load("@rules_crubit//rs_bindings_from_cc/bazel_support:providers.bzl", "AdditionalRustSrcsProviderInfo", "RustBindingsFromCcInfo")
 load(
-    "@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
+    "@rules_crubit//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
     "rust_bindings_from_cc_aspect",
 )
 

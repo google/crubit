@@ -13,8 +13,8 @@ You can request bindings generation only via `--output_groups=sources`.
 
 load("@rules_rust//rust:rust_common.bzl", "CrateInfo", "DepInfo")
 load("//cc_bindings_from_rs/bazel_support:providers.bzl", "CcBindingsFromRustInfo")
-load("@@//rs_bindings_from_cc/bazel_support:providers.bzl", "GeneratedBindingsInfo", "RustBindingsFromCcInfo")
-load("@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl", "rust_bindings_from_cc_aspect")
+load("@rules_crubit//rs_bindings_from_cc/bazel_support:providers.bzl", "GeneratedBindingsInfo", "RustBindingsFromCcInfo")
+load("@rules_crubit//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl", "rust_bindings_from_cc_aspect")
 
 def _rust_api_from_cpp_generate_bindings_impl(ctx):
     """Implementation of the `rust_bindings_from_cc` rule."""

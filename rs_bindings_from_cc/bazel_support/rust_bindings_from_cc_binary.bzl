@@ -11,7 +11,7 @@ rust_bindings_from_cc_aspect -> rs_bindings_from_cc -> rust_library
 """
 
 load(
-    "@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_transition.bzl",
+    "@rules_crubit//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_transition.bzl",
     "rust_bindings_from_cc_transition",
 )
 

@@ -6,13 +6,13 @@
 
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(
-    "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
+    "@rules_crubit//rs_bindings_from_cc/bazel_support:providers.bzl",
     "AdditionalRustSrcsProviderInfo",
     "DepsForBindingsInfo",
     "RustToolchainHeadersInfo",
 )
 load(
-    "@@//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
+    "@rules_crubit//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
     "bindings_attrs",
     "generate_and_compile_bindings",
 )
@@ -33,7 +33,7 @@ def _add_prefix(strings, prefix):
     return [prefix + s for s in strings]
 
 def _bindings_for_toolchain_headers_impl(ctx):
-    toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"]
+    toolchain = ctx.toolchains["@rules_crubit//rs_bindings_from_cc/bazel_support:toolchain_type"]
     if toolchain == None:
         return RustToolchainHeadersInfo(headers = depset())
     toolchain = toolchain.rs_bindings_from_cc_toolchain_info
@@ -120,7 +120,7 @@ bindings_for_toolchain_headers = rule(
     toolchains = [
         "@rules_rust//rust:toolchain_type",
         "@bazel_tools//tools/cpp:toolchain_type",
-        config_common.toolchain_type("@@//rs_bindings_from_cc/bazel_support:toolchain_type", mandatory = False),
+        config_common.toolchain_type("@rules_crubit//rs_bindings_from_cc/bazel_support:toolchain_type", mandatory = False),
     ],
     fragments = ["cpp", "google_cpp"],
 )

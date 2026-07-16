@@ -1,10 +1,14 @@
 # Part of the Crubit project, under the Apache License v2.0 with LLVM
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+module(
+    name = "rules_crubit",
+    version = "0.0.1",
+)
 
 # TODO: this needs to be paired with a refreshed patch
 # (see WORKSPACE.bzlmod)
-bazel_dep(name = "rules_rust", version = "0.71.2")
+bazel_dep(name = "rules_rust", version = "0.71.3")
 bazel_dep(name = "rules_cc", version = "0.2.19")
 bazel_dep(name = "rules_shell", version = "0.6.1")
 bazel_dep(name = "abseil-cpp", version = "20250127.1")
@@ -15,11 +19,11 @@ git_override(
     remote = "https://github.com/abseil/abseil-cpp",
 )
 
-bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "fuzztest", version = "20250214.0")
 bazel_dep(name = "google_benchmark", version = "1.9.1")
 bazel_dep(name = "googletest", version = "1.17.0")
-bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "protobuf", version = "35.0")
 bazel_dep(name = "re2", version = "2024-07-02.bcr.1")
 bazel_dep(name = "rules_license", version = "1.0.0")
@@ -43,23 +47,15 @@ crate.from_cargo(
 )
 use_repo(crate, "crate_index")
 
-bazel_dep(name = "toolchains_llvm", version = "1.5.0")
-
-llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
-llvm.toolchain(
-    llvm_version = "19.1.7",
+crubit_toolchains = use_extension("//bazel:extensions.bzl", "crubit_toolchains")
+crubit_toolchains.configure(
+    llvm_version = "22.1.0",
+    rust_version = "nightly/2026-07-01",
 )
-use_repo(llvm, "llvm_toolchain")
+use_repo(crubit_toolchains, "llvm_toolchain", "rust_toolchains", "llvm_version_check")
 
-register_toolchains("@llvm_toolchain//:all")
-
-single_version_override(
-    module_name = "protobuf",
-    version = "34.1",
-    patches = [
-        "//patches:protobuf.patch",
-        "//patches:protobuf_visibility.patch",
-        "//patches:protobuf_aspects_visibility.patch",
-    ],
-    patch_strip = 1,
+register_toolchains(
+    "@rust_toolchains//:all",
+    "@llvm_toolchain//:all",
+    "//common/bazel_support/toolchains:cc_bindings_from_rs_on_demand_linux",
 )

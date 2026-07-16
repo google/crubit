@@ -8,11 +8,11 @@ load("@toolchains_llvm//toolchain:rules.bzl", "llvm_toolchain")
 load("//bazel:llvm_version_check.bzl", "llvm_version_check")
 
 # buildifier: disable=bzl-visibility
-load("@rules_rust//private:repositories.bzl", "DEFAULT_TOOLCHAIN_TRIPLES", "rust_register_toolchains")
+load("@rules_rust//rust/private:repositories.bzl", "DEFAULT_TOOLCHAIN_TRIPLES", "rust_register_toolchains")
 
 # buildifier: disable=bzl-visibility
 load(
-    "@rules_rust//private:repository_utils.bzl",
+    "@rules_rust//rust/private:repository_utils.bzl",
     "DEFAULT_EXTRA_TARGET_TRIPLES",
     "DEFAULT_STATIC_RUST_URL_TEMPLATES",
 )

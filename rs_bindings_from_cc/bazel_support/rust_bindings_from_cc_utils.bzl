@@ -19,15 +19,15 @@ load(
     "//common/bazel_support:cc_info_util.bzl",
     "get_static_libraries_from_cc_info",
 )
-load("@@//rs_bindings_from_cc/bazel_support:compile_cc.bzl", "compile_cc")
-load("@@//rs_bindings_from_cc/bazel_support:compile_rust.bzl", "compile_rust")
+load("@rules_crubit//rs_bindings_from_cc/bazel_support:compile_cc.bzl", "compile_cc")
+load("@rules_crubit//rs_bindings_from_cc/bazel_support:compile_rust.bzl", "compile_rust")
 load(
-    "@@//rs_bindings_from_cc/bazel_support:generate_bindings.bzl",
+    "@rules_crubit//rs_bindings_from_cc/bazel_support:generate_bindings.bzl",
     "escape_cpp_target_name",
     "generate_bindings",
 )
 load(
-    "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
+    "@rules_crubit//rs_bindings_from_cc/bazel_support:providers.bzl",
     "GeneratedBindingsInfo",
     "RustBindingsFromCcInfo",
 )
@@ -226,7 +226,7 @@ bindings_attrs = {
     ),
     "_deps_for_bindings": attr.label(
         doc = "Dependencies that are needed to compile the generated .cc and .rs file.",
-        default = "@@//rs_bindings_from_cc/bazel_support:deps_for_bindings",
+        default = "@rules_crubit//rs_bindings_from_cc/bazel_support:deps_for_bindings",
     ),
     "_clang_format": attr.label(
         default = Label("@llvm_toolchain//:clang-format"),
@@ -263,7 +263,7 @@ bindings_attrs = {
         cfg = "exec",
     ),
     "_generate_error_report": attr.label(
-        default = "@@//rs_bindings_from_cc/bazel_support:generate_error_report",
+        default = "@rules_crubit//rs_bindings_from_cc/bazel_support:generate_error_report",
     ),
     "_is_golden_test": attr.label(
         default = "//common/bazel_support:is_golden_test",

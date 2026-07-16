@@ -119,7 +119,7 @@ def generate_bindings(
             error_report_output.path,
         ]
 
-    toolchain = ctx.toolchains["@@//rs_bindings_from_cc/bazel_support:toolchain_type"]
+    toolchain = ctx.toolchains["@rules_crubit//rs_bindings_from_cc/bazel_support:toolchain_type"]
     if toolchain == None:
         # Fail at action execution time.
         # Note: we can't just keep going with an error shell script as the binary,
@@ -127,7 +127,7 @@ def generate_bindings(
         # So instead, we directly error out on actions producing the output files.
         ctx.actions.run_shell(
             command = (
-                "echo 'Crubit (rs_bindings_from_cc) is not available on this platform.\n" + "To debug, rerun with --toolchain_resolution_debug=@@//rs_bindings_from_cc/bazel_support:toolchain_type'" + " && false"
+                "echo 'Crubit (rs_bindings_from_cc) is not available on this platform.\n" + "To debug, rerun with --toolchain_resolution_debug=@rules_crubit//rs_bindings_from_cc/bazel_support:toolchain_type'" + " && false"
             ),
             outputs = [cc_output, rs_output, namespaces_output] + ([error_report_output] if error_report_output != None else []),
             mnemonic = "RustBindingsFromCcUnsupported",

@@ -14,7 +14,7 @@ load(
     "DepVariantInfo",
 )
 load(
-    "@@//rs_bindings_from_cc/bazel_support:providers.bzl",
+    "@rules_crubit//rs_bindings_from_cc/bazel_support:providers.bzl",
     "DepsForBindingsInfo",
 )
 
