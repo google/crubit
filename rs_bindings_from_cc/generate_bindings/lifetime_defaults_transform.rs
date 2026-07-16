@@ -113,14 +113,21 @@ fn decl_lifetime_arity_impl(
         // explicitly only need to check for StdStringView here (and not the more general
         // rc.is_string_view()).
         Item::Record(rc) => {
-            if let Some(ts) = &rc.template_specialization()
-                && matches!(
+            if rc.is_string_view() {
+                return Ok(0);
+            }
+            let is_bridged_lifetime_arg = (if let Some(ts) = &rc.template_specialization() {
+                matches!(
                     ts.kind(),
                     ir::TemplateSpecializationKind::StdStringView
                         | ir::TemplateSpecializationKind::AbslSpan { .. }
                         | ir::TemplateSpecializationKind::C9Co { .. }
                 )
-            {
+            } else {
+                false
+            }) || (rc.bridge_type().is_some()
+                && rc.cc_name().as_str().contains("string_view"));
+            if is_bridged_lifetime_arg {
                 Ok(1)
             } else {
                 record_lifetime_arity(db, rc)
@@ -136,8 +143,12 @@ fn decl_lifetime_arity_impl(
             bail!("Incomplete records unhandled for lifetimes: {:?}", item.cc_name_as_str())
         }
         Item::Enum(_ec) => bail!("Enums unhandled for lifetimes: {:?}", item.cc_name_as_str()),
-        Item::ExistingRustType(_ec) => {
-            bail!("Existing Rust types unhandled for lifetimes: {:?}", item.cc_name_as_str())
+        Item::ExistingRustType(ec) => {
+            if ec.rs_name() == "SliceRef" || ec.rs_name() == "StrRef" {
+                Ok(1)
+            } else {
+                bail!("Existing Rust types unhandled for lifetimes: {:?}", item.cc_name_as_str())
+            }
         }
         Item::Func(_) => {
             bail!("Unexpected function found in type position: {:?}", item.cc_name_as_str())
@@ -336,9 +347,13 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         ty: &CcType,
     ) -> Result<LifetimeResult> {
         match ty.variant() {
-            CcTypeVariant::Decl { id, .. } if self.decl_binds_lifetimes(id)? => {
+            CcTypeVariant::Decl { id, template_args } if self.decl_binds_lifetimes(id)? => {
                 let mut new_ty = ty.clone();
-                if let Some(type_arg) = self.type_arg_from_decl_id(*id) {
+                let type_arg = template_args
+                    .as_ref()
+                    .and_then(|args| args.first().cloned())
+                    .or_else(|| self.type_arg_from_decl_id(*id));
+                if let Some(type_arg) = type_arg {
                     let LifetimeResult { ty: type_arg, .. } =
                         self.add_lifetime_to_input_type(false, name_hint, new_bindings, &type_arg)?;
                     *new_ty.variant_mut() =
@@ -444,7 +459,14 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                         *new_ty.explicit_lifetimes_mut() = lifetime_hint.clone();
                     }
                 }
-                if let Some(elt) = self.type_arg_from_decl_id(*id) {
+                let type_arg = match ty.variant() {
+                    CcTypeVariant::Decl { template_args, .. } => template_args
+                        .as_ref()
+                        .and_then(|args| args.first().cloned())
+                        .or_else(|| self.type_arg_from_decl_id(*id)),
+                    _ => self.type_arg_from_decl_id(*id),
+                };
+                if let Some(elt) = type_arg {
                     let elt_lowered =
                         self.add_lifetime_to_output_type(lifetime_hint, new_bindings, &elt)?;
                     *new_ty.variant_mut() =

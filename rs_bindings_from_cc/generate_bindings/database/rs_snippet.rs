@@ -755,6 +755,7 @@ pub enum BridgeRsTypeKind {
         abi_rust: Rc<str>,
         abi_cpp: Rc<str>,
         generic_types: Rc<[RsTypeKind]>,
+        lifetimes: Rc<[Lifetime]>,
     },
     ProtoMessageBridge {
         rust_name: Rc<str>,
@@ -824,6 +825,7 @@ impl BridgeRsTypeKind {
                         .iter()
                         .map(|template_arg| db.rs_type_kind(template_arg.clone()))
                         .collect::<Result<Rc<[RsTypeKind]>>>()?,
+                    lifetimes: lifetimes.into(),
                 }
             }
             BridgeType::StdOptional(t) => {
@@ -962,7 +964,7 @@ impl RsTypeKind {
                 RsTypeKind::new_type_alias(db, type_alias, options, lifetimes)
             }
             Item::ExistingRustType(existing_rust_type) => {
-                RsTypeKind::new_existing_rust_type(db, existing_rust_type)
+                RsTypeKind::new_existing_rust_type(db, existing_rust_type, options, template_args)
             }
             other_item => bail!("Item does not define a type: {other_item:?}"),
         }
@@ -1090,19 +1092,22 @@ impl RsTypeKind {
     fn new_existing_rust_type<'db>(
         db: impl Deref<Target = BindingsGenerator<'db>> + Copy,
         existing_rust_type: Rc<ExistingRustType>,
+        options: &LifetimeOptions,
+        template_args: &Option<Rc<[CcType]>>,
     ) -> Result<Self> {
         if existing_rust_type.rs_name() == SLICE_REF_NAME_RS {
-            let [template_arg] = &existing_rust_type.template_args() else {
-                bail!(
-                    "SliceRef has {} template parameters, expected 1",
-                    existing_rust_type.template_args().len()
-                );
-            };
-            let TemplateArg::Type(inner_cc_type) = template_arg else {
+            let inner_cc_type = if let Some(args) = template_args
+                && let Some(arg) = args.first()
+            {
+                arg.clone()
+            } else if let [TemplateArg::Type(ty)] = &existing_rust_type.template_args()[..] {
+                ty.clone()
+            } else {
                 bail!("SliceRef should have a type as its singular template argument");
             };
 
-            let inner_rs_type_kind = db.rs_type_kind(inner_cc_type.clone())?;
+            let inner_rs_type_kind =
+                db.rs_type_kind_with_lifetime_elision(inner_cc_type.clone(), *options)?;
             ensure!(
                 inner_rs_type_kind.allowed_behind_multi_element_ptr(),
                 "SliceRef pointee type is not allowed behind a multi element pointer: {}",
@@ -2100,21 +2105,22 @@ impl RsTypeKind {
             }
             RsTypeKind::BridgeType { bridge_type, original_type } => {
                 match bridge_type {
-                    BridgeRsTypeKind::Bridge { rust_name, generic_types, .. } => {
+                    BridgeRsTypeKind::Bridge { rust_name, generic_types, lifetimes, .. } => {
                         let path = fully_qualify_type(
                             db,
                             ir::Item::Record(original_type.clone()),
                             rust_name,
                         );
 
-                        // If there are no generic types, then we're done.
-                        if generic_types.is_empty() {
+                        // If there are no generic types and no lifetimes, then we're done.
+                        if generic_types.is_empty() && lifetimes.is_empty() {
                             return path;
                         }
 
+                        let lifetime_tokens = lifetimes.iter().map(|l| quote! { #l });
                         let generic_types_tokens =
                             generic_types.iter().map(|t| t.to_token_stream(db));
-                        quote! { #path<#(#generic_types_tokens),*> }
+                        quote! { #path<#(#lifetime_tokens,)* #(#generic_types_tokens),*> }
                     }
                     BridgeRsTypeKind::ProtoMessageBridge { rust_name } => {
                         fully_qualify_type(db, ir::Item::Record(original_type.clone()), rust_name)
@@ -2156,6 +2162,38 @@ impl RsTypeKind {
                 }
             }
             RsTypeKind::ExistingRustType { rust_type, .. } => rust_type.parse().expect("ExistingRustType.rust_type should parse as a TokenStream because it was constructed from one."),
+        }
+    }
+
+    pub fn to_token_stream_without_lifetimes<'a>(
+        &self,
+        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+    ) -> TokenStream {
+        match self {
+            RsTypeKind::Record { record, crate_path, uniform_repr_template_type, .. } => {
+                if let Some(generic_monomorphization) = uniform_repr_template_type {
+                    return generic_monomorphization.to_token_stream(&db);
+                }
+                let ident = make_rs_ident(record.rs_name().as_str());
+                quote! { #crate_path #ident }
+            }
+            RsTypeKind::TypeAlias { type_alias, crate_path, lifetimes, .. } => {
+                let mut ident = make_rs_ident(type_alias.rs_name().as_str());
+                let mut crate_path = crate_path.clone();
+                if !lifetimes.is_empty()
+                    && let RsTypeKind::Record { record, .. } = self.unalias()
+                    && record.template_specialization().as_ref().is_some_and(|ts| {
+                        matches!(ts.kind(), TemplateSpecializationKind::StdStringView)
+                    })
+                {
+                    ident = make_rs_ident("string_view");
+                    let mut new_crate_path: CratePath = (*crate_path).clone();
+                    new_crate_path.namespace_qualifier.namespaces.pop();
+                    crate_path = Rc::new(new_crate_path);
+                };
+                quote! { #crate_path #ident }
+            }
+            _ => self.to_token_stream(db),
         }
     }
 }
@@ -2327,6 +2365,8 @@ mod tests {
                 false,
                 false,
             )),
+            &LifetimeOptions::default(),
+            &None,
         )
         .expect("Should succeed because all fallible operations come from BindingsGenerated, which EmptyDatabase cannot successfully deref to (it panics).")
     }

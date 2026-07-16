@@ -2295,9 +2295,10 @@ pub fn generate_function(
                 quote! { #record_name }
             } else {
                 // If the trait is being implemented for a different record than its enclosing one
-                // (e.g. for conversion operators) retrieve the fully qualified path.
+                // (e.g. for conversion operators) retrieve the fully qualified path without lifetime
+                // arguments, since `#trait_record_param_tokens` will be appended when generating the trait impl.
                 let t = db.rs_type_kind(trait_record.into())?;
-                t.to_token_stream(db)
+                t.to_token_stream_without_lifetimes(db)
             };
 
             let mut extra_body = if let Some(name) = associated_return_type {
@@ -2803,9 +2804,6 @@ fn function_signature(
         .filter(|lifetime| !parent_lifetimes.contains(lifetime.0.as_ref()))
         .collect();
 
-    let mut lifetimes_including_impl: Vec<Lifetime> =
-        unique_lifetimes(&*param_types, func.lifetime_inputs());
-
     let mut lifetime_inputs_and_parents = func.lifetime_inputs().to_vec();
     for lifetime in parent_lifetimes {
         lifetime_inputs_and_parents.push(intern!(db.interner(), "{lifetime}"));
@@ -2815,6 +2813,8 @@ fn function_signature(
             .into_iter()
             .filter(|lifetime| !lifetime.is_elided())
             .collect();
+
+    let mut lifetimes_including_impl: Vec<Lifetime> = all_lifetimes.clone();
 
     if matches!(
         impl_kind,
