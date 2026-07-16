@@ -517,13 +517,14 @@ pub(crate) struct MustUseAttr {
 }
 
 pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option<MustUseAttr> {
-    #[allow(deprecated)]
-    for attr in tcx.get_all_attrs(def_id) {
-        if let hir::Attribute::Parsed(AttributeKind::MustUse { reason, .. }) = attr {
-            return Some(MustUseAttr { reason: *reason });
-        }
+    if !crubit_attr::supports_attrs(tcx.def_kind(def_id)) {
+        return None;
     }
-    None
+    rustc_hir::find_attr!(
+        tcx,
+        def_id,
+        AttributeKind::MustUse { reason, .. } => MustUseAttr { reason: *reason }
+    )
 }
 
 pub(crate) struct Param<'tcx> {
