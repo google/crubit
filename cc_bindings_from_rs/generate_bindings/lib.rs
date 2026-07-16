@@ -1748,22 +1748,21 @@ fn generate_source_location(db: &BindingsGenerator, def_id: DefId) -> String {
 /// defined.
 fn generate_doc_comment(db: &BindingsGenerator, def_id: DefId) -> TokenStream {
     #[allow(deprecated)]
-    let mut docs = db
+    let mut doc_comment: String = db
         .tcx()
         .get_all_attrs(def_id)
         .iter()
         .filter_map(|attr| attr.doc_str())
         .map(|symbol| symbol.to_string())
-        .peekable();
-
-    let include_source_loc = !db.is_golden_test() || db.kythe_annotations();
-    let leading_newline = if docs.peek().is_none() { "" } else { "\n" };
-
-    let doc_comment = docs
-        .chain(include_source_loc.then(|| {
-            format!("{leading_newline}Generated from: {}", generate_source_location(db, def_id))
-        }))
         .join("\n");
+
+    if !db.is_golden_test() || db.kythe_annotations() {
+        if !doc_comment.is_empty() {
+            doc_comment.push_str("\n\n");
+        }
+        doc_comment.push_str("Generated from: ");
+        doc_comment.push_str(&generate_source_location(db, def_id));
+    }
 
     if db.kythe_annotations() {
         generate_kythe_doc_comment(db, def_id, doc_comment)
