@@ -13,6 +13,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "common/status_test_matchers.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -101,6 +102,9 @@ MATCHER_P(IdentifierIs, identifier, "") {
 
 // Matches an Record node that has the given `rs_name`.
 MATCHER_P(RsNameIs, rs_name, "") { return arg.rs_name.Ident() == rs_name; }
+
+// Matches an IR item (Record or TypeAlias) that has the given `cc_name`.
+MATCHER_P(CcNameIs, cc_name, "") { return arg.cc_name.Ident() == cc_name; }
 
 // Matches an IR node that has the given doc comment.
 MATCHER_P(DocCommentIs, doc_comment, "") {
@@ -1565,6 +1569,53 @@ TEST(ImporterTest, ExistingRustTypeWithImplDebug) {
   EXPECT_THAT(ir.get_items_if<ExistingRustType>(),
               ElementsAre(Pointee(
                   AllOf(Field(&ExistingRustType::cc_name, "S"), ImplDebug()))));
+}
+
+TEST(ImporterTest, RecordTruncatesAndHashesRustNameWhenOver160Chars) {
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir,
+      IrFromCc(
+          {R"cc(
+             struct
+                 LongStructName_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789 {
+             };
+           )cc"}));
+
+  EXPECT_THAT(
+      ir.get_items_if<Record>(),
+      ElementsAre(Pointee(AllOf(
+          CcNameIs(
+              "LongStructName_123456789_123456789_123456789_123456789_"
+              "123456789_"
+              "123456789_123456789_123456789_123456789_123456789_123456789_"
+              "123456789_123456789_123456789_123456789"),
+          RsNameIs(
+              "LongStructName_123456789_123456789_123456789_123456789_"
+              "123456789_"
+              "123456789_123456789_123456789_123456789_123456789_123456789_"
+              "123456789_12345678_983f62f5b703d944")))));
+}
+
+TEST(ImporterTest, TypeAliasTruncatesAndHashesRustNameWhenOver160Chars) {
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir,
+      IrFromCc(
+          {R"cc(
+             using LongAliasName_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789 =
+                 int;
+           )cc"}));
+
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      ElementsAre(VariantWith<TypeAlias>(AllOf(
+          CcNameIs(
+              "LongAliasName_123456789_123456789_123456789_123456789_123456789_"
+              "123456789_123456789_123456789_123456789_123456789_123456789_"
+              "123456789_123456789_123456789_123456789"),
+          RsNameIs(
+              "LongAliasName_123456789_123456789_123456789_123456789_123456789_"
+              "123456789_123456789_123456789_123456789_123456789_123456789_"
+              "123456789_123456789_b5317e69b85ef233")))));
 }
 }  // namespace
 }  // namespace crubit

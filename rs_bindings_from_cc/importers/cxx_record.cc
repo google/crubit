@@ -21,7 +21,6 @@
 #include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_set.h"
-#include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
 #include "absl/log/log.h"
@@ -51,8 +50,8 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/Specifiers.h"
-#include "clang/Sema/Sema.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/MD5.h"
 namespace crubit {
 
 namespace {
@@ -1160,6 +1159,15 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     cc_name = record_name->cc_identifier.Ident();
     doc_comment = ictx_.GetComment(record_decl);
     source_loc = record_decl->getBeginLoc();
+  }
+
+  if (rs_name.size() > 160) {
+    // rustdoc generates filenames using these names, so they can't be too long.
+    // Preserve the prefix of the name for debugging. The hash must be stable
+    // across runs. (llvm::MD5Hash returns the lower 64 bits of the MD5 hash,
+    // and we need some extra headroom for the full file name.)
+    rs_name = absl::StrCat(rs_name.substr(0, 160 - 17), "_",
+                           absl::Hex(llvm::MD5Hash(rs_name)));
   }
 
   if (!enclosing_item_id.has_value()) {

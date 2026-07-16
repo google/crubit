@@ -22,9 +22,9 @@
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
-#include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/LLVM.h"
+#include "llvm/Support/MD5.h"
 
 namespace crubit {
 namespace {
@@ -176,9 +176,19 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
         {FormattedError::FromStatus(std::move(unknown_attr.status()))});
   }
 
+  std::string rs_name = std::string(identifier->rs_identifier().Ident());
+  if (rs_name.size() > 160) {
+    // rustdoc generates filenames using these names, so they can't be too long.
+    // Preserve the prefix of the name for debugging. The hash must be stable
+    // across runs. (llvm::MD5Hash returns the lower 64 bits of the MD5 hash,
+    // and we need some extra headroom for the full file name.)
+    rs_name = absl::StrCat(rs_name.substr(0, 160 - 17), "_",
+                           absl::Hex(llvm::MD5Hash(rs_name)));
+  }
+
   return TypeAlias{
       .cc_name = identifier->cc_identifier,
-      .rs_name = identifier->rs_identifier(),
+      .rs_name = Identifier(rs_name),
       .unique_name = ictx_.GetUniqueName(*decl),
       .id = ictx_.GenerateItemId(decl),
       .owning_target = ictx_.GetOwningTarget(decl),
