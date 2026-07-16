@@ -1544,8 +1544,6 @@ pub fn generate_adt<'tcx>(
     .into_iter()
     .collect();
 
-    let repr_attrs = core.def_id.map(|id| db.repr_attrs(id)).unwrap_or_default();
-
     let ApiSnippets {
         main_api: mut fields_main_api,
         cc_details: fields_cc_details,
@@ -1555,7 +1553,6 @@ pub fn generate_adt<'tcx>(
         core.self_ty,
         &core.cc_short_name,
         &core.rs_fully_qualified_name,
-        &repr_attrs,
         core.size_in_bytes,
         core.alignment_in_bytes,
         &member_function_names,
@@ -2912,12 +2909,11 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
 }
 
 /// Returns the body of the C++ struct that represents the given ADT.
-pub(crate) fn generate_fields<'tcx>(
+fn generate_fields<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     cc_short_name: &Ident,
     rs_fully_qualified_name: &TokenStream,
-    repr_attrs: &[rustc_hir::attrs::ReprAttr],
     size_in_bytes: u64,
     alignment_in_bytes: u64,
     member_function_names: &HashSet<String>,
@@ -2928,6 +2924,7 @@ pub(crate) fn generate_fields<'tcx>(
 
     let layout = get_layout(db.tcx(), self_ty)
         .expect("Layout should be already verified by `generate_adt_core`");
+    let repr_attrs = db.repr_attrs(adt_def.did());
 
     let generator = AdtFieldGenerator {
         db,
@@ -2936,7 +2933,7 @@ pub(crate) fn generate_fields<'tcx>(
         adt_generic_args,
         cc_short_name,
         rs_fully_qualified_name,
-        repr_attrs,
+        repr_attrs: &repr_attrs,
         size_in_bytes,
         alignment_in_bytes,
         member_function_names,
