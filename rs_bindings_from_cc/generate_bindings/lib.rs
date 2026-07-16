@@ -18,8 +18,9 @@ use database::code_snippet::{
 use database::db::{BindingsGenerator, CodegenFunctions, Interner};
 use database::intern;
 use database::rs_snippet::{
-    BackingType, BridgeRsTypeKind, Callable, CustomizeMethodsKind, FnTrait, LifetimeOptions,
-    Mutability, PassingConvention, RsTypeKind, RustPtrKind, UniformReprTemplateType, UnsafeReason,
+    BackingType, BridgeRsTypeKind, Callable, CustomizeMethodsKind, FnTrait, Lifetime,
+    LifetimeOptions, Mutability, PassingConvention, RsTypeKind, RustPtrKind,
+    UniformReprTemplateType, UnsafeReason,
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -1158,21 +1159,26 @@ fn all_static_lifetimes_internal(t: Rc<RsTypeKind>) -> Rc<RsTypeKind> {
         RsTypeKind::Primitive(_) => t,
         RsTypeKind::BridgeType { bridge_type, original_type } => Rc::new(RsTypeKind::BridgeType {
             bridge_type: match bridge_type {
-                BridgeRsTypeKind::Bridge { rust_name, abi_rust, abi_cpp, generic_types } => {
-                    BridgeRsTypeKind::Bridge {
-                        rust_name: rust_name.clone(),
-                        abi_rust: abi_rust.clone(),
-                        abi_cpp: abi_cpp.clone(),
-                        generic_types: generic_types
-                            .iter()
-                            .map(|generic_type| {
-                                all_static_lifetimes_internal(Rc::new(generic_type.clone()))
-                                    .as_ref()
-                                    .clone()
-                            })
-                            .collect(),
-                    }
-                }
+                BridgeRsTypeKind::Bridge {
+                    rust_name,
+                    abi_rust,
+                    abi_cpp,
+                    generic_types,
+                    lifetimes,
+                } => BridgeRsTypeKind::Bridge {
+                    rust_name: rust_name.clone(),
+                    abi_rust: abi_rust.clone(),
+                    abi_cpp: abi_cpp.clone(),
+                    generic_types: generic_types
+                        .iter()
+                        .map(|generic_type| {
+                            all_static_lifetimes_internal(Rc::new(generic_type.clone()))
+                                .as_ref()
+                                .clone()
+                        })
+                        .collect(),
+                    lifetimes: lifetimes.iter().map(|_| Lifetime::new("static")).collect(),
+                },
                 BridgeRsTypeKind::ProtoMessageBridge { .. } => bridge_type.clone(),
                 BridgeRsTypeKind::StdOptional(element_type) => BridgeRsTypeKind::StdOptional(
                     all_static_lifetimes_internal(element_type.clone()),
