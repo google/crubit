@@ -190,6 +190,11 @@ def retain_proto_dot_h_headers(headers):
     return [h for h in headers if h.path.endswith("proto.h")]
 
 def _rust_bindings_from_cc_aspect_impl(target, ctx):
+    # Bypass bindings generation under Android target platforms because
+    # Crubit toolchain actions (e.g. c++-header-analysis) are not configured.
+    if ctx.target_platform_has_constraint(ctx.attr._android_constraint[platform_common.ConstraintValueInfo]):
+        return []
+
     # Faithless is he that says farewell when the road darkens (=Fasten the seatbelt).
     #
     # rust_bindings_from_cc_aspect requires cc_proto_aspect (because it visits through CcInfo), and
