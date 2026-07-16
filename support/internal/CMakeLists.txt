@@ -4,7 +4,7 @@
 
 # Automatically @generated CMakeLists.txt.
 
-add_library(crubit_support_internal_bindings_support STATIC
+add_library(crubit_support_internal_bindings_support INTERFACE
 "check_no_mutable_aliasing.cc"
 "check.h"
 "check_no_mutable_aliasing.h"
@@ -18,7 +18,7 @@ add_library(crubit_support_internal_bindings_support STATIC
 )
 set_target_properties(crubit_support_internal_bindings_support PROPERTIES LINKER_LANGUAGE CXX)
 
-target_include_directories(crubit_support_internal_bindings_support PUBLIC
+target_include_directories(crubit_support_internal_bindings_support INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
