@@ -208,3 +208,18 @@ fn test_deprecated_alias() {
 fn test_deprecated() {
     assert!(value_exists!(has_bindings::crubit_deprecated));
 }
+
+#[gtest]
+fn test_instantiated_template_struct() {
+    assert!(type_exists!(has_bindings::InstantiatedTemplatedStruct));
+}
+
+#[gtest]
+fn test_std_set() {
+    assert!(value_exists!(has_bindings::UseSetByReference));
+    assert!(value_exists!(has_bindings::UseSetByPointer));
+    fn uses_use_set_by_value(s: has_bindings::IntSet) {
+        // we can't use value_exists! here because UseSetByValue is generic.
+        has_bindings::UseSetByValue(s);
+    }
+}

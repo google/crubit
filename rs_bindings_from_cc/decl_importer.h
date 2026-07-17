@@ -227,6 +227,11 @@ class ImportContext {
   // other redeclarations of the decl.
   virtual bool IsFromCurrentTarget(const clang::Decl* decl) const = 0;
 
+  // Checks if the alien `decl` (!IsFromCurrentTarget(decl)) depends on any
+  // CXXRecordDecl definition owned by the current target.
+  virtual bool RefersToOwnedDefinition(
+      const clang::CXXRecordDecl* decl) const = 0;
+
   // Returns true iff the `decl` is from a proto target. Does not look into
   // other redeclarations of the decl.
   virtual bool IsFromProtoTarget(const clang::Decl& decl) const = 0;

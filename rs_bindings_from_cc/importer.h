@@ -84,6 +84,9 @@ class Importer final : public ImportContext {
       clang::RedeclarableTemplateDecl* template_decl) override;
   BazelLabel GetOwningTarget(const clang::Decl* decl) const override;
   bool IsFromCurrentTarget(const clang::Decl* decl) const override;
+  bool RefersToOwnedDefinition(const clang::CXXRecordDecl* decl) const override;
+  bool IsFromCurrentTargetAndNotUnderSpecialization(
+      const clang::Decl* decl) const;
   bool IsFromProtoTarget(const clang::Decl& decl) const override;
   bool IsCrubitEnabledForTarget(const BazelLabel& label) const override;
   bool AreAssumedLifetimesEnabledForTarget(
@@ -177,6 +180,10 @@ class Importer final : public ImportContext {
   // the template instantiation.
   CcType ConvertTemplateSpecializationType(
       const clang::TemplateSpecializationType* type);
+
+  bool RefersToOwnedDefinitionImpl(
+      const clang::CXXRecordDecl* decl,
+      absl::flat_hash_set<const clang::CXXRecordDecl*>& visited) const;
 
   bool IsFeatureEnabledForTarget(const BazelLabel& label,
                                  absl::string_view feature) const;

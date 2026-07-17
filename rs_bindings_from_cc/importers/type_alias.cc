@@ -156,6 +156,38 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
                               .enclosing_item_id = *enclosing_item_id},
         {FormattedError::FromStatus(std::move(underlying_type.status()))});
   }
+  bool is_cc_template_instantiation = false;
+  if (const auto* ns_decl =
+          clang::dyn_cast<clang::NamespaceDecl>(decl->getDeclContext())) {
+    // Explicitly support `cc_template!`: see support/cc_template/cc_template.rs
+    if (ns_decl->getName() == "__cc_template_instantiations") {
+      is_cc_template_instantiation = true;
+    }
+  }
+
+  // TODO(zarko): This check is overly conservative; we should see if we can
+  // come up with a better way to filter out problematic cases where we disagree
+  // about completeness in different targets, or we could also decide that this
+  // is not a valid way to use the tool and require that users include the
+  // necessary headers to get proper output.
+  if (!ictx_.IsFromCurrentTarget(decl) && !is_cc_template_instantiation) {
+    const clang::CXXRecordDecl* record_decl =
+        underlying_qualtype->getAsCXXRecordDecl();
+    if (auto* tst =
+            underlying_qualtype->getAs<clang::TemplateSpecializationType>()) {
+      if (record_decl == nullptr) record_decl = tst->getAsCXXRecordDecl();
+    }
+    if (record_decl != nullptr && ictx_.RefersToOwnedDefinition(record_decl)) {
+      return ictx_.ImportUnsupportedItem(
+          *decl,
+          UnsupportedItem::Path{.ident = (*identifier).cc_identifier,
+                                .enclosing_item_id = *enclosing_item_id},
+          {FormattedError::Static(
+              "Cannot import across-target type alias because its underlying "
+              "type requires a record definition owned by a downstream "
+              "target")});
+    }
+  }
   ictx_.MarkAsSuccessfullyImported(decl);
 
   std::optional<std::string> deprecated;

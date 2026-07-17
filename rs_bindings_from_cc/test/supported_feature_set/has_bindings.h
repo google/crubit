@@ -5,6 +5,8 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_ALLOWED_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_ALLOWED_H_
 
+#include <set>
+
 #include "absl/base/attributes.h"
 namespace crubit::has_bindings {
 
@@ -89,6 +91,19 @@ using DeprecatedAlias [[deprecated]] = int;
 // function. We need to actually test deprecated functions!
 // Note to humans: please figure out a good way to control the robots.
 [[deprecated]] inline void crubit_deprecated() {}
+
+template <typename T>
+struct TemplatedStruct {
+  T x;
+};
+
+using InstantiatedTemplatedStruct = TemplatedStruct<int>;
+
+using IntSet = std::set<int>;
+
+inline void UseSetByReference(const std::set<int>& v) {}
+inline void UseSetByPointer(std::set<int>* v) {}
+inline void UseSetByValue(std::set<int> v) {}
 
 }  // namespace crubit::has_bindings
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_ALLOWED_H_

@@ -7,7 +7,10 @@ crubit_test_cc_library(
     name = "has_bindings",
     srcs = ["has_bindings.cc"],
     hdrs = ["has_bindings.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [
+        "//features:supported",
+        "//features:template_instantiation",
+    ],
     copts = ["-Wno-nullability-completeness"],
     deps = ["@abseil-cpp//absl/base:core_headers"],
 )
@@ -15,7 +18,10 @@ crubit_test_cc_library(
 crubit_test_cc_library(
     name = "no_bindings",
     hdrs = ["no_bindings.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [
+        "//features:supported",
+        "//features:template_instantiation",
+    ],
 )
 
 crubit_rust_test(

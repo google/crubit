@@ -1278,6 +1278,104 @@ bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
   return invocation_.target_ == GetOwningTarget(decl);
 }
 
+bool Importer::IsFromCurrentTargetAndNotUnderSpecialization(
+    const clang::Decl* decl) const {
+  if (decl == nullptr) return false;
+  if (IsFullClassTemplateSpecializationOrChild(decl)) return false;
+  return IsFromCurrentTarget(decl);
+}
+
+bool Importer::RefersToOwnedDefinition(const clang::CXXRecordDecl* decl) const {
+  if (decl == nullptr) return false;
+  absl::flat_hash_set<const clang::CXXRecordDecl*> visited;
+  return RefersToOwnedDefinitionImpl(decl, visited);
+}
+
+bool Importer::RefersToOwnedDefinitionImpl(
+    const clang::CXXRecordDecl* decl,
+    absl::flat_hash_set<const clang::CXXRecordDecl*>& visited) const {
+  if (decl == nullptr) return false;
+  if (!visited.insert(decl).second) return false;
+
+  const clang::CXXRecordDecl* def = decl->getDefinition();
+  if (def != nullptr &&
+      !clang::isa<clang::ClassTemplateSpecializationDecl>(decl)) {
+    if (IsFromCurrentTargetAndNotUnderSpecialization(def)) return true;
+  }
+
+  if (auto* spec =
+          clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl)) {
+    auto primary_or_partial = spec->getSpecializedTemplateOrPartial();
+    if (auto* primary =
+            primary_or_partial.dyn_cast<clang::ClassTemplateDecl*>()) {
+      if (auto* primary_def = primary->getTemplatedDecl()->getDefinition()) {
+        if (IsFromCurrentTargetAndNotUnderSpecialization(primary_def) ||
+            (primary_def != decl &&
+             RefersToOwnedDefinitionImpl(primary_def, visited))) {
+          return true;
+        }
+      }
+    } else if (auto* partial =
+                   primary_or_partial.dyn_cast<
+                       clang::ClassTemplatePartialSpecializationDecl*>()) {
+      if (auto* partial_def = partial->getDefinition()) {
+        if (IsFromCurrentTargetAndNotUnderSpecialization(partial_def) ||
+            (partial_def != decl &&
+             RefersToOwnedDefinitionImpl(partial_def, visited))) {
+          return true;
+        }
+      }
+    }
+
+    for (const clang::TemplateArgument& arg :
+         spec->getTemplateArgs().asArray()) {
+      if (arg.getKind() == clang::TemplateArgument::Type) {
+        if (clang::CXXRecordDecl* arg_record =
+                arg.getAsType()->getAsCXXRecordDecl()) {
+          if (RefersToOwnedDefinitionImpl(arg_record, visited)) {
+            return true;
+          }
+        } else if (auto* tst =
+                       arg.getAsType()
+                           ->getAs<clang::TemplateSpecializationType>()) {
+          if (auto* sub_record = tst->getAsCXXRecordDecl()) {
+            if (RefersToOwnedDefinitionImpl(sub_record, visited)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (def != nullptr) {
+    for (const clang::FieldDecl* field : def->fields()) {
+      if (clang::CXXRecordDecl* field_record =
+              field->getType()->getAsCXXRecordDecl()) {
+        if (RefersToOwnedDefinitionImpl(field_record, visited)) return true;
+      } else if (auto* tst = field->getType()
+                                 ->getAs<clang::TemplateSpecializationType>()) {
+        if (auto* sub_record = tst->getAsCXXRecordDecl()) {
+          if (RefersToOwnedDefinitionImpl(sub_record, visited)) return true;
+        }
+      }
+    }
+    for (const clang::CXXBaseSpecifier& base : def->bases()) {
+      if (clang::CXXRecordDecl* base_record =
+              base.getType()->getAsCXXRecordDecl()) {
+        if (RefersToOwnedDefinitionImpl(base_record, visited)) return true;
+      } else if (auto* tst = base.getType()
+                                 ->getAs<clang::TemplateSpecializationType>()) {
+        if (auto* sub_record = tst->getAsCXXRecordDecl()) {
+          if (RefersToOwnedDefinitionImpl(sub_record, visited)) return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
 bool Importer::IsFromProtoTarget(const clang::Decl& decl) const {
   // TODO(b/b/441343672): This is probably not a good way to detect if something
   // is from a proto target, and we should do something more durable.

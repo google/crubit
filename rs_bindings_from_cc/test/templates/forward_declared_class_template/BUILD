@@ -46,6 +46,7 @@ crubit_rust_test(
 crubit_test_cc_library(
     name = "definition_forward_declared_template",
     hdrs = ["definition_forward_declared_template.h"],
+    aspect_hints = ["//features:template_instantiation"],
     deps = [
         ":use_forward_declared_template",
     ],

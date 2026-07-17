@@ -48,7 +48,6 @@ fn test_unknown_attr_enum() {
 #[gtest]
 fn test_templates() {
     assert!(!type_exists!(no_bindings::TemplatedStruct));
-    assert!(!type_exists!(no_bindings::InstantiatedTemplatedStruct));
 }
 
 /// Function pointers, like most supported types, are only supported if their
@@ -70,10 +69,8 @@ fn test_incomplete_type() {
 }
 
 #[gtest]
-fn test_std_vector() {
+fn test_std_set() {
     assert!(!value_exists!(no_bindings::UseSetByValue));
-    assert!(!value_exists!(no_bindings::UseSetByReference));
-    assert!(!value_exists!(no_bindings::UseSetByPointer));
 }
 
 #[gtest]

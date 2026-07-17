@@ -7,7 +7,6 @@
 
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_NO_BINDINGS_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_C_NO_BINDINGS_H_
-#include <set>
 namespace crubit::no_bindings {
 
 using UnknownAttrAlias [[gnu::unused]] = int;
@@ -31,8 +30,6 @@ struct TemplatedStruct {
   T x;
 };
 
-using InstantiatedTemplatedStruct = TemplatedStruct<int>;
-
 [[clang::vectorcall]] inline void crubit_vectorcall() {}
 
 [[noreturn]] inline void crubit_noreturn() {
@@ -46,16 +43,12 @@ using InstantiatedTemplatedStruct = TemplatedStruct<int>;
 [[deprecated]] inline void crubit_enable_if()
     __attribute__((enable_if(2 + 2 == 4, ""))) {}
 
-inline void crubit_invoke_callback(void (*f)(InstantiatedTemplatedStruct* x)) {
+inline void crubit_invoke_callback(void (*f)(UnknownAttrStruct* x)) {
   f(nullptr);
 }
 
 using UnknownTypeAttribute = __attribute__((noderef)) int*;
 inline void crubit_unknown_type_attribute(__attribute__((noderef)) int*) {}
-
-inline void UseSetByValue(std::set<int> v) {}
-inline void UseSetByReference(const std::set<int>& v) {}
-inline void UseSetByPointer(std::set<int>* v) {}
 
 // It is an error for consteval to NOT be evaluated at compile time, so its not
 // possible to expose these to Rust.
