@@ -40,7 +40,7 @@ TEST(PointerNullabilityTest, DesignatedInitializerListExpressions) {
       int x = 1;
 
       S{.p = nullptr};  // [[unsafe]]
-      S{.p = q};  // [[unsafe]]
+      S{.p = q};        // [[unsafe]]
       S{.p = new int};
       S{.p = &x};
     }
@@ -144,8 +144,8 @@ TEST(PointerNullabilityTest,
       int* _Nullable q = nullptr;
       int x = 1;
 
-      S s1{.NullableMember = nullptr}; // [[unsafe]]
-      S s2{.NullableMember = new int}; // [[unsafe]]
+      S s1{.NullableMember = nullptr};  // [[unsafe]]
+      S s2{.NullableMember = new int};  // [[unsafe]]
 
       S s3{.NonnullMember = nullptr};  // [[unsafe]]
       S s4{.NonnullMember = q};        // [[unsafe]]
@@ -240,14 +240,108 @@ TEST(PointerNullabilityTest, DefaultConstructorInitialization) {
       int* _Nonnull p;
     };
 
+    struct DefaultedDefaultCtor {
+      DefaultedDefaultCtor() = default;
+      int* _Nonnull p;
+    };
+
     struct ImplicitDefaultCtor {
       std::unique_ptr<int> _Nonnull ptr;
     };
 
+    template <typename T>
+    struct TemplatedDefaultedCtor {
+      TemplatedDefaultedCtor() = default;
+      T* _Nonnull p;
+    };
+
     void target() {
-      TrivialPOD pod;                // [[unsafe]]
-      ImplicitDefaultCtor implicit;  // [[unsafe]]
+      TrivialPOD pod;                         // [[unsafe]]
+      DefaultedDefaultCtor defaulted;         // [[unsafe]]
+      ImplicitDefaultCtor implicit;           // [[unsafe]]
+      TemplatedDefaultedCtor<int> templated;  // [[unsafe]]
     }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, DefaultedCtorLeavesFieldUninitialized) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct target {
+      target() /* [[unsafe]] */ = default;
+      int* _Nonnull p;
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, TemplatedDefaultedCtorLeavesFieldUninitialized) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    struct target {
+      target() /* [[unsafe]] */ = default;
+      T* _Nonnull p;
+    };
+    template struct target<int>;
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, CustomConstructorLeavesFieldUninitialized) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct target {
+      target(int* _Nonnull i) : i1(i) { /* [[unsafe]] */ }
+      int* _Nonnull i1;
+      int* _Nonnull i2;
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest,
+     CustomConstructorLeavesReferencedFieldUninitialized) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct target {
+      target(int* _Nonnull i) : i1(i) { int* x = i2; } /* [[unsafe]] */
+      int* _Nonnull i1;
+      int* _Nonnull i2;
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, CustomCtorWithNullableInClassInit) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int* _Nullable getNullable();
+    struct target {
+      target() { /* [[unsafe]] */ }
+      int* _Nonnull p = getNullable();
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, DefaultedCtorWithNullableInClassInit) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int* _Nullable getNullable();
+    struct target {
+      target() /* [[unsafe]] */ = default;
+      int* _Nonnull p = getNullable();
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, DefaultedCtorWithValidInClassInit) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int* _Nonnull getNonnull();
+    struct target {
+      target() = default;
+      int* _Nonnull p = getNonnull();
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, DefaultedCtorWithUnspecifiedInClassInit) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int* getUnspecified();
+    struct target {
+      target() = default;
+      int* _Nonnull p = getUnspecified();
+    };
   )cc"));
 }
 

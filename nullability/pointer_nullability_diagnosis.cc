@@ -673,7 +673,6 @@ static void checkRecordFieldsForUninitializedNonnull(
     const TypeNullabilityDefaults& Defaults, ASTContext& Ctx,
     PointerNullabilityDiagnostic::ErrorCode Code,
     PointerNullabilityDiagnostic::Context DiagCtx, CharSourceRange Range,
-    bool VerifyInClassInitializers,
     SmallVectorImpl<PointerNullabilityDiagnostic>& Diags) {
   for (const FieldDecl* Field : RD->fields()) {
     if (!isSupportedPointerType(Field->getType())) {
@@ -686,22 +685,22 @@ static void checkRecordFieldsForUninitializedNonnull(
       continue;
     }
 
+    // Check if the field has a non-nullable in-class initializer.
     if (const Expr* Init = Field->getInClassInitializer()) {
-      if (VerifyInClassInitializers &&
-          Init->isNullPointerConstant(Ctx, Expr::NPC_ValueDependentIsNull)) {
-        Diags.push_back({
-            .Code = Code,
-            .Ctx = DiagCtx,
-            .Range = Range,
-            .NoteRange =
-                CharSourceRange::getTokenRange(Field->getSourceRange()),
-            .NoteMessage = "pointer field is declared here",
-        });
+      if (!Init->isNullPointerConstant(Ctx, Expr::NPC_ValueDependentIsNull)) {
+        // Statically check if the initializer expression is explicitly
+        // annotated as nullable. This is needed for defaulted constructors
+        // where we don't run dataflow analysis.
+        FileID FID = Ctx.getSourceManager().getFileID(Init->getExprLoc());
+        TypeNullability InitNullability =
+            getTypeNullability(Init->getType(), FID, Defaults);
+        if (InitNullability.empty() ||
+            InitNullability.front().concrete() != NullabilityKind::Nullable) {
+          continue;
+        }
       }
-      continue;
     }
 
-    // The nonnull pointer field has no in-class initializer.
     Diags.push_back({
         .Code = Code,
         .Ctx = DiagCtx,
@@ -729,8 +728,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseConstructExpr(
           RD, State.Lattice.defaults(), *Result.Context,
           PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
           PointerNullabilityDiagnostic::Context::Initializer,
-          CharSourceRange::getTokenRange(CE->getSourceRange()),
-          /*VerifyInClassInitializers=*/true, Diagnostics);
+          CharSourceRange::getTokenRange(CE->getSourceRange()), Diagnostics);
     }
   }
 
@@ -1262,9 +1260,10 @@ static void checkNonnullPointerMemberDefaultInitializer(
 }
 
 static CharSourceRange getMethodClosingBraceRange(const CXXMethodDecl& Method) {
-  if (!Method.hasBody()) {
-    // If the method doesn't have a body, fall back to using the entire method
-    // source range (which should be the source range for the declaration).
+  if (Method.isDefaulted() || !Method.hasBody()) {
+    // If the method doesn't have a body (or is defaulted), fall back to using
+    // the entire method source range (which should be the source range for the
+    // declaration).
     return CharSourceRange::getTokenRange(Method.getSourceRange());
   }
 
@@ -1290,6 +1289,12 @@ static void diagnoseNonnullPointerFieldNullableAtExit(
   // analyze destructors.
   if (isa<CXXDestructorDecl>(Method)) return;
 
+  // Delegating constructors delegate initialization to another constructor,
+  // which will be checked separately.
+  if (const auto* Ctor = dyn_cast<CXXConstructorDecl>(Method)) {
+    if (Ctor->isDelegatingConstructor()) return;
+  }
+
   RecordStorageLocation* RecordLoc =
       StateAtExit.Env.getThisPointeeStorageLocation();
   if (RecordLoc == nullptr) return;
@@ -1298,10 +1303,6 @@ static void diagnoseNonnullPointerFieldNullableAtExit(
   FieldSet ModeledFields =
       AnalysisContext.getModeledFields(RecordLoc->getType());
   for (const FieldDecl* Field : RD->fields()) {
-    // If the field isn't modeled, we can't access it below -- but it also can't
-    // be moved from because the method obviously doesn't refer to it.
-    if (!ModeledFields.contains(Field)) continue;
-
     bool SmartPointer;
     if (isSupportedRawPointerType(Field->getType())) {
       SmartPointer = false;
@@ -1318,42 +1319,51 @@ static void diagnoseNonnullPointerFieldNullableAtExit(
       continue;
     }
 
-    StorageLocation* FieldLoc = RecordLoc->getChild(*Field);
-    if (FieldLoc == nullptr) continue;
+    if (ModeledFields.contains(Field)) {
+      StorageLocation* FieldLoc = RecordLoc->getChild(*Field);
+      if (FieldLoc == nullptr) continue;
 
-    PointerValue* Val;
-    if (SmartPointer) {
-      Val = getPointerValueFromSmartPointer(
-          cast<RecordStorageLocation>(FieldLoc), StateAtExit.Env);
-    } else {
-      Val = StateAtExit.Env.get<PointerValue>(*FieldLoc);
-    }
-    if (Val == nullptr) {
-      Diags.push_back({
-          .Code = PointerNullabilityDiagnostic::ErrorCode::Untracked,
-          .Ctx = PointerNullabilityDiagnostic::Context::Other,
-          .Range = CharSourceRange::getTokenRange(Field->getSourceRange()),
-      });
+      PointerValue* Val;
+      if (SmartPointer) {
+        Val = getPointerValueFromSmartPointer(
+            cast<RecordStorageLocation>(FieldLoc), StateAtExit.Env);
+      } else {
+        Val = StateAtExit.Env.get<PointerValue>(*FieldLoc);
+      }
+      if (Val == nullptr) {
+        Diags.push_back({
+            .Code = PointerNullabilityDiagnostic::ErrorCode::Untracked,
+            .Ctx = PointerNullabilityDiagnostic::Context::Other,
+            .Range = CharSourceRange::getTokenRange(Field->getSourceRange()),
+        });
+        continue;
+      }
+
+      // We may see a value without nullability properties here, so guard
+      // against that. This can happen, for example, if the field was
+      // initialized by the framework on function entry but not accessed on some
+      // paths, hence not giving us an opportunity to initialize the nullability
+      // properties on those paths.
+      if (!hasPointerNullState(*Val)) return;
+
+      if (!isNullable(*Val, StateAtExit.Env)) {
+        continue;
+      }
+    } else if (!isa<CXXConstructorDecl>(Method)) {
+      // The field is not modeled. For constructors, this means it was left
+      // uninitialized, which we report below. For other methods, it means the
+      // method does not access it, so it has not been moved from.
       continue;
     }
 
-    // We may see a value without nullability properties here, so guard against
-    // that. This can happen, for example, if the field was initialized by the
-    // framework on function entry but not accessed on some paths, hence not
-    // giving us an opportunity to initialize the nullability properties on
-    // those paths.
-    if (!hasPointerNullState(*Val)) return;
-
-    if (isNullable(*Val, StateAtExit.Env)) {
-      Diags.push_back({
-          .Code = PointerNullabilityDiagnostic::ErrorCode::
-              NonnullPointerFieldNullableAtExit,
-          .Ctx = PointerNullabilityDiagnostic::Context::Other,
-          .Range = getMethodClosingBraceRange(*Method),
-          .NoteRange = CharSourceRange::getTokenRange(Field->getSourceRange()),
-          .NoteMessage = "pointer field is declared here",
-      });
-    }
+    Diags.push_back({
+        .Code = PointerNullabilityDiagnostic::ErrorCode::
+            NonnullPointerFieldNullableAtExit,
+        .Ctx = PointerNullabilityDiagnostic::Context::Other,
+        .Range = getMethodClosingBraceRange(*Method),
+        .NoteRange = CharSourceRange::getTokenRange(Field->getSourceRange()),
+        .NoteMessage = "pointer field is declared here",
+    });
   }
 }
 
@@ -1439,6 +1449,38 @@ static DiagTransferFunc pointerNullabilityDiagnoserAfter(
       .Build();
 }
 
+// Diagnose explicitly defaulted constructors to check for uninitialized,
+// nonnull pointers. Although most constructors are checked by
+// `diagnoseNonnullPointerFieldNullableAtExit`, the defaulted constructor is a
+// special case: if it's not ODR-used in the same translation unit, Clang won't
+// generate its body, so `diagnoseNonnullPointerFieldNullableAtExit` can't run.
+static void checkExplicitlyDefaultedConstructor(
+    clang::ASTContext& Ctx, const TypeNullabilityDefaults& Defaults,
+    const CXXConstructorDecl& Ctor,
+    llvm::SmallVector<PointerNullabilityDiagnostic>& Diags) {
+  if (!Ctor.isDefaultConstructor() || !Ctor.isDefaulted() ||
+      Ctor.isImplicit() || Ctor.isDeleted()) {
+    return;
+  }
+
+  const CXXRecordDecl* RD = Ctor.getParent();
+  if (RD->isTemplated() ||
+      Ctx.getSourceManager().isInSystemHeader(RD->getLocation())) {
+    return;
+  }
+  if (!RD->isClass() && !RD->isStruct()) {
+    return;
+  }
+
+  // Check all fields of the record for uninitialized nonnull pointers.
+  checkRecordFieldsForUninitializedNonnull(
+      RD, Defaults, Ctx,
+      PointerNullabilityDiagnostic::ErrorCode::
+          NonnullPointerFieldNullableAtExit,
+      PointerNullabilityDiagnostic::Context::Other,
+      CharSourceRange::getTokenRange(Ctor.getSourceRange()), Diags);
+}
+
 std::unique_ptr<dataflow::Solver> makeDefaultSolverForDiagnosis() {
   // This limit is set based on empirical observations. Mostly, it is a rough
   // proxy for a line between "finite" and "effectively infinite", rather than a
@@ -1466,6 +1508,10 @@ diagnosePointerNullability(const ValueDecl* VD,
 
   checkAnnotationsConsistent(VD, Diags, Defaults);
 
+  if (const auto* Ctor = dyn_cast<CXXConstructorDecl>(VD)) {
+    checkExplicitlyDefaultedConstructor(Ctx, Defaults, *Ctor, Diags);
+  }
+
   if (const FieldDecl* Member = dyn_cast<FieldDecl>(VD)) {
     checkNonnullPointerMemberDefaultInitializer(Ctx, Defaults, *Member, Diags);
   }
@@ -1478,7 +1524,8 @@ diagnosePointerNullability(const ValueDecl* VD,
 
   // Use `doesThisDeclarationHaveABody()` rather than `hasBody()` to ensure we
   // analyze forward-declared functions only once.
-  if (!Func->doesThisDeclarationHaveABody()) return Diags;
+  if (!Func->doesThisDeclarationHaveABody() || Func->isDefaulted())
+    return Diags;
 
   AllowedMovedFromNonnullSmartPointerExprs AllowedMovedFromNonnull(Func);
 
