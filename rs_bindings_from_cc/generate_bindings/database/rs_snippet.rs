@@ -2158,6 +2158,39 @@ impl RsTypeKind {
             RsTypeKind::ExistingRustType { rust_type, .. } => rust_type.parse().expect("ExistingRustType.rust_type should parse as a TokenStream because it was constructed from one."),
         }
     }
+
+    pub fn to_token_stream_without_lifetimes<'a>(
+        &self,
+        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+    ) -> TokenStream {
+        match self {
+            RsTypeKind::Record { record, crate_path, uniform_repr_template_type, .. } => {
+                if let Some(generic_monomorphization) = uniform_repr_template_type {
+                    return generic_monomorphization.to_token_stream(&db);
+                }
+                let ident = make_rs_ident(record.rs_name().as_str());
+                quote! { #crate_path #ident }
+            }
+            RsTypeKind::TypeAlias { type_alias, crate_path, lifetimes, .. } => {
+                let mut ident = make_rs_ident(type_alias.rs_name().as_str());
+                let mut crate_path = crate_path.clone();
+                if !lifetimes.is_empty()
+                    && let RsTypeKind::Record { record, .. } = self.unalias()
+                    && record.template_specialization().as_ref().is_some_and(|ts| {
+                        matches!(ts.kind(), TemplateSpecializationKind::StdStringView)
+                    })
+                {
+                    ident = make_rs_ident("string_view");
+                    // Remove `__u`.
+                    let mut new_crate_path: CratePath = (*crate_path).clone();
+                    new_crate_path.namespace_qualifier.namespaces.pop();
+                    crate_path = Rc::new(new_crate_path);
+                };
+                quote! { #crate_path #ident }
+            }
+            _ => self.to_token_stream(db),
+        }
+    }
 }
 
 /// Take a user defined path, like `foo` or `::bar`, and convert it to

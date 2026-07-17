@@ -608,6 +608,33 @@ fn test_impl_eq_for_free_function() -> Result<()> {
 }
 
 #[gtest]
+fn test_impl_eq_for_free_function_with_lifetime_params() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
+        namespace ns {
+            struct LIFETIME_PARAMS("a") SomeView final { const char* data; };
+        }
+        bool operator==(ns::SomeView lhs, ns::SomeView rhs) {
+            return lhs.data == rhs.data;
+        }
+        "#,
+    )?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'a, 'rhs> PartialEq<crate::ns::SomeView<'rhs>> for crate::ns::SomeView<'a> {
+                #[inline(always)]
+                fn eq<'lhs>(&self, rhs: &crate::ns::SomeView<'rhs>) -> bool {
+                    unsafe { crate::detail::__rust_thunk___ZeqN2ns8SomeViewES0_(&mut self.clone(), &mut rhs.clone()) }
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_impl_eq_ne_for_member_function() -> Result<()> {
     let ir = ir_from_assumed_lifetimes_cc(
         r#"

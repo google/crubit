@@ -2295,9 +2295,10 @@ pub fn generate_function(
                 quote! { #record_name }
             } else {
                 // If the trait is being implemented for a different record than its enclosing one
-                // (e.g. for conversion operators) retrieve the fully qualified path.
+                // (e.g. for conversion operators) retrieve the fully qualified path without lifetime
+                // arguments, since `#trait_record_param_tokens` will be appended when generating the trait impl.
                 let t = db.rs_type_kind(trait_record.into())?;
-                t.to_token_stream(db)
+                t.to_token_stream_without_lifetimes(db)
             };
 
             let mut extra_body = if let Some(name) = associated_return_type {
