@@ -1,0 +1,27 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load(
+    "@rules_crubit//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
+    "cc_bindings_from_rust",
+)
+load("@rules_rust//rust:rust_library.bzl", "rust_library")
+
+cc_binary(
+    name = "main",
+    srcs = ["main.cpp"],
+    deps = [
+        ":lib_cc_api",
+    ],
+)
+
+rust_library(
+    name = "lib",
+    srcs = ["rust_lib/src/lib.rs"],
+    deps = [
+        "@crates//base64",
+    ],
+)
+
+cc_bindings_from_rust(
+    name = "lib_cc_api",
+    crate = ":lib",
+)

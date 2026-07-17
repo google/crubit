@@ -1,0 +1,39 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+module(
+    name = "demo_project",
+    version = "0.0.1",
+)
+
+bazel_dep(name = "rules_crubit", version = "0.0.1")
+
+local_path_override(
+    module_name = "rules_crubit",
+    path = "../../..",
+)
+
+bazel_dep(name = "rules_rust", version = "0.71.3")
+bazel_dep(name = "rules_cc", version = "0.2.19")
+bazel_dep(name = "toolchains_llvm", version = "1.8.0")
+
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+crate.from_cargo(
+    name = "crates",
+    manifests = [
+      "//:rust_lib/Cargo.toml",
+    ],
+)
+use_repo(crate, "crates")
+
+crubit_toolchains = use_extension("@rules_crubit//bazel:extensions.bzl", "crubit_toolchains")
+crubit_toolchains.configure(
+  llvm_version = "22.1.0",
+  rust_version = "nightly/2026-07-15",
+)
+use_repo(crubit_toolchains, "llvm_toolchain", "rust_toolchains")
+
+register_toolchains(
+  "@rust_toolchains//:all",
+  "@llvm_toolchain//:all",
+)
