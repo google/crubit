@@ -3276,6 +3276,34 @@ pub fn overload_sets(db: &BindingsGenerator) -> Rc<HashMap<Rc<FunctionId>, Optio
 
 pub const CONTAINER_LIFETIME_NAME: &str = "ctnr";
 
+fn has_matching_cc_index(db: &BindingsGenerator, record: &Record, index_type: &RsTypeKind) -> bool {
+    record.children().iter().any(|item| {
+        if let Item::Func(f) = item
+            && let Some(metadata) = f.instance_method_metadata()
+            && metadata.is_const()
+            && let UnqualifiedIdentifier::Operator(op) = f.cc_name()
+            && op.name() == "[]"
+        {
+            let Ok((mut param_types, return_type)) = rs_type_kinds_for_func(db, f) else {
+                return false;
+            };
+            let result = api_func_shape(db, f, &mut param_types, &return_type, &Errors::new());
+            if let Some((
+                _,
+                ImplKind::Trait {
+                    trait_name: TraitName::CcIndex { index_type: const_index_type, .. },
+                    ..
+                },
+            )) = result
+            {
+                return const_index_type.all_static_lifetimes(true)
+                    == index_type.all_static_lifetimes(true);
+            }
+        }
+        false
+    })
+}
+
 /// Generates standard `std::ops::Index` and `std::ops::IndexMut`
 /// implementations that forward to the GAT-based `CcIndex` and `CcIndexMut`
 /// traits.
@@ -3298,9 +3326,12 @@ pub fn generate_standard_indexing_impl(
             } else {
                 let index_type_tokens = index_type.to_token_stream(db);
                 let output_type_tokens = output_type.to_token_stream(db);
+                let index_lifetimes = unique_lifetimes(core::slice::from_ref(&**index_type), &[]);
                 if trait_record.is_unpin() {
+                    let impl_generics =
+                        format_generic_params(&index_lifetimes, std::iter::empty::<syn::Ident>());
                     quote! {
-                        impl ::core::ops::Index<#index_type_tokens> for #record_name #unsatisfied_where_clause {
+                        impl #impl_generics ::core::ops::Index<#index_type_tokens> for #record_name #unsatisfied_where_clause {
                             type Output = #output_type_tokens;
                             #[inline(always)]
                             fn index(&self, index: #index_type_tokens) -> &Self::Output {
@@ -3309,8 +3340,14 @@ pub fn generate_standard_indexing_impl(
                         }
                     }
                 } else {
+                    let mut lifetimes = index_lifetimes;
+                    if !lifetimes.iter().any(|l| l.0.as_ref() == CONTAINER_LIFETIME_NAME) {
+                        lifetimes.push(Lifetime::new(CONTAINER_LIFETIME_NAME));
+                    }
+                    let impl_generics =
+                        format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
                     quote! {
-                        impl<'ctnr> ::core::ops::Index<#index_type_tokens> for ::core::pin::Pin<&'ctnr mut #record_name> #unsatisfied_where_clause {
+                        impl #impl_generics ::core::ops::Index<#index_type_tokens> for ::core::pin::Pin<&'ctnr mut #record_name> #unsatisfied_where_clause {
                             type Output = #output_type_tokens;
                             #[inline(always)]
                             fn index(&self, index: #index_type_tokens) -> &Self::Output {
@@ -3330,13 +3367,16 @@ pub fn generate_standard_indexing_impl(
                 RsTypeKind::Record { record, .. } => record.is_unpin(),
                 _ => true,
             };
-            if is_rvalue || !is_item_unpin {
+            if is_rvalue || !is_item_unpin || !has_matching_cc_index(db, trait_record, index_type) {
                 quote! {}
             } else {
                 let index_type_tokens = index_type.to_token_stream(db);
+                let index_lifetimes = unique_lifetimes(core::slice::from_ref(&**index_type), &[]);
                 if trait_record.is_unpin() {
+                    let impl_generics =
+                        format_generic_params(&index_lifetimes, std::iter::empty::<syn::Ident>());
                     quote! {
-                        impl ::core::ops::IndexMut<#index_type_tokens> for #record_name #unsatisfied_where_clause {
+                        impl #impl_generics ::core::ops::IndexMut<#index_type_tokens> for #record_name #unsatisfied_where_clause {
                             #[inline(always)]
                             fn index_mut(&mut self, index: #index_type_tokens) -> &mut Self::Output {
                                 ::operator::CcIndexMut::cc_index_mut(::core::pin::Pin::new(self), index)
@@ -3344,8 +3384,14 @@ pub fn generate_standard_indexing_impl(
                         }
                     }
                 } else {
+                    let mut lifetimes = index_lifetimes;
+                    if !lifetimes.iter().any(|l| l.0.as_ref() == CONTAINER_LIFETIME_NAME) {
+                        lifetimes.push(Lifetime::new(CONTAINER_LIFETIME_NAME));
+                    }
+                    let impl_generics =
+                        format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
                     quote! {
-                        impl<'ctnr> ::core::ops::IndexMut<#index_type_tokens> for ::core::pin::Pin<&'ctnr mut #record_name> #unsatisfied_where_clause {
+                        impl #impl_generics ::core::ops::IndexMut<#index_type_tokens> for ::core::pin::Pin<&'ctnr mut #record_name> #unsatisfied_where_clause {
                             #[inline(always)]
                             fn index_mut(&mut self, index: #index_type_tokens) -> &mut Self::Output {
                                 ::operator::CcIndexMut::cc_index_mut(self.as_mut(), index)

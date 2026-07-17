@@ -1179,6 +1179,20 @@ impl RsTypeKind {
         unaliased
     }
 
+    /// Returns `self` with all [`Lifetime`]s replaced with `'static`.
+    ///
+    /// If `strip_aliases` is `true`, all [`RsTypeKind::TypeAlias`] variants
+    /// are recursively replaced with their `underlying_type`.
+    pub fn all_static_lifetimes(&self, strip_aliases: bool) -> Rc<RsTypeKind> {
+        if self.lifetimes().all(|l| l.0.as_ref() == "static")
+            && (!strip_aliases
+                || !self.dfs_iter().any(|k| matches!(k, RsTypeKind::TypeAlias { .. })))
+        {
+            return Rc::new(self.clone());
+        }
+        all_static_lifetimes_internal(self, strip_aliases)
+    }
+
     pub fn is_bridge_type(&self) -> bool {
         matches!(self.unalias(), RsTypeKind::BridgeType { .. })
     }
@@ -1808,6 +1822,180 @@ impl RsTypeKind {
         } else {
             PassingConvention::LayoutCompatible
         }
+    }
+}
+
+fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTypeKind> {
+    match t {
+        RsTypeKind::Error { .. } => Rc::new(t.clone()),
+        RsTypeKind::Pointer { pointee, kind, mutability } => Rc::new(RsTypeKind::Pointer {
+            pointee: all_static_lifetimes_internal(pointee, strip_aliases),
+            kind: *kind,
+            mutability: *mutability,
+        }),
+        RsTypeKind::Reference { referent, mutability, lifetime: _, is_cref } => {
+            Rc::new(RsTypeKind::Reference {
+                referent: all_static_lifetimes_internal(referent, strip_aliases),
+                mutability: *mutability,
+                lifetime: Lifetime::new("static"),
+                is_cref: *is_cref,
+            })
+        }
+        RsTypeKind::RvalueReference { referent, mutability, lifetime: _ } => {
+            Rc::new(RsTypeKind::RvalueReference {
+                referent: all_static_lifetimes_internal(referent, strip_aliases),
+                mutability: *mutability,
+                lifetime: Lifetime::new("static"),
+            })
+        }
+        RsTypeKind::FuncPtr { option, cc_calling_conv, return_type, param_types } => {
+            Rc::new(RsTypeKind::FuncPtr {
+                option: *option,
+                cc_calling_conv: *cc_calling_conv,
+                return_type: all_static_lifetimes_internal(return_type, strip_aliases),
+                param_types: param_types
+                    .iter()
+                    .map(|param_type| {
+                        all_static_lifetimes_internal(param_type, strip_aliases).as_ref().clone()
+                    })
+                    .collect(),
+            })
+        }
+        RsTypeKind::IncompleteRecord { .. } => Rc::new(t.clone()),
+        RsTypeKind::Record {
+            record,
+            crate_path,
+            uniform_repr_template_type,
+            owned_ptr_type,
+            lifetimes,
+            customize_methods,
+        } => Rc::new(RsTypeKind::Record {
+            record: record.clone(),
+            crate_path: crate_path.clone(),
+            uniform_repr_template_type: uniform_repr_template_type.as_ref().map(|r| {
+                Rc::new(match r.as_ref() {
+                    UniformReprTemplateType::StdVector { element_type } => {
+                        UniformReprTemplateType::StdVector {
+                            element_type: all_static_lifetimes_internal(
+                                element_type,
+                                strip_aliases,
+                            )
+                            .as_ref()
+                            .clone(),
+                        }
+                    }
+                    UniformReprTemplateType::StdUniquePtr { element_type } => {
+                        UniformReprTemplateType::StdUniquePtr {
+                            element_type: all_static_lifetimes_internal(
+                                element_type,
+                                strip_aliases,
+                            )
+                            .as_ref()
+                            .clone(),
+                        }
+                    }
+                    UniformReprTemplateType::AbslSpan {
+                        is_const,
+                        include_lifetime,
+                        element_type,
+                        lifetime,
+                    } => UniformReprTemplateType::AbslSpan {
+                        is_const: *is_const,
+                        include_lifetime: *include_lifetime,
+                        element_type: all_static_lifetimes_internal(element_type, strip_aliases)
+                            .as_ref()
+                            .clone(),
+                        lifetime: lifetime.as_ref().map(|_| Lifetime::new("static")),
+                    },
+                    UniformReprTemplateType::StdStringView { in_cc_std, lifetime: _ } => {
+                        UniformReprTemplateType::StdStringView {
+                            in_cc_std: *in_cc_std,
+                            lifetime: Lifetime::new("static"),
+                        }
+                    }
+                })
+            }),
+            owned_ptr_type: owned_ptr_type.clone(),
+            lifetimes: lifetimes.iter().map(|_| Lifetime::new("static")).collect(),
+            customize_methods: customize_methods.as_ref().map(|customize_methods| {
+                Rc::new(match customize_methods.as_ref() {
+                    CustomizeMethodsKind::AbslFlatHashMap { key_type, value_type } => {
+                        CustomizeMethodsKind::AbslFlatHashMap {
+                            key_type: all_static_lifetimes_internal(key_type, strip_aliases)
+                                .as_ref()
+                                .clone(),
+                            value_type: all_static_lifetimes_internal(value_type, strip_aliases)
+                                .as_ref()
+                                .clone(),
+                        }
+                    }
+                })
+            }),
+        }),
+        RsTypeKind::Enum { .. } => Rc::new(t.clone()),
+        RsTypeKind::TypeAlias { type_alias, underlying_type, crate_path, lifetimes } => {
+            if strip_aliases {
+                all_static_lifetimes_internal(underlying_type, strip_aliases)
+            } else {
+                Rc::new(RsTypeKind::TypeAlias {
+                    type_alias: type_alias.clone(),
+                    underlying_type: all_static_lifetimes_internal(underlying_type, strip_aliases),
+                    crate_path: crate_path.clone(),
+                    lifetimes: lifetimes.iter().map(|_| Lifetime::new("static")).collect(),
+                })
+            }
+        }
+        RsTypeKind::Primitive(_) => Rc::new(t.clone()),
+        RsTypeKind::BridgeType { bridge_type, original_type } => Rc::new(RsTypeKind::BridgeType {
+            bridge_type: match bridge_type {
+                BridgeRsTypeKind::Bridge { rust_name, abi_rust, abi_cpp, generic_types } => {
+                    BridgeRsTypeKind::Bridge {
+                        rust_name: rust_name.clone(),
+                        abi_rust: abi_rust.clone(),
+                        abi_cpp: abi_cpp.clone(),
+                        generic_types: generic_types
+                            .iter()
+                            .map(|generic_type| {
+                                all_static_lifetimes_internal(generic_type, strip_aliases)
+                                    .as_ref()
+                                    .clone()
+                            })
+                            .collect(),
+                    }
+                }
+                BridgeRsTypeKind::ProtoMessageBridge { .. } => bridge_type.clone(),
+                BridgeRsTypeKind::StdOptional(element_type) => BridgeRsTypeKind::StdOptional(
+                    all_static_lifetimes_internal(element_type, strip_aliases),
+                ),
+                BridgeRsTypeKind::StdPair(first, second) => BridgeRsTypeKind::StdPair(
+                    all_static_lifetimes_internal(first, strip_aliases),
+                    all_static_lifetimes_internal(second, strip_aliases),
+                ),
+                BridgeRsTypeKind::StdString { .. } => bridge_type.clone(),
+                BridgeRsTypeKind::Callable(k) => BridgeRsTypeKind::Callable(Rc::new(Callable {
+                    return_type: all_static_lifetimes_internal(&k.return_type, strip_aliases),
+                    param_types: k
+                        .param_types
+                        .iter()
+                        .map(|param_type| {
+                            all_static_lifetimes_internal(param_type, strip_aliases)
+                                .as_ref()
+                                .clone()
+                        })
+                        .collect(),
+                    ..k.as_ref().clone()
+                })),
+                BridgeRsTypeKind::C9Co { has_reference_param, result_type, lifetime } => {
+                    BridgeRsTypeKind::C9Co {
+                        has_reference_param: *has_reference_param,
+                        result_type: all_static_lifetimes_internal(result_type, strip_aliases),
+                        lifetime: lifetime.as_ref().map(|_| Lifetime::new("static")),
+                    }
+                }
+            },
+            original_type: original_type.clone(),
+        }),
+        RsTypeKind::ExistingRustType { .. } => Rc::new(t.clone()),
     }
 }
 

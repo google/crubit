@@ -542,6 +542,194 @@ fn test_impl_cc_index_mut_for_member_function() -> Result<()> {
             }
         }
     );
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            impl ::core::ops::IndexMut<::ffi_11::c_uint> for SomeStruct
+        }
+    );
+    Ok(())
+}
+
+/// Verifies that when a type provides both `const` and non-`const` `operator[]` overloads
+/// with matching index parameter types (e.g. `unsigned int`), both standard Rust indexing
+/// traits (`core::ops::Index` and `core::ops::IndexMut`) are generated.
+#[gtest]
+fn test_impl_index_and_index_mut_for_member_function() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
+        struct SomeStruct final {
+            inline const int& operator[](unsigned int index) const {
+                return items[index];
+            }
+            inline int& operator[](unsigned int index) {
+                return items[index];
+            }
+            int items[10];
+        };"#,
+    )?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::ops::Index<::ffi_11::c_uint> for SomeStruct {
+                type Output = ::ffi_11::c_int;
+                #[inline(always)]
+                fn index(&self, index: ::ffi_11::c_uint) -> &Self::Output {
+                    ::operator::CcIndex::cc_index(self, index)
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::ops::IndexMut<::ffi_11::c_uint> for SomeStruct {
+                #[inline(always)]
+                fn index_mut(&mut self, index: ::ffi_11::c_uint) -> &mut Self::Output {
+                    ::operator::CcIndexMut::cc_index_mut(::core::pin::Pin::new(self), index)
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+/// Verifies `has_matching_cc_index`: because Rust's `core::ops::IndexMut<Idx>` trait requires
+/// `core::ops::Index<Idx>` (`pub trait IndexMut<Idx: ?Sized>: Index<Idx>`), if a type has an
+/// `index_mut` overload without a matching `const` overload (`CcIndex`) for that index type
+/// (ignoring lifetimes), `core::ops::IndexMut` must not be generated while `::operator::CcIndexMut`
+/// is still generated.
+#[gtest]
+fn test_impl_index_mut_requires_matching_cc_index() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
+        struct SomeStruct final {
+            inline const int& operator[](unsigned int index) const {
+                return items[index];
+            }
+            inline int& operator[](int index) {
+                return items[index];
+            }
+            int items[10];
+        };"#,
+    )?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::core::ops::Index<::ffi_11::c_uint> for SomeStruct {
+                type Output = ::ffi_11::c_int;
+                #[inline(always)]
+                fn index(&self, index: ::ffi_11::c_uint) -> &Self::Output {
+                    ::operator::CcIndex::cc_index(self, index)
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl ::operator::CcIndexMut<::ffi_11::c_int> for SomeStruct
+        }
+    );
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            impl ::core::ops::IndexMut<::ffi_11::c_int> for SomeStruct
+        }
+    );
+    Ok(())
+}
+
+/// Verifies that when the indexing parameter contains lifetime parameters (such as `&IndexKey`),
+/// generic lifetime parameters are properly added to the `impl` blocks (`impl<'key> core::ops::Index...`)
+/// when implementing `Index` and `IndexMut` for unpinned (`Unpin`) types.
+#[gtest]
+fn test_impl_index_and_index_mut_with_lifetimes_unpin() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
+        struct IndexKey final { int i; };
+        struct SomeStruct final {
+            inline const int& operator[](const IndexKey& key) const {
+                return items[key.i];
+            }
+            inline int& operator[](const IndexKey& key) {
+                return items[key.i];
+            }
+            int items[10];
+        };"#,
+    )?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'key> ::core::ops::Index<&'key crate::IndexKey> for SomeStruct {
+                type Output = ::ffi_11::c_int;
+                #[inline(always)]
+                fn index(&self, index: &'key crate::IndexKey) -> &Self::Output {
+                    ::operator::CcIndex::cc_index(self, index)
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'key> ::core::ops::IndexMut<&'key crate::IndexKey> for SomeStruct {
+                #[inline(always)]
+                fn index_mut(&mut self, index: &'key crate::IndexKey) -> &mut Self::Output {
+                    ::operator::CcIndexMut::cc_index_mut(::core::pin::Pin::new(self), index)
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+/// Verifies that generic lifetime parameters from the index parameter type as well as the container
+/// lifetime `'ctnr` are properly generated (`impl<'key, 'ctnr> core::ops::Index... for Pin<&'ctnr mut SomeStruct>`)
+/// when implementing `Index` and `IndexMut` for pinned (`!Unpin`) types.
+#[gtest]
+fn test_impl_index_and_index_mut_with_lifetimes_pin() -> Result<()> {
+    let ir = ir_from_assumed_lifetimes_cc(
+        r#"
+        struct IndexKey final { int i; };
+        struct SomeStruct final {
+            ~SomeStruct(); // non-trivial destructor makes it !Unpin
+            inline const int& operator[](const IndexKey& key) const {
+                return items[key.i];
+            }
+            inline int& operator[](const IndexKey& key) {
+                return items[key.i];
+            }
+            int items[10];
+        };"#,
+    )?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'key, 'ctnr> ::core::ops::Index<&'key crate::IndexKey> for ::core::pin::Pin<&'ctnr mut SomeStruct> {
+                type Output = ::ffi_11::c_int;
+                #[inline(always)]
+                fn index(&self, index: &'key crate::IndexKey) -> &Self::Output {
+                    ::operator::CcIndex::cc_index(self.as_ref().get_ref(), index)
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl<'key, 'ctnr> ::core::ops::IndexMut<&'key crate::IndexKey> for ::core::pin::Pin<&'ctnr mut SomeStruct> {
+                #[inline(always)]
+                fn index_mut(&mut self, index: &'key crate::IndexKey) -> &mut Self::Output {
+                    ::operator::CcIndexMut::cc_index_mut(self.as_mut(), index)
+                }
+            }
+        }
+    );
     Ok(())
 }
 
