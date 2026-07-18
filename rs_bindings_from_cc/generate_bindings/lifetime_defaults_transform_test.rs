@@ -18,7 +18,7 @@ use multiplatform_ir_testing::ir_from_assumed_lifetimes_cc;
 use quote::quote;
 use std::rc::Rc;
 
-fn lifetime_defaults_transform_ir(ir: &ir::IR) -> Result<ir::IR> {
+fn lifetime_defaults_transform_ir(ir: &ir::IR<'_>) -> Result<ir::IR<'static>> {
     let errors = ErrorReport::new(SourceLanguage::Cpp);
     let fatal_errors = FatalErrors::new();
     let interner = Interner::new();

@@ -18,9 +18,7 @@ pub fn generate_bindings(
 ) {
     let request_view = request.as_view();
     let ir = if request_view.has_ir_proto() {
-        ir::proto_to_ir(request_view.ir_proto())
-            .with_context(|| "Failed to deserialize IRProto".to_string())
-            .unwrap()
+        ir::IR::from_view(request_view.ir_proto())
     } else {
         let json: &[u8] = request_view.json().as_bytes();
         deserialize_ir(json)

@@ -12,7 +12,7 @@ use generate_bindings::{generate_bindings_tokens, new_database};
 use ir::IR;
 use multiplatform_ir_testing::ir_from_cc;
 
-pub fn generate_bindings_tokens_for_test(ir: IR) -> Result<BindingsTokens> {
+pub fn generate_bindings_tokens_for_test(ir: IR<'static>) -> Result<BindingsTokens> {
     let fatal_errors = FatalErrors::new();
     let tokens = generate_bindings_tokens(
         &ir,
@@ -31,7 +31,9 @@ pub fn generate_bindings_tokens_for_test(ir: IR) -> Result<BindingsTokens> {
     Ok(tokens)
 }
 
-pub fn generate_bindings_tokens_for_test_with_annotations(ir: IR) -> Result<BindingsTokens> {
+pub fn generate_bindings_tokens_for_test_with_annotations(
+    ir: IR<'static>,
+) -> Result<BindingsTokens> {
     let fatal_errors = FatalErrors::new();
     let tokens = generate_bindings_tokens(
         &ir,
@@ -51,7 +53,7 @@ pub fn generate_bindings_tokens_for_test_with_annotations(ir: IR) -> Result<Bind
 }
 
 pub struct TestDbFactory {
-    ir: IR,
+    ir: IR<'static>,
     errors: ErrorReport,
     fatal_errors: FatalErrors,
     interner: Interner,

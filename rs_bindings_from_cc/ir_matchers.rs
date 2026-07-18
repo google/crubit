@@ -61,7 +61,7 @@ pub mod internal {
     };
 
     #[track_caller]
-    pub fn assert_ir_matches_fn(ir: &IR, pattern: &TokenStream) {
+    pub fn assert_ir_matches_fn(ir: &IR<'_>, pattern: &TokenStream) {
         token_stream_matchers::internal::match_tokens(
             &ir_to_token_stream(ir).expect("Failed to convert IR to token stream"),
             pattern,
@@ -71,7 +71,7 @@ pub mod internal {
     }
 
     #[track_caller]
-    pub fn assert_ir_not_matches_fn(ir: &IR, pattern: &TokenStream) {
+    pub fn assert_ir_not_matches_fn(ir: &IR<'_>, pattern: &TokenStream) {
         token_stream_matchers::internal::mismatch_tokens(
             &ir_to_token_stream(ir).expect("Failed to convert IR to token stream"),
             pattern,
@@ -80,7 +80,7 @@ pub mod internal {
         .unwrap()
     }
 
-    fn ir_to_token_stream(ir: &IR) -> Result<TokenStream> {
+    fn ir_to_token_stream(ir: &IR<'_>) -> Result<TokenStream> {
         // derived debug impl doesn't emit commas after the last element of a group,
         // (for example `[a, b, c]`), but rustfmt automatically adds it (`[a, b,
         // c,]`). We use rustfmt to format the failure messages. So to make the
@@ -140,7 +140,7 @@ mod tests {
     use quote::quote;
 
     /// We aren't testing platform-specific details, just the matchers.
-    fn ir_from_cc(header: &str) -> arc_anyhow::Result<ir::IR> {
+    fn ir_from_cc(header: &str) -> arc_anyhow::Result<ir::IR<'static>> {
         ir_testing::ir_from_cc(multiplatform_testing::Platform::X86Linux, header)
     }
 
