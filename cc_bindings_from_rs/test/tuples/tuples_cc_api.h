@@ -15,7 +15,6 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
-#include "support/bridge.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
@@ -275,7 +274,7 @@ void param_nontrivial_drop_in_tuple(
     ::std::tuple<::tuples::NontrivialDrop> nontrivial_drop);
 
 // CRUBIT_ANNOTATE: must_bind=
-void param_option_in_tuple(::std::tuple<::std::optional<::std::int32_t>> opt);
+void param_option_in_tuple(::std::tuple<rs_std::Option<::std::int32_t>> opt);
 
 // CRUBIT_ANNOTATE: must_bind=
 void param_triply_nested_tuple(
@@ -304,10 +303,10 @@ return_nested_tuples();
 ::std::tuple<::tuples::NontrivialDrop> return_new_nontrivial_drop_in_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
-::std::tuple<::std::optional<::std::int32_t>> return_option_in_tuple();
+::std::tuple<rs_std::Option<::std::int32_t>> return_option_in_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
-::std::optional<::std::int32_t> return_option_in_tuple_ref(
+rs_std::Option<::std::int32_t> return_option_in_tuple_ref(
     rs_std::Tuple<rs_std::Option<::std::int32_t>> const& opt);
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -2148,16 +2147,9 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_param_uoption_uin_utuple(void**);
 }
 inline void param_option_in_tuple(
-    ::std::tuple<::std::optional<::std::int32_t>> opt) {
+    ::std::tuple<rs_std::Option<::std::int32_t>> opt) {
   auto&& opt_0 = ::std::get<0>(opt);
-  unsigned char opt_0_buffer
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
-  ::crubit::internal::Encode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
-          ::crubit::TransmuteAbi<::std::int32_t>()),
-      opt_0_buffer, ::std::move(opt_0));
-  auto&& opt_cabi_0 = opt_0_buffer;
+  auto&& opt_cabi_0 = &opt_0;
   void* opt_cabi[] = {&opt_cabi_0};
   return __crubit_internal::__crubit_thunk_param_uoption_uin_utuple(opt_cabi);
 }
@@ -2260,36 +2252,28 @@ return_new_nontrivial_drop_in_tuple() {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uoption_uin_utuple(void** __ret_ptr);
 }
-inline ::std::tuple<::std::optional<::std::int32_t>> return_option_in_tuple() {
-  unsigned char __return_value_0_storage
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
+inline ::std::tuple<rs_std::Option<::std::int32_t>> return_option_in_tuple() {
+  crubit::Slot<rs_std::Option<::std::int32_t>> __return_value_0_ret_val_holder;
+  auto* __return_value_0_storage = __return_value_0_ret_val_holder.Get();
   void* __return_value_storage[] = {__return_value_0_storage};
   __crubit_internal::__crubit_thunk_return_uoption_uin_utuple(
       __return_value_storage);
   return ::std::make_tuple(
-      ::crubit::internal::Decode<
-          ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
-          ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
-              ::crubit::TransmuteAbi<::std::int32_t>()),
-          __return_value_0_storage));
+      ::std::move(__return_value_0_ret_val_holder).AssumeInitAndTakeValue());
 }
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uoption_uin_utuple_uref(
     rs_std::Tuple<rs_std::Option<::std::int32_t>> const&,
-    unsigned char* __ret_ptr);
+    rs_std::Option<::std::int32_t>* __ret_ptr);
 }
-inline ::std::optional<::std::int32_t> return_option_in_tuple_ref(
+inline rs_std::Option<::std::int32_t> return_option_in_tuple_ref(
     rs_std::Tuple<rs_std::Option<::std::int32_t>> const& opt) {
-  unsigned char __return_value_storage
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
+  crubit::Slot<rs_std::Option<::std::int32_t>> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_uoption_uin_utuple_uref(
       opt, __return_value_storage);
-  return ::crubit::internal::Decode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
-          ::crubit::TransmuteAbi<::std::int32_t>()),
-      __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
