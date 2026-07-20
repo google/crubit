@@ -938,8 +938,12 @@ pub fn generate_function<'tcx>(
 
     let params = {
         let names = fn_arg_idents(tcx, def_id);
-        let cpp_types =
-            format_param_types_for_cc_api(db, &sig_mid, function_kind.has_self_param())?;
+        let cpp_types = format_param_types_for_cc_api(
+            db,
+            sig_mid.inputs(),
+            sig_mid.output(),
+            function_kind.has_self_param(),
+        )?;
         names
             .into_iter()
             .enumerate()
@@ -1124,7 +1128,8 @@ pub fn generate_function<'tcx>(
         let mut prereqs = main_api_prereqs;
         let mut thunk_decl = generate_thunk_decl(
             db,
-            &sig_mid,
+            sig_mid.inputs(),
+            sig_mid.output(),
             &thunk_name_cc,
             function_kind.has_self_param(),
             /*is_constructor=*/ false,
@@ -1216,7 +1221,8 @@ pub fn generate_function<'tcx>(
         generate_thunk_impl(
             db,
             def_id,
-            &sig_mid,
+            sig_mid.inputs(),
+            sig_mid.output(),
             &thunk_name,
             fully_qualified_fn_name,
             /*is_constructor=*/ false,

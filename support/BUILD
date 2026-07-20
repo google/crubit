@@ -169,6 +169,15 @@ rust_test(
 )
 
 rust_library(
+    name = "decltype_cast",
+    srcs = ["decltype_cast.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+rust_library(
     name = "forward_declare",
     srcs = ["forward_declare.rs"],
     compatible_with = ["//buildenv/target:non_prod"],

@@ -820,7 +820,8 @@ fn generate_constructor_impls<'tcx>(
                 let thunk_name_cc_ident = format_cc_ident(db, &thunk_name).ok()?;
                 let cc_thunk_decls = generate_thunk_decl(
                     db,
-                    &sig,
+                    sig.inputs(),
+                    sig.output(),
                     &thunk_name_cc_ident,
                     /*has_self_param=*/ true,
                     /*is_constructor=*/ true,
@@ -846,7 +847,8 @@ fn generate_constructor_impls<'tcx>(
                         generate_thunk_impl(
                             db,
                             into_trait_assoc_fn.def_id,
-                            &sig,
+                            sig.inputs(),
+                            sig.output(),
                             &thunk_name,
                             fully_qualified_fn_name,
                             /*is_constructor=*/ true,
