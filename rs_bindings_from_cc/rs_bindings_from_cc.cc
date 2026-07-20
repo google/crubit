@@ -13,6 +13,7 @@
 
 #include "absl/flags/parse.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "common/file_io.h"
@@ -70,6 +71,16 @@ absl::Status Main(absl::Span<char* const> positional_args) {
     CRUBIT_RETURN_IF_ERROR(
         SetFileContents(args.ir_out, IrToJson(bindings_and_metadata.ir)));
   }
+
+  std::string extra_cpp_srcs_content;
+  for (const std::string& cc_src : args.extra_cpp_srcs) {
+    CRUBIT_ASSIGN_OR_RETURN(std::string cc_src_content,
+                            GetFileContents(cc_src));
+    absl::StrAppend(&extra_cpp_srcs_content, "\n#line 1 \"", cc_src, "\"\n",
+                    cc_src_content, "\n");
+  }
+  bindings_and_metadata.rs_api_impl =
+      absl::StrCat(extra_cpp_srcs_content, bindings_and_metadata.rs_api_impl);
 
   CRUBIT_RETURN_IF_ERROR(
       SetFileContents(args.rs_out, bindings_and_metadata.rs_api));

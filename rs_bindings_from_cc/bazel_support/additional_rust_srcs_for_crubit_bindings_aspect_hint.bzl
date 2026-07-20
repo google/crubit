@@ -53,6 +53,8 @@ load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 # buildifier: disable=bzl-visibility
 load("@rules_rust//rust/private:providers.bzl", "BuildInfo", "CrateInfo", "DepInfo", "DepVariantInfo")
 load("@bazel_skylib//lib:collections.bzl", "collections")
+load("//features:crubit_feature_hint.bzl", "CrubitFeaturesInfo")
+load("//features:global_features.bzl", "SUPPORTED_FEATURES")
 load("@rules_crubit//rs_bindings_from_cc/bazel_support:providers.bzl", "AdditionalRustSrcsProviderInfo", "RustBindingsFromCcInfo")
 load(
     "@rules_crubit//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
@@ -67,7 +69,14 @@ visibility([
     # <internal link> end
 ])
 
-def make_additional_rust_srcs_provider(srcs, namespace_path, deps, cc_deps, cc_support_deps = [], unstable_rust_features = []):
+def make_additional_rust_srcs_provider(
+        srcs,
+        namespace_path,
+        cpp_srcs,
+        deps,
+        cc_deps,
+        cc_support_deps = [],
+        unstable_rust_features = []):
     return AdditionalRustSrcsProviderInfo(
         srcs = srcs,
         namespace_path = namespace_path,
@@ -77,24 +86,33 @@ def make_additional_rust_srcs_provider(srcs, namespace_path, deps, cc_deps, cc_s
             dep[CcInfo]
             for dep in cc_support_deps
         ],
+        cpp_srcs = cpp_srcs,
         unstable_rust_features = unstable_rust_features,
     )
 
 def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
-    return [make_additional_rust_srcs_provider(
+    providers = [make_additional_rust_srcs_provider(
         ctx.attr.srcs,
         ctx.attr.namespace_path,
+        ctx.attr.cpp_srcs,
         ctx.attr.deps,
         ctx.attr.cc_deps,
         ctx.attr.cc_support_deps,
         ctx.attr.unstable_rust_features,
     )]
+    if ctx.attr.crubit_features:
+        providers.append(CrubitFeaturesInfo(crubit_features = ctx.attr.crubit_features))
+    return providers
 
 _additional_rust_srcs_for_crubit_bindings_rule = rule(
     attrs = {
         "srcs": attr.label_list(
             allow_files = True,
             mandatory = True,
+        ),
+        "cpp_srcs": attr.label_list(
+            allow_files = [".cc"],
+            doc = "The C++ source files whose contents are parsed by Clang to generate Rust bindings, and prepended to the generated C++ implementation (`rs_api_impl.cc`).",
         ),
         "namespace_path": attr.string(
             mandatory = False,
@@ -117,6 +135,10 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
             mandatory = False,
             default = [],
         ),
+        "crubit_features": attr.string_list(
+            mandatory = False,
+            default = SUPPORTED_FEATURES,
+        ),
     },
     implementation = _additional_rust_srcs_for_crubit_bindings_impl,
 )
@@ -124,11 +146,13 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
 def additional_rust_srcs_for_crubit_bindings(
         name,
         srcs,
+        cpp_srcs = [],
         namespace_path = "",
         deps = [],
         cc_deps = [],
         cc_support_deps = [],
         unstable_rust_features = [],
+        crubit_features = SUPPORTED_FEATURES,
         **kwargs):
     """
     Defines an aspect hint that is used to pass extra Rust source files to `rs_bindings_from_cc` tool's `extra_rs_srcs` CLI argument.
@@ -141,6 +165,7 @@ def additional_rust_srcs_for_crubit_bindings(
     Args:
         name: Aspect hint name.
         srcs: The Rust source files to be included in addition to generated Rust bindings.
+        cpp_srcs: The C++ source files whose contents are parsed by Clang to generate Rust bindings, and prepended to the generated C++ implementation (`rs_api_impl.cc`).
         namespace_path: This allows Rust source files define new entries inside of a specific
             existing C++ namespace instead of the top level namespace. For modules which are not
             existing namespace names, use `pub mod` statement in the Rust source file instead.
@@ -153,17 +178,20 @@ def additional_rust_srcs_for_crubit_bindings(
             Crubit ABI types here so they're available to generated code without being exposed to
             Crubit.
         unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
+        crubit_features: List of Crubit features to enable.
         **kwargs: Args passed through to the underlying rule (visibility, etc.).
     """
 
     _additional_rust_srcs_for_crubit_bindings_rule(
         name = name,
         srcs = srcs,
+        cpp_srcs = cpp_srcs,
         namespace_path = namespace_path,
         deps = deps,
         cc_deps = cc_deps,
         cc_support_deps = cc_support_deps,
         unstable_rust_features = unstable_rust_features,
+        crubit_features = crubit_features,
         **kwargs
     )
 

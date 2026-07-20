@@ -192,8 +192,9 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
                              name_and_content.second});
   }
 
-  // Tests may inject `extra_source_code_for_testing` - it needs to be appended
-  // to `public_headers` and exposed via `file_contents` virtual file system.
+  // We must parse `extra_cpp_srcs` (user-provided manual wiring C++ files) and
+  // `extra_source_code_for_testing` (injected by tests) so that Clang includes
+  // their AST nodes in the generated IR. We append them to `public_headers`.
   std::vector<HeaderName> augmented_public_headers(
       options.public_headers.begin(), options.public_headers.end());
   if (!options.extra_source_code_for_testing.empty()) {
@@ -206,9 +207,17 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
   }
 
   std::string virtual_input_file_content;
-  for (const HeaderName& header_name : augmented_public_headers) {
+  auto add_header = [&](absl::string_view header_path) {
     absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
-                              header_name.IncludePath());
+                              header_path);
+  };
+  for (const HeaderName& header_name : augmented_public_headers) {
+    add_header(header_name.IncludePath());
+  }
+  for (const std::string& cc_src : options.extra_cpp_srcs) {
+    add_header(cc_src);
+    options.headers_to_targets.insert(
+        {HeaderName(cc_src), options.current_target});
   }
   if (!options.extra_instantiations.empty()) {
     absl::SubstituteAndAppend(&virtual_input_file_content, "namespace $0 {\n",
@@ -235,6 +244,7 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
       options.headers_to_targets, std::move(options.do_not_bind_allowlist),
       std::move(options.crubit_features), std::move(options.crate_names),
       options.kythe_annotations, options.template_blocklist_path_regex);
+
   if (!clang::tooling::runToolOnCodeWithArgs(
           std::make_unique<FrontendAction>(invocation),
           virtual_input_file_content, args_as_strings,

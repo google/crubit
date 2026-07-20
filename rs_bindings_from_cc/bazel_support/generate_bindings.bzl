@@ -50,6 +50,11 @@ def _get_unstable_rust_features_command_line(unstable_rust_features):
         return []
     return ["--unstable_rust_features=" + ",".join(unstable_rust_features)]
 
+def _get_extra_cpp_srcs_command_line(extra_cpp_srcs):
+    if not extra_cpp_srcs:
+        return []
+    return ["--extra_cpp_srcs=" + ",".join([x.path for x in extra_cpp_srcs])]
+
 def generate_bindings(
         ctx,
         attr,
@@ -61,6 +66,7 @@ def generate_bindings(
         action_inputs,
         target_args,
         extra_rs_srcs,
+        extra_cpp_srcs,
         unstable_rust_features,
         extra_rs_bindings_from_cc_cli_flags):
     """Runs the bindings generator.
@@ -77,6 +83,7 @@ def generate_bindings(
       target_args: A depset of strings, each one representing mapping of target to
                         its per-target arguments (headers, features, crate name) in json format.
       extra_rs_srcs: A list of extra source file and module path pairs to add.
+      extra_cpp_srcs: A list of extra C++ source files to add.
       unstable_rust_features: A list of unstable rustc features to enable.
       extra_rs_bindings_from_cc_cli_flags: CLI flags to be passed to `rs_bindings_from_cc`.
 
@@ -169,7 +176,7 @@ def generate_bindings(
         preprocessor_defines = compilation_context.defines,
         variables_extension = {
             "rs_bindings_from_cc_tool": rs_bindings_from_cc_tool.path,
-            "rs_bindings_from_cc_flags": rs_bindings_from_cc_flags + _get_hdrs_command_line(public_hdrs) + _get_extra_rs_srcs_command_line(extra_rs_srcs) + _get_unstable_rust_features_command_line(unstable_rust_features),
+            "rs_bindings_from_cc_flags": rs_bindings_from_cc_flags + _get_hdrs_command_line(public_hdrs) + _get_extra_rs_srcs_command_line(extra_rs_srcs) + _get_unstable_rust_features_command_line(unstable_rust_features) + _get_extra_cpp_srcs_command_line(extra_cpp_srcs),
             "target_args": target_args,
         },
     )
@@ -188,7 +195,7 @@ def generate_bindings(
                 ctx.executable._clang_format,
                 ctx.executable._rustfmt,
                 rs_bindings_from_cc_tool,
-            ] + ctx.files._rustfmt_cfg,
+            ] + ctx.files._rustfmt_cfg + extra_cpp_srcs,
             transitive = [action_inputs],
         ),
         additional_outputs = [x for x in [rs_output, namespaces_output, error_report_output] if x != None],

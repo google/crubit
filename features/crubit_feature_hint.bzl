@@ -14,15 +14,15 @@ load("//features:global_features.bzl", "NO_ASSUME_LIFETIMES_TARGETS")
 visibility(["//..."])
 
 # Omitted from providers.bzl: this is used internally and in tests only.
-# (The "public" interface is `crubit_feature_hint` to create it,
-# and `find_crubit_features` to aggregate it for collection into RustBindingsFromCcInfo.)
-_CrubitFeaturesInfo = provider(
+# (The "public" interface is `crubit_feature_hint` and `additional_rust_srcs_for_crubit_bindings` to
+# create it, and `find_crubit_features` to aggregate it for collection into RustBindingsFromCcInfo.)
+CrubitFeaturesInfo = provider(
     doc = "A set of enabled Crubit features.",
     fields = {"crubit_features": "List of features"},
 )
 
 def _crubit_feature_hint_impl(ctx):
-    return [_CrubitFeaturesInfo(
+    return [CrubitFeaturesInfo(
         crubit_features = ctx.attr.crubit_features,
     )]
 
@@ -35,9 +35,9 @@ crubit_feature_hint = rule(
 
 def _add_features(features, target):
     # Starlark doesn't have sets, so the following is O(n^2) for convenience.
-    if _CrubitFeaturesInfo not in target:
+    if CrubitFeaturesInfo not in target:
         return
-    for feature in target[_CrubitFeaturesInfo].crubit_features:
+    for feature in target[CrubitFeaturesInfo].crubit_features:
         if feature not in features:
             features.append(feature)
 

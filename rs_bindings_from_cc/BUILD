@@ -90,6 +90,7 @@ cc_library(
         "//common:status_macros",
         "@abseil-cpp//absl/flags:parse",
         "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
         "@llvm-project//llvm:Support",

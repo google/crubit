@@ -93,6 +93,10 @@ ABSL_FLAG(
     "]");
 ABSL_FLAG(std::vector<std::string>, extra_rs_srcs, std::vector<std::string>(),
           "Additional Rust source files to include into the crate.");
+ABSL_FLAG(std::vector<std::string>, extra_cpp_srcs, std::vector<std::string>(),
+          "Additional C++ source files whose contents are parsed by Clang to "
+          "generate Rust bindings, and prepended to the generated C++ "
+          "implementation (`rs_api_impl.cc`).");
 ABSL_FLAG(std::vector<std::string>, reexported_namespaces,
           std::vector<std::string>(),
           "List of C++ namespaces to re-export at the root of the generated "
@@ -240,6 +244,7 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
       .kythe_default_corpus = absl::GetFlag(FLAGS_kythe_default_corpus),
       .public_headers = PublicHeaders(),
       .extra_rs_srcs = absl::GetFlag(FLAGS_extra_rs_srcs),
+      .extra_cpp_srcs = absl::GetFlag(FLAGS_extra_cpp_srcs),
       .reexported_namespaces = absl::GetFlag(FLAGS_reexported_namespaces),
       .unstable_rust_features = absl::GetFlag(FLAGS_unstable_rust_features),
       .srcs_to_scan_for_instantiations =

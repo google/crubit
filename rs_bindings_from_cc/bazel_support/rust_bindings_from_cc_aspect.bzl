@@ -100,6 +100,23 @@ def _get_additional_rust_srcs(aspect_ctx):
             )
     return collections.uniq(additional_rust_srcs)
 
+def _get_additional_cpp_srcs_from_provider(provider):
+    """Returns `extra_cpp_srcs` associated with the `provider`."""
+    srcs = []
+    for target in getattr(provider, "cpp_srcs", []):
+        srcs.extend(target.files.to_list())
+    return srcs
+
+def _get_additional_cpp_srcs(aspect_ctx):
+    """Returns extra `cpp_srcs` associated with the `_target`."""
+    additional_cpp_srcs = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            additional_cpp_srcs.extend(
+                _get_additional_cpp_srcs_from_provider(hint[AdditionalRustSrcsProviderInfo]),
+            )
+    return collections.uniq(additional_cpp_srcs)
+
 def _get_unstable_rust_features(aspect_ctx):
     features = []
     for hint in aspect_ctx.rule.attr.aspect_hints:
@@ -133,10 +150,9 @@ def _get_cc_support_deps(aspect_ctx):
     cc_support_deps = []
     for hint in aspect_ctx.rule.attr.aspect_hints:
         if AdditionalRustSrcsProviderInfo in hint:
-            cc_support_deps.extend(
-                hint[AdditionalRustSrcsProviderInfo].cc_support_deps,
-            )
-    return collections.uniq(cc_support_deps)
+            info = hint[AdditionalRustSrcsProviderInfo]
+            cc_support_deps.extend(info.cc_support_deps)
+    return cc_support_deps
 
 def _collect_hdrs(ctx, crubit_features):
     public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
@@ -310,6 +326,9 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     public_hdrs = []
 
     features = find_crubit_features(target, ctx)
+
+    extra_cpp_srcs = _get_additional_cpp_srcs(ctx)
+
     if hasattr(ctx.rule.attr, "hdrs"):
         public_hdrs = _collect_hdrs(ctx, features)
 
@@ -370,16 +389,23 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         for dep in all_deps
         if RustBindingsFromCcInfo in dep
     ]
+    compilation_context = target[CcInfo].compilation_context
+    if cc_support_deps:
+        compilation_context = cc_common.merge_cc_infos(
+            cc_infos = [target[CcInfo]] + cc_support_deps,
+        ).compilation_context
+
     return generate_and_compile_bindings(
         ctx,
         ctx.rule.attr,
-        compilation_context = target[CcInfo].compilation_context,
+        compilation_context = compilation_context,
         public_hdrs = public_hdrs,
         header_includes = header_includes,
         action_inputs = depset(
             direct = public_hdrs + (toolchain.builtin_headers if toolchain != None else []),
             transitive = [
                 ctx.attr._std[RustToolchainHeadersInfo].headers,
+                compilation_context.headers,
             ],
         ),
         target_args = target_args,
@@ -414,6 +440,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
                 if hasattr(d, "additional_rust_srcs")
             ],
         ),
+        extra_cpp_srcs = extra_cpp_srcs,
     )
 
 rust_bindings_from_cc_aspect = aspect(

@@ -2,6 +2,10 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
+    "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
+    "additional_rust_srcs_for_crubit_bindings",
+)
+load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_cli_flag_aspect_hint.bzl",
     "rust_bindings_from_cc_cli_flag",
 )
@@ -11,6 +15,11 @@ load(
 )
 
 package(default_applicable_licenses = ["//:license"])
+
+exports_files([
+    "types_in_extra_cpp_srcs_extra.cc",
+    "types_in_extra_cpp_srcs_extra.rs",
+])
 
 TESTS = [name[:-2] for name in glob(
     ["*.h"],
@@ -89,7 +98,16 @@ ASPECT_HINTS = {
     "dunder_types": [
         "//features:wrapper",
     ],
+    "types_in_extra_cpp_srcs": [
+        ":types_in_extra_cpp_srcs_aspect_hint",
+    ],
 }
+
+additional_rust_srcs_for_crubit_bindings(
+    name = "types_in_extra_cpp_srcs_aspect_hint",
+    srcs = ["types_in_extra_cpp_srcs_extra.rs"],
+    cpp_srcs = ["types_in_extra_cpp_srcs_extra.cc"],
+)
 
 rust_bindings_from_cc_cli_flag(
     name = "enable_kythe_annotations",
@@ -133,6 +151,9 @@ NON_BUILDABLE_TEST = [
     "composable_bridging",
     "composable_bridging_template_type",
     "bridge_wrapping_alias",
+
+    # Rust type is not defined in the C++ header, but in an extra .cc file.
+    "types_in_extra_cpp_srcs",
 ]
 
 BUILDABLE_TESTS = [name for name in TESTS if name not in NON_BUILDABLE_TEST]

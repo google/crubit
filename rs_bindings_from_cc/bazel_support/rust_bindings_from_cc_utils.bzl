@@ -49,7 +49,8 @@ def generate_and_compile_bindings(
         extra_rs_bindings_from_cc_cli_flags = [],
         should_generate_bindings = True,
         aliases = {},
-        additional_rust_srcs = depset()):
+        additional_rust_srcs = depset(),
+        extra_cpp_srcs = []):
     """Runs the bindings generator.
 
     Args:
@@ -74,6 +75,7 @@ def generate_and_compile_bindings(
       aliases: (dict, optional) A dict of aliases to be passed to the rustc_compile_action.
       additional_rust_srcs: A depset of additional source files to be included in the generated
         Rust bindings.
+      extra_cpp_srcs: list[File]: Additional C++ source files to concatenate to the generated C++ bindings.
     Returns:
       A RustBindingsFromCcInfo containing the result of the compilation of the generated source
       files, as well a GeneratedBindingsInfo provider containing the generated source files.
@@ -110,6 +112,7 @@ def generate_and_compile_bindings(
         action_inputs = action_inputs,
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
+        extra_cpp_srcs = extra_cpp_srcs,
         unstable_rust_features = unstable_rust_features,
         extra_rs_bindings_from_cc_cli_flags = extra_rs_bindings_from_cc_cli_flags,
     )
