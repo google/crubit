@@ -724,12 +724,50 @@ pub struct TraitThunks<'tcx> {
     pub rs_thunk_impls: RsSnippet,
 }
 
+/// Traits that Crubit supports generating bindings for.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum SupportedTrait<'tcx> {
+    Into(Ty<'tcx>),
+    From(Ty<'tcx>),
+    ToString,
+    Drop,
+    IntoIterator,
+    Default,
+    Clone,
+}
+
+impl<'tcx> SupportedTrait<'tcx> {
+    pub fn trait_id(&self, tcx: TyCtxt<'_>) -> DefId {
+        let trait_id = match self {
+            SupportedTrait::Into(_) => tcx.get_diagnostic_item(sym::Into),
+            SupportedTrait::From(_) => tcx.get_diagnostic_item(sym::From),
+            SupportedTrait::ToString => tcx.get_diagnostic_item(Symbol::intern("ToString")),
+            SupportedTrait::Drop => tcx.lang_items().drop_trait(),
+            SupportedTrait::IntoIterator => tcx.get_diagnostic_item(sym::IntoIterator),
+            SupportedTrait::Default => tcx.get_diagnostic_item(sym::Default),
+            SupportedTrait::Clone => tcx.lang_items().clone_trait(),
+        };
+        trait_id.expect("trait id not found, this is a bug")
+    }
+
+    pub fn type_args(&self) -> &[Ty<'tcx>] {
+        match self {
+            SupportedTrait::Into(ty) => std::slice::from_ref(ty),
+            SupportedTrait::From(ty) => std::slice::from_ref(ty),
+            SupportedTrait::ToString => &[],
+            SupportedTrait::Drop => &[],
+            SupportedTrait::IntoIterator => &[],
+            SupportedTrait::Default => &[],
+            SupportedTrait::Clone => &[],
+        }
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn generate_trait_thunks<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    trait_id: DefId,
-    // We do not support other generic args, yet.
-    type_args: &[Ty<'tcx>],
+    // Accepting SupportedTrait allows us to control the set of traits that can be used.
+    supported_trait: SupportedTrait<'tcx>,
     self_ty: Ty<'tcx>,
     def_id: Option<DefId>,
     rs_fully_qualified_name: TokenStream,
@@ -737,10 +775,9 @@ pub fn generate_trait_thunks<'tcx>(
     within_template: bool,
 ) -> Result<TraitThunks<'tcx>> {
     let tcx = db.tcx();
-    assert!(tcx.is_trait(trait_id));
+    let trait_id = supported_trait.trait_id(tcx);
 
-    let is_drop_trait = Some(trait_id) == tcx.lang_items().drop_trait();
-    if is_drop_trait {
+    if let SupportedTrait::Drop = supported_trait {
         // To support "drop glue" we don't require that `self_ty` directly implements
         // the `Drop` trait.  Instead we require the caller to check
         // `needs_drop`.
@@ -752,7 +789,7 @@ pub fn generate_trait_thunks<'tcx>(
         tcx,
         self_ty,
         trait_id,
-        type_args.iter().copied().map(ty::GenericArg::from),
+        supported_trait.type_args().iter().copied().map(ty::GenericArg::from),
     ) {
         let display_name = def_id
             .and_then(|id| db.symbol_canonical_name(id))
@@ -780,7 +817,10 @@ pub fn generate_trait_thunks<'tcx>(
         // We don't support trait methods that use `Box<Self>` or `Pin<Self>` yet.
         self_ty.pinned_ty().is_none() && self_ty.boxed_ty().is_none()
     }
-    let substs = tcx.mk_args_trait(self_ty, type_args.iter().copied().map(ty::GenericArg::from));
+    let substs = tcx.mk_args_trait(
+        self_ty,
+        supported_trait.type_args().iter().copied().map(ty::GenericArg::from),
+    );
 
     let mut method_name_to_cc_thunk_name = HashMap::new();
     let mut cc_thunk_decls = CcSnippet::default();
@@ -837,7 +877,7 @@ pub fn generate_trait_thunks<'tcx>(
         method_name_to_cc_thunk_name.insert(method.name(), thunk_name_cc_ident);
 
         let struct_name = &rs_fully_qualified_name;
-        rs_thunk_impls += if is_drop_trait {
+        rs_thunk_impls += if let SupportedTrait::Drop = supported_trait {
             // Manually formatting (instead of depending on `generate_thunk_impl`)
             // to avoid https://doc.rust-lang.org/error_codes/E0040.html
             let thunk_name = make_rs_ident(&thunk_name);
@@ -853,7 +893,8 @@ pub fn generate_trait_thunks<'tcx>(
                 .ok_or_else(|| anyhow!("Failed to get canonical name for {trait_id:?}"))?
                 .format_for_rs();
             let method_name = make_rs_ident(method.name().as_str());
-            let args = type_args
+            let args = supported_trait
+                .type_args()
                 .iter()
                 .map(|ty| {
                     let static_ty = replace_all_regions_with_static(tcx, *ty);

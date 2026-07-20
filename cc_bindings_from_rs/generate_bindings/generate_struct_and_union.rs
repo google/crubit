@@ -22,7 +22,7 @@ use crate::{
     does_type_implement_trait, generate_const, generate_deprecated_tag, generate_must_use_tag,
     generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
     get_tag_size_with_padding, is_bridged_type, is_copy, BridgedBuiltin, RsSnippet, SortedByDef,
-    TraitThunks,
+    SupportedTrait, TraitThunks,
 };
 
 use arc_anyhow::{Context, Result};
@@ -573,8 +573,7 @@ fn generate_into_impls<'tcx>(
                 rs_thunk_impls: rs_details,
             } = generate_trait_thunks(
                 db,
-                into_trait,
-                &[middle_ty],
+                SupportedTrait::Into(middle_ty),
                 core.self_ty,
                 core.def_id,
                 core.rs_fully_qualified_name.clone(),
@@ -771,8 +770,7 @@ fn generate_constructor_impls<'tcx>(
                     rs_thunk_impls: rs_details,
                 } = generate_trait_thunks(
                     db,
-                    from_trait,
-                    &[src_ty],
+                    SupportedTrait::From(src_ty),
                     core.self_ty,
                     core.def_id,
                     core.rs_fully_qualified_name.clone(),
@@ -1343,15 +1341,10 @@ fn generate_display_impl<'tcx>(
         return err_snippets(anyhow!("`core` crate does not support `std::fmt::Display` because it requires `alloc::string::String` which is not available in `core`"));
     }
 
-    let Some(to_string_trait_id) = tcx.get_diagnostic_item(Symbol::intern("ToString")) else {
-        return err_snippets(anyhow!("Internal Crubit Error: `ToString` trait not found."));
-    };
-
     let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls: rs_details } =
         match generate_trait_thunks(
             db,
-            to_string_trait_id,
-            &[],
+            SupportedTrait::ToString,
             core.self_ty,
             core.def_id,
             core.rs_fully_qualified_name.clone(),
@@ -1423,16 +1416,13 @@ pub fn generate_adt<'tcx>(
     let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
 
     let destructor_snippets = if adt_core_bindings_needs_drop(&core, tcx) {
-        let drop_trait_id =
-            tcx.lang_items().drop_trait().expect("`Drop` trait should be present if `needs_drop");
         let TraitThunks {
             method_name_to_cc_thunk_name,
             mut cc_thunk_decls,
             rs_thunk_impls: rs_details,
         } = generate_trait_thunks(
             db,
-            drop_trait_id,
-            &[],
+            SupportedTrait::Drop,
             core.self_ty,
             core.def_id,
             core.rs_fully_qualified_name.clone(),
@@ -2996,13 +2986,9 @@ enum PassingMode {
     MutRef,
 }
 
-fn get_into_iter_ty<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    self_ty: Ty<'tcx>,
-    into_iterator_trait_id: DefId,
-) -> Result<Ty<'tcx>> {
+fn get_into_iter_ty<'tcx>(tcx: TyCtxt<'tcx>, self_ty: Ty<'tcx>) -> Result<Ty<'tcx>> {
     let into_iter_assoc_item = tcx
-        .associated_items(into_iterator_trait_id)
+        .associated_items(SupportedTrait::IntoIterator.trait_id(tcx))
         .in_definition_order()
         .find(|item| {
             item.name() == rustc_span::symbol::Symbol::intern("IntoIter")
@@ -3026,13 +3012,9 @@ fn get_into_iter_ty<'tcx>(
     .map_err(|_| anyhow!("Failed to normalize `<{} as IntoIterator>::IntoIter`", self_ty))
 }
 
-fn get_into_iter_item_ty<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    self_ty: Ty<'tcx>,
-    into_iterator_trait_id: DefId,
-) -> Result<Ty<'tcx>> {
+fn get_into_iter_item_ty<'tcx>(tcx: TyCtxt<'tcx>, self_ty: Ty<'tcx>) -> Result<Ty<'tcx>> {
     let item_assoc_item = tcx
-        .associated_items(into_iterator_trait_id)
+        .associated_items(SupportedTrait::IntoIterator.trait_id(tcx))
         .in_definition_order()
         .find(|item| {
             item.name() == Symbol::intern("Item") && matches!(item.kind, ty::AssocKind::Type { .. })
@@ -3057,7 +3039,6 @@ fn get_into_iter_item_ty<'tcx>(
 fn generate_begin_and_end_for_type<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
-    into_iterator_trait_id: DefId,
     passing_mode: PassingMode,
 ) -> Result<Option<ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
@@ -3097,13 +3078,13 @@ fn generate_begin_and_end_for_type<'tcx>(
         return Ok(Some(ApiSnippets { main_api, ..Default::default() }));
     }
 
-    if !does_type_implement_trait(tcx, check_ty, into_iterator_trait_id, []) {
+    if !does_type_implement_trait(tcx, check_ty, SupportedTrait::IntoIterator.trait_id(tcx), []) {
         return Ok(None);
     }
 
-    let into_iter_ty = get_into_iter_ty(tcx, check_ty, into_iterator_trait_id)?;
+    let into_iter_ty = get_into_iter_ty(tcx, check_ty)?;
 
-    let item_ty = get_into_iter_item_ty(tcx, check_ty, into_iterator_trait_id)?;
+    let item_ty = get_into_iter_item_ty(tcx, check_ty)?;
 
     let _ = db
         .format_ty_for_cc(item_ty, TypeLocation::Other)
@@ -3119,8 +3100,7 @@ fn generate_begin_and_end_for_type<'tcx>(
     let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls } =
         generate_trait_thunks(
             db,
-            into_iterator_trait_id,
-            &[],
+            SupportedTrait::IntoIterator,
             check_ty,
             core.def_id,
             rs_fully_qualified_name,
@@ -3133,7 +3113,7 @@ fn generate_begin_and_end_for_type<'tcx>(
         .expect("IntoIterator trait missing into_iter method");
 
     let into_iter_fn_assoc_item = tcx
-        .associated_items(into_iterator_trait_id)
+        .associated_items(SupportedTrait::IntoIterator.trait_id(tcx))
         .in_definition_order()
         .find(|item| item.name() == sym::into_iter && matches!(item.kind, ty::AssocKind::Fn { .. }))
         .expect("IntoIterator should have into_iter method");
@@ -3278,8 +3258,6 @@ fn generate_into_iterator_impls<'tcx>(
     core: &AdtCoreBindings<'tcx>,
     member_function_names: &mut HashSet<String>,
 ) -> Result<ApiSnippets<'tcx>> {
-    let tcx = db.tcx();
-
     if member_function_names.contains("begin")
         || member_function_names.contains("end")
         || member_function_names.contains("into_iter")
@@ -3296,13 +3274,9 @@ fn generate_into_iterator_impls<'tcx>(
         bail!("{} has a field named `begin`, `end`, or `into_iter`, which prevents binding methods for IntoIterator.", core.self_ty);
     }
 
-    let into_iterator_trait_id = tcx
-        .get_diagnostic_item(sym::IntoIterator)
-        .expect("Could not find IntoIterator trait. Please file a crubit bug.");
-
     Ok([PassingMode::Value, PassingMode::SharedRef, PassingMode::MutRef]
         .into_iter()
-        .map(|mode| generate_begin_and_end_for_type(db, core, into_iterator_trait_id, mode))
+        .map(|mode| generate_begin_and_end_for_type(db, core, mode))
         .filter_map(|result| {
             result.unwrap_or_else(|err| {
                 core.def_id.map(|def_id| generate_unsupported_def(db, def_id, err).into_main_api())

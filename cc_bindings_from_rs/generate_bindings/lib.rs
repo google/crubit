@@ -33,7 +33,7 @@ use crate::format_type::{
     BridgedType, BridgedTypeConversionInfo,
 };
 use crate::generate_function::{generate_function, must_use_attr_of};
-use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
+use crate::generate_function_thunk::{generate_trait_thunks, SupportedTrait, TraitThunks};
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
     generate_adt_core, into_trait_impls_by_destination, scalar_value_to_string,
@@ -1340,17 +1340,13 @@ fn generate_default_ctor<'tcx>(
         core: Rc<AdtCoreBindings<'tcx>>,
     ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
-        let trait_id = tcx
-            .get_diagnostic_item(sym::Default)
-            .ok_or(anyhow!("Couldn't find `core::default::Default`"))?;
         let TraitThunks {
             method_name_to_cc_thunk_name,
             cc_thunk_decls,
             rs_thunk_impls: rs_details,
         } = generate_trait_thunks(
             db,
-            trait_id,
-            &[],
+            SupportedTrait::Default,
             core.self_ty,
             core.def_id,
             core.rs_fully_qualified_name.clone(),
@@ -1459,18 +1455,13 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
                 Ok(ApiSnippets { main_api, cc_details, rs_details: RsSnippet::default() })
             }
             Some(CopyCtorStyle::Clone) => {
-                let trait_id = tcx
-                    .lang_items()
-                    .clone_trait()
-                    .ok_or_else(|| anyhow!("Can't find the `Clone` trait"))?;
                 let TraitThunks {
                     method_name_to_cc_thunk_name,
                     cc_thunk_decls,
                     rs_thunk_impls: rs_details,
                 } = generate_trait_thunks(
                     db,
-                    trait_id,
-                    &[],
+                    SupportedTrait::Clone,
                     core.self_ty,
                     core.def_id,
                     core.rs_fully_qualified_name.clone(),
