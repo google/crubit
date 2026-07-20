@@ -84,13 +84,13 @@ aliasing properties, and so these cannot be mapped to the distinct owned,
 because the C++ types do not have direct Rust bindings: the generated `.proto.h`
 file does not get piped through Crubit.
 
-  * **To convert a Rust `Proto` to a C++ `const Proto*`**: use
+*   **To convert a Rust `Proto` to a C++ `const Proto*`**: use
     `my_proto.as_view().cpp_cast()`
 
-  * **To convert a Rust `Proto` to a C++ `Proto*`**: use
+*   **To convert a Rust `Proto` to a C++ `Proto*`**: use
     `my_proto.as_mut().cpp_cast()`
 
-  * **To convert a C++ `(const) Proto*` to a Rust `View`/`Mut`**: use `unsafe
+*   **To convert a C++ `(const) Proto*` to a Rust `View`/`Mut`**: use `unsafe
     {my_ptr.unsafe_cpp_cast()}`.
 
 See support/forward_declare.rs for the definition of
