@@ -712,12 +712,6 @@ pub fn format_ty_for_cc<'tcx>(
 
             CcSnippet { tokens, prereqs }
         }
-
-        // TODO(b/260268230, b/260729464): When recursively processing nested types (e.g. an
-        // element type of an Array, a referent of a Ref, a parameter type of an FnPtr, etc), one
-        // should also 1) propagate `CcPrerequisites::defs`, 2) cover `CcPrerequisites::defs` in
-        // `test_format_ty_for_cc...`.  For ptr/ref it might be possible to use
-        // `CcPrerequisites::move_defs_to_fwd_decls`.
         _ => bail!("The following Rust type is not supported yet: {ty}"),
     })
 }
