@@ -161,9 +161,9 @@ cc_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":decl_importer",
+        ":recording_diagnostic_consumer",
         "//common:annotation_reader",
         "//common:status_macros",
-        "@abseil-cpp//absl/algorithm:container",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/functional:function_ref",
         "@abseil-cpp//absl/status",
@@ -172,6 +172,8 @@ cc_library(
         "@abseil-cpp//absl/strings:string_view",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
+        "@llvm-project//clang:sema",
+        "@llvm-project//llvm:Support",
     ],
 )
 

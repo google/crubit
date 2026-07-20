@@ -888,6 +888,7 @@ version = "0.0.0"
 dependencies = [
  "annotation_reader_sys",
  "crubit_build",
+ "rs_bindings_from_cc_recording_diagnostic_consumer_sys",
 ]
 
 [[package]]

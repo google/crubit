@@ -5,3 +5,4 @@
 // Automatically @generated lib.rs for the cc_library ast_util.
 
 extern crate annotation_reader_sys;
+extern crate recording_diagnostic_consumer_sys;

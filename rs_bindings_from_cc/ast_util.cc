@@ -5,13 +5,11 @@
 #include "rs_bindings_from_cc/ast_util.h"
 
 #include <algorithm>
-#include <array>
 #include <cstddef>
 #include <optional>
 #include <string>
 #include <vector>
 
-#include "absl/algorithm/container.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/functional/function_ref.h"
 #include "absl/status/status.h"
@@ -20,16 +18,24 @@
 #include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
+#include "rs_bindings_from_cc/decl_importer.h"
+#include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Attrs.inc"
+#include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Sema/Scope.h"
+#include "clang/Sema/Sema.h"
+#include "llvm/Support/Casting.h"
 
 namespace crubit {
 
@@ -330,6 +336,183 @@ const clang::TagDecl* StripCStyleNameIntroducingTypedef(
   // redecl context as the alias decl, so we know it's shaped like
   // `typedef struct Foo Foo;`.
   return tag_decl;
+}
+
+bool ForceDefineImplicitFunction(ImportContext& ictx,
+                                 clang::FunctionDecl* function_decl) {
+  if (auto defaulted_kind = ictx.sema_.getDefaultedFunctionKind(function_decl);
+      defaulted_kind.isSpecialMember()) {
+    auto special_member_kind = defaulted_kind.asSpecialMember();
+    if (!function_decl->isDeleted() &&
+        (function_decl->isImplicit() || function_decl->isDefaulted()) &&
+        !function_decl->doesThisDeclarationHaveABody()) {
+      crubit::RecordingDiagnosticConsumer diagnostic_recorder =
+          crubit::RecordDiagnostics(ictx.sema_.getDiagnostics(), [&] {
+            FakeTUScope fake_tu_scope(ictx);
+            clang::Sema::SynthesizedFunctionScope synthesized_function_scope(
+                ictx.sema_, function_decl);
+            // This is slightly different from DefineDefaultedFunction in that
+            // we only consider certain special member kinds and we clear
+            // the WillHaveBody flag. (We also run it in our diagnostic
+            // sandbox.)
+            switch (special_member_kind) {
+              case clang::CXXSpecialMemberKind::CopyAssignment:
+                function_decl->setWillHaveBody(false);
+                ictx.sema_.DefineImplicitCopyAssignment(
+                    function_decl->getLocation(),
+                    llvm::cast<clang::CXXMethodDecl>(function_decl));
+                break;
+              case clang::CXXSpecialMemberKind::MoveAssignment:
+                function_decl->setWillHaveBody(false);
+                ictx.sema_.DefineImplicitMoveAssignment(
+                    function_decl->getLocation(),
+                    llvm::cast<clang::CXXMethodDecl>(function_decl));
+                break;
+              case clang::CXXSpecialMemberKind::MoveConstructor:
+                function_decl->setWillHaveBody(false);
+                ictx.sema_.DefineImplicitMoveConstructor(
+                    function_decl->getLocation(),
+                    llvm::cast<clang::CXXConstructorDecl>(function_decl));
+                break;
+              case clang::CXXSpecialMemberKind::CopyConstructor:
+                function_decl->setWillHaveBody(false);
+                ictx.sema_.DefineImplicitCopyConstructor(
+                    function_decl->getLocation(),
+                    llvm::cast<clang::CXXConstructorDecl>(function_decl));
+                break;
+              default:
+                break;
+            }
+            ictx.sema_.PerformPendingInstantiations(/*LocalOnly=*/false,
+                                                    /*AtEndOfTU=*/false);
+          });
+      if (diagnostic_recorder.getNumErrors() != 0) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+bool EnsureFunctionDefined(ImportContext& ictx, clang::FunctionDecl* fn) {
+  if (fn->isDeleted() || fn->getBody() != nullptr) {
+    return true;
+  }
+  if (fn->isImplicit() || fn->isDefaulted()) {
+    return ForceDefineImplicitFunction(ictx, fn);
+  }
+  if (fn->isTemplateInstantiation()) {
+    crubit::RecordingDiagnosticConsumer diagnostic_recorder =
+        crubit::RecordDiagnostics(ictx.sema_.getDiagnostics(), [&] {
+          FakeTUScope fake_tu_scope(ictx);
+          auto poi = fn->getPointOfInstantiation();
+          if (poi.isInvalid()) poi = fn->getLocation();
+          ictx.sema_.InstantiateFunctionDefinition(poi, fn);
+          ictx.sema_.PerformPendingInstantiations(/*LocalOnly=*/false,
+                                                  /*AtEndOfTU=*/false);
+        });
+    if (diagnostic_recorder.getNumErrors() != 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+std::string GetInvalidCallTarget(ImportContext& ictx,
+                                 clang::FunctionDecl* function_decl) {
+  // TODO(zarko): Should we ForceDefineImplicitFunction each function we
+  // encounter?
+  std::string invalid_decl_name;
+  absl::flat_hash_set<clang::FunctionDecl*> visited_decls;
+  struct BodyVisitor : public clang::RecursiveASTVisitor<BodyVisitor> {
+    std::string& invalid_decl_name;
+    absl::flat_hash_set<clang::FunctionDecl*>& visited_decls;
+    ImportContext& ictx;
+    clang::NamedDecl* blame_decl;
+    BodyVisitor(std::string& invalid_decl_name,
+                absl::flat_hash_set<clang::FunctionDecl*>& visited_decls,
+                ImportContext& ictx, clang::NamedDecl* blame_decl)
+        : invalid_decl_name(invalid_decl_name),
+          visited_decls(visited_decls),
+          ictx(ictx),
+          blame_decl(blame_decl) {}
+    bool CheckAndRecurse(clang::FunctionDecl* fn, bool force = false) {
+      if (force || fn->isTemplateInstantiation() || fn->isDefaulted() ||
+          fn->isImplicit()) {
+        if (fn->getBody() == nullptr) {
+          if (!EnsureFunctionDefined(ictx, fn)) {
+            invalid_decl_name = fn->getQualifiedNameAsString();
+            return false;
+          }
+        }
+        if (fn->isInvalidDecl() || fn->isDeleted()) {
+          invalid_decl_name = fn->getQualifiedNameAsString();
+          return false;
+        }
+        if (fn->getBody() != nullptr) {
+          if (!visited_decls.insert(fn).second) {
+            return true;
+          }
+          BodyVisitor really_recurse(invalid_decl_name, visited_decls, ictx,
+                                     blame_decl);
+          really_recurse.TraverseStmt(fn->getBody());
+          if (auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(fn)) {
+            for (clang::CXXCtorInitializer* init : ctor->inits()) {
+              if (init->getInit()) {
+                really_recurse.TraverseStmt(init->getInit());
+              }
+            }
+          }
+        }
+      }
+      return true;
+    }
+    bool VisitCXXConstructExpr(clang::CXXConstructExpr* expr) {
+      if (auto* mfn = clang::dyn_cast<clang::CXXConstructorDecl>(
+              expr->getConstructor())) {
+        return CheckAndRecurse(mfn);
+      }
+      return true;
+    }
+    bool VisitMemberExpr(clang::MemberExpr* expr) {
+      if (auto* mfn =
+              clang::dyn_cast<clang::CXXMethodDecl>(expr->getMemberDecl())) {
+        return CheckAndRecurse(mfn);
+      }
+      return true;
+    }
+    bool VisitStaticAssertDecl(clang::StaticAssertDecl* decl) {
+      if (decl->isFailed()) {
+        invalid_decl_name = blame_decl->getQualifiedNameAsString();
+        return false;
+      }
+      return true;
+    }
+    bool VisitRecoveryExpr(clang::RecoveryExpr* expr) {
+      // Clang appears to insert a RecoveryExpr in template bodies that fail
+      // to instantiate properly.
+      if (expr->containsErrors()) {
+        invalid_decl_name = blame_decl->getQualifiedNameAsString();
+        return false;
+      }
+      return true;
+    }
+    bool VisitDeclRefExpr(clang::DeclRefExpr* expr) {
+      if (auto* fn = clang::dyn_cast<clang::FunctionDecl>(expr->getDecl())) {
+        return CheckAndRecurse(fn);
+      }
+      return true;
+    }
+  } visitor(invalid_decl_name, visited_decls, ictx, function_decl);
+  auto qnas = function_decl->getQualifiedNameAsString();
+  if (!EnsureFunctionDefined(ictx, function_decl)) {
+    return qnas;
+  }
+  if (function_decl->isInvalidDecl()) {
+    return qnas;
+  }
+  visitor.CheckAndRecurse(function_decl, true);
+  return invalid_decl_name;
 }
 
 }  // namespace crubit

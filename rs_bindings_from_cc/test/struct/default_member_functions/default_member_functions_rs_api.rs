@@ -88,7 +88,7 @@ impl ::ctor::CtorNew<()> for UncopyableDespiteDecl {
 }
 
 // error: constructor `UncopyableDespiteDecl::UncopyableDespiteDecl` could not be bound
-//   Would use an unavailable copy constructor for UncopyableDespiteDecl
+//   Defaulted function relies on an invalid decl: UncopyableDespiteDecl::UncopyableDespiteDecl
 
 // error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>` could not be bound
 //   incomplete type

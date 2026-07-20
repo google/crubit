@@ -121,6 +121,9 @@ SpecialMemberFunc GetSpecialMemberFunc(
       return SpecialMemberFunc::kUnavailable;
     }
   }
+  if (ictx != nullptr && !GetInvalidCallTarget(*ictx, decl).empty()) {
+    return SpecialMemberFunc::kUnavailable;
+  }
   if (decl->isDeleted()) {
     return SpecialMemberFunc::kUnavailable;
   } else if (decl->isTrivial()) {

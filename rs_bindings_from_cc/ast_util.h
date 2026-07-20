@@ -12,6 +12,7 @@
 #include "absl/status/statusor.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "clang/AST/Attr.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/AttrKinds.h"
@@ -79,6 +80,29 @@ bool IsProto2Message(const clang::Decl& decl);
 // underlying `TagDecl` representing the C type. Otherwise, returns `nullptr`.
 const clang::TagDecl* StripCStyleNameIntroducingTypedef(
     const clang::TypedefNameDecl* alias_decl);
+
+// Attempts to define the implicit/default function `function_decl`. Has no
+// effect if `function_decl` is not an interesting special member or is not
+// implicit. Returns `false` if there were errors defining the function
+// (e.g., an implicit copy constructor could rely on a deleted copy constructor
+// for a member variable).
+bool ForceDefineImplicitFunction(ImportContext& ictx,
+                                 clang::FunctionDecl* function_decl);
+
+// Checks to see if `function_decl` can reach an invalid template instantiation
+// or an invalid default/implicit member (including if `function_decl` itself
+// is invalid). Returns the fully-qualified name of the first invalid decl
+// reached (suitable for including in a diagnostic message). Returns the empty
+// string if no such decl was found.
+//
+// Clang won't diagnose invalid template declarations multiple times, but we
+// can crawl over the syntax tree to determine if a template instantiation will
+// be invalid because it transitively reaches an invalid declaration.
+//
+// Note that we only need to recurse on template instantiations. Concrete
+// declaration instances can't hide like templates can.
+std::string GetInvalidCallTarget(ImportContext& ictx,
+                                 clang::FunctionDecl* function_decl);
 
 // An RAII guard that sets a fake TU scope for the duration of its lifetime
 // and restores the previous TU scope when it goes out of scope.
