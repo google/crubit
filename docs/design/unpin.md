@@ -40,11 +40,11 @@ A C++ type `T` is `Unpin` if it is known to be a **Rust-movable type**
 (move+destroy is logically equivalent to `memcpy`+release).
 
 `Unpin` C++ types can be used like any other normal Rust type: they are always
-safe to access by reference or by value. Non-`Unpin` types, in contrast, can
+safe to access by reference or by value. Non-`Unpin` C++ types, in contrast, can
 only be accessed behind pins such as `Pin<&mut T>`, or `Pin<Box<T>>`, because it
 may not be safe to directly mutate. These types are never used directly by value
 in Rust, because value-like assignment has incorrect semantics: it fails to run
-C++ special members for non-Rust-movable types.
+the overloaded C++ assignment operator or constructor.
 
 Note that not every object with an `Unpin` type is actually safe to hold in a
 mutable reference. Objects with live aliases still must not be used with `&mut`,
@@ -103,18 +103,6 @@ This definition is, however, sound: all types which are trivial for calls are
 Rust-movable, because a type which is trivial for calls is Rust-moved when
 passed by value as a function argument.
 
-### Expanding Rust-movability
-
-C++26 introduces a concept called "trivial relocation" and "trivially
-relocatable types". These are types which have an alternate relocation operation
-that does not throw exceptions or run the move constructor or destructor.
-Ideally, a type would be Rust-movable if and only if it is trivially
-relocatable, replaceable, and trivial relocation is tantamount to a `memcpy`.
-(For example, perhaps `T` is Rust-movable if and only if any union containing
-`T` is trivially relocatable.)
-
-TODO: This is a work in progress.
-
 ## Reference Safety
 
 Not every object with an `Unpin` type can actually safely be pointed to by a
@@ -123,8 +111,8 @@ Rust reference.
 ### Conventional aliasing
 
 If a C++ reference mutably aliases, it is unsafe to pass to Rust as a Rust
-reference. Do not under any circumstance create aliasing Rust references, the
-behavior of doing so is undefined.
+reference. Do not under any circumstance create mutably aliasing Rust
+references, the behavior of doing so is undefined.
 
 For example:
 
@@ -137,9 +125,9 @@ It is Undefined Behavior to, in C++, call `foo(x, x)`.
 ### Tail padding
 
 In C++, tail padding is not part of the object, and the space in the tail
-padding can be taken up by other unrelated objects. Avoid creating a Rust
-reference to a base class, or to a `[[no_unique_address]]` field, as these are
-"potentially overlapping". This can cause surprising behavior, or unintended
+padding can be taken up by other unrelated objects. Avoid creating a mutable
+Rust reference to a base class, or to a `[[no_unique_address]]` field, as these
+are "potentially overlapping". This can cause surprising behavior, or unintended
 aliasing and undefined behavior.
 
 Consider the following struct:
@@ -188,8 +176,8 @@ And the following Rust code would perform unintended mutations to `field_2`:
 ```rust
 let mut b1: B = ...;
 let mut b2: B = ...;
-// This actually swaps field_2!
-std::mem::swap(&mut b1.field_1(), &mut b2.field_1());
+// This also swaps field_2!
+std::mem::swap(&mut *b1.field_1(), &mut *b2.field_1());
 ```
 
 ### C++20
@@ -207,5 +195,5 @@ does not exist.
 
 In modern C++, `final` types are not much safer than other types. One must be
 careful **when creating Rust references**, to ensure that those Rust references
-do not contain data in their tail padding, or otherwise alias, and there is no
-way to guarantee this at the type level.
+do not alias, including via the tail padding. There is no way to guarantee this
+at the type level.
