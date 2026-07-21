@@ -12,13 +12,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "annotation_reader_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
-]
-
-[[package]]
 name = "anstream"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -144,19 +137,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "cc"
-version = "1.2.66"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5d6cac793997bd970000024b2934968efe83b382de4fdcf4fcb46b6ee4ad996"
-dependencies = [
- "find-msvc-tools",
- "jobserver",
- "libc",
- "shlex",
+ "thiserror",
 ]
 
 [[package]]
@@ -312,14 +293,6 @@ name = "cc_bindings_from_rs_toposort"
 version = "0.0.0"
 
 [[package]]
-name = "cc_ffi_types_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "ffi_types",
-]
-
-[[package]]
 name = "cfg-if"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -430,13 +403,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crubit_build"
-version = "0.0.0"
-dependencies = [
- "cc",
-]
-
-[[package]]
 name = "crubit_feature"
 version = "0.0.0"
 dependencies = [
@@ -484,18 +450,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "errors"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "arc_anyhow",
- "error_report",
- "errors",
- "googletest",
- "serde_json",
-]
-
-[[package]]
 name = "external_binaries"
 version = "0.0.0"
 
@@ -518,19 +472,6 @@ version = "0.0.0"
 dependencies = [
  "googletest",
 ]
-
-[[package]]
-name = "file_io_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
-]
-
-[[package]]
-name = "find-msvc-tools"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
 
 [[package]]
 name = "flagset"
@@ -606,16 +547,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
-name = "jobserver"
-version = "0.1.35"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c00acbd29eabad4a2392fa0e921c874934dbbf4194312ad20f04a0ed67a3cb3"
-dependencies = [
- "getrandom",
- "libc",
-]
-
-[[package]]
 name = "kythe_metadata"
 version = "0.0.0"
 dependencies = [
@@ -632,40 +563,6 @@ name = "libc"
 version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
-
-[[package]]
-name = "lifetime_annotations_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "lifetime_symbol_table_sys",
- "lifetime_sys",
- "pointee_type_sys",
- "type_lifetimes_sys",
-]
-
-[[package]]
-name = "lifetime_substitutions_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "lifetime_sys",
-]
-
-[[package]]
-name = "lifetime_symbol_table_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "lifetime_sys",
-]
-
-[[package]]
-name = "lifetime_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
-]
 
 [[package]]
 name = "linux-raw-sys"
@@ -685,10 +582,6 @@ version = "0.0.0"
 dependencies = [
  "googletest",
 ]
-
-[[package]]
-name = "multiplatform_testing"
-version = "0.0.0"
 
 [[package]]
 name = "num-traits"
@@ -754,39 +647,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "pointee_type_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
-]
-
-[[package]]
 name = "proc-macro2"
 version = "1.0.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "protobuf"
-version = "3.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d65a1d4ddae7d8b5de68153b48f6aa3bba8cb002b243dbdbc55a5afbc98f99f4"
-dependencies = [
- "once_cell",
- "protobuf-support",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "protobuf-support"
-version = "3.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e36c2f31e0a47f9280fb347ef5e461ffcd2c52dd520d8e216b52f93b0b0d7d6"
-dependencies = [
- "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -847,697 +713,6 @@ name = "regex-syntax"
 version = "0.8.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
-
-[[package]]
-name = "rs_bindings_from_cc"
-version = "0.0.0"
-dependencies = [
- "rs_bindings_from_cc_impl_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_annotations_consumer_sys"
-version = "0.0.0"
-dependencies = [
- "annotation_reader_sys",
- "crubit_build",
- "rs_bindings_from_cc_cc_ir_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_ast_consumer_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_importer_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_ast_convert_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_ast_util_sys",
- "rs_bindings_from_cc_cc_ir_sys",
- "rs_bindings_from_cc_recording_diagnostic_consumer_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_ast_util_sys"
-version = "0.0.0"
-dependencies = [
- "annotation_reader_sys",
- "crubit_build",
- "rs_bindings_from_cc_recording_diagnostic_consumer_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_cc_api"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "error_report",
- "protobuf",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_bindings",
- "rs_bindings_from_cc_ir",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_cc_api_ffi"
-version = "0.0.0"
-dependencies = [
- "ffi_types",
- "protobuf",
- "rs_bindings_from_cc_cc_api",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_cc_collect_instantiations_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ffi_types_sys",
- "crubit_build",
- "rs_bindings_from_cc_collect_instantiations",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_cc_ir_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_class_template_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_cc_ir_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_cmdline_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_cc_ir_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_collect_instantiations"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "ffi_types",
- "googletest",
- "proc-macro2",
- "quote",
- "serde_json",
- "syn",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_collect_namespaces_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_cc_ir_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_cpp_type_name"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "error_report",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_ir",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_cxx_record_sys"
-version = "0.0.0"
-dependencies = [
- "annotation_reader_sys",
- "crubit_build",
- "rs_bindings_from_cc_ast_convert_sys",
- "rs_bindings_from_cc_ast_util_sys",
- "rs_bindings_from_cc_cc_ir_sys",
- "type_lifetimes_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_database"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_abi_type",
- "crubit_feature",
- "error_report",
- "errors",
- "ffi_types",
- "flagset",
- "heck",
- "itertools",
- "memoized",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_ir",
- "serde_json",
- "syn",
- "token_stream_printer",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_enum_constant_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_ast_util_sys",
- "rs_bindings_from_cc_cc_ir_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_enum_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_ast_util_sys",
- "rs_bindings_from_cc_cc_ir_sys",
- "type_lifetimes_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_existing_rust_type_sys"
-version = "0.0.0"
-dependencies = [
- "annotation_reader_sys",
- "crubit_build",
- "rs_bindings_from_cc_cc_ir_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_friend_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_cc_ir_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_frontend_action_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "lifetime_annotations_sys",
- "rs_bindings_from_cc_ast_consumer_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_function_sys"
-version = "0.0.0"
-dependencies = [
- "annotation_reader_sys",
- "crubit_build",
- "lifetime_annotations_sys",
- "lifetime_symbol_table_sys",
- "lifetime_sys",
- "rs_bindings_from_cc_ast_util_sys",
- "rs_bindings_from_cc_cc_ir_sys",
- "rs_bindings_from_cc_recording_diagnostic_consumer_sys",
- "type_lifetimes_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_function_template_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_cc_ir_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_bindings"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_abi_type",
- "crubit_feature",
- "dyn_format",
- "error_report",
- "errors",
- "flagset",
- "googletest",
- "heck",
- "itertools",
- "kythe_metadata",
- "multiplatform_testing",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_cpp_type_name",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_comment",
- "rs_bindings_from_cc_generate_enum",
- "rs_bindings_from_cc_generate_function",
- "rs_bindings_from_cc_generate_function_thunk",
- "rs_bindings_from_cc_generate_struct_and_union",
- "rs_bindings_from_cc_has_bindings",
- "rs_bindings_from_cc_ir",
- "rs_bindings_from_cc_ir_matchers",
- "rs_bindings_from_cc_ir_testing",
- "rs_bindings_from_cc_lifetime_defaults_transform",
- "rs_bindings_from_cc_multiplatform_ir_testing",
- "rs_bindings_from_cc_rs_type_kind",
- "rs_bindings_from_cc_test_generators",
- "static_assertions",
- "syn",
- "token_stream_matchers",
- "token_stream_printer",
- "unicode-ident",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_bindings_and_metadata_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_cc_collect_instantiations_sys",
- "rs_bindings_from_cc_cc_ir_sys",
- "rs_bindings_from_cc_cmdline_sys",
- "rs_bindings_from_cc_collect_namespaces_sys",
- "rs_bindings_from_cc_ir_from_cc_sys",
- "rs_bindings_from_cc_src_code_gen_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_comment"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_feature",
- "error_report",
- "googletest",
- "itertools",
- "once_cell",
- "proc-macro2",
- "quote",
- "regex",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_bindings",
- "rs_bindings_from_cc_generate_comment",
- "rs_bindings_from_cc_ir",
- "rs_bindings_from_cc_ir_matchers",
- "rs_bindings_from_cc_ir_testing",
- "token_stream_matchers",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_enum"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_feature",
- "error_report",
- "flagset",
- "googletest",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_bindings",
- "rs_bindings_from_cc_generate_comment",
- "rs_bindings_from_cc_ir",
- "rs_bindings_from_cc_multiplatform_ir_testing",
- "rs_bindings_from_cc_test_generators",
- "token_stream_matchers",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_function"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_abi_type",
- "crubit_feature",
- "error_report",
- "errors",
- "flagset",
- "googletest",
- "itertools",
- "multiplatform_testing",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_bindings",
- "rs_bindings_from_cc_generate_comment",
- "rs_bindings_from_cc_generate_function_thunk",
- "rs_bindings_from_cc_has_bindings",
- "rs_bindings_from_cc_ir",
- "rs_bindings_from_cc_ir_matchers",
- "rs_bindings_from_cc_ir_testing",
- "rs_bindings_from_cc_lifetime_defaults_transform",
- "rs_bindings_from_cc_multiplatform_ir_testing",
- "rs_bindings_from_cc_test_generators",
- "rustversion",
- "static_assertions",
- "syn",
- "token_stream_matchers",
- "token_stream_printer",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_function_thunk"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_abi_type",
- "crubit_feature",
- "error_report",
- "itertools",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_cpp_type_name",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_ir",
- "rs_bindings_from_cc_lifetime_defaults_transform",
- "rustc-stable-hash",
- "syn",
- "unicode-ident",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_generate_struct_and_union"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_feature",
- "error_report",
- "flagset",
- "googletest",
- "itertools",
- "multiplatform_testing",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_cpp_type_name",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_bindings",
- "rs_bindings_from_cc_generate_comment",
- "rs_bindings_from_cc_generate_struct_and_union",
- "rs_bindings_from_cc_ir",
- "rs_bindings_from_cc_ir_matchers",
- "rs_bindings_from_cc_ir_testing",
- "rs_bindings_from_cc_lifetime_defaults_transform",
- "rs_bindings_from_cc_multiplatform_ir_testing",
- "rs_bindings_from_cc_test_generators",
- "static_assertions",
- "syn",
- "token_stream_matchers",
- "token_stream_printer",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_has_bindings"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "crubit_feature",
- "error_report",
- "heck",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_ir",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_impl_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "file_io_sys",
- "rs_bindings_from_cc_cc_ir_sys",
- "rs_bindings_from_cc_cmdline_sys",
- "rs_bindings_from_cc_collect_namespaces_sys",
- "rs_bindings_from_cc_generate_bindings_and_metadata_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_importer_sys"
-version = "0.0.0"
-dependencies = [
- "annotation_reader_sys",
- "crubit_build",
- "rs_bindings_from_cc_annotations_consumer_sys",
- "rs_bindings_from_cc_ast_util_sys",
- "rs_bindings_from_cc_cc_ir_sys",
- "rs_bindings_from_cc_class_template_sys",
- "rs_bindings_from_cc_cxx_record_sys",
- "rs_bindings_from_cc_enum_constant_sys",
- "rs_bindings_from_cc_enum_sys",
- "rs_bindings_from_cc_existing_rust_type_sys",
- "rs_bindings_from_cc_friend_sys",
- "rs_bindings_from_cc_function_sys",
- "rs_bindings_from_cc_function_template_sys",
- "rs_bindings_from_cc_namespace_sys",
- "rs_bindings_from_cc_recording_diagnostic_consumer_sys",
- "rs_bindings_from_cc_type_alias_sys",
- "rs_bindings_from_cc_type_map_sys",
- "rs_bindings_from_cc_var_sys",
- "type_lifetimes_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_ir"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_feature",
- "error_report",
- "flagset",
- "googletest",
- "itertools",
- "proc-macro2",
- "protobuf",
- "quote",
- "serde",
- "serde_json",
- "syn",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_ir_from_cc_dependency_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ffi_types_sys",
- "crubit_build",
- "rs_bindings_from_cc_cc_ir_sys",
- "rs_bindings_from_cc_ir_from_cc_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_ir_from_cc_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_cc_ir_sys",
- "rs_bindings_from_cc_frontend_action_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_ir_matchers"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "arc_anyhow",
- "googletest",
- "itertools",
- "multiplatform_testing",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_ir",
- "rs_bindings_from_cc_ir_testing",
- "token_stream_matchers",
- "token_stream_printer",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_ir_testing"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "crubit_feature",
- "ffi_types",
- "flagset",
- "googletest",
- "itertools",
- "multiplatform_testing",
- "protobuf",
- "quote",
- "rs_bindings_from_cc_ir",
- "rs_bindings_from_cc_ir_matchers",
- "rs_bindings_from_cc_ir_testing",
- "rs_bindings_from_cc_json_from_cc_sys",
- "rs_bindings_from_cc_proto_from_cc_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_json_from_cc_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ffi_types_sys",
- "crubit_build",
- "rs_bindings_from_cc_cc_ir_sys",
- "rs_bindings_from_cc_ir_from_cc_dependency_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_lifetime_defaults_transform"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "code_gen_utils",
- "crubit_abi_type",
- "crubit_feature",
- "error_report",
- "googletest",
- "itertools",
- "memoized",
- "multiplatform_testing",
- "proc-macro2",
- "quote",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_bindings",
- "rs_bindings_from_cc_ir",
- "rs_bindings_from_cc_ir_matchers",
- "rs_bindings_from_cc_ir_testing",
- "rs_bindings_from_cc_lifetime_defaults_transform",
- "rs_bindings_from_cc_multiplatform_ir_testing",
- "syn",
- "unicode-ident",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_multiplatform_ir_testing"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "multiplatform_testing",
- "rs_bindings_from_cc_ir",
- "rs_bindings_from_cc_ir_testing",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_namespace_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_ast_util_sys",
- "rs_bindings_from_cc_cc_ir_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_proto_from_cc_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ffi_types_sys",
- "crubit_build",
- "rs_bindings_from_cc_cc_ir_sys",
- "rs_bindings_from_cc_ir_from_cc_dependency_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_recording_diagnostic_consumer_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_rs_type_kind"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "crubit_feature",
- "error_report",
- "rs_bindings_from_cc_cpp_type_name",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_has_bindings",
- "rs_bindings_from_cc_ir",
- "rs_bindings_from_cc_lifetime_defaults_transform",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_src_code_gen_ffi_sys"
-version = "0.0.0"
-dependencies = [
- "cc_ffi_types_sys",
- "crubit_build",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_src_code_gen_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_cc_api_ffi",
- "rs_bindings_from_cc_cc_ir_sys",
- "rs_bindings_from_cc_src_code_gen_ffi_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_test_generators"
-version = "0.0.0"
-dependencies = [
- "arc_anyhow",
- "dyn_format",
- "error_report",
- "rs_bindings_from_cc_database",
- "rs_bindings_from_cc_generate_bindings",
- "rs_bindings_from_cc_ir",
- "rs_bindings_from_cc_multiplatform_ir_testing",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_type_alias_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_ast_util_sys",
- "rs_bindings_from_cc_cc_ir_sys",
- "type_lifetimes_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_type_map_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_cc_ir_sys",
-]
-
-[[package]]
-name = "rs_bindings_from_cc_var_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "rs_bindings_from_cc_ast_util_sys",
- "rs_bindings_from_cc_cc_ir_sys",
-]
-
-[[package]]
-name = "rustc-stable-hash"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "781442f29170c5c93b7185ad559492601acdc71d5bb0706f5868094f45cfcd08"
 
 [[package]]
 name = "rustix"
@@ -1612,12 +787,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "shlex"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
-
-[[package]]
 name = "siphasher"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1661,31 +830,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.69"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
-dependencies = [
- "thiserror-impl 1.0.69",
-]
-
-[[package]]
-name = "thiserror"
 version = "2.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4288b5bcbc7920c07a1149a35cf9590a2aa808e0bc1eafaade0b80947865fbc4"
 dependencies = [
- "thiserror-impl 2.0.18",
-]
-
-[[package]]
-name = "thiserror-impl"
-version = "1.0.69"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
+ "thiserror-impl",
 ]
 
 [[package]]
@@ -1732,17 +881,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "tempfile",
-]
-
-[[package]]
-name = "type_lifetimes_sys"
-version = "0.0.0"
-dependencies = [
- "crubit_build",
- "lifetime_substitutions_sys",
- "lifetime_symbol_table_sys",
- "lifetime_sys",
- "pointee_type_sys",
 ]
 
 [[package]]
