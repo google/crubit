@@ -34,6 +34,8 @@ RustBindingsFromCcInfo = provider(
         "pass_through_dep_variant_infos": ("A depset of DepVariantInfo providers that should be " +
                                            "passed through to downstream bindings in case the " +
                                            "target doesn't get bindings."),
+        "extra_named_deps": "An optional AliasableDepInfo depset that lists the crates of " +
+                            "the generated bindings of direct and indirect c++ dependencies.",
         "target_args": ("A depset of strings, each one representing a mapping of target " +
                         "to its per-target arguments (headers, features, crate name) in json format:\n\n" +
                         "{'t': <target>, 'h': [<header>], 'f': [<feature>], 'c': <crate_name>}"),

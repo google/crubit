@@ -386,7 +386,6 @@ def _compile_rs_out_file(ctx, attr, rs_out_file, crate_name, deps):
         deps = depset(_deps),
         crate_name = crate_name + "_cc_api_impl",
         include_coverage = True,
-        force_all_deps_direct = False,
     )
 
 def _cc_bindings_from_rust_aspect_impl(target, ctx):

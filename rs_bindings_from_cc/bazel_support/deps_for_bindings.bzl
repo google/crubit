@@ -19,15 +19,21 @@ load(
 )
 
 def _deps_for_bindings_impl(ctx):
-    dep_variant_infos = [
-        DepVariantInfo(
+    def make_dep_variant_info(dep):
+        return DepVariantInfo(
             crate_info = dep[CrateInfo] if CrateInfo in dep else None,
             dep_info = dep[DepInfo] if DepInfo in dep else None,
             cc_info = dep[CcInfo] if CcInfo in dep else None,
             build_info = None,
         )
+
+    dep_variant_infos = [
+        make_dep_variant_info(dep)
         for dep in ctx.attr.deps_for_generated_rs_file
     ]
+
+    if CrateInfo in ctx.attr._import_macro_dep:
+        dep_variant_infos.append(make_dep_variant_info(ctx.attr._import_macro_dep))
 
     return [
         DepsForBindingsInfo(

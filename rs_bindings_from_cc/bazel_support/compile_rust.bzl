@@ -44,7 +44,7 @@ def _get_cc_info(providers):
             return provider
     fail("Couldn't find a CcInfo in the list of providers")
 
-def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage, force_all_deps_direct, allow_lto = True, aliases = {}, remap_path_prefix = {}):
+def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage, allow_lto = True, aliases = {}, remap_path_prefix = {}, extra_named_deps = depset()):
     """Compiles a Rust source file.
 
     Args:
@@ -55,10 +55,10 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
       deps: depset[DepVariantInfo]: A depset of dependencies needed.
       crate_name: (string) crate name for naming the output files (.rlib, .rmeta...))
       include_coverage: (bool) Whether or not coverage information should be generated.
-      force_all_deps_direct: (bool) Whether or not to force all deps to be direct.
       allow_lto: (bool, optional) Whether to allow LTO
       aliases: (dict, optional) A dict of aliases to be passed to the rustc_compile_action.
       remap_path_prefix: (dict, optional) A dict of {symlink_path: source_path} to be remapped by rustc.
+      extra_named_deps: (depset[AliasableDepInfo], optional) Extra dependencies with custom crate names used for the compilation of the generated bindings.
 
     Returns:
       A DepVariantInfo provider.
@@ -120,9 +120,9 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             compile_data_targets = depset([]),
             owner = ctx.label,
         ),
+        extra_named_deps = extra_named_deps,
         rust_flags = remapped_flags,
         output_hash = output_hash,
-        force_all_deps_direct = force_all_deps_direct,
         include_coverage = include_coverage,
         # LINT.IfChange
         allowed_unstable_rust_features = [

@@ -395,6 +395,12 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             cc_infos = [target[CcInfo]] + cc_support_deps,
         ).compilation_context
 
+    extra_named_deps = depset(transitive = [
+        b.extra_named_deps
+        for b in binding_infos
+        if hasattr(b, "extra_named_deps")
+    ])
+
     return generate_and_compile_bindings(
         ctx,
         ctx.rule.attr,
@@ -441,6 +447,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             ],
         ),
         extra_cpp_srcs = extra_cpp_srcs,
+        extra_named_deps = extra_named_deps,
     )
 
 rust_bindings_from_cc_aspect = aspect(

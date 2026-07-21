@@ -11,6 +11,9 @@ load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 # buildifier: disable=bzl-visibility
 load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
 
+# buildifier: disable=bzl-visibility
+load("@rules_rust//rust/private:rustc.bzl", "AliasableDepInfo")
+
 load(
     "//cc_bindings_from_rs/bazel_support:providers.bzl",
     "CcBindingsFromRustInfo",
@@ -50,7 +53,8 @@ def generate_and_compile_bindings(
         should_generate_bindings = True,
         aliases = {},
         additional_rust_srcs = depset(),
-        extra_cpp_srcs = []):
+        extra_cpp_srcs = [],
+        extra_named_deps = depset()):
     """Runs the bindings generator.
 
     Args:
@@ -89,6 +93,7 @@ def generate_and_compile_bindings(
                 target_args = target_args,
                 namespaces = None,
                 additional_rust_srcs = additional_rust_srcs,
+                extra_named_deps = extra_named_deps,
             ),
         ]
 
@@ -178,10 +183,10 @@ def generate_and_compile_bindings(
         # the .dat file with the underlying cc_library. Once bazel supports baseline_coverage.dat
         # for aspects, we can remove this option.
         include_coverage = False,
-        force_all_deps_direct = True,
         allow_lto = False,
         aliases = aliases,
         remap_path_prefix = remap_paths,
+        extra_named_deps = extra_named_deps,
     )
 
     return [
@@ -194,6 +199,15 @@ def generate_and_compile_bindings(
             additional_rust_srcs = depset(
                 direct = [file for (file, _) in extra_rs_srcs],
                 transitive = [additional_rust_srcs],
+            ),
+            extra_named_deps = depset(
+                direct = [
+                    AliasableDepInfo(
+                        name = dep_variant_info.crate_info.name,
+                        dep = dep_variant_info.crate_info,
+                    ),
+                ],
+                transitive = [extra_named_deps],
             ),
         ),
         GeneratedBindingsInfo(
