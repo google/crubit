@@ -8,9 +8,10 @@ use googletest::matchers::{eq, pat, some};
 use googletest::{expect_eq, expect_that, fail, gtest, OrFail};
 use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
+use ir_rust_proto::IRProto;
 use ir_testing::{
-    ir_id, retrieve_func, retrieve_record, retrieve_type_alias_record, with_full_lifetime_macros,
-    DEPENDENCY_TARGET, TESTING_TARGET,
+    ir_id, make_test_ir, retrieve_func, retrieve_record, retrieve_type_alias_record,
+    with_full_lifetime_macros, DEPENDENCY_TARGET, TESTING_TARGET,
 };
 use itertools::Itertools;
 use quote::quote;
@@ -51,12 +52,12 @@ impl IrTestingExt for IR<'_> {
     }
 }
 
-fn ir_from_cc(header: &str) -> Result<IR<'static>> {
-    ir_testing::ir_from_cc(multiplatform_testing::test_platform(), header)
+fn ir_proto_from_cc(header: &str) -> Result<IRProto> {
+    ir_testing::ir_proto_from_cc(multiplatform_testing::test_platform(), header)
 }
 
-fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR<'static>> {
-    ir_testing::ir_from_cc_dependency(
+fn ir_proto_from_cc_dependency(header: &str, dep_header: &str) -> Result<IRProto> {
+    ir_testing::ir_proto_from_cc_dependency(
         multiplatform_testing::test_platform(),
         header,
         dep_header,
@@ -65,8 +66,8 @@ fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR<'static>> 
     )
 }
 
-fn ir_from_record_impl_debug_cc(header: &str) -> Result<IR> {
-    ir_testing::ir_from_cc_dependency(
+fn ir_proto_from_record_impl_debug_cc(header: &str) -> Result<IRProto> {
+    ir_testing::ir_proto_from_cc_dependency(
         multiplatform_testing::test_platform(),
         header,
         "// empty header",
@@ -75,10 +76,10 @@ fn ir_from_record_impl_debug_cc(header: &str) -> Result<IR> {
     )
 }
 
-fn ir_from_assumed_lifetimes_cc(program: &str) -> Result<IR> {
+fn ir_proto_from_assumed_lifetimes_cc(program: &str) -> Result<IRProto> {
     let mut full_program = with_full_lifetime_macros();
     full_program.push_str(program);
-    ir_testing::ir_from_cc_dependency(
+    ir_testing::ir_proto_from_cc_dependency(
         multiplatform_testing::test_platform(),
         &full_program,
         "// empty header",
@@ -89,7 +90,9 @@ fn ir_from_assumed_lifetimes_cc(program: &str) -> Result<IR> {
 
 #[gtest]
 fn test_function() {
-    let ir = ir_from_cc("int f(int a, int b);").unwrap();
+    let proto = ir_proto_from_cc("int f(int a, int b);").unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -150,7 +153,9 @@ fn test_function() {
 
 #[gtest]
 fn test_function_with_asm_label() {
-    let ir = ir_from_cc("int f(int a, int b) asm(\"foo\");").unwrap();
+    let proto = ir_proto_from_cc("int f(int a, int b) asm(\"foo\");").unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
     match multiplatform_testing::test_platform() {
         // If a declaration uses an asm label, the Clang mangler adds a '\u{1}' prefix on some
         // platforms to signify that LLVM should not perform any LLVM-level mangling on it.
@@ -181,7 +186,9 @@ fn test_function_with_asm_label() {
 
 #[gtest]
 fn test_function_with_unnamed_parameters() {
-    let ir = ir_from_cc("int f(int, int);").unwrap();
+    let proto = ir_proto_from_cc("int f(int, int);").unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -204,7 +211,9 @@ fn test_function_with_unnamed_parameters() {
 
 #[gtest]
 fn test_unescapable_rust_keywords_in_function_parameters() {
-    let ir = ir_from_cc("int f(int self, int crate, int super);").unwrap();
+    let proto = ir_proto_from_cc("int f(int self, int crate, int super);").unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -229,7 +238,9 @@ fn test_unescapable_rust_keywords_in_function_parameters() {
 
 #[gtest]
 fn test_unescapable_rust_keywords_in_struct_name() {
-    let ir = ir_from_cc("struct Self{ int field; };").unwrap();
+    let proto = ir_proto_from_cc("struct Self{ int field; };").unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
@@ -243,7 +254,9 @@ fn test_unescapable_rust_keywords_in_struct_name() {
 
 #[gtest]
 fn test_unescapable_rust_keywords_in_enum_name() {
-    let ir = ir_from_cc("enum Self{ kFoo = 1 };").unwrap();
+    let proto = ir_proto_from_cc("enum Self{ kFoo = 1 };").unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
@@ -257,7 +270,9 @@ fn test_unescapable_rust_keywords_in_enum_name() {
 
 #[gtest]
 fn test_unescapable_rust_keywords_in_enumerator_name() {
-    let ir = ir_from_cc("enum SomeEnum { self = 1 };").unwrap();
+    let proto = ir_proto_from_cc("enum SomeEnum { self = 1 };").unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
@@ -271,7 +286,9 @@ fn test_unescapable_rust_keywords_in_enumerator_name() {
 
 #[gtest]
 fn test_unescapable_rust_keywords_in_anonymous_struct_type_alias() {
-    let ir = ir_from_cc("typedef struct { int field; } Self;").unwrap();
+    let proto = ir_proto_from_cc("typedef struct { int field; } Self;").unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
@@ -285,7 +302,9 @@ fn test_unescapable_rust_keywords_in_anonymous_struct_type_alias() {
 
 #[gtest]
 fn test_unescapable_rust_keywords_in_field_name() {
-    let ir = ir_from_cc("struct SomeStruct { int self; };").unwrap();
+    let proto = ir_proto_from_cc("struct SomeStruct { int self; };").unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
     let record = ir.records().find(|record| *record.rs_name() == "SomeStruct").unwrap();
     assert_eq!(record.fields().len(), 1);
     let field = &record.fields()[0];
@@ -295,7 +314,9 @@ fn test_unescapable_rust_keywords_in_field_name() {
 
 #[gtest]
 fn test_unescapable_rust_keywords_in_namespace_name() {
-    let ir = ir_from_cc("namespace self { void foo(); }").unwrap();
+    let proto = ir_proto_from_cc("namespace self { void foo(); }").unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
@@ -309,7 +330,9 @@ fn test_unescapable_rust_keywords_in_namespace_name() {
 
 #[gtest]
 fn test_unescapable_rust_keywords_in_function_name() {
-    let ir = ir_from_cc("void self();").unwrap();
+    let proto = ir_proto_from_cc("void self();").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
@@ -323,7 +346,9 @@ fn test_unescapable_rust_keywords_in_function_name() {
 
 #[gtest]
 fn test_unescapable_rust_keywords_in_type_alias_name() {
-    let ir = ir_from_cc("using Self = int;").unwrap();
+    let proto = ir_proto_from_cc("using Self = int;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! { UnsupportedItem {
@@ -340,7 +365,9 @@ fn test_function_with_custom_calling_convention() {
     if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
         return; // vectorcall only exists on x86_64, not e.g. aarch64
     }
-    let ir = ir_from_cc("int f_vectorcall(int, int) [[clang::vectorcall]];").unwrap();
+    let proto = ir_proto_from_cc("int f_vectorcall(int, int) [[clang::vectorcall]];").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -355,7 +382,9 @@ fn test_function_with_custom_calling_convention() {
 
 #[gtest]
 fn test_consteval_function() {
-    let ir = ir_from_cc("consteval int add(int a, int b) { return a + b; }").unwrap();
+    let proto = ir_proto_from_cc("consteval int add(int a, int b) { return a + b; }").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -369,7 +398,9 @@ fn test_consteval_function() {
 
 #[gtest]
 fn test_variadic_function() {
-    let ir = ir_from_cc("int sprintf(char* str, const char* format, ...);").unwrap();
+    let proto = ir_proto_from_cc("int sprintf(char* str, const char* format, ...);").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -383,7 +414,10 @@ fn test_variadic_function() {
 
 #[gtest]
 fn test_functions_from_dependency_are_not_emitted() -> Result<()> {
-    let ir = ir_from_cc_dependency("int Add(int a, int b);", "int Multiply(int a, int b);")?;
+    let proto =
+        ir_proto_from_cc_dependency("int Add(int a, int b);", "int Multiply(int a, int b);")?;
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
     assert_ir_matches!(ir, quote! { Func { cc_name: "Add" ... } });
     assert_ir_not_matches!(ir, quote! { Func { cc_name: "Multiply" ... } });
     Ok(())
@@ -391,19 +425,23 @@ fn test_functions_from_dependency_are_not_emitted() -> Result<()> {
 
 #[gtest]
 fn test_dont_import_record_nested_in_func() {
-    let ir = ir_from_cc("inline void f() { struct S{}; }").unwrap();
+    let proto = ir_proto_from_cc("inline void f() { struct S{}; }").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_not_matches!(ir, quote! { Record { ... "S" ... } });
 }
 
 #[gtest]
 fn test_explicit_class_template_instantiation_declaration_not_supported_yet() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "
         template <class T> struct MyTemplate{};
         extern template struct MyTemplate<int>;
       ",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_not_matches!(ir, quote! { Record });
     let unsupported_item = ir.unsupported_items().find(|item| item.name() == "MyTemplate").unwrap();
     expect_eq!(unsupported_item.kind(), UnsupportedItemKind::Class);
@@ -414,7 +452,10 @@ fn test_explicit_class_template_instantiation_declaration_not_supported_yet() {
 
 #[gtest]
 fn test_function_template_not_supported_yet() {
-    let ir = ir_from_cc("template<typename SomeParam> void SomeFunctionTemplate() {};").unwrap();
+    let proto =
+        ir_proto_from_cc("template<typename SomeParam> void SomeFunctionTemplate() {};").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let unsupported_item =
         ir.unsupported_items().find(|item| item.name() == "SomeFunctionTemplate").unwrap();
     expect_eq!(unsupported_item.kind(), UnsupportedItemKind::Func);
@@ -425,7 +466,7 @@ fn test_function_template_not_supported_yet() {
 
 #[gtest]
 fn test_function_template_with_deduction_guide_does_not_generate_ir() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
     template <typename T>
     class SomeFunctionTemplateWithDeductionGuide {
@@ -441,6 +482,8 @@ fn test_function_template_with_deduction_guide_does_not_generate_ir() {
     "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     // We should only generate bindings for the class template, not the deduction guide.
     let unsupported_item = ir
         .unsupported_items()
@@ -455,7 +498,9 @@ fn test_function_template_with_deduction_guide_does_not_generate_ir() {
 #[gtest]
 fn test_function_with_rvalue_reference_parameter_without_lifetime_analysis_has_no_lifetime(
 ) -> googletest::Result<()> {
-    let ir = ir_from_cc("void f(int&& a) {};").unwrap();
+    let proto = ir_proto_from_cc("void f(int&& a) {};").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let function = ir.functions().find(|func| *func.cc_name() == "f").or_fail()?;
     let [param] = function.params() else { return fail!("expected exactly one parameter") };
     let ptr = param.type_().variant().as_pointer().or_fail()?;
@@ -466,7 +511,7 @@ fn test_function_with_rvalue_reference_parameter_without_lifetime_analysis_has_n
 
 #[gtest]
 fn test_record_member_variable_access_specifiers() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "
         struct SomeStruct {
             int default_access_int;
@@ -484,6 +529,8 @@ fn test_record_member_variable_access_specifiers() {
     ",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -529,7 +576,7 @@ fn test_record_member_variable_access_specifiers() {
 
 #[gtest]
 fn test_bitfields() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct Bitfields {
             int b1: 1;
@@ -539,6 +586,8 @@ fn test_bitfields() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -583,7 +632,7 @@ fn test_bitfields() {
 /// This is a regression test for b/270748945.
 #[gtest]
 fn test_struct_with_packed_attribute() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct __attribute__((packed)) PackedStruct {
           char char_var;
@@ -591,6 +640,8 @@ fn test_struct_with_packed_attribute() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -606,7 +657,7 @@ fn test_struct_with_packed_attribute() {
 /// This is a regression test for b/270748945.
 #[gtest]
 fn test_struct_with_packed_field() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct PackedStruct {
           char char_var;
@@ -614,6 +665,8 @@ fn test_struct_with_packed_field() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -630,7 +683,7 @@ fn test_struct_with_packed_field() {
 fn test_struct_with_unnamed_bitfield_member() {
     // This test input causes `field_decl->getName()` to return an empty string.
     // This example is based on `struct timex` from bits/timex.h
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct WithUnnamedFields {
             int foo;
@@ -638,6 +691,8 @@ fn test_struct_with_unnamed_bitfield_member() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -655,7 +710,7 @@ fn test_struct_with_unnamed_bitfield_member() {
 
 #[gtest]
 fn test_struct_with_owned_ptr_type_annotation() -> googletest::Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct [[clang::annotate("crubit_owned_pointee", "SomeOwnedPtrType")]]
                 RecordWithOwnedPtrType {
@@ -663,6 +718,8 @@ fn test_struct_with_owned_ptr_type_annotation() -> googletest::Result<()> {
         };"#,
     )
     .expect("Failed to generate IR from CC");
+
+    let ir = ir_testing::make_test_ir(&proto).expect("Failed to generate IR from CC");
 
     let record =
         ir.records().find(|record| *record.rs_name() == "RecordWithOwnedPtrType").or_fail()?;
@@ -673,13 +730,15 @@ fn test_struct_with_owned_ptr_type_annotation() -> googletest::Result<()> {
 
 #[gtest]
 fn test_owned_ptr_as_return_type_annotation() -> googletest::Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeType;
         SomeType* [[clang::annotate_type("crubit_owned_pointer")]] f() { return nullptr; }
         "#,
     )
     .expect("Failed to generate IR from CC");
+
+    let ir = ir_testing::make_test_ir(&proto).expect("Failed to generate IR from CC");
 
     let function = ir.functions().find(|f| *f.cc_name() == "f").or_fail()?;
     let pointer_type = &function.return_type().variant().as_pointer().or_fail()?;
@@ -689,7 +748,7 @@ fn test_owned_ptr_as_return_type_annotation() -> googletest::Result<()> {
 
 #[gtest]
 fn test_owned_ptr_as_param_type_annotation() -> googletest::Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeType;
         void f(
@@ -698,6 +757,8 @@ fn test_owned_ptr_as_param_type_annotation() -> googletest::Result<()> {
         "#,
     )
     .expect("Failed to generate IR from CC");
+
+    let ir = ir_testing::make_test_ir(&proto).expect("Failed to generate IR from CC");
 
     let function = ir.functions().find(|f| *f.cc_name() == "f").or_fail()?;
     let first_param_pointer_type =
@@ -708,7 +769,7 @@ fn test_owned_ptr_as_param_type_annotation() -> googletest::Result<()> {
 
 #[gtest]
 fn test_struct_with_trait_derive_annotation() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct [[clang::annotate("crubit_internal_trait_derive", "Debug"),
                  clang::annotate("crubit_internal_unsafe_impl", "Send")]]
@@ -717,6 +778,8 @@ fn test_struct_with_trait_derive_annotation() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -734,7 +797,7 @@ fn test_struct_with_trait_derive_annotation() {
 
 #[gtest]
 fn test_crubit_internal_rust_type_annotation() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct [[clang::annotate("crubit_internal_rust_type", "MyRustType")]]
                 MyCppType {
@@ -742,6 +805,8 @@ fn test_crubit_internal_rust_type_annotation() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -756,7 +821,7 @@ fn test_crubit_internal_rust_type_annotation() {
 
 #[gtest]
 fn test_crubit_internal_rust_type_annotation_with_template_args() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace crubit::rust_type {
         template <typename...>
@@ -771,8 +836,9 @@ fn test_crubit_internal_rust_type_annotation_with_template_args() {
         
         CppPtr<int> instantiate();
         "#,
-    )
-    .unwrap();
+    ).unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -790,7 +856,7 @@ fn test_crubit_internal_rust_type_annotation_with_template_args() {
 
 #[gtest]
 fn test_crubit_internal_rust_type_annotation_with_const_generic() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace crubit::rust_type {
         template <typename...>
@@ -805,6 +871,8 @@ fn test_crubit_internal_rust_type_annotation_with_const_generic() {
     )
     .unwrap();
 
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
     let ty = ir.existing_rust_types().find(|t| t.rs_name() == "MyType").unwrap();
     let template_args = ty.template_args();
     assert!(matches!(
@@ -818,7 +886,7 @@ fn test_crubit_internal_rust_type_annotation_with_const_generic() {
 
 #[gtest]
 fn test_crubit_internal_rust_type_annotation_with_templates() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace crubit::rust_type {
         template <typename...>
@@ -833,6 +901,8 @@ fn test_crubit_internal_rust_type_annotation_with_templates() {
         "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -850,7 +920,7 @@ fn test_crubit_internal_rust_type_annotation_with_templates() {
 
 #[gtest]
 fn test_struct_with_unsafe_annotation() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct [[clang::annotate("crubit_override_unsafe", true)]]
                 UnsafeType {
@@ -858,6 +928,8 @@ fn test_struct_with_unsafe_annotation() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -872,7 +944,7 @@ fn test_struct_with_unsafe_annotation() {
 
 #[gtest]
 fn test_conflicting_unsafe_annotation() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct [[clang::annotate("crubit_override_unsafe", true)]] S;
         struct [[clang::annotate("crubit_override_unsafe", false)]] S {
@@ -881,6 +953,8 @@ fn test_conflicting_unsafe_annotation() {
         "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_not_matches!(ir, quote! { Record { ... "S" ... } });
     assert_ir_matches!(
@@ -899,7 +973,7 @@ fn test_conflicting_unsafe_annotation() {
 
 #[gtest]
 fn test_struct_with_thread_safe_annotation() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct [[clang::annotate("crubit_thread_safe")]]
                 ThreadSafeType {
@@ -907,6 +981,8 @@ fn test_struct_with_thread_safe_annotation() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -921,13 +997,15 @@ fn test_struct_with_thread_safe_annotation() {
 
 #[gtest]
 fn test_struct_without_thread_safe_annotation() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct NotThreadSafe {
             int foo;
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -948,7 +1026,7 @@ fn test_struct_with_unnamed_struct_and_union_members() {
     //   of a struct whose type is a struct without name is known as anonymous
     //   struct."
     // - https://rust-lang.github.io/rfcs/2102-unnamed-fields.html
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct StructWithUnnamedMembers {
           struct {
@@ -962,6 +1040,8 @@ fn test_struct_with_unnamed_struct_and_union_members() {
         }; "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -992,7 +1072,7 @@ fn test_struct_with_unnamed_struct_and_union_members() {
 
 #[gtest]
 fn test_record_private_member_functions_not_present() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "
         struct SomeStruct {
           public:
@@ -1006,6 +1086,8 @@ fn test_record_private_member_functions_not_present() {
     )
     .unwrap();
 
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
     assert_ir_matches!(ir, quote! { Func { cc_name: "public_method" ... } });
     assert_ir_not_matches!(ir, quote! { Func { cc_name: "protected_method" ... } });
     assert_ir_not_matches!(ir, quote! { Func { cc_name: "private_method" ... } });
@@ -1013,7 +1095,7 @@ fn test_record_private_member_functions_not_present() {
 
 #[gtest]
 fn test_record_private_static_member_functions_not_present() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "
         struct SomeStruct {
           public:
@@ -1027,6 +1109,8 @@ fn test_record_private_static_member_functions_not_present() {
     )
     .unwrap();
 
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
     assert_ir_matches!(ir, quote! { Func { cc_name: "public_method" ... } });
     assert_ir_not_matches!(ir, quote! { Func { cc_name: "protected_method" ... } });
     assert_ir_not_matches!(ir, quote! { Func { cc_name: "private_method" ... } });
@@ -1034,7 +1118,7 @@ fn test_record_private_static_member_functions_not_present() {
 
 #[gtest]
 fn test_record_special_member_access_specifiers() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "
         struct SomeStruct {
           private:
@@ -1047,6 +1131,8 @@ fn test_record_special_member_access_specifiers() {
     ",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -1063,7 +1149,7 @@ fn test_record_special_member_access_specifiers() {
 
 #[gtest]
 fn test_record_special_member_definition() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "
         struct SomeStruct {
           private:
@@ -1074,6 +1160,8 @@ fn test_record_special_member_definition() {
     ",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -1090,12 +1178,14 @@ fn test_record_special_member_definition() {
 
 #[gtest]
 fn test_pointer_member_variable() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "struct SomeStruct {
             SomeStruct* ptr;
         };",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -1117,7 +1207,7 @@ fn test_pointer_member_variable() {
 
 #[gtest]
 fn test_doc_comment() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             /// Doc comment
             ///
@@ -1145,6 +1235,8 @@ fn test_doc_comment() -> Result<()> {
             struct MultilineOneStar {};
         "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     let comments: HashMap<_, _> =
         ir.records().map(|r| (r.rs_name().as_str(), r.doc_comment().unwrap())).collect();
 
@@ -1167,7 +1259,7 @@ fn test_doc_comment() -> Result<()> {
 
 #[gtest]
 fn test_doc_comment_vs_tooling_directives() -> Result<()> {
-    let ir = ir_from_cc(concat!(
+    let proto = ir_proto_from_cc(concat!(
         " // Doc comment for `f1`\n",
         " // NOLINTNEXTLINE(directive-name)\n",
         r#" void f1();
@@ -1192,6 +1284,8 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
             void f6();
         "#,
     ))?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
 
     let comments: HashMap<&str, Option<&str>> = ir
         .functions()
@@ -1218,7 +1312,10 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
 
 #[gtest]
 fn test_must_bind_annotation_on_record() -> googletest::Result<()> {
-    let ir = ir_from_cc(r#"struct [[clang::annotate("crubit_must_bind")]] S {};"#).or_fail()?;
+    let proto =
+        ir_proto_from_cc(r#"struct [[clang::annotate("crubit_must_bind")]] S {};"#).or_fail()?;
+
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
     let record = ir.records().find(|record| *record.rs_name() == "S").or_fail()?;
     expect_eq!(record.must_bind(), true);
     Ok(())
@@ -1226,7 +1323,10 @@ fn test_must_bind_annotation_on_record() -> googletest::Result<()> {
 
 #[gtest]
 fn test_must_bind_annotation_on_function() -> googletest::Result<()> {
-    let ir = ir_from_cc(r#"[[clang::annotate("crubit_must_bind")]] void f() {}"#).or_fail()?;
+    let proto =
+        ir_proto_from_cc(r#"[[clang::annotate("crubit_must_bind")]] void f() {}"#).or_fail()?;
+
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
     let func = ir.functions().find(|func| *func.rs_name() == "f").or_fail()?;
     expect_eq!(func.must_bind(), true);
     Ok(())
@@ -1235,10 +1335,12 @@ fn test_must_bind_annotation_on_function() -> googletest::Result<()> {
 #[gtest]
 fn test_must_bind_annotation_on_unbindable_type_produces_must_bind_error() -> googletest::Result<()>
 {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"template<typename T> struct [[clang::annotate("crubit_must_bind", 7)]] S {};"#,
     )
     .or_fail()?;
+
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
     let record = ir.unsupported_items().find(|item| item.name() == "S").or_fail()?;
     expect_eq!(record.must_bind(), true);
     Ok(())
@@ -1247,7 +1349,10 @@ fn test_must_bind_annotation_on_unbindable_type_produces_must_bind_error() -> go
 #[gtest]
 fn test_must_bind_annotation_on_unbindable_function_produces_must_bind_error(
 ) -> googletest::Result<()> {
-    let ir = ir_from_cc(r#"[[clang::annotate("crubit_must_bind")]] inline void f();"#).or_fail()?;
+    let proto = ir_proto_from_cc(r#"[[clang::annotate("crubit_must_bind")]] inline void f();"#)
+        .or_fail()?;
+
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
     let func = ir.unsupported_items().find(|item| item.name() == "f").or_fail()?;
     expect_eq!(func.must_bind(), true);
     Ok(())
@@ -1255,7 +1360,7 @@ fn test_must_bind_annotation_on_unbindable_function_produces_must_bind_error(
 
 #[gtest]
 fn test_typedef() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             // Doc comment for MyTypedefDecl.
             typedef int MyTypedefDecl;
@@ -1264,6 +1369,8 @@ fn test_typedef() -> Result<()> {
             using MyTypeAliasDecl = int;
         "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
 
     let int = quote! {
       CcType {
@@ -1317,7 +1424,7 @@ fn test_typedef() -> Result<()> {
 
 #[gtest]
 fn test_typedef_duplicate() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             struct MyStruct {};
             // First doc comment.
@@ -1326,6 +1433,8 @@ fn test_typedef_duplicate() -> Result<()> {
             using MyTypeAlias = MyStruct;
         "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     // TODO(b/200064504): Figure out if we can (and want to) merge the doc
     // comments from both C++ declarations above. (Currently only the first doc
     // comment makes it through - maybe this is also okay in the long term?)
@@ -1366,7 +1475,7 @@ fn test_typedef_duplicate() -> Result<()> {
 
 #[gtest]
 fn test_typedef_of_full_template_specialization() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             namespace test_namespace_bindings {
                 // Doc comment of MyStruct template.
@@ -1383,6 +1492,8 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
                 using MyTypeAlias = MyStruct<int>;
             }"#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     // Instantiation of MyStruct<int> specialization:
     assert_ir_matches!(
         ir,
@@ -1462,7 +1573,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
 
 #[gtest]
 fn test_typedef_for_explicit_template_specialization() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             namespace test_namespace_bindings {
                 template <typename T>
@@ -1482,6 +1593,8 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
                 using MyTypeAlias = MyStruct<int>;
               }"#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     // Instantiation of the explicit MyStruct<int> specialization:
     assert_ir_matches!(
         ir,
@@ -1537,7 +1650,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
 
 #[gtest]
 fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             template <typename T>
             struct [[clang::annotate("crubit_always_instantiate")]] MyStruct {
@@ -1549,6 +1662,8 @@ fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
             using MyFloatAlias = MyStruct<float>;
             "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
 
     // Verify that there is only 1 record for each specialization.
     assert_eq!(1, ir.records().filter(|r| r.cc_name().as_str() == "MyStruct<int>").count());
@@ -1568,7 +1683,7 @@ fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
 
 #[gtest]
 fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             template <typename T>
             struct [[clang::annotate("crubit_always_instantiate")]] MyStruct {
@@ -1584,6 +1699,8 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
             }
             "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
 
     // Implicit class template specializations and their methods all have the same
     // source location. Test that they are sorted deterministically. (Implementation
@@ -1634,7 +1751,7 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
 
 #[gtest]
 fn test_templates_inheritance() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             template <typename T>
             class BaseTemplate {
@@ -1662,6 +1779,8 @@ fn test_templates_inheritance() -> Result<()> {
             "#,
     )?;
 
+    let ir = ir_testing::make_test_ir(&proto)?;
+
     // ClassTemplateDerivedFromClassTemplate is instantiated because of
     // TypeAliasForClassTemplateDerivedFromClassTemplate..
     assert_eq!(
@@ -1683,7 +1802,7 @@ fn test_aliased_class_template_instantiated_in_header() -> Result<()> {
     // This aliased class template specialization is instantiated due to the code
     // that is present in the header. We should not corrupt the AST by
     // instantiating again.
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             template <typename T>
             struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
@@ -1699,6 +1818,8 @@ fn test_aliased_class_template_instantiated_in_header() -> Result<()> {
 
             using MyAlias = MyTemplate<int>; "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     assert_ir_matches!(
         ir,
         quote! {
@@ -1717,7 +1838,7 @@ fn test_aliased_class_template_instantiated_in_header() -> Result<()> {
 fn test_aliased_class_template_partially_instantiated_in_header() -> Result<()> {
     // Similar to `test_aliased_class_template_instantiated_in_header`, but doesn't
     // instantiate all members.
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             template <typename T>
             struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
@@ -1732,6 +1853,8 @@ fn test_aliased_class_template_partially_instantiated_in_header() -> Result<()> 
 
             using MyAlias = MyTemplate<int>; "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     assert_ir_matches!(
         ir,
         quote! {
@@ -1748,7 +1871,7 @@ fn test_aliased_class_template_partially_instantiated_in_header() -> Result<()> 
 
 #[gtest]
 fn test_subst_template_type_parm_pack_type() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             template <typename... TArgs>
             struct [[clang::annotate("crubit_always_instantiate")]] MyStruct {
@@ -1756,6 +1879,8 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
             };
             using MyTypeAlias = MyStruct<int, int>; "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     assert_ir_matches!(
         ir,
         quote! {
@@ -1793,13 +1918,15 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
 
 #[gtest]
 fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             template <typename T>
             struct MyStruct { T value; };
 
             MyStruct<int> MyFunction(); "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     // Instantiation of the struct template:
     assert_ir_matches!(
         ir,
@@ -1838,13 +1965,15 @@ fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
 
 #[gtest]
 fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
             template <typename T>
             struct MyStruct { T value; };
 
             void MyFunction(const MyStruct<int>& my_param); "#,
     )?;
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     // Instantiation of the struct template:
     assert_ir_matches!(
         ir,
@@ -1893,7 +2022,7 @@ fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
 
 #[gtest]
 fn test_fully_instantiated_template_in_public_field() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             template <typename T>
             struct MyTemplate { T field; };
@@ -1903,6 +2032,8 @@ fn test_fully_instantiated_template_in_public_field() -> Result<()> {
               MyTemplate<int> public_field;
             }; "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     // Instantiation of the struct template:
     assert_ir_matches!(
         ir,
@@ -1946,7 +2077,7 @@ fn test_fully_instantiated_template_in_public_field() -> Result<()> {
 
 #[gtest]
 fn test_fully_instantiated_template_in_private_field() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             template <typename T>
             struct MyTemplate { T field; };
@@ -1956,6 +2087,8 @@ fn test_fully_instantiated_template_in_private_field() -> Result<()> {
               MyTemplate<int> private_field_;
             }; "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     // There should be no instantiated template, just because of the private field.
     // To some extent this test is an early enforcement of the long-term plan for
     // b/226580208 and <internal link>.
@@ -1995,7 +2128,7 @@ fn test_fully_instantiated_template_in_private_field() -> Result<()> {
 
 #[gtest]
 fn test_template_with_decltype_and_with_auto() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             template <typename T1, typename T2>
             struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
@@ -2003,6 +2136,8 @@ fn test_template_with_decltype_and_with_auto() -> Result<()> {
             };
             using MyAlias = MyTemplate<unsigned int, long long>; "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     assert_ir_matches!(
         ir,
         quote! {
@@ -2025,7 +2160,7 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
     // 1) SubstTemplateTypeParm (i.e. the template *argument* has `const`:
     // `MyTemplate<const int>`) 2) TemplateTypeParmType used inside the template
     // definition: `const T& GetConstRef()`
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
             template <typename T>
             struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
@@ -2038,6 +2173,8 @@ fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -
             // test, but using non-*const* int template parameter.
             using MyAlias = MyTemplate<int>; "#,
     )?;
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     assert_ir_matches!(
         ir,
         quote! {
@@ -2090,7 +2227,7 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
     // 1) SubstTemplateTypeParm (i.e. the template *argument* has `const`:
     // `MyTemplate<const int>`) 2) TemplateTypeParmType used inside the template
     // definition: `const T& GetConstRef()`
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
             template <typename T>
             struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
@@ -2103,6 +2240,8 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
             // test, but using *const* int template parameter.
             using MyAlias = MyTemplate<const int>; "#,
     )?;
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     assert_ir_matches!(
         ir,
         quote! {
@@ -2149,8 +2288,7 @@ fn test_subst_template_type_parm_type_vs_const_when_const_template_param() -> Re
 #[gtest]
 fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
     // See also the `test_template_in_dependency_and_alias_in_current_target` test.
-    let ir = {
-        let dependency_src = r#"
+    let dependency_src = r#"
                 template <typename T>
                 struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
                     T GetValue();
@@ -2158,11 +2296,11 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
                 };
                 using MyAliasOfTemplate = MyTemplate<int>;
                 struct StructInDependency {}; "#;
-        let current_target_src = r#"
+    let current_target_src = r#"
                 /* no references to MyTemplate or MyAliasOfTemplate */
                 struct StructInCurrentTarget {}; "#;
-        ir_from_cc_dependency(current_target_src, dependency_src)?
-    };
+    let proto = ir_proto_from_cc_dependency(current_target_src, dependency_src)?;
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
 
     // Just double-checking the test inputs VS target names.
     let current_target = ir_testing::TESTING_TARGET;
@@ -2260,19 +2398,18 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
 #[gtest]
 fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
     // See also the `test_template_and_alias_are_both_in_dependency` test.
-    let ir = {
-        let dependency_src = r#"
+    let dependency_src = r#"
                 template <typename T>
                 struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
                     T GetValue();
                     T field;
                 };
                 struct StructInDependency{}; "#;
-        let current_target_src = r#"
+    let current_target_src = r#"
                 using MyAliasOfTemplate = MyTemplate<int>;
                 struct StructInCurrentTarget{}; "#;
-        ir_from_cc_dependency(current_target_src, dependency_src)?
-    };
+    let proto = ir_proto_from_cc_dependency(current_target_src, dependency_src)?;
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
 
     // Just double-checking the test inputs VS target names.
     let current_target = ir_testing::TESTING_TARGET;
@@ -2366,7 +2503,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
 
 #[gtest]
 fn test_well_known_types_check_namespaces() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             namespace my_namespace {
               using int32_t = int;
@@ -2374,6 +2511,8 @@ fn test_well_known_types_check_namespaces() -> Result<()> {
             void f(my_namespace::int32_t i);
         "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     assert_ir_matches!(
         ir,
         quote! {
@@ -2394,37 +2533,47 @@ fn test_well_known_types_check_namespaces() -> Result<()> {
 
 #[gtest]
 fn test_dont_import_typedef_nested_in_func() {
-    let ir = ir_from_cc("inline void f() { typedef int MyTypedefDecl; }").unwrap();
+    let proto = ir_proto_from_cc("inline void f() { typedef int MyTypedefDecl; }").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyTypedefDecl" ... } });
 }
 
 #[gtest]
 fn test_dont_import_typedef_for_structs_from_c() {
-    let ir = ir_from_cc("struct MyStruct {}; typedef struct MyStruct MyStruct;").unwrap();
+    let proto = ir_proto_from_cc("struct MyStruct {}; typedef struct MyStruct MyStruct;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
 }
 
 #[gtest]
 fn test_ignore_typedef_but_import_struct_from_c() {
-    let ir = ir_from_cc("typedef struct {} MyStruct;").unwrap();
+    let proto = ir_proto_from_cc("typedef struct {} MyStruct;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
 }
 
 #[gtest]
 fn test_typedef_and_import_struct_from_c() {
-    let ir = ir_from_cc("typedef struct MyStruct {} MyTypedef;").unwrap();
+    let proto = ir_proto_from_cc("typedef struct MyStruct {} MyTypedef;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
     assert_ir_matches!(ir, quote! { TypeAlias { cc_name: "MyTypedef" ... } });
 }
 
 #[gtest]
 fn test_import_struct_typedef_from_different_decl_context() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "struct MyStruct {}; namespace test_namespace_bindings { typedef MyStruct MyStruct; }",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
     assert_ir_matches!(ir, quote! { TypeAlias { cc_name: "MyStruct" ... } });
 }
@@ -2434,13 +2583,15 @@ fn test_import_struct_typedef_from_different_decl_context() {
 // #[gtest]
 #[allow(dead_code)]
 fn test_ignore_struct_typedef_from_decl_context_redecl() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings { struct MyStruct {}; }
         namespace test_namespace_bindings { typedef MyStruct MyStruct; }
     "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
 }
@@ -2450,41 +2601,51 @@ fn test_ignore_struct_typedef_from_decl_context_redecl() {
 // #[gtest]
 #[allow(dead_code)]
 fn test_ignore_struct_typedef_from_decl_context_redecl_from_multiple_targets() {
-    let ir = ir_from_cc_dependency(
+    let proto = ir_proto_from_cc_dependency(
         "namespace test_namespace_bindings { typedef MyStruct MyStruct; }",
         "namespace test_namespace_bindings { struct MyStruct {}; }",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, None).unwrap();
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
 }
 
 #[gtest]
 fn test_dont_import_typedef_for_unions_from_c() {
-    let ir = ir_from_cc("union MyUnion {}; typedef union MyUnion MyUnion;").unwrap();
+    let proto = ir_proto_from_cc("union MyUnion {}; typedef union MyUnion MyUnion;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
 }
 
 #[gtest]
 fn test_ignore_typedef_but_import_union_from_c() {
-    let ir = ir_from_cc("typedef union {} MyUnion;").unwrap();
+    let proto = ir_proto_from_cc("typedef union {} MyUnion;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
 }
 
 #[gtest]
 fn test_typedef_and_import_union_from_c() {
-    let ir = ir_from_cc("typedef union MyUnion {} MyTypedef;").unwrap();
+    let proto = ir_proto_from_cc("typedef union MyUnion {} MyTypedef;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
     assert_ir_matches!(ir, quote! { TypeAlias { cc_name: "MyTypedef" ... } });
 }
 
 #[gtest]
 fn test_import_union_typedef_from_different_decl_context() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "union MyUnion {}; namespace test_namespace_bindings { typedef MyUnion MyUnion; }",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
     assert_ir_matches!(ir, quote! { TypeAlias { cc_name: "MyUnion" ... } });
 }
@@ -2494,13 +2655,15 @@ fn test_import_union_typedef_from_different_decl_context() {
 // #[gtest]
 #[allow(dead_code)]
 fn test_ignore_union_typedef_from_decl_context_redecl() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings { union MyUnion {}; }
         namespace test_namespace_bindings { typedef MyUnion MyUnion; }
     "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
 }
@@ -2510,11 +2673,13 @@ fn test_ignore_union_typedef_from_decl_context_redecl() {
 // #[gtest]
 #[allow(dead_code)]
 fn test_ignore_union_typedef_from_decl_context_redecl_from_multiple_targets() {
-    let ir = ir_from_cc_dependency(
+    let proto = ir_proto_from_cc_dependency(
         "namespace test_namespace_bindings { typedef MyUnion MyUnion; }",
         "namespace test_namespace_bindings { union MyUnion {}; }",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, None).unwrap();
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
 }
 
@@ -2522,7 +2687,7 @@ fn test_ignore_union_typedef_from_decl_context_redecl_from_multiple_targets() {
 fn test_record_with_unsupported_field_type() -> Result<()> {
     // Using a packed struct because it's currently not supported.
     // But... any other unsupported type would also work for this test.
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct __attribute__((packed)) Packed {};
         struct StructWithUnsupportedField {
@@ -2531,6 +2696,8 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
         };
     "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     assert_ir_matches!(
         ir,
         quote! {
@@ -2579,7 +2746,7 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
 
 #[gtest]
 fn test_record_with_unsupported_base() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             struct __attribute__((packed)) IllegalBaseClass {
               // Having a field here avoids empty base class optimization
@@ -2595,6 +2762,8 @@ fn test_record_with_unsupported_base() -> Result<()> {
               int derived_field;
             }; "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     // Verify that `unambiguous_public_bases` are empty (instead of containing a
     // dangling `ItemId` of the `IllegalBaseClass` (which got imported as
     // `UnsupportedItem` rather than as a `Record`).
@@ -2644,13 +2813,15 @@ fn test_record_with_unsupported_base() -> Result<()> {
 #[gtest]
 fn test_do_not_import_static_member_functions_when_record_not_supported_yet() {
     // only using __attribute__((packed)) as an example of a record we cannot import yet.
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "
         struct __attribute__((packed)) SomeStruct {
           static void StaticMemberFunction();
         };",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -2670,13 +2841,15 @@ fn test_do_not_import_static_member_functions_when_record_not_supported_yet() {
 #[gtest]
 fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet() {
     // only using __attribute__((packed)) as an example of a record we cannot import yet.
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "
         struct __attribute__((packed)) SomeStruct {
           void NonStaticMemberFunction();
         };",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -2695,7 +2868,9 @@ fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet()
 
 #[gtest]
 fn test_dont_import_injected_class_name() {
-    let ir = ir_from_cc("struct SomeStruct {};").unwrap();
+    let proto = ir_proto_from_cc("struct SomeStruct {};").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let names = ir.records().map(|r| r.rs_name().as_str()).filter(|n| n.contains("SomeStruct"));
     // we support nested structs, so we should not emit record for injected class name
     assert_eq!(names.count(), 1);
@@ -2709,12 +2884,14 @@ fn test_integer_typedef_usage() -> Result<()> {
     // parameter of type `int` instead of `MyTypedef`. This test therefore
     // checks that the type has a `decl_id` but doesn't have a `name`. More
     // specific checks are done in the code generation tests.
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             typedef int MyTypedef;
             void f(MyTypedef my_typedef);
         "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     assert_ir_matches!(
         ir,
         quote! { Func {
@@ -2735,7 +2912,10 @@ fn test_integer_typedef_usage() -> Result<()> {
 
 #[gtest]
 fn test_struct() {
-    let ir = ir_from_cc("struct SomeStruct { int first_field; int second_field; };").unwrap();
+    let proto =
+        ir_proto_from_cc("struct SomeStruct { int first_field; int second_field; };").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -2773,7 +2953,9 @@ fn test_struct() {
 fn test_class() {
     // This test verifies that `record_type` correectly captures whether the C++
     // RecordDecl was for a `struct` VS for a `class`.
-    let ir = ir_from_cc("class SomeClass { int field; };").unwrap();
+    let proto = ir_proto_from_cc("class SomeClass { int field; };").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -2788,19 +2970,23 @@ fn test_class() {
 
 #[gtest]
 fn test_struct_forward_declaration() {
-    let ir = ir_from_cc("struct Struct;").unwrap();
+    let proto = ir_proto_from_cc("struct Struct;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert!(!ir.records().any(|r| r.rs_name().as_str() == "Struct"));
 }
 
 #[gtest]
 fn test_struct_forward_declaration_in_namespace() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace MyNamespace {
         struct FwdDeclared;
         }
         "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
 
     assert_eq!(1, ir.namespaces().count());
     let ns = ir.namespaces().next().unwrap();
@@ -2839,7 +3025,10 @@ fn test_struct_forward_declaration_in_namespace() -> Result<()> {
 
 #[gtest]
 fn test_union() {
-    let ir = ir_from_cc("union SomeUnion { int first_field; int second_field; };").unwrap();
+    let proto =
+        ir_proto_from_cc("union SomeUnion { int first_field; int second_field; };").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -2874,7 +3063,7 @@ fn test_union() {
 
 #[gtest]
 fn test_union_with_data_members_with_different_sizes() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
     union MyUnion {
       char first_field[56];
@@ -2883,6 +3072,8 @@ fn test_union_with_data_members_with_different_sizes() {
   "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -2907,7 +3098,7 @@ fn test_union_with_data_members_with_different_sizes() {
 
 #[gtest]
 fn test_member_function_params() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             struct Struct {
                 void Foo(int x, int y);
@@ -2915,6 +3106,8 @@ fn test_member_function_params() {
         "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let foo_func = ir
         .functions()
         .find(|f| *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("Foo")))
@@ -2945,7 +3138,9 @@ fn assert_member_function_has_instance_method_metadata(
     file += "struct Struct {\n  ";
     file += definition;
     file += "\n};";
-    let ir = ir_from_cc(&file).unwrap();
+    let proto = ir_proto_from_cc(&file).unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_member_function_with_predicate_has_instance_method_metadata(
         &ir,
@@ -3023,7 +3218,7 @@ fn test_member_function_rvalue() {
 
 #[gtest]
 fn test_member_function_rvalue_ref_qualified_this_param_type() {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
             struct StructWithRvalueRefQualifiedMethod final {
                 void rvalue_ref_qualified_method() &&;
@@ -3032,6 +3227,8 @@ fn test_member_function_rvalue_ref_qualified_this_param_type() {
         "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
 
     let rvalue_ref_method = ir
         .functions()
@@ -3058,7 +3255,7 @@ fn test_member_function_rvalue_ref_qualified_this_param_type() {
 
 #[gtest]
 fn test_member_function_explicit_constructor() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeStruct {
           explicit SomeStruct(int i);
@@ -3067,6 +3264,8 @@ fn test_member_function_explicit_constructor() {
         }; "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_member_function_with_predicate_has_instance_method_metadata(
         &ir,
         "SomeStruct",
@@ -3082,13 +3281,15 @@ fn test_member_function_explicit_constructor() {
 #[gtest]
 fn test_member_function_constructor() {
     for explicit_prefix in ["", "explicit"] {
-        let ir = ir_from_cc(&format!(
+        let proto = ir_proto_from_cc(&format!(
             r#"
                 struct SomeStruct {{
                   {explicit_prefix} SomeStruct(int i);
                 }}; "#
         ))
         .unwrap();
+
+        let ir = ir_testing::make_test_ir(&proto).unwrap();
         assert_member_function_with_predicate_has_instance_method_metadata(
             &ir,
             "SomeStruct",
@@ -3103,7 +3304,9 @@ fn test_member_function_constructor() {
 }
 
 fn get_func_names(definition: &str) -> Vec<ir::UnqualifiedIdentifier> {
-    let ir = ir_from_cc(definition).unwrap();
+    let proto = ir_proto_from_cc(definition).unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     ir.functions().map(|f| f.rs_name().clone()).collect()
 }
 
@@ -3131,7 +3334,9 @@ fn test_destructor_function_name() {
 fn test_unsupported_items_are_emitted() -> Result<()> {
     // We will have to rewrite this test to use something else that is unsupported
     // once we start importing nested structs.
-    let ir = ir_from_cc("struct __attribute__((packed)) PackedStruct {};")?;
+    let proto = ir_proto_from_cc("struct __attribute__((packed)) PackedStruct {};")?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     assert_strings_contain(
         ir.unsupported_items().map(|i| i.name()).collect_vec().as_slice(),
         "PackedStruct",
@@ -3141,10 +3346,12 @@ fn test_unsupported_items_are_emitted() -> Result<()> {
 
 #[gtest]
 fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
-    let ir = ir_from_cc_dependency(
+    let proto = ir_proto_from_cc_dependency(
         "struct MyOtherStruct { ImportantLibaryTypeThatsUnsupported my_field; };",
         "struct __attribute__((packed)) ImportantLibaryTypeThatsUnsupported {};",
     )?;
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
     let names = ir.unsupported_items().map(|i| i.name()).collect_vec();
     assert_strings_dont_contain(names.as_slice(), "ImportantLibaryTypeThatsUnsupported");
     Ok(())
@@ -3152,11 +3359,13 @@ fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
 
 #[gtest]
 fn test_user_of_unsupported_type_is_unsupported() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"struct __attribute__((packed)) Packed {};
            void f(Packed n);
         "#,
     )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
     assert_ir_matches!(
         ir,
         quote! {
@@ -3200,13 +3409,15 @@ fn assert_strings_dont_contain(strings: &[&str], unexpected_pattern: &str) {
 
 #[gtest]
 fn test_elided_lifetimes() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
         struct S {
           int& f(int& i);
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let func = retrieve_func(&ir, "f");
     let lifetime_params = func.lifetime_params();
     assert_eq!(lifetime_params.iter().map(|p| p.name()).collect_vec(), vec!["a", "b"]);
@@ -3248,7 +3459,7 @@ fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
 
 #[gtest]
 fn test_operator_names() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         // TOOD(b/208377928): Use #include <stddef.h> instead of declaring `size_t` ourselves...
         using size_t = unsigned long;
@@ -3261,6 +3472,8 @@ fn test_operator_names() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let operator_names: HashSet<&str> = ir
         .functions()
         .filter_map(|f| {
@@ -3284,19 +3497,21 @@ fn test_operator_names() {
 
 #[gtest]
 fn test_elided_lifetimes_in_default_constructor_with_implicit_default() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
         struct S {
           int i;
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     verify_elided_lifetimes_in_default_constructor(&ir);
 }
 
 #[gtest]
 fn test_elided_lifetimes_in_default_constructor_with_explicit_default() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
         struct S {
           S() = default;
@@ -3304,12 +3519,16 @@ fn test_elided_lifetimes_in_default_constructor_with_explicit_default() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     verify_elided_lifetimes_in_default_constructor(&ir);
 }
 
 #[gtest]
 fn test_no_aligned_attr() {
-    let ir = ir_from_cc("struct SomeStruct {};").unwrap();
+    let proto = ir_proto_from_cc("struct SomeStruct {};").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches! {ir, quote! {
       Record {
@@ -3325,7 +3544,9 @@ fn test_no_aligned_attr() {
 
 #[gtest]
 fn test_aligned_attr() {
-    let ir = ir_from_cc("struct SomeStruct {} __attribute__((aligned(64)));").unwrap();
+    let proto = ir_proto_from_cc("struct SomeStruct {} __attribute__((aligned(64)));").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches! {ir, quote! {
       Record {
         ... rs_name: "SomeStruct" ...
@@ -3340,7 +3561,7 @@ fn test_aligned_attr() {
 
 #[gtest]
 fn test_std_string_view() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
       namespace std {
       template<typename T> struct char_traits {};
@@ -3350,6 +3571,8 @@ fn test_std_string_view() {
       "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches! {ir, quote! {
       ...
       Record {
@@ -3366,12 +3589,14 @@ fn test_std_string_view() {
 
 #[gtest]
 fn test_record_with_pointer_attribute() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
       class [[gsl::Pointer(int)]] Struct {};
       "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches! {ir, quote! {
       Record {
         ... rs_name: "Struct" ...
@@ -3383,12 +3608,14 @@ fn test_record_with_pointer_attribute() {
 
 #[gtest]
 fn test_record_with_owner_attribute() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
       class [[gsl::Owner(int)]] Struct {};
       "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches! {ir, quote! {
       Record {
         ... rs_name: "Struct" ...
@@ -3400,7 +3627,10 @@ fn test_record_with_owner_attribute() {
 
 #[gtest]
 fn test_c_style_struct_with_typedef_and_aligned_attr() {
-    let ir = ir_from_cc("typedef struct {} SomeStruct __attribute__((aligned(64)));").unwrap();
+    let proto =
+        ir_proto_from_cc("typedef struct {} SomeStruct __attribute__((aligned(64)));").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches! {ir, quote! {
       Record {
@@ -3416,7 +3646,9 @@ fn test_c_style_struct_with_typedef_and_aligned_attr() {
 
 #[gtest]
 fn test_volatile_is_unsupported() {
-    let ir = ir_from_cc("volatile int* foo();").unwrap();
+    let proto = ir_proto_from_cc("volatile int* foo();").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -3430,13 +3662,15 @@ fn test_volatile_is_unsupported() {
 
 #[gtest]
 fn test_literal_operator_unsupported() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         // clang::DeclarationName::NameKind::CXXLiteralOperatorName
         unsigned operator ""_foobar(const char*);
     "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -3455,21 +3689,27 @@ fn test_literal_operator_unsupported() {
 
 #[gtest]
 fn test_unsupported_item_has_item_id() {
-    let ir = ir_from_cc("struct __attribute__((packed)) SomeStruct {};").unwrap();
+    let proto = ir_proto_from_cc("struct __attribute__((packed)) SomeStruct {};").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let unsupported = ir.unsupported_items().find(|i| i.name() == "SomeStruct").unwrap();
     assert_ne!(unsupported.id(), ItemId::new_for_testing(0));
 }
 
 #[gtest]
 fn test_comment_has_item_id() {
-    let ir = ir_from_cc("// Comment").unwrap();
+    let proto = ir_proto_from_cc("// Comment").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let comment = ir.comments().find(|i| i.text() == "Comment").unwrap();
     assert_ne!(comment.id(), ItemId::new_for_testing(0));
 }
 
 #[gtest]
 fn test_function_has_item_id() {
-    let ir = ir_from_cc("int foo();").unwrap();
+    let proto = ir_proto_from_cc("int foo();").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let function = ir
         .functions()
         .find(|i| *i.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("foo")))
@@ -3479,7 +3719,7 @@ fn test_function_has_item_id() {
 
 #[gtest]
 fn test_top_level_items() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct ForwardDeclaredTopLevelStruct;
         struct TopLevelStruct;
@@ -3497,6 +3737,8 @@ fn test_top_level_items() {
         }  // namespace top_level_namespace"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     let top_level_items = ir.top_level_items().iter().collect_vec();
 
@@ -3535,7 +3777,7 @@ fn test_top_level_items() {
 
 #[gtest]
 fn test_record_items() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct TopLevelStruct {
           // A free comment
@@ -3552,6 +3794,8 @@ fn test_record_items() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     let record = ir.records().find(|i| *i.rs_name() == "TopLevelStruct").unwrap();
     let record_items = record.children().iter().collect_vec();
@@ -3606,7 +3850,7 @@ fn test_record_items() {
 
 #[gtest]
 fn test_namespaces() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings {
           // A free comment
@@ -3622,6 +3866,8 @@ fn test_namespaces() {
           }  // namespace test_namespace_bindings"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     let namespace =
         ir.namespaces().find(|n| n.rs_name() == &ir_id("test_namespace_bindings")).unwrap();
@@ -3672,13 +3918,15 @@ fn test_namespaces() {
 
 #[gtest]
 fn test_nested_namespace_definition() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings::inner {
         void func();
         }"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     let namespace =
         ir.namespaces().find(|n| n.rs_name() == &ir_id("test_namespace_bindings")).unwrap();
@@ -3704,7 +3952,7 @@ fn test_nested_namespace_definition() {
 
 #[gtest]
 fn test_enclosing_item_ids() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings {
           struct T {};
@@ -3725,6 +3973,8 @@ fn test_enclosing_item_ids() {
         }"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     let namespace =
         ir.namespaces().find(|n| n.rs_name() == &ir_id("test_namespace_bindings")).unwrap();
@@ -3755,7 +4005,7 @@ fn test_enclosing_item_ids() {
 
 #[gtest]
 fn test_namespace_canonical_id() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings {
           struct T {};
@@ -3766,6 +4016,8 @@ fn test_namespace_canonical_id() {
         }"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -3789,7 +4041,7 @@ fn test_namespace_canonical_id() {
 
 #[gtest]
 fn test_reopened_namespaces() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings {
         namespace inner {}
@@ -3800,6 +4052,8 @@ fn test_reopened_namespaces() {
         }"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -3835,7 +4089,7 @@ fn test_reopened_namespaces() {
 
 #[gtest]
 fn test_namespace_stored_data_in_ir() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings {
           namespace inner {}
@@ -3846,6 +4100,8 @@ fn test_namespace_stored_data_in_ir() {
         }"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     let outer_namespaces = ir
         .namespaces()
@@ -3899,7 +4155,7 @@ fn test_namespace_stored_data_in_ir() {
 
 #[gtest]
 fn test_items_inside_linkage_spec_decl_are_imported() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
           extern "C" {
             struct MyStruct {};
@@ -3907,6 +4163,8 @@ fn test_items_inside_linkage_spec_decl_are_imported() {
       "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ... } })
 }
 
@@ -3914,15 +4172,19 @@ fn test_items_inside_linkage_spec_decl_are_imported() {
 fn test_items_inside_linkage_spec_decl_are_considered_toplevel() {
     // The test below assumes the first top_level_items element is the one added
     // by the the source code under test. Let's double check that assumption here.
-    assert!(ir_from_cc("").unwrap().top_level_items().is_empty());
+    let assert_proto = ir_proto_from_cc("").unwrap();
+    let assert_ir = ir_testing::make_test_ir(&assert_proto).unwrap();
+    assert!(assert_ir.top_level_items().is_empty());
 
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
     extern "C" {
       struct MyStruct {};
     }"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let item_id = ir.top_level_items().first().expect("should have a first item").id();
 
     assert_ir_matches!(
@@ -3940,7 +4202,7 @@ fn test_items_inside_linkage_spec_decl_are_considered_toplevel() {
 
 #[gtest]
 fn test_inline_namespace() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings {
           inline namespace inner {
@@ -3949,6 +4211,8 @@ fn test_inline_namespace() {
         }"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     assert_ir_matches!(
         ir,
@@ -3974,7 +4238,7 @@ fn test_inline_namespace() {
 
 #[gtest]
 fn test_function_redeclared_as_friend() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             class SomeClass final {
               friend constexpr int bar();
@@ -3983,6 +4247,8 @@ fn test_function_redeclared_as_friend() {
         "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     // The function should appear only once in IR items.  (This is a bit redundant
     // with the assert below, but double-checks that `...` didn't miss a Func
@@ -4033,7 +4299,7 @@ fn test_function_redeclared_as_friend() {
 
 #[gtest]
 fn test_friend_not_definition_not_redeclared() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             class SomeClass final {
               friend void some_friend_func();
@@ -4041,6 +4307,8 @@ fn test_friend_not_definition_not_redeclared() {
         "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     let functions = ir
         .functions()
@@ -4051,13 +4319,15 @@ fn test_friend_not_definition_not_redeclared() {
 
 #[gtest]
 fn test_function_redeclared_in_separate_namespace_chunk() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace ns { inline void f(); }
         namespace ns { inline void f() {} }
         "#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     // The function should appear only once in IR items.  (This is a bit redundant
     // with the assert below, but double-checks that `...` didn't miss a Func
@@ -4110,7 +4380,7 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
 
 #[gtest]
 fn test_forward_declared_specialization_has_rs_name() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings {
           template <typename T>
@@ -4127,6 +4397,8 @@ fn test_forward_declared_specialization_has_rs_name() {
     )
     .unwrap();
 
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
     assert_ir_matches!(
         ir,
         quote! {
@@ -4142,7 +4414,7 @@ fn test_forward_declared_specialization_has_rs_name() {
 
 #[gtest]
 fn test_friend() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct MyStruct {
           friend int Invisible();
@@ -4150,6 +4422,8 @@ fn test_friend() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     // NOTE: Actual ADL visibility determination is handled by the IR consumer.
     // These two friend functions have similar IR representations.
@@ -4199,7 +4473,9 @@ fn test_private_method() {
         ("class", "", false),
     ] {
         let record = generate_member_func_with_visibility(record_type, visibility);
-        let ir = ir_from_cc(&record).unwrap();
+        let proto = ir_proto_from_cc(&record).unwrap();
+
+        let ir = ir_testing::make_test_ir(&proto).unwrap();
         eprintln!("{}", record);
         if expect_function {
             assert_ir_matches!(ir, ir_with_function);
@@ -4212,7 +4488,9 @@ fn test_private_method() {
 #[gtest]
 fn test_source_location_with_macro() {
     let assert_matches = |cc_snippet: &str, expected: proc_macro2::TokenStream| {
-        let ir = ir_from_cc(cc_snippet).unwrap();
+        let proto = ir_proto_from_cc(cc_snippet).unwrap();
+
+        let ir = ir_testing::make_test_ir(&proto).unwrap();
         assert_ir_matches!(ir, expected);
     };
     let loc = "Generated from: ir_from_cc_virtual_header.h;l=5\n\
@@ -4268,7 +4546,9 @@ DEFINE_EMPTY_STRUCT(EmptyStructToTestSourceLocationWithMacro);"#,
 #[gtest]
 fn test_source_location() {
     let assert_matches = |cc_snippet: &str, expected: proc_macro2::TokenStream| {
-        let ir = ir_from_cc(cc_snippet).unwrap();
+        let proto = ir_proto_from_cc(cc_snippet).unwrap();
+
+        let ir = ir_testing::make_test_ir(&proto).unwrap();
         assert_ir_matches!(ir, expected);
     };
     assert_matches(
@@ -4298,7 +4578,9 @@ fn test_source_location_with_macro_defined_in_another_file() {
     let dependency_header = r#"
 #define MyIntTypeAliasToTestSourceLocation(type_alias_name) using type_alias_name = int;"#;
     let header = "MyIntTypeAliasToTestSourceLocation(my_int);";
-    let ir = ir_from_cc_dependency(header, dependency_header).unwrap();
+    let proto = ir_proto_from_cc_dependency(header, dependency_header).unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, None).unwrap();
     let expected_source_loc = "Generated from: test/dependency_header.h;l=2\n\
                                Expanded at: ir_from_cc_virtual_header.h;l=3";
     assert_ir_matches!(
@@ -4319,7 +4601,9 @@ fn test_source_location_with_macro_defined_in_another_file() {
 fn test_source_location_class_template_specialization() {
     let cc_snippet = "template <typename T> class MyClassTemplateToTestSourceLocation { T t_; };
     using MyClassTemplateSpecializationToTestSourceLocation = MyClassTemplateToTestSourceLocation<bool>;";
-    let ir = ir_from_cc(cc_snippet).unwrap();
+    let proto = ir_proto_from_cc(cc_snippet).unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let expected_source_loc = "Generated from: ir_from_cc_virtual_header.h;l=4";
     assert_ir_matches!(
         ir,
@@ -4339,7 +4623,9 @@ fn test_source_location_class_template_specialization() {
 fn test_top_level_items_from_multiple_targets() {
     let dependency_header = r#"struct FromDependency {};"#;
     let header = "struct FromHeader {};";
-    let ir = ir_from_cc_dependency(header, dependency_header).unwrap();
+    let proto = ir_proto_from_cc_dependency(header, dependency_header).unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, None).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4355,7 +4641,9 @@ fn test_top_level_items_from_multiple_targets() {
 
 #[gtest]
 fn test_assumed_lifetimes_function() {
-    let ir = ir_from_assumed_lifetimes_cc("void f(int& $a x);").unwrap();
+    let proto = ir_proto_from_assumed_lifetimes_cc("void f(int& $a x);").unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4395,7 +4683,10 @@ fn test_assumed_lifetimes_function() {
 
 #[gtest]
 fn test_assumed_lifetimes_function_with_explicit_binding() {
-    let ir = ir_from_assumed_lifetimes_cc("LIFETIME_PARAMS(\"a\") void f(int& $a x);").unwrap();
+    let proto =
+        ir_proto_from_assumed_lifetimes_cc("LIFETIME_PARAMS(\"a\") void f(int& $a x);").unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4437,10 +4728,12 @@ fn test_assumed_lifetimes_function_with_explicit_binding() {
 
 #[gtest]
 fn test_assumed_lifetimes_function_with_explicit_bindings() {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         "LIFETIME_PARAMS(\"a\", \"b\") LIFETIME_PARAMS(\"c\", \"d\") void f(int& $a x);",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4482,8 +4775,11 @@ fn test_assumed_lifetimes_function_with_explicit_bindings() {
 
 #[gtest]
 fn test_assumed_lifetimes_lifetimebound_free_function() {
-    let ir =
-        ir_from_assumed_lifetimes_cc("int& f(int& x [[clang::lifetimebound]], int& y);").unwrap();
+    let proto =
+        ir_proto_from_assumed_lifetimes_cc("int& f(int& x [[clang::lifetimebound]], int& y);")
+            .unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4544,9 +4840,12 @@ fn test_assumed_lifetimes_lifetimebound_free_function() {
 
 #[gtest]
 fn test_assumed_lifetimes_lifetime_capture_by_free_function() {
-    let ir =
-        ir_from_assumed_lifetimes_cc("int& f(int& x [[clang::lifetime_capture_by(y)]], int& y);")
-            .unwrap();
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        "int& f(int& x [[clang::lifetime_capture_by(y)]], int& y);",
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4607,8 +4906,11 @@ fn test_assumed_lifetimes_lifetime_capture_by_free_function() {
 
 #[gtest]
 fn test_assumed_lifetimes_lifetimebound_member_function() {
-    let ir =
-        ir_from_assumed_lifetimes_cc("struct S { int& f() [[clang::lifetimebound]]; }; ").unwrap();
+    let proto =
+        ir_proto_from_assumed_lifetimes_cc("struct S { int& f() [[clang::lifetimebound]]; }; ")
+            .unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4634,9 +4936,12 @@ fn test_assumed_lifetimes_lifetimebound_member_function() {
 
 #[gtest]
 fn test_assumed_lifetimes_lifetimebound_internal_param_member_function() {
-    let ir =
-        ir_from_assumed_lifetimes_cc("struct S { int& f(int& x [[clang::lifetimebound]]); }; ")
-            .unwrap();
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        "struct S { int& f(int& x [[clang::lifetimebound]]); }; ",
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4669,8 +4974,12 @@ fn test_assumed_lifetimes_lifetimebound_internal_param_member_function() {
 
 #[gtest]
 fn test_assumed_lifetimes_lifetimebound_member_function_with_param() {
-    let ir = ir_from_assumed_lifetimes_cc("struct S { int& f(int x) [[clang::lifetimebound]]; }; ")
-        .unwrap();
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        "struct S { int& f(int x) [[clang::lifetimebound]]; }; ",
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4703,10 +5012,12 @@ fn test_assumed_lifetimes_lifetimebound_member_function_with_param() {
 
 #[gtest]
 fn test_assumed_lifetimes_lifetime_capture_by_member_function() {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         "struct S { void f(int& x, int& y) [[clang::lifetime_capture_by(y)]]; }; ",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4746,8 +5057,9 @@ fn test_assumed_lifetimes_lifetime_capture_by_member_function() {
 
 #[gtest]
 fn test_assumed_lifetimes_lifetime_capture_by_member_function_this() {
-    let ir =
-        ir_from_assumed_lifetimes_cc("struct S { int& f(int& x [[clang::lifetime_capture_by(this)]], int& y) [[clang::lifetimebound]]; }; ").unwrap();
+    let proto = ir_proto_from_assumed_lifetimes_cc("struct S { int& f(int& x [[clang::lifetime_capture_by(this)]], int& y) [[clang::lifetimebound]]; }; ").unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4787,10 +5099,12 @@ fn test_assumed_lifetimes_lifetime_capture_by_member_function_this() {
 
 #[gtest]
 fn test_assumed_lifetimes_lifetime_capture_by_multiple_params() {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         "void f(int& x, int& y [[clang::lifetime_capture_by(x, z)]], int& z);",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4830,7 +5144,7 @@ fn test_assumed_lifetimes_lifetime_capture_by_multiple_params() {
 
 #[gtest]
 fn test_detects_formatter() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct Foo {
           template <typename Sink>
@@ -4838,6 +5152,8 @@ fn test_detects_formatter() {
         };"#,
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4856,7 +5172,9 @@ fn test_detects_formatter() {
 
 #[gtest]
 fn test_assumed_lifetimes_struct_with_explicit_binding() {
-    let ir = ir_from_assumed_lifetimes_cc("struct LIFETIME_PARAMS(\"a\") S { };").unwrap();
+    let proto = ir_proto_from_assumed_lifetimes_cc("struct LIFETIME_PARAMS(\"a\") S { };").unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
     assert_ir_matches!(
         ir,
         quote! {
@@ -4884,7 +5202,9 @@ fn expect_constant<'a>(ir: &'a ir::IR<'_>) -> &'a ir::Constant {
 
 #[gtest]
 fn test_top_level_constexpr_int() {
-    let ir = ir_from_cc("constexpr int x = 1;").unwrap();
+    let proto = ir_proto_from_cc("constexpr int x = 1;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let constant = expect_constant(&ir);
     expect_eq!(constant.cc_name(), "x");
     expect_eq!(constant.value().wrapped_value(), 1);
@@ -4892,7 +5212,9 @@ fn test_top_level_constexpr_int() {
 
 #[gtest]
 fn test_top_level_constexpr_bool() {
-    let ir = ir_from_cc("constexpr bool x = false;").unwrap();
+    let proto = ir_proto_from_cc("constexpr bool x = false;").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let constant = expect_constant(&ir);
     expect_eq!(constant.cc_name(), "x");
     expect_eq!(constant.value().wrapped_value(), 0);
@@ -4900,7 +5222,9 @@ fn test_top_level_constexpr_bool() {
 
 #[gtest]
 fn test_anonymous_enum() {
-    let ir = ir_from_cc("enum { kFoo = 1, kBar = 2 };").unwrap();
+    let proto = ir_proto_from_cc("enum { kFoo = 1, kBar = 2 };").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let kfoo = ir.constants().find(|c| c.cc_name() == "kFoo").unwrap();
     assert_eq!(kfoo.value().wrapped_value(), 1);
     let kbar = ir.constants().find(|c| c.cc_name() == "kBar").unwrap();
@@ -4909,7 +5233,9 @@ fn test_anonymous_enum() {
 
 #[gtest]
 fn test_anonymous_enum_in_record() {
-    let ir = ir_from_cc("struct S { enum { kFoo = 1 }; };").unwrap();
+    let proto = ir_proto_from_cc("struct S { enum { kFoo = 1 }; };").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let record = retrieve_record(&ir, "S");
     let constant = ir.constants().find(|c| c.cc_name() == "kFoo").unwrap();
     assert_eq!(constant.enclosing_item_id(), Some(record.id()));
@@ -4918,7 +5244,7 @@ fn test_anonymous_enum_in_record() {
 
 #[gtest]
 fn test_has_private_or_deleted_operator_delete() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "
         struct S1 { private: void operator delete(void*); };
         struct S2 { void operator delete(void*) = delete; };
@@ -4927,6 +5253,8 @@ fn test_has_private_or_deleted_operator_delete() {
         ",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
     let s1 = retrieve_record(&ir, "S1");
     assert!(s1.has_private_or_deleted_operator_delete());
     let s2 = retrieve_record(&ir, "S2");
@@ -4938,7 +5266,7 @@ fn test_has_private_or_deleted_operator_delete() {
 }
 #[gtest]
 fn test_absl_container_template_specialization_kind() {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "
         namespace absl {
 
@@ -4955,6 +5283,8 @@ fn test_absl_container_template_specialization_kind() {
         ",
     )
     .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     let record = retrieve_type_alias_record(&ir, "IntFloatMap");
     expect_that!(
@@ -4985,7 +5315,9 @@ fn test_absl_container_template_specialization_kind() {
 
 #[gtest]
 fn test_impl_debug_default_true() {
-    let ir = ir_from_record_impl_debug_cc("struct S {};").unwrap();
+    let proto = ir_proto_from_record_impl_debug_cc("struct S {};").unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("record_impl_debug")).unwrap();
     let s = retrieve_record(&ir, "S");
     assert!(s.impl_debug());
 }

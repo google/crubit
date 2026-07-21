@@ -13,9 +13,10 @@ use generate_function_thunk::thunk_ident;
 use googletest::prelude::{assert_that, contains_substring, expect_that, gtest, not, OrFail as _};
 
 use ir::{Func, Item, UnqualifiedIdentifier};
-use ir_testing::{retrieve_func, with_lifetime_macros};
+use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_func, with_lifetime_macros};
 use multiplatform_ir_testing::{
-    ir_from_assumed_lifetimes_cc, ir_from_cc, ir_from_cc_annotated, ir_from_cc_dependency,
+    ir_proto_from_assumed_lifetimes_cc, ir_proto_from_cc, ir_proto_from_cc_annotated,
+    ir_proto_from_cc_dependency,
 };
 use quote::quote;
 use test_generators::{
@@ -27,7 +28,9 @@ use token_stream_matchers::{
 
 #[gtest]
 fn test_simple_function() -> Result<()> {
-    let ir = ir_from_cc("int Add(int a, int b);")?;
+    let proto = ir_proto_from_cc("int Add(int a, int b);")?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -59,7 +62,9 @@ fn test_simple_function() -> Result<()> {
 
 #[gtest]
 fn test_inline_function() -> Result<()> {
-    let ir = ir_from_cc("inline int Add(int a, int b) { return a + b; }")?;
+    let proto = ir_proto_from_cc("inline int Add(int a, int b) { return a + b; }")?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -96,10 +101,12 @@ fn test_inline_function() -> Result<()> {
 
 #[gtest]
 fn test_simple_function_with_types_from_other_target() -> Result<()> {
-    let ir = ir_from_cc_dependency(
+    let proto = ir_proto_from_cc_dependency(
         "inline ReturnStruct DoSomething(ParamStruct param) { return ReturnStruct {}; }",
         "struct ReturnStruct final {}; struct ParamStruct final {};",
     )?;
+
+    let ir = make_test_ir_dependency(&proto, None)?;
 
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
@@ -147,7 +154,9 @@ fn test_simple_function_with_types_from_other_target() -> Result<()> {
 
 #[gtest]
 fn test_ref_to_struct_in_thunk_impls() -> Result<()> {
-    let ir = ir_from_cc("struct S{}; inline void foo(S& s) {} ")?;
+    let proto = ir_proto_from_cc("struct S{}; inline void foo(S& s) {} ")?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api_impl = generate_bindings_tokens_for_test(ir)?.rs_api_impl;
     assert_cc_matches!(
         rs_api_impl,
@@ -162,7 +171,9 @@ fn test_ref_to_struct_in_thunk_impls() -> Result<()> {
 
 #[gtest]
 fn test_const_ref_to_struct_in_thunk_impls() -> Result<()> {
-    let ir = ir_from_cc("struct S{}; inline void foo(const S& s) {} ")?;
+    let proto = ir_proto_from_cc("struct S{}; inline void foo(const S& s) {} ")?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api_impl = generate_bindings_tokens_for_test(ir)?.rs_api_impl;
     assert_cc_matches!(
         rs_api_impl,
@@ -177,7 +188,9 @@ fn test_const_ref_to_struct_in_thunk_impls() -> Result<()> {
 
 #[gtest]
 fn test_unsigned_int_in_thunk_impls() -> Result<()> {
-    let ir = ir_from_cc("inline void foo(unsigned int i) {} ")?;
+    let proto = ir_proto_from_cc("inline void foo(unsigned int i) {} ")?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api_impl = generate_bindings_tokens_for_test(ir)?.rs_api_impl;
     assert_cc_matches!(
         rs_api_impl,
@@ -192,12 +205,14 @@ fn test_unsigned_int_in_thunk_impls() -> Result<()> {
 
 #[gtest]
 fn test_record_static_methods_qualify_call_in_thunk() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeStruct {
             static inline int some_func() { return 42; }
         }; "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
 
     assert_cc_matches!(
         generate_bindings_tokens_for_test(ir)?.rs_api_impl,
@@ -212,12 +227,14 @@ fn test_record_static_methods_qualify_call_in_thunk() -> Result<()> {
 
 #[gtest]
 fn test_record_instance_methods_deref_this_in_thunk() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeStruct {
             inline int some_func(int arg) const { return 42 + arg; }
         }; "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
 
     assert_cc_matches!(
         generate_bindings_tokens_for_test(ir)?.rs_api_impl,
@@ -233,7 +250,9 @@ fn test_record_instance_methods_deref_this_in_thunk() -> Result<()> {
 
 #[gtest]
 fn test_ptr_func() -> Result<()> {
-    let ir = ir_from_cc(r#" inline int* Deref(int*const* p) { return *p; } "#)?;
+    let proto = ir_proto_from_cc(r#" inline int* Deref(int*const* p) { return *p; } "#)?;
+
+    let ir = make_test_ir(&proto)?;
 
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
@@ -276,7 +295,9 @@ fn test_const_char_ptr_func() -> Result<()> {
     // ('"const char" is not a valid Ident').
     // It's therefore important that f() is inline so that we need to
     // generate a thunk for it (where we then process the CcType).
-    let ir = ir_from_cc(r#" inline void f(const signed char *str) {} "#)?;
+    let proto = ir_proto_from_cc(r#" inline void f(const signed char *str) {} "#)?;
+
+    let ir = make_test_ir(&proto)?;
 
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
@@ -310,7 +331,7 @@ fn test_const_char_ptr_func() -> Result<()> {
 fn test_func_ptr_thunk() -> Result<()> {
     // Using an `inline` keyword forces generation of a C++ thunk in
     // `rs_api_impl` (i.e. exercises `format_cpp_type` and similar code).
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         int multiply(int x, int y);
         inline int (*inline_get_pointer_to_function())(int, int) {
@@ -318,6 +339,8 @@ fn test_func_ptr_thunk() -> Result<()> {
         }
     "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api_impl = generate_bindings_tokens_for_test(ir)?.rs_api_impl;
     assert_cc_matches!(
         rs_api_impl,
@@ -333,12 +356,14 @@ fn test_func_ptr_thunk() -> Result<()> {
 
 #[gtest]
 fn test_doc_comment_func() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "
     // Doc Comment
     // with two lines
     int func();",
     )?;
+
+    let ir = make_test_ir(&proto)?;
 
     assert_rs_matches!(
         generate_bindings_tokens_for_test(ir)?.rs_api,
@@ -356,12 +381,14 @@ fn test_doc_comment_func() -> Result<()> {
 
 #[gtest]
 fn test_doc_comment_func_with_annotations() -> Result<()> {
-    let ir = ir_from_cc_annotated(
+    let proto = ir_proto_from_cc_annotated(
         "
     // Doc Comment
     // with two lines
     int func();",
     )?;
+
+    let ir = make_test_ir(&proto)?;
 
     let rs_api = generate_bindings_tokens_for_test_with_annotations(ir)?.rs_api;
     assert_rs_matches!(
@@ -383,12 +410,14 @@ fn test_doc_comment_func_with_annotations() -> Result<()> {
 /// get a Drop impl.
 #[gtest]
 fn test_impl_drop_trivial() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"struct Trivial final {
             ~Trivial() = default;
             int x;
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {impl Drop});
     assert_rs_not_matches!(rs_api, quote! {impl ::ctor::PinnedDrop});
@@ -399,12 +428,14 @@ fn test_impl_drop_trivial() -> Result<()> {
 
 #[gtest]
 fn test_impl_default_explicitly_defaulted_constructor() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct DefaultedConstructor final {
             DefaultedConstructor() = default;
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -441,12 +472,14 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
     // same lifetime as the constructor's parameter. (This might require
     // annotating the whole C++ struct with a lifetime, so maybe the
     // example below is not fully realistic/accurate...).
-    let ir = ir_from_cc(&with_lifetime_macros(
+    let proto = ir_proto_from_cc(&with_lifetime_macros(
         r#"
         struct Foo final {
             Foo(const int& $a i) $a;
         };"#,
     ))?;
+
+    let ir = make_test_ir(&proto)?;
     let ctor: &Func = ir
         .items()
         .filter_map(|item| match item {
@@ -480,20 +513,22 @@ fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
 
 #[gtest]
 fn test_impl_default_non_trivial_struct() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct NonTrivialStructWithConstructors final {
             NonTrivialStructWithConstructors();
             ~NonTrivialStructWithConstructors();  // Non-trivial
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_not_matches!(rs_api, quote! {impl Default});
     Ok(())
 }
 #[gtest]
 fn test_impl_cc_index_for_member_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         struct SomeStruct final {
             inline const int& operator[](unsigned int index) const {
@@ -502,6 +537,8 @@ fn test_impl_cc_index_for_member_function() -> Result<()> {
             int items[10];
         };"#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -520,7 +557,7 @@ fn test_impl_cc_index_for_member_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_cc_index_mut_for_member_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         struct SomeStruct final {
             inline int& operator[](unsigned int index) {
@@ -529,6 +566,8 @@ fn test_impl_cc_index_mut_for_member_function() -> Result<()> {
             int items[10];
         };"#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -556,7 +595,7 @@ fn test_impl_cc_index_mut_for_member_function() -> Result<()> {
 /// traits (`core::ops::Index` and `core::ops::IndexMut`) are generated.
 #[gtest]
 fn test_impl_index_and_index_mut_for_member_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         struct SomeStruct final {
             inline const int& operator[](unsigned int index) const {
@@ -568,6 +607,8 @@ fn test_impl_index_and_index_mut_for_member_function() -> Result<()> {
             int items[10];
         };"#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -602,7 +643,7 @@ fn test_impl_index_and_index_mut_for_member_function() -> Result<()> {
 /// is still generated.
 #[gtest]
 fn test_impl_index_mut_requires_matching_cc_index() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         struct SomeStruct final {
             inline const int& operator[](unsigned int index) const {
@@ -614,6 +655,8 @@ fn test_impl_index_mut_requires_matching_cc_index() -> Result<()> {
             int items[10];
         };"#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -647,7 +690,7 @@ fn test_impl_index_mut_requires_matching_cc_index() -> Result<()> {
 /// when implementing `Index` and `IndexMut` for unpinned (`Unpin`) types.
 #[gtest]
 fn test_impl_index_and_index_mut_with_lifetimes_unpin() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         struct IndexKey final { int i; };
         struct SomeStruct final {
@@ -660,6 +703,8 @@ fn test_impl_index_and_index_mut_with_lifetimes_unpin() -> Result<()> {
             int items[10];
         };"#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -692,7 +737,7 @@ fn test_impl_index_and_index_mut_with_lifetimes_unpin() -> Result<()> {
 /// when implementing `Index` and `IndexMut` for pinned (`!Unpin`) types.
 #[gtest]
 fn test_impl_index_and_index_mut_with_lifetimes_pin() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         struct IndexKey final { int i; };
         struct SomeStruct final {
@@ -706,6 +751,8 @@ fn test_impl_index_and_index_mut_with_lifetimes_pin() -> Result<()> {
             int items[10];
         };"#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -735,7 +782,7 @@ fn test_impl_index_and_index_mut_with_lifetimes_pin() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_for_member_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         struct SomeStruct final {
             inline bool operator==(const SomeStruct& other) const {
@@ -744,6 +791,8 @@ fn test_impl_eq_for_member_function() -> Result<()> {
             int i;
         };"#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -770,7 +819,7 @@ fn test_impl_eq_for_member_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_for_free_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         namespace ns {
             struct SomeStruct final { int i; };
@@ -780,6 +829,8 @@ fn test_impl_eq_for_free_function() -> Result<()> {
         }
         "#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -797,7 +848,7 @@ fn test_impl_eq_for_free_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_for_free_function_with_lifetime_params() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         namespace ns {
             struct LIFETIME_PARAMS("a") SomeView final { const char* data; };
@@ -807,6 +858,8 @@ fn test_impl_eq_for_free_function_with_lifetime_params() -> Result<()> {
         }
         "#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -824,7 +877,7 @@ fn test_impl_eq_for_free_function_with_lifetime_params() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_ne_for_member_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         struct SomeStruct final {
             inline bool operator==(const SomeStruct& other) const {
@@ -836,6 +889,8 @@ fn test_impl_eq_ne_for_member_function() -> Result<()> {
             int i;
         };"#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -862,7 +917,7 @@ fn test_impl_eq_ne_for_member_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_ne_for_free_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         namespace ns {
             struct SomeStruct final { int i; };
@@ -875,6 +930,8 @@ fn test_impl_eq_ne_for_free_function() -> Result<()> {
         }
         "#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -893,7 +950,7 @@ fn test_impl_eq_ne_for_free_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_ne_for_member_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         struct SomeStruct final {
             inline bool operator!=(const SomeStruct& other) const {
@@ -902,6 +959,8 @@ fn test_impl_ne_for_member_function() -> Result<()> {
             int i;
         };"#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -928,7 +987,7 @@ fn test_impl_ne_for_member_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_ne_for_free_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         namespace ns {
             struct SomeStruct final { int i; };
@@ -938,6 +997,8 @@ fn test_impl_ne_for_free_function() -> Result<()> {
         }
         "#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -955,7 +1016,7 @@ fn test_impl_ne_for_free_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_for_free_function_different_types() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         struct SomeStruct final { int i; };
         struct SomeOtherStruct final { int i; };
@@ -963,6 +1024,8 @@ fn test_impl_eq_for_free_function_different_types() -> Result<()> {
             return lhs.i == rhs.i;
         }"#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -980,13 +1043,15 @@ fn test_impl_eq_for_free_function_different_types() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_for_free_function_by_value() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeStruct final { int i; };
         bool operator==(SomeStruct lhs, SomeStruct rhs) {
             return lhs.i == rhs.i;
         }"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -1006,7 +1071,7 @@ fn test_impl_eq_for_free_function_by_value() -> Result<()> {
 
 #[gtest]
 fn test_impl_ne_for_free_function_different_types() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
         struct SomeStruct final { int i; };
         struct SomeOtherStruct final { int i; };
@@ -1014,6 +1079,8 @@ fn test_impl_ne_for_free_function_different_types() -> Result<()> {
             return lhs.i != rhs.i;
         }"#,
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -1031,13 +1098,15 @@ fn test_impl_ne_for_free_function_different_types() -> Result<()> {
 
 #[gtest]
 fn test_impl_ne_for_free_function_by_value() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeStruct final { int i; };
         bool operator!=(SomeStruct lhs, SomeStruct rhs) {
             return lhs.i != rhs.i;
         }"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -1057,7 +1126,7 @@ fn test_impl_ne_for_free_function_by_value() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_ne_for_free_function_different_types() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
         struct SomeStruct final { int i; };
         struct SomeOtherStruct final { int i; };
@@ -1068,6 +1137,8 @@ fn test_impl_eq_ne_for_free_function_different_types() -> Result<()> {
             return lhs.i != rhs.i;
         }"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -1085,7 +1156,7 @@ fn test_impl_eq_ne_for_free_function_different_types() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_ne_for_free_function_by_value() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeStruct final { int i; };
         bool operator==(SomeStruct lhs, SomeStruct rhs) {
@@ -1095,6 +1166,8 @@ fn test_impl_eq_ne_for_free_function_by_value() -> Result<()> {
             return lhs.i != rhs.i;
         }"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -1114,7 +1187,7 @@ fn test_impl_eq_ne_for_free_function_by_value() -> Result<()> {
 
 #[gtest]
 fn test_impl_lt_for_member_function() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
         struct SomeStruct final {
             inline bool operator==(const SomeStruct& other) const {
@@ -1126,6 +1199,8 @@ fn test_impl_lt_for_member_function() -> Result<()> {
             int i;
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -1165,7 +1240,7 @@ fn test_impl_lt_for_member_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_lt_for_free_function() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
         struct SomeStruct final {
             inline bool operator==(const SomeStruct& other) const {
@@ -1177,6 +1252,8 @@ fn test_impl_lt_for_free_function() -> Result<()> {
             return lhs.i < rhs.i;
         }"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -1207,7 +1284,7 @@ fn test_impl_lt_for_free_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_lt_for_free_function_by_value() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeStruct final { int i; };
         bool operator==(SomeStruct lhs, SomeStruct rhs) {
@@ -1217,6 +1294,8 @@ fn test_impl_lt_for_free_function_by_value() -> Result<()> {
             return lhs.i < rhs.i;
         }"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -1248,7 +1327,7 @@ fn test_impl_lt_for_free_function_by_value() -> Result<()> {
 
 #[gtest]
 fn test_assign() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         #pragma clang lifetime_elision
         struct SomeStruct {
@@ -1256,6 +1335,8 @@ fn test_assign() -> Result<()> {
             SomeStruct& operator=(const SomeStruct& other);
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -1275,7 +1356,7 @@ fn test_assign() -> Result<()> {
 
 #[gtest]
 fn test_assign_nonreference_other() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         #pragma clang lifetime_elision
         struct SomeStruct {
@@ -1283,6 +1364,8 @@ fn test_assign_nonreference_other() -> Result<()> {
             SomeStruct& operator=(int other);
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -1302,7 +1385,7 @@ fn test_assign_nonreference_other() -> Result<()> {
 
 #[gtest]
 fn test_assign_nonreference_return() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         #pragma clang lifetime_elision
         struct SomeStruct {
@@ -1310,6 +1393,8 @@ fn test_assign_nonreference_return() -> Result<()> {
             int operator=(const SomeStruct& other);
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -1329,12 +1414,14 @@ fn test_assign_nonreference_return() -> Result<()> {
 
 #[gtest]
 fn test_impl_eq_non_const_member_function() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeStruct final {
             bool operator==(const SomeStruct& other) /* no `const` here */;
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     expect_that!(
         rs_api.to_string(),
@@ -1345,7 +1432,7 @@ fn test_impl_eq_non_const_member_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_lt_different_operands() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeStruct1 final {
             int i;
@@ -1360,6 +1447,8 @@ fn test_impl_lt_different_operands() -> Result<()> {
             int i;
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_not_matches!(rs_api, quote! {impl PartialOrd});
     Ok(())
@@ -1367,7 +1456,7 @@ fn test_impl_lt_different_operands() -> Result<()> {
 
 #[gtest]
 fn test_impl_lt_non_const_member_function() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeStruct final {
             inline bool operator==(const SomeStruct& other) const {
@@ -1377,6 +1466,8 @@ fn test_impl_lt_non_const_member_function() -> Result<()> {
             bool operator<(const SomeStruct& other) /* no `const` here */;
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     expect_that!(
         rs_api.to_string(),
@@ -1387,7 +1478,7 @@ fn test_impl_lt_non_const_member_function() -> Result<()> {
 
 #[gtest]
 fn test_impl_lt_rhs_by_value() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeStruct final {
             inline bool operator==(SomeStruct other) const {
@@ -1397,6 +1488,8 @@ fn test_impl_lt_rhs_by_value() -> Result<()> {
             bool operator<(SomeStruct other) const;
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     expect_that!(rs_api.to_string(), not(contains_substring("error")));
     Ok(())
@@ -1404,7 +1497,7 @@ fn test_impl_lt_rhs_by_value() -> Result<()> {
 
 #[gtest]
 fn test_impl_lt_missing_eq_impl() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct SomeStruct final {
             inline bool operator<(const SomeStruct& other) const {
@@ -1413,6 +1506,8 @@ fn test_impl_lt_missing_eq_impl() -> Result<()> {
             int i;
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     expect_that!(rs_api.to_string(), contains_substring("operator< where operator== is missing"),);
     Ok(())
@@ -1420,7 +1515,9 @@ fn test_impl_lt_missing_eq_impl() -> Result<()> {
 
 #[gtest]
 fn test_thunk_ident_function() -> Result<()> {
-    let ir = ir_from_cc("inline int foo() { return 42; }")?;
+    let proto = ir_proto_from_cc("inline int foo() { return 42; }")?;
+
+    let ir = make_test_ir(&proto)?;
     let func = retrieve_func(&ir, "foo");
     let errors = ErrorReport::new(SourceLanguage::Cpp);
     let fatal_errors = FatalErrors::new();
@@ -1432,7 +1529,9 @@ fn test_thunk_ident_function() -> Result<()> {
 
 #[gtest]
 fn test_thunk_ident_special_names() -> Result<()> {
-    let ir = ir_from_cc("struct Class {};")?;
+    let proto = ir_proto_from_cc("struct Class {};")?;
+
+    let ir = make_test_ir(&proto)?;
     let errors = ErrorReport::new(SourceLanguage::Cpp);
     let fatal_errors = FatalErrors::new();
     let interner = Interner::new();
@@ -1451,12 +1550,14 @@ fn test_thunk_ident_special_names() -> Result<()> {
 
 #[gtest]
 fn test_elided_lifetimes() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
       struct S final {
         int& f(int& i);
       };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -1476,11 +1577,13 @@ fn test_elided_lifetimes() -> Result<()> {
 
 #[gtest]
 fn test_annotated_lifetimes() -> Result<()> {
-    let ir = ir_from_cc(&with_lifetime_macros(
+    let proto = ir_proto_from_cc(&with_lifetime_macros(
         r#"
       int& $a f(int& $a i1, int& $a i2);
       "#,
     ))?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -1521,7 +1624,7 @@ fn test_overloaded_functions() -> Result<()> {
     // TODO(b/213280424): We don't support creating bindings for overloaded
     // functions yet, except in the case of overloaded constructors with a
     // single parameter.
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#" #pragma clang lifetime_elision
             void f() {}
             void f(int i) {}
@@ -1541,6 +1644,8 @@ fn test_overloaded_functions() -> Result<()> {
             namespace bar { void not_overloaded(); }
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
 
     // Cannot overload free functions.
@@ -1568,14 +1673,17 @@ fn test_overloaded_functions() -> Result<()> {
 /// !Unpin references should not be pinned.
 #[gtest]
 fn test_nonunpin_ref_param() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         #pragma clang lifetime_elision
         struct S {~S();};
         void Function(const S& s);
     "#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -1588,14 +1696,17 @@ fn test_nonunpin_ref_param() -> Result<()> {
 /// !Unpin mut references must be pinned.
 #[gtest]
 fn test_nonunpin_mut_param() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         #pragma clang lifetime_elision
         struct S {~S();};
         void Function(S& s);
     "#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -1608,7 +1719,7 @@ fn test_nonunpin_mut_param() -> Result<()> {
 /// !Unpin &self should not be pinned.
 #[gtest]
 fn test_nonunpin_ref_self() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         #pragma clang lifetime_elision
         struct S {
@@ -1616,8 +1727,11 @@ fn test_nonunpin_ref_self() -> Result<()> {
           void Function() const;
         };
     "#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -1630,7 +1744,7 @@ fn test_nonunpin_ref_self() -> Result<()> {
 /// !Unpin &mut self must be pinned.
 #[gtest]
 fn test_nonunpin_mut_self() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         #pragma clang lifetime_elision
         struct S {
@@ -1638,8 +1752,11 @@ fn test_nonunpin_mut_self() -> Result<()> {
           void Function();
         };
     "#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -1652,12 +1769,15 @@ fn test_nonunpin_mut_self() -> Result<()> {
 /// Drop::drop must not use self : Pin<...>.
 #[gtest]
 fn test_nonunpin_drop() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct S {~S();};
     "#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -1669,7 +1789,7 @@ fn test_nonunpin_drop() -> Result<()> {
 
 #[gtest]
 fn test_nonunpin_0_arg_constructor() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         // This type must be `!Unpin`.
         struct HasConstructor {
@@ -1677,6 +1797,8 @@ fn test_nonunpin_0_arg_constructor() -> Result<()> {
             ~HasConstructor();
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned(PinnedDrop)]});
     assert_rs_matches!(
@@ -1703,7 +1825,7 @@ fn test_nonunpin_0_arg_constructor() -> Result<()> {
 
 #[gtest]
 fn test_nonunpin_1_arg_constructor() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         // This type must be `!Unpin`.
         struct HasConstructor {
@@ -1711,6 +1833,8 @@ fn test_nonunpin_1_arg_constructor() -> Result<()> {
             ~HasConstructor();
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned(PinnedDrop)]});
     assert_rs_matches!(
@@ -1737,7 +1861,7 @@ fn test_nonunpin_1_arg_constructor() -> Result<()> {
 
 #[gtest]
 fn test_nonunpin_2_arg_constructor() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         // This type must be `!Unpin`.
         struct HasConstructor {
@@ -1745,6 +1869,8 @@ fn test_nonunpin_2_arg_constructor() -> Result<()> {
             ~HasConstructor();
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned(PinnedDrop)]});
     assert_rs_matches!(
@@ -1774,7 +1900,7 @@ fn test_nonunpin_2_arg_constructor() -> Result<()> {
 /// lifetime parameter.
 #[gtest]
 fn test_nonunpin_by_value_params() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
 // This type must be `!Unpin`.
         struct HasConstructor {
@@ -1787,6 +1913,8 @@ fn test_nonunpin_by_value_params() -> Result<()> {
             ~HasConstructor();
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned(PinnedDrop)]});
     assert_rs_matches!(
@@ -1823,7 +1951,7 @@ fn test_nonunpin_by_value_params() -> Result<()> {
 
 #[gtest]
 fn test_nonunpin_return() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
 // This type must be `!Unpin`.
         struct Nontrivial {~Nontrivial();};
@@ -1831,6 +1959,8 @@ fn test_nonunpin_return() -> Result<()> {
         Nontrivial ReturnsByValue(const int& x, const int& y);
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -1861,7 +1991,7 @@ fn test_nonunpin_return() -> Result<()> {
 
 #[gtest]
 fn test_nonunpin_const_return() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
 // This type must be `!Unpin`.
         struct Nontrivial {~Nontrivial();};
@@ -1869,6 +1999,8 @@ fn test_nonunpin_const_return() -> Result<()> {
         const Nontrivial ReturnsByValue(const int& x, const int& y);
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -1899,7 +2031,7 @@ fn test_nonunpin_const_return() -> Result<()> {
 
 #[gtest]
 fn test_unpin_by_value_param() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct Trivial final {
           int trivial_field;
@@ -1908,6 +2040,8 @@ fn test_unpin_by_value_param() -> Result<()> {
         void foo(Trivial param);
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -1937,7 +2071,7 @@ fn test_unpin_by_value_param() -> Result<()> {
 
 #[gtest]
 fn test_unpin_by_value_return() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct Trivial final {
           int trivial_field;
@@ -1946,6 +2080,8 @@ fn test_unpin_by_value_return() -> Result<()> {
         Trivial foo();
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -1981,13 +2117,15 @@ fn test_unpin_by_value_return() -> Result<()> {
 
 #[gtest]
 fn test_unpin_rvalue_ref_qualified_method() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
         struct TrivialWithRvalueRefQualifiedMethod final {
           void rvalue_ref_qualified_method() &&;
         };
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -2011,13 +2149,15 @@ fn test_unpin_rvalue_ref_qualified_method() -> Result<()> {
 
 #[gtest]
 fn test_unpin_rvalue_ref_const_qualified_method() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
         struct TrivialWithRvalueRefConstQualifiedMethod final {
           void rvalue_ref_const_qualified_method() const &&;
         };
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -2043,7 +2183,7 @@ fn test_unpin_rvalue_ref_const_qualified_method() -> Result<()> {
 /// So if the return type is !Unpin, it needs to emplace!() it.
 #[gtest]
 fn test_nonunpin_return_assign() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
 // This type must be `!Unpin`.
         struct Nontrivial {
@@ -2052,6 +2192,8 @@ fn test_nonunpin_return_assign() -> Result<()> {
         };
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -2091,7 +2233,7 @@ fn test_nonunpin_return_assign() -> Result<()> {
 
 #[gtest]
 fn test_nonunpin_param() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         // This type must be `!Unpin`.
         struct Nontrivial {
@@ -2102,6 +2244,8 @@ fn test_nonunpin_param() -> Result<()> {
         void TakesByValue(Nontrivial x);
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -2127,7 +2271,7 @@ fn test_nonunpin_param() -> Result<()> {
 
 #[gtest]
 fn test_nonmovable_param() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         // This type must be `!Unpin` and non-move constructible.
         struct Nonmovable {
@@ -2137,6 +2281,8 @@ fn test_nonmovable_param() -> Result<()> {
         void TakesByValue(Nonmovable) {}
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api_impl, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_cc_not_matches!(rs_api_impl, quote! {void TakesByValue});
     Ok(())
@@ -2144,7 +2290,7 @@ fn test_nonmovable_param() -> Result<()> {
 
 #[gtest]
 fn test_invalid_unsafe_annotation_causes_fatal_error() -> googletest::Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct Trivial final {
             [[clang::annotate("crubit_override_unsafe", true)]]
@@ -2153,6 +2299,8 @@ fn test_invalid_unsafe_annotation_causes_fatal_error() -> googletest::Result<()>
         "#,
     )
     .or_fail()?;
+
+    let ir = make_test_ir(&proto).or_fail()?;
     let error_message = generate_bindings_tokens_for_test(ir).err().or_fail()?.to_string();
     assert_that!(
         error_message,
@@ -2163,7 +2311,7 @@ fn test_invalid_unsafe_annotation_causes_fatal_error() -> googletest::Result<()>
 
 #[gtest]
 fn test_function_returning_rvalue_reference() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"#pragma clang lifetime_elision
         struct SomeStruct final {
 // Inline to force generation (and test coverage) of C++ thunks.
@@ -2174,6 +2322,8 @@ fn test_function_returning_rvalue_reference() -> Result<()> {
         };
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -2227,13 +2377,15 @@ fn test_function_returning_rvalue_reference() -> Result<()> {
 
 #[gtest]
 fn test_c_abi_compatible_type_by_value_with_move() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             typedef int MyTypedefDecl;
 
             inline void f(MyTypedefDecl a, void* b, int c) {}
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api_impl, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_cc_matches!(
         rs_api_impl,
@@ -2248,7 +2400,9 @@ fn test_c_abi_compatible_type_by_value_with_move() -> Result<()> {
 
 #[gtest]
 fn test_simple_explicit_lifetime() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc("int& $a Add(int& $a x);")?;
+    let proto = ir_proto_from_assumed_lifetimes_cc("int& $a Add(int& $a x);")?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -2292,7 +2446,9 @@ fn test_deterministic_lifetime_order() -> Result<()> {
     "#,
     );
 
-    let ir = ir_from_assumed_lifetimes_cc(&cc_src)?;
+    let proto = ir_proto_from_assumed_lifetimes_cc(&cc_src)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
 
     // Verify that lifetimes are sorted alphabetically in the `use<...>` clause.
@@ -2310,13 +2466,15 @@ fn test_deterministic_lifetime_order() -> Result<()> {
 
 #[gtest]
 fn test_unsafe_constructor_unpin() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct StructWithUnsafeConstructor final {
             explicit StructWithUnsafeConstructor(int* p) : ptr_field(p) {}
             int* ptr_field;
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -2342,7 +2500,7 @@ fn test_unsafe_constructor_unpin() -> Result<()> {
 
 #[gtest]
 fn test_unsafe_constructor_nonunpin() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct NonUnpinStructWithUnsafeConstructor final {
             explicit NonUnpinStructWithUnsafeConstructor(int* p) : ptr_field(p) {}
@@ -2350,6 +2508,8 @@ fn test_unsafe_constructor_nonunpin() -> Result<()> {
             int* ptr_field;
         };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -2377,12 +2537,14 @@ fn test_unsafe_constructor_nonunpin() -> Result<()> {
 
 #[gtest]
 fn test_function_using_error_type_by_value() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         struct __DunderName {};
         void foo(__DunderName x);
         "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
 
     assert_rs_matches!(

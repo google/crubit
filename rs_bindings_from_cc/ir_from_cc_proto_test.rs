@@ -4,15 +4,17 @@
 
 use arc_anyhow::Result;
 use googletest::gtest;
-use ir_testing::ir_proto_from_cc;
+use ir_rust_proto::IRProto;
+use ir_testing::{ir_proto_from_cc, make_test_ir};
 
-fn get_ir(header: &str) -> Result<ir::IR> {
+fn get_proto(header: &str) -> Result<IRProto> {
     ir_proto_from_cc(multiplatform_testing::test_platform(), header)
 }
 
 #[gtest]
 fn test_func_proto() -> Result<()> {
-    let ir = get_ir("int f(int a, int b);")?;
+    let proto = get_proto("int f(int a, int b);")?;
+    let ir = make_test_ir(&proto)?;
     let func = ir
         .functions()
         .find(|f| f.rs_name() == "f")
@@ -29,7 +31,8 @@ fn test_func_proto() -> Result<()> {
 
 #[gtest]
 fn test_record_proto() -> Result<()> {
-    let ir = get_ir("struct MyStruct { int a; };")?;
+    let proto = get_proto("struct MyStruct { int a; };")?;
+    let ir = make_test_ir(&proto)?;
     let record = ir
         .records()
         .find(|r| *r.cc_name() == "MyStruct")
@@ -52,7 +55,8 @@ fn test_record_proto() -> Result<()> {
 
 #[gtest]
 fn test_function_with_asm_label_proto() -> Result<()> {
-    let ir = get_ir("int f(int a, int b) asm(\"foo\");")?;
+    let proto = get_proto("int f(int a, int b) asm(\"foo\");")?;
+    let ir = make_test_ir(&proto)?;
     let func = ir
         .functions()
         .find(|f| f.rs_name() == "f")
@@ -73,7 +77,8 @@ fn test_function_with_asm_label_proto() -> Result<()> {
 
 #[gtest]
 fn test_function_with_unnamed_parameters_proto() -> Result<()> {
-    let ir = get_ir("int f(int, int);")?;
+    let proto = get_proto("int f(int, int);")?;
+    let ir = make_test_ir(&proto)?;
     let func = ir
         .functions()
         .find(|f| f.rs_name() == "f")
@@ -92,7 +97,8 @@ fn test_function_with_unnamed_parameters_proto() -> Result<()> {
 
 #[gtest]
 fn test_unescapable_rust_keywords_in_function_parameters_proto() -> Result<()> {
-    let ir = get_ir("int f(int self, int crate, int super);")?;
+    let proto = get_proto("int f(int self, int crate, int super);")?;
+    let ir = make_test_ir(&proto)?;
     let func = ir
         .functions()
         .find(|f| f.rs_name() == "f")
@@ -115,7 +121,8 @@ fn test_unescapable_rust_keywords_in_function_parameters_proto() -> Result<()> {
 
 #[gtest]
 fn test_unescapable_rust_keywords_in_struct_name_proto() -> Result<()> {
-    let ir = get_ir("struct Self{ int field; };")?;
+    let proto = get_proto("struct Self{ int field; };")?;
+    let ir = make_test_ir(&proto)?;
     let unsupported = ir
         .unsupported_items()
         .find(|i| i.name() == "Self")
@@ -133,7 +140,7 @@ fn test_unescapable_rust_keywords_in_struct_name_proto() -> Result<()> {
 
 #[gtest]
 fn test_record_member_variable_access_specifiers_proto() -> Result<()> {
-    let ir = get_ir(
+    let proto = get_proto(
         "
         struct SomeStruct {
             int default_access_int;
@@ -150,7 +157,7 @@ fn test_record_member_variable_access_specifiers_proto() -> Result<()> {
         };
     ",
     )?;
-
+    let ir = make_test_ir(&proto)?;
     let some_struct = ir
         .records()
         .find(|r| *r.cc_name() == "SomeStruct")
@@ -187,7 +194,8 @@ fn test_record_member_variable_access_specifiers_proto() -> Result<()> {
 
 #[gtest]
 fn test_enum_proto() -> Result<()> {
-    let ir = get_ir("enum MyEnum { kA = 42, kB = -1 };")?;
+    let proto = get_proto("enum MyEnum { kA = 42, kB = -1 };")?;
+    let ir = make_test_ir(&proto)?;
     let enum_decl = ir
         .enums()
         .find(|r| r.cc_name() == "MyEnum")
@@ -210,7 +218,8 @@ fn test_enum_proto() -> Result<()> {
 
 #[gtest]
 fn test_type_alias_proto() -> Result<()> {
-    let ir = get_ir("typedef int MyInt;")?;
+    let proto = get_proto("typedef int MyInt;")?;
+    let ir = make_test_ir(&proto)?;
     let type_alias = ir
         .type_aliases()
         .find(|t| t.cc_name() == "MyInt")

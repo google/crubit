@@ -10,32 +10,28 @@ use generate_bindings::new_database;
 use googletest::matchers::contains_substring;
 use googletest::{assert_that, gtest};
 use ir_matchers::assert_ir_matches;
-use ir_testing::{retrieve_record, with_full_lifetime_macros};
+use ir_testing::{make_test_ir_dependency, retrieve_record, with_full_lifetime_macros};
 use lifetime_defaults_transform::{
     lifetime_defaults_transform, record_lifetime_arity, BindingContext,
 };
-use multiplatform_ir_testing::ir_from_assumed_lifetimes_cc;
+use multiplatform_ir_testing::ir_proto_from_assumed_lifetimes_cc;
 use quote::quote;
 use std::rc::Rc;
-
-fn lifetime_defaults_transform_ir(ir: &ir::IR<'_>) -> Result<ir::IR<'static>> {
-    let errors = ErrorReport::new(SourceLanguage::Cpp);
-    let fatal_errors = FatalErrors::new();
-    let interner = Interner::new();
-    let db = new_database(ir, &errors, &fatal_errors, false, false, &interner);
-    lifetime_defaults_transform(&db)
-}
+use test_generators::TestDbFactory;
 
 #[gtest]
 fn test_fn_with_no_unbound_lifetimes_is_unchanged() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       LIFETIME_PARAMS("a")
       int& $a f(int& $a i1, int& $a i2);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -64,13 +60,16 @@ fn test_fn_with_no_unbound_lifetimes_is_unchanged() -> Result<()> {
 
 #[gtest]
 fn test_no_change_if_binder_is_already_added_to_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       int& $a f(int& $a i1, int& $a i2);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -99,13 +98,16 @@ fn test_no_change_if_binder_is_already_added_to_function() -> Result<()> {
 
 #[gtest]
 fn test_unique_lifetime_ascribed_to_single_ref() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       void f(int& i1);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -129,13 +131,16 @@ fn test_unique_lifetime_ascribed_to_single_ref() -> Result<()> {
 
 #[gtest]
 fn test_distinct_lifetime_returned_for_annotated_ref() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       int& $b f(int& $a i1);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -160,13 +165,16 @@ fn test_distinct_lifetime_returned_for_annotated_ref() -> Result<()> {
 
 #[gtest]
 fn test_unique_lifetime_returned_for_single_ref() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       int& f(int& i1);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -191,13 +199,16 @@ fn test_unique_lifetime_returned_for_single_ref() -> Result<()> {
 
 #[gtest]
 fn test_unknown_lifetime_inhibits_default_lifetimes() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       int& f(int& $unknown i1);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -222,13 +233,16 @@ fn test_unknown_lifetime_inhibits_default_lifetimes() -> Result<()> {
 
 #[gtest]
 fn test_no_lifetime_returned_for_distinct_ref_parameters() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       int& f(int& i1, int& i2);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -257,13 +271,16 @@ fn test_no_lifetime_returned_for_distinct_ref_parameters() -> Result<()> {
 
 #[gtest]
 fn test_no_lifetime_assigned_for_nullary_fn() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       int& f();
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -282,14 +299,17 @@ fn test_no_lifetime_assigned_for_nullary_fn() -> Result<()> {
 
 #[gtest]
 fn test_lifetimebound_param_with_decl_type() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct S {};
       S f(S i1 [[clang::lifetimebound]]);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -318,26 +338,32 @@ fn test_lifetimebound_param_with_decl_type() -> Result<()> {
 
 #[gtest]
 fn test_lifetimebound_param_with_fnptr_type() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       void (*f (void (*i1 [[clang::lifetimebound]])())) ();
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir);
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db());
     assert!(dir.is_err());
     Ok(())
 }
 
 #[gtest]
 fn test_lifetimebound_param_is_returned_with_lifetime() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       int& f(int& i1 [[clang::lifetimebound]]);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -366,13 +392,16 @@ fn test_lifetimebound_param_is_returned_with_lifetime() -> Result<()> {
 
 #[gtest]
 fn test_lifetimebound_param_is_returned_with_lifetime_and_other_param() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       int& f(int& i1 [[clang::lifetimebound]], int& i2);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -408,13 +437,16 @@ fn test_lifetimebound_param_is_returned_with_lifetime_and_other_param() -> Resul
 
 #[gtest]
 fn test_lifetimebound_param_is_returned_with_rv_unified_lifetime() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       int& $a f(int& i1 [[clang::lifetimebound]]);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -443,13 +475,16 @@ fn test_lifetimebound_param_is_returned_with_rv_unified_lifetime() -> Result<()>
 
 #[gtest]
 fn test_lifetimebound_param_is_returned_with_param_unified_lifetime() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       int& f(int& i1 [[clang::lifetimebound]], int& $a i2 [[clang::lifetimebound]]);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -485,13 +520,16 @@ fn test_lifetimebound_param_is_returned_with_param_unified_lifetime() -> Result<
 
 #[gtest]
 fn test_lifetimebound_param_is_returned_with_param_fresh_unified_lifetime() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       int& f(int& i1 [[clang::lifetimebound]], int& i2 [[clang::lifetimebound]]);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -527,13 +565,16 @@ fn test_lifetimebound_param_is_returned_with_param_fresh_unified_lifetime() -> R
 
 #[gtest]
 fn test_this_lifetime_returned_for_nullary_member_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct S { int& f() const; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -559,13 +600,16 @@ fn test_this_lifetime_returned_for_nullary_member_function() -> Result<()> {
 
 #[gtest]
 fn test_explicit_this_lifetime_returned_for_nullary_member_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct S { int& f() const $a; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -591,13 +635,16 @@ fn test_explicit_this_lifetime_returned_for_nullary_member_function() -> Result<
 
 #[gtest]
 fn test_very_explicit_this_lifetime_returned_for_nullary_member_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct S { int& $a f() $a; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -623,13 +670,16 @@ fn test_very_explicit_this_lifetime_returned_for_nullary_member_function() -> Re
 
 #[gtest]
 fn test_this_lifetime_returned_for_member_function_with_reference_param() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct S { int& f(int& i1) const; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -659,13 +709,16 @@ fn test_this_lifetime_returned_for_member_function_with_reference_param() -> Res
 
 #[gtest]
 fn test_this_lifetime_applied_for_constructor() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct S { S(); S(const S& o) = delete; S(const S&& o) = delete; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -691,13 +744,16 @@ fn test_this_lifetime_applied_for_constructor() -> Result<()> {
 
 #[gtest]
 fn test_this_lifetime_annotation_applied_for_constructor() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct S { S() $a; S(const S& o) = delete; S(const S&& o) = delete; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -725,13 +781,16 @@ fn test_this_lifetime_annotation_applied_for_constructor() -> Result<()> {
 
 #[gtest]
 fn test_param_lifetime_inferred_for_constructor() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct S { S(int& i1); S(const S& o) = delete; S(const S&& o) = delete; };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -763,7 +822,7 @@ fn test_param_lifetime_inferred_for_constructor() -> Result<()> {
 
 #[gtest]
 fn test_param_lifetimebound_to_this_in_constructor() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct S {
@@ -773,7 +832,10 @@ fn test_param_lifetimebound_to_this_in_constructor() -> Result<()> {
       };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -818,7 +880,7 @@ fn test_param_lifetimebound_to_this_in_constructor() -> Result<()> {
 
 #[gtest]
 fn test_param_lifetimebound_to_this_in_constructor_explicit_lifetime() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct S {
@@ -828,7 +890,10 @@ fn test_param_lifetimebound_to_this_in_constructor_explicit_lifetime() -> Result
       };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -922,13 +987,16 @@ fn test_binding_context_pushes_fresh_names() -> Result<()> {
 
 #[gtest]
 fn test_struct_binds_lifetime_param() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct LIFETIME_PARAMS("a") S { int& $a f(); };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -960,13 +1028,16 @@ fn test_struct_binds_lifetime_param() -> Result<()> {
 
 #[gtest]
 fn test_struct_shadows_unknown_lifetime_param() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct LIFETIME_PARAMS("unknown") S { int& $unknown f(); };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -998,13 +1069,16 @@ fn test_struct_shadows_unknown_lifetime_param() -> Result<()> {
 
 #[gtest]
 fn test_struct_does_not_shadow_unrelated_lifetime_param() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct LIFETIME_PARAMS("b") S { int& $a f(); };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1036,13 +1110,16 @@ fn test_struct_does_not_shadow_unrelated_lifetime_param() -> Result<()> {
 
 #[gtest]
 fn test_struct_renames_shadowed_lifetime_param_in_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct LIFETIME_PARAMS("a") S { LIFETIME_PARAMS("a") int& $a f(); };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1074,7 +1151,7 @@ fn test_struct_renames_shadowed_lifetime_param_in_function() -> Result<()> {
 
 #[gtest]
 fn test_struct_renames_multiple_shadowed_lifetime_param_in_function() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct LIFETIME_PARAMS("a") T {
@@ -1082,7 +1159,10 @@ fn test_struct_renames_multiple_shadowed_lifetime_param_in_function() -> Result<
       };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1126,7 +1206,7 @@ fn test_struct_renames_multiple_shadowed_lifetime_param_in_function() -> Result<
 
 #[gtest]
 fn test_function_uses_top_of_renamed_lifetime_stack() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct LIFETIME_PARAMS("a") T {
@@ -1134,7 +1214,10 @@ fn test_function_uses_top_of_renamed_lifetime_stack() -> Result<()> {
       };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1178,7 +1261,7 @@ fn test_function_uses_top_of_renamed_lifetime_stack() -> Result<()> {
 
 #[gtest]
 fn test_string_view_alias_detected() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       namespace std {
@@ -1189,7 +1272,10 @@ fn test_string_view_alias_detected() -> Result<()> {
       void f(std::string_view sv);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1213,7 +1299,7 @@ fn test_string_view_alias_detected() -> Result<()> {
 
 #[gtest]
 fn test_string_view_annotated_alias_detected() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       namespace std {
@@ -1224,7 +1310,10 @@ fn test_string_view_annotated_alias_detected() -> Result<()> {
       void f(std::string_view $a sv);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1248,7 +1337,7 @@ fn test_string_view_annotated_alias_detected() -> Result<()> {
 
 #[gtest]
 fn test_string_view_assumed_output_lifetime_matches_input() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       namespace std {
@@ -1259,7 +1348,10 @@ fn test_string_view_assumed_output_lifetime_matches_input() -> Result<()> {
       std::string_view f(std::string_view sv);
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {
@@ -1293,65 +1385,77 @@ fn arity_of_record(ir: &ir::IR, record_name: &str) -> Result<usize> {
 
 #[gtest]
 fn test_arity_of_noparam_struct_is_zero() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct S { S(); };
       "#),
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     assert_eq!(arity_of_record(&ir, "S"), Ok(0));
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_eq!(arity_of_record(&dir, "S"), Ok(0));
     Ok(())
 }
 
 #[gtest]
 fn test_arity_of_explicit_param_struct() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct LIFETIME_PARAMS("a", "b") S { S(); };
       "#),
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     assert_eq!(arity_of_record(&ir, "S"), Ok(2));
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_eq!(arity_of_record(&dir, "S"), Ok(2));
     Ok(())
 }
 
 #[gtest]
 fn test_arity_of_simple_lifetimebound_constructor() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct LIFETIME_PARAMS("a", "b") R {};
       struct S { S(R ref [[clang::lifetimebound]]); };
       "#),
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     assert_eq!(arity_of_record(&ir, "S"), Ok(2));
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_eq!(arity_of_record(&dir, "S"), Ok(2));
     Ok(())
 }
 
 #[gtest]
 fn test_arity_of_simple_lifetimebound_return() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
       struct LIFETIME_PARAMS("a", "b") R {};
       struct S { R f() [[clang::lifetimebound]]; };
       "#),
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     assert_eq!(arity_of_record(&ir, "S"), Ok(2));
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_eq!(arity_of_record(&dir, "S"), Ok(2));
     Ok(())
 }
 
 #[gtest]
 fn test_spurious_lifetimebound_on_return() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
         struct PlainStruct {};
@@ -1363,7 +1467,10 @@ fn test_spurious_lifetimebound_on_return() -> Result<()> {
         };
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     // Check that the return type doesn't incorrectly get the __implicit lifetime applied.
     assert_ir_matches!(
         dir,
@@ -1382,7 +1489,7 @@ fn test_spurious_lifetimebound_on_return() -> Result<()> {
 
 #[gtest]
 fn test_lifetimebound_cycle() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
         struct Impossible {
@@ -1396,21 +1503,27 @@ fn test_lifetimebound_cycle() -> Result<()> {
         };
       "#),
     )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
     let error_message =
-        lifetime_defaults_transform_ir(&ir).expect_err("Expected an error").to_string();
+        lifetime_defaults_transform(&factory.make_db()).expect_err("Expected an error").to_string();
     assert_that!(error_message, contains_substring("Cycle detected: decl_lifetime_arity"));
     Ok(())
 }
 
 #[gtest]
 fn test_static_lifetime_is_not_abstracted() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
         int& $static f(int& $static a) { return a; }
       "#),
     )?;
-    let dir = lifetime_defaults_transform_ir(&ir)?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_ir_matches!(
         dir,
         quote! {

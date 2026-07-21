@@ -4,7 +4,8 @@
 
 use arc_anyhow::Result;
 use googletest::prelude::gtest;
-use multiplatform_ir_testing::{ir_from_cc, ir_from_cc_annotated};
+use ir_testing::make_test_ir;
+use multiplatform_ir_testing::{ir_proto_from_cc, ir_proto_from_cc_annotated};
 use quote::quote;
 use test_generators::{
     generate_bindings_tokens_for_test, generate_bindings_tokens_for_test_with_annotations,
@@ -13,7 +14,9 @@ use token_stream_matchers::{assert_rs_matches, assert_rs_not_matches};
 
 #[gtest]
 fn test_generate_enum_basic() -> Result<()> {
-    let ir = ir_from_cc("enum Color { kRed = 5, kBlue };")?;
+    let proto = ir_proto_from_cc("enum Color { kRed = 5, kBlue };")?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -45,7 +48,9 @@ fn test_generate_enum_basic() -> Result<()> {
 
 #[gtest]
 fn test_generate_enum_basic_with_annotations() -> Result<()> {
-    let ir = ir_from_cc_annotated("enum Color { kRed = 5, kBlue };")?;
+    let proto = ir_proto_from_cc_annotated("enum Color { kRed = 5, kBlue };")?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test_with_annotations(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -78,7 +83,9 @@ fn test_generate_enum_basic_with_annotations() -> Result<()> {
 
 #[gtest]
 fn test_generate_opaque_enum() -> Result<()> {
-    let ir = ir_from_cc("enum Color : int;")?;
+    let proto = ir_proto_from_cc("enum Color : int;")?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_not_matches!(rs_api, quote! {Color});
     Ok(())
@@ -86,7 +93,9 @@ fn test_generate_opaque_enum() -> Result<()> {
 
 #[gtest]
 fn test_generate_scoped_enum_basic() -> Result<()> {
-    let ir = ir_from_cc("enum class Color { kRed = -5, kBlue };")?;
+    let proto = ir_proto_from_cc("enum class Color { kRed = -5, kBlue };")?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -118,7 +127,7 @@ fn test_generate_scoped_enum_basic() -> Result<()> {
 
 #[gtest]
 fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"enum Color : long {
                 kViolet = -9223372036854775807 - 1LL,
                 kRed = -5,
@@ -127,6 +136,8 @@ fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
                 kMagenta = 9223372036854775807
             };"#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -161,13 +172,15 @@ fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
 
 #[gtest]
 fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#" enum Color: unsigned long {
                 kRed,
                 kBlue,
                 kLimeGreen = 18446744073709551615
             }; "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -200,9 +213,11 @@ fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
 
 #[gtest]
 fn test_generate_enum_with_32_bit_signed_vals() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "enum Color { kViolet = -2147483647 - 1, kRed = -5, kBlue, kGreen = 3, kMagenta = 2147483647 };",
     )?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -237,7 +252,10 @@ fn test_generate_enum_with_32_bit_signed_vals() -> Result<()> {
 
 #[gtest]
 fn test_generate_enum_with_32_bit_unsigned_vals() -> Result<()> {
-    let ir = ir_from_cc("enum Color: unsigned int { kRed, kBlue, kLimeGreen = 4294967295 };")?;
+    let proto =
+        ir_proto_from_cc("enum Color: unsigned int { kRed, kBlue, kLimeGreen = 4294967295 };")?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -270,7 +288,9 @@ fn test_generate_enum_with_32_bit_unsigned_vals() -> Result<()> {
 
 #[gtest]
 fn test_generate_enum_bool() -> Result<()> {
-    let ir = ir_from_cc("enum Bool : bool { kFalse, kTrue };")?;
+    let proto = ir_proto_from_cc("enum Bool : bool { kFalse, kTrue };")?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -302,7 +322,9 @@ fn test_generate_enum_bool() -> Result<()> {
 
 #[gtest]
 fn test_generate_enum_bool_alias() -> Result<()> {
-    let ir = ir_from_cc("using MyBool = bool; enum Bool : MyBool { kFalse, kTrue };")?;
+    let proto = ir_proto_from_cc("using MyBool = bool; enum Bool : MyBool { kFalse, kTrue };")?;
+
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -334,7 +356,7 @@ fn test_generate_enum_bool_alias() -> Result<()> {
 
 #[gtest]
 fn test_display() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         enum class Enum {
             kEnum,
@@ -345,6 +367,8 @@ fn test_display() -> Result<()> {
         }
     "#,
     )?;
+
+    let ir = make_test_ir(&proto)?;
 
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
 

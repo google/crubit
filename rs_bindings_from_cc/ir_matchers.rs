@@ -139,39 +139,51 @@ mod tests {
     use googletest::gtest;
     use quote::quote;
 
-    /// We aren't testing platform-specific details, just the matchers.
-    fn ir_from_cc(header: &str) -> arc_anyhow::Result<ir::IR> {
-        ir_testing::ir_from_cc(multiplatform_testing::Platform::X86Linux, header)
+    fn ir_proto_from_cc(header: &str) -> arc_anyhow::Result<ir_rust_proto::IRProto> {
+        ir_testing::ir_proto_from_cc(multiplatform_testing::Platform::X86Linux, header)
     }
 
     #[gtest]
-    fn test_optional_trailing_comma() {
-        assert_ir_matches!(ir_from_cc("").unwrap(), quote! { TreeIR { ... }});
-        assert_ir_matches!(ir_from_cc("").unwrap(), quote! { TreeIR { ... }},);
+    fn test_optional_trailing_comma() -> arc_anyhow::Result<()> {
+        let proto = ir_proto_from_cc("")?;
+        let ir = ir_testing::make_test_ir(&proto)?;
+        assert_ir_matches!(ir, quote! { TreeIR { ... }});
+        assert_ir_matches!(ir, quote! { TreeIR { ... }},);
 
-        assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir});
-        assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir},);
+        assert_ir_not_matches!(ir, quote! {this pattern is not in the ir});
+        assert_ir_not_matches!(ir, quote! {this pattern is not in the ir},);
+        Ok(())
     }
 
     #[gtest]
-    fn test_assert_ir_matches_assumes_trailing_commas_in_groups() {
-        assert_ir_matches!(ir_from_cc("").unwrap(), quote! {{... , }});
+    fn test_assert_ir_matches_assumes_trailing_commas_in_groups() -> arc_anyhow::Result<()> {
+        let proto = ir_proto_from_cc("")?;
+        let ir = ir_testing::make_test_ir(&proto)?;
+        assert_ir_matches!(ir, quote! {{... , }});
+        Ok(())
     }
 
     #[gtest]
-    fn test_assert_not_matches_accepts_not_matching_pattern() {
-        assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir});
+    fn test_assert_not_matches_accepts_not_matching_pattern() -> arc_anyhow::Result<()> {
+        let proto = ir_proto_from_cc("")?;
+        let ir = ir_testing::make_test_ir(&proto)?;
+        assert_ir_not_matches!(ir, quote! {this pattern is not in the ir});
+        Ok(())
     }
 
     #[gtest]
     #[should_panic(expected = "input:\n\n```\nTreeIR {")]
     fn test_assert_ir_not_matches_panics_on_match() {
-        assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {current_target});
+        let proto = ir_proto_from_cc("").unwrap();
+        let ir = ir_testing::make_test_ir(&proto).unwrap();
+        assert_ir_not_matches!(ir, quote! {current_target});
     }
 
     #[gtest]
     #[should_panic]
     fn test_assert_ir_matches_panics_on_mismatch() {
-        assert_ir_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir});
+        let proto = ir_proto_from_cc("").unwrap();
+        let ir = ir_testing::make_test_ir(&proto).unwrap();
+        assert_ir_matches!(ir, quote! {this pattern is not in the ir});
     }
 }

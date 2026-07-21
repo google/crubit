@@ -12,6 +12,7 @@ use generate_bindings::new_database;
 use generate_comment::{generate_doc_comment, generate_unsupported};
 use googletest::prelude::gtest;
 use ir::{BazelLabel, ItemId, UnsupportedItem, UnsupportedItemKind, IR};
+use ir_rust_proto::IRProto;
 use ir_testing::make_ir_from_items;
 use quote::quote;
 use std::rc::Rc;
@@ -115,31 +116,16 @@ impl ir::GenericItem for TestItem {
     }
 }
 
-struct TestDbFactory {
-    ir: IR<'static>,
+struct TestDbFactory<'pb> {
+    ir: IR<'pb>,
     errors: ErrorReport,
     fatal_errors: FatalErrors,
     interner: Interner,
 }
-impl TestDbFactory {
-    fn new() -> Self {
-        let test_item = UnsupportedItem::new_raw(
-            "test_item".into(),
-            None,
-            UnsupportedItemKind::Other,
-            TEST_ITEM_ID,
-            Some("Generated from: some/header;l=1".into()),
-            None,
-            false,
-            /* path= */ None,
-            Some(Rc::new(ir::FormattedError {
-                fmt: "unsupported_message".into(),
-                message: "unsupported_message".into(),
-            })),
-            None,
-        );
+impl<'pb> TestDbFactory<'pb> {
+    fn new(ir: IR<'pb>) -> Self {
         Self {
-            ir: make_ir_from_items([test_item.into()]),
+            ir,
             errors: ErrorReport::new(SourceLanguage::Cpp),
             fatal_errors: FatalErrors::new(),
             interner: Interner::new(),
@@ -157,9 +143,29 @@ impl TestDbFactory {
     }
 }
 
+fn make_factory<'pb>(proto: &'pb IRProto) -> TestDbFactory<'pb> {
+    let test_item = UnsupportedItem::new_raw(
+        "test_item".into(),
+        None,
+        UnsupportedItemKind::Other,
+        TEST_ITEM_ID,
+        Some("Generated from: some/header;l=1".into()),
+        None,
+        false,
+        /* path= */ None,
+        Some(Rc::new(ir::FormattedError {
+            fmt: "unsupported_message".into(),
+            message: "unsupported_message".into(),
+        })),
+        None,
+    );
+    TestDbFactory::new(make_ir_from_items(proto, [test_item.into()]))
+}
+
 #[gtest]
 fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
-    let factory = TestDbFactory::new();
+    let proto = IRProto::new();
+    let factory = make_factory(&proto);
     let db = factory.make_db(false);
     let _scope = error_report::ItemScope::new(
         db.errors(),
@@ -191,7 +197,8 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
 /// For these, we omit the mention of the location.
 #[gtest]
 fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
-    let factory = TestDbFactory::new();
+    let proto = IRProto::new();
+    let factory = make_factory(&proto);
     let db = factory.make_db(false);
     let _scope = error_report::ItemScope::new(
         db.errors(),
@@ -220,7 +227,8 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
 
 #[gtest]
 fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
-    let factory = TestDbFactory::new();
+    let proto = IRProto::new();
+    let factory = make_factory(&proto);
     let db = factory.make_db(true);
     let _scope = error_report::ItemScope::new(
         db.errors(),

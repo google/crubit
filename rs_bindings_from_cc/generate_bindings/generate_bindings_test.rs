@@ -8,8 +8,10 @@ use database::rs_snippet::{interpolate_spelled_rust_type, Mutability, RsTypeKind
 use googletest::{expect_eq, gtest};
 use ir::IR;
 use ir_matchers::assert_ir_matches;
-use ir_testing::retrieve_func;
-use multiplatform_ir_testing::{ir_from_assumed_lifetimes_cc, ir_from_cc, ir_from_cc_dependency};
+use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_func};
+use multiplatform_ir_testing::{
+    ir_proto_from_assumed_lifetimes_cc, ir_proto_from_cc, ir_proto_from_cc_dependency,
+};
 use quote::quote;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
 use test_generators::{generate_bindings_tokens_for_test, TestDbFactory};
@@ -20,7 +22,8 @@ use token_stream_printer::rs_tokens_to_formatted_string_for_tests;
 
 #[gtest]
 fn test_disable_thread_safety_warnings() -> Result<()> {
-    let ir = ir_from_cc("inline void foo() {}")?;
+    let proto = ir_proto_from_cc("inline void foo() {}")?;
+    let ir = make_test_ir(&proto)?;
     let rs_api_impl = generate_bindings_tokens_for_test(ir)?.rs_api_impl;
     assert_cc_matches!(
         rs_api_impl,
@@ -39,7 +42,8 @@ fn test_disable_thread_safety_warnings() -> Result<()> {
 
 #[gtest]
 fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
-    let ir = ir_from_cc(r#" int (*get_ptr_to_func())(float, double); "#)?;
+    let proto = ir_proto_from_cc(r#" int (*get_ptr_to_func())(float, double); "#)?;
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -79,7 +83,8 @@ fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
 
 #[gtest]
 fn test_func_ref() -> Result<()> {
-    let ir = ir_from_cc(r#" int (&get_ref_to_func())(float, double); "#)?;
+    let proto = ir_proto_from_cc(r#" int (&get_ref_to_func())(float, double); "#)?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -95,7 +100,8 @@ fn test_func_ref() -> Result<()> {
 
 #[gtest]
 fn test_func_ptr_where_params_are_raw_ptrs() -> Result<()> {
-    let ir = ir_from_cc(r#" const int* (*get_ptr_to_func())(const int*); "#)?;
+    let proto = ir_proto_from_cc(r#" const int* (*get_ptr_to_func())(const int*); "#)?;
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -152,7 +158,10 @@ mod custom_abi_tests {
         if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
             return Ok(());
         }
-        let ir = ir_from_cc(r#" int (*get_ptr_to_func())(float, double) [[clang::vectorcall]]; "#)?;
+        let proto = ir_proto_from_cc(
+            r#" int (*get_ptr_to_func())(float, double) [[clang::vectorcall]]; "#,
+        )?;
+        let ir = make_test_ir(&proto)?;
 
         // Verify that the test input correctly represents what we intend to
         // test - we want [[clang::vectorcall]] to apply to the returned
@@ -215,13 +224,14 @@ mod custom_abi_tests {
         // Using an `inline` keyword forces generation of a C++ thunk in
         // `rs_api_impl` (i.e. exercises `format_cpp_type`,
         // `format_cc_call_conv_as_clang_attribute` and similar code).
-        let ir = ir_from_cc(
+        let proto = ir_proto_from_cc(
             r#"
             inline int (*inline_get_ptr_to_func())(float, double) [[clang::vectorcall]] {
               return nullptr;
             }
         "#,
         )?;
+        let ir = make_test_ir(&proto)?;
 
         // Verify that the test input correctly represents what we intend to
         // test - we want [[clang::vectorcall]] to apply to the returned
@@ -264,12 +274,13 @@ mod custom_abi_tests {
         if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
             return Ok(());
         }
-        let ir = ir_from_cc(
+        let proto = ir_proto_from_cc(
             r#"
             float f_vectorcall_calling_convention(float p1, float p2) [[clang::vectorcall]];
             double f_c_calling_convention(double p1, double p2);
         "#,
         )?;
+        let ir = make_test_ir(&proto)?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_matches!(
             rs_api,
@@ -328,12 +339,13 @@ mod custom_abi_tests {
 
 #[gtest]
 fn test_item_order() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         "int first_func();
          struct FirstStruct {};
          int second_func();
          struct SecondStruct {};",
     )?;
+    let ir = make_test_ir(&proto)?;
 
     let rs_api =
         rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens_for_test(ir)?.rs_api)?;
@@ -360,7 +372,8 @@ fn test_item_order() -> Result<()> {
 /// empty drop impls.
 #[gtest]
 fn test_no_impl_drop() -> Result<()> {
-    let ir = ir_from_cc("struct Trivial {};")?;
+    let proto = ir_proto_from_cc("struct Trivial {};")?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_not_matches!(rs_api, quote! {impl Drop});
     assert_rs_not_matches!(rs_api, quote! {impl ::ctor::PinnedDrop});
@@ -371,7 +384,7 @@ fn test_no_impl_drop() -> Result<()> {
 /// fields
 #[gtest]
 fn test_impl_drop_user_defined_destructor() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#" struct NontrivialStruct { ~NontrivialStruct(); };
         struct UserDefinedDestructor {
             ~UserDefinedDestructor();
@@ -379,6 +392,7 @@ fn test_impl_drop_user_defined_destructor() -> Result<()> {
             NontrivialStruct nts;
         };"#,
     )?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -406,7 +420,7 @@ fn test_impl_drop_nontrivial_member_destructor() -> Result<()> {
     // TODO(jeanpierreda): This would be cleaner if the UserDefinedDestructor code were
     // omitted. For example, we simulate it so that UserDefinedDestructor
     // comes from another library.
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"struct UserDefinedDestructor final {
             ~UserDefinedDestructor();
         };
@@ -417,6 +431,7 @@ fn test_impl_drop_nontrivial_member_destructor() -> Result<()> {
             int x;
         };"#,
     )?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
@@ -440,7 +455,7 @@ fn test_impl_drop_nontrivial_member_destructor() -> Result<()> {
 
 #[gtest]
 fn test_type_alias() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             // MyTypedefDecl doc comment
             typedef int MyTypedefDecl;
@@ -455,6 +470,7 @@ fn test_type_alias() -> Result<()> {
             inline void f(MyTypedefDecl t) {}
         "#,
     )?;
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(
         rs_api,
@@ -479,12 +495,13 @@ fn test_type_alias() -> Result<()> {
 
 #[gtest]
 fn test_type_alias_skips_dunder() -> Result<()> {
-    let ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             struct __DunderStruct final { int x; };
             using AliasToDunder = __DunderStruct;
         "#,
     )?;
+    let ir = make_test_ir(&proto)?;
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! { pub type AliasToDunder });
     Ok(())
@@ -569,7 +586,11 @@ fn test_rs_type_kind_implements_copy() -> Result<()> {
             "LIFETIMES",
             if test.lifetimes { "#pragma clang lifetime_elision" } else { "" },
         );
-        let db_factory = TestDbFactory::from_cc(&cc_input)?;
+        let proto = ir_proto_from_cc(&cc_input)?;
+
+        let ir = make_test_ir(&proto)?;
+
+        let db_factory = TestDbFactory::new(ir);
         let db = db_factory.make_db();
         let ir = db.ir();
 
@@ -589,7 +610,11 @@ fn test_rs_type_kind_is_shared_ref_to_with_lifetimes() -> Result<()> {
         struct SomeStruct {};
         void foo(const SomeStruct& foo_param);
         void bar(SomeStruct& bar_param);";
-    let db_factory = TestDbFactory::from_cc(cc_input)?;
+    let proto = ir_proto_from_cc(cc_input)?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let db_factory = TestDbFactory::new(ir);
     let db = db_factory.make_db();
     let ir = db.ir();
     let record = ir.records().next().unwrap();
@@ -619,7 +644,11 @@ fn test_rs_type_kind_is_shared_ref_to_with_lifetimes() -> Result<()> {
 fn test_rs_type_kind_is_shared_ref_to_without_lifetimes() -> Result<()> {
     let cc_input = "struct SomeStruct {};
          void foo(const SomeStruct& foo_param);";
-    let db_factory = TestDbFactory::from_cc(cc_input)?;
+    let proto = ir_proto_from_cc(cc_input)?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let db_factory = TestDbFactory::new(ir);
     let db = db_factory.make_db();
     let ir = db.ir();
     let record = ir.records().next().unwrap();
@@ -643,7 +672,11 @@ fn test_rs_type_kind_lifetimes() -> Result<()> {
         using TypeAlias = int&;
         struct SomeStruct {};
         void foo(int a, int& b, int&& c, int* d, int** e, TypeAlias f, SomeStruct g); "#;
-    let db_factory = TestDbFactory::from_cc(cc_input)?;
+    let proto = ir_proto_from_cc(cc_input)?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let db_factory = TestDbFactory::new(ir);
     let db = db_factory.make_db();
     let ir = db.ir();
     let func = retrieve_func(ir, "foo");
@@ -670,7 +703,11 @@ fn test_rs_type_kind_lifetimes() -> Result<()> {
 #[gtest]
 fn test_rs_type_kind_lifetimes_raw_ptr() -> Result<()> {
     let cc_input = "void foo(int* a);";
-    let db_factory = TestDbFactory::from_cc(cc_input)?;
+    let proto = ir_proto_from_cc(cc_input)?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let db_factory = TestDbFactory::new(ir);
     let db = db_factory.make_db();
     let ir = db.ir();
     let f = retrieve_func(ir, "foo");
@@ -687,7 +724,11 @@ fn test_rs_type_kind_rejects_func_ptr_that_returns_struct_by_value() -> Result<(
         };
         SomeStruct (*get_ptr_to_func())();
     "#;
-    let db_factory = TestDbFactory::from_cc(cc_input)?;
+    let proto = ir_proto_from_cc(cc_input)?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let db_factory = TestDbFactory::new(ir);
     let db = db_factory.make_db();
     let ir = db.ir();
     let f = retrieve_func(ir, "get_ptr_to_func");
@@ -712,7 +753,11 @@ fn test_rs_type_kind_rejects_func_ptr_that_takes_struct_by_value() -> Result<()>
         };
         void (*get_ptr_to_func())(SomeStruct);
     "#;
-    let db_factory = TestDbFactory::from_cc(cc_input)?;
+    let proto = ir_proto_from_cc(cc_input)?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let db_factory = TestDbFactory::new(ir);
     let db = db_factory.make_db();
     let ir = db.ir();
     let f = retrieve_func(ir, "get_ptr_to_func");
@@ -731,7 +776,8 @@ fn test_rs_type_kind_rejects_func_ptr_that_takes_struct_by_value() -> Result<()>
 
 #[gtest]
 fn test_rust_keywords_are_escaped_in_rs_api_file() -> Result<()> {
-    let ir = ir_from_cc("struct type { int dyn; };")?;
+    let proto = ir_proto_from_cc("struct type { int dyn; };")?;
+    let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(rs_api, quote! { struct r#type { ... r#dyn: ::ffi_11::c_int ... } });
     Ok(())
@@ -739,7 +785,9 @@ fn test_rust_keywords_are_escaped_in_rs_api_file() -> Result<()> {
 
 #[gtest]
 fn test_leading_colons_for_cpp_type() -> Result<()> {
-    let mut ir = ir_from_cc("struct S {};")?;
+    let proto = ir_proto_from_cc("struct S {};")?;
+
+    let mut ir = make_test_ir(&proto)?;
     let target = ir.current_target().clone();
     let features = ir.target_crubit_features(&target);
     *ir.target_crubit_features_mut(&target) =
@@ -757,7 +805,8 @@ fn test_leading_colons_for_cpp_type() -> Result<()> {
 
 #[gtest]
 fn test_rust_keywords_are_not_escaped_in_rs_api_impl_file() -> Result<()> {
-    let ir = ir_from_cc("struct type { int dyn; };")?;
+    let proto = ir_proto_from_cc("struct type { int dyn; };")?;
+    let ir = make_test_ir(&proto)?;
     let rs_api_impl = generate_bindings_tokens_for_test(ir)?.rs_api_impl;
     assert_cc_matches!(
         rs_api_impl,
@@ -768,7 +817,7 @@ fn test_rust_keywords_are_not_escaped_in_rs_api_impl_file() -> Result<()> {
 
 #[gtest]
 fn test_namespace_module_items() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings {
             int func();
@@ -779,8 +828,11 @@ fn test_namespace_module_items() -> Result<()> {
             }
         }
     "#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -806,14 +858,17 @@ fn test_namespace_module_items() -> Result<()> {
 
 #[gtest]
 fn test_detail_outside_of_namespace_module() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings {
             int f();
         }
     "#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -837,7 +892,7 @@ fn test_detail_outside_of_namespace_module() -> Result<()> {
 
 #[gtest]
 fn test_assertions_outside_of_namespace_module() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings {
             struct S {
@@ -845,8 +900,11 @@ fn test_assertions_outside_of_namespace_module() -> Result<()> {
             };
         }
     "#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -869,7 +927,7 @@ fn test_assertions_outside_of_namespace_module() -> Result<()> {
 
 #[gtest]
 fn test_reopened_namespaces() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
     namespace test_namespace_bindings {
     namespace inner {}
@@ -878,8 +936,11 @@ fn test_reopened_namespaces() -> Result<()> {
     namespace test_namespace_bindings {
     namespace inner {}
     }  // namespace test_namespace_bindings"#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -896,15 +957,18 @@ fn test_reopened_namespaces() -> Result<()> {
 
 #[gtest]
 fn test_qualified_identifiers_in_impl_file() -> Result<()> {
-    let rs_api_impl = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
     namespace test_namespace_bindings {
         inline void f() {};
         struct S final {};
     }
     inline void useS(test_namespace_bindings::S s) {};"#,
-    )?)?
-    .rs_api_impl;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api_impl = generate_bindings_tokens_for_test(ir)?.rs_api_impl;
 
     assert_cc_matches!(
         rs_api_impl,
@@ -925,7 +989,7 @@ fn test_qualified_identifiers_in_impl_file() -> Result<()> {
 
 #[gtest]
 fn test_inline_namespace() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace test_namespace_bindings {
             inline namespace inner {
@@ -936,8 +1000,11 @@ fn test_inline_namespace() -> Result<()> {
         void processMyStructOutsideNamespace(test_namespace_bindings::inner::MyStruct s);
         void processMyStructSkipInlineNamespaceQualifier(test_namespace_bindings::MyStruct s);
         "#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -970,7 +1037,7 @@ fn test_inline_namespace() -> Result<()> {
 
 #[gtest]
 fn test_inline_namespace_not_marked_inline() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         inline namespace my_inline {}
         namespace foo {}
@@ -978,8 +1045,11 @@ fn test_inline_namespace_not_marked_inline() -> Result<()> {
             struct MyStruct final {};
         }
         "#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1009,13 +1079,15 @@ fn enable_supported(ir: &mut IR) {
 /// This is hard to test any other way than token comparison!
 #[gtest]
 fn test_supported_unknown_attr_enumerator() -> Result<()> {
-    let mut ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         enum Enum {
             kHidden [[maybe_unused]] = 1,
         };
         "#,
     )?;
+
+    let mut ir = make_test_ir(&proto)?;
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_matches!(rs_api, quote! {pub struct Enum});
@@ -1031,7 +1103,7 @@ fn test_supported_unknown_attr_enumerator() -> Result<()> {
 fn test_supported_unknown_attr_namespace() -> Result<()> {
     for nested_notpresent in ["struct NotPresent {};", "struct NotPresent;", "enum NotPresent {};"]
     {
-        let mut ir = ir_from_cc(&format!(
+        let proto = ir_proto_from_cc(&format!(
             r#"
             namespace [[gnu::visibility("default")]] unknown_attr_namespace {{
                 {nested_notpresent}
@@ -1042,6 +1114,8 @@ fn test_supported_unknown_attr_namespace() -> Result<()> {
             }}
             "#
         ))?;
+
+        let mut ir = make_test_ir(&proto)?;
         enable_supported(&mut ir);
         let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
         // The namespace, and everything in it or using it, will be missing from the
@@ -1057,7 +1131,7 @@ fn test_supported_unknown_attr_namespace() -> Result<()> {
 /// namespace with no unknown attribute.
 #[gtest]
 fn test_supported_unknown_attr_namespace_merge() -> Result<()> {
-    let mut ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace unknown_attr_namespace {
             enum Present {};
@@ -1070,6 +1144,8 @@ fn test_supported_unknown_attr_namespace_merge() -> Result<()> {
         }
         "#,
     )?;
+
+    let mut ir = make_test_ir(&proto)?;
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     // The namespace, and everything in it or using it, will be missing from the
@@ -1085,7 +1161,7 @@ fn test_supported_unknown_attr_namespace_merge() -> Result<()> {
 /// their typedefs are.
 #[gtest]
 fn test_supported_unknown_attr_namespace_typedef() -> Result<()> {
-    let mut ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         namespace [[gnu::visibility("default")]] unknown_attr_namespace {
             using NotPresent = int;
@@ -1096,6 +1172,8 @@ fn test_supported_unknown_attr_namespace_typedef() -> Result<()> {
         }
         "#,
     )?;
+
+    let mut ir = make_test_ir(&proto)?;
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
     // The namespace, and everything in it or using it, will be missing from the
@@ -1114,7 +1192,9 @@ fn test_default_crubit_features_disabled_supported() -> Result<()> {
         "struct NotPresent {};",
         "extern \"C\" int NotPresent() {}",
     ] {
-        let mut ir = ir_from_cc(item)?;
+        let proto = ir_proto_from_cc(item)?;
+
+        let mut ir = make_test_ir(&proto)?;
         ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
         assert_rs_not_matches!(rs_api, quote! {NotPresent});
@@ -1129,7 +1209,9 @@ fn test_default_crubit_features_disabled_supported() -> Result<()> {
 /// test.)
 #[gtest]
 fn test_default_crubit_features_disabled_wrapper() -> Result<()> {
-    let mut ir = ir_from_cc("struct NotPresent;")?;
+    let proto = ir_proto_from_cc("struct NotPresent;")?;
+
+    let mut ir = make_test_ir(&proto)?;
     ir.target_crubit_features_mut(&ir.current_target().clone()).clear();
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {NotPresent});
@@ -1139,10 +1221,12 @@ fn test_default_crubit_features_disabled_wrapper() -> Result<()> {
 
 #[gtest]
 fn test_default_crubit_features_disabled_dependency_supported_function_parameter() -> Result<()> {
-    let mut ir = ir_from_cc_dependency(
+    let proto = ir_proto_from_cc_dependency(
         "void Func(NotPresent);",
         /*dependency=*/ "struct NotPresent {};",
     )?;
+
+    let mut ir = make_test_ir_dependency(&proto, None)?;
     ir.target_crubit_features_mut(&ir::BazelLabel::from("//test:dependency")).clear();
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
@@ -1153,10 +1237,12 @@ fn test_default_crubit_features_disabled_dependency_supported_function_parameter
 
 #[gtest]
 fn test_default_crubit_features_disabled_dependency_wrapper_function_parameter() -> Result<()> {
-    let mut ir = ir_from_cc_dependency(
+    let proto = ir_proto_from_cc_dependency(
         "void Func(NotPresent);",
         "template <typename T> struct NotPresentTemplate {T x;}; using NotPresent = NotPresentTemplate<int>;",
     )?;
+
+    let mut ir = make_test_ir_dependency(&proto, None)?;
     ir.target_crubit_features_mut(&ir::BazelLabel::from("//test:dependency")).clear();
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
@@ -1167,7 +1253,9 @@ fn test_default_crubit_features_disabled_dependency_wrapper_function_parameter()
 
 #[gtest]
 fn test_default_crubit_features_disabled_dependency_supported_function_return_type() -> Result<()> {
-    let mut ir = ir_from_cc_dependency("NotPresent Func();", "struct NotPresent {};")?;
+    let proto = ir_proto_from_cc_dependency("NotPresent Func();", "struct NotPresent {};")?;
+
+    let mut ir = make_test_ir_dependency(&proto, None)?;
     ir.target_crubit_features_mut(&ir::BazelLabel::from("//test:dependency")).clear();
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
@@ -1178,9 +1266,11 @@ fn test_default_crubit_features_disabled_dependency_supported_function_return_ty
 
 #[gtest]
 fn test_default_crubit_features_disabled_dependency_wrapper_function_return_type() -> Result<()> {
-    let mut ir = ir_from_cc_dependency(
+    let proto = ir_proto_from_cc_dependency(
         "NotPresent Func();",
         "template <typename T> struct NotPresentTemplate {T x;}; using NotPresent = NotPresentTemplate<int>;")?;
+
+    let mut ir = make_test_ir_dependency(&proto, None)?;
     ir.target_crubit_features_mut(&ir::BazelLabel::from("//test:dependency")).clear();
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
@@ -1192,7 +1282,9 @@ fn test_default_crubit_features_disabled_dependency_wrapper_function_return_type
 #[gtest]
 fn test_default_crubit_features_disabled_dependency_struct() -> Result<()> {
     for dependency in ["struct NotPresent {signed char x;};", "using NotPresent = signed char;"] {
-        let mut ir = ir_from_cc_dependency("struct Present {NotPresent field;};", dependency)?;
+        let proto = ir_proto_from_cc_dependency("struct Present {NotPresent field;};", dependency)?;
+
+        let mut ir = make_test_ir_dependency(&proto, None)?;
         ir.target_crubit_features_mut(&ir::BazelLabel::from("//test:dependency")).clear();
         enable_supported(&mut ir);
         let BindingsTokens { rs_api, rs_api_impl: _ } = generate_bindings_tokens_for_test(ir)?;
@@ -1211,7 +1303,7 @@ fn test_default_crubit_features_disabled_dependency_struct() -> Result<()> {
 
 #[gtest]
 fn test_default_crubit_features_disabled_template_explicit_specialization() -> Result<()> {
-    let mut ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         template <typename T>
         struct X {
@@ -1226,6 +1318,8 @@ fn test_default_crubit_features_disabled_template_explicit_specialization() -> R
 
         inline X<int> NotPresent() { return X<int>(); }"#,
     )?;
+
+    let mut ir = make_test_ir(&proto)?;
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {NotPresent});
@@ -1235,11 +1329,13 @@ fn test_default_crubit_features_disabled_template_explicit_specialization() -> R
 
 #[gtest]
 fn test_default_crubit_features_disabled_variadic_function() -> Result<()> {
-    let mut ir = ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
         int sprintf(char* str, const char* format, ...);
         "#,
     )?;
+
+    let mut ir = make_test_ir(&proto)?;
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! {sprintf});
@@ -1249,13 +1345,16 @@ fn test_default_crubit_features_disabled_variadic_function() -> Result<()> {
 
 #[gtest]
 fn test_existing_rust_type_assert() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             // Broken class: uses i32 but has size 1.
             // (These asserts would fail if this were compiled.)
             class [[clang::annotate("crubit_internal_rust_type", "i32")]] Class final {};"#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1275,14 +1374,17 @@ fn test_existing_rust_type_assert() -> Result<()> {
 
 #[gtest]
 fn test_existing_rust_type_c_abi_incompatible() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             // Broken class: uses i32 but has size 1.
             // (These asserts would fail if this were compiled.)
             class [[clang::annotate("crubit_internal_rust_type", "i8")]] MyI8 {unsigned char field;};
             MyI8 Make();"#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1302,15 +1404,18 @@ fn test_existing_rust_type_c_abi_incompatible() -> Result<()> {
 
 #[gtest]
 fn test_existing_rust_type_c_abi_compatible() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             class
                 [[clang::annotate("crubit_internal_rust_type", "i8")]]
                 [[clang::annotate("crubit_internal_same_abi")]]
                 MyI8 {unsigned char field;};
             MyI8 Make();"#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
 
     assert_rs_matches!(
         rs_api,
@@ -1331,14 +1436,17 @@ fn test_existing_rust_type_c_abi_compatible() -> Result<()> {
 /// We cannot generate size/align assertions for incomplete types.
 #[gtest]
 fn test_existing_rust_type_assert_incomplete() -> Result<()> {
-    let rs_api = generate_bindings_tokens_for_test(ir_from_cc(
+    let proto = ir_proto_from_cc(
         r#"
             // Broken class: uses i32 but has size 1.
             // (These asserts would fail if this were compiled.)
             class [[clang::annotate("crubit_internal_rust_type", "i32")]] Incomplete;
         "#,
-    )?)?
-    .rs_api;
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
 
     assert_rs_not_matches!(
         rs_api,
@@ -1356,7 +1464,7 @@ fn test_existing_rust_type_assert_incomplete() -> Result<()> {
 
 #[gtest]
 fn test_existing_rust_type_reordered_template_args() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
             namespace crubit::rust_type {
             template <typename...>
@@ -1372,6 +1480,7 @@ fn test_existing_rust_type_reordered_template_args() -> Result<()> {
             void AcceptReordered(Reordered<int, float> x);
         "#,
     )?;
+    let ir = make_test_ir(&proto)?;
 
     assert_ir_matches!(
         ir,
@@ -1397,7 +1506,7 @@ fn test_existing_rust_type_reordered_template_args() -> Result<()> {
 
 #[gtest]
 fn test_existing_rust_type_default_template_args() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
             namespace crubit::rust_type {
             template <typename...>
@@ -1410,6 +1519,7 @@ fn test_existing_rust_type_default_template_args() -> Result<()> {
             void AcceptWithDefault(WithDefault<float> x);
         "#,
     )?;
+    let ir = make_test_ir(&proto)?;
 
     assert_ir_matches!(
         ir,
@@ -1435,7 +1545,7 @@ fn test_existing_rust_type_default_template_args() -> Result<()> {
 
 #[gtest]
 fn test_existing_rust_type_specialized_template_args() -> Result<()> {
-    let ir = ir_from_assumed_lifetimes_cc(
+    let proto = ir_proto_from_assumed_lifetimes_cc(
         r#"
             namespace crubit::rust_type {
             template <typename...>
@@ -1450,6 +1560,7 @@ fn test_existing_rust_type_specialized_template_args() -> Result<()> {
             void AcceptSpecialized(Container<float> a, Container<void> b);
         "#,
     )?;
+    let ir = make_test_ir(&proto)?;
 
     assert_ir_matches!(
         ir,
@@ -1489,13 +1600,15 @@ fn test_interpolate_spelled_rust_type() {
 fn test_nested_ir_end_to_end() -> Result<()> {
     let header_source = "namespace outer { struct Inner { int x; }; }";
 
-    let ir = ir_testing::ir_from_cc_dependency(
+    let proto = ir_testing::ir_proto_from_cc_dependency(
         multiplatform_testing::test_platform(),
         header_source,
         "// no dependencies",
         None,
         /*kythe_annotations=*/ false,
     )?;
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
 
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_matches!(

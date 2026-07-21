@@ -224,6 +224,7 @@ rust_library(
         "//common:arc_anyhow",
         "//common:multiplatform_testing",
         "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc:ir_rust_proto",
         "//rs_bindings_from_cc:ir_testing",
     ],
 )
@@ -331,6 +332,7 @@ multiplatform_rust_test(
         "//common:arc_anyhow",
         "//common:crubit_feature",
         "//common:token_stream_matchers",
+        "//rs_bindings_from_cc:ir_testing",
         "@crate_index//:googletest",
         "@crate_index//:quote",  # v1
     ],
@@ -486,6 +488,7 @@ multiplatform_rust_test(
         ":generate_bindings",
         ":lifetime_defaults_transform",
         ":multiplatform_ir_testing",
+        ":test_generators",
         "//common:arc_anyhow",
         "//common:error_report",
         "//common:multiplatform_testing",

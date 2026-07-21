@@ -17,19 +17,19 @@ use ir_rust_proto::IRProto;
 use protobuf::Parse;
 
 /// Generates `IR` from a header containing `header_source`.
-pub fn ir_from_cc(
+pub fn ir_proto_from_cc(
     platform: multiplatform_testing::Platform,
     header_source: &str,
-) -> Result<IR<'static>> {
-    ir_from_cc_dependency(platform, header_source, "// empty header", None, false)
+) -> Result<IRProto> {
+    ir_proto_from_cc_dependency(platform, header_source, "// empty header", None, false)
 }
 
-/// Generates `IR` from a header containing `header_source` with source annotations.
-pub fn ir_from_cc_annotated(
+/// Generates `IRProto` from a header containing `header_source` with source annotations.
+pub fn ir_proto_from_cc_annotated(
     platform: multiplatform_testing::Platform,
     header_source: &str,
-) -> Result<IR<'static>> {
-    ir_from_cc_dependency(platform, header_source, "// empty header", None, true)
+) -> Result<IRProto> {
+    ir_proto_from_cc_dependency(platform, header_source, "// empty header", None, true)
 }
 
 /// Prepends definitions for lifetime annotation macros to the code.
@@ -90,9 +90,13 @@ fn update_test_ir(ir: &mut IR<'_>, extra_feature: Option<&str>) {
     }
 }
 
-/// Create a testing `IR` instance from given items, using mock values for other
-/// fields.
-pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR<'static> {
+/// Create a testing `IR` instance from given items, using mock values for other fields.
+/// TODO(b/532184844): Should remove this method once IRProto is fully migrated to views.
+/// For now, constructing IR<'pb> in tests requires explicitly passing in a proto reference.
+pub fn make_ir_from_items<'pb>(
+    proto: &'pb ir_rust_proto::IRProto,
+    items: impl IntoIterator<Item = Item>,
+) -> IR<'pb> {
     let mut ir = make_ir_from_parts(
         items.into_iter().collect_vec(),
         /* public_headers= */ vec![],
@@ -101,6 +105,7 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR<'static> 
         /* crubit_features= */
         <BTreeMap<ir::BazelLabel, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new(),
         /* reexported_namespaces= */ vec![],
+        proto.as_view(),
     );
     update_test_ir(&mut ir, None);
     ir
@@ -115,41 +120,13 @@ pub const DEPENDENCY_TARGET: &str = "//test:dependency";
 /// `header_source` of the header will be updated to contain the `#include` line
 /// for the header with `dependency_header_source`. The name of the dependency
 /// target is exposed as `DEPENDENCY_TARGET`.
-pub fn ir_from_cc_dependency(
-    platform: multiplatform_testing::Platform,
-    header_source: &str,
-    dependency_header_source: &str,
-    extra_feature: Option<&str>,
-    kythe_annotations: bool,
-) -> Result<IR<'static>> {
-    ir_proto_from_cc_dependency(
-        platform,
-        header_source,
-        dependency_header_source,
-        extra_feature,
-        kythe_annotations,
-    )
-}
-
-pub fn ir_proto_from_cc(
-    platform: multiplatform_testing::Platform,
-    header_source: &str,
-) -> Result<IR<'static>> {
-    ir_proto_from_cc_dependency(platform, header_source, "// empty header", None, false)
-}
-
-/// Generates `IR` protobuf from a header containing `header_source`.
-///
-/// `header_source` of the header will be updated to contain the `#include` line
-/// for the header with `dependency_header_source`. The name of the dependency
-/// target is exposed as `DEPENDENCY_TARGET`.
 pub fn ir_proto_from_cc_dependency(
     platform: multiplatform_testing::Platform,
     header_source: &str,
     dependency_header_source: &str,
     extra_feature: Option<&str>,
     kythe_annotations: bool,
-) -> Result<IR<'static>> {
+) -> Result<IRProto> {
     const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
 
     unsafe extern "C" {
@@ -174,8 +151,18 @@ pub fn ir_proto_from_cc_dependency(
         )
         .into_boxed_slice()
     };
-    let proto = IRProto::parse(&proto_bytes)?;
-    let mut ir = ir::proto_to_ir(ir::IRProtoCow::Owned(proto))?;
+    Ok(IRProto::parse(&proto_bytes)?)
+}
+
+pub fn make_test_ir<'pb>(proto: &'pb IRProto) -> Result<IR<'pb>> {
+    make_test_ir_dependency(proto, None)
+}
+
+pub fn make_test_ir_dependency<'pb>(
+    proto: &'pb IRProto,
+    extra_feature: Option<&str>,
+) -> Result<IR<'pb>> {
+    let mut ir = ir::proto_to_ir(proto.as_view())?;
     update_test_ir(&mut ir, extra_feature);
     Ok(ir)
 }
@@ -187,7 +174,8 @@ pub fn ir_id(name: &str) -> Identifier {
 
 /// Creates a simple `Item::Record` with a given name.
 pub fn ir_record(platform: multiplatform_testing::Platform, name: &str) -> Record {
-    let ir = ir_from_cc(platform, "struct REPLACEME final {};").unwrap();
+    let proto = ir_proto_from_cc(platform, "struct REPLACEME final {};").unwrap();
+    let ir = make_test_ir(&proto).unwrap();
     for item in ir.items() {
         if let Item::Record(record) = item {
             let mut record = (**record).clone();
@@ -259,7 +247,8 @@ mod tests {
 
     #[gtest]
     fn test_features_ir_from_cc() -> Result<()> {
-        let ir = ir_from_cc(multiplatform_testing::Platform::X86Linux, "")?;
+        let proto = ir_proto_from_cc(multiplatform_testing::Platform::X86Linux, "")?;
+        let ir = make_test_ir(&proto)?;
         let enabled_features = ir.target_crubit_features(&ir::BazelLabel::from(TESTING_TARGET));
         expect_eq!(
             enabled_features,
@@ -273,7 +262,8 @@ mod tests {
     }
     #[gtest]
     fn test_features_ir_from_items() -> Result<()> {
-        let ir = make_ir_from_items([]);
+        let proto = ir_rust_proto::IRProto::new();
+        let ir = make_ir_from_items(&proto, []);
         let enabled_features = ir.target_crubit_features(&ir::BazelLabel::from(TESTING_TARGET));
         expect_eq!(
             enabled_features,
@@ -292,6 +282,7 @@ mod tests {
         r1.set_id(ItemId::new_for_testing(42));
         let mut r2 = ir_record(Platform::X86Linux, "R2");
         r2.set_id(ItemId::new_for_testing(42));
-        let _ = make_ir_from_items([r1.into(), r2.into()]);
+        let proto = ir_rust_proto::IRProto::new();
+        let _ = make_ir_from_items(&proto, [r1.into(), r2.into()]);
     }
 }
