@@ -1596,7 +1596,7 @@ fn generate_func_body(
     }
 }
 
-/// A structure describing how to represent any errors that occured as an
+/// A structure describing how to represent any errors that occurred as an
 /// unsatisfied trait bound. See `errors_as_unsatisfied_trait_bound` for more
 /// details.
 ///

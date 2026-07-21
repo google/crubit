@@ -251,7 +251,7 @@ pub fn generate_thunk_decl<'tcx>(
 
 /// Creates Rust code to convert a bridged type from a C ABI type to a Rust type.
 ///
-/// Expects an exising local of type `cpp_type` named `local_name` and shadows it
+/// Expects an existing local of type `cpp_type` named `local_name` and shadows it
 /// with a local of type `ty` named `local_name`.
 fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
     db: &BindingsGenerator<'tcx>,

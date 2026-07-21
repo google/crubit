@@ -831,8 +831,8 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
     })
 }
 
-/// Checks whether a definition matches a specific qualified name by matching it's definition path
-/// against `name`. Name must include the crate in it's path.
+/// Checks whether a definition matches a specific qualified name by matching its definition path
+/// against `name`. Name must include the crate in its path.
 fn matches_qualified_name(db: &BindingsGenerator<'_>, item_did: DefId, name: &[&str]) -> bool {
     let tcx = db.tcx();
     let path = tcx.def_path(item_did);

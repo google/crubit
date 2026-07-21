@@ -50,7 +50,7 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
         tcx,
         tcx.normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), unnorm_ty),
     );
-    // If our specialization contains a status type from additonal srcs, we should not generate a
+    // If our specialization contains a status type from additional srcs, we should not generate a
     // specialization for it.
     if self_ty.walk().any(|arg| {
         arg.as_type()
@@ -244,7 +244,7 @@ fn parse_tuple_template_specialization<'tcx>(
 struct OptionApiGenerator<'tcx> {
     arg_ty: TokenStream,
     needs_drop: bool,
-    // Reads our tag out of our Option<T> and defines a variable `tag` pointing at it's value.
+    // Reads our tag out of our Option<T> and defines a variable `tag` pointing at its value.
     // This is complicated by the niche optimization, so we abstract it as this reference so it's
     // easy to reference.
     tag_method: ApiSnippets<'tcx>,

@@ -960,7 +960,7 @@ fn test_format_item_generic_fn_as_ref_trait_basic_replacement() {
     });
 }
 
-/// This test was initally added to provide coverage/verification that
+/// This test was initially added to provide coverage/verification that
 /// _all_ generic parameters need to have valid replacements.
 #[test]
 fn test_format_item_generic_fn_into_trait_and_unsupported_trait() {
@@ -974,7 +974,7 @@ fn test_format_item_generic_fn_into_trait_and_unsupported_trait() {
     });
 }
 
-/// This test was initally added to provide coverage/verification that
+/// This test was initially added to provide coverage/verification that
 /// _all_ clauses/constraints of `T` have to be considered in
 /// `is_valid_replacement_for_generic_type_param`.
 #[test]

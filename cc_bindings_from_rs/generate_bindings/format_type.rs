@@ -527,7 +527,7 @@ pub fn format_ty_for_cc<'tcx>(
                         return Ok(CcSnippet { tokens, prereqs });
                     }
                     BridgedType::Composable(mut composable) => {
-                        // The existance of crubit_abi_type implies that the type can fully
+                        // The existence of crubit_abi_type implies that the type can fully
                         // composably bridge.
                         let mut tokens = composable.cpp_type.to_token_stream();
                         if !substs.is_empty() {
@@ -560,7 +560,7 @@ pub fn format_ty_for_cc<'tcx>(
 
                 prereqs.depend_on_def(db, def_id)?;
 
-                // Verify if definition of `ty` can be succesfully imported and bail otherwise.
+                // Verify if definition of `ty` can be successfully imported and bail otherwise.
                 db.generate_adt_core(def_id).with_context(|| {
                     format!("Failed to format type for the definition of `{ty}`")
                 })?;

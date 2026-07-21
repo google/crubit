@@ -125,7 +125,7 @@ fn stream_cargo_build(
     let reader = std::io::BufReader::new(
         command.stdout.take().ok_or_else(|| anyhow!("Failed to open cargo stdout"))?,
     );
-    // Print out any compiler diagnostics when we walk the iterator leaving only the complier artifacts.
+    // Print out any compiler diagnostics when we walk the iterator leaving only the compiler artifacts.
     Ok((
         command,
         cargo_metadata::Message::parse_stream(reader).filter_map(|message| match message {

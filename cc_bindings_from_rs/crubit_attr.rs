@@ -68,7 +68,7 @@ pub struct CrubitAttrs {
     pub cpp_enum: Option<Symbol>,
 
     /// The name of a function that can convert the annotated Rust
-    /// type into the C++ type specifed in the `cpp_type` attribute.
+    /// type into the C++ type specified in the `cpp_type` attribute.
     ///
     /// The generated bindings assume the function to be an `extern C` function
     /// with the following type signature:
@@ -80,7 +80,7 @@ pub struct CrubitAttrs {
     /// `cpp_type`.
     pub rust_to_cpp_converter: Option<Symbol>,
 
-    /// The name of a function that can convert the C++ type specifed in the
+    /// The name of a function that can convert the C++ type specified in the
     /// `cpp_type` attribute into the annotated Rust type.
     ///
     /// The generated bindings assume the function to be an `extern C` function

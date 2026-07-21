@@ -356,7 +356,7 @@ pub fn get_tag_size_with_padding(layout: Layout<'_>) -> u64 {
             // 1. A struct that contains the discriminant and a union of the variants
             // 2. A union where each field begins with a discriminant.
             //
-            // Rust interally uses the second representation, and we extract out the
+            // Rust internally uses the second representation, and we extract out the
             // discriminant to produce the first.
             //
             //

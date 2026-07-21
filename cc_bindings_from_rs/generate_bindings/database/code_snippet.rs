@@ -315,7 +315,7 @@ impl<'tcx> CcPrerequisites<'tcx> {
         self.defs = self.defs.difference(&adts).cloned().collect();
     }
 
-    /// Include the definition as a prequisite. For a local definition, this is adding it to the
+    /// Include the definition as a prerequisite. For a local definition, this is adding it to the
     ///`defs` set. For a foreign definition, an include path for the foreign crate must be available
     /// or this will fail.
     pub fn depend_on_def(&mut self, db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<()> {
