@@ -15,6 +15,7 @@
     *   They must be built with support for compression (zlib), which is the
         default build config.
 *   Requires Abseil libraries to be built and installed.
+*   Requires Protobuf libraries and protoc compiler (v27.1+) to be installed.
 *   Requires zlib (e.g. libz.so) to be available in the system include and lib
     paths.
 *   An up-to-date stable Rust toolchain.
@@ -89,6 +90,10 @@ export CLANG_LIB_STATIC_PATH=/path/to/llvm/and/clang/libs
 export ABSL_INCLUDE_PATH=/path/to/absl/include/dir
 ## This path contains libabsl_*
 export ABSL_LIB_STATIC_PATH=/path/to/absl/libs
+## This path contains google/protobuf/ dir with all the includes.
+export PROTOBUF_INCLUDE_PATH=/path/to/protobuf/include/dir
+## This path contains libprotobuf.a
+export PROTOBUF_LIB_STATIC_PATH=/path/to/protobuf/libs
 
 cargo build --bin rs_bindings_from_cc
 ```

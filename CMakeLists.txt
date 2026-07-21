@@ -23,6 +23,25 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(absl)
 
+find_package(Protobuf QUIET)
+if(NOT Protobuf_FOUND)
+  set(protobuf_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(protobuf_INSTALL OFF CACHE BOOL "" FORCE)
+  set(protobuf_BUILD_PROTOC_BINARIES OFF CACHE BOOL "" FORCE)
+  set(protobuf_BUILD_LIBPROTOC OFF CACHE BOOL "" FORCE)
+  FetchContent_Declare(
+    Protobuf
+    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
+    GIT_TAG main
+    FIND_PACKAGE_ARGS NAMES Protobuf
+  )
+  FetchContent_GetProperties(Protobuf)
+  if(NOT protobuf_POPULATED)
+    FetchContent_Populate(Protobuf)
+    add_subdirectory(${protobuf_SOURCE_DIR} ${protobuf_BINARY_DIR} EXCLUDE_FROM_ALL)
+  endif()
+endif()
+
 set(CRUBIT_SUBDIRS
   support
   support/internal
