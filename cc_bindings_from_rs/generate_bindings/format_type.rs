@@ -700,10 +700,14 @@ pub fn format_ty_for_cc<'tcx>(
             prereqs.includes.insert(db.support_header("internal/cxx20_backports.h"));
 
             let ret_type = format_ret_ty_for_cc(db, &sig)?.into_tokens(&mut prereqs);
-            let param_types =
-                format_param_types_for_cc_api(db, &sig, /*has_self_param=*/ false)?
-                    .into_iter()
-                    .map(|cc_param| cc_param.snippet.into_tokens(&mut prereqs));
+            let param_types = format_param_types_for_cc_api(
+                db,
+                sig.inputs(),
+                sig.output(),
+                /*has_self_param=*/ false,
+            )?
+            .into_iter()
+            .map(|cc_param| cc_param.snippet.into_tokens(&mut prereqs));
             let tokens = quote! {
                 crubit::type_identity_t<
                     #ret_type( #( #param_types ),* )
@@ -841,18 +845,18 @@ pub struct CcParamTy<'tcx> {
 /// Returns the C++ parameter types, both for thunks and non-thunks
 fn format_param_types_for_cc_impl<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    sig_mid: &ty::FnSig<'tcx>,
+    param_tys: &[Ty<'tcx>],
+    output: Ty<'tcx>,
     has_self_param: bool,
     is_thunk: bool,
 ) -> Result<Vec<CcParamTy<'tcx>>> {
-    let elided_is_output = has_elided_region(db.tcx(), sig_mid.output());
-    let param_types = sig_mid.inputs();
-    let mut snippets = Vec::with_capacity(param_types.len());
+    let elided_is_output = has_elided_region(db.tcx(), output);
+    let mut snippets = Vec::with_capacity(param_tys.len());
     let ctor_plain_values = db
         .crate_features(db.source_crate_num())
         .contains(crubit_feature::CrubitFeature::CtorPlainValues);
 
-    for (i, mut param_type) in param_types.iter().copied().enumerate() {
+    for (i, mut param_type) in param_tys.iter().copied().enumerate() {
         let is_self_param = i == 0 && has_self_param;
         let location = TypeLocation::FnParam { elided_is_output, is_self_param };
 
@@ -881,19 +885,21 @@ fn format_param_types_for_cc_impl<'tcx>(
 /// Returns the C++ parameter types for the C++ API.
 pub fn format_param_types_for_cc_api<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    sig_mid: &ty::FnSig<'tcx>,
+    param_tys: &[Ty<'tcx>],
+    output: Ty<'tcx>,
     has_self_param: bool,
 ) -> Result<Vec<CcParamTy<'tcx>>> {
-    format_param_types_for_cc_impl(db, sig_mid, has_self_param, /*is_thunk=*/ false)
+    format_param_types_for_cc_impl(db, param_tys, output, has_self_param, /*is_thunk=*/ false)
 }
 
 /// Returns the C++ parameter types for the thunks.
 pub fn format_param_types_for_cc_thunk<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    sig_mid: &ty::FnSig<'tcx>,
+    param_tys: &[Ty<'tcx>],
+    output: Ty<'tcx>,
     has_self_param: bool,
 ) -> Result<Vec<CcParamTy<'tcx>>> {
-    format_param_types_for_cc_impl(db, sig_mid, has_self_param, /*is_thunk=*/ true)
+    format_param_types_for_cc_impl(db, param_tys, output, has_self_param, /*is_thunk=*/ true)
 }
 
 fn try_ty_as_maybe_uninit<'tcx>(

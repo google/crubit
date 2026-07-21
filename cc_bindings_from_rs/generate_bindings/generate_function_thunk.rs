@@ -14,7 +14,7 @@ use code_gen_utils::make_rs_ident;
 use code_gen_utils::CcConstQualifier;
 use crubit_abi_type::CrubitAbiTypeToRustExprTokens;
 use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl};
-use database::BindingsGenerator;
+use database::{AdtCoreBindingsRsName, BindingsGenerator};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -28,7 +28,6 @@ use rustc_span::def_id::DefId;
 use rustc_span::symbol::{kw, sym, Symbol};
 use rustc_type_ir::inherent::Region;
 use std::collections::{BTreeSet, HashMap};
-use std::ops::AddAssign;
 
 /// Returns a C ABI-compatible C type to pass a tuple, or `None` if `possibly_tuple_ty` is not a
 /// tuple.
@@ -111,7 +110,8 @@ fn array_c_abi_c_type<'tcx>(tcx: ty::TyCtxt<'tcx>, inner_ty: ty::Ty<'tcx>) -> Re
 /// Formats a C++ declaration of a C-ABI-compatible-function wrapper around a Rust function.
 pub fn generate_thunk_decl<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    sig_mid: &ty::FnSig<'tcx>,
+    param_tys: &[Ty<'tcx>],
+    output: Ty<'tcx>,
     thunk_name: &Ident,
     has_self_param: bool,
     is_constructor: bool,
@@ -120,11 +120,7 @@ pub fn generate_thunk_decl<'tcx>(
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
-    let actual_output_ty = if is_async {
-        get_async_future_output_ty(tcx, sig_mid.output())?
-    } else {
-        sig_mid.output()
-    };
+    let actual_output_ty = if is_async { get_async_future_output_ty(tcx, output)? } else { output };
     let main_api_ret_type = if is_async {
         let CcSnippet { tokens: cc_ret_ty, prereqs: ret_prereqs } =
             db.format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })?;
@@ -138,9 +134,8 @@ pub fn generate_thunk_decl<'tcx>(
     };
 
     let mut thunk_params = {
-        let cpp_types = format_param_types_for_cc_thunk(db, sig_mid, has_self_param)?;
-        sig_mid
-            .inputs()
+        let cpp_types = format_param_types_for_cc_thunk(db, param_tys, output, has_self_param)?;
+        param_tys
             .iter()
             .zip(cpp_types)
             .map(|(&ty, cpp_type)| -> Result<TokenStream> {
@@ -200,10 +195,10 @@ pub fn generate_thunk_decl<'tcx>(
             .tokens;
         thunk_params.push(quote! { ::crubit::DynErasedFuture<#cc_ret_ty>* __ret_ptr });
         quote! { void }
-    } else if is_constructor && is_bridged_layout_compat_type(db, sig_mid.output()) {
+    } else if is_constructor && is_bridged_layout_compat_type(db, output) {
         thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
         quote! { void }
-    } else if let Some(briging) = is_bridged_type(db, sig_mid.output())? {
+    } else if let Some(briging) = is_bridged_type(db, output)? {
         match briging {
             BridgedType::Legacy { .. } => {
                 thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
@@ -214,12 +209,12 @@ pub fn generate_thunk_decl<'tcx>(
                 quote! { void }
             }
         }
-    } else if is_c_abi_compatible_by_value(tcx, sig_mid.output()) {
+    } else if is_c_abi_compatible_by_value(tcx, output) {
         main_api_ret_type
-    } else if let Some(tuple_abi) = tuple_c_abi_c_type(db, sig_mid.output()) {
+    } else if let Some(tuple_abi) = tuple_c_abi_c_type(db, output) {
         thunk_params.push(quote! { #tuple_abi __ret_ptr });
         quote! { void }
-    } else if let ty::TyKind::Array(inner_ty, _) = sig_mid.output().kind() {
+    } else if let ty::TyKind::Array(inner_ty, _) = output.kind() {
         let c_type = array_c_abi_c_type(db.tcx(), *inner_ty)?;
         thunk_params.push(quote! { #c_type __ret_ptr });
         quote! { void }
@@ -230,8 +225,7 @@ pub fn generate_thunk_decl<'tcx>(
 
     let mut attributes = vec![];
     // Attribute: noreturn
-    let rs_return_type = sig_mid.output();
-    if *rs_return_type.kind() == ty::TyKind::Never {
+    if *output.kind() == ty::TyKind::Never {
         attributes.push(quote! {[[noreturn]]});
     }
 
@@ -576,7 +570,8 @@ where
 pub fn generate_thunk_impl<'tcx>(
     db: &BindingsGenerator<'tcx>,
     fn_def_id: DefId,
-    sig: &ty::FnSig<'tcx>,
+    param_tys: &[Ty<'tcx>],
+    output: Ty<'tcx>,
     thunk_name: &str,
     fully_qualified_fn_name: TokenStream,
     is_constructor: bool,
@@ -588,12 +583,12 @@ pub fn generate_thunk_impl<'tcx>(
     // thunk cannot be dependent upon a particular choice of lifetime parameters. Using `'static`
     // everywhere is the easiest way to allow the thunk to compile regardless of the specific
     // relationship between the lifetime parameters.
-    let sig = replace_all_regions_with_static(tcx, *sig);
+    let output = replace_all_regions_with_static(tcx, output);
+    let param_tys = param_tys.iter().map(|ty| replace_all_regions_with_static(tcx, *ty));
 
     let param_names_and_types: Vec<(Ident, Ty)> = {
         let param_names = thunk_param_names(tcx, fn_def_id);
-        let param_types = sig.inputs().iter().copied();
-        param_names.zip(param_types).collect_vec()
+        param_names.zip(param_tys).collect_vec()
     };
 
     let mut thunk_params = param_names_and_types
@@ -617,7 +612,7 @@ pub fn generate_thunk_impl<'tcx>(
 
     let fn_args: Vec<Ident> =
         param_names_and_types.into_iter().map(|(rs_name, _ty)| rs_name).collect();
-    let output_is_bridged = is_bridged_type(db, sig.output())?;
+    let output_is_bridged = is_bridged_type(db, output)?;
     let thunk_return_type;
     let thunk_return_expression;
     if is_async {
@@ -633,10 +628,10 @@ pub fn generate_thunk_impl<'tcx>(
                 ::dyn_erased_future::DynErasedFuture::new(#fully_qualified_fn_name( #( #fn_args ),* ))
             );
         };
-    } else if output_is_bridged.is_none() && is_c_abi_compatible_by_value(tcx, sig.output()) {
+    } else if output_is_bridged.is_none() && is_c_abi_compatible_by_value(tcx, output) {
         // The output is not bridged and is C ABI compatible by-value, so we can just return
         // the result directly, and no out-param is needed.
-        thunk_return_type = db.format_ty_for_rs(sig.output())?;
+        thunk_return_type = db.format_ty_for_rs(output)?;
         thunk_return_expression = quote! {
             #fully_qualified_fn_name( #( #fn_args ),* )
         };
@@ -645,7 +640,7 @@ pub fn generate_thunk_impl<'tcx>(
         let rs_return_value_ident = format_ident!("__rs_return_value");
         thunk_return_type = quote! { () };
 
-        let return_ptr_type = if is_constructor && is_bridged_layout_compat_type(db, sig.output()) {
+        let return_ptr_type = if is_constructor && is_bridged_layout_compat_type(db, output) {
             quote! { *mut core::ffi::c_void }
         } else if let Some(BridgedType::Composable(_)) = output_is_bridged {
             // Composable bridging writes its Crubit ABI form in an unsigned char array.
@@ -660,7 +655,7 @@ pub fn generate_thunk_impl<'tcx>(
             db,
             &rs_return_value_ident,
             &return_ptr_ident,
-            sig.output(),
+            output,
             &mut extern_c_decls,
         )?;
         thunk_return_expression = quote! {
@@ -725,23 +720,60 @@ pub struct TraitThunks<'tcx> {
     pub rs_thunk_impls: RsSnippet,
 }
 
+/// Traits that Crubit supports generating bindings for.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum SupportedTrait<'tcx> {
+    Into(Ty<'tcx>),
+    From(Ty<'tcx>),
+    ToString,
+    Drop,
+    IntoIterator,
+    Default,
+    Clone,
+}
+
+impl<'tcx> SupportedTrait<'tcx> {
+    pub fn trait_id(&self, tcx: TyCtxt<'_>) -> DefId {
+        let trait_id = match self {
+            SupportedTrait::Into(_) => tcx.get_diagnostic_item(sym::Into),
+            SupportedTrait::From(_) => tcx.get_diagnostic_item(sym::From),
+            SupportedTrait::ToString => tcx.get_diagnostic_item(Symbol::intern("ToString")),
+            SupportedTrait::Drop => tcx.lang_items().drop_trait(),
+            SupportedTrait::IntoIterator => tcx.get_diagnostic_item(sym::IntoIterator),
+            SupportedTrait::Default => tcx.get_diagnostic_item(sym::Default),
+            SupportedTrait::Clone => tcx.lang_items().clone_trait(),
+        };
+        trait_id.expect("trait id not found, this is a bug")
+    }
+
+    pub fn type_args(&self) -> &[Ty<'tcx>] {
+        match self {
+            SupportedTrait::Into(ty) => std::slice::from_ref(ty),
+            SupportedTrait::From(ty) => std::slice::from_ref(ty),
+            SupportedTrait::ToString => &[],
+            SupportedTrait::Drop => &[],
+            SupportedTrait::IntoIterator => &[],
+            SupportedTrait::Default => &[],
+            SupportedTrait::Clone => &[],
+        }
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn generate_trait_thunks<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    trait_id: DefId,
-    // We do not support other generic args, yet.
-    type_args: &[Ty<'tcx>],
+    // Accepting SupportedTrait allows us to control the set of traits that can be used.
+    supported_trait: SupportedTrait<'tcx>,
     self_ty: Ty<'tcx>,
     def_id: Option<DefId>,
-    rs_fully_qualified_name: TokenStream,
+    rs_name: AdtCoreBindingsRsName,
     is_constructor: bool,
     within_template: bool,
 ) -> Result<TraitThunks<'tcx>> {
     let tcx = db.tcx();
-    assert!(tcx.is_trait(trait_id));
+    let trait_id = supported_trait.trait_id(tcx);
 
-    let is_drop_trait = Some(trait_id) == tcx.lang_items().drop_trait();
-    if is_drop_trait {
+    if let SupportedTrait::Drop = supported_trait {
         // To support "drop glue" we don't require that `self_ty` directly implements
         // the `Drop` trait.  Instead we require the caller to check
         // `needs_drop`.
@@ -753,7 +785,7 @@ pub fn generate_trait_thunks<'tcx>(
         tcx,
         self_ty,
         trait_id,
-        type_args.iter().copied().map(ty::GenericArg::from),
+        supported_trait.type_args().iter().copied().map(ty::GenericArg::from),
     ) {
         let display_name = def_id
             .and_then(|id| db.symbol_canonical_name(id))
@@ -781,6 +813,10 @@ pub fn generate_trait_thunks<'tcx>(
         // We don't support trait methods that use `Box<Self>` or `Pin<Self>` yet.
         self_ty.pinned_ty().is_none() && self_ty.boxed_ty().is_none()
     }
+    let substs = tcx.mk_args_trait(
+        self_ty,
+        supported_trait.type_args().iter().copied().map(ty::GenericArg::from),
+    );
 
     let mut method_name_to_cc_thunk_name = HashMap::new();
     let mut cc_thunk_decls = CcSnippet::default();
@@ -791,21 +827,18 @@ pub fn generate_trait_thunks<'tcx>(
         .filter(|item| matches!(item.kind, ty::AssocKind::Fn { .. }))
         .filter(|item| is_supported_trait_method(tcx, item.def_id));
     for method in methods {
-        let substs = {
-            let generics = tcx.generics_of(method.def_id);
-            if generics.own_params.iter().any(|p| p.kind.is_ty_or_const()) {
-                // Note that lifetime-generic methods are ok:
-                // * they are handled by `generate_thunk_decl` and `generate_thunk_impl`
-                // * the lifetimes are erased by `ty::Instance::mono` and *seem* to be erased by
-                //   `ty::Instance::new`
-                panic!(
-                    "So far callers of `generate_trait_thunks` didn't need traits with \
+        let generics = tcx.generics_of(method.def_id);
+        if generics.own_params.iter().any(|p| p.kind.is_ty_or_const()) {
+            // Note that lifetime-generic methods are ok:
+            // * they are handled by `generate_thunk_decl` and `generate_thunk_impl`
+            // * the lifetimes are erased by `ty::Instance::mono` and *seem* to be erased by
+            //   `ty::Instance::new`
+            panic!(
+                "So far callers of `generate_trait_thunks` didn't need traits with \
                       methods that are type-generic or const-generic"
-                );
-            }
-            assert!(generics.has_self);
-            tcx.mk_args_trait(self_ty, type_args.iter().copied().map(ty::GenericArg::from))
-        };
+            );
+        }
+        assert!(generics.has_self);
 
         let thunk_name = make_thunk_name(db, ThunkKind::TraitMethod { method, substs });
 
@@ -828,71 +861,76 @@ pub fn generate_trait_thunks<'tcx>(
 
         let thunk_name_cc_ident = format_cc_ident(db, &thunk_name)?;
         let is_async = tcx.asyncness(method.def_id).is_async();
-        cc_thunk_decls.add_assign(generate_thunk_decl(
+        cc_thunk_decls += generate_thunk_decl(
             db,
-            &sig_mid,
+            sig_mid.inputs(),
+            sig_mid.output(),
             &thunk_name_cc_ident,
             /*has_self_param=*/ method.is_method(),
             is_constructor,
             within_template,
             is_async,
-        )?);
+        )?;
         method_name_to_cc_thunk_name.insert(method.name(), thunk_name_cc_ident);
 
-        rs_thunk_impls += {
-            let struct_name = &rs_fully_qualified_name;
-            if is_drop_trait {
-                // Manually formatting (instead of depending on `generate_thunk_impl`)
-                // to avoid https://doc.rust-lang.org/error_codes/E0040.html
-                let thunk_name = make_rs_ident(&thunk_name);
-                RsSnippet::new(quote! {
+        rs_thunk_impls += if let SupportedTrait::Drop = supported_trait {
+            // Manually formatting (instead of depending on `generate_thunk_impl`)
+            // to avoid https://doc.rust-lang.org/error_codes/E0040.html
+            let thunk_name = make_rs_ident(&thunk_name);
+            match &rs_name {
+                AdtCoreBindingsRsName::FullyQualified(struct_name) => RsSnippet::new(quote! {
                     #[unsafe(no_mangle)]
                     extern "C" fn #thunk_name(__self: *mut #struct_name) {
                         unsafe { ::core::ptr::drop_in_place(__self) };
                     }
-                })
-            } else {
-                let fully_qualified_fn_name = {
-                    let fully_qualified_trait_name = db
-                        .symbol_canonical_name(trait_id)
-                        .ok_or_else(|| anyhow!("Failed to get canonical name for {trait_id:?}"))?
-                        .format_for_rs();
-                    let method_name = make_rs_ident(method.name().as_str());
-                    let args = type_args
-                        .iter()
-                        .map(|ty| {
-                            let static_ty = replace_all_regions_with_static(tcx, *ty);
-                            // Check our type has no variables.
-                            assert!(
-                                !static_ty.flags().contains(
-                                    ty::TypeFlags::HAS_PARAM
-                                        | ty::TypeFlags::HAS_INFER
-                                        | ty::TypeFlags::HAS_PLACEHOLDER
-                                        | ty::TypeFlags::HAS_FREE_REGIONS
-                                ),
-                                "Generic types are not supported in trait impls yet."
-                            );
-                            db.format_ty_for_rs(static_ty)
-                                .expect("We've replaced all types with static")
-                        })
-                        .collect_vec();
-                    let generics = if args.is_empty() {
-                        quote! {}
-                    } else {
-                        quote! { < #( #args ),* > }
-                    };
-                    quote! { <#struct_name as #fully_qualified_trait_name #generics >::#method_name }
-                };
-                generate_thunk_impl(
-                    db,
-                    method.def_id,
-                    &sig_mid,
-                    &thunk_name,
-                    fully_qualified_fn_name,
-                    is_constructor,
-                    is_async,
-                )?
+                }),
             }
+        } else {
+            let fully_qualified_trait_name = db
+                .symbol_canonical_name(trait_id)
+                .ok_or_else(|| anyhow!("Failed to get canonical name for {trait_id:?}"))?
+                .format_for_rs();
+            let method_name = make_rs_ident(method.name().as_str());
+            let args = supported_trait
+                .type_args()
+                .iter()
+                .map(|ty| {
+                    let static_ty = replace_all_regions_with_static(tcx, *ty);
+                    // Check our type has no variables.
+                    assert!(
+                        !static_ty.flags().contains(
+                            ty::TypeFlags::HAS_PARAM
+                                | ty::TypeFlags::HAS_INFER
+                                | ty::TypeFlags::HAS_PLACEHOLDER
+                                | ty::TypeFlags::HAS_FREE_REGIONS
+                        ),
+                        "Generic types are not supported in trait impls yet."
+                    );
+                    db.format_ty_for_rs(static_ty).expect("We've replaced all types with static")
+                })
+                .collect_vec();
+            let generics = if args.is_empty() {
+                quote! {}
+            } else {
+                quote! { < #( #args ),* > }
+            };
+
+            let struct_name = match &rs_name {
+                AdtCoreBindingsRsName::FullyQualified(name) => name,
+            };
+            let fully_qualified_fn_name = quote! {
+                <#struct_name as #fully_qualified_trait_name #generics >::#method_name
+            };
+            generate_thunk_impl(
+                db,
+                method.def_id,
+                sig_mid.inputs(),
+                sig_mid.output(),
+                &thunk_name,
+                fully_qualified_fn_name,
+                is_constructor,
+                is_async,
+            )?
         };
     }
 

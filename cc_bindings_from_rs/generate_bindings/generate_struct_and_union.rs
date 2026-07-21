@@ -22,7 +22,7 @@ use crate::{
     does_type_implement_trait, generate_const, generate_deprecated_tag, generate_must_use_tag,
     generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
     get_tag_size_with_padding, is_bridged_type, is_copy, BridgedBuiltin, RsSnippet, SortedByDef,
-    TraitThunks,
+    SupportedTrait, TraitThunks,
 };
 
 use arc_anyhow::{Context, Result};
@@ -31,7 +31,10 @@ use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, TemplateSpecialization,
     TraitImplTemplateSpecialization,
 };
-use database::{AdtCoreBindings, BindingsGenerator, StaticMethodMode, TypeLocation};
+use database::{
+    AdtCoreBindings, AdtCoreBindingsKind, AdtCoreBindingsRsName, BindingsGenerator,
+    StaticMethodMode, TypeLocation,
+};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
@@ -71,7 +74,8 @@ pub(crate) fn adt_core_bindings_needs_drop<'tcx>(
     tcx: TyCtxt<'tcx>,
 ) -> bool {
     let typing_env = bindings
-        .def_id
+        .kind
+        .def_id()
         .map(|id| post_analysis_typing_env(tcx, id))
         .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
     bindings.self_ty.needs_drop(tcx, typing_env)
@@ -213,9 +217,13 @@ fn generate_cpp_enum<'tcx>(
     main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
 
     // Generate relevant attributes.
-    let rs_type = core.rs_fully_qualified_name.to_string();
+    let (def_id, rs_type) = match &core.kind {
+        AdtCoreBindingsKind::Nominal { def_id, rs_fully_qualified_name } => {
+            (*def_id, rs_fully_qualified_name.to_string())
+        }
+        kind => unreachable!("Expected AdtCoreBindingsKind::Nominal for cpp_enum, found: {kind:?}"),
+    };
     let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
-    let def_id = core.def_id.expect("cpp_enum requires a valid DefId");
     if let Some(tag) = generate_must_use_tag(tcx, def_id) {
         attributes.push(tag);
     }
@@ -505,7 +513,7 @@ fn generate_into_impls<'tcx>(
     let cc_struct_name = &core.cc_short_name;
 
     let into_trait = tcx.get_diagnostic_item(sym::Into).expect("Could not find Into trait");
-    let Some(def_id) = core.def_id else {
+    let Some(def_id) = core.kind.def_id() else {
         // If we don't have a def_id, we can't generate Into impls.
         return ApiSnippets::default();
     };
@@ -573,11 +581,10 @@ fn generate_into_impls<'tcx>(
                 rs_thunk_impls: rs_details,
             } = generate_trait_thunks(
                 db,
-                into_trait,
-                &[middle_ty],
+                SupportedTrait::Into(middle_ty),
                 core.self_ty,
-                core.def_id,
-                core.rs_fully_qualified_name.clone(),
+                core.kind.def_id(),
+                core.kind.rs_name(),
                 /*is_constructor=*/ false,
                 /*within_template=*/ false,
             )
@@ -676,7 +683,9 @@ fn generate_constructor_impls<'tcx>(
     let cc_struct_name = &core.cc_short_name;
 
     // We need there to be a `def_id` to generate a constructor from.
-    let def_id = core.def_id.expect("ADT must have a def_id");
+    let AdtCoreBindingsKind::Nominal { def_id, ref rs_fully_qualified_name } = core.kind else {
+        panic!("generate_constructor_impls expects a nominal ADT");
+    };
 
     // Find From impls from the selected ADT
     let from_trait = tcx.get_diagnostic_item(sym::From).expect("Could not find From trait");
@@ -771,11 +780,10 @@ fn generate_constructor_impls<'tcx>(
                     rs_thunk_impls: rs_details,
                 } = generate_trait_thunks(
                     db,
-                    from_trait,
-                    &[src_ty],
+                    SupportedTrait::From(src_ty),
                     core.self_ty,
-                    core.def_id,
-                    core.rs_fully_qualified_name.clone(),
+                    core.kind.def_id(),
+                    core.kind.rs_name(),
                     /*is_constructor=*/ true,
                     /*within_template=*/ false,
                 )
@@ -820,7 +828,8 @@ fn generate_constructor_impls<'tcx>(
                 let thunk_name_cc_ident = format_cc_ident(db, &thunk_name).ok()?;
                 let cc_thunk_decls = generate_thunk_decl(
                     db,
-                    &sig,
+                    sig.inputs(),
+                    sig.output(),
                     &thunk_name_cc_ident,
                     /*has_self_param=*/ true,
                     /*is_constructor=*/ true,
@@ -840,13 +849,13 @@ fn generate_constructor_impls<'tcx>(
                     } else {
                         let static_src_ty = replace_all_regions_with_static(tcx, src_ty);
                         let src_rs = db.format_ty_for_rs(static_src_ty).ok()?;
-                        let foo_rs = &core.rs_fully_qualified_name;
                         let fully_qualified_fn_name =
-                            quote! { <#src_rs as ::core::convert::Into<#foo_rs>>::into };
+                            quote! { <#src_rs as ::core::convert::Into<#rs_fully_qualified_name>>::into };
                         generate_thunk_impl(
                             db,
                             into_trait_assoc_fn.def_id,
-                            &sig,
+                            sig.inputs(),
+                            sig.output(),
                             &thunk_name,
                             fully_qualified_fn_name,
                             /*is_constructor=*/ true,
@@ -1319,7 +1328,7 @@ fn generate_display_impl<'tcx>(
     core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
-    let Some(def_id) = core.def_id else {
+    let Some(def_id) = core.kind.def_id() else {
         return ApiSnippets::default();
     };
     let err_snippets = |err| generate_unsupported_def(db, def_id, err).into_main_api();
@@ -1343,18 +1352,13 @@ fn generate_display_impl<'tcx>(
         return err_snippets(anyhow!("`core` crate does not support `std::fmt::Display` because it requires `alloc::string::String` which is not available in `core`"));
     }
 
-    let Some(to_string_trait_id) = tcx.get_diagnostic_item(Symbol::intern("ToString")) else {
-        return err_snippets(anyhow!("Internal Crubit Error: `ToString` trait not found."));
-    };
-
     let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls: rs_details } =
         match generate_trait_thunks(
             db,
-            to_string_trait_id,
-            &[],
+            SupportedTrait::ToString,
             core.self_ty,
-            core.def_id,
-            core.rs_fully_qualified_name.clone(),
+            core.kind.def_id(),
+            core.kind.rs_name(),
             /*is_constructor=*/ false,
             /*within_template=*/ true,
         ) {
@@ -1415,7 +1419,7 @@ pub fn generate_adt<'tcx>(
 
     // Handle `cpp_enum` structs.
     let crubit_attrs =
-        core.def_id.and_then(|id| crubit_attr::get_attrs(tcx, id).ok()).unwrap_or_default();
+        core.kind.def_id().and_then(|id| crubit_attr::get_attrs(tcx, id).ok()).unwrap_or_default();
     if crubit_attrs.cpp_enum.is_some() {
         return generate_cpp_enum(db, core);
     }
@@ -1423,19 +1427,16 @@ pub fn generate_adt<'tcx>(
     let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
 
     let destructor_snippets = if adt_core_bindings_needs_drop(&core, tcx) {
-        let drop_trait_id =
-            tcx.lang_items().drop_trait().expect("`Drop` trait should be present if `needs_drop");
         let TraitThunks {
             method_name_to_cc_thunk_name,
             mut cc_thunk_decls,
             rs_thunk_impls: rs_details,
         } = generate_trait_thunks(
             db,
-            drop_trait_id,
-            &[],
+            SupportedTrait::Drop,
             core.self_ty,
-            core.def_id,
-            core.rs_fully_qualified_name.clone(),
+            core.kind.def_id(),
+            core.kind.rs_name(),
             /*is_constructor=*/ false,
             /*within_template=*/ false,
         )
@@ -1488,7 +1489,8 @@ pub fn generate_adt<'tcx>(
 
     let mut member_function_names = HashSet::<String>::new();
     let impl_items_snippets = core
-        .def_id
+        .kind
+        .def_id()
         .map(|id| tcx.inherent_impls(id))
         .unwrap_or_default()
         .iter()
@@ -1512,15 +1514,17 @@ pub fn generate_adt<'tcx>(
     let constructor_operator_snippets = generate_constructor_impls(db, core.as_ref());
     let compare_snippets = generate_ord_and_partialord_impls(db, core.as_ref());
     let display_snippets = generate_display_impl(db, core.as_ref());
-    let into_iterator_snippets = generate_into_iterator_impls(
-        db,
-        core.as_ref(),
-        &mut member_function_names,
-    )
-    .unwrap_or_else(|err| {
-        generate_unsupported_def(db, core.def_id.expect("DefId should be present for an ADT"), err)
-            .into_main_api()
-    });
+    let into_iterator_snippets =
+        generate_into_iterator_impls(db, core.as_ref(), &mut member_function_names).unwrap_or_else(
+            |err| {
+                generate_unsupported_def(
+                    db,
+                    core.kind.def_id().expect("DefId should be present for an ADT"),
+                    err,
+                )
+                .into_main_api()
+            },
+        );
 
     let ApiSnippets {
         main_api: public_functions_main_api,
@@ -1552,7 +1556,7 @@ pub fn generate_adt<'tcx>(
         db,
         core.self_ty,
         &core.cc_short_name,
-        &core.rs_fully_qualified_name,
+        &core.kind.rs_name(),
         core.size_in_bytes,
         core.alignment_in_bytes,
         &member_function_names,
@@ -1563,14 +1567,17 @@ pub fn generate_adt<'tcx>(
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
     let main_api = {
-        let rs_type = core.rs_fully_qualified_name.to_string();
-        let mut attributes = vec![
-            quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)},
-            quote! {alignas(#alignment)},
-            quote! {[[clang::trivial_abi]]},
-        ];
+        let mut attributes = vec![];
+        match core.kind.rs_name() {
+            AdtCoreBindingsRsName::FullyQualified(name) => {
+                let name = name.to_string();
+                attributes.push(quote! { CRUBIT_INTERNAL_RUST_TYPE(#name) });
+            }
+        };
+        attributes.extend([quote! {alignas(#alignment)}, quote! {[[clang::trivial_abi]]}]);
         if core
-            .def_id
+            .kind
+            .def_id()
             .map(|id| db.repr_attrs(id).to_vec())
             .unwrap_or_default()
             .iter()
@@ -1580,7 +1587,7 @@ pub fn generate_adt<'tcx>(
         }
 
         // Additional attributes
-        if let Some(def_id) = core.def_id {
+        if let Some(def_id) = core.kind.def_id() {
             if let Some(tag) = generate_must_use_tag(tcx, def_id) {
                 attributes.push(tag);
             }
@@ -1589,14 +1596,15 @@ pub fn generate_adt<'tcx>(
             }
         }
 
-        let doc_comment = core.def_id.map(|id| generate_doc_comment(db, id)).unwrap_or_default();
+        let doc_comment =
+            core.kind.def_id().map(|id| generate_doc_comment(db, id)).unwrap_or_default();
         let keyword = &core.keyword;
 
         let mut prereqs = CcPrerequisites::default();
         prereqs.includes.insert(db.support_header("annotations_internal.h"));
         let public_functions_main_api = public_functions_main_api.into_tokens(&mut prereqs);
         let fields_main_api = fields_main_api.into_tokens(&mut prereqs);
-        if let Some(def_id) = core.def_id {
+        if let Some(def_id) = core.kind.def_id() {
             prereqs.fwd_decls.remove(&def_id);
         }
 
@@ -1623,7 +1631,7 @@ pub fn generate_adt<'tcx>(
         let mut prereqs = CcPrerequisites::default();
         let public_functions_cc_details = public_functions_cc_details.into_tokens(&mut prereqs);
         let fields_cc_details = fields_cc_details.into_tokens(&mut prereqs);
-        if let Some(def_id) = core.def_id {
+        if let Some(def_id) = core.kind.def_id() {
             prereqs.defs.insert(def_id);
         }
         CcSnippet {
@@ -1643,15 +1651,19 @@ pub fn generate_adt<'tcx>(
         }
     };
     let rs_details = {
-        let adt_rs_name = &core.rs_fully_qualified_name;
+        let size_align_assertions = match core.kind.rs_name() {
+            AdtCoreBindingsRsName::FullyQualified(name) => quote! {
+                const _: () = assert!(::std::mem::size_of::<#name>() == #size);
+                const _: () = assert!(::std::mem::align_of::<#name>() == #alignment);
+            },
+        };
         let mut extern_c_decls = BTreeSet::new();
         let public_functions_rs_details =
             public_functions_rs_details.into_tokens(&mut extern_c_decls);
         let fields_rs_details = fields_rs_details.into_tokens(&mut extern_c_decls);
         RsSnippet {
             tokens: quote! {
-                const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
-                const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
+                #size_align_assertions
                 #public_functions_rs_details
                 #fields_rs_details
             },
@@ -1775,14 +1787,13 @@ pub fn generate_adt_core<'tcx>(
     ensure!(size_in_bytes != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
 
     Ok(Rc::new(AdtCoreBindings {
-        def_id: Some(def_id),
         keyword,
         cc_short_name: cpp_name,
-        rs_fully_qualified_name,
         cc_fully_qualified_name,
         self_ty,
         alignment_in_bytes,
         size_in_bytes,
+        kind: AdtCoreBindingsKind::Nominal { def_id, rs_fully_qualified_name },
     }))
 }
 
@@ -1993,7 +2004,7 @@ fn generate_variant_ctor<'tcx>(
                             rustc_abi::Variants::Multiple { tag_field, .. } => {
                                 let typing_env = post_analysis_typing_env(
                                     tcx,
-                                    core.def_id.expect("Enums must have a DefId"),
+                                    core.kind.def_id().expect("Enums must have a DefId"),
                                 );
                                 let tag = tcx.tag_for_variant(typing_env.as_query_input((
                                     tcx.erase_and_anonymize_regions(core.self_ty),
@@ -2913,11 +2924,15 @@ fn generate_fields<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     cc_short_name: &Ident,
-    rs_fully_qualified_name: &TokenStream,
+    rs_name: &AdtCoreBindingsRsName,
     size_in_bytes: u64,
     alignment_in_bytes: u64,
     member_function_names: &HashSet<String>,
 ) -> ApiSnippets<'tcx> {
+    let rs_fully_qualified_name: &TokenStream = match rs_name {
+        AdtCoreBindingsRsName::FullyQualified(name) => name,
+    };
+
     let TyKind::Adt(adt_def, adt_generic_args) = self_ty.kind() else {
         panic!("Attempted to generate fields for a non-ADT type: {:?}", self_ty)
     };
@@ -2996,13 +3011,9 @@ enum PassingMode {
     MutRef,
 }
 
-fn get_into_iter_ty<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    self_ty: Ty<'tcx>,
-    into_iterator_trait_id: DefId,
-) -> Result<Ty<'tcx>> {
+fn get_into_iter_ty<'tcx>(tcx: TyCtxt<'tcx>, self_ty: Ty<'tcx>) -> Result<Ty<'tcx>> {
     let into_iter_assoc_item = tcx
-        .associated_items(into_iterator_trait_id)
+        .associated_items(SupportedTrait::IntoIterator.trait_id(tcx))
         .in_definition_order()
         .find(|item| {
             item.name() == rustc_span::symbol::Symbol::intern("IntoIter")
@@ -3026,13 +3037,9 @@ fn get_into_iter_ty<'tcx>(
     .map_err(|_| anyhow!("Failed to normalize `<{} as IntoIterator>::IntoIter`", self_ty))
 }
 
-fn get_into_iter_item_ty<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    self_ty: Ty<'tcx>,
-    into_iterator_trait_id: DefId,
-) -> Result<Ty<'tcx>> {
+fn get_into_iter_item_ty<'tcx>(tcx: TyCtxt<'tcx>, self_ty: Ty<'tcx>) -> Result<Ty<'tcx>> {
     let item_assoc_item = tcx
-        .associated_items(into_iterator_trait_id)
+        .associated_items(SupportedTrait::IntoIterator.trait_id(tcx))
         .in_definition_order()
         .find(|item| {
             item.name() == Symbol::intern("Item") && matches!(item.kind, ty::AssocKind::Type { .. })
@@ -3057,7 +3064,6 @@ fn get_into_iter_item_ty<'tcx>(
 fn generate_begin_and_end_for_type<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
-    into_iterator_trait_id: DefId,
     passing_mode: PassingMode,
 ) -> Result<Option<ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
@@ -3097,13 +3103,13 @@ fn generate_begin_and_end_for_type<'tcx>(
         return Ok(Some(ApiSnippets { main_api, ..Default::default() }));
     }
 
-    if !does_type_implement_trait(tcx, check_ty, into_iterator_trait_id, []) {
+    if !does_type_implement_trait(tcx, check_ty, SupportedTrait::IntoIterator.trait_id(tcx), []) {
         return Ok(None);
     }
 
-    let into_iter_ty = get_into_iter_ty(tcx, check_ty, into_iterator_trait_id)?;
+    let into_iter_ty = get_into_iter_ty(tcx, check_ty)?;
 
-    let item_ty = get_into_iter_item_ty(tcx, check_ty, into_iterator_trait_id)?;
+    let item_ty = get_into_iter_item_ty(tcx, check_ty)?;
 
     let _ = db
         .format_ty_for_cc(item_ty, TypeLocation::Other)
@@ -3119,11 +3125,10 @@ fn generate_begin_and_end_for_type<'tcx>(
     let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls } =
         generate_trait_thunks(
             db,
-            into_iterator_trait_id,
-            &[],
+            SupportedTrait::IntoIterator,
             check_ty,
-            core.def_id,
-            rs_fully_qualified_name,
+            core.kind.def_id(),
+            AdtCoreBindingsRsName::FullyQualified(rs_fully_qualified_name),
             /*is_constructor=*/ false,
             /*within_template=*/ false,
         )?;
@@ -3133,7 +3138,7 @@ fn generate_begin_and_end_for_type<'tcx>(
         .expect("IntoIterator trait missing into_iter method");
 
     let into_iter_fn_assoc_item = tcx
-        .associated_items(into_iterator_trait_id)
+        .associated_items(SupportedTrait::IntoIterator.trait_id(tcx))
         .in_definition_order()
         .find(|item| item.name() == sym::into_iter && matches!(item.kind, ty::AssocKind::Fn { .. }))
         .expect("IntoIterator should have into_iter method");
@@ -3278,8 +3283,6 @@ fn generate_into_iterator_impls<'tcx>(
     core: &AdtCoreBindings<'tcx>,
     member_function_names: &mut HashSet<String>,
 ) -> Result<ApiSnippets<'tcx>> {
-    let tcx = db.tcx();
-
     if member_function_names.contains("begin")
         || member_function_names.contains("end")
         || member_function_names.contains("into_iter")
@@ -3296,16 +3299,14 @@ fn generate_into_iterator_impls<'tcx>(
         bail!("{} has a field named `begin`, `end`, or `into_iter`, which prevents binding methods for IntoIterator.", core.self_ty);
     }
 
-    let into_iterator_trait_id = tcx
-        .get_diagnostic_item(sym::IntoIterator)
-        .expect("Could not find IntoIterator trait. Please file a crubit bug.");
-
     Ok([PassingMode::Value, PassingMode::SharedRef, PassingMode::MutRef]
         .into_iter()
-        .map(|mode| generate_begin_and_end_for_type(db, core, into_iterator_trait_id, mode))
+        .map(|mode| generate_begin_and_end_for_type(db, core, mode))
         .filter_map(|result| {
             result.unwrap_or_else(|err| {
-                core.def_id.map(|def_id| generate_unsupported_def(db, def_id, err).into_main_api())
+                core.kind
+                    .def_id()
+                    .map(|def_id| generate_unsupported_def(db, def_id, err).into_main_api())
             })
         })
         .collect())

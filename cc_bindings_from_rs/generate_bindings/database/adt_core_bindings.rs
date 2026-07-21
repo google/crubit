@@ -11,6 +11,75 @@ use rustc_middle::ty::Ty;
 use rustc_span::def_id::DefId;
 use std::hash::{Hash, Hasher};
 
+#[derive(Clone, Debug)]
+pub enum AdtCoreBindingsRsName {
+    FullyQualified(TokenStream),
+    // Will add a variant for opaque types in a followup.
+}
+
+#[derive(Clone, Debug)]
+pub enum AdtCoreBindingsKind {
+    /// Structs, enums, and unions.
+    Nominal {
+        /// DefId of the ADT.
+        def_id: DefId,
+
+        /// Rust spelling of the ADT type - e.g.
+        /// `::some_crate::some_module::SomeStruct`.
+        rs_fully_qualified_name: TokenStream,
+    },
+    /// Tuples.
+    Tuple {
+        /// Rust spelling of the ADT type - e.g.
+        /// `::some_crate::some_module::SomeStruct`.
+        rs_fully_qualified_name: TokenStream,
+    },
+}
+
+impl AdtCoreBindingsKind {
+    pub fn def_id(&self) -> Option<DefId> {
+        match self {
+            AdtCoreBindingsKind::Nominal { def_id, .. } => Some(*def_id),
+            AdtCoreBindingsKind::Tuple { .. } => None,
+        }
+    }
+
+    pub fn rs_name(&self) -> AdtCoreBindingsRsName {
+        match self {
+            AdtCoreBindingsKind::Nominal { rs_fully_qualified_name, .. } => {
+                AdtCoreBindingsRsName::FullyQualified(rs_fully_qualified_name.clone())
+            }
+            AdtCoreBindingsKind::Tuple { rs_fully_qualified_name, .. } => {
+                AdtCoreBindingsRsName::FullyQualified(rs_fully_qualified_name.clone())
+            }
+        }
+    }
+}
+
+impl PartialEq for AdtCoreBindingsKind {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                AdtCoreBindingsKind::Nominal { def_id: self_def_id, .. },
+                AdtCoreBindingsKind::Nominal { def_id: other_def_id, .. },
+            ) => self_def_id == other_def_id,
+            (AdtCoreBindingsKind::Tuple { .. }, AdtCoreBindingsKind::Tuple { .. }) => true,
+            _ => false,
+        }
+    }
+}
+
+impl Eq for AdtCoreBindingsKind {}
+impl Hash for AdtCoreBindingsKind {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            AdtCoreBindingsKind::Nominal { def_id, .. } => def_id.hash(state),
+            AdtCoreBindingsKind::Tuple { .. } => {}
+        }
+    }
+}
+
 /// Represents bindings for the "core" part of an algebraic data type (an ADT -
 /// a struct, an enum, or a union) in a way that supports later injecting the
 /// other parts like so:
@@ -28,9 +97,6 @@ use std::hash::{Hash, Hasher};
 /// forward declaration - e.g. `struct SomeStruct`.
 #[derive(Clone)]
 pub struct AdtCoreBindings<'tcx> {
-    /// DefId of the ADT.
-    pub def_id: Option<DefId>,
-
     /// C++ tag - e.g. `struct`, `class`, `enum`, or `union`.  This isn't always
     /// a direct mapping from Rust (e.g. a Rust `enum` might end up being
     /// represented as an opaque C++ `struct`).
@@ -44,27 +110,26 @@ pub struct AdtCoreBindings<'tcx> {
     /// today.)
     pub cc_short_name: Ident,
 
-    /// Rust spelling of the ADT type - e.g.
-    /// `::some_crate::some_module::SomeStruct`.
-    pub rs_fully_qualified_name: TokenStream,
     pub cc_fully_qualified_name: TokenStream,
 
     pub self_ty: Ty<'tcx>,
     pub alignment_in_bytes: u64,
     pub size_in_bytes: u64,
+
+    pub kind: AdtCoreBindingsKind,
 }
 
 // AdtCoreBindings are a pure (and memoized...) function of the def_id.
 impl PartialEq for AdtCoreBindings<'_> {
     fn eq(&self, other: &Self) -> bool {
-        self.def_id == other.def_id && self.self_ty == other.self_ty
+        self.kind == other.kind && self.self_ty == other.self_ty
     }
 }
 
 impl Eq for AdtCoreBindings<'_> {}
 impl Hash for AdtCoreBindings<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.def_id.hash(state);
+        self.kind.hash(state);
         self.self_ty.hash(state);
     }
 }

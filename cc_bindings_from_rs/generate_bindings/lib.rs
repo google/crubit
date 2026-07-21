@@ -33,7 +33,7 @@ use crate::format_type::{
     BridgedType, BridgedTypeConversionInfo,
 };
 use crate::generate_function::{generate_function, must_use_attr_of};
-use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
+use crate::generate_function_thunk::{generate_trait_thunks, SupportedTrait, TraitThunks};
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
     generate_adt_core, into_trait_impls_by_destination, scalar_value_to_string,
@@ -1340,20 +1340,16 @@ fn generate_default_ctor<'tcx>(
         core: Rc<AdtCoreBindings<'tcx>>,
     ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
-        let trait_id = tcx
-            .get_diagnostic_item(sym::Default)
-            .ok_or(anyhow!("Couldn't find `core::default::Default`"))?;
         let TraitThunks {
             method_name_to_cc_thunk_name,
             cc_thunk_decls,
             rs_thunk_impls: rs_details,
         } = generate_trait_thunks(
             db,
-            trait_id,
-            &[],
+            SupportedTrait::Default,
             core.self_ty,
-            core.def_id,
-            core.rs_fully_qualified_name.clone(),
+            core.kind.def_id(),
+            core.kind.rs_name(),
             /*is_constructor=*/ true,
             /*within_template=*/ false,
         )?;
@@ -1435,11 +1431,10 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
         db: &BindingsGenerator<'tcx>,
         core: Rc<AdtCoreBindings<'tcx>>,
     ) -> Result<ApiSnippets<'tcx>> {
-        let tcx = db.tcx();
         let cc_struct_name = &core.cc_short_name;
         let qualified_adt_name = &core.cc_fully_qualified_name;
 
-        match db.has_copy_ctor_and_assignment_operator(core.def_id, core.self_ty) {
+        match db.has_copy_ctor_and_assignment_operator(core.kind.def_id(), core.self_ty) {
             Some(CopyCtorStyle::Copy) => {
                 let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
                         and assignment operator.";
@@ -1459,21 +1454,16 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
                 Ok(ApiSnippets { main_api, cc_details, rs_details: RsSnippet::default() })
             }
             Some(CopyCtorStyle::Clone) => {
-                let trait_id = tcx
-                    .lang_items()
-                    .clone_trait()
-                    .ok_or_else(|| anyhow!("Can't find the `Clone` trait"))?;
                 let TraitThunks {
                     method_name_to_cc_thunk_name,
                     cc_thunk_decls,
                     rs_thunk_impls: rs_details,
                 } = generate_trait_thunks(
                     db,
-                    trait_id,
-                    &[],
+                    SupportedTrait::Clone,
                     core.self_ty,
-                    core.def_id,
-                    core.rs_fully_qualified_name.clone(),
+                    core.kind.def_id(),
+                    core.kind.rs_name(),
                     /*is_constructor=*/ true,
                     /*within_template=*/ false,
                 )?;
@@ -1510,7 +1500,8 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
             }
             None => {
                 let display_name = core
-                    .def_id
+                    .kind
+                    .def_id()
                     .and_then(|id| db.symbol_canonical_name(id))
                     .map(|canon| {
                         let parts =
@@ -1572,7 +1563,7 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
     ) -> Result<ApiSnippets<'tcx>> {
         let adt_cc_name = &core.cc_short_name;
         let qualified_adt_name = &core.cc_fully_qualified_name;
-        match db.has_move_ctor_and_assignment_operator(core.def_id, core.self_ty) {
+        match db.has_move_ctor_and_assignment_operator(core.kind.def_id(), core.self_ty) {
             // We rely on the copy constructor and assignment operator to handle the move
             // operations.
             Some(MoveCtorStyle::Copy) => Ok(ApiSnippets::default()),

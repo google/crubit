@@ -721,14 +721,15 @@ fn specialize_tuple<'tcx>(
     let cc_fully_qualified_name = quote! { ::rs_std::Tuple<#(#element_cc_tys),*> };
 
     let core = Rc::new(database::AdtCoreBindings {
-        def_id: None,
         keyword: quote! { struct },
         cc_short_name: format_ident!("Tuple"),
-        rs_fully_qualified_name: rs_fully_qualified_name.clone(),
         cc_fully_qualified_name: cc_fully_qualified_name.clone(),
         self_ty: rs_std.self_ty_rs,
         alignment_in_bytes: layout.align().abi.bytes(),
         size_in_bytes: layout.size().bytes(),
+        kind: database::AdtCoreBindingsKind::Tuple {
+            rs_fully_qualified_name: rs_fully_qualified_name.clone(),
+        },
     });
 
     let copy_ctor_and_assignment_snippets =
@@ -900,17 +901,18 @@ fn specialize_vec<'tcx>(
     let cc_fully_qualified_name = quote! { rs_std::Vec<#inner_ty_cc> };
 
     let adt_def = rs_std.self_ty_rs.ty_adt_def().expect("Vec should be an ADT");
-    let def_id = Some(adt_def.did());
 
     let core = Rc::new(database::AdtCoreBindings {
-        def_id,
         keyword: quote! { struct },
         cc_short_name: format_ident!("Vec"),
-        rs_fully_qualified_name: rs_fully_qualified_name.clone(),
         cc_fully_qualified_name: cc_fully_qualified_name.clone(),
         self_ty: rs_std.self_ty_rs,
         alignment_in_bytes: layout.align().abi.bytes(),
         size_in_bytes: layout.size().bytes(),
+        kind: database::AdtCoreBindingsKind::Nominal {
+            def_id: adt_def.did(),
+            rs_fully_qualified_name: rs_fully_qualified_name.clone(),
+        },
     });
 
     let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
@@ -1260,14 +1262,16 @@ fn specialize_result<'tcx>(
     let rs_fully_qualified_name = quote! { std::result::Result<#ok_ty_for_rs, #err_ty_for_rs> };
     let cc_fully_qualified_name = quote! { rs_std::Result<#ok_ty_tokens, #err_ty_tokens> };
     let core = Rc::new(database::AdtCoreBindings {
-        def_id: Some(adt.did()),
         keyword: quote! { struct },
         cc_short_name: format_ident!("Result"),
-        rs_fully_qualified_name: rs_fully_qualified_name.clone(),
         cc_fully_qualified_name: cc_fully_qualified_name.clone(),
         self_ty: rs_std.self_ty_rs,
         alignment_in_bytes: layout.align().abi.bytes(),
         size_in_bytes: layout.size().bytes(),
+        kind: database::AdtCoreBindingsKind::Nominal {
+            def_id: adt.did(),
+            rs_fully_qualified_name: rs_fully_qualified_name.clone(),
+        },
     });
 
     let copy_ctor_and_assignment_snippets =
@@ -1487,14 +1491,16 @@ fn specialize_option<'tcx>(
     let rs_fully_qualified_name = quote! { std::option::Option<#arg_ty_for_rs> };
     let cc_fully_qualified_name = quote! { rs_std::Option<#ty_tokens> };
     let core = Rc::new(database::AdtCoreBindings {
-        def_id: Some(adt.did()),
         keyword: quote! { struct },
         cc_short_name: format_ident!("Option"),
-        rs_fully_qualified_name: rs_fully_qualified_name.clone(),
         cc_fully_qualified_name: cc_fully_qualified_name.clone(),
         self_ty: rs_std.self_ty_rs,
         alignment_in_bytes: layout.align().abi.bytes(),
         size_in_bytes: layout.size().bytes(),
+        kind: database::AdtCoreBindingsKind::Nominal {
+            def_id: adt.did(),
+            rs_fully_qualified_name: rs_fully_qualified_name.clone(),
+        },
     });
 
     let copy_ctor_and_assignment_snippets =
