@@ -29,17 +29,7 @@ absl::StatusOr<Bindings> GenerateBindings(
     absl::string_view kythe_default_corpus) {
   GenerateBindingsRequest request;
 
-  bool use_protobuf_ir = false;
-  if (auto it = ir.crubit_features.find(ir.current_target);
-      it != ir.crubit_features.end()) {
-    use_protobuf_ir = it->second.contains("use_protobuf_ir");
-  }
-
-  if (use_protobuf_ir) {
-    ir.ToFlatProto(request.mutable_ir_proto());
-  } else {
-    request.set_json(llvm::formatv("{0}", ir.ToJson()));
-  }
+  ir.ToFlatProto(request.mutable_ir_proto());
   request.set_crubit_support_path_format(crubit_support_path_format);
   request.set_crubit_support_versioned_path_format(
       crubit_support_versioned_path_format);

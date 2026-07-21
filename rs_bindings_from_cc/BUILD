@@ -436,8 +436,6 @@ rust_library(
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
-        "@crate_index//:serde",  # v1
-        "@crate_index//:serde_json",  # v1
         "@crate_index//:syn",  # v1
     ],
 )

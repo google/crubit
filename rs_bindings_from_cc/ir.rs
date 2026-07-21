@@ -11,7 +11,6 @@ use crubit_feature::CrubitFeature;
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
-use serde::{Deserialize, Serialize};
 use std::cell::OnceCell;
 use std::cmp::Ordering;
 use std::collections::hash_map::{Entry, HashMap};
@@ -73,12 +72,6 @@ where
     fn must_bind(&self) -> bool {
         (**self).must_bind()
     }
-}
-
-/// Deserialize `IR` from JSON bytes.
-pub fn deserialize_ir(bytes: &[u8]) -> Result<IR> {
-    let tree_ir = serde_json::from_slice(bytes)?;
-    Ok(make_ir(tree_ir))
 }
 
 /// Create a testing `IR` instance from given parts. This function does not use
@@ -253,8 +246,7 @@ pub fn make_ir(tree_ir: TreeIR) -> IR {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct HeaderName {
     pub(crate) name: Rc<str>,
 }
@@ -265,13 +257,10 @@ impl HeaderName {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
-#[serde(deny_unknown_fields)]
-#[serde(transparent)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct LifetimeId(pub i32);
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct LifetimeName {
     pub(crate) name: Rc<str>,
     pub(crate) id: LifetimeId,
@@ -287,15 +276,13 @@ impl LifetimeName {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct CcType {
     pub(crate) variant: CcTypeVariant,
     pub(crate) is_const: bool,
     pub(crate) unknown_attr: Rc<str>,
     // An ordered list of lifetime variable names applied to this type. It is valid for the same
     // name to appear multiple times.
-    #[serde(default)]
     pub(crate) explicit_lifetimes: Vec<Rc<str>>,
 }
 
@@ -375,8 +362,7 @@ impl From<&ExistingRustType> for CcType {
     }
 }
 
-#[derive(Copy, Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Copy, Debug, PartialEq, Eq, Hash, Clone)]
 pub enum PointerTypeKind {
     LValueRef,
     RValueRef,
@@ -385,8 +371,7 @@ pub enum PointerTypeKind {
     Owned,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct PointerType {
     pub(crate) kind: PointerTypeKind,
     pub(crate) lifetime: Option<LifetimeId>,
@@ -427,8 +412,7 @@ impl PointerType {
     }
 }
 
-/// Generates an enum type that implements `Deserialize`, which parses the stringified contents of
-/// the braces, and `ToTokens`, which quotes the contents of the braces.
+///// Generates an enum type that implements `ToTokens`, which quotes the contents of the braces.
 macro_rules! define_typed_tokens_enum {
     {$(#[$ty_attr:meta])* $vis:vis enum $Type:ident {$($(#[$variant_attr:meta])* $Variant:ident = {$($cpp_spelling:tt)+},)+}} => {
         $(#[$ty_attr])*
@@ -439,39 +423,7 @@ macro_rules! define_typed_tokens_enum {
             )+
         }
 
-        // #[serde(rename(deserialize = stringify!(...)))] doesn't work, so manual impl.
-        impl<'de> serde::Deserialize<'de> for $Type {
-            fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-                struct Visitor;
-                impl serde::de::Visitor<'_> for Visitor {
-                    type Value = $Type;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        const S: &str = concat!(
-                            "one of: ",
-                            $(
-                                "\"",
-                                stringify!($($cpp_spelling)+),
-                                "\", "
-                            ),+
-                        );
-                        formatter.write_str(&S[..S.len() - ", ".len()])
-                    }
-
-                    fn visit_str<E: serde::de::Error>(self, s: &str) -> Result<Self::Value, E> {
-                        match s {
-                            $(
-                                stringify!($($cpp_spelling)+) => Ok($Type::$Variant),
-                            )+
-                            _ => Err(serde::de::Error::invalid_value(serde::de::Unexpected::Str(s), &self))
-                        }
-                    }
-                }
-                deserializer.deserialize_str(Visitor)
-            }
-        }
-
-        impl ToTokens for $Type {
+        impl quote::ToTokens for $Type {
             fn to_tokens(&self, tokens: &mut TokenStream) {
                 match self {
                     $(
@@ -616,8 +568,7 @@ impl CcCallingConv {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum CcTypeVariant {
     Primitive(Primitive),
     Pointer(PointerType),
@@ -629,13 +580,11 @@ pub enum CcTypeVariant {
         param_and_return_types: Rc<[CcType]>,
 
         // Lifetime variable names bound by this function pointer.
-        #[serde(default)]
         lifetime_inputs: Vec<Rc<str>>,
     },
     Decl {
         id: ItemId,
         /// The type arguments to the type. These override any type arguments attached to the item.
-        #[serde(default)]
         template_args: Option<Rc<[CcType]>>,
     },
     /// This type could not be translated to Rust.
@@ -678,8 +627,7 @@ impl TypeWithDeclId for CcType {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub struct Identifier {
     pub(crate) identifier: Rc<str>,
 }
@@ -718,8 +666,7 @@ impl PartialEq<&str> for Identifier {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub struct IntegerConstant {
     pub(crate) is_negative: bool,
     pub(crate) wrapped_value: u64,
@@ -735,8 +682,7 @@ impl IntegerConstant {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub struct Operator {
     pub(crate) name: Rc<str>,
 }
@@ -765,8 +711,7 @@ impl Debug for Operator {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
-#[serde(transparent)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub struct ItemId(usize);
 
 impl Debug for ItemId {
@@ -799,8 +744,7 @@ impl ToTokens for LifetimeId {
 }
 
 /// A Bazel label, e.g. `//foo:bar`.
-#[derive(Debug, Eq, Clone, Deserialize)]
-#[serde(transparent)]
+#[derive(Debug, Eq, Clone)]
 pub struct BazelLabel(pub(crate) Rc<str>);
 
 impl BazelLabel {
@@ -921,7 +865,7 @@ impl Display for BazelLabel {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub enum UnqualifiedIdentifier {
     Identifier(Identifier),
     Operator(Operator),
@@ -982,15 +926,14 @@ impl PartialEq<&str> for UnqualifiedIdentifier {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ReferenceQualification {
     LValue,
     RValue,
     Unqualified,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct InstanceMethodMetadata {
     pub(crate) reference: ReferenceQualification,
     pub(crate) is_const: bool,
@@ -1015,19 +958,15 @@ impl InstanceMethodMetadata {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct FuncParam {
-    #[serde(rename(deserialize = "type"))]
     pub(crate) type_: CcType,
     pub(crate) identifier: Identifier,
     /// A list of parameter indexes attached to this parameter by Clang's lifetime_capture_by.
     /// In `f(x, y)`, `x` is parameter 0 and y is parameter 1. In the member function
     /// `S::f(x, y)`, `this` is parameter 0, `x` is 1, and `y` is 2.
-    #[serde(default)]
     pub(crate) clang_lifetime_capture_by: Vec<i32>,
     /// True if this parameter was annotated with Clang's lifetimebound.
-    #[serde(default)]
     pub(crate) clang_lifetimebound: bool,
     /// A human-readable list of attributes that Crubit doesn't understand.
     ///
@@ -1080,16 +1019,14 @@ impl FuncParam {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum SafetyAnnotation {
     DisableUnsafe,
     Unsafe,
     Unannotated,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Func {
     pub(crate) cc_name: UnqualifiedIdentifier,
     pub(crate) rs_name: UnqualifiedIdentifier,
@@ -1145,7 +1082,6 @@ pub struct Func {
     pub(crate) must_bind: bool,
 
     // Lifetime variable names bound by this function.
-    #[serde(default)]
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
 }
 
@@ -1368,20 +1304,18 @@ impl GenericItem for Func {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum AccessSpecifier {
     Public,
     Protected,
     Private,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Field {
     pub(crate) rust_identifier: Option<Identifier>,
     pub(crate) cpp_identifier: Option<Identifier>,
     pub(crate) doc_comment: Option<Rc<str>>,
-    #[serde(rename(deserialize = "type"))]
     pub(crate) type_: CcType,
     pub(crate) access: AccessSpecifier,
     pub(crate) offset: usize,
@@ -1400,7 +1334,6 @@ pub struct Field {
 
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    #[serde(default)]
     pub(crate) deprecated: Option<Rc<str>>,
 }
 
@@ -1499,7 +1432,7 @@ impl Field {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum SpecialMemberFunc {
     Trivial,
     NontrivialMembers,
@@ -1507,8 +1440,7 @@ pub enum SpecialMemberFunc {
     Unavailable,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct BaseClass {
     pub(crate) base_record_id: ItemId,
     pub(crate) offset: Option<i64>,
@@ -1524,8 +1456,7 @@ impl BaseClass {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct IncompleteRecord {
     pub(crate) cc_name: Identifier,
     pub(crate) rs_name: Identifier,
@@ -1630,7 +1561,7 @@ impl GenericItem for IncompleteRecord {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum RecordType {
     Struct,
     Union,
@@ -1658,8 +1589,7 @@ impl ToTokens for RecordType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub struct SizeAlign {
     pub(crate) size: usize,
     pub(crate) alignment: usize,
@@ -1675,23 +1605,20 @@ impl SizeAlign {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum BackingType {
     DynCallable,
     AnyInvocable,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum FnTrait {
     Fn,
     FnMut,
     FnOnce,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum BridgeType {
     ProtoMessageBridge {
         rust_name: Rc<str>,
@@ -1713,15 +1640,14 @@ pub enum BridgeType {
     },
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum TemplateArg {
     Type(CcType),
     Bool(bool),
     Int(i64),
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct TemplateSpecialization {
     /// The target containing the template definition
     pub(crate) defining_target: BazelLabel,
@@ -1744,58 +1670,36 @@ impl TemplateSpecialization {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum TemplateSpecializationKind {
     /// std::basic_string_view<char, std::char_traits<char>>
     StdStringView,
     /// std::basic_string_view<wchar_t, std::char_traits<wchar_t>>
     StdWStringView,
     /// std::vector<T, std::allocator<T>>
-    StdVector {
-        #[serde(rename(deserialize = "element_type"))]
-        raw_element_type: CcType,
-    },
+    StdVector { raw_element_type: CcType },
     /// std::unique_ptr<T, std::default_delete<T>>
-    StdUniquePtr {
-        #[serde(rename(deserialize = "element_type"))]
-        raw_element_type: CcType,
-    },
+    StdUniquePtr { raw_element_type: CcType },
     /// c9::Co<T>
-    C9Co {
-        #[serde(rename(deserialize = "element_type"))]
-        raw_element_type: CcType,
-    },
+    C9Co { raw_element_type: CcType },
     /// absl::Span<T>
-    AbslSpan {
-        #[serde(rename(deserialize = "element_type"))]
-        raw_element_type: CcType,
-    },
+    AbslSpan { raw_element_type: CcType },
     /// absl::flat_hash_map<K, V, ...>
-    AbslFlatHashMap {
-        #[serde(rename(deserialize = "key_type"))]
-        raw_key_type: CcType,
-        #[serde(rename(deserialize = "value_type"))]
-        raw_value_type: CcType,
-    },
+    AbslFlatHashMap { raw_key_type: CcType, raw_value_type: CcType },
     /// absl::flat_hash_set<T, ...>
-    AbslFlatHashSet {
-        #[serde(rename(deserialize = "element_type"))]
-        raw_element_type: CcType,
-    },
+    AbslFlatHashSet { raw_element_type: CcType },
     /// Some other template specialization.
     NonSpecial,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum TraitImplPolarity {
     Negative,
     None,
     Positive,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct TraitDerives {
     // <internal link> start
     pub clone: TraitImplPolarity,
@@ -1807,15 +1711,13 @@ pub struct TraitDerives {
     pub custom: Vec<Rc<str>>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct OwnedPtrConfig {
     pub owned_ptr_type: Rc<str>,
     pub drop_impl: Rc<str>,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Record {
     pub(crate) rs_name: Identifier,
     /// The C++ name of the record. If the record is a template specialization, the fully qualified
@@ -1840,7 +1742,6 @@ pub struct Record {
     pub(crate) unknown_attr: Option<Rc<str>>,
     pub(crate) doc_comment: Option<Rc<str>>,
     pub(crate) bridge_type: Option<BridgeType>,
-    #[serde(default)]
     pub(crate) owned_ptr_config: Option<OwnedPtrConfig>,
     pub(crate) source_loc: Rc<str>,
     pub(crate) unambiguous_public_bases: Vec<BaseClass>,
@@ -1869,20 +1770,15 @@ pub struct Record {
     pub(crate) overloads_operator_delete: bool,
     pub(crate) has_private_or_deleted_operator_delete: bool,
     // Lifetime variable names bound by this record.
-    #[serde(default)]
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
     pub(crate) impl_debug: bool,
     pub(crate) detected_formatter: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    #[serde(default)]
     pub(crate) deprecated: Option<Rc<str>>,
     /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
-    #[serde(default)]
     pub(crate) is_thread_safe: bool,
-    #[serde(default)]
     pub(crate) is_explicit_class_template_instantiation_definition: bool,
-    #[serde(default)]
     pub(crate) children: Vec<Item>,
 }
 
@@ -2358,8 +2254,7 @@ impl Record {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Constant {
     pub(crate) value: IntegerConstant,
     pub(crate) cc_name: Identifier,
@@ -2370,14 +2265,11 @@ pub struct Constant {
     pub(crate) source_loc: Rc<str>,
     pub(crate) unknown_attr: Option<Rc<str>>,
     pub(crate) enclosing_item_id: Option<ItemId>,
-    #[serde(rename(deserialize = "type"))]
     pub(crate) type_: CcType,
     pub(crate) must_bind: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    #[serde(default)]
     pub(crate) deprecated: Option<Rc<str>>,
-    #[serde(default)]
     pub(crate) doc_comment: Option<Rc<str>>,
 }
 
@@ -2459,8 +2351,7 @@ impl GenericItem for Constant {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct GlobalVar {
     pub(crate) cc_name: Identifier,
     pub(crate) rs_name: Identifier,
@@ -2472,14 +2363,11 @@ pub struct GlobalVar {
     pub(crate) unknown_attr: Option<Rc<str>>,
     pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) mangled_name: Option<Rc<str>>,
-    #[serde(rename(deserialize = "type"))]
     pub(crate) type_: CcType,
     pub(crate) must_bind: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    #[serde(default)]
     pub(crate) deprecated: Option<Rc<str>>,
-    #[serde(default)]
     pub(crate) doc_comment: Option<Rc<str>>,
 }
 
@@ -2561,8 +2449,7 @@ impl GenericItem for GlobalVar {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Enum {
     pub(crate) cc_name: Identifier,
     pub(crate) rs_name: Identifier,
@@ -2585,13 +2472,10 @@ pub struct Enum {
     pub(crate) detected_formatter: bool,
     /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
     /// string is used.
-    #[serde(default)]
     pub(crate) nodiscard: Option<Rc<str>>,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    #[serde(default)]
     pub(crate) deprecated: Option<Rc<str>>,
-    #[serde(default)]
     pub(crate) doc_comment: Option<Rc<str>>,
 }
 
@@ -2724,8 +2608,7 @@ impl GenericItem for Enum {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Enumerator {
     pub(crate) identifier: Identifier,
     pub(crate) value: IntegerConstant,
@@ -2733,9 +2616,7 @@ pub struct Enumerator {
     pub(crate) unknown_attr: Option<Rc<str>>,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    #[serde(default)]
     pub(crate) deprecated: Option<Rc<str>>,
-    #[serde(default)]
     pub(crate) doc_comment: Option<Rc<str>>,
 }
 
@@ -2761,8 +2642,7 @@ impl Enumerator {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct TypeAlias {
     pub(crate) cc_name: Identifier,
     pub(crate) rs_name: Identifier,
@@ -2778,10 +2658,8 @@ pub struct TypeAlias {
     pub(crate) must_bind: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    #[serde(default)]
     pub(crate) deprecated: Option<Rc<str>>,
     // Lifetime variable names bound by this type alias.
-    #[serde(default)]
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
 }
 
@@ -2933,8 +2811,7 @@ impl<T> Hash for IgnoredField<T> {
     fn hash<H: Hasher>(&self, _state: &mut H) {}
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct FormattedError {
     pub fmt: Rc<str>,
     pub message: Rc<str>,
@@ -2942,8 +2819,7 @@ pub struct FormattedError {
 
 /// Kind is used to indicate which item would cannot be wrapped.
 /// Need to be synced with UnsupportedItem::Kind in ir.h.
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum UnsupportedItemKind {
     Func,
     GlobalVar,
@@ -2982,8 +2858,7 @@ impl Display for UnsupportedItemKind {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct UnsupportedItemPath {
     pub(crate) ident: UnqualifiedIdentifier,
     pub(crate) enclosing_item_id: Option<ItemId>,
@@ -2999,8 +2874,7 @@ impl UnsupportedItemPath {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct UnsupportedItem {
     pub(crate) name: Rc<str>,
     pub(crate) unique_name: Option<Rc<str>>,
@@ -3014,7 +2888,6 @@ pub struct UnsupportedItem {
 
     /// Stores either one natively generated [`arc_anyhow::Error`] or the
     /// memoized result of converting `errors`.
-    #[serde(skip)]
     cause: IgnoredField<OnceCell<Vec<Error>>>,
 }
 
@@ -3119,8 +2992,7 @@ impl UnsupportedItem {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Comment {
     pub(crate) text: Rc<str>,
     pub(crate) id: ItemId,
@@ -3165,8 +3037,7 @@ impl GenericItem for Comment {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Namespace {
     pub(crate) cc_name: Identifier,
     pub(crate) rs_name: Identifier,
@@ -3181,11 +3052,8 @@ pub struct Namespace {
     pub(crate) must_bind: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    #[serde(default)]
     pub(crate) deprecated: Option<Rc<str>>,
-    #[serde(default)]
     pub(crate) doc_comment: Option<Rc<str>>,
-    #[serde(default)]
     pub(crate) children: Vec<Item>,
 }
 
@@ -3271,8 +3139,7 @@ impl GenericItem for Namespace {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct UseMod {
     pub(crate) path: Rc<str>,
     pub(crate) mod_name: Identifier,
@@ -3326,8 +3193,7 @@ impl GenericItem for UseMod {
 /// existing Rust type instead of generating a new Rust type. Note that this corresponds to concrete
 /// types, meaning non-template types or template instantiations, but not uninstantiated template
 /// declarations.
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct ExistingRustType {
     /// The name of the existing Rust type.
     /// Note that it may contain interpolated type parameters, like `RustType<{T}>`.
@@ -3439,7 +3305,7 @@ impl GenericItem for ExistingRustType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum Item {
     Func(Rc<Func>),
     IncompleteRecord(Rc<IncompleteRecord>),
@@ -3710,40 +3576,17 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<ExistingRustType> {
     }
 }
 
-fn deserialize_crate_names<'de, D>(deserializer: D) -> Result<BTreeMap<BazelLabel, Ident>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let map = BTreeMap::<BazelLabel, &str>::deserialize(deserializer)?;
-    map.into_iter()
-        .map(|(key, value)| {
-            let ident = try_make_rs_ident(value).map_err(|_| {
-                serde::de::Error::custom(format!("Invalid crate name identifier {value:?}"))
-            })?;
-            Ok((key, ident))
-        })
-        .collect()
-}
-
 // There's no reason to hide TreeIR or make_ir: deserialize_ir is just make_ir(from_json("ir")),
 // and transforming the json is strictly worse than transforming the ir itself.
-#[derive(PartialEq, Eq, Clone, Deserialize)]
-#[serde(deny_unknown_fields, rename(deserialize = "IR"))]
+#[derive(PartialEq, Eq, Clone)]
 pub struct TreeIR {
-    #[serde(default)]
     pub public_headers: Vec<HeaderName>,
     pub current_target: BazelLabel,
-    #[serde(default)]
     pub crate_root_path: Option<Rc<str>>,
-    #[serde(default)]
     pub crubit_features: BTreeMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
-    #[serde(default, deserialize_with = "deserialize_crate_names")]
     pub crate_names: BTreeMap<BazelLabel, Ident>,
-    #[serde(default)]
     pub unstable_rust_features: Vec<String>,
-    #[serde(default)]
     pub reexported_namespaces: Vec<Rc<str>>,
-    #[serde(default)]
     pub top_level_items: BTreeMap<BazelLabel, Vec<Item>>,
 }
 
@@ -4016,6 +3859,7 @@ pub fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ide
 mod tests {
     use super::*;
     use googletest::gtest;
+    use ir_rust_proto::IRProto;
 
     #[gtest]
     fn test_identifier_debug_print() {
@@ -4037,13 +3881,11 @@ mod tests {
 
     #[gtest]
     fn test_used_headers() {
-        let input = r#"
-        {
-            "public_headers": [{ "name": "foo/bar.h" }],
-            "current_target": "//foo:bar"
-        }
-        "#;
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let proto = protobuf::proto!(IRProto {
+            public_headers: [__ { name: "foo/bar.h" }],
+            current_target: "//foo:bar",
+        });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
         let expected = TreeIR {
             public_headers: vec![HeaderName { name: "foo/bar.h".into() }],
             current_target: "//foo:bar".into(),
@@ -4059,20 +3901,18 @@ mod tests {
 
     #[gtest]
     fn test_empty_crate_root_path() {
-        let input = "{ \"current_target\": \"//foo:bar\" }";
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let proto = protobuf::proto!(IRProto { current_target: "//foo:bar" });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
         assert_eq!(ir.crate_root_path(), None);
     }
 
     #[gtest]
     fn test_crate_root_path() {
-        let input = r#"
-        {
-            "crate_root_path": "__cc_template_instantiations_rs_api",
-            "current_target": "//foo:bar"
-        }
-        "#;
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let proto = protobuf::proto!(IRProto {
+            crate_root_path: "__cc_template_instantiations_rs_api",
+            current_target: "//foo:bar",
+        });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
         assert_eq!(ir.crate_root_path().as_deref(), Some("__cc_template_instantiations_rs_api"));
     }
 
@@ -4183,7 +4023,7 @@ mod tests {
 
     #[gtest]
     fn test_make_ir_happy_path() {
-        let proto = protobuf::proto!(ir_rust_proto::IRProto {
+        let proto = protobuf::proto!(IRProto {
             current_target: "//foo:bar",
             top_level_items: [(
                 "//foo:bar",
@@ -4226,7 +4066,7 @@ mod tests {
 
     #[gtest]
     fn test_make_ir_redeclarations() {
-        let proto = protobuf::proto!(ir_rust_proto::IRProto {
+        let proto = protobuf::proto!(IRProto {
             current_target: "//foo:bar",
             top_level_items: [(
                 "//foo:bar",
@@ -4275,7 +4115,7 @@ mod tests {
 
     #[gtest]
     fn test_proto_crate_names() {
-        let proto = protobuf::proto!(ir_rust_proto::IRProto {
+        let proto = protobuf::proto!(IRProto {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "custom_crate")]
         });
@@ -4288,7 +4128,7 @@ mod tests {
 
     #[gtest]
     fn test_proto_crate_names_invalid_ident() {
-        let proto = protobuf::proto!(ir_rust_proto::IRProto {
+        let proto = protobuf::proto!(IRProto {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "invalid*crate")]
         });
@@ -4303,51 +4143,20 @@ mod tests {
     }
 
     #[gtest]
-    fn test_crate_names_deserialization_invalid_ident() {
-        let input = r#"
-        {
-            "public_headers": [],
-            "current_target": "//foo:bar",
-            "crate_names": {
-                "//dep:target": "invalid*crate"
-            }
-        }
-        "#;
-        let result = deserialize_ir(input.as_bytes());
-        assert!(result.is_err());
-        let err_msg = result.unwrap_err().to_string();
-        assert!(
-            err_msg.contains("Invalid crate name identifier \"invalid*crate\""),
-            "error: {}",
-            err_msg
-        );
-    }
-
-    #[gtest]
     fn test_rs_imported_crate_name_with_custom_name() {
-        let input = r#"
-        {
-            "public_headers": [],
-            "current_target": "//foo:bar",
-            "crate_names": {
-                "//dep:target": "custom_crate"
-            }
-        }
-        "#;
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let proto = protobuf::proto!(IRProto {
+            current_target: "//foo:bar",
+            crate_names: [("//dep:target", "custom_crate")],
+        });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
         let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
         assert_eq!(crate_ident.to_string(), "custom_crate");
     }
 
     #[gtest]
     fn test_rs_imported_crate_name_without_custom_name() {
-        let input = r#"
-        {
-            "public_headers": [],
-            "current_target": "//foo:bar"
-        }
-        "#;
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let proto = protobuf::proto!(IRProto { current_target: "//foo:bar" });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
         let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
         assert_eq!(crate_ident.to_string(), "target");
     }
