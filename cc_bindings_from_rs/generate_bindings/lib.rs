@@ -2143,9 +2143,9 @@ impl NodeSortKey {
                 let hash = tcx.with_stable_hashing_context(|mut hcx| {
                     let mut hasher = stable_hash::StableHasher::new();
 
-                    #[rustversion::stable(1.96)]
+                    #[rustversion::not(any(all(since(2026-05-03), nightly), stable(1.97)))]
                     stable_hash::HashStable::hash_stable(&ty, &mut hcx, &mut hasher);
-                    #[rustversion::stable(1.97)]
+                    #[rustversion::any(all(since(2026-05-03), nightly), stable(1.97))]
                     stable_hash::StableHash::stable_hash(&ty, &mut hcx, &mut hasher);
 
                     hasher
