@@ -27,7 +27,7 @@ trait IrTestingExt {
         &'a T: TryFrom<&'a ir::Item>;
 }
 
-impl IrTestingExt for IR {
+impl IrTestingExt for IR<'_> {
     #[track_caller]
     fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item {
         let Some(item) = self.get_decl(decl_id) else {
@@ -51,11 +51,11 @@ impl IrTestingExt for IR {
     }
 }
 
-fn ir_from_cc(header: &str) -> Result<IR> {
+fn ir_from_cc(header: &str) -> Result<IR<'static>> {
     ir_testing::ir_from_cc(multiplatform_testing::test_platform(), header)
 }
 
-fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR> {
+fn ir_from_cc_dependency(header: &str, dep_header: &str) -> Result<IR<'static>> {
     ir_testing::ir_from_cc_dependency(
         multiplatform_testing::test_platform(),
         header,
@@ -4871,7 +4871,7 @@ fn test_assumed_lifetimes_struct_with_explicit_binding() {
     );
 }
 
-fn expect_constant(ir: &ir::IR) -> &ir::Constant {
+fn expect_constant<'a>(ir: &'a ir::IR<'_>) -> &'a ir::Constant {
     let constant = ir.items().find_map(|item| match item {
         Item::Constant(constant) => Some(constant),
         _ => None,

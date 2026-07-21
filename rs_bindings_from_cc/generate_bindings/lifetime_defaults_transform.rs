@@ -8,8 +8,8 @@ use arc_anyhow::Result;
 use database::BindingsGenerator;
 use error_report::bail;
 use ir::{
-    make_ir, BazelLabel, CcType, CcTypeVariant, Func, Item, ItemId, PointerType, PointerTypeKind,
-    Record, TreeIR, TypeAlias, IR,
+    BazelLabel, CcType, CcTypeVariant, Func, Item, ItemId, PointerType, PointerTypeKind, Record,
+    TreeIR, TypeAlias, IR,
 };
 use itertools::Itertools;
 use memoized::memoized;
@@ -820,7 +820,7 @@ fn transform_item(db: &BindingsGenerator, item: &Item) -> Result<Item> {
 
 /// Creates a copy of `ir` with default lifetimes filled in. This is mostly useful for testing;
 /// prefer to transform items on demand.
-pub fn lifetime_defaults_transform(db: &BindingsGenerator) -> Result<IR> {
+pub fn lifetime_defaults_transform(db: &BindingsGenerator) -> Result<IR<'static>> {
     let ir = db.ir();
 
     let mut top_level_items: BTreeMap<BazelLabel, Vec<Item>> = BTreeMap::new();
@@ -829,7 +829,7 @@ pub fn lifetime_defaults_transform(db: &BindingsGenerator) -> Result<IR> {
         top_level_items.insert(target.clone(), transformed_roots);
     }
 
-    Ok(make_ir(TreeIR {
+    Ok(ir::make_ir(TreeIR {
         public_headers: ir.tree_ir().public_headers.clone(),
         current_target: ir.tree_ir().current_target.clone(),
         crate_root_path: ir.tree_ir().crate_root_path.clone(),

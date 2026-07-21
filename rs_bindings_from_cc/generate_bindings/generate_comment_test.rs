@@ -116,7 +116,7 @@ impl ir::GenericItem for TestItem {
 }
 
 struct TestDbFactory {
-    ir: IR,
+    ir: IR<'static>,
     errors: ErrorReport,
     fatal_errors: FatalErrors,
     interner: Interner,

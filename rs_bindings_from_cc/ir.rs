@@ -19,6 +19,10 @@ use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 
+mod proto_to_ir;
+use ir_rust_proto::{IRProto, IRProtoView};
+pub use proto_to_ir::proto_to_ir;
+
 /// Common data about all items.
 pub trait GenericItem {
     fn id(&self) -> ItemId;
@@ -83,7 +87,7 @@ pub fn make_ir_from_parts<CrubitFeatures>(
     crate_root_path: Option<Rc<str>>,
     crubit_features: BTreeMap<BazelLabel, CrubitFeatures>,
     reexported_namespaces: Vec<Rc<str>>,
-) -> IR
+) -> IR<'static>
 where
     CrubitFeatures: Into<flagset::FlagSet<CrubitFeature>>,
 {
@@ -181,7 +185,7 @@ fn populate_item_id_to_item(item: &Item, item_id_to_item: &mut HashMap<ItemId, I
     }
 }
 
-pub fn make_ir(tree_ir: TreeIR) -> IR {
+pub fn make_ir_with_proto<'pb>(tree_ir: TreeIR, proto: IRProtoCow<'pb>) -> IR<'pb> {
     let mut item_id_to_item = HashMap::new();
 
     for items in tree_ir.top_level_items.values() {
@@ -237,6 +241,7 @@ pub fn make_ir(tree_ir: TreeIR) -> IR {
     }
 
     IR {
+        proto,
         tree_ir,
         item_id_to_item,
         lifetimes,
@@ -244,6 +249,10 @@ pub fn make_ir(tree_ir: TreeIR) -> IR {
         reopened_namespace_id_to_idx,
         function_name_to_functions,
     }
+}
+
+pub fn make_ir(tree_ir: TreeIR) -> IR<'static> {
+    make_ir_with_proto(tree_ir, IRProtoCow::Owned(IRProto::new()))
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
@@ -3631,11 +3640,32 @@ impl Debug for TreeIR {
     }
 }
 
-/// Struct providing the necessary information about the API of a C++ target to
-/// enable generation of Rust bindings source code (both `rs_api.rs` and
-/// `rs_api_impl.cc` files).
-#[derive(PartialEq, Debug)]
-pub struct IR {
+#[derive(Clone)]
+pub enum IRProtoCow<'pb> {
+    /// Zero-copy pointer to the C++ protobuf memory.
+    Borrowed(IRProtoView<'pb>),
+    /// Tests require us to pass in an owned protobuf instance; this enum provides an API to do so.
+    Owned(IRProto),
+}
+
+impl<'pb> IRProtoCow<'pb> {
+    pub fn as_view(&self) -> ::ir_rust_proto::IRProtoView<'_> {
+        match self {
+            Self::Borrowed(view) => *view,
+            Self::Owned(proto) => proto.as_view(),
+        }
+    }
+}
+
+impl<'pb> Debug for IRProtoCow<'pb> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Debug::fmt(&self.as_view(), f)
+    }
+}
+
+#[derive(Debug)]
+pub struct IR<'pb> {
+    pub(crate) proto: IRProtoCow<'pb>,
     tree_ir: TreeIR,
     item_id_to_item: HashMap<ItemId, Item>,
     lifetimes: HashMap<LifetimeId, LifetimeName>,
@@ -3644,7 +3674,25 @@ pub struct IR {
     function_name_to_functions: HashMap<UnqualifiedIdentifier, Vec<Rc<Func>>>,
 }
 
-impl IR {
+impl<'pb> PartialEq for IR<'pb> {
+    fn eq(&self, other: &Self) -> bool {
+        self.tree_ir == other.tree_ir
+            && self.item_id_to_item == other.item_id_to_item
+            && self.lifetimes == other.lifetimes
+            && self.namespace_id_to_number_of_reopened_namespaces
+                == other.namespace_id_to_number_of_reopened_namespaces
+            && self.reopened_namespace_id_to_idx == other.reopened_namespace_id_to_idx
+            && self.function_name_to_functions == other.function_name_to_functions
+    }
+}
+
+impl<'pb> Eq for IR<'pb> {}
+
+impl<'pb> IR<'pb> {
+    pub fn as_view(&self) -> IRProtoView<'_> {
+        self.proto.as_view()
+    }
+
     pub fn tree_ir(&self) -> &TreeIR {
         &self.tree_ir
     }
@@ -3842,7 +3890,7 @@ impl IR {
 // and returning the crate name, or similar.
 
 /// Returns Some(crate_ident) if this is an imported crate.
-pub fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ident> {
+pub fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR<'_>) -> Option<Ident> {
     if ir.is_current_target(owning_target) {
         None
     } else {
@@ -3885,7 +3933,7 @@ mod tests {
             public_headers: [__ { name: "foo/bar.h" }],
             current_target: "//foo:bar",
         });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(IRProtoCow::Borrowed(proto.as_view())).unwrap();
         let expected = TreeIR {
             public_headers: vec![HeaderName { name: "foo/bar.h".into() }],
             current_target: "//foo:bar".into(),
@@ -3902,7 +3950,7 @@ mod tests {
     #[gtest]
     fn test_empty_crate_root_path() {
         let proto = protobuf::proto!(IRProto { current_target: "//foo:bar" });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(IRProtoCow::Borrowed(proto.as_view())).unwrap();
         assert_eq!(ir.crate_root_path(), None);
     }
 
@@ -3912,7 +3960,7 @@ mod tests {
             crate_root_path: "__cc_template_instantiations_rs_api",
             current_target: "//foo:bar",
         });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(IRProtoCow::Borrowed(proto.as_view())).unwrap();
         assert_eq!(ir.crate_root_path().as_deref(), Some("__cc_template_instantiations_rs_api"));
     }
 
@@ -4058,7 +4106,7 @@ mod tests {
                 }
             )]
         });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(IRProtoCow::Borrowed(proto.as_view())).unwrap();
 
         let ids: Vec<_> = ir.items().map(|item| item.id().0).collect();
         assert_eq!(ids, vec![1, 2, 3]);
@@ -4106,7 +4154,7 @@ mod tests {
                 }
             )]
         });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(IRProtoCow::Borrowed(proto.as_view())).unwrap();
 
         let comment_items: Vec<_> = ir.items().filter(|item| item.id() == ItemId(200)).collect();
 
@@ -4119,7 +4167,7 @@ mod tests {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "custom_crate")]
         });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(IRProtoCow::Borrowed(proto.as_view())).unwrap();
         assert_eq!(
             ir.crate_name(&"//dep:target".into()).map(|i| i.to_string()),
             Some("custom_crate".to_string())
@@ -4132,7 +4180,7 @@ mod tests {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "invalid*crate")]
         });
-        let result = proto_to_ir(proto.as_view());
+        let result = proto_to_ir(IRProtoCow::Borrowed(proto.as_view()));
         assert!(result.is_err());
         let err_msg = result.unwrap_err().to_string();
         assert!(
@@ -4148,7 +4196,7 @@ mod tests {
             current_target: "//foo:bar",
             crate_names: [("//dep:target", "custom_crate")],
         });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(IRProtoCow::Borrowed(proto.as_view())).unwrap();
         let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
         assert_eq!(crate_ident.to_string(), "custom_crate");
     }
@@ -4156,7 +4204,7 @@ mod tests {
     #[gtest]
     fn test_rs_imported_crate_name_without_custom_name() {
         let proto = protobuf::proto!(IRProto { current_target: "//foo:bar" });
-        let ir = proto_to_ir(proto.as_view()).unwrap();
+        let ir = proto_to_ir(IRProtoCow::Borrowed(proto.as_view())).unwrap();
         let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
         assert_eq!(crate_ident.to_string(), "target");
     }

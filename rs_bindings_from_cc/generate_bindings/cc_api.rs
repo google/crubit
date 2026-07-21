@@ -17,7 +17,7 @@ pub fn generate_bindings(
 ) {
     let request_view = request.as_view();
     assert!(request_view.has_ir_proto(), "Request should have provided a valid IR protobuf.");
-    let ir = ir::proto_to_ir(request_view.ir_proto())
+    let ir = ir::proto_to_ir(ir::IRProtoCow::Borrowed(request_view.ir_proto()))
         .with_context(|| "Failed to deserialize IRProto".to_string())
         .unwrap();
     let crubit_support_path_format: &str = request_view

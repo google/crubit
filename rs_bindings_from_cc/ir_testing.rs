@@ -13,9 +13,14 @@ use ir::{
     self, make_ir_from_parts, Func, Identifier, Item, LifetimeId, LifetimeName, Record,
     TypeWithDeclId, IR,
 };
+use ir_rust_proto::IRProto;
+use protobuf::Parse;
 
 /// Generates `IR` from a header containing `header_source`.
-pub fn ir_from_cc(platform: multiplatform_testing::Platform, header_source: &str) -> Result<IR> {
+pub fn ir_from_cc(
+    platform: multiplatform_testing::Platform,
+    header_source: &str,
+) -> Result<IR<'static>> {
     ir_from_cc_dependency(platform, header_source, "// empty header", None, false)
 }
 
@@ -23,7 +28,7 @@ pub fn ir_from_cc(platform: multiplatform_testing::Platform, header_source: &str
 pub fn ir_from_cc_annotated(
     platform: multiplatform_testing::Platform,
     header_source: &str,
-) -> Result<IR> {
+) -> Result<IR<'static>> {
     ir_from_cc_dependency(platform, header_source, "// empty header", None, true)
 }
 
@@ -75,7 +80,7 @@ static TESTING_FEATURES: LazyLock<flagset::FlagSet<crubit_feature::CrubitFeature
 ///
 /// This provides one place to update the IR that affects both
 /// `make_ir_from_items` and `ir_from_cc_dependency`.
-fn update_test_ir(ir: &mut IR, extra_feature: Option<&str>) {
+fn update_test_ir(ir: &mut IR<'_>, extra_feature: Option<&str>) {
     *ir.target_crubit_features_mut(&ir.current_target().clone()) = *TESTING_FEATURES;
     *ir.target_crubit_features_mut(&ir::BazelLabel::from(DEPENDENCY_TARGET)) = *TESTING_FEATURES;
     if let Some(s) = extra_feature {
@@ -87,7 +92,7 @@ fn update_test_ir(ir: &mut IR, extra_feature: Option<&str>) {
 
 /// Create a testing `IR` instance from given items, using mock values for other
 /// fields.
-pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR {
+pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> IR<'static> {
     let mut ir = make_ir_from_parts(
         items.into_iter().collect_vec(),
         /* public_headers= */ vec![],
@@ -116,7 +121,7 @@ pub fn ir_from_cc_dependency(
     dependency_header_source: &str,
     extra_feature: Option<&str>,
     kythe_annotations: bool,
-) -> Result<IR> {
+) -> Result<IR<'static>> {
     ir_proto_from_cc_dependency(
         platform,
         header_source,
@@ -124,6 +129,55 @@ pub fn ir_from_cc_dependency(
         extra_feature,
         kythe_annotations,
     )
+}
+
+pub fn ir_proto_from_cc(
+    platform: multiplatform_testing::Platform,
+    header_source: &str,
+) -> Result<IR<'static>> {
+    ir_proto_from_cc_dependency(platform, header_source, "// empty header", None, false)
+}
+
+/// Generates `IR` protobuf from a header containing `header_source`.
+///
+/// `header_source` of the header will be updated to contain the `#include` line
+/// for the header with `dependency_header_source`. The name of the dependency
+/// target is exposed as `DEPENDENCY_TARGET`.
+pub fn ir_proto_from_cc_dependency(
+    platform: multiplatform_testing::Platform,
+    header_source: &str,
+    dependency_header_source: &str,
+    extra_feature: Option<&str>,
+    kythe_annotations: bool,
+) -> Result<IR<'static>> {
+    const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
+
+    unsafe extern "C" {
+        fn proto_from_cc_dependency(
+            target_triple: FfiU8Slice,
+            header_source: FfiU8Slice,
+            dependency_header_source: FfiU8Slice,
+            extra_feature: FfiU8Slice,
+            kythe_annotations: bool,
+        ) -> FfiU8SliceBox;
+    }
+
+    let header_source_with_include =
+        format!("#include \"{}\"\n\n{}", DEPENDENCY_HEADER_NAME, header_source);
+    let proto_bytes = unsafe {
+        proto_from_cc_dependency(
+            FfiU8Slice::from_slice(platform.target_triple().as_ref()),
+            FfiU8Slice::from_slice(header_source_with_include.as_bytes()),
+            FfiU8Slice::from_slice(dependency_header_source.as_bytes()),
+            FfiU8Slice::from_slice(extra_feature.unwrap_or_default().as_bytes()),
+            kythe_annotations,
+        )
+        .into_boxed_slice()
+    };
+    let proto = IRProto::parse(&proto_bytes)?;
+    let mut ir = ir::proto_to_ir(ir::IRProtoCow::Owned(proto))?;
+    update_test_ir(&mut ir, extra_feature);
+    Ok(ir)
 }
 
 /// Creates an identifier
@@ -156,7 +210,7 @@ pub fn retrieve_lifetime_param_id(names: &[LifetimeName], name: &str) -> Lifetim
 
 /// Retrieves the function with the given name.
 /// Panics if no such function could be found.
-pub fn retrieve_func<'a>(ir: &'a IR, name: &str) -> &'a Func {
+pub fn retrieve_func<'a>(ir: &'a IR<'_>, name: &str) -> &'a Func {
     for func in ir.functions() {
         if *func.rs_name() == ir::UnqualifiedIdentifier::Identifier(ir_id(name)) {
             return func;
@@ -167,7 +221,7 @@ pub fn retrieve_func<'a>(ir: &'a IR, name: &str) -> &'a Func {
 
 /// Retrieves the `Record` with the given name.
 /// Panics if no such record could be found.
-pub fn retrieve_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
+pub fn retrieve_record<'a>(ir: &'a IR<'_>, cc_name: &str) -> &'a Record {
     for record in ir.records() {
         if *record.cc_name() == cc_name {
             return record;
@@ -178,7 +232,7 @@ pub fn retrieve_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
 
 /// Retrieves the `Record` underlying the type alias with the given name.
 /// Panics if no such type alias could be found or it did not refer to a record.
-pub fn retrieve_type_alias_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
+pub fn retrieve_type_alias_record<'a>(ir: &'a IR<'_>, cc_name: &str) -> &'a Record {
     for type_alias in ir.type_aliases() {
         if type_alias.cc_name().as_str() == cc_name {
             let Some(item_id) = type_alias.underlying_type().decl_id() else {

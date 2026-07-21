@@ -14,7 +14,7 @@ use ir::{BazelLabel, CcType, Enum, Field, Func, GenericItem, Record, Unqualified
 use proc_macro2::Ident;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::fmt::{Arguments, Display};
+use std::fmt::Arguments;
 use std::rc::Rc;
 
 #[derive(Default)]
@@ -98,7 +98,7 @@ pub struct CodegenFunctions {
 memoized::query_group! {
     pub struct BindingsGenerator<'db> {
         #[input]
-        fn ir(&self) -> &'db IR;
+        fn ir(&self) -> &'db IR<'db>;
 
         #[input]
         fn errors(&self) -> &'db dyn ErrorReporting;
