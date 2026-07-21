@@ -57,3 +57,42 @@ Allowing for C++ to call it:
 ```c++
 append_to_rust_string(s, " I'm a neat addition");
 ```
+
+## `Result`
+
+The Rust `Result<T, E>` generic receives Rust bindings as `rs_std::Result<T,
+E>`, so long as both `T` and `E` are non-ZST types supported by Crubit.
+
+`rs_std::Result<T, E>` has a similar API to
+[`std::expected`](https://en.cppreference.com/cpp/utility/expected).
+(Alternatively, it has a similar API to
+[`std::optional`](https://en.cppreference.com/cpp/utility/optional), but with an
+additional error payload.) If `has_value()` returns `false`, then `error()` will
+return a reference to the error payload of type `E`.
+
+```c++
+if (myresult.has_value()) {
+  Foo(*myresult);
+} else {
+  Foo(myresult.error());
+}
+```
+
+A more complete description of the API is in the common `ResultBase` public base
+class: support/rs_std/result.h
+
+## `Option`
+
+The Rust `Option<T>` generic receives Rust bindings as `rs_std::Option<T>`, so
+long as `T` is a non-ZST type supported by Crubit. It has a similar API to
+[`std::optional`](https://en.cppreference.com/cpp/utility/optional), and
+implicitly converts to and from `std::optional`.
+
+```c++
+if (myoption.has_value()) {
+  Foo(*myoption);
+}
+```
+
+A more complete description of the API is in the common `OptionBase` public base
+class: support/rs_std/option.h
