@@ -21,16 +21,17 @@ use std::rc::Rc;
 
 // TODO(b/492229823): This trait is a temporary artifact for refactoring. Remove this trait and
 // update the tests in this file.
-trait IrTestingExt {
-    fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item;
+trait IrTestingExt<'pb> {
+    fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item<'pb>;
     fn find_decl<'a, T>(&'a self, decl_id: ir::ItemId) -> Result<&'a T>
     where
-        &'a T: TryFrom<&'a ir::Item>;
+        'pb: 'a,
+        &'a T: TryFrom<&'a ir::Item<'pb>>;
 }
 
-impl IrTestingExt for IR<'_> {
+impl<'pb> IrTestingExt<'pb> for IR<'pb> {
     #[track_caller]
-    fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item {
+    fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &ir::Item<'pb> {
         let Some(item) = self.get_decl(decl_id) else {
             panic!("Couldn't find decl_id {:?} in the IR:\n{:#?}", decl_id, self.tree_ir())
         };
@@ -40,7 +41,8 @@ impl IrTestingExt for IR<'_> {
     #[track_caller]
     fn find_decl<'a, T>(&'a self, decl_id: ir::ItemId) -> Result<&'a T>
     where
-        &'a T: TryFrom<&'a ir::Item>,
+        'pb: 'a,
+        &'a T: TryFrom<&'a ir::Item<'pb>>,
     {
         self.find_untyped_decl(decl_id).try_into().map_err(|_| {
             arc_anyhow::anyhow!(
@@ -3303,31 +3305,30 @@ fn test_member_function_constructor() {
     }
 }
 
-fn get_func_names(definition: &str) -> Vec<ir::UnqualifiedIdentifier> {
-    let proto = ir_proto_from_cc(definition).unwrap();
-
-    let ir = ir_testing::make_test_ir(&proto).unwrap();
+fn get_func_names<'pb>(proto: &'pb ir_rust_proto::IRProto) -> Vec<ir::UnqualifiedIdentifier<'pb>> {
+    let ir = ir_testing::make_test_ir(proto).unwrap();
     ir.functions().map(|f| f.rs_name().clone()).collect()
 }
 
 #[gtest]
 fn test_identifier_function_name() {
+    let proto = ir_proto_from_cc("void Function();").unwrap();
     assert_eq!(
-        get_func_names("void Function();"),
+        get_func_names(&proto),
         vec![ir::UnqualifiedIdentifier::Identifier(ir_id("Function"))],
     );
 }
 
 #[gtest]
 fn test_constructor_function_name() {
-    assert!(get_func_names("struct Struct {Struct();};")
-        .contains(&ir::UnqualifiedIdentifier::Constructor));
+    let proto = ir_proto_from_cc("struct Struct {Struct();};").unwrap();
+    assert!(get_func_names(&proto).contains(&ir::UnqualifiedIdentifier::Constructor));
 }
 
 #[gtest]
 fn test_destructor_function_name() {
-    assert!(get_func_names("struct Struct {~Struct();};")
-        .contains(&ir::UnqualifiedIdentifier::Destructor));
+    let proto = ir_proto_from_cc("struct Struct {~Struct();};").unwrap();
+    assert!(get_func_names(&proto).contains(&ir::UnqualifiedIdentifier::Destructor));
 }
 
 #[gtest]
@@ -5189,7 +5190,7 @@ fn test_assumed_lifetimes_struct_with_explicit_binding() {
     );
 }
 
-fn expect_constant<'a>(ir: &'a ir::IR<'_>) -> &'a ir::Constant {
+fn expect_constant<'pb>(ir: &'pb ir::IR<'pb>) -> &'pb ir::Constant<'pb> {
     let constant = ir.items().find_map(|item| match item {
         Item::Constant(constant) => Some(constant),
         _ => None,

@@ -38,54 +38,54 @@ pub struct FunctionId {
 /// The name of a one-function trait, with extra entries for
 /// specially-understood traits and families of traits.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum TraitName {
+pub enum TraitName<'a> {
     /// The std::clone::Clone trait.
     Clone,
     /// The constructor trait for !Unpin types, with a list of parameter types.
     /// For example, `CtorNew(vec![])` is the default constructor.
-    CtorNew(Rc<[RsTypeKind]>),
+    CtorNew(Rc<[RsTypeKind<'a>]>),
     Default,
-    From(Rc<[RsTypeKind]>),
+    From(Rc<[RsTypeKind<'a>]>),
     /// The constructor trait for !Unpin types that are considered unsafe.
-    UnsafeCtorNew(Rc<[RsTypeKind]>),
+    UnsafeCtorNew(Rc<[RsTypeKind<'a>]>),
     /// The conversion trait for Unpin types that are considered unsafe.
-    UnsafeFrom(Rc<[RsTypeKind]>),
+    UnsafeFrom(Rc<[RsTypeKind<'a>]>),
     /// The PartialEq trait.
     PartialEq {
-        param: Rc<RsTypeKind>,
+        param: Rc<RsTypeKind<'a>>,
         negate_thunk_result: bool,
     },
     /// The PartialOrd trait.
     PartialOrd {
-        param: Rc<RsTypeKind>,
+        param: Rc<RsTypeKind<'a>>,
     },
     /// The trait for the const C++ operator[] overload.
     CcIndex {
-        index_type: Rc<RsTypeKind>,
-        output_type: Rc<RsTypeKind>,
+        index_type: Rc<RsTypeKind<'a>>,
+        output_type: Rc<RsTypeKind<'a>>,
     },
     /// The trait for the mutable C++ operator[] overload.
     CcIndexMut {
-        index_type: Rc<RsTypeKind>,
-        output_type: Rc<RsTypeKind>,
+        index_type: Rc<RsTypeKind<'a>>,
+        output_type: Rc<RsTypeKind<'a>>,
     },
     /// The operator::Delete trait.
     Delete,
     /// Any other trait, e.g. Eq.
     Other {
         name: Rc<str>,
-        params: Rc<[RsTypeKind]>,
+        params: Rc<[RsTypeKind<'a>]>,
         is_unsafe_fn: bool,
     },
 }
 
-impl std::fmt::Display for TraitName {
+impl std::fmt::Display for TraitName<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         f.write_str(self.name_str())
     }
 }
 
-impl TraitName {
+impl<'a> TraitName<'a> {
     fn name_str(&self) -> &str {
         match self {
             TraitName::Clone => "Clone",
@@ -104,7 +104,7 @@ impl TraitName {
     }
 
     /// Returns the generic parameters in this trait name.
-    fn params(&self) -> &[RsTypeKind] {
+    fn params(&self) -> &[RsTypeKind<'a>] {
         match self {
             Self::Clone | Self::Default | Self::Delete => &[],
             Self::CtorNew(params)
@@ -129,14 +129,14 @@ impl TraitName {
 
 /// The kind of the `impl` block the function needs to be generated in.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ImplKind {
+pub enum ImplKind<'a> {
     /// Used for free functions for which we don't want the `impl` block.
     None { is_unsafe: bool },
     /// Used for inherent methods for which we need an `impl SomeStruct { ... }`
     /// block.
     Struct {
         /// For example, `SomeStruct`.
-        record: Rc<Record>,
+        record: Rc<Record<'a>>,
         is_unsafe: bool,
         /// Whether to format the first parameter as "self" (e.g. `__this:
         /// &mut T` -> `&mut self`)
@@ -149,9 +149,9 @@ pub enum ImplKind {
     /// SomeStruct { ... }` block.
     Trait {
         /// For example, `SomeStruct`.
-        record: Rc<Record>,
+        record: Rc<Record<'a>>,
         /// For example, `quote!{ From<i32> }`.
-        trait_name: TraitName,
+        trait_name: TraitName<'a>,
         /// Reference style for the `impl` block and self parameters.
         impl_for: ImplFor,
 
@@ -190,10 +190,10 @@ pub enum ImplKind {
         always_public: bool,
     },
 }
-impl ImplKind {
+impl<'a> ImplKind<'a> {
     pub fn new_trait(
-        trait_name: TraitName,
-        record: Rc<Record>,
+        trait_name: TraitName<'a>,
+        record: Rc<Record<'a>>,
         format_first_param_as_self: bool,
         force_const_reference_params: bool,
     ) -> Self {

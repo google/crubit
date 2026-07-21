@@ -87,25 +87,25 @@ fn test_generate_doc_comment_with_safety() {
 }
 
 struct TestItem {
-    source_loc: Option<Rc<str>>,
+    source_loc: Option<&'static str>,
 }
 
 const TEST_ITEM_ID: ItemId = ItemId::new_for_testing(123);
 
-impl ir::GenericItem for TestItem {
+impl<'a> ir::GenericItem<'a> for TestItem {
     fn id(&self) -> ItemId {
         TEST_ITEM_ID
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
+    fn unique_name(&self) -> Option<&'a str> {
         None
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         None
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
-        self.source_loc.clone()
+    fn source_loc(&self) -> Option<&'a str> {
+        self.source_loc
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
+    fn unknown_attr(&self) -> Option<&'a str> {
         None
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
@@ -145,11 +145,11 @@ impl<'pb> TestDbFactory<'pb> {
 
 fn make_factory<'pb>(proto: &'pb IRProto) -> TestDbFactory<'pb> {
     let test_item = UnsupportedItem::new_raw(
-        "test_item".into(),
+        Rc::from("test_item"),
         None,
         UnsupportedItemKind::Other,
         TEST_ITEM_ID,
-        Some("Generated from: some/header;l=1".into()),
+        Some("Generated from: some/header;l=1"),
         None,
         false,
         /* path= */ None,

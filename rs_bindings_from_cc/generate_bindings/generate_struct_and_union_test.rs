@@ -7,9 +7,9 @@ use code_gen_utils::make_rs_ident;
 use database::code_snippet::BindingsTokens;
 use generate_struct_and_union::generate_derives;
 use googletest::{expect_that, gtest, matchers::contains_substring};
-use ir_testing::{make_test_ir, make_test_ir_dependency, with_lifetime_macros};
+use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_record, with_lifetime_macros};
 use multiplatform_ir_testing::{
-    ir_proto_from_assumed_lifetimes_cc, ir_proto_from_cc, ir_proto_from_cc_dependency, ir_record,
+    ir_proto_from_assumed_lifetimes_cc, ir_proto_from_cc, ir_proto_from_cc_dependency,
 };
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -625,34 +625,44 @@ fn assert_derives(record: &ir::Record, expected: &[&str]) {
 
 #[gtest]
 fn test_copy_derives() {
-    let record = ir_record("S");
-    assert_derives(&record, &["Clone", "Copy", "::ctor::MoveAndAssignViaCopy"]);
+    let proto = ir_proto_from_cc("struct S final {};").unwrap();
+    let ir = make_test_ir(&proto).unwrap();
+    let record = retrieve_record(&ir, "S");
+    assert_derives(record, &["Clone", "Copy", "::ctor::MoveAndAssignViaCopy"]);
 }
 
 #[gtest]
 fn test_copy_derives_not_is_trivial_abi() {
-    let mut record = ir_record("S");
+    let proto = ir_proto_from_cc("struct S final {};").unwrap();
+    let ir = make_test_ir(&proto).unwrap();
+    let mut record = retrieve_record(&ir, "S").clone();
     record.set_is_trivial_abi(false);
     assert_derives(&record, &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_deleted() {
-    let mut record = ir_record("S");
+    let proto = ir_proto_from_cc("struct S final {};").unwrap();
+    let ir = make_test_ir(&proto).unwrap();
+    let mut record = retrieve_record(&ir, "S").clone();
     record.set_copy_constructor(ir::SpecialMemberFunc::Unavailable);
     assert_derives(&record, &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_nontrivial_members() {
-    let mut record = ir_record("S");
+    let proto = ir_proto_from_cc("struct S final {};").unwrap();
+    let ir = make_test_ir(&proto).unwrap();
+    let mut record = retrieve_record(&ir, "S").clone();
     record.set_copy_constructor(ir::SpecialMemberFunc::NontrivialMembers);
     assert_derives(&record, &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_nontrivial_self() {
-    let mut record = ir_record("S");
+    let proto = ir_proto_from_cc("struct S final {};").unwrap();
+    let ir = make_test_ir(&proto).unwrap();
+    let mut record = retrieve_record(&ir, "S").clone();
     record.set_copy_constructor(ir::SpecialMemberFunc::NontrivialUserDefined);
     assert_derives(&record, &[]);
 }
@@ -660,7 +670,9 @@ fn test_copy_derives_ctor_nontrivial_self() {
 /// In Rust, a Drop type cannot be Copy.
 #[gtest]
 fn test_copy_derives_dtor_nontrivial_self() {
-    let mut record = ir_record("S");
+    let proto = ir_proto_from_cc("struct S final {};").unwrap();
+    let ir = make_test_ir(&proto).unwrap();
+    let mut record = retrieve_record(&ir, "S").clone();
     for definition in
         [ir::SpecialMemberFunc::NontrivialUserDefined, ir::SpecialMemberFunc::NontrivialMembers]
     {

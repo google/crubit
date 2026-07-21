@@ -24,7 +24,7 @@ use unicode_ident::is_xid_continue;
 /// If we know the original C++ function is codegenned and already compatible
 /// with `extern "C"` calling convention we skip creating/calling the C++ thunk
 /// since we can call the original C++ directly.
-pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
+pub fn can_skip_cc_thunk<'a>(db: &BindingsGenerator<'a>, func: &Func<'a>) -> bool {
     // ## Inline functions
     //
     // Inline functions may not be codegenned in the C++ library since Clang doesn't
@@ -126,12 +126,12 @@ pub fn can_skip_cc_thunk(db: &BindingsGenerator, func: &Func) -> bool {
     true
 }
 
-pub fn generate_function_thunk(
-    db: &BindingsGenerator,
-    func: &Func,
+pub fn generate_function_thunk<'a>(
+    db: &BindingsGenerator<'a>,
+    func: &Func<'a>,
     param_idents: &[Ident],
-    param_types: &[RsTypeKind],
-    return_type: &RsTypeKind,
+    param_types: &[RsTypeKind<'a>],
+    return_type: &RsTypeKind<'a>,
 ) -> Result<Thunk> {
     let assume_lifetimes = db
         .ir()
@@ -284,7 +284,7 @@ fn compute_disambiguator_hash(func: &Func) -> String {
     format!("{:08x}_", hash.0 as u32)
 }
 
-pub fn thunk_ident(db: &BindingsGenerator, func: &Func) -> Ident {
+pub fn thunk_ident<'a>(db: &BindingsGenerator<'a>, func: &Func<'a>) -> Ident {
     let disambiguator = {
         let need_disambiguation = db.has_conflicting_mangled_name(func)
             || func.is_member_or_descendant_of_class_template();
@@ -301,10 +301,10 @@ pub fn thunk_ident(db: &BindingsGenerator, func: &Func) -> Ident {
     )
 }
 
-fn generate_function_assertion_for_identifier(
-    db: &BindingsGenerator,
-    func: &Func,
-    id: &Identifier,
+fn generate_function_assertion_for_identifier<'a>(
+    db: &BindingsGenerator<'a>,
+    func: &Func<'a>,
+    id: &Identifier<'a>,
 ) -> Result<ThunkImpl> {
     let features = db.ir().target_crubit_features(func.owning_target());
     let fn_ident = format_nonportable_cc_ident(id.as_str())?;
@@ -377,9 +377,9 @@ fn generate_function_assertion_for_identifier(
     Ok(ThunkImpl::FunctionTypeAssertion { cc_function_type, implementation_function })
 }
 
-pub fn generate_function_assertion(
-    db: &BindingsGenerator,
-    func: &Func,
+pub fn generate_function_assertion<'a>(
+    db: &BindingsGenerator<'a>,
+    func: &Func<'a>,
 ) -> Result<Option<ThunkImpl>> {
     if func.adl_enclosing_record().is_some() {
         // This is a friend function that is only reachable with ADL. We can't take the address.
@@ -406,7 +406,7 @@ pub fn generate_function_assertion(
 // Returns whether `func` is a copy constructor of `record_id`, assuming that `func` is a
 // constructor member function of `record_id`.
 // TODO(zarko): do we need to distinguish between non-const and const ctors? See b/436870965.
-fn is_copy_constructor(func: &Func, record_id: ItemId) -> bool {
+fn is_copy_constructor(func: &Func<'_>, record_id: ItemId) -> bool {
     let [_, other] = func.params() else {
         return false;
     };
@@ -422,9 +422,9 @@ fn is_copy_constructor(func: &Func, record_id: ItemId) -> bool {
     *id == record_id
 }
 
-pub fn generate_function_thunk_impl(
-    db: &BindingsGenerator,
-    func: &Func,
+pub fn generate_function_thunk_impl<'a>(
+    db: &BindingsGenerator<'a>,
+    func: &Func<'a>,
 ) -> Result<Option<ThunkImpl>> {
     if can_skip_cc_thunk(db, func) {
         return Ok(None);

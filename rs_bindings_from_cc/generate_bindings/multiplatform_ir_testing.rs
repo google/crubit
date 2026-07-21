@@ -5,7 +5,6 @@
 //! Utilities for generating IR for the `multiplatformat_testing::test_platform` in tests.
 
 use arc_anyhow::Result;
-use ir::{Record, IR};
 use ir_rust_proto::IRProto;
 use ir_testing::with_full_lifetime_macros;
 use multiplatform_testing::test_platform;
@@ -26,10 +25,6 @@ pub fn ir_proto_from_cc_dependency(header: &str, dep_header: &str) -> Result<IRP
         None,
         /*kythe_annotations=*/ false,
     )
-}
-
-pub fn ir_record(name: &str) -> Record {
-    ir_testing::ir_record(test_platform(), name)
 }
 
 pub fn ir_proto_from_assumed_lifetimes_cc(program: &str) -> Result<IRProto> {

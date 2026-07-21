@@ -89,10 +89,10 @@ macro_rules! intern {
 
 #[derive(Clone)]
 pub struct CodegenFunctions {
-    pub generate_enum: fn(&BindingsGenerator, Rc<Enum>) -> Result<ApiSnippets>,
-    pub generate_item: fn(&BindingsGenerator, ir::Item) -> Result<ApiSnippets>,
-    pub generate_record: fn(&BindingsGenerator, Rc<Record>) -> Result<ApiSnippets>,
-    pub decl_lifetime_arity: fn(&BindingsGenerator, ir::ItemId) -> Result<usize>,
+    pub generate_enum: for<'a> fn(&BindingsGenerator<'a>, Rc<Enum<'a>>) -> Result<ApiSnippets>,
+    pub generate_item: for<'a> fn(&BindingsGenerator<'a>, ir::Item<'a>) -> Result<ApiSnippets>,
+    pub generate_record: for<'a> fn(&BindingsGenerator<'a>, Rc<Record<'a>>) -> Result<ApiSnippets>,
+    pub decl_lifetime_arity: fn(&BindingsGenerator<'_>, ir::ItemId) -> Result<usize>,
 }
 
 memoized::query_group! {
@@ -129,13 +129,13 @@ memoized::query_group! {
         /// Returns `None` if the type is safe.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:rs_type_kind_safety
-        fn rs_type_kind_safety(&self, rs_type_kind: RsTypeKind) -> Option<UnsafeReason>;
+        fn rs_type_kind_safety(&self, rs_type_kind: RsTypeKind<'db>) -> Option<UnsafeReason>;
 
         #[break_cycles_with = None]
         /// Returns whether the given field is unsafe to access.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:record_field_safety
-        fn record_field_safety(&self, field: Field) -> Option<UnsafeReason>;
+        fn record_field_safety(&self, field: Field<'db>) -> Option<UnsafeReason>;
 
         #[break_cycles_with = None]
         /// Returns whether the given record is unsafe.
@@ -144,12 +144,12 @@ memoized::query_group! {
         /// or by having an unsafe public field (see `record_field_safety`).
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:record_safety
-        fn record_safety(&self, record: Rc<Record>) -> Option<UnsafeReason>;
+        fn record_safety(&self, record: Rc<Record<'db>>) -> Option<UnsafeReason>;
 
         /// Returns the bindings info for the given item, or an error if the item is not supported.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:has_bindings
-        fn has_bindings(&self, item: ir::Item) -> Result<BindingsInfo, NoBindingsReason>;
+        fn has_bindings(&self, item: ir::Item<'db>) -> Result<BindingsInfo, NoBindingsReason>;
 
         /// Returns the Rust type kind of the given C++ type, optionally filling in missing
         /// reference lifetimes with the elided lifetime (`'_`).
@@ -163,7 +163,7 @@ memoized::query_group! {
         /// TODO(b/409128537): never return `Err` here, instead check `type_visibility`
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/rs_type_kind.rs?q=function:rs_type_kind_with_lifetime_elision
-        fn rs_type_kind_with_lifetime_elision(&self, cc_type: CcType, lifetime_options: LifetimeOptions) -> Result<RsTypeKind>;
+        fn rs_type_kind_with_lifetime_elision(&self, cc_type: CcType, lifetime_options: LifetimeOptions) -> Result<RsTypeKind<'db>>;
 
         /// Returns the generated bindings for the given function.
         ///
@@ -185,7 +185,7 @@ memoized::query_group! {
         /// rely on the bindings of a function being generated correctly, except for `Drop`.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:generate_function
-        fn generate_function(&self, func: Rc<Func>, derived_record: Option<Rc<Record>>) -> Result<Option<GeneratedFunction>>;
+        fn generate_function(&self, func: Rc<Func<'db>>, derived_record: Option<Rc<Record<'db>>>) -> Result<Option<GeneratedFunction>>;
 
         /// You should call is_function_ambiguous() instead.
         ///
@@ -200,7 +200,7 @@ memoized::query_group! {
         /// trait.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:is_record_clonable
-        fn is_record_clonable(&self, record: Rc<Record>) -> bool;
+        fn is_record_clonable(&self, record: Rc<Record<'db>>) -> bool;
 
         /// Returns the generated bindings for a function with the given name and param
         /// types. If none exists, returns None.
@@ -208,32 +208,32 @@ memoized::query_group! {
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:get_binding
         fn get_binding(
             &self,
-            expected_function_name: UnqualifiedIdentifier,
-            expected_param_types: Vec<RsTypeKind>,
-        ) -> Option<(Ident, ImplKind)>;
+            expected_function_name: UnqualifiedIdentifier<'db>,
+            expected_param_types: Vec<RsTypeKind<'db>>,
+        ) -> Option<(Ident, ImplKind<'db>)>;
 
         /// Returns a collection of unqualified member functions of the given record.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_struct_and_union.rs?q=function:collect_unqualified_member_functions
         fn collect_unqualified_member_functions(
             &self,
-            record: Rc<Record>,
-        ) -> Rc<[Rc<Func>]>;
+            record: Rc<Record<'db>>,
+        ) -> Rc<[Rc<Func<'db>>]>;
 
         /// Returns the `CrubitAbiType` for the given `RsTypeKind`.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:crubit_abi_type
-        fn crubit_abi_type(&self, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType>;
+        fn crubit_abi_type(&self, rs_type_kind: RsTypeKind<'db>) -> Result<CrubitAbiType>;
 
         // You should probably use `type_visibility()` instead of this function.
-        fn type_target_restriction(&self, rs_type_kind: RsTypeKind) -> Result<Option<BazelLabel>>;
+        fn type_target_restriction(&self, rs_type_kind: RsTypeKind<'db>) -> Result<Option<BazelLabel>>;
 
         /// Resolves names to a map from name to ResolvedName.
         ///
         /// This checks both type and value namespaces.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/has_bindings.rs?q=function:resolve_names
-        fn resolve_names(&self, parent: Rc<Record>) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>>;
+        fn resolve_names(&self, parent: Rc<Record<'db>>) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>>;
 
         /// Counts how many functions have the given mangled name.
         /// Returns a map from a mangled name to the number of times it occurs in the IR.
@@ -251,7 +251,7 @@ impl<'db> BindingsGenerator<'db> {
     /// Returns the generated bindings for the given enum.
     ///
     /// Implementation: rs_bindings_from_cc/generate_bindings/generate_enum.rs?q=function:generate_enum
-    pub fn generate_enum(&self, enum_: Rc<Enum>) -> Result<ApiSnippets> {
+    pub fn generate_enum(&self, enum_: Rc<Enum<'db>>) -> Result<ApiSnippets> {
         (self.codegen_functions().generate_enum)(self, enum_)
     }
 
@@ -259,7 +259,7 @@ impl<'db> BindingsGenerator<'db> {
     /// failed in such a way as to make the generated bindings as a whole invalid.
     ///
     /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:generate_item
-    pub fn generate_item(&self, item: ir::Item) -> Result<ApiSnippets> {
+    pub fn generate_item(&self, item: ir::Item<'db>) -> Result<ApiSnippets> {
         (self.codegen_functions().generate_item)(self, item)
     }
 
@@ -267,7 +267,7 @@ impl<'db> BindingsGenerator<'db> {
     /// assertions.
     ///
     /// Implementation: rs_bindings_from_cc/generate_bindings/generate_struct_and_union.rs?q=function:generate_record
-    pub fn generate_record(&self, record: Rc<Record>) -> Result<ApiSnippets> {
+    pub fn generate_record(&self, record: Rc<Record<'db>>) -> Result<ApiSnippets> {
         (self.codegen_functions().generate_record)(self, record)
     }
 
@@ -275,7 +275,7 @@ impl<'db> BindingsGenerator<'db> {
     ///
     /// This differs from `rs_type_kind_with_lifetime_elision` in that it replaces references
     /// with missing lifetimes with pointer types.
-    pub fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind> {
+    pub fn rs_type_kind(&self, cc_type: CcType) -> Result<RsTypeKind<'db>> {
         self.rs_type_kind_with_lifetime_elision(cc_type, LifetimeOptions::default())
     }
 
@@ -292,7 +292,7 @@ impl<'db> BindingsGenerator<'db> {
     }
 
     /// Returns true if `func` has a conflicting mangled name.
-    pub fn has_conflicting_mangled_name(&self, func: &ir::Func) -> bool {
+    pub fn has_conflicting_mangled_name(&self, func: &ir::Func<'_>) -> bool {
         let conflicts_counter =
             self.mangled_name_counts().get(func.mangled_name()).copied().unwrap_or(0);
         conflicts_counter > 1
@@ -302,7 +302,7 @@ impl<'db> BindingsGenerator<'db> {
     pub fn type_visibility(
         &self,
         library: &BazelLabel,
-        rs_type_kind: RsTypeKind,
+        rs_type_kind: RsTypeKind<'db>,
     ) -> Result<Visibility> {
         match self.type_target_restriction(rs_type_kind.clone())? {
             Some(label) if &label != library => {
@@ -502,12 +502,12 @@ impl<'db> BindingsGenerator<'db> {
 
     pub fn new_unsupported_item(
         &self,
-        item: &impl GenericItem,
-        path: Option<ir::UnsupportedItemPath>,
+        item: &impl GenericItem<'db>,
+        path: Option<ir::UnsupportedItemPath<'db>>,
         error: Option<Rc<ir::FormattedError>>,
         cause: Option<Error>,
         must_bind: bool,
-    ) -> ir::UnsupportedItem {
+    ) -> ir::UnsupportedItem<'db> {
         ir::UnsupportedItem::new_raw(
             self.debug_name(item.id()),
             item.unique_name(),
@@ -524,10 +524,10 @@ impl<'db> BindingsGenerator<'db> {
 
     pub fn new_unsupported_item_with_static_message(
         &self,
-        item: &impl GenericItem,
-        path: Option<ir::UnsupportedItemPath>,
+        item: &impl GenericItem<'db>,
+        path: Option<ir::UnsupportedItemPath<'db>>,
         message: &'static str,
-    ) -> ir::UnsupportedItem {
+    ) -> ir::UnsupportedItem<'db> {
         let message = intern!(self.interner(), "{message}");
         self.new_unsupported_item(
             item,
@@ -540,10 +540,10 @@ impl<'db> BindingsGenerator<'db> {
 
     pub fn new_unsupported_item_with_cause(
         &self,
-        item: &impl GenericItem,
-        path: Option<ir::UnsupportedItemPath>,
+        item: &impl GenericItem<'db>,
+        path: Option<ir::UnsupportedItemPath<'db>>,
         cause: Error,
-    ) -> ir::UnsupportedItem {
+    ) -> ir::UnsupportedItem<'db> {
         self.new_unsupported_item(item, path, None, Some(cause), item.must_bind())
     }
 
@@ -553,7 +553,7 @@ impl<'db> BindingsGenerator<'db> {
         error_report::ItemName {
             name,
             id: item.id().as_u64(),
-            unique_name: item.unique_name(),
+            unique_name: item.unique_name().map(Rc::from),
             defining_target: self.defining_target(item.id()).map(|label| label.as_str().into()),
         }
     }
@@ -585,7 +585,7 @@ impl<'db> BindingsGenerator<'db> {
     #[track_caller]
     pub fn find_decl<T>(&self, decl_id: ir::ItemId) -> arc_anyhow::Result<&'db T>
     where
-        &'db T: TryFrom<&'db ir::Item>,
+        &'db T: TryFrom<&'db ir::Item<'db>>,
     {
         self.find_untyped_decl(decl_id).try_into().map_err(|_| {
             arc_anyhow::anyhow!(
@@ -597,16 +597,16 @@ impl<'db> BindingsGenerator<'db> {
     }
 
     #[track_caller]
-    pub fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &'db ir::Item {
+    pub fn find_untyped_decl(&self, decl_id: ir::ItemId) -> &'db ir::Item<'db> {
         let Some(item) = self.ir().get_decl(decl_id) else {
             panic!("Couldn't find decl_id {:?} in the IR:\n{:#?}", decl_id, self.ir().tree_ir())
         };
         item
     }
 
-    pub fn namespace_qualifier(
+    pub fn namespace_qualifier<'a>(
         &self,
-        item: &impl ir::GenericItem,
+        item: &impl ir::GenericItem<'a>,
     ) -> code_gen_utils::NamespaceQualifier {
         self.namespace_qualifier_from_id(item.id())
     }
@@ -671,7 +671,7 @@ impl<'db> BindingsGenerator<'db> {
     /// Returns the name of the snake-cased module that exposes the given record's nested items.
     pub fn record_to_associated_module_name(
         &self,
-        record: Rc<Record>,
+        record: Rc<Record<'db>>,
     ) -> Result<proc_macro2::Ident> {
         let record_name: &str = record.rs_name().as_str();
         let snake_case_name = record_name.to_snake_case();

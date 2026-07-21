@@ -12,7 +12,7 @@ use ir::{CcType, CcTypeVariant, PointerTypeKind};
 use lifetime_defaults_transform::lifetime_defaults_transform_item;
 use std::rc::Rc;
 
-fn pointee_is_string_view(db: &BindingsGenerator, ty: &CcType) -> bool {
+fn pointee_is_string_view(db: &BindingsGenerator<'_>, ty: &CcType) -> bool {
     match ty.variant() {
         CcTypeVariant::Decl { id, .. } => {
             let item = db.find_untyped_decl(*id);
@@ -26,7 +26,7 @@ fn pointee_is_string_view(db: &BindingsGenerator, ty: &CcType) -> bool {
     }
 }
 
-fn item_is_or_aliases_string_view(db: &BindingsGenerator, item: &ir::Item) -> bool {
+fn item_is_or_aliases_string_view(db: &BindingsGenerator<'_>, item: &ir::Item<'_>) -> bool {
     match item {
         ir::Item::Record(record) => record.is_string_view(),
         ir::Item::TypeAlias(type_alias) => match type_alias.underlying_type().variant() {
@@ -40,11 +40,11 @@ fn item_is_or_aliases_string_view(db: &BindingsGenerator, item: &ir::Item) -> bo
 }
 
 /// Implementation of `BindingsGenerator::rs_type_kind`.
-pub fn rs_type_kind_with_lifetime_elision(
-    db: &BindingsGenerator,
+pub fn rs_type_kind_with_lifetime_elision<'a>(
+    db: &BindingsGenerator<'a>,
     ty: CcType,
     lifetime_options: LifetimeOptions,
-) -> Result<RsTypeKind> {
+) -> Result<RsTypeKind<'a>> {
     ensure!(
         ty.unknown_attr().is_empty(),
         "crubit.rs/errors/unknown_attribute: unknown attribute(s): {}",

@@ -95,7 +95,7 @@ fn update_test_ir(ir: &mut IR<'_>, extra_feature: Option<&str>) {
 /// For now, constructing IR<'pb> in tests requires explicitly passing in a proto reference.
 pub fn make_ir_from_items<'pb>(
     proto: &'pb ir_rust_proto::IRProto,
-    items: impl IntoIterator<Item = Item>,
+    items: impl IntoIterator<Item = Item<'pb>>,
 ) -> IR<'pb> {
     let mut ir = make_ir_from_parts(
         items.into_iter().collect_vec(),
@@ -172,21 +172,6 @@ pub fn ir_id(name: &str) -> Identifier {
     Identifier::new(name)
 }
 
-/// Creates a simple `Item::Record` with a given name.
-pub fn ir_record(platform: multiplatform_testing::Platform, name: &str) -> Record {
-    let proto = ir_proto_from_cc(platform, "struct REPLACEME final {};").unwrap();
-    let ir = make_test_ir(&proto).unwrap();
-    for item in ir.items() {
-        if let Item::Record(record) = item {
-            let mut record = (**record).clone();
-            record.set_rs_name(Identifier::new(name));
-            record.set_cc_name(Identifier::new(name));
-            return record;
-        }
-    }
-    panic!("Test IR doesn't contain a record");
-}
-
 pub fn retrieve_lifetime_param_id(names: &[LifetimeName], name: &str) -> LifetimeId {
     for param in names {
         if param.name() == name {
@@ -198,7 +183,7 @@ pub fn retrieve_lifetime_param_id(names: &[LifetimeName], name: &str) -> Lifetim
 
 /// Retrieves the function with the given name.
 /// Panics if no such function could be found.
-pub fn retrieve_func<'a>(ir: &'a IR<'_>, name: &str) -> &'a Func {
+pub fn retrieve_func<'pb>(ir: &'pb IR<'pb>, name: &str) -> &'pb Func<'pb> {
     for func in ir.functions() {
         if *func.rs_name() == ir::UnqualifiedIdentifier::Identifier(ir_id(name)) {
             return func;
@@ -209,7 +194,7 @@ pub fn retrieve_func<'a>(ir: &'a IR<'_>, name: &str) -> &'a Func {
 
 /// Retrieves the `Record` with the given name.
 /// Panics if no such record could be found.
-pub fn retrieve_record<'a>(ir: &'a IR<'_>, cc_name: &str) -> &'a Record {
+pub fn retrieve_record<'pb>(ir: &'pb IR<'pb>, cc_name: &str) -> &'pb Record<'pb> {
     for record in ir.records() {
         if *record.cc_name() == cc_name {
             return record;
@@ -220,7 +205,7 @@ pub fn retrieve_record<'a>(ir: &'a IR<'_>, cc_name: &str) -> &'a Record {
 
 /// Retrieves the `Record` underlying the type alias with the given name.
 /// Panics if no such type alias could be found or it did not refer to a record.
-pub fn retrieve_type_alias_record<'a>(ir: &'a IR<'_>, cc_name: &str) -> &'a Record {
+pub fn retrieve_type_alias_record<'pb>(ir: &'pb IR<'pb>, cc_name: &str) -> &'pb Record<'pb> {
     for type_alias in ir.type_aliases() {
         if type_alias.cc_name().as_str() == cc_name {
             let Some(item_id) = type_alias.underlying_type().decl_id() else {
@@ -244,6 +229,7 @@ mod tests {
     use googletest::{expect_eq, gtest};
     use ir::ItemId;
     use multiplatform_testing::Platform;
+    use std::rc::Rc;
 
     #[gtest]
     fn test_features_ir_from_cc() -> Result<()> {
@@ -278,11 +264,12 @@ mod tests {
     #[gtest]
     #[should_panic(expected = "Duplicate decl_id found in")]
     fn test_duplicate_decl_ids_err() {
-        let mut r1 = ir_record(Platform::X86Linux, "R1");
+        let proto = ir_proto_from_cc(Platform::X86Linux, "struct R1 {};").unwrap();
+        let ir = make_test_ir(&proto).unwrap();
+        let mut r1 = retrieve_record(&ir, "R1").clone();
         r1.set_id(ItemId::new_for_testing(42));
-        let mut r2 = ir_record(Platform::X86Linux, "R2");
-        r2.set_id(ItemId::new_for_testing(42));
-        let proto = ir_rust_proto::IRProto::new();
-        let _ = make_ir_from_items(&proto, [r1.into(), r2.into()]);
+        let mut r2 = r1.clone();
+        r2.set_rs_name(ir::Identifier::new("R2"));
+        let _ = make_ir_from_items(&proto, [Item::Record(Rc::new(r1)), Item::Record(Rc::new(r2))]);
     }
 }

@@ -53,9 +53,9 @@ fn needs_manually_drop(ty: &RsTypeKind) -> bool {
 }
 
 /// Generates Rust source code for a given incomplete record declaration.
-pub fn generate_incomplete_record(
-    db: &BindingsGenerator,
-    incomplete_record: Rc<IncompleteRecord>,
+pub fn generate_incomplete_record<'a>(
+    db: &BindingsGenerator<'a>,
+    incomplete_record: Rc<IncompleteRecord<'a>>,
 ) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::NonMovable);
 
@@ -81,7 +81,7 @@ pub fn generate_incomplete_record(
     })
 }
 
-fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
+fn make_rs_field_ident(field: &Field<'_>, field_index: usize) -> Ident {
     match field.rust_identifier() {
         None => make_rs_ident(&format!("__unnamed_field{}", field_index)),
         Some(ident) => make_rs_ident(ident.as_str()),
@@ -102,11 +102,11 @@ fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
 /// of memory, of a size that can fill up space to the next field.
 ///
 /// See docs/design/struct_layout.md
-fn get_field_rs_type_kind_for_layout(
-    db: &BindingsGenerator,
-    record: &Record,
-    field: &Field,
-) -> Result<RsTypeKind> {
+fn get_field_rs_type_kind_for_layout<'a>(
+    db: &BindingsGenerator<'a>,
+    record: &Record<'a>,
+    field: &Field<'a>,
+) -> Result<RsTypeKind<'a>> {
     if field.is_no_unique_address() {
         bail!("`[[no_unique_address]]` attribute was present.");
     }
@@ -168,10 +168,10 @@ fn get_field_rs_type_kind_for_layout(
     Ok(type_kind)
 }
 
-fn collect_unqualified_member_functions_from_all_bases(
-    db: &BindingsGenerator,
-    record: &Record,
-) -> Rc<[Rc<Func>]> {
+fn collect_unqualified_member_functions_from_all_bases<'a>(
+    db: &BindingsGenerator<'a>,
+    record: &Record<'a>,
+) -> Rc<[Rc<Func<'a>>]> {
     record
         .unambiguous_public_bases()
         .iter()
@@ -191,10 +191,10 @@ fn collect_unqualified_member_functions_from_all_bases(
 }
 
 /// Implementation of `BindingsGenerator::collect_unqualified_member_functions`.
-pub fn collect_unqualified_member_functions(
-    _db: &BindingsGenerator,
-    record: Rc<Record>,
-) -> Rc<[Rc<Func>]> {
+pub fn collect_unqualified_member_functions<'a>(
+    _db: &BindingsGenerator<'a>,
+    record: Rc<Record<'a>>,
+) -> Rc<[Rc<Func<'a>>]> {
     record
         .children()
         .iter()
@@ -214,11 +214,11 @@ pub fn collect_unqualified_member_functions(
 ///
 /// Ambiguous functions are functions that have the same name as a function in
 /// the base class.
-fn filter_out_ambiguous_member_functions(
-    db: &BindingsGenerator,
-    derived_record: Rc<Record>,
-    inherited_functions: Rc<[Rc<Func>]>,
-) -> Rc<[Rc<Func>]> {
+fn filter_out_ambiguous_member_functions<'a>(
+    db: &BindingsGenerator<'a>,
+    derived_record: Rc<Record<'a>>,
+    inherited_functions: Rc<[Rc<Func<'a>>]>,
+) -> Rc<[Rc<Func<'a>>]> {
     let derived_member_functions = db
         .collect_unqualified_member_functions(derived_record.clone())
         .iter()
@@ -247,10 +247,10 @@ fn filter_out_ambiguous_member_functions(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn field_definition(
-    db: &BindingsGenerator,
-    record: &Record,
-    field: Option<&ir::Field>,
+fn field_definition<'a>(
+    db: &BindingsGenerator<'a>,
+    record: &Record<'a>,
+    field: Option<&ir::Field<'a>>,
     field_index: usize,
     prev_end: usize,
     offset: usize,
@@ -379,7 +379,10 @@ fn field_definition(
 }
 
 /// Implementation of `BindingsGenerator::generate_record`.
-pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<ApiSnippets> {
+pub fn generate_record<'a>(
+    db: &BindingsGenerator<'a>,
+    record: Rc<Record<'a>>,
+) -> Result<ApiSnippets> {
     use error_report::Category;
     db.errors().add_category(Category::Type);
     let record_safety = db.record_safety(record.clone());
@@ -414,9 +417,9 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
         quote! { #crate_root_path:: #namespace_qualifier #ident }
     };
 
-    struct FieldWithLayout<'a> {
+    struct FieldWithLayout<'a, 'pb> {
         /// The IR field. Note that bitfields are represented as `None`.
-        ir: Option<&'a ir::Field>,
+        ir: Option<&'a ir::Field<'pb>>,
         /// The offset of the field in the struct.
         offset: usize,
         /// The offset of the end of the field or `None` for opaque fields.
@@ -825,10 +828,10 @@ pub fn generate_record(db: &BindingsGenerator, record: Rc<Record>) -> Result<Api
 
 /// Returns an iterator over the child items of this record, including
 /// whether each child item should be nested in a module.
-pub fn child_items<'a>(
-    record: &'a Record,
-    db: &'a BindingsGenerator,
-) -> impl Iterator<Item = ChildItem> + 'a {
+pub fn child_items<'a, 'pb>(
+    record: &'a Record<'pb>,
+    db: &'a BindingsGenerator<'pb>,
+) -> impl Iterator<Item = ChildItem<'pb>> + 'a {
     record.children().iter().map(move |item| {
         let is_nested = item.place_in_nested_module_if_nested_in_record()
             && db.has_bindings(item.clone()).is_ok();
@@ -837,18 +840,18 @@ pub fn child_items<'a>(
 }
 
 /// A child item of a record.
-pub struct ChildItem {
+pub struct ChildItem<'pb> {
     /// Whether the child item should be nested in a module.
     pub is_nested: bool,
     /// The child item.
-    pub item: Item,
+    pub item: Item<'pb>,
 }
 
 pub fn rs_size_align_assertions(type_name: TokenStream, size_align: &ir::SizeAlign) -> Assertion {
     Assertion::SizeAlign { type_name, size: size_align.size(), alignment: size_align.alignment() }
 }
 
-pub fn generate_derives(record: &Record) -> DeriveAttr {
+pub fn generate_derives(record: &Record<'_>) -> DeriveAttr {
     // Thread-safe types wrap their fields in UnsafeCell<[MaybeUninit<u8>; N]>.
     // This opaque byte array doesn't support useful standard derives, and Clone/Copy
     // are explicitly prevented to support interior mutability anyway.

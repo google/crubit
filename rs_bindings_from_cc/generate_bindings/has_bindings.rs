@@ -17,8 +17,8 @@ use std::rc::Rc;
 
 /// Recursively checks whether all C++ declarations (`Decl`) directly or transitively
 /// referenced by `cc_type` have bindings.
-fn cc_type_has_bindings(
-    db: &BindingsGenerator,
+fn cc_type_has_bindings<'a>(
+    db: &BindingsGenerator<'a>,
     cc_type: &CcType,
     alias_id: ItemId,
 ) -> Result<(), NoBindingsReason> {
@@ -53,7 +53,10 @@ fn cc_type_has_bindings(
 }
 
 /// Implementation of `BindingsGenerator::has_bindings`.
-pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, NoBindingsReason> {
+pub fn has_bindings<'a>(
+    db: &BindingsGenerator<'a>,
+    item: Item<'a>,
+) -> Result<BindingsInfo, NoBindingsReason> {
     if let Some(name) = item.cc_name_as_str() {
         // Dunder namespaces are allowed for now.
         if name.starts_with("__") && !matches!(item, Item::Namespace(_)) {
@@ -248,9 +251,9 @@ pub fn has_bindings(db: &BindingsGenerator, item: Item) -> Result<BindingsInfo, 
 }
 
 /// Returns function-specific `has_bindings` information.
-fn func_has_bindings(
-    db: &BindingsGenerator,
-    func: Rc<Func>,
+fn func_has_bindings<'a>(
+    db: &BindingsGenerator<'a>,
+    func: Rc<Func<'a>>,
 ) -> Result<BindingsInfo, NoBindingsReason> {
     if func.is_consteval() {
         return Err(NoBindingsReason::Unsupported(anyhow!(
@@ -329,9 +332,9 @@ fn func_has_bindings(
 // structured a bit differently, and it's difficult to share the code.
 //
 // YMMV: feel free to unify the two functions later.
-pub fn type_target_restriction(
-    db: &BindingsGenerator,
-    rs_type_kind: RsTypeKind,
+pub fn type_target_restriction<'a>(
+    db: &BindingsGenerator<'a>,
+    rs_type_kind: RsTypeKind<'a>,
 ) -> Result<Option<BazelLabel>> {
     let mut dfs_iter = rs_type_kind.dfs_iter();
     // `unwrap()` is safe because we know there is at least the `Self type.
@@ -348,11 +351,11 @@ pub fn type_target_restriction(
 }
 
 /// A visibility restriction indicating that a type is `pub(crate)` within a specific target.
-struct TargetRestriction {
+struct TargetRestriction<'a> {
     /// The target which provides the `pub(crate)` type.
     target: BazelLabel,
     /// The type which is `pub(crate)`, used for error messages.
-    exemplar_type: RsTypeKind,
+    exemplar_type: RsTypeKind<'a>,
 }
 
 /// Updates `old_restriction`: if `new_restriction` is `pub(crate)` while
@@ -360,11 +363,11 @@ struct TargetRestriction {
 ///
 /// Returns an error if both are `pub(crate)`, and the two types are owned by different crates.
 /// The error contains just a list of the types it found that are incompatible.
-fn intersect_target_restrictions(
-    db: &BindingsGenerator,
-    original_type: &RsTypeKind,
-    old_restriction: &mut Option<TargetRestriction>,
-    new_restriction: Option<TargetRestriction>,
+fn intersect_target_restrictions<'a>(
+    db: &BindingsGenerator<'a>,
+    original_type: &RsTypeKind<'a>,
+    old_restriction: &mut Option<TargetRestriction<'a>>,
+    new_restriction: Option<TargetRestriction<'a>>,
 ) -> Result<()> {
     if let Some(old_restriction) = old_restriction.as_ref()
         && let Some(new_restriction) = new_restriction.as_ref()
@@ -394,10 +397,10 @@ fn intersect_target_restrictions(
 ///
 /// For example, the top level visibility restriction of `*mut T` is `None` for all `T`, because
 /// pointers are never `pub(crate)`, only their pointees can be.
-fn type_target_restriction_shallow(
-    db: &BindingsGenerator,
-    rs_type_kind: &RsTypeKind,
-) -> Option<TargetRestriction> {
+fn type_target_restriction_shallow<'a>(
+    db: &BindingsGenerator<'a>,
+    rs_type_kind: &RsTypeKind<'a>,
+) -> Option<TargetRestriction<'a>> {
     let rs_type_kind = rs_type_kind.unalias();
     let RsTypeKind::Record { record, .. } = rs_type_kind else {
         // All non-record types are `pub` if they receive bindings.
@@ -423,10 +426,10 @@ fn type_target_restriction_shallow(
     Some(TargetRestriction { target: target.clone(), exemplar_type: rs_type_kind.clone() })
 }
 
-fn type_visibility(
-    db: &BindingsGenerator,
+fn type_visibility<'a>(
+    db: &BindingsGenerator<'a>,
     item: &dyn GenericItem,
-    rs_type_kind: RsTypeKind,
+    rs_type_kind: RsTypeKind<'a>,
 ) -> Result<Visibility, NoBindingsReason> {
     let Some(target) = item.owning_target() else {
         return Ok(Visibility::Public);
@@ -440,8 +443,8 @@ enum NameConflictAction {
     Coalesce,
 }
 
-fn determine_name_conflict_action(
-    db: &BindingsGenerator,
+fn determine_name_conflict_action<'a>(
+    db: &BindingsGenerator<'a>,
     old_resolved_name: &ResolvedName,
     new_resolved_name: &ResolvedName,
 ) -> NameConflictAction {
@@ -470,9 +473,9 @@ fn determine_name_conflict_action(
 /// Resolves names to a map from name to ResolvedName.
 ///
 /// This checks both type and value namespaces.
-pub fn resolve_names(
-    db: &BindingsGenerator,
-    parent: Rc<Record>,
+pub fn resolve_names<'a>(
+    db: &BindingsGenerator<'a>,
+    parent: Rc<Record<'a>>,
 ) -> Result<Rc<HashMap<Rc<str>, ResolvedName>>> {
     let child_items = match parent.enclosing_item_id().map(|id| db.find_untyped_decl(id)) {
         Some(Item::Namespace(ns)) => ns.children().iter(),

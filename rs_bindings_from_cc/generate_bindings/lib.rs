@@ -127,9 +127,9 @@ pub fn generate_bindings(
     Ok(Bindings { rs_api, rs_api_impl })
 }
 
-fn generate_type_alias(
-    db: &BindingsGenerator,
-    raw_type_alias: Rc<TypeAlias>,
+fn generate_type_alias<'a>(
+    db: &BindingsGenerator<'a>,
+    raw_type_alias: Rc<TypeAlias<'a>>,
 ) -> Result<ApiSnippets> {
     let assume_lifetimes = db
         .ir()
@@ -206,7 +206,10 @@ fn generate_type_alias(
     })
 }
 
-fn generate_constant(db: &BindingsGenerator, constant: &Constant) -> Result<ApiSnippets> {
+fn generate_constant<'a>(
+    db: &BindingsGenerator<'a>,
+    constant: &Constant<'a>,
+) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Constant);
     let type_ = db.rs_type_kind(constant.type_().clone())?;
     let value = match integer_constant_to_token_stream(db, constant.value(), &type_) {
@@ -255,7 +258,10 @@ fn generate_global_var(db: &BindingsGenerator, var: &GlobalVar) -> Result<ApiSni
     })
 }
 
-fn generate_namespace(db: &BindingsGenerator, namespace: Rc<Namespace>) -> Result<ApiSnippets> {
+fn generate_namespace<'a>(
+    db: &BindingsGenerator<'a>,
+    namespace: Rc<Namespace<'a>>,
+) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Namespace);
 
     let mut api_snippets = ApiSnippets::default();
@@ -276,7 +282,7 @@ fn generate_namespace(db: &BindingsGenerator, namespace: Rc<Namespace>) -> Resul
 }
 
 /// Implementation of `BindingsGenerator::generate_item`.
-fn generate_item(db: &BindingsGenerator, item: Item) -> Result<ApiSnippets> {
+fn generate_item<'a>(db: &BindingsGenerator<'a>, item: Item<'a>) -> Result<ApiSnippets> {
     if let Some(owning_target) = item.owning_target()
         && !db.ir().is_current_target(&owning_target)
     {
@@ -304,7 +310,7 @@ fn generate_item(db: &BindingsGenerator, item: Item) -> Result<ApiSnippets> {
 /// The implementation of generate_item, without the error recovery logic.
 ///
 /// Returns Err if bindings could not be generated for this item.
-fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets> {
+fn generate_item_impl<'a>(db: &BindingsGenerator<'a>, item: &Item<'a>) -> Result<ApiSnippets> {
     let generated_item = match item {
         Item::Func(func) => match db.generate_function(func.clone(), None)? {
             None => ApiSnippets::default(),
@@ -381,7 +387,7 @@ fn generate_item_impl(db: &BindingsGenerator, item: &Item) -> Result<ApiSnippets
                 .map(|size_align| {
                     generate_struct_and_union::rs_size_align_assertions(
                         rs_type_kind.to_token_stream(db),
-                        size_align,
+                        &size_align,
                     )
                 })
                 .into_iter()
@@ -681,7 +687,10 @@ pub fn generate_bindings_tokens(
 }
 
 /// Implementation of `BindingsGenerator::rs_type_kind_safety`.
-fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Option<UnsafeReason> {
+fn rs_type_kind_safety<'a>(
+    db: &BindingsGenerator<'a>,
+    rs_type_kind: RsTypeKind<'a>,
+) -> Option<UnsafeReason> {
     match rs_type_kind {
         RsTypeKind::Error { error, .. } => Some(UnsafeReason(intern!(
             db.interner(),
@@ -774,10 +783,10 @@ fn rs_type_kind_safety(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Opti
 
 /// Helper function for `rs_type_kind_safety`.
 /// Returns whether a callable is unsafe due to its parameters or return type.
-fn callable_safety(
-    db: &BindingsGenerator,
-    param_types: &[RsTypeKind],
-    return_type: &RsTypeKind,
+fn callable_safety<'a>(
+    db: &BindingsGenerator<'a>,
+    param_types: &[RsTypeKind<'a>],
+    return_type: &RsTypeKind<'a>,
 ) -> Option<UnsafeReason> {
     let param_reasons = param_types
         .iter()
@@ -813,7 +822,7 @@ fn callable_safety(
 }
 
 /// Implementation of `BindingsGenerator::record_field_safety`.
-fn record_field_safety(db: &BindingsGenerator, field: Field) -> Option<UnsafeReason> {
+fn record_field_safety<'a>(db: &BindingsGenerator<'a>, field: Field<'a>) -> Option<UnsafeReason> {
     if field.access() != AccessSpecifier::Public {
         return None;
     }
@@ -831,7 +840,7 @@ fn record_field_safety(db: &BindingsGenerator, field: Field) -> Option<UnsafeRea
 }
 
 /// Implementation of `BindingsGenerator::record_safety`.
-fn record_safety(db: &BindingsGenerator, record: Rc<Record>) -> Option<UnsafeReason> {
+fn record_safety<'a>(db: &BindingsGenerator<'a>, record: Rc<Record<'a>>) -> Option<UnsafeReason> {
     let mut doc = String::new();
 
     match record.safety_annotation() {
@@ -1025,7 +1034,10 @@ fn generate_rs_api_impl_includes(
 }
 
 /// Implementation of `BindingsGenerator::crubit_abi_type`.
-fn crubit_abi_type(db: &BindingsGenerator, rs_type_kind: RsTypeKind) -> Result<CrubitAbiType> {
+fn crubit_abi_type<'a>(
+    db: &BindingsGenerator<'a>,
+    rs_type_kind: RsTypeKind<'a>,
+) -> Result<CrubitAbiType> {
     match rs_type_kind {
         RsTypeKind::Error { symbol, error, .. } => {
             bail!("Type '{symbol}' has an error and cannot be bridged: {error}")
@@ -1417,9 +1429,9 @@ fn generate_dyn_callable_invoker_and_manager_decls(
 ///
 /// `None` is returned if there is issue generating the definition. The specific error is not
 /// reported because it will be reported elsewhere.
-fn generate_dyn_callable_invoker_and_manager_defs(
-    db: &BindingsGenerator,
-    callable: &Callable,
+fn generate_dyn_callable_invoker_and_manager_defs<'a>(
+    db: &BindingsGenerator<'a>,
+    callable: &Callable<'a>,
     param_idents: &[Ident],
 ) -> Option<TokenStream> {
     assert!(
@@ -1587,9 +1599,9 @@ fn generate_dyn_callable_invoker_and_manager_defs(
 ///
 /// `None` is returned if there is issue generating the declaration. The specific error is not
 /// reported because it will be reported elsewhere.
-fn generate_any_invocable_invoker_decl(
-    db: &BindingsGenerator,
-    callable: &Callable,
+fn generate_any_invocable_invoker_decl<'a>(
+    db: &BindingsGenerator<'a>,
+    callable: &Callable<'a>,
     param_idents: &[Ident],
     invoke_any_invocable_ident: &Ident,
 ) -> Option<TokenStream> {
@@ -1677,9 +1689,9 @@ fn generate_any_invocable_invoker_decl(
 ///
 /// `None` is returned if there is issue generating the definition. The specific error is not
 /// reported because it will be reported elsewhere.
-fn generate_any_invocable_invoker_def(
-    db: &BindingsGenerator,
-    callable: &Callable,
+fn generate_any_invocable_invoker_def<'a>(
+    db: &BindingsGenerator<'a>,
+    callable: &Callable<'a>,
     param_idents: &[Ident],
     invoke_any_invocable_ident: &Ident,
     internal_includes: &mut BTreeSet<CcInclude>,
@@ -1896,8 +1908,8 @@ fn strip_leading_colon2(path: &mut &str) -> bool {
 }
 
 /// Only to be used in a `CrubitAbiType::Transmute` context.
-fn make_cpp_type_from_item(
-    item: &impl GenericItem,
+fn make_cpp_type_from_item<'a>(
+    item: &impl GenericItem<'a>,
     cc_name: &str,
     db: &BindingsGenerator,
 ) -> Result<TokenStream> {

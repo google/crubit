@@ -175,7 +175,7 @@ impl ToTokens for CratePath {
 }
 
 pub fn unique_lifetimes<'a>(
-    types: impl IntoIterator<Item = &'a RsTypeKind> + 'a,
+    types: impl IntoIterator<Item = &'a RsTypeKind<'a>> + 'a,
     assumed_inputs: &[Rc<str>],
 ) -> Vec<Lifetime> {
     let mut unordered_lifetimes = HashSet::new();
@@ -219,10 +219,10 @@ pub fn format_generic_params<'a, T: ToTokens>(
     }
 }
 
-pub fn format_generic_params_replacing_by_self<'db, 'a>(
-    db: impl Deref<Target = BindingsGenerator<'db>> + Copy,
-    types: impl IntoIterator<Item = &'a RsTypeKind>,
-    trait_type: Option<&RsTypeKind>,
+pub fn format_generic_params_replacing_by_self<'a: 'b, 'b>(
+    db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+    types: impl IntoIterator<Item = &'b RsTypeKind<'a>>,
+    trait_type: Option<&RsTypeKind<'a>>,
 ) -> TokenStream {
     format_generic_params(
         [],
@@ -291,21 +291,21 @@ pub struct LifetimeOptions {
 /// A type with template type arguments that has a uniform representation regardless of `T` and
 /// should be mapped to a handwritten Rust type.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum UniformReprTemplateType {
+pub enum UniformReprTemplateType<'a> {
     /// std::vector<T, std::allocator<T>>
     StdVector {
         // No lifetime: owned by the vector
-        element_type: RsTypeKind,
+        element_type: RsTypeKind<'a>,
     },
     /// std::unique_ptr<T, std::default_delete<T>>
     StdUniquePtr {
         // No lifetime here: owned by the unique_ptr
-        element_type: RsTypeKind,
+        element_type: RsTypeKind<'a>,
     },
     AbslSpan {
         is_const: bool,
         include_lifetime: bool,
-        element_type: RsTypeKind,
+        element_type: RsTypeKind<'a>,
         // The lifetime for the span, if assumed lifetimes are turned on.
         lifetime: Option<Lifetime>,
     },
@@ -344,13 +344,13 @@ fn choose_types<const N: usize>(
     })
 }
 
-impl UniformReprTemplateType {
+impl<'a> UniformReprTemplateType<'a> {
     /// Returns the `UniformReprTemplateType` for a `TemplateSpecialization`.
     /// Returns an error if the template arguments (if any) fail to db.rs_type_kind(T).
     /// Returns none if the template specialization is not for a known type corresponding with
     /// one of `UniformReprTemplateType`s variants.
     fn new(
-        db: &BindingsGenerator,
+        db: &BindingsGenerator<'a>,
         template_specialization_kind: Option<&TemplateSpecializationKind>,
         options: &LifetimeOptions,
         template_args: &Option<Rc<[CcType]>>,
@@ -444,7 +444,7 @@ impl UniformReprTemplateType {
         }
     }
 
-    pub fn to_token_stream(&self, db: &BindingsGenerator) -> TokenStream {
+    pub fn to_token_stream(&self, db: &BindingsGenerator<'a>) -> TokenStream {
         match self {
             Self::StdVector { element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
@@ -509,7 +509,7 @@ pub enum RustPtrKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum RsTypeKind {
+pub enum RsTypeKind<'a> {
     /// An error occurred while generating the type.
     ///
     /// Error types are only exposed in `:wrapper` mode, where they become
@@ -520,64 +520,64 @@ pub enum RsTypeKind {
         visibility_override: Option<Visibility>,
     },
     Pointer {
-        pointee: Rc<RsTypeKind>,
+        pointee: Rc<RsTypeKind<'a>>,
         kind: RustPtrKind,
         mutability: Mutability,
     },
     Reference {
-        referent: Rc<RsTypeKind>,
+        referent: Rc<RsTypeKind<'a>>,
         mutability: Mutability,
         lifetime: Lifetime,
         is_cref: bool,
     },
     RvalueReference {
-        referent: Rc<RsTypeKind>,
+        referent: Rc<RsTypeKind<'a>>,
         mutability: Mutability,
         lifetime: Lifetime,
     },
     FuncPtr {
         option: bool,
         cc_calling_conv: CcCallingConv,
-        return_type: Rc<RsTypeKind>,
-        param_types: Rc<[RsTypeKind]>,
+        return_type: Rc<RsTypeKind<'a>>,
+        param_types: Rc<[RsTypeKind<'a>]>,
     },
     /// An incomplete record type.
     IncompleteRecord {
-        incomplete_record: Rc<IncompleteRecord>,
+        incomplete_record: Rc<IncompleteRecord<'a>>,
         crate_path: Rc<CratePath>,
     },
     /// A complete record type.
     Record {
-        record: Rc<Record>,
+        record: Rc<Record<'a>>,
         crate_path: Rc<CratePath>,
         /// If this record is an instantiation of a `UniformReprTemplateType`, this will be set.
-        uniform_repr_template_type: Option<Rc<UniformReprTemplateType>>,
+        uniform_repr_template_type: Option<Rc<UniformReprTemplateType<'a>>>,
         owned_ptr_type: Option<Rc<str>>,
         lifetimes: Vec<Lifetime>,
-        customize_methods: Option<Rc<CustomizeMethodsKind>>,
+        customize_methods: Option<Rc<CustomizeMethodsKind<'a>>>,
     },
     Enum {
-        enum_: Rc<Enum>,
+        enum_: Rc<Enum<'a>>,
         crate_path: Rc<CratePath>,
     },
     TypeAlias {
-        type_alias: Rc<TypeAlias>,
-        underlying_type: Rc<RsTypeKind>,
+        type_alias: Rc<TypeAlias<'a>>,
+        underlying_type: Rc<RsTypeKind<'a>>,
         crate_path: Rc<CratePath>,
         lifetimes: Vec<Lifetime>,
     },
     Primitive(Primitive),
     /// Types that require custom logic to translate.
     BridgeType {
-        bridge_type: BridgeRsTypeKind,
-        original_type: Rc<Record>,
+        bridge_type: BridgeRsTypeKind<'a>,
+        original_type: Rc<Record<'a>>,
     },
     /// Types that can be reinterpreted in place, e.g., signed char <-> i8
     /// This variant comes from the `CRUBIT_INTERNAL_RUST_TYPE` attribute macro in C++,
     /// which is used on types like `SliceRef`, `StrRef`, and C++ types generated from Rust
     /// types by cc_bindings_from_rs.
     ExistingRustType {
-        existing_rust_type: Rc<ExistingRustType>,
+        existing_rust_type: Rc<ExistingRustType<'a>>,
         /// How the Rust type should be spelled, after interpolating template arguments.
         /// This is the stringified TokenStream because TokenStream is not PartialEq + Eq + Hash.
         rust_type: Rc<str>,
@@ -586,17 +586,17 @@ pub enum RsTypeKind {
 
 /// Ways of customizing a type's methods rather than directly binding its C++ methods.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum CustomizeMethodsKind {
-    AbslFlatHashMap { key_type: RsTypeKind, value_type: RsTypeKind },
+pub enum CustomizeMethodsKind<'a> {
+    AbslFlatHashMap { key_type: RsTypeKind<'a>, value_type: RsTypeKind<'a> },
 }
 
-impl CustomizeMethodsKind {
+impl<'a> CustomizeMethodsKind<'a> {
     /// Returns the `CustomizeMethodsKind` for a `TemplateSpecialization`.
     /// Returns an error if the template arguments (if any) fail to db.rs_type_kind(T).
     /// Returns none if the template specialization is not for a known type corresponding with one
     /// of `CustomizeMethodsKind`s variants.
     fn new(
-        db: &BindingsGenerator,
+        db: &BindingsGenerator<'a>,
         template_specialization_kind: Option<&TemplateSpecializationKind>,
         options: &LifetimeOptions,
         template_args: &Option<Rc<[CcType]>>,
@@ -699,7 +699,7 @@ impl ToTokens for FnTrait {
 
 /// Information about a dyn callable type.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Callable {
+pub struct Callable<'a> {
     pub backing_type: BackingType,
     /// The trait bound that should be used when spelling out the C++ function type.
     pub cpp_fn_trait: FnTrait,
@@ -710,15 +710,15 @@ pub struct Callable {
     /// guarantees that Rust FnMut needs to be called, e.g. an exclusive mutable reference. C++
     /// allows for non-exclusive calls to mutable function objects.
     pub rust_fn_trait: FnTrait,
-    pub return_type: Rc<RsTypeKind>,
-    pub param_types: Rc<[RsTypeKind]>,
+    pub return_type: Rc<RsTypeKind<'a>>,
+    pub param_types: Rc<[RsTypeKind<'a>]>,
     pub invoker_ident: Ident,
     pub manager_ident: Ident,
 }
 
-impl Callable {
+impl<'a> Callable<'a> {
     /// Returns a `TokenStream` in the shape of `-> Output`, or None if the return type is void.
-    pub fn rust_return_type_fragment(&self, db: &BindingsGenerator) -> Option<TokenStream> {
+    pub fn rust_return_type_fragment(&self, db: &BindingsGenerator<'a>) -> Option<TokenStream> {
         if self.return_type.is_void() {
             None
         } else {
@@ -728,7 +728,7 @@ impl Callable {
     }
 
     /// Returns a `TokenStream` in the shape of `dyn Trait(Inputs) -> Output`.
-    pub fn dyn_fn_spelling(&self, db: &BindingsGenerator) -> TokenStream {
+    pub fn dyn_fn_spelling(&self, db: &BindingsGenerator<'a>) -> TokenStream {
         let rust_return_type_fragment = self.rust_return_type_fragment(db);
         let param_type_tokens =
             self.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
@@ -749,32 +749,32 @@ impl Callable {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum BridgeRsTypeKind {
+pub enum BridgeRsTypeKind<'a> {
     Bridge {
         rust_name: Rc<str>,
         abi_rust: Rc<str>,
         abi_cpp: Rc<str>,
-        generic_types: Rc<[RsTypeKind]>,
+        generic_types: Rc<[RsTypeKind<'a>]>,
     },
     ProtoMessageBridge {
         rust_name: Rc<str>,
     },
-    StdOptional(Rc<RsTypeKind>),
-    StdPair(Rc<RsTypeKind>, Rc<RsTypeKind>),
+    StdOptional(Rc<RsTypeKind<'a>>),
+    StdPair(Rc<RsTypeKind<'a>>, Rc<RsTypeKind<'a>>),
     StdString {
         in_cc_std: bool,
     },
-    Callable(Rc<Callable>),
+    Callable(Rc<Callable<'a>>),
     /// c9::Co<T>
     C9Co {
         // TODO(b/489098131): Remove has_reference_param after assume_lifetimes is supported.
         has_reference_param: bool,
-        result_type: Rc<RsTypeKind>,
+        result_type: Rc<RsTypeKind<'a>>,
         lifetime: Option<Lifetime>,
     },
 }
 
-impl BridgeRsTypeKind {
+impl<'a> BridgeRsTypeKind<'a> {
     /// If the record is a bridge type, returns the corresponding BridgeRsTypeKind.
     /// Otherwise, returns None. This may also return an error if db.rs_type_kind fails, or if the
     /// record has template parameters that cannot be translated.
@@ -782,9 +782,9 @@ impl BridgeRsTypeKind {
         record: &Record,
         options: &LifetimeOptions,
         template_args: &Option<Rc<[CcType]>>,
-        db: &BindingsGenerator,
+        db: &BindingsGenerator<'a>,
         lifetimes: &[Lifetime],
-    ) -> Result<Option<BridgeRsTypeKind>> {
+    ) -> Result<Option<BridgeRsTypeKind<'a>>> {
         if let Some(c9_co) = new_c9_co_record(options, record, template_args, lifetimes, db)? {
             return Ok(Some(c9_co));
         }
@@ -795,7 +795,7 @@ impl BridgeRsTypeKind {
 
         let bridge_rs_type_kind = match bridge_type.clone() {
             BridgeType::ProtoMessageBridge { rust_name } => {
-                BridgeRsTypeKind::ProtoMessageBridge { rust_name }
+                BridgeRsTypeKind::ProtoMessageBridge { rust_name: Rc::from(rust_name) }
             }
             BridgeType::Bridge {
                 rust_name,
@@ -817,9 +817,9 @@ impl BridgeRsTypeKind {
                     None => bridge_template_args.clone(),
                 };
                 BridgeRsTypeKind::Bridge {
-                    rust_name,
-                    abi_rust,
-                    abi_cpp,
+                    rust_name: Rc::from(rust_name),
+                    abi_rust: Rc::from(abi_rust),
+                    abi_cpp: Rc::from(abi_cpp),
                     generic_types: template_args
                         .iter()
                         .map(|template_arg| db.rs_type_kind(template_arg.clone()))
@@ -890,13 +890,13 @@ impl BridgeRsTypeKind {
     }
 }
 
-fn new_c9_co_record(
+fn new_c9_co_record<'a>(
     options: &LifetimeOptions,
     record: &Record,
     template_args: &Option<Rc<[CcType]>>,
     lifetimes: &[Lifetime],
-    db: &BindingsGenerator,
-) -> Result<Option<BridgeRsTypeKind>> {
+    db: &BindingsGenerator<'a>,
+) -> Result<Option<BridgeRsTypeKind<'a>>> {
     let Some(ts) = record.template_specialization() else {
         return Ok(None);
     };
@@ -932,7 +932,7 @@ fn new_c9_co_record(
     }))
 }
 
-impl RsTypeKind {
+impl<'a> RsTypeKind<'a> {
     /// Directly creates an `RsTypeKind` from an `Item` that defines a type.
     ///
     /// WARNING: this is a low-level function that bypasses the validity checks
@@ -944,8 +944,8 @@ impl RsTypeKind {
     /// or if the `RsTypeKind` cannot be created (e.g. a type alias which points to a type that
     /// cannot receive an `RsTypeKind`).
     pub fn from_item_raw(
-        db: &BindingsGenerator,
-        item: Item,
+        db: &BindingsGenerator<'a>,
+        item: Item<'a>,
         options: &LifetimeOptions,
         template_args: &Option<Rc<[CcType]>>,
         lifetimes: &[Lifetime],
@@ -969,8 +969,8 @@ impl RsTypeKind {
     }
 
     fn new_type_alias(
-        db: &BindingsGenerator,
-        type_alias: Rc<TypeAlias>,
+        db: &BindingsGenerator<'a>,
+        type_alias: Rc<TypeAlias<'a>>,
         options: &LifetimeOptions,
         lifetimes: &[Lifetime],
     ) -> Result<Self> {
@@ -1014,8 +1014,8 @@ impl RsTypeKind {
     }
 
     fn new_record(
-        db: &BindingsGenerator,
-        record: Rc<Record>,
+        db: &BindingsGenerator<'a>,
+        record: Rc<Record<'a>>,
         options: &LifetimeOptions,
         template_args: &Option<Rc<[CcType]>>,
         lifetimes: &[Lifetime],
@@ -1056,7 +1056,7 @@ impl RsTypeKind {
             owned_ptr_type: record
                 .owned_ptr_config()
                 .as_ref()
-                .map(|cfg| cfg.owned_ptr_type.clone()),
+                .map(|cfg| Rc::from(cfg.owned_ptr_type)),
             record,
             crate_path,
             lifetimes: lifetimes.to_vec(),
@@ -1065,8 +1065,8 @@ impl RsTypeKind {
     }
 
     fn new_incomplete_record(
-        db: &BindingsGenerator,
-        incomplete_record: Rc<IncompleteRecord>,
+        db: &BindingsGenerator<'a>,
+        incomplete_record: Rc<IncompleteRecord<'a>>,
     ) -> Result<Self> {
         let ir = db.ir();
         let crate_path = Rc::new(CratePath::new(
@@ -1077,7 +1077,7 @@ impl RsTypeKind {
         Ok(RsTypeKind::IncompleteRecord { incomplete_record, crate_path })
     }
 
-    fn new_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<Self> {
+    fn new_enum(db: &BindingsGenerator<'a>, enum_: Rc<Enum<'a>>) -> Result<Self> {
         let ir = db.ir();
         let crate_path = Rc::new(CratePath::new(
             ir,
@@ -1087,9 +1087,9 @@ impl RsTypeKind {
         Ok(RsTypeKind::Enum { enum_, crate_path })
     }
 
-    fn new_existing_rust_type<'db>(
-        db: impl Deref<Target = BindingsGenerator<'db>> + Copy,
-        existing_rust_type: Rc<ExistingRustType>,
+    fn new_existing_rust_type(
+        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+        existing_rust_type: Rc<ExistingRustType<'a>>,
     ) -> Result<Self> {
         if existing_rust_type.rs_name() == SLICE_REF_NAME_RS {
             let [template_arg] = &existing_rust_type.template_args() else {
@@ -1183,7 +1183,7 @@ impl RsTypeKind {
     ///
     /// If `strip_aliases` is `true`, all [`RsTypeKind::TypeAlias`] variants
     /// are recursively replaced with their `underlying_type`.
-    pub fn all_static_lifetimes(&self, strip_aliases: bool) -> Rc<RsTypeKind> {
+    pub fn all_static_lifetimes(&self, strip_aliases: bool) -> Rc<RsTypeKind<'a>> {
         if self.lifetimes().all(|l| l.0.as_ref() == "static")
             && (!strip_aliases
                 || !self.dfs_iter().any(|k| matches!(k, RsTypeKind::TypeAlias { .. })))
@@ -1310,7 +1310,7 @@ impl RsTypeKind {
 
     // If the type is pointer annotated with CRUBIT_OWNED_POINTER, returns the pointee type.
     // Otherwise, returns None.
-    pub fn as_owned_ptr(&self) -> Option<&RsTypeKind> {
+    pub fn as_owned_ptr(&self) -> Option<&RsTypeKind<'a>> {
         match self.unalias() {
             RsTypeKind::Pointer {
                 pointee,
@@ -1436,10 +1436,10 @@ impl RsTypeKind {
         }
     }
 
-    pub fn format_as_return_type_fragment<'a>(
+    pub fn format_as_return_type_fragment(
         &self,
         db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
-        self_type: Option<&RsTypeKind>,
+        self_type: Option<&RsTypeKind<'a>>,
     ) -> Option<TokenStream> {
         match self.unalias() {
             RsTypeKind::Primitive(Primitive::Void) => None,
@@ -1626,19 +1626,19 @@ impl RsTypeKind {
 
     /// Iterates over `self` and all the nested types (e.g. pointees, generic
     /// type args, etc.) in DFS order.
-    pub fn dfs_iter(&self) -> impl Iterator<Item = &RsTypeKind> + '_ {
+    pub fn dfs_iter(&self) -> impl Iterator<Item = &RsTypeKind<'a>> + use<'a, '_> {
         RsTypeKindIter::new(self, false)
     }
 
     /// Iterates over all `LifetimeId`s in `self` and in all the nested types.
     /// Note that the results might contain duplicate LifetimeId values (e.g.
     /// if the same LifetimeId is used in two `type_args`).
-    pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + use<'_> {
+    pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + use<'a, '_> {
         RsTypeKindIter::new(self, true).filter_map(Self::lifetime)
     }
 
     /// Returns the pointer or reference target.
-    pub fn referent(&self) -> Option<&RsTypeKind> {
+    pub fn referent(&self) -> Option<&RsTypeKind<'a>> {
         match self.unalias() {
             Self::Pointer { pointee: p, .. }
             | Self::Reference { referent: p, .. }
@@ -1682,7 +1682,7 @@ impl RsTypeKind {
     /// `RsTypeKind::Pointer` with kind
     /// `RustPtrKind::CcPtr(PointerTypeKind::Owned)` will emit the corresponding
     /// owning Rust type rather than a raw pointer.
-    pub fn to_token_stream_with_owned_ptr_type(&self, db: &BindingsGenerator) -> TokenStream {
+    pub fn to_token_stream_with_owned_ptr_type(&self, db: &BindingsGenerator<'a>) -> TokenStream {
         // If it's not an owned pointer, just use the default implementation.
         let Some(pointee) = self.as_owned_ptr() else {
             return self.to_token_stream(db);
@@ -1704,10 +1704,10 @@ impl RsTypeKind {
 
     /// Similar to to_token_stream, but replacing RsTypeKind with Self
     /// when the underlying type matches the given one.
-    pub fn to_token_stream_replacing_by_self<'a>(
+    pub fn to_token_stream_replacing_by_self(
         &self,
         db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
-        self_type: Option<&RsTypeKind>,
+        self_type: Option<&RsTypeKind<'a>>,
     ) -> TokenStream {
         match self {
             RsTypeKind::Pointer { pointee, kind, mutability } => {
@@ -1777,10 +1777,10 @@ impl RsTypeKind {
     }
 
     /// Returns a `Display`able type for this `RsTypeKind`.
-    pub fn display<'a, 'db>(
-        &'a self,
-        db: &'a BindingsGenerator<'db>,
-    ) -> impl std::fmt::Display + use<'a, 'db> {
+    pub fn display<'b>(
+        &'b self,
+        db: &'b BindingsGenerator<'a>,
+    ) -> impl std::fmt::Display + use<'a, 'b> {
         DisplayRsTypeKind { rs_type_kind: self, db }
     }
 
@@ -1825,7 +1825,10 @@ impl RsTypeKind {
     }
 }
 
-fn all_static_lifetimes_internal(t: &RsTypeKind, strip_aliases: bool) -> Rc<RsTypeKind> {
+fn all_static_lifetimes_internal<'a>(
+    t: &RsTypeKind<'a>,
+    strip_aliases: bool,
+) -> Rc<RsTypeKind<'a>> {
     match t {
         RsTypeKind::Error { .. } => Rc::new(t.clone()),
         RsTypeKind::Pointer { pointee, kind, mutability } => Rc::new(RsTypeKind::Pointer {
@@ -2081,9 +2084,9 @@ pub enum PassingConvention {
 
 /// A type that implements [`std::fmt::Display`] for [`RsTypeKind`], which
 /// requires a [`BindingsGenerator`] to be able to format the type.
-pub struct DisplayRsTypeKind<'a, 'db> {
-    rs_type_kind: &'a RsTypeKind,
-    db: &'a BindingsGenerator<'db>,
+pub struct DisplayRsTypeKind<'a, 'b> {
+    rs_type_kind: &'a RsTypeKind<'b>,
+    db: &'a BindingsGenerator<'b>,
 }
 
 impl std::fmt::Display for DisplayRsTypeKind<'_, '_> {
@@ -2159,8 +2162,8 @@ impl PrimitiveName {
     }
 }
 
-impl RsTypeKind {
-    pub fn to_token_stream<'a>(
+impl<'a> RsTypeKind<'a> {
+    pub fn to_token_stream(
         &self,
         db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
     ) -> TokenStream {
@@ -2347,7 +2350,7 @@ impl RsTypeKind {
         }
     }
 
-    pub fn to_token_stream_without_lifetimes<'a>(
+    pub fn to_token_stream_without_lifetimes(
         &self,
         db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
     ) -> TokenStream {
@@ -2462,20 +2465,20 @@ fn fully_qualify_type_impl(
     }
 }
 
-struct RsTypeKindIter<'ty> {
-    todo: Vec<&'ty RsTypeKind>,
+struct RsTypeKindIter<'a, 'ty> {
+    todo: Vec<&'ty RsTypeKind<'a>>,
     /// If true, traversal stops at type aliases and will not inspect their `underlying_type`.
     ignore_type_alias_underlying: bool,
 }
 
-impl<'ty> RsTypeKindIter<'ty> {
-    pub fn new(ty: &'ty RsTypeKind, ignore_type_alias_underlying: bool) -> Self {
+impl<'a, 'ty> RsTypeKindIter<'a, 'ty> {
+    pub fn new(ty: &'ty RsTypeKind<'a>, ignore_type_alias_underlying: bool) -> Self {
         Self { todo: vec![ty], ignore_type_alias_underlying }
     }
 }
 
-impl<'ty> Iterator for RsTypeKindIter<'ty> {
-    type Item = &'ty RsTypeKind;
+impl<'a, 'ty> Iterator for RsTypeKindIter<'a, 'ty> {
+    type Item = &'ty RsTypeKind<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.todo.pop() {
@@ -2533,13 +2536,13 @@ mod tests {
     use googletest::{expect_that, gtest};
     use token_stream_matchers::assert_rs_matches;
 
-    fn make_existing_rust_type(name: Rc<str>, is_same_abi: bool) -> RsTypeKind {
+    fn make_existing_rust_type(name: &'static str, is_same_abi: bool) -> RsTypeKind<'static> {
         RsTypeKind::new_existing_rust_type(
             EmptyDatabase,
             Rc::new(ExistingRustType::new_for_testing(
-                name.clone(),
-                "".into(),
-                name.clone(),
+                name,
+                "",
+                name,
                 Vec::new(),
                 BazelLabel::from("//new/for/testing"),
                 None,
@@ -2556,9 +2559,9 @@ mod tests {
     fn test_dfs_iter_ordering_for_func_ptr() {
         // Set up a test input representing: fn(A, B) -> C
         let f = {
-            let a = make_existing_rust_type("::A".into(), true);
-            let b = make_existing_rust_type("::B".into(), true);
-            let c = make_existing_rust_type("::C".into(), true);
+            let a = make_existing_rust_type("::A", true);
+            let b = make_existing_rust_type("::B", true);
+            let c = make_existing_rust_type("::C", true);
             RsTypeKind::FuncPtr {
                 option: false,
                 cc_calling_conv: CcCallingConv::C,
@@ -2590,7 +2593,7 @@ mod tests {
 
     #[gtest]
     fn test_lifetime_elision_for_references() {
-        let referent = Rc::new(make_existing_rust_type("::T".into(), true));
+        let referent = Rc::new(make_existing_rust_type("::T", true));
         let reference = RsTypeKind::Reference {
             referent,
             mutability: Mutability::Const,
@@ -2602,7 +2605,7 @@ mod tests {
 
     #[gtest]
     fn test_lifetime_elision_for_rvalue_references() {
-        let referent = Rc::new(make_existing_rust_type("::T".into(), true));
+        let referent = Rc::new(make_existing_rust_type("::T", true));
         let reference = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -2616,7 +2619,7 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_rvalue_reference() -> Result<()> {
-        let referent = Rc::new(make_existing_rust_type("::T".into(), true));
+        let referent = Rc::new(make_existing_rust_type("::T", true));
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -2630,7 +2633,7 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_const_rvalue_reference() -> Result<()> {
-        let referent = Rc::new(make_existing_rust_type("::T".into(), true));
+        let referent = Rc::new(make_existing_rust_type("::T", true));
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Const,
@@ -2648,7 +2651,7 @@ mod tests {
     /// does. This is done automatically via dfs_iter().
     #[gtest]
     fn test_required_crubit_features() {
-        let no_types: &[RsTypeKind] = &[];
+        let no_types: &[RsTypeKind<'_>] = &[];
         let int = RsTypeKind::Primitive(Primitive::Int32T);
         let reference = RsTypeKind::Reference {
             referent: Rc::new(int.clone()),
@@ -2731,7 +2734,7 @@ mod tests {
         expect_that!(enum_.allowed_behind_multi_element_ptr(), eq(true));
     }
 
-    fn make_incomplete_record() -> RsTypeKind {
+    fn make_incomplete_record() -> RsTypeKind<'static> {
         RsTypeKind::IncompleteRecord {
             incomplete_record: Rc::new(IncompleteRecord::new_for_testing(
                 Identifier::new("MyStruct"),

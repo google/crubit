@@ -20,15 +20,15 @@ use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 
 mod proto_to_ir;
-use ir_rust_proto::{IRProto, IRProtoView};
+use ir_rust_proto::IRProtoView;
 pub use proto_to_ir::proto_to_ir;
 
 /// Common data about all items.
-pub trait GenericItem {
+pub trait GenericItem<'pb> {
     fn id(&self) -> ItemId;
 
     /// The unique name (probably the USR) of the item for log aggregation purposes.
-    fn unique_name(&self) -> Option<Rc<str>>;
+    fn unique_name(&self) -> Option<&'pb str>;
 
     /// The Bazel target which owns the bindings for this item.
     fn owning_target(&self) -> Option<BazelLabel>;
@@ -41,24 +41,29 @@ pub trait GenericItem {
     fn unsupported_kind(&self) -> UnsupportedItemKind;
 
     /// The recorded source location, or None if none is present.
-    fn source_loc(&self) -> Option<Rc<str>>;
+    fn source_loc(&self) -> Option<&'pb str>;
 
     /// A human-readable list of unknown attributes, or None if all attributes
     /// were understood.
-    fn unknown_attr(&self) -> Option<Rc<str>>;
+    fn unknown_attr(&self) -> Option<&'pb str>;
 
     /// Whether failure to generate binding should be treated as a hard error (`CRUBIT_MUST_BIND`).
     fn must_bind(&self) -> bool;
+
+    /// Returns the C++ name of this item, if applicable.
+    fn cc_name_as_str(&self) -> Option<&'pb str> {
+        None
+    }
 }
 
-impl<T> GenericItem for Rc<T>
+impl<'pb, T> GenericItem<'pb> for Rc<T>
 where
-    T: GenericItem + ?Sized,
+    T: GenericItem<'pb> + ?Sized,
 {
     fn id(&self) -> ItemId {
         (**self).id()
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
+    fn unique_name(&self) -> Option<&'pb str> {
         (**self).unique_name()
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -67,22 +72,25 @@ where
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         (**self).unsupported_kind()
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
+    fn source_loc(&self) -> Option<&'pb str> {
         (**self).source_loc()
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
+    fn unknown_attr(&self) -> Option<&'pb str> {
         (**self).unknown_attr()
     }
     fn must_bind(&self) -> bool {
         (**self).must_bind()
+    }
+    fn cc_name_as_str(&self) -> Option<&'pb str> {
+        (**self).cc_name_as_str()
     }
 }
 
 /// Create a testing `IR` instance from given parts. This function does not use
 /// any mock values.
 pub fn make_ir_from_parts<'pb, CrubitFeatures>(
-    items: Vec<Item>,
-    public_headers: Vec<HeaderName>,
+    items: Vec<Item<'pb>>,
+    public_headers: Vec<HeaderName<'pb>>,
     current_target: BazelLabel,
     crate_root_path: Option<Rc<str>>,
     crubit_features: BTreeMap<BazelLabel, CrubitFeatures>,
@@ -94,7 +102,7 @@ where
 {
     // To avoid rewiring tests as part of migrating to nested IR, automatically populate the roots
     // of the tree from the flat list of items.
-    let mut top_level_items: BTreeMap<BazelLabel, Vec<Item>> = BTreeMap::new();
+    let mut top_level_items: BTreeMap<BazelLabel, Vec<Item<'pb>>> = BTreeMap::new();
     for item in &items {
         if item.enclosing_item_id().is_none() {
             let target = item.owning_target().unwrap_or_else(|| current_target.clone());
@@ -125,21 +133,21 @@ where
 /// A pre-order depth-first search iterator over the nested IR tree.
 /// Preserves C++ declaration order and allows bindings generator components (e.g., `has_bindings`)
 /// that expect a flat list of items to work in-place on the nested IR without a full rewrite.
-pub struct ItemsIterator<'a> {
-    stack: Vec<&'a Item>,
+pub struct ItemsIterator<'pb, 'iter> {
+    stack: Vec<&'iter Item<'pb>>,
     visited: HashSet<ItemId>,
 }
 
-impl<'a> ItemsIterator<'a> {
-    fn new(mut stack: Vec<&'a Item>) -> Self {
+impl<'pb, 'iter> ItemsIterator<'pb, 'iter> {
+    fn new(mut stack: Vec<&'iter Item<'pb>>) -> Self {
         // Reverse so we pop roots in their original order.
         stack.reverse();
         Self { stack, visited: HashSet::new() }
     }
 }
 
-impl<'a> Iterator for ItemsIterator<'a> {
-    type Item = &'a Item;
+impl<'pb, 'iter> Iterator for ItemsIterator<'pb, 'iter> {
+    type Item = &'iter Item<'pb>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(item) = self.stack.pop() {
@@ -163,7 +171,10 @@ impl<'a> Iterator for ItemsIterator<'a> {
 }
 
 // Read-only traversal to populate the lookup cache with deserialized items.
-fn populate_item_id_to_item(item: &Item, item_id_to_item: &mut HashMap<ItemId, Item>) {
+fn populate_item_id_to_item<'pb>(
+    item: &Item<'pb>,
+    item_id_to_item: &mut HashMap<ItemId, Item<'pb>>,
+) {
     match item_id_to_item.entry(item.id()) {
         Entry::Vacant(vacant) => {
             vacant.insert(item.clone());
@@ -189,7 +200,7 @@ fn populate_item_id_to_item(item: &Item, item_id_to_item: &mut HashMap<ItemId, I
     }
 }
 
-pub fn make_ir_with_proto<'pb>(tree_ir: TreeIR, proto: IRProtoView<'pb>) -> IR<'pb> {
+pub fn make_ir_with_proto<'pb>(tree_ir: TreeIR<'pb>, proto: IRProtoView<'pb>) -> IR<'pb> {
     let mut item_id_to_item = HashMap::new();
 
     for items in tree_ir.top_level_items.values() {
@@ -202,9 +213,9 @@ pub fn make_ir_with_proto<'pb>(tree_ir: TreeIR, proto: IRProtoView<'pb>) -> IR<'
         ItemsIterator::new(tree_ir.top_level_items.values().flat_map(|v| v.iter()).collect());
 
     let mut lifetimes: HashMap<LifetimeId, LifetimeName> = HashMap::new();
-    let mut namespace_id_to_number_of_reopened_namespaces: HashMap<ItemId, usize> = HashMap::new();
-    let mut reopened_namespace_id_to_idx: HashMap<ItemId, usize> = HashMap::new();
-    let mut function_name_to_functions: HashMap<UnqualifiedIdentifier, Vec<Rc<Func>>> =
+    let mut namespace_id_to_number_of_reopened_namespaces = HashMap::new();
+    let mut reopened_namespace_id_to_idx = HashMap::new();
+    let mut function_name_to_functions: HashMap<UnqualifiedIdentifier<'pb>, Vec<Rc<Func<'pb>>>> =
         HashMap::new();
 
     for item in ordered_items {
@@ -255,14 +266,14 @@ pub fn make_ir_with_proto<'pb>(tree_ir: TreeIR, proto: IRProtoView<'pb>) -> IR<'
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct HeaderName {
-    pub(crate) name: Rc<str>,
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub struct HeaderName<'pb> {
+    pub(crate) name: &'pb str,
 }
 
-impl HeaderName {
-    pub fn name(&self) -> &str {
-        &self.name
+impl<'pb> HeaderName<'pb> {
+    pub fn name(&self) -> &'pb str {
+        self.name
     }
 }
 
@@ -338,7 +349,7 @@ impl CcType {
     }
 }
 
-impl From<&Record> for CcType {
+impl From<&Record<'_>> for CcType {
     fn from(record: &Record) -> Self {
         CcType {
             variant: CcTypeVariant::Decl { id: record.id, template_args: None },
@@ -349,7 +360,7 @@ impl From<&Record> for CcType {
     }
 }
 
-impl From<&TypeAlias> for CcType {
+impl From<&TypeAlias<'_>> for CcType {
     fn from(alias: &TypeAlias) -> Self {
         CcType {
             variant: CcTypeVariant::Decl { id: alias.id, template_args: None },
@@ -360,7 +371,7 @@ impl From<&TypeAlias> for CcType {
     }
 }
 
-impl From<&ExistingRustType> for CcType {
+impl From<&ExistingRustType<'_>> for CcType {
     fn from(existing_rust_type: &ExistingRustType) -> Self {
         CcType {
             variant: CcTypeVariant::Decl { id: existing_rust_type.id, template_args: None },
@@ -636,40 +647,40 @@ impl TypeWithDeclId for CcType {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone)]
-pub struct Identifier {
-    pub(crate) identifier: Rc<str>,
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+pub struct Identifier<'pb> {
+    pub(crate) identifier: &'pb str,
 }
 
-impl Identifier {
-    pub fn new(identifier: impl Into<Rc<str>>) -> Self {
-        Self { identifier: identifier.into() }
+impl<'pb> Identifier<'pb> {
+    pub fn new(identifier: &'pb str) -> Self {
+        Self { identifier }
     }
 
-    pub fn as_str(&self) -> &str {
-        &self.identifier
+    pub fn as_str(&self) -> &'pb str {
+        self.identifier
     }
 }
 
-impl Display for Identifier {
+impl Display for Identifier<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.identifier)
     }
 }
 
-impl Debug for Identifier {
+impl Debug for Identifier<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "\"{}\"", self.identifier)
     }
 }
 
-impl PartialEq<str> for Identifier {
+impl PartialEq<str> for Identifier<'_> {
     fn eq(&self, other: &str) -> bool {
-        self.identifier.as_ref() == other
+        self.identifier == other
     }
 }
 
-impl PartialEq<&str> for Identifier {
+impl PartialEq<&str> for Identifier<'_> {
     fn eq(&self, other: &&str) -> bool {
         self.eq(*other)
     }
@@ -691,18 +702,18 @@ impl IntegerConstant {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone)]
-pub struct Operator {
-    pub(crate) name: Rc<str>,
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+pub struct Operator<'pb> {
+    pub(crate) name: &'pb str,
 }
 
-impl Operator {
-    pub fn new(name: impl Into<Rc<str>>) -> Self {
-        Self { name: name.into() }
+impl<'pb> Operator<'pb> {
+    pub fn new(name: &'pb str) -> Self {
+        Self { name }
     }
 
-    pub fn name(&self) -> &str {
-        &self.name
+    pub fn name(&self) -> &'pb str {
+        self.name
     }
 
     pub fn cc_name(&self) -> String {
@@ -714,7 +725,7 @@ impl Operator {
     }
 }
 
-impl Debug for Operator {
+impl Debug for Operator<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "\"{}\"", self.cc_name())
     }
@@ -875,39 +886,39 @@ impl Display for BazelLabel {
 }
 
 #[derive(PartialEq, Eq, Hash, Clone)]
-pub enum UnqualifiedIdentifier {
-    Identifier(Identifier),
-    Operator(Operator),
+pub enum UnqualifiedIdentifier<'pb> {
+    Identifier(Identifier<'pb>),
+    Operator(Operator<'pb>),
     Constructor,
     Destructor,
     ConversionOperator,
 }
 
-impl UnqualifiedIdentifier {
+impl<'pb> UnqualifiedIdentifier<'pb> {
     pub fn is_constructor(&self) -> bool {
         matches!(self, UnqualifiedIdentifier::Constructor)
     }
     pub fn is_destructor(&self) -> bool {
         matches!(self, UnqualifiedIdentifier::Destructor)
     }
-    pub fn as_identifier(&self) -> Option<&Identifier> {
+    pub fn as_identifier(&self) -> Option<&Identifier<'pb>> {
         match self {
             UnqualifiedIdentifier::Identifier(identifier) => Some(identifier),
             _ => None,
         }
     }
-    pub fn as_operator(&self) -> Option<&Operator> {
+    pub fn as_operator(&self) -> Option<&Operator<'pb>> {
         match self {
             UnqualifiedIdentifier::Operator(op) => Some(op),
             _ => None,
         }
     }
-    pub fn identifier_as_str(&self) -> Option<&str> {
-        self.as_identifier().map(|id| id.identifier.as_ref())
+    pub fn identifier_as_str(&self) -> Option<&'pb str> {
+        self.as_identifier().map(|id| id.identifier)
     }
 }
 
-impl Debug for UnqualifiedIdentifier {
+impl Debug for UnqualifiedIdentifier<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             UnqualifiedIdentifier::Identifier(identifier) => Debug::fmt(identifier, f),
@@ -919,17 +930,17 @@ impl Debug for UnqualifiedIdentifier {
     }
 }
 
-impl PartialEq<str> for UnqualifiedIdentifier {
+impl PartialEq<str> for UnqualifiedIdentifier<'_> {
     fn eq(&self, other: &str) -> bool {
         if let UnqualifiedIdentifier::Identifier(identifier) = self {
-            &*identifier.identifier == other
+            identifier.identifier == other
         } else {
             false
         }
     }
 }
 
-impl PartialEq<&str> for UnqualifiedIdentifier {
+impl PartialEq<&str> for UnqualifiedIdentifier<'_> {
     fn eq(&self, other: &&str) -> bool {
         self.eq(*other)
     }
@@ -968,9 +979,9 @@ impl InstanceMethodMetadata {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct FuncParam {
+pub struct FuncParam<'pb> {
     pub(crate) type_: CcType,
-    pub(crate) identifier: Identifier,
+    pub(crate) identifier: Identifier<'pb>,
     /// A list of parameter indexes attached to this parameter by Clang's lifetime_capture_by.
     /// In `f(x, y)`, `x` is parameter 0 and y is parameter 1. In the member function
     /// `S::f(x, y)`, `this` is parameter 0, `x` is 1, and `y` is 2.
@@ -985,16 +996,16 @@ pub struct FuncParam {
     ///
     /// One notable example is `lifetimebound`, which we might expect to map
     /// to Rust lifetimes.
-    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) unknown_attr: Option<&'pb str>,
 }
 
-impl FuncParam {
+impl<'pb> FuncParam<'pb> {
     pub fn new(
         type_: CcType,
-        identifier: Identifier,
+        identifier: Identifier<'pb>,
         clang_lifetime_capture_by: Vec<i32>,
         clang_lifetimebound: bool,
-        unknown_attr: Option<Rc<str>>,
+        unknown_attr: Option<&'pb str>,
     ) -> Self {
         Self { type_, identifier, clang_lifetime_capture_by, clang_lifetimebound, unknown_attr }
     }
@@ -1011,7 +1022,7 @@ impl FuncParam {
         self.type_ = type_;
     }
 
-    pub fn identifier(&self) -> &Identifier {
+    pub fn identifier(&self) -> &Identifier<'pb> {
         &self.identifier
     }
 
@@ -1023,8 +1034,8 @@ impl FuncParam {
         self.clang_lifetimebound
     }
 
-    pub fn unknown_attr(&self) -> Option<&str> {
-        self.unknown_attr.as_deref()
+    pub fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr
     }
 }
 
@@ -1036,15 +1047,15 @@ pub enum SafetyAnnotation {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Func {
-    pub(crate) cc_name: UnqualifiedIdentifier,
-    pub(crate) rs_name: UnqualifiedIdentifier,
-    pub(crate) unique_name: Rc<str>,
+pub struct Func<'pb> {
+    pub(crate) cc_name: UnqualifiedIdentifier<'pb>,
+    pub(crate) rs_name: UnqualifiedIdentifier<'pb>,
+    pub(crate) unique_name: &'pb str,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) mangled_name: Rc<str>,
-    pub(crate) doc_comment: Option<Rc<str>>,
+    pub(crate) mangled_name: &'pb str,
+    pub(crate) doc_comment: Option<&'pb str>,
     pub(crate) return_type: CcType,
-    pub(crate) params: Vec<FuncParam>,
+    pub(crate) params: Vec<FuncParam<'pb>>,
     /// For tests and internal use only.
     ///
     /// Prefer to reconstruct the lifetime params from the parameter types, as
@@ -1059,20 +1070,20 @@ pub struct Func {
     pub(crate) is_consteval: bool,
     /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
     /// string is used.
-    pub(crate) nodiscard: Option<Rc<str>>,
+    pub(crate) nodiscard: Option<&'pb str>,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    pub(crate) deprecated: Option<Rc<str>>,
+    pub(crate) deprecated: Option<&'pb str>,
     /// A human-readable list of attributes that Crubit doesn't understand.
     ///
     /// Because attributes can change the behavior or semantics of functions in
     /// fairly significant ways, and in ways that may affect interop, we
     /// default-closed and do not expose functions with unknown attributes.
-    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) has_c_calling_convention: bool,
     pub(crate) is_member_or_descendant_of_class_template: bool,
     pub(crate) safety_annotation: SafetyAnnotation,
-    pub(crate) source_loc: Rc<str>,
+    pub(crate) source_loc: &'pb str,
     pub(crate) id: ItemId,
     /// The enclosing item ID.
     ///
@@ -1094,29 +1105,29 @@ pub struct Func {
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
 }
 
-impl Func {
-    pub fn cc_name(&self) -> &UnqualifiedIdentifier {
+impl<'pb> Func<'pb> {
+    pub fn cc_name(&self) -> &UnqualifiedIdentifier<'pb> {
         &self.cc_name
     }
 
-    pub fn rs_name(&self) -> &UnqualifiedIdentifier {
+    pub fn rs_name(&self) -> &UnqualifiedIdentifier<'pb> {
         &self.rs_name
     }
 
-    pub fn unique_name(&self) -> &str {
-        &self.unique_name
+    pub fn unique_name(&self) -> &'pb str {
+        self.unique_name
     }
 
     pub fn owning_target(&self) -> &BazelLabel {
         &self.owning_target
     }
 
-    pub fn mangled_name(&self) -> &str {
-        &self.mangled_name
+    pub fn mangled_name(&self) -> &'pb str {
+        self.mangled_name
     }
 
-    pub fn doc_comment(&self) -> Option<&str> {
-        self.doc_comment.as_deref()
+    pub fn doc_comment(&self) -> Option<&'pb str> {
+        self.doc_comment
     }
 
     pub fn return_type(&self) -> &CcType {
@@ -1131,11 +1142,11 @@ impl Func {
         self.return_type = return_type;
     }
 
-    pub fn params(&self) -> &[FuncParam] {
+    pub fn params(&self) -> &[FuncParam<'pb>] {
         &self.params
     }
 
-    pub fn params_mut(&mut self) -> &mut Vec<FuncParam> {
+    pub fn params_mut(&mut self) -> &mut Vec<FuncParam<'pb>> {
         &mut self.params
     }
 
@@ -1171,16 +1182,16 @@ impl Func {
         self.is_consteval
     }
 
-    pub fn nodiscard(&self) -> Option<&str> {
-        self.nodiscard.as_deref()
+    pub fn nodiscard(&self) -> Option<&'pb str> {
+        self.nodiscard
     }
 
-    pub fn deprecated(&self) -> Option<&str> {
-        self.deprecated.as_deref()
+    pub fn deprecated(&self) -> Option<&'pb str> {
+        self.deprecated
     }
 
-    pub fn unknown_attr(&self) -> Option<&str> {
-        self.unknown_attr.as_deref()
+    pub fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr
     }
 
     pub fn has_c_calling_convention(&self) -> bool {
@@ -1195,8 +1206,8 @@ impl Func {
         self.safety_annotation
     }
 
-    pub fn source_loc(&self) -> &str {
-        &self.source_loc
+    pub fn source_loc(&self) -> &'pb str {
+        self.source_loc
     }
 
     pub fn id(&self) -> ItemId {
@@ -1225,14 +1236,14 @@ impl Func {
 
     #[allow(clippy::too_many_arguments)]
     pub fn new_for_testing(
-        cc_name: UnqualifiedIdentifier,
-        rs_name: UnqualifiedIdentifier,
-        unique_name: Rc<str>,
+        cc_name: UnqualifiedIdentifier<'pb>,
+        rs_name: UnqualifiedIdentifier<'pb>,
+        unique_name: &'pb str,
         owning_target: BazelLabel,
-        mangled_name: Rc<str>,
-        doc_comment: Option<Rc<str>>,
+        mangled_name: &'pb str,
+        doc_comment: Option<&'pb str>,
         return_type: CcType,
-        params: Vec<FuncParam>,
+        params: Vec<FuncParam<'pb>>,
         lifetime_params: Vec<LifetimeName>,
         is_inline: bool,
         instance_method_metadata: Option<InstanceMethodMetadata>,
@@ -1240,13 +1251,13 @@ impl Func {
         is_noreturn: bool,
         is_variadic: bool,
         is_consteval: bool,
-        nodiscard: Option<Rc<str>>,
-        deprecated: Option<Rc<str>>,
-        unknown_attr: Option<Rc<str>>,
+        nodiscard: Option<&'pb str>,
+        deprecated: Option<&'pb str>,
+        unknown_attr: Option<&'pb str>,
         has_c_calling_convention: bool,
         is_member_or_descendant_of_class_template: bool,
         safety_annotation: SafetyAnnotation,
-        source_loc: Rc<str>,
+        source_loc: &'pb str,
         id: ItemId,
         enclosing_item_id: Option<ItemId>,
         adl_enclosing_record: Option<ItemId>,
@@ -1285,12 +1296,12 @@ impl Func {
     }
 }
 
-impl GenericItem for Func {
+impl<'pb> GenericItem<'pb> for Func<'pb> {
     fn id(&self) -> ItemId {
         self.id
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
-        Some(self.unique_name.clone())
+    fn unique_name(&self) -> Option<&'pb str> {
+        Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -1302,14 +1313,17 @@ impl GenericItem for Func {
             UnsupportedItemKind::Func
         }
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
-        Some(self.source_loc.clone())
+    fn source_loc(&self) -> Option<&'pb str> {
+        Some(self.source_loc())
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
-        self.unknown_attr.clone()
+    fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         self.must_bind
+    }
+    fn cc_name_as_str(&self) -> Option<&'pb str> {
+        self.cc_name.identifier_as_str()
     }
 }
 
@@ -1321,17 +1335,17 @@ pub enum AccessSpecifier {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Field {
-    pub(crate) rust_identifier: Option<Identifier>,
-    pub(crate) cpp_identifier: Option<Identifier>,
-    pub(crate) doc_comment: Option<Rc<str>>,
+pub struct Field<'pb> {
+    pub(crate) rust_identifier: Option<Identifier<'pb>>,
+    pub(crate) cpp_identifier: Option<Identifier<'pb>>,
+    pub(crate) doc_comment: Option<&'pb str>,
     pub(crate) type_: CcType,
     pub(crate) access: AccessSpecifier,
     pub(crate) offset: usize,
     pub(crate) size: usize,
 
     /// A human-readable list of attributes that Crubit doesn't understand.
-    pub(crate) unknown_attr: Result<Option<Rc<str>>, String>,
+    pub(crate) unknown_attr: Result<Option<&'pb str>, String>,
 
     pub(crate) is_no_unique_address: bool,
     pub(crate) is_bitfield: bool,
@@ -1343,20 +1357,20 @@ pub struct Field {
 
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    pub(crate) deprecated: Option<Rc<str>>,
+    pub(crate) deprecated: Option<&'pb str>,
 }
 
-impl Field {
-    pub fn rust_identifier(&self) -> Option<&Identifier> {
+impl<'pb> Field<'pb> {
+    pub fn rust_identifier(&self) -> Option<&Identifier<'pb>> {
         self.rust_identifier.as_ref()
     }
 
-    pub fn cpp_identifier(&self) -> Option<&Identifier> {
+    pub fn cpp_identifier(&self) -> Option<&Identifier<'pb>> {
         self.cpp_identifier.as_ref()
     }
 
-    pub fn doc_comment(&self) -> Option<&str> {
-        self.doc_comment.as_deref()
+    pub fn doc_comment(&self) -> Option<&'pb str> {
+        self.doc_comment
     }
 
     pub fn type_(&self) -> &CcType {
@@ -1383,7 +1397,7 @@ impl Field {
         self.size
     }
 
-    pub fn unknown_attr(&self) -> &Result<Option<Rc<str>>, String> {
+    pub fn unknown_attr(&self) -> &Result<Option<&'pb str>, String> {
         &self.unknown_attr
     }
 
@@ -1403,25 +1417,25 @@ impl Field {
         self.is_mutable
     }
 
-    pub fn deprecated(&self) -> Option<&str> {
-        self.deprecated.as_deref()
+    pub fn deprecated(&self) -> Option<&'pb str> {
+        self.deprecated
     }
 
     #[allow(clippy::too_many_arguments)]
     pub fn new_for_testing(
-        rust_identifier: Option<Identifier>,
-        cpp_identifier: Option<Identifier>,
-        doc_comment: Option<Rc<str>>,
+        rust_identifier: Option<Identifier<'pb>>,
+        cpp_identifier: Option<Identifier<'pb>>,
+        doc_comment: Option<&'pb str>,
         type_: CcType,
         access: AccessSpecifier,
         offset: usize,
         size: usize,
-        unknown_attr: Result<Option<Rc<str>>, String>,
+        unknown_attr: Result<Option<&'pb str>, String>,
         is_no_unique_address: bool,
         is_bitfield: bool,
         is_inheritable: bool,
         is_mutable: bool,
-        deprecated: Option<Rc<str>>,
+        deprecated: Option<&'pb str>,
     ) -> Self {
         Self {
             rust_identifier,
@@ -1466,10 +1480,10 @@ impl BaseClass {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct IncompleteRecord {
-    pub(crate) cc_name: Identifier,
-    pub(crate) rs_name: Identifier,
-    pub(crate) unique_name: Rc<str>,
+pub struct IncompleteRecord<'pb> {
+    pub(crate) cc_name: Identifier<'pb>,
+    pub(crate) rs_name: Identifier<'pb>,
+    pub(crate) unique_name: &'pb str,
     pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
     /// A human-readable list of attributes that Crubit doesn't understand.
@@ -1477,23 +1491,23 @@ pub struct IncompleteRecord {
     /// Because attributes can change the behavior or semantics of types in
     /// fairly significant ways, and in ways that may affect interop, we
     /// default-closed and do not expose functions with unknown attributes.
-    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) record_type: RecordType,
     pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) must_bind: bool,
 }
 
-impl IncompleteRecord {
-    pub fn cc_name(&self) -> &Identifier {
+impl<'pb> IncompleteRecord<'pb> {
+    pub fn cc_name(&self) -> &Identifier<'pb> {
         &self.cc_name
     }
 
-    pub fn rs_name(&self) -> &Identifier {
+    pub fn rs_name(&self) -> &Identifier<'pb> {
         &self.rs_name
     }
 
-    pub fn unique_name(&self) -> &str {
-        &self.unique_name
+    pub fn unique_name(&self) -> &'pb str {
+        self.unique_name
     }
 
     pub fn id(&self) -> ItemId {
@@ -1504,8 +1518,8 @@ impl IncompleteRecord {
         &self.owning_target
     }
 
-    pub fn unknown_attr(&self) -> Option<&str> {
-        self.unknown_attr.as_deref()
+    pub fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr
     }
 
     pub fn record_type(&self) -> RecordType {
@@ -1522,12 +1536,12 @@ impl IncompleteRecord {
 
     #[allow(clippy::too_many_arguments)]
     pub fn new_for_testing(
-        cc_name: Identifier,
-        rs_name: Identifier,
-        unique_name: Rc<str>,
+        cc_name: Identifier<'pb>,
+        rs_name: Identifier<'pb>,
+        unique_name: &'pb str,
         id: ItemId,
         owning_target: BazelLabel,
-        unknown_attr: Option<Rc<str>>,
+        unknown_attr: Option<&'pb str>,
         record_type: RecordType,
         enclosing_item_id: Option<ItemId>,
         must_bind: bool,
@@ -1546,12 +1560,12 @@ impl IncompleteRecord {
     }
 }
 
-impl GenericItem for IncompleteRecord {
+impl<'pb> GenericItem<'pb> for IncompleteRecord<'pb> {
     fn id(&self) -> ItemId {
         self.id
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
-        Some(self.unique_name.clone())
+    fn unique_name(&self) -> Option<&'pb str> {
+        Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -1559,14 +1573,17 @@ impl GenericItem for IncompleteRecord {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         self.record_type.unsupported_item_kind()
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
+    fn source_loc(&self) -> Option<&'pb str> {
         None
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
-        self.unknown_attr.clone()
+    fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         self.must_bind
+    }
+    fn cc_name_as_str(&self) -> Option<&'pb str> {
+        Some(self.cc_name.as_str())
     }
 }
 
@@ -1628,14 +1645,14 @@ pub enum FnTrait {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum BridgeType {
+pub enum BridgeType<'pb> {
     ProtoMessageBridge {
-        rust_name: Rc<str>,
+        rust_name: &'pb str,
     },
     Bridge {
-        rust_name: Rc<str>,
-        abi_rust: Rc<str>,
-        abi_cpp: Rc<str>,
+        rust_name: &'pb str,
+        abi_rust: &'pb str,
+        abi_cpp: &'pb str,
         template_args: Rc<[CcType]>,
     },
     StdOptional(CcType),
@@ -1709,7 +1726,7 @@ pub enum TraitImplPolarity {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct TraitDerives {
+pub struct TraitDerives<'pb> {
     // <internal link> start
     pub clone: TraitImplPolarity,
     pub copy: TraitImplPolarity,
@@ -1717,29 +1734,29 @@ pub struct TraitDerives {
     // <internal link> end
     pub send: bool,
     pub sync: bool,
-    pub custom: Vec<Rc<str>>,
+    pub custom: Vec<&'pb str>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct OwnedPtrConfig {
-    pub owned_ptr_type: Rc<str>,
-    pub drop_impl: Rc<str>,
+pub struct OwnedPtrConfig<'pb> {
+    pub owned_ptr_type: &'pb str,
+    pub drop_impl: &'pb str,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Record {
-    pub(crate) rs_name: Identifier,
+pub struct Record<'pb> {
+    pub(crate) rs_name: Identifier<'pb>,
     /// The C++ name of the record. If the record is a template specialization, the fully qualified
     /// name is used. Otherwise, the only the name of the record is used.
     /// Today, cc_name is only used for debugging, checking for names starting in __, and generating
     /// parent modules for nested items which are disallowed for template specializations in Crubit.
-    pub(crate) cc_name: Identifier,
-    pub(crate) unique_name: Rc<str>,
+    pub(crate) cc_name: Identifier<'pb>,
+    pub(crate) unique_name: &'pb str,
 
     /// Mangled record names are used to 1) provide valid Rust identifiers for
     /// C++ template specializations, and 2) help build unique names for virtual
     /// upcast thunks.
-    pub(crate) mangled_cc_name: Rc<str>,
+    pub(crate) mangled_cc_name: &'pb str,
     pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
     pub(crate) template_specialization: Option<TemplateSpecialization>,
@@ -1748,16 +1765,16 @@ pub struct Record {
     /// Because attributes can change the behavior or semantics of types in
     /// fairly significant ways, and in ways that may affect interop, we
     /// default-closed and do not expose functions with unknown attributes.
-    pub(crate) unknown_attr: Option<Rc<str>>,
-    pub(crate) doc_comment: Option<Rc<str>>,
-    pub(crate) bridge_type: Option<BridgeType>,
-    pub(crate) owned_ptr_config: Option<OwnedPtrConfig>,
-    pub(crate) source_loc: Rc<str>,
+    pub(crate) unknown_attr: Option<&'pb str>,
+    pub(crate) doc_comment: Option<&'pb str>,
+    pub(crate) bridge_type: Option<BridgeType<'pb>>,
+    pub(crate) owned_ptr_config: Option<OwnedPtrConfig<'pb>>,
+    pub(crate) source_loc: &'pb str,
     pub(crate) unambiguous_public_bases: Vec<BaseClass>,
-    pub(crate) fields: Vec<Field>,
+    pub(crate) fields: Vec<Field<'pb>>,
     pub(crate) lifetime_params: Vec<LifetimeName>,
     pub(crate) size_align: SizeAlign,
-    pub(crate) trait_derives: TraitDerives,
+    pub(crate) trait_derives: TraitDerives<'pb>,
     pub(crate) is_derived_class: bool,
     pub(crate) override_alignment: bool,
     pub(crate) safety_annotation: SafetyAnnotation,
@@ -1769,7 +1786,7 @@ pub struct Record {
     pub(crate) is_abstract: bool,
     /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
     /// string is used.
-    pub(crate) nodiscard: Option<Rc<str>>,
+    pub(crate) nodiscard: Option<&'pb str>,
     pub(crate) record_type: RecordType,
     pub(crate) is_aggregate: bool,
     pub(crate) is_canonical_alias: bool,
@@ -1784,36 +1801,36 @@ pub struct Record {
     pub(crate) detected_formatter: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    pub(crate) deprecated: Option<Rc<str>>,
+    pub(crate) deprecated: Option<&'pb str>,
     /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
     pub(crate) is_thread_safe: bool,
     pub(crate) is_explicit_class_template_instantiation_definition: bool,
-    pub(crate) children: Vec<Item>,
+    pub(crate) children: Vec<Item<'pb>>,
 }
 
-impl Record {
-    pub fn rs_name(&self) -> &Identifier {
+impl<'pb> Record<'pb> {
+    pub fn rs_name(&self) -> &Identifier<'pb> {
         &self.rs_name
     }
 
-    pub fn set_rs_name(&mut self, rs_name: Identifier) {
+    pub fn set_rs_name(&mut self, rs_name: Identifier<'pb>) {
         self.rs_name = rs_name;
     }
 
-    pub fn cc_name(&self) -> &Identifier {
+    pub fn cc_name(&self) -> &Identifier<'pb> {
         &self.cc_name
     }
 
-    pub fn set_cc_name(&mut self, cc_name: Identifier) {
+    pub fn set_cc_name(&mut self, cc_name: Identifier<'pb>) {
         self.cc_name = cc_name;
     }
 
-    pub fn unique_name(&self) -> &str {
-        &self.unique_name
+    pub fn unique_name(&self) -> &'pb str {
+        self.unique_name
     }
 
-    pub fn mangled_cc_name(&self) -> &str {
-        &self.mangled_cc_name
+    pub fn mangled_cc_name(&self) -> &'pb str {
+        self.mangled_cc_name
     }
 
     pub fn id(&self) -> ItemId {
@@ -1828,35 +1845,35 @@ impl Record {
         self.template_specialization.as_ref()
     }
 
-    pub fn unknown_attr(&self) -> Option<&str> {
-        self.unknown_attr.as_deref()
+    pub fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr
     }
 
-    pub fn doc_comment(&self) -> Option<&str> {
-        self.doc_comment.as_deref()
+    pub fn doc_comment(&self) -> Option<&'pb str> {
+        self.doc_comment
     }
 
-    pub fn bridge_type(&self) -> Option<&BridgeType> {
+    pub fn bridge_type(&self) -> Option<&BridgeType<'pb>> {
         self.bridge_type.as_ref()
     }
 
-    pub fn owned_ptr_config(&self) -> Option<&OwnedPtrConfig> {
+    pub fn owned_ptr_config(&self) -> Option<&OwnedPtrConfig<'pb>> {
         self.owned_ptr_config.as_ref()
     }
 
-    pub fn source_loc(&self) -> &str {
-        &self.source_loc
+    pub fn source_loc(&self) -> &'pb str {
+        self.source_loc
     }
 
     pub fn unambiguous_public_bases(&self) -> &[BaseClass] {
         &self.unambiguous_public_bases
     }
 
-    pub fn fields(&self) -> &[Field] {
+    pub fn fields(&self) -> &[Field<'pb>] {
         &self.fields
     }
 
-    pub fn fields_mut(&mut self) -> &mut Vec<Field> {
+    pub fn fields_mut(&mut self) -> &mut Vec<Field<'pb>> {
         &mut self.fields
     }
 
@@ -1868,7 +1885,7 @@ impl Record {
         self.size_align
     }
 
-    pub fn trait_derives(&self) -> &TraitDerives {
+    pub fn trait_derives(&self) -> &TraitDerives<'pb> {
         &self.trait_derives
     }
 
@@ -1912,8 +1929,8 @@ impl Record {
         self.is_abstract
     }
 
-    pub fn nodiscard(&self) -> Option<&str> {
-        self.nodiscard.as_deref()
+    pub fn nodiscard(&self) -> Option<&'pb str> {
+        self.nodiscard
     }
 
     pub fn record_type(&self) -> RecordType {
@@ -1964,8 +1981,8 @@ impl Record {
         self.detected_formatter
     }
 
-    pub fn deprecated(&self) -> Option<&str> {
-        self.deprecated.as_deref()
+    pub fn deprecated(&self) -> Option<&'pb str> {
+        self.deprecated
     }
 
     pub fn is_thread_safe(&self) -> bool {
@@ -1976,15 +1993,15 @@ impl Record {
         self.is_explicit_class_template_instantiation_definition
     }
 
-    pub fn children(&self) -> &[Item] {
+    pub fn children(&self) -> &[Item<'pb>] {
         &self.children
     }
 
-    pub fn children_mut(&mut self) -> &mut Vec<Item> {
+    pub fn children_mut(&mut self) -> &mut Vec<Item<'pb>> {
         &mut self.children
     }
 
-    pub fn set_children(&mut self, children: Vec<Item>) {
+    pub fn set_children(&mut self, children: Vec<Item<'pb>>) {
         self.children = children;
     }
 
@@ -2006,23 +2023,23 @@ impl Record {
 
     #[allow(clippy::too_many_arguments)]
     pub fn new_for_testing(
-        rs_name: Identifier,
-        cc_name: Identifier,
-        unique_name: Rc<str>,
-        mangled_cc_name: Rc<str>,
+        rs_name: Identifier<'pb>,
+        cc_name: Identifier<'pb>,
+        unique_name: &'pb str,
+        mangled_cc_name: &'pb str,
         id: ItemId,
         owning_target: BazelLabel,
         template_specialization: Option<TemplateSpecialization>,
-        unknown_attr: Option<Rc<str>>,
-        doc_comment: Option<Rc<str>>,
-        bridge_type: Option<BridgeType>,
-        owned_ptr_config: Option<OwnedPtrConfig>,
-        source_loc: Rc<str>,
+        unknown_attr: Option<&'pb str>,
+        doc_comment: Option<&'pb str>,
+        bridge_type: Option<BridgeType<'pb>>,
+        owned_ptr_config: Option<OwnedPtrConfig<'pb>>,
+        source_loc: &'pb str,
         unambiguous_public_bases: Vec<BaseClass>,
-        fields: Vec<Field>,
+        fields: Vec<Field<'pb>>,
         lifetime_params: Vec<LifetimeName>,
         size_align: SizeAlign,
-        trait_derives: TraitDerives,
+        trait_derives: TraitDerives<'pb>,
         is_derived_class: bool,
         override_alignment: bool,
         safety_annotation: SafetyAnnotation,
@@ -2032,7 +2049,7 @@ impl Record {
         is_trivial_abi: bool,
         is_inheritable: bool,
         is_abstract: bool,
-        nodiscard: Option<Rc<str>>,
+        nodiscard: Option<&'pb str>,
         record_type: RecordType,
         is_aggregate: bool,
         is_canonical_alias: bool,
@@ -2043,10 +2060,10 @@ impl Record {
         lifetime_inputs: Vec<Rc<str>>,
         impl_debug: bool,
         detected_formatter: bool,
-        deprecated: Option<Rc<str>>,
+        deprecated: Option<&'pb str>,
         is_thread_safe: bool,
         is_explicit_class_template_instantiation_definition: bool,
-        children: Vec<Item>,
+        children: Vec<Item<'pb>>,
     ) -> Self {
         Self {
             rs_name,
@@ -2094,12 +2111,12 @@ impl Record {
     }
 }
 
-impl GenericItem for Record {
+impl<'pb> GenericItem<'pb> for Record<'pb> {
     fn id(&self) -> ItemId {
         self.id
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
-        Some(self.unique_name.clone())
+    fn unique_name(&self) -> Option<&'pb str> {
+        Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -2107,18 +2124,21 @@ impl GenericItem for Record {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         self.record_type.unsupported_item_kind()
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
-        Some(self.source_loc.clone())
+    fn source_loc(&self) -> Option<&'pb str> {
+        Some(self.source_loc())
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
-        self.unknown_attr.clone()
+    fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         self.must_bind
     }
+    fn cc_name_as_str(&self) -> Option<&'pb str> {
+        Some(self.cc_name.as_str())
+    }
 }
 
-impl Record {
+impl Record<'_> {
     /// Whether this type has Rust-like object semantics for mutating
     /// assignment, and can be passed by mut reference as a result.
     ///
@@ -2170,7 +2190,7 @@ impl Record {
         matches!(
             self.template_specialization,
             Some(TemplateSpecialization { kind: TemplateSpecializationKind::StdStringView, .. })
-        ) && self.rs_name.identifier.as_ref() == "raw_string_view"
+        ) && self.rs_name.identifier == "raw_string_view"
     }
 
     pub fn is_union(&self) -> bool {
@@ -2258,45 +2278,45 @@ impl Record {
     ///
     /// Notably, all records that have a unique owning target are supported, e.g. `std::string`, but
     /// not all supported records have a unique owning target, e.g. `std::vector<int>`.
-    pub fn has_unique_owning_target(self: &Record) -> bool {
+    pub fn has_unique_owning_target(&self) -> bool {
         self.template_specialization.is_none() || self.is_canonical_alias
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Constant {
+pub struct Constant<'pb> {
     pub(crate) value: IntegerConstant,
-    pub(crate) cc_name: Identifier,
-    pub(crate) rs_name: Identifier,
-    pub(crate) unique_name: Rc<str>,
+    pub(crate) cc_name: Identifier<'pb>,
+    pub(crate) rs_name: Identifier<'pb>,
+    pub(crate) unique_name: &'pb str,
     pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) source_loc: Rc<str>,
-    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) source_loc: &'pb str,
+    pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) type_: CcType,
     pub(crate) must_bind: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    pub(crate) deprecated: Option<Rc<str>>,
-    pub(crate) doc_comment: Option<Rc<str>>,
+    pub(crate) deprecated: Option<&'pb str>,
+    pub(crate) doc_comment: Option<&'pb str>,
 }
 
-impl Constant {
+impl<'pb> Constant<'pb> {
     pub fn value(&self) -> IntegerConstant {
         self.value
     }
 
-    pub fn cc_name(&self) -> &Identifier {
+    pub fn cc_name(&self) -> &Identifier<'pb> {
         &self.cc_name
     }
 
-    pub fn rs_name(&self) -> &Identifier {
+    pub fn rs_name(&self) -> &Identifier<'pb> {
         &self.rs_name
     }
 
-    pub fn unique_name(&self) -> &str {
-        &self.unique_name
+    pub fn unique_name(&self) -> &'pb str {
+        self.unique_name
     }
 
     pub fn id(&self) -> ItemId {
@@ -2307,12 +2327,12 @@ impl Constant {
         &self.owning_target
     }
 
-    pub fn source_loc(&self) -> &str {
-        &self.source_loc
+    pub fn source_loc(&self) -> &'pb str {
+        self.source_loc
     }
 
-    pub fn unknown_attr(&self) -> Option<&str> {
-        self.unknown_attr.as_deref()
+    pub fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr
     }
 
     pub fn enclosing_item_id(&self) -> Option<ItemId> {
@@ -2327,21 +2347,21 @@ impl Constant {
         self.must_bind
     }
 
-    pub fn deprecated(&self) -> Option<&str> {
-        self.deprecated.as_deref()
+    pub fn deprecated(&self) -> Option<&'pb str> {
+        self.deprecated
     }
 
-    pub fn doc_comment(&self) -> Option<&str> {
-        self.doc_comment.as_deref()
+    pub fn doc_comment(&self) -> Option<&'pb str> {
+        self.doc_comment
     }
 }
 
-impl GenericItem for Constant {
+impl<'pb> GenericItem<'pb> for Constant<'pb> {
     fn id(&self) -> ItemId {
         self.id
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
-        Some(self.unique_name.clone())
+    fn unique_name(&self) -> Option<&'pb str> {
+        Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -2349,48 +2369,51 @@ impl GenericItem for Constant {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::GlobalVar
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
-        Some(self.source_loc.clone())
+    fn source_loc(&self) -> Option<&'pb str> {
+        Some(self.source_loc())
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
-        self.unknown_attr.clone()
+    fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         self.must_bind
     }
+    fn cc_name_as_str(&self) -> Option<&'pb str> {
+        Some(self.cc_name.as_str())
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct GlobalVar {
-    pub(crate) cc_name: Identifier,
-    pub(crate) rs_name: Identifier,
-    pub(crate) unique_name: Rc<str>,
+pub struct GlobalVar<'pb> {
+    pub(crate) cc_name: Identifier<'pb>,
+    pub(crate) rs_name: Identifier<'pb>,
+    pub(crate) unique_name: &'pb str,
     pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) source_loc: Rc<str>,
+    pub(crate) source_loc: &'pb str,
     /// A human-readable list of attributes that Crubit doesn't understand.
-    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) enclosing_item_id: Option<ItemId>,
-    pub(crate) mangled_name: Option<Rc<str>>,
+    pub(crate) mangled_name: Option<&'pb str>,
     pub(crate) type_: CcType,
     pub(crate) must_bind: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    pub(crate) deprecated: Option<Rc<str>>,
-    pub(crate) doc_comment: Option<Rc<str>>,
+    pub(crate) deprecated: Option<&'pb str>,
+    pub(crate) doc_comment: Option<&'pb str>,
 }
 
-impl GlobalVar {
-    pub fn cc_name(&self) -> &Identifier {
+impl<'pb> GlobalVar<'pb> {
+    pub fn cc_name(&self) -> &Identifier<'pb> {
         &self.cc_name
     }
 
-    pub fn rs_name(&self) -> &Identifier {
+    pub fn rs_name(&self) -> &Identifier<'pb> {
         &self.rs_name
     }
 
-    pub fn unique_name(&self) -> &str {
-        &self.unique_name
+    pub fn unique_name(&self) -> &'pb str {
+        self.unique_name
     }
 
     pub fn id(&self) -> ItemId {
@@ -2401,20 +2424,20 @@ impl GlobalVar {
         &self.owning_target
     }
 
-    pub fn source_loc(&self) -> &str {
-        &self.source_loc
+    pub fn source_loc(&self) -> &'pb str {
+        self.source_loc
     }
 
-    pub fn unknown_attr(&self) -> Option<&str> {
-        self.unknown_attr.as_deref()
+    pub fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr
     }
 
     pub fn enclosing_item_id(&self) -> Option<ItemId> {
         self.enclosing_item_id
     }
 
-    pub fn mangled_name(&self) -> Option<&str> {
-        self.mangled_name.as_deref()
+    pub fn mangled_name(&self) -> Option<&'pb str> {
+        self.mangled_name
     }
 
     pub fn type_(&self) -> &CcType {
@@ -2425,21 +2448,21 @@ impl GlobalVar {
         self.must_bind
     }
 
-    pub fn deprecated(&self) -> Option<&str> {
-        self.deprecated.as_deref()
+    pub fn deprecated(&self) -> Option<&'pb str> {
+        self.deprecated
     }
 
-    pub fn doc_comment(&self) -> Option<&str> {
-        self.doc_comment.as_deref()
+    pub fn doc_comment(&self) -> Option<&'pb str> {
+        self.doc_comment
     }
 }
 
-impl GenericItem for GlobalVar {
+impl<'pb> GenericItem<'pb> for GlobalVar<'pb> {
     fn id(&self) -> ItemId {
         self.id
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
-        Some(self.unique_name.clone())
+    fn unique_name(&self) -> Option<&'pb str> {
+        Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -2447,62 +2470,65 @@ impl GenericItem for GlobalVar {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::GlobalVar
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
-        Some(self.source_loc.clone())
+    fn source_loc(&self) -> Option<&'pb str> {
+        Some(self.source_loc())
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
-        self.unknown_attr.clone()
+    fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         self.must_bind
     }
+    fn cc_name_as_str(&self) -> Option<&'pb str> {
+        Some(self.cc_name.as_str())
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Enum {
-    pub(crate) cc_name: Identifier,
-    pub(crate) rs_name: Identifier,
-    pub(crate) unique_name: Rc<str>,
-    pub(crate) mangled_cc_name: Rc<str>,
+pub struct Enum<'pb> {
+    pub(crate) cc_name: Identifier<'pb>,
+    pub(crate) rs_name: Identifier<'pb>,
+    pub(crate) unique_name: &'pb str,
+    pub(crate) mangled_cc_name: &'pb str,
     pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) source_loc: Rc<str>,
+    pub(crate) source_loc: &'pb str,
     pub(crate) underlying_type: CcType,
     /// The enumerators. If None, this is a forward-declared (opaque) enum.
     ///
     /// That is, the difference between `enum X : int {};` and `enum X : int;`
     /// is that the former has `Some(vec![])` for the enumerators, while the
     /// latter has `None`.
-    pub(crate) enumerators: Option<Vec<Enumerator>>,
+    pub(crate) enumerators: Option<Vec<Enumerator<'pb>>>,
     /// A human-readable list of attributes that Crubit doesn't understand.
-    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) must_bind: bool,
     pub(crate) detected_formatter: bool,
     /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
     /// string is used.
-    pub(crate) nodiscard: Option<Rc<str>>,
+    pub(crate) nodiscard: Option<&'pb str>,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    pub(crate) deprecated: Option<Rc<str>>,
-    pub(crate) doc_comment: Option<Rc<str>>,
+    pub(crate) deprecated: Option<&'pb str>,
+    pub(crate) doc_comment: Option<&'pb str>,
 }
 
-impl Enum {
-    pub fn cc_name(&self) -> &Identifier {
+impl<'pb> Enum<'pb> {
+    pub fn cc_name(&self) -> &Identifier<'pb> {
         &self.cc_name
     }
 
-    pub fn rs_name(&self) -> &Identifier {
+    pub fn rs_name(&self) -> &Identifier<'pb> {
         &self.rs_name
     }
 
-    pub fn unique_name(&self) -> &str {
-        &self.unique_name
+    pub fn unique_name(&self) -> &'pb str {
+        self.unique_name
     }
 
-    pub fn mangled_cc_name(&self) -> &str {
-        &self.mangled_cc_name
+    pub fn mangled_cc_name(&self) -> &'pb str {
+        self.mangled_cc_name
     }
 
     pub fn id(&self) -> ItemId {
@@ -2513,20 +2539,20 @@ impl Enum {
         &self.owning_target
     }
 
-    pub fn source_loc(&self) -> &str {
-        &self.source_loc
+    pub fn source_loc(&self) -> &'pb str {
+        self.source_loc
     }
 
     pub fn underlying_type(&self) -> &CcType {
         &self.underlying_type
     }
 
-    pub fn enumerators(&self) -> Option<&[Enumerator]> {
+    pub fn enumerators(&self) -> Option<&[Enumerator<'pb>]> {
         self.enumerators.as_deref()
     }
 
-    pub fn unknown_attr(&self) -> Option<&str> {
-        self.unknown_attr.as_deref()
+    pub fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr
     }
 
     pub fn enclosing_item_id(&self) -> Option<ItemId> {
@@ -2541,36 +2567,36 @@ impl Enum {
         self.detected_formatter
     }
 
-    pub fn nodiscard(&self) -> Option<&str> {
-        self.nodiscard.as_deref()
+    pub fn nodiscard(&self) -> Option<&'pb str> {
+        self.nodiscard
     }
 
-    pub fn deprecated(&self) -> Option<&str> {
-        self.deprecated.as_deref()
+    pub fn deprecated(&self) -> Option<&'pb str> {
+        self.deprecated
     }
 
-    pub fn doc_comment(&self) -> Option<&str> {
-        self.doc_comment.as_deref()
+    pub fn doc_comment(&self) -> Option<&'pb str> {
+        self.doc_comment
     }
 
     #[allow(clippy::too_many_arguments)]
     pub fn new_for_testing(
-        cc_name: Identifier,
-        rs_name: Identifier,
-        unique_name: Rc<str>,
-        mangled_cc_name: Rc<str>,
+        cc_name: Identifier<'pb>,
+        rs_name: Identifier<'pb>,
+        unique_name: &'pb str,
+        mangled_cc_name: &'pb str,
         id: ItemId,
         owning_target: BazelLabel,
-        source_loc: Rc<str>,
+        source_loc: &'pb str,
         underlying_type: CcType,
-        enumerators: Option<Vec<Enumerator>>,
-        unknown_attr: Option<Rc<str>>,
+        enumerators: Option<Vec<Enumerator<'pb>>>,
+        unknown_attr: Option<&'pb str>,
         enclosing_item_id: Option<ItemId>,
         must_bind: bool,
         detected_formatter: bool,
-        nodiscard: Option<Rc<str>>,
-        deprecated: Option<Rc<str>>,
-        doc_comment: Option<Rc<str>>,
+        nodiscard: Option<&'pb str>,
+        deprecated: Option<&'pb str>,
+        doc_comment: Option<&'pb str>,
     ) -> Self {
         Self {
             cc_name,
@@ -2593,12 +2619,12 @@ impl Enum {
     }
 }
 
-impl GenericItem for Enum {
+impl<'pb> GenericItem<'pb> for Enum<'pb> {
     fn id(&self) -> ItemId {
         self.id
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
-        Some(self.unique_name.clone())
+    fn unique_name(&self) -> Option<&'pb str> {
+        Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -2606,31 +2632,34 @@ impl GenericItem for Enum {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Enum
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
-        Some(self.source_loc.clone())
+    fn source_loc(&self) -> Option<&'pb str> {
+        Some(self.source_loc())
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
-        self.unknown_attr.clone()
+    fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         self.must_bind
     }
+    fn cc_name_as_str(&self) -> Option<&'pb str> {
+        Some(self.cc_name.as_str())
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Enumerator {
-    pub(crate) identifier: Identifier,
+pub struct Enumerator<'pb> {
+    pub(crate) identifier: Identifier<'pb>,
     pub(crate) value: IntegerConstant,
     /// A human-readable list of attributes that Crubit doesn't understand.
-    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) unknown_attr: Option<&'pb str>,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    pub(crate) deprecated: Option<Rc<str>>,
-    pub(crate) doc_comment: Option<Rc<str>>,
+    pub(crate) deprecated: Option<&'pb str>,
+    pub(crate) doc_comment: Option<&'pb str>,
 }
 
-impl Enumerator {
-    pub fn identifier(&self) -> &Identifier {
+impl<'pb> Enumerator<'pb> {
+    pub fn identifier(&self) -> &Identifier<'pb> {
         &self.identifier
     }
 
@@ -2638,51 +2667,51 @@ impl Enumerator {
         self.value
     }
 
-    pub fn unknown_attr(&self) -> Option<&str> {
-        self.unknown_attr.as_deref()
+    pub fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr
     }
 
-    pub fn deprecated(&self) -> Option<&str> {
-        self.deprecated.as_deref()
+    pub fn deprecated(&self) -> Option<&'pb str> {
+        self.deprecated
     }
 
-    pub fn doc_comment(&self) -> Option<&str> {
-        self.doc_comment.as_deref()
+    pub fn doc_comment(&self) -> Option<&'pb str> {
+        self.doc_comment
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct TypeAlias {
-    pub(crate) cc_name: Identifier,
-    pub(crate) rs_name: Identifier,
-    pub(crate) unique_name: Rc<str>,
+pub struct TypeAlias<'pb> {
+    pub(crate) cc_name: Identifier<'pb>,
+    pub(crate) rs_name: Identifier<'pb>,
+    pub(crate) unique_name: &'pb str,
     pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) doc_comment: Option<Rc<str>>,
+    pub(crate) doc_comment: Option<&'pb str>,
     /// A human-readable list of attributes that Crubit doesn't understand.
-    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) underlying_type: CcType,
-    pub(crate) source_loc: Rc<str>,
+    pub(crate) source_loc: &'pb str,
     pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) must_bind: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
-    pub(crate) deprecated: Option<Rc<str>>,
+    pub(crate) deprecated: Option<&'pb str>,
     // Lifetime variable names bound by this type alias.
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
 }
 
-impl TypeAlias {
-    pub fn cc_name(&self) -> &Identifier {
+impl<'pb> TypeAlias<'pb> {
+    pub fn cc_name(&self) -> &Identifier<'pb> {
         &self.cc_name
     }
 
-    pub fn rs_name(&self) -> &Identifier {
+    pub fn rs_name(&self) -> &Identifier<'pb> {
         &self.rs_name
     }
 
-    pub fn unique_name(&self) -> &str {
-        &self.unique_name
+    pub fn unique_name(&self) -> &'pb str {
+        self.unique_name
     }
 
     pub fn id(&self) -> ItemId {
@@ -2693,12 +2722,12 @@ impl TypeAlias {
         &self.owning_target
     }
 
-    pub fn doc_comment(&self) -> Option<&str> {
-        self.doc_comment.as_deref()
+    pub fn doc_comment(&self) -> Option<&'pb str> {
+        self.doc_comment
     }
 
-    pub fn unknown_attr(&self) -> Option<&str> {
-        self.unknown_attr.as_deref()
+    pub fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr
     }
 
     pub fn underlying_type(&self) -> &CcType {
@@ -2709,8 +2738,8 @@ impl TypeAlias {
         &mut self.underlying_type
     }
 
-    pub fn source_loc(&self) -> &str {
-        &self.source_loc
+    pub fn source_loc(&self) -> &'pb str {
+        self.source_loc
     }
 
     pub fn enclosing_item_id(&self) -> Option<ItemId> {
@@ -2721,8 +2750,8 @@ impl TypeAlias {
         self.must_bind
     }
 
-    pub fn deprecated(&self) -> Option<&str> {
-        self.deprecated.as_deref()
+    pub fn deprecated(&self) -> Option<&'pb str> {
+        self.deprecated
     }
 
     pub fn lifetime_inputs(&self) -> &[Rc<str>] {
@@ -2735,18 +2764,18 @@ impl TypeAlias {
 
     #[allow(clippy::too_many_arguments)]
     pub fn new_for_testing(
-        cc_name: Identifier,
-        rs_name: Identifier,
-        unique_name: Rc<str>,
+        cc_name: Identifier<'pb>,
+        rs_name: Identifier<'pb>,
+        unique_name: &'pb str,
         id: ItemId,
         owning_target: BazelLabel,
-        doc_comment: Option<Rc<str>>,
-        unknown_attr: Option<Rc<str>>,
+        doc_comment: Option<&'pb str>,
+        unknown_attr: Option<&'pb str>,
         underlying_type: CcType,
-        source_loc: Rc<str>,
+        source_loc: &'pb str,
         enclosing_item_id: Option<ItemId>,
         must_bind: bool,
-        deprecated: Option<Rc<str>>,
+        deprecated: Option<&'pb str>,
         lifetime_inputs: Vec<Rc<str>>,
     ) -> Self {
         Self {
@@ -2767,12 +2796,12 @@ impl TypeAlias {
     }
 }
 
-impl GenericItem for TypeAlias {
+impl<'pb> GenericItem<'pb> for TypeAlias<'pb> {
     fn id(&self) -> ItemId {
         self.id
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
-        Some(self.unique_name.clone())
+    fn unique_name(&self) -> Option<&'pb str> {
+        Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -2780,18 +2809,21 @@ impl GenericItem for TypeAlias {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::TypeAlias
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
-        Some(self.source_loc.clone())
+    fn source_loc(&self) -> Option<&'pb str> {
+        Some(self.source_loc())
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
-        self.unknown_attr.clone()
+    fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         self.must_bind
     }
+    fn cc_name_as_str(&self) -> Option<&'pb str> {
+        Some(self.cc_name.as_str())
+    }
 }
 
-impl Display for TypeAlias {
+impl Display for TypeAlias<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} ({}, {})", self.rs_name, self.owning_target, self.source_loc)
     }
@@ -2868,13 +2900,13 @@ impl Display for UnsupportedItemKind {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct UnsupportedItemPath {
-    pub(crate) ident: UnqualifiedIdentifier,
+pub struct UnsupportedItemPath<'pb> {
+    pub(crate) ident: UnqualifiedIdentifier<'pb>,
     pub(crate) enclosing_item_id: Option<ItemId>,
 }
 
-impl UnsupportedItemPath {
-    pub fn ident(&self) -> &UnqualifiedIdentifier {
+impl<'pb> UnsupportedItemPath<'pb> {
+    pub fn ident(&self) -> &UnqualifiedIdentifier<'pb> {
         &self.ident
     }
 
@@ -2884,13 +2916,16 @@ impl UnsupportedItemPath {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct UnsupportedItem {
+pub struct UnsupportedItem<'pb> {
+    /// Unlike other AST nodes that borrow from the protobuf memory, `UnsupportedItem` names are
+    /// dynamically formatted during Rust code generation. Storing `Rc<str>` here avoids requiring
+    /// unsafe string lifetime extensions at the cost of negligible string allocations.
     pub(crate) name: Rc<str>,
-    pub(crate) unique_name: Option<Rc<str>>,
+    pub(crate) unique_name: Option<&'pb str>,
     pub(crate) kind: UnsupportedItemKind,
-    pub(crate) path: Option<UnsupportedItemPath>,
+    pub(crate) path: Option<UnsupportedItemPath<'pb>>,
     errors: Vec<Rc<FormattedError>>,
-    pub(crate) source_loc: Option<Rc<str>>,
+    pub(crate) source_loc: Option<&'pb str>,
     pub(crate) id: ItemId,
     pub(crate) must_bind: bool,
     pub(crate) defining_target: Option<BazelLabel>,
@@ -2900,25 +2935,25 @@ pub struct UnsupportedItem {
     cause: IgnoredField<OnceCell<Vec<Error>>>,
 }
 
-impl UnsupportedItem {
+impl<'pb> UnsupportedItem<'pb> {
     pub fn name(&self) -> &str {
         &self.name
     }
 
-    pub fn unique_name(&self) -> Option<&str> {
-        self.unique_name.as_deref()
+    pub fn unique_name(&self) -> Option<&'pb str> {
+        self.unique_name
     }
 
     pub fn kind(&self) -> UnsupportedItemKind {
         self.kind
     }
 
-    pub fn path(&self) -> Option<&UnsupportedItemPath> {
+    pub fn path(&self) -> Option<&UnsupportedItemPath<'pb>> {
         self.path.as_ref()
     }
 
-    pub fn source_loc(&self) -> Option<&str> {
-        self.source_loc.as_deref()
+    pub fn source_loc(&self) -> Option<&'pb str> {
+        self.source_loc
     }
 
     pub fn id(&self) -> ItemId {
@@ -2934,12 +2969,12 @@ impl UnsupportedItem {
     }
 }
 
-impl GenericItem for UnsupportedItem {
+impl<'pb> GenericItem<'pb> for UnsupportedItem<'pb> {
     fn id(&self) -> ItemId {
         self.id
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
-        self.unique_name.clone()
+    fn unique_name(&self) -> Option<&'pb str> {
+        self.unique_name()
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         None
@@ -2947,10 +2982,10 @@ impl GenericItem for UnsupportedItem {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         self.kind
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
-        self.source_loc.clone()
+    fn source_loc(&self) -> Option<&'pb str> {
+        self.source_loc()
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
+    fn unknown_attr(&self) -> Option<&'pb str> {
         None
     }
     fn must_bind(&self) -> bool {
@@ -2958,21 +2993,22 @@ impl GenericItem for UnsupportedItem {
     }
 }
 
-impl UnsupportedItem {
+impl<'pb> UnsupportedItem<'pb> {
+    #[allow(clippy::too_many_arguments)]
     pub fn new_raw(
-        name: Rc<str>,
-        unique_name: Option<Rc<str>>,
+        name: impl Into<Rc<str>>,
+        unique_name: Option<&'pb str>,
         kind: UnsupportedItemKind,
         id: ItemId,
-        source_loc: Option<Rc<str>>,
+        source_loc: Option<&'pb str>,
         defining_target: Option<BazelLabel>,
         must_bind: bool,
-        path: Option<UnsupportedItemPath>,
+        path: Option<UnsupportedItemPath<'pb>>,
         error: Option<Rc<FormattedError>>,
         cause: Option<Error>,
     ) -> Self {
         Self {
-            name,
+            name: name.into(),
             unique_name,
             errors: error.into_iter().collect(),
             kind,
@@ -3002,15 +3038,15 @@ impl UnsupportedItem {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Comment {
-    pub(crate) text: Rc<str>,
+pub struct Comment<'pb> {
+    pub(crate) text: &'pb str,
     pub(crate) id: ItemId,
     pub(crate) must_bind: bool,
 }
 
-impl Comment {
-    pub fn text(&self) -> &str {
-        &self.text
+impl<'pb> Comment<'pb> {
+    pub fn text(&self) -> &'pb str {
+        self.text
     }
 
     pub fn id(&self) -> ItemId {
@@ -3022,11 +3058,11 @@ impl Comment {
     }
 }
 
-impl GenericItem for Comment {
+impl<'pb> GenericItem<'pb> for Comment<'pb> {
     fn id(&self) -> ItemId {
         self.id
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
+    fn unique_name(&self) -> Option<&'pb str> {
         None
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -3035,10 +3071,10 @@ impl GenericItem for Comment {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
+    fn source_loc(&self) -> Option<&'pb str> {
         None
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
+    fn unknown_attr(&self) -> Option<&'pb str> {
         None
     }
     fn must_bind(&self) -> bool {
@@ -3047,36 +3083,34 @@ impl GenericItem for Comment {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct Namespace {
-    pub(crate) cc_name: Identifier,
-    pub(crate) rs_name: Identifier,
-    pub(crate) unique_name: Rc<str>,
+pub struct Namespace<'pb> {
+    pub(crate) cc_name: Identifier<'pb>,
+    pub(crate) rs_name: Identifier<'pb>,
+    pub(crate) unique_name: &'pb str,
     pub(crate) id: ItemId,
     pub(crate) canonical_namespace_id: ItemId,
     /// A human-readable list of attributes that Crubit doesn't understand.
-    pub(crate) unknown_attr: Option<Rc<str>>,
+    pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) owning_target: BazelLabel,
     pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) is_inline: bool,
     pub(crate) must_bind: bool,
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
-    pub(crate) deprecated: Option<Rc<str>>,
-    pub(crate) doc_comment: Option<Rc<str>>,
-    pub(crate) children: Vec<Item>,
+    pub(crate) deprecated: Option<&'pb str>,
+    pub(crate) doc_comment: Option<&'pb str>,
+    pub(crate) children: Vec<Item<'pb>>,
 }
 
-impl Namespace {
-    pub fn cc_name(&self) -> &Identifier {
+impl<'pb> Namespace<'pb> {
+    pub fn cc_name(&self) -> &Identifier<'pb> {
         &self.cc_name
     }
 
-    pub fn rs_name(&self) -> &Identifier {
+    pub fn rs_name(&self) -> &Identifier<'pb> {
         &self.rs_name
     }
 
-    pub fn unique_name(&self) -> &str {
-        &self.unique_name
+    pub fn unique_name(&self) -> &'pb str {
+        self.unique_name
     }
 
     pub fn id(&self) -> ItemId {
@@ -3087,8 +3121,8 @@ impl Namespace {
         self.canonical_namespace_id
     }
 
-    pub fn unknown_attr(&self) -> Option<&str> {
-        self.unknown_attr.as_deref()
+    pub fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr
     }
 
     pub fn owning_target(&self) -> &BazelLabel {
@@ -3107,29 +3141,33 @@ impl Namespace {
         self.must_bind
     }
 
-    pub fn deprecated(&self) -> Option<&str> {
-        self.deprecated.as_deref()
+    pub fn deprecated(&self) -> Option<&'pb str> {
+        self.deprecated
     }
 
-    pub fn doc_comment(&self) -> Option<&str> {
-        self.doc_comment.as_deref()
+    pub fn doc_comment(&self) -> Option<&'pb str> {
+        self.doc_comment
     }
 
-    pub fn children(&self) -> &[Item] {
+    pub fn children(&self) -> &[Item<'pb>] {
         &self.children
     }
 
-    pub fn set_children(&mut self, children: Vec<Item>) {
+    pub fn children_mut(&mut self) -> &mut Vec<Item<'pb>> {
+        &mut self.children
+    }
+
+    pub fn set_children(&mut self, children: Vec<Item<'pb>>) {
         self.children = children;
     }
 }
 
-impl GenericItem for Namespace {
+impl<'pb> GenericItem<'pb> for Namespace<'pb> {
     fn id(&self) -> ItemId {
         self.id
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
-        Some(self.unique_name.clone())
+    fn unique_name(&self) -> Option<&'pb str> {
+        Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -3137,31 +3175,34 @@ impl GenericItem for Namespace {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Namespace
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
+    fn source_loc(&self) -> Option<&'pb str> {
         None
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
-        self.unknown_attr.clone()
+    fn unknown_attr(&self) -> Option<&'pb str> {
+        self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
         self.must_bind
     }
+    fn cc_name_as_str(&self) -> Option<&'pb str> {
+        Some(self.cc_name.as_str())
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct UseMod {
+pub struct UseMod<'pb> {
     pub(crate) path: Rc<str>,
-    pub(crate) mod_name: Identifier,
+    pub(crate) mod_name: Identifier<'pb>,
     pub(crate) id: ItemId,
     pub(crate) must_bind: bool,
 }
 
-impl UseMod {
+impl<'pb> UseMod<'pb> {
     pub fn path(&self) -> &str {
         &self.path
     }
 
-    pub fn mod_name(&self) -> &Identifier {
+    pub fn mod_name(&self) -> &Identifier<'pb> {
         &self.mod_name
     }
 
@@ -3174,11 +3215,11 @@ impl UseMod {
     }
 }
 
-impl GenericItem for UseMod {
+impl<'pb> GenericItem<'pb> for UseMod<'pb> {
     fn id(&self) -> ItemId {
         self.id
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
+    fn unique_name(&self) -> Option<&'pb str> {
         None
     }
     fn owning_target(&self) -> Option<BazelLabel> {
@@ -3187,10 +3228,10 @@ impl GenericItem for UseMod {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
+    fn source_loc(&self) -> Option<&'pb str> {
         None
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
+    fn unknown_attr(&self) -> Option<&'pb str> {
         None
     }
     fn must_bind(&self) -> bool {
@@ -3203,13 +3244,13 @@ impl GenericItem for UseMod {
 /// types, meaning non-template types or template instantiations, but not uninstantiated template
 /// declarations.
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct ExistingRustType {
+pub struct ExistingRustType<'pb> {
     /// The name of the existing Rust type.
     /// Note that it may contain interpolated type parameters, like `RustType<{T}>`.
     /// This means that it's incorrect to directly parse as an Ident.
-    pub(crate) rs_name: Rc<str>,
-    pub(crate) cc_name: Rc<str>,
-    pub(crate) unique_name: Rc<str>,
+    pub(crate) rs_name: &'pb str,
+    pub(crate) cc_name: &'pb str,
+    pub(crate) unique_name: &'pb str,
     /// The template arguments on this instance of the type instantiation (empty is no template
     /// arguments). This list parallels `template_arg_names`.
     pub(crate) template_args: Vec<TemplateArg>,
@@ -3221,17 +3262,17 @@ pub struct ExistingRustType {
     pub(crate) impl_debug: bool,
 }
 
-impl ExistingRustType {
-    pub fn rs_name(&self) -> &str {
-        &self.rs_name
+impl<'pb> ExistingRustType<'pb> {
+    pub fn rs_name(&self) -> &'pb str {
+        self.rs_name
     }
 
-    pub fn cc_name(&self) -> &str {
-        &self.cc_name
+    pub fn cc_name(&self) -> &'pb str {
+        self.cc_name
     }
 
-    pub fn unique_name(&self) -> &str {
-        &self.unique_name
+    pub fn unique_name(&self) -> &'pb str {
+        self.unique_name
     }
 
     pub fn template_args(&self) -> &[TemplateArg] {
@@ -3242,8 +3283,8 @@ impl ExistingRustType {
         &self.owning_target
     }
 
-    pub fn size_align(&self) -> Option<&SizeAlign> {
-        self.size_align.as_ref()
+    pub fn size_align(&self) -> Option<SizeAlign> {
+        self.size_align
     }
 
     pub fn is_same_abi(&self) -> bool {
@@ -3264,9 +3305,9 @@ impl ExistingRustType {
 
     #[allow(clippy::too_many_arguments)]
     pub fn new_for_testing(
-        rs_name: Rc<str>,
-        cc_name: Rc<str>,
-        unique_name: Rc<str>,
+        rs_name: &'pb str,
+        cc_name: &'pb str,
+        unique_name: &'pb str,
         template_args: Vec<TemplateArg>,
         owning_target: BazelLabel,
         size_align: Option<SizeAlign>,
@@ -3290,12 +3331,12 @@ impl ExistingRustType {
     }
 }
 
-impl GenericItem for ExistingRustType {
+impl<'pb> GenericItem<'pb> for ExistingRustType<'pb> {
     fn id(&self) -> ItemId {
         self.id
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
-        Some(self.unique_name.clone())
+    fn unique_name(&self) -> Option<&'pb str> {
+        Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
         Some(self.owning_target.clone())
@@ -3303,10 +3344,10 @@ impl GenericItem for ExistingRustType {
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Other
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
+    fn source_loc(&self) -> Option<&'pb str> {
         None
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
+    fn unknown_attr(&self) -> Option<&'pb str> {
         None
     }
     fn must_bind(&self) -> bool {
@@ -3315,19 +3356,19 @@ impl GenericItem for ExistingRustType {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum Item {
-    Func(Rc<Func>),
-    IncompleteRecord(Rc<IncompleteRecord>),
-    Record(Rc<Record>),
-    Enum(Rc<Enum>),
-    Constant(Rc<Constant>),
-    GlobalVar(Rc<GlobalVar>),
-    TypeAlias(Rc<TypeAlias>),
-    UnsupportedItem(Rc<UnsupportedItem>),
-    Comment(Rc<Comment>),
-    Namespace(Rc<Namespace>),
-    UseMod(Rc<UseMod>),
-    ExistingRustType(Rc<ExistingRustType>),
+pub enum Item<'pb> {
+    Func(Rc<Func<'pb>>),
+    IncompleteRecord(Rc<IncompleteRecord<'pb>>),
+    Record(Rc<Record<'pb>>),
+    Enum(Rc<Enum<'pb>>),
+    Constant(Rc<Constant<'pb>>),
+    GlobalVar(Rc<GlobalVar<'pb>>),
+    TypeAlias(Rc<TypeAlias<'pb>>),
+    UnsupportedItem(Rc<UnsupportedItem<'pb>>),
+    Comment(Rc<Comment<'pb>>),
+    Namespace(Rc<Namespace<'pb>>),
+    UseMod(Rc<UseMod<'pb>>),
+    ExistingRustType(Rc<ExistingRustType<'pb>>),
 }
 
 macro_rules! forward_item {
@@ -3349,7 +3390,7 @@ macro_rules! forward_item {
     };
 }
 
-impl GenericItem for Item {
+impl<'pb> GenericItem<'pb> for Item<'pb> {
     fn id(&self) -> ItemId {
         forward_item! {
             match self {
@@ -3357,7 +3398,7 @@ impl GenericItem for Item {
             }
         }
     }
-    fn unique_name(&self) -> Option<Rc<str>> {
+    fn unique_name(&self) -> Option<&'pb str> {
         forward_item! {
             match self {
                 _(x) => x.unique_name()
@@ -3378,14 +3419,14 @@ impl GenericItem for Item {
             }
         }
     }
-    fn source_loc(&self) -> Option<Rc<str>> {
+    fn source_loc(&self) -> Option<&'pb str> {
         forward_item! {
             match self {
                 _(x) => x.source_loc()
             }
         }
     }
-    fn unknown_attr(&self) -> Option<Rc<str>> {
+    fn unknown_attr(&self) -> Option<&'pb str> {
         forward_item! {
             match self {
                 _(x) => x.unknown_attr()
@@ -3399,9 +3440,38 @@ impl GenericItem for Item {
             }
         }
     }
+
+    /// Forwards C++ identifier extraction to the underlying AST item variant for compatibilty with
+    /// golden tests/error messages. Returns None for non-named items like comments and imports.
+    fn cc_name_as_str(&self) -> Option<&'pb str> {
+        forward_item! {
+            match self {
+                _(x) => x.cc_name_as_str()
+            }
+        }
+    }
 }
 
-impl Item {
+impl<'pb> Item<'pb> {
+    /// Returns true if this is an aggregate type (struct, union, class, or
+    /// enum).
+    pub fn is_aggregate_type(&self) -> bool {
+        matches!(
+            self,
+            Item::IncompleteRecord(_)
+                | Item::Record(_)
+                | Item::Enum(_)
+                | Item::ExistingRustType(_)
+                | Item::TypeAlias(_)
+        )
+    }
+
+    /// Returns true if this item should generate an `f::UnsupportedItem` record
+    /// instead of a regular Rust item.
+    pub fn is_unsupported(&self) -> bool {
+        matches!(self, Item::UnsupportedItem(_))
+    }
+
     pub fn enclosing_item_id(&self) -> Option<ItemId> {
         match self {
             Item::Record(record) => record.enclosing_item_id,
@@ -3441,28 +3511,49 @@ impl Item {
     }
 
     /// Returns the C++ identifier for this item, if it has one.
-    pub fn cc_name_as_str(&self) -> Option<Rc<str>> {
+    pub fn cc_name_as_str(&self) -> Option<&'pb str> {
         match self {
             Item::Func(func) => match &func.cc_name {
-                UnqualifiedIdentifier::Identifier(identifier) => {
-                    Some(identifier.identifier.clone())
-                }
+                UnqualifiedIdentifier::Identifier(identifier) => Some(identifier.as_str()),
                 _ => None,
             },
-            Item::IncompleteRecord(incomplete_record) => {
-                Some(incomplete_record.cc_name.identifier.clone())
-            }
-            Item::Record(record) => Some(record.cc_name.identifier.clone()),
-            Item::Enum(enum_) => Some(enum_.cc_name.identifier.clone()),
-            Item::Constant(constant) => Some(constant.cc_name.identifier.clone()),
-            Item::GlobalVar(global_var) => Some(global_var.cc_name.identifier.clone()),
-            Item::TypeAlias(type_alias) => Some(type_alias.cc_name.identifier.clone()),
-            Item::Namespace(namespace) => Some(namespace.cc_name.identifier.clone()),
+            Item::IncompleteRecord(incomplete_record) => Some(incomplete_record.cc_name.as_str()),
+            Item::Record(record) => Some(record.cc_name.as_str()),
+            Item::Enum(enum_) => Some(enum_.cc_name.as_str()),
+            Item::Constant(constant) => Some(constant.cc_name.as_str()),
+            Item::GlobalVar(global_var) => Some(global_var.cc_name.as_str()),
+            Item::TypeAlias(type_alias) => Some(type_alias.cc_name.as_str()),
+            Item::Namespace(namespace) => Some(namespace.cc_name.as_str()),
             Item::UnsupportedItem(_) => None,
             Item::Comment(_) => None,
             Item::UseMod(_) => None,
-            Item::ExistingRustType(existing_rust_type) => Some(existing_rust_type.cc_name.clone()),
+            Item::ExistingRustType(existing_rust_type) => Some(existing_rust_type.cc_name),
         }
+    }
+
+    /// Returns the Rust identifier for this item, if it has one and the
+    /// identifier is unqualified.
+    pub fn rs_name_as_str(&self) -> Option<&str> {
+        match self {
+            Item::Func(func) => func.rs_name.identifier_as_str(),
+            Item::IncompleteRecord(incomplete_record) => Some(incomplete_record.rs_name.as_str()),
+            Item::Record(record) => Some(record.rs_name.as_str()),
+            Item::Enum(enum_) => Some(enum_.rs_name.as_str()),
+            Item::Constant(constant) => Some(constant.rs_name.as_str()),
+            Item::GlobalVar(global_var) => Some(global_var.rs_name.as_str()),
+            Item::TypeAlias(type_alias) => Some(type_alias.rs_name.as_str()),
+            Item::UnsupportedItem(_) => None,
+            Item::Comment(_) => None,
+            Item::Namespace(namespace) => Some(namespace.rs_name.as_str()),
+            Item::UseMod(use_mod) => Some(use_mod.mod_name.as_str()),
+            Item::ExistingRustType(existing_rust_type) => Some(existing_rust_type.rs_name()),
+        }
+    }
+
+    /// Returns whether this item is a namespace whose namespace_id matches
+    /// `canonical_namespace_id`.
+    pub fn is_canonical_namespace(&self, canonical_namespace_id: ItemId) -> bool {
+        matches!(self, Item::Namespace(ns) if ns.id == canonical_namespace_id)
     }
 
     /// If this item is a child item of a Record, returns true if it should be
@@ -3483,15 +3574,15 @@ impl Item {
     }
 }
 
-impl From<Func> for Item {
-    fn from(func: Func) -> Item {
+impl<'pb> From<Func<'pb>> for Item<'pb> {
+    fn from(func: Func<'pb>) -> Item<'pb> {
         Item::Func(Rc::new(func))
     }
 }
 
-impl<'a> TryFrom<&'a Item> for &'a Rc<Func> {
+impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<Func<'pb>> {
     type Error = Error;
-    fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a Item<'pb>) -> Result<Self, Self::Error> {
         if let Item::Func(f) = value {
             Ok(f)
         } else {
@@ -3500,15 +3591,15 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<Func> {
     }
 }
 
-impl From<Record> for Item {
-    fn from(record: Record) -> Item {
+impl<'pb> From<Record<'pb>> for Item<'pb> {
+    fn from(record: Record<'pb>) -> Item<'pb> {
         Item::Record(Rc::new(record))
     }
 }
 
-impl<'a> TryFrom<&'a Item> for &'a Rc<Record> {
+impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<Record<'pb>> {
     type Error = Error;
-    fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a Item<'pb>) -> Result<Self, Self::Error> {
         if let Item::Record(r) = value {
             Ok(r)
         } else {
@@ -3517,15 +3608,15 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<Record> {
     }
 }
 
-impl From<UnsupportedItem> for Item {
-    fn from(unsupported: UnsupportedItem) -> Item {
+impl<'pb> From<UnsupportedItem<'pb>> for Item<'pb> {
+    fn from(unsupported: UnsupportedItem<'pb>) -> Item<'pb> {
         Item::UnsupportedItem(Rc::new(unsupported))
     }
 }
 
-impl<'a> TryFrom<&'a Item> for &'a Rc<UnsupportedItem> {
+impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<UnsupportedItem<'pb>> {
     type Error = Error;
-    fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a Item<'pb>) -> Result<Self, Self::Error> {
         if let Item::UnsupportedItem(u) = value {
             Ok(u)
         } else {
@@ -3534,15 +3625,15 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<UnsupportedItem> {
     }
 }
 
-impl From<Comment> for Item {
-    fn from(comment: Comment) -> Item {
+impl<'pb> From<Comment<'pb>> for Item<'pb> {
+    fn from(comment: Comment<'pb>) -> Item<'pb> {
         Item::Comment(Rc::new(comment))
     }
 }
 
-impl<'a> TryFrom<&'a Item> for &'a Rc<Comment> {
+impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<Comment<'pb>> {
     type Error = Error;
-    fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a Item<'pb>) -> Result<Self, Self::Error> {
         if let Item::Comment(c) = value {
             Ok(c)
         } else {
@@ -3551,15 +3642,15 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<Comment> {
     }
 }
 
-impl From<Namespace> for Item {
-    fn from(ns: Namespace) -> Item {
+impl<'pb> From<Namespace<'pb>> for Item<'pb> {
+    fn from(ns: Namespace<'pb>) -> Item<'pb> {
         Item::Namespace(Rc::new(ns))
     }
 }
 
-impl<'a> TryFrom<&'a Item> for &'a Rc<Namespace> {
+impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<Namespace<'pb>> {
     type Error = Error;
-    fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a Item<'pb>) -> Result<Self, Self::Error> {
         if let Item::Namespace(c) = value {
             Ok(c)
         } else {
@@ -3568,15 +3659,15 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<Namespace> {
     }
 }
 
-impl From<ExistingRustType> for Item {
-    fn from(existing_rust_type: ExistingRustType) -> Item {
+impl<'pb> From<ExistingRustType<'pb>> for Item<'pb> {
+    fn from(existing_rust_type: ExistingRustType<'pb>) -> Item<'pb> {
         Item::ExistingRustType(Rc::new(existing_rust_type))
     }
 }
 
-impl<'a> TryFrom<&'a Item> for &'a Rc<ExistingRustType> {
+impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<ExistingRustType<'pb>> {
     type Error = Error;
-    fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+    fn try_from(value: &'a Item<'pb>) -> Result<Self, Self::Error> {
         if let Item::ExistingRustType(r) = value {
             Ok(r)
         } else {
@@ -3585,24 +3676,25 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<ExistingRustType> {
     }
 }
 
+// TODO(b/536964606): Replace read-only IR fields with IRProtoView<'pb>.
 // There's no reason to hide TreeIR or make_ir: deserialize_ir is just make_ir(from_json("ir")),
 // and transforming the json is strictly worse than transforming the ir itself.
 #[derive(PartialEq, Eq, Clone)]
-pub struct TreeIR {
-    pub public_headers: Vec<HeaderName>,
+pub struct TreeIR<'pb> {
+    pub public_headers: Vec<HeaderName<'pb>>,
     pub current_target: BazelLabel,
     pub crate_root_path: Option<Rc<str>>,
     pub crubit_features: BTreeMap<BazelLabel, crubit_feature::SerializedCrubitFeatures>,
     pub crate_names: BTreeMap<BazelLabel, Ident>,
     pub unstable_rust_features: Vec<String>,
     pub reexported_namespaces: Vec<Rc<str>>,
-    pub top_level_items: BTreeMap<BazelLabel, Vec<Item>>,
+    pub top_level_items: BTreeMap<BazelLabel, Vec<Item<'pb>>>,
 }
 
 /// A custom debug impl that wraps the HashMap in rustfmt-friendly notation.
 ///
 /// See b/272530008.
-impl Debug for TreeIR {
+impl<'pb> Debug for TreeIR<'pb> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // BTreeMap has consistent ordering, unlike HashMap, so it's reasonable to rely on a
         // consistent Debug output.
@@ -3616,6 +3708,7 @@ impl Debug for TreeIR {
                 f.debug_list().entries(self.0.iter()).finish()
             }
         }
+
         // exhaustive-match so we don't forget to add fields to Debug when we add to TreeIR.
         let TreeIR {
             public_headers,
@@ -3643,12 +3736,12 @@ impl Debug for TreeIR {
 #[derive(Debug)]
 pub struct IR<'pb> {
     pub(crate) proto: IRProtoView<'pb>,
-    tree_ir: TreeIR,
-    item_id_to_item: HashMap<ItemId, Item>,
+    tree_ir: TreeIR<'pb>,
+    item_id_to_item: HashMap<ItemId, Item<'pb>>,
     lifetimes: HashMap<LifetimeId, LifetimeName>,
     namespace_id_to_number_of_reopened_namespaces: HashMap<ItemId, usize>,
     reopened_namespace_id_to_idx: HashMap<ItemId, usize>,
-    function_name_to_functions: HashMap<UnqualifiedIdentifier, Vec<Rc<Func>>>,
+    function_name_to_functions: HashMap<UnqualifiedIdentifier<'pb>, Vec<Rc<Func<'pb>>>>,
 }
 
 impl<'pb> PartialEq for IR<'pb> {
@@ -3670,7 +3763,7 @@ impl<'pb> IR<'pb> {
         self.proto
     }
 
-    pub fn tree_ir(&self) -> &TreeIR {
+    pub fn tree_ir(&self) -> &TreeIR<'pb> {
         &self.tree_ir
     }
 
@@ -3678,11 +3771,11 @@ impl<'pb> IR<'pb> {
         &self.tree_ir.unstable_rust_features
     }
 
-    pub fn get_decl(&self, id: ItemId) -> Option<&Item> {
+    pub fn get_decl(&self, id: ItemId) -> Option<&Item<'pb>> {
         self.item_id_to_item.get(&id)
     }
 
-    pub fn items(&self) -> impl Iterator<Item = &Item> + '_ {
+    pub fn items(&self) -> impl Iterator<Item = &Item<'pb>> + '_ {
         let roots = self.tree_ir.top_level_items.values().flat_map(|v| v.iter());
         ItemsIterator::new(roots.collect())
     }
@@ -3692,11 +3785,11 @@ impl<'pb> IR<'pb> {
     }
 
     /// Returns the top-level items of a target.
-    pub fn top_level_items_in_target(&self, target: &BazelLabel) -> &[Item] {
+    pub fn top_level_items_in_target(&self, target: &BazelLabel) -> &[Item<'pb>] {
         self.tree_ir.top_level_items.get(target).map(|v| v.as_slice()).unwrap_or_default()
     }
 
-    pub fn top_level_items(&self) -> &[Item] {
+    pub fn top_level_items(&self) -> &[Item<'pb>] {
         self.top_level_items_in_target(self.current_target())
     }
 
@@ -3704,67 +3797,67 @@ impl<'pb> IR<'pb> {
         &self.tree_ir.reexported_namespaces
     }
 
-    pub fn public_headers(&self) -> impl Iterator<Item = &HeaderName> {
+    pub fn public_headers(&self) -> impl Iterator<Item = &HeaderName<'pb>> {
         self.tree_ir.public_headers.iter()
     }
 
-    pub fn functions(&self) -> impl Iterator<Item = &Rc<Func>> {
+    pub fn functions(&self) -> impl Iterator<Item = &Rc<Func<'pb>>> {
         self.items().filter_map(|item| match item {
             Item::Func(func) => Some(func),
             _ => None,
         })
     }
 
-    pub fn type_aliases(&self) -> impl Iterator<Item = &Rc<TypeAlias>> {
+    pub fn type_aliases(&self) -> impl Iterator<Item = &Rc<TypeAlias<'pb>>> {
         self.items().filter_map(|item| match item {
             Item::TypeAlias(type_alias) => Some(type_alias),
             _ => None,
         })
     }
 
-    pub fn records(&self) -> impl Iterator<Item = &Rc<Record>> {
+    pub fn records(&self) -> impl Iterator<Item = &Rc<Record<'pb>>> {
         self.items().filter_map(|item| match item {
             Item::Record(record) => Some(record),
             _ => None,
         })
     }
 
-    pub fn enums(&self) -> impl Iterator<Item = &Rc<Enum>> {
+    pub fn enums(&self) -> impl Iterator<Item = &Rc<Enum<'pb>>> {
         self.items().filter_map(|item| match item {
             Item::Enum(enum_item) => Some(enum_item),
             _ => None,
         })
     }
 
-    pub fn constants(&self) -> impl Iterator<Item = &Rc<Constant>> {
+    pub fn constants(&self) -> impl Iterator<Item = &Rc<Constant<'pb>>> {
         self.items().filter_map(|item| match item {
             Item::Constant(constant) => Some(constant),
             _ => None,
         })
     }
 
-    pub fn unsupported_items(&self) -> impl Iterator<Item = &Rc<UnsupportedItem>> {
+    pub fn unsupported_items(&self) -> impl Iterator<Item = &Rc<UnsupportedItem<'pb>>> {
         self.items().filter_map(|item| match item {
             Item::UnsupportedItem(unsupported_item) => Some(unsupported_item),
             _ => None,
         })
     }
 
-    pub fn comments(&self) -> impl Iterator<Item = &Rc<Comment>> {
+    pub fn comments(&self) -> impl Iterator<Item = &Rc<Comment<'pb>>> {
         self.items().filter_map(|item| match item {
             Item::Comment(comment) => Some(comment),
             _ => None,
         })
     }
 
-    pub fn namespaces(&self) -> impl Iterator<Item = &Rc<Namespace>> {
+    pub fn namespaces(&self) -> impl Iterator<Item = &Rc<Namespace<'pb>>> {
         self.items().filter_map(|item| match item {
             Item::Namespace(ns) => Some(ns),
             _ => None,
         })
     }
 
-    pub fn existing_rust_types(&self) -> impl Iterator<Item = &Rc<ExistingRustType>> {
+    pub fn existing_rust_types(&self) -> impl Iterator<Item = &Rc<ExistingRustType<'pb>>> {
         self.items().filter_map(|item| match item {
             Item::ExistingRustType(existing_rust_type) => Some(existing_rust_type),
             _ => None,
@@ -3844,12 +3937,12 @@ impl<'pb> IR<'pb> {
         Ok(idx == last_item_idx)
     }
 
-    pub fn crate_root_path(&self) -> Option<Rc<str>> {
-        self.tree_ir.crate_root_path.clone()
+    pub fn crate_root_path(&self) -> Option<&str> {
+        self.tree_ir.crate_root_path.as_deref()
     }
 
     pub fn crate_root_path_tokens(&self) -> TokenStream {
-        match self.crate_root_path().as_deref().map(make_rs_ident) {
+        match self.crate_root_path().map(make_rs_ident) {
             None => quote! { crate },
             Some(crate_root_path) => quote! { crate :: #crate_root_path },
         }
@@ -3857,8 +3950,8 @@ impl<'pb> IR<'pb> {
 
     pub fn get_functions_by_name(
         &self,
-        function_name: &UnqualifiedIdentifier,
-    ) -> impl Iterator<Item = &Rc<Func>> {
+        function_name: &UnqualifiedIdentifier<'pb>,
+    ) -> impl Iterator<Item = &Rc<Func<'pb>>> + '_ {
         self.function_name_to_functions.get(function_name).map_or([].iter(), |v| v.iter())
     }
 }

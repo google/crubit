@@ -114,7 +114,10 @@ pub struct BindingsTokens {
 ///
 /// If the item does have a defining target, and it doesn't enable the specified
 /// features, then bindings are suppressed for this item.
-pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Result<Vec<String>> {
+pub fn missing_feature_descriptions<'a>(
+    db: &BindingsGenerator<'a>,
+    item: &Item<'a>,
+) -> Result<Vec<String>> {
     let mut missing_features = vec![];
 
     let ir = &db.ir();
@@ -143,7 +146,7 @@ pub fn missing_feature_descriptions(db: &BindingsGenerator, item: &Item) -> Resu
         true
     };
 
-    let missing_features_of_type = |rs_type_kind: &RsTypeKind| -> Option<Vec<String>> {
+    let missing_features_of_type = |rs_type_kind: &RsTypeKind<'_>| -> Option<Vec<String>> {
         for TargetAndFeatures { target, features } in &defining_and_owning_target {
             let descriptions = rs_type_kind.missing_feature_descriptions_of_type(target, *features);
             if !descriptions.is_empty() {
@@ -456,10 +459,10 @@ pub fn generated_items_to_token_stream<'db>(
     tokens
 }
 
-pub fn integer_constant_to_token_stream(
-    db: &crate::BindingsGenerator,
+pub fn integer_constant_to_token_stream<'a>(
+    db: &crate::BindingsGenerator<'a>,
     integer_constant: IntegerConstant,
-    underlying_type: &RsTypeKind,
+    underlying_type: &RsTypeKind<'a>,
 ) -> Result<TokenStream> {
     let RsTypeKind::Primitive(primitive) = *underlying_type.unalias() else {
         bail!(

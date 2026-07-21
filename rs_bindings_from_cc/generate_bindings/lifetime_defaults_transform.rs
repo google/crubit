@@ -637,7 +637,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     }
 
     /// Transforms a function to use default lifetime rules.
-    fn add_lifetime_to_func(&mut self, func: &Func) -> Result<Func> {
+    fn add_lifetime_to_func<'ir>(&mut self, func: &Func<'ir>) -> Result<Func<'ir>> {
         let mut new_func = func.clone();
         let mut state = LifetimeState::Unseen;
         let mut this_state = LifetimeState::Unseen;
@@ -697,7 +697,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     }
 
     /// Transforms a record to use default lifetime rules.
-    fn add_lifetime_to_record(&mut self, record: &Record) -> Result<Record> {
+    fn add_lifetime_to_record<'ir>(&mut self, record: &Record<'ir>) -> Result<Record<'ir>> {
         let mut new_record = record.clone();
         self.bind_lifetime_inputs(record.enclosing_item_id())?;
         if new_record.lifetime_inputs().is_empty() {
@@ -719,7 +719,10 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     }
 
     /// Transforms a type alias to use default lifetime rules.
-    fn add_lifetime_to_type_alias(&mut self, type_alias: &TypeAlias) -> Result<TypeAlias> {
+    fn add_lifetime_to_type_alias<'ir>(
+        &mut self,
+        type_alias: &TypeAlias<'ir>,
+    ) -> Result<TypeAlias<'ir>> {
         let mut new_type_alias = type_alias.clone();
         self.bind_lifetime_inputs(type_alias.enclosing_item_id())?;
         // TODO(b/517949862): Right now we don't allow users to explicitly bind lifetime parameters.
@@ -750,7 +753,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
     /// Since we keep all item ids stable, we only have to deep-clone the objects that we need to
     /// change. We may need to introduce lifetime param binders whenever we see a type (but not on
     /// decls).
-    fn add_lifetime_to_item(&mut self, item: &Item) -> Result<Item> {
+    fn add_lifetime_to_item<'ir>(&mut self, item: &Item<'ir>) -> Result<Item<'ir>> {
         match item {
             Item::Func(func) => Ok(Item::Func(self.add_lifetime_to_func(func)?.into())),
             Item::Record(record) => Ok(Item::Record(self.add_lifetime_to_record(record)?.into())),
@@ -763,33 +766,42 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
 }
 
 /// Creates a copy of `func` with default lifetimes filled in.
-pub fn lifetime_defaults_transform_func(db: &BindingsGenerator, func: &Func) -> Result<Func> {
+pub fn lifetime_defaults_transform_func<'a>(
+    db: &BindingsGenerator<'_>,
+    func: &Func<'a>,
+) -> Result<Func<'a>> {
     LifetimeDefaults::new(db).add_lifetime_to_func(func)
 }
 
 /// Creates a copy of `record` with default lifetimes filled in.
-pub fn lifetime_defaults_transform_record(
-    db: &BindingsGenerator,
-    record: &Record,
-) -> Result<Record> {
+pub fn lifetime_defaults_transform_record<'a>(
+    db: &BindingsGenerator<'_>,
+    record: &Record<'a>,
+) -> Result<Record<'a>> {
     LifetimeDefaults::new(db).add_lifetime_to_record(record)
 }
 
 /// Creates a copy of `type_alias` with default lifetimes filled in.
-pub fn lifetime_defaults_transform_type_alias(
-    db: &BindingsGenerator,
-    type_alias: &TypeAlias,
-) -> Result<TypeAlias> {
+pub fn lifetime_defaults_transform_type_alias<'a>(
+    db: &BindingsGenerator<'_>,
+    type_alias: &TypeAlias<'a>,
+) -> Result<TypeAlias<'a>> {
     LifetimeDefaults::new(db).add_lifetime_to_type_alias(type_alias)
 }
 
 /// Creates a copy of `item` with default lifetimes filled in.
-pub fn lifetime_defaults_transform_item(db: &BindingsGenerator, item: &Item) -> Result<Item> {
+pub fn lifetime_defaults_transform_item<'a>(
+    db: &BindingsGenerator<'_>,
+    item: &Item<'a>,
+) -> Result<Item<'a>> {
     LifetimeDefaults::new(db).add_lifetime_to_item(item)
 }
 
 /// Helper to transform a slice of nested items.
-fn transform_children(db: &BindingsGenerator, children: &[Item]) -> Result<Vec<Item>> {
+fn transform_children<'a>(
+    db: &BindingsGenerator<'_>,
+    children: &[Item<'a>],
+) -> Result<Vec<Item<'a>>> {
     let mut transformed_children = Vec::with_capacity(children.len());
     for c in children {
         transformed_children.push(transform_item(db, c)?);
@@ -798,7 +810,7 @@ fn transform_children(db: &BindingsGenerator, children: &[Item]) -> Result<Vec<I
 }
 
 /// Recursively traverses and transforms an Item and its nested children.
-fn transform_item(db: &BindingsGenerator, item: &Item) -> Result<Item> {
+fn transform_item<'a>(db: &BindingsGenerator<'_>, item: &Item<'a>) -> Result<Item<'a>> {
     let mut transformed = LifetimeDefaults::new(db).add_lifetime_to_item(item)?;
 
     match &mut transformed {
@@ -822,8 +834,7 @@ fn transform_item(db: &BindingsGenerator, item: &Item) -> Result<Item> {
 /// prefer to transform items on demand.
 pub fn lifetime_defaults_transform<'pb>(db: &BindingsGenerator<'pb>) -> Result<IR<'pb>> {
     let ir = db.ir();
-
-    let mut top_level_items: BTreeMap<BazelLabel, Vec<Item>> = BTreeMap::new();
+    let mut top_level_items: BTreeMap<BazelLabel, Vec<Item<'pb>>> = BTreeMap::new();
     for (target, items) in &ir.tree_ir().top_level_items {
         let transformed_roots = items.iter().map(|item| transform_item(db, item)).try_collect()?;
         top_level_items.insert(target.clone(), transformed_roots);
