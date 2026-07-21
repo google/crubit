@@ -28,7 +28,6 @@ use rustc_span::def_id::DefId;
 use rustc_span::symbol::{kw, sym, Symbol};
 use rustc_type_ir::inherent::Region;
 use std::collections::{BTreeSet, HashMap};
-use std::ops::AddAssign;
 
 /// Returns a C ABI-compatible C type to pass a tuple, or `None` if `possibly_tuple_ty` is not a
 /// tuple.
@@ -781,6 +780,7 @@ pub fn generate_trait_thunks<'tcx>(
         // We don't support trait methods that use `Box<Self>` or `Pin<Self>` yet.
         self_ty.pinned_ty().is_none() && self_ty.boxed_ty().is_none()
     }
+    let substs = tcx.mk_args_trait(self_ty, type_args.iter().copied().map(ty::GenericArg::from));
 
     let mut method_name_to_cc_thunk_name = HashMap::new();
     let mut cc_thunk_decls = CcSnippet::default();
@@ -791,21 +791,18 @@ pub fn generate_trait_thunks<'tcx>(
         .filter(|item| matches!(item.kind, ty::AssocKind::Fn { .. }))
         .filter(|item| is_supported_trait_method(tcx, item.def_id));
     for method in methods {
-        let substs = {
-            let generics = tcx.generics_of(method.def_id);
-            if generics.own_params.iter().any(|p| p.kind.is_ty_or_const()) {
-                // Note that lifetime-generic methods are ok:
-                // * they are handled by `generate_thunk_decl` and `generate_thunk_impl`
-                // * the lifetimes are erased by `ty::Instance::mono` and *seem* to be erased by
-                //   `ty::Instance::new`
-                panic!(
-                    "So far callers of `generate_trait_thunks` didn't need traits with \
+        let generics = tcx.generics_of(method.def_id);
+        if generics.own_params.iter().any(|p| p.kind.is_ty_or_const()) {
+            // Note that lifetime-generic methods are ok:
+            // * they are handled by `generate_thunk_decl` and `generate_thunk_impl`
+            // * the lifetimes are erased by `ty::Instance::mono` and *seem* to be erased by
+            //   `ty::Instance::new`
+            panic!(
+                "So far callers of `generate_trait_thunks` didn't need traits with \
                       methods that are type-generic or const-generic"
-                );
-            }
-            assert!(generics.has_self);
-            tcx.mk_args_trait(self_ty, type_args.iter().copied().map(ty::GenericArg::from))
-        };
+            );
+        }
+        assert!(generics.has_self);
 
         let thunk_name = make_thunk_name(db, ThunkKind::TraitMethod { method, substs });
 
@@ -828,7 +825,7 @@ pub fn generate_trait_thunks<'tcx>(
 
         let thunk_name_cc_ident = format_cc_ident(db, &thunk_name)?;
         let is_async = tcx.asyncness(method.def_id).is_async();
-        cc_thunk_decls.add_assign(generate_thunk_decl(
+        cc_thunk_decls += generate_thunk_decl(
             db,
             &sig_mid,
             &thunk_name_cc_ident,
@@ -836,63 +833,61 @@ pub fn generate_trait_thunks<'tcx>(
             is_constructor,
             within_template,
             is_async,
-        )?);
+        )?;
         method_name_to_cc_thunk_name.insert(method.name(), thunk_name_cc_ident);
 
-        rs_thunk_impls += {
-            let struct_name = &rs_fully_qualified_name;
-            if is_drop_trait {
-                // Manually formatting (instead of depending on `generate_thunk_impl`)
-                // to avoid https://doc.rust-lang.org/error_codes/E0040.html
-                let thunk_name = make_rs_ident(&thunk_name);
-                RsSnippet::new(quote! {
-                    #[unsafe(no_mangle)]
-                    extern "C" fn #thunk_name(__self: *mut #struct_name) {
-                        unsafe { ::core::ptr::drop_in_place(__self) };
-                    }
+        let struct_name = &rs_fully_qualified_name;
+        rs_thunk_impls += if is_drop_trait {
+            // Manually formatting (instead of depending on `generate_thunk_impl`)
+            // to avoid https://doc.rust-lang.org/error_codes/E0040.html
+            let thunk_name = make_rs_ident(&thunk_name);
+            RsSnippet::new(quote! {
+                #[unsafe(no_mangle)]
+                extern "C" fn #thunk_name(__self: *mut #struct_name) {
+                    unsafe { ::core::ptr::drop_in_place(__self) };
+                }
+            })
+        } else {
+            let fully_qualified_trait_name = db
+                .symbol_canonical_name(trait_id)
+                .ok_or_else(|| anyhow!("Failed to get canonical name for {trait_id:?}"))?
+                .format_for_rs();
+            let method_name = make_rs_ident(method.name().as_str());
+            let args = type_args
+                .iter()
+                .map(|ty| {
+                    let static_ty = replace_all_regions_with_static(tcx, *ty);
+                    // Check our type has no variables.
+                    assert!(
+                        !static_ty.flags().contains(
+                            ty::TypeFlags::HAS_PARAM
+                                | ty::TypeFlags::HAS_INFER
+                                | ty::TypeFlags::HAS_PLACEHOLDER
+                                | ty::TypeFlags::HAS_FREE_REGIONS
+                        ),
+                        "Generic types are not supported in trait impls yet."
+                    );
+                    db.format_ty_for_rs(static_ty).expect("We've replaced all types with static")
                 })
+                .collect_vec();
+            let generics = if args.is_empty() {
+                quote! {}
             } else {
-                let fully_qualified_fn_name = {
-                    let fully_qualified_trait_name = db
-                        .symbol_canonical_name(trait_id)
-                        .ok_or_else(|| anyhow!("Failed to get canonical name for {trait_id:?}"))?
-                        .format_for_rs();
-                    let method_name = make_rs_ident(method.name().as_str());
-                    let args = type_args
-                        .iter()
-                        .map(|ty| {
-                            let static_ty = replace_all_regions_with_static(tcx, *ty);
-                            // Check our type has no variables.
-                            assert!(
-                                !static_ty.flags().contains(
-                                    ty::TypeFlags::HAS_PARAM
-                                        | ty::TypeFlags::HAS_INFER
-                                        | ty::TypeFlags::HAS_PLACEHOLDER
-                                        | ty::TypeFlags::HAS_FREE_REGIONS
-                                ),
-                                "Generic types are not supported in trait impls yet."
-                            );
-                            db.format_ty_for_rs(static_ty)
-                                .expect("We've replaced all types with static")
-                        })
-                        .collect_vec();
-                    let generics = if args.is_empty() {
-                        quote! {}
-                    } else {
-                        quote! { < #( #args ),* > }
-                    };
-                    quote! { <#struct_name as #fully_qualified_trait_name #generics >::#method_name }
-                };
-                generate_thunk_impl(
-                    db,
-                    method.def_id,
-                    &sig_mid,
-                    &thunk_name,
-                    fully_qualified_fn_name,
-                    is_constructor,
-                    is_async,
-                )?
-            }
+                quote! { < #( #args ),* > }
+            };
+
+            let fully_qualified_fn_name = quote! {
+                <#struct_name as #fully_qualified_trait_name #generics >::#method_name
+            };
+            generate_thunk_impl(
+                db,
+                method.def_id,
+                &sig_mid,
+                &thunk_name,
+                fully_qualified_fn_name,
+                is_constructor,
+                is_async,
+            )?
         };
     }
 
