@@ -261,6 +261,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
         crubit_args.add("--source-crate-name", self_crate_name)
         if self_rmeta != None:
             crubit_args.add("--extern={}={}".format(self_crate_name, self_rmeta.path))
+
     crubit_args.add("--enable-rmeta-interface")
     is_golden_test = is_golden_test_override if is_golden_test_override != None else ctx.attr._is_golden_test[BuildSettingInfo].value
     if is_golden_test:
@@ -393,6 +394,8 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
 
     if CrateInfo not in target:
         return []
+    if CcBindingsFromRustInfo in target:
+        return []
     if str(target.label) in targets_to_remove:
         return []
 
@@ -486,6 +489,11 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         aspect_hints = ctx.rule.attr.aspect_hints,
         rust_infos = dep_bindings_infos,
     )
+    (extra_cc_hdrs, extra_cc_srcs) = get_additional_cc_hdrs_and_srcs(ctx.rule.attr.aspect_hints)
+    for hdr in extra_cc_hdrs:
+        if hdr.short_path.endswith("_extracted_cc.h"):
+            cli_flags.append("--extra-rs-srcs-include=" + hdr.short_path)
+
     bindings_info, features, config, output_depset = _generate_bindings(
         ctx,
         dep_bindings_infos = dep_bindings_infos,
@@ -503,8 +511,6 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
     )
 
     dep_variant_info = _compile_rs_out_file(ctx, ctx.rule.attr, bindings_info.rust_file, target[CrateInfo].name, [target])
-
-    (extra_cc_hdrs, extra_cc_srcs) = get_additional_cc_hdrs_and_srcs(ctx.rule.attr.aspect_hints)
 
     cc_info = _make_cc_info_for_h_out_file(
         ctx,

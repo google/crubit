@@ -63,6 +63,8 @@ struct IrFromCcOptions final {
 
   absl_nullable std::shared_ptr<const llvm::Regex>
       template_blocklist_path_regex = nullptr;
+
+  bool carcinize = false;
 };
 
 static_assert(std::is_aggregate_v<IrFromCcOptions>);

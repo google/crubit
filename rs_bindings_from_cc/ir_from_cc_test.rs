@@ -65,6 +65,7 @@ fn ir_proto_from_cc_dependency(header: &str, dep_header: &str) -> Result<IRProto
         dep_header,
         None,
         /*kythe_annotations=*/ false,
+        /*carcinize=*/ false,
     )
 }
 
@@ -75,6 +76,7 @@ fn ir_proto_from_record_impl_debug_cc(header: &str) -> Result<IRProto> {
         "// empty header",
         Some("record_impl_debug"),
         /*kythe_annotations=*/ false,
+        /*carcinize=*/ false,
     )
 }
 
@@ -87,6 +89,7 @@ fn ir_proto_from_assumed_lifetimes_cc(program: &str) -> Result<IRProto> {
         "// empty header",
         Some("assume_lifetimes"),
         /*kythe_annotations=*/ false,
+        /*carcinize=*/ false,
     )
 }
 
@@ -147,7 +150,9 @@ fn test_function() {
                 enclosing_item_id: None,
                 adl_enclosing_record: None,
                 must_bind: false,
+                inline_cpp_source_text: None,
                 lifetime_inputs: [],
+                is_compiler_generated: false,
             }
         }
     );

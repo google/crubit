@@ -141,6 +141,14 @@ pub struct Cmdline {
            value_name = "CRATE_NAME=RENAMED")]
     pub crate_rename: Vec<(String, String)>,
 
+    /// Extra headers to `#include` and re-export via IWYU in the generated C++ API header.
+    ///
+    /// Re-exports user headers required by embedded C++ declarations (such as `inline_cpp!`).
+    /// This ensures C++ callers using the generated C++ API header automatically receive
+    /// the necessary includes for those types without encountering missing symbol errors.
+    #[clap(long = "extra-rs-srcs-include", value_name = "FILE")]
+    pub extra_rs_srcs_includes: Vec<String>,
+
     /// The name of the crate to generate bindings for.
     ///
     /// If provided, this value must correspond to the name of an extern crate provided to the

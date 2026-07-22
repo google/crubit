@@ -135,6 +135,10 @@ ABSL_FLAG(std::string, template_blocklist_path_regex, "",
           "If nonempty, do not instantiate templates defined in files with "
           "paths matching this llvm::Regex.");
 
+ABSL_FLAG(bool, carcinize, false,
+          "If true, enables the carcinize pipeline for automated porting, "
+          "which emits inline_cpp! blocks and modifies structure.");
+
 namespace crubit {
 
 namespace {
@@ -253,6 +257,7 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
       .do_not_bind_allowlist = absl::GetFlag(FLAGS_do_not_bind_allowlist),
       .template_blocklist_path_regex =
           absl::GetFlag(FLAGS_template_blocklist_path_regex),
+      .carcinize = absl::GetFlag(FLAGS_carcinize),
   };
 
   absl::Status parse_target_args_status =

@@ -1606,6 +1606,7 @@ fn test_nested_ir_end_to_end() -> Result<()> {
         "// no dependencies",
         None,
         /*kythe_annotations=*/ false,
+        /*carcinize=*/ false,
     )?;
 
     let ir = ir_testing::make_test_ir_dependency(&proto, None)?;

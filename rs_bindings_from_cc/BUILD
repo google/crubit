@@ -422,12 +422,19 @@ cc_library(
 )
 
 rust_library(
+    name = "bazel_label",
+    srcs = ["bazel_label.rs"],
+    visibility = ["//:__subpackages__"],
+)
+
+rust_library(
     name = "ir",
     srcs = [
         "ir.rs",
     ],
     visibility = ["//:__subpackages__"],
     deps = [
+        ":bazel_label",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_feature",

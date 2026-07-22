@@ -44,13 +44,16 @@
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/DiagnosticIDs.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
+#include "clang/Lex/Lexer.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
 namespace {
@@ -205,6 +208,44 @@ bool FunctionNameIsIdentifier(clang::FunctionDecl& function_decl) {
   return function_decl.getDeclName().getNameKind() ==
          clang::DeclarationName::Identifier;
 }
+
+// Formats a C++ function declaration's signature and body for inline_cpp!
+// token generation.
+// Note: This does not return raw source text verbatim from the file, but
+// rather a formatted string combining printed parameter types, return type,
+// and body tokens so Rust macro codegen can parse it.
+std::optional<std::string> GetFunctionSourceText(
+    const clang::ASTContext& ast_ctx, const clang::SourceManager& sm,
+    const clang::FunctionDecl* function_decl, bool carcinize) {
+  if (!carcinize || !function_decl->hasBody() || function_decl->isImplicit()) {
+    return std::nullopt;
+  }
+
+  bool invalid = false;
+  llvm::StringRef body_text =
+      clang::Lexer::getSourceText(clang::CharSourceRange::getTokenRange(
+                                      function_decl->getBody()->getBeginLoc(),
+                                      function_decl->getBody()->getEndLoc()),
+                                  sm, ast_ctx.getLangOpts(), &invalid);
+  if (invalid) {
+    return std::nullopt;
+  }
+
+  std::string sig;
+  llvm::raw_string_ostream os(sig);
+  os << "(";
+  for (unsigned i = 0; i < function_decl->getNumParams(); ++i) {
+    if (i > 0) os << ", ";
+    function_decl->getParamDecl(i)->print(os, ast_ctx.getPrintingPolicy());
+  }
+  os << ") -> ";
+  os << function_decl->getReturnType().getAsString(ast_ctx.getPrintingPolicy());
+  os << " ";
+  os << body_text;
+
+  return sig;
+}
+
 }  // namespace
 
 std::optional<IR::Item> FunctionDeclImporter::Import(
@@ -760,6 +801,10 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
   }
 
+  std::optional<std::string> source_text =
+      GetFunctionSourceText(ictx_.ctx_, ictx_.ctx_.getSourceManager(),
+                            function_decl, ictx_.invocation_.carcinize());
+
   auto name_info = function_decl->getNameInfo();
   return Func{
       .cc_name = translated_name->cc_identifier,
@@ -790,6 +835,10 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .enclosing_item_id = *std::move(enclosing_item_id),
       .adl_enclosing_record = adl_enclosing_record,
       .lifetime_inputs = std::move(lifetime_inputs),
+      .inline_cpp_source_text = std::move(source_text),
+      .is_compiler_generated =
+          function_decl != nullptr &&
+          (function_decl->isImplicit() || function_decl->isDefaulted()),
   };
 }
 

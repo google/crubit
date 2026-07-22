@@ -6,6 +6,7 @@
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
+load("//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl", "cc_bindings_from_rust_library_config")
 load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//support/extract_cpp_from_rust:extract_cpp.bzl", "extract_cpp")
 
@@ -36,15 +37,29 @@ def rust_library_with_embedded_cpp(name, srcs, deps = [], deps_of_cc_library = [
         cpp_target = ":" + cc_lib_name,
     )
 
+    cc_bindings_from_rust_library_config(
+        name = name + "_cc_bindings_from_rust_config",
+        extra_cc_hdrs = [extracted_header],
+    )
+
     bindings_label = ":" + rust_bindings_name
+
+    user_aliases = kwargs.pop("aliases", {})
+    merged_aliases = dict(user_aliases)
+    merged_aliases.update({
+        bindings_label: "inline_cpp_generated_bindings",
+        ":" + cc_lib_name: "inline_cpp_generated_bindings",
+    })
+
     rust_library(
         name = name,
         srcs = srcs,
         deps = deps + [":" + rust_bindings_name],
-        aliases = {
-            bindings_label: "inline_cpp_generated_bindings",
-            ":" + cc_lib_name: "inline_cpp_generated_bindings",
-        },
+        aspect_hints = [
+            "//features:supported",
+            ":" + name + "_cc_bindings_from_rust_config",
+        ],
+        aliases = merged_aliases,
         proc_macro_deps = kwargs.pop("proc_macro_deps", []) + [
             "//support/extract_cpp_from_rust:inline_cpp_macro",
         ],
