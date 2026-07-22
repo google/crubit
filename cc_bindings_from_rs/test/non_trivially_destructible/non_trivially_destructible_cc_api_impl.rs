@@ -67,12 +67,10 @@ unsafe extern "C" fn __crubit_thunk_return_uby_uvalue(__ret_ptr: *mut core::ffi:
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_take_uby_uvalue(
-    _x: &'static mut ::core::mem::MaybeUninit<
-        ::non_trivially_destructible_golden::NonTriviallyDestructable,
-    >,
+    _x: *mut ::non_trivially_destructible_golden::NonTriviallyDestructable,
 ) -> () {
     unsafe {
-        let _x = _x.assume_init_read();
+        let _x = _x.read();
         ::non_trivially_destructible_golden::take_by_value(_x)
     }
 }

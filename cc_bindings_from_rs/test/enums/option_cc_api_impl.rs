@@ -111,11 +111,11 @@ unsafe extern "C" fn __crubit_thunk_new(value: u8, __ret_ptr: *mut core::ffi::c_
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_with_uoption(
-    value: &'static mut ::core::mem::MaybeUninit<::core::option::Option<u8>>,
+    value: *mut ::core::option::Option<u8>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let value = value.assume_init_read();
+        let value = value.read();
         let __rs_return_value = ::option_golden::HasOptions::with_option(value);
         (__ret_ptr as *mut ::option_golden::HasOptions).write(__rs_return_value);
     }
@@ -151,11 +151,9 @@ unsafe extern "C" fn __crubit_thunk_new(value: u8, __ret_ptr: *mut core::ffi::c_
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_value(
-    __self: &'static mut ::core::mem::MaybeUninit<::option_golden::LessThan20U8>,
-) -> u8 {
+unsafe extern "C" fn __crubit_thunk_value(__self: *mut ::option_golden::LessThan20U8) -> u8 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         ::option_golden::LessThan20U8::value(__self)
     }
 }
@@ -258,11 +256,11 @@ const _: () = assert!(::std::mem::align_of::<::option_golden::ZStream>() == 8);
 const _: () = assert!(::core::mem::offset_of!(::option_golden::ZStream, zfree) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_pass_uoption_uptr(
-    x: &'static mut ::core::mem::MaybeUninit<::core::option::Option<*const i32>>,
+    x: *mut ::core::option::Option<*const i32>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let x = x.assume_init_read();
+        let x = x.read();
         let __rs_return_value = ::option_golden::pass_option_ptr(x);
         (__ret_ptr as *mut ::core::option::Option<*const i32>).write(__rs_return_value);
     }
@@ -322,14 +320,12 @@ unsafe extern "C" fn __crubit_thunk_stringify_ulen(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_take_uoption_uresult_uunmovable(
-    _x: &'static mut ::core::mem::MaybeUninit<
-        ::core::option::Option<
-            ::core::result::Result<::option_golden::HasNoDefault, ::alloc::string::String>,
-        >,
+    _x: *mut ::core::option::Option<
+        ::core::result::Result<::option_golden::HasNoDefault, ::alloc::string::String>,
     >,
 ) -> () {
     unsafe {
-        let _x = _x.assume_init_read();
+        let _x = _x.read();
         ::option_golden::take_option_result_unmovable(_x)
     }
 }

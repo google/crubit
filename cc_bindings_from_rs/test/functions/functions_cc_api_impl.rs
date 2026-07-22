@@ -168,15 +168,13 @@ unsafe extern "C" fn __crubit_thunk_accept_uctor(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_accept_uctor_uarray(
-    a: &'static mut ::core::mem::MaybeUninit<
-        [::ctor::ByValue<
-            'static,
-            ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
-        >; 3],
-    >,
+    a: *mut [::ctor::ByValue<
+        'static,
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
+    >; 3],
 ) -> i32 {
     unsafe {
-        let a = a.assume_init_read();
+        let a = a.read();
         ::functions_golden::generic_fn_tests::ctor_trait_tests::accept_ctor_array(a)
     }
 }
@@ -211,15 +209,13 @@ unsafe extern "C" fn __crubit_thunk_accept_urvalue_uref(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_accept_urvalue_ureference_uarray(
-    a: &'static mut ::core::mem::MaybeUninit<
-        [::ctor::RvalueReference<
-            'static,
-            ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
-        >; 3],
-    >,
+    a: *mut [::ctor::RvalueReference<
+        'static,
+        ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
+    >; 3],
 ) -> i32 {
     unsafe {
-        let a = a.assume_init_read();
+        let a = a.read();
         ::functions_golden::generic_fn_tests::ctor_trait_tests::accept_rvalue_reference_array(a)
     }
 }
@@ -305,10 +301,10 @@ unsafe extern "C" fn __crubit_thunk_basic_utest(arg: i32) -> i32 {
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_generic_uparam_unested_udeeper_uin_uparam_uty(
-    xs: &'static mut ::core::mem::MaybeUninit<[i32; 3]>,
+    xs: *mut [i32; 3],
 ) -> i32 {
     unsafe {
-        let xs = xs.assume_init_read();
+        let xs = xs.read();
         ::functions_golden::generic_fn_tests::into_trait_tests::generic_param_nested_deeper_in_param_ty(xs)
     }
 }

@@ -30,11 +30,9 @@ unsafe extern "C" fn __crubit_thunk_from_ubyte(byte: u8, __ret_ptr: *mut core::f
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_consume_uself(
-    __self: &'static mut ::core::mem::MaybeUninit<::move_golden::Copyable>,
-) -> u8 {
+unsafe extern "C" fn __crubit_thunk_consume_uself(__self: *mut ::move_golden::Copyable) -> u8 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         ::move_golden::Copyable::consume_self(__self)
     }
 }
@@ -68,20 +66,16 @@ unsafe extern "C" fn __crubit_thunk_read_ubyte(__self: &'static ::move_golden::F
     unsafe { ::move_golden::Foo::read_byte(__self) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_ubyte(
-    __self: &'static mut ::core::mem::MaybeUninit<::move_golden::Foo>,
-) -> u8 {
+unsafe extern "C" fn __crubit_thunk_into_ubyte(__self: *mut ::move_golden::Foo) -> u8 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         ::move_golden::Foo::into_byte(__self)
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_consume_ufoo(
-    _foo: &'static mut ::core::mem::MaybeUninit<::move_golden::Foo>,
-) -> () {
+unsafe extern "C" fn __crubit_thunk_consume_ufoo(_foo: *mut ::move_golden::Foo) -> () {
     unsafe {
-        let _foo = _foo.assume_init_read();
+        let _foo = _foo.read();
         ::move_golden::consume_foo(_foo)
     }
 }

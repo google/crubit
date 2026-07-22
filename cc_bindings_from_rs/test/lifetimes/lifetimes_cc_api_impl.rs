@@ -27,19 +27,19 @@ unsafe extern "C" fn __crubit_thunk_from_uref(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_into_uref(
-    __self: &'static mut ::core::mem::MaybeUninit<::lifetimes_golden::StructWithLifetime<'static>>,
+    __self: *mut ::lifetimes_golden::StructWithLifetime<'static>,
 ) -> &'static i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         ::lifetimes_golden::StructWithLifetime::into_ref(__self)
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_value(
-    __self: &'static mut ::core::mem::MaybeUninit<::lifetimes_golden::StructWithLifetime<'static>>,
+    __self: *mut ::lifetimes_golden::StructWithLifetime<'static>,
 ) -> i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         ::lifetimes_golden::StructWithLifetime::value(__self)
     }
 }
@@ -90,10 +90,10 @@ unsafe extern "C" fn __crubit_thunk_borrow_ufrom_ustatic_uself(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
-    __self: &'static mut ::core::mem::MaybeUninit<::lifetimes_golden::StructWithLifetime<'static>>,
+    __self: *mut ::lifetimes_golden::StructWithLifetime<'static>,
 ) -> &'static i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         <::lifetimes_golden::StructWithLifetime as ::core::convert::Into<&'static i32>>::into(
             __self,
         )
@@ -101,10 +101,10 @@ unsafe extern "C" fn __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x000
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_ui32(
-    __self: &'static mut ::core::mem::MaybeUninit<::lifetimes_golden::StructWithLifetime<'static>>,
+    __self: *mut ::lifetimes_golden::StructWithLifetime<'static>,
 ) -> i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         <::lifetimes_golden::StructWithLifetime as ::core::convert::Into<i32>>::into(__self)
     }
 }

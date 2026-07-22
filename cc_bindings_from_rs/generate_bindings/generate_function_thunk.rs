@@ -371,8 +371,8 @@ fn convert_value_from_c_abi_to_rust<'tcx>(
         return convert_tuple_from_c_abi_to_rust(db, tuple_tys, local_name, extern_c_decls);
     }
     // Non-C-ABI-compatible-by-value types are passed by
-    // `&mut MaybeUninit<T>` reference, so we need to read out the value.
-    Ok(quote! { let #local_name = #local_name.assume_init_read(); })
+    // `*mut T`, so we need to read out the value.
+    Ok(quote! { let #local_name = #local_name.read(); })
 }
 
 fn c_abi_for_param_type<'tcx>(
@@ -392,9 +392,7 @@ fn c_abi_for_param_type<'tcx>(
         Ok(quote! { #tuple_abi })
     } else {
         let rs_type = db.format_ty_for_rs(ty)?;
-        // `'static` is used to erase all lifetime parameters since C++ doesn't understand
-        // lifetime constraints.
-        Ok(quote! { &'static mut ::core::mem::MaybeUninit<#rs_type> })
+        Ok(quote! { *mut #rs_type })
     }
 }
 

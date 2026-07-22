@@ -266,14 +266,9 @@ unsafe extern "C" fn __crubit_thunk_param_uadt_uin_utuple(
 ) -> () {
     unsafe {
         let adt = ({
-            let adt_0: &'static mut ::core::mem::MaybeUninit<
-                ::tuples_golden::AdtHoldingFiveAndSix,
-            > = ((*adt)[0usize]
-                as *const &'static mut ::core::mem::MaybeUninit<
-                    ::tuples_golden::AdtHoldingFiveAndSix,
-                >)
-                .read();
-            let adt_0 = adt_0.assume_init_read();
+            let adt_0: *mut ::tuples_golden::AdtHoldingFiveAndSix =
+                ((*adt)[0usize] as *const *mut ::tuples_golden::AdtHoldingFiveAndSix).read();
+            let adt_0 = adt_0.read();
             adt_0
         },);
         ::tuples_golden::param_adt_in_tuple(adt)
@@ -338,12 +333,9 @@ unsafe extern "C" fn __crubit_thunk_param_unontrivial_udrop_uin_utuple(
 ) -> () {
     unsafe {
         let nontrivial_drop = ({
-            let nontrivial_drop_0: &'static mut ::core::mem::MaybeUninit<
-                ::tuples_golden::NontrivialDrop,
-            > = ((*nontrivial_drop)[0usize]
-                as *const &'static mut ::core::mem::MaybeUninit<::tuples_golden::NontrivialDrop>)
-                .read();
-            let nontrivial_drop_0 = nontrivial_drop_0.assume_init_read();
+            let nontrivial_drop_0: *mut ::tuples_golden::NontrivialDrop =
+                ((*nontrivial_drop)[0usize] as *const *mut ::tuples_golden::NontrivialDrop).read();
+            let nontrivial_drop_0 = nontrivial_drop_0.read();
             nontrivial_drop_0
         },);
         ::tuples_golden::param_nontrivial_drop_in_tuple(nontrivial_drop)

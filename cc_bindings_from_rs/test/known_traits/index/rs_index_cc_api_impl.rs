@@ -50,10 +50,10 @@ unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
     __self: &'static ::rs_index_golden::IntPair,
-    index: &'static mut ::core::mem::MaybeUninit<::rs_index_golden::CustomIndex>,
+    index: *mut ::rs_index_golden::CustomIndex,
 ) -> &'static i32 {
     unsafe {
-        let index = index.assume_init_read();
+        let index = index.read();
         <::rs_index_golden::IntPair as ::core::ops::Index<::rs_index_golden::CustomIndex>>::index(
             __self, index,
         )
@@ -71,10 +71,10 @@ unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x000
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
     __self: &'static mut ::rs_index_golden::IntPair,
-    index: &'static mut ::core::mem::MaybeUninit<::rs_index_golden::CustomIndex>,
+    index: *mut ::rs_index_golden::CustomIndex,
 ) -> &'static mut i32 {
     unsafe {
-        let index = index.assume_init_read();
+        let index = index.read();
         <::rs_index_golden::IntPair as::core::ops::IndexMut<::rs_index_golden::CustomIndex>>::index_mut(__self,index)
     }
 }

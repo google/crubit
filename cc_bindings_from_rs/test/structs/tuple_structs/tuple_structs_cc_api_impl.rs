@@ -126,10 +126,10 @@ unsafe extern "C" fn __crubit_thunk_create(arg: i32, __ret_ptr: *mut core::ffi::
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_uarg(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuple_structs_golden::TupleStructOnePrivateArg>,
+    __self: *mut ::tuple_structs_golden::TupleStructOnePrivateArg,
 ) -> i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         ::tuple_structs_golden::TupleStructOnePrivateArg::get_arg(__self)
     }
 }
@@ -147,10 +147,10 @@ unsafe extern "C" fn __crubit_thunk_create(arg: i32, __ret_ptr: *mut core::ffi::
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_uarg(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuple_structs_golden::TupleStructOnePublicArg>,
+    __self: *mut ::tuple_structs_golden::TupleStructOnePublicArg,
 ) -> i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         ::tuple_structs_golden::TupleStructOnePublicArg::get_arg(__self)
     }
 }
@@ -179,12 +179,10 @@ unsafe extern "C" fn __crubit_thunk_create(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_usecond_uarg(
-    __self: &'static mut ::core::mem::MaybeUninit<
-        ::tuple_structs_golden::TupleStructOnePublicArgOnePrivateArg,
-    >,
+    __self: *mut ::tuple_structs_golden::TupleStructOnePublicArgOnePrivateArg,
 ) -> i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         ::tuple_structs_golden::TupleStructOnePublicArgOnePrivateArg::get_second_arg(__self)
     }
 }
@@ -210,23 +208,19 @@ unsafe extern "C" fn __crubit_thunk_create(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_ufirst_uarg(
-    __self: &'static mut ::core::mem::MaybeUninit<
-        ::tuple_structs_golden::TupleStructTwoPrivateArgs,
-    >,
+    __self: *mut ::tuple_structs_golden::TupleStructTwoPrivateArgs,
 ) -> i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         ::tuple_structs_golden::TupleStructTwoPrivateArgs::get_first_arg(__self)
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_usecond_uarg(
-    __self: &'static mut ::core::mem::MaybeUninit<
-        ::tuple_structs_golden::TupleStructTwoPrivateArgs,
-    >,
+    __self: *mut ::tuple_structs_golden::TupleStructTwoPrivateArgs,
 ) -> i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         ::tuple_structs_golden::TupleStructTwoPrivateArgs::get_second_arg(__self)
     }
 }
@@ -249,19 +243,19 @@ unsafe extern "C" fn __crubit_thunk_create(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_ufirst_uarg(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuple_structs_golden::TupleStructTwoPublicArgs>,
+    __self: *mut ::tuple_structs_golden::TupleStructTwoPublicArgs,
 ) -> i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         ::tuple_structs_golden::TupleStructTwoPublicArgs::get_first_arg(__self)
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_usecond_uarg(
-    __self: &'static mut ::core::mem::MaybeUninit<::tuple_structs_golden::TupleStructTwoPublicArgs>,
+    __self: *mut ::tuple_structs_golden::TupleStructTwoPublicArgs,
 ) -> i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         ::tuple_structs_golden::TupleStructTwoPublicArgs::get_second_arg(__self)
     }
 }
@@ -448,13 +442,11 @@ unsafe extern "C" fn __crubit_thunk_create(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_uarg(
-    __self: &'static mut ::core::mem::MaybeUninit<
-        ::tuple_structs_golden::TupleStructWithTupleFieldType,
-    >,
+    __self: *mut ::tuple_structs_golden::TupleStructWithTupleFieldType,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         let __rs_return_value =
             ::tuple_structs_golden::TupleStructWithTupleFieldType::get_arg(__self);
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;

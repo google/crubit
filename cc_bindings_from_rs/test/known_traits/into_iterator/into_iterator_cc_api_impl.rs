@@ -51,11 +51,11 @@ const _: () = assert!(::std::mem::size_of::<::into_iterator_rust_golden::MyConta
 const _: () = assert!(::std::mem::align_of::<::into_iterator_rust_golden::MyContainer>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
-    __self: &'static mut ::core::mem::MaybeUninit<::into_iterator_rust_golden::MyContainer>,
+    __self: *mut ::into_iterator_rust_golden::MyContainer,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         let __rs_return_value =
             <::into_iterator_rust_golden::MyContainer as ::core::iter::IntoIterator>::into_iter(
                 __self,
@@ -160,25 +160,21 @@ unsafe extern "C" fn __crubit_thunk_make_uref_ucontainer(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithInherentBegin(
-    __self: &'static mut ::core::mem::MaybeUninit<
-        ::into_iterator_rust_golden::ContainerWithInherentBegin,
-    >,
+    __self: *mut ::into_iterator_rust_golden::ContainerWithInherentBegin,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         let __rs_return_value=<::into_iterator_rust_golden::ContainerWithInherentBegin as::core::iter::IntoIterator>::into_iter(__self);
         (__ret_ptr as *mut ::into_iterator_rust_golden::SimpleIntoIter).write(__rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithRefIntoIter_x0000003c_x00000027a_x0000003e(
-    __self: &'static mut ::core::mem::MaybeUninit<
-        ::into_iterator_rust_golden::ContainerWithRefIntoIter<'static>,
-    >,
+    __self: *mut ::into_iterator_rust_golden::ContainerWithRefIntoIter<'static>,
 ) -> &'static mut ::into_iterator_rust_golden::MyIterator {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         <::into_iterator_rust_golden::ContainerWithRefIntoIter as::core::iter::IntoIterator>::into_iter(__self)
     }
 }
@@ -203,11 +199,11 @@ unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
-    __self: &'static mut ::core::mem::MaybeUninit<::into_iterator_rust_golden::MyContainer>,
+    __self: *mut ::into_iterator_rust_golden::MyContainer,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         let __rs_return_value =
             <::into_iterator_rust_golden::MyContainer as ::core::iter::IntoIterator>::into_iter(
                 __self,

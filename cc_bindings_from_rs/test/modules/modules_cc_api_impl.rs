@@ -33,12 +33,10 @@ unsafe extern "C" fn __crubit_thunk_create(i: i32, __ret_ptr: *mut core::ffi::c_
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_into_ui32(
-    s: &'static mut ::core::mem::MaybeUninit<
-        ::modules_golden::impl_in_separate_private_module::Foo,
-    >,
+    s: *mut ::modules_golden::impl_in_separate_private_module::Foo,
 ) -> i32 {
     unsafe {
-        let s = s.assume_init_read();
+        let s = s.read();
         ::modules_golden::impl_in_separate_private_module::Foo::into_i32(s)
     }
 }

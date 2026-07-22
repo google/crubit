@@ -192,10 +192,10 @@ unsafe extern "C" fn __crubit_thunk_return_uresult_uby_uvalue(
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_take_uresult_uby_uvalue(
-    r: &'static mut ::core::mem::MaybeUninit<::core::result::Result<u8, u8>>,
+    r: *mut ::core::result::Result<u8, u8>,
 ) -> u8 {
     unsafe {
-        let r = r.assume_init_read();
+        let r = r.read();
         ::result_golden::take_result_by_value(r)
     }
 }

@@ -15,11 +15,11 @@ const _: () = assert!(::std::mem::size_of::<::enums_golden::qr_error::QrError>()
 const _: () = assert!(::std::mem::align_of::<::enums_golden::qr_error::QrError>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Structured(
-    __param_0: &'static mut ::core::mem::MaybeUninit<::enums_golden::qr_error::StructuredQrError>,
+    __param_0: *mut ::enums_golden::qr_error::StructuredQrError,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __param_0 = __param_0.assume_init_read();
+        let __param_0 = __param_0.read();
         let __rs_return_value = ::enums_golden::qr_error::QrError::Structured(__param_0);
         (__ret_ptr as *mut ::enums_golden::qr_error::QrError).write(__rs_return_value);
     }
@@ -146,12 +146,12 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_E(
-    __param_0: &'static mut ::core::mem::MaybeUninit<::alloc::string::String>,
+    __param_0: *mut ::alloc::string::String,
     __param_1: i32,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __param_0 = __param_0.assume_init_read();
+        let __param_0 = __param_0.read();
         let __rs_return_value = ::enums_golden::repr_c::MyEnum::E(__param_0, __param_1);
         (__ret_ptr as *mut ::enums_golden::repr_c::MyEnum).write(__rs_return_value);
     }

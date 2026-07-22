@@ -177,10 +177,10 @@ unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething_utraits_ugolden_x0000
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_MyTrait_uconsume_uself_utraits_ugolden_x0000003a_x0000003aMyStruct(
-    __self: &'static mut ::core::mem::MaybeUninit<::traits_golden::MyStruct>,
+    __self: *mut ::traits_golden::MyStruct,
 ) -> i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         <::traits_golden::MyStruct as ::traits_golden::MyTrait>::consume_self(__self)
     }
 }
@@ -198,11 +198,11 @@ unsafe extern "C" fn __crubit_thunk_MyTrait_uno_uself_utraits_ugolden_x0000003a_
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes_utraits_ugolden_x0000003a_x0000003aMyStruct(
     __self: &'static ::traits_golden::MyStruct,
-    x: &'static mut ::core::mem::MaybeUninit<::traits_golden::Foo>,
+    x: *mut ::traits_golden::Foo,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let x = x.assume_init_read();
+        let x = x.read();
         let __rs_return_value =
             <::traits_golden::MyStruct as ::traits_golden::MyTrait>::take_and_return_other_types(
                 __self, x,
@@ -221,10 +221,10 @@ unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething_utraits_ugolden_x0000
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_MyTrait_uconsume_uself_utraits_ugolden_x0000003a_x0000003aMyStruct2(
-    __self: &'static mut ::core::mem::MaybeUninit<::traits_golden::MyStruct2>,
+    __self: *mut ::traits_golden::MyStruct2,
 ) -> i32 {
     unsafe {
-        let __self = __self.assume_init_read();
+        let __self = __self.read();
         <::traits_golden::MyStruct2 as ::traits_golden::MyTrait>::consume_self(__self)
     }
 }
@@ -242,11 +242,11 @@ unsafe extern "C" fn __crubit_thunk_MyTrait_uno_uself_utraits_ugolden_x0000003a_
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes_utraits_ugolden_x0000003a_x0000003aMyStruct2(
     __self: &'static ::traits_golden::MyStruct2,
-    x: &'static mut ::core::mem::MaybeUninit<::traits_golden::Foo>,
+    x: *mut ::traits_golden::Foo,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let x = x.assume_init_read();
+        let x = x.read();
         let __rs_return_value =
             <::traits_golden::MyStruct2 as ::traits_golden::MyTrait>::take_and_return_other_types(
                 __self, x,

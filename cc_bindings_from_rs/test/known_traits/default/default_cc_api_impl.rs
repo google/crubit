@@ -25,10 +25,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x00000
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_extract_uint(
-    s: &'static mut ::core::mem::MaybeUninit<::rs_default_golden::derived_impl::SomeStruct>,
+    s: *mut ::rs_default_golden::derived_impl::SomeStruct,
 ) -> i32 {
     unsafe {
-        let s = s.assume_init_read();
+        let s = s.read();
         ::rs_default_golden::derived_impl::SomeStruct::extract_int(s)
     }
 }
@@ -49,10 +49,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x00000
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_extract_uint(
-    s: &'static mut ::core::mem::MaybeUninit<::rs_default_golden::explicit_impl::SomeStruct>,
+    s: *mut ::rs_default_golden::explicit_impl::SomeStruct,
 ) -> i32 {
     unsafe {
-        let s = s.assume_init_read();
+        let s = s.read();
         ::rs_default_golden::explicit_impl::SomeStruct::extract_int(s)
     }
 }
@@ -79,12 +79,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x00000
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_extract_uint(
-    s: &'static mut ::core::mem::MaybeUninit<
-        ::rs_default_golden::field_with_no_default::StructWithFieldWithNoDefault,
-    >,
+    s: *mut ::rs_default_golden::field_with_no_default::StructWithFieldWithNoDefault,
 ) -> i32 {
     unsafe {
-        let s = s.assume_init_read();
+        let s = s.read();
         ::rs_default_golden::field_with_no_default::StructWithFieldWithNoDefault::extract_int(s)
     }
 }

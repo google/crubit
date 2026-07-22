@@ -42,11 +42,9 @@ unsafe extern "C" fn __crubit_thunk_return_uvec(__ret_ptr: *mut core::ffi::c_voi
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_take_uvec(
-    v: &'static mut ::core::mem::MaybeUninit<::alloc::vec::Vec<i32>>,
-) -> i32 {
+unsafe extern "C" fn __crubit_thunk_take_uvec(v: *mut ::alloc::vec::Vec<i32>) -> i32 {
     unsafe {
-        let v = v.assume_init_read();
+        let v = v.read();
         ::vec_golden::take_vec(v)
     }
 }

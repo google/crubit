@@ -1185,7 +1185,7 @@ fn test_format_item_fn_rust_abi_with_param_taking_struct_by_value22() {
                 unsafe extern "C"
                 fn ...(...) -> i32 {
                     unsafe {
-                        let s = s.assume_init_read();
+                        let s = s.read();
                         ::rust_out::transmute_slice(..., ..., ..., s)
                     }
                 }
@@ -1226,9 +1226,9 @@ fn test_format_item_fn_rust_abi_with_param_taking_struct_by_value() {
             quote! {
                 #[unsafe(no_mangle)]
                 unsafe extern "C"
-                fn ...(s: &'static mut ::core::mem::MaybeUninit<::rust_out::S>) -> i32 {
+                fn ...(s: *mut ::rust_out::S) -> i32 {
                     unsafe {
-                        let s = s.assume_init_read();
+                        let s = s.read();
                         ::rust_out::into_i32(s)
                     }
                 }
@@ -1482,10 +1482,10 @@ fn test_format_item_fn_with_destructuring_parameter_name() {
             quote! {
                 #[unsafe(no_mangle)]
                 unsafe extern "C" fn ...(
-                    __param_0: &'static mut ::core::mem::MaybeUninit<::rust_out::S>
+                    __param_0: *mut ::rust_out::S
                 ) -> i32 {
                     unsafe {
-                        let __param_0 = __param_0.assume_init_read();
+                        let __param_0 = __param_0.read();
                         ::rust_out::func(__param_0)
                     }
                 }

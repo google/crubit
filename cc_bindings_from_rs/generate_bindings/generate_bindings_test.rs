@@ -995,9 +995,9 @@ fn test_format_item_method_taking_self_by_value(test_src: &str) {
             quote! {
                 ...
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...(__self: &'static mut ::core::mem::MaybeUninit<::rust_out::SomeStruct>) -> f32 {
+                unsafe extern "C" fn ...(__self: *mut ::rust_out::SomeStruct) -> f32 {
                     unsafe {
-                        let __self = __self.assume_init_read();
+                        let __self = __self.read();
                         ::rust_out::SomeStruct::into_f32(__self)
                     }
                 }
