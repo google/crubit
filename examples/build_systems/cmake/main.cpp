@@ -19,6 +19,14 @@ int main() {
   std::string_view temp_dir_str = g.as_str();
   std::cout << "Successfully used Rust std::env::temp_dir(): " << temp_dir_str
             << std::endl;
+
+  // Test calling a function with mutable and shared references
+  // (aliasing checks).
+  std::uint64_t dest = 10;
+  std::uint64_t src = 32;
+  rust_lib::add_assign(dest, src);
+  std::cout << "Successfully called rust_lib::add_assign: " << dest
+            << std::endl;
   return 0;
 }
 

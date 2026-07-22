@@ -31,3 +31,7 @@ impl Gymnastics {
         &self.internal
     }
 }
+
+pub fn add_assign(dest: &mut u64, src: &u64) {
+    *dest += *src;
+}
