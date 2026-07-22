@@ -87,6 +87,9 @@
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
+
+namespace ir_proto = rs_bindings_from_cc::ir_proto::flat;
+
 namespace {
 
 constexpr absl::string_view kTypeStatusPayloadUrl =
@@ -636,8 +639,8 @@ ItemId Importer::GenerateItemId(const clang::Decl* decl) const {
 
 bool Importer::IsUnsupportedAndAlien(ItemId item_id) const {
   auto it = import_cache_.find(reinterpret_cast<clang::Decl*>(item_id.value()));
-  return it != import_cache_.end() && it->second.has_value() &&
-         std::holds_alternative<UnsupportedItem>(*it->second) &&
+  return it != import_cache_.end() && it->second.legacy_item.has_value() &&
+         std::holds_alternative<UnsupportedItem>(*it->second.legacy_item) &&
          !IsFromCurrentTarget(it->first);
 }
 
@@ -922,6 +925,26 @@ bool Importer::IsAlwaysInstantiate(
   return false;
 }
 
+void SetMustBindItem(ir_proto::Item& item) {
+  if (item.has_record()) {
+    item.mutable_record()->set_must_bind(true);
+  } else if (item.has_func()) {
+    item.mutable_func()->set_must_bind(true);
+  } else if (item.has_enum_decl()) {
+    item.mutable_enum_decl()->set_must_bind(true);
+  } else if (item.has_type_alias()) {
+    item.mutable_type_alias()->set_must_bind(true);
+  } else if (item.has_comment()) {
+    item.mutable_comment()->set_must_bind(true);
+  } else if (item.has_unsupported_item()) {
+    item.mutable_unsupported_item()->set_must_bind(true);
+  } else if (item.has_namespace_decl()) {
+    item.mutable_namespace_decl()->set_must_bind(true);
+  } else if (item.has_use_mod()) {
+    item.mutable_use_mod()->set_must_bind(true);
+  }
+}
+
 void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   FindAlwaysInstantiateSpecs(translation_unit_decl);
   ImportFreeComments();
@@ -942,14 +965,15 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   // class A { class B; };   // declares A::B
   // class A::B { ... };  // defines A::B
   std::vector<std::pair<SourceOrderKey, const clang::Decl*>> ordered_children;
-  for (const auto& [decl, item] : import_cache_) {
-    if (!item.has_value()) continue;
+  for (const auto& [decl, entry] : import_cache_) {
+    if (!entry.legacy_item.has_value()) continue;
     if (auto* parent_record_decl =
             llvm::dyn_cast<clang::CXXRecordDecl>(decl->getDeclContext())) {
       auto parent_it = import_cache_.find(parent_record_decl);
-      if (parent_it != import_cache_.end() && parent_it->second.has_value()) {
+      if (parent_it != import_cache_.end() &&
+          parent_it->second.legacy_item.has_value()) {
         if (auto* parent_item =
-                std::get_if<Record>(&(parent_it->second.value()))) {
+                std::get_if<Record>(&(parent_it->second.legacy_item.value()))) {
           ordered_children.push_back({GetSourceOrderKey(decl), decl});
         }
       }
@@ -963,7 +987,8 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
     auto* parent_record_decl =
         llvm::dyn_cast<clang::CXXRecordDecl>(decl->getDeclContext());
     auto parent_it = import_cache_.find(parent_record_decl);
-    auto* parent_item = std::get_if<Record>(&(parent_it->second.value()));
+    auto* parent_item =
+        std::get_if<Record>(&(parent_it->second.legacy_item.value()));
 
     auto child_id = GenerateItemId(decl);
     auto& parent_child_ids = invocation_.child_item_ids_[parent_item->id];
@@ -973,11 +998,12 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
     }
   }
 
-  for (const auto& [decl, item] : import_cache_) {
-    if (!item.has_value() || IsUnsupportedAndAlien(GenerateItemId(decl))) {
+  for (const auto& [decl, entry] : import_cache_) {
+    if (!entry.legacy_item.has_value() ||
+        IsUnsupportedAndAlien(GenerateItemId(decl))) {
       continue;
     }
-    ordered_items.push_back({GetSourceOrderKey(decl), *item});
+    ordered_items.push_back({GetSourceOrderKey(decl), *entry.legacy_item});
   }
 
   llvm::stable_sort(ordered_items, SourceLocationComparator(sm));
@@ -1018,7 +1044,10 @@ void Importer::ImportDeclsFromDeclContext(
 
 std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
   if (auto it = import_cache_.find(decl); it != import_cache_.end()) {
-    return it->second;
+    if (it->second.status == ItemCacheEntry::Status::kInProgress) {
+      return std::nullopt;
+    }
+    return it->second.legacy_item;
   }
   // Here, we need to be careful. Recursive imports break cycles as follows:
   // an item which may, in the process of being imported, then import itself,
@@ -1054,8 +1083,14 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
   // Note: insert_or_assign, not insert, in case a record, so as to overwrite
   // any null entries introduced by cycles.
 
-  std::optional<IR::Item> result = ImportDecl(decl);
-  auto [it, inserted] = import_cache_.try_emplace(decl, result);
+  ItemId id = GenerateItemId(decl);
+  auto [it, inserted] = import_cache_.try_emplace(
+      decl, ItemCacheEntry{
+                .status = ItemCacheEntry::Status::kInProgress,
+                .id = id,
+                .legacy_item = std::nullopt,
+                .proto_item = nullptr,
+            });
   if (!inserted) {
     // TODO(jeanpierreda): Fix and promote to CHECK.
     // At least one cycle occurs with Typedef, where a typedef will import
@@ -1066,14 +1101,27 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
     //
     // Alternatively, maybe it's sufficient to check that they're _equal_.
     // It's not a bug at all to import it twice if it has no effect.
-    LOG_IF(INFO, !it->second.has_value())
+    LOG_IF(INFO, !it->second.legacy_item.has_value())
         << "re-entrant import discovered, where the re-entrant import had a "
            "non-null value."
-        << "\n  trying to import a " << decl->getDeclKindName()
-        << "\n  present entry: " << ItemToString(it->second)
-        << "\n  was going to be inserted: " << ItemToString(result);
-    it->second = result;
+        << "\n  trying to import a " << decl->getDeclKindName();
   }
+
+  std::optional<IR::Item> result = ImportDecl(decl);
+
+  ItemCacheEntry::Status entry_status = result.has_value()
+                                            ? ItemCacheEntry::Status::kCompleted
+                                            : ItemCacheEntry::Status::kFailed;
+
+  import_cache_[decl] = ItemCacheEntry{
+      .status = entry_status,
+      .id = id,
+      .legacy_item = result,
+      .proto_item = result.has_value() ? std::make_unique<ir_proto::Item>(
+                                             crubit::ToFlatProto(*result))
+                                       : nullptr,
+  };
+
   if (auto* record_decl = clang::dyn_cast<clang::CXXRecordDecl>(decl)) {
     // TODO(forster): Should we even visit the nested decl if we couldn't
     // import the parent? For now we have tests that check that we generate
@@ -1136,9 +1184,10 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
 
   if (IsTransitivelyInPrivate(decl)) {
     if (*must_bind) {
-      return HardError(*decl,
-                       FormattedError::Static(
-                           "Private declarations cannot receive bindings"));
+      return HardError(
+          *decl,
+          FormattedError::Static("Items in private sections or classes are not "
+                                 "supported, but marked with must_bind"));
     }
     return std::nullopt;
   }
@@ -1202,11 +1251,84 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
   return std::nullopt;
 }
 
+absl::StatusOr<std::unique_ptr<ir_proto::Item>> Importer::ImportDeclToProto(
+    clang::Decl* decl, bool must_bind) {
+  if (IsTransitivelyInPrivate(decl)) {
+    if (must_bind) {
+      return HardErrorToProto(
+          *decl,
+          FormattedError::Static("Items in private sections or classes are not "
+                                 "supported, but marked with must_bind"));
+    }
+    return nullptr;
+  }
+
+  const absl::StatusOr<bool> do_not_bind =
+      HasAnnotationWithoutArgs(*decl, "crubit_do_not_bind");
+  if (!do_not_bind.ok()) {
+    return HardErrorToProto(*decl,
+                            FormattedError::FromStatus(do_not_bind.status()));
+  }
+  if (*do_not_bind) {
+    if (must_bind) {
+      return HardErrorToProto(
+          *decl, FormattedError::Static("Conflicting CRUBIT_MUST_BIND and "
+                                        "CRUBIT_DO_NOT_BIND annotations"));
+    }
+    const std::optional<absl::flat_hash_set<std::string>>&
+        do_not_bind_allowlist = invocation_.do_not_bind_allowlist_;
+    const clang::NamedDecl* named_decl =
+        clang::dyn_cast<clang::NamedDecl>(decl);
+    if (named_decl && !clang::isa<clang::FunctionDecl>(decl) &&
+        do_not_bind_allowlist.has_value()) {
+      std::string decl_name = named_decl->getQualifiedNameAsString();
+      if (!do_not_bind_allowlist->contains(decl_name)) {
+        return HardErrorToProto(
+            *decl, FormattedError::PrefixedStrCat(
+                       "CRUBIT_DO_NOT_BIND annotation on non-allowlisted decl",
+                       std::move(decl_name),
+                       "\nOmitted bindings must be pre-registered using "
+                       "`do_not_bind_allowlist`"));
+      }
+    }
+    return nullptr;
+  }
+
+  std::string unavailable_error;
+  if (decl->isUnavailable(&unavailable_error)) {
+    return ImportUnsupportedItemToProto(
+        *decl, std::nullopt,
+        {FormattedError::PrefixedStrCat("Decl is unavailable: ",
+                                        std::move(unavailable_error))},
+        /*is_hard_error=*/must_bind);
+  }
+
+  for (auto& decl_importer : decl_importers_) {
+    CRUBIT_ASSIGN_OR_RETURN(std::unique_ptr<ir_proto::Item> item,
+                            decl_importer->ImportDeclToProto(decl, must_bind));
+    if (item != nullptr) {
+      if (must_bind) {
+        SetMustBindItem(*item);
+      }
+      return item;
+    }
+  }
+
+  if (must_bind) {
+    return HardErrorToProto(
+        *decl,
+        FormattedError::Static(
+            "No importer found for decl with CRUBIT_MUST_BIND annotation"));
+  }
+
+  return nullptr;
+}
+
 std::optional<IR::Item> Importer::GetImportedItem(
     const clang::Decl* decl) const {
   auto it = import_cache_.find(decl);
   if (it != import_cache_.end()) {
-    return it->second;
+    return it->second.legacy_item;
   }
   return std::nullopt;
 }
@@ -1377,7 +1499,7 @@ bool Importer::RefersToOwnedDefinitionImpl(
 }
 
 bool Importer::IsFromProtoTarget(const clang::Decl& decl) const {
-  // TODO(b/b/441343672): This is probably not a good way to detect if something
+  // TODO(b/441343672): This is probably not a good way to detect if something
   // is from a proto target, and we should do something more durable.
   clang::SourceManager& source_manager = ctx_.getSourceManager();
   std::optional<llvm::StringRef> filename =
@@ -1606,6 +1728,20 @@ bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {
 IR::Item Importer::HardError(const clang::Decl& decl, FormattedError error) {
   return ImportUnsupportedItem(decl, std::nullopt, {error},
                                /*is_hard_error=*/true);
+}
+
+std::unique_ptr<ir_proto::Item> Importer::HardErrorToProto(
+    const clang::Decl& decl, FormattedError error) {
+  return ImportUnsupportedItemToProto(decl, std::nullopt, {std::move(error)},
+                                      /*is_hard_error=*/true);
+}
+
+std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItemToProto(
+    const clang::Decl& original_decl, std::optional<UnsupportedItem::Path> path,
+    std::vector<FormattedError> errors, bool is_hard_error) {
+  IR::Item legacy_item = ImportUnsupportedItem(
+      original_decl, std::move(path), std::move(errors), is_hard_error);
+  return std::make_unique<ir_proto::Item>(crubit::ToFlatProto(legacy_item));
 }
 
 IR::Item Importer::ImportUnsupportedItem(
