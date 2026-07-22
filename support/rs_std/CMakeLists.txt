@@ -49,6 +49,19 @@ target_link_libraries(crubit_support_rs_std_dyn_erased_future_cc INTERFACE
 crubit_support_rs_std_waker
 )
 
+add_library(crubit_support_rs_std_int INTERFACE
+"int.h"
+)
+set_target_properties(crubit_support_rs_std_int PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_rs_std_int INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+
+target_link_libraries(crubit_support_rs_std_int INTERFACE
+crubit_support_annotations
+)
+
 add_library(crubit_support_rs_std_iterator_adapter INTERFACE
 "iterator_adapter.h"
 )

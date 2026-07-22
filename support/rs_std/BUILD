@@ -36,6 +36,33 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "int",
+    hdrs = ["int.h"],
+    aspect_hints = ["//features:experimental"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    tags = [
+        "alt_dep=//support/public:int",
+        "avoid_dep",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "//support:annotations",
+    ],
+)
+
+crubit_cc_test(
+    name = "int_test",
+    srcs = ["int_test.cc"],
+    deps = [
+        ":int",
+        "@fuzztest//:fuzztest_gtest_main",
+        "@googletest//:gmock",
+    ],
+)
+
 alias(
     name = "rs_char",
     actual = "//support/rs_std:char",
