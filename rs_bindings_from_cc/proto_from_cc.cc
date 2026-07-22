@@ -15,10 +15,10 @@ namespace crubit {
 extern "C" FfiU8SliceBox proto_from_cc_dependency(
     FfiU8Slice target_triple, FfiU8Slice header_source,
     FfiU8Slice dependency_header_source, FfiU8Slice extra_feature,
-    bool kythe_annotations) {
+    bool kythe_annotations, bool carcinize) {
   absl::StatusOr<IR> ir =
       IrFromCcDependency(target_triple, header_source, dependency_header_source,
-                         extra_feature, kythe_annotations);
+                         extra_feature, kythe_annotations, carcinize);
 
   if (!ir.ok()) {
     llvm::report_fatal_error(llvm::formatv("IrFromCc reported an error: {0}",

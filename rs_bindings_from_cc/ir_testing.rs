@@ -21,7 +21,7 @@ pub fn ir_proto_from_cc(
     platform: multiplatform_testing::Platform,
     header_source: &str,
 ) -> Result<IRProto> {
-    ir_proto_from_cc_dependency(platform, header_source, "// empty header", None, false)
+    ir_proto_from_cc_dependency(platform, header_source, "// empty header", None, false, false)
 }
 
 /// Generates `IRProto` from a header containing `header_source` with source annotations.
@@ -29,7 +29,7 @@ pub fn ir_proto_from_cc_annotated(
     platform: multiplatform_testing::Platform,
     header_source: &str,
 ) -> Result<IRProto> {
-    ir_proto_from_cc_dependency(platform, header_source, "// empty header", None, true)
+    ir_proto_from_cc_dependency(platform, header_source, "// empty header", None, true, false)
 }
 
 /// Prepends definitions for lifetime annotation macros to the code.
@@ -126,6 +126,7 @@ pub fn ir_proto_from_cc_dependency(
     dependency_header_source: &str,
     extra_feature: Option<&str>,
     kythe_annotations: bool,
+    carcinize: bool,
 ) -> Result<IRProto> {
     const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
 
@@ -136,6 +137,7 @@ pub fn ir_proto_from_cc_dependency(
             dependency_header_source: FfiU8Slice,
             extra_feature: FfiU8Slice,
             kythe_annotations: bool,
+            carcinize: bool,
         ) -> FfiU8SliceBox;
     }
 
@@ -148,6 +150,7 @@ pub fn ir_proto_from_cc_dependency(
             FfiU8Slice::from_slice(dependency_header_source.as_bytes()),
             FfiU8Slice::from_slice(extra_feature.unwrap_or_default().as_bytes()),
             kythe_annotations,
+            carcinize,
         )
         .into_boxed_slice()
     };

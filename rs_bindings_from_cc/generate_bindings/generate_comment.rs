@@ -174,11 +174,20 @@ pub fn generate_unsupported(db: &BindingsGenerator, item: Rc<UnsupportedItem>) -
         db.fatal_errors().report(&message);
     }
 
+    // Note: `item.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
+    let generated_item = if let Some(parsed_tokens) = item.source_text_as_token_stream() {
+        GeneratedItem::Func(quote::quote! {
+            __COMMENT__ #message
+            ::crubit_support::global_cpp! {
+                #parsed_tokens
+            }
+        })
+    } else {
+        GeneratedItem::Comment { message: intern!(db.interner(), "{message}") }
+    };
+
     ApiSnippets {
-        generated_items: HashMap::from([(
-            item.id(),
-            GeneratedItem::Comment { message: intern!(db.interner(), "{message}") },
-        )]),
+        generated_items: HashMap::from([(item.id(), generated_item)]),
         ..Default::default()
     }
 }

@@ -19,7 +19,7 @@ use rustc_middle::ty::TyCtxt;
 use rustc_session::config::OptionsTargetModifiers;
 
 use arc_anyhow::{bail, Context, Result};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
@@ -121,10 +121,23 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
         ErrorReport::new_rc_or_ignore(generate_error_report, SourceLanguage::Rust);
     let fatal_errors = Rc::new(FatalErrors::new());
 
-    let BindingsTokens { cc_api, cc_api_impl } = {
+    let BindingsTokens { mut cc_api, cc_api_impl } = {
         let db = new_db(cmdline, tcx, errors, fatal_errors.clone());
         generate_bindings(&db)?
     };
+
+    if !cmdline.extra_rs_srcs_includes.is_empty() {
+        let extra_includes: BTreeSet<CcInclude> = cmdline
+            .extra_rs_srcs_includes
+            .iter()
+            .map(|include| CcInclude::exported_user_header(include.as_str().into()))
+            .collect();
+        let extra_includes_tokens = code_gen_utils::format_cc_includes(&extra_includes);
+        cc_api = quote::quote! {
+            #extra_includes_tokens
+            #cc_api
+        };
+    }
 
     let fatal_error_message = fatal_errors.take_string();
     if !fatal_error_message.is_empty() {

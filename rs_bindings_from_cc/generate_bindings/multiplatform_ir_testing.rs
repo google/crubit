@@ -24,6 +24,18 @@ pub fn ir_proto_from_cc_dependency(header: &str, dep_header: &str) -> Result<IRP
         dep_header,
         None,
         /*kythe_annotations=*/ false,
+        /*carcinize=*/ false,
+    )
+}
+
+pub fn ir_proto_from_cc_with_inline_cpp(header: &str) -> Result<IRProto> {
+    ir_testing::ir_proto_from_cc_dependency(
+        test_platform(),
+        header,
+        "// empty header",
+        None,
+        /*kythe_annotations=*/ false,
+        /*carcinize=*/ true,
     )
 }
 
@@ -36,5 +48,6 @@ pub fn ir_proto_from_assumed_lifetimes_cc(program: &str) -> Result<IRProto> {
         "// empty header",
         Some("assume_lifetimes"),
         /*kythe_annotations=*/ false,
+        /*carcinize=*/ false,
     )
 }

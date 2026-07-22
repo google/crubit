@@ -1888,6 +1888,10 @@ pub fn generate_function<'a>(
     // as the base class thunk will already have been generated.
     let skip_thunk_generation: bool = {
         || {
+            // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
+            if func.source_text_as_token_stream().is_some() {
+                return true;
+            }
             let Some(derived) = &derived_record else { return false };
             let Some(enclosing_id) = func.enclosing_item_id() else { return false };
             if enclosing_id == derived.id() {
@@ -1988,6 +1992,14 @@ pub fn generate_function<'a>(
 
     let create_func_body = || -> Result<TokenStream> {
         if reportable_status.is_ok() {
+            // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
+            if let Some(parsed_tokens) = func.source_text_as_token_stream() {
+                return Ok(quote! {
+                    ::crubit_support::inline_cpp! {
+                        #parsed_tokens
+                    }
+                });
+            }
             generate_func_body(
                 db,
                 &impl_kind,
@@ -2149,16 +2161,25 @@ pub fn generate_function<'a>(
             features |= free_features;
 
             let free_func_body = if reportable_status.is_ok() {
-                generate_func_body(
-                    db,
-                    &impl_kind,
-                    &crate_root_path,
-                    &free_return_type,
-                    &param_value_adjustments,
-                    thunk_ident(db, &func),
-                    free_thunk_prepare,
-                    free_thunk_args,
-                )?
+                // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
+                if let Some(parsed_tokens) = func.source_text_as_token_stream() {
+                    quote! {
+                        ::crubit_support::inline_cpp! {
+                            #parsed_tokens
+                        }
+                    }
+                } else {
+                    generate_func_body(
+                        db,
+                        &impl_kind,
+                        &crate_root_path,
+                        &free_return_type,
+                        &param_value_adjustments,
+                        thunk_ident(db, &func),
+                        free_thunk_prepare,
+                        free_thunk_args,
+                    )?
+                }
             } else {
                 // Use the `unreachable` body
                 create_func_body()?

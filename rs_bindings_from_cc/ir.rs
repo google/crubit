@@ -762,7 +762,6 @@ impl ToTokens for LifetimeId {
         proc_macro2::Literal::from_str(&format!("{:#}", self.0)).unwrap().to_tokens(tokens)
     }
 }
-
 /// A Bazel label, e.g. `//foo:bar`.
 #[derive(Debug, Eq, Clone)]
 pub struct BazelLabel(pub(crate) Rc<str>);
@@ -790,6 +789,7 @@ impl BazelLabel {
     fn last_package_component(&self) -> &str {
         self.package_name().rsplit_once('/').unwrap_or(("", "")).1
     }
+
     // TODO(b/216587072): Remove this hacky escaping and use the import! macro once
     // available.
     // For now, use the simple escaping scheme of mapping all invalid characters
@@ -1100,9 +1100,12 @@ pub struct Func<'pb> {
     /// invoke this function.
     pub(crate) adl_enclosing_record: Option<ItemId>,
     pub(crate) must_bind: bool,
+    pub(crate) inline_cpp_source_text: Option<Rc<str>>,
 
     // Lifetime variable names bound by this function.
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
+
+    pub(crate) is_compiler_generated: bool,
 }
 
 impl<'pb> Func<'pb> {
@@ -1292,6 +1295,8 @@ impl<'pb> Func<'pb> {
             adl_enclosing_record,
             must_bind,
             lifetime_inputs,
+            inline_cpp_source_text: None,
+            is_compiler_generated: false,
         }
     }
 }
@@ -1324,6 +1329,20 @@ impl<'pb> GenericItem<'pb> for Func<'pb> {
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
         self.cc_name.identifier_as_str()
+    }
+}
+
+impl<'pb> Func<'pb> {
+    pub fn inline_cpp_source_text(&self) -> Option<&str> {
+        self.inline_cpp_source_text.as_deref()
+    }
+
+    pub fn source_text_as_token_stream(&self) -> Option<proc_macro2::TokenStream> {
+        self.inline_cpp_source_text()?.parse::<proc_macro2::TokenStream>().ok()
+    }
+
+    pub fn set_inline_cpp_source_text(&mut self, text: Option<Rc<str>>) {
+        self.inline_cpp_source_text = text;
     }
 }
 
@@ -2935,6 +2954,9 @@ pub struct UnsupportedItem<'pb> {
     pub(crate) id: ItemId,
     pub(crate) must_bind: bool,
     pub(crate) defining_target: Option<BazelLabel>,
+    pub(crate) inline_cpp_source_text: Option<Rc<str>>,
+
+    pub(crate) is_compiler_generated: bool,
 
     /// Stores either one natively generated [`arc_anyhow::Error`] or the
     /// memoized result of converting `errors`.
@@ -2960,6 +2982,18 @@ impl<'pb> UnsupportedItem<'pb> {
 
     pub fn source_loc(&self) -> Option<&'pb str> {
         self.source_loc
+    }
+
+    pub fn inline_cpp_source_text(&self) -> Option<&str> {
+        self.inline_cpp_source_text.as_deref()
+    }
+
+    pub fn source_text_as_token_stream(&self) -> Option<proc_macro2::TokenStream> {
+        self.inline_cpp_source_text()?.parse::<proc_macro2::TokenStream>().ok()
+    }
+
+    pub fn set_inline_cpp_source_text(&mut self, text: Option<Rc<str>>) {
+        self.inline_cpp_source_text = text;
     }
 
     pub fn id(&self) -> ItemId {
@@ -3024,6 +3058,8 @@ impl<'pb> UnsupportedItem<'pb> {
             cause: IgnoredField(cause.map(|e| OnceCell::from(vec![e])).unwrap_or_default()),
             must_bind,
             defining_target,
+            inline_cpp_source_text: None,
+            is_compiler_generated: false,
         }
     }
 

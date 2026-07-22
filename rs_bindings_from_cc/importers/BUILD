@@ -133,6 +133,7 @@ cc_library(
         "@abseil-cpp//absl/strings",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
+        "@llvm-project//clang:lex",
         "@llvm-project//clang:sema",
         "@llvm-project//llvm:Support",
     ],

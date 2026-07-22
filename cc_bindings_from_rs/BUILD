@@ -38,6 +38,7 @@ rust_library(
         "@crate_index//:clap",  # v4
         "@crate_index//:flagset",  # v0_4
         "@crate_index//:itertools",  # v0_13
+        "@crate_index//:quote",  # v1
     ],
 )
 

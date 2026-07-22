@@ -59,6 +59,7 @@ struct CmdlineArgs {
   std::optional<std::vector<std::string>> do_not_bind_allowlist;
 
   std::string template_blocklist_path_regex;
+  bool carcinize = false;
 };
 
 // A valid command line invocation.

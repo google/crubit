@@ -1658,6 +1658,24 @@ IR::Item Importer::ImportUnsupportedItem(
   }
   std::string source_loc =
       ConvertSourceLocation(original_decl.getBeginLoc(), nullptr);
+  std::optional<std::string> inline_cpp_source_text;
+  if (invocation_.carcinize()) {
+    clang::SourceManager& sm = ctx_.getSourceManager();
+    bool invalid = false;
+    llvm::StringRef text = clang::Lexer::getSourceText(
+        clang::CharSourceRange::getTokenRange(original_decl.getBeginLoc(),
+                                              original_decl.getEndLoc()),
+        sm, ctx_.getLangOpts(), &invalid);
+    if (!invalid) {
+      inline_cpp_source_text = text.str();
+    }
+  }
+
+  const auto* func_decl = clang::dyn_cast<clang::FunctionDecl>(&original_decl);
+  const bool is_compiler_generated =
+      func_decl != nullptr &&
+      (func_decl->isImplicit() || func_decl->isDefaulted());
+
   return UnsupportedItem{
       .name = name,
       .unique_name = GetUniqueName(original_decl),
@@ -1666,7 +1684,10 @@ IR::Item Importer::ImportUnsupportedItem(
       .errors = std::move(errors),
       .source_loc = source_loc,
       .id = GenerateItemId(&original_decl),
+      .defining_target = GetOwningTarget(&original_decl),
       .must_bind = is_hard_error,
+      .inline_cpp_source_text = inline_cpp_source_text,
+      .is_compiler_generated = is_compiler_generated,
   };
 }
 

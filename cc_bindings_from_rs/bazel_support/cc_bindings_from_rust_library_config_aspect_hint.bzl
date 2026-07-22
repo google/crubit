@@ -73,13 +73,14 @@ def get_additional_cc_hdrs_and_srcs(aspect_hints):
     """Returns any additional C++ headers and sources that should be compiled with the generated bindings.
 
     Args:
-        aspect_ctx: The ctx from an aspect_hint.
+        aspect_hints: A list of aspect hints (Target list).
 
     Returns:
         A list of `File` and its module paths as specified by the `extra_rs_srcs`.
     """
     additional_cc_hdrs = []
     additional_cc_srcs = []
+
     for hint in aspect_hints:
         if CcBindingsFromRustLibraryConfigInfo in hint:
             for target in hint[CcBindingsFromRustLibraryConfigInfo].extra_cc_hdrs:

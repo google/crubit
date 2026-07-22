@@ -16,7 +16,7 @@ use ir::{Func, Item, UnqualifiedIdentifier};
 use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_func, with_lifetime_macros};
 use multiplatform_ir_testing::{
     ir_proto_from_assumed_lifetimes_cc, ir_proto_from_cc, ir_proto_from_cc_annotated,
-    ir_proto_from_cc_dependency,
+    ir_proto_from_cc_dependency, ir_proto_from_cc_with_inline_cpp,
 };
 use quote::quote;
 use test_generators::{
@@ -96,6 +96,71 @@ fn test_inline_function() -> Result<()> {
             }
         }
     );
+    Ok(())
+}
+
+#[gtest]
+fn test_inline_function_with_inline_cpp() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp("inline int Add(int a, int b) { return a + b; }")?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            ::crubit_support::inline_cpp! {
+                (int a, int b) -> int { return a + b; }
+            }
+        }
+    );
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            mod detail {
+                #[allow(unused_imports)]
+                use super::*;
+                unsafe extern "C" {
+                    pub(crate) unsafe fn __rust_thunk___Z3Addii(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int;
+                }
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___Z3Addii});
+    Ok(())
+}
+
+#[gtest]
+fn test_non_inline_function_with_inline_cpp() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp("int Add(int a, int b) { return a + b; }")?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            ::crubit_support::inline_cpp! {
+                (int a, int b) -> int { return a + b; }
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___Z3Addii});
+    Ok(())
+}
+
+#[gtest]
+fn test_member_function_with_inline_cpp() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        "struct SomeStruct { inline int some_func(int arg) const { return 42 + arg; } };",
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            ::crubit_support::inline_cpp! {
+                (int arg) -> int { return 42 + arg; }
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZNK10SomeStruct9some_funcEi});
     Ok(())
 }
 
