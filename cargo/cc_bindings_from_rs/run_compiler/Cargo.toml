@@ -19,8 +19,8 @@ doctest = false
 
 [dependencies]
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
+rustversion = { path = "../../../cargo/cc_bindings_from_rs/rustversion", package = "cc_bindings_from_rs_rustversion"}
 either.workspace = true
-rustversion.workspace = true
 [dev-dependencies]
 run_compiler_test_support = { path = "../../../cargo/cc_bindings_from_rs/run_compiler_test_support", package = "cc_bindings_from_rs_run_compiler_test_support"}
 tempfile.workspace = true

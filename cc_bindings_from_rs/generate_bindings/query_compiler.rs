@@ -19,7 +19,7 @@ extern crate rustc_trait_selection;
 
 use arc_anyhow::Result;
 use error_report::anyhow;
-#[rustversion::any(all(before(2026-05-18), nightly), stable(1.96))]
+#[rustversion::before(2026-05-18)]
 use rustc_abi::FieldsShape;
 use rustc_abi::IntegerType;
 use rustc_abi::{FieldIdx, Integer, Layout, Primitive, Scalar, Variants};
@@ -79,9 +79,9 @@ pub fn is_c_abi_compatible_by_value<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bo
                 // TODO: b/258259459 - Support zero sized types.
                 return false;
             };
-            #[rustversion::any(all(before(2026-04-19), nightly), stable(1.96))]
+            #[rustversion::before(2026-04-19)]
             let mut ty = tcx.type_of(field.did).instantiate(tcx, substs);
-            #[rustversion::any(since(2026-04-19), stable(1.97))]
+            #[rustversion::since(2026-04-19)]
             let mut ty = tcx.type_of(field.did).instantiate(tcx, substs).skip_normalization();
 
             // Pattern types can be considered by value when they're embedded within an ADT.
@@ -134,10 +134,10 @@ pub fn count_regions<'tcx>(sig_mid: &ty::FnSig<'tcx>) -> HashMap<Region<'tcx>, u
 /// The prefix for deanonymized region names.
 pub const ANON_REGION_PREFIX: &str = "'__anon";
 
-#[rustversion::any(all(before(2026-04-19), nightly), stable(1.96))]
+#[rustversion::before(2026-04-19)]
 pub type PolyFnSig<'tcx> = ty::PolyFnSig<'tcx>;
 
-#[rustversion::any(since(2026-04-19), stable(1.97))]
+#[rustversion::since(2026-04-19)]
 pub type PolyFnSig<'tcx> = ty::Unnormalized<'tcx, ty::PolyFnSig<'tcx>>;
 
 /// Similar to `TyCtxt::liberate_and_name_late_bound_regions` but also replaces
@@ -147,7 +147,7 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
     sig: PolyFnSig<'tcx>,
     fn_def_id: DefId,
 ) -> ty::FnSig<'tcx> {
-    #[rustversion::any(since(2026-04-19), stable(1.97))]
+    #[rustversion::since(2026-04-19)]
     let sig = sig.skip_normalization();
     let mut anon_count: u32 = 0;
     let mut translated_kinds: HashMap<ty::BoundVar, ty::BoundRegionKind> = HashMap::new();
@@ -265,9 +265,9 @@ fn convert_interger_type_to_int_type(input: IntegerType) -> IntType {
 /// Implementation of `BindingsGenerator::repr_attrs`.
 pub fn repr_attrs(tcx: TyCtxt, def_id: DefId) -> Rc<[rustc_hir::attrs::ReprAttr]> {
     let mut result = Vec::new();
-    #[rustversion::any(all(before(2026-04-19), nightly), stable(1.96))]
+    #[rustversion::before(2026-04-19)]
     let ty = tcx.type_of(def_id).instantiate_identity();
-    #[rustversion::any(since(2026-04-19), stable(1.97))]
+    #[rustversion::since(2026-04-19)]
     let ty = tcx.type_of(def_id).instantiate_identity().skip_normalization();
     match ty.kind() {
         ty::TyKind::Adt(adt_def, _) => {
@@ -333,7 +333,7 @@ pub fn get_tag_size_with_padding(layout: Layout<'_>) -> u64 {
     match layout.variants() {
         Variants::Single { .. } | Variants::Empty => 0,
         Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
-            #[rustversion::any(all(before(2026-05-18), nightly), stable(1.96))]
+            #[rustversion::before(2026-05-18)]
             let mut variant_offsets = variants.iter().map(|variant| match &variant.fields {
                 FieldsShape::Arbitrary { offsets, .. } => {
                     if offsets.is_empty() {
@@ -346,7 +346,7 @@ pub fn get_tag_size_with_padding(layout: Layout<'_>) -> u64 {
                 _ => panic!("Internal Error - Detected an enum with non-arbitrary field"),
             });
 
-            #[rustversion::any(since(2026-05-18), stable(1.97))]
+            #[rustversion::since(2026-05-18)]
             let mut variant_offsets = variants.iter().map(|variant| {
                 if variant.field_offsets.is_empty() {
                     variant.size.bytes()

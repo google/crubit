@@ -236,16 +236,16 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
             // bindings for it and we'll generate the relevant error below.
             return Ok(());
         };
-        #[rustversion::stable]
+        #[rustversion::before(2026-05-24)]
         let has_no_std = rustc_hir::find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoStd { .. } => ()).is_some();
-        #[rustversion::nightly]
+        #[rustversion::since(2026-05-24)]
         let has_no_std = rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd { .. });
         if has_no_std {
             crate_attrs.push("#![no_std]");
         }
-        #[rustversion::stable]
+        #[rustversion::before(2026-05-24)]
         let has_no_core = rustc_hir::find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoCore { .. } => ()).is_some();
-        #[rustversion::nightly]
+        #[rustversion::since(2026-05-24)]
         let has_no_core =
             rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore { .. });
         if has_no_core {

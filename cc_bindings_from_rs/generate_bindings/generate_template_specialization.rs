@@ -22,15 +22,15 @@ use proc_macro2::Literal;
 use proc_macro2::TokenStream;
 use query_compiler::{self, get_layout, post_analysis_typing_env};
 use quote::{format_ident, quote};
-#[rustversion::any(nightly, stable(1.97))]
+#[rustversion::since(2026-04-22)]
 use rustc_abi::LayoutData;
 use rustc_abi::{Layout, VariantIdx};
 use rustc_hir::def::DefKind;
 use rustc_middle::ty::fast_reject::SimplifiedType;
 use rustc_middle::ty::layout::PrimitiveExt;
-#[rustversion::any(since(2026-04-22), stable(1.97))]
+#[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
-#[rustversion::any(nightly, stable(1.97))]
+#[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Unnormalized;
 use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt, TypingEnv};
 use rustc_span::def_id::DefId;
@@ -42,9 +42,9 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     self_ty: Ty<'tcx>,
 ) -> Option<Result<RsStdTemplateSpecialization<'tcx>>> {
     let tcx = db.tcx();
-    #[rustversion::stable(1.96)]
+    #[rustversion::before(2026-04-22)]
     let unnorm_ty = self_ty;
-    #[rustversion::any(nightly, stable(1.97))]
+    #[rustversion::since(2026-04-22)]
     let unnorm_ty = Unnormalized::new(self_ty);
     let self_ty = replace_all_regions_with_static(
         tcx,
@@ -1144,7 +1144,7 @@ fn specialize_result<'tcx>(
     );
     let err_discr_val = literal_of_tag_ty(tcx, discr_for_err.val, tag_type);
 
-    #[rustversion::all(before(2026-05-18), nightly)]
+    #[rustversion::before(2026-05-18)]
     let (ok_offset, err_offset) = {
         let variants = match layout.variants() {
             rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
@@ -1154,32 +1154,11 @@ fn specialize_result<'tcx>(
             }
             rustc_abi::Variants::Multiple { variants, .. } => variants,
         };
-        (
-            Literal::u64_unsuffixed(variants[ok_idx].fields.offset(0).bytes()),
-            Literal::u64_unsuffixed(variants[err_idx].fields.offset(0).bytes()),
-        )
-    };
-    #[rustversion::any(all(before(2026-05-18), nightly), stable(1.96))]
-    let (ok_offset, err_offset) = {
-        let variants = match layout.variants() {
-            rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
-                unreachable!(
-                    "This should have been checked in parse_rs_std_template_specialization"
-                )
-            }
-            rustc_abi::Variants::Multiple { variants, .. } => variants,
-        };
-        #[rustversion::stable(1.96)]
         let (ok_b, err_b) =
             (variants[ok_idx].fields.offset(0).bytes(), variants[err_idx].fields.offset(0).bytes());
-        #[rustversion::nightly]
-        let (ok_b, err_b) = (
-            variants[ok_idx].field_offsets[FieldIdx::from_usize(0)].bytes(),
-            variants[err_idx].field_offsets[FieldIdx::from_usize(0)].bytes(),
-        );
         (Literal::u64_unsuffixed(ok_b), Literal::u64_unsuffixed(err_b))
     };
-    #[rustversion::any(since(2026-05-18), stable(1.97))]
+    #[rustversion::since(2026-05-18)]
     let (ok_offset, err_offset) = (
         Literal::u64_unsuffixed(LayoutData::for_variant(&layout, ok_idx).fields.offset(0).bytes()),
         Literal::u64_unsuffixed(LayoutData::for_variant(&layout, err_idx).fields.offset(0).bytes()),
@@ -1406,7 +1385,7 @@ fn specialize_option<'tcx>(
     let option_api = match tag_encoding {
         rustc_abi::TagEncoding::Direct => {
             // Option::None is variant 0. Option::Some is variant 1.
-            #[rustversion::all(before(2026-05-18), nightly)]
+            #[rustversion::before(2026-05-18)]
             let payload_offset = {
                 let variants = match layout.variants() {
                     rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
@@ -1416,25 +1395,10 @@ fn specialize_option<'tcx>(
                     }
                     rustc_abi::Variants::Multiple { variants, .. } => variants,
                 };
-                Literal::u64_unsuffixed(variants[some_idx].fields.offset(0).bytes())
-            };
-            #[rustversion::any(all(before(2026-05-18), nightly), stable(1.96))]
-            let payload_offset = {
-                let variants = match layout.variants() {
-                    rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
-                        unreachable!(
-                            "This should have been checked in parse_rs_std_template_specialization"
-                        )
-                    }
-                    rustc_abi::Variants::Multiple { variants, .. } => variants,
-                };
-                #[rustversion::nightly]
-                let bytes = variants[some_idx].field_offsets[FieldIdx::from_usize(0)].bytes();
-                #[rustversion::stable(1.96)]
                 let bytes = variants[some_idx].fields.offset(0).bytes();
                 Literal::u64_unsuffixed(bytes)
             };
-            #[rustversion::any(since(2026-05-18), stable(1.97))]
+            #[rustversion::since(2026-05-18)]
             let payload_offset = Literal::u64_unsuffixed(
                 LayoutData::for_variant(&layout, some_idx).fields.offset(0).bytes(),
             );

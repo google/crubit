@@ -371,9 +371,6 @@ rust_library(
     srcs = [
         "generate_function.rs",
     ],
-    proc_macro_deps = [
-        "@crate_index//:rustversion",  # v1
-    ],
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -383,6 +380,7 @@ rust_library(
         ":generate_function_thunk",
         ":has_bindings",
         ":lifetime_defaults_transform",
+        "//cc_bindings_from_rs:rustversion",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_abi_type",

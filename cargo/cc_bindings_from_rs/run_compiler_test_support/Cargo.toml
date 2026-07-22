@@ -20,4 +20,4 @@ doctest = false
 [dependencies]
 tempfile.workspace = true
 itertools.workspace = true
-rustversion.workspace = true
+rustversion = { path = "../../../cargo/cc_bindings_from_rs/rustversion", package = "cc_bindings_from_rs_rustversion"}

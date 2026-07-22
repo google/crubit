@@ -3,6 +3,7 @@
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
+    "rust_proc_macro",
 )
 load("//common/bazel_support:external_binaries.bzl", "EXTERNAL_BINARIES")
 load(
@@ -20,15 +21,13 @@ package(
 rust_library(
     name = "cpp_api_from_rust_lib",
     srcs = ["lib.rs"],
-    proc_macro_deps = [
-        "@crate_index//:rustversion",  # v1
-    ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=never_type,rustc_private,proc_macro_hygiene"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":cmdline",
         ":run_compiler",
+        ":rustversion",
         "//cc_bindings_from_rs/generate_bindings",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
@@ -170,13 +169,11 @@ crubit_rust_test(
 rust_library(
     name = "crubit_attr",
     srcs = ["crubit_attr.rs"],
-    proc_macro_deps = [
-        "@crate_index//:rustversion",  # v1
-    ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
+        ":rustversion",
         "@crate_index//:anyhow",  # v1
     ],
 )
@@ -201,13 +198,11 @@ rust_library(
     srcs = [
         "run_compiler.rs",
     ],
-    proc_macro_deps = [
-        "@crate_index//:rustversion",  # v1
-    ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,cfg_accessible"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
+        ":rustversion",
         "//common:arc_anyhow",
         "@crate_index//:either",  # v1
     ],
@@ -236,14 +231,12 @@ rust_library(
     data = [
         "@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:rust_std-x86_64-unknown-linux-gnu",
     ],
-    proc_macro_deps = [
-        "@crate_index//:rustversion",  # v1
-    ],
     rustc_flags = [
         "--cfg=bazel",
         "--cfg=oss",
     ],
     deps = [
+        ":rustversion",
         "@crate_index//:itertools",  # v0_13
         "@rules_rust//tools/runfiles",
     ],
@@ -265,4 +258,28 @@ rust_library(
 crubit_rust_test(
     name = "toposort_test",
     crate = ":toposort",
+)
+
+rust_proc_macro(
+    name = "rustversion_impl",
+    srcs = ["rustversion_impl.rs"],
+    deps = [
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+        "@crate_index//:syn",  # v1
+    ],
+)
+
+crubit_rust_test(
+    name = "rustversion_impl_test",
+    crate = ":rustversion_impl_proc_macro_internal",
+)
+
+rust_library(
+    name = "rustversion",
+    srcs = ["rustversion.rs"],
+    proc_macro_deps = [
+        ":rustversion_impl",
+        "@crate_index//:rustversion",  # v1
+    ],
 )

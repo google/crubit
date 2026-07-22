@@ -24,6 +24,7 @@ run_compiler = { path = "../../../../cargo/cc_bindings_from_rs/run_compiler", pa
 toposort = { path = "../../../../cargo/cc_bindings_from_rs/toposort", package = "cc_bindings_from_rs_toposort"}
 database = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/database/database", package = "cc_bindings_from_rs_database"}
 dyn_format = { path = "../../../../cargo/common/dyn_format"}
+rustversion = { path = "../../../../cargo/cc_bindings_from_rs/rustversion", package = "cc_bindings_from_rs_rustversion"}
 code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}
 crubit_abi_type = { path = "../../../../cargo/common/crubit_abi_type"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
@@ -34,7 +35,6 @@ quote.workspace = true
 syn.workspace = true
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
 flagset.workspace = true
-rustversion.workspace = true
 [dev-dependencies]
 generate_bindings = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/generate_bindings", package = "cc_bindings_from_rs_generate_bindings"}
 test_helpers = { path = "../../../../cargo/cc_bindings_from_rs/generate_bindings/test_helpers", package = "cc_bindings_from_rs_test_helpers"}
@@ -42,7 +42,7 @@ run_compiler_test_support = { path = "../../../../cargo/cc_bindings_from_rs/run_
 code_gen_utils = { path = "../../../../cargo/common/code_gen_utils"}
 token_stream_matchers = { path = "../../../../cargo/common/token_stream_matchers"}
 token_stream_printer = { path = "../../../../cargo/common/token_stream_printer"}
+rustversion = { path = "../../../../cargo/cc_bindings_from_rs/rustversion", package = "cc_bindings_from_rs_rustversion"}
 proc-macro2.workspace = true
 quote.workspace = true
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
-rustversion.workspace = true

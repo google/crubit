@@ -647,14 +647,14 @@ pub fn format_ty_for_cc<'tcx>(
                     None => bail!("Generic function pointers are not supported yet (b/259749023)"),
                     Some(sig_tys) => sig_tys,
                 };
-                #[rustversion::any(all(before(2026-04-19), nightly), stable(1.96))]
+                #[rustversion::before(2026-04-19)]
                 let sig = rustc_middle::ty::FnSig {
                     inputs_and_output: sig_tys.inputs_and_output,
                     c_variadic: fn_header.c_variadic,
                     safety: fn_header.safety,
                     abi: fn_header.abi,
                 };
-                #[rustversion::any(since(2026-04-19), stable(1.97))]
+                #[rustversion::since(2026-04-19)]
                 let sig = {
                     // Trait was replaced with inherent methods in nightly-2026-05-01.
                     #[cfg_accessible(rustc_type_ir::inherent::FSigKind)]
@@ -677,9 +677,9 @@ pub fn format_ty_for_cc<'tcx>(
             // `is_thunk_required` check above implies `extern "C"` (or `"C-unwind"`).
             // This assertion reinforces that the generated C++ code doesn't need
             // to use calling convention attributes like `_stdcall`, etc.
-            #[rustversion::any(all(before(2026-04-19), nightly), stable(1.96))]
+            #[rustversion::before(2026-04-19)]
             let abi = sig.abi;
-            #[rustversion::any(since(2026-04-19), stable(1.97))]
+            #[rustversion::since(2026-04-19)]
             let abi = sig.abi();
             assert!(matches!(abi, rustc_abi::ExternAbi::C { .. }));
 
@@ -934,9 +934,9 @@ fn format_fn_ptr_for_rs<'tcx>(
     fn_header: ty::FnHeader<TyCtxt<'tcx>>,
 ) -> Result<TokenStream> {
     let tcx = db.tcx();
-    #[rustversion::any(all(before(2026-04-19), nightly), stable(1.96))]
+    #[rustversion::before(2026-04-19)]
     let (c_variadic, safety, abi) = (fn_header.c_variadic, fn_header.safety, fn_header.abi);
-    #[rustversion::any(since(2026-04-19), stable(1.97))]
+    #[rustversion::since(2026-04-19)]
     let (c_variadic, safety, abi) = (fn_header.c_variadic(), fn_header.safety(), fn_header.abi());
     if c_variadic {
         bail!("Variadic functions are not yet supported.");
@@ -1654,9 +1654,9 @@ pub fn is_bridged_type<'tcx>(
 // Evaluates a constant (such as the length of an array type).
 pub fn evaluate_const_as_u64<'tcx>(tcx: ty::TyCtxt<'tcx>, cst: ty::Const<'tcx>) -> Result<u64> {
     // It would be nice if we knew that these types were already fully normalized.
-    #[rustversion::stable(1.96)]
+    #[rustversion::before(2026-04-11)]
     let unnorm_cst = cst;
-    #[rustversion::any(nightly, stable(1.97))]
+    #[rustversion::since(2026-04-11)]
     let unnorm_cst = ty::Unnormalized::new_wip(cst);
     let normalized = tcx
         .try_normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), unnorm_cst)
