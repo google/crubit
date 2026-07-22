@@ -40,6 +40,9 @@ use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::symbol::Symbol;
 use std::rc::Rc;
 
+#[cfg_accessible(rustc_middle::ty::RegionUtilitiesExt)]
+use rustc_middle::ty::RegionUtilitiesExt as _;
+
 /// Returns true if `did` is the struct `::ctor::RvalueReference`.
 fn is_rvalue_reference(db: &BindingsGenerator<'_>, did: DefId) -> bool {
     matches_qualified_name(db, did, &["ctor", "RvalueReference"])

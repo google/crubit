@@ -155,7 +155,7 @@ rust_library(
         "@crate_index//:rustversion",  # v1
     ],
     # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,stmt_expr_attributes,proc_macro_hygiene"],
+    rustc_flags = ["-Zallow-features=cfg_accessible,rustc_private,rustc_attr,stmt_expr_attributes,proc_macro_hygiene"],
     # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//common:arc_anyhow",

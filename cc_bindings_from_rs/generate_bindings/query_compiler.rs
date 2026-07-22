@@ -1,6 +1,7 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#![feature(cfg_accessible)]
 #![feature(rustc_private)]
 #![feature(stmt_expr_attributes)]
 #![feature(proc_macro_hygiene)]
@@ -161,6 +162,8 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
                 ty::BoundRegionKind::NamedForPrinting(name)
             }
         });
+        #[cfg_accessible(rustc_middle::ty::RegionExt)]
+        use rustc_middle::ty::RegionExt;
         ty::Region::new_late_param(
             tcx,
             fn_def_id,

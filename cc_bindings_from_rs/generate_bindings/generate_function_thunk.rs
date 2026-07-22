@@ -26,6 +26,7 @@ use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, Ty, TyCtxt, TypingEnv};
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::{kw, sym, Symbol};
+#[rustversion::before(2026-07-21)] // cfg_accessible is "not sure" if it's accessible.
 use rustc_type_ir::inherent::Region;
 use std::collections::{BTreeSet, HashMap};
 
