@@ -8,8 +8,7 @@ use crate::format_type::{
 };
 use crate::generate_doc_comment;
 use crate::generate_function_thunk::{
-    generate_thunk_decl, generate_thunk_impl, ident_or_opt_ident, is_thunk_required,
-    make_thunk_name, ThunkKind,
+    generate_thunk_decl, generate_thunk_impl, is_thunk_required, make_thunk_name, ThunkKind,
 };
 use crate::{
     format_param_types_for_cc_api, format_region_as_cc_lifetime, format_ret_ty_for_cc,
@@ -948,12 +947,11 @@ pub fn generate_function<'tcx>(
             .map(|(((i, name), ty), cpp_type)| {
                 // TODO(jeanpierreda): deduplicate this with thunk_param_names.
                 let mut cc_name = None;
-                if let Some(ident) = ident_or_opt_ident(&name) {
-                    if ident.name.as_str() != "_" {
-                        if let Ok(name) = format_cc_ident(db, ident.name.as_str()) {
-                            cc_name = Some(name);
-                        }
-                    }
+                if let Some(ident) = name.as_ref()
+                    && ident.name.as_str() != "_"
+                    && let Ok(name) = format_cc_ident(db, ident.name.as_str())
+                {
+                    cc_name = Some(name);
                 }
                 let cc_name = if let Some(cc_name) = cc_name {
                     cc_name

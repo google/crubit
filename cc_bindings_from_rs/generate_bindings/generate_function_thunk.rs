@@ -398,15 +398,11 @@ fn c_abi_for_param_type<'tcx>(
     }
 }
 
-pub(crate) fn ident_or_opt_ident(i: &Option<rustc_span::Ident>) -> Option<&rustc_span::Ident> {
-    i.as_ref()
-}
-
 /// Returns an iterator which yields arbitrary unique names for the parameters
 /// of the function identified by `fn_def_id`.
 fn thunk_param_names(tcx: ty::TyCtxt<'_>, fn_def_id: DefId) -> impl Iterator<Item = Ident> + '_ {
     fn_arg_idents(tcx, fn_def_id).into_iter().enumerate().map(|(i, ident)| {
-        let Some(ident) = ident_or_opt_ident(&ident) else {
+        let Some(ident) = ident.as_ref() else {
             return format_ident!("__param_{i}");
         };
         // TODO(jeanpierreda): Deduplicate the logic after the next rustc rollout.
