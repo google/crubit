@@ -141,11 +141,6 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/query_compiler.rs?q=function:repr_attrs
       fn repr_attrs(&self, did: DefId) -> Rc<[rustc_hir::attrs::ReprAttr]>;
 
-      /// Returns the set of DefIds that have naming conflicts in C++.
-      ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:conflicting_defs
-      fn conflicting_defs(&self) -> Rc<HashSet<DefId>>;
-
       /// Returns the list of traits that should appear in the generated bindings.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:supported_traits
