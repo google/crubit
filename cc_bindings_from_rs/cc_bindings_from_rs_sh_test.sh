@@ -19,7 +19,7 @@ function delete_all_test_outputs() {
   rm -rf "$STDERR_PATH" "$STDOUT_PATH" "$H_OUT_PATH" "$RS_OUT_PATH" "$TARGET_JSON_PATH"
 }
 
-readonly CC_BINDINGS_FROM_RS_PATH="${RUNFILES}/cc_bindings_from_rs/cc_bindings_from_rs"
+readonly CC_BINDINGS_FROM_RS_PATH="${RUNFILES}/rules_crubit/cc_bindings_from_rs/cc_bindings_from_rs"
 readonly SYSROOT_PATH="${RUNFILES}/${G3_SYSROOT_PATH}"
 readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${CRUBIT_CLANG_FORMAT_EXE_PATH}"
 

@@ -76,6 +76,7 @@ crubit_rust_binary(
         "not_run",
         "notap",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         ":cmdline",
         ":cpp_api_from_rust_lib",

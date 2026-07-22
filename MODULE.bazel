@@ -39,8 +39,8 @@ bazel_dep(name = "rules_foreign_cc", version = "0.15.0")
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 crate.from_cargo(
     name = "crate_index",
-    lockfile = "//:Cargo.Bazel.lock",
     cargo_lockfile = "//:Cargo.lock",
+    lockfile = "//:Cargo.Bazel.lock",
     manifests = [
         "//:Cargo.toml",
     ],
@@ -52,7 +52,7 @@ crubit_toolchains.configure(
     llvm_version = "22.1.0",
     rust_version = "nightly/2026-07-01",
 )
-use_repo(crubit_toolchains, "llvm_toolchain", "rust_toolchains", "llvm_version_check")
+use_repo(crubit_toolchains, "llvm_toolchain", "llvm_version_check", "rust_toolchains")
 
 register_toolchains(
     "@rust_toolchains//:all",

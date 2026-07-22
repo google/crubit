@@ -2,8 +2,12 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+load(
+    "@rules_crubit//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_rust_binary",
+    "crubit_rust_test",
+)
 load("@rules_license//rules:license.bzl", "license")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 
 package(
     default_applicable_licenses = [":license"],
@@ -15,35 +19,51 @@ license(
     package_name = "crubit_explorer",
 )
 
-rust_binary(
+crubit_rust_binary(
     name = "server",
     srcs = ["src/main.rs"],
+    data = [
+        "@rules_crubit//cc_bindings_from_rs",
+        "@rules_rust//rust/toolchain:current_rustc_files",
+        "@rules_rust//rust/toolchain:current_rustc_lib_files",
+    ],
     edition = "2024",
+    env = {
+        "RUSTC_RUNFILES_PATH": "$(rlocationpath @rules_rust//rust/toolchain:current_rustc_files)",
+    },
     visibility = ["//visibility:public"],
     deps = [
-        "@crate_index//:axum",  # v0_8
-        "@crate_index//:base64",  # v0_22
-        "@crate_index//:serde",  # v1
-        "@crate_index//:serde_json",  # v1
-        "@crate_index//:tempfile",  # v3
-        "@crate_index//:tokio",  # v1
-        "@crate_index//:tower-http",
+        "@crubit_explorer_crates//:axum",
+        "@crubit_explorer_crates//:base64",
+        "@crubit_explorer_crates//:serde",
+        "@crubit_explorer_crates//:serde_json",
+        "@crubit_explorer_crates//:tempfile",
+        "@crubit_explorer_crates//:tokio",
+        "@rules_rust//tools/runfiles",
     ],
 )
 
-rust_test(
+crubit_rust_test(
     name = "server_test",
     size = "small",
     srcs = ["src/main.rs"],
+    data = [
+        "@rules_crubit//cc_bindings_from_rs",
+        "@rules_rust//rust/toolchain:current_rustc_files",
+        "@rules_rust//rust/toolchain:current_rustc_lib_files",
+    ],
     edition = "2024",
+    env = {
+        "RUSTC_RUNFILES_PATH": "$(rlocationpath @rules_rust//rust/toolchain:current_rustc_files)",
+    },
     deps = [
-        "@crate_index//:axum",  # v0_8
-        "@crate_index//:base64",  # v0_22
-        "@crate_index//:serde",  # v1
-        "@crate_index//:serde_json",  # v1
-        "@crate_index//:tempfile",  # v3
-        "@crate_index//:tokio",  # v1
-        "@crate_index//:tower",  # v0_5
-        "@crate_index//:tower-http",
+        "@crubit_explorer_crates//:axum",
+        "@crubit_explorer_crates//:base64",
+        "@crubit_explorer_crates//:serde",
+        "@crubit_explorer_crates//:serde_json",
+        "@crubit_explorer_crates//:tempfile",
+        "@crubit_explorer_crates//:tokio",
+        "@crubit_explorer_crates//:tower",
+        "@rules_rust//tools/runfiles",
     ],
 )

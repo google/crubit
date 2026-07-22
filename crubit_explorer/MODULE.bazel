@@ -9,20 +9,32 @@ module(
 
 bazel_dep(name = "rules_rust", version = "0.71.3")
 bazel_dep(name = "rules_license", version = "1.0.0")
-
-rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
-rust.toolchain(
-    edition = "2024",
+bazel_dep(name = "rules_crubit")
+local_path_override(
+    module_name = "rules_crubit",
+    path = "..",
 )
-use_repo(rust, "rust_toolchains")
 
-register_toolchains("@rust_toolchains//:all")
+crubit_toolchains = use_extension("@rules_crubit//bazel:extensions.bzl", "crubit_toolchains")
+crubit_toolchains.configure(
+    llvm_version = "22.1.0",
+    rust_version = "nightly/2026-07-01",
+)
+
+register_toolchains("@rust_toolchains//:all", "@llvm_toolchain//:all")
+
+use_repo(
+    crubit_toolchains,
+    "llvm_toolchain",
+    "llvm_version_check",
+    "rust_toolchains",
+)
 
 # Crate Universe to import dependencies from Cargo.toml
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 crate.from_cargo(
-    name = "crate_index",
+    name = "crubit_explorer_crates",
     cargo_lockfile = "//:Cargo.lock",
     manifests = ["//:Cargo.toml"],
 )
-use_repo(crate, "crate_index")
+use_repo(crate, "crubit_explorer_crates")
