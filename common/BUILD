@@ -171,6 +171,7 @@ cc_library(
 rust_library(
     name = "external_binaries",
     srcs = ["external_binaries.rs"],
+    edition = "2021",
     rustc_env = EXTERNAL_BINARIES,
 )
 
@@ -290,6 +291,7 @@ rust_library(
     name = "token_stream_matchers",
     testonly = 1,
     srcs = ["token_stream_matchers.rs"],
+    edition = "2021",
     visibility = [
         "//:__subpackages__",
     ],
