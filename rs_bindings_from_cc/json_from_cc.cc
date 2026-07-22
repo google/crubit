@@ -17,10 +17,10 @@ namespace crubit {
 extern "C" FfiU8SliceBox json_from_cc_dependency(
     FfiU8Slice target_triple, FfiU8Slice header_source,
     FfiU8Slice dependency_header_source, FfiU8Slice extra_feature,
-    bool kythe_annotations) {
+    bool kythe_annotations, bool carcinize) {
   absl::StatusOr<IR> ir =
       IrFromCcDependency(target_triple, header_source, dependency_header_source,
-                         extra_feature, kythe_annotations);
+                         extra_feature, kythe_annotations, carcinize);
 
   // TODO(forster): For now it is good enough to just exit: We are just
   // using this from tests, which are ok to just fail. Clang has already

@@ -959,6 +959,8 @@ pub enum CcInclude {
     /// format specifier for what comes after `#include` and path of the support
     /// library header.
     SupportLibHeader(Format<1>, Rc<str>),
+    /// Represents a user header which should be re-exported by IWYU.
+    ExportedUserHeader(Rc<str>),
 }
 
 impl CcInclude {
@@ -1043,6 +1045,11 @@ impl CcInclude {
         Self::UserHeader(path)
     }
 
+    /// Creates a user include: `#include "some/path/to/header.h" // IWYU pragma: export`
+    pub fn exported_user_header(path: Rc<str>) -> Self {
+        Self::ExportedUserHeader(path)
+    }
+
     /// Creates a `CcInclude` and detects whether it's a system header or a user
     /// header based on the path.
     ///
@@ -1073,6 +1080,9 @@ impl ToTokens for CcInclude {
             }
             Self::UserHeader(path) => {
                 quote! { __HASH_TOKEN__ include #path __NEWLINE__ }.to_tokens(tokens)
+            }
+            Self::ExportedUserHeader(path) => {
+                quote! { __HASH_TOKEN__ include #path __COMMENT__ "IWYU pragma: export" __NEWLINE__ }.to_tokens(tokens)
             }
             Self::SupportLibHeader(format, path) => {
                 let full_path: TokenStream = format

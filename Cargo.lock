@@ -183,6 +183,7 @@ dependencies = [
  "flagset",
  "itertools",
  "kythe_metadata",
+ "quote",
  "regex",
  "tempfile",
  "token_stream_printer",

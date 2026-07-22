@@ -12,7 +12,6 @@ use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 use std::cell::OnceCell;
-use std::cmp::Ordering;
 use std::collections::hash_map::{Entry, HashMap};
 use std::collections::{BTreeMap, HashSet};
 use std::fmt::{self, Debug, Display, Formatter};
@@ -762,128 +761,7 @@ impl ToTokens for LifetimeId {
         proc_macro2::Literal::from_str(&format!("{:#}", self.0)).unwrap().to_tokens(tokens)
     }
 }
-
-/// A Bazel label, e.g. `//foo:bar`.
-#[derive(Debug, Eq, Clone)]
-pub struct BazelLabel(pub(crate) Rc<str>);
-
-impl BazelLabel {
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    /// Returns the target name. E.g. `bar` for `//foo:bar`.
-    pub fn target_name(&self) -> &str {
-        if let Some((_package, target_name)) = self.0.split_once(':') {
-            return target_name;
-        }
-        if let Some((_, last_package_component)) = self.0.rsplit_once('/') {
-            return last_package_component;
-        }
-        &self.0
-    }
-
-    fn package_name(&self) -> &str {
-        self.0.rsplit_once(':').unwrap_or((&self.0, "")).0
-    }
-
-    fn last_package_component(&self) -> &str {
-        self.package_name().rsplit_once('/').unwrap_or(("", "")).1
-    }
-    // TODO(b/216587072): Remove this hacky escaping and use the import! macro once
-    // available.
-    // For now, use the simple escaping scheme of mapping all invalid characters
-    // to underscore, instead of the one similar to `convert_to_cc_identifier`, so
-    // that the escaped target name doesn't become longer (rustc currently produces
-    // .o artifacts that repeat the target name twice, which can easily cause
-    // the path length of artifacts to exceed the limit of the file system.)
-    pub fn target_name_escaped(&self) -> String {
-        let mut target_name = self.target_name().to_owned();
-        if target_name == "core" {
-            target_name = "core_".to_owned() + self.last_package_component();
-        } else if target_name.starts_with(char::is_numeric) {
-            target_name.insert(0, 'n');
-        }
-        target_name.replace(|c: char| !c.is_ascii_alphanumeric(), "_")
-    }
-
-    // Returns the bazel label as a valid C++ identifier, with a leading underscore.
-    // Non-alphanumeric characters are escaped as `_xx`, where `xx` is the the byte
-    // as hexadecimal.
-    //
-    // For instance, `//foo` becomes `__2f_2ffoo`.
-    pub fn convert_to_cc_identifier(&self) -> String {
-        use std::fmt::Write;
-        let mut result = "_".to_string();
-        result.reserve_exact(self.0.len().checked_mul(2).unwrap_or(self.0.len()));
-
-        // This is yet another escaping scheme... :-/  Compare this with
-        // https://github.com/bazelbuild/rules_rust/blob/1f2e6231de29d8fad8d21486f0d16403632700bf/rust/private/utils.bzl#L459-L586
-        for b in self.0.bytes() {
-            if (b as char).is_ascii_alphanumeric() {
-                result.push(b as char);
-            } else {
-                write!(result, "_{b:02x}").unwrap();
-            }
-        }
-        result.shrink_to_fit();
-
-        #[cfg(debug_assertions)]
-        for c in result.chars() {
-            debug_assert!(
-                c.is_ascii_alphanumeric() || c == '_',
-                "invalid result identifier: {result:?}"
-            );
-        }
-
-        result
-    }
-
-    fn components(&self) -> (&str, &str) {
-        (self.target_name(), self.package_name())
-    }
-}
-
-impl PartialEq for BazelLabel {
-    fn eq(&self, other: &Self) -> bool {
-        self.components() == other.components()
-    }
-}
-
-impl PartialOrd for BazelLabel {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for BazelLabel {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.components().cmp(&other.components())
-    }
-}
-
-impl Hash for BazelLabel {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.components().hash(state);
-    }
-}
-
-impl<T: Into<String>> From<T> for BazelLabel {
-    fn from(label: T) -> Self {
-        Self(label.into().into())
-    }
-}
-
-impl Display for BazelLabel {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // If this isn't actually a known bazel target, stringify for humans as the filename.
-        if let Some(s) = self.0.strip_prefix("//_unknown_target:") {
-            write!(f, "{}", s)
-        } else {
-            write!(f, "{}", &*self.0)
-        }
-    }
-}
+pub use bazel_label::BazelLabel;
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub enum UnqualifiedIdentifier<'pb> {
@@ -1100,9 +978,12 @@ pub struct Func<'pb> {
     /// invoke this function.
     pub(crate) adl_enclosing_record: Option<ItemId>,
     pub(crate) must_bind: bool,
+    pub(crate) inline_cpp_source_text: Option<Rc<str>>,
 
     // Lifetime variable names bound by this function.
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
+
+    pub(crate) is_compiler_generated: bool,
 }
 
 impl<'pb> Func<'pb> {
@@ -1292,6 +1173,8 @@ impl<'pb> Func<'pb> {
             adl_enclosing_record,
             must_bind,
             lifetime_inputs,
+            inline_cpp_source_text: None,
+            is_compiler_generated: false,
         }
     }
 }
@@ -1324,6 +1207,20 @@ impl<'pb> GenericItem<'pb> for Func<'pb> {
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
         self.cc_name.identifier_as_str()
+    }
+}
+
+impl<'pb> Func<'pb> {
+    pub fn inline_cpp_source_text(&self) -> Option<&str> {
+        self.inline_cpp_source_text.as_deref()
+    }
+
+    pub fn source_text_as_token_stream(&self) -> Option<proc_macro2::TokenStream> {
+        self.inline_cpp_source_text()?.parse::<proc_macro2::TokenStream>().ok()
+    }
+
+    pub fn set_inline_cpp_source_text(&mut self, text: Option<Rc<str>>) {
+        self.inline_cpp_source_text = text;
     }
 }
 
@@ -2163,11 +2060,10 @@ impl Record<'_> {
         match &self.template_specialization {
             Some(TemplateSpecialization { defining_target, kind, .. }) => {
                 let is_in_cc_std = *defining_target
-                    == BazelLabel("//support/cc_std:cc_std".into())
+                    == BazelLabel::from("//support/cc_std:cc_std")
                     || *defining_target
-                        == BazelLabel(
-                            "//third_party/crosstool/rust/stable/crubit/support/cc_std:cc_std"
-                                .into(),
+                        == BazelLabel::from(
+                            "//third_party/crosstool/rust/stable/crubit/support/cc_std:cc_std",
                         );
                 if is_in_cc_std {
                     let is_string_view = *kind == TemplateSpecializationKind::StdStringView
@@ -2929,6 +2825,9 @@ pub struct UnsupportedItem<'pb> {
     pub(crate) id: ItemId,
     pub(crate) must_bind: bool,
     pub(crate) defining_target: Option<BazelLabel>,
+    pub(crate) inline_cpp_source_text: Option<Rc<str>>,
+
+    pub(crate) is_compiler_generated: bool,
 
     /// Stores either one natively generated [`arc_anyhow::Error`] or the
     /// memoized result of converting `errors`.
@@ -2954,6 +2853,18 @@ impl<'pb> UnsupportedItem<'pb> {
 
     pub fn source_loc(&self) -> Option<&'pb str> {
         self.source_loc
+    }
+
+    pub fn inline_cpp_source_text(&self) -> Option<&str> {
+        self.inline_cpp_source_text.as_deref()
+    }
+
+    pub fn source_text_as_token_stream(&self) -> Option<proc_macro2::TokenStream> {
+        self.inline_cpp_source_text()?.parse::<proc_macro2::TokenStream>().ok()
+    }
+
+    pub fn set_inline_cpp_source_text(&mut self, text: Option<Rc<str>>) {
+        self.inline_cpp_source_text = text;
     }
 
     pub fn id(&self) -> ItemId {
@@ -3018,6 +2929,8 @@ impl<'pb> UnsupportedItem<'pb> {
             cause: IgnoredField(cause.map(|e| OnceCell::from(vec![e])).unwrap_or_default()),
             must_bind,
             defining_target,
+            inline_cpp_source_text: None,
+            is_compiler_generated: false,
         }
     }
 

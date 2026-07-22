@@ -155,6 +155,8 @@ message Func {
   int64 adl_enclosing_record = 25;
   bool must_bind = 26;
   repeated string lifetime_inputs = 27;
+  string inline_cpp_source_text = 28;
+  bool is_compiler_generated = 29;
 }
 
 enum AccessSpecifier {
@@ -486,6 +488,8 @@ message UnsupportedItem {
   int64 id = 7;
   bool must_bind = 8;
   string defining_target = 9;
+  string inline_cpp_source_text = 10;
+  bool is_compiler_generated = 11;
 }
 
 message Comment {

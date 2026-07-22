@@ -23,7 +23,7 @@ absl::StatusOr<IR> IrFromCcDependency(FfiU8Slice target_triple,
                                       FfiU8Slice header_source,
                                       FfiU8Slice dependency_header_source,
                                       FfiU8Slice extra_feature,
-                                      bool kythe_annotations);
+                                      bool kythe_annotations, bool carcinize);
 
 }  // namespace crubit
 

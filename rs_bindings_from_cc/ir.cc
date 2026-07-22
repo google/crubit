@@ -642,6 +642,12 @@ llvm::json::Value Func::ToJson() const {
     func.insert({"lifetime_inputs", lifetime_inputs});
   }
 
+  if (inline_cpp_source_text) {
+    func.insert({"inline_cpp_source_text", *inline_cpp_source_text});
+  }
+
+  func.insert({"is_compiler_generated", is_compiler_generated});
+
   return llvm::json::Object{
       {"Func", std::move(func)},
   };
@@ -684,6 +690,10 @@ flat_proto::Func Func::ToFlatProto() const {
   proto.set_must_bind(must_bind);
   proto.mutable_lifetime_inputs()->Add(lifetime_inputs.begin(),
                                        lifetime_inputs.end());
+  if (inline_cpp_source_text) {
+    proto.set_inline_cpp_source_text(*inline_cpp_source_text);
+  }
+  proto.set_is_compiler_generated(is_compiler_generated);
   return proto;
 }
 
@@ -1632,6 +1642,12 @@ llvm::json::Value UnsupportedItem::ToJson() const {
     unsupported.insert({"defining_target", *defining_target});
   }
 
+  if (inline_cpp_source_text) {
+    unsupported.insert({"inline_cpp_source_text", *inline_cpp_source_text});
+  }
+
+  unsupported.insert({"is_compiler_generated", is_compiler_generated});
+
   return llvm::json::Object{
       {"UnsupportedItem", std::move(unsupported)},
   };
@@ -1648,6 +1664,10 @@ flat_proto::UnsupportedItem UnsupportedItem::ToFlatProto() const {
   proto.set_id(id.value());
   proto.set_must_bind(must_bind);
   if (defining_target) proto.set_defining_target(defining_target->value());
+  if (inline_cpp_source_text) {
+    proto.set_inline_cpp_source_text(*inline_cpp_source_text);
+  }
+  proto.set_is_compiler_generated(is_compiler_generated);
   return proto;
 }
 

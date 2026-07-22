@@ -515,6 +515,8 @@ struct Func {
   bool must_bind = false;
   // Lifetime variable names bound by this function.
   std::vector<std::string> lifetime_inputs;
+  std::optional<std::string> inline_cpp_source_text;
+  bool is_compiler_generated = false;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Func& f) {
@@ -1056,6 +1058,8 @@ struct UnsupportedItem {
   // Whether the item required binding (was annotated with `CRUBIT_MUST_BIND`).
   // If this is true, binding generation will fail with a hard error.
   bool must_bind;
+  std::optional<std::string> inline_cpp_source_text;
+  bool is_compiler_generated = false;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const UnsupportedItem& r) {

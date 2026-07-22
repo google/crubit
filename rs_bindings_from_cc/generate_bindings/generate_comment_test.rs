@@ -16,7 +16,7 @@ use ir_rust_proto::IRProto;
 use ir_testing::make_ir_from_items;
 use quote::quote;
 use std::rc::Rc;
-use token_stream_matchers::assert_rs_matches;
+use token_stream_matchers::{assert_rs_matches, assert_rs_not_matches};
 
 #[gtest]
 fn test_generate_doc_comment_with_no_comment_with_no_source_loc_with_environment_production() {
@@ -189,6 +189,66 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
     let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
     let expected = "Generated from: some/header;l=1\nerror: item `test_item` could not be bound\n  unsupported_message";
     assert_rs_matches!(quote! { #actual }, quote! { __COMMENT__ #expected});
+    Ok(())
+}
+
+#[gtest]
+fn test_generate_unsupported_item_with_global_cpp() -> Result<()> {
+    let proto = IRProto::new();
+    let factory = make_factory(&proto);
+    let db = factory.make_db(false);
+    let _scope = error_report::ItemScope::new(
+        db.errors(),
+        error_report::ItemName {
+            name: "test_item".into(),
+            id: TEST_ITEM_ID.as_u64(),
+            unique_name: None,
+            defining_target: None,
+        },
+    );
+    let mut unsupported_item = db.new_unsupported_item_with_static_message(
+        &TestItem { source_loc: Some("Generated from: some/header;l=1") },
+        /* path= */ None,
+        "unsupported_message",
+    );
+    unsupported_item
+        .set_inline_cpp_source_text(Some("int Add(int a, int b) { return a + b; }".into()));
+    let actual = generate_unsupported(&db, unsupported_item.into()).generated_items;
+    let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
+    let expected_comment = "Generated from: some/header;l=1\nerror: item `test_item` could not be bound\n  unsupported_message";
+    let expected = quote! {
+        __COMMENT__ #expected_comment
+        ::crubit_support::global_cpp! {
+            int Add(int a, int b) { return a + b; }
+        }
+    };
+    assert_rs_matches!(quote! { #actual }, expected);
+    Ok(())
+}
+
+#[gtest]
+fn test_generate_unsupported_item_no_global_cpp_if_empty_source_text() -> Result<()> {
+    let proto = IRProto::new();
+    let factory = make_factory(&proto);
+    let db = factory.make_db(false);
+    let _scope = error_report::ItemScope::new(
+        db.errors(),
+        error_report::ItemName {
+            name: "test_item".into(),
+            id: TEST_ITEM_ID.as_u64(),
+            unique_name: None,
+            defining_target: None,
+        },
+    );
+    let mut unsupported_item = db.new_unsupported_item_with_static_message(
+        &TestItem { source_loc: Some("Generated from: some/header;l=1") },
+        /* path= */ None,
+        "unsupported_message",
+    );
+    unsupported_item.set_inline_cpp_source_text(None);
+    let actual = generate_unsupported(&db, unsupported_item.into()).generated_items;
+    let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
+    assert_rs_not_matches!(actual, quote! { ::crubit_support::global_cpp! });
     Ok(())
 }
 

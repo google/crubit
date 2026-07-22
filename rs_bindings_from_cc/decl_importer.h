@@ -45,7 +45,8 @@ class Invocation {
           crubit_features,
       absl::flat_hash_map<BazelLabel, std::string> crate_names,
       bool kythe_annotations,
-      std::shared_ptr<const llvm::Regex> template_blocklist_path_regex)
+      std::shared_ptr<const llvm::Regex> template_blocklist_path_regex,
+      bool carcinize)
       : target_(target),
         public_headers_(public_headers),
         lifetime_context_(std::make_shared<
@@ -54,7 +55,8 @@ class Invocation {
         header_targets_(header_targets),
         kythe_annotations_(kythe_annotations),
         template_blocklist_path_regex_(
-            std::move(template_blocklist_path_regex)) {
+            std::move(template_blocklist_path_regex)),
+        carcinize_(carcinize) {
     // Caller should verify that the inputs are non-empty.
     CHECK(!public_headers_.empty());
     CHECK(!header_targets_.empty());
@@ -97,6 +99,8 @@ class Invocation {
   // Returns whether to record extra location information for Kythe annotations.
   bool kythe_annotations() const { return kythe_annotations_; }
 
+  bool carcinize() const { return carcinize_; }
+
   // Returns true if we should instantiate a template defined at `loc`.
   // (`loc` is the definition location of the primary or partial template,
   // *not* the location causing the instantiation to occur.) Fails open;
@@ -133,6 +137,8 @@ class Invocation {
   // If non-null, a regex that matches the paths of definition files of
   // templates that should not be instantiated.
   std::shared_ptr<const llvm::Regex> template_blocklist_path_regex_;
+
+  bool carcinize_;
 };
 
 // Explicitly defined interface that defines how `DeclImporter`s are allowed to
