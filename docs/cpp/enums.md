@@ -29,7 +29,15 @@ Crubit will generate the following bindings:
 ```
 {{ #include ../../examples/cpp/enum/example_generated.rs }}
 ```
-<!--  class:Color -->
+<!--  content:^([^/#\n]|#[^!]|///)[^\n]* -->
+
+
+Which can be used like this:
+
+```
+{{ #include ../../examples/cpp/enum/main.rs }}
+```
+<!--  function:main -->
 
 
 ## Why isn't it an `enum`?

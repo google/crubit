@@ -37,6 +37,14 @@ calls into the corresponding FFI glue:
 <!--  function:add_two_integers -->
 
 
+Which can be used like this:
+
+```
+{{ #include ../../examples/cpp/function/main.rs }}
+```
+<!--  function:main -->
+
+
 ### Methods
 
 Given the following C++ header:
@@ -59,6 +67,14 @@ Crubit will generate the following bindings:
 {{ #include ../../examples/cpp/method/example_generated.rs }}
 ```
 <!--  content:"(?m)impl Bar.*?(^$|^    \})" -->
+
+
+Which can be used like this:
+
+```
+{{ #include ../../examples/cpp/method/main.rs }}
+```
+<!--  function:main -->
 
 
 ### `unsafe` functions {#unsafe}
@@ -87,6 +103,14 @@ Crubit will generate the following bindings:
 {{ #include ../../examples/cpp/unsafe_attributes/example_generated.rs }}
 ```
 <!--  content:^([^/\n])([^!\n]|$)[^\n]* -->
+
+
+Which can be used like this:
+
+```
+{{ #include ../../examples/cpp/unsafe_attributes/main.rs }}
+```
+<!--  function:main -->
 
 
 #### Correct usage of `unsafe` {#using-unsafe}

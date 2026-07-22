@@ -23,6 +23,14 @@ Crubit will generate a struct with the same layout:
 <!--  class:Position -->
 
 
+Which can be used like this:
+
+```
+{{ #include ../../examples/cpp/trivial_struct/main.rs }}
+```
+<!--  function:main -->
+
+
 For an example of a Rust-movable class with a destructor, see
 [examples/cpp/trivial_abi_struct/](https://github.com/google/crubit/tree/main/examples/cpp/trivial_abi_struct/).
 
