@@ -69,4 +69,15 @@ jobs:
         cmake --build build --parallel
         cd build
         ctest --output-on-failure --parallel 2
+
+  test_bazel:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: Build Bazel test project
+      run: |
+        cd examples/build_systems/bazel
+        bazel build //:main
 # LINT.ThenChange(//depot/copy.bara.sky)

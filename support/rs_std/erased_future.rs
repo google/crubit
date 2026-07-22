@@ -8,6 +8,7 @@
 //! Note that this crate is intended to be used as a Crubit support library for cc_bindings_from_rs,
 //! and not intended for direct use by Rust library authors.
 
+use std::future::Future;
 use std::pin::Pin;
 use std::ptr;
 use std::task::{Context, Poll};
@@ -48,6 +49,8 @@ impl<T, F: Future<Output = T> + Send> ErasedFuture for F {
 }
 
 mod sealed {
+    use std::future::Future;
+
     /// Sealed trait to ensure that only `Future`s can implement `ErasedFuture`.
     pub trait Sealed {}
 

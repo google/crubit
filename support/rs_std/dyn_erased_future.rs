@@ -13,6 +13,7 @@
 
 use erased_future::ErasedFuture;
 use std::future;
+use std::future::Future;
 use std::mem::ManuallyDrop;
 use std::pin::Pin;
 use std::ptr;
