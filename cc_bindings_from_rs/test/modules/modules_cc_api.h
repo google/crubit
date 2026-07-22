@@ -29,6 +29,24 @@ namespace modules::basic_module {
 
 }
 
+namespace modules::conflicting_names_in_different_rust_namespaces {
+
+// Error generating bindings for module
+// `modules_golden::conflicting_names_in_different_rust_namespaces::naming_conflict`
+// defined at
+// cc_bindings_from_rs/test/modules/modules.rs;l=73:
+// Naming conflict in C++: item conflicts with another item having the same C++
+// name
+
+// Error generating bindings for function
+// `modules_golden::conflicting_names_in_different_rust_namespaces::naming_conflict`
+// defined at
+// cc_bindings_from_rs/test/modules/modules.rs;l=71:
+// Naming conflict in C++: item conflicts with another item having the same C++
+// name
+
+}  // namespace modules::conflicting_names_in_different_rust_namespaces
+
 namespace modules {
 
 namespace [[deprecated]] deprecated_module {

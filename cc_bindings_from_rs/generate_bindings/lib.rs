@@ -282,6 +282,7 @@ pub fn new_database<'db>(
         source_crate_num,
         support_header,
         repr_attrs_from_db,
+        conflicting_defs,
         supported_traits,
         symbol_unqualified_name,
         symbol_canonical_name,
@@ -1119,6 +1120,77 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
     })
 }
 
+/// Whether a `DefKind` participates in C++ naming-conflict detection.
+///
+/// We only group defs that actually produce a C++ entity (structs, enums,
+/// unions, functions, type aliases, consts, traits) or that open a C++
+/// namespace (modules). Items invisible to C++ (e.g. macros) must be excluded:
+/// otherwise a macro `foo` and a function `foo` would be treated as conflicting,
+/// causing the valid function `foo` to be over-suppressed even though the macro
+/// never emits any C++ that could collide with it.
+fn is_conflict_relevant_def_kind(kind: DefKind) -> bool {
+    matches!(
+        kind,
+        DefKind::Struct
+            | DefKind::Enum
+            | DefKind::Union
+            | DefKind::Fn
+            | DefKind::TyAlias
+            | DefKind::Const { .. }
+            | DefKind::Trait
+            | DefKind::Mod
+    )
+}
+
+/// Returns the set of defs whose C++ bindings must be suppressed because they
+/// share a fully-qualified C++ name with another def.
+///
+/// Detection is done up-front (rather than lazily during generation) so that
+/// suppression is *symmetric* and order-independent: there is no principled way
+/// to decide which of two conflicting defs should "win", so we suppress all of
+/// them. Descendants of a conflicting module are handled separately at the
+/// item-filtering stage (see `formatted_items_in_crate`), so they don't need to
+/// appear in this set.
+fn conflicting_defs(db: &BindingsGenerator<'_>) -> Rc<HashSet<DefId>> {
+    let tcx = db.tcx();
+    let defs_in_crate = db.public_paths_by_def_id(db.source_crate_num());
+    #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+    struct CppNameKey {
+        top_level_ns: Rc<[Symbol]>,
+        ns_path: NamespaceQualifier,
+        name: Symbol,
+    }
+
+    let mut grouped_defs: HashMap<CppNameKey, Vec<DefId>> = HashMap::new();
+
+    for (def_id, _paths) in defs_in_crate {
+        let resolved_def_id = resolve_if_use(db, def_id).unwrap_or(def_id);
+        let kind = tcx.def_kind(resolved_def_id);
+
+        if !is_conflict_relevant_def_kind(kind) {
+            continue;
+        }
+
+        if let Some(canonical_name) = db.symbol_canonical_name(def_id) {
+            let key = CppNameKey {
+                top_level_ns: canonical_name.cpp_top_level_ns,
+                ns_path: canonical_name.cpp_ns_path,
+                name: canonical_name.unqualified.cpp_name,
+            };
+            grouped_defs.entry(key).or_default().push(def_id);
+        }
+    }
+
+    let mut conflicting_defs = HashSet::new();
+    for (_, defs) in grouped_defs {
+        if defs.len() > 1 {
+            conflicting_defs.extend(defs);
+        }
+    }
+
+    Rc::new(conflicting_defs)
+}
+
 // Implementation of `BindingsGenerator::supported_traits`.
 fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
     let tcx = db.tcx();
@@ -1839,6 +1911,11 @@ fn generate_item_impl<'tcx>(
     if db.symbol_canonical_name(def_id).is_none() {
         return Ok(None);
     };
+
+    if db.conflicting_defs().contains(&def_id) {
+        bail!("Naming conflict in C++: item conflicts with another item having the same C++ name");
+    }
+
     let item = match tcx.def_kind(def_id) {
         DefKind::Struct | DefKind::Enum | DefKind::Union => {
             db.adt_needs_bindings(def_id).map(|core| Some(generate_adt(db, core)))
@@ -2084,11 +2161,23 @@ fn formatted_items_in_crate<'tcx>(
 ) -> impl Iterator<Item = FormattedItem<'tcx>> {
     let tcx = db.tcx();
     let defs_in_crate = db.public_paths_by_def_id(db.source_crate_num());
+    let conflicts = db.conflicting_defs();
     defs_in_crate
         .into_iter()
-        .filter_map(|(def_id, paths)| {
+        .filter_map(move |(def_id, paths)| {
             if !crate::should_receive_bindings(db, def_id) {
                 return None;
+            }
+            // Descendants of a conflicting module are suppressed silently: emitting
+            // anything for them would reopen the conflicting module's C++ namespace.
+            // The module itself still emits a conflict comment (in its parent
+            // namespace via `generate_item_impl`), which documents the whole subtree.
+            let mut ancestor = def_id;
+            while let Some(parent) = tcx.opt_parent(ancestor) {
+                if conflicts.contains(&parent) {
+                    return None;
+                }
+                ancestor = parent;
             }
             let mut snippets = None;
             let canonical_name = db.symbol_canonical_name(def_id)?;

@@ -62,3 +62,15 @@ pub mod impl_in_separate_private_module {
         }
     }
 }
+
+/// This test attempts to induce a C++-side naming conflict when the same name is used on
+/// Rust-side - Rust allows this situation, because Rust language uses separate, distinct
+/// namespaces for names of modules VS functions - see
+/// https://doc.rust-lang.org/reference/names/namespaces.html
+pub mod conflicting_names_in_different_rust_namespaces {
+    pub fn naming_conflict() {}
+
+    pub mod naming_conflict {
+        pub fn foo() {}
+    }
+}
