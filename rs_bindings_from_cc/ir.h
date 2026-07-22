@@ -887,6 +887,7 @@ struct Record {
   bool has_private_or_deleted_operator_delete = false;
   bool detected_formatter = false;
   bool impl_debug = false;
+  bool has_private_pointer_or_reference_fields = false;
 
   // Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
   // Thread-safe types implement Send+Sync and wrap their internals in

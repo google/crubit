@@ -826,6 +826,7 @@ fn test_param_lifetimebound_to_this_in_constructor() -> Result<()> {
         &(with_full_lifetime_macros()
             + r#"
       struct S {
+        int& member;
         S(int& i1 [[clang::lifetimebound]]);
         S(const S& o) = delete;
         S(const S&& o) = delete;
@@ -1423,7 +1424,7 @@ fn test_arity_of_simple_lifetimebound_constructor() -> Result<()> {
         &(with_full_lifetime_macros()
             + r#"
       struct LIFETIME_PARAMS("a", "b") R {};
-      struct S { S(R ref [[clang::lifetimebound]]); };
+      struct S { R member; S(R ref [[clang::lifetimebound]]); };
       "#),
     )?;
 
@@ -1441,7 +1442,7 @@ fn test_arity_of_simple_lifetimebound_return() -> Result<()> {
         &(with_full_lifetime_macros()
             + r#"
       struct LIFETIME_PARAMS("a", "b") R {};
-      struct S { R f() [[clang::lifetimebound]]; };
+      struct S { R member; R f() [[clang::lifetimebound]]; };
       "#),
     )?;
 
@@ -1450,6 +1451,56 @@ fn test_arity_of_simple_lifetimebound_return() -> Result<()> {
     let factory = TestDbFactory::new(ir);
     let dir = lifetime_defaults_transform(&factory.make_db())?;
     assert_eq!(arity_of_record(&dir, "S"), Ok(2));
+    Ok(())
+}
+
+#[gtest]
+fn test_arity_of_lifetimebound_without_lifetime_members_is_zero() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct LIFETIME_PARAMS("a", "b") R {};
+      struct S { R f() [[clang::lifetimebound]]; };
+      "#),
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    assert_eq!(arity_of_record(&ir, "S"), Ok(0));
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
+    assert_eq!(arity_of_record(&dir, "S"), Ok(0));
+    Ok(())
+}
+
+#[gtest]
+fn test_arity_of_lifetimebound_with_pointer_member() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      class S { int* i; public: int* f() [[clang::lifetimebound]]; };
+      "#),
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    assert_eq!(arity_of_record(&ir, "S"), Ok(1));
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
+    assert_eq!(arity_of_record(&dir, "S"), Ok(1));
+    Ok(())
+}
+
+#[gtest]
+fn test_arity_of_lifetimebound_with_indirect_pointer_member() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct S { int* i; };
+      class C { S s; public: int* f() [[clang::lifetimebound]]; };
+      "#),
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    assert_eq!(arity_of_record(&ir, "C"), Ok(0));
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
+    assert_eq!(arity_of_record(&dir, "C"), Ok(0));
     Ok(())
 }
 
@@ -1488,7 +1539,7 @@ fn test_spurious_lifetimebound_on_return() -> Result<()> {
 }
 
 #[gtest]
-fn test_lifetimebound_cycle() -> Result<()> {
+fn test_lifetimebound_cycle_with_owner() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
@@ -1503,7 +1554,30 @@ fn test_lifetimebound_cycle() -> Result<()> {
         };
       "#),
     )?;
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let ir_out = lifetime_defaults_transform(&factory.make_db());
+    assert!(ir_out.is_ok());
+    Ok(())
+}
 
+#[gtest]
+fn test_lifetimebound_cycle_with_view() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+        struct Impossible {
+            int* k;
+            Impossible f() [[clang::lifetimebound]];
+            Impossible() = delete;
+            ~Impossible() = delete;
+            Impossible(const Impossible&) = delete;
+            Impossible(Impossible&&) = delete;
+            Impossible& operator=(const Impossible&) = delete;
+            Impossible& operator=(Impossible&&) = delete;
+        };
+      "#),
+    )?;
     let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let factory = TestDbFactory::new(ir);
     let error_message =

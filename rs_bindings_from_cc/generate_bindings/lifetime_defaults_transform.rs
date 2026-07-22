@@ -42,6 +42,23 @@ fn lifetime_arity(db: &BindingsGenerator, ty: &CcType) -> Result<usize> {
     }
 }
 
+fn has_members_with_lifetimes(db: &BindingsGenerator, rc: &Record) -> bool {
+    if rc.has_private_pointer_or_reference_fields() {
+        return true;
+    }
+    for field in rc.fields() {
+        if lifetime_arity(db, field.type_()).unwrap_or(0) > 0 {
+            return true;
+        }
+    }
+    for base in rc.unambiguous_public_bases() {
+        if decl_lifetime_arity(db, base.base_record_id()).unwrap_or(0) > 0 {
+            return true;
+        }
+    }
+    false
+}
+
 pub fn record_lifetime_arity(
     db: &BindingsGenerator,
     rc: &Record,
@@ -62,6 +79,10 @@ pub fn record_lifetime_arity(
 
     // TODO(b/498977848): string_view shouldn't be special.
     if rc.is_string_view() {
+        return Ok(0);
+    }
+
+    if !has_members_with_lifetimes(db, rc) {
         return Ok(0);
     }
 
@@ -570,8 +591,19 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                 return_lifetime = this_lifetimebound_names.to_vec();
             } else if is_member_function && func.params()[0].clang_lifetimebound() {
                 // Here, the implicit object parameter was annotated with [[lifetimebound]].
-                // In this case, forall lifetimebound parameters P, L(*this) : L(P)
-                return_lifetime = this_lifetimebound_names.to_vec();
+                if !this_lifetimebound_names.is_empty() {
+                    // For view types, forall lifetimebound parameters P, L(*this) : L(P)
+                    return_lifetime = this_lifetimebound_names.to_vec();
+                } else {
+                    // For owning types (arity 0), the returned reference borrows from `this`
+                    // (the reference &self itself), rather than from `*this`.
+                    let this_param = &func.params()[0];
+                    if !this_param.type_().explicit_lifetimes().is_empty() {
+                        return_lifetime = this_param.type_().explicit_lifetimes().to_vec();
+                    } else {
+                        return_lifetime = vec![self.bindings.fresh_name_for(&Rc::from("__this"))];
+                    }
+                }
             } else {
                 // Otherwise, for return value R and forall lifetimebound parameters P, L(P) : L(R).
                 for _ in 0..self.get_lifetime_arity(func.return_type())? {
@@ -581,7 +613,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         }
         for (ix, param) in func.params_mut().iter_mut().enumerate() {
             if param.clang_lifetimebound() || (is_constructor && ix == 0) {
-                if is_member_function && ix == 0 {
+                if is_member_function && ix == 0 && !this_lifetimebound_names.is_empty() {
                     self.inject_lifetimes_into_this(param, &return_lifetime)?;
                 } else {
                     *param.type_mut().explicit_lifetimes_mut() = return_lifetime.clone();

@@ -2279,7 +2279,11 @@ impl<'a> RsTypeKind<'a> {
                     new_crate_path.namespace_qualifier.namespaces.pop();
                     crate_path = Rc::new(new_crate_path);
                 };
-                let lts = if lifetimes.is_empty() {
+                let arity = (db.codegen_functions().decl_lifetime_arity)(&db, type_alias.id()).unwrap_or(0);
+                let lts = if lifetimes.is_empty() && arity > 0 {
+                    let statics = std::iter::repeat_n(make_rs_lifetime_ident("static"), arity);
+                    quote! { <#( #statics ),* > }
+                } else if lifetimes.is_empty() {
                     quote! {}
                 } else {
                     quote! { <#( #lifetimes ),* > }
@@ -2298,9 +2302,17 @@ impl<'a> RsTypeKind<'a> {
                             rust_name,
                         );
 
-                        // If there are no generic types, then we're done.
-                        if generic_types.is_empty() {
+                        let arity = (db.codegen_functions().decl_lifetime_arity)(
+                            &db,
+                            original_type.id(),
+                        )
+                        .unwrap_or(0);
+                        if generic_types.is_empty() && arity == 0 {
                             return path;
+                        } else if generic_types.is_empty() && arity > 0 {
+                            let statics =
+                                std::iter::repeat_n(make_rs_lifetime_ident("static"), arity);
+                            return quote! { #path< #( #statics ),* > };
                         }
 
                         let generic_types_tokens =

@@ -1257,6 +1257,8 @@ llvm::json::Value Record::ToJson() const {
       {"has_private_or_deleted_operator_delete",
        has_private_or_deleted_operator_delete},
       {"impl_debug", impl_debug},
+      {"has_private_pointer_or_reference_fields",
+       has_private_pointer_or_reference_fields},
       {"detected_formatter", detected_formatter},
       {"is_thread_safe", is_thread_safe},
   };
@@ -1327,6 +1329,8 @@ flat_proto::Record Record::ToFlatProto() const {
   proto.set_has_private_or_deleted_operator_delete(
       has_private_or_deleted_operator_delete);
   proto.set_impl_debug(impl_debug);
+  proto.set_has_private_pointer_or_reference_fields(
+      has_private_pointer_or_reference_fields);
   proto.set_detected_formatter(detected_formatter);
   proto.set_is_thread_safe(is_thread_safe);
   proto.mutable_lifetime_inputs()->Add(lifetime_inputs.begin(),

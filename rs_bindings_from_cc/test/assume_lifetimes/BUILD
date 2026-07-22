@@ -223,6 +223,38 @@ crubit_rust_test(
     ],
 )
 
+crubit_test_cc_library(
+    name = "view_struct_with_lifetimebound",
+    srcs = ["view_struct_with_lifetimebound.cc"],
+    hdrs = ["view_struct_with_lifetimebound.h"],
+    aspect_hints = [
+        "//features:assume_lifetimes",
+        "//features:supported",
+    ],
+)
+
+golden_test(
+    name = "view_struct_with_lifetimebound_golden_test",
+    basename = "view_struct_with_lifetimebound",
+    cc_library = "view_struct_with_lifetimebound",
+    golden_cc = "view_struct_with_lifetimebound_api_impl.cc",
+    golden_rs = "view_struct_with_lifetimebound_rs_api.rs",
+)
+
+crubit_rust_test(
+    name = "view_struct_with_lifetimebound_test",
+    srcs = ["view_struct_with_lifetimebound_test.rs"],
+    cc_deps = [
+        ":view_struct_with_lifetimebound",
+        "//support/cc_std",
+    ],
+    deps = [
+        "//support:cref",
+        "//support:ctor",
+        "@crate_index//:googletest",
+    ],
+)
+
 cc_library(
     name = "type_alias_target_without_assume_lifetimes",
     hdrs = ["type_alias_target_without_assume_lifetimes.h"],

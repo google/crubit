@@ -2633,7 +2633,12 @@ struct BindingsSignature {
 fn collect_parent_lifetime_bindings(
     db: &BindingsGenerator,
     func: &Func,
+    impl_kind: &ImplKind,
 ) -> Result<HashSet<String>> {
+    if matches!(impl_kind, ImplKind::None { .. }) {
+        // This function isn't in an impl block.
+        return Ok(HashSet::new());
+    }
     let mut unordered_lifetimes: HashSet<String> = HashSet::new();
     let mut parent_id = func.enclosing_item_id();
     loop {
@@ -2800,7 +2805,7 @@ fn function_signature<'a>(
 
     // We guarantee that all transformed lifetimes are unique, so all we need to do here is to
     // make sure that we don't rebind an existing lifetime.
-    let parent_lifetimes = collect_parent_lifetime_bindings(db, func)?;
+    let parent_lifetimes = collect_parent_lifetime_bindings(db, func, impl_kind)?;
 
     let mut lifetimes: Vec<Lifetime> = unique_lifetimes(&*param_types, func.lifetime_inputs())
         .into_iter()

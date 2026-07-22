@@ -383,6 +383,7 @@ message Record {
   bool has_private_or_deleted_operator_delete = 40;
   repeated Item children = 41;
   bool impl_debug = 42;
+  bool has_private_pointer_or_reference_fields = 43;
 }
 
 message IncompleteRecord {

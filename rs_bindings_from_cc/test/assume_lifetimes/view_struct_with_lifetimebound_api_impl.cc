@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated Rust bindings for the following C++ target:
-// //rs_bindings_from_cc/test/assume_lifetimes:struct_with_lifetimebound
+// //rs_bindings_from_cc/test/assume_lifetimes:view_struct_with_lifetimebound
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -13,7 +13,7 @@
 #include <memory>
 
 // Public headers of the C++ library being wrapped.
-#include "rs_bindings_from_cc/test/assume_lifetimes/struct_with_lifetimebound.h"
+#include "rs_bindings_from_cc/test/assume_lifetimes/view_struct_with_lifetimebound.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
@@ -25,8 +25,8 @@ extern "C" void __rust_thunk___ZN11PlainStructC1Ev(struct PlainStruct* __this) {
   crubit::construct_at(__this);
 }
 
-static_assert(sizeof(struct StructWithLifetimeboundMemberFunction) == 1);
-static_assert(alignof(struct StructWithLifetimeboundMemberFunction) == 1);
+static_assert(CRUBIT_SIZEOF(struct StructWithLifetimeboundMemberFunction) == 8);
+static_assert(alignof(struct StructWithLifetimeboundMemberFunction) == 8);
 
 extern "C" void __rust_thunk___ZN37StructWithLifetimeboundMemberFunctionC1Ev(
     struct StructWithLifetimeboundMemberFunction* __this) {
@@ -43,8 +43,9 @@ static_assert((struct PlainStruct const (
                   ::StructWithLifetimeboundMemberFunction::*)() const) &
               ::StructWithLifetimeboundMemberFunction::f);
 
-static_assert(sizeof(struct StructWithLifetimeboundRefMemberFunction) == 1);
-static_assert(alignof(struct StructWithLifetimeboundRefMemberFunction) == 1);
+static_assert(CRUBIT_SIZEOF(struct StructWithLifetimeboundRefMemberFunction) ==
+              8);
+static_assert(alignof(struct StructWithLifetimeboundRefMemberFunction) == 8);
 
 extern "C" void __rust_thunk___ZN40StructWithLifetimeboundRefMemberFunctionC1Ev(
     struct StructWithLifetimeboundRefMemberFunction* __this) {
@@ -55,8 +56,9 @@ static_assert((struct PlainStruct const& (
                   ::StructWithLifetimeboundRefMemberFunction::*)() const) &
               ::StructWithLifetimeboundRefMemberFunction::f);
 
-static_assert(sizeof(class DropClassWithLifetimeboundMemberFunction) == 1);
-static_assert(alignof(class DropClassWithLifetimeboundMemberFunction) == 1);
+static_assert(CRUBIT_SIZEOF(class DropClassWithLifetimeboundMemberFunction) ==
+              8);
+static_assert(alignof(class DropClassWithLifetimeboundMemberFunction) == 8);
 
 extern "C" void __rust_thunk___ZN40DropClassWithLifetimeboundMemberFunctionC1Ev(
     class DropClassWithLifetimeboundMemberFunction* __this) {
@@ -88,8 +90,9 @@ static_assert((struct PlainStruct const (
                   ::DropClassWithLifetimeboundMemberFunction::*)() const) &
               ::DropClassWithLifetimeboundMemberFunction::f);
 
-static_assert(sizeof(class DropClassWithLifetimeboundRefMemberFunction) == 1);
-static_assert(alignof(class DropClassWithLifetimeboundRefMemberFunction) == 1);
+static_assert(
+    CRUBIT_SIZEOF(class DropClassWithLifetimeboundRefMemberFunction) == 8);
+static_assert(alignof(class DropClassWithLifetimeboundRefMemberFunction) == 8);
 
 extern "C" void
 __rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionC1Ev(
@@ -115,16 +118,16 @@ static_assert((struct PlainStruct const& (
                   ::DropClassWithLifetimeboundRefMemberFunction::*)() const) &
               ::DropClassWithLifetimeboundRefMemberFunction::f);
 
-static_assert(sizeof(struct StructWithLifetimeboundCtor) == 1);
-static_assert(alignof(struct StructWithLifetimeboundCtor) == 1);
+static_assert(CRUBIT_SIZEOF(struct StructWithLifetimeboundCtor) == 8);
+static_assert(alignof(struct StructWithLifetimeboundCtor) == 8);
 
 extern "C" void __rust_thunk___ZN27StructWithLifetimeboundCtorC1E11PlainStruct(
     struct StructWithLifetimeboundCtor* __this, struct PlainStruct* s) {
   crubit::construct_at(__this, std::move(*s));
 }
 
-static_assert(sizeof(struct StructWithLifetimeboundRefCtor) == 1);
-static_assert(alignof(struct StructWithLifetimeboundRefCtor) == 1);
+static_assert(CRUBIT_SIZEOF(struct StructWithLifetimeboundRefCtor) == 8);
+static_assert(alignof(struct StructWithLifetimeboundRefCtor) == 8);
 
 extern "C" void
 __rust_thunk___ZN30StructWithLifetimeboundRefCtorC1ERK11PlainStruct(
@@ -133,8 +136,8 @@ __rust_thunk___ZN30StructWithLifetimeboundRefCtorC1ERK11PlainStruct(
   crubit::construct_at(__this, *s);
 }
 
-static_assert(sizeof(struct DropStructWithLifetimeboundCtor) == 1);
-static_assert(alignof(struct DropStructWithLifetimeboundCtor) == 1);
+static_assert(CRUBIT_SIZEOF(struct DropStructWithLifetimeboundCtor) == 8);
+static_assert(alignof(struct DropStructWithLifetimeboundCtor) == 8);
 
 extern "C" void __rust_thunk___ZN31DropStructWithLifetimeboundCtorC1ERKS_(
     struct DropStructWithLifetimeboundCtor* __this,
@@ -155,8 +158,8 @@ __rust_thunk___ZN31DropStructWithLifetimeboundCtorC1E11PlainStruct(
   crubit::construct_at(__this, std::move(*s));
 }
 
-static_assert(sizeof(struct DropStructWithLifetimeboundRefCtor) == 1);
-static_assert(alignof(struct DropStructWithLifetimeboundRefCtor) == 1);
+static_assert(CRUBIT_SIZEOF(struct DropStructWithLifetimeboundRefCtor) == 8);
+static_assert(alignof(struct DropStructWithLifetimeboundRefCtor) == 8);
 
 extern "C" void __rust_thunk___ZN34DropStructWithLifetimeboundRefCtorC1ERKS_(
     struct DropStructWithLifetimeboundRefCtor* __this,
@@ -178,8 +181,9 @@ __rust_thunk___ZN34DropStructWithLifetimeboundRefCtorC1ERK11PlainStruct(
   crubit::construct_at(__this, *s);
 }
 
-static_assert(sizeof(struct DropStructWithRefCtorAndRefMemberFunction) == 1);
-static_assert(alignof(struct DropStructWithRefCtorAndRefMemberFunction) == 1);
+static_assert(CRUBIT_SIZEOF(struct DropStructWithRefCtorAndRefMemberFunction) ==
+              8);
+static_assert(alignof(struct DropStructWithRefCtorAndRefMemberFunction) == 8);
 
 extern "C" void
 __rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionC1ERKS_(
@@ -206,8 +210,8 @@ static_assert((struct PlainStruct const& (
                   ::DropStructWithRefCtorAndRefMemberFunction::*)() const) &
               ::DropStructWithRefCtorAndRefMemberFunction::f);
 
-static_assert(sizeof(struct DropStructWithCtorAndMemberFunction) == 1);
-static_assert(alignof(struct DropStructWithCtorAndMemberFunction) == 1);
+static_assert(CRUBIT_SIZEOF(struct DropStructWithCtorAndMemberFunction) == 8);
+static_assert(alignof(struct DropStructWithCtorAndMemberFunction) == 8);
 
 extern "C" void __rust_thunk___ZN35DropStructWithCtorAndMemberFunctionC1ERKS_(
     struct DropStructWithCtorAndMemberFunction* __this,
@@ -238,8 +242,9 @@ static_assert((struct PlainStruct const (
                   ::DropStructWithCtorAndMemberFunction::*)() const) &
               ::DropStructWithCtorAndMemberFunction::f);
 
-static_assert(sizeof(struct DropStructWithCtorAndRefMemberFunction) == 1);
-static_assert(alignof(struct DropStructWithCtorAndRefMemberFunction) == 1);
+static_assert(CRUBIT_SIZEOF(struct DropStructWithCtorAndRefMemberFunction) ==
+              8);
+static_assert(alignof(struct DropStructWithCtorAndRefMemberFunction) == 8);
 
 extern "C" void
 __rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionC1ERKS_(
@@ -266,8 +271,9 @@ static_assert((struct PlainStruct const& (
                   ::DropStructWithCtorAndRefMemberFunction::*)() const) &
               ::DropStructWithCtorAndRefMemberFunction::f);
 
-static_assert(sizeof(struct DropStructWithRefCtorAndMemberFunction) == 1);
-static_assert(alignof(struct DropStructWithRefCtorAndMemberFunction) == 1);
+static_assert(CRUBIT_SIZEOF(struct DropStructWithRefCtorAndMemberFunction) ==
+              8);
+static_assert(alignof(struct DropStructWithRefCtorAndMemberFunction) == 8);
 
 extern "C" void
 __rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionC1ERKS_(
@@ -299,8 +305,5 @@ extern "C" void __rust_thunk___ZNK38DropStructWithRefCtorAndMemberFunction1fEv(
 static_assert((struct PlainStruct const (
                   ::DropStructWithRefCtorAndMemberFunction::*)() const) &
               ::DropStructWithRefCtorAndMemberFunction::f);
-
-static_assert(sizeof(struct Impossible) == 1);
-static_assert(alignof(struct Impossible) == 1);
 
 #pragma clang diagnostic pop

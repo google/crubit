@@ -1293,6 +1293,16 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     }
     impl_debug = override_debug->value_or(!record_decl->isAbstract());
   }
+  bool has_private_pointer_or_reference_fields = false;
+  for (const clang::FieldDecl* field : record_decl->fields()) {
+    if (field->getAccess() != clang::AS_public) {
+      clang::QualType t = field->getType();
+      if (t->isPointerType() || t->isReferenceType()) {
+        has_private_pointer_or_reference_fields = true;
+        break;
+      }
+    }
+  }
   auto record = Record{
       .rs_name = Identifier(rs_name),
       .cc_name = Identifier(cc_name),
@@ -1336,6 +1346,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
           HasPrivateOrDeletedOperatorDelete(*record_decl),
       .detected_formatter = *detected_formatter,
       .impl_debug = impl_debug,
+      .has_private_pointer_or_reference_fields =
+          has_private_pointer_or_reference_fields,
       .is_thread_safe = *is_thread_safe,
       .lifetime_inputs = std::move(lifetime_inputs),
       .deprecated = std::move(deprecated),

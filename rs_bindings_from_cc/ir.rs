@@ -1798,6 +1798,7 @@ pub struct Record<'pb> {
     // Lifetime variable names bound by this record.
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
     pub(crate) impl_debug: bool,
+    pub(crate) has_private_pointer_or_reference_fields: bool,
     pub(crate) detected_formatter: bool,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
     /// string is used.
@@ -1973,6 +1974,10 @@ impl<'pb> Record<'pb> {
         self.impl_debug
     }
 
+    pub fn has_private_pointer_or_reference_fields(&self) -> bool {
+        self.has_private_pointer_or_reference_fields
+    }
+
     pub fn impl_debug_mut(&mut self) -> &mut bool {
         &mut self.impl_debug
     }
@@ -2102,6 +2107,7 @@ impl<'pb> Record<'pb> {
             has_private_or_deleted_operator_delete,
             lifetime_inputs,
             impl_debug,
+            has_private_pointer_or_reference_fields: false,
             detected_formatter,
             deprecated,
             is_thread_safe,
