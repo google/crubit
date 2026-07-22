@@ -6,7 +6,8 @@
 members = [
   "cargo/cc_bindings_from_rs/cc_bindings_from_rs",
   "cargo/cc_bindings_from_rs/cargo-cpp_api_from_rust",
-  # TODO(b/514390064): Remove this strip once Cargo is able to build rust_proto_library.
+  # TODO(b/514390064): uncomment this once Cargo is able to build rust_proto_library.
+  # "cargo/rs_bindings_from_cc/rs_bindings_from_cc",
   "support/ffi_11",
   "support/crubit_bridge_rust",
   "support/crubit_annotate"
