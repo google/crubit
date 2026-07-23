@@ -4,6 +4,7 @@
 
 use arc_anyhow::Result;
 use googletest::gtest;
+use ir::MemberFuncSemantic;
 use ir_rust_proto::IRProto;
 use ir_testing::{ir_proto_from_cc, make_test_ir};
 
@@ -227,5 +228,43 @@ fn test_type_alias_proto() -> Result<()> {
     assert_eq!(type_alias.cc_name().as_str(), "MyInt");
     assert_eq!(type_alias.rs_name().as_str(), "MyInt");
 
+    Ok(())
+}
+
+#[gtest]
+fn test_member_func_semantic_proto() -> Result<()> {
+    let mut setter_proto = ir_rust_proto::member_func_semantic::Setter::new();
+    let mut prim_proto = ir_rust_proto::cc_type::Primitive::new();
+    prim_proto.set_spelling("int");
+    let mut type_proto = ir_rust_proto::CcType::new();
+    type_proto.set_primitive(prim_proto);
+    setter_proto.set_type(type_proto);
+    setter_proto.set_offset(32);
+    let mut semantic_proto = ir_rust_proto::MemberFuncSemantic::new();
+    semantic_proto.set_setter(setter_proto);
+    let semantic = MemberFuncSemantic::try_from(semantic_proto.as_view())
+        .expect("should convert successfully");
+    let MemberFuncSemantic::Setter(s) = semantic else {
+        panic!("expected Setter");
+    };
+    assert_eq!(s.offset, 32);
+    assert!(matches!(s.type_.variant(), ir::CcTypeVariant::Primitive(ir::Primitive::Int)));
+
+    let mut getter_proto = ir_rust_proto::member_func_semantic::Getter::new();
+    let mut prim_proto = ir_rust_proto::cc_type::Primitive::new();
+    prim_proto.set_spelling("int");
+    let mut type_proto = ir_rust_proto::CcType::new();
+    type_proto.set_primitive(prim_proto);
+    getter_proto.set_type(type_proto);
+    getter_proto.set_offset(32);
+    let mut semantic_getter_proto = ir_rust_proto::MemberFuncSemantic::new();
+    semantic_getter_proto.set_getter(getter_proto);
+    let semantic_getter = MemberFuncSemantic::try_from(semantic_getter_proto.as_view())
+        .expect("should convert successfully");
+    let MemberFuncSemantic::Getter(g) = semantic_getter else {
+        panic!("expected Getter");
+    };
+    assert_eq!(g.offset, 32);
+    assert!(matches!(g.type_.variant(), ir::CcTypeVariant::Primitive(ir::Primitive::Int)));
     Ok(())
 }

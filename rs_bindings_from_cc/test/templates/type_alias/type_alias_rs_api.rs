@@ -76,7 +76,10 @@ pub mod cc_template_inst10_my_template_ii_e {
     pub(crate) fn value<'__this>(
         __this: &'__this crate::__CcTemplateInst10MyTemplateIiE,
     ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
-        unsafe { crate::detail::__rust_thunk__758630aa__ZNK10MyTemplateIiE5valueEv(__this) }
+        unsafe {
+            *((__this as *const _ as *const u8).add(0)
+                as *const ::cref::CRef<'__this, ::ffi_11::c_int>)
+        }
     }
 }
 
@@ -91,9 +94,6 @@ mod detail {
             __return: *mut ::core::ffi::c_void,
             value: ::ffi_11::c_int,
         );
-        pub(crate) unsafe fn __rust_thunk__758630aa__ZNK10MyTemplateIiE5valueEv<'__this>(
-            __this: &'__this crate::__CcTemplateInst10MyTemplateIiE,
-        ) -> ::cref::CRef<'__this, ::ffi_11::c_int>;
     }
 }
 

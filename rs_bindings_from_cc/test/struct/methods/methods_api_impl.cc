@@ -57,22 +57,6 @@ static_assert((int (::InstanceMethods::*)() const) &
 static_assert((void (::InstanceMethods::*)(int)) &
               ::InstanceMethods::set_int_field);
 
-extern "C" int __rust_thunk___ZNK15InstanceMethods20inline_get_int_fieldEv(
-    struct InstanceMethods const* __this) {
-  return __this->inline_get_int_field();
-}
-
-static_assert((int (::InstanceMethods::*)() const) &
-              ::InstanceMethods::inline_get_int_field);
-
-extern "C" void __rust_thunk___ZN15InstanceMethods20inline_set_int_fieldEi(
-    struct InstanceMethods* __this, int new_value) {
-  __this->inline_set_int_field(new_value);
-}
-
-static_assert((void (::InstanceMethods::*)(int)) &
-              ::InstanceMethods::inline_set_int_field);
-
 extern "C" int* __rust_thunk___ZN15InstanceMethods21takes_and_returns_refERi(
     struct InstanceMethods* __this, int* input_ref) {
   return std::addressof(__this->takes_and_returns_ref(*input_ref));

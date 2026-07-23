@@ -1458,6 +1458,7 @@ fn adjust_param_types_for_trait_impl<'a>(
 #[allow(clippy::too_many_arguments)]
 fn generate_func_body<'a>(
     db: &BindingsGenerator<'a>,
+    func: &Func<'a>,
     impl_kind: &ImplKind<'a>,
     crate_root_path: &TokenStream,
     return_type: &RsTypeKind<'a>,
@@ -1484,6 +1485,36 @@ fn generate_func_body<'a>(
         };
         return_type.to_token_stream_replacing_by_self(db, self_type.as_ref())
     };
+
+    if let Some(MemberFuncSemantic::Getter(getter)) = func.semantic() {
+        if let Ok(RsTypeKind::Primitive(_)) = db.rs_type_kind(getter.type_.clone()) {
+            let self_arg = &thunk_args[0];
+            let offset_bytes = syn::Index::from(getter.offset / 8);
+            let body = quote! {
+                *((#self_arg as *const _ as *const u8).add(#offset_bytes) as *const #return_type_or_self)
+            };
+            return Ok(quote! {
+                #thunk_prepare
+                unsafe { #body }
+            });
+        }
+    }
+
+    if let Some(MemberFuncSemantic::Setter(setter)) = func.semantic() {
+        if let Ok(field_type @ RsTypeKind::Primitive(_)) = db.rs_type_kind(setter.type_.clone()) {
+            let self_arg = &thunk_args[0];
+            let val_arg = &thunk_args[1];
+            let offset_bytes = syn::Index::from(setter.offset / 8);
+            let field_type_tokens = field_type.to_token_stream(db);
+            let body = quote! {
+                *((#self_arg as *mut _ as *mut u8).add(#offset_bytes) as *mut #field_type_tokens) = #val_arg
+            };
+            return Ok(quote! {
+                #thunk_prepare
+                unsafe { #body }
+            });
+        }
+    }
 
     match &impl_kind {
         ImplKind::Trait {
@@ -1885,8 +1916,18 @@ pub fn generate_function<'a>(
         func.params().iter().map(|p| make_rs_ident(p.identifier().as_str())).collect_vec();
 
     // Skip thunk generation if the function is a method on a public base class,
-    // as the base class thunk will already have been generated.
-    let skip_thunk_generation: bool = {
+    // as the base class thunk will already have been generated, or if we generate
+    // a direct Rust getter or setter implementation.
+    let is_direct_access = match func.semantic() {
+        Some(MemberFuncSemantic::Getter(getter)) => {
+            matches!(db.rs_type_kind(getter.type_.clone()), Ok(RsTypeKind::Primitive(_)))
+        }
+        Some(MemberFuncSemantic::Setter(setter)) => {
+            matches!(db.rs_type_kind(setter.type_.clone()), Ok(RsTypeKind::Primitive(_)))
+        }
+        _ => false,
+    };
+    let skip_thunk_generation: bool = is_direct_access || {
         || {
             // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
             if func.source_text_as_token_stream().is_some() {
@@ -2002,6 +2043,7 @@ pub fn generate_function<'a>(
             }
             generate_func_body(
                 db,
+                &func,
                 &impl_kind,
                 &crate_root_path,
                 &return_type,
@@ -2171,6 +2213,7 @@ pub fn generate_function<'a>(
                 } else {
                     generate_func_body(
                         db,
+                        &func,
                         &impl_kind,
                         &crate_root_path,
                         &free_return_type,

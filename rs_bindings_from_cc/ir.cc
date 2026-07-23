@@ -478,6 +478,48 @@ flat_proto::InstanceMethodMetadata InstanceMethodMetadata::ToFlatProto() const {
   return proto;
 }
 
+llvm::json::Value MemberFuncSemantic::ToJson() const {
+  return std::visit(visitor{
+                        [&](const MemberFuncSemantic::Setter& setter) {
+                          return llvm::json::Object{{
+                              "Setter",
+                              llvm::json::Object{
+                                  {"type", setter.type.ToJson()},
+                                  {"offset", setter.offset},
+                              },
+                          }};
+                        },
+                        [&](const MemberFuncSemantic::Getter& getter) {
+                          return llvm::json::Object{{
+                              "Getter",
+                              llvm::json::Object{
+                                  {"type", getter.type.ToJson()},
+                                  {"offset", getter.offset},
+                              },
+                          }};
+                        },
+                    },
+                    variant);
+}
+
+flat_proto::MemberFuncSemantic MemberFuncSemantic::ToFlatProto() const {
+  flat_proto::MemberFuncSemantic proto;
+  std::visit(visitor{
+                 [&](const MemberFuncSemantic::Setter& setter) {
+                   auto* proto_setter = proto.mutable_setter();
+                   *proto_setter->mutable_type() = setter.type.ToFlatProto();
+                   proto_setter->set_offset(setter.offset);
+                 },
+                 [&](const MemberFuncSemantic::Getter& getter) {
+                   auto* proto_getter = proto.mutable_getter();
+                   *proto_getter->mutable_type() = getter.type.ToFlatProto();
+                   proto_getter->set_offset(getter.offset);
+                 },
+             },
+             variant);
+  return proto;
+}
+
 llvm::json::Value Constant::ToJson() const {
   llvm::json::Object constant{
       {"value", value.ToJson()},
@@ -636,6 +678,7 @@ llvm::json::Value Func::ToJson() const {
       {"enclosing_item_id", enclosing_item_id},
       {"adl_enclosing_record", adl_enclosing_record},
       {"must_bind", must_bind},
+      {"semantic", semantic},
   };
 
   if (!lifetime_inputs.empty()) {
@@ -688,6 +731,9 @@ flat_proto::Func Func::ToFlatProto() const {
   if (adl_enclosing_record)
     proto.set_adl_enclosing_record(adl_enclosing_record->value());
   proto.set_must_bind(must_bind);
+  if (semantic) {
+    *proto.mutable_semantic() = semantic->ToFlatProto();
+  }
   proto.mutable_lifetime_inputs()->Add(lifetime_inputs.begin(),
                                        lifetime_inputs.end());
   if (inline_cpp_source_text) {

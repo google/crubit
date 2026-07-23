@@ -152,6 +152,7 @@ fn test_function() {
                 must_bind: false,
                 inline_cpp_source_text: None,
                 lifetime_inputs: [],
+                semantic: None,
                 is_compiler_generated: false,
             }
         }
@@ -5326,4 +5327,92 @@ fn test_impl_debug_default_true() {
     let ir = ir_testing::make_test_ir_dependency(&proto, Some("record_impl_debug")).unwrap();
     let s = retrieve_record(&ir, "S");
     assert!(s.impl_debug());
+}
+
+#[gtest]
+fn test_getter_semantic() {
+    let proto = ir_proto_from_cc(
+        "
+        class S {
+         public:
+          int x() const { return x_; }
+          int explicit_this_x() const { return this->x_; }
+          int not_getter() const { return 42; }
+         private:
+          int x_;
+        };
+        ",
+    )
+    .unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
+    let func_x = ir.functions().find(|f| f.rs_name() == "x").expect("should find x()");
+    let semantic_x = func_x.semantic().expect("x() should have Getter semantic");
+    assert!(matches!(semantic_x, MemberFuncSemantic::Getter(_)));
+
+    let func_exp = ir
+        .functions()
+        .find(|f| f.rs_name() == "explicit_this_x")
+        .expect("should find explicit_this_x()");
+    let semantic_exp = func_exp.semantic().expect("explicit_this_x() should have Getter semantic");
+    let (MemberFuncSemantic::Getter(g_x), MemberFuncSemantic::Getter(g_exp)) =
+        (semantic_x, semantic_exp)
+    else {
+        panic!("expected Getter");
+    };
+    assert_eq!(g_x.offset, g_exp.offset);
+    assert_eq!(g_x.type_, g_exp.type_);
+
+    let func_not =
+        ir.functions().find(|f| f.rs_name() == "not_getter").expect("should find not_getter()");
+    assert_eq!(func_not.semantic(), None);
+}
+
+#[gtest]
+fn test_setter_semantic() {
+    let proto = ir_proto_from_cc(
+        "
+        class S {
+         public:
+          void set_x(int x) { x_ = x; }
+          void explicit_this_set_x(int x) { this->x_ = x; }
+          void not_setter_const(int x) { x_ = 42; }
+          void not_setter_wrong_param_count(int x, int y) { x_ = x; }
+         private:
+          int x_;
+        };
+        ",
+    )
+    .unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
+    let func_x = ir.functions().find(|f| f.rs_name() == "set_x").expect("should find set_x()");
+    let semantic_x = func_x.semantic().expect("set_x() should have Setter semantic");
+    assert!(matches!(semantic_x, MemberFuncSemantic::Setter(_)));
+
+    let func_exp = ir
+        .functions()
+        .find(|f| f.rs_name() == "explicit_this_set_x")
+        .expect("should find explicit_this_set_x()");
+    let semantic_exp =
+        func_exp.semantic().expect("explicit_this_set_x() should have Setter semantic");
+    let (MemberFuncSemantic::Setter(s_x), MemberFuncSemantic::Setter(s_exp)) =
+        (semantic_x, semantic_exp)
+    else {
+        panic!("expected Setter");
+    };
+    assert_eq!(s_x.offset, s_exp.offset);
+    assert_eq!(s_x.type_, s_exp.type_);
+
+    let func_not_const = ir
+        .functions()
+        .find(|f| f.rs_name() == "not_setter_const")
+        .expect("should find not_setter_const()");
+    assert_eq!(func_not_const.semantic(), None);
+
+    let func_not_param = ir
+        .functions()
+        .find(|f| f.rs_name() == "not_setter_wrong_param_count")
+        .expect("should find not_setter_wrong_param_count()");
+    assert_eq!(func_not_param.semantic(), None);
 }

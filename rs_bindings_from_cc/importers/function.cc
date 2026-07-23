@@ -4,7 +4,6 @@
 
 #include "rs_bindings_from_cc/importers/function.h"
 
-#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <optional>
@@ -17,7 +16,6 @@
 #include "clang/Sema/Template.h"
 #include "absl/algorithm/container.h"
 #include "absl/container/btree_set.h"
-#include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -40,6 +38,9 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
+#include "clang/AST/RecordLayout.h"
+#include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/DiagnosticIDs.h"
@@ -53,6 +54,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
@@ -207,6 +209,225 @@ bool FunctionInStdOrSystemHeaderWithReservedName(
 bool FunctionNameIsIdentifier(clang::FunctionDecl& function_decl) {
   return function_decl.getDeclName().getNameKind() ==
          clang::DeclarationName::Identifier;
+}
+
+bool FunctionBodyIsDefinedInHeader(const clang::FunctionDecl* function_decl) {
+  if (function_decl == nullptr) {
+    return false;
+  }
+  const clang::FunctionDecl* def = nullptr;
+  if (!function_decl->hasBody(def) || def == nullptr) {
+    return false;
+  }
+  const clang::FunctionDecl* pattern = def->getTemplateInstantiationPattern();
+  const clang::FunctionDecl* target_decl = def;
+  if (pattern != nullptr) {
+    const clang::FunctionDecl* pattern_def = nullptr;
+    if (pattern->hasBody(pattern_def) && pattern_def != nullptr) {
+      target_decl = pattern_def;
+    } else {
+      target_decl = pattern;
+    }
+  }
+
+  clang::SourceManager& source_manager =
+      function_decl->getASTContext().getSourceManager();
+  clang::SourceLocation loc = target_decl->getLocation();
+  if (loc.isInvalid()) {
+    return false;
+  }
+  if (loc.isMacroID()) {
+    loc = source_manager.getExpansionLoc(loc);
+  }
+  if (source_manager.isInMainFile(loc) ||
+      source_manager.isWrittenInMainFile(loc) ||
+      source_manager.isWrittenInCommandLineFile(loc) ||
+      source_manager.isWrittenInScratchSpace(loc)) {
+    return false;
+  }
+  if (source_manager.isInSystemHeader(loc)) {
+    return true;
+  }
+  std::optional<llvm::StringRef> filename =
+      source_manager.getNonBuiltinFilenameForID(source_manager.getFileID(loc));
+  if (!filename.has_value()) {
+    return false;
+  }
+  llvm::StringRef ext = llvm::sys::path::extension(*filename);
+  static constexpr llvm::StringRef kHeaderExtensions[] = {
+      ".h", ".H", ".hh", ".hpp", ".hxx", ".h++", ".inc", ".inl", ".def", ".tcc",
+  };
+  return absl::c_contains(kHeaderExtensions, ext);
+}
+
+struct PropertyFieldInfo {
+  CcType type;
+  int64_t offset;
+};
+
+std::optional<PropertyFieldInfo> GetPropertyFieldInfo(ImportContext& ictx,
+                                                      const clang::Expr* expr) {
+  auto* member_expr = clang::dyn_cast_or_null<clang::MemberExpr>(expr);
+  if (!member_expr) {
+    return std::nullopt;
+  }
+
+  if (!member_expr->isImplicitAccess()) {
+    const clang::Expr* base = member_expr->getBase()->IgnoreParenImpCasts();
+    if (!clang::isa<clang::CXXThisExpr>(base)) {
+      return std::nullopt;
+    }
+  }
+
+  auto* field_decl =
+      clang::dyn_cast_or_null<clang::FieldDecl>(member_expr->getMemberDecl());
+  if (!field_decl) {
+    return std::nullopt;
+  }
+
+  auto* record_decl = field_decl->getParent();
+  if (!record_decl || record_decl->isDependentContext() ||
+      !record_decl->isCompleteDefinition()) {
+    return std::nullopt;
+  }
+  CcType type = ictx.ConvertQualType(field_decl->getType(),
+                                     /*lifetimes=*/nullptr, /*nullable=*/true,
+                                     ictx.AreAssumedLifetimesEnabledForTarget(
+                                         ictx.GetOwningTarget(record_decl)));
+
+  const clang::ASTRecordLayout& layout =
+      record_decl->getASTContext().getASTRecordLayout(record_decl);
+  int64_t offset = layout.getFieldOffset(field_decl->getFieldIndex());
+
+  return PropertyFieldInfo{
+      .type = std::move(type),
+      .offset = offset,
+  };
+}
+
+std::optional<MemberFuncSemantic> GetMemberFuncSemantic(
+    ImportContext& ictx, const clang::FunctionDecl* function_decl) {
+  auto* method_decl = clang::dyn_cast<clang::CXXMethodDecl>(function_decl);
+  if (!method_decl || !method_decl->isInstance()) {
+    return std::nullopt;
+  }
+
+  const bool is_getter_candidate = method_decl->isConst() &&
+                                   method_decl->param_empty() &&
+                                   !method_decl->getReturnType()->isVoidType();
+  const bool is_setter_candidate = !method_decl->isConst() &&
+                                   method_decl->getNumParams() == 1 &&
+                                   method_decl->getReturnType()->isVoidType();
+  if (!is_getter_candidate && !is_setter_candidate) {
+    return std::nullopt;
+  }
+
+  const clang::FunctionDecl* def = nullptr;
+  if (!method_decl->hasBody(def)) {
+    return std::nullopt;
+  }
+  auto* method_def = clang::dyn_cast<clang::CXXMethodDecl>(def);
+  if (!method_def || !method_def->isInstance()) {
+    return std::nullopt;
+  }
+  if (is_getter_candidate) {
+    if (!method_def->isConst() || !method_def->param_empty() ||
+        method_def->getReturnType()->isVoidType()) {
+      return std::nullopt;
+    }
+  } else {
+    if (method_def->isConst() || method_def->getNumParams() != 1 ||
+        !method_def->getReturnType()->isVoidType()) {
+      return std::nullopt;
+    }
+  }
+
+  if (!FunctionBodyIsDefinedInHeader(method_def)) {
+    return std::nullopt;
+  }
+
+  const clang::Stmt* body = method_def->getBody();
+  auto* compound_stmt = clang::dyn_cast_or_null<clang::CompoundStmt>(body);
+  if (!compound_stmt || compound_stmt->size() != 1) {
+    return std::nullopt;
+  }
+
+  if (is_getter_candidate) {
+    auto* return_stmt =
+        clang::dyn_cast<clang::ReturnStmt>(compound_stmt->body_back());
+    if (!return_stmt || !return_stmt->getRetValue()) {
+      return std::nullopt;
+    }
+
+    const clang::Expr* ret_expr =
+        return_stmt->getRetValue()->IgnoreParenImpCasts();
+    std::optional<PropertyFieldInfo> field_info =
+        GetPropertyFieldInfo(ictx, ret_expr);
+    if (!field_info) {
+      return std::nullopt;
+    }
+    return MemberFuncSemantic{
+        .variant =
+            MemberFuncSemantic::Getter{
+                .type = std::move(field_info->type),
+                .offset = field_info->offset,
+            },
+    };
+  } else {
+    const clang::Expr* expr =
+        clang::dyn_cast<clang::Expr>(compound_stmt->body_back());
+    if (!expr) {
+      return std::nullopt;
+    }
+    if (auto* ewc = clang::dyn_cast<clang::ExprWithCleanups>(expr)) {
+      expr = ewc->getSubExpr();
+    }
+    if (!expr) {
+      return std::nullopt;
+    }
+    expr = expr->IgnoreParenImpCasts();
+
+    const clang::Expr* lhs = nullptr;
+    const clang::Expr* rhs = nullptr;
+    if (auto* bin_op = clang::dyn_cast<clang::BinaryOperator>(expr)) {
+      if (bin_op->getOpcode() == clang::BO_Assign) {
+        lhs = bin_op->getLHS()->IgnoreParenImpCasts();
+        rhs = bin_op->getRHS()->IgnoreParenImpCasts();
+      }
+    } else if (auto* op_call =
+                   clang::dyn_cast<clang::CXXOperatorCallExpr>(expr)) {
+      if (op_call->getOperator() == clang::OO_Equal &&
+          op_call->getNumArgs() == 2) {
+        lhs = op_call->getArg(0)->IgnoreParenImpCasts();
+        rhs = op_call->getArg(1)->IgnoreParenImpCasts();
+      }
+    }
+    if (!lhs || !rhs) {
+      return std::nullopt;
+    }
+
+    auto* decl_ref = clang::dyn_cast<clang::DeclRefExpr>(rhs);
+    if (!decl_ref) {
+      return std::nullopt;
+    }
+    if (decl_ref->getDecl() != method_def->getParamDecl(0) &&
+        decl_ref->getDecl() != method_decl->getParamDecl(0)) {
+      return std::nullopt;
+    }
+
+    std::optional<PropertyFieldInfo> field_info =
+        GetPropertyFieldInfo(ictx, lhs);
+    if (!field_info) {
+      return std::nullopt;
+    }
+    return MemberFuncSemantic{
+        .variant =
+            MemberFuncSemantic::Setter{
+                .type = std::move(field_info->type),
+                .offset = field_info->offset,
+            },
+    };
+  }
 }
 
 // Formats a C++ function declaration's signature and body for inline_cpp!
@@ -835,6 +1056,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       .enclosing_item_id = *std::move(enclosing_item_id),
       .adl_enclosing_record = adl_enclosing_record,
       .lifetime_inputs = std::move(lifetime_inputs),
+      .semantic = GetMemberFuncSemantic(ictx_, function_decl),
       .inline_cpp_source_text = std::move(source_text),
       .is_compiler_generated =
           function_decl != nullptr &&

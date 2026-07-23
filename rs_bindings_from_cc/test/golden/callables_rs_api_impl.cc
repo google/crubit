@@ -385,13 +385,6 @@ extern "C" void __rust_thunk___ZN16LayoutCompatible6CreateEi(
 
 static_assert((class LayoutCompatible (*)(int)) & ::LayoutCompatible::Create);
 
-extern "C" int __rust_thunk___ZNK16LayoutCompatible3getEv(
-    class LayoutCompatible const* __this) {
-  return __this->get();
-}
-
-static_assert((int (::LayoutCompatible::*)() const) & ::LayoutCompatible::get);
-
 extern "C" void
 __rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEES1_(
     class LayoutCompatible* __return, const unsigned char* f,
