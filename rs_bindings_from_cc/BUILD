@@ -271,6 +271,7 @@ cc_library(
     deps = [
         "cc_ir",
         ":bazel_types",
+        ":ir_cc_proto",
         "//lifetime_annotations",
         "//lifetime_annotations:type_lifetimes",
         "@abseil-cpp//absl/container:flat_hash_map",
@@ -323,6 +324,7 @@ cc_library(
         ":bazel_types",
         ":cc_ir",
         ":decl_importer",
+        ":ir_cc_proto",
         ":recording_diagnostic_consumer",
         ":type_map",
         "//common:annotation_reader",
