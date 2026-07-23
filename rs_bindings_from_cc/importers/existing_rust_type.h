@@ -5,8 +5,10 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_TYPE_DECL_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_TYPE_DECL_H_
 
+#include <memory>
 #include <optional>
 
+#include "absl/status/statusor.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
@@ -19,6 +21,8 @@ class ExistingRustTypeImporter final
   explicit ExistingRustTypeImporter(ImportContext& context)
       : DeclImporterBase(context) {}
   std::optional<IR::Item> Import(clang::TypeDecl*) override;
+  absl::StatusOr<std::unique_ptr<ir_proto::Item>> ImportToProto(
+      clang::TypeDecl*) override;
 };
 
 }  // namespace crubit

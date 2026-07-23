@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/enum_constant.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -96,6 +97,99 @@ std::optional<IR::Item> EnumConstantDeclImporter::Import(
       .deprecated = std::move(deprecated),
       .doc_comment = ictx_.GetComment(enum_constant_decl),
   };
+}
+
+absl::StatusOr<std::unique_ptr<ir_proto::Item>>
+EnumConstantDeclImporter::ImportToProto(
+    clang::EnumConstantDecl* enum_constant_decl) {
+  absl::StatusOr<TranslatedIdentifier> enumerator_name =
+      ictx_.GetTranslatedIdentifier(enum_constant_decl);
+  if (!enumerator_name.ok()) {
+    return ictx_.ImportUnsupportedItemToProto(
+        *enum_constant_decl, std::nullopt,
+        {FormattedError::PrefixedStrCat("Enumerator name is not supported",
+                                        enumerator_name.status().message())});
+  }
+
+  auto enclosing_item_id = ictx_.GetEnclosingItemId(enum_constant_decl);
+  if (!enclosing_item_id.ok()) {
+    return ictx_.ImportUnsupportedItemToProto(
+        *enum_constant_decl, std::nullopt,
+        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
+  }
+
+  const auto* enum_decl =
+      llvm::cast<clang::EnumDecl>(enum_constant_decl->getDeclContext());
+  clang::QualType cpp_type = enum_decl->getIntegerType();
+  if (cpp_type.isNull()) {
+    return ictx_.ImportUnsupportedItemToProto(
+        *enum_constant_decl, std::nullopt,
+        {FormattedError::Static("Enumerator's enum has no underlying type")});
+  }
+
+  absl::StatusOr<CcType> type =
+      ictx_.ConvertQualType(cpp_type, nullptr, /*nullable=*/true,
+                            ictx_.AreAssumedLifetimesEnabledForTarget(
+                                ictx_.GetOwningTarget(enum_constant_decl)));
+  if (!type.ok()) {
+    return ictx_.ImportUnsupportedItemToProto(
+        *enum_constant_decl, std::nullopt,
+        {FormattedError::FromStatus(std::move(type.status()))});
+  }
+
+  std::optional<std::string> deprecated;
+  absl::StatusOr<std::optional<std::string>> unknown_attr = CollectUnknownAttrs(
+      *enum_constant_decl, [&deprecated](const clang::Attr& attr) {
+        if (auto* deprecated_attr =
+                clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
+          deprecated.emplace(deprecated_attr->getMessage());
+          return true;
+        }
+        return false;
+      });
+  if (!unknown_attr.ok()) {
+    return ictx_.ImportUnsupportedItemToProto(
+        *enum_constant_decl, std::nullopt,
+        {FormattedError::FromStatus(std::move(unknown_attr.status()))});
+  }
+
+  ictx_.MarkAsSuccessfullyImported(enum_constant_decl);
+  absl::StatusOr<IntegerConstant> value =
+      IntegerConstant::FromAPValue(enum_constant_decl->getInitVal());
+  if (!value.ok()) {
+    return ictx_.ImportUnsupportedItemToProto(
+        *enum_constant_decl, std::nullopt,
+        {FormattedError::FromStatus(std::move(value.status()))});
+  }
+
+  auto item = std::make_unique<ir_proto::Item>();
+  ir_proto::Constant* constant = item->mutable_constant();
+
+  *constant->mutable_value() = value->ToFlatProto();
+  *constant->mutable_cc_name() = enumerator_name->cc_identifier.ToFlatProto();
+  *constant->mutable_rs_name() = enumerator_name->rs_identifier().ToFlatProto();
+  constant->set_unique_name(ictx_.GetUniqueName(*enum_constant_decl));
+  constant->set_id(ictx_.GenerateItemId(enum_constant_decl).value());
+  constant->set_owning_target(
+      ictx_.GetOwningTarget(enum_constant_decl).value());
+  constant->set_source_loc(
+      ictx_.ConvertSourceLocation(enum_constant_decl->getBeginLoc(), nullptr));
+  *constant->mutable_type() = type->ToFlatProto();
+  if (unknown_attr->has_value()) {
+    constant->set_unknown_attr(**unknown_attr);
+  }
+  if (enclosing_item_id->has_value()) {
+    constant->set_enclosing_item_id((*enclosing_item_id)->value());
+  }
+  constant->set_must_bind(must_bind_);
+  if (deprecated) {
+    constant->set_deprecated(*deprecated);
+  }
+  if (auto doc_comment = ictx_.GetComment(enum_constant_decl)) {
+    constant->set_doc_comment(*doc_comment);
+  }
+
+  return item;
 }
 
 }  // namespace crubit
