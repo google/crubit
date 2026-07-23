@@ -40,8 +40,8 @@ ABSL_FLAG(std::string, rs_out, "",
 ABSL_FLAG(std::string, cc_out, "",
           "output path for the C++ source file with bindings implementation");
 ABSL_FLAG(std::string, ir_out, "",
-          "(optional) output path for the JSON IR. If not present, the JSON IR "
-          "will not be dumped.");
+          "(optional) output path for the textproto IR. If not present, the "
+          "textproto IR will not be dumped.");
 ABSL_FLAG(std::string, crubit_support_path_format, "",
           "the format of `#include` for including Crubit C++ support library "
           "headers in the "

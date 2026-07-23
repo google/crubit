@@ -89,6 +89,7 @@ cc_library(
         ":generate_bindings_and_metadata",
         "//common:file_io",
         "//common:status_macros",
+        "//third_party/protobuf",
         "@abseil-cpp//absl/flags:parse",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",
@@ -96,6 +97,7 @@ cc_library(
         "@abseil-cpp//absl/types:span",
         "@llvm-project//llvm:Support",
     ],
+    alwayslink = 1,
 )
 
 cc_library(
@@ -465,7 +467,6 @@ rust_library(
     ],
     deps = [
         ":ir",
-        ":json_from_cc",
         "//common:arc_anyhow",
         "//common:crubit_feature",
         "//common:ffi_types",
@@ -531,22 +532,6 @@ cc_library(
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings:string_view",
     ],
-)
-
-cc_library(
-    name = "json_from_cc",
-    testonly = 1,
-    srcs = ["json_from_cc.cc"],
-    deps = [
-        ":cc_ir",
-        ":ir_from_cc_dependency",
-        "//common:cc_ffi_types",
-        "@abseil-cpp//absl/container:flat_hash_set",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings:string_view",
-        "@llvm-project//llvm:Support",
-    ],
-    alwayslink = 1,
 )
 
 cc_library(

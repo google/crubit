@@ -26,6 +26,7 @@
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/Support/raw_ostream.h"
+#include "google/protobuf/text_format.h"
 
 namespace crubit {
 
@@ -68,8 +69,11 @@ absl::Status Main(absl::Span<char* const> positional_args) {
       GenerateBindingsAndMetadata(cmdline, std::move(clang_args)));
 
   if (!args.ir_out.empty()) {
-    CRUBIT_RETURN_IF_ERROR(
-        SetFileContents(args.ir_out, IrToJson(bindings_and_metadata.ir)));
+    rs_bindings_from_cc::ir_proto::flat::IRProto ir_proto;
+    bindings_and_metadata.ir.ToFlatProto(&ir_proto);
+    std::string textproto;
+    google::protobuf::TextFormat::PrintToString(ir_proto, &textproto);
+    CRUBIT_RETURN_IF_ERROR(SetFileContents(args.ir_out, textproto));
   }
 
   std::string extra_cpp_srcs_content;

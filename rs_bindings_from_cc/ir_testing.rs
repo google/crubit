@@ -112,7 +112,7 @@ pub fn make_ir_from_items<'pb>(
 }
 
 /// Target of the dependency used by `ir_from_cc_dependency`.
-/// Needs to be kept in sync with `kDependencyTarget` in `json_from_cc.cc`.
+/// Needs to be kept in sync with `kDependencyTarget` in `proto_from_cc.cc`.
 pub const DEPENDENCY_TARGET: &str = "//test:dependency";
 
 /// Generates `IR` from a header that depends on another header.
