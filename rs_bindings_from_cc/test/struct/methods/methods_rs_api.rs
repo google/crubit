@@ -170,20 +170,14 @@ pub mod instance_methods {
     }
     #[inline(always)]
     pub(crate) fn inline_get_int_field(__this: &crate::InstanceMethods) -> ::ffi_11::c_int {
-        unsafe {
-            crate::detail::__rust_thunk___ZNK15InstanceMethods20inline_get_int_fieldEv(__this)
-        }
+        unsafe { *((__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int) }
     }
     #[inline(always)]
     pub(crate) fn inline_set_int_field(
         __this: &mut crate::InstanceMethods,
         new_value: ::ffi_11::c_int,
     ) {
-        unsafe {
-            crate::detail::__rust_thunk___ZN15InstanceMethods20inline_set_int_fieldEi(
-                __this, new_value,
-            )
-        }
+        unsafe { *((__this as *mut _ as *mut u8).add(0) as *mut ::ffi_11::c_int) = new_value }
     }
     /// # Safety
     ///
@@ -242,13 +236,6 @@ mod detail {
         ) -> ::ffi_11::c_int;
         #[link_name = "_ZN15InstanceMethods13set_int_fieldEi"]
         pub(crate) unsafe fn __rust_thunk___ZN15InstanceMethods13set_int_fieldEi(
-            __this: &mut crate::InstanceMethods,
-            new_value: ::ffi_11::c_int,
-        );
-        pub(crate) unsafe fn __rust_thunk___ZNK15InstanceMethods20inline_get_int_fieldEv(
-            __this: &crate::InstanceMethods,
-        ) -> ::ffi_11::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN15InstanceMethods20inline_set_int_fieldEi(
             __this: &mut crate::InstanceMethods,
             new_value: ::ffi_11::c_int,
         );

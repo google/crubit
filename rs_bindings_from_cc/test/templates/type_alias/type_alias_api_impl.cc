@@ -33,12 +33,4 @@ extern "C" void __rust_thunk__5a9d55c6__ZN10MyTemplateIiE6CreateEi(
 
 static_assert((class ::MyTemplate<int> (*)(int)) & ::MyTemplate<int>::Create);
 
-extern "C" int const* __rust_thunk__758630aa__ZNK10MyTemplateIiE5valueEv(
-    class ::MyTemplate<int> const* __this) {
-  return std::addressof(__this->value());
-}
-
-static_assert((int const& (::MyTemplate<int>::*)() const) &
-              ::MyTemplate<int>::value);
-
 #pragma clang diagnostic pop

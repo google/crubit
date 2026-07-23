@@ -65,11 +65,7 @@ pub mod crubit {
             pub(crate) fn ConstGet(
                 __this: &crate::crubit::test::ThreadSafeStruct,
             ) -> ::ffi_11::c_int {
-                unsafe {
-                    crate::detail::__rust_thunk___ZNK6crubit4test16ThreadSafeStruct8ConstGetEv(
-                        __this,
-                    )
-                }
+                unsafe { *((__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int) }
             }
             /// A non-const method for testing the generation behavior.
             /// The implementation doesn't actually do anything non-const, but it doesn't
@@ -144,9 +140,7 @@ pub mod crubit {
             pub(crate) unsafe fn ConstGet(
                 __this: *const crate::crubit::test::RegularStruct,
             ) -> ::ffi_11::c_int {
-                unsafe {
-                    crate::detail::__rust_thunk___ZNK6crubit4test13RegularStruct8ConstGetEv(__this)
-                }
+                unsafe { *((__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int) }
             }
             /// # Safety
             ///
@@ -175,18 +169,12 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test16ThreadSafeStructC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZNK6crubit4test16ThreadSafeStruct8ConstGetEv(
-            __this: &crate::crubit::test::ThreadSafeStruct,
-        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test16ThreadSafeStruct11NonConstGetEv(
             __this: &crate::crubit::test::ThreadSafeStruct,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test13RegularStructC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk___ZNK6crubit4test13RegularStruct8ConstGetEv(
-            __this: *const crate::crubit::test::RegularStruct,
-        ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test13RegularStruct11NonConstGetEv(
             __this: *mut crate::crubit::test::RegularStruct,
         ) -> ::ffi_11::c_int;

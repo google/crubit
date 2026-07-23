@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 // Automatically @generated Rust bindings for the following C++ target:
-// //rs_bindings_from_cc/test/assume_lifetimes:member_function
+// //rs_bindings_from_cc/test/function/semantic_import:semantic_import
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
@@ -13,23 +13,16 @@
 #include <memory>
 
 // Public headers of the C++ library being wrapped.
-#include "rs_bindings_from_cc/test/assume_lifetimes/member_function.h"
+#include "rs_bindings_from_cc/test/function/semantic_import/semantic_import.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(CRUBIT_SIZEOF(struct S) == 4);
-static_assert(alignof(struct S) == 4);
-static_assert(CRUBIT_OFFSET_OF(int_field, struct S) == 0);
+static_assert(CRUBIT_SIZEOF(class S) == 4);
+static_assert(alignof(class S) == 4);
 
-extern "C" void __rust_thunk___ZN1SC1Ev(struct S* __this) {
-  crubit::construct_at(__this);
+extern "C" void __rust_thunk___ZN1SC1Ei(class S* __this, int x) {
+  crubit::construct_at(__this, x);
 }
-
-extern "C" struct S* __rust_thunk___ZN1S2meEv(struct S* __this) {
-  return std::addressof(__this->me());
-}
-
-static_assert((struct S & (::S::*)()) & ::S::me);
 
 #pragma clang diagnostic pop

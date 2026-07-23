@@ -26,14 +26,6 @@ extern "C" void __rust_thunk___ZN6crubit4test16ThreadSafeStructC1Ev(
   crubit::construct_at(__this);
 }
 
-extern "C" int __rust_thunk___ZNK6crubit4test16ThreadSafeStruct8ConstGetEv(
-    class crubit::test::ThreadSafeStruct const* __this) {
-  return __this->ConstGet();
-}
-
-static_assert((int (::crubit::test::ThreadSafeStruct::*)() const) &
-              ::crubit::test::ThreadSafeStruct::ConstGet);
-
 extern "C" int __rust_thunk___ZN6crubit4test16ThreadSafeStruct11NonConstGetEv(
     class crubit::test::ThreadSafeStruct* __this) {
   return __this->NonConstGet();
@@ -49,14 +41,6 @@ extern "C" void __rust_thunk___ZN6crubit4test13RegularStructC1Ev(
     class crubit::test::RegularStruct* __this) {
   crubit::construct_at(__this);
 }
-
-extern "C" int __rust_thunk___ZNK6crubit4test13RegularStruct8ConstGetEv(
-    class crubit::test::RegularStruct const* __this) {
-  return __this->ConstGet();
-}
-
-static_assert((int (::crubit::test::RegularStruct::*)() const) &
-              ::crubit::test::RegularStruct::ConstGet);
 
 extern "C" int __rust_thunk___ZN6crubit4test13RegularStruct11NonConstGetEv(
     class crubit::test::RegularStruct* __this) {

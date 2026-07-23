@@ -54,7 +54,10 @@ pub mod s {
     pub(crate) fn int_accessor<'__this>(
         __this: &'__this crate::S,
     ) -> ::cref::CRef<'__this, ::ffi_11::c_int> {
-        unsafe { crate::detail::__rust_thunk___ZNK1S12int_accessorEv(__this) }
+        unsafe {
+            *((__this as *const _ as *const u8).add(0)
+                as *const ::cref::CRef<'__this, ::ffi_11::c_int>)
+        }
     }
     #[inline(always)]
     pub(crate) fn me<'__this>(__this: &'__this mut crate::S) -> ::cref::CMut<'__this, crate::S> {
@@ -67,9 +70,6 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN1SC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZNK1S12int_accessorEv<'__this>(
-            __this: &'__this crate::S,
-        ) -> ::cref::CRef<'__this, ::ffi_11::c_int>;
         pub(crate) unsafe fn __rust_thunk___ZN1S2meEv<'__this>(
             __this: &'__this mut crate::S,
         ) -> ::cref::CMut<'__this, crate::S>;

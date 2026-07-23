@@ -472,6 +472,24 @@ struct InstanceMethodMetadata {
   bool is_virtual = false;
 };
 
+struct MemberFuncSemantic {
+  struct Setter {
+    CcType type;
+    int64_t offset;
+  };
+  struct Getter {
+    CcType type;
+    int64_t offset;
+  };
+
+  llvm::json::Value ToJson() const;
+  rs_bindings_from_cc::ir_proto::flat::MemberFuncSemantic ToFlatProto() const;
+
+  using Variant = std::variant<Setter, Getter>;
+
+  Variant variant;
+};
+
 // A function involved in the bindings.
 struct Func {
   llvm::json::Value ToJson() const;
@@ -515,6 +533,7 @@ struct Func {
   bool must_bind = false;
   // Lifetime variable names bound by this function.
   std::vector<std::string> lifetime_inputs;
+  std::optional<MemberFuncSemantic> semantic;
   std::optional<std::string> inline_cpp_source_text;
   bool is_compiler_generated = false;
 };

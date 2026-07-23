@@ -857,6 +857,24 @@ impl InstanceMethodMetadata {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct Setter {
+    pub type_: CcType,
+    pub offset: usize,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct Getter {
+    pub type_: CcType,
+    pub offset: usize,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub enum MemberFuncSemantic {
+    Setter(Setter),
+    Getter(Getter),
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct FuncParam<'pb> {
     pub(crate) type_: CcType,
     pub(crate) identifier: Identifier<'pb>,
@@ -983,6 +1001,7 @@ pub struct Func<'pb> {
     // Lifetime variable names bound by this function.
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
 
+    pub(crate) semantic: Option<MemberFuncSemantic>,
     pub(crate) is_compiler_generated: bool,
 }
 
@@ -1107,6 +1126,10 @@ impl<'pb> Func<'pb> {
         self.must_bind
     }
 
+    pub fn semantic(&self) -> Option<&MemberFuncSemantic> {
+        self.semantic.as_ref()
+    }
+
     pub fn lifetime_inputs(&self) -> &[Rc<str>] {
         &self.lifetime_inputs
     }
@@ -1144,6 +1167,7 @@ impl<'pb> Func<'pb> {
         adl_enclosing_record: Option<ItemId>,
         must_bind: bool,
         lifetime_inputs: Vec<Rc<str>>,
+        semantic: Option<MemberFuncSemantic>,
     ) -> Self {
         Self {
             cc_name,
@@ -1173,6 +1197,7 @@ impl<'pb> Func<'pb> {
             adl_enclosing_record,
             must_bind,
             lifetime_inputs,
+            semantic,
             inline_cpp_source_text: None,
             is_compiler_generated: false,
         }
