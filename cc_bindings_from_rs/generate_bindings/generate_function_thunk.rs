@@ -831,11 +831,11 @@ pub fn generate_trait_thunks<'tcx>(
         )?;
         method_name_to_cc_thunk_name.insert(method.name(), thunk_name_cc_ident);
 
-        let struct_name = &rs_fully_qualified_name;
         rs_thunk_impls += if is_drop_trait {
             // Manually formatting (instead of depending on `generate_thunk_impl`)
             // to avoid https://doc.rust-lang.org/error_codes/E0040.html
             let thunk_name = make_rs_ident(&thunk_name);
+            let struct_name = &rs_fully_qualified_name;
             RsSnippet::new(quote! {
                 #[unsafe(no_mangle)]
                 extern "C" fn #thunk_name(__self: *mut #struct_name) {
@@ -871,6 +871,7 @@ pub fn generate_trait_thunks<'tcx>(
                 quote! { < #( #args ),* > }
             };
 
+            let struct_name = &rs_fully_qualified_name;
             let fully_qualified_fn_name = quote! {
                 <#struct_name as #fully_qualified_trait_name #generics >::#method_name
             };
