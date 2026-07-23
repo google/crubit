@@ -5,8 +5,10 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_NAMESPACE_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_NAMESPACE_H_
 
+#include <memory>
 #include <optional>
 
+#include "absl/status/statusor.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
@@ -19,6 +21,8 @@ class NamespaceDeclImporter : public DeclImporterBase<clang::NamespaceDecl> {
   explicit NamespaceDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
   std::optional<IR::Item> Import(clang::NamespaceDecl*) override;
+  absl::StatusOr<std::unique_ptr<ir_proto::Item>> ImportToProto(
+      clang::NamespaceDecl* namespace_decl) override;
 };
 
 }  // namespace crubit

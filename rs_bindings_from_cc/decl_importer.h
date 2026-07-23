@@ -21,6 +21,7 @@
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/ir.pb.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
@@ -33,6 +34,8 @@
 #include "llvm/Support/Regex.h"
 
 namespace crubit {
+
+namespace ir_proto = rs_bindings_from_cc::ir_proto::flat;
 
 // Top-level parameters as well as return value of an importer invocation.
 class Invocation {
@@ -88,6 +91,7 @@ class Invocation {
   const std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist_;
 
   // The main output of the import process
+  ir_proto::IRProto ir_proto_;
   IR ir_;
 
   // Transient map of top level items used to build the tree.
@@ -180,9 +184,37 @@ class ImportContext {
                                  /*is_hard_error=*/false);
   }
 
+  virtual std::unique_ptr<ir_proto::Item> ImportUnsupportedItemToProto(
+      const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+      std::vector<FormattedError> errors, bool is_hard_error) {
+    IR::Item legacy_item = ImportUnsupportedItem(
+        decl, std::move(path), std::move(errors), is_hard_error);
+    auto proto_item = std::make_unique<ir_proto::Item>();
+    *proto_item = crubit::ToFlatProto(legacy_item);
+    return proto_item;
+  }
+
+  std::unique_ptr<ir_proto::Item> ImportUnsupportedItemToProto(
+      const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+      std::vector<FormattedError> errors) {
+    return ImportUnsupportedItemToProto(decl, std::move(path),
+                                        std::move(errors),
+                                        /*is_hard_error=*/false);
+  }
+
+  std::unique_ptr<ir_proto::Item> HardErrorToProto(const clang::Decl& decl,
+                                                   FormattedError error) {
+    return ImportUnsupportedItemToProto(decl, std::nullopt, {std::move(error)},
+                                        /*is_hard_error=*/true);
+  }
+
   // Imports a decl and creates an IR item (or error messages). This allows
   // importers to recursively delegate to other importers.
   // Does not use or update the cache.
+  // TODO(deprecate-cpp-ir): Add virtual absl::StatusOr<flat_proto::Item*>
+  // ImportDeclToProto(clang::Decl* decl, bool must_bind) here (CL 1).
+  virtual absl::StatusOr<std::unique_ptr<ir_proto::Item>> ImportDeclToProto(
+      clang::Decl* decl, bool must_bind) = 0;
   virtual std::optional<IR::Item> ImportDecl(clang::Decl* decl) = 0;
 
   // Returns the Item of a Decl, importing it first if necessary.
@@ -383,6 +415,19 @@ class DeclImporter {
   // be attempted, return UnsupportedItem.
   virtual std::optional<IR::Item> ImportDecl(clang::Decl*, bool must_bind) = 0;
 
+  // Converts a decl to a proto IR item on the heap. Default
+  // implementation falls back to ImportDecl and converts via ToFlatProto.
+  virtual absl::StatusOr<std::unique_ptr<ir_proto::Item>> ImportDeclToProto(
+      clang::Decl* decl, bool must_bind) {
+    std::optional<IR::Item> legacy_item = ImportDecl(decl, must_bind);
+    if (!legacy_item.has_value()) {
+      return nullptr;
+    }
+    auto proto_item = std::make_unique<ir_proto::Item>();
+    *proto_item = crubit::ToFlatProto(*legacy_item);
+    return proto_item;
+  }
+
  protected:
   ImportContext& ictx_;
 };
@@ -402,7 +447,26 @@ class DeclImporterBase : public DeclImporter {
     must_bind_ = must_bind;
     return Import(typed_decl);
   }
-  virtual std::optional<IR::Item> Import(D*) = 0;
+  // TODO(b/532184858): Remove Import once all importers are migrated.
+  virtual std::optional<IR::Item> Import(D*) { return std::nullopt; }
+
+  absl::StatusOr<std::unique_ptr<ir_proto::Item>> ImportDeclToProto(
+      clang::Decl* decl, bool must_bind) override {
+    auto* typed_decl = clang::dyn_cast<D>(decl);
+    if (typed_decl == nullptr) return nullptr;
+    must_bind_ = must_bind;
+    return ImportToProto(typed_decl);
+  }
+  // TODO(b/532184858): Remove ToFlatProto fallback once all importers override
+  // this function.
+  virtual absl::StatusOr<std::unique_ptr<ir_proto::Item>> ImportToProto(
+      D* decl) {
+    std::optional<IR::Item> legacy_item = Import(decl);
+    if (!legacy_item.has_value()) return nullptr;
+    auto proto_item = std::make_unique<ir_proto::Item>();
+    *proto_item = crubit::ToFlatProto(*legacy_item);
+    return proto_item;
+  }
 
   // A property of the current decl being imported.
   // This is used to avoid re-parsing the annotation.

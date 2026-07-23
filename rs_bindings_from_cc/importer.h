@@ -21,6 +21,7 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/ir.pb.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
@@ -31,6 +32,18 @@
 #include "clang/Sema/Sema.h"
 
 namespace crubit {
+
+namespace ir_proto = rs_bindings_from_cc::ir_proto::flat;
+
+// Stateful entry to prevent re-entrant imports, and to track the underlying
+// proto item we should store the AST node in.
+struct ItemCacheEntry {
+  enum class Status { kInProgress, kCompleted, kFailed, kUnsupported };
+  Status status = Status::kCompleted;
+  ItemId id = ItemId(0);
+  std::optional<IR::Item> legacy_item;
+  std::unique_ptr<ir_proto::Item> proto_item;
+};
 
 // Iterates over the AST created from the invocation's entry headers and
 // creates an intermediate representation of the import (`IR`) into the
@@ -48,11 +61,18 @@ class Importer final : public ImportContext {
   void ImportDeclsFromDeclContext(
       const clang::DeclContext* decl_context) override;
   IR::Item HardError(const clang::Decl& decl, FormattedError error) override;
+  std::unique_ptr<ir_proto::Item> HardErrorToProto(const clang::Decl& decl,
+                                                   FormattedError error);
   IR::Item ImportUnsupportedItem(const clang::Decl& decl,
                                  std::optional<UnsupportedItem::Path> path,
                                  std::vector<FormattedError> errors,
                                  bool is_hard_error) override;
+  std::unique_ptr<ir_proto::Item> ImportUnsupportedItemToProto(
+      const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+      std::vector<FormattedError> errors, bool is_hard_error) override;
   std::optional<IR::Item> ImportDecl(clang::Decl* decl) override;
+  absl::StatusOr<std::unique_ptr<ir_proto::Item>> ImportDeclToProto(
+      clang::Decl* decl, bool must_bind) override;
   std::optional<IR::Item> GetImportedItem(
       const clang::Decl* decl) const override;
 
@@ -198,8 +218,7 @@ class Importer final : public ImportContext {
   // to successfully match a decl "wins", and no other importers are tried.
   std::vector<std::unique_ptr<DeclImporter>> decl_importers_;
   std::unique_ptr<clang::MangleContext> mangler_;
-  absl::flat_hash_map<const clang::Decl*, std::optional<IR::Item>>
-      import_cache_;
+  absl::flat_hash_map<const clang::Decl*, ItemCacheEntry> import_cache_;
   absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
       class_template_instantiations_;
   std::vector<const clang::RawComment*> comments_;
