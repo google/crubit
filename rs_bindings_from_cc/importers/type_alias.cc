@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/type_alias.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -11,6 +12,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/log/check.h"
 #include "absl/log/log.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
@@ -231,6 +233,134 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       .enclosing_item_id = *std::move(enclosing_item_id),
       .deprecated = std::move(deprecated),
   };
+}
+
+absl::StatusOr<std::unique_ptr<ir_proto::Item>>
+TypeAliasImporter::ImportToProto(clang::NamedDecl* decl) {
+  clang::QualType underlying_qualtype;
+  if (const auto* typedef_name_decl =
+          clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
+    underlying_qualtype = typedef_name_decl->getUnderlyingType();
+  } else if (const auto* using_decl =
+                 clang::dyn_cast<clang::UsingShadowDecl>(decl)) {
+    const auto* target_type =
+        clang::dyn_cast<clang::TypeDecl>(using_decl->getTargetDecl());
+    if (target_type == nullptr) {
+      return nullptr;
+    }
+    underlying_qualtype =
+        target_type->getASTContext().getTypeDeclType(target_type);
+    decl = const_cast<clang::UsingShadowDecl*>(using_decl);
+  } else {
+    return nullptr;
+  }
+
+  absl::StatusOr<TranslatedIdentifier> identifier =
+      ictx_.GetTranslatedIdentifier(decl);
+  if (!identifier.ok()) {
+    return ictx_.ImportUnsupportedItemToProto(
+        *decl, std::nullopt,
+        {FormattedError::PrefixedStrCat("Type alias name is not supported",
+                                        identifier.status().message())});
+  }
+
+  auto enclosing_item_id = ictx_.GetEnclosingItemId(decl);
+  if (!enclosing_item_id.ok()) {
+    return ictx_.ImportUnsupportedItemToProto(
+        *decl, std::nullopt,
+        {FormattedError::FromStatus(std::move(enclosing_item_id.status()))});
+  }
+
+  clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
+  absl::StatusOr<CcType> underlying_type = ictx_.ConvertQualType(
+      underlying_qualtype, no_lifetimes, /*nullable=*/true,
+      ictx_.AreAssumedLifetimesEnabledForTarget(ictx_.GetOwningTarget(decl)));
+
+  if (!underlying_type.ok()) {
+    return ictx_.ImportUnsupportedItemToProto(
+        *decl,
+        UnsupportedItem::Path{.ident = (*identifier).cc_identifier,
+                              .enclosing_item_id = *enclosing_item_id},
+        {FormattedError::FromStatus(std::move(underlying_type.status()))});
+  }
+  bool is_cc_template_instantiation = false;
+  if (const auto* ns_decl =
+          clang::dyn_cast<clang::NamespaceDecl>(decl->getDeclContext())) {
+    if (ns_decl->getName() == "__cc_template_instantiations") {
+      is_cc_template_instantiation = true;
+    }
+  }
+
+  if (!ictx_.IsFromCurrentTarget(decl) && !is_cc_template_instantiation) {
+    const clang::CXXRecordDecl* record_decl =
+        underlying_qualtype->getAsCXXRecordDecl();
+    if (auto* tst =
+            underlying_qualtype->getAs<clang::TemplateSpecializationType>()) {
+      if (record_decl == nullptr) record_decl = tst->getAsCXXRecordDecl();
+    }
+    if (record_decl != nullptr && ictx_.RefersToOwnedDefinition(record_decl)) {
+      return ictx_.ImportUnsupportedItemToProto(
+          *decl,
+          UnsupportedItem::Path{.ident = (*identifier).cc_identifier,
+                                .enclosing_item_id = *enclosing_item_id},
+          {FormattedError::Static(
+              "Cannot import across-target type alias because its underlying "
+              "type requires a record definition owned by a downstream "
+              "target")});
+    }
+  }
+  ictx_.MarkAsSuccessfullyImported(decl);
+
+  std::optional<std::string> deprecated;
+  absl::StatusOr<std::optional<std::string>> unknown_attr =
+      CollectUnknownAttrs(*decl, [&](const clang::Attr& attr) {
+        if (auto* deprecated_attr =
+                clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
+          deprecated.emplace(deprecated_attr->getMessage());
+          return true;
+        }
+        return false;
+      });
+  if (!unknown_attr.ok()) {
+    return ictx_.ImportUnsupportedItemToProto(
+        *decl,
+        UnsupportedItem::Path{.ident = (*identifier).cc_identifier,
+                              .enclosing_item_id = *enclosing_item_id},
+        {FormattedError::FromStatus(std::move(unknown_attr.status()))});
+  }
+
+  std::string rs_name = std::string(identifier->rs_identifier().Ident());
+  if (rs_name.size() > 160) {
+    rs_name = absl::StrCat(rs_name.substr(0, 160 - 17), "_",
+                           absl::Hex(llvm::MD5Hash(rs_name)));
+  }
+
+  auto item = std::make_unique<ir_proto::Item>();
+  ir_proto::TypeAlias* type_alias = item->mutable_type_alias();
+
+  *type_alias->mutable_cc_name() = identifier->cc_identifier.ToFlatProto();
+  *type_alias->mutable_rs_name() = Identifier(rs_name).ToFlatProto();
+  type_alias->set_unique_name(ictx_.GetUniqueName(*decl));
+  type_alias->set_id(ictx_.GenerateItemId(decl).value());
+  type_alias->set_owning_target(ictx_.GetOwningTarget(decl).value());
+  if (auto doc_comment = ictx_.GetComment(decl)) {
+    type_alias->set_doc_comment(*doc_comment);
+  }
+  if (unknown_attr->has_value()) {
+    type_alias->set_unknown_attr(**unknown_attr);
+  }
+  *type_alias->mutable_underlying_type() = underlying_type->ToFlatProto();
+  type_alias->set_source_loc(
+      ictx_.ConvertSourceLocation(decl->getBeginLoc(), nullptr));
+  if (enclosing_item_id->has_value()) {
+    type_alias->set_enclosing_item_id((*enclosing_item_id)->value());
+  }
+  type_alias->set_must_bind(must_bind_);
+  if (deprecated) {
+    type_alias->set_deprecated(*deprecated);
+  }
+
+  return item;
 }
 
 }  // namespace crubit

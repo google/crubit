@@ -4,15 +4,19 @@
 
 #include "rs_bindings_from_cc/importers/friend.h"
 
+#include <memory>
 #include <optional>
 #include <variant>
 
 #include "absl/log/check.h"
+#include "absl/status/statusor.h"
+#include "common/status_macros.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/Basic/LLVM.h"
+#include "llvm/ADT/STLExtras.h"
 
 namespace crubit {
 
@@ -70,6 +74,51 @@ std::optional<IR::Item> FriendDeclImporter::Import(
   result.id = ictx_.GenerateItemId(friend_decl);
   result.adl_enclosing_record = ictx_.GenerateItemId(enclosing_record_decl);
   return result;
+}
+
+absl::StatusOr<std::unique_ptr<ir_proto::Item>>
+FriendDeclImporter::ImportToProto(clang::FriendDecl* friend_decl) {
+  if (!ictx_.IsFromCurrentTarget(friend_decl)) return nullptr;
+
+  clang::NamedDecl* named_decl = clang::dyn_cast_or_null<clang::FunctionDecl>(
+      friend_decl->getFriendDecl());
+  if (!named_decl || named_decl != named_decl->getCanonicalDecl()) {
+    return nullptr;
+  }
+
+  clang::DeclContext* decl_context = friend_decl->getDeclContext();
+  if (!decl_context) {
+    return ictx_.ImportUnsupportedItemToProto(
+        *named_decl, std::nullopt,
+        {FormattedError::Static("DeclContext was unexpectedly null")});
+  }
+  clang::CXXRecordDecl* enclosing_record_decl =
+      clang::dyn_cast<clang::CXXRecordDecl>(decl_context);
+  if (!enclosing_record_decl) {
+    return ictx_.ImportUnsupportedItemToProto(
+        *named_decl, std::nullopt,
+        {FormattedError::Static(
+            "DeclContext was unexpectedly not a CXXRecordDecl")});
+  }
+
+  if (llvm::any_of(named_decl->redecls(),
+                   [named_decl](const clang::Decl* redecl) {
+                     return redecl != named_decl &&
+                            !redecl->getLexicalDeclContext()->isRecord();
+                   })) {
+    return nullptr;
+  }
+
+  CRUBIT_ASSIGN_OR_RETURN(std::unique_ptr<ir_proto::Item> item,
+                          ictx_.ImportDeclToProto(named_decl, must_bind_));
+  if (item == nullptr || item->has_unsupported_item() || !item->has_func()) {
+    return nullptr;
+  }
+
+  item->mutable_func()->set_id(ictx_.GenerateItemId(friend_decl).value());
+  item->mutable_func()->set_adl_enclosing_record(
+      ictx_.GenerateItemId(enclosing_record_decl).value());
+  return item;
 }
 
 }  // namespace crubit

@@ -4,8 +4,10 @@
 
 #include "rs_bindings_from_cc/importers/class_template.h"
 
+#include <memory>
 #include <optional>
 
+#include "absl/status/statusor.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/DeclTemplate.h"
 
@@ -14,6 +16,15 @@ namespace crubit {
 std::optional<IR::Item> ClassTemplateDeclImporter::Import(
     clang::ClassTemplateDecl* class_template_decl) {
   return ictx_.ImportUnsupportedItem(
+      *class_template_decl,
+      ictx_.GetUnsupportedItemPathForTemplateDecl(class_template_decl),
+      {FormattedError::Static("Class templates are not yet supported")});
+}
+
+absl::StatusOr<std::unique_ptr<ir_proto::Item>>
+ClassTemplateDeclImporter::ImportToProto(
+    clang::ClassTemplateDecl* class_template_decl) {
+  return ictx_.ImportUnsupportedItemToProto(
       *class_template_decl,
       ictx_.GetUnsupportedItemPathForTemplateDecl(class_template_decl),
       {FormattedError::Static("Class templates are not yet supported")});
