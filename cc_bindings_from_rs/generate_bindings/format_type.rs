@@ -986,8 +986,6 @@ fn format_fn_ptr_for_rs<'tcx>(
 /// distinct, separate crate, the returned `TokenStream` uses crate-qualified
 /// names whenever necessary - for example: `target_crate::SomeStruct` rather
 /// than just `SomeStruct`.
-//
-// TODO(b/259724276): This function's results should be memoized.
 pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
     Ok(match *ty.kind() {
         ty::TyKind::Bool
