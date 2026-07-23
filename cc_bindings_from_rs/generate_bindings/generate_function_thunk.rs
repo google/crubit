@@ -35,10 +35,7 @@ use std::collections::{BTreeSet, HashMap};
 ///
 /// Tuples are passed via a pointer to an array of `void*` where
 /// each pointer points to the corresponding element of the tuple.
-fn tuple_c_abi_c_type(
-    db: &BindingsGenerator<'_>,
-    possibly_tuple_ty: ty::Ty,
-) -> Option<TokenStream> {
+fn tuple_c_abi_c_type(db: &BindingsGenerator<'_>, possibly_tuple_ty: Ty) -> Option<TokenStream> {
     let ty::TyKind::Tuple(_) = possibly_tuple_ty.kind() else { return None };
     if db
         .crate_features(db.source_crate_num())
@@ -55,10 +52,7 @@ fn tuple_c_abi_c_type(
 ///
 /// Tuples are passed via a pointer to an array of `*const c_void` where
 /// each pointer points to the corresponding element of the tuple.
-fn tuple_c_abi_rs_type(
-    db: &BindingsGenerator<'_>,
-    possibly_tuple_ty: ty::Ty,
-) -> Option<TokenStream> {
+fn tuple_c_abi_rs_type(db: &BindingsGenerator<'_>, possibly_tuple_ty: Ty) -> Option<TokenStream> {
     let ty::TyKind::Tuple(tuple_tys) = possibly_tuple_ty.kind() else { return None };
     if db
         .crate_features(db.source_crate_num())
@@ -70,8 +64,8 @@ fn tuple_c_abi_rs_type(
     Some(quote! { *const [*const core::ffi::c_void; #num_elements] })
 }
 
-fn is_drop_not_default<'tcx>(tcx: ty::TyCtxt<'tcx>, ty: ty::Ty<'tcx>) -> bool {
-    if !ty.needs_drop(tcx, ty::TypingEnv::fully_monomorphized()) {
+fn is_drop_not_default<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bool {
+    if !ty.needs_drop(tcx, TypingEnv::fully_monomorphized()) {
         return false;
     }
     let trait_id =
@@ -83,7 +77,7 @@ fn is_drop_not_default<'tcx>(tcx: ty::TyCtxt<'tcx>, ty: ty::Ty<'tcx>) -> bool {
 ///
 /// For example, `Option<T>` will be bridged as `std::optional<T>` in function signatures, but
 /// appears as `rs_std::Option<T>` in struct fields.
-fn is_bridged_layout_compat_type<'tcx>(db: &BindingsGenerator<'tcx>, ret_ty: ty::Ty<'tcx>) -> bool {
+fn is_bridged_layout_compat_type<'tcx>(db: &BindingsGenerator<'tcx>, ret_ty: Ty<'tcx>) -> bool {
     let is_nonempty_tuple = || {
         let ty::TyKind::Tuple(fields) = ret_ty.kind() else { return false };
         !fields.is_empty()
@@ -97,7 +91,7 @@ fn is_bridged_layout_compat_type<'tcx>(db: &BindingsGenerator<'tcx>, ret_ty: ty:
 /// Returns a C ABI-compatible C type to pass a [inner_ty; _].
 ///
 /// Layout-compatible arrays are passed through memory.
-fn array_c_abi_c_type<'tcx>(tcx: ty::TyCtxt<'tcx>, inner_ty: ty::Ty<'tcx>) -> Result<TokenStream> {
+fn array_c_abi_c_type<'tcx>(tcx: TyCtxt<'tcx>, inner_ty: Ty<'tcx>) -> Result<TokenStream> {
     // TODO: b/451981992 - Nested arrays containing types that are Drop but not Default do not
     // behave well in std::arrays.
     match inner_ty.kind() {
@@ -255,7 +249,7 @@ pub fn generate_thunk_decl<'tcx>(
 /// with a local of type `ty` named `local_name`.
 fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    ty: ty::Ty<'tcx>,
+    ty: Ty<'tcx>,
     bridged_type: &BridgedType<'tcx>,
     local_name: &Ident,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
@@ -317,7 +311,7 @@ fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
 /// `*const [*const core::ffi::c_void; <tuple_tys.len()>]` to a tuple of Rust types.
 fn convert_tuple_from_c_abi_to_rust<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    tuple_tys: &[ty::Ty<'tcx>],
+    tuple_tys: &[Ty<'tcx>],
     local_name: &Ident,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
 ) -> Result<TokenStream> {
@@ -346,7 +340,7 @@ fn convert_tuple_from_c_abi_to_rust<'tcx>(
 /// type.
 fn convert_value_from_c_abi_to_rust<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    ty: ty::Ty<'tcx>,
+    ty: Ty<'tcx>,
     local_name: &Ident,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
 ) -> Result<TokenStream> {
@@ -375,10 +369,7 @@ fn convert_value_from_c_abi_to_rust<'tcx>(
     Ok(quote! { let #local_name = #local_name.read(); })
 }
 
-fn c_abi_for_param_type<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    ty: ty::Ty<'tcx>,
-) -> Result<TokenStream> {
+fn c_abi_for_param_type<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
     let tcx = db.tcx();
     if let Some(bridged) = is_bridged_type(db, ty)? {
         match bridged {
@@ -398,7 +389,7 @@ fn c_abi_for_param_type<'tcx>(
 
 /// Returns an iterator which yields arbitrary unique names for the parameters
 /// of the function identified by `fn_def_id`.
-fn thunk_param_names(tcx: ty::TyCtxt<'_>, fn_def_id: DefId) -> impl Iterator<Item = Ident> + '_ {
+fn thunk_param_names(tcx: TyCtxt<'_>, fn_def_id: DefId) -> impl Iterator<Item = Ident> + '_ {
     fn_arg_idents(tcx, fn_def_id).into_iter().enumerate().map(|(i, ident)| {
         let Some(ident) = ident.as_ref() else {
             return format_ident!("__param_{i}");
@@ -452,7 +443,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
     db: &BindingsGenerator<'tcx>,
     rs_value: &Ident,
     c_ptr: &Ident,
-    rs_type: ty::Ty<'tcx>,
+    rs_type: Ty<'tcx>,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
 ) -> Result<TokenStream> {
     let write_directly = || -> Result<TokenStream> {
@@ -741,7 +732,7 @@ pub fn generate_trait_thunks<'tcx>(
         // `needs_drop`.
         let typing_env = def_id
             .map(|id| post_analysis_typing_env(tcx, id))
-            .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
+            .unwrap_or_else(TypingEnv::fully_monomorphized);
         assert!(self_ty.needs_drop(tcx, typing_env));
     } else if !does_type_implement_trait(
         tcx,
