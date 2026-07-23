@@ -26,5 +26,5 @@ Crubit will generate the following bindings:
 ```
 {{ #include ../../examples/rust/use_declaration/example_generated.h }}
 ```
-<!--  content:\busing\b -->
+<!--  content:\busing\b[^;]*; -->
 
