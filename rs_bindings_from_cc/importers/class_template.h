@@ -5,8 +5,10 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_CLASS_TEMPLATE_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_CLASS_TEMPLATE_H_
 
+#include <memory>
 #include <optional>
 
+#include "absl/status/statusor.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/DeclTemplate.h"
@@ -20,6 +22,8 @@ class ClassTemplateDeclImporter
   explicit ClassTemplateDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
   std::optional<IR::Item> Import(clang::ClassTemplateDecl*) override;
+  absl::StatusOr<std::unique_ptr<ir_proto::Item>> ImportToProto(
+      clang::ClassTemplateDecl*) override;
 };
 
 }  // namespace crubit

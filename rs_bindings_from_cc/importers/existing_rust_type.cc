@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/existing_rust_type.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -303,6 +304,66 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
                         ictx_.GetOwningTarget(type_decl)) &&
                     ictx_.ImplementsCoreFmtDebug(*type_decl),
   };
+}
+
+absl::StatusOr<std::unique_ptr<ir_proto::Item>>
+ExistingRustTypeImporter::ImportToProto(clang::TypeDecl* type_decl) {
+  absl::StatusOr<std::optional<CrubitInternalRustType>> opt_attr =
+      GetCrubitInternalRustTypeAttr(ictx_, *type_decl);
+  if (!opt_attr.ok()) {
+    return ictx_.HardErrorToProto(
+        *type_decl, FormattedError::PrefixedStrCat(
+                        "Invalid CRUBIT_INTERNAL_RUST_TYPE attribute",
+                        std::move(opt_attr).status().message()));
+  }
+  if (!opt_attr->has_value()) {
+    return nullptr;
+  }
+  auto [format_string, format_args] = **std::move(opt_attr);
+  absl::StatusOr<bool> is_same_abi = GetIsSameAbiAttribute(type_decl);
+  if (!is_same_abi.ok()) {
+    return ictx_.HardErrorToProto(
+        *type_decl, FormattedError::PrefixedStrCat(
+                        "Invalid crubit_internal_is_same_abi attribute",
+                        is_same_abi.status().message()));
+  }
+
+  clang::ASTContext& context = type_decl->getASTContext();
+  clang::QualType cc_qualtype = context.getTypeDeclType(type_decl);
+  const clang::Type* cpp_type = cc_qualtype.getTypePtr();
+  if (cpp_type == nullptr) return nullptr;
+
+  clang::PrintingPolicy policy(context.getLangOpts());
+  policy.SuppressTagKeyword = true;
+  std::string cc_name = cc_qualtype.getAsString(policy);
+
+  ictx_.MarkAsSuccessfullyImported(type_decl);
+
+  auto item = std::make_unique<ir_proto::Item>();
+  ir_proto::ExistingRustType* existing_rust_type =
+      item->mutable_existing_rust_type();
+
+  existing_rust_type->set_rs_name(std::move(format_string));
+  existing_rust_type->set_cc_name(std::move(cc_name));
+  existing_rust_type->set_unique_name(ictx_.GetUniqueName(*type_decl));
+  for (const auto& arg : format_args) {
+    *existing_rust_type->add_template_args() = arg.ToFlatProto();
+  }
+  existing_rust_type->set_owning_target(
+      ictx_.GetOwningTarget(type_decl).value());
+  if (!cpp_type->isIncompleteType()) {
+    ir_proto::SizeAlign* sa = existing_rust_type->mutable_size_align();
+    sa->set_size(context.getTypeSizeInChars(cpp_type).getQuantity());
+    sa->set_alignment(context.getTypeAlignInChars(cpp_type).getQuantity());
+  }
+  existing_rust_type->set_is_same_abi(*is_same_abi);
+  existing_rust_type->set_id(ictx_.GenerateItemId(type_decl).value());
+  existing_rust_type->set_must_bind(must_bind_);
+  existing_rust_type->set_impl_debug(ictx_.IsRecordImplDebugEnabledForTarget(
+                                         ictx_.GetOwningTarget(type_decl)) &&
+                                     ictx_.ImplementsCoreFmtDebug(*type_decl));
+
+  return item;
 }
 
 }  // namespace crubit

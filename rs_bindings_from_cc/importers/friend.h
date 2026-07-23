@@ -5,8 +5,10 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_FRIEND_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_FRIEND_H_
 
+#include <memory>
 #include <optional>
 
+#include "absl/status/statusor.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/DeclFriend.h"
@@ -19,6 +21,8 @@ class FriendDeclImporter : public DeclImporterBase<clang::FriendDecl> {
   explicit FriendDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
   std::optional<IR::Item> Import(clang::FriendDecl*) override;
+  absl::StatusOr<std::unique_ptr<ir_proto::Item>> ImportToProto(
+      clang::FriendDecl*) override;
 };
 
 }  // namespace crubit

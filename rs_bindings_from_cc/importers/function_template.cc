@@ -4,8 +4,10 @@
 
 #include "rs_bindings_from_cc/importers/function_template.h"
 
+#include <memory>
 #include <optional>
 
+#include "absl/status/statusor.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
@@ -20,6 +22,19 @@ std::optional<IR::Item> FunctionTemplateDeclImporter::Import(
           function_template_decl->getTemplatedDecl()))
     return std::nullopt;
   return ictx_.ImportUnsupportedItem(
+      *function_template_decl,
+      ictx_.GetUnsupportedItemPathForTemplateDecl(function_template_decl),
+      {FormattedError::Static("Function templates are not yet supported")});
+}
+
+absl::StatusOr<std::unique_ptr<ir_proto::Item>>
+FunctionTemplateDeclImporter::ImportToProto(
+    clang::FunctionTemplateDecl* function_template_decl) {
+  if (!ictx_.IsFromCurrentTarget(function_template_decl) ||
+      clang::isa<clang::CXXDeductionGuideDecl>(
+          function_template_decl->getTemplatedDecl()))
+    return nullptr;
+  return ictx_.ImportUnsupportedItemToProto(
       *function_template_decl,
       ictx_.GetUnsupportedItemPathForTemplateDecl(function_template_decl),
       {FormattedError::Static("Function templates are not yet supported")});
