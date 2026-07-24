@@ -144,5 +144,45 @@ TEST(PointerNullabilityTest, CreatesConsistentPointerValueForField) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest,
+     NonnullRawPointerFieldNullableAtDestructorEntryViaRValueRefMethod) {
+  // An `&&`-qualified method may null out `some_resource_` before destruction,
+  // so it is modeled as nullable at destructor entry and dereferencing it in
+  // the destructor body is unsafe.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct SomeResource {};
+    class target {
+     public:
+      void Finalize() && { some_resource_ = nullptr; }
+      ~target() {
+        *some_resource_;  // [[unsafe]]
+      }
+
+     private:
+      SomeResource* _Nonnull some_resource_;
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, NonnullRawPointerFieldCheckedAtDestructorEntry) {
+  // The field is modeled as nullable at destructor entry, so a null check
+  // narrows it back to nonnull and the guarded dereference is safe. Smart
+  // pointer fields can be null-checked the same way (see
+  // smart_pointers_diagnosis tests).
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct SomeResource {};
+    class target {
+     public:
+      void Finalize() && { some_resource_ = nullptr; }
+      ~target() {
+        if (some_resource_) *some_resource_;  // safe: narrowed to nonnull
+      }
+
+     private:
+      SomeResource* _Nonnull some_resource_;
+    };
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

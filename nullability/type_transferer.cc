@@ -295,7 +295,17 @@ static void transferMemberExpr(
     if (ME->hasExplicitTemplateArgs())
       Resugar.addTemplateArgs(ME->getMemberDecl(), ME->template_arguments());
 
-    return State.Lattice.getTypeNullabilityWithOverrides(*Member, Resugar);
+    TypeNullability N =
+        State.Lattice.getTypeNullabilityWithOverrides(*Member, Resugar);
+    // At the entry of a destructor of a movable class, a nonnull pointer field
+    // of `*this` may already have been moved from (nulled out). Model it as
+    // nullable so that normal flow analysis applies: an unchecked dereference
+    // is unsafe, but a null check narrows it and defensive cleanup is allowed.
+    if (!N.empty() &&
+        shouldTreatFieldAsNullableAtDestructorEntry(ME, State.Lattice)) {
+      N.front() = NullabilityKind::Nullable;
+    }
+    return N;
   });
 }
 
