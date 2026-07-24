@@ -20,7 +20,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_unever_ugolden_x0000003a_x0
     unsafe {
         let __rs_return_value =
             <::never_golden::NeverStruct as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::never_golden::NeverStruct).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

@@ -255,8 +255,7 @@ unsafe extern "C" fn __crubit_thunk_new_ustruct_uwith_uc_uvoid_upointer_umember(
             ::primitive_types_golden::test_c_void_ptr::new_struct_with_c_void_pointer_member(
                 ptr_const, ptr_mut,
             );
-        (__ret_ptr as *mut ::primitive_types_golden::test_c_void_ptr::StructWithCVoidPointerMember)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

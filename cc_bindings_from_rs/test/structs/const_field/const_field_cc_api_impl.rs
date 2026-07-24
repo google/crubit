@@ -36,7 +36,6 @@ unsafe extern "C" fn __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalu
     unsafe {
         let __rs_return_value =
             ::const_field_golden::return_struct_with_const_field_by_value_in_result();
-        (__ret_ptr as *mut ::core::result::Result<::cc_struct::struct_with_const_field, u8>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }

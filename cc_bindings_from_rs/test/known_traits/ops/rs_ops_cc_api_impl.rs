@@ -17,7 +17,7 @@ const _: () = assert!(::std::mem::align_of::<::rs_ops_golden::MyInt>() == 4);
 unsafe extern "C" fn __crubit_thunk_new(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::rs_ops_golden::MyInt::new(value);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -42,7 +42,7 @@ unsafe extern "C" fn __crubit_thunk_Add_uadd_urs_uops_ugolden_x0000003a_x0000003
         let rhs = rhs.read();
         let __rs_return_value =
             <::rs_ops_golden::MyInt as ::core::ops::Add<::rs_ops_golden::MyInt>>::add(__self, rhs);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -69,7 +69,7 @@ unsafe extern "C" fn __crubit_thunk_BitAnd_ubitand_urs_uops_ugolden_x0000003a_x0
         let __rs_return_value = <::rs_ops_golden::MyInt as ::core::ops::BitAnd<
             ::rs_ops_golden::MyInt,
         >>::bitand(__self, rhs);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -96,7 +96,7 @@ unsafe extern "C" fn __crubit_thunk_BitOr_ubitor_urs_uops_ugolden_x0000003a_x000
         let __rs_return_value = <::rs_ops_golden::MyInt as ::core::ops::BitOr<
             ::rs_ops_golden::MyInt,
         >>::bitor(__self, rhs);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -123,7 +123,7 @@ unsafe extern "C" fn __crubit_thunk_BitXor_ubitxor_urs_uops_ugolden_x0000003a_x0
         let __rs_return_value = <::rs_ops_golden::MyInt as ::core::ops::BitXor<
             ::rs_ops_golden::MyInt,
         >>::bitxor(__self, rhs);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -149,7 +149,7 @@ unsafe extern "C" fn __crubit_thunk_Div_udiv_urs_uops_ugolden_x0000003a_x0000003
         let rhs = rhs.read();
         let __rs_return_value =
             <::rs_ops_golden::MyInt as ::core::ops::Div<::rs_ops_golden::MyInt>>::div(__self, rhs);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -175,7 +175,7 @@ unsafe extern "C" fn __crubit_thunk_Mul_umul_urs_uops_ugolden_x0000003a_x0000003
         let rhs = rhs.read();
         let __rs_return_value =
             <::rs_ops_golden::MyInt as ::core::ops::Mul<::rs_ops_golden::MyInt>>::mul(__self, rhs);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -198,7 +198,7 @@ unsafe extern "C" fn __crubit_thunk_Neg_uneg_urs_uops_ugolden_x0000003a_x0000003
     unsafe {
         let __self = __self.read();
         let __rs_return_value = <::rs_ops_golden::MyInt as ::core::ops::Neg>::neg(__self);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -209,7 +209,7 @@ unsafe extern "C" fn __crubit_thunk_Not_unot_urs_uops_ugolden_x0000003a_x0000003
     unsafe {
         let __self = __self.read();
         let __rs_return_value = <::rs_ops_golden::MyInt as ::core::ops::Not>::not(__self);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -223,7 +223,7 @@ unsafe extern "C" fn __crubit_thunk_Rem_urem_urs_uops_ugolden_x0000003a_x0000003
         let rhs = rhs.read();
         let __rs_return_value =
             <::rs_ops_golden::MyInt as ::core::ops::Rem<::rs_ops_golden::MyInt>>::rem(__self, rhs);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -247,7 +247,7 @@ unsafe extern "C" fn __crubit_thunk_Shl_ushl_urs_uops_ugolden_x0000003a_x0000003
     unsafe {
         let __self = __self.read();
         let __rs_return_value = <::rs_ops_golden::MyInt as ::core::ops::Shl<i32>>::shl(__self, rhs);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -266,7 +266,7 @@ unsafe extern "C" fn __crubit_thunk_Shr_ushr_urs_uops_ugolden_x0000003a_x0000003
     unsafe {
         let __self = __self.read();
         let __rs_return_value = <::rs_ops_golden::MyInt as ::core::ops::Shr<i32>>::shr(__self, rhs);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -287,7 +287,7 @@ unsafe extern "C" fn __crubit_thunk_Sub_usub_urs_uops_ugolden_x0000003a_x0000003
         let rhs = rhs.read();
         let __rs_return_value =
             <::rs_ops_golden::MyInt as ::core::ops::Sub<::rs_ops_golden::MyInt>>::sub(__self, rhs);
-        (__ret_ptr as *mut ::rs_ops_golden::MyInt).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

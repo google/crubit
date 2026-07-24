@@ -18,7 +18,7 @@ unsafe extern "C" fn __crubit_thunk_direct_uto_utransitive(
 ) -> () {
     unsafe {
         let __rs_return_value = ::transitive_reexports_golden::direct_to_transitive(direct);
-        (__ret_ptr as *mut ::direct::Transitive).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -28,7 +28,7 @@ unsafe extern "C" fn __crubit_thunk_direct_uto_utransitive_uglob_ua(
 ) -> () {
     unsafe {
         let __rs_return_value = ::transitive_reexports_golden::direct_to_transitive_glob_a(direct);
-        (__ret_ptr as *mut ::direct::TransitiveGlobA).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -39,7 +39,7 @@ unsafe extern "C" fn __crubit_thunk_direct_uto_utransitive_uprivate_utype_ualias
     unsafe {
         let __rs_return_value =
             ::transitive_reexports_golden::direct_to_transitive_private_type_alias(direct);
-        (__ret_ptr as *mut ::direct::Transitive).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -50,7 +50,7 @@ unsafe extern "C" fn __crubit_thunk_direct_uto_utransitive_uuse_ualias(
     unsafe {
         let __rs_return_value =
             ::transitive_reexports_golden::direct_to_transitive_use_alias(direct);
-        (__ret_ptr as *mut ::direct::Transitive).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -61,6 +61,6 @@ unsafe extern "C" fn __crubit_thunk_direct_uto_utransittive_utype_ualias(
     unsafe {
         let __rs_return_value =
             ::transitive_reexports_golden::direct_to_transittive_type_alias(direct);
-        (__ret_ptr as *mut ::direct::Transitive).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }

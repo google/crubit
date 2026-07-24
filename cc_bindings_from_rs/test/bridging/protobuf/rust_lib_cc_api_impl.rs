@@ -21,7 +21,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_urust_ulib_ugolden_x0000003
     unsafe {
         let __rs_return_value =
             <::rust_lib_golden::FooService as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::rust_lib_golden::FooService).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -59,7 +59,7 @@ unsafe extern "C" fn __crubit_thunk_request_ustats(
 ) -> () {
     unsafe {
         let __rs_return_value = ::rust_lib_golden::FooService::request_stats(__self);
-        (__ret_ptr as *mut ::foo_proto::FooRequestStatsView<'static>).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

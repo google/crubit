@@ -19,7 +19,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ustr_ugolden_x0000003a_x000
 ) -> () {
     unsafe {
         let __rs_return_value = <::str_golden::TypeWithStr as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::str_golden::TypeWithStr).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -29,7 +29,7 @@ unsafe extern "C" fn __crubit_thunk_create(
 ) -> () {
     unsafe {
         let __rs_return_value = ::str_golden::TypeWithStr::create(s);
-        (__ret_ptr as *mut ::str_golden::TypeWithStr).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

@@ -23,8 +23,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ureturn_uposition_uimpl_utr
         let __rs_return_value =
             <::return_position_impl_trait_golden::ArcWrapper as ::core::default::Default>::default(
             );
-        (__ret_ptr as *mut ::return_position_impl_trait_golden::ArcWrapper)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -43,8 +42,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ureturn_uposition_uimpl_utrait_
             <::return_position_impl_trait_golden::ArcWrapper as ::core::clone::Clone>::clone(
                 __self,
             );
-        (__ret_ptr as *mut ::return_position_impl_trait_golden::ArcWrapper)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

@@ -23,7 +23,7 @@ extern "C" fn __crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aStructWi
 unsafe extern "C" fn __crubit_thunk_new(val: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::vec_golden::StructWithVec::new(val);
-        (__ret_ptr as *mut ::vec_golden::StructWithVec).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::vec_golden::StructWithVec, v) == 0);
@@ -31,14 +31,14 @@ const _: () = assert!(::core::mem::offset_of!(::vec_golden::StructWithVec, v) ==
 unsafe extern "C" fn __crubit_thunk_return_uu8_uvec(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::vec_golden::return_u8_vec();
-        (__ret_ptr as *mut ::alloc::vec::Vec<u8>).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uvec(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::vec_golden::return_vec();
-        (__ret_ptr as *mut ::alloc::vec::Vec<i32>).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -54,7 +54,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec
 ) -> () {
     unsafe {
         let __rs_return_value = <::alloc::vec::Vec<i32> as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::alloc::vec::Vec<i32>).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -64,7 +64,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x00
 ) -> () {
     unsafe {
         let __rs_return_value = <::alloc::vec::Vec<i32> as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr as *mut ::alloc::vec::Vec<i32>).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -86,7 +86,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec
 ) -> () {
     unsafe {
         let __rs_return_value = <::alloc::vec::Vec<u8> as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::alloc::vec::Vec<u8>).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -96,7 +96,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x00
 ) -> () {
     unsafe {
         let __rs_return_value = <::alloc::vec::Vec<u8> as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr as *mut ::alloc::vec::Vec<u8>).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

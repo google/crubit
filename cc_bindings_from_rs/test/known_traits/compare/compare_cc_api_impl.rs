@@ -92,6 +92,6 @@ unsafe extern "C" fn __crubit_thunk_Ord_ucmp_ucompare_ugolden_x0000003a_x0000003
 ) -> () {
     unsafe {
         let __rs_return_value = <::compare_golden::MyOrd as ::core::cmp::Ord>::cmp(__self, other);
-        (__ret_ptr as *mut ::core::cmp::Ordering).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }

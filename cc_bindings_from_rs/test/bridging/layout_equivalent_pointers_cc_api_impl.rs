@@ -30,6 +30,6 @@ unsafe extern "C" fn __crubit_thunk_test_uformat_ureturn_utype_upointer_ulike(
 ) -> () {
     unsafe {
         let __rs_return_value=::layout_equivalent_pointers_golden::test_format_return_type_pointer_like::test_format_return_type_pointer_like();
-        (__ret_ptr as*mut::layout_equivalent_pointers_golden::test_format_return_type_pointer_like::RustTypeOwned).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }

@@ -1280,7 +1280,7 @@ fn test_format_item_fn_rust_abi_returning_struct_by_value() {
                 ) -> () {
                     unsafe {
                         let __rs_return_value = ::rust_out::create(i);
-                        (__ret_ptr as *mut ::rust_out::S).write(__rs_return_value);
+                        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
                     }
                 }
             }

@@ -20,7 +20,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ufunction_upointers_ugolden
     unsafe {
         let __rs_return_value =
             <::function_pointers_golden::CStruct as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::function_pointers_golden::CStruct).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::function_pointers_golden::CStruct, field) == 0);
@@ -30,7 +30,7 @@ const _: () = assert!(::std::mem::align_of::<::function_pointers_golden::HasFnPt
 unsafe extern "C" fn __crubit_thunk_with_uadd_uten(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::function_pointers_golden::HasFnPtrField::with_add_ten();
-        (__ret_ptr as *mut ::function_pointers_golden::HasFnPtrField).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::function_pointers_golden::HasFnPtrField, ptr) == 0);

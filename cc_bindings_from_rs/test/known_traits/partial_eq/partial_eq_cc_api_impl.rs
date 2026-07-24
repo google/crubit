@@ -17,7 +17,7 @@ const _: () = assert!(::std::mem::align_of::<::partial_eq_golden::basic_test::My
 unsafe extern "C" fn __crubit_thunk_new(val: usize, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::partial_eq_golden::basic_test::MyStruct::new(val);
-        (__ret_ptr as *mut ::partial_eq_golden::basic_test::MyStruct).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -38,7 +38,7 @@ const _: () =
 unsafe extern "C" fn __crubit_thunk_new(val: usize, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::partial_eq_golden::tuple_collision::MyStruct::new(val);
-        (__ret_ptr as *mut ::partial_eq_golden::tuple_collision::MyStruct).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -56,7 +56,7 @@ const _: () = assert!(::std::mem::align_of::<::partial_eq_golden::usize_rhs::MyS
 unsafe extern "C" fn __crubit_thunk_new(val: usize, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::partial_eq_golden::usize_rhs::MyStruct::new(val);
-        (__ret_ptr as *mut ::partial_eq_golden::usize_rhs::MyStruct).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -78,7 +78,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_
         let __rs_return_value = <(usize, bool) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
         let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
-        (__ret_ptr_0 as *mut usize).write(__rs_return_value_0);
-        (__ret_ptr_1 as *mut bool).write(__rs_return_value_1);
+        ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
+        ::core::ptr::write(__ret_ptr_1 as *mut _, __rs_return_value_1);
     }
 }

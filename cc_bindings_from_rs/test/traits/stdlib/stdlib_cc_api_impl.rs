@@ -19,7 +19,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ustdlib_ugolden_x0000003a_x
 ) -> () {
     unsafe {
         let __rs_return_value = <::stdlib_golden::MyStruct as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::stdlib_golden::MyStruct).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -35,7 +35,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustdlib_ugolden_x0000003a_x0000
 ) -> () {
     unsafe {
         let __rs_return_value = <::stdlib_golden::MyStruct as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr as *mut ::stdlib_golden::MyStruct).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -49,7 +49,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustdlib_ugolden_x0000003a
 unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::stdlib_golden::MyStruct::new(x);
-        (__ret_ptr as *mut ::stdlib_golden::MyStruct).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -60,7 +60,7 @@ unsafe extern "C" fn __crubit_thunk_From_ufrom_ustdlib_ugolden_x0000003a_x000000
     unsafe {
         let __rs_return_value =
             <::stdlib_golden::MyStruct as ::core::convert::From<i32>>::from(value);
-        (__ret_ptr as *mut ::stdlib_golden::MyStruct).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::MyStruct, x) == 0);
@@ -70,7 +70,7 @@ const _: () = assert!(::std::mem::align_of::<::stdlib_golden::NonCloneableIterat
 unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::stdlib_golden::NonCloneableIterator::new(x);
-        (__ret_ptr as *mut ::stdlib_golden::NonCloneableIterator).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::NonCloneableIterator, x) == 0);
@@ -86,7 +86,7 @@ unsafe extern "C" fn __crubit_thunk_new(
 ) -> () {
     unsafe {
         let __rs_return_value = ::stdlib_golden::RefIterator::new(slice);
-        (__ret_ptr as *mut ::stdlib_golden::RefIterator<'static>).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::RefIterator, slice) == 0);
@@ -115,7 +115,7 @@ unsafe extern "C" fn __crubit_thunk_ToString_uto_ustring_ustdlib_ugolden_x000000
     unsafe {
         let __rs_return_value =
             <::stdlib_golden::MyStruct as ::alloc::string::ToString>::to_string(__self);
-        (__ret_ptr as *mut ::alloc::string::String).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

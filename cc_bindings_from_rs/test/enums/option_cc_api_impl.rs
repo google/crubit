@@ -21,7 +21,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_uoption_ugolden_x0000003a_x0000
     unsafe {
         let __rs_return_value =
             <::option_golden::CloneNoDefault as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr as *mut ::option_golden::CloneNoDefault).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -44,7 +44,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x
     unsafe {
         let __rs_return_value =
             <::option_golden::HasDefault as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::option_golden::HasDefault).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -57,7 +57,7 @@ extern "C" fn __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aHasDe
 unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::HasDefault::new(s);
-        (__ret_ptr as *mut ::option_golden::HasDefault).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -73,7 +73,7 @@ const _: () = assert!(::std::mem::align_of::<::option_golden::HasHasOptions>() =
 unsafe extern "C" fn __crubit_thunk_new(value: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::HasHasOptions::new(value);
-        (__ret_ptr as *mut ::option_golden::HasHasOptions).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::option_golden::HasHasOptions, me) == 0);
@@ -89,7 +89,7 @@ extern "C" fn __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aHasNo
 unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::HasNoDefault::new(s);
-        (__ret_ptr as *mut ::option_golden::HasNoDefault).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -106,7 +106,7 @@ const _: () = assert!(::std::mem::align_of::<::option_golden::HasOptions>() == 1
 unsafe extern "C" fn __crubit_thunk_new(value: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::HasOptions::new(value);
-        (__ret_ptr as *mut ::option_golden::HasOptions).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -117,7 +117,7 @@ unsafe extern "C" fn __crubit_thunk_with_uoption(
     unsafe {
         let value = value.read();
         let __rs_return_value = ::option_golden::HasOptions::with_option(value);
-        (__ret_ptr as *mut ::option_golden::HasOptions).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -127,14 +127,14 @@ unsafe extern "C" fn __crubit_thunk_from_uref(
 ) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::HasOptions::from_ref(value);
-        (__ret_ptr as *mut ::option_golden::HasOptions).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_with_unone(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::HasOptions::with_none();
-        (__ret_ptr as *mut ::option_golden::HasOptions).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::option_golden::HasOptions, direct) == 0);
@@ -146,8 +146,7 @@ const _: () = assert!(::std::mem::align_of::<::option_golden::LessThan20U8>() ==
 unsafe extern "C" fn __crubit_thunk_new(value: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::LessThan20U8::new(value);
-        (__ret_ptr as *mut ::core::option::Option<::option_golden::LessThan20U8>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -167,7 +166,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_uoption_ugolden_x0000003a_x0000
     unsafe {
         let __rs_return_value =
             <::option_golden::OptCloneNoDefault as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr as *mut ::option_golden::OptCloneNoDefault).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -183,7 +182,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_uoption_ugolden_x0000003a
 unsafe extern "C" fn __crubit_thunk_new(x: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::OptCloneNoDefault::new(x);
-        (__ret_ptr as *mut ::option_golden::OptCloneNoDefault).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptCloneNoDefault, val) == 0);
@@ -193,7 +192,7 @@ const _: () = assert!(::std::mem::align_of::<::option_golden::OptCopyNoDefault>(
 unsafe extern "C" fn __crubit_thunk_new(x: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::OptCopyNoDefault::new(x);
-        (__ret_ptr as *mut ::option_golden::OptCopyNoDefault).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptCopyNoDefault, val) == 0);
@@ -209,7 +208,7 @@ extern "C" fn __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aOptDe
 unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::OptDefaultWithDrop::new(s);
-        (__ret_ptr as *mut ::option_golden::OptDefaultWithDrop).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptDefaultWithDrop, opt) == 0);
@@ -225,7 +224,7 @@ extern "C" fn __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aOptNo
 unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::OptNoDefaultWithDrop::new(s);
-        (__ret_ptr as *mut ::option_golden::OptNoDefaultWithDrop).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -243,7 +242,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x
 ) -> () {
     unsafe {
         let __rs_return_value = <::option_golden::OptZst as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::option_golden::OptZst).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptZst, val) == 0);
@@ -262,7 +261,7 @@ unsafe extern "C" fn __crubit_thunk_pass_uoption_uptr(
     unsafe {
         let x = x.read();
         let __rs_return_value = ::option_golden::pass_option_ptr(x);
-        (__ret_ptr as *mut ::core::option::Option<*const i32>).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -271,9 +270,7 @@ unsafe extern "C" fn __crubit_thunk_return_uoption_uresult(
 ) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::return_option_result();
-        (__ret_ptr
-            as *mut ::core::option::Option<::core::result::Result<i32, ::alloc::string::String>>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -282,11 +279,7 @@ unsafe extern "C" fn __crubit_thunk_return_uoption_uresult_uunmovable(
 ) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::return_option_result_unmovable();
-        (__ret_ptr
-            as *mut ::core::option::Option<
-                ::core::result::Result<::option_golden::HasNoDefault, ::alloc::string::String>,
-            >)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -295,17 +288,7 @@ unsafe extern "C" fn __crubit_thunk_stress_utesting_unested_utypes(
 ) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::stress_testing_nested_types();
-        (__ret_ptr
-            as *mut ::core::option::Option<
-                ::core::result::Result<
-                    ::core::option::Option<::core::result::Result<i32, ::alloc::string::String>>,
-                    ::core::result::Result<
-                        ::core::option::Option<i32>,
-                        ::core::option::Option<i32>,
-                    >,
-                >,
-            >)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -315,7 +298,7 @@ unsafe extern "C" fn __crubit_thunk_stringify_ulen(
 ) -> () {
     unsafe {
         let __rs_return_value = ::option_golden::stringify_len(x);
-        (__ret_ptr as *mut ::core::option::Option<u32>).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -339,8 +322,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aoption_
             <std::option::Option<::option_golden::CloneNoDefault> as ::core::clone::Clone>::clone(
                 __self,
             );
-        (__ret_ptr as *mut ::core::option::Option<::option_golden::CloneNoDefault>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -363,9 +345,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aoption_
         let __rs_return_value = <std::option::Option<
             ::core::result::Result<i32, ::alloc::string::String>,
         > as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr
-            as *mut ::core::option::Option<::core::result::Result<i32, ::alloc::string::String>>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -396,17 +376,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aoption_
                 ::core::result::Result<::core::option::Option<i32>, ::core::option::Option<i32>>,
             >,
         > as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr
-            as *mut ::core::option::Option<
-                ::core::result::Result<
-                    ::core::option::Option<::core::result::Result<i32, ::alloc::string::String>>,
-                    ::core::result::Result<
-                        ::core::option::Option<i32>,
-                        ::core::option::Option<i32>,
-                    >,
-                >,
-            >)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -443,8 +413,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_
             <std::result::Result<i32, ::alloc::string::String> as ::core::clone::Clone>::clone(
                 __self,
             );
-        (__ret_ptr as *mut ::core::result::Result<i32, ::alloc::string::String>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -471,12 +440,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_
             ::core::option::Option<::core::result::Result<i32, ::alloc::string::String>>,
             ::core::result::Result<::core::option::Option<i32>, ::core::option::Option<i32>>,
         > as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr
-            as *mut ::core::result::Result<
-                ::core::option::Option<::core::result::Result<i32, ::alloc::string::String>>,
-                ::core::result::Result<::core::option::Option<i32>, ::core::option::Option<i32>>,
-            >)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

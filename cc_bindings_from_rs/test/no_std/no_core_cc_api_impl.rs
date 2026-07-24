@@ -23,7 +23,7 @@ extern "C" fn __crubit_thunk_Drop_udrop_uno_ucore_ugolden_x0000003a_x0000003aTes
 unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::no_core_golden::Test::new();
-        (__ret_ptr as *mut ::no_core_golden::Test).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

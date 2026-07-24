@@ -17,7 +17,7 @@ const _: () = assert!(::std::mem::align_of::<::cpp_name_golden::Original>() == 4
 unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::cpp_name_golden::Original::new();
-        (__ret_ptr as *mut ::cpp_name_golden::Original).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::cpp_name_golden::Original, x) == 0);

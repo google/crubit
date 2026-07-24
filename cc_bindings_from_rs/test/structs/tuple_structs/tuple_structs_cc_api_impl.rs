@@ -27,7 +27,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x000000
     unsafe {
         let __rs_return_value =
             <::tuple_structs_golden::CloneNoDefault as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr as *mut ::tuple_structs_golden::CloneNoDefault).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -46,7 +46,7 @@ const _: () = assert!(::std::mem::align_of::<::tuple_structs_golden::CopyNoDefau
 unsafe extern "C" fn __crubit_thunk_create(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::tuple_structs_golden::CopyNoDefault::create(value);
-        (__ret_ptr as *mut ::tuple_structs_golden::CopyNoDefault).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::tuple_structs_golden::CopyNoDefault, value) == 0);
@@ -60,7 +60,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x00
     unsafe {
         let __rs_return_value =
             <::tuple_structs_golden::DefaultAndCloneNoUnpin as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::tuple_structs_golden::DefaultAndCloneNoUnpin).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -71,7 +71,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x000000
     unsafe {
         let __rs_return_value =
             <::tuple_structs_golden::DefaultAndCloneNoUnpin as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr as *mut ::tuple_structs_golden::DefaultAndCloneNoUnpin).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -98,7 +98,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x00
     unsafe {
         let __rs_return_value =
             <::tuple_structs_golden::DefaultNoCopyNoClone as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::tuple_structs_golden::DefaultNoCopyNoClone).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () =
@@ -120,8 +120,7 @@ const _: () =
 unsafe extern "C" fn __crubit_thunk_create(arg: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::tuple_structs_golden::TupleStructOnePrivateArg::create(arg);
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructOnePrivateArg)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -141,8 +140,7 @@ const _: () =
 unsafe extern "C" fn __crubit_thunk_create(arg: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::tuple_structs_golden::TupleStructOnePublicArg::create(arg);
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructOnePublicArg)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -173,8 +171,7 @@ unsafe extern "C" fn __crubit_thunk_create(
             ::tuple_structs_golden::TupleStructOnePublicArgOnePrivateArg::create(
                 first_arg, second_arg,
             );
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructOnePublicArgOnePrivateArg)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -202,8 +199,7 @@ unsafe extern "C" fn __crubit_thunk_create(
     unsafe {
         let __rs_return_value =
             ::tuple_structs_golden::TupleStructTwoPrivateArgs::create(first_arg, second_arg);
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructTwoPrivateArgs)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -237,8 +233,7 @@ unsafe extern "C" fn __crubit_thunk_create(
     unsafe {
         let __rs_return_value =
             ::tuple_structs_golden::TupleStructTwoPublicArgs::create(first_arg, second_arg);
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructTwoPublicArgs)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -278,8 +273,7 @@ unsafe extern "C" fn __crubit_thunk_create(value: i32, __ret_ptr: *mut core::ffi
     unsafe {
         let __rs_return_value =
             ::tuple_structs_golden::TupleStructWithCloneNoDefault::create(value);
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithCloneNoDefault)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -309,8 +303,7 @@ unsafe extern "C" fn __crubit_thunk_create(
     unsafe {
         let __rs_return_value =
             ::tuple_structs_golden::TupleStructWithCppImmovableType::create(first_arg, second_arg);
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithCppImmovableType)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -342,8 +335,7 @@ unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) ->
     unsafe {
         let __rs_return_value =
             ::tuple_structs_golden::TupleStructWithDefaultAndCloneNoUnpin::create();
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithDefaultAndCloneNoUnpin)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -381,8 +373,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x00
 ) -> () {
     unsafe {
         let __rs_return_value=<::tuple_structs_golden::TupleStructWithNonExhaustiveCtor as::core::default::Default>::default();
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithNonExhaustiveCtor)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -394,8 +385,7 @@ unsafe extern "C" fn __crubit_thunk_create(
     unsafe {
         let __rs_return_value =
             ::tuple_structs_golden::TupleStructWithNonExhaustiveCtor::create(first_arg, second_arg);
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithNonExhaustiveCtor)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(
@@ -414,8 +404,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x00
 ) -> () {
     unsafe {
         let __rs_return_value=<::tuple_structs_golden::TupleStructWithTupleFieldType as::core::default::Default>::default();
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithTupleFieldType)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -436,8 +425,7 @@ unsafe extern "C" fn __crubit_thunk_create(
         );
         let __rs_return_value =
             ::tuple_structs_golden::TupleStructWithTupleFieldType::create(__param_0);
-        (__ret_ptr as *mut ::tuple_structs_golden::TupleStructWithTupleFieldType)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -451,8 +439,8 @@ unsafe extern "C" fn __crubit_thunk_get_uarg(
             ::tuple_structs_golden::TupleStructWithTupleFieldType::get_arg(__self);
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
         let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
-        (__ret_ptr_0 as *mut i32).write(__rs_return_value_0);
-        (__ret_ptr_1 as *mut i32).write(__rs_return_value_1);
+        ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
+        ::core::ptr::write(__ret_ptr_1 as *mut _, __rs_return_value_1);
     }
 }
 const _: () =
@@ -465,7 +453,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x0
         let __rs_return_value = <(i32, i32) as ::core::default::Default>::default();
         let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
         let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
-        (__ret_ptr_0 as *mut i32).write(__rs_return_value_0);
-        (__ret_ptr_1 as *mut i32).write(__rs_return_value_1);
+        ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
+        ::core::ptr::write(__ret_ptr_1 as *mut _, __rs_return_value_1);
     }
 }

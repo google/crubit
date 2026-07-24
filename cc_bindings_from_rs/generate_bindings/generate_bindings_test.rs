@@ -1316,7 +1316,7 @@ fn test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src: &
                 unsafe extern "C" fn ...(__ret_ptr: *mut core::ffi::c_void) -> () {
                     unsafe {
                         let __rs_return_value = ::rust_out::TypeUnderTest::pass_by_value();
-                        (__ret_ptr as *mut ::rust_out::TypeUnderTest).write(__rs_return_value);
+                        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
                     }
                 }
                 ...

@@ -447,8 +447,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
 ) -> Result<TokenStream> {
     let write_directly = || -> Result<TokenStream> {
-        let rs_type_tokens = db.format_ty_for_rs(rs_type)?;
-        Ok(quote! { (#c_ptr as *mut #rs_type_tokens).write(#rs_value); })
+        Ok(quote! { ::core::ptr::write(#c_ptr as *mut _, #rs_value); })
     };
     let tcx = db.tcx();
     Ok(if let Some(bridged_type) = is_bridged_type(db, rs_type)? {

@@ -71,8 +71,7 @@ unsafe extern "C" fn __crubit_thunk_create_ubool_ubool_upair(
 ) -> () {
     unsafe {
         let __rs_return_value = ::layout_equivalent_generics_golden::create_bool_bool_pair();
-        (__ret_ptr as *mut ::layout_equivalent_generics_golden::MyPair<bool, bool>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -81,8 +80,7 @@ unsafe extern "C" fn __crubit_thunk_create_uint_ubool_upair(
 ) -> () {
     unsafe {
         let __rs_return_value = ::layout_equivalent_generics_golden::create_int_bool_pair();
-        (__ret_ptr as *mut ::layout_equivalent_generics_golden::MyPair<i32, bool>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -92,8 +90,7 @@ unsafe extern "C" fn __crubit_thunk_create_ustatus_uwith_uprivate_usecret(
     unsafe {
         let __rs_return_value =
             ::layout_equivalent_generics_golden::create_status_with_private_secret();
-        (__ret_ptr as *mut ::layout_equivalent_generics_golden::MyStatusOr<i32>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -102,8 +99,7 @@ unsafe extern "C" fn __crubit_thunk_create_ustatus_uwith_usecret(
 ) -> () {
     unsafe {
         let __rs_return_value = ::layout_equivalent_generics_golden::create_status_with_secret();
-        (__ret_ptr as *mut ::layout_equivalent_generics_golden::MyStatusOr<i32>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -113,8 +109,7 @@ unsafe extern "C" fn __crubit_thunk_create_ustatus_uwith_usecret_ualias(
     unsafe {
         let __rs_return_value =
             ::layout_equivalent_generics_golden::create_status_with_secret_alias();
-        (__ret_ptr as *mut ::layout_equivalent_generics_golden::MyStatusOr<i32>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -139,24 +134,21 @@ unsafe extern "C" fn __crubit_thunk_return_uoptional_uby_uvalue(
 ) -> () {
     unsafe {
         let __rs_return_value = ::layout_equivalent_generics_golden::return_optional_by_value(x);
-        (__ret_ptr as *mut ::layout_equivalent_generics_golden::MyOptional<i32>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_ustatus(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::layout_equivalent_generics_golden::return_status();
-        (__ret_ptr as *mut ::layout_equivalent_generics_golden::MyStatusOr<()>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_ustatus_ualias(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::layout_equivalent_generics_golden::return_status_alias();
-        (__ret_ptr as *mut ::layout_equivalent_generics_golden::MyStatusOr<()>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -175,8 +167,7 @@ unsafe extern "C" fn __crubit_thunk_return_ustatus_unon_uunit(
             __crubit_temp.assume_init()
         };
         let __rs_return_value = ::layout_equivalent_generics_golden::return_status_non_unit(status);
-        (__ret_ptr as *mut ::layout_equivalent_generics_golden::MyStatusOr<u64>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -185,8 +176,7 @@ unsafe extern "C" fn __crubit_thunk_return_ustatus_uor_uunit(
 ) -> () {
     unsafe {
         let __rs_return_value = ::layout_equivalent_generics_golden::return_status_or_unit();
-        (__ret_ptr as *mut ::layout_equivalent_generics_golden::MyStatusOr<()>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -195,7 +185,6 @@ unsafe extern "C" fn __crubit_thunk_return_ustatus_uor_uunit_ualias(
 ) -> () {
     unsafe {
         let __rs_return_value = ::layout_equivalent_generics_golden::return_status_or_unit_alias();
-        (__ret_ptr as *mut ::layout_equivalent_generics_golden::MyStatusOr<()>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }

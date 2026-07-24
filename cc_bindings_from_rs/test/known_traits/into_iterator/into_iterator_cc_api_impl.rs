@@ -60,8 +60,7 @@ unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_uru
             <::into_iterator_rust_golden::MyContainer as ::core::iter::IntoIterator>::into_iter(
                 __self,
             );
-        (__ret_ptr as *mut ::into_iterator_rust_golden::MyContainerIntoIter)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -71,8 +70,7 @@ unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_u_x00000026into_uit
 ) -> () {
     unsafe {
         let __rs_return_value=<&'static::into_iterator_rust_golden::MyContainer as::core::iter::IntoIterator>::into_iter(__self);
-        (__ret_ptr as *mut ::into_iterator_rust_golden::MyContainerIter<'static>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -82,8 +80,7 @@ unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_u_x00000026mut_x000
 ) -> () {
     unsafe {
         let __rs_return_value=<&'static mut::into_iterator_rust_golden::MyContainer as::core::iter::IntoIterator>::into_iter(__self);
-        (__ret_ptr as *mut ::into_iterator_rust_golden::MyContainerIterMut<'static>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::into_iterator_rust_golden::MyContainer, data) == 0);
@@ -113,7 +110,7 @@ unsafe extern "C" fn __crubit_thunk_make_ucontainer(
 ) -> () {
     unsafe {
         let __rs_return_value = ::into_iterator_rust_golden::make_container(a, b, c);
-        (__ret_ptr as *mut ::into_iterator_rust_golden::MyContainer).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -122,8 +119,7 @@ unsafe extern "C" fn __crubit_thunk_make_uinherent_ucontainer(
 ) -> () {
     unsafe {
         let __rs_return_value = ::into_iterator_rust_golden::make_inherent_container();
-        (__ret_ptr as *mut ::into_iterator_rust_golden::ContainerWithInherentBegin)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -133,7 +129,7 @@ unsafe extern "C" fn __crubit_thunk_make_uiterator(
 ) -> () {
     unsafe {
         let __rs_return_value = ::into_iterator_rust_golden::make_iterator(value);
-        (__ret_ptr as *mut ::into_iterator_rust_golden::MyIterator).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -144,7 +140,7 @@ unsafe extern "C" fn __crubit_thunk_make_umove_uonly_uiterator(
 ) -> () {
     unsafe {
         let __rs_return_value = ::into_iterator_rust_golden::make_move_only_iterator(val, count);
-        (__ret_ptr as *mut ::into_iterator_rust_golden::MoveOnlyIterator).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -154,8 +150,7 @@ unsafe extern "C" fn __crubit_thunk_make_uref_ucontainer(
 ) -> () {
     unsafe {
         let __rs_return_value = ::into_iterator_rust_golden::make_ref_container(iter);
-        (__ret_ptr as *mut ::into_iterator_rust_golden::ContainerWithRefIntoIter<'static>)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -166,7 +161,7 @@ unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_uru
     unsafe {
         let __self = __self.read();
         let __rs_return_value=<::into_iterator_rust_golden::ContainerWithInherentBegin as::core::iter::IntoIterator>::into_iter(__self);
-        (__ret_ptr as *mut ::into_iterator_rust_golden::SimpleIntoIter).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -208,8 +203,7 @@ unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_uru
             <::into_iterator_rust_golden::MyContainer as ::core::iter::IntoIterator>::into_iter(
                 __self,
             );
-        (__ret_ptr as *mut ::into_iterator_rust_golden::MyContainerIntoIter)
-            .write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

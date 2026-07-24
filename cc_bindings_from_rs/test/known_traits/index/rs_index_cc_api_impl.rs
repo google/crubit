@@ -17,7 +17,7 @@ const _: () = assert!(::std::mem::align_of::<::rs_index_golden::CustomIndex>() =
 unsafe extern "C" fn __crubit_thunk_new(index: usize, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::rs_index_golden::CustomIndex::new(index);
-        (__ret_ptr as *mut ::rs_index_golden::CustomIndex).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::CustomIndex, 0) == 0);
@@ -27,7 +27,7 @@ const _: () = assert!(::std::mem::align_of::<::rs_index_golden::Id>() == 4);
 unsafe extern "C" fn __crubit_thunk_new(id: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::rs_index_golden::Id::new(id);
-        (__ret_ptr as *mut ::rs_index_golden::Id).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::Id, 0) == 0);
@@ -37,7 +37,7 @@ const _: () = assert!(::std::mem::align_of::<::rs_index_golden::IntPair>() == 4)
 unsafe extern "C" fn __crubit_thunk_new(x: i32, y: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::rs_index_golden::IntPair::new(x, y);
-        (__ret_ptr as *mut ::rs_index_golden::IntPair).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -96,7 +96,7 @@ unsafe extern "C" fn __crubit_thunk_new(
 ) -> () {
     unsafe {
         let __rs_return_value = ::rs_index_golden::Map::new(row_size, col_size);
-        (__ret_ptr as *mut ::rs_index_golden::Map).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -136,7 +136,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec
     unsafe {
         let __rs_return_value =
             <::alloc::vec::Vec<::alloc::string::String> as ::core::default::Default>::default();
-        (__ret_ptr as *mut ::alloc::vec::Vec<::alloc::string::String>).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -147,7 +147,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x00
     unsafe {
         let __rs_return_value =
             <::alloc::vec::Vec<::alloc::string::String> as ::core::clone::Clone>::clone(__self);
-        (__ret_ptr as *mut ::alloc::vec::Vec<::alloc::string::String>).write(__rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
