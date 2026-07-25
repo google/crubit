@@ -703,5 +703,197 @@ TEST(SmartPointerTest, DerivedSmartPointerWithPointerTemplateArg) {
   )cc"));
 }
 
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldMovedFromInRValueRefQualifiedMethod) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class A {
+     public:
+      void target() && {
+        std::unique_ptr<SomeResource> some_resource = std::move(some_resource_);
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldNullableAtDestructorEntryViaRValueRefMethod) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class target {
+     public:
+      void Finalize() && {
+        std::unique_ptr<SomeResource> some_resource = std::move(some_resource_);
+      }
+      ~target() {
+        // An `&&`-qualified method may have moved from `some_resource_`
+        // (leaving it null) before destruction, so dereferencing it here is
+        // unsafe.
+        *some_resource_;  // [[unsafe]]
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldNullableAtDestructorEntryViaMoveConstructor) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class target {
+     public:
+      target(target&&) = default;
+      ~target() {
+        // A move constructor may have moved from `some_resource_` (leaving it
+        // null) before destruction, so dereferencing it here is unsafe.
+        *some_resource_;  // [[unsafe]]
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldNullableAtDestructorEntryViaMoveAssignment) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class target {
+     public:
+      target& operator=(target&&) = default;
+      ~target() {
+        // A move assignment operator may have moved from `some_resource_`
+        // (leaving it null) before destruction, so dereferencing it here is
+        // unsafe.
+        *some_resource_;  // [[unsafe]]
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldNonnullAtDestructorEntryWhenClassNotMovable) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class target {
+     public:
+      ~target() {
+        // This class is not movable: it declares no move operations, and its
+        // user-declared destructor suppresses the implicit move constructor and
+        // move assignment operator. So `some_resource_` cannot have been moved
+        // from, is still nonnull at destructor entry, and dereferencing it is
+        // safe.
+        *some_resource_;
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldNonnullAtDestructorEntryWhenMoveOperatorsDeleted) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class target {
+     public:
+      target(target&&) = delete;
+      target& operator=(target&&) = delete;
+      ~target() {
+        // The move operations are explicitly deleted, so the object cannot be
+        // moved from; `some_resource_` is still nonnull at destructor entry and
+        // dereferencing it is safe.
+        *some_resource_;
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldNullableAtDestructorEntryCanBeNullChecked) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class target {
+     public:
+      target(target&&) = default;
+      ~target() {
+        // At destructor entry the field is modeled as an ordinary nullable
+        // smart pointer (not "moved-from poisoned"), so it can be null-checked
+        // and used defensively during cleanup.
+        if (some_resource_) *some_resource_;  // Safe: narrowed to nonnull.
+        // An unchecked dereference is still unsafe, because the field may have
+        // been moved from before destruction.
+        *some_resource_;  // [[unsafe]]
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldNullableAtDestructorEntryViaConsumingMethod) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class target {
+     public:
+      // Consumes `src`, potentially moving out its members. Even though this
+      // class declares no move constructor or move assignment operator (the
+      // user-declared destructor suppresses the implicit ones), an object may
+      // still be moved-from via this method, so `some_resource_` may be null at
+      // destructor entry.
+      void Append(target&& src);
+      ~target() {
+        *some_resource_;  // [[unsafe]]
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> some_resource_;
+    };
+  )cc"));
+}
+
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldNonnullAtDestructorEntryWithConstRefParamMethod) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class target {
+     public:
+      // A method taking a const lvalue reference (not an rvalue reference) does
+      // not consume its argument, so it does not make the class movable-from.
+      void MergeFrom(const target& src);
+      ~target() {
+        *some_resource_;  // Safe: class is not movable-from.
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> some_resource_;
+    };
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

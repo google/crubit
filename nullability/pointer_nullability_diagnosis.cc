@@ -203,16 +203,16 @@ static bool isCapturedVariableOrMemberAccess(const Expr* absl_nonnull E) {
 
 // Diagnoses whether `E` violates the expectation that it is nonnull.
 static SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
-    const Expr* absl_nonnull E, const Environment& Env, ASTContext& Ctx,
+    const Expr* absl_nonnull E, const DiagTransferState& State, ASTContext& Ctx,
     PointerNullabilityDiagnostic::Context DiagCtx,
     const clang::NamedDecl* absl_nullable Callee = nullptr,
     const clang::IdentifierInfo* absl_nullable ParamName = nullptr,
     CharSourceRange Range = {}) {
   std::optional<bool> IsNullable;
-  if (PointerValue* ActualVal = getPointerValue(E, Env))
-    IsNullable = isNullable(*ActualVal, Env);
+  if (PointerValue* ActualVal = getPointerValue(E, State.Env))
+    IsNullable = isNullable(*ActualVal, State.Env);
   else if (E->getType()->isNullPtrType())
-    IsNullable = isReachableNullptrLiteral(Env);
+    IsNullable = isReachableNullptrLiteral(State.Env);
 
   if (!IsNullable.has_value()) {
     LLVM_DEBUG({
@@ -231,7 +231,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
     Range = CharSourceRange::getTokenRange(E->getSourceRange());
 
   if (const Expr* NullCheck =
-          matchesNonConstCallNullCheck(*E, Ctx, Env.getCurrentFunc()))
+          matchesNonConstCallNullCheck(*E, Ctx, State.Env.getCurrentFunc()))
     return {{
         .Code = PointerNullabilityDiagnostic::ErrorCode::
             ExpectedNonnullWithCheckOnNonConstCall,
@@ -265,13 +265,27 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
              "by value or reference (possibly with an init-capture). Otherwise "
              "do a null check inside the lambda body to ensure null safety."}};
 
-  return {{
+  PointerNullabilityDiagnostic Diag{
       .Code = PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
       .Ctx = DiagCtx,
       .Range = Range,
       .Callee = Callee,
       .ParamName = ParamName,
-  }};
+  };
+  // If a nonnull pointer field is dereferenced in a destructor where it is
+  // modeled as nullable (because the enclosing object may have been moved from
+  // before destruction), explain why and how to fix it.
+  if (DiagCtx == PointerNullabilityDiagnostic::Context::NullableDereference &&
+      shouldTreatFieldAsNullableAtDestructorEntry(E, State.Lattice)) {
+    const auto* Field = cast<FieldDecl>(
+        cast<MemberExpr>(E->IgnoreParenImpCasts())->getMemberDecl());
+    Diag.NoteRange = CharSourceRange::getTokenRange(Field->getSourceRange());
+    Diag.NoteMessage =
+        "a Nonnull pointer field may be null at destructor entry (possibly "
+        "because it was moved from); null-check it before dereferencing, or "
+        "make the type non-movable if it should never be moved from";
+  }
+  return {Diag};
 }
 
 static bool invariantMatch(ArrayRef<PointerTypeNullability> A,
@@ -334,8 +348,8 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssignmentLike(
     }
 
     if (LHSNullability.front().concrete() == NullabilityKind::NonNull) {
-      Diagnostics = diagnoseNonnullExpected(RHS, State.Env, Ctx, DiagCtx,
-                                            Callee, ParamName, LHSRange);
+      Diagnostics = diagnoseNonnullExpected(RHS, State, Ctx, DiagCtx, Callee,
+                                            ParamName, LHSRange);
     }
 
     // Continue unwrapping pointer layers outside of template arguments. Each of
@@ -401,7 +415,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseDereference(
     const UnaryOperator* absl_nonnull UnaryOp,
     const MatchFinder::MatchResult& Result, const DiagTransferState& State) {
   return diagnoseNonnullExpected(
-      UnaryOp->getSubExpr(), State.Env, *Result.Context,
+      UnaryOp->getSubExpr(), State, *Result.Context,
       PointerNullabilityDiagnostic::Context::NullableDereference);
 }
 
@@ -410,7 +424,7 @@ diagnoseSmartPointerDereference(const CXXOperatorCallExpr* absl_nonnull Op,
                                 const MatchFinder::MatchResult& Result,
                                 const DiagTransferState& State) {
   return diagnoseNonnullExpected(
-      Op->getArg(0), State.Env, *Result.Context,
+      Op->getArg(0), State, *Result.Context,
       PointerNullabilityDiagnostic::Context::NullableDereference);
 }
 
@@ -418,7 +432,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseSubscript(
     const ArraySubscriptExpr* absl_nonnull Subscript,
     const MatchFinder::MatchResult& Result, const DiagTransferState& State) {
   return diagnoseNonnullExpected(
-      Subscript->getBase(), State.Env, *Result.Context,
+      Subscript->getBase(), State, *Result.Context,
       PointerNullabilityDiagnostic::Context::NullableDereference);
 }
 
@@ -426,7 +440,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseArrow(
     const MemberExpr* absl_nonnull MemberExpr,
     const MatchFinder::MatchResult& Result, const DiagTransferState& State) {
   return diagnoseNonnullExpected(
-      MemberExpr->getBase(), State.Env, *Result.Context,
+      MemberExpr->getBase(), State, *Result.Context,
       PointerNullabilityDiagnostic::Context::NullableDereference,
       /*Callee=*/nullptr, /*ParamName=*/nullptr);
 }
@@ -609,26 +623,26 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAssertNullabilityCall(
 static SmallVector<PointerNullabilityDiagnostic> diagnoseIncrementDecrement(
     const UnaryOperator* absl_nonnull UnaryOp,
     const MatchFinder::MatchResult& Result, const DiagTransferState& State) {
-  return diagnoseNonnullExpected(UnaryOp->getSubExpr(), State.Env,
-                                 *Result.Context,
+  return diagnoseNonnullExpected(UnaryOp->getSubExpr(), State, *Result.Context,
                                  PointerNullabilityDiagnostic::Context::Other);
 }
 
 static SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtract(
-    Expr* PtrExpr, Expr* IntExpr, const Environment& Env, ASTContext& Ctx) {
+    Expr* PtrExpr, Expr* IntExpr, const DiagTransferState& State,
+    ASTContext& Ctx) {
   // Adding or subtracting zero is allowed even if the pointer is null.
   if (auto* Lit = dyn_cast<IntegerLiteral>(IntExpr->IgnoreParenImpCasts())) {
     if (Lit->getValue().isZero()) return {};
   }
 
-  return diagnoseNonnullExpected(PtrExpr, Env, Ctx,
+  return diagnoseNonnullExpected(PtrExpr, State, Ctx,
                                  PointerNullabilityDiagnostic::Context::Other);
 }
 
 static SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtractAssign(
     const BinaryOperator* absl_nonnull BinaryOp,
     const MatchFinder::MatchResult& Result, const DiagTransferState& State) {
-  return diagnoseAddSubtract(BinaryOp->getLHS(), BinaryOp->getRHS(), State.Env,
+  return diagnoseAddSubtract(BinaryOp->getLHS(), BinaryOp->getRHS(), State,
                              *Result.Context);
 }
 
@@ -636,10 +650,10 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseAddSubtractInteger(
     const BinaryOperator* absl_nonnull BinaryOp,
     const MatchFinder::MatchResult& Result, const DiagTransferState& State) {
   if (BinaryOp->getLHS()->getType()->isIntegerType()) {
-    return diagnoseAddSubtract(BinaryOp->getRHS(), BinaryOp->getLHS(),
-                               State.Env, *Result.Context);
+    return diagnoseAddSubtract(BinaryOp->getRHS(), BinaryOp->getLHS(), State,
+                               *Result.Context);
   }
-  return diagnoseAddSubtract(BinaryOp->getLHS(), BinaryOp->getRHS(), State.Env,
+  return diagnoseAddSubtract(BinaryOp->getLHS(), BinaryOp->getRHS(), State,
                              *Result.Context);
 }
 
@@ -647,10 +661,10 @@ static SmallVector<PointerNullabilityDiagnostic> diagnosePointerDifference(
     const BinaryOperator* absl_nonnull BinaryOp,
     const MatchFinder::MatchResult& Result, const DiagTransferState& State) {
   SmallVector<PointerNullabilityDiagnostic> Diagnostics =
-      diagnoseNonnullExpected(BinaryOp->getLHS(), State.Env, *Result.Context,
+      diagnoseNonnullExpected(BinaryOp->getLHS(), State, *Result.Context,
                               PointerNullabilityDiagnostic::Context::Other);
   Diagnostics.append(
-      diagnoseNonnullExpected(BinaryOp->getRHS(), State.Env, *Result.Context,
+      diagnoseNonnullExpected(BinaryOp->getRHS(), State, *Result.Context,
                               PointerNullabilityDiagnostic::Context::Other));
   return Diagnostics;
 }
@@ -853,7 +867,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseCallExpr(
   // Check it for null, and unwrap the pointer for the next step.
   if (Callee->getType()->isPointerType()) {
     auto D =
-        diagnoseNonnullExpected(Callee, State.Env, *Result.Context,
+        diagnoseNonnullExpected(Callee, State, *Result.Context,
                                 PointerNullabilityDiagnostic::Context::Other);
     // TODO: should we continue to diagnose arguments?
     if (!D.empty()) return D;
@@ -1276,6 +1290,43 @@ static CharSourceRange getMethodClosingBraceRange(const CXXMethodDecl& Method) {
                                         Body->getRBracLoc());
 }
 
+// Returns true if `Method` is `&&`-qualified and non-const. Running such a
+// method moves from the object, after which its member invariants (including
+// member nullability) may no longer hold.
+static bool isNonConstRValueRefQualified(const CXXMethodDecl& Method) {
+  return Method.getRefQualifier() == clang::RQ_RValue && !Method.isConst();
+}
+
+// Returns true if an object of this class may be moved from before it is
+// destroyed.
+static bool classMayBeMovedFrom(const CXXRecordDecl& RD) {
+  // Implicitly-declared move operations may not appear in `methods()` yet, so
+  // detect the "needs an implicit move operation" case explicitly. Once
+  // declared, such operations take an `RD&&` parameter and are found by the
+  // loop below.
+  if (RD.needsImplicitMoveConstructor() || RD.needsImplicitMoveAssignment())
+    return true;
+  for (const CXXMethodDecl* Method : RD.methods()) {
+    if (Method->isDeleted()) continue;
+    // A non-const `&&`-qualified method consumes `*this`.
+    if (isNonConstRValueRefQualified(*Method)) return true;
+    // A method with a parameter that is an rvalue reference to the same class
+    // (a move constructor, move assignment operator, or a consuming method such
+    // as `void Cord::Append(Cord&& src)`) may move from that argument, nulling
+    // out its nonnull pointer members.
+    for (const ParmVarDecl* Param : Method->parameters()) {
+      const auto* RRT = Param->getType()->getAs<RValueReferenceType>();
+      if (RRT == nullptr) continue;
+      const CXXRecordDecl* ParamRD =
+          RRT->getPointeeType()->getAsCXXRecordDecl();
+      if (ParamRD != nullptr &&
+          ParamRD->getCanonicalDecl() == RD.getCanonicalDecl())
+        return true;
+    }
+  }
+  return false;
+}
+
 static void diagnoseNonnullPointerFieldNullableAtExit(
     const FunctionDecl& Func,
     const dataflow::DataflowAnalysisState<PointerNullabilityLattice>&
@@ -1294,6 +1345,10 @@ static void diagnoseNonnullPointerFieldNullableAtExit(
   if (const auto* Ctor = dyn_cast<CXXConstructorDecl>(Method)) {
     if (Ctor->isDelegatingConstructor()) return;
   }
+
+  // Running a &&-qualified method requires moving from the object, after which
+  // its invariants (including member nullability) may no longer be valid.
+  if (isNonConstRValueRefQualified(*Method)) return;
 
   RecordStorageLocation* RecordLoc =
       StateAtExit.Env.getThisPointeeStorageLocation();
@@ -1489,6 +1544,34 @@ std::unique_ptr<dataflow::Solver> makeDefaultSolverForDiagnosis() {
   return std::make_unique<dataflow::WatchedLiteralsSolver>(MaxSATIterations);
 }
 
+// Returns the nonnull pointer fields (raw and smart) of the destructor's class
+// that must be modeled as nullable at destructor entry, because a move
+// operation may have nulled them out before destruction. Returns empty if the
+// class cannot be moved from.
+static llvm::DenseSet<const FieldDecl*>
+computeFieldsToTreatAsNullableAtDestructorEntry(
+    const CXXDestructorDecl& Dtor, const TypeNullabilityDefaults& Defaults) {
+  llvm::DenseSet<const FieldDecl*> Result;
+
+  const CXXRecordDecl* RD = Dtor.getParent();
+  if (RD == nullptr || !classMayBeMovedFrom(*RD)) return Result;
+
+  for (const FieldDecl* Field : RD->fields()) {
+    if (!isSupportedPointerType(Field->getType())) continue;
+
+    // Only downgrade fields annotated `_Nonnull`; nullable and unannotated
+    // fields already tolerate a null value at entry.
+    TypeNullability FieldNullability = getTypeNullability(*Field, Defaults);
+    if (FieldNullability.empty() ||
+        FieldNullability.front().concrete() != NullabilityKind::NonNull) {
+      continue;
+    }
+
+    Result.insert(Field);
+  }
+  return Result;
+}
+
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
 diagnosePointerNullability(const ValueDecl* VD,
                            const NullabilityPragmas& Pragmas,
@@ -1539,6 +1622,11 @@ diagnosePointerNullability(const ValueDecl* VD,
   Environment Env(AnalysisContext, *Func);
 
   PointerNullabilityAnalysis Analysis(Ctx, Env, Pragmas);
+
+  if (const auto* Dtor = dyn_cast<CXXDestructorDecl>(Func)) {
+    Analysis.setFieldsToTreatAsNullableAtDestructorEntry(
+        computeFieldsToTreatAsNullableAtDestructorEntry(*Dtor, Defaults));
+  }
 
   dataflow::CFGEltCallbacks<PointerNullabilityAnalysis> PostAnalysisCallbacks;
   PostAnalysisCallbacks.Before =

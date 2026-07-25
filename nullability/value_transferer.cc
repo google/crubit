@@ -97,6 +97,17 @@ static PointerTypeNullability getPointerTypeNullability(
 void initPointerFromTypeNullability(
     PointerValue& PointerVal, const Expr* absl_nonnull E,
     TransferState<PointerNullabilityLattice>& State) {
+  // If `E` reads a nonnull pointer field of `*this` that must be treated as
+  // nullable at destructor entry (because a move operation may have nulled it
+  // out before destruction), model its null state as nullable instead of using
+  // its declared (nonnull) type. This affects only the first derivation of the
+  // field's null state; subsequent assignments and null checks in the
+  // destructor body are handled normally by the flow analysis.
+  if (shouldTreatFieldAsNullableAtDestructorEntry(E, State.Lattice)) {
+    initPointerNullState(PointerVal, State.Env.getDataflowAnalysisContext(),
+                         NullabilityKind::Nullable);
+    return;
+  }
   initPointerNullState(PointerVal, State.Env.getDataflowAnalysisContext(),
                        getPointerTypeNullability(E, State.Lattice));
 }

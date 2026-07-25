@@ -144,5 +144,92 @@ TEST(PointerNullabilityTest, CreatesConsistentPointerValueForField) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest,
+     NonnullRawPointerFieldNullableAtDestructorEntryViaRValueRefMethod) {
+  // An `&&`-qualified method may null out `some_resource_` before destruction,
+  // so it is modeled as nullable at destructor entry and dereferencing it in
+  // the destructor body is unsafe.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct SomeResource {};
+    class target {
+     public:
+      void Finalize() && { some_resource_ = nullptr; }
+      ~target() {
+        *some_resource_;  // [[unsafe]]
+      }
+
+     private:
+      SomeResource* _Nonnull some_resource_;
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, NonnullRawPointerFieldCheckedAtDestructorEntry) {
+  // The field is modeled as nullable at destructor entry, so a null check
+  // narrows it back to nonnull and the guarded dereference is safe. Smart
+  // pointer fields can be null-checked the same way (see
+  // smart_pointers_diagnosis tests).
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct SomeResource {};
+    class target {
+     public:
+      void Finalize() && { some_resource_ = nullptr; }
+      ~target() {
+        if (some_resource_) *some_resource_;  // safe: narrowed to nonnull
+      }
+
+     private:
+      SomeResource* _Nonnull some_resource_;
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest,
+     UnknownRawPointerFieldNotNullableAtDestructorEntry) {
+  // A pointer field with unknown (unannotated) nullability is NOT modeled as
+  // nullable at destructor entry, even in a movable class. The user has not
+  // opted into nullability checking for such a field, so dereferencing it in
+  // the destructor -- without a null check -- must not be diagnosed as unsafe.
+  // (Only fields declared _Nonnull are downgraded; see
+  // computeFieldsToTreatAsNullableAtDestructorEntry and the transferMemberExpr
+  // guard.)
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct SomeResource {};
+    class target {
+     public:
+      void Finalize() && { some_resource_ = nullptr; }
+      ~target() {
+        *some_resource_;  // safe: unknown nullability, not downgraded
+      }
+
+     private:
+      SomeResource* some_resource_;
+    };
+  )cc"));
+}
+
+TEST(PointerNullabilityTest,
+     NonnullRawPointerFieldNullableAtDestructorEntryViaConsumingMethod) {
+  // A method taking an rvalue reference to the same class (`Consume(target&&)`)
+  // may move from its argument, nulling the argument's members before
+  // destruction -- even though this class declares no move constructor or move
+  // assignment operator (the user-declared destructor suppresses the implicit
+  // ones). So `some_resource_` may be null at destructor entry and
+  // dereferencing it is unsafe.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct SomeResource {};
+    class target {
+     public:
+      void Consume(target&& other);
+      ~target() {
+        *some_resource_;  // [[unsafe]]
+      }
+
+     private:
+      SomeResource* _Nonnull some_resource_;
+    };
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability

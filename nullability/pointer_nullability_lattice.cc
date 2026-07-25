@@ -12,6 +12,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/Analysis/FlowSensitive/ASTOps.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "clang/Basic/LLVM.h"
@@ -63,6 +64,20 @@ void PointerNullabilityLatticeBase::overrideNullabilityFromDecl(
   if (auto *PN = getDeclNullability(D, NFS)) {
     N.front() = *PN;
   }
+}
+
+bool shouldTreatFieldAsNullableAtDestructorEntry(
+    const Expr* absl_nonnull E, const PointerNullabilityLatticeBase& Lattice) {
+  const auto& Fields = Lattice.fieldsToTreatAsNullableAtDestructorEntry();
+  if (Fields.empty()) return false;
+  const auto* ME = dyn_cast<MemberExpr>(E->IgnoreParenImpCasts());
+  if (ME == nullptr) return false;
+  // Only downgrade fields accessed through `*this` (the object being
+  // destroyed); an access like `other.field` on a different instance keeps its
+  // declared nullability.
+  if (!isa<CXXThisExpr>(ME->getBase()->IgnoreParenImpCasts())) return false;
+  const auto* FD = dyn_cast<FieldDecl>(ME->getMemberDecl());
+  return FD != nullptr && Fields.contains(FD);
 }
 
 LatticeJoinEffect PointerNullabilityLatticeBase::join(
