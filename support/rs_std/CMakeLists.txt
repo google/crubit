@@ -4,17 +4,17 @@
 
 # Automatically @generated CMakeLists.txt.
 
-add_library(crubit_support_rs_std_char INTERFACE
+add_library(crubit_support_rs_std_char STATIC
 "char.cc"
 "char.h"
 )
 set_target_properties(crubit_support_rs_std_char PROPERTIES LINKER_LANGUAGE CXX)
 
-target_include_directories(crubit_support_rs_std_char INTERFACE
+target_include_directories(crubit_support_rs_std_char PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
-target_link_libraries(crubit_support_rs_std_char INTERFACE
+target_link_libraries(crubit_support_rs_std_char PUBLIC
 crubit_support_rs_std_str_ref
 crubit_support_annotations
 crubit_support_internal_bindings_support
@@ -167,13 +167,13 @@ target_include_directories(crubit_support_rs_std_vec INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
-add_library(crubit_support_rs_std_waker INTERFACE
+add_library(crubit_support_rs_std_waker STATIC
 "waker.cc"
 "waker.h"
 )
 set_target_properties(crubit_support_rs_std_waker PROPERTIES LINKER_LANGUAGE CXX)
 
-target_include_directories(crubit_support_rs_std_waker INTERFACE
+target_include_directories(crubit_support_rs_std_waker PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
