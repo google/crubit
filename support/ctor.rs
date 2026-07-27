@@ -36,6 +36,7 @@ use core::marker::{PhantomData, Unpin};
 use core::mem::{ManuallyDrop, MaybeUninit};
 use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
+use core::ptr;
 
 pub use ctor_proc_macros::{
     project_pin_type, project_ref_type, recursively_pinned, CtorFrom_Default, MoveAndAssignViaCopy,
@@ -688,6 +689,7 @@ pub fn copy<T: ?Sized + for<'a> CtorNew<&'a T>, P: Deref<Target = T>>(src: P) ->
 /// types.
 ///
 /// Note: this does not actually move until it is used.
+#[derive(Debug)]
 #[must_use = must_use_ctor_assign!("RvalueReference")]
 #[repr(transparent)]
 #[cfg_attr(all(not(doc), feature = "same_abi"), doc = "CRUBIT_ANNOTATE: same_abi=")]
@@ -721,6 +723,23 @@ impl<T: ?Sized> RvalueReference<'_, T> {
         // &'a T. (For the same reason, as_const returns a ConstRvalueReference
         // whose lifetime is bound by self, not 'a.)
         &self.0
+    }
+
+    /// Returns a raw mutable pointer to the underlying data.
+    ///
+    /// # Safety
+    ///
+    /// As with [`Pin::into_inner_unchecked`], you must guarantee that you will continue to treat
+    /// the pointer as pinned after you call this function, so that the invariants on the `Pin` type
+    /// can be upheld.
+    pub unsafe fn into_mut_ptr(rref: Self) -> *mut T {
+        // SAFETY: Requirement propagated to caller.
+        //
+        // We could do this with safe code by following the path:
+        //   Pin<&mut T> => Pin<&T> => &T => *const T => *mut T
+        //
+        // But that would produce a pointer derived from an immutable reference.
+        ptr::from_mut(unsafe { Pin::into_inner_unchecked(rref.0) })
     }
 }
 
@@ -772,6 +791,26 @@ where
 {
     fn deref_rvalue_reference(&mut self) -> RvalueReference<'_, Self::Target> {
         RvalueReference(Pin::new(self))
+    }
+}
+
+/// Borrows a pinned value as an `RvalueReference`.
+///
+/// This trait provides a generic way to extract an rvalue reference from either a pinned `Unpin`
+/// value or a (trivially) pinned `RvalueReference`.
+pub trait AsRvalue<T>: Unpin {
+    fn as_rvalue<'a>(self: Pin<&'a mut Self>) -> RvalueReference<'a, T>;
+}
+
+impl<T: Unpin> AsRvalue<T> for T {
+    fn as_rvalue<'a>(self: Pin<&'a mut Self>) -> RvalueReference<'a, T> {
+        RvalueReference(self)
+    }
+}
+
+impl<T> AsRvalue<T> for RvalueReference<'_, T> {
+    fn as_rvalue<'a>(self: Pin<&'a mut Self>) -> RvalueReference<'a, T> {
+        RvalueReference(Pin::into_inner(self).0.as_mut())
     }
 }
 
