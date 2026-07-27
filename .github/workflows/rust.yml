@@ -76,6 +76,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
+    - name: Setup Bazel
+      uses: bazel-contrib/setup-bazel@0.19.0
+      with:
+        bazelisk-cache: true
+        disk-cache: ${{ github.workflow }}-${{ github.job }}
+        repository-cache: true
     - name: Build Bazel test project
       run: |
         cd examples/build_systems/bazel
