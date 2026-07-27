@@ -533,22 +533,73 @@ pub fn construct<T: Unpin>(ctor: impl Ctor<Output = T, Error = Infallible>) -> T
     unsafe { value.assume_init() }
 }
 
-/// Trait for smart pointer types which support in-place initialization via `Ctor`.
+/// Trait for non-Rust-movable types which do not need to be destroyed at any particular time.
+///
+/// This allows for safely using types which require the invocation of the destructor: that type
+/// must require in-place initialization using `ctor`, and must _not_ implement `SafeLeak`.
+///
+/// For example, a threading API which uses RAII instead of callbacks should have the join handle
+/// require in-place construction, and not implement `SafeLeak`. That join handle will be allocated
+/// on the stack, and is guaranteed to be destroyed (joined) before its borrow expires.
+///
+/// All `'static` types are `SafeLeak`: it is not possible to place a requirement on when or if a
+/// `'static` type is destroyed. (For example, they can be stored in a `static` variable.)
+///
+/// # Safety
+///
+/// Do not implement `SafeLeak` for types which require destruction at a specific time.
+pub unsafe auto trait SafeLeak {}
+
+/// All `'static` types are `SafeLeak`.
+///
+/// SAFETY: definitionally safe. See [`SafeLeak`].
+unsafe impl<T: 'static> SafeLeak for T {}
+
+/// Trait for smart pointer types which support unsafe in-place initialization via `Ctor`.
 ///
 /// A typical example would be `Box<T>`, allows emplacing a `Ctor` into
 /// a `Pin<Box<T>>` by calling `{Box, Rc, Arc}::emplace`.
 pub trait Emplace<T>: Sized {
     /// Materialize an infallible `Ctor`.
-    fn emplace<C: Ctor<Output = T, Error = Infallible>>(c: C) -> Pin<Self> {
-        Self::try_emplace(c).unwrap()
+    ///
+    /// # Safety
+    ///
+    /// If the type places requirements on when it can be destroyed, you must follow
+    /// those requirements.
+    unsafe fn unsafe_emplace<C: Ctor<Output = T, Error = Infallible>>(c: C) -> Pin<Self> {
+        // SAFETY: forwards requirements
+        unsafe { Self::unsafe_try_emplace(c) }.unwrap()
     }
 
     /// Materialize a `Ctor`, returning an error if initialization fails.
-    fn try_emplace<C: Ctor<Output = T>>(c: C) -> Result<Pin<Self>, C::Error>;
+    ///
+    /// # Safety
+    ///
+    /// If the type places requirements on when it can be destroyed, you must follow
+    /// those requirements.
+    unsafe fn unsafe_try_emplace<C: Ctor<Output = T>>(c: C) -> Result<Pin<Self>, C::Error>;
+
+    /// Materialize an infallible `Ctor`.
+    fn emplace<C: Ctor<Output = T, Error = Infallible>>(c: C) -> Pin<Self>
+    where
+        T: SafeLeak,
+    {
+        // SAFETY: Output is SafeLeak.
+        unsafe { Self::unsafe_try_emplace(c) }.unwrap()
+    }
+
+    /// Materialize a `Ctor`, returning an error if initialization fails.
+    fn try_emplace<C: Ctor<Output = T>>(c: C) -> Result<Pin<Self>, C::Error>
+    where
+        T: SafeLeak,
+    {
+        // SAFETY: Output is SafeLeak.
+        unsafe { Self::unsafe_try_emplace(c) }
+    }
 }
 
 impl<T> Emplace<T> for Box<T> {
-    fn try_emplace<C: Ctor<Output = T>>(ctor: C) -> Result<Pin<Box<T>>, C::Error> {
+    unsafe fn unsafe_try_emplace<C: Ctor<Output = T>>(ctor: C) -> Result<Pin<Box<T>>, C::Error> {
         let mut uninit = Box::new(MaybeUninit::<T>::uninit());
         unsafe {
             ctor.ctor(uninit.as_mut_ptr())?;
@@ -558,7 +609,7 @@ impl<T> Emplace<T> for Box<T> {
 }
 
 impl<T> Emplace<T> for Rc<T> {
-    fn try_emplace<C: Ctor<Output = T>>(ctor: C) -> Result<Pin<Rc<T>>, C::Error> {
+    unsafe fn unsafe_try_emplace<C: Ctor<Output = T>>(ctor: C) -> Result<Pin<Rc<T>>, C::Error> {
         let uninit = Rc::new(MaybeUninit::<T>::uninit());
         unsafe {
             // TODO: https://github.com/rust-lang/rust/issues/145036 - use cast_init when stable.
@@ -569,7 +620,7 @@ impl<T> Emplace<T> for Rc<T> {
 }
 
 impl<T> Emplace<T> for Arc<T> {
-    fn try_emplace<C: Ctor<Output = T>>(ctor: C) -> Result<Pin<Arc<T>>, C::Error> {
+    unsafe fn unsafe_try_emplace<C: Ctor<Output = T>>(ctor: C) -> Result<Pin<Arc<T>>, C::Error> {
         let uninit = Arc::new(MaybeUninit::<T>::uninit());
         unsafe {
             // TODO: https://github.com/rust-lang/rust/issues/145036 - use cast_init when stable.
@@ -1772,20 +1823,21 @@ pub trait UnsafeCtorNew<ConstructorArgs> {
 // ====
 
 /// A constructor for ManuallyDrop<T>, given a constructor for T.
-///
-/// ManuallyDrop is special as the only non-Copy type allowed in a union, so we
-/// specifically support its use, even though it is not guaranteed to be
-/// structurally pinned.
 #[must_use = must_use_ctor!()]
 pub struct ManuallyDropCtor<T: Ctor>(T);
 
 impl<T: Ctor> ManuallyDropCtor<T> {
+    pub fn new(x: T) -> Self
+    where
+        T::Output: SafeLeak,
+    {
+        ManuallyDropCtor(x)
+    }
+
     /// # Safety
     ///
-    /// This structurally pins the contents of ManuallyDrop.
-    /// Therefore, it is not safe to use with anything that assumes that
-    /// ManuallyDrop is not structurally pinned.
-    pub unsafe fn new(x: T) -> Self {
+    /// The constructed value must be destroyed when required. See [`SafeLeak`].
+    pub unsafe fn unsafe_new(x: T) -> Self {
         ManuallyDropCtor(x)
     }
 }
