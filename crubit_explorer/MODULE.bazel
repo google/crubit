@@ -15,6 +15,20 @@ local_path_override(
     path = "..",
 )
 
+bazel_dep(name = "aspect_rules_js", version = "2.1.0")
+bazel_dep(name = "rules_nodejs", version = "6.7.5")
+
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
+node.toolchain(node_version = "20.11.1")
+use_repo(node, "nodejs_toolchains")
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
+npm.npm_translate_lock(
+    name = "npm",
+    pnpm_lock = "//frontend:pnpm-lock.yaml",
+)
+use_repo(npm, "npm")
+
 crubit_toolchains = use_extension("@rules_crubit//bazel:extensions.bzl", "crubit_toolchains")
 crubit_toolchains.configure(
     llvm_version = "22.1.0",

@@ -2,17 +2,23 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use axum::body::Body;
+use axum::extract::State;
+use axum::http::{header, StatusCode, Uri};
+use axum::response::{IntoResponse, Response};
 use axum::{routing, Router};
+use std::error::Error;
 use std::net::SocketAddr;
-use std::path::PathBuf;
+use std::path::{Component, Path, PathBuf};
+use std::process::Command;
 use tokio::net::TcpListener;
 
 use runfiles::Runfiles;
 
 const CC_BINDINGS_FROM_RS_RLOCATION: &str =
-    "rules_crubit/cc_bindings_from_rs/cc_bindings_from_rs";
+   "rules_crubit/cc_bindings_from_rs/cc_bindings_from_rs";
 
-fn get_cc_bindings_from_rs_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
+fn get_cc_bindings_from_rs_path() -> Result<PathBuf, Box<dyn Error>> {
     // Environment variable for location to cc_bindings_from_rs binary
     if let Ok(env_path) = std::env::var("CC_BINDINGS_FROM_RS")
         && let path = PathBuf::from(env_path)
@@ -48,9 +54,10 @@ fn get_cc_bindings_from_rs_path() -> Result<PathBuf, Box<dyn std::error::Error>>
     Err("cc_bindings_from_rs binary not found via CC_BINDINGS_FROM_RS env var, Bazel runfiles, adjacent to executable, or in system PATH".into())
 }
 
-fn new_cc_bindings_from_rs_command() -> Result<std::process::Command, Box<dyn std::error::Error>> {
+#[cfg(test)]
+fn new_cc_bindings_from_rs_command() -> Result<Command, Box<dyn Error>> {
     let binary_path = get_cc_bindings_from_rs_path()?;
-    let mut cmd = std::process::Command::new(binary_path);
+    let mut cmd = Command::new(binary_path);
 
     let mut extra_lib_dirs = Vec::new();
 
@@ -104,18 +111,99 @@ fn find_in_path(name: &str) -> Option<PathBuf> {
     })
 }
 
-fn app() -> Router {
-    Router::new().route("/", routing::get(|| async { "Hello, World!" }))
+fn get_frontend_dist_path() -> Option<PathBuf> {
+    if let Ok(r) = Runfiles::create() {
+        if let Some(path) = runfiles::rlocation!(r, "crubit_explorer/frontend/dist/frontend") {
+            if path.exists() {
+                return Some(path);
+            }
+        }
+    }
+
+    if let Ok(mut exe_path) = std::env::current_exe() {
+        exe_path.pop();
+        let adjacent_path = exe_path.join("frontend/dist/frontend");
+        if adjacent_path.exists() {
+            return Some(adjacent_path);
+        }
+        let adjacent_path2 = exe_path.join("dist/frontend");
+        if adjacent_path2.exists() {
+            return Some(adjacent_path2);
+        }
+    }
+
+    None
+}
+
+fn app(frontend_path: Option<PathBuf>) -> Router {
+    if let Some(path) = frontend_path {
+        println!("Serving frontend from {}", path.display());
+        Router::new().fallback(serve_frontend).with_state(path)
+    } else {
+        println!("Frontend not found, serving Hello World at root");
+        Router::new().route("/", routing::get(|| async { "Hello, World!" }))
+    }
+}
+
+async fn serve_frontend(uri: Uri, State(frontend_path): State<PathBuf>) -> impl IntoResponse {
+    let path = uri.path();
+    let relative_path = path.trim_start_matches('/');
+
+    if relative_path.is_empty() {
+        return serve_file(&frontend_path.join("index.html")).await;
+    }
+
+    // Don't allow path traversal
+    let has_parent_dir =
+        Path::new(relative_path).components().any(|c| matches!(c, Component::ParentDir));
+
+    if has_parent_dir {
+        return (StatusCode::FORBIDDEN, "Forbidden").into_response();
+    }
+
+    let file_path = frontend_path.join(relative_path);
+    if file_path.exists() && file_path.is_file() {
+        return serve_file(&file_path).await;
+    }
+
+    serve_file(&frontend_path.join("index.html")).await
+}
+
+async fn serve_file(path: &Path) -> Response {
+    match tokio::fs::read(path).await {
+        Ok(content) => {
+            let mime = mime_guess_fallback(path);
+            Response::builder()
+                .header(header::CONTENT_TYPE, mime)
+                .body(Body::from(content))
+                .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())
+        }
+        Err(_) => StatusCode::NOT_FOUND.into_response(),
+    }
+}
+
+fn mime_guess_fallback(path: &Path) -> &'static str {
+    match path.extension().and_then(|s| s.to_str()) {
+        Some("html") => "text/html",
+        Some("js") => "application/javascript",
+        Some("css") => "text/css",
+        Some("svg") => "image/svg+xml",
+        Some("png") => "image/png",
+        Some("jpg") | Some("jpeg") => "image/jpeg",
+        Some("wasm") => "application/wasm",
+        _ => "application/octet-stream",
+    }
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn Error>> {
     match get_cc_bindings_from_rs_path() {
         Ok(path) => println!("cc_bindings_from_rs found at: {}", path.display()),
         Err(err) => eprintln!("Error locating cc_bindings_from_rs: {}", err),
     }
 
-    let app = app();
+    let frontend_path = get_frontend_dist_path();
+    let app = app(frontend_path);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     println!("Listening on http://{}", addr);
@@ -132,32 +220,56 @@ mod tests {
         body::Body,
         http::{Request, StatusCode},
     };
+    use googletest::prelude::*;
     use tower::ServiceExt;
 
+    #[gtest]
     #[tokio::test]
     async fn hello_world() {
-        let app = app();
+        let app = app(None);
 
         let response =
             app.oneshot(Request::builder().uri("/").body(Body::empty()).unwrap()).await.unwrap();
 
-        assert_eq!(response.status(), StatusCode::OK);
+        expect_eq!(response.status(), StatusCode::OK);
 
         let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
-        assert_eq!(&body[..], b"Hello, World!");
+        expect_eq!(&body[..], b"Hello, World!");
     }
 
+    #[gtest]
+    #[tokio::test]
+    async fn test_frontend_serving() {
+        let path = get_frontend_dist_path();
+        if let Some(frontend_path) = path {
+            let app = app(Some(frontend_path));
+            let response = app
+                .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+                .await
+                .unwrap();
+
+            expect_eq!(response.status(), StatusCode::OK);
+            let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+            let html_str = String::from_utf8(body.to_vec()).unwrap();
+            expect_that!(html_str, contains_substring("<app-root>"));
+        } else {
+            println!("Frontend dist path not found, skipping test.");
+        }
+    }
+
+    #[gtest]
     #[tokio::test]
     async fn test_cc_bindings_from_rs_help() {
         let mut cmd = new_cc_bindings_from_rs_command()
             .expect("Failed to create cc_bindings_from_rs command");
         let output = cmd.arg("--help").output().expect("Failed to execute cc_bindings_from_rs");
 
-        assert!(output.status.success());
+        expect_true!(output.status.success());
         let stdout = String::from_utf8(output.stdout).unwrap();
-        assert!(stdout.contains("Generates C++ bindings for a Rust crate"));
+        expect_that!(stdout, contains_substring("Generates C++ bindings for a Rust crate"));
     }
 
+    #[gtest]
     #[tokio::test]
     async fn test_generate_bindings() {
         let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
@@ -181,15 +293,15 @@ mod tests {
 
         let stderr = String::from_utf8_lossy(&output.stderr);
 
-        assert!(output.status.success(), "Command failed with stderr: {}", stderr);
-        assert!(h_out.exists());
-        assert!(rs_out.exists());
+        expect_true!(output.status.success(), "Command failed with stderr: {}", stderr);
+        expect_true!(h_out.exists());
+        expect_true!(rs_out.exists());
 
         let h_content = std::fs::read_to_string(&h_out).expect("Failed to read h_out");
         let rs_content = std::fs::read_to_string(&rs_out).expect("Failed to read rs_out");
 
-        assert!(!h_content.is_empty());
-        assert!(!rs_content.is_empty());
-        assert!(h_content.contains("foo"));
+        expect_false!(h_content.is_empty());
+        expect_false!(rs_content.is_empty());
+        expect_that!(h_content, contains_substring("foo"));
     }
 }

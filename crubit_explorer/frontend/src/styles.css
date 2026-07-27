@@ -1,0 +1,445 @@
+/*
+Part of the Crubit project, under the Apache License v2.0 with LLVM
+Exceptions. See /LICENSE for license information.
+SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+*/
+
+:root {
+  --theme-color: #ff6d3cff;
+  --dropdown-color: #c0a0a0ff;
+}
+
+.material-icons {
+  font-family: 'Google Material Icons';
+}
+
+.toolbar-flags {
+  display:none;
+}
+
+.toolbar-codegen-tracing {
+  display:none;
+}
+
+html {
+  /* Copied from tailwind */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  line-height: 1.5;
+}
+
+@media(prefers-color-scheme: dark) {
+  html {
+    /* Matches monaco 'vs-dark' theme's editor-background */
+    background: #1e1e1e;
+  }
+}
+
+button, input, select {
+  /* Copied from tailwind */
+  font-family: inherit;
+  font-size: 100%;
+}
+
+body {
+  /* Prevent full-page UI (100vh/100vw) from creating scrollbars). */
+  margin: 0;
+}
+
+.cursor-wait, .cursor-wait * {
+  /*
+    override *all* cursors during compilation, otherwise the text editor and
+    interactive button cursors will mask the compilation indicator
+  */
+  cursor: wait !important;
+}
+
+app-root {
+  display: flex;
+  flex-direction: column;
+
+  height: 100vh;
+  width: 100vw;
+  padding: 0;
+  margin: 0;
+}
+
+header {
+  padding: .5rem;
+  display: flex;
+  background: oklch(from var(--theme-color) calc(l - .09) calc(c + .018) h);
+  color: #fff;
+}
+
+header h1 {
+  margin: 0 .5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  flex-grow: 1;
+}
+
+header h1 .build-label {
+  font-size: .75rem;
+  font-weight: 300;
+}
+
+header .toolbar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0 .5rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+header .toolbar > label {
+  font-size: .875rem;
+}
+
+header .toolbar > label input,
+header .toolbar > label select {
+  margin: 0 0.5rem;
+  font-size: 1rem;
+  display: inline-block;
+}
+
+app-shortn {
+  display: inline-flex;
+  align-items: center;
+}
+
+app-shortn button {
+  appearance: none;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  color: inherit;
+}
+
+app-shortn .shortn-popup {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  background: #fff;
+  color: #000;
+  border: 2px solid oklch(from var(--theme-color) calc(l - .36) c h);
+
+  font-size: 1.25rem;
+  padding: .5rem;
+}
+
+.tab-bar {
+  width: 100%;
+  display: flex;
+  color: #fff;
+  background: oklch(from var(--theme-color) calc(l - .24) calc(c - .008) h);
+  padding: .5rem 0 0 0;
+  margin: 0 0 .5rem 0;
+}
+
+.tab-bar app-tabs {
+  display: inline-block;
+}
+
+.tab-bar app-tabs .tab {
+  display: inline-block;
+  cursor: default;
+  border: 2px solid oklch(from var(--theme-color) calc(l - .27) calc(c - .009) h);
+  border-bottom-width: 0;
+  border-top-left-radius: .5rem;
+  border-top-right-radius: .5rem;
+  padding: .5rem;
+  vertical-align: middle;
+  font-size: .875rem;
+  background: oklch(from var(--theme-color) calc(l - .24) calc(c - .008) h);
+}
+
+.tab-bar app-tabs .tab.selected {
+  background: oklch(from var(--theme-color) calc(l - .09) calc(c - .009) h);
+}
+
+.tab-bar app-tabs .tab:hover,
+.tab-bar app-tabs .tab.selected:hover {
+  background: var(--theme-color);
+}
+
+.tab-bar app-tabs .tab span {
+  display: inline-block;
+}
+
+.tab-bar app-tabs .tab span.icon {
+  padding-left: .5rem;
+  cursor: pointer;
+  vertical-align: middle;
+  font-size: .875rem;
+}
+
+.dropdown {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.dropdown button {
+  appearance: none;
+  color: inherit;
+  background: none;
+  cursor: pointer;
+  border: 0;
+  opacity: .5;
+  padding: 0 .5rem;
+}
+
+.dropdown .dropdown-content {
+  position: absolute;
+  z-index: 10;
+  top: 2rem;
+  left: 0;
+  display: none;
+}
+
+.dropdown .dropdown-content > div {
+  padding: .5rem;
+  font-size: .875rem;
+  color: #000;
+  background: oklch(from var(--dropdown-color) calc(l + .18) calc(c - .018) h);
+  cursor: pointer;
+}
+
+.dropdown .dropdown-content > div.header {
+  cursor: default;
+  font-size: .75rem;
+  color: var(--dropdown-color);
+}
+
+.dropdown .dropdown-content > div.highlight {
+  background: oklch(from var(--dropdown-color) calc(l + .21) calc(c - .021) h);
+}
+
+.dropdown:hover .dropdown-content {
+  display: inline-block;
+}
+
+main {
+  display: grid;
+  flex-grow: 1;
+  grid-template-columns: 4fr 4px 6fr;
+}
+
+main .pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+main .pane > monaco-editor {
+  display: block;
+  flex-grow: 1;
+  /* Prevents monaco editor from resizing beyond the page boundary. */
+  position: relative;
+}
+
+main .pane > monaco-editor > .monaco-editor {
+  position: absolute;
+}
+
+main .resizer {
+  background: oklch(from var(--theme-color) calc(l + .18) calc(c - .018) h);
+  cursor: col-resize;
+}
+
+/* Doxygen Section styling */
+.doxygen-section {
+  height: 250px;
+  border-top: 1px solid #ccc;
+  padding: 10px;
+  background: #f9f9f9;
+  font-family: monospace;
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  transition: height 0.2s ease-in-out;
+}
+
+.doxygen-section.collapsed {
+  height: 40px;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+.doxygen-header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+
+.doxygen-section.collapsed .doxygen-header-container {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.doxygen-header {
+  margin: 0;
+  color: #333;
+  font-size: 1rem;
+}
+
+.doxygen-panel-toggle-icon {
+  color: #666;
+  font-size: 20px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.doxygen-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.doxygen-error {
+  color: red;
+  padding: 5px;
+  background: #fee;
+  border: 1px solid #fdd;
+  margin-bottom: 10px;
+}
+
+.doxygen-empty {
+  color: #666;
+  font-style: italic;
+}
+
+/* Symbol Tree styling */
+.symbol-tree-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.symbol-tree-row {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  cursor: default;
+  border-radius: 4px;
+  user-select: none;
+  transition: background-color 0.1s ease;
+}
+
+.symbol-tree-row.has-children {
+  cursor: pointer;
+}
+
+.symbol-tree-row:hover {
+  background-color: #f0f0f0;
+}
+
+.symbol-toggle-icon {
+  font-size: 16px !important;
+  margin-right: 4px;
+  color: #666;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.symbol-kind-badge {
+  font-size: 0.75rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-right: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+  min-width: 65px;
+  text-align: center;
+}
+
+.symbol-name {
+  color: #111;
+  font-weight: bold;
+}
+
+.symbol-location {
+  color: #666;
+  font-size: 0.85em;
+  margin-left: auto;
+  font-family: monospace;
+}
+
+/* Kind specific badge colors */
+.symbol-kind-badge[data-kind="namespace"] { background-color: #e1f5fe; color: #0288d1; }
+.symbol-kind-badge[data-kind="class"] { background-color: #efebe9; color: #5d4037; }
+.symbol-kind-badge[data-kind="struct"] { background-color: #ede7f6; color: #5e35b1; }
+.symbol-kind-badge[data-kind="function"] { background-color: #e8f5e9; color: #2e7d32; }
+.symbol-kind-badge[data-kind="variable"] { background-color: #fff3e0; color: #ef6c00; }
+.symbol-kind-badge[data-kind="typedef"] { background-color: #fce4ec; color: #c2185b; }
+.symbol-kind-badge[data-kind="union"] { background-color: #fffde7; color: #f57f17; }
+.symbol-kind-badge[data-kind="enum"] { background-color: #e0f2f1; color: #004d40; }
+
+/* Dark mode overrides */
+@media(prefers-color-scheme: dark) {
+  .doxygen-section {
+    background: #1e1e1e;
+    border-top: 1px solid #444;
+    color: #fff;
+  }
+
+  .doxygen-header-container {
+    border-bottom: 1px solid #444;
+  }
+
+  .doxygen-section.collapsed .doxygen-header-container {
+    border-bottom: none;
+  }
+
+  .doxygen-header {
+    color: #eee;
+  }
+
+  .doxygen-panel-toggle-icon {
+    color: #aaa;
+  }
+
+  .doxygen-empty {
+    color: #aaa;
+  }
+
+  .symbol-tree-row:hover {
+    background-color: #2d2d2d;
+  }
+
+  .symbol-name {
+    color: #eee;
+  }
+
+  .symbol-location {
+    color: #aaa;
+  }
+
+  .symbol-kind-badge[data-kind="namespace"] { background-color: #0b2f44; color: #4fc3f7; }
+  .symbol-kind-badge[data-kind="class"] { background-color: #2d2421; color: #d7ccc8; }
+  .symbol-kind-badge[data-kind="struct"] { background-color: #241933; color: #d1c4e9; }
+  .symbol-kind-badge[data-kind="function"] { background-color: #1b301c; color: #81c784; }
+  .symbol-kind-badge[data-kind="variable"] { background-color: #321; color: #ffb74d; }
+  .symbol-kind-badge[data-kind="typedef"] { background-color: #331420; color: #f48fb1; }
+  .symbol-kind-badge[data-kind="union"] { background-color: #333111; color: #fff176; }
+  .symbol-kind-badge[data-kind="enum"] { background-color: #0d2d2a; color: #4db6ac; }
+}

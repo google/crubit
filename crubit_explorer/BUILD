@@ -23,6 +23,7 @@ crubit_rust_binary(
     name = "server",
     srcs = ["src/main.rs"],
     data = [
+        "//frontend:build",
         "@rules_crubit//cc_bindings_from_rs",
         "@rules_rust//rust/toolchain:current_rustc_files",
         "@rules_rust//rust/toolchain:current_rustc_lib_files",
@@ -48,6 +49,7 @@ crubit_rust_test(
     size = "small",
     srcs = ["src/main.rs"],
     data = [
+        "//frontend:build",
         "@rules_crubit//cc_bindings_from_rs",
         "@rules_rust//rust/toolchain:current_rustc_files",
         "@rules_rust//rust/toolchain:current_rustc_lib_files",
@@ -59,6 +61,7 @@ crubit_rust_test(
     deps = [
         "@crubit_explorer_crates//:axum",
         "@crubit_explorer_crates//:base64",
+        "@crubit_explorer_crates//:googletest",
         "@crubit_explorer_crates//:serde",
         "@crubit_explorer_crates//:serde_json",
         "@crubit_explorer_crates//:tempfile",

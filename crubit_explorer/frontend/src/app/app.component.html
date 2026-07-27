@@ -1,0 +1,50 @@
+<!--
+  Part of the Crubit project, under the Apache License v2.0 with LLVM
+  Exceptions. See /LICENSE for license information.
+  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+-->
+<header>
+  <h1>Crubit Explorer</h1>
+  <div class="toolbar">
+    <label>
+      <span class="toolbar-plugin">Tool:</span>
+      <select [disabled]="true">
+        <option>cc_bindings_from_rs</option>
+      </select>
+    </label>
+    <label class="toolbar-flags">
+      <span>Flags:</span>
+      <input />
+    </label>
+    <label class="toolbar-codegen-tracing">
+      <input type="checkbox">
+      <span>Codegen Tracing</span>
+    </label>
+  </div>
+</header>
+
+<main>
+  <div class="pane">
+    <div class="tab-bar">
+      <app-tabs>
+        <div class="tab selected">
+          <span>input.rs</span>
+        </div>
+      </app-tabs>
+    </div>
+    <div #inputEditorContainer style="flex-grow: 1; position: relative;"></div>
+  </div>
+  
+  <div class="resizer"></div>
+  
+  <div class="pane">
+    <div class="tab-bar">
+      <app-tabs>
+        <div class="tab selected">
+          <span>bindings.h</span>
+        </div>
+      </app-tabs>
+    </div>
+    <div #outputEditorContainer style="flex-grow: 1; position: relative;"></div>
+  </div>
+</main>
