@@ -1,0 +1,48 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+name: Crubit Explorer
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'crubit_explorer/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'crubit_explorer/**'
+
+permissions:
+  contents: read
+
+jobs:
+  crubit_explorer:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: Cache npm dependencies
+      uses: actions/cache@v5
+      with:
+        path: |
+          ~/.npm
+          ~/.local/share/pnpm/store
+        key: ${{ runner.os }}-npm-${{ hashFiles('crubit_explorer/frontend/package.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+    - name: Cache Bazel
+      uses: actions/cache@v5
+      with:
+        path: ~/.cache/bazel
+        key: ${{ runner.os }}-bazel-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-bazel-
+    - name: Build and test Crubit Explorer
+      run: |
+        cd crubit_explorer/frontend
+        npm i --package-lock-only
+        npx pnpm import
+        cd ..
+        bazel build //:server
+        bazel test //:server_test
