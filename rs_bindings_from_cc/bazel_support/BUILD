@@ -11,12 +11,19 @@ load(
 package(default_applicable_licenses = ["//:license"])
 
 bzl_library(
+    name = "encode_raw_string_as_crate_name_bzl",
+    srcs = ["encode_raw_string_as_crate_name.bzl"],
+    visibility = ["//:__subpackages__"],
+)
+
+bzl_library(
     name = "rust_bindings_from_cc_aspect",
     srcs = ["rust_bindings_from_cc_aspect.bzl"],
     visibility = [
         "//:__subpackages__",
     ],
     deps = [
+        ":encode_raw_string_as_crate_name_bzl",
         ":providers_bzl",
         ":rust_bindings_from_cc_cli_flag_aspect_hint",
         ":rust_bindings_from_cc_utils_bzl",
@@ -78,6 +85,7 @@ bzl_library(
     deps = [
         ":compile_cc_bzl",
         ":compile_rust_bzl",
+        ":encode_raw_string_as_crate_name_bzl",
         ":generate_bindings_bzl",
         ":providers_bzl",
         "//cc_bindings_from_rs/bazel_support:providers_bzl",

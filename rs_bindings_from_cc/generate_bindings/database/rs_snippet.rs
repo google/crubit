@@ -2410,11 +2410,9 @@ fn fully_qualify_type<'a>(
 ) -> TokenStream {
     let root_crate = || {
         let target = db.defining_target(item.id()).or_else(|| item.owning_target()).unwrap();
-        if db.ir().is_current_target(&target) {
-            quote! { crate }
-        } else {
-            let ident = make_rs_ident(&target.target_name_escaped());
-            quote! { :: #ident }
+        match rs_imported_crate_name(&target, db.ir()) {
+            Some(ident) => quote! { :: #ident },
+            None => quote! { crate },
         }
     };
     fully_qualify_type_impl(type_expression, root_crate)

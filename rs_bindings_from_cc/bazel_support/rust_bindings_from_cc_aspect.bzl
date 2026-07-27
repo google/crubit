@@ -16,6 +16,10 @@ load(
     "find_crubit_features",
 )
 load(
+    "@rules_crubit//rs_bindings_from_cc/bazel_support:encode_raw_string_as_crate_name.bzl",
+    crubit_encode_raw_string_as_crate_name = "encode_raw_string_as_crate_name",
+)
+load(
     "@rules_crubit//rs_bindings_from_cc/bazel_support:providers.bzl",
     "AdditionalRustSrcsProviderInfo",
     "DepsForBindingsInfo",
@@ -34,7 +38,7 @@ load(
 load("@protobuf//rust:aspects.bzl", "RustProtoInfo", "rust_cc_proto_library_aspect")
 load(
     "@protobuf//rust/bazel:encode_raw_string_as_crate_name.bzl",
-    "encode_raw_string_as_crate_name",
+    protobuf_encode_raw_string_as_crate_name = "encode_raw_string_as_crate_name",
 )
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
@@ -284,6 +288,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     if RustBindingsFromCcInfo in target:
         return []
 
+    use_label_encoded_names_for_deps = ctx.attr._use_label_encoded_names_for_deps[BuildSettingInfo].value
+
     # If this is a header target for a cc_public_library, we can't assign ownership of the headers
     # to this target. The header-only target actually cannot usefully get bindings (e.g.
     # non-inline functions would have no implementation to link against), and should
@@ -360,6 +366,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         direct_target_args["h"] = [h.path for h in public_hdrs]
     if features:
         direct_target_args["f"] = features
+    if use_label_encoded_names_for_deps:
+        direct_target_args["c"] = crubit_encode_raw_string_as_crate_name(str(ctx.label))
 
     if direct_target_args:
         direct_target_args["t"] = str(ctx.label)
@@ -389,6 +397,12 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         for dep in all_deps
         if RustBindingsFromCcInfo in dep
     ]
+
+    if use_label_encoded_names_for_deps:
+        for dep in all_deps:
+            if RustBindingsFromCcInfo in dep:
+                aliases[dep] = crubit_encode_raw_string_as_crate_name(str(dep.label))
+
     compilation_context = target[CcInfo].compilation_context
     if cc_support_deps:
         compilation_context = cc_common.merge_cc_infos(
@@ -448,6 +462,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         ),
         extra_cpp_srcs = extra_cpp_srcs,
         extra_named_deps = extra_named_deps,
+        use_label_encoded_names_for_deps = use_label_encoded_names_for_deps,
     )
 
 rust_bindings_from_cc_aspect = aspect(

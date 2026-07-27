@@ -24,6 +24,7 @@ load(
 )
 load("@rules_crubit//rs_bindings_from_cc/bazel_support:compile_cc.bzl", "compile_cc")
 load("@rules_crubit//rs_bindings_from_cc/bazel_support:compile_rust.bzl", "compile_rust")
+load("@rules_crubit//rs_bindings_from_cc/bazel_support:encode_raw_string_as_crate_name.bzl", "encode_raw_string_as_crate_name")
 load(
     "@rules_crubit//rs_bindings_from_cc/bazel_support:generate_bindings.bzl",
     "escape_cpp_target_name",
@@ -54,7 +55,8 @@ def generate_and_compile_bindings(
         aliases = {},
         additional_rust_srcs = depset(),
         extra_cpp_srcs = [],
-        extra_named_deps = depset()):
+        extra_named_deps = depset(),
+        use_label_encoded_names_for_deps = False):
     """Runs the bindings generator.
 
     Args:
@@ -189,6 +191,11 @@ def generate_and_compile_bindings(
         extra_named_deps = extra_named_deps,
     )
 
+    if use_label_encoded_names_for_deps:
+        name = encode_raw_string_as_crate_name(str(dep_variant_info.crate_info.owner))
+    else:
+        name = dep_variant_info.crate_info.name
+
     return [
         RustBindingsFromCcInfo(
             cc_info = dep_variant_info.cc_info,
@@ -203,7 +210,7 @@ def generate_and_compile_bindings(
             extra_named_deps = depset(
                 direct = [
                     AliasableDepInfo(
-                        name = dep_variant_info.crate_info.name,
+                        name = name,
                         dep = dep_variant_info.crate_info,
                     ),
                 ],
@@ -293,5 +300,8 @@ bindings_attrs = {
     ),
     "_verbose_log_targets": attr.label(
         default = "//common/bazel_support:verbose_log_targets",
+    ),
+    "_use_label_encoded_names_for_deps": attr.label(
+        default = "//common/bazel_support:use_label_encoded_names_for_deps",
     ),
 }

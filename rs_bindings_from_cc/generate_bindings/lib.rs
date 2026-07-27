@@ -1857,11 +1857,14 @@ fn make_rust_abi_path_from_str(
 
     let prefix = if start_with_colon2 {
         None
-    } else if ir.is_current_target(target) {
-        Some(Ident::new("crate", proc_macro2::Span::call_site()))
     } else {
-        start_with_colon2 = true;
-        Some(make_rs_ident(&target.target_name_escaped()))
+        match rs_imported_crate_name(target, ir) {
+            Some(ident) => {
+                start_with_colon2 = true;
+                Some(ident)
+            }
+            None => Some(Ident::new("crate", proc_macro2::Span::call_site())),
+        }
     };
 
     FullyQualifiedPath {
