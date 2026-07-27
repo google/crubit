@@ -47,4 +47,33 @@ extern "C" void __rust_thunk__25d7606d__ZN4absl13flat_hash_mapIimLi42EEC1Ev(
   crubit::construct_at(__this);
 }
 
+extern "C" size_t
+__crubit_flat_hash_map_len___CcTemplateInstN4absl13flat_hash_mapIimLi42EEE___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(
+    const absl::flat_hash_map<int, unsigned long, 42>* __this) {
+  return __this->size();
+}
+
+extern "C" size_t
+__crubit_flat_hash_map_capacity___CcTemplateInstN4absl13flat_hash_mapIimLi42EEE___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(
+    const absl::flat_hash_map<int, unsigned long, 42>* __this) {
+  return __this->capacity();
+}
+
+extern "C" bool
+__crubit_flat_hash_map_is_empty___CcTemplateInstN4absl13flat_hash_mapIimLi42EEE___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(
+    const absl::flat_hash_map<int, unsigned long, 42>* __this) {
+  return __this->empty();
+}
+
+extern "C" bool
+__crubit_flat_hash_map_try_insert___CcTemplateInstN4absl13flat_hash_mapIimLi42EEE___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(
+    absl::flat_hash_map<int, unsigned long, 42>* __this, int* key,
+    unsigned long* value, int const** result_key,
+    unsigned long** result_value) {
+  auto it = __this->try_emplace(std::move(*key), std::move(*value));
+  *result_key = &it.first->first;
+  *result_value = &it.first->second;
+  return it.second;
+}
+
 #pragma clang diagnostic pop
