@@ -6,6 +6,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "cc_bindings_from_rs/test/bazel/cross_crate/other_crate_types.h"
 #include "cc_bindings_from_rs/test/bazel/cross_crate/test_api.h"
 
 namespace crubit {
@@ -15,6 +16,11 @@ TEST(CrossCrateTests, BasicEndToEndTest) {
   other_crate::SomeStruct s = test_api::create_struct(123);
   int i = test_api::extract_int(std::move(s));
   EXPECT_EQ(123, i);
+}
+
+TEST(CrossCrateTests, SpecializationTest) {
+  crubit::test::MyStatus s = test_api::return_status_from_other_crate();
+  EXPECT_TRUE(s.ok);
 }
 
 // b/292231336

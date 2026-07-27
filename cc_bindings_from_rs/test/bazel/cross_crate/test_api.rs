@@ -22,3 +22,7 @@ pub fn extract_int(s: other_crate::SomeStruct) -> i32 {
 pub fn return_a_type_from_a_rust_toolchain_crate() -> String {
     "String".to_owned()
 }
+
+pub fn return_status_from_other_crate() -> other_crate::MyStatus {
+    other_crate::MyStatusOr { has_value: true, value: () }
+}

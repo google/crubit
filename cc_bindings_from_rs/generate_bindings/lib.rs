@@ -192,8 +192,8 @@ fn specializations<'tcx>(db: &crate::BindingsGenerator<'tcx>) -> Rc<[CppTypeSpec
     let tcx = db.tcx();
     let mut specializations = Vec::new();
 
-    let defs_in_crate = db.public_paths_by_def_id(db.source_crate_num());
-    for (adt_or_alias_def_id, paths) in defs_in_crate {
+    let all_public_paths = db.all_public_paths_by_def_id();
+    for (adt_or_alias_def_id, paths) in all_public_paths {
         specializations.extend(
             std::iter::once(adt_or_alias_def_id)
                 .chain(
