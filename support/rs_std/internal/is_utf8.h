@@ -151,7 +151,7 @@ constexpr bool IsUtf8Char(std::string_view str) {
       if (second < 0x80 || second > 0xBF) {
         return false;
       }
-      switch (str[0]) {
+      switch (static_cast<unsigned char>(str[0])) {
         case 0xE0: {
           if (second < 0xA0) {
             return false;

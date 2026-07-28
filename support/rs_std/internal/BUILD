@@ -1,7 +1,7 @@
 """Internal C++ libraries that help work with Rust types."""
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
-load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -15,7 +15,7 @@ cc_library(
     deps = [],
 )
 
-cc_test(
+crubit_cc_test(
     name = "is_utf8_test",
     srcs = ["is_utf8_test.cc"],
     deps = [

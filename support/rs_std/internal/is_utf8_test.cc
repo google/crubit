@@ -60,6 +60,15 @@ static_assert(!BytesAreUtf8<0b11111111>());
 // Test surrogate code point
 static_assert(!BytesAreUtf8<0b10110000, 0b10111111>());
 
+// Regression test for https://crbug.com/538084342.
+//
+// Test surrogate code point ED A0 80.
+// This is also a regression test for character signedness issues
+// where `char` is treated as `signed char` (e.g. in Chromium).
+// We use `static_assert` here so that the failure is caught at compile-time
+// during transition-based cross-compilation tests (which only build, not run).
+static_assert(!rs_std::internal::IsUtf8("\xed\xa0\x80"));
+
 void ExpectUtf8(absl::string_view data) {
   EXPECT_TRUE(rs_std::internal::IsUtf8(data));
 }
