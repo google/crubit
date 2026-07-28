@@ -1772,20 +1772,11 @@ pub trait UnsafeCtorNew<ConstructorArgs> {
 // ====
 
 /// A constructor for ManuallyDrop<T>, given a constructor for T.
-///
-/// ManuallyDrop is special as the only non-Copy type allowed in a union, so we
-/// specifically support its use, even though it is not guaranteed to be
-/// structurally pinned.
 #[must_use = must_use_ctor!()]
 pub struct ManuallyDropCtor<T: Ctor>(T);
 
 impl<T: Ctor> ManuallyDropCtor<T> {
-    /// # Safety
-    ///
-    /// This structurally pins the contents of ManuallyDrop.
-    /// Therefore, it is not safe to use with anything that assumes that
-    /// ManuallyDrop is not structurally pinned.
-    pub unsafe fn new(x: T) -> Self {
+    pub fn new(x: T) -> Self {
         ManuallyDropCtor(x)
     }
 }

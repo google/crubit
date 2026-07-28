@@ -240,8 +240,7 @@ fn test_ctor_macro_manuallydrop_struct() {
     unsafe impl RecursivelyPinned for MyStruct {
         type CtorInitializedFields = Self;
     }
-    let my_struct =
-        emplace!(ctor!(MyStruct { x: unsafe { ManuallyDropCtor::new(vec![42]) }, y: 0 }));
+    let my_struct = emplace!(ctor!(MyStruct { x: ManuallyDropCtor::new(vec![42]), y: 0 }));
     assert_eq!(&*my_struct.x, &vec![42]);
     assert_eq!(my_struct.y, 0);
 }
@@ -255,7 +254,7 @@ fn test_ctor_macro_union() {
     unsafe impl RecursivelyPinned for MyUnion {
         type CtorInitializedFields = Self;
     }
-    let mut my_union = emplace!(ctor!(MyUnion { x: unsafe { ManuallyDropCtor::new(vec![42]) } }));
+    let mut my_union = emplace!(ctor!(MyUnion { x: ManuallyDropCtor::new(vec![42]) }));
     assert_eq!(unsafe { &*my_union.x }, &vec![42]);
 
     // And now write to the union.
