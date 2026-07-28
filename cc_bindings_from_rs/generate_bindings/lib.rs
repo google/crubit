@@ -250,6 +250,7 @@ pub fn new_database<'db>(
     crubit_debug_path_format: Option<dyn_format::Format<2>>,
     default_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
     kythe_annotations: bool,
+    portable_abi_compatible: bool,
     enable_rmeta_interface: bool,
     crate_name_to_include_paths: Rc<HashMap<Rc<str>, Vec<CcInclude>>>,
     crate_name_to_features: Rc<HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>,
@@ -268,6 +269,7 @@ pub fn new_database<'db>(
         crubit_debug_path_format,
         default_features,
         kythe_annotations,
+        portable_abi_compatible,
         enable_rmeta_interface,
         crate_name_to_include_paths,
         crate_name_to_features,
@@ -1376,7 +1378,7 @@ fn generate_default_ctor<'tcx>(
             // This might be the case for `#[repr(transparent)]` types.
             // TODO: b/459482188 - This is ultimately dependent on the return ABI of the thunk and
             // should be centralized with the other callsites that depend on return type ABI.
-            let ctor_impl = if is_c_abi_compatible_by_value(tcx, core.self_ty) {
+            let ctor_impl = if is_c_abi_compatible_by_value(db, core.self_ty) {
                 quote! {
                     inline #fully_qualified_name::#cc_struct_name() {
                        *this = __crubit_internal::#thunk_name();

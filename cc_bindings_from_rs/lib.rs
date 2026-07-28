@@ -100,6 +100,7 @@ fn new_db<'tcx>(
         cmdline.crubit_debug_path_format.clone(),
         cmdline.default_crate_features,
         cmdline.kythe_annotations,
+        cmdline.portable_abi_compatible,
         cmdline.enable_rmeta_interface,
         crate_name_to_include_paths.into(),
         crate_name_to_features.into(),

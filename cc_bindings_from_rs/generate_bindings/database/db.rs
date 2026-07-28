@@ -73,6 +73,10 @@ memoized::query_group! {
       fn kythe_annotations(&self) -> bool;
 
       #[input]
+      /// Rollout flag: more correct definition of ABI compatibility. See b/539569491.
+      fn portable_abi_compatible(&self) -> bool;
+
+      #[input]
       /// Feature flag for rmeta commandline interface.
       fn enable_rmeta_interface(&self) -> bool;
 

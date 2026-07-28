@@ -690,6 +690,7 @@ pub fn copy<T: ?Sized + for<'a> CtorNew<&'a T>, P: Deref<Target = T>>(src: P) ->
 /// Note: this does not actually move until it is used.
 #[must_use = must_use_ctor_assign!("RvalueReference")]
 #[repr(transparent)]
+#[cfg_attr(all(not(doc), feature = "same_abi"), doc = "CRUBIT_ANNOTATE: same_abi=")]
 pub struct RvalueReference<'a, T: ?Sized>(pub Pin<&'a mut T>);
 
 impl<T: ?Sized> RvalueReference<'_, T> {
@@ -784,6 +785,7 @@ impl<'a, T: ?Sized> !SelfCtor for RvalueReference<'a, T> {}
 /// due to "overlapping" impls that Rust doesn't recognize as disjoint due to different
 /// associated types. (Rust does not recognize `Ctor![i32]` and `Ctor![i64]` as disjoint,
 /// even though no type can implement both.)
+#[cfg_attr(all(not(doc), feature = "same_abi"), doc = "CRUBIT_ANNOTATE: same_abi=")]
 #[repr(transparent)]
 pub struct ByValue<'a, T: ?Sized>(pub RvalueReference<'a, T>);
 
@@ -818,6 +820,7 @@ impl<'a, T: ?Sized> !SelfCtor for ByValue<'a, T> {}
 /// const-move-assignment (assignment from `ConstRvalueReference(&x)`).
 #[must_use = must_use_ctor_assign!("ConstRvalueReference")]
 #[repr(transparent)]
+#[cfg_attr(all(not(doc), feature = "same_abi"), doc = "CRUBIT_ANNOTATE: same_abi=")]
 pub struct ConstRvalueReference<'a, T: ?Sized>(pub &'a T);
 
 impl<'a, T: ?Sized> ConstRvalueReference<'a, T> {

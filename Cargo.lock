@@ -250,6 +250,8 @@ name = "cc_bindings_from_rs_query_compiler"
 version = "0.0.0"
 dependencies = [
  "arc_anyhow",
+ "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_database",
  "cc_bindings_from_rs_rustversion",
  "error_report",
 ]

@@ -161,6 +161,10 @@ pub struct Cmdline {
     #[clap(long, value_parser, value_name = "BOOL", default_value_t = false)]
     pub kythe_annotations: bool,
 
+    /// Rollout flag: more correct definition of ABI compatibility. See b/539569491.
+    #[clap(long, value_parser, value_name = "BOOL", default_value_t = false)]
+    pub portable_abi_compatible: bool,
+
     /// Default corpus to use for Kythe vnames.
     #[clap(long, value_parser, value_name = "STRING", default_value = "corpus")]
     pub kythe_default_corpus: Option<String>,

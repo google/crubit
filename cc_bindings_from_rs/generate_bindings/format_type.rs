@@ -450,7 +450,7 @@ pub fn format_ty_for_cc<'tcx>(
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
 
-            if location.is_bridgeable() && is_c_abi_compatible_by_value(tcx, ty) {
+            if location.is_bridgeable() && is_c_abi_compatible_by_value(db, ty) {
                 ensure!(
                     db.has_move_ctor_and_assignment_operator(
                         Some(adt.did()),
@@ -672,7 +672,7 @@ pub fn format_ty_for_cc<'tcx>(
             };
 
             check_fn_sig(&sig)?;
-            is_thunk_required(tcx, &sig).context("Function pointers can't have a thunk")?;
+            is_thunk_required(db, &sig).context("Function pointers can't have a thunk")?;
 
             // `is_thunk_required` check above implies `extern "C"` (or `"C-unwind"`).
             // This assertion reinforces that the generated C++ code doesn't need

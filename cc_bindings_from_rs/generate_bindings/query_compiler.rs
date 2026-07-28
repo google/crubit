@@ -36,9 +36,12 @@ use rustc_trait_selection::infer::InferCtxtExt;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use database::BindingsGenerator;
+
 /// Whether functions using `extern "C"` ABI can safely handle values of type
 /// `ty` (e.g. when passing by value arguments or return values of such type).
-pub fn is_c_abi_compatible_by_value<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bool {
+pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+    let tcx = db.tcx();
     match ty.kind() {
         // `improper_ctypes_definitions` warning doesn't complain about the following types:
         ty::TyKind::Bool
@@ -46,14 +49,15 @@ pub fn is_c_abi_compatible_by_value<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bo
         | ty::TyKind::Int { .. }
         | ty::TyKind::Uint { .. }
         | ty::TyKind::Never
-        | ty::TyKind::RawPtr { .. }
-        | ty::TyKind::Ref { .. }
         | ty::TyKind::FnPtr { .. } => true,
-        ty::TyKind::Tuple(types) if types.is_empty() => true,
 
-        // Crubit assumes that `char` is compatible with a certain `extern "C"` ABI.
-        // See `rust_builtin_type_abi_assumptions.md` for more details.
-        ty::TyKind::Char => true,
+        ty::TyKind::RawPtr(pointee, ..) | ty::TyKind::Ref(_, pointee, ..) => {
+            // Only thin references/pointers are ABI-compatible. (Not e.g. &str.)
+            !db.portable_abi_compatible()
+                || pointee.is_sized(tcx, ty::TypingEnv::fully_monomorphized())
+        }
+        ty::TyKind::Tuple(types) if types.is_empty() => true,
+        ty::TyKind::Char => !db.portable_abi_compatible(),
 
         // Crubit's C++ bindings for tuples, structs, and other ADTs may not preserve
         // their ABI (even if they *do* preserve their memory layout).  For example:
@@ -71,6 +75,16 @@ pub fn is_c_abi_compatible_by_value<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bo
         // - Discriminant-only enums (b/259984090).
         ty::TyKind::Tuple { .. } => false, // An empty tuple (`()` - the unit type) is handled above.
         ty::TyKind::Adt(adt, substs) => {
+            let attrs = crubit_attr::get_attrs(tcx, adt.did()).unwrap_or_default();
+            if attrs.same_abi {
+                return true;
+            }
+            // NOTE: the below categorizes repr(transparent) types, but that only
+            // works if the C++ side uses the _underlying_ type. If it uses the actual
+            // same type as Rust, repr(transparent) actually makes it _less_ ABI compatible!
+            if db.portable_abi_compatible() {
+                return false;
+            }
             if !adt.repr().transparent() {
                 // If our adt is not transparent, it is not abi compatible by value.
                 return false;
@@ -91,7 +105,7 @@ pub fn is_c_abi_compatible_by_value<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bo
             if let ty::TyKind::Pat(pat_ty, _) = ty.kind() {
                 ty = *pat_ty;
             }
-            is_c_abi_compatible_by_value(tcx, ty)
+            is_c_abi_compatible_by_value(db, ty)
         }
         ty::TyKind::Pat(_, _) => false,
 
@@ -99,8 +113,7 @@ pub fn is_c_abi_compatible_by_value<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bo
         ty::TyKind::Array { .. } => false,
         ty::TyKind::Alias { .. } => false,
 
-        // Slice references (`&[T]`, `&str`) are not guaranteed to be ABI-compatible when passed
-        // by-value.
+        // In case we were visited via a repr(transparent) wrapper, instead of `Ref` etc.
         ty::TyKind::Slice { .. } | ty::TyKind::Str => false,
 
         // `format_ty_for_cc` is expected to fail for other kinds of types

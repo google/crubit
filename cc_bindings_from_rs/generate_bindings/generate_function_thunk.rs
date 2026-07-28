@@ -152,7 +152,7 @@ pub fn generate_thunk_decl<'tcx>(
                         }
                         BridgedType::Composable(_) => Ok(quote! { unsigned char* }),
                     }
-                } else if is_c_abi_compatible_by_value(tcx, ty) {
+                } else if is_c_abi_compatible_by_value(db, ty) {
                     Ok(quote! { #cpp_type })
                 } else if let Some(tuple_abi) = tuple_c_abi_c_type(db, ty) {
                     Ok(tuple_abi)
@@ -175,10 +175,8 @@ pub fn generate_thunk_decl<'tcx>(
                         anyhow!("Can't pass type `{ty}` by value without a move constructor. See crubit.rs/rust/movable_types for what types are C++ movable.")
                     })?;
                     Ok(quote! { #cpp_type* })
-                } else if let ty::TyKind::Tuple(_) = ty.kind() {
-                    Ok(quote! { #cpp_type* })
                 } else {
-                    bail!("Unknown type")
+                    Ok(quote! { #cpp_type* })
                 }
             })
             .collect::<Result<Vec<_>>>()?
@@ -208,7 +206,7 @@ pub fn generate_thunk_decl<'tcx>(
                 quote! { void }
             }
         }
-    } else if is_c_abi_compatible_by_value(tcx, sig_mid.output()) {
+    } else if is_c_abi_compatible_by_value(db, sig_mid.output()) {
         main_api_ret_type
     } else if let Some(tuple_abi) = tuple_c_abi_c_type(db, sig_mid.output()) {
         thunk_params.push(quote! { #tuple_abi __ret_ptr });
@@ -353,8 +351,7 @@ fn convert_value_from_c_abi_to_rust<'tcx>(
             extern_c_decls,
         );
     }
-    let tcx = db.tcx();
-    if is_c_abi_compatible_by_value(tcx, ty) {
+    if is_c_abi_compatible_by_value(db, ty) {
         return Ok(quote! {});
     }
     if let ty::TyKind::Tuple(tuple_tys) = ty.kind()
@@ -370,13 +367,12 @@ fn convert_value_from_c_abi_to_rust<'tcx>(
 }
 
 fn c_abi_for_param_type<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
-    let tcx = db.tcx();
     if let Some(bridged) = is_bridged_type(db, ty)? {
         match bridged {
             BridgedType::Legacy { .. } => Ok(quote! { *const core::ffi::c_void }),
             BridgedType::Composable(_) => Ok(quote! { *const core::ffi::c_uchar }),
         }
-    } else if is_c_abi_compatible_by_value(tcx, ty) {
+    } else if is_c_abi_compatible_by_value(db, ty) {
         let rs_type = db.format_ty_for_rs(ty)?;
         Ok(quote! { #rs_type })
     } else if let Some(tuple_abi) = tuple_c_abi_rs_type(db, ty) {
@@ -449,7 +445,6 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
     let write_directly = || -> Result<TokenStream> {
         Ok(quote! { ::core::ptr::write(#c_ptr as *mut _, #rs_value); })
     };
-    let tcx = db.tcx();
     Ok(if let Some(bridged_type) = is_bridged_type(db, rs_type)? {
         match bridged_type {
             BridgedType::Legacy { conversion_info, .. } => match conversion_info {
@@ -486,7 +481,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
                 }
             }
         }
-    } else if is_c_abi_compatible_by_value(tcx, rs_type) {
+    } else if is_c_abi_compatible_by_value(db, rs_type) {
         write_directly()?
     } else if let ty::TyKind::Tuple(tuple_tys) = rs_type.kind()
         && !db
@@ -517,9 +512,16 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
             #unpack
             #write_elements
         }
-    } else if let ty::TyKind::Array { .. } = rs_type.kind() {
-        write_directly()?
-    } else if rs_type.ty_adt_def().is_some() || matches!(rs_type.kind(), ty::TyKind::Tuple(_)) {
+    } else if rs_type.ty_adt_def().is_some()
+        || matches!(
+            rs_type.kind(),
+            ty::TyKind::Tuple(_)
+                | ty::TyKind::Array { .. }
+                | ty::TyKind::Ref { .. }
+                | ty::TyKind::RawPtr { .. }
+                | ty::TyKind::Char
+        )
+    {
         write_directly()?
     } else {
         bail!("Attempted to write out unknown type from Rust to C")
@@ -617,7 +619,7 @@ pub fn generate_thunk_impl<'tcx>(
                 ::dyn_erased_future::DynErasedFuture::new(#fully_qualified_fn_name( #( #fn_args ),* ))
             );
         };
-    } else if output_is_bridged.is_none() && is_c_abi_compatible_by_value(tcx, sig.output()) {
+    } else if output_is_bridged.is_none() && is_c_abi_compatible_by_value(db, sig.output()) {
         // The output is not bridged and is C ABI compatible by-value, so we can just return
         // the result directly, and no out-param is needed.
         thunk_return_type = db.format_ty_for_rs(sig.output())?;
@@ -670,7 +672,7 @@ pub fn generate_thunk_impl<'tcx>(
 
 /// Returns `Ok(())` if no thunk is required.
 /// Otherwise returns an error the describes why the thunk is needed.
-pub fn is_thunk_required<'tcx>(tcx: TyCtxt<'tcx>, sig: &ty::FnSig<'tcx>) -> Result<()> {
+pub fn is_thunk_required<'tcx>(db: &BindingsGenerator<'tcx>, sig: &ty::FnSig<'tcx>) -> Result<()> {
     #[rustversion::before(2026-04-19)]
     let abi = sig.abi;
     #[rustversion::since(2026-04-19)]
@@ -692,10 +694,10 @@ pub fn is_thunk_required<'tcx>(tcx: TyCtxt<'tcx>, sig: &ty::FnSig<'tcx>) -> Resu
         _ => bail!("Any calling convention other than `extern \"C\"` requires a thunk"),
     };
 
-    ensure!(is_c_abi_compatible_by_value(tcx, sig.output()), "Return type requires a thunk");
+    ensure!(is_c_abi_compatible_by_value(db, sig.output()), "Return type requires a thunk");
     for (i, param_ty) in sig.inputs().iter().enumerate() {
         ensure!(
-            is_c_abi_compatible_by_value(tcx, *param_ty),
+            is_c_abi_compatible_by_value(db, *param_ty),
             "Type of parameter #{i} requires a thunk"
         );
     }

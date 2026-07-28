@@ -125,6 +125,7 @@ pub const fn new_c_double(value: f64) -> c_double {
 // `core::ffi::c_char` if they need it.
 new_integer! {
     #[cfg_attr(not(doc), doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char(0))")]
+    #[cfg_attr(all(not(doc), feature="same_abi"), doc = "CRUBIT_ANNOTATE: same_abi=")]
     #[cfi_encoding = "c"]
     pub struct c_char(u8);
     pub const fn new_c_char;

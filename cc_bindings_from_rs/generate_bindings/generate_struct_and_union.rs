@@ -870,7 +870,7 @@ fn generate_constructor_impls<'tcx>(
             )
             .ok()?;
 
-            let returns_by_value = is_c_abi_compatible_by_value(tcx, core.self_ty);
+            let returns_by_value = is_c_abi_compatible_by_value(db, core.self_ty);
             let impl_body_tokens = if returns_by_value {
                 quote! {
                     #statements

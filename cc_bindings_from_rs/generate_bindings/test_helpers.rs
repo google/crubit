@@ -110,6 +110,7 @@ fn bindings_db_for_tests_with_features<'tcx>(
         /* crubit_debug_path_format= */ None,
         /* default_features= */ Default::default(),
         /* kythe_annotations= */ with_kythe_annotations,
+        /* portable_abi_compatible= */ false,
         /* enable_rmeta_interface= */ false,
         Rc::new(crate_name_to_include_paths),
         Rc::new(crate_name_to_features),

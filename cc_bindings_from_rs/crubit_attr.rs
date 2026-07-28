@@ -116,6 +116,9 @@ pub struct CrubitAttrs {
     /// pub fn new() -> i32 {...}
     /// ```
     pub must_bind: bool,
+
+    /// Whether the annotated item has the same ABI as the C++ type it maps to.
+    pub same_abi: bool,
 }
 
 impl CrubitAttrs {
@@ -129,6 +132,7 @@ impl CrubitAttrs {
     pub const BRIDGE_ABI_CPP: &'static str = "bridge_abi_cpp";
     pub const MUST_BIND: &'static str = "must_bind";
     pub const SPECIALIZES_CPP_TYPE: &'static str = "specializes_cpp_type";
+    pub const SAME_ABI: &'static str = "same_abi";
 
     fn add_attr(&mut self, name: &str, symbol: Symbol) -> Result<()> {
         let set_opt_once = |slot: &mut Option<Symbol>, symbol: Symbol| -> Result<()> {
@@ -158,6 +162,7 @@ impl CrubitAttrs {
             CrubitAttrs::BRIDGE_ABI_CPP => set_opt_once(&mut self.bridge_abi_cpp, symbol)?,
             CrubitAttrs::MUST_BIND => set_bool_once(&mut self.must_bind)?,
             CrubitAttrs::SPECIALIZES_CPP_TYPE => set_bool_once(&mut self.specializes_cpp_type)?,
+            CrubitAttrs::SAME_ABI => set_bool_once(&mut self.same_abi)?,
             _ => bail!("Invalid CRUBIT_ANNOTATE key: \"{name}\""),
         }
         Ok(())
