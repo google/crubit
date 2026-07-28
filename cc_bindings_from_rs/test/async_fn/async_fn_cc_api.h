@@ -31,13 +31,13 @@ namespace async_fn {
 
 // Error generating bindings for struct
 // `async_fn_golden::AsyncFnRustConvertible` defined at
-// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=54:
+// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=58:
 // Type bindings for async_fn_golden::AsyncFnRustConvertible suppressed due to
 // being mapped to an existing C++ type (crubit::test::AsyncFnCppConvertible)
 
 // Error generating bindings for struct
 // `async_fn_golden::AsyncFnRustLayoutEquivalent` defined at
-// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=96:
+// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=100:
 // Type bindings for async_fn_golden::AsyncFnRustLayoutEquivalent suppressed due
 // to being mapped to an existing C++ type
 // (crubit::test::AsyncFnCppLayoutEquivalent)
@@ -122,21 +122,21 @@ extern "C" void convert_rust_to_cpp_async_fn(const void* _rs_in,
 
 // Error generating bindings for function `async_fn_golden::non_send_return`
 // defined at
-// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=130:
+// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=134:
 // Crubit currently only supports async functions that return a Send future.
 
 ::crubit::DynErasedFuture<::std::int32_t> pend_5_times();
 
 // Error generating bindings for function
 // `async_fn_golden::return_box_dyn_future` defined at
-// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=125:
+// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=129:
 // Error formatting function return type `std::boxed::Box<(dyn
 // std::future::Future<Output = i32> + 'static)>`: Generic types are not
 // supported yet (b/259749095)
 
 // Error generating bindings for function
 // `async_fn_golden::return_bridged_convertible` defined at
-// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=58:
+// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=62:
 // Crubit currently does not support async functions returning bridged types
 // that require conversion thunks, found
 // `async_fn_golden::AsyncFnRustConvertible`.
@@ -146,7 +146,7 @@ return_cpp_layout_equivalent(::std::int32_t x);
 
 // Error generating bindings for function `async_fn_golden::return_impl_future`
 // defined at
-// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=120:
+// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=124:
 // Error formatting function return type `impl std::future::Future<Output =
 // i32>`: Generic types are not supported yet (b/259749095)
 
@@ -155,9 +155,14 @@ return_cpp_layout_equivalent(::std::int32_t x);
 
 // Error generating bindings for function `async_fn_golden::return_unmovable`
 // defined at
-// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=115:
+// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=119:
 // Can't pass a type by value without a move constructor. See
 // crubit.rs/rust/movable_types for what types are C++ movable.
+
+// Error generating bindings for function `async_fn_golden::sum_slice` defined
+// at
+// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=14:
+// Crubit currently only supports async functions that return a Send future.
 
 static_assert(
     sizeof(NotCppMovable) == 4,

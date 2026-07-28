@@ -11,6 +11,10 @@ pub async fn add(x: i32, y: i32) -> i32 {
     x + y
 }
 
+pub async fn sum_slice(slice: &[i32]) -> i32 {
+    slice.iter().sum()
+}
+
 // 1. A return type which implements `Drop`
 #[derive(Default)]
 pub struct StructWithDrop {
