@@ -21,7 +21,10 @@ license(
 
 crubit_rust_binary(
     name = "server",
-    srcs = ["src/main.rs"],
+    srcs = [
+        "src/api.rs",
+        "src/main.rs",
+    ],
     data = [
         "//frontend:build",
         "@rules_crubit//cc_bindings_from_rs",
@@ -47,7 +50,10 @@ crubit_rust_binary(
 crubit_rust_test(
     name = "server_test",
     size = "small",
-    srcs = ["src/main.rs"],
+    srcs = [
+        "src/api.rs",
+        "src/main.rs",
+    ],
     data = [
         "//frontend:build",
         "@rules_crubit//cc_bindings_from_rs",

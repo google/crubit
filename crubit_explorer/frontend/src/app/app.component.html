@@ -3,6 +3,7 @@
   Exceptions. See /LICENSE for license information.
   SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 -->
+
 <header>
   <h1>Crubit Explorer</h1>
   <div class="toolbar">
@@ -12,38 +13,40 @@
         <option>cc_bindings_from_rs</option>
       </select>
     </label>
-    <label class="toolbar-flags">
-      <span>Flags:</span>
-      <input />
-    </label>
-    <label class="toolbar-codegen-tracing">
-      <input type="checkbox">
-      <span>Codegen Tracing</span>
-    </label>
   </div>
 </header>
 
 <main>
   <div class="pane">
     <div class="tab-bar">
-      <app-tabs>
+      <div class="app-tabs">
         <div class="tab selected">
           <span>input.rs</span>
         </div>
-      </app-tabs>
+      </div>
     </div>
     <div #inputEditorContainer style="flex-grow: 1; position: relative;"></div>
   </div>
-  
+
   <div class="resizer"></div>
-  
+
   <div class="pane">
     <div class="tab-bar">
-      <app-tabs>
-        <div class="tab selected">
-          <span>bindings.h</span>
-        </div>
-      </app-tabs>
+      <div class="app-tabs">
+        <ng-container *ngIf="outputFiles.length > 0; else defaultTab">
+          <div *ngFor="let file of outputFiles; let i = index"
+               class="tab"
+               [class.selected]="selectedOutputFileIndex === i"
+               (click)="selectOutputFile(i)">
+            <span>{{ file.name }}</span>
+          </div>
+        </ng-container>
+        <ng-template #defaultTab>
+          <div class="tab selected">
+            <span>bindings.h</span>
+          </div>
+        </ng-template>
+      </div>
     </div>
     <div #outputEditorContainer style="flex-grow: 1; position: relative;"></div>
   </div>

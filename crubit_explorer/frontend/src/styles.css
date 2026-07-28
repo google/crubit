@@ -14,11 +14,13 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 }
 
 .toolbar-flags {
-  display:none;
+  display: flex;
+  align-items: center;
 }
 
 .toolbar-codegen-tracing {
-  display:none;
+  display: flex;
+  align-items: center;
 }
 
 html {
@@ -142,11 +144,11 @@ app-shortn .shortn-popup {
   margin: 0 0 .5rem 0;
 }
 
-.tab-bar app-tabs {
+.tab-bar .app-tabs {
   display: inline-block;
 }
 
-.tab-bar app-tabs .tab {
+.tab-bar .app-tabs .tab {
   display: inline-block;
   cursor: default;
   border: 2px solid oklch(from var(--theme-color) calc(l - .27) calc(c - .009) h);
@@ -159,20 +161,20 @@ app-shortn .shortn-popup {
   background: oklch(from var(--theme-color) calc(l - .24) calc(c - .008) h);
 }
 
-.tab-bar app-tabs .tab.selected {
+.tab-bar .app-tabs .tab.selected {
   background: oklch(from var(--theme-color) calc(l - .09) calc(c - .009) h);
 }
 
-.tab-bar app-tabs .tab:hover,
-.tab-bar app-tabs .tab.selected:hover {
+.tab-bar .app-tabs .tab:hover,
+.tab-bar .app-tabs .tab.selected:hover {
   background: var(--theme-color);
 }
 
-.tab-bar app-tabs .tab span {
+.tab-bar .app-tabs .tab span {
   display: inline-block;
 }
 
-.tab-bar app-tabs .tab span.icon {
+.tab-bar .app-tabs .tab span.icon {
   padding-left: .5rem;
   cursor: pointer;
   vertical-align: middle;

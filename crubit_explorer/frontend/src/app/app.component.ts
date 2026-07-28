@@ -4,15 +4,16 @@
 
 import {CommonModule} from '@angular/common';
 import {HttpClient} from '@angular/common/http';
-import {AfterViewInit, Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, OnDestroy, ViewChild} from '@angular/core';
-import {Subject, Subscription, debounceTime} from 'rxjs';
-import loader from '@monaco-editor/loader';
+import {AfterViewInit, Component, ElementRef, OnDestroy, ViewChild} from '@angular/core';
+import {Subject, Subscription} from 'rxjs';
+import {debounceTime} from 'rxjs/operators';
+
+import {loadMonaco} from './monaco_loader';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './app.component.html',
   styleUrls: []
 })
@@ -24,17 +25,18 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   inputEditor: any;
   outputEditor: any;
-  monaco: any;
 
   private inputChangeSubject = new Subject<string>();
   private subscription!: Subscription;
   isCompiling = false;
 
+  outputFiles: Array<{name: string, content: string}> = [];
+  selectedOutputFileIndex = 0;
+
   constructor(private http: HttpClient) {}
 
   ngAfterViewInit() {
-    loader.init().then(monaco => {
-      this.monaco = monaco;
+    loadMonaco().then((monaco: any) => {
       const prefersDark = window.matchMedia &&
           window.matchMedia('(prefers-color-scheme: dark)').matches;
       const theme = prefersDark ? 'vs-dark' : 'vs';
@@ -61,12 +63,44 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       this.inputEditor.onDidChangeModelContent(() => {
         this.inputChangeSubject.next(this.inputEditor.getValue());
       });
+
+      this.compile();
     });
 
     this.subscription =
         this.inputChangeSubject.pipe(debounceTime(600)).subscribe(content => {
           this.compile(content);
         });
+  }
+
+  selectOutputFile(index: number) {
+    this.selectedOutputFileIndex = index;
+    if (!this.outputEditor || !this.outputFiles[index]) {
+      return;
+    }
+
+    this.outputEditor.setValue(this.outputFiles[index].content);
+    this.updateOutputEditorLanguage(this.outputFiles[index].name);
+  }
+
+  private updateOutputEditorLanguage(fileName: string) {
+    const monaco = (window as any).monaco;
+    if (!monaco?.editor || !this.outputEditor) {
+      return;
+    }
+
+    let lang = '';
+    if (fileName.endsWith('.rs')) {
+      lang = 'rust';
+    } else if ([
+                 '.h', '.hpp', '.cc', '.cpp'
+               ].some(ext => fileName.endsWith(ext))) {
+      lang = 'cpp';
+    }
+
+    if (lang) {
+      monaco.editor.setModelLanguage(this.outputEditor.getModel(), lang);
+    }
   }
 
   compile(content?: string) {
@@ -79,8 +113,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
     const payload = {
       pluginName: 'cc_bindings_from_rs',
-      enableCodegenTracing: false,
-      pluginFlags: [],
       input: {
         files: [{
           name: 'input.rs',
@@ -93,25 +125,39 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       next: (res) => {
         this.isCompiling = false;
         if (res.error) {
+          this.outputFiles = [];
           if (this.outputEditor) {
             this.outputEditor.setValue(
                 '// Error:\n' + (res.error.reason || res.error.text));
           }
-        } else if (
-            res.output && res.output.files && res.output.files.length > 0) {
-          // Combine all output files for display
-          let combinedOutput = '';
-          for (let file of res.output.files) {
-            const decoded = decodeURIComponent(escape(atob(file.contentsB64)));
-            combinedOutput += '// File: ' + file.name + '\n' + decoded + '\n\n';
-          }
-          if (this.outputEditor) {
-            this.outputEditor.setValue(combinedOutput);
-          }
+          return;
         }
+
+        if (!res.output?.files?.length) {
+          return;
+        }
+
+        this.outputFiles = res.output.files.map(
+            (file: {name: string, contentsB64: string}) => ({
+              name: file.name,
+              content: decodeURIComponent(escape(atob(file.contentsB64)))
+            }));
+
+        if (this.selectedOutputFileIndex >= this.outputFiles.length) {
+          this.selectedOutputFileIndex = 0;
+        }
+
+        const currentFile = this.outputFiles[this.selectedOutputFileIndex];
+        if (!this.outputEditor || !currentFile) {
+          return;
+        }
+
+        this.outputEditor.setValue(currentFile.content);
+        this.updateOutputEditorLanguage(currentFile.name);
       },
       error: (err) => {
         this.isCompiling = false;
+        this.outputFiles = [];
         const errText =
             err.error?.error?.reason || err.message || 'Unknown Error';
         if (this.outputEditor) {

@@ -2,12 +2,16 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+pub mod api;
+
 use axum::body::Body;
 use axum::extract::State;
 use axum::http::{header, StatusCode, Uri};
 use axum::response::{IntoResponse, Response};
 use axum::{routing, Router};
+use std::env;
 use std::error::Error;
+use std::fs;
 use std::net::SocketAddr;
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
@@ -20,7 +24,7 @@ const CC_BINDINGS_FROM_RS_RLOCATION: &str =
 
 fn get_cc_bindings_from_rs_path() -> Result<PathBuf, Box<dyn Error>> {
     // Environment variable for location to cc_bindings_from_rs binary
-    if let Ok(env_path) = std::env::var("CC_BINDINGS_FROM_RS")
+    if let Ok(env_path) = env::var("CC_BINDINGS_FROM_RS")
         && let path = PathBuf::from(env_path)
         && path.exists()
     {
@@ -38,7 +42,7 @@ fn get_cc_bindings_from_rs_path() -> Result<PathBuf, Box<dyn Error>> {
     // Check if cc_bindings_from_rs is in the same directory as the executable
     // This is useful when crubit_explorer is run in a tarball or Docker container with
     // a specific directory structure
-    if let Ok(mut exe_path) = std::env::current_exe() {
+    if let Ok(mut exe_path) = env::current_exe() {
         exe_path.pop(); // Remove the executable name, leaving the directory
         let adjacent_path = exe_path.join("cc_bindings_from_rs");
         if adjacent_path.exists() {
@@ -54,8 +58,7 @@ fn get_cc_bindings_from_rs_path() -> Result<PathBuf, Box<dyn Error>> {
     Err("cc_bindings_from_rs binary not found via CC_BINDINGS_FROM_RS env var, Bazel runfiles, adjacent to executable, or in system PATH".into())
 }
 
-#[cfg(test)]
-fn new_cc_bindings_from_rs_command() -> Result<Command, Box<dyn Error>> {
+pub(crate) fn new_cc_bindings_from_rs_command() -> Result<Command, Box<dyn Error>> {
     let binary_path = get_cc_bindings_from_rs_path()?;
     let mut cmd = Command::new(binary_path);
 
@@ -63,7 +66,7 @@ fn new_cc_bindings_from_rs_command() -> Result<Command, Box<dyn Error>> {
 
     // Check Bazel runfiles
     if let Ok(r) = Runfiles::create()
-        && let Ok(rustc_runfiles_env) = std::env::var("RUSTC_RUNFILES_PATH")
+        && let Ok(rustc_runfiles_env) = env::var("RUSTC_RUNFILES_PATH")
         && let Some(rustc_path) = runfiles::rlocation!(r, &rustc_runfiles_env)
     {
         let mut lib_dir = rustc_path;
@@ -76,7 +79,7 @@ fn new_cc_bindings_from_rs_command() -> Result<Command, Box<dyn Error>> {
     }
 
     // Check adjacent lib directory to the current executable (useful in Docker/production tarball)
-    if let Ok(mut exe_path) = std::env::current_exe() {
+    if let Ok(mut exe_path) = env::current_exe() {
         exe_path.pop();
         let adjacent_lib = exe_path.join("lib");
         if adjacent_lib.exists() {
@@ -92,11 +95,11 @@ fn new_cc_bindings_from_rs_command() -> Result<Command, Box<dyn Error>> {
         };
 
         let mut paths = extra_lib_dirs;
-        if let Some(old_val) = std::env::var_os(LIB_PATH_ENV) {
-            paths.extend(std::env::split_paths(&old_val));
+        if let Some(old_val) = env::var_os(LIB_PATH_ENV) {
+            paths.extend(env::split_paths(&old_val));
         }
 
-        let new_val = std::env::join_paths(paths)?;
+        let new_val = env::join_paths(paths)?;
         cmd.env(LIB_PATH_ENV, new_val);
     }
 
@@ -104,8 +107,8 @@ fn new_cc_bindings_from_rs_command() -> Result<Command, Box<dyn Error>> {
 }
 
 fn find_in_path(name: &str) -> Option<PathBuf> {
-    let paths = std::env::var_os("PATH")?;
-    std::env::split_paths(&paths).find_map(|dir| {
+    let paths = env::var_os("PATH")?;
+    env::split_paths(&paths).find_map(|dir| {
         let full_path = dir.join(name);
         full_path.exists().then_some(full_path)
     })
@@ -120,7 +123,7 @@ fn get_frontend_dist_path() -> Option<PathBuf> {
         }
     }
 
-    if let Ok(mut exe_path) = std::env::current_exe() {
+    if let Ok(mut exe_path) = env::current_exe() {
         exe_path.pop();
         let adjacent_path = exe_path.join("frontend/dist/frontend");
         if adjacent_path.exists() {
@@ -136,17 +139,37 @@ fn get_frontend_dist_path() -> Option<PathBuf> {
 }
 
 fn app(frontend_path: Option<PathBuf>) -> Router {
+    let mut app = Router::new()
+        .route("/api/compile", routing::post(api::compile_handler).get(api::compile_handler));
+
     if let Some(path) = frontend_path {
         println!("Serving frontend from {}", path.display());
-        Router::new().fallback(serve_frontend).with_state(path)
+        let frontend_router = Router::new().fallback(serve_frontend).with_state(path);
+        app = app.fallback_service(frontend_router);
     } else {
         println!("Frontend not found, serving Hello World at root");
-        Router::new().route("/", routing::get(|| async { "Hello, World!" }))
+        app = app.route("/", routing::get(|| async { "Hello, World!" }));
     }
+
+    app
 }
 
 async fn serve_frontend(uri: Uri, State(frontend_path): State<PathBuf>) -> impl IntoResponse {
     let path = uri.path();
+
+    if path.starts_with("/api") {
+        return (
+            StatusCode::NOT_FOUND,
+            axum::Json(serde_json::json!({
+                "error": {
+                    "text": "Not Found",
+                    "reason": format!("API endpoint not found: {}", path)
+                }
+            })),
+        )
+            .into_response();
+    }
+
     let relative_path = path.trim_start_matches('/');
 
     if relative_path.is_empty() {
@@ -220,6 +243,8 @@ mod tests {
         body::Body,
         http::{Request, StatusCode},
     };
+    use base64::prelude::BASE64_STANDARD;
+    use base64::Engine;
     use googletest::prelude::*;
     use tower::ServiceExt;
 
@@ -235,6 +260,109 @@ mod tests {
 
         let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         expect_eq!(&body[..], b"Hello, World!");
+    }
+
+    #[gtest]
+    #[tokio::test]
+    async fn test_compile_handler_api() {
+        let app = app(get_frontend_dist_path());
+
+        let input_code = "pub struct TestStruct { pub x: i32 }";
+        let payload = api::CrubitBuildRequest {
+            plugin_name: "cc_bindings_from_rs".to_string(),
+            enable_codegen_tracing: false,
+            plugin_flags: vec![],
+            input: api::FileSet {
+                files: vec![api::File {
+                    name: "test.rs".to_string(),
+                    contents_b64: BASE64_STANDARD.encode(input_code),
+                }],
+            },
+        };
+
+        let req_body = serde_json::to_vec(&payload).unwrap();
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/api/compile")
+                    .header("content-type", "application/json")
+                    .body(Body::from(req_body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        expect_eq!(response.status(), StatusCode::OK);
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let resp: api::CrubitBuildResponse = serde_json::from_slice(&body).unwrap();
+
+        match resp {
+            api::CrubitBuildResponse::Success { output } => {
+                expect_true!(!output.files.is_empty());
+            }
+            api::CrubitBuildResponse::Error { error } => {
+                panic!("Expected success response, got error: {:?}", error);
+            }
+        }
+    }
+
+    #[gtest]
+    #[tokio::test]
+    async fn test_compile_handler_api_invalid_payload() {
+        let app = app(get_frontend_dist_path());
+
+        // Send invalid JSON body
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/api/compile")
+                    .header("content-type", "application/json")
+                    .body(Body::from("{invalid_json}"))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        expect_eq!(response.status(), StatusCode::OK);
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let resp: api::CrubitBuildResponse = serde_json::from_slice(&body).unwrap();
+
+        match resp {
+            api::CrubitBuildResponse::Error { error } => {
+                expect_that!(error.text, contains_substring("Invalid request format"));
+            }
+            api::CrubitBuildResponse::Success { .. } => {
+                panic!("Expected error response for invalid JSON payload");
+            }
+        }
+    }
+
+    #[gtest]
+    #[tokio::test]
+    async fn test_api_not_found() {
+        let app = app(get_frontend_dist_path());
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .uri("/api/nonexistent")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        expect_eq!(response.status(), StatusCode::NOT_FOUND);
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let json_val: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        expect_that!(json_val["error"]["text"].as_str().unwrap(), contains_substring("Not Found"));
     }
 
     #[gtest]
@@ -277,7 +405,7 @@ mod tests {
         let h_out = temp_dir.path().join("output.h");
         let rs_out = temp_dir.path().join("output.rs");
 
-        std::fs::write(&rs_input, b"#[no_mangle] pub extern \"C\" fn foo() {}")
+        fs::write(&rs_input, b"#[no_mangle] pub extern \"C\" fn foo() {}")
             .expect("Failed to write input file");
 
         let mut cmd = new_cc_bindings_from_rs_command()
@@ -297,8 +425,8 @@ mod tests {
         expect_true!(h_out.exists());
         expect_true!(rs_out.exists());
 
-        let h_content = std::fs::read_to_string(&h_out).expect("Failed to read h_out");
-        let rs_content = std::fs::read_to_string(&rs_out).expect("Failed to read rs_out");
+        let h_content = fs::read_to_string(&h_out).expect("Failed to read h_out");
+        let rs_content = fs::read_to_string(&rs_out).expect("Failed to read rs_out");
 
         expect_false!(h_content.is_empty());
         expect_false!(rs_content.is_empty());
