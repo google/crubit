@@ -15,6 +15,15 @@ namespace crubit::test {
 struct CRUBIT_UNSAFE_IGNORE_ATTR("gnu::abi_tag") [[gnu::abi_tag("foo")]]
 MyStruct {};
 
+struct CRUBIT_UNSAFE_IGNORE_ATTR("gnu::packed") [[gnu::packed]] PackedStruct {
+  char x;
+  char y;
+};
+
+struct CRUBIT_UNSAFE_IGNORE_ATTR("gsl::Pointer") [[gsl::Pointer]]
+PointerStruct {
+  int x;
+};
 }  // namespace crubit::test
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ANNOTATIONS_IGNORE_ATTR_H_

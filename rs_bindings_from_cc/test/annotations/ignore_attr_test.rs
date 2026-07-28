@@ -5,3 +5,7 @@
 // Ensure the bindings were generated.
 #[allow(unused)]
 use ignore_attr::crubit::test::MyStruct;
+#[allow(unused)]
+use ignore_attr::crubit::test::PackedStruct;
+#[allow(unused)]
+use ignore_attr::crubit::test::PointerStruct;

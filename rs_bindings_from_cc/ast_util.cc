@@ -113,8 +113,14 @@ absl::StatusOr<std::optional<std::string>> CollectUnknownAttrs(
       continue;
     }
     // Ignore attributes we have been instructed to ignore.
-    std::string name = attr->getAttrName() ? attr->getNormalizedFullName()
-                                           : attr->getSpelling();
+    std::string name_buf;
+    absl::string_view name;
+    if (attr->getAttrName()) {
+      name_buf = attr->getNormalizedFullName();
+      name = name_buf;
+    } else {
+      name = attr->getSpelling();
+    }
     if (ignored_attr_names.contains(name)) {
       continue;
     }
@@ -513,6 +519,23 @@ std::string GetInvalidCallTarget(ImportContext& ictx,
   }
   visitor.CheckAndRecurse(function_decl, true);
   return invalid_decl_name;
+}
+
+absl::flat_hash_set<absl::string_view> GetIgnoredAttrs(
+    const clang::Decl* decl) {
+  absl::flat_hash_set<absl::string_view> ignored_attr_names;
+  if (!decl) return ignored_attr_names;
+
+  if (auto args = GetAnnotateAttrArgs(*decl, "crubit_unsafe_ignore_attr");
+      args.ok() && args->has_value()) {
+    clang::ASTContext& ast_context = decl->getASTContext();
+    for (const clang::Expr* arg : **args) {
+      if (auto name = GetExprAsStringLiteral(*arg, ast_context); name.ok()) {
+        ignored_attr_names.insert(*name);
+      }
+    }
+  }
+  return ignored_attr_names;
 }
 
 }  // namespace crubit
