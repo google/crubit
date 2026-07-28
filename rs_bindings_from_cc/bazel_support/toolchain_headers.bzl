@@ -87,7 +87,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
                 fail("toolchain_headers do not accept additional Rust cc_deps")
         else:
             extra_rs_srcs.extend([(f, "") for f in target.files.to_list()])
-    return [RustToolchainHeadersInfo(headers = std_and_builtin_files)] + generate_and_compile_bindings(
+    bindings_providers = generate_and_compile_bindings(
         ctx,
         ctx.attr,
         compilation_context = ctx.attr._stl[CcInfo].compilation_context,
@@ -99,6 +99,15 @@ def _bindings_for_toolchain_headers_impl(ctx):
         deps_for_cc_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
         deps_for_rs_file = depset(extra_rs_deps + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file),
     )
+    providers = list(bindings_providers)
+    for p in bindings_providers:
+        if hasattr(p, "dep_variant_info"):
+            if p.dep_variant_info:
+                providers.append(p.dep_variant_info.crate_info)
+                providers.append(p.dep_variant_info.dep_info)
+                providers.append(p.dep_variant_info.cc_info)
+            break
+    return [RustToolchainHeadersInfo(headers = std_and_builtin_files)] + providers
 
 bindings_for_toolchain_headers = rule(
     implementation = _bindings_for_toolchain_headers_impl,
