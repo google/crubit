@@ -56,6 +56,7 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "namespace_test",
     srcs = ["namespace_test.cc"],
+    platforms = ["android"],
     deps = [
         ":namespace_crate2_cc_api",
         "//testing/base/public:gunit_main",

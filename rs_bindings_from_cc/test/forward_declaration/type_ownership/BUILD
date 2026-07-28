@@ -25,6 +25,7 @@ crubit_cc_test(
     srcs = [
         "test.cc",
     ],
+    platforms = ["android"],
     deps = [
         ":definition",
         ":forward_declaration",

@@ -43,6 +43,7 @@ golden_test(
 crubit_cc_test(
     name = "struct_with_conflicting_fields_and_member_functions_test",
     srcs = ["struct_with_conflicting_fields_and_member_functions_test.cc"],
+    platforms = ["android"],
     deps = [
         ":struct_with_conflicting_fields_and_member_functions_cc_api",
         "//testing/base/public:gunit_main",

@@ -44,6 +44,7 @@ golden_test(
 crubit_cc_test(
     name = "typedef_annotations_test",
     srcs = ["typedef_annotations_test.cc"],
+    platforms = ["android"],
     deps = [
         ":typedef_annotations_cc_api",
         "//testing/base/public:gunit_main",

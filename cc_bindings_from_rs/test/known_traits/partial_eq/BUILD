@@ -43,6 +43,7 @@ golden_test(
 crubit_cc_test(
     name = "partial_eq_test",
     srcs = ["partial_eq_test.cc"],
+    platforms = ["android"],
     deps = [
         ":partial_eq_cc_api",
         "//testing/base/public:gunit_main",

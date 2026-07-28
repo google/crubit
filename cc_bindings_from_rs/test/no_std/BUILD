@@ -43,6 +43,7 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "no_std_test",
     srcs = ["no_std_test.cc"],
+    platforms = ["android"],
     deps = [
         ":no_std_cc_api",
         "//testing/base/public:gunit_main",
@@ -72,6 +73,7 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "no_core_test",
     srcs = ["no_core_test.cc"],
+    platforms = ["android"],
     deps = [
         ":no_core_cc_api",
         "//testing/base/public:gunit_main",

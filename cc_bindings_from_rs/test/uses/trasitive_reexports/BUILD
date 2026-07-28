@@ -45,6 +45,7 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "transitive_reexports_test",
     srcs = ["transitive_reexports_test.cc"],
+    platforms = ["android"],
     deps = [
         ":transitive_reexports_cc_api",
         "//testing/base/public:gunit_main",

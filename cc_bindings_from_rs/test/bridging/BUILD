@@ -158,6 +158,7 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "mapped_cpp_type_test",
     srcs = ["mapped_cpp_type_test.cc"],
+    platforms = ["android"],
     deps = [
         ":mapped_cpp_type_cc_api",
         "//testing/base/public:gunit_main",

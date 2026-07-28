@@ -41,6 +41,7 @@ golden_test(
 crubit_cc_test(
     name = "rs_ops_test",
     srcs = ["rs_ops_test.cc"],
+    platforms = ["android"],
     deps = [
         ":rs_ops_cc_api",
         "//testing/base/public:gunit_main",

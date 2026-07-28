@@ -29,6 +29,7 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "crate_name_test",
     srcs = ["crate_name_test.cc"],
+    platforms = ["android"],
     deps = [
         ":custom_crate_name_cc_api",
         "//testing/base/public:gunit_main",

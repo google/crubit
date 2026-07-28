@@ -29,6 +29,7 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "copy_test",
     srcs = ["copy_test.cc"],
+    platforms = ["android"],
     deps = [
         ":copy_cc_api",
         "//testing/base/public:gunit_main",

@@ -44,6 +44,7 @@ golden_test(
 crubit_cc_test(
     name = "function_annotations_test",
     srcs = ["function_annotations_test.cc"],
+    platforms = ["android"],
     deps = [
         ":function_annotations_cc_api",
         "//testing/base/public:gunit_main",

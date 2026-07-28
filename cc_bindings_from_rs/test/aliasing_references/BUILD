@@ -39,6 +39,7 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "aliasing_references_test",
     srcs = ["aliasing_references_test.cc"],
+    platforms = ["android"],
     deps = [
         ":aliasing_references_cc_api",
         "//testing/base/public:gunit_main",

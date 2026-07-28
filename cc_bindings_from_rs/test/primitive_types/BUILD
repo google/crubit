@@ -44,6 +44,7 @@ golden_test(
 crubit_cc_test(
     name = "primitive_types_test",
     srcs = ["primitive_types_test.cc"],
+    platforms = ["android"],
     deps = [
         ":primitive_types_cc_api",
         "//testing/base/public:gunit_main",

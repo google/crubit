@@ -43,6 +43,7 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "tuple_structs_test",
     srcs = ["tuple_structs_test.cc"],
+    platforms = ["android"],
     deps = [
         ":tuple_structs_cc_api",
         "//testing/base/public:gunit_main",

@@ -41,6 +41,7 @@ golden_test(
 crubit_cc_test(
     name = "rs_index_test",
     srcs = ["rs_index_test.cc"],
+    platforms = ["android"],
     deps = [
         ":rs_index_cc_api",
         "//testing/base/public:gunit_main",
