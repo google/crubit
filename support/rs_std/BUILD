@@ -9,7 +9,10 @@ load(
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
 
-package(default_applicable_licenses = ["//:license"])
+package(
+    default_applicable_licenses = ["//:license"],
+    features = ["-system_include_paths"],
+)
 
 cc_library(
     name = "char",
