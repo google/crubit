@@ -129,6 +129,13 @@ def _get_unstable_rust_features(aspect_ctx):
             features.extend(hint[AdditionalRustSrcsProviderInfo].unstable_rust_features)
     return collections.uniq(features)
 
+def _get_root_namespaces(aspect_ctx):
+    root_namespaces = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            root_namespaces.extend(hint[AdditionalRustSrcsProviderInfo].root_namespaces)
+    return collections.uniq(root_namespaces)
+
 def _get_additional_rust_deps_from_provider(provider):
     """Returns `deps` and `cc_deps` associated with the `provider`.
     """
@@ -390,6 +397,11 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     extra_deps = collections.uniq(extra_deps + _get_additional_rust_deps(ctx))
 
     extra_rs_bindings_from_cc_cli_flags = collect_rust_bindings_from_cc_cli_flags(target, ctx)
+    root_namespaces = _get_root_namespaces(ctx)
+    if root_namespaces:
+        extra_rs_bindings_from_cc_cli_flags.append(
+            "--reexported_namespaces=" + ",".join(root_namespaces),
+        )
     if ctx.attr._is_golden_test[BuildSettingInfo].value:
         extra_rs_bindings_from_cc_cli_flags.append("--is_golden_test=True")
 
