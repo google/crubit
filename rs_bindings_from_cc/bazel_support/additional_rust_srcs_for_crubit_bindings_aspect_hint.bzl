@@ -76,7 +76,8 @@ def make_additional_rust_srcs_provider(
         deps,
         cc_deps,
         cc_support_deps = [],
-        unstable_rust_features = []):
+        unstable_rust_features = [],
+        root_namespaces = []):
     return AdditionalRustSrcsProviderInfo(
         srcs = srcs,
         namespace_path = namespace_path,
@@ -88,6 +89,7 @@ def make_additional_rust_srcs_provider(
         ],
         cpp_srcs = cpp_srcs,
         unstable_rust_features = unstable_rust_features,
+        root_namespaces = root_namespaces,
     )
 
 def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
@@ -99,6 +101,7 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         ctx.attr.cc_deps,
         ctx.attr.cc_support_deps,
         ctx.attr.unstable_rust_features,
+        ctx.attr.root_namespaces,
     )]
     if ctx.attr.crubit_features:
         providers.append(CrubitFeaturesInfo(crubit_features = ctx.attr.crubit_features))
@@ -108,7 +111,8 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
     attrs = {
         "srcs": attr.label_list(
             allow_files = True,
-            mandatory = True,
+            mandatory = False,
+            default = [],
         ),
         "cpp_srcs": attr.label_list(
             allow_files = [".cc"],
@@ -139,13 +143,17 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
             mandatory = False,
             default = SUPPORTED_FEATURES,
         ),
+        "root_namespaces": attr.string_list(
+            mandatory = False,
+            default = [],
+        ),
     },
     implementation = _additional_rust_srcs_for_crubit_bindings_impl,
 )
 
 def additional_rust_srcs_for_crubit_bindings(
         name,
-        srcs,
+        srcs = [],
         cpp_srcs = [],
         namespace_path = "",
         deps = [],
@@ -153,6 +161,7 @@ def additional_rust_srcs_for_crubit_bindings(
         cc_support_deps = [],
         unstable_rust_features = [],
         crubit_features = SUPPORTED_FEATURES,
+        root_namespaces = [],
         **kwargs):
     """
     Defines an aspect hint that is used to pass extra Rust source files to `rs_bindings_from_cc` tool's `extra_rs_srcs` CLI argument.
@@ -192,6 +201,7 @@ def additional_rust_srcs_for_crubit_bindings(
         cc_support_deps = cc_support_deps,
         unstable_rust_features = unstable_rust_features,
         crubit_features = crubit_features,
+        root_namespaces = root_namespaces,
         **kwargs
     )
 
