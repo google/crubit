@@ -77,6 +77,26 @@ rust_library(
     target_compatible_with = _compatible_with_flag,
 )
 
+# Proto dependency collision test
+cc_library(
+    name = "lib_proto_deps",
+    hdrs = ["proto_deps.h"],
+    aspect_hints = ["//features:supported"],
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+    deps = [
+        "//rs_bindings_from_cc/test/bazel/deps_with_same_names/deps/X_cc_library_deps_YZ:a",
+    ],
+)
+
+rust_library(
+    name = "lib_with_proto_deps_with_same_names",
+    srcs = ["proto_deps.rs"],
+    cc_deps = [":lib_proto_deps"],
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+)
+
 # cc_public_library dependency collision test
 cc_library(
     name = "lib_public_deps",
@@ -124,6 +144,7 @@ build_test(
     targets = [
         ":lib_with_two_direct_deps_with_same_name",
         ":lib_with_indirect_deps_with_same_names",
+        ":lib_with_proto_deps_with_same_names",
         ":lib_with_public_deps_with_same_names",
         ":lib_with_mixed_deps",
     ],

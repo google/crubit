@@ -34,6 +34,7 @@ load(
     "@rules_crubit//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
     "bindings_attrs",
     "generate_and_compile_bindings",
+    "make_aliasable_dep_info",
 )
 load("@protobuf//rust:aspects.bzl", "RustProtoInfo", "rust_cc_proto_library_aspect")
 load(

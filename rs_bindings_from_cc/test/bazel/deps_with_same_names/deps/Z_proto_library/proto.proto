@@ -1,0 +1,14 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+syntax = "proto3";
+
+package crubit.test.deps_with_same_names.proto9;
+
+option java_multiple_files = true;
+option java_outer_classname = "Proto";
+
+message M9 {
+  int32 value = 1;
+}

@@ -305,3 +305,18 @@ bindings_attrs = {
         default = "//common/bazel_support:use_label_encoded_names_for_deps",
     ),
 }
+
+def make_aliasable_dep_info(name, dep):
+    """Constructs an AliasableDepInfo provider.
+
+    This is a helper to avoid loading AliasableDepInfo directly in other files,
+    which violates bzl-visibility rules.
+
+    Args:
+        name: The alias name.
+        dep: The dependency CrateInfo.
+
+    Returns:
+        An AliasableDepInfo provider.
+    """
+    return AliasableDepInfo(name = name, dep = dep)
