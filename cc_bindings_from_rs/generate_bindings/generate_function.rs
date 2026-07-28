@@ -86,8 +86,13 @@ pub(crate) fn function_symbol_name(
         } else {
             let def_name = db
                 .symbol_unqualified_name(def_id)
-                .map(|name| name.rs_name)
-                .unwrap_or_else(|| panic!("Functions are assumed to always have a name {def_id:?}"))
+                .unwrap_or_else(|| {
+                    panic!(
+                        "Functions are assumed to always have a name {}",
+                        tcx.def_path_str(def_id)
+                    )
+                })
+                .rs_name
                 .to_string();
             tcx.trait_impl_of_assoc(def_id)
                 .map(|impl_id| {
@@ -99,10 +104,13 @@ pub(crate) fn function_symbol_name(
                     let trait_id = trait_ref.def_id;
                     let trait_name = db
                         .symbol_unqualified_name(trait_id)
-                        .map(|name| name.rs_name)
                         .unwrap_or_else(|| {
-                            panic!("Traits are assumed to always have a name {trait_id:?}")
+                            panic!(
+                                "Traits are assumed to always have a name {}",
+                                tcx.def_path_str(trait_id)
+                            )
                         })
+                        .rs_name
                         .to_string();
                     let trait_args =
                         trait_ref.args.iter().map(|arg| format!("{}", arg)).collect_vec();
@@ -767,11 +775,12 @@ pub(crate) fn format_variant_ctor_cc_name(variant_name: &str) -> String {
 }
 
 fn get_function_cc_name(db: &BindingsGenerator, def_id: DefId) -> Result<Ident> {
-    let unqualified_fn_name = db
-        .symbol_unqualified_name(def_id)
-        .unwrap_or_else(|| panic!("`generate_function` called on unnamed function {def_id:?}"));
+    let tcx = db.tcx();
+    let Some(unqualified_fn_name) = db.symbol_unqualified_name(def_id) else {
+        panic!("`generate_function` called on unnamed function {}", tcx.def_path_str(def_id));
+    };
     let cc_name = unqualified_fn_name.cpp_name.as_str();
-    match db.tcx().def_kind(def_id) {
+    match tcx.def_kind(def_id) {
         DefKind::Ctor { .. } => format_cc_ident(db, &format_variant_ctor_cc_name(cc_name)),
         _ => format_cc_ident(db, cc_name),
     }
@@ -901,9 +910,9 @@ pub fn generate_function<'tcx>(
         is_thunk_required(db, &sig_mid).is_err() || (!has_no_mangle && !has_export_name);
     let thunk_name = thunk_name(db, def_id, export_name, needs_thunk);
 
-    let unqualified_fn_name = db
-        .symbol_unqualified_name(def_id)
-        .unwrap_or_else(|| panic!("`generate_function` called on unnamed function {def_id:?}"));
+    let Some(unqualified_fn_name) = db.symbol_unqualified_name(def_id) else {
+        panic!("`generate_function` called on unnamed function {}", tcx.def_path_str(def_id));
+    };
     let unqualified_rust_fn_name = unqualified_fn_name.rs_name;
     let main_api_fn_name = match method_name_override {
         Some(name) => name.parse().unwrap(),
@@ -1189,23 +1198,17 @@ pub fn generate_function<'tcx>(
             let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
             let trait_name_with_args = format_trait_ref_for_rs(db, trait_ref)?;
             quote! { <#struct_name as #trait_name_with_args>::#fn_name }
+        } else if let Some(struct_name) = struct_name.as_ref() {
+            let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
+            let struct_name = struct_name.format_for_rs();
+            quote! { #struct_name :: #fn_name }
+        } else if let Some(canonical) = db.symbol_canonical_name(def_id) {
+            canonical.format_for_rs()
         } else {
-            struct_name
-                .as_ref()
-                .map(|struct_name| {
-                    let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
-                    let struct_name = struct_name.format_for_rs();
-                    quote! { #struct_name :: #fn_name }
-                })
-                .unwrap_or_else(|| {
-                    db.symbol_canonical_name(def_id)
-                        .unwrap_or_else(|| {
-                            panic!(
-                        "`generate_function` called on unreachable top-level function {def_id:?}"
-                    )
-                        })
-                        .format_for_rs()
-                })
+            panic!(
+                "`generate_function` called on unreachable top-level function {}",
+                tcx.def_path_str(def_id)
+            )
         };
         generate_thunk_impl(
             db,

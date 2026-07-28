@@ -837,7 +837,9 @@ pub fn generate_trait_thunks<'tcx>(
         } else {
             let fully_qualified_trait_name = db
                 .symbol_canonical_name(trait_id)
-                .ok_or_else(|| anyhow!("Failed to get canonical name for {trait_id:?}"))?
+                .ok_or_else(|| {
+                    anyhow!("Failed to get canonical name for {}", tcx.def_path_str(trait_id))
+                })?
                 .format_for_rs();
             let method_name = make_rs_ident(method.name().as_str());
             let args = type_args
@@ -905,10 +907,13 @@ pub(crate) fn make_thunk_name<'tcx>(db: &BindingsGenerator<'tcx>, kind: ThunkKin
                 let trait_id = tcx.parent(method.def_id);
                 let trait_name = db
                     .symbol_unqualified_name(trait_id)
-                    .map(|name| name.rs_name)
                     .unwrap_or_else(|| {
-                        panic!("Traits are assumed to always have a name {trait_id:?}")
+                        panic!(
+                            "Traits are assumed to always have a name {}",
+                            tcx.def_path_str(trait_id)
+                        )
                     })
+                    .rs_name
                     .to_string();
                 let method_symbol = method.name();
                 let method_name = method_symbol.as_str();

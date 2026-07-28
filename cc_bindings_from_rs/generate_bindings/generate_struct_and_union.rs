@@ -349,9 +349,9 @@ pub(crate) fn generate_associated_item<'tcx>(
         ty::AssocKind::Fn { .. } => {
             db.generate_function(def_id, method_name_override, static_method_mode).inspect(|_binding| {
                 // If `generate_function` succeeds, record the method in `member_function_names`.
-                let unqualified_name = db
-                    .symbol_unqualified_name(def_id)
-                    .expect("Associated item should have an unqualified name: {def_id:?}");
+                let Some(unqualified_name) = db.symbol_unqualified_name(def_id) else {
+                    panic!("Associated item should have an unqualified name: {}", tcx.def_path_str(def_id));
+                };
                 let cpp_name = unqualified_name.cpp_name.to_string();
                 let was_inserted = member_function_names.insert(cpp_name.clone());
                 assert!(
@@ -1669,9 +1669,9 @@ pub fn adt_needs_bindings<'tcx>(
     let tcx = db.tcx();
     let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
 
-    let fully_qualified_name = db
-        .symbol_canonical_name(def_id)
-        .ok_or_else(|| anyhow!("No public path could be found for type {def_id:?}"))?;
+    let Some(fully_qualified_name) = db.symbol_canonical_name(def_id) else {
+        bail!("No public path could be found for type {}", tcx.def_path_str(def_id));
+    };
     if let Some(cpp_type) = fully_qualified_name.unqualified.cpp_type {
         let item_name = tcx.def_path_str(def_id);
         bail!(
@@ -1714,9 +1714,9 @@ pub fn generate_adt_core<'tcx>(
     assert!(self_ty.is_adt());
     assert!(db.symbol_canonical_name(def_id).is_some(), "Caller should verify");
 
-    let fully_qualified_name = db
-        .symbol_canonical_name(def_id)
-        .ok_or_else(|| anyhow!("`generate_adt_core` called on non-reachable type {def_id:?}"))?;
+    let Some(fully_qualified_name) = db.symbol_canonical_name(def_id) else {
+        bail!("`generate_adt_core` called on non-reachable type {}", tcx.def_path_str(def_id));
+    };
     let rs_fully_qualified_name = fully_qualified_name.format_for_rs();
     let cpp_name = format_cc_ident(db, fully_qualified_name.unqualified.cpp_name.as_str())
         .context("Error formatting item name")?;

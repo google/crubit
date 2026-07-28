@@ -209,9 +209,8 @@ fn specializations<'tcx>(db: &crate::BindingsGenerator<'tcx>) -> Rc<[CppTypeSpec
                     let attrs = crubit_attr::get_attrs(tcx, def_id)
                         .map_err(|err| {
                             db.fatal_errors().report(&format!(
-                                "Failed to parse Crubit attributes for `{}`: {}",
-                                tcx.def_path_str(def_id),
-                                err
+                                "Failed to parse Crubit attributes for `{}`: {err}",
+                                tcx.def_path_str(def_id)
                             ));
                         })
                         .ok()?;
@@ -721,7 +720,7 @@ fn symbol_unqualified_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<
         .or_else(|| tcx.opt_item_name(def_id))?;
     let rs_name = item_name;
     let attributes = crubit_attr::get_attrs(tcx, def_id)
-        .unwrap_or_else(|_| panic!("Expected crubit_attrs on {def_id:?}"));
+        .unwrap_or_else(|e| panic!("Malformed crubit_attrs on {}: {e}", tcx.def_path_str(def_id)));
     let cpp_name = attributes.cpp_name.map(|s| Symbol::intern(s.as_str())).unwrap_or_else(|| {
         // If the rs_name is going to be used for the cpp_name, then we need to unkeyword it.
         // This prevents silly Rust names like "reinterpret_cast" from trying to be named
@@ -2232,7 +2231,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
             continue;
         };
         let old_item = main_apis.insert(def_id, api_snippets.main_api);
-        assert!(old_item.is_none(), "Duplicated key: {def_id:?}");
+        assert!(old_item.is_none(), "Duplicated key: {}", db.tcx().def_path_str(def_id));
 
         // `cc_details` don't participate in the toposort, because
         // `CcPrerequisites::defs` always use `main_api` as the predecessor
@@ -2241,7 +2240,12 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
         cc_details.push(CcDetails::new(
             def_id,
             db.symbol_canonical_name(def_id)
-                .unwrap_or_else(|| panic!("Exported item {def_id:?} should have a canonical name"))
+                .unwrap_or_else(|| {
+                    panic!(
+                        "Exported item {} should have a canonical name",
+                        db.tcx().def_path_str(def_id)
+                    )
+                })
                 .cpp_ns_path,
             api_snippets.cc_details.into_tokens(&mut cc_details_prereqs),
         ));
@@ -2409,7 +2413,8 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                                 db.symbol_canonical_name(def_id)
                                     .unwrap_or_else(|| {
                                         panic!(
-                                            "Exported item {def_id:?} should have a canonical name"
+                                            "Exported item {} should have a canonical name",
+                                            tcx.def_path_str(def_id),
                                         )
                                     })
                                     .cpp_ns_path
