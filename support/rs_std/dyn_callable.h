@@ -17,7 +17,7 @@
 #include "absl/functional/any_invocable.h"
 #include "support/bridge.h"
 
-namespace rs {
+namespace rs_std {
 
 template <class Sig>
 class DynCallable;
@@ -53,7 +53,7 @@ class ManagedCallable {
   ManagedCallable& operator=(ManagedCallable&) = delete;
 
   ManagedCallable(ManagedCallable&& other) {
-    *this = ::std::forward<ManagedCallable>(other);
+    *this = std::forward<ManagedCallable>(other);
   }
 
   ManagedCallable& operator=(ManagedCallable&& other) {
@@ -298,12 +298,6 @@ class DynCallable : private internal_dyn_callable::Impl<Sig> {
   friend void swap(DynCallable& f1, DynCallable& f2) noexcept { f1.swap(f2); }
 };
 
-}  // namespace rs
-
-namespace rs_std {
-template <class Sig>
-using DynCallable [[deprecated("Use rs::DynCallable instead")]] =
-    rs::DynCallable<Sig>;
 }  // namespace rs_std
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_DYN_CALLABLE_H_

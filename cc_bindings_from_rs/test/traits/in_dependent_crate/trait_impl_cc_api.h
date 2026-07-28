@@ -86,7 +86,7 @@ NotImplemented final {
 }  // namespace trait_impl
 
 template <>
-struct rs::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait> {
+struct rs_std::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t do_something(::trait_impl::MyStruct const& self);
@@ -154,7 +154,7 @@ __crubit_thunk_MyTrait_udo_usomething_utrait_uimpl_ugolden_x0000003a_x0000003aMy
 }
 }  // namespace trait_impl
 inline ::std::int32_t
-rs::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait>::do_something(
+rs_std::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait>::do_something(
     ::trait_impl::MyStruct const& self) {
   return trait_impl::__crubit_internal::
       __crubit_thunk_MyTrait_udo_usomething_utrait_uimpl_ugolden_x0000003a_x0000003aMyStruct(

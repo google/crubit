@@ -104,12 +104,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyInt") alignas(4)
 }  // namespace rs_ops
 
 template <>
-struct rs::impl<::rs_ops::MyInt, ::rs::core::cmp::Eq> {
+struct rs_std::impl<::rs_ops::MyInt, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs::impl<::rs_ops::MyInt, ::rs::core::fmt::Debug> {
+struct rs_std::impl<::rs_ops::MyInt, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function `<rs_ops_golden::MyInt as

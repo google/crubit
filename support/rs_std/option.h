@@ -15,7 +15,7 @@
 #include "support/internal/move_assign.h"
 #include "support/internal/slot.h"
 
-namespace rs {
+namespace rs_std {
 
 template <typename OptionType, typename T, typename U>
 inline constexpr bool OptionForwardConstructible = std::negation_v<
@@ -191,11 +191,6 @@ struct Option final {
                 "This type should only be used via a generated specialization");
 };
 
-}  // namespace rs
-
-namespace rs_std {
-template <typename T>
-using Option [[deprecated("Use rs::Option instead")]] = rs::Option<T>;
 }  // namespace rs_std
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_OPTION_H_

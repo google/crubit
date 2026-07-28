@@ -165,7 +165,7 @@ fn test_format_ty_for_cc_successes() {
         case!(rs: "usize", cc: "::std::uintptr_t", includes: ["<cstdint>"]),
         case!(
             rs: "char",
-            cc: "rs::char_",
+            cc: "rs_std::char_",
             includes: ["<crubit/support/for/tests/rs_std/char.h>"]
         ),
         case!(rs: "SomeStruct", cc: "::rust_out::SomeStruct", includes: [],  prereq_def: "SomeStruct"),
@@ -191,29 +191,29 @@ fn test_format_ty_for_cc_successes() {
         // Slice pointers:
         case!(
             rs: "*const [i8]",
-            cc: "rs::SliceRef< const ::std::int8_t>",
+            cc: "rs_std::SliceRef< const ::std::int8_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "*mut [i64]",
-            cc: "rs::SliceRef< ::std::int64_t>",
+            cc: "rs_std::SliceRef< ::std::int64_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "*mut [SomeStruct]",
-            cc: "rs::SliceRef< ::rust_out::SomeStruct>",
+            cc: "rs_std::SliceRef< ::rust_out::SomeStruct>",
             includes: [ "<crubit/support/for/tests/rs_std/slice_ref.h>"],
             prereq_def: "SomeStruct"
 
         ),
         case!(
             rs: "&'static [i32]",
-            cc: "rs::SliceRef< const ::std::int32_t>",
+            cc: "rs_std::SliceRef< const ::std::int32_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
             rs: "&'static mut [i32]",
-            cc: "rs::SliceRef< ::std::int32_t>",
+            cc: "rs_std::SliceRef< ::std::int32_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):

@@ -1003,12 +1003,12 @@ RustReprWithSingleTuplePayloadVariant final {
 }  // namespace enums::repr_rust
 
 template <>
-struct rs::impl<::enums::qr_error::QrError, ::rs::core::cmp::Eq> {
+struct rs_std::impl<::enums::qr_error::QrError, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs::impl<::enums::qr_error::QrError, ::rs::core::fmt::Debug> {
+struct rs_std::impl<::enums::qr_error::QrError, ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function
@@ -1019,12 +1019,13 @@ struct rs::impl<::enums::qr_error::QrError, ::rs::core::fmt::Debug> {
 };
 
 template <>
-struct rs::impl<::enums::qr_error::StructuredQrError, ::rs::core::cmp::Eq> {
+struct rs_std::impl<::enums::qr_error::StructuredQrError, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs::impl<::enums::qr_error::StructuredQrError, ::rs::core::fmt::Debug> {
+struct rs_std::impl<::enums::qr_error::StructuredQrError,
+                    ::rs::core::fmt::Debug> {
   static constexpr bool kIsImplemented = true;
 
   // Error generating bindings for associated function

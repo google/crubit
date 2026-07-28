@@ -50,11 +50,11 @@ struct IteratorEnd {
 //   functionality conditonally - if `TAdaptedIterator` is `Clone` (which
 //   presumably would ensure that `next()` doesn't affect the other copy?).
 template <typename TAdaptedIterator>
-  requires(rs::where_v<TAdaptedIterator, rs::core::iter::Iterator>)
+  requires(rs_std::where_v<TAdaptedIterator, rs::core::iter::Iterator>)
 
 class IteratorAdapter {
  private:
-  using impl = rs::impl<TAdaptedIterator, rs::core::iter::Iterator>;
+  using impl = rs_std::impl<TAdaptedIterator, rs::core::iter::Iterator>;
   using element_type = impl::Item;
 
  public:
@@ -135,27 +135,19 @@ IteratorAdapter(TAdaptedIterator) -> IteratorAdapter<TAdaptedIterator>;
 
 }  // namespace rs
 
-namespace rs {
+namespace rs_std {
 // Mirrors `impl<I: Iterator + ?Sized> Iterator for &mut I` from the Rust
 // standard library, which is needed because we don't automatically generate
 // bindings for blanket impls today.
 template <typename T>
-  requires(rs::where_v<T, rs::core::iter::Iterator>)
+  requires(rs_std::where_v<T, rs::core::iter::Iterator>)
 struct impl<T*, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
-  using Item = typename rs::impl<T, ::rs::core::iter::Iterator>::Item;
+  using Item = typename rs_std::impl<T, ::rs::core::iter::Iterator>::Item;
   static ::std::optional<Item> next(T* self) {
-    return rs::impl<T, ::rs::core::iter::Iterator>::next(*self);
+    return rs_std::impl<T, ::rs::core::iter::Iterator>::next(*self);
   }
 };
-}  // namespace rs
-
-namespace rs_std {
-using IteratorEnd [[deprecated("Use rs::IteratorEnd instead")]] =
-    rs::IteratorEnd;
-template <typename TAdaptedIterator>
-using IteratorAdapter [[deprecated("Use rs::IteratorAdapter instead")]] =
-    rs::IteratorAdapter<TAdaptedIterator>;
 }  // namespace rs_std
 
 #endif  // CRUBIT_SUPPORT_RS_STD_ITERATOR_ADAPTER_H_

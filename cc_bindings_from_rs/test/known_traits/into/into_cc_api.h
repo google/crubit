@@ -54,7 +54,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocTarget") alignas(
   CloneAllocTarget(::crubit::UnsafeRelocateTag, CloneAllocTarget&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  rs::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+  rs_std::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   explicit CloneAllocTarget(::into::CloneAllocType value);
 
@@ -85,10 +85,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocType") alignas(8)
   CloneAllocType(::crubit::UnsafeRelocateTag, CloneAllocType&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::into::CloneAllocType create(rs::StrRef s);
+  static ::into::CloneAllocType create(rs_std::StrRef s);
 
   // CRUBIT_ANNOTATE: must_bind=
-  rs::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+  rs_std::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   explicit operator ::into::CloneAllocTarget();
 
@@ -226,7 +226,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
 
   explicit operator ::std::int64_t();
 
-  explicit operator rs::StrRef();
+  explicit operator rs_std::StrRef();
 
   explicit operator ::std::int16_t();
 
@@ -291,18 +291,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   ConvertRef(::crubit::UnsafeRelocateTag, ConvertRef&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::into::ConvertRef create(rs::StrRef s);
+  static ::into::ConvertRef create(rs_std::StrRef s);
 
   // CRUBIT_ANNOTATE: must_bind=
   ::into::Convert transmigrate() &&;
 
-  explicit operator rs::StrRef();
+  explicit operator rs_std::StrRef();
 
   explicit operator ::into::Convert();
 
  private:
   union {
-    rs::StrRef __field0;
+    rs_std::StrRef __field0;
   };
 
  private:
@@ -577,10 +577,10 @@ inline ::into::CloneAllocTarget::CloneAllocTarget(::crubit::UnsafeRelocateTag,
 }
 
 namespace __crubit_internal {
-extern "C" rs::StrRef __crubit_thunk_get_uvalue(
+extern "C" rs_std::StrRef __crubit_thunk_get_uvalue(
     ::into::CloneAllocTarget const&);
 }
-inline rs::StrRef CloneAllocTarget::get_value() const& $(__anon1)
+inline rs_std::StrRef CloneAllocTarget::get_value() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_uvalue(self);
@@ -645,10 +645,10 @@ inline ::into::CloneAllocType::CloneAllocType(::crubit::UnsafeRelocateTag,
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs::StrRef,
+extern "C" void __crubit_thunk_create(rs_std::StrRef,
                                       ::into::CloneAllocType* __ret_ptr);
 }
-inline ::into::CloneAllocType CloneAllocType::create(rs::StrRef s) {
+inline ::into::CloneAllocType CloneAllocType::create(rs_std::StrRef s) {
   crubit::Slot<::into::CloneAllocType> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(s, __return_value_storage);
@@ -656,9 +656,10 @@ inline ::into::CloneAllocType CloneAllocType::create(rs::StrRef s) {
 }
 
 namespace __crubit_internal {
-extern "C" rs::StrRef __crubit_thunk_get_uvalue(::into::CloneAllocType const&);
+extern "C" rs_std::StrRef __crubit_thunk_get_uvalue(
+    ::into::CloneAllocType const&);
 }
-inline rs::StrRef CloneAllocType::get_value() const& $(__anon1)
+inline rs_std::StrRef CloneAllocType::get_value() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_uvalue(self);
@@ -817,11 +818,11 @@ inline Convert::operator ::std::int64_t() {
           &self);
 }
 namespace __crubit_internal {
-extern "C" rs::StrRef
+extern "C" rs_std::StrRef
 __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aConvert_u_x00000026_x00000027static_x00000020str(
     ::into::Convert*);
 }
-inline Convert::operator rs::StrRef() {
+inline Convert::operator rs_std::StrRef() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aConvert_u_x00000026_x00000027static_x00000020str(
@@ -904,10 +905,10 @@ inline ::into::ConvertRef::ConvertRef(::crubit::UnsafeRelocateTag,
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs::StrRef,
+extern "C" void __crubit_thunk_create(rs_std::StrRef,
                                       ::into::ConvertRef* __ret_ptr);
 }
-inline ::into::ConvertRef ConvertRef::create(rs::StrRef s) {
+inline ::into::ConvertRef ConvertRef::create(rs_std::StrRef s) {
   crubit::Slot<::into::ConvertRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(s, __return_value_storage);
@@ -926,11 +927,11 @@ inline ::into::Convert ConvertRef::transmigrate() && {
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {
-extern "C" rs::StrRef
+extern "C" rs_std::StrRef
 __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aConvertRef_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020str(
     ::into::ConvertRef*);
 }
-inline ConvertRef::operator rs::StrRef() {
+inline ConvertRef::operator rs_std::StrRef() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aConvertRef_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020str(

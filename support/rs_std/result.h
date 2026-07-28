@@ -15,7 +15,7 @@
 #include "support/internal/check.h"
 #include "support/internal/move_assign.h"
 
-namespace rs {
+namespace rs_std {
 
 struct unexpect_t {
   explicit unexpect_t() = default;
@@ -34,24 +34,24 @@ class unexpected final {
   constexpr ~unexpected() = default;
 
   template <typename G = E>
-    requires(::std::is_constructible_v<E, G>)
-  constexpr explicit unexpected(G&& err) : err_(::std::forward<G>(err)) {}
+    requires(std::is_constructible_v<E, G>)
+  constexpr explicit unexpected(G&& err) : err_(std::forward<G>(err)) {}
 
   template <typename... Args>
-    requires(::std::is_constructible_v<E, Args...>)
-  constexpr explicit unexpected(::std::in_place_t, Args&&... args)
-      : err_(::std::forward<Args>(args)...) {}
+    requires(std::is_constructible_v<E, Args...>)
+  constexpr explicit unexpected(std::in_place_t, Args&&... args)
+      : err_(std::forward<Args>(args)...) {}
 
   template <class U, class... Args>
-    requires(::std::is_constructible_v<E, ::std::initializer_list<U>&, Args...>)
-  constexpr explicit unexpected(::std::in_place_t,
-                                ::std::initializer_list<U> il, Args&&... args)
-      : err_(il, ::std::forward<Args>(args)...) {}
+    requires(std::is_constructible_v<E, std::initializer_list<U>&, Args...>)
+  constexpr explicit unexpected(std::in_place_t, std::initializer_list<U> il,
+                                Args&&... args)
+      : err_(il, std::forward<Args>(args)...) {}
 
   constexpr const E& error() const& noexcept { return err_; }
   constexpr E& error() & noexcept { return err_; }
-  constexpr const E&& error() const&& noexcept { return ::std::move(err_); }
-  constexpr E&& error() && noexcept { return ::std::move(err_); }
+  constexpr const E&& error() const&& noexcept { return std::move(err_); }
+  constexpr E&& error() && noexcept { return std::move(err_); }
 
  private:
   E err_;
@@ -67,8 +67,8 @@ inline constexpr bool is_unexpected_v = is_unexpected<T>::value;
 template <typename ResultType, typename T, typename U>
 inline constexpr bool ResultForwardConstructible = std::negation_v<
     std::disjunction<std::is_base_of<ResultType, std::decay_t<U>>,
-                     rs::is_unexpected<std::decay_t<U>>,
-                     std::is_same<std::decay_t<U>, rs::unexpect_t>,
+                     rs_std::is_unexpected<std::decay_t<U>>,
+                     std::is_same<std::decay_t<U>, rs_std::unexpect_t>,
                      std::is_same<std::decay_t<U>, std::in_place_t>,
                      std::negation<std::is_constructible<T, U>>>>;
 
@@ -94,6 +94,11 @@ class ResultBase {
   template <typename U = T>
     requires(ResultForwardConstructible<ResultBase, T, U>)
   constexpr ResultBase& operator=(U&& ok) noexcept {
+    // If we're moving an Ok value into a Result hat currently holds an Err,
+    // we can't move assign the underlying ok_ptr as normal. We need to destroy
+    // the value at the err_ptr, and then construct our ok value at ok_ptr.
+    // This can't use crubit::MoveAssignOrDestroyAndConstruct because the ok and
+    // err pointers are different types (and possibly different pointers).
     if (!has_value()) {
       std::destroy_at(derived().err_ptr());
       derived().set_ok_tag();
@@ -108,14 +113,14 @@ class ResultBase {
 
   template <typename F = E>
     requires(ResultUnexpectedConstructible<E, F>)
-  explicit constexpr ResultBase(rs::unexpected<F>&& err) noexcept {
+  explicit constexpr ResultBase(rs_std::unexpected<F>&& err) noexcept {
     derived().set_err_tag();
     std::construct_at(derived().err_ptr(), std::move(err.error()));
   }
 
   template <typename F = E>
     requires(ResultUnexpectedConstructible<E, F>)
-  constexpr ResultBase& operator=(rs::unexpected<F>&& err) noexcept {
+  constexpr ResultBase& operator=(rs_std::unexpected<F>&& err) noexcept {
     if (has_value()) {
       std::destroy_at(derived().ok_ptr());
       derived().set_err_tag();
@@ -135,22 +140,25 @@ class ResultBase {
   }
 
   template <typename... Args>
-  explicit constexpr ResultBase(unexpect_t, Args&&... args) noexcept {
+  explicit constexpr ResultBase(rs_std::unexpect_t, Args&&... args) noexcept {
     derived().set_err_tag();
     std::construct_at(derived().err_ptr(), std::forward<Args>(args)...);
   }
 
   explicit constexpr operator bool() const noexcept { return has_value(); }
 
+  /// Returns true if this Result contains an Ok variant (or value in C++
+  /// terms), and false if it contains an Err variant (or unexpected in C++
+  /// terms).
   constexpr bool has_value() const noexcept {
     return derived().has_value_impl();
   }
 
   constexpr void CheckHasOk() const {
-    CRUBIT_CHECK(has_value()) << "Bad value access on rs::Result";
+    CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Result";
   }
   constexpr void CheckHasErr() const {
-    CRUBIT_CHECK(!has_value()) << "Bad error access on rs::Result";
+    CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
   }
 
   constexpr T& value() & {
@@ -229,17 +237,6 @@ struct Result final {
                 "This type should only be used via a generated specialization");
 };
 
-}  // namespace rs
-
-namespace rs_std {
-template <typename T, typename E>
-using Result [[deprecated("Use rs::Result instead")]] = rs::Result<T, E>;
-using unexpect_t [[deprecated("Use rs::unexpect_t instead")]] = rs::unexpect_t;
-[[deprecated(
-    "Use rs::unexpect instead")]] inline constexpr rs::unexpect_t unexpect{};
-template <typename E>
-using unexpected [[deprecated("Use rs::unexpected instead")]] =
-    rs::unexpected<E>;
 }  // namespace rs_std
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_RESULT_H_

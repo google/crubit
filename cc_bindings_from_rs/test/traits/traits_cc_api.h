@@ -70,13 +70,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: AssociatedTypeTrait")
     AssociatedTypeTrait {
   template <typename T>
-  using impl = rs::impl<T, AssociatedTypeTrait>;
+  using impl = rs_std::impl<T, AssociatedTypeTrait>;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: DifferentTraitSameName")
     DifferentTraitSameName {
   template <typename T>
-  using impl = rs::impl<T, DifferentTraitSameName>;
+  using impl = rs_std::impl<T, DifferentTraitSameName>;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
@@ -107,7 +107,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeTrait")
     LifetimeTrait {
   template <typename T>
-  using impl = rs::impl<T, LifetimeTrait>;
+  using impl = rs_std::impl<T, LifetimeTrait>;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
@@ -167,7 +167,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2") alignas(4)
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyTrait") MyTrait {
   template <typename T>
-  using impl = rs::impl<T, MyTrait>;
+  using impl = rs_std::impl<T, MyTrait>;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -201,16 +201,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: TraitWithAssociatedConst")
     TraitWithAssociatedConst {
   template <typename T>
-  using impl = rs::impl<T, TraitWithAssociatedConst>;
+  using impl = rs_std::impl<T, TraitWithAssociatedConst>;
 };
 
 }  // namespace traits
 
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "(i32 , i32 ,)") rs::Tuple<::std::int32_t, ::std::int32_t> {
+    "(i32 , i32 ,)") rs_std::Tuple<::std::int32_t, ::std::int32_t> {
  public:
   // Default::default
   Tuple();
@@ -223,9 +223,9 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
-  Tuple(::std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept;
+  Tuple(std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept;
   ~Tuple() = default;
-  operator ::std::tuple<::std::int32_t, ::std::int32_t>() && noexcept;
+  operator std::tuple<::std::int32_t, ::std::int32_t>() && noexcept;
 
  private:
   unsigned char storage_[8];
@@ -255,7 +255,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
 
  private:
   union {
-    rs::Tuple<::std::int32_t, ::std::int32_t> a;
+    rs_std::Tuple<::std::int32_t, ::std::int32_t> a;
   };
 
  private:
@@ -265,7 +265,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
 }  // namespace traits
 
 template <>
-struct rs::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait> {
+struct rs_std::impl<::traits::AssociatedTypeStruct,
+                    ::traits::AssociatedTypeTrait> {
   static constexpr bool kIsImplemented = true;
   using MyAssocType CRUBIT_INTERNAL_RUST_TYPE(
       "<traits_golden::AssociatedTypeStruct as :: traits_golden :: "
@@ -284,7 +285,7 @@ struct rs::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait> {
 };
 
 template <>
-struct rs::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait> {
+struct rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t const& $a
@@ -295,14 +296,14 @@ struct rs::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait> {
 };
 
 template <>
-struct rs::impl<::traits::MyStruct, ::traits::DifferentTraitSameName> {
+struct rs_std::impl<::traits::MyStruct, ::traits::DifferentTraitSameName> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t do_something(::traits::MyStruct const& self);
 };
 
 template <>
-struct rs::impl<::traits::MyStruct, ::traits::MyTrait> {
+struct rs_std::impl<::traits::MyStruct, ::traits::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t do_something(::traits::MyStruct const& self);
@@ -319,7 +320,7 @@ struct rs::impl<::traits::MyStruct, ::traits::MyTrait> {
 };
 
 template <>
-struct rs::impl<::traits::MyStruct2, ::traits::MyTrait> {
+struct rs_std::impl<::traits::MyStruct2, ::traits::MyTrait> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t do_something(::traits::MyStruct2 const& self);
@@ -336,8 +337,8 @@ struct rs::impl<::traits::MyStruct2, ::traits::MyTrait> {
 };
 
 template <>
-struct rs::impl<::traits::StructWithAssociatedConst,
-                ::traits::TraitWithAssociatedConst> {
+struct rs_std::impl<::traits::StructWithAssociatedConst,
+                    ::traits::TraitWithAssociatedConst> {
   static constexpr bool kIsImplemented = true;
   static constexpr ::std::int32_t CONST_INT = INT32_C(10);
 
@@ -585,42 +586,42 @@ inline void StructWithAssociatedConst::__crubit_field_offset_assertions() {
 }
 }  // namespace traits
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
-    rs::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
+    rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
 }
-inline ::rs::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
+inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
   __crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
           this);
 }
 static_assert(::std::is_trivially_copy_constructible_v<
-              ::rs::Tuple<::std::int32_t, ::std::int32_t>>);
+              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
 static_assert(::std::is_trivially_copy_assignable_v<
-              ::rs::Tuple<::std::int32_t, ::std::int32_t>>);
+              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
 static_assert(::std::is_trivially_move_constructible_v<
-              ::rs::Tuple<::std::int32_t, ::std::int32_t>>);
+              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
 static_assert(::std::is_trivially_move_assignable_v<
-              ::rs::Tuple<::std::int32_t, ::std::int32_t>>);
-inline ::rs::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
+              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
+inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
     ::crubit::UnsafeRelocateTag, Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline rs::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
-    ::std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept {
-  ::std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 0),
-                      ::std::move(::std::get<0>(tuple)));
-  ::std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
-                      ::std::move(::std::get<1>(tuple)));
+inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
+    std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept {
+  std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 0),
+                    std::move(std::get<0>(tuple)));
+  std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
+                    std::move(std::get<1>(tuple)));
 }
-inline rs::Tuple<::std::int32_t, ::std::int32_t>::operator ::std::tuple<
+inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::operator std::tuple<
     ::std::int32_t, ::std::int32_t>() && noexcept {
-  return ::std::tuple<::std::int32_t, ::std::int32_t>(
-      ::std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 0)),
-      ::std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 4)));
+  return std::tuple<::std::int32_t, ::std::int32_t>(
+      std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 0)),
+      std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 4)));
 }
 
 #endif
@@ -633,7 +634,7 @@ __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype_utraits_ugolden_x000000
 }
 }  // namespace traits
 inline ::std::int32_t
-rs::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
+rs_std::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
     get_my_assoc_type(::traits::AssociatedTypeStruct const& self) {
   return traits::__crubit_internal::
       __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
@@ -649,7 +650,7 @@ __crubit_thunk_AssociatedTypeTrait_uget_uunsupported_uassoc_utype_utraits_ugolde
 }
 }  // namespace traits
 inline ::rs::alloc::string::String
-rs::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
+rs_std::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
     get_unsupported_assoc_type(::traits::AssociatedTypeStruct const& self) {
   crubit::Slot<::rs::alloc::string::String> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -667,8 +668,8 @@ __crubit_thunk_LifetimeTrait_utrait_udo_usomething_utraits_ugolden_x0000003a_x00
 }
 }  // namespace traits
 inline ::std::int32_t const& $a
-rs::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::trait_do_something(
-    ::traits::LifetimeStruct const& self) {
+rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
+    trait_do_something(::traits::LifetimeStruct const& self) {
   return traits::__crubit_internal::
       __crubit_thunk_LifetimeTrait_utrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a(
           self);
@@ -682,7 +683,7 @@ extern "C" ::std::int32_t const& $(__anon1)
 }
 }  // namespace traits
 inline ::std::int32_t const& $(
-    __anon1) rs::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
+    __anon1) rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
     function_do_something(::traits::LifetimeStruct const& self) {
   return traits::__crubit_internal::
       __crubit_thunk_LifetimeTrait_ufunction_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a(
@@ -696,9 +697,9 @@ __crubit_thunk_DifferentTraitSameName_udo_usomething_utraits_ugolden_x0000003a_x
     ::traits::MyStruct const&);
 }
 }  // namespace traits
-inline ::std::int32_t
-rs::impl<::traits::MyStruct, ::traits::DifferentTraitSameName>::do_something(
-    ::traits::MyStruct const& self) {
+inline ::std::int32_t rs_std::
+    impl<::traits::MyStruct, ::traits::DifferentTraitSameName>::do_something(
+        ::traits::MyStruct const& self) {
   return traits::__crubit_internal::
       __crubit_thunk_DifferentTraitSameName_udo_usomething_utraits_ugolden_x0000003a_x0000003aMyStruct(
           self);
@@ -712,7 +713,7 @@ __crubit_thunk_MyTrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aMyStruc
 }
 }  // namespace traits
 inline ::std::int32_t
-rs::impl<::traits::MyStruct, ::traits::MyTrait>::do_something(
+rs_std::impl<::traits::MyStruct, ::traits::MyTrait>::do_something(
     ::traits::MyStruct const& self) {
   return traits::__crubit_internal::
       __crubit_thunk_MyTrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aMyStruct(
@@ -727,7 +728,7 @@ __crubit_thunk_MyTrait_uconsume_uself_utraits_ugolden_x0000003a_x0000003aMyStruc
 }
 }  // namespace traits
 inline ::std::int32_t
-rs::impl<::traits::MyStruct, ::traits::MyTrait>::consume_self(
+rs_std::impl<::traits::MyStruct, ::traits::MyTrait>::consume_self(
     ::traits::MyStruct self) {
   return traits::__crubit_internal::
       __crubit_thunk_MyTrait_uconsume_uself_utraits_ugolden_x0000003a_x0000003aMyStruct(
@@ -742,7 +743,7 @@ extern "C" ::traits::MyStruct const& $(__anon1)
 }
 }  // namespace traits
 inline ::traits::MyStruct const& $(__anon1)
-    rs::impl<::traits::MyStruct, ::traits::MyTrait>::return_self(
+    rs_std::impl<::traits::MyStruct, ::traits::MyTrait>::return_self(
         ::traits::MyStruct const& self) {
   return traits::__crubit_internal::
       __crubit_thunk_MyTrait_ureturn_uself_utraits_ugolden_x0000003a_x0000003aMyStruct(
@@ -756,7 +757,7 @@ __crubit_thunk_MyTrait_uno_uself_utraits_ugolden_x0000003a_x0000003aMyStruct();
 }
 }  // namespace traits
 inline ::std::int32_t
-rs::impl<::traits::MyStruct, ::traits::MyTrait>::no_self() {
+rs_std::impl<::traits::MyStruct, ::traits::MyTrait>::no_self() {
   return traits::__crubit_internal::
       __crubit_thunk_MyTrait_uno_uself_utraits_ugolden_x0000003a_x0000003aMyStruct();
 }
@@ -768,9 +769,9 @@ __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes_utraits_ugolden_x0000003
     ::traits::MyStruct const&, ::traits::Foo*, void** __ret_ptr);
 }
 }  // namespace traits
-inline ::std::tuple<::std::int32_t, ::std::int32_t>
-rs::impl<::traits::MyStruct, ::traits::MyTrait>::take_and_return_other_types(
-    ::traits::MyStruct const& self, ::traits::Foo x) {
+inline ::std::tuple<::std::int32_t, ::std::int32_t> rs_std::
+    impl<::traits::MyStruct, ::traits::MyTrait>::take_and_return_other_types(
+        ::traits::MyStruct const& self, ::traits::Foo x) {
   ::std::int32_t __return_value_0_ret_val_holder;
   ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
   ::std::int32_t __return_value_1_ret_val_holder;
@@ -792,7 +793,7 @@ __crubit_thunk_MyTrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aMyStruc
 }
 }  // namespace traits
 inline ::std::int32_t
-rs::impl<::traits::MyStruct2, ::traits::MyTrait>::do_something(
+rs_std::impl<::traits::MyStruct2, ::traits::MyTrait>::do_something(
     ::traits::MyStruct2 const& self) {
   return traits::__crubit_internal::
       __crubit_thunk_MyTrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aMyStruct2(
@@ -807,7 +808,7 @@ __crubit_thunk_MyTrait_uconsume_uself_utraits_ugolden_x0000003a_x0000003aMyStruc
 }
 }  // namespace traits
 inline ::std::int32_t
-rs::impl<::traits::MyStruct2, ::traits::MyTrait>::consume_self(
+rs_std::impl<::traits::MyStruct2, ::traits::MyTrait>::consume_self(
     ::traits::MyStruct2 self) {
   return traits::__crubit_internal::
       __crubit_thunk_MyTrait_uconsume_uself_utraits_ugolden_x0000003a_x0000003aMyStruct2(
@@ -822,7 +823,7 @@ extern "C" ::traits::MyStruct2 const& $(__anon1)
 }
 }  // namespace traits
 inline ::traits::MyStruct2 const& $(__anon1)
-    rs::impl<::traits::MyStruct2, ::traits::MyTrait>::return_self(
+    rs_std::impl<::traits::MyStruct2, ::traits::MyTrait>::return_self(
         ::traits::MyStruct2 const& self) {
   return traits::__crubit_internal::
       __crubit_thunk_MyTrait_ureturn_uself_utraits_ugolden_x0000003a_x0000003aMyStruct2(
@@ -836,7 +837,7 @@ __crubit_thunk_MyTrait_uno_uself_utraits_ugolden_x0000003a_x0000003aMyStruct2();
 }
 }  // namespace traits
 inline ::std::int32_t
-rs::impl<::traits::MyStruct2, ::traits::MyTrait>::no_self() {
+rs_std::impl<::traits::MyStruct2, ::traits::MyTrait>::no_self() {
   return traits::__crubit_internal::
       __crubit_thunk_MyTrait_uno_uself_utraits_ugolden_x0000003a_x0000003aMyStruct2();
 }
@@ -848,9 +849,9 @@ __crubit_thunk_MyTrait_utake_uand_ureturn_uother_utypes_utraits_ugolden_x0000003
     ::traits::MyStruct2 const&, ::traits::Foo*, void** __ret_ptr);
 }
 }  // namespace traits
-inline ::std::tuple<::std::int32_t, ::std::int32_t>
-rs::impl<::traits::MyStruct2, ::traits::MyTrait>::take_and_return_other_types(
-    ::traits::MyStruct2 const& self, ::traits::Foo x) {
+inline ::std::tuple<::std::int32_t, ::std::int32_t> rs_std::
+    impl<::traits::MyStruct2, ::traits::MyTrait>::take_and_return_other_types(
+        ::traits::MyStruct2 const& self, ::traits::Foo x) {
   ::std::int32_t __return_value_0_ret_val_holder;
   ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
   ::std::int32_t __return_value_1_ret_val_holder;

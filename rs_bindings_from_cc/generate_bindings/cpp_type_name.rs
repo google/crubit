@@ -67,7 +67,9 @@ pub fn format_cpp_type_inner(
                     };
                     Ok(quote! { #nested_type #const_fragment #ptr })
                 }
-                RustPtrKind::Slice => Ok(quote! { ::rs::SliceRef<#const_fragment #nested_type> }),
+                RustPtrKind::Slice => {
+                    Ok(quote! { ::rs_std::SliceRef<#const_fragment #nested_type> })
+                }
             }
         }
         RsTypeKind::Reference { referent, mutability, .. } => {

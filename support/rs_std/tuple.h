@@ -7,7 +7,7 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_TUPLE_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_TUPLE_H_
 
-namespace rs {
+namespace rs_std {
 
 /**
  * A layout-compatible type for Rust tuples.
@@ -20,11 +20,6 @@ struct Tuple final {
                 "This type should only be used via a generated specialization");
 };
 
-}  // namespace rs
-
-namespace rs_std {
-template <typename... Ts>
-using Tuple [[deprecated("Use rs::Tuple instead")]] = rs::Tuple<Ts...>;
 }  // namespace rs_std
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_TUPLE_H_
