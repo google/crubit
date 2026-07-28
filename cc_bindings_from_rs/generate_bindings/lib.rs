@@ -1493,10 +1493,21 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
                     let mut prereqs = CcPrerequisites::default();
                     let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
 
+                    // TODO: b/459482188 - This is ultimately dependent on the return ABI of the thunk and
+                    // should be centralized with the other callsites that depend on return type ABI.
+                    let ctor_body = if is_c_abi_compatible_by_value(db, core.self_ty) {
+                        quote! {
+                            *this = __crubit_internal::#clone_thunk_name(other);
+                        }
+                    } else {
+                        quote! {
+                            __crubit_internal::#clone_thunk_name(other, this);
+                        }
+                    };
                     let tokens = quote! {
                         #cc_thunk_decls
                         inline #qualified_adt_name::#cc_struct_name(const #cc_struct_name& other) {
-                            __crubit_internal::#clone_thunk_name(other, this);
+                            #ctor_body
                         }
                         inline #qualified_adt_name& #qualified_adt_name::operator=(const #cc_struct_name& other) {
                             if (this != &other) {

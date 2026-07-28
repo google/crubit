@@ -83,5 +83,17 @@ TEST(CloneTest, NoImpl) {
   static_assert(!std::is_copy_assignable_v<tests::SomeStruct>);
 }
 
+TEST(CloneTest, ReprTransparentImpl) {
+  MainTestBody(
+      rs_clone::repr_transparent_impl::TransparentStruct::create_struct(42), 42,
+      42);
+}
+
+TEST(CloneTest, VaListImpl) {
+  namespace tests = rs_clone::va_list_impl;
+  static_assert(std::is_copy_constructible_v<tests::StructWithVaList>);
+  static_assert(std::is_copy_assignable_v<tests::StructWithVaList>);
+}
+
 }  // namespace
 }  // namespace crubit

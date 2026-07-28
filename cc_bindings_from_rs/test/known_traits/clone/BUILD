@@ -20,6 +20,7 @@ rust_library(
     name = "rs_clone",
     testonly = 1,
     srcs = ["clone.rs"],
+    rustc_flags = ["-Zallow-features=c_variadic"],
 )
 
 cc_bindings_from_rust(

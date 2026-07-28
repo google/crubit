@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#![feature(c_variadic)]
+
 //! This crate is used as a test input for `cc_bindings_from_rs` and the
 //! generated C++ bindings are then tested via `clone_test.cc`.
 
@@ -101,4 +103,38 @@ pub mod derived_impl_with_non_default_field {
 /// Test of a missing impl of a trait.
 pub mod no_impl {
     pub struct SomeStruct(pub i32);
+}
+
+/// Test of `impl Clone for TransparentStruct` where `TransparentStruct` is
+/// `#[repr(transparent)]`, which makes it C-ABI compatible by value.
+/// Regression test for b/459482188.
+pub mod repr_transparent_impl {
+    #[repr(transparent)]
+    pub struct TransparentStruct(pub i32);
+
+    impl Clone for TransparentStruct {
+        fn clone(&self) -> Self {
+            Self(self.0)
+        }
+    }
+
+    impl TransparentStruct {
+        pub fn create_struct(i: i32) -> Self {
+            Self(i)
+        }
+
+        pub fn extract_int(s: Self) -> i32 {
+            s.0
+        }
+    }
+}
+
+/// Test of `Clone` for a struct containing `core::ffi::VaList`. On ARM32,
+/// `VaList` is `#[repr(transparent)]` and C-ABI compatible by value.
+/// Regression test for b/459482188.
+pub mod va_list_impl {
+    #[derive(Clone)]
+    pub struct StructWithVaList<'a> {
+        pub va: core::ffi::VaList<'a>,
+    }
 }
