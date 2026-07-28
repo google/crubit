@@ -6,7 +6,7 @@
 
 #![deny(missing_docs, unsafe_op_in_unsafe_fn)]
 
-use cpp_waker::rs_std::CppWaker;
+use cpp_waker::rs::CppWaker;
 use std::mem::ManuallyDrop;
 use std::pin::Pin;
 use std::task::{Context, RawWaker, RawWakerVTable, Waker};

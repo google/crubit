@@ -25,13 +25,13 @@ namespace trait {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_golden :: Trait") Trait {
   template <typename T>
-  using impl = rs_std::impl<T, Trait>;
+  using impl = rs::impl<T, Trait>;
 };
 
 }  // namespace trait
 
 template <>
-struct rs_std::impl<::CcType, ::trait::Trait> {
+struct rs::impl<::CcType, ::trait::Trait> {
   static constexpr bool kIsImplemented = true;
 
   static ::std::int32_t get_value(::CcType const& self);
@@ -44,7 +44,7 @@ __crubit_thunk_Trait_uget_uvalue_ucc_utype_x0000003a_x0000003aCcType(
     ::CcType const&);
 }
 }  // namespace trait
-inline ::std::int32_t rs_std::impl<::CcType, ::trait::Trait>::get_value(
+inline ::std::int32_t rs::impl<::CcType, ::trait::Trait>::get_value(
     ::CcType const& self) {
   return trait::__crubit_internal::
       __crubit_thunk_Trait_uget_uvalue_ucc_utype_x0000003a_x0000003aCcType(

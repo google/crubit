@@ -113,7 +113,7 @@ fn parse_adt_template_specialization<'tcx>(
                     let mut prereqs = CcPrerequisites::default();
                     let some_ty_cc = some_ty.for_cc.clone().into_tokens(&mut prereqs);
                     prereqs.forward_declare_type(substs.type_at(0));
-                    CcSnippet { tokens: quote! { rs_std::Option<#some_ty_cc> }, prereqs }
+                    CcSnippet { tokens: quote! { rs::Option<#some_ty_cc> }, prereqs }
                 };
                 Ok(RsStdTemplateSpecialization {
                     layout,
@@ -170,7 +170,7 @@ fn parse_adt_template_specialization<'tcx>(
                     prereqs.forward_declare_type(substs.type_at(0));
                     prereqs.forward_declare_type(substs.type_at(1));
                     CcSnippet {
-                        tokens: quote! { rs_std::Result<#ok_ty_cc, #err_ty_cc> },
+                        tokens: quote! { rs::Result<#ok_ty_cc, #err_ty_cc> },
                         prereqs,
                     }
                 };
@@ -196,7 +196,7 @@ fn parse_adt_template_specialization<'tcx>(
                     let mut prereqs = CcPrerequisites::default();
                     let inner_ty_cc = inner_ty.for_cc.clone().into_tokens(&mut prereqs);
                     prereqs.forward_declare_type(substs.type_at(0));
-                    CcSnippet { tokens: quote! { rs_std::Vec<#inner_ty_cc> }, prereqs }
+                    CcSnippet { tokens: quote! { rs::Vec<#inner_ty_cc> }, prereqs }
                 };
                 Ok(RsStdTemplateSpecialization {
                     layout,
@@ -231,7 +231,7 @@ fn parse_tuple_template_specialization<'tcx>(
                 ty.for_cc.clone().into_tokens(&mut prereqs)
             })
             .collect::<Vec<_>>();
-        CcSnippet { tokens: quote! { rs_std::Tuple<#(#element_tys_cc),*> }, prereqs }
+        CcSnippet { tokens: quote! { rs::Tuple<#(#element_tys_cc),*> }, prereqs }
     };
     Some(Ok(RsStdTemplateSpecialization {
         layout,
@@ -276,7 +276,7 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                     constexpr ~Option() noexcept;
                 },
                 quote! {
-                    inline constexpr rs_std::Option<#arg_ty>::~Option() noexcept {
+                    inline constexpr rs::Option<#arg_ty>::~Option() noexcept {
                         this->reset();
                     }
                 },
@@ -287,34 +287,34 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                 quote! {
                     ~Option() noexcept = default;
                 },
-                quote! { static_assert(::std::is_trivially_destructible_v<rs_std::Option<#arg_ty>>); },
+                quote! { static_assert(::std::is_trivially_destructible_v<rs::Option<#arg_ty>>); },
             )
         };
 
         let tag_method_main_api = tag_method.main_api.into_tokens(&mut prereqs);
-        let full_self_ty = quote! { rs_std::Option<#arg_ty> };
+        let full_self_ty = quote! { rs::Option<#arg_ty> };
 
         let main_api = CcSnippet {
             tokens: quote! {
-                using base_type = rs_std::OptionBase<#full_self_ty, #arg_ty>;
+                using base_type = rs::OptionBase<#full_self_ty, #arg_ty>;
                 constexpr Option() = default;
                 constexpr Option(::std::nullopt_t) noexcept;
                 constexpr Option& operator=(::std::nullopt_t) noexcept;
 
                 template <typename U>
-                  requires(rs_std::OptionForwardConstructible<Option, #arg_ty, U>)
+                  requires(rs::OptionForwardConstructible<Option, #arg_ty, U>)
                 Option(U&& value) noexcept;
 
                 template <typename U>
-                  requires(rs_std::OptionForwardConstructible<Option, #arg_ty, U>)
+                  requires(rs::OptionForwardConstructible<Option, #arg_ty, U>)
                 Option& operator=(U&& value) noexcept;
 
                 template <typename Opt>
-                  requires(rs_std::OptionFromStdOptional<#arg_ty, Opt>)
+                  requires(rs::OptionFromStdOptional<#arg_ty, Opt>)
                 Option(Opt&& value) noexcept;
 
                 template <typename Opt>
-                  requires(rs_std::OptionFromStdOptional<#arg_ty, Opt>)
+                  requires(rs::OptionFromStdOptional<#arg_ty, Opt>)
                 Option& operator=(Opt&& value) noexcept;
 
                 template <typename... Args>
@@ -363,22 +363,22 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                 } __NEWLINE__
 
                 template <typename U>
-                  requires(rs_std::OptionForwardConstructible<#full_self_ty, #arg_ty, U>)
+                  requires(rs::OptionForwardConstructible<#full_self_ty, #arg_ty, U>)
                 inline #full_self_ty::Option(U&& value) noexcept : base_type(::std::forward<U>(value)) {} __NEWLINE__
 
                 template <typename U>
-                  requires(rs_std::OptionForwardConstructible<#full_self_ty, #arg_ty, U>)
+                  requires(rs::OptionForwardConstructible<#full_self_ty, #arg_ty, U>)
                 inline #full_self_ty& #full_self_ty::operator=(U&& value) noexcept {
                     base_type::operator=(::std::forward<U>(value));
                     return *this;
                 } __NEWLINE__
 
                 template <typename Opt>
-                  requires(rs_std::OptionFromStdOptional<#arg_ty, Opt>)
+                  requires(rs::OptionFromStdOptional<#arg_ty, Opt>)
                 inline #full_self_ty::Option(Opt&& value) noexcept : base_type(::std::forward<Opt>(value)) {} __NEWLINE__
 
                 template <typename Opt>
-                  requires(rs_std::OptionFromStdOptional<#arg_ty, Opt>)
+                  requires(rs::OptionFromStdOptional<#arg_ty, Opt>)
                 inline #full_self_ty& #full_self_ty::operator=(Opt&& value) noexcept {
                     base_type::operator=(::std::forward<Opt>(value));
                     return *this;
@@ -476,7 +476,7 @@ impl<'tcx> ResultApiGenerator<'tcx> {
             ..
         } = self;
         let mut prereqs = CcPrerequisites::default();
-        let full_self_ty = quote! { rs_std::Result<#ok_ty_cpp, #err_ty_cpp> };
+        let full_self_ty = quote! { rs::Result<#ok_ty_cpp, #err_ty_cpp> };
 
         let (drop, drop_details) = if needs_drop {
             (
@@ -498,29 +498,29 @@ impl<'tcx> ResultApiGenerator<'tcx> {
         let main_api = CcSnippet {
             tokens: quote! {
             public:
-                using base_type = rs_std::ResultBase<#full_self_ty, #ok_ty_cpp, #err_ty_cpp>;
+                using base_type = rs::ResultBase<#full_self_ty, #ok_ty_cpp, #err_ty_cpp>;
 
                 template <typename U>
-                  requires(rs_std::ResultForwardConstructible<Result, #ok_ty_cpp, U>)
+                  requires(rs::ResultForwardConstructible<Result, #ok_ty_cpp, U>)
                 explicit constexpr Result(U&& ok) noexcept;
 
                 template <typename U>
-                  requires(rs_std::ResultForwardConstructible<Result, #ok_ty_cpp, U>)
+                  requires(rs::ResultForwardConstructible<Result, #ok_ty_cpp, U>)
                 constexpr Result& operator=(U&& ok) noexcept;
 
                 template <typename F>
-                  requires(rs_std::ResultUnexpectedConstructible<#err_ty_cpp, F>)
-                explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
+                  requires(rs::ResultUnexpectedConstructible<#err_ty_cpp, F>)
+                explicit constexpr Result(rs::unexpected<F>&& err) noexcept;
 
                 template <typename F>
-                  requires(rs_std::ResultUnexpectedConstructible<#err_ty_cpp, F>)
-                constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
+                  requires(rs::ResultUnexpectedConstructible<#err_ty_cpp, F>)
+                constexpr Result& operator=(rs::unexpected<F>&& err) noexcept;
 
                 template <typename... Args>
                 explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
 
                 template <typename... Args>
-                explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
+                explicit constexpr Result(rs::unexpect_t u, Args&&... args) noexcept;
 
                 #drop
 
@@ -563,23 +563,23 @@ impl<'tcx> ResultApiGenerator<'tcx> {
                 #tag_method_cc_details __NEWLINE__
 
                 template <typename U>
-                  requires(rs_std::ResultForwardConstructible<#full_self_ty, #ok_ty_cpp, U>)
+                  requires(rs::ResultForwardConstructible<#full_self_ty, #ok_ty_cpp, U>)
                 inline constexpr #full_self_ty::Result(U&& ok) noexcept : base_type(::std::forward<U>(ok)) {} __NEWLINE__
 
                 template <typename U>
-                  requires(rs_std::ResultForwardConstructible<#full_self_ty, #ok_ty_cpp, U>)
+                  requires(rs::ResultForwardConstructible<#full_self_ty, #ok_ty_cpp, U>)
                 inline constexpr #full_self_ty& #full_self_ty::operator=(U&& ok) noexcept {
                     base_type::operator=(::std::forward<U>(ok));
                     return *this;
                 } __NEWLINE__
 
                 template <typename F>
-                  requires(rs_std::ResultUnexpectedConstructible<#err_ty_cpp, F>)
-                inline constexpr #full_self_ty::Result(rs_std::unexpected<F>&& err) noexcept : base_type(::std::move(err)) {} __NEWLINE__
+                  requires(rs::ResultUnexpectedConstructible<#err_ty_cpp, F>)
+                inline constexpr #full_self_ty::Result(rs::unexpected<F>&& err) noexcept : base_type(::std::move(err)) {} __NEWLINE__
 
                 template <typename F>
-                  requires(rs_std::ResultUnexpectedConstructible<#err_ty_cpp, F>)
-                inline constexpr #full_self_ty& #full_self_ty::operator=(rs_std::unexpected<F>&& err) noexcept {
+                  requires(rs::ResultUnexpectedConstructible<#err_ty_cpp, F>)
+                inline constexpr #full_self_ty& #full_self_ty::operator=(rs::unexpected<F>&& err) noexcept {
                     base_type::operator=(::std::move(err));
                     return *this;
                 } __NEWLINE__
@@ -589,7 +589,7 @@ impl<'tcx> ResultApiGenerator<'tcx> {
                     : base_type(ip, ::std::forward<Args>(args)...) {} __NEWLINE__
 
                 template <typename... Args>
-                inline constexpr #full_self_ty::Result(rs_std::unexpect_t u, Args&&... args) noexcept
+                inline constexpr #full_self_ty::Result(rs::unexpect_t u, Args&&... args) noexcept
                     : base_type(u, ::std::forward<Args>(args)...) {} __NEWLINE__
             },
             prereqs,
@@ -614,7 +614,7 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
 
         let element_cc_tys: Vec<_> =
             self.element_tys.iter().map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs)).collect();
-        let full_self_ty = quote! { rs_std::Tuple<#(#element_cc_tys),*> };
+        let full_self_ty = quote! { rs::Tuple<#(#element_cc_tys),*> };
 
         let mut construct_elements = quote! {};
         let mut convert_elements = Vec::new();
@@ -624,10 +624,10 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
             let i_idx = Literal::usize_unsuffixed(i);
 
             construct_elements.extend(quote! {
-                std::construct_at(#element_ptr, std::move(std::get<#i_idx>(tuple)));
+                ::std::construct_at(#element_ptr, ::std::move(::std::get<#i_idx>(tuple)));
             });
             convert_elements.push(quote! {
-                    std::move(*#element_ptr)
+                    ::std::move(*#element_ptr)
             });
         }
 
@@ -638,7 +638,7 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
             for (i, element_cc_ty) in element_cc_tys.iter().enumerate() {
                 let offset = Literal::u64_unsuffixed(self.layout.fields().offset(i).bytes());
                 drop_elements.extend(quote! {
-                    std::destroy_at(reinterpret_cast<#element_cc_ty*>(storage_ + #offset));
+                    ::std::destroy_at(reinterpret_cast<#element_cc_ty*>(storage_ + #offset));
                 });
             }
             (
@@ -660,21 +660,21 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
         let (std_tuple_main_api_ctor, std_tuple_main_api_conv, std_tuple_cc_details) =
             if all_elements_cpp_movable {
                 (
-                    quote! { Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) noexcept; },
-                    quote! { operator std::tuple<#(#element_cc_tys),*>() && noexcept; },
+                    quote! { Tuple(::std::tuple<#(#element_cc_tys),*>&& tuple) noexcept; },
+                    quote! { operator ::std::tuple<#(#element_cc_tys),*>() && noexcept; },
                     quote! {
-                        inline #full_self_ty::Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) noexcept {
+                        inline #full_self_ty::Tuple(::std::tuple<#(#element_cc_tys),*>&& tuple) noexcept {
                             #construct_elements
                         } __NEWLINE__
-                        inline #full_self_ty::operator std::tuple<#(#element_cc_tys),*>() && noexcept {
-                            return std::tuple<#(#element_cc_tys),*>(#(#convert_elements),*);
+                        inline #full_self_ty::operator ::std::tuple<#(#element_cc_tys),*>() && noexcept {
+                            return ::std::tuple<#(#element_cc_tys),*>(#(#convert_elements),*);
                         }
                     },
                 )
             } else {
                 (
-                    quote! { Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) = delete; },
-                    quote! { operator std::tuple<#(#element_cc_tys),*>() && = delete; },
+                    quote! { Tuple(::std::tuple<#(#element_cc_tys),*>&& tuple) = delete; },
+                    quote! { operator ::std::tuple<#(#element_cc_tys),*>() && = delete; },
                     quote! {},
                 )
             };
@@ -718,7 +718,7 @@ fn specialize_tuple<'tcx>(
         let element_rs_tys = element_tys.iter().map(|ty| &ty.for_rs);
         quote! { (#(#element_rs_tys,)*) }
     };
-    let cc_fully_qualified_name = quote! { ::rs_std::Tuple<#(#element_cc_tys),*> };
+    let cc_fully_qualified_name = quote! { ::rs::Tuple<#(#element_cc_tys),*> };
 
     let core = Rc::new(database::AdtCoreBindings {
         def_id: None,
@@ -764,7 +764,7 @@ fn specialize_tuple<'tcx>(
         template<> __NEWLINE__
         struct alignas(#align_literal)
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
-        rs_std::Tuple<#(#element_cc_tys),*> { __NEWLINE__
+        rs::Tuple<#(#element_cc_tys),*> { __NEWLINE__
         public:
             #main_api_tokens __NEWLINE__
         private:
@@ -897,7 +897,7 @@ fn specialize_vec<'tcx>(
     let inner_ty_rs = &inner_ty.for_rs;
 
     let rs_fully_qualified_name = quote! { ::alloc::vec::Vec<#inner_ty_rs> };
-    let cc_fully_qualified_name = quote! { rs_std::Vec<#inner_ty_cc> };
+    let cc_fully_qualified_name = quote! { rs::Vec<#inner_ty_cc> };
 
     let adt_def = rs_std.self_ty_rs.ty_adt_def().expect("Vec should be an ADT");
     let def_id = Some(adt_def.did());
@@ -949,7 +949,7 @@ fn specialize_vec<'tcx>(
     };
     let drop_impl = quote! {
         extern "C" void #drop_thunk_name(void* vec) noexcept;
-        inline rs_std::Vec<#inner_ty_cc>::~Vec() noexcept {
+        inline rs::Vec<#inner_ty_cc>::~Vec() noexcept {
             #drop_thunk_name(this);
         }
     };
@@ -967,34 +967,34 @@ fn specialize_vec<'tcx>(
     let accessors_decl = quote! {
         #inner_ty_cc* data() noexcept;
         #inner_ty_cc const* data() const noexcept;
-        std::size_t size() const noexcept;
-        #inner_ty_cc& operator[](std::size_t index) noexcept;
-        #inner_ty_cc const& operator[](std::size_t index) const noexcept;
+        ::std::size_t size() const noexcept;
+        #inner_ty_cc& operator[](::std::size_t index) noexcept;
+        #inner_ty_cc const& operator[](::std::size_t index) const noexcept;
         #inner_ty_cc* begin() noexcept;
         #inner_ty_cc const* begin() const noexcept;
         #inner_ty_cc* end() noexcept;
         #inner_ty_cc const* end() const noexcept;
     };
 
-    let full_self_ty = quote! { rs_std::Vec<#inner_ty_cc> };
+    let full_self_ty = quote! { rs::Vec<#inner_ty_cc> };
     let accessors_impl = quote! {
         inline #inner_ty_cc* #full_self_ty::data() noexcept {
-            return std::bit_cast<#inner_ty_cc*>(
-                *reinterpret_cast<const std::uintptr_t*>(&storage_[#ptr_offset]));
+            return ::std::bit_cast<#inner_ty_cc*>(
+                *reinterpret_cast<const ::std::uintptr_t*>(&storage_[#ptr_offset]));
         }
         inline #inner_ty_cc const* #full_self_ty::data() const noexcept {
-            return std::bit_cast<#inner_ty_cc*>(
-                *reinterpret_cast<const std::uintptr_t*>(&storage_[#ptr_offset]));
+            return ::std::bit_cast<#inner_ty_cc*>(
+                *reinterpret_cast<const ::std::uintptr_t*>(&storage_[#ptr_offset]));
         }
-        inline std::size_t #full_self_ty::size() const noexcept {
-            return std::bit_cast<std::size_t>(
-                *reinterpret_cast<const std::size_t*>(&storage_[#len_offset]));
+        inline ::std::size_t #full_self_ty::size() const noexcept {
+            return ::std::bit_cast<::std::size_t>(
+                *reinterpret_cast<const ::std::size_t*>(&storage_[#len_offset]));
         }
-        inline #inner_ty_cc& #full_self_ty::operator[](std::size_t index) noexcept {
+        inline #inner_ty_cc& #full_self_ty::operator[](::std::size_t index) noexcept {
             CRUBIT_CHECK(index < size());
             return data()[index];
         }
-        inline #inner_ty_cc const& #full_self_ty::operator[](std::size_t index) const noexcept {
+        inline #inner_ty_cc const& #full_self_ty::operator[](::std::size_t index) const noexcept {
             CRUBIT_CHECK(index < size());
             return data()[index];
         }
@@ -1028,7 +1028,7 @@ fn specialize_vec<'tcx>(
         template<> __NEWLINE__
         struct alignas(#align_literal)
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
-        rs_std::Vec<#inner_ty_cc> { __NEWLINE__
+        rs::Vec<#inner_ty_cc> { __NEWLINE__
         public:
             #main_api_tokens __NEWLINE__
             #drop_decl __NEWLINE__
@@ -1109,17 +1109,17 @@ fn specialize_result<'tcx>(
         }),
         cc_details: CcSnippet::with_include(
             quote! {
-                inline constexpr #tag_type_cc_tokens rs_std::Result<#ok_ty_tokens, #err_ty_tokens>::tag() const& noexcept {
-                    std::array<unsigned char, sizeof(#tag_type_cc_tokens)> __bytes = {};
-                    for (std::size_t i = 0; i < sizeof(#tag_type_cc_tokens); ++i) {
+                inline constexpr #tag_type_cc_tokens rs::Result<#ok_ty_tokens, #err_ty_tokens>::tag() const& noexcept {
+                    ::std::array<unsigned char, sizeof(#tag_type_cc_tokens)> __bytes = {};
+                    for (::std::size_t i = 0; i < sizeof(#tag_type_cc_tokens); ++i) {
                         __bytes[#byte_index_read] = __storage[#tag_offset + i];
                     }
-                    return std::bit_cast<#tag_type_cc_tokens>(__bytes);
+                    return ::std::bit_cast<#tag_type_cc_tokens>(__bytes);
                 }
                 __NEWLINE__
-                inline constexpr void rs_std::Result<#ok_ty_tokens, #err_ty_tokens>::set_tag(#tag_type_cc_tokens tag) noexcept {
-                    auto __bytes = std::bit_cast<std::array<unsigned char, sizeof(#tag_type_cc_tokens)>>(tag);
-                    for (std::size_t i = 0; i < sizeof(#tag_type_cc_tokens); ++i) {
+                inline constexpr void rs::Result<#ok_ty_tokens, #err_ty_tokens>::set_tag(#tag_type_cc_tokens tag) noexcept {
+                    auto __bytes = ::std::bit_cast<::std::array<unsigned char, sizeof(#tag_type_cc_tokens)>>(tag);
+                    for (::std::size_t i = 0; i < sizeof(#tag_type_cc_tokens); ++i) {
                         __storage[#tag_offset + i] = __bytes[#byte_index_write];
                     }
                 }
@@ -1237,7 +1237,7 @@ fn specialize_result<'tcx>(
     };
 
     let rs_fully_qualified_name = quote! { std::result::Result<#ok_ty_for_rs, #err_ty_for_rs> };
-    let cc_fully_qualified_name = quote! { rs_std::Result<#ok_ty_tokens, #err_ty_tokens> };
+    let cc_fully_qualified_name = quote! { rs::Result<#ok_ty_tokens, #err_ty_tokens> };
     let core = Rc::new(database::AdtCoreBindings {
         def_id: Some(adt.did()),
         keyword: quote! { struct },
@@ -1280,8 +1280,8 @@ fn specialize_result<'tcx>(
         struct
         alignas(#align_literal) __NEWLINE__
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
-        rs_std::Result<#ok_ty_tokens, #err_ty_tokens>
-            : public rs_std::ResultBase<rs_std::Result<#ok_ty_tokens, #err_ty_tokens>, #ok_ty_tokens, #err_ty_tokens> { __NEWLINE__
+        rs::Result<#ok_ty_tokens, #err_ty_tokens>
+            : public rs::ResultBase<rs::Result<#ok_ty_tokens, #err_ty_tokens>, #ok_ty_tokens, #err_ty_tokens> { __NEWLINE__
         public:
             #main_api_tokens __NEWLINE__
 
@@ -1354,7 +1354,7 @@ fn specialize_option<'tcx>(
         }),
         cc_details: CcSnippet::with_include(
             quote! {
-                inline constexpr #tag_type_cc rs_std::Option<#ty_tokens>::tag() const& noexcept {
+                inline constexpr #tag_type_cc rs::Option<#ty_tokens>::tag() const& noexcept {
                     ::std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
                     for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
                         __bytes[#endian_index] = storage_[#tag_offset + i];
@@ -1362,7 +1362,7 @@ fn specialize_option<'tcx>(
                     return ::std::bit_cast<#tag_type_cc>(__bytes);
                 }
                 __NEWLINE__
-                inline constexpr void rs_std::Option<#ty_tokens>::set_tag(#tag_type_cc tag) noexcept {
+                inline constexpr void rs::Option<#ty_tokens>::set_tag(#tag_type_cc tag) noexcept {
                     auto __bytes = ::std::bit_cast<::std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
                     for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
                         storage_[#tag_offset + i] = __bytes[#endian_index];
@@ -1449,7 +1449,7 @@ fn specialize_option<'tcx>(
         }
     };
     let rs_fully_qualified_name = quote! { std::option::Option<#arg_ty_for_rs> };
-    let cc_fully_qualified_name = quote! { rs_std::Option<#ty_tokens> };
+    let cc_fully_qualified_name = quote! { rs::Option<#ty_tokens> };
     let core = Rc::new(database::AdtCoreBindings {
         def_id: Some(adt.did()),
         keyword: quote! { struct },
@@ -1495,8 +1495,8 @@ fn specialize_option<'tcx>(
         template<> __NEWLINE__
         struct alignas(#align_literal)
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
-        rs_std::Option<#ty_tokens>
-            : public rs_std::OptionBase<rs_std::Option<#ty_tokens>, #ty_tokens> { __NEWLINE__
+        rs::Option<#ty_tokens>
+            : public rs::OptionBase<rs::Option<#ty_tokens>, #ty_tokens> { __NEWLINE__
         public:
             #main_api_tokens __NEWLINE__
 
@@ -1791,7 +1791,7 @@ fn generate_trait_impl_specialization<'tcx>(
             tokens: quote! {
                 __NEWLINE__
                 template<>
-                struct rs_std::impl<#self_ty_cc_name, #trait_name_with_args> {
+                struct rs::impl<#self_ty_cc_name, #trait_name_with_args> {
                     static constexpr bool kIsImplemented = true;
 
                     #main_api
@@ -1830,7 +1830,7 @@ fn generate_negative_auto_trait_impl_specialization<'tcx>(
             tokens: quote! {
                 __NEWLINE__
                 template<>
-                struct rs_std::impl<#self_ty_cc_name, #trait_name> {
+                struct rs::impl<#self_ty_cc_name, #trait_name> {
                     static constexpr bool kIsImplemented = false;
                 };
                 __NEWLINE__

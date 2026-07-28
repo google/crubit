@@ -28,13 +28,13 @@ using ::testing::Not;
 // that's because its default constructor needs to be user-defined to make sure
 // that `ptr_` is never null. The latter is needed so that interpreting the data
 // as a slice in Rust won't result in a (in Rust) forbidden null pointer.
-static_assert(std::is_nothrow_constructible_v<StrRef>);
-static_assert(std::is_trivially_destructible_v<StrRef>);
-static_assert(std::is_trivially_copyable_v<StrRef>);
-static_assert(std::is_trivially_copy_constructible_v<StrRef>);
-static_assert(std::is_trivially_copy_assignable_v<StrRef>);
-static_assert(std::is_trivially_move_constructible_v<StrRef>);
-static_assert(std::is_trivially_move_assignable_v<StrRef>);
+static_assert(::std::is_nothrow_constructible_v<StrRef>);
+static_assert(::std::is_trivially_destructible_v<StrRef>);
+static_assert(::std::is_trivially_copyable_v<StrRef>);
+static_assert(::std::is_trivially_copy_constructible_v<StrRef>);
+static_assert(::std::is_trivially_copy_assignable_v<StrRef>);
+static_assert(::std::is_trivially_move_constructible_v<StrRef>);
+static_assert(::std::is_trivially_move_assignable_v<StrRef>);
 // Note: `StrRef` is not trivially constructible because its default
 // constructor ensures that the data pointer is not null.
 
@@ -53,11 +53,11 @@ static_assert(std::is_trivially_move_assignable_v<StrRef>);
 static_assert(sizeof(StrRef) == sizeof(uintptr_t) * 2);
 static_assert(alignof(StrRef) == alignof(uintptr_t));
 
-static_assert(std::is_standard_layout_v<StrRef>);
+static_assert(::std::is_standard_layout_v<StrRef>);
 
-static_assert(std::is_constructible_v<StrRef, absl::string_view>);
-static_assert(std::is_constructible_v<StrRef, std::string_view>);
-static_assert(std::is_constructible_v<StrRef, const char*>);
+static_assert(::std::is_constructible_v<StrRef, absl::string_view>);
+static_assert(::std::is_constructible_v<StrRef, ::std::string_view>);
+static_assert(::std::is_constructible_v<StrRef, const char*>);
 
 TEST(StrTest, Comparison) {
   static constexpr absl::string_view kStr = "12345";
@@ -101,7 +101,7 @@ struct StrRefFields {
 TEST(StrTest, Layout) {
   static constexpr absl::string_view kStr = "foo";
   const StrRef s = kStr;
-  const auto fields = std::bit_cast<StrRefFields>(s);
+  const auto fields = ::std::bit_cast<StrRefFields>(s);
   EXPECT_EQ(fields.ptr, kStr.data());
   EXPECT_EQ(fields.size, kStr.size());
 }
@@ -112,12 +112,12 @@ TEST(StrTest, Empty) {
   static constexpr StrRef default_constructed;
   EXPECT_EQ(empty, default_constructed);
 
-  const auto fields = std::bit_cast<StrRefFields>(empty);
+  const auto fields = ::std::bit_cast<StrRefFields>(empty);
   EXPECT_THAT(fields.ptr, Not(IsNull()));
   EXPECT_EQ(fields.size, 0);
 
   // While `empty.data_` is not null, `data()` converts it to null for
-  // compatibility with `std::span`.
+  // compatibility with `::std::span`.
   EXPECT_THAT(empty.data(), IsNull());
   EXPECT_EQ(empty.size(), 0);
 }
@@ -130,7 +130,7 @@ TEST(StrTest, StrCat) {
 
 TEST(StrTest, OStream) {
   static constexpr StrRef kStrRef = "12345";
-  std::ostringstream os;
+  ::std::ostringstream os;
   os << kStrRef;
   EXPECT_EQ(os.str(), "12345");
 }
@@ -142,8 +142,8 @@ TEST(StrTest, FromUtf8OnNonUtf8ReturnsNullopt) {
 }
 
 TEST(ImplicitConversionTest, FromConstString) {
-  const std::string string = "123";
-  const std::optional<StrRef> from_string = StrRef::FromUtf8(string);
+  const ::std::string string = "123";
+  const ::std::optional<StrRef> from_string = StrRef::FromUtf8(string);
   ASSERT_TRUE(from_string.has_value());
   EXPECT_EQ(from_string, "123");
 }
@@ -160,11 +160,11 @@ TEST(ImplicitConversionTest, ToAbslStringView) {
   EXPECT_EQ(view, "hello");
 }
 
-void Fuzzer(std::string data) {
-  const std::optional<StrRef> s = StrRef::FromUtf8(data);
+void Fuzzer(::std::string data) {
+  const ::std::optional<StrRef> s = StrRef::FromUtf8(data);
   ASSERT_TRUE(s.has_value());
   EXPECT_EQ(data, *s);
-  const std::string data_copy(s->data(), s->data() + s->size());
+  const ::std::string data_copy(s->data(), s->data() + s->size());
   EXPECT_EQ(data, data_copy);
 }
 

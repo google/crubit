@@ -946,7 +946,7 @@ fn test_format_item_generic_fn_as_ref_trait_basic_replacement() {
         assert_cc_matches!(
             result.main_api.tokens,
             quote! {
-              void generic_function(rs_std::SliceRef<const ::std::uint8_t> arg);
+              void generic_function(rs::SliceRef<const ::std::uint8_t> arg);
             }
         );
         assert_rs_matches!(

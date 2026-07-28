@@ -98,24 +98,23 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyUnordered") alignas(4)
 }  // namespace compare
 
 template <>
-struct rs_std::impl<::compare::MyOrd, ::rs::core::cmp::Eq> {
+struct rs::impl<::compare::MyOrd, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 
 template <>
-struct rs_std::impl<::compare::MyOrd, ::rs::core::cmp::Ord> {
+struct rs::impl<::compare::MyOrd, ::rs::core::cmp::Ord> {
   static constexpr bool kIsImplemented = true;
 
   static ::rs::core::cmp::Ordering cmp(::compare::MyOrd const& self,
                                        ::compare::MyOrd const& other);
 };
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < i32 >") rs_std::Option<::std::int32_t>
-    : public rs_std::OptionBase<rs_std::Option<::std::int32_t>,
-                                ::std::int32_t> {
+    "std :: option :: Option < i32 >") rs::Option<::std::int32_t>
+    : public rs::OptionBase<rs::Option<::std::int32_t>, ::std::int32_t> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -125,22 +124,21 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Option& operator=(Option&&) = default;
 
   Option(::crubit::UnsafeRelocateTag, Option&& value);
-  using base_type =
-      rs_std::OptionBase<rs_std::Option<::std::int32_t>, ::std::int32_t>;
+  using base_type = rs::OptionBase<rs::Option<::std::int32_t>, ::std::int32_t>;
   constexpr Option() = default;
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
+    requires(rs::OptionForwardConstructible<Option, ::std::int32_t, U>)
   Option(U&& value) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int32_t, U>)
+    requires(rs::OptionForwardConstructible<Option, ::std::int32_t, U>)
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
+    requires(rs::OptionFromStdOptional<::std::int32_t, Opt>)
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
+    requires(rs::OptionFromStdOptional<::std::int32_t, Opt>)
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -176,7 +174,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyPartialOrd") alignas(4)
   MyPartialOrd() = delete;
 
   // Synthesized tuple constructor
-  explicit MyPartialOrd(rs_std::Option<::std::int32_t> __field0)
+  explicit MyPartialOrd(rs::Option<::std::int32_t> __field0)
       : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
@@ -195,7 +193,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyPartialOrd") alignas(4)
       ::compare::MyPartialOrd const& other) const;
 
   union {
-    rs_std::Option<::std::int32_t> __field0;
+    rs::Option<::std::int32_t> __field0;
   };
 
  private:
@@ -364,7 +362,7 @@ __crubit_thunk_Ord_ucmp_ucompare_ugolden_x0000003a_x0000003aMyOrd(
 }
 }  // namespace compare
 inline ::rs::core::cmp::Ordering
-rs_std::impl<::compare::MyOrd, ::rs::core::cmp::Ord>::cmp(
+rs::impl<::compare::MyOrd, ::rs::core::cmp::Ord>::cmp(
     ::compare::MyOrd const& self, ::compare::MyOrd const& other) {
   crubit::Slot<::rs::core::cmp::Ordering> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -374,23 +372,22 @@ rs_std::impl<::compare::MyOrd, ::rs::core::cmp::Ord>::cmp(
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 static_assert(
-    ::std::is_trivially_copy_constructible_v<rs_std::Option<::std::int32_t>>);
+    ::std::is_trivially_copy_constructible_v<rs::Option<::std::int32_t>>);
 static_assert(
-    ::std::is_trivially_copy_assignable_v<rs_std::Option<::std::int32_t>>);
+    ::std::is_trivially_copy_assignable_v<rs::Option<::std::int32_t>>);
 static_assert(
-    ::std::is_trivially_move_constructible_v<rs_std::Option<::std::int32_t>>);
+    ::std::is_trivially_move_constructible_v<rs::Option<::std::int32_t>>);
 static_assert(
-    ::std::is_trivially_move_assignable_v<rs_std::Option<::std::int32_t>>);
-inline rs_std::Option<::std::int32_t>::Option(::crubit::UnsafeRelocateTag,
-                                              Option&& value) {
+    ::std::is_trivially_move_assignable_v<rs::Option<::std::int32_t>>);
+inline rs::Option<::std::int32_t>::Option(::crubit::UnsafeRelocateTag,
+                                          Option&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-static_assert(
-    ::std::is_trivially_destructible_v<rs_std::Option<::std::int32_t>>);
-inline constexpr ::std::uint32_t rs_std::Option<::std::int32_t>::tag()
+static_assert(::std::is_trivially_destructible_v<rs::Option<::std::int32_t>>);
+inline constexpr ::std::uint32_t rs::Option<::std::int32_t>::tag()
     const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
@@ -398,7 +395,7 @@ inline constexpr ::std::uint32_t rs_std::Option<::std::int32_t>::tag()
   }
   return ::std::bit_cast<::std::uint32_t>(__bytes);
 }
-inline constexpr void rs_std::Option<::std::int32_t>::set_tag(
+inline constexpr void rs::Option<::std::int32_t>::set_tag(
     ::std::uint32_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint32_t)>>(
@@ -408,41 +405,40 @@ inline constexpr void rs_std::Option<::std::int32_t>::set_tag(
   }
 }
 
-inline constexpr rs_std::Option<::std::int32_t>::Option(
-    ::std::nullopt_t) noexcept
+inline constexpr rs::Option<::std::int32_t>::Option(::std::nullopt_t) noexcept
     : base_type(::std::nullopt) {}
-inline constexpr rs_std::Option<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator=(::std::nullopt_t) noexcept {
+inline constexpr rs::Option<::std::int32_t>&
+rs::Option<::std::int32_t>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
-                                              ::std::int32_t, U>)
-inline rs_std::Option<::std::int32_t>::Option(U&& value) noexcept
+  requires(rs::OptionForwardConstructible<rs::Option<::std::int32_t>,
+                                          ::std::int32_t, U>)
+inline rs::Option<::std::int32_t>::Option(U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int32_t>,
-                                              ::std::int32_t, U>)
-inline rs_std::Option<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator=(U&& value) noexcept {
+  requires(rs::OptionForwardConstructible<rs::Option<::std::int32_t>,
+                                          ::std::int32_t, U>)
+inline rs::Option<::std::int32_t>& rs::Option<::std::int32_t>::operator=(
+    U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
-inline rs_std::Option<::std::int32_t>::Option(Opt&& value) noexcept
+  requires(rs::OptionFromStdOptional<::std::int32_t, Opt>)
+inline rs::Option<::std::int32_t>::Option(Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::std::int32_t, Opt>)
-inline rs_std::Option<::std::int32_t>&
-rs_std::Option<::std::int32_t>::operator=(Opt&& value) noexcept {
+  requires(rs::OptionFromStdOptional<::std::int32_t, Opt>)
+inline rs::Option<::std::int32_t>& rs::Option<::std::int32_t>::operator=(
+    Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::std::int32_t>::Option(::std::in_place_t ip,
-                                              Args&&... args) noexcept
+inline rs::Option<::std::int32_t>::Option(::std::in_place_t ip,
+                                          Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif

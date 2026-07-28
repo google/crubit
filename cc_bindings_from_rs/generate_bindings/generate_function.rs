@@ -1149,7 +1149,7 @@ pub fn generate_function<'tcx>(
                 let trait_name_with_args = format_trait_ref_for_cc(db, trait_ref)
                     .expect("Implementation of trait containing invalid type requested. Caller should have verified type arguments were valid.")
                     .into_tokens(&mut prereqs);
-                quote! { rs_std :: impl <#struct_name, #trait_name_with_args> :: #bracketed_decl_name }
+                quote! { rs :: impl <#struct_name, #trait_name_with_args> :: #bracketed_decl_name }
             }
             StaticMethodMode::Infer => struct_name
                 .as_ref()

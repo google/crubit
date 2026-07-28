@@ -36,7 +36,7 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
 }  // namespace example_crate
 
 template <>
-struct rs_std::impl<::example_crate::Color, ::rs::core::cmp::Eq> {
+struct rs::impl<::example_crate::Color, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
 

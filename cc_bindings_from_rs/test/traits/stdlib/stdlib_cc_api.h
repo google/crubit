@@ -74,7 +74,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyTrait") MyTrait {
   template <typename T>
-  using impl = rs_std::impl<T, MyTrait>;
+  using impl = rs::impl<T, MyTrait>;
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -150,15 +150,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(8)
   RefIterator& operator=(const RefIterator&) = delete;
   RefIterator(::crubit::UnsafeRelocateTag, RefIterator&& value);
 
-  static ::stdlib::RefIterator new_(
-      rs_std::SliceRef<const ::std::int32_t> slice);
+  static ::stdlib::RefIterator new_(rs::SliceRef<const ::std::int32_t> slice);
   template <typename TAdaptedSelf_ = RefIterator>
   inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
   }
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
   union {
-    rs_std::SliceRef<const ::std::int32_t> slice;
+    rs::SliceRef<const ::std::int32_t> slice;
   };
   union {
     ::std::uintptr_t index;
@@ -171,7 +170,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(8)
 }  // namespace stdlib
 
 template <>
-struct rs_std::impl<::stdlib::MyStruct, ::rs::core::future::Future> {
+struct rs::impl<::stdlib::MyStruct, ::rs::core::future::Future> {
   static constexpr bool kIsImplemented = true;
   using Output CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::MyStruct as :: core :: future :: Future>::Output") =
@@ -185,7 +184,7 @@ struct rs_std::impl<::stdlib::MyStruct, ::rs::core::future::Future> {
 };
 
 template <>
-struct rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
+struct rs::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::MyStruct as :: core :: iter :: Iterator>::Item") =
@@ -195,15 +194,14 @@ struct rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator> {
 };
 
 template <>
-struct rs_std::impl<::stdlib::MyStruct, ::rs::alloc::string::ToString> {
+struct rs::impl<::stdlib::MyStruct, ::rs::alloc::string::ToString> {
   static constexpr bool kIsImplemented = true;
 
   static ::rs::alloc::string::String to_string(::stdlib::MyStruct const& self);
 };
 
 template <>
-struct rs_std::impl<::stdlib::NonCloneableIterator,
-                    ::rs::core::iter::Iterator> {
+struct rs::impl<::stdlib::NonCloneableIterator, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::NonCloneableIterator as :: core :: iter :: "
@@ -214,7 +212,7 @@ struct rs_std::impl<::stdlib::NonCloneableIterator,
 };
 
 template <>
-struct rs_std::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator> {
+struct rs::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::RefIterator<'a> as :: core :: iter :: Iterator>::Item") =
@@ -374,11 +372,11 @@ inline ::stdlib::RefIterator::RefIterator(::crubit::UnsafeRelocateTag,
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::SliceRef<const ::std::int32_t>,
+extern "C" void __crubit_thunk_new(rs::SliceRef<const ::std::int32_t>,
                                    ::stdlib::RefIterator* __ret_ptr);
 }
 inline ::stdlib::RefIterator RefIterator::new_(
-    rs_std::SliceRef<const ::std::int32_t> slice) {
+    rs::SliceRef<const ::std::int32_t> slice) {
   crubit::Slot<::stdlib::RefIterator> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(slice, __return_value_storage);
@@ -398,7 +396,7 @@ __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
 }
 }  // namespace stdlib
 inline ::std::optional<::std::int32_t>
-rs_std::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator>::next(
+rs::impl<::stdlib::MyStruct, ::rs::core::iter::Iterator>::next(
     ::stdlib::MyStruct& self) {
   unsigned char __return_value_storage
       [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
@@ -420,7 +418,7 @@ __crubit_thunk_ToString_uto_ustring_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
 }
 }  // namespace stdlib
 inline ::rs::alloc::string::String
-rs_std::impl<::stdlib::MyStruct, ::rs::alloc::string::ToString>::to_string(
+rs::impl<::stdlib::MyStruct, ::rs::alloc::string::ToString>::to_string(
     ::stdlib::MyStruct const& self) {
   crubit::Slot<::rs::alloc::string::String> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -438,7 +436,7 @@ __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aNonCloneableIte
 }
 }  // namespace stdlib
 inline ::std::optional<::stdlib::NonCloneableValue>
-rs_std::impl<::stdlib::NonCloneableIterator, ::rs::core::iter::Iterator>::next(
+rs::impl<::stdlib::NonCloneableIterator, ::rs::core::iter::Iterator>::next(
     ::stdlib::NonCloneableIterator& self) {
   unsigned char __return_value_storage[::crubit::OptionAbi<
       ::crubit::TransmuteAbi<::stdlib::NonCloneableValue>>::kSize];
@@ -460,7 +458,7 @@ __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aRefIterator_x00
 }
 }  // namespace stdlib
 inline ::std::optional<::std::int32_t const * $a crubit_nonnull>
-rs_std::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator>::next(
+rs::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator>::next(
     ::stdlib::RefIterator& self) {
   unsigned char
       __return_value_storage[::crubit::OptionAbi<::crubit::TransmuteAbi<

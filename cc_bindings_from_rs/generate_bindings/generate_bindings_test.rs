@@ -768,10 +768,10 @@ fn test_format_item_slice() {
             quote! {
               void
               foo(
-                rs_std::SliceRef<const ::std::uint32_t> _a,
-                rs_std::SliceRef<const ::std::uint8_t> _b,
-                rs_std::SliceRef<::std::int16_t> _c,
-                rs_std::SliceRef<bool> _d
+                rs::SliceRef<const ::std::uint32_t> _a,
+                rs::SliceRef<const ::std::uint8_t> _b,
+                rs::SliceRef<::std::int16_t> _c,
+                rs::SliceRef<bool> _d
               );
             }
         );
@@ -1817,7 +1817,7 @@ fn test_trait_impl_for_std_iter_iterator_trait() {
             bindings.cc_api,
             quote! {
                 template <>
-                struct rs_std::impl<::rust_out::MyStruct, ::rs::core::iter::Iterator> {
+                struct rs::impl<::rust_out::MyStruct, ::rs::core::iter::Iterator> {
                     static constexpr bool kIsImplemented = true;
                     ...
                     using Item CRUBIT_INTERNAL_RUST_TYPE(
@@ -1848,7 +1848,7 @@ fn test_trait_impl_for_unpin_trait() {
         assert_cc_not_matches!(
             bindings.cc_api,
             quote! {
-                struct rs_std::impl<::rust_out::MyStruct, ::rs::core::marker::Unpin>
+                struct rs::impl<::rust_out::MyStruct, ::rs::core::marker::Unpin>
             }
         );
 
@@ -1857,7 +1857,7 @@ fn test_trait_impl_for_unpin_trait() {
             bindings.cc_api,
             quote! {
                 template <>
-                struct rs_std::impl<::rust_out::NonUnpinStruct, ::rs::core::marker::Unpin> {
+                struct rs::impl<::rust_out::NonUnpinStruct, ::rs::core::marker::Unpin> {
                     static constexpr bool kIsImplemented = false;
                 };
             }
@@ -1889,7 +1889,7 @@ fn test_trait_impl_for_std_future_future_trait() {
             bindings.cc_api,
             quote! {
                 template <>
-                struct rs_std::impl<::rust_out::MyStruct, ::rs::core::future::Future> {
+                struct rs::impl<::rust_out::MyStruct, ::rs::core::future::Future> {
                     static constexpr bool kIsImplemented = true;
                     ...
                     using Output CRUBIT_INTERNAL_RUST_TYPE(
@@ -2005,7 +2005,7 @@ fn test_trait_impl_for_mapped_cpp_type() {
                 __HASH_TOKEN__ include "some_ns/some_cpp_struct.h"
                 ...
                 template <>
-                struct rs_std::impl<::some_ns::SomeCppStruct, ::rs::core::iter::Iterator> {
+                struct rs::impl<::some_ns::SomeCppStruct, ::rs::core::iter::Iterator> {
                     ...
                 };
                 ...
