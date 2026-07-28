@@ -36,7 +36,7 @@ inline void CharArgumentMustBeUnicodeCodePoint() {}
 // `rs_std::char_` is a C++ representation of the `char` type from Rust.
 // `rust_builtin_type_abi_assumptions.md` documents the ABI compatibility of
 // these types.
-class CRUBIT_INTERNAL_RUST_TYPE("char") CRUBIT_INTERNAL_SAME_ABI char_ final {
+class CRUBIT_INTERNAL_RUST_TYPE("char") char_ final {
  public:
   // Creates a default `char_` - one that represents ASCII NUL character.
   //

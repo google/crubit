@@ -19,7 +19,7 @@ namespace rs_std {
 // used as a template argument inside template specializations (such as
 // `rs_std::Option<T>`). This prevents C++ explicit template specialization
 // redefinition errors or overload collisions between `usize`, `u64`, and `u32`.
-class CRUBIT_INTERNAL_RUST_TYPE("usize") CRUBIT_INTERNAL_SAME_ABI usize final {
+class CRUBIT_INTERNAL_RUST_TYPE("usize") usize final {
  public:
   constexpr usize() noexcept = default;
 
@@ -67,7 +67,7 @@ static_assert(::std::is_trivially_destructible_v<usize>);
 // used as a template argument inside template specializations (such as
 // `rs_std::Option<T>`). This prevents C++ explicit template specialization
 // redefinition errors or overload collisions between `isize`, `i64`, and `i32`.
-class CRUBIT_INTERNAL_RUST_TYPE("isize") CRUBIT_INTERNAL_SAME_ABI isize final {
+class CRUBIT_INTERNAL_RUST_TYPE("isize") isize final {
  public:
   constexpr isize() noexcept = default;
 
