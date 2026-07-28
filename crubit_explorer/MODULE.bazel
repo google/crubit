@@ -52,3 +52,18 @@ crate.from_cargo(
     manifests = ["//:Cargo.toml"],
 )
 use_repo(crate, "crubit_explorer_crates")
+
+# OCI Image packaging rules
+bazel_dep(name = "rules_oci", version = "2.2.0")
+bazel_dep(name = "rules_pkg", version = "1.0.1")
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+oci.pull(
+    name = "distroless_cc",
+    image = "gcr.io/distroless/cc-debian13",
+    tag = "latest",
+    platforms = [
+        "linux/amd64",
+    ],
+)
+use_repo(oci, "distroless_cc", "distroless_cc_linux_amd64")

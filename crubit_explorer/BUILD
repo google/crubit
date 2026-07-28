@@ -8,6 +8,8 @@ load(
     "crubit_rust_test",
 )
 load("@rules_license//rules:license.bzl", "license")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 package(
     default_applicable_licenses = [":license"],
@@ -25,6 +27,7 @@ crubit_rust_binary(
         "src/api.rs",
         "src/main.rs",
     ],
+    crate_root = "src/main.rs",
     data = [
         "//frontend:build",
         "@rules_crubit//cc_bindings_from_rs",
@@ -54,6 +57,7 @@ crubit_rust_test(
         "src/api.rs",
         "src/main.rs",
     ],
+    crate_root = "src/main.rs",
     data = [
         "//frontend:build",
         "@rules_crubit//cc_bindings_from_rs",
@@ -75,4 +79,55 @@ crubit_rust_test(
         "@crubit_explorer_crates//:tower",
         "@rules_rust//tools/runfiles",
     ],
+)
+
+pkg_tar(
+    name = "server_layer",
+    srcs = [
+        ":server",
+        "@rules_crubit//cc_bindings_from_rs",
+    ],
+    package_dir = "/",
+)
+
+pkg_tar(
+    name = "frontend_layer",
+    srcs = ["//frontend:build"],
+    package_dir = "/frontend/dist/frontend",
+    strip_prefix = "frontend/dist/frontend",
+)
+
+pkg_tar(
+    name = "rust_layer",
+    srcs = [
+        "@rules_rust//rust/toolchain:current_rustc_lib_files",
+    ],
+    package_dir = "/",
+    strip_prefix = "external/rules_crubit++crubit_toolchains+rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain",
+)
+
+oci_image(
+    name = "image",
+    base = "@distroless_cc",
+    entrypoint = ["/server"],
+    env = {
+        "RUST_LOG": "info",
+    },
+    tars = [
+        ":server_layer",
+        ":frontend_layer",
+        ":rust_layer",
+    ],
+)
+
+oci_load(
+    name = "server_load",
+    image = ":image",
+    repo_tags = ["crubit_explorer:latest"],
+)
+
+filegroup(
+    name = "server_image",
+    srcs = [":server_load"],
+    output_group = "tarball",
 )
