@@ -206,11 +206,18 @@ WARNING: Thread-safety in interop is subtle. Ensure you understand the
 implications before exposing mutating methods to Rust.
 
 SUMMARY: The preferred way to make a thread-safe C++ type available to Rust is
-to annotate it with `CRUBIT_THREAD_SAFE`. This automatically implements
-`Send + Sync` in Rust, wraps the type in `UnsafeCell`, and allows non-const
-methods to be called via shared references (`&self`).
+to annotate it with `CRUBIT_THREAD_SAFE`. This automatically implements `Send +
+Sync` in Rust, wraps the type in `UnsafeCell`, and allows non-const methods to
+be called via shared references (`&self`). However, this requires all mutated
+fields to be marked `mutable`, or else for the object to never be stored in a
+C++ `const`.
 
 ### `CRUBIT_THREAD_SAFE` {#crubit_thread_safe}
+
+WARNING: This is an unsafe operation. Only use this annotation on thread-safe
+types which are never created as `const`, or else which mark all fields that can
+be mutated as `mutable`, even if those fields can only be mutated from a
+non-const method.
 
 To make a C++ class that internally synchronizes access (e.g., using mutexes or
 atomics) safe to use concurrently in Rust, annotate its definition with
@@ -223,6 +230,8 @@ class CRUBIT_THREAD_SAFE ThreadSafeCounter {
  public:
   void Increment();      // Can be called via `&self` in Rust.
   int Get() const;       // Can be called via `&self` in Rust.
+ private:
+   mutable std::atomic<int> counter_;
 };
 ```
 
@@ -236,6 +245,10 @@ This annotation tells Crubit to:
 
 This allows Rust callers to use the type concurrently across threads using
 standard shared references.
+
+Because `CRUBIT_THREAD_SAFE` makes the type internally mutable in Rust, the type
+must either also be internally mutable in C++, by making all mutated fields
+`mutable`, or else it must never be stored as a `const` object.
 
 ### Manual Approach (Legacy) {#manual_thread_safety}
 
@@ -276,9 +289,21 @@ class FakeClock {
   // Mutable for Rust.
   mutable int mytime_;
 };
+
+````
+You can also use the `CRUBIT_THREAD_SAFE` annotation, but this is more dangerous, as
+there is no enforcement that every method only modifies `mutable` fields, and
+requires more extensive review:
+
+```c++
+class CRUBIT_THREAD_SAFE FakeClock {
+  ...
+};
 ```
 
-</section>
+Using `const` methods, while less idiomatic in C++, structurally forces
+soundness, so that there is no UB.
+````
 
 ## Working around blocking bugs in Crubit {#blockers}
 

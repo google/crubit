@@ -332,25 +332,38 @@
 
 // Marks a type as thread-safe for Rust interop.
 //
+// This is an unsafe operation. Only use this annotation on thread-safe types
+// which are never created as `const`, or else which mark all fields that can
+// be mutated as `mutable`, even if those fields can only be mutated from a
+// non-const method.
+//
 // Types annotated with `CRUBIT_THREAD_SAFE` will:
+//
 // * Implement `Send + Sync` in Rust
 // * Have their internal representation wrapped in `UnsafeCell`, allowing
 //   non-const C++ methods to be called via shared references (`&self`)
 //
 // This annotation is appropriate for types that internally synchronize
 // access (e.g., types with mutexes, atomics, or other synchronization
-// primitives).
+// primitives). However, it places strong requirements on the type's C++ users
+// and/or the C++ type owner: either the type must never be created as a top
+// level `const` object, or else all mutating operations must be made valid on a
+// `const` object, by marking all mutated fields as `mutable`.
 //
 // Example:
+//
 // ```c++
 // class CRUBIT_THREAD_SAFE ThreadSafeCounter {
 //   public:
 //     void Increment();      // Can be called via mut T*.
 //     int Get() const;       // Can also be called via &self
 //   private:
-//     std::atomic<int> count_;
+//     mutable std::atomic<int> count_;
 // };
 // ```
+//
+// See crubit.rs/cpp/cookbook#thread_safety
+//
 #define CRUBIT_THREAD_SAFE CRUBIT_INTERNAL_ANNOTATE("crubit_thread_safe")
 
 // Marks a template or template instance as always instantiated.
