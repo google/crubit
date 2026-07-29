@@ -19,6 +19,7 @@
 #include "support/internal/slot.h"
 #include "support/rs_std/dyn_erased_future.h"
 #include "support/rs_std/run_crubit_future.h"
+#include "support/rs_std/slice_ref.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -159,10 +160,8 @@ return_cpp_layout_equivalent(::std::int32_t x);
 // Can't pass a type by value without a move constructor. See
 // crubit.rs/rust/movable_types for what types are C++ movable.
 
-// Error generating bindings for function `async_fn_golden::sum_slice` defined
-// at
-// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=14:
-// Crubit currently only supports async functions that return a Send future.
+::crubit::DynErasedFuture<::std::int32_t> sum_slice(
+    rs_std::SliceRef<const ::std::int32_t> slice CRUBIT_LIFETIME_BOUND);
 
 static_assert(
     sizeof(NotCppMovable) == 4,
@@ -293,6 +292,20 @@ return_struct_with_drop(::std::int32_t x) {
       __return_value_ret_val_holder;
   __crubit_internal::__crubit_thunk_return_ustruct_uwith_udrop(
       x, __return_value_ret_val_holder.Get());
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_sum_uslice(
+    rs_std::SliceRef<const ::std::int32_t>,
+    ::crubit::DynErasedFuture<::std::int32_t>* __ret_ptr);
+}
+inline ::crubit::DynErasedFuture<::std::int32_t> sum_slice(
+    rs_std::SliceRef<const ::std::int32_t> slice CRUBIT_LIFETIME_BOUND) {
+  ::crubit::Slot<::crubit::DynErasedFuture<::std::int32_t>>
+      __return_value_ret_val_holder;
+  __crubit_internal::__crubit_thunk_sum_uslice(
+      slice, __return_value_ret_val_holder.Get());
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
