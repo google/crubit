@@ -66,4 +66,77 @@ extern "C" int __rust_thunk___ZN6crubit4test13RegularStruct11NonConstGetEv(
 static_assert((int (::crubit::test::RegularStruct::*)()) &
               ::crubit::test::RegularStruct::NonConstGet);
 
+static_assert(sizeof(struct crubit::test::ThreadSafeUnpin) == 1);
+static_assert(alignof(struct crubit::test::ThreadSafeUnpin) == 1);
+
+extern "C" void __rust_thunk___ZN6crubit4test15ThreadSafeUnpinC1Ev(
+    struct crubit::test::ThreadSafeUnpin* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN6crubit4test15ThreadSafeUnpinC1ERKS1_(
+    struct crubit::test::ThreadSafeUnpin* __this,
+    struct crubit::test::ThreadSafeUnpin const* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+
+extern "C" void __rust_thunk___ZN6crubit4test15ThreadSafeUnpinC1EOS1_(
+    struct crubit::test::ThreadSafeUnpin* __this,
+    struct crubit::test::ThreadSafeUnpin* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" struct crubit::test::ThreadSafeUnpin*
+__rust_thunk___ZN6crubit4test15ThreadSafeUnpinaSERKS1_(
+    struct crubit::test::ThreadSafeUnpin* __this,
+    struct crubit::test::ThreadSafeUnpin const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+extern "C" struct crubit::test::ThreadSafeUnpin*
+__rust_thunk___ZN6crubit4test15ThreadSafeUnpinaSEOS1_(
+    struct crubit::test::ThreadSafeUnpin* __this,
+    struct crubit::test::ThreadSafeUnpin* __param_0) {
+  return std::addressof(__this->operator=(std::move(*__param_0)));
+}
+
+static_assert(sizeof(struct crubit::test::ThreadSafePinned) == 1);
+static_assert(alignof(struct crubit::test::ThreadSafePinned) == 1);
+
+extern "C" void __rust_thunk___ZN6crubit4test16ThreadSafePinnedC1Ev(
+    struct crubit::test::ThreadSafePinned* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN6crubit4test16ThreadSafePinnedC1ERKS1_(
+    struct crubit::test::ThreadSafePinned* __this,
+    struct crubit::test::ThreadSafePinned const* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+
+extern "C" void __rust_thunk___ZN6crubit4test16ThreadSafePinnedC1EOS1_(
+    struct crubit::test::ThreadSafePinned* __this,
+    struct crubit::test::ThreadSafePinned* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+
+extern "C" struct crubit::test::ThreadSafePinned*
+__rust_thunk___ZN6crubit4test16ThreadSafePinnedaSERKS1_(
+    struct crubit::test::ThreadSafePinned* __this,
+    struct crubit::test::ThreadSafePinned const* __param_0) {
+  return std::addressof(__this->operator=(*__param_0));
+}
+
+extern "C" struct crubit::test::ThreadSafePinned*
+__rust_thunk___ZN6crubit4test16ThreadSafePinnedaSEOS1_(
+    struct crubit::test::ThreadSafePinned* __this,
+    struct crubit::test::ThreadSafePinned* __param_0) {
+  return std::addressof(__this->operator=(std::move(*__param_0)));
+}
+
+extern "C" void __rust_thunk___ZN6crubit4test16ThreadSafePinnedD1Ev(
+    struct crubit::test::ThreadSafePinned* __this) {
+  std::destroy_at(__this);
+}
+
 #pragma clang diagnostic pop

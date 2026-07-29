@@ -3,7 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use ctor::emplace;
+use ctor::Assign;
 use ctor::CtorNew;
+use ctor::UnpinAssign;
 use googletest::gtest;
 use static_assertions::assert_not_impl_any;
 use thread_safe::crubit::test::ThreadSafeStruct;
@@ -42,4 +44,26 @@ fn test_regular_struct_round_trip_via_raw_ptr() {
         assert_eq!(RegularStruct::ConstGet(ptr as *const _), 0);
         assert_eq!(RegularStruct::NonConstGet(ptr), 0);
     }
+}
+
+#[gtest]
+fn test_thread_safe_unpin_assign() {
+    use thread_safe::crubit::test::ThreadSafeUnpin;
+    let mut s1 = ThreadSafeUnpin::default();
+    let s2 = ThreadSafeUnpin::default();
+    s1.unpin_assign(&s2);
+
+    let mut s3 = ThreadSafeUnpin::default();
+    s1.unpin_assign(::ctor::mov!(&mut s3));
+}
+
+#[gtest]
+fn test_thread_safe_pinned_assign() {
+    use thread_safe::crubit::test::ThreadSafePinned;
+    let mut s1 = emplace!(ThreadSafePinned::ctor_new(()));
+    let s2 = emplace!(ThreadSafePinned::ctor_new(()));
+    s1.as_mut().assign(s2.as_ref().get_ref());
+
+    let mut s3 = emplace!(ThreadSafePinned::ctor_new(()));
+    s1.as_mut().assign(::ctor::mov!(s3));
 }

@@ -1681,6 +1681,26 @@ fn func_should_infer_lifetimes_of_references(func: &Func) -> bool {
     }
 }
 
+fn use_shared_ref_if_thread_safe(db: &BindingsGenerator<'_>, func: &Func<'_>) -> bool {
+    let Some(Item::Record(record)) = func.enclosing_item_id().map(|id| db.find_untyped_decl(id))
+    else {
+        return false;
+    };
+    if !record.is_thread_safe() {
+        return false;
+    }
+
+    // Constructors, destructors, and assignment operators are excluded from const-forcing.
+    // Assignment operators are not thread-safe even on thread-safe types, and must
+    // receive `self` by mutable reference (or pinned mutable reference) to match
+    // the signature of the Rust `Assign`/`UnpinAssign` traits.
+    let has_mutable_receiver = func.cc_name().is_constructor()
+        || func.cc_name().is_destructor()
+        || func.cc_name().as_operator().is_some_and(|op| op.name() == "=");
+
+    !has_mutable_receiver
+}
+
 fn rs_type_kinds_for_func<'a>(
     db: &BindingsGenerator<'a>,
     func: &Func<'a>,
@@ -1710,19 +1730,23 @@ fn rs_type_kinds_for_func<'a>(
             let mut param_type = param.type_().clone();
             let mut infer_param_lifetimes = infer_lifetimes;
             if i == 0 && func.is_instance_method() {
-                if !func.cc_name().is_constructor() && !func.cc_name().is_destructor()
-                    && let Some(Item::Record(record)) = func.enclosing_item_id().map(|id| db.find_untyped_decl(id))
-                        && record.is_thread_safe()
-                            && let CcTypeVariant::Pointer(ptr) = param_type.variant_mut() {
-                                let mut new_pointee = ptr.pointee_type().clone();
-                                new_pointee.set_is_const(true);
-                                *ptr = PointerType::new(
-                                    PointerTypeKind::LValueRef,
-                                    ptr.lifetime(),
-                                    Rc::new(new_pointee),
-                                );
-                                infer_param_lifetimes = true;
-                            }
+                if use_shared_ref_if_thread_safe(db, func)
+                    && let CcTypeVariant::Pointer(ptr) = param_type.variant_mut()
+                {
+                    // Types annotated with CRUBIT_THREAD_SAFE are treated as thread-safe,
+                    // meaning their methods can be called concurrently. This requires
+                    // mapping the `this` receiver to a shared reference (&Self) rather
+                    // than a mutable reference (&mut Self), which is achieved by forcing
+                    // the pointee type to be const.
+                    let mut new_pointee = ptr.pointee_type().clone();
+                    new_pointee.set_is_const(true);
+                    *ptr = PointerType::new(
+                        PointerTypeKind::LValueRef,
+                        ptr.lifetime(),
+                        Rc::new(new_pointee),
+                    );
+                    infer_param_lifetimes = true;
+                }
 
                 // `param_type` is a `this` pointer, but its semantics are really that of
                 // references. That is, `this` in these operators is non-null.

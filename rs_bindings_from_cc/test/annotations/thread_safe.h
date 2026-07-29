@@ -36,6 +36,25 @@ class RegularStruct final {
   int x_ = 0;
 };
 
+// Unpin thread-safe type with custom assignment
+struct [[clang::trivial_abi]] CRUBIT_THREAD_SAFE ThreadSafeUnpin final {
+  ThreadSafeUnpin() = default;
+  ThreadSafeUnpin(const ThreadSafeUnpin&) = default;
+  ThreadSafeUnpin(ThreadSafeUnpin&&) = default;
+  ThreadSafeUnpin& operator=(const ThreadSafeUnpin&) { return *this; }
+  ThreadSafeUnpin& operator=(ThreadSafeUnpin&&) { return *this; }
+};
+
+// Pinned thread-safe type with custom assignment
+struct CRUBIT_THREAD_SAFE ThreadSafePinned final {
+  ThreadSafePinned() = default;
+  ThreadSafePinned(const ThreadSafePinned&) = default;
+  ThreadSafePinned(ThreadSafePinned&&) = default;
+  ThreadSafePinned& operator=(const ThreadSafePinned&) { return *this; }
+  ThreadSafePinned& operator=(ThreadSafePinned&&) { return *this; }
+  ~ThreadSafePinned() {}
+};
+
 }  // namespace crubit::test
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ANNOTATIONS_THREAD_SAFE_H_
