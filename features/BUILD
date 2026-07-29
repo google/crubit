@@ -82,7 +82,6 @@ crubit_feature_hint(
 crubit_feature_hint(
     name = "experimental",
     compatible_with = ["//buildenv/target:non_prod"],
-    # TODO(b/409128537): Add _WRAPPER_FEATURES on next binary release.
     crubit_features = ["all"],
     visibility = _EXPERIMENTAL_CLIENTS,
 )

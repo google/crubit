@@ -160,7 +160,7 @@ memoized::query_group! {
         /// have a successful non-error return value, even if the type is not generally usable.
         /// Instead, restrictions will always be done via `type_visibility`.
         ///
-        /// TODO(b/409128537): never return `Err` here, instead check `type_visibility`
+        /// TODO(jeanpierreda): never return `Err` here, instead check `type_visibility`. See b/409128537.
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/rs_type_kind.rs?q=function:rs_type_kind_with_lifetime_elision
         fn rs_type_kind_with_lifetime_elision(&self, cc_type: CcType, lifetime_options: LifetimeOptions) -> Result<RsTypeKind<'db>>;
