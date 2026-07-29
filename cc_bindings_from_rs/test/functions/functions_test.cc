@@ -99,6 +99,11 @@ TEST(FnParamTyTest, FnPtr) {
   EXPECT_EQ(product, 56 * 78);
 }
 
+TEST(FnParamTyTest, SumBytes) {
+  std::string_view sv = "abc";
+  EXPECT_EQ(97 + 98 + 99, fn_param_ty_tests::sum_bytes(sv));
+}
+
 TEST(OtherFnTest, VoidReturningFunction) {
   namespace tests = functions::unit_ret_ty_tests;
   tests::set_global_i32_via_extern_c_with_export_name(123);

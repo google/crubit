@@ -96,6 +96,10 @@ pub mod fn_param_ty_tests {
     pub fn set_mut_ref_to_sum_of_ints(sum: &mut i32, x: i32, y: i32) {
         *sum = x + y;
     }
+
+    pub fn sum_bytes(bytes: &[u8]) -> u32 {
+        bytes.iter().map(|&b| b as u32).sum()
+    }
 }
 
 /// APIs for testing functions that return the unit / `()` / `void` type.

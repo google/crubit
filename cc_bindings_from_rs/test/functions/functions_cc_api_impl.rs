@@ -84,6 +84,10 @@ unsafe extern "C" fn __crubit_thunk_set_umut_uref_uto_usum_uof_uints(
     unsafe { ::functions_golden::fn_param_ty_tests::set_mut_ref_to_sum_of_ints(sum, x, y) }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_sum_ubytes(bytes: &'static [u8]) -> u32 {
+    unsafe { ::functions_golden::fn_param_ty_tests::sum_bytes(bytes) }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_prefix_usums(arg: &'static mut [i32]) -> () {
     unsafe { ::functions_golden::generic_fn_tests::as_mut_trait_tests::prefix_sums(arg) }
 }

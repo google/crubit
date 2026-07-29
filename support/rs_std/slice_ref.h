@@ -60,9 +60,14 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   // Style waiver for implicit conversions granted in cl/662479273.
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr SliceRef(std::string_view str) noexcept
+    requires(std::is_same_v<T, const char> || std::is_same_v<T, const uint8_t>)
       : dangling_ptr_(alignof(T)), size_(str.size()) {
     if (!str.empty()) {
-      ptr_ = str.data();
+      if constexpr (std::is_same_v<T, const char>) {
+        ptr_ = str.data();
+      } else {
+        ptr_ = reinterpret_cast<T*>(str.data());
+      }
     }
   }
 

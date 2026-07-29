@@ -110,6 +110,8 @@ get_ref_to_smaller_int(::std::int32_t const* $a crubit_nonnull x,
 void set_mut_ref_to_sum_of_ints(::std::int32_t& sum, ::std::int32_t x,
                                 ::std::int32_t y);
 
+::std::uint32_t sum_bytes(rs_std::SliceRef<const ::std::uint8_t> bytes);
+
 }  // namespace functions::fn_param_ty_tests
 
 namespace functions::generic_fn_tests::as_mut_trait_tests {
@@ -243,7 +245,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // Error generating bindings for function
 // `functions_golden::generic_fn_tests::ctor_trait_tests::return_ctor` defined
 // at
-// cc_bindings_from_rs/test/functions/functions.rs;l=327:
+// cc_bindings_from_rs/test/functions/functions.rs;l=331:
 // Attempted to write out unknown type from Rust to C
 
 ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&
@@ -282,7 +284,7 @@ namespace functions::generic_fn_tests::into_trait_tests {
 // Error generating bindings for function
 // `functions_golden::generic_fn_tests::into_trait_tests::unused_generic_param`
 // defined at
-// cc_bindings_from_rs/test/functions/functions.rs;l=204:
+// cc_bindings_from_rs/test/functions/functions.rs;l=208:
 // No support for replacing an _unused_ generic type param: `T`
 
 ::std::int32_t where_clause(::std::int32_t x);
@@ -341,7 +343,7 @@ struct rs_std::impl<
   // ctor::CtorNew<ctor::RvalueReference<'a,
   // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::CtorType`
   // defined at
-  // cc_bindings_from_rs/test/functions/functions.rs;l=294:
+  // cc_bindings_from_rs/test/functions/functions.rs;l=298:
   // Generic types are not supported yet (b/259749095)
 
   // Error generating bindings for associated type
@@ -349,7 +351,7 @@ struct rs_std::impl<
   // ctor::CtorNew<ctor::RvalueReference<'a,
   // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::Error`
   // defined at
-  // cc_bindings_from_rs/test/functions/functions.rs;l=295:
+  // cc_bindings_from_rs/test/functions/functions.rs;l=299:
   // Failed to format type for the definition of `std::convert::Infallible`:
   // Zero-sized types (ZSTs) are not supported (b/258259459)
 
@@ -358,7 +360,7 @@ struct rs_std::impl<
   // ctor::CtorNew<ctor::RvalueReference<'a,
   // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::ctor_new`
   // defined at
-  // cc_bindings_from_rs/test/functions/functions.rs;l=296:
+  // cc_bindings_from_rs/test/functions/functions.rs;l=300:
   // Error formatting function return type
   // `ctor::RustMoveCtor<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>`:
   // Generic types are not supported yet (b/259749095)
@@ -507,6 +509,14 @@ inline void set_mut_ref_to_sum_of_ints(::std::int32_t& sum, ::std::int32_t x,
                                        ::std::int32_t y) {
   return __crubit_internal::__crubit_thunk_set_umut_uref_uto_usum_uof_uints(
       sum, x, y);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uint32_t __crubit_thunk_sum_ubytes(
+    rs_std::SliceRef<const ::std::uint8_t>);
+}
+inline ::std::uint32_t sum_bytes(rs_std::SliceRef<const ::std::uint8_t> bytes) {
+  return __crubit_internal::__crubit_thunk_sum_ubytes(bytes);
 }
 
 }  // namespace functions::fn_param_ty_tests

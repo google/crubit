@@ -152,6 +152,13 @@ TEST(SliceTest, Empty) {
   EXPECT_EQ(kEmpty.size(), 0);
 }
 
+TEST(SliceTest, FromStringView) {
+  std::string_view sv = "hello";
+  rs_std::SliceRef<const uint8_t> slice(sv);
+  EXPECT_EQ(slice.size(), sv.size());
+  EXPECT_EQ(reinterpret_cast<const char*>(slice.data()), sv.data());
+}
+
 TEST(ImplicitConversionTest, MutableFromVector) {
   std::vector<int> vec = {1, 2, 3};
   // Mirroring `absl::Span`, there is no implicit conversion from mutable
