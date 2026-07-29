@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/friend.h"
 
+#include <memory>
 #include <optional>
 #include <variant>
 
@@ -16,18 +17,18 @@
 
 namespace crubit {
 
-std::optional<IR::Item> FriendDeclImporter::Import(
+std::unique_ptr<ir_proto::Item> FriendDeclImporter::Import(
     clang::FriendDecl* friend_decl) {
-  if (!ictx_.IsFromCurrentTarget(friend_decl)) return std::nullopt;
+  if (!ictx_.IsFromCurrentTarget(friend_decl)) return nullptr;
 
   // Check if this is a `friend` declaration for a function (and not for a
   // type).
   clang::NamedDecl* named_decl = clang::dyn_cast_or_null<clang::FunctionDecl>(
       friend_decl->getFriendDecl());
-  if (!named_decl) return std::nullopt;
+  if (!named_decl) return nullptr;
 
   // Skip non-canonical decls, similarly to GetCanonicalChildren in importer.cc
-  if (named_decl != named_decl->getCanonicalDecl()) return std::nullopt;
+  if (named_decl != named_decl->getCanonicalDecl()) return nullptr;
 
   // Get the enclosing record declaration.
   clang::DeclContext* decl_context = friend_decl->getDeclContext();
@@ -52,13 +53,11 @@ std::optional<IR::Item> FriendDeclImporter::Import(
       break;
     }
   }
-  if (redeclared_outside) return std::nullopt;
+  if (redeclared_outside) return nullptr;
 
-  std::optional<IR::Item> item = ictx_.ImportDecl(named_decl);
-  if (!item.has_value()) return std::nullopt;
-  if (std::holds_alternative<UnsupportedItem>(*item)) return std::nullopt;
-  Func* func_item = std::get_if<Func>(&*item);
-  CHECK(func_item);  // Guaranteed by `isa<clang::FunctionDecl>` above.
+  std::unique_ptr<ir_proto::Item> item = ictx_.ImportDecl(named_decl);
+  if (!item || item->has_unsupported_item()) return nullptr;
+  CHECK(item->has_func());  // Guaranteed by `isa<clang::FunctionDecl>` above.
   // Return the recursively generated function item almost as-is. It needs a
   // fresh item ID because it came from this friend_decl.
   //
@@ -66,10 +65,10 @@ std::optional<IR::Item> FriendDeclImporter::Import(
   // allows us to prevent generation of bindings in the case that the enclosing
   // record is not visible, as ADL is necessary for the friend function to be
   // found.
-  Func result = *func_item;
-  result.id = ictx_.GenerateItemId(friend_decl);
-  result.adl_enclosing_record = ictx_.GenerateItemId(enclosing_record_decl);
-  return result;
+  item->mutable_func()->set_id(ictx_.GenerateItemId(friend_decl).value());
+  item->mutable_func()->set_adl_enclosing_record(
+      ictx_.GenerateItemId(enclosing_record_decl).value());
+  return item;
 }
 
 }  // namespace crubit

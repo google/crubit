@@ -6,8 +6,8 @@
 
 #include <stdint.h>
 
-#include <algorithm>
 #include <cassert>
+#include <functional>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -87,6 +87,9 @@
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
+
+namespace ir_proto = rs_bindings_from_cc::ir_proto::flat;
+
 namespace {
 
 constexpr absl::string_view kTypeStatusPayloadUrl =
@@ -94,14 +97,15 @@ constexpr absl::string_view kTypeStatusPayloadUrl =
 
 // Checks if the return value from `GetDeclItem` indicates that the import was
 // successful.
-absl::Status CheckImportStatus(const std::optional<IR::Item>& item) {
-  if (!item.has_value()) {
+absl::Status CheckImportStatus(const ir_proto::Item* item) {
+  if (item == nullptr) {
     return absl::InvalidArgumentError("The import has been skipped");
   }
-  if (auto* unsupported = std::get_if<UnsupportedItem>(&*item)) {
+  if (item->has_unsupported_item()) {
+    const auto& unsupported = item->unsupported_item();
     std::vector<absl::string_view> messages;
-    messages.reserve(unsupported->errors.size());
-    for (const auto& error : unsupported->errors) {
+    messages.reserve(unsupported.errors_size());
+    for (const auto& error : unsupported.errors()) {
       messages.push_back(error.message());
     }
     return absl::InvalidArgumentError(absl::StrJoin(messages, "\n\n"));
@@ -463,7 +467,7 @@ class Importer::SourceLocationComparator {
   }
 
   using OrderedItemId = std::pair<SourceOrderKey, ItemId>;
-  using OrderedItem = std::pair<SourceOrderKey, IR::Item>;
+  using OrderedItem = std::pair<SourceOrderKey, const ir_proto::Item*>;
 
   template <typename OrderedItemOrId>
   bool operator()(const OrderedItemOrId& a, const OrderedItemOrId& b) const {
@@ -636,8 +640,8 @@ ItemId Importer::GenerateItemId(const clang::Decl* decl) const {
 
 bool Importer::IsUnsupportedAndAlien(ItemId item_id) const {
   auto it = import_cache_.find(reinterpret_cast<clang::Decl*>(item_id.value()));
-  return it != import_cache_.end() && it->second.has_value() &&
-         std::holds_alternative<UnsupportedItem>(*it->second) &&
+  return it != import_cache_.end() && it->second.proto_item != nullptr &&
+         it->second.proto_item->has_unsupported_item() &&
          !IsFromCurrentTarget(it->first);
 }
 
@@ -696,7 +700,7 @@ Importer::DeclItems Importer::GetDeclItems(const clang::Decl* decl) {
   auto* decl_context = clang::cast<clang::DeclContext>(decl);
   for (auto decl : GetCanonicalChildren(decl_context)) {
     // Only add item ids for decls that can be successfully imported.
-    if (auto item = GetDeclItem(decl); item.has_value()) {
+    if (auto item = GetDeclItem(decl); item != nullptr) {
       auto item_id = GenerateItemId(decl);
       // TODO(rosica): Drop this check when we start importing also other
       // redecls, not just the canonical
@@ -922,18 +926,44 @@ bool Importer::IsAlwaysInstantiate(
   return false;
 }
 
+void SetMustBindItem(ir_proto::Item& item) {
+  if (item.has_record()) {
+    item.mutable_record()->set_must_bind(true);
+  } else if (item.has_func()) {
+    item.mutable_func()->set_must_bind(true);
+  } else if (item.has_enum_decl()) {
+    item.mutable_enum_decl()->set_must_bind(true);
+  } else if (item.has_type_alias()) {
+    item.mutable_type_alias()->set_must_bind(true);
+  } else if (item.has_comment()) {
+    item.mutable_comment()->set_must_bind(true);
+  } else if (item.has_unsupported_item()) {
+    item.mutable_unsupported_item()->set_must_bind(true);
+  } else if (item.has_namespace_decl()) {
+    item.mutable_namespace_decl()->set_must_bind(true);
+  } else if (item.has_use_mod()) {
+    item.mutable_use_mod()->set_must_bind(true);
+  }
+}
+
 void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   FindAlwaysInstantiateSpecs(translation_unit_decl);
   ImportFreeComments();
   clang::SourceManager& sm = ctx_.getSourceManager();
   std::vector<SourceLocationComparator::OrderedItem> ordered_items;
 
+  // Store free comments in comment_items to preserve their lifetime during
+  // Import.
+  std::vector<std::unique_ptr<ir_proto::Item>> comment_items;
+  comment_items.reserve(comments_.size());
   ordered_items.reserve(comments_.size());
   for (auto& comment : comments_) {
-    ordered_items.push_back(
-        {GetSourceOrderKey(comment),
-         Comment{.text = comment->getFormattedText(sm, sm.getDiagnostics()),
-                 .id = GenerateItemId(comment)}});
+    auto item = std::make_unique<ir_proto::Item>();
+    auto* c = item->mutable_comment();
+    c->set_text(comment->getFormattedText(sm, sm.getDiagnostics()));
+    c->set_id(GenerateItemId(comment).value());
+    ordered_items.push_back({GetSourceOrderKey(comment), item.get()});
+    comment_items.push_back(std::move(item));
   }
 
   ImportDeclsFromDeclContext(translation_unit_decl);
@@ -942,16 +972,15 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   // class A { class B; };   // declares A::B
   // class A::B { ... };  // defines A::B
   std::vector<std::pair<SourceOrderKey, const clang::Decl*>> ordered_children;
-  for (const auto& [decl, item] : import_cache_) {
-    if (!item.has_value()) continue;
+  for (const auto& [decl, entry] : import_cache_) {
+    if (entry.proto_item == nullptr) continue;
     if (auto* parent_record_decl =
             llvm::dyn_cast<clang::CXXRecordDecl>(decl->getDeclContext())) {
       auto parent_it = import_cache_.find(parent_record_decl);
-      if (parent_it != import_cache_.end() && parent_it->second.has_value()) {
-        if (auto* parent_item =
-                std::get_if<Record>(&(parent_it->second.value()))) {
-          ordered_children.push_back({GetSourceOrderKey(decl), decl});
-        }
+      if (parent_it != import_cache_.end() &&
+          parent_it->second.proto_item != nullptr &&
+          parent_it->second.proto_item->has_record()) {
+        ordered_children.push_back({GetSourceOrderKey(decl), decl});
       }
     }
   }
@@ -963,29 +992,16 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
     auto* parent_record_decl =
         llvm::dyn_cast<clang::CXXRecordDecl>(decl->getDeclContext());
     auto parent_it = import_cache_.find(parent_record_decl);
-    auto* parent_item = std::get_if<Record>(&(parent_it->second.value()));
+    auto parent_id = parent_it->second.proto_item->record().id();
 
     auto child_id = GenerateItemId(decl);
-    auto& parent_child_ids = invocation_.child_item_ids_[parent_item->id];
+    auto& parent_child_ids = invocation_.child_item_ids_[ItemId(parent_id)];
     if (!IsUnsupportedAndAlien(child_id) &&
         !absl::c_linear_search(parent_child_ids, child_id)) {
       parent_child_ids.push_back(child_id);
     }
   }
 
-  for (const auto& [decl, item] : import_cache_) {
-    if (!item.has_value() || IsUnsupportedAndAlien(GenerateItemId(decl))) {
-      continue;
-    }
-    ordered_items.push_back({GetSourceOrderKey(decl), *item});
-  }
-
-  llvm::stable_sort(ordered_items, SourceLocationComparator(sm));
-
-  invocation_.ir_.items.reserve(ordered_items.size());
-  for (auto& ordered_item : ordered_items) {
-    invocation_.ir_.items.push_back(ordered_item.second);
-  }
   invocation_.top_level_item_ids_ =
       GetTopLevelItemIdsInSourceOrder(translation_unit_decl);
 
@@ -995,17 +1011,103 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
       GetOrderedItemIdsOfTemplateInstantiations(),
       std::back_inserter(invocation_.top_level_item_ids_[invocation_.target_]));
 
-  // Remove any unsupported alien (to the current target) items.
-  // IsUnsupportedAndAlien only returns true for items outside the current
-  // target that are unsupported. You have to run it only if label is not equal
-  // to the current target; you can skip the current target.
-  for (auto& [label, item_ids] : invocation_.top_level_item_ids_) {
-    if (label == invocation_.target_) continue;
-    item_ids.erase(std::remove_if(item_ids.begin(), item_ids.end(),
-                                  [&](ItemId item_id) {
-                                    return IsUnsupportedAndAlien(item_id);
-                                  }),
-                   item_ids.end());
+  // TODO(b/530340081): This logic to build a representative tree IR
+  // replaces BuildTree() in ir.cc. The latter should be deleted.
+  //
+  // Map each ItemId to its corresponding ir_proto::Item pointer.
+  absl::flat_hash_map<ItemId, ir_proto::Item* absl_nonnull> id_to_item;
+  for (const auto& comment_item : comment_items) {
+    id_to_item[ItemId(comment_item->comment().id())] = comment_item.get();
+  }
+  for (const auto& [decl, entry] : import_cache_) {
+    if (entry.proto_item != nullptr) {
+      id_to_item[GenerateItemId(decl)] = entry.proto_item.get();
+    }
+  }
+
+  // IR previously maintains a flat array of opaque items. To improve
+  // readability, we enforce a nested IR structure by populating nested child
+  // items for Record and NamespaceDecl containers. See crubit.rs-ir-proto.
+  //
+  // Protobufs do not allow pointer aliasing. We have to explicitly populate
+  // items in a post-order traversal to ensure that children items are complete
+  // before copying them into parent items.
+  std::vector<ItemId> ordered_item_ids;
+  {
+    absl::flat_hash_set<ItemId> visited;
+    auto collect_in_post_order = [&](auto& self, ItemId item_id) -> void {
+      if (!visited.insert(item_id).second) return;
+      if (auto child_ids_it = invocation_.child_item_ids_.find(item_id);
+          child_ids_it != invocation_.child_item_ids_.end()) {
+        for (ItemId child_id : child_ids_it->second) {
+          self(self, child_id);
+        }
+      }
+      ordered_item_ids.push_back(item_id);
+    };
+    for (const auto& [parent_id, _] : invocation_.child_item_ids_) {
+      collect_in_post_order(collect_in_post_order, parent_id);
+    }
+  }
+
+  for (ItemId item_id : ordered_item_ids) {
+    auto child_ids_it = invocation_.child_item_ids_.find(item_id);
+    if (child_ids_it == invocation_.child_item_ids_.end()) continue;
+
+    auto parent_it = id_to_item.find(item_id);
+    if (parent_it == id_to_item.end()) continue;
+
+    if (parent_it->second->has_record()) {
+      auto* record = parent_it->second->mutable_record();
+      record->clear_children();
+      for (ItemId child_id : child_ids_it->second) {
+        auto child_it = id_to_item.find(child_id);
+        if (child_it != id_to_item.end()) {
+          record->add_children()->CopyFrom(*child_it->second);
+        }
+      }
+    } else if (parent_it->second->has_namespace_decl()) {
+      auto* ns = parent_it->second->mutable_namespace_decl();
+      ns->clear_children();
+      for (ItemId child_id : child_ids_it->second) {
+        auto child_it = id_to_item.find(child_id);
+        if (child_it != id_to_item.end()) {
+          ns->add_children()->CopyFrom(*child_it->second);
+        }
+      }
+    }
+  }
+
+  // Populate top-level items for each Bazel label in the IR protobuf. This
+  // preserves the source order recorded in top_level_item_ids_.
+  for (const auto& [target, item_ids] : invocation_.top_level_item_ids_) {
+    auto& target_items =
+        (*invocation_.ir_proto_.mutable_top_level_items())[target.value()];
+    for (ItemId id : item_ids) {
+      auto it = id_to_item.find(id);
+      // Remove any unsupported alien (to the current target) items.
+      // IsUnsupportedAndAlien only returns true for items outside the current
+      // target that are unsupported. You have to run it only if label is not
+      // equal to the current target; you can skip the current target.
+      if (it != id_to_item.end() && !IsUnsupportedAndAlien(id)) {
+        target_items.add_items()->CopyFrom(*it->second);
+      }
+    }
+  }
+
+  invocation_.ir_proto_.set_current_target(invocation_.target_.value());
+  for (const auto& header : invocation_.public_headers_) {
+    *invocation_.ir_proto_.add_public_headers() = header.ToFlatProto();
+  }
+  for (const auto& [target, features] : invocation_.ir_.crubit_features) {
+    auto& set =
+        (*invocation_.ir_proto_.mutable_crubit_features())[target.value()];
+    std::vector<std::string> sorted_features(features.begin(), features.end());
+    absl::c_sort(sorted_features);
+    set.mutable_features()->Add(sorted_features.begin(), sorted_features.end());
+  }
+  for (const auto& [target, name] : invocation_.ir_.crate_names) {
+    (*invocation_.ir_proto_.mutable_crate_names())[target.value()] = name;
   }
 }
 
@@ -1016,9 +1118,25 @@ void Importer::ImportDeclsFromDeclContext(
   }
 }
 
-std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
+const ir_proto::Item* absl_nullable Importer::GetDeclItem(clang::Decl* decl) {
   if (auto it = import_cache_.find(decl); it != import_cache_.end()) {
-    return it->second;
+    if (it->second.status == ItemCacheEntry::Status::kInProgress) {
+      // TODO(jeanpierreda): Fix and promote to CHECK.
+      // At least one cycle occurs with Typedef, where a typedef will import
+      // itself during its own import. This isn't an infinite loop, because the
+      // recursive cycle gets broken between the two by CXXRecordDecl, but the
+      // result is that we get this typedef inserted while we were attempting to
+      // insert it.
+      //
+      // Alternatively, maybe it's sufficient to check that they're _equal_.
+      // It's not a bug at all to import it twice if it has no effect.
+      LOG(INFO) << "Re-entrant import discovered. Trying to import a "
+                << decl->getDeclKindName()
+                << " while its import is still in progress. Returning nullptr "
+                   "to break the cycle.";
+      return nullptr;
+    }
+    return it->second.proto_item.get();
   }
   // Here, we need to be careful. Recursive imports break cycles as follows:
   // an item which may, in the process of being imported, then import itself,
@@ -1054,26 +1172,22 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
   // Note: insert_or_assign, not insert, in case a record, so as to overwrite
   // any null entries introduced by cycles.
 
-  std::optional<IR::Item> result = ImportDecl(decl);
-  auto [it, inserted] = import_cache_.try_emplace(decl, result);
-  if (!inserted) {
-    // TODO(jeanpierreda): Fix and promote to CHECK.
-    // At least one cycle occurs with Typedef, where a typedef will import
-    // itself during its own import. This isn't an infinite loop, because the
-    // recursive cycle gets broken between the two by CXXRecordDecl, but the
-    // result is that we get this typedef inserted while we were attempting to
-    // insert it.
-    //
-    // Alternatively, maybe it's sufficient to check that they're _equal_.
-    // It's not a bug at all to import it twice if it has no effect.
-    LOG_IF(INFO, !it->second.has_value())
-        << "re-entrant import discovered, where the re-entrant import had a "
-           "non-null value."
-        << "\n  trying to import a " << decl->getDeclKindName()
-        << "\n  present entry: " << ItemToString(it->second)
-        << "\n  was going to be inserted: " << ItemToString(result);
-    it->second = result;
-  }
+  ItemId id = GenerateItemId(decl);
+  import_cache_.try_emplace(decl,
+                            ItemCacheEntry{
+                                .status = ItemCacheEntry::Status::kInProgress,
+                                .id = id,
+                                .proto_item = nullptr,
+                            });
+
+  std::unique_ptr<ir_proto::Item> result = ImportDecl(decl);
+  const ir_proto::Item* item_ptr = result.get();
+
+  auto& entry = import_cache_.find(decl)->second;
+  entry.status = result != nullptr ? ItemCacheEntry::Status::kCompleted
+                                   : ItemCacheEntry::Status::kFailed;
+  entry.proto_item = std::move(result);
+
   if (auto* record_decl = clang::dyn_cast<clang::CXXRecordDecl>(decl)) {
     // TODO(forster): Should we even visit the nested decl if we couldn't
     // import the parent? For now we have tests that check that we generate
@@ -1089,7 +1203,7 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
   // instantiation decl ID is inserted into the top-level items but does
   // not have its corresponding IR item, resulting in lookup failures (crashes)
   // when generating bindings.
-  if (result.has_value()) {
+  if (item_ptr != nullptr) {
     if (auto* specialization_decl =
             llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl);
         specialization_decl && IsFromCurrentTarget(specialization_decl)) {
@@ -1098,7 +1212,7 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
       }
     }
   }
-  return result;
+  return item_ptr;
 }
 
 /// Returns true if a decl is inside a private section, or is inside a
@@ -1127,7 +1241,8 @@ bool IsTransitivelyInPrivate(clang::Decl* decl_to_check) {
   }
 }
 
-std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
+absl_nullable std::unique_ptr<ir_proto::Item> Importer::ImportDecl(
+    clang::Decl* absl_nonnull decl) {
   const absl::StatusOr<bool> must_bind =
       HasAnnotationWithoutArgs(*decl, "crubit_must_bind");
   if (!must_bind.ok()) {
@@ -1140,7 +1255,7 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
                        FormattedError::Static(
                            "Private declarations cannot receive bindings"));
     }
-    return std::nullopt;
+    return nullptr;
   }
 
   const absl::StatusOr<bool> do_not_bind =
@@ -1171,7 +1286,7 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
                        "`do_not_bind_allowlist`"));
       }
     }
-    return std::nullopt;
+    return nullptr;
   }
 
   std::string unavailable_error;
@@ -1184,8 +1299,9 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
   }
 
   for (auto& importer : decl_importers_) {
-    std::optional<IR::Item> result = importer->ImportDecl(decl, *must_bind);
-    if (result.has_value()) {
+    std::unique_ptr<ir_proto::Item> result =
+        importer->ImportDecl(decl, *must_bind);
+    if (result != nullptr) {
       if (*must_bind) {
         SetMustBindItem(*result);
       }
@@ -1199,16 +1315,15 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
         FormattedError::Static(
             "No importer found for decl with CRUBIT_MUST_BIND annotation"));
   }
-  return std::nullopt;
+  return nullptr;
 }
 
-std::optional<IR::Item> Importer::GetImportedItem(
-    const clang::Decl* decl) const {
+const ir_proto::Item* Importer::GetImportedItem(const clang::Decl* decl) const {
   auto it = import_cache_.find(decl);
   if (it != import_cache_.end()) {
-    return it->second;
+    return it->second.proto_item.get();
   }
-  return std::nullopt;
+  return nullptr;
 }
 
 BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
@@ -1603,15 +1718,16 @@ bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {
   return false;
 }
 
-IR::Item Importer::HardError(const clang::Decl& decl, FormattedError error) {
-  return ImportUnsupportedItem(decl, std::nullopt, {error},
+std::unique_ptr<ir_proto::Item> Importer::HardError(const clang::Decl& decl,
+                                                    FormattedError error) {
+  return ImportUnsupportedItem(decl, std::nullopt, {std::move(error)},
                                /*is_hard_error=*/true);
 }
 
-IR::Item Importer::ImportUnsupportedItem(
+std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
     const clang::Decl& original_decl, std::optional<UnsupportedItem::Path> path,
     std::vector<FormattedError> errors, bool is_hard_error) {
-  auto kind = UnsupportedItem::Kind::kOther;
+  ir_proto::UnsupportedItem::Kind kind = ir_proto::UnsupportedItem::OTHER;
   const clang::Decl* decl = &original_decl;
   while (auto* using_decl = clang::dyn_cast<clang::UsingShadowDecl>(decl)) {
     decl = using_decl->getTargetDecl();
@@ -1620,16 +1736,16 @@ IR::Item Importer::ImportUnsupportedItem(
           clang::dyn_cast<clang::TagDecl>(decl)) {
     switch (named_decl->getTagKind()) {
       case clang::TagTypeKind::Struct:
-        kind = UnsupportedItem::Kind::kStruct;
+        kind = ir_proto::UnsupportedItem::STRUCT;
         break;
       case clang::TagTypeKind::Class:
-        kind = UnsupportedItem::Kind::kClass;
+        kind = ir_proto::UnsupportedItem::CLASS;
         break;
       case clang::TagTypeKind::Enum:
-        kind = UnsupportedItem::Kind::kEnum;
+        kind = ir_proto::UnsupportedItem::ENUM;
         break;
       case clang::TagTypeKind::Union:
-        kind = UnsupportedItem::Kind::kUnion;
+        kind = ir_proto::UnsupportedItem::UNION;
         break;
       default:
         break;
@@ -1637,19 +1753,19 @@ IR::Item Importer::ImportUnsupportedItem(
   } else if (const clang::FunctionDecl* func_decl =
                  clang::dyn_cast<clang::FunctionDecl>(decl)) {
     kind = func_decl->getKind() == clang::NamedDecl::Kind::CXXConstructor
-               ? UnsupportedItem::Kind::kConstructor
-               : UnsupportedItem::Kind::kFunc;
+               ? ir_proto::UnsupportedItem::CONSTRUCTOR
+               : ir_proto::UnsupportedItem::FUNC;
   } else if (clang::isa<clang::NamespaceDecl>(decl)) {
-    kind = UnsupportedItem::Kind::kNamespace;
+    kind = ir_proto::UnsupportedItem::NAMESPACE;
   } else if (clang::isa<clang::VarDecl>(decl)) {
-    kind = UnsupportedItem::Kind::kGlobalVar;
+    kind = ir_proto::UnsupportedItem::GLOBAL_VAR;
   } else if (clang::isa<clang::FunctionTemplateDecl>(decl)) {
-    kind = UnsupportedItem::Kind::kFunc;
+    kind = ir_proto::UnsupportedItem::FUNC;
   } else if (clang::isa<clang::ClassTemplateDecl>(decl)) {
-    kind = UnsupportedItem::Kind::kClass;
+    kind = ir_proto::UnsupportedItem::CLASS;
   } else if (clang::isa<clang::TypeAliasDecl>(decl) ||
              clang::isa<clang::TypedefNameDecl>(decl)) {
-    kind = UnsupportedItem::Kind::kTypeAlias;
+    kind = ir_proto::UnsupportedItem::TYPE_ALIAS;
   }
   std::string name = "unnamed";
   if (const auto* named_decl =
@@ -1676,19 +1792,26 @@ IR::Item Importer::ImportUnsupportedItem(
       func_decl != nullptr &&
       (func_decl->isImplicit() || func_decl->isDefaulted());
 
-  return UnsupportedItem{
-      .name = name,
-      .unique_name = GetUniqueName(original_decl),
-      .kind = kind,
-      .path = std::move(path),
-      .errors = std::move(errors),
-      .source_loc = source_loc,
-      .id = GenerateItemId(&original_decl),
-      .defining_target = GetOwningTarget(&original_decl),
-      .must_bind = is_hard_error,
-      .inline_cpp_source_text = inline_cpp_source_text,
-      .is_compiler_generated = is_compiler_generated,
-  };
+  auto item = std::make_unique<ir_proto::Item>();
+  auto* unsupported = item->mutable_unsupported_item();
+  unsupported->set_name(std::move(name));
+  unsupported->set_unique_name(GetUniqueName(original_decl));
+  unsupported->set_kind(kind);
+  if (path.has_value()) {
+    *unsupported->mutable_path() = path->ToFlatProto();
+  }
+  for (const auto& err : errors) {
+    *unsupported->add_errors() = err.ToFlatProto();
+  }
+  unsupported->set_source_loc(std::move(source_loc));
+  unsupported->set_id(GenerateItemId(&original_decl).value());
+  unsupported->set_defining_target(GetOwningTarget(&original_decl).value());
+  unsupported->set_must_bind(is_hard_error);
+  if (inline_cpp_source_text.has_value()) {
+    unsupported->set_inline_cpp_source_text(*inline_cpp_source_text);
+  }
+  unsupported->set_is_compiler_generated(is_compiler_generated);
+  return item;
 }
 
 static bool ShouldKeepCommentLine(absl::string_view line) {

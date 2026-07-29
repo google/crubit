@@ -5,7 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_TYPEDEF_NAME_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_TYPEDEF_NAME_H_
 
-#include <optional>
+#include <memory>
 
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -19,7 +19,7 @@ class TypeAliasImporter : public DeclImporterBase<clang::NamedDecl> {
  public:
   explicit TypeAliasImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::NamedDecl* decl) override;
+  std::unique_ptr<ir_proto::Item> Import(clang::NamedDecl* decl) override;
 };
 
 }  // namespace crubit

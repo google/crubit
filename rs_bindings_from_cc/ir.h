@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <iomanip>
 #include <memory>
@@ -45,6 +46,8 @@
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
+
+namespace ir_proto = ::crubit::rs_bindings_from_cc::ir_proto::flat;
 
 struct Item;
 
@@ -1144,26 +1147,135 @@ struct Item
 
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
+template <typename T>
+const T* absl_nullable get_item_if(const ir_proto::Item& item) {
+  if constexpr (std::is_same_v<T, ir_proto::Record>) {
+    return item.has_record() ? &item.record() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::Func>) {
+    return item.has_func() ? &item.func() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::Enum>) {
+    return item.has_enum_decl() ? &item.enum_decl() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::UnsupportedItem>) {
+    return item.has_unsupported_item() ? &item.unsupported_item() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::IncompleteRecord>) {
+    return item.has_incomplete_record() ? &item.incomplete_record() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::Namespace>) {
+    return item.has_namespace_decl() ? &item.namespace_decl() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::TypeAlias>) {
+    return item.has_type_alias() ? &item.type_alias() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::Constant>) {
+    return item.has_constant() ? &item.constant() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::GlobalVar>) {
+    return item.has_global_var() ? &item.global_var() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::Comment>) {
+    return item.has_comment() ? &item.comment() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::ExistingRustType>) {
+    return item.has_existing_rust_type() ? &item.existing_rust_type() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::UseMod>) {
+    return item.has_use_mod() ? &item.use_mod() : nullptr;
+  }
+}
+
+template <typename T>
+T* absl_nullable get_item_if(ir_proto::Item& item) {
+  if constexpr (std::is_same_v<T, ir_proto::Record>) {
+    return item.has_record() ? item.mutable_record() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::Func>) {
+    return item.has_func() ? item.mutable_func() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::Enum>) {
+    return item.has_enum_decl() ? item.mutable_enum_decl() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::UnsupportedItem>) {
+    return item.has_unsupported_item() ? item.mutable_unsupported_item()
+                                       : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::IncompleteRecord>) {
+    return item.has_incomplete_record() ? item.mutable_incomplete_record()
+                                        : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::Namespace>) {
+    return item.has_namespace_decl() ? item.mutable_namespace_decl() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::TypeAlias>) {
+    return item.has_type_alias() ? item.mutable_type_alias() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::Constant>) {
+    return item.has_constant() ? item.mutable_constant() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::GlobalVar>) {
+    return item.has_global_var() ? item.mutable_global_var() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::Comment>) {
+    return item.has_comment() ? item.mutable_comment() : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::ExistingRustType>) {
+    return item.has_existing_rust_type() ? item.mutable_existing_rust_type()
+                                         : nullptr;
+  } else if constexpr (std::is_same_v<T, ir_proto::UseMod>) {
+    return item.has_use_mod() ? item.mutable_use_mod() : nullptr;
+  }
+}
+
 struct IR {
-  void ToFlatProto(rs_bindings_from_cc::ir_proto::flat::IRProto* proto) const;
+  void ToFlatProto(ir_proto::IRProto* proto) const;
 
   template <typename T>
-  std::vector<const T*> get_items_if() const {
-    std::vector<const T*> filtered_items;
-    for (const auto& item : items) {
-      if (auto* filtered_item = std::get_if<T>(&item)) {
-        filtered_items.push_back(filtered_item);
+  std::vector<const T* absl_nonnull> get_items_if() const {
+    std::vector<const T* absl_nonnull> filtered_items;
+    auto process_item = [&](auto& self, const ir_proto::Item& item) -> void {
+      if (const T* val = get_item_if<T>(item)) {
+        filtered_items.push_back(val);
+      }
+      if (item.has_record()) {
+        for (const auto& child : item.record().children()) {
+          self(self, child);
+        }
+      } else if (item.has_namespace_decl()) {
+        for (const auto& child : item.namespace_decl().children()) {
+          self(self, child);
+        }
+      }
+    };
+
+    // Sort target keys to iterate `top_level_items()` deterministically, this
+    // prevents non-deterministic hash bucket ordering from protobuf::Map.
+    std::vector<std::string> target_keys;
+    target_keys.reserve(ir_proto.top_level_items().size());
+    for (const auto& [target, _] : ir_proto.top_level_items()) {
+      target_keys.push_back(target);
+    }
+    std::sort(target_keys.begin(), target_keys.end());
+
+    for (const auto& target : target_keys) {
+      const auto& item_list = ir_proto.top_level_items().at(target);
+      for (const auto& item : item_list.items()) {
+        process_item(process_item, item);
       }
     }
     return filtered_items;
   }
 
   template <typename T>
-  std::vector<T*> get_items_if() {
-    std::vector<T*> filtered_items;
-    for (auto& item : items) {
-      if (auto* filtered_item = std::get_if<T>(&item)) {
-        filtered_items.push_back(const_cast<T*>(filtered_item));
+  std::vector<T* absl_nonnull> get_items_if() {
+    std::vector<T* absl_nonnull> filtered_items;
+    auto process_item = [&](auto& self, ir_proto::Item& item) -> void {
+      if (T* val = get_item_if<T>(item)) {
+        filtered_items.push_back(val);
+      }
+      if (item.has_record()) {
+        for (auto& child : *item.mutable_record()->mutable_children()) {
+          self(self, child);
+        }
+      } else if (item.has_namespace_decl()) {
+        for (auto& child : *item.mutable_namespace_decl()->mutable_children()) {
+          self(self, child);
+        }
+      }
+    };
+
+    std::vector<std::string> target_keys;
+    target_keys.reserve(ir_proto.top_level_items().size());
+    for (const auto& [target, _] : ir_proto.top_level_items()) {
+      target_keys.push_back(target);
+    }
+    std::sort(target_keys.begin(), target_keys.end());
+
+    for (const auto& target : target_keys) {
+      auto& item_list = (*ir_proto.mutable_top_level_items())[target];
+      for (auto& item : *item_list.mutable_items()) {
+        process_item(process_item, item);
       }
     }
     return filtered_items;
@@ -1177,6 +1289,7 @@ struct IR {
   std::vector<HeaderName> public_headers;
 
   BazelLabel current_target;
+  ir_proto::IRProto ir_proto;
 
   using Item = ::crubit::Item;
   // TODO(b/530340081): Should refactor this out to stage flat items elsewhere.

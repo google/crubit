@@ -5,6 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_CXX_RECORD_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_CXX_RECORD_H_
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -34,11 +35,11 @@ class CXXRecordDeclImporter : public DeclImporterBase<clang::CXXRecordDecl> {
  public:
   explicit CXXRecordDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::CXXRecordDecl*) override;
+  std::unique_ptr<ir_proto::Item> Import(clang::CXXRecordDecl*) override;
 
  private:
-  std::vector<Field> ImportFields(clang::CXXRecordDecl*);
-  std::vector<BaseClass> GetUnambiguousPublicBases(
+  std::vector<ir_proto::Field> ImportFields(clang::CXXRecordDecl*);
+  std::vector<ir_proto::BaseClass> GetUnambiguousPublicBases(
       const clang::CXXRecordDecl& record_decl) const;
   std::optional<Identifier> GetTranslatedFieldName(
       const clang::FieldDecl* field);

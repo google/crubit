@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
@@ -21,6 +22,7 @@
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/ir.pb.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
@@ -33,6 +35,8 @@
 #include "llvm/Support/Regex.h"
 
 namespace crubit {
+
+namespace ir_proto = rs_bindings_from_cc::ir_proto::flat;
 
 // Top-level parameters as well as return value of an importer invocation.
 class Invocation {
@@ -88,6 +92,7 @@ class Invocation {
   const std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist_;
 
   // The main output of the import process
+  ir_proto::IRProto ir_proto_;
   IR ir_;
 
   // Transient map of top level items used to build the tree.
@@ -156,7 +161,8 @@ class ImportContext {
 
   // Returns an unsupported item that will result in a hard error at binding
   // generation time.
-  virtual IR::Item HardError(const clang::Decl& decl, FormattedError error) = 0;
+  virtual std::unique_ptr<ir_proto::Item> HardError(const clang::Decl& decl,
+                                                    FormattedError error) = 0;
 
   // Imports an unsupported item with a vector of formatted error messages.
   //
@@ -166,16 +172,16 @@ class ImportContext {
   // `[[crubit::must_bind]]`). If false, the error is instead emitted as a
   // comment in the generated Rust source, allowing the rest of the target's
   // bindings to be generated.
-  virtual IR::Item ImportUnsupportedItem(
+  virtual std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
       const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
       std::vector<FormattedError> errors, bool is_hard_error) = 0;
 
   // Convenience wrapper for `ImportUnsupportedItem` with `is_hard_error=false`.
   // This results in a diagnostic comment in the generated Rust code rather than
   // a build failure.
-  IR::Item ImportUnsupportedItem(const clang::Decl& decl,
-                                 std::optional<UnsupportedItem::Path> path,
-                                 std::vector<FormattedError> errors) {
+  std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
+      const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+      std::vector<FormattedError> errors) {
     return ImportUnsupportedItem(decl, std::move(path), std::move(errors),
                                  /*is_hard_error=*/false);
   }
@@ -183,13 +189,15 @@ class ImportContext {
   // Imports a decl and creates an IR item (or error messages). This allows
   // importers to recursively delegate to other importers.
   // Does not use or update the cache.
-  virtual std::optional<IR::Item> ImportDecl(clang::Decl* decl) = 0;
+  virtual absl_nullable std::unique_ptr<ir_proto::Item> ImportDecl(
+      clang::Decl* absl_nullable decl) = 0;
 
   // Returns the Item of a Decl, importing it first if necessary.
   // Updates the cache.
-  virtual std::optional<IR::Item> GetDeclItem(clang::Decl* decl) = 0;
+  virtual const ir_proto::Item* absl_nullable GetDeclItem(
+      clang::Decl* decl) = 0;
 
-  virtual std::optional<IR::Item> GetImportedItem(
+  virtual const ir_proto::Item* GetImportedItem(
       const clang::Decl* decl) const = 0;
 
   virtual ItemId GenerateItemId(const clang::Decl* decl) const = 0;
@@ -376,12 +384,13 @@ class DeclImporter {
   explicit DeclImporter(ImportContext& ictx) : ictx_(ictx) {}
   virtual ~DeclImporter() = default;
 
-  // Returns an IR item for a decl, or `std::nullopt` if it could not be
+  // Returns an IR item for a decl, or `nullptr` if it could not be
   // imported.
   // If it can't be imported, other DeclImporters may be attempted.
   // To indicate that an item can't be imported, and no other importers should
   // be attempted, return UnsupportedItem.
-  virtual std::optional<IR::Item> ImportDecl(clang::Decl*, bool must_bind) = 0;
+  virtual absl_nullable std::unique_ptr<ir_proto::Item> ImportDecl(
+      clang::Decl* absl_nullable decl, bool must_bind) = 0;
 
  protected:
   ImportContext& ictx_;
@@ -395,14 +404,15 @@ class DeclImporterBase : public DeclImporter {
   explicit DeclImporterBase(ImportContext& context) : DeclImporter(context) {}
 
  protected:
-  std::optional<IR::Item> ImportDecl(clang::Decl* decl,
-                                     bool must_bind) override {
-    auto* typed_decl = clang::dyn_cast<D>(decl);
-    if (typed_decl == nullptr) return std::nullopt;
+  absl_nullable std::unique_ptr<ir_proto::Item> ImportDecl(
+      clang::Decl* absl_nullable decl, bool must_bind) override {
+    auto* absl_nullable typed_decl = clang::dyn_cast_or_null<D>(decl);
+    if (typed_decl == nullptr) return nullptr;
     must_bind_ = must_bind;
     return Import(typed_decl);
   }
-  virtual std::optional<IR::Item> Import(D*) = 0;
+  virtual absl_nullable std::unique_ptr<ir_proto::Item> Import(
+      D* absl_nonnull typed_decl) = 0;
 
   // A property of the current decl being imported.
   // This is used to avoid re-parsing the annotation.

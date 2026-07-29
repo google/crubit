@@ -5,7 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_ENUM_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_ENUM_H_
 
-#include <optional>
+#include <memory>
 
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -18,7 +18,7 @@ class EnumDeclImporter : public DeclImporterBase<clang::EnumDecl> {
  public:
   explicit EnumDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::EnumDecl*) override;
+  std::unique_ptr<ir_proto::Item> Import(clang::EnumDecl*) override;
 };
 
 }  // namespace crubit

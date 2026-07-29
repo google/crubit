@@ -5,7 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_FUNCTION_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_FUNCTION_H_
 
-#include <optional>
+#include <memory>
 
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -18,7 +18,7 @@ class FunctionDeclImporter : public DeclImporterBase<clang::FunctionDecl> {
  public:
   explicit FunctionDeclImporter(ImportContext& context)
       : DeclImporterBase(context) {}
-  std::optional<IR::Item> Import(clang::FunctionDecl*) override;
+  std::unique_ptr<ir_proto::Item> Import(clang::FunctionDecl*) override;
 
  private:
   Identifier GetTranslatedParamName(const clang::ParmVarDecl* param_decl);

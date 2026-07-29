@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/type_alias.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -67,7 +68,7 @@ std::string ProtoEnumToRustName(clang::NamedDecl& decl) {
 }
 }  // namespace
 
-std::optional<IR::Item> crubit::TypeAliasImporter::Import(
+std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
     clang::NamedDecl* decl) {
   // Special-case proto enums. We handle them under the alias, rather than
   // the enum declaration, because the enum declaration gives no useful
@@ -77,16 +78,16 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
     if (ictx_.IsFromProtoTarget(*alias_decl) &&
         alias_decl->getUnderlyingType()->isEnumeralType()) {
       ictx_.MarkAsSuccessfullyImported(decl);
-      return ExistingRustType{
-          .rs_name = ProtoEnumToRustName(*decl),
-          .cc_name = decl->getQualifiedNameAsString(),
-          .unique_name = ictx_.GetUniqueName(*decl),
-          .owning_target = ictx_.GetOwningTarget(decl),
-          .size_align = std::nullopt,
-          // To be paranoid, assume Rust proto enums are not ABI compatible.
-          .is_same_abi = false,
-          .id = ictx_.GenerateItemId(decl),
-      };
+      auto item = std::make_unique<ir_proto::Item>();
+      auto* existing = item->mutable_existing_rust_type();
+      existing->set_rs_name(ProtoEnumToRustName(*decl));
+      existing->set_cc_name(decl->getQualifiedNameAsString());
+      existing->set_unique_name(ictx_.GetUniqueName(*decl));
+      existing->set_owning_target(ictx_.GetOwningTarget(decl).value());
+      // To be paranoid, assume Rust proto enums are not ABI compatible.
+      existing->set_is_same_abi(false);
+      existing->set_id(ictx_.GenerateItemId(decl).value());
+      return item;
     }
   }
 
@@ -96,7 +97,7 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
       // Anonymous declarations with typedefs just incorporate the typedef name
       // into their item, instead of having a separate TypeAlias item in
       // addition.
-      return std::nullopt;
+      return nullptr;
     }
     underlying_qualtype = typedef_name_decl->getUnderlyingType();
     if (const clang::TagDecl* tag_decl =
@@ -116,14 +117,14 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
     auto* target_type = clang::dyn_cast<clang::TypeDecl>(target);
     if (target_type == nullptr) {
       // Not a type.
-      return std::nullopt;
+      return nullptr;
     }
     underlying_qualtype =
         target_type->getASTContext().getTypeDeclType(target_type);
     decl = using_decl;
   } else {
     // Neither a typedef nor a using decl.
-    return std::nullopt;
+    return nullptr;
   }
 
   absl::StatusOr<TranslatedIdentifier> identifier =
@@ -218,19 +219,30 @@ std::optional<IR::Item> crubit::TypeAliasImporter::Import(
                            absl::Hex(llvm::MD5Hash(rs_name)));
   }
 
-  return TypeAlias{
-      .cc_name = identifier->cc_identifier,
-      .rs_name = Identifier(rs_name),
-      .unique_name = ictx_.GetUniqueName(*decl),
-      .id = ictx_.GenerateItemId(decl),
-      .owning_target = ictx_.GetOwningTarget(decl),
-      .doc_comment = ictx_.GetComment(decl),
-      .unknown_attr = std::move(*unknown_attr),
-      .underlying_type = *underlying_type,
-      .source_loc = ictx_.ConvertSourceLocation(decl->getBeginLoc(), nullptr),
-      .enclosing_item_id = *std::move(enclosing_item_id),
-      .deprecated = std::move(deprecated),
-  };
+  auto item = std::make_unique<ir_proto::Item>();
+  auto* type_alias = item->mutable_type_alias();
+  type_alias->mutable_cc_name()->set_identifier(
+      identifier->cc_identifier.Ident());
+  type_alias->mutable_rs_name()->set_identifier(rs_name);
+  type_alias->set_unique_name(ictx_.GetUniqueName(*decl));
+  type_alias->set_id(ictx_.GenerateItemId(decl).value());
+  type_alias->set_owning_target(ictx_.GetOwningTarget(decl).value());
+  if (auto doc = ictx_.GetComment(decl); doc.has_value()) {
+    type_alias->set_doc_comment(std::move(*doc));
+  }
+  if (unknown_attr->has_value()) {
+    type_alias->set_unknown_attr(std::move(**unknown_attr));
+  }
+  *type_alias->mutable_underlying_type() = underlying_type->ToFlatProto();
+  type_alias->set_source_loc(
+      ictx_.ConvertSourceLocation(decl->getBeginLoc(), nullptr));
+  if (enclosing_item_id->has_value()) {
+    type_alias->set_enclosing_item_id((*enclosing_item_id)->value());
+  }
+  if (deprecated.has_value()) {
+    type_alias->set_deprecated(std::move(*deprecated));
+  }
+  return item;
 }
 
 }  // namespace crubit

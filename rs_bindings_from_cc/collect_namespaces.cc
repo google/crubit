@@ -58,11 +58,11 @@ class NamespaceTrie {
   BazelLabel label_;
   // A map of item id to the IR Namespace item. It allows us to look up the
   // children namespace items.
-  absl::flat_hash_map<ItemId, const Namespace*>& id_to_namespace_;
+  absl::flat_hash_map<ItemId, const ir_proto::Namespace*>& id_to_namespace_;
 
   // Creates a node from a Namespace and inserts it into the trie.
-  void InsertNode(int parent_idx, const Namespace* ns) {
-    auto name = ns->rs_name.Ident();
+  void InsertNode(int parent_idx, const ir_proto::Namespace& ns) {
+    auto name = ns.rs_name().identifier();
     auto parent = &trie_nodes_[parent_idx];
     int child_idx;
     if (parent->child_name_to_idx.find(name) ==
@@ -75,28 +75,32 @@ class NamespaceTrie {
       child_idx = parent->child_name_to_idx[name];
     }
 
-    for (auto ns_child_id : ns->child_item_ids()) {
-      if (id_to_namespace_.find(ns_child_id) == id_to_namespace_.end()) {
-        continue;
+    for (const auto& child_item : ns.children()) {
+      if (child_item.has_namespace_decl()) {
+        auto it =
+            id_to_namespace_.find(ItemId(child_item.namespace_decl().id()));
+        if (it == id_to_namespace_.end()) {
+          continue;
+        }
+        InsertNode(child_idx, *it->second);
       }
-      auto ns_child = id_to_namespace_[ns_child_id];
-      InsertNode(child_idx, ns_child);
     }
   }
 
   // Converts a trie node into the JSON serializable NamespaceNode.
-  NamespaceNode NodeToNamespaceNode(const Node* node) const {
+  NamespaceNode NodeToNamespaceNode(const Node& node) const {
     std::vector<NamespaceNode> namespaces;
-    namespaces.reserve(node->child_name_to_idx.size());
-    for (const auto& [_, idx] : node->child_name_to_idx) {
-      namespaces.push_back(NodeToNamespaceNode(&trie_nodes_[idx]));
+    namespaces.reserve(node.child_name_to_idx.size());
+    for (const auto& [_, idx] : node.child_name_to_idx) {
+      namespaces.push_back(NodeToNamespaceNode(trie_nodes_[idx]));
     }
-    return NamespaceNode{std::string(node->name), std::move(namespaces)};
+    return NamespaceNode{std::string(node.name), std::move(namespaces)};
   }
 
  public:
-  NamespaceTrie(BazelLabel label,
-                absl::flat_hash_map<ItemId, const Namespace*>& id_to_namespace)
+  NamespaceTrie(
+      BazelLabel label,
+      absl::flat_hash_map<ItemId, const ir_proto::Namespace*>& id_to_namespace)
       : label_(label), id_to_namespace_(id_to_namespace) {}
 
   NamespaceTrie(NamespaceTrie&) = delete;
@@ -104,23 +108,25 @@ class NamespaceTrie {
 
   // Creates a trie node from the top level namespace and inserts it into the
   // trie.
-  void InsertTopLevel(const Namespace* ns) {
-    auto name = ns->rs_name.Ident();
-    int node_idx;
-    if (top_level_name_to_idx_.find(name) == top_level_name_to_idx_.end()) {
-      node_idx = trie_nodes_.size();
-      top_level_name_to_idx_.insert({name, node_idx});
+  void InsertTopLevel(const ir_proto::Namespace& ns) {
+    auto name = ns.rs_name().identifier();
+    // If the namespace is not already in the trie, add it. Else add any
+    // reopened namespaces to the existing entry.
+    auto [it, inserted] =
+        top_level_name_to_idx_.try_emplace(name, trie_nodes_.size());
+    if (inserted) {
       trie_nodes_.push_back({name, {}});
-    } else {
-      node_idx = top_level_name_to_idx_[name];
     }
+    int node_idx = it->second;
 
-    for (auto ns_child_id : ns->child_item_ids()) {
-      if (id_to_namespace_.find(ns_child_id) == id_to_namespace_.end()) {
-        continue;
+    for (const auto& child_item : ns.children()) {
+      if (child_item.has_namespace_decl()) {
+        auto child_it =
+            id_to_namespace_.find(ItemId(child_item.namespace_decl().id()));
+        if (child_it != id_to_namespace_.end()) {
+          InsertNode(node_idx, *child_it->second);
+        }
       }
-      auto ns_child = id_to_namespace_[ns_child_id];
-      InsertNode(node_idx, ns_child);
     }
   }
 
@@ -129,7 +135,7 @@ class NamespaceTrie {
     std::vector<NamespaceNode> namespaces;
     namespaces.reserve(this->top_level_name_to_idx_.size());
     for (auto& [_, idx] : this->top_level_name_to_idx_) {
-      namespaces.push_back(NodeToNamespaceNode(&trie_nodes_[idx]));
+      namespaces.push_back(NodeToNamespaceNode(trie_nodes_[idx]));
     }
     return NamespacesHierarchy{label_, std::move(namespaces)};
   }
@@ -139,23 +145,28 @@ class NamespaceTrie {
 
 // Returns the current target's namespace hierarchy in JSON serializable format.
 NamespacesHierarchy CollectNamespaces(const IR& ir) {
-  auto all_namespaces = ir.get_items_if<Namespace>();
-  absl::flat_hash_map<ItemId, const Namespace*> id_to_namespace;
+  auto all_namespaces = ir.get_items_if<ir_proto::Namespace>();
+  absl::flat_hash_map<ItemId, const ir_proto::Namespace*> id_to_namespace;
   for (auto ns : all_namespaces) {
     // We are not interested in namespaces from different targets.
-    if (ns->owning_target != ir.current_target) {
+    if (ns->owning_target() != ir.current_target.value()) {
       continue;
     }
-    id_to_namespace.insert({ns->id, ns});
+    id_to_namespace.insert({ItemId(ns->id()), ns});
   }
 
   NamespaceTrie trie(ir.current_target, id_to_namespace);
-  for (auto namespace_id : ir.top_level_item_ids(ir.current_target)) {
-    if (id_to_namespace.count(namespace_id) == 0) {
-      continue;
+  auto target_it =
+      ir.ir_proto.top_level_items().find(ir.current_target.value());
+  if (target_it != ir.ir_proto.top_level_items().end()) {
+    for (const auto& item : target_it->second.items()) {
+      if (item.has_namespace_decl()) {
+        auto it = id_to_namespace.find(ItemId(item.namespace_decl().id()));
+        if (it != id_to_namespace.end()) {
+          trie.InsertTopLevel(*it->second);
+        }
+      }
     }
-    auto ns = id_to_namespace[namespace_id];
-    trie.InsertTopLevel(ns);
   }
 
   return trie.ToNamespacesHierarchy();

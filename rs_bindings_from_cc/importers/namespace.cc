@@ -5,6 +5,7 @@
 #include "rs_bindings_from_cc/importers/namespace.h"
 
 #include <algorithm>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -17,7 +18,7 @@
 
 namespace crubit {
 
-std::optional<IR::Item> NamespaceDeclImporter::Import(
+std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
     clang::NamespaceDecl* namespace_decl) {
   if (namespace_decl->isAnonymousNamespace()) {
     return ictx_.ImportUnsupportedItem(
@@ -69,18 +70,29 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   ItemId id = ictx_.GenerateItemId(namespace_decl);
   ictx_.invocation_.child_item_ids_[id] = std::move(item_ids);
 
-  return Namespace{.cc_name = identifier->cc_identifier,
-                   .rs_name = identifier->cc_identifier,
-                   .unique_name = ictx_.GetUniqueName(*namespace_decl),
-                   .id = id,
-                   .canonical_namespace_id =
-                       ictx_.GenerateItemId(namespace_decl->getCanonicalDecl()),
-                   .unknown_attr = std::move(*unknown_attr),
-                   .owning_target = ictx_.GetOwningTarget(namespace_decl),
-                   .enclosing_item_id = *std::move(enclosing_item_id),
-                   .is_inline = namespace_decl->isInline(),
-                   .deprecated = std::move(deprecated),
-                   .doc_comment = ictx_.GetComment(namespace_decl)};
+  auto item = std::make_unique<ir_proto::Item>();
+  auto* ns = item->mutable_namespace_decl();
+  ns->mutable_cc_name()->set_identifier(identifier->cc_identifier.Ident());
+  ns->mutable_rs_name()->set_identifier(identifier->cc_identifier.Ident());
+  ns->set_unique_name(ictx_.GetUniqueName(*namespace_decl));
+  ns->set_id(id.value());
+  ns->set_canonical_namespace_id(
+      ictx_.GenerateItemId(namespace_decl->getCanonicalDecl()).value());
+  if (unknown_attr->has_value()) {
+    ns->set_unknown_attr(std::move(**unknown_attr));
+  }
+  ns->set_owning_target(ictx_.GetOwningTarget(namespace_decl).value());
+  if (enclosing_item_id->has_value()) {
+    ns->set_enclosing_item_id((*enclosing_item_id)->value());
+  }
+  ns->set_is_inline(namespace_decl->isInline());
+  if (deprecated.has_value()) {
+    ns->set_deprecated(std::move(*deprecated));
+  }
+  if (auto comment = ictx_.GetComment(namespace_decl); comment.has_value()) {
+    ns->set_doc_comment(std::move(*comment));
+  }
+  return item;
 }
 
 }  // namespace crubit

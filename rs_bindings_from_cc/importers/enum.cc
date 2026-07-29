@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/enum.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -23,10 +24,11 @@
 
 namespace crubit {
 
-std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
+std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
+    clang::EnumDecl* enum_decl) {
   if (enum_decl->getName().empty()) {
     // Anonymous enums are handled by `EnumConstantDeclImporter`.
-    return std::nullopt;
+    return nullptr;
   }
   absl::StatusOr<TranslatedIdentifier> enum_name =
       ictx_.GetTranslatedIdentifier(enum_decl);
@@ -78,7 +80,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     return unsupported(FormattedError::FromStatus(std::move(type.status())));
   }
 
-  std::vector<Enumerator> enumerators;
+  std::vector<ir_proto::Enumerator> enumerators;
   enumerators.reserve(absl::c_distance(enum_decl->enumerators()));
   for (clang::EnumConstantDecl* enumerator : enum_decl->enumerators()) {
     absl::StatusOr<TranslatedIdentifier> enumerator_name =
@@ -110,13 +112,20 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
     if (!value.ok()) {
       return unsupported(FormattedError::FromStatus(std::move(value.status())));
     }
-    enumerators.push_back(Enumerator{
-        .identifier = (*enumerator_name).rs_identifier(),
-        .value = std::move(*value),
-        .unknown_attr = std::move(*unknown_attr),
-        .deprecated = std::move(deprecated),
-        .doc_comment = ictx_.GetComment(enumerator),
-    });
+    ir_proto::Enumerator proto_enum_val;
+    proto_enum_val.mutable_identifier()->set_identifier(
+        (*enumerator_name).rs_identifier().Ident());
+    *proto_enum_val.mutable_value() = value->ToFlatProto();
+    if (unknown_attr->has_value()) {
+      proto_enum_val.set_unknown_attr(std::move(**unknown_attr));
+    }
+    if (deprecated.has_value()) {
+      proto_enum_val.set_deprecated(std::move(*deprecated));
+    }
+    if (auto doc = ictx_.GetComment(enumerator); doc.has_value()) {
+      proto_enum_val.set_doc_comment(std::move(*doc));
+    }
+    enumerators.push_back(std::move(proto_enum_val));
   }
 
   std::optional<std::string> nodiscard;
@@ -163,16 +172,15 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
           "except via Message::Enum syntax."));
     }
     ictx_.MarkAsSuccessfullyImported(enum_decl);
-    return ExistingRustType{
-        .rs_name = std::string(enum_decl->getName()),
-        .cc_name = enum_decl->getQualifiedNameAsString(),
-        .unique_name = ictx_.GetUniqueName(*enum_decl),
-        .owning_target = ictx_.GetOwningTarget(enum_decl),
-        .size_align = std::nullopt,
-        // To be paranoid, assume Rust proto enums are not ABI compatible.
-        .is_same_abi = false,
-        .id = ictx_.GenerateItemId(enum_decl),
-    };
+    auto item = std::make_unique<ir_proto::Item>();
+    auto* existing = item->mutable_existing_rust_type();
+    existing->set_rs_name(std::string(enum_decl->getName()));
+    existing->set_cc_name(enum_decl->getQualifiedNameAsString());
+    existing->set_unique_name(ictx_.GetUniqueName(*enum_decl));
+    existing->set_owning_target(ictx_.GetOwningTarget(enum_decl).value());
+    existing->set_is_same_abi(false);
+    existing->set_id(ictx_.GenerateItemId(enum_decl).value());
+    return item;
   }
 
   BazelLabel owning_target = ictx_.GetOwningTarget(enum_decl);
@@ -187,26 +195,45 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   ictx_.MarkAsSuccessfullyImported(enum_decl);
   clang::DeclarationNameInfo name_info(enum_decl->getDeclName(),
                                        enum_decl->getLocation());
-  return Enum{
-      .cc_name = (*enum_name).cc_identifier,
-      .rs_name = (*enum_name).rs_identifier(),
-      .unique_name = ictx_.GetUniqueName(*enum_decl),
-      .mangled_cc_name = ictx_.GetMangledName(enum_decl),
-      .id = ictx_.GenerateItemId(enum_decl),
-      .owning_target = std::move(owning_target),
-      .source_loc =
-          ictx_.ConvertSourceLocation(enum_decl->getBeginLoc(), &name_info),
-      .underlying_type = *std::move(type),
-      .enumerators = enum_decl->isCompleteDefinition()
-                         ? std::make_optional(std::move(enumerators))
-                         : std::nullopt,
-      .unknown_attr = std::move(*unknown_attr),
-      .enclosing_item_id = *std::move(enclosing_item_id),
-      .detected_formatter = *detected_formatter,
-      .nodiscard = std::move(nodiscard),
-      .deprecated = std::move(deprecated),
-      .doc_comment = std::move(doc_comment),
-  };
+
+  auto item = std::make_unique<ir_proto::Item>();
+  auto* proto_enum = item->mutable_enum_decl();
+  proto_enum->mutable_cc_name()->set_identifier(
+      (*enum_name).cc_identifier.Ident());
+  proto_enum->mutable_rs_name()->set_identifier(
+      (*enum_name).rs_identifier().Ident());
+  proto_enum->set_unique_name(ictx_.GetUniqueName(*enum_decl));
+  proto_enum->set_mangled_cc_name(ictx_.GetMangledName(enum_decl));
+  proto_enum->set_id(ictx_.GenerateItemId(enum_decl).value());
+  proto_enum->set_owning_target(std::move(owning_target).value());
+  proto_enum->set_source_loc(
+      ictx_.ConvertSourceLocation(enum_decl->getBeginLoc(), &name_info));
+  *proto_enum->mutable_underlying_type() = type->ToFlatProto();
+  if (enum_decl->isCompleteDefinition()) {
+    for (auto& enumerator : enumerators) {
+      *proto_enum->add_enumerators() = std::move(enumerator);
+    }
+  } else {
+    // Forward declared enums must be distinguished from complete empty enums.
+    proto_enum->set_is_incomplete(true);
+  }
+  if (unknown_attr->has_value()) {
+    proto_enum->set_unknown_attr(std::move(**unknown_attr));
+  }
+  if (enclosing_item_id->has_value()) {
+    proto_enum->set_enclosing_item_id((*enclosing_item_id)->value());
+  }
+  proto_enum->set_detected_formatter(*detected_formatter);
+  if (nodiscard.has_value()) {
+    proto_enum->set_nodiscard(std::move(*nodiscard));
+  }
+  if (deprecated.has_value()) {
+    proto_enum->set_deprecated(std::move(*deprecated));
+  }
+  if (doc_comment.has_value()) {
+    proto_enum->set_doc_comment(std::move(*doc_comment));
+  }
+  return item;
 }
 
 }  // namespace crubit

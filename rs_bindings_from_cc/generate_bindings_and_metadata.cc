@@ -29,31 +29,31 @@
 
 namespace crubit {
 
-std::optional<const Namespace*> FindNamespace(const IR& ir,
-                                              absl::string_view name) {
-  for (const auto* ns : ir.get_items_if<Namespace>()) {
-    if (ns->cc_name.Ident() == kInstantiationsNamespaceName) {
+namespace ir_proto = ::crubit::rs_bindings_from_cc::ir_proto::flat;
+
+const ir_proto::Namespace* absl_nullable FindNamespace(const IR& ir,
+                                                       absl::string_view name) {
+  for (const auto* ns : ir.get_items_if<ir_proto::Namespace>()) {
+    if (ns->cc_name().identifier() == kInstantiationsNamespaceName) {
       return ns;
     }
   }
-  return std::nullopt;
+  return nullptr;
 }
 
-std::vector<const Record*> FindInstantiationsInNamespace(const IR& ir,
-                                                         ItemId namespace_id) {
+std::vector<const ir_proto::Record* absl_nonnull> FindInstantiationsInNamespace(
+    const IR& ir, ItemId namespace_id) {
   absl::flat_hash_set<ItemId> record_ids;
-  for (const auto* type_alias : ir.get_items_if<TypeAlias>()) {
-    if (type_alias->enclosing_item_id == namespace_id) {
-      const auto* id =
-          std::get_if<ItemId>(&type_alias->underlying_type.variant);
-      CHECK(id != nullptr);
-      record_ids.insert(*id);
+  for (const auto* type_alias : ir.get_items_if<ir_proto::TypeAlias>()) {
+    if (ItemId(type_alias->enclosing_item_id()) == namespace_id) {
+      CHECK(type_alias->underlying_type().has_decl());
+      record_ids.insert(ItemId(type_alias->underlying_type().decl()));
     }
   }
 
-  std::vector<const Record*> result;
-  for (const auto* record : ir.get_items_if<Record>()) {
-    if (record_ids.find(record->id) != record_ids.end()) {
+  std::vector<const ir_proto::Record* absl_nonnull> result;
+  for (const auto* record : ir.get_items_if<ir_proto::Record>()) {
+    if (record_ids.find(ItemId(record->id())) != record_ids.end()) {
       result.push_back(record);
     }
   }
@@ -131,13 +131,14 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
                        args.kythe_default_corpus));
 
   absl::flat_hash_map<Identifier, Identifier> instantiations;
-  std::optional<const Namespace*> ns =
-      FindNamespace(ir, kInstantiationsNamespaceName);
-  if (ns.has_value()) {
-    std::vector<const Record*> records =
-        FindInstantiationsInNamespace(ir, ns.value()->id);
+  if (const auto* absl_nullable ns =
+          FindNamespace(ir, kInstantiationsNamespaceName)) {
+    std::vector<const ir_proto::Record* absl_nonnull> records =
+        FindInstantiationsInNamespace(ir, ItemId(ns->id()));
     for (const auto* record : records) {
-      instantiations.insert({record->cc_name, record->rs_name});
+      instantiations.insert(
+          {Identifier(std::string(record->cc_name().identifier())),
+           Identifier(std::string(record->rs_name().identifier()))});
     }
   }
 

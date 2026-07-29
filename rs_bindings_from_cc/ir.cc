@@ -973,19 +973,12 @@ flat_proto::Item ToFlatProto(const IR::Item& item) {
 // re-allocate memory continuously for large item counts, unlike standard C++
 // containers.
 void IR::ToFlatProto(flat_proto::IRProto* proto) const {
+  *proto = ir_proto;
   proto->mutable_public_headers()->Reserve(public_headers.size());
   for (const auto& h : public_headers)
     *proto->add_public_headers() = h.ToFlatProto();
   proto->set_current_target(current_target.value());
-  // Flat items list is deprecated and empty in serialization.
 
-  for (const auto& [target, items] : top_level_items) {
-    auto& list = (*proto->mutable_top_level_items())[target.value()];
-    list.mutable_items()->Reserve(items.size());
-    for (const auto& item : items) {
-      *list.add_items() = crubit::ToFlatProto(*item);
-    }
-  }
   if (!crate_root_path.empty()) proto->set_crate_root_path(crate_root_path);
   for (const auto& [target, features] : crubit_features) {
     auto& set = (*proto->mutable_crubit_features())[target.value()];
@@ -1016,13 +1009,26 @@ ItemId Item::id() const {
   return std::visit([](const auto& val) { return val.id; }, as_variant());
 }
 
+// TODO(b/530340081): We can remove this once downstream consumers migrate to
+// inspecting IRProto directly ie. removing calls to `IR::top_level_item_ids()`.
+static ItemId GetItemId(const flat_proto::Item& item) {
+  const auto* refl = item.GetReflection();
+  const auto* field =
+      refl->GetOneofFieldDescriptor(item, item.GetDescriptor()->oneof_decl(0));
+  if (!field) return ItemId(0);
+  const auto& sub = refl->GetMessage(item, field);
+  const auto* id_field = sub.GetDescriptor()->FindFieldByName("id");
+  return id_field ? ItemId(sub.GetReflection()->GetInt64(sub, id_field))
+                  : ItemId(0);
+}
+
 std::vector<ItemId> IR::top_level_item_ids(const BazelLabel& target) const {
   std::vector<ItemId> ids;
-  auto it = top_level_items.find(target);
-  if (it != top_level_items.end()) {
-    ids.reserve(it->second.size());
-    for (const auto& item : it->second) {
-      ids.push_back(item->id());
+  auto it = ir_proto.top_level_items().find(target.value());
+  if (it != ir_proto.top_level_items().end()) {
+    ids.reserve(it->second.items_size());
+    for (const auto& item : it->second.items()) {
+      ids.push_back(GetItemId(item));
     }
   }
   return ids;
@@ -1049,6 +1055,10 @@ std::vector<ItemId> Namespace::child_item_ids() const {
 // Produces a nested IR which inlines child items on namespaces and records to
 // replace the legacy representation (an array of item IDs).
 // See crubit.rs-better-ir for more context.
+//
+// TODO(b/530340081): The importer populates and builds the tree IR directly.
+// Most of the logic here is superseded by Importer::Import(), so this method
+// should be removed once there are no usages of the C++ IR struct.
 void IR::BuildTree(
     absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids,
     absl::flat_hash_map<ItemId, std::vector<ItemId>> child_item_ids) {

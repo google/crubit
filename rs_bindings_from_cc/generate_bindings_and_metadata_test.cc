@@ -66,8 +66,8 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
   ASSERT_EQ(result.error_report, "");
 
   // Check that IR items have the proper owning target set.
-  auto item = result.ir.get_items_if<Namespace>().front();
-  ASSERT_EQ(item->owning_target.value(), "//:target");
+  auto item = result.ir.get_items_if<ir_proto::Namespace>().front();
+  ASSERT_EQ(item->owning_target(), "//:target");
 }
 
 TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {

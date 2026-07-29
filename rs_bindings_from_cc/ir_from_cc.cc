@@ -41,11 +41,13 @@ static constexpr absl::string_view kVirtualInputPath =
 
 namespace {
 
+namespace ir_proto = ::crubit::rs_bindings_from_cc::ir_proto::flat;
+
 struct UseModFromSrc {
-  UseMod use_mod;
+  ir_proto::Item use_mod_item;
   // The namespace that this UseMod should be added to. If not set, the UseMod
   // is a top-level item.
-  std::optional<Namespace*> enclosing_namespace;
+  std::optional<ir_proto::Namespace*> enclosing_namespace;
 };
 
 absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
@@ -53,29 +55,30 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
     const absl::flat_hash_map<BazelLabel, std::vector<ItemId>>&
         top_level_item_ids,
     const absl::flat_hash_map<ItemId, std::vector<ItemId>>& child_item_ids) {
-  std::vector<Namespace*> all_namespaces = ir.get_items_if<Namespace>();
+  std::vector<ir_proto::Namespace*> all_namespaces =
+      ir.get_items_if<ir_proto::Namespace>();
   absl::flat_hash_map<std::string, ItemId> name_to_top_level_ns;
   absl::flat_hash_set<ItemId> top_level_item_id_set;
   if (auto it = top_level_item_ids.find(ir.current_target);
       it != top_level_item_ids.end()) {
     top_level_item_id_set.insert(it->second.begin(), it->second.end());
   }
-  absl::flat_hash_map<ItemId, Namespace*> id_to_namespace;
+  absl::flat_hash_map<ItemId, ir_proto::Namespace*> id_to_namespace;
   for (auto ns : all_namespaces) {
-    if (ns->owning_target != ir.current_target) {
+    if (ns->owning_target() != ir.current_target.value()) {
       continue;
     }
     // If a namespace is open more than once, we pick the last one of them as
     // it will serve as the canonical namespace without any number suffix in
     // the name.
-    if (top_level_item_id_set.contains(ns->id)) {
-      name_to_top_level_ns[ns->cc_name.Ident()] = ns->id;
+    if (top_level_item_id_set.contains(ItemId(ns->id()))) {
+      name_to_top_level_ns[ns->cc_name().identifier()] = ItemId(ns->id());
     }
-    id_to_namespace.insert({ns->id, ns});
+    id_to_namespace.insert({ItemId(ns->id()), ns});
   }
 
   auto follow_mod_path_to_ns =
-      [&](absl::string_view mod_path) -> std::optional<Namespace*> {
+      [&](absl::string_view mod_path) -> std::optional<ir_proto::Namespace*> {
     if (mod_path.empty()) {
       return std::nullopt;
     }
@@ -96,7 +99,7 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
         for (auto child_id : child_it->second) {
           if (auto ns_it = id_to_namespace.find(child_id);
               ns_it != id_to_namespace.end() &&
-              ns_it->second->cc_name.Ident() == part) {
+              ns_it->second->cc_name().identifier() == part) {
             ns_id = child_id;
             found = true;
             break;
@@ -126,12 +129,14 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
     // name of the file without the `.rs`, but it's also annoying to handle name
     // collisions.
     ItemId id(reinterpret_cast<uintptr_t>(&extra_source_info));
-    UseMod use_mod = UseMod{
-        .path = std::string(extra_source_file_path),
-        .mod_name = Identifier(absl::StrCat("__crubit_mod_", i++)),
-        .id = id,
-    };
-    std::optional<Namespace*> enclosing_namespace = std::nullopt;
+    ir_proto::Item item;
+    auto* use_mod = item.mutable_use_mod();
+    use_mod->set_path(extra_source_file_path);
+    use_mod->mutable_mod_name()->set_identifier(
+        absl::StrCat("__crubit_mod_", i++));
+    use_mod->set_id(id.value());
+
+    std::optional<ir_proto::Namespace*> enclosing_namespace = std::nullopt;
     if (!mod_path.empty()) {
       if (auto ns = follow_mod_path_to_ns(mod_path); ns.has_value()) {
         enclosing_namespace = std::move(ns);
@@ -143,7 +148,7 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
       }
     }
     use_mods.push_back(UseModFromSrc{
-        .use_mod = std::move(use_mod),
+        .use_mod_item = std::move(item),
         .enclosing_namespace = std::move(enclosing_namespace),
     });
   }
@@ -155,23 +160,21 @@ absl::Status AddUseModToIr(
     IR& ir, absl::Span<const std::string> extra_rs_srcs,
     absl::flat_hash_map<BazelLabel, std::vector<ItemId>>& top_level_item_ids,
     absl::flat_hash_map<ItemId, std::vector<ItemId>>& child_item_ids) {
-  // We have to reserve the space for the new items here because below we store
-  // pointers to the Namespace items in the `UseModFromSrc`. If we reserve the
-  // space after creating the `UseModFromSrc`, the pointers might be
-  // invalidated.
-  ir.items.reserve(ir.items.size() + extra_rs_srcs.size());
   CRUBIT_ASSIGN_OR_RETURN(
       std::vector<UseModFromSrc> use_mods,
       CreateUseModsFromExtraRustSrcs(ir, extra_rs_srcs, top_level_item_ids,
                                      child_item_ids));
   for (auto& use_mod_from_src : use_mods) {
-    ir.items.push_back(std::move(use_mod_from_src.use_mod));
+    ItemId use_mod_id(use_mod_from_src.use_mod_item.use_mod().id());
     if (use_mod_from_src.enclosing_namespace.has_value()) {
-      child_item_ids[use_mod_from_src.enclosing_namespace.value()->id]
-          .push_back(use_mod_from_src.use_mod.id);
+      child_item_ids[ItemId(use_mod_from_src.enclosing_namespace.value()->id())]
+          .push_back(use_mod_id);
+      *use_mod_from_src.enclosing_namespace.value()->add_children() =
+          std::move(use_mod_from_src.use_mod_item);
     } else {
-      top_level_item_ids[ir.current_target].push_back(
-          use_mod_from_src.use_mod.id);
+      top_level_item_ids[ir.current_target].push_back(use_mod_id);
+      *(*ir.ir_proto.mutable_top_level_items())[ir.current_target.value()]
+           .add_items() = std::move(use_mod_from_src.use_mod_item);
     }
   }
   return absl::OkStatus();
@@ -256,6 +259,8 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Could not compile header contents");
   }
+
+  invocation.ir_.ir_proto = std::move(invocation.ir_proto_);
 
   absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids =
       invocation.top_level_item_ids_;

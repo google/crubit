@@ -889,11 +889,22 @@ bool IsKnownAttr(const clang::Attr& attr) {
          clang::isa<clang::ReentrantCapabilityAttr>(attr);
 }
 
-std::optional<IR::Item> CXXRecordDeclImporter::Import(
+static ir_proto::StatusOrOptionalString ToFlatProto(
+    const absl::StatusOr<std::optional<std::string>>& unknown_attr) {
+  ir_proto::StatusOrOptionalString proto;
+  if (!unknown_attr.ok()) {
+    proto.set_err(unknown_attr.status().message());
+  } else if (unknown_attr->has_value()) {
+    proto.set_ok_value(**unknown_attr);
+  }
+  return proto;
+}
+
+std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
     clang::CXXRecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
   if (decl_context->isFunctionOrMethod()) {
-    return std::nullopt;
+    return nullptr;
   }
   if (ictx_.HasBeenAlreadySuccessfullyImported(record_decl)) {
     LOG(FATAL)
@@ -903,10 +914,10 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
             "instead. Report this upstream.");
   }
   if (record_decl->isInjectedClassName()) {
-    return std::nullopt;
+    return nullptr;
   }
   if (record_decl->isImplicit()) {
-    return std::nullopt;
+    return nullptr;
   }
   if (clang::isa<clang::ClassTemplatePartialSpecializationDecl>(record_decl)) {
     return ictx_.ImportUnsupportedItem(
@@ -916,10 +927,10 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   }
 
   if (record_decl->isInvalidDecl()) {
-    return std::nullopt;
+    return nullptr;
   }
 
-  std::optional<IR::Item> attr_error_item;
+  std::unique_ptr<ir_proto::Item> attr_error_item;
   std::optional<std::string> nodiscard;
   std::optional<std::string> deprecated;
   absl::StatusOr<std::optional<std::string>> unknown_attr =
@@ -954,7 +965,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         *record_decl, std::nullopt,
         {FormattedError::FromStatus(std::move(unknown_attr).status())});
   }
-  if (attr_error_item.has_value()) {
+  if (attr_error_item != nullptr) {
     return attr_error_item;
   }
 
@@ -1142,7 +1153,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         named_decl = typedef_decl;
       } else {
         // Skip anonymous structs that don't get a name via typedecl.
-        return std::nullopt;
+        return nullptr;
       }
     }
     CHECK(!named_decl->getName().empty());
@@ -1202,14 +1213,21 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
 
   ictx_.MarkAsSuccessfullyImported(record_decl);
   if (!record_decl->isCompleteDefinition()) {
-    return IncompleteRecord{.cc_name = Identifier(cc_name),
-                            .rs_name = Identifier(rs_name),
-                            .unique_name = ictx_.GetUniqueName(*record_decl),
-                            .id = ictx_.GenerateItemId(record_decl),
-                            .owning_target = std::move(owning_target),
-                            .unknown_attr = *std::move(unknown_attr),
-                            .record_type = *std::move(record_type),
-                            .enclosing_item_id = std::move(enclosing_item_id)};
+    auto item = std::make_unique<ir_proto::Item>();
+    auto* incomplete = item->mutable_incomplete_record();
+    incomplete->mutable_cc_name()->set_identifier(cc_name);
+    incomplete->mutable_rs_name()->set_identifier(rs_name);
+    incomplete->set_unique_name(ictx_.GetUniqueName(*record_decl));
+    incomplete->set_id(ictx_.GenerateItemId(record_decl).value());
+    incomplete->set_owning_target(owning_target.value());
+    if (unknown_attr->has_value()) {
+      incomplete->set_unknown_attr(std::move(**unknown_attr));
+    }
+    incomplete->set_record_type(ToFlatProto(*record_type));
+    if (enclosing_item_id.has_value()) {
+      incomplete->set_enclosing_item_id(enclosing_item_id->value());
+    }
+    return item;
   }
 
   ictx_.sema_.ForceDeclarationOfImplicitMembers(record_decl);
@@ -1303,55 +1321,83 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       }
     }
   }
-  auto record = Record{
-      .rs_name = Identifier(rs_name),
-      .cc_name = Identifier(cc_name),
-      .unique_name = ictx_.GetUniqueName(*record_decl),
-      .mangled_cc_name = ictx_.GetMangledName(record_decl),
-      .id = id,
-      .owning_target = std::move(owning_target),
-      .template_specialization = std::move(template_specialization),
-      .unknown_attr = std::move(*unknown_attr),
-      .doc_comment = std::move(doc_comment),
-      .bridge_type = std::move(bridge_type),
-      .owned_ptr_config = std::move(owned_ptr_config),
-      .source_loc = ictx_.ConvertSourceLocation(source_loc, nullptr),
-      .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
-      .fields = ImportFields(record_decl),
-      .size_align =
-          {
-              .size = layout.getSize().getQuantity(),
-              .alignment = layout.getAlignment().getQuantity(),
-          },
-      .trait_derives = *std::move(trait_derives),
-      .is_derived_class = is_derived_class,
-      .override_alignment = override_alignment,
-      .safety_annotation = *safety_annotation,
-      .copy_constructor = GetCopyCtorSpecialMemberFunc(ictx_, *record_decl),
-      .move_constructor = GetMoveCtorSpecialMemberFunc(ictx_, *record_decl),
-      .destructor = GetDestructorSpecialMemberFunc(*record_decl),
-      .is_trivial_abi = record_decl->canPassInRegisters(),
-      .is_inheritable = !is_effectively_final,
-      .is_abstract = record_decl->isAbstract(),
-      .nodiscard = std::move(nodiscard),
-      .record_type = *record_type,
-      .is_aggregate = record_decl->isAggregate(),
-      .is_canonical_alias =
-          anon_typedef != nullptr || is_canonical_template_alias,
-      .is_explicit_class_template_instantiation_definition =
-          is_explicit_class_template_instantiation_definition,
-      .enclosing_item_id = std::move(enclosing_item_id),
-      .overloads_operator_delete = MayOverloadOperatorDelete(*record_decl),
-      .has_private_or_deleted_operator_delete =
-          HasPrivateOrDeletedOperatorDelete(*record_decl),
-      .detected_formatter = *detected_formatter,
-      .impl_debug = impl_debug,
-      .has_private_pointer_or_reference_fields =
-          has_private_pointer_or_reference_fields,
-      .is_thread_safe = *is_thread_safe,
-      .lifetime_inputs = std::move(lifetime_inputs),
-      .deprecated = std::move(deprecated),
-  };
+
+  auto fields = ImportFields(record_decl);
+
+  auto item = std::make_unique<ir_proto::Item>();
+  auto* record = item->mutable_record();
+  record->mutable_rs_name()->set_identifier(rs_name);
+  record->mutable_cc_name()->set_identifier(cc_name);
+  record->set_unique_name(ictx_.GetUniqueName(*record_decl));
+  record->set_mangled_cc_name(ictx_.GetMangledName(record_decl));
+  record->set_id(id.value());
+  record->set_owning_target(owning_target.value());
+  if (template_specialization.has_value()) {
+    *record->mutable_template_specialization() =
+        template_specialization->ToFlatProto();
+  }
+  if (unknown_attr->has_value()) {
+    record->set_unknown_attr(std::move(**unknown_attr));
+  }
+  if (doc_comment.has_value()) {
+    record->set_doc_comment(std::move(*doc_comment));
+  }
+  if (bridge_type.has_value()) {
+    *record->mutable_bridge_type() = bridge_type->ToFlatProto();
+  }
+  if (owned_ptr_config.has_value()) {
+    *record->mutable_owned_ptr_config() = owned_ptr_config->ToFlatProto();
+  }
+  record->set_source_loc(ictx_.ConvertSourceLocation(source_loc, nullptr));
+  for (auto& base : GetUnambiguousPublicBases(*record_decl)) {
+    *record->add_unambiguous_public_bases() = std::move(base);
+  }
+  for (auto& field : fields) {
+    *record->add_fields() = std::move(field);
+  }
+  record->mutable_size_align()->set_size(layout.getSize().getQuantity());
+  record->mutable_size_align()->set_alignment(
+      layout.getAlignment().getQuantity());
+  *record->mutable_trait_derives() = trait_derives->ToFlatProto();
+  record->set_is_derived_class(is_derived_class);
+  record->set_override_alignment(override_alignment);
+  record->set_safety_annotation(ToFlatProto(*safety_annotation));
+  record->set_copy_constructor(
+      ToFlatProto(GetCopyCtorSpecialMemberFunc(ictx_, *record_decl)));
+  record->set_move_constructor(
+      ToFlatProto(GetMoveCtorSpecialMemberFunc(ictx_, *record_decl)));
+  record->set_destructor(
+      ToFlatProto(GetDestructorSpecialMemberFunc(*record_decl)));
+  record->set_is_trivial_abi(record_decl->canPassInRegisters());
+  record->set_is_inheritable(!is_effectively_final);
+  record->set_is_abstract(record_decl->isAbstract());
+  if (nodiscard.has_value()) {
+    record->set_nodiscard(std::move(*nodiscard));
+  }
+  record->set_record_type(ToFlatProto(*record_type));
+  record->set_is_aggregate(record_decl->isAggregate());
+  record->set_is_canonical_alias(anon_typedef != nullptr ||
+                                 is_canonical_template_alias);
+  record->set_is_explicit_class_template_instantiation_definition(
+      is_explicit_class_template_instantiation_definition);
+  if (enclosing_item_id.has_value()) {
+    record->set_enclosing_item_id(enclosing_item_id->value());
+  }
+  record->set_overloads_operator_delete(
+      MayOverloadOperatorDelete(*record_decl));
+  record->set_has_private_or_deleted_operator_delete(
+      HasPrivateOrDeletedOperatorDelete(*record_decl));
+  record->set_detected_formatter(*detected_formatter);
+  record->set_impl_debug(impl_debug);
+  record->set_has_private_pointer_or_reference_fields(
+      has_private_pointer_or_reference_fields);
+  record->set_is_thread_safe(*is_thread_safe);
+  for (const auto& lifetime_input : lifetime_inputs) {
+    record->add_lifetime_inputs(lifetime_input);
+  }
+  if (deprecated.has_value()) {
+    record->set_deprecated(std::move(*deprecated));
+  }
 
   // If the align attribute was attached to the typedef decl, we should
   // apply it to the generated record.
@@ -1363,13 +1409,12 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (anon_typedef != nullptr) {
     auto* aligned = anon_typedef->getAttr<clang::AlignedAttr>();
     if (aligned) {
-      int64_t& size = record.size_align.size;
-      int64_t& alignment = record.size_align.alignment;
-      alignment =
+      int64_t size = record->size_align().size();
+      int64_t alignment =
           ictx_.ctx_.toCharUnitsFromBits(aligned->getAlignment(ictx_.ctx_))
               .getQuantity();
-      record.override_alignment = true;
-
+      record->mutable_size_align()->set_alignment(alignment);
+      record->set_override_alignment(true);
       // If it has alignment, update the `record->size` to the aligned
       // one, because that size is going to be used as this record's
       // canonical size in IR and in the binding code.
@@ -1383,16 +1428,17 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       // `alignment - 1` and doing &~ with it effectively rounds it up
       // to the next multiple of the alignment.
       size = (size + alignment - 1) & ~(alignment - 1);
+      record->mutable_size_align()->set_size(size);
     }
   }
-  return record;
+  return item;
 }
 
-std::vector<Field> CXXRecordDeclImporter::ImportFields(
+std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
     clang::CXXRecordDecl* record_decl) {
   clang::AccessSpecifier default_access =
       record_decl->isClass() ? clang::AS_private : clang::AS_public;
-  std::vector<Field> fields;
+  std::vector<ir_proto::Field> fields;
   const clang::ASTRecordLayout& layout =
       ictx_.ctx_.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
@@ -1432,11 +1478,9 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
     if (field_record) {
       // If it is a record as a direct member, its item must be already
       // imported.
-      auto item = ictx_.GetImportedItem(field_record);
-      if (item.has_value()) {
-        if (const auto* record = std::get_if<Record>(&item.value())) {
-          is_inheritable = record->is_inheritable;
-        }
+      const auto* item = ictx_.GetImportedItem(field_record);
+      if (item && item->has_record()) {
+        is_inheritable = item->record().is_inheritable();
       }
     }
 
@@ -1460,26 +1504,40 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
           return false;
         });
 
-    fields.push_back(
-        {.rust_identifier = GetTranslatedFieldName(field_decl),
-         .cpp_identifier = StringRefToOptionalIdentifier(field_decl->getName()),
-         .doc_comment = ictx_.GetComment(field_decl),
-         .type = std::move(type),
-         .access = TranslateAccessSpecifier(access),
-         .offset = layout.getFieldOffset(field_decl->getFieldIndex()),
-         .size = size,
-         .unknown_attr = unknown_attr,
-         .is_no_unique_address =
-             field_decl->hasAttr<clang::NoUniqueAddressAttr>(),
-         .is_bitfield = field_decl->isBitField(),
-         .is_inheritable = is_inheritable,
-         .is_mutable = field_decl->isMutable(),
-         .deprecated = std::move(deprecated)});
+    ir_proto::Field proto_field;
+    if (auto rust_id = GetTranslatedFieldName(field_decl);
+        rust_id.has_value()) {
+      *proto_field.mutable_rust_identifier() = rust_id->ToFlatProto();
+    }
+    if (auto cpp_id = StringRefToOptionalIdentifier(field_decl->getName());
+        cpp_id.has_value()) {
+      *proto_field.mutable_cpp_identifier() = cpp_id->ToFlatProto();
+    }
+    if (auto comment = ictx_.GetComment(field_decl); comment.has_value()) {
+      proto_field.set_doc_comment(*comment);
+    }
+    *proto_field.mutable_type() = type.ToFlatProto();
+    proto_field.set_access(ToFlatProto(TranslateAccessSpecifier(access)));
+    proto_field.set_offset(layout.getFieldOffset(field_decl->getFieldIndex()));
+    proto_field.set_size(size);
+    if (!unknown_attr.ok() || unknown_attr->has_value()) {
+      *proto_field.mutable_unknown_attr() = ToFlatProto(unknown_attr);
+    }
+    proto_field.set_is_no_unique_address(
+        field_decl->hasAttr<clang::NoUniqueAddressAttr>());
+    proto_field.set_is_bitfield(field_decl->isBitField());
+    proto_field.set_is_inheritable(is_inheritable);
+    proto_field.set_is_mutable(field_decl->isMutable());
+    if (deprecated.has_value()) {
+      proto_field.set_deprecated(std::move(*deprecated));
+    }
+    fields.push_back(std::move(proto_field));
   }
   return fields;
 }
 
-std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
+std::vector<ir_proto::BaseClass>
+CXXRecordDeclImporter::GetUnambiguousPublicBases(
     const clang::CXXRecordDecl& record_decl) const {
   // This function is unfortunate: the only way to correctly get information
   // about the bases is lookupInBases. It runs a complex O(N^3) algorithm for
@@ -1489,7 +1547,7 @@ std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
   // So we need to call lookupInBases once per class, making this O(N^4).
 
   llvm::SmallPtrSet<const clang::CXXRecordDecl*, 4> seen;
-  std::vector<BaseClass> bases;
+  std::vector<ir_proto::BaseClass> bases;
   clang::CXXBasePaths paths;
   // the const cast is a common pattern, apparently, see e.g.
   // https://clang.llvm.org/doxygen/CXXInheritance_8cpp_source.html#l00074
@@ -1548,9 +1606,13 @@ std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
       }
       CHECK((!offset.has_value() || *offset >= 0) &&
             "Concrete base classes should have non-negative offsets.");
-      bases.push_back(
-          BaseClass{.base_record_id = ictx_.GenerateItemId(base_record_decl),
-                    .offset = offset});
+      ir_proto::BaseClass base_class;
+      base_class.set_base_record_id(
+          ictx_.GenerateItemId(base_record_decl).value());
+      if (offset.has_value()) {
+        base_class.set_offset(*offset);
+      }
+      bases.push_back(std::move(base_class));
       break;
     }
   }

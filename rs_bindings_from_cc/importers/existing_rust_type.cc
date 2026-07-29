@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/existing_rust_type.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -244,7 +245,7 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
 }
 }  // namespace
 
-std::optional<IR::Item> ExistingRustTypeImporter::Import(
+std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
     clang::TypeDecl* type_decl) {
   absl::StatusOr<std::optional<CrubitInternalRustType>> opt_attr =
       GetCrubitInternalRustTypeAttr(ictx_, *type_decl);
@@ -260,7 +261,7 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
             std::move(opt_attr).status().message()));
   }
   if (!opt_attr->has_value()) {
-    return std::nullopt;
+    return nullptr;
   }
   const auto [format_string, format_args] = **std::move(opt_attr);
   absl::StatusOr<bool> is_same_abi = GetIsSameAbiAttribute(type_decl);
@@ -274,7 +275,7 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
   clang::ASTContext& context = type_decl->getASTContext();
   clang::QualType cc_qualtype = context.getTypeDeclType(type_decl);
   const clang::Type* cpp_type = cc_qualtype.getTypePtr();
-  if (cpp_type == nullptr) return std::nullopt;
+  if (cpp_type == nullptr) return nullptr;
   // Tag keywords (e.g. `struct`, `class`, `union`) are suppressed so we get
   // `Foo` instead of `struct Foo`.
   clang::PrintingPolicy policy(context.getLangOpts());
@@ -283,26 +284,27 @@ std::optional<IR::Item> ExistingRustTypeImporter::Import(
 
   ictx_.MarkAsSuccessfullyImported(type_decl);
 
-  std::optional<SizeAlign> size_align;
-  if (!cpp_type->isIncompleteType()) {
-    size_align = SizeAlign{
-        .size = context.getTypeSizeInChars(cpp_type).getQuantity(),
-        .alignment = context.getTypeAlignInChars(cpp_type).getQuantity(),
-    };
+  auto item = std::make_unique<ir_proto::Item>();
+  auto* existing = item->mutable_existing_rust_type();
+  existing->set_rs_name(std::move(format_string));
+  existing->set_cc_name(std::move(cc_name));
+  existing->set_unique_name(ictx_.GetUniqueName(*type_decl));
+  for (const auto& arg : format_args) {
+    *existing->add_template_args() = arg.ToFlatProto();
   }
-  return ExistingRustType{
-      .rs_name = std::move(format_string),
-      .cc_name = std::move(cc_name),
-      .unique_name = ictx_.GetUniqueName(*type_decl),
-      .template_args = std::move(format_args),
-      .owning_target = ictx_.GetOwningTarget(type_decl),
-      .size_align = std::move(size_align),
-      .is_same_abi = *is_same_abi,
-      .id = ictx_.GenerateItemId(type_decl),
-      .impl_debug = ictx_.IsRecordImplDebugEnabledForTarget(
-                        ictx_.GetOwningTarget(type_decl)) &&
-                    ictx_.ImplementsCoreFmtDebug(*type_decl),
-  };
+  existing->set_owning_target(ictx_.GetOwningTarget(type_decl).value());
+  if (!cpp_type->isIncompleteType()) {
+    auto* size_align = existing->mutable_size_align();
+    size_align->set_size(context.getTypeSizeInChars(cpp_type).getQuantity());
+    size_align->set_alignment(
+        context.getTypeAlignInChars(cpp_type).getQuantity());
+  }
+  existing->set_is_same_abi(*is_same_abi);
+  existing->set_id(ictx_.GenerateItemId(type_decl).value());
+  existing->set_impl_debug(ictx_.IsRecordImplDebugEnabledForTarget(
+                               ictx_.GetOwningTarget(type_decl)) &&
+                           ictx_.ImplementsCoreFmtDebug(*type_decl));
+  return item;
 }
 
 }  // namespace crubit

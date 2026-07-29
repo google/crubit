@@ -248,16 +248,16 @@ std::optional<std::string> GetFunctionSourceText(
 
 }  // namespace
 
-std::optional<IR::Item> FunctionDeclImporter::Import(
+std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     clang::FunctionDecl* function_decl) {
-  if (!ictx_.IsFromCurrentTarget(function_decl)) return std::nullopt;
-  if (function_decl->isDeleted()) return std::nullopt;
+  if (!ictx_.IsFromCurrentTarget(function_decl)) return nullptr;
+  if (function_decl->isDeleted()) return nullptr;
   const bool only_import_types =
       ictx_.IsFeatureEnabledForCurrentTarget("types") &&
       !ictx_.IsFeatureEnabledForCurrentTarget("supported");
   if (!must_bind_ && only_import_types &&
       FunctionNameIsIdentifier(*function_decl)) {
-    return std::nullopt;
+    return nullptr;
   }
   if (FunctionInStdOrSystemHeaderWithReservedName(*function_decl)) {
     return ictx_.ImportUnsupportedItem(
@@ -277,7 +277,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       case clang::AS_none:
         // No need for IR to include Func representing private methods.
         // TODO(b/475810473): Revisit this for protected methods.
-        return std::nullopt;
+        return nullptr;
     }
   }
 
@@ -484,7 +484,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
   }
 
-  std::vector<FuncParam> params;
+  std::vector<ir_proto::FuncParam> params;
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (!ictx_.HasBeenAlreadySuccessfullyImported(method_decl->getParent())) {
@@ -538,11 +538,10 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       ApplyRefQualifierToThisPointer(this_param_type,
                                      method_decl->getRefQualifier(),
                                      assumed_lifetimes_enabled);
-      params.push_back(
-          {.type = std::move(this_param_type),
-           .identifier = Identifier("__this"),
-           // TODO(b/319524852): catch `[[clang::lifetimebound]]` on `this`.
-           .unknown_attr = {}});
+      ir_proto::FuncParam this_param;
+      *this_param.mutable_type() = this_param_type.ToFlatProto();
+      this_param.mutable_identifier()->set_identifier("__this");
+      // TODO(b/319524852): catch `[[clang::lifetimebound]]` on `this`.
       if (assumed_lifetimes_enabled && !method_decl->getType().isNull()) {
         auto clang_annotations =
             CollectClangLifetimeAnnotationsForMemberFunctionType(
@@ -554,14 +553,14 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
               clang_annotations.status().message()));
         } else {
           if (clang_annotations->lifetimebound) {
-            params.back().clang_lifetimebound = true;
+            this_param.set_clang_lifetimebound(true);
           }
-          if (!clang_annotations->lifetime_capture_by.empty()) {
-            params.back().clang_lifetime_capture_by =
-                std::move(clang_annotations->lifetime_capture_by);
+          for (const auto& cap : clang_annotations->lifetime_capture_by) {
+            this_param.add_clang_lifetime_capture_by(cap);
           }
         }
       }
+      params.push_back(std::move(this_param));
     }
   }
 
@@ -591,25 +590,30 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       errors.Add(FormattedError::FromStatus(std::move(unknown_attr).status()));
       continue;
     }
-    params.push_back({.type = std::move(param_type),
-                      .identifier = *std::move(param_name),
-                      .unknown_attr = *std::move(unknown_attr)});
+
+    ir_proto::FuncParam proto_param;
+    *proto_param.mutable_type() = param_type.ToFlatProto();
+    proto_param.mutable_identifier()->set_identifier(param_name->Ident());
+    if (unknown_attr->has_value()) {
+      proto_param.set_unknown_attr(std::move(**unknown_attr));
+    }
 
     if (assumed_lifetimes_enabled) {
       auto lifetimebound = param->specific_attrs<clang::LifetimeBoundAttr>();
       if (!lifetimebound.empty()) {
-        params.back().clang_lifetimebound = true;
+        proto_param.set_clang_lifetimebound(true);
       }
       auto lifetime_capture_by =
           param->specific_attrs<clang::LifetimeCaptureByAttr>();
       if (!lifetime_capture_by.empty()) {
         for (const clang::LifetimeCaptureByAttr* attr : lifetime_capture_by) {
-          for (const auto& param : attr->params()) {
-            params.back().clang_lifetime_capture_by.push_back(param);
+          for (const auto& p : attr->params()) {
+            proto_param.add_clang_lifetime_capture_by(p);
           }
         }
       }
     }
+    params.push_back(std::move(proto_param));
   }
 
   bool undeduced_return_type =
@@ -650,18 +654,21 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     all_free_lifetimes = lifetimes->AllFreeLifetimes();
   }
 
-  std::vector<LifetimeName> lifetime_params;
+  std::vector<ir_proto::LifetimeName> lifetime_params;
+  lifetime_params.reserve(all_free_lifetimes.size());
   for (clang::tidy::lifetimes::Lifetime lifetime : all_free_lifetimes) {
     std::optional<llvm::StringRef> name =
         lifetime_symbol_table.LookupLifetime(lifetime);
     CHECK(name.has_value());
-    lifetime_params.push_back(
-        {.name = name->str(), .id = LifetimeId(lifetime.Id())});
+    ir_proto::LifetimeName l_name;
+    l_name.set_name(name->str());
+    l_name.set_id(lifetime.Id());
+    lifetime_params.push_back(std::move(l_name));
   }
-  llvm::sort(lifetime_params,
-             [](const LifetimeName& l1, const LifetimeName& l2) {
-               return l1.name < l2.name;
-             });
+  llvm::sort(lifetime_params, [](const ir_proto::LifetimeName& l1,
+                                 const ir_proto::LifetimeName& l2) {
+    return l1.name() < l2.name();
+  });
 
   bool is_inline = false;
   bool is_defined = false;
@@ -683,27 +690,25 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     errors.Add(FormattedError::Static("Inline function is not defined"));
   }
 
-  std::optional<InstanceMethodMetadata> instance_metadata;
+  std::optional<ir_proto::InstanceMethodMetadata> instance_metadata;
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (method_decl->isInstance()) {
-      InstanceMethodMetadata::ReferenceQualification reference;
+      ir_proto::InstanceMethodMetadata meta;
       switch (method_decl->getRefQualifier()) {
         case clang::RQ_LValue:
-          reference = InstanceMethodMetadata::kLValue;
+          meta.set_reference(ir_proto::InstanceMethodMetadata::L_VALUE);
           break;
         case clang::RQ_RValue:
-          reference = InstanceMethodMetadata::kRValue;
+          meta.set_reference(ir_proto::InstanceMethodMetadata::R_VALUE);
           break;
         case clang::RQ_None:
-          reference = InstanceMethodMetadata::kUnqualified;
+          meta.set_reference(ir_proto::InstanceMethodMetadata::UNQUALIFIED);
           break;
       }
-      instance_metadata = InstanceMethodMetadata{
-          .reference = reference,
-          .is_const = method_decl->isConst(),
-          .is_virtual = method_decl->isVirtual(),
-      };
+      meta.set_is_const(method_decl->isConst());
+      meta.set_is_virtual(method_decl->isVirtual());
+      instance_metadata = std::move(meta);
     }
   }
 
@@ -806,40 +811,65 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
                             function_decl, ictx_.invocation_.carcinize());
 
   auto name_info = function_decl->getNameInfo();
-  return Func{
-      .cc_name = translated_name->cc_identifier,
-      .rs_name = translated_name->rs_identifier(),
-      .unique_name = ictx_.GetUniqueName(*function_decl),
-      .owning_target = ictx_.GetOwningTarget(function_decl),
-      .doc_comment = std::move(doc_comment),
-      .mangled_name = ictx_.GetMangledName(function_decl),
-      .return_type = *std::move(return_type),
-      .params = std::move(params),
-      .lifetime_params = std::move(lifetime_params),
-      .is_inline = is_inline,
-      .instance_method_metadata = std::move(instance_metadata),
-      .is_extern_c = function_decl->isExternC(),
-      .is_noreturn = function_decl->isNoReturn(),
-      .is_variadic = function_decl->isVariadic(),
-      .is_consteval = function_decl->isConsteval(),
-      .nodiscard = std::move(nodiscard),
-      .deprecated = std::move(deprecated),
-      .unknown_attr = *std::move(unknown_attr),
-      .has_c_calling_convention = has_c_calling_convention,
-      .is_member_or_descendant_of_class_template =
-          is_member_or_descendant_of_class_template,
-      .safety_annotation = safety_annotation,
-      .source_loc =
-          ictx_.ConvertSourceLocation(function_decl->getBeginLoc(), &name_info),
-      .id = ictx_.GenerateItemId(function_decl),
-      .enclosing_item_id = *std::move(enclosing_item_id),
-      .adl_enclosing_record = adl_enclosing_record,
-      .lifetime_inputs = std::move(lifetime_inputs),
-      .inline_cpp_source_text = std::move(source_text),
-      .is_compiler_generated =
-          function_decl != nullptr &&
-          (function_decl->isImplicit() || function_decl->isDefaulted()),
-  };
+  auto item = std::make_unique<ir_proto::Item>();
+  auto* func = item->mutable_func();
+  *func->mutable_cc_name() =
+      crubit::ToFlatProto(translated_name->cc_identifier);
+  *func->mutable_rs_name() =
+      crubit::ToFlatProto(translated_name->rs_identifier());
+  func->set_unique_name(ictx_.GetUniqueName(*function_decl));
+  func->set_owning_target(ictx_.GetOwningTarget(function_decl).value());
+  if (doc_comment.has_value()) {
+    func->set_doc_comment(*doc_comment);
+  }
+  func->set_mangled_name(ictx_.GetMangledName(function_decl));
+  *func->mutable_return_type() = return_type->ToFlatProto();
+  for (auto& param : params) {
+    *func->add_params() = std::move(param);
+  }
+  for (auto& l_param : lifetime_params) {
+    *func->add_lifetime_params() = std::move(l_param);
+  }
+  func->set_is_inline(is_inline);
+  if (instance_metadata.has_value()) {
+    *func->mutable_instance_method_metadata() = std::move(*instance_metadata);
+  }
+  func->set_is_extern_c(function_decl->isExternC());
+  func->set_is_noreturn(function_decl->isNoReturn());
+  func->set_is_variadic(function_decl->isVariadic());
+  func->set_is_consteval(function_decl->isConsteval());
+  if (nodiscard.has_value()) {
+    func->set_nodiscard(std::move(*nodiscard));
+  }
+  if (deprecated.has_value()) {
+    func->set_deprecated(std::move(*deprecated));
+  }
+  if (unknown_attr->has_value()) {
+    func->set_unknown_attr(std::move(**unknown_attr));
+  }
+  func->set_has_c_calling_convention(has_c_calling_convention);
+  func->set_is_member_or_descendant_of_class_template(
+      is_member_or_descendant_of_class_template);
+  func->set_safety_annotation(ToFlatProto(safety_annotation));
+  func->set_source_loc(
+      ictx_.ConvertSourceLocation(function_decl->getBeginLoc(), &name_info));
+  func->set_id(ictx_.GenerateItemId(function_decl).value());
+  if (enclosing_item_id->has_value()) {
+    func->set_enclosing_item_id((*enclosing_item_id)->value());
+  }
+  if (adl_enclosing_record.has_value()) {
+    func->set_adl_enclosing_record(adl_enclosing_record->value());
+  }
+  for (const auto& lifetime_input : lifetime_inputs) {
+    func->add_lifetime_inputs(lifetime_input);
+  }
+  if (source_text.has_value()) {
+    func->set_inline_cpp_source_text(*source_text);
+  }
+  func->set_is_compiler_generated(
+      function_decl != nullptr &&
+      (function_decl->isImplicit() || function_decl->isDefaulted()));
+  return item;
 }
 
 }  // namespace crubit
