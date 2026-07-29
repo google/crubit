@@ -15,6 +15,30 @@ use rustc_trait_selection::infer::TyCtxtInferExt;
 use rustc_trait_selection::traits::ObligationCtxt;
 use std::collections::{HashMap, HashSet};
 
+#[cfg_accessible(rustc_middle::ty::GenericPredicates)]
+type GenericClauses<'tcx> = ty::GenericPredicates<'tcx>;
+
+#[cfg_accessible(rustc_middle::ty::GenericClauses)]
+type GenericClauses<'tcx> = ty::GenericClauses<'tcx>;
+
+trait GenericClausesExt<'tcx> {
+    fn clauses(&self) -> &[(ty::Clause<'tcx>, rustc_span::Span)];
+}
+
+#[cfg_accessible(rustc_middle::ty::GenericPredicates)]
+impl<'tcx> GenericClausesExt<'tcx> for ty::GenericPredicates<'tcx> {
+    fn clauses(&self) -> &[(ty::Clause<'tcx>, rustc_span::Span)] {
+        self.predicates
+    }
+}
+
+#[cfg_accessible(rustc_middle::ty::GenericClauses)]
+impl<'tcx> GenericClausesExt<'tcx> for ty::GenericClauses<'tcx> {
+    fn clauses(&self) -> &[(ty::Clause<'tcx>, rustc_span::Span)] {
+        self.clauses
+    }
+}
+
 /// Implementation of `BindingsGenerator::get_generic_args`.
 pub fn get_generic_args<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -22,7 +46,10 @@ pub fn get_generic_args<'tcx>(
 ) -> Result<ty::GenericArgsRef<'tcx>> {
     let tcx = db.tcx();
     let generics = tcx.generics_of(fn_def_id);
+    #[cfg_accessible(rustc_middle::ty::GenericPredicates)]
     let predicates = tcx.predicates_of(fn_def_id);
+    #[cfg_accessible(rustc_middle::ty::GenericClauses)]
+    let predicates = tcx.clauses_of(fn_def_id);
 
     // See the doc comment for `unused_generic_param` in
     // `test/functions/functions.rs` for an explanation why we currently don't
@@ -96,7 +123,7 @@ pub fn get_generic_args<'tcx>(
 fn get_replacement_for_trait_predicate<'tcx>(
     db: &BindingsGenerator<'tcx>,
     trait_predicate: ty::TraitPredicate<'tcx>,
-    predicates: ty::GenericPredicates<'tcx>,
+    predicates: GenericClauses<'tcx>,
     new_anon_lifetime: impl Fn() -> ty::Region<'tcx>,
     is_used_in_return_type: bool,
 ) -> Option<Ty<'tcx>> {
@@ -143,7 +170,7 @@ fn get_replacement_for_trait_predicate<'tcx>(
 fn get_replacement_for_ctor_trait<'tcx>(
     db: &BindingsGenerator<'tcx>,
     trait_ref: ty::TraitRef<'tcx>,
-    predicates: ty::GenericPredicates<'tcx>,
+    predicates: GenericClauses<'tcx>,
     new_anon_lifetime: &impl Fn() -> ty::Region<'tcx>,
     is_used_in_return_type: bool,
 ) -> Option<Ty<'tcx>> {
@@ -161,7 +188,7 @@ fn get_replacement_for_ctor_trait<'tcx>(
 
     // 2. Iterate over the predicates and look for projections.
     let output_ty = predicates
-        .predicates
+        .clauses()
         .iter()
         .filter_map(|(clause, _)| {
             if let ty::ClauseKind::Projection(projection_predicate) = clause.kind().skip_binder() {
@@ -200,7 +227,7 @@ fn get_replacement_for_ctor_trait<'tcx>(
 fn is_valid_replacement_for_generic_type_param<'tcx>(
     infcx: &InferCtxt<'tcx>,
     def_id: DefId,
-    predicates: ty::GenericPredicates<'tcx>,
+    predicates: GenericClauses<'tcx>,
     generic_param: &ty::GenericParamDef,
     new_ty: Ty<'tcx>,
 ) -> bool {
@@ -232,14 +259,14 @@ fn is_valid_replacement_for_generic_type_param<'tcx>(
 fn get_replacement_for_generic_type_param<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
-    predicates: ty::GenericPredicates<'tcx>,
+    predicates: GenericClauses<'tcx>,
     generic_type_param: &ty::GenericParamDef,
     is_used_in_return_type: bool,
 ) -> Option<Ty<'tcx>> {
     let tcx = db.tcx();
     // Look only at trait predicates involving this param (e.g. `T: SomeTrait`).
     let trait_predicates_for_this_generic_param = predicates
-        .predicates
+        .clauses()
         .iter()
         .filter_map(|(clause, _)| match clause.kind().skip_binder() {
             ty::ClauseKind::Trait(trait_predicate) => Some(trait_predicate),
