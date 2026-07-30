@@ -122,6 +122,9 @@ pub struct CrubitAttrs {
 
     /// Whether the annotated item corresponds to a C++-originated thread-safe type.
     pub cpp_thread_safe: bool,
+
+    /// Whether the annotated item should be skipped during C++ bindings generation.
+    pub do_not_bind: bool,
 }
 
 impl CrubitAttrs {
@@ -137,6 +140,7 @@ impl CrubitAttrs {
     pub const SPECIALIZES_CPP_TYPE: &'static str = "specializes_cpp_type";
     pub const SAME_ABI: &'static str = "same_abi";
     pub const CPP_ORIGINATED_THREAD_SAFE: &'static str = "cpp_thread_safe";
+    pub const DO_NOT_BIND: &'static str = "do_not_bind";
 
     fn add_attr(&mut self, name: &str, symbol: Symbol) -> Result<()> {
         let set_opt_once = |slot: &mut Option<Symbol>, symbol: Symbol| -> Result<()> {
@@ -168,6 +172,7 @@ impl CrubitAttrs {
             CrubitAttrs::SPECIALIZES_CPP_TYPE => set_bool_once(&mut self.specializes_cpp_type)?,
             CrubitAttrs::SAME_ABI => set_bool_once(&mut self.same_abi)?,
             CrubitAttrs::CPP_ORIGINATED_THREAD_SAFE => set_bool_once(&mut self.cpp_thread_safe)?,
+            CrubitAttrs::DO_NOT_BIND => set_bool_once(&mut self.do_not_bind)?,
             _ => bail!("Invalid CRUBIT_ANNOTATE key: \"{name}\""),
         }
         Ok(())
@@ -405,6 +410,12 @@ pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
         let key = key.trim();
         let value = value.trim();
         crubit_attrs.add_attr(key, Symbol::intern(value))?;
+    }
+    if crubit_attrs.do_not_bind {
+        ensure!(
+            matches!(tcx.def_kind(did), DefKind::Fn | DefKind::AssocFn),
+            "`do_not_bind` is explicitly only permitted on functions and methods"
+        )
     }
     Ok(crubit_attrs)
 }

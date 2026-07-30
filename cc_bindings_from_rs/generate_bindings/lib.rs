@@ -80,6 +80,10 @@ fn support_header<'tcx>(db: &BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcIn
 }
 
 pub(crate) fn should_receive_bindings<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> bool {
+    let attributes = crubit_attr::get_attrs(db.tcx(), def_id).unwrap_or_default();
+    if attributes.do_not_bind {
+        return false;
+    }
     let def_span = db.tcx().def_span(def_id);
     let filepath = db.tcx().sess.source_map().span_to_filename(def_span);
     let file_name = filepath.prefer_local_unconditionally().to_string();

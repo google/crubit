@@ -416,3 +416,21 @@ pub fn cpp_thread_safe(attribute: TokenStream, input: TokenStream) -> TokenStrea
         key_value_to_doc_comment("cpp_thread_safe", "")
     })
 }
+
+/// The `#[crubit_annotate::do_not_bind]` attribute indicates that Crubit should not generate
+/// C++ bindings for the annotated Rust item.
+#[proc_macro_attribute]
+pub fn do_not_bind(attribute: TokenStream, input: TokenStream) -> TokenStream {
+    make_prefix_for(input, || {
+        if !attribute.is_empty() {
+            return TokenStream::from(
+                syn::Error::new(
+                    attribute.into_iter().next().unwrap().span().into(),
+                    "The `do_not_bind` annotation does not accept any arguments.",
+                )
+                .into_compile_error(),
+            );
+        }
+        key_value_to_doc_comment("do_not_bind", "")
+    })
+}
