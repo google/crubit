@@ -158,13 +158,13 @@ def _get_additional_rust_deps(aspect_ctx):
             )
     return collections.uniq(additional_rust_deps)
 
-def _get_cc_support_deps(aspect_ctx):
-    cc_support_deps = []
+def _get_generated_cpp_support_deps(aspect_ctx):
+    generated_cpp_support_deps = []
     for hint in aspect_ctx.rule.attr.aspect_hints:
         if AdditionalRustSrcsProviderInfo in hint:
             info = hint[AdditionalRustSrcsProviderInfo]
-            cc_support_deps.extend(info.cc_support_deps)
-    return cc_support_deps
+            generated_cpp_support_deps.extend(info.generated_cpp_support_deps)
+    return generated_cpp_support_deps
 
 def _collect_hdrs(ctx, crubit_features):
     public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
@@ -334,7 +334,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     extra_deps = []
     aliases = {}
 
-    cc_support_deps = _get_cc_support_deps(ctx)
+    generated_cpp_support_deps = _get_generated_cpp_support_deps(ctx)
 
     # Headers for which we will produce bindings.
     public_hdrs = []
@@ -417,9 +417,9 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
                 aliases[dep] = crubit_encode_raw_string_as_crate_name(str(dep.label))
 
     compilation_context = target[CcInfo].compilation_context
-    if cc_support_deps:
+    if generated_cpp_support_deps:
         compilation_context = cc_common.merge_cc_infos(
-            cc_infos = [target[CcInfo]] + cc_support_deps,
+            cc_infos = [target[CcInfo]] + generated_cpp_support_deps,
         ).compilation_context
 
     extra_named_deps = depset(transitive = [
@@ -448,7 +448,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             d.cc_info
             for d in binding_infos
             if d.cc_info
-        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file + cc_support_deps,
+        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file + generated_cpp_support_deps,
         deps_for_rs_file = depset(
             direct = [
                 d.dep_variant_info

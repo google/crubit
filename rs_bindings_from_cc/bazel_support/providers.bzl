@@ -17,7 +17,7 @@ generated Rust bindings of this C++ target.
                 "linking a native library.",
         "cc_deps": "List of DepVariantInfo of cc_library targets whose crubit-generated bindings " +
                    "will be linked to this library target.",
-        "cc_support_deps": "List of CcInfo of support libraries for generated C++ code.",
+        "generated_cpp_support_deps": "List of CcInfo of support libraries for generated C++ code.",
         "unstable_rust_features": "List of unstable rustc features to enable via `#![feature(...)]`.",
         "cpp_srcs": "List of C++ source files to be concatenated to the Crubit-generated C++ source.",
         "root_namespaces": "List of C++ namespaces to re-export at the root of the generated Rust bindings.",

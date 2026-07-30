@@ -75,6 +75,7 @@ def make_additional_rust_srcs_provider(
         cpp_srcs,
         deps,
         cc_deps,
+        generated_cpp_support_deps = [],
         cc_support_deps = [],
         unstable_rust_features = [],
         root_namespaces = []):
@@ -83,9 +84,9 @@ def make_additional_rust_srcs_provider(
         namespace_path = namespace_path,
         deps = _get_additional_rust_deps_variant_info(deps),
         cc_deps = _get_additional_cc_deps_variant_info(cc_deps),
-        cc_support_deps = [
+        generated_cpp_support_deps = [
             dep[CcInfo]
-            for dep in cc_support_deps
+            for dep in (generated_cpp_support_deps + cc_support_deps)
         ],
         cpp_srcs = cpp_srcs,
         unstable_rust_features = unstable_rust_features,
@@ -99,6 +100,7 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         ctx.attr.cpp_srcs,
         ctx.attr.deps,
         ctx.attr.cc_deps,
+        ctx.attr.generated_cpp_support_deps,
         ctx.attr.cc_support_deps,
         ctx.attr.unstable_rust_features,
         ctx.attr.root_namespaces,
@@ -131,6 +133,10 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
             default = [],
             aspects = [rust_bindings_from_cc_aspect],
         ),
+        "generated_cpp_support_deps": attr.label_list(
+            mandatory = False,
+            default = [],
+        ),
         "cc_support_deps": attr.label_list(
             mandatory = False,
             default = [],
@@ -158,6 +164,7 @@ def additional_rust_srcs_for_crubit_bindings(
         namespace_path = "",
         deps = [],
         cc_deps = [],
+        generated_cpp_support_deps = [],
         cc_support_deps = [],
         unstable_rust_features = [],
         crubit_features = SUPPORTED_FEATURES,
@@ -182,10 +189,12 @@ def additional_rust_srcs_for_crubit_bindings(
             deps as rust_library.
         cc_deps: List of cc_library targets whose crubit-generated bindings will be made available
             to this library target.
-        cc_support_deps: List of cc_library targets of support libraries for generated C++ code.
+        generated_cpp_support_deps: List of cc_library targets of support libraries for generated C++ code.
             For example, C++ types that have composable bridging should define their supporting
             Crubit ABI types here so they're available to generated code without being exposed to
             Crubit.
+        cc_support_deps: Deprecated. Use generated_cpp_support_deps instead.
+        root_namespaces: List of C++ namespaces to re-export at the root of the generated Rust bindings.
         unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
         crubit_features: List of Crubit features to enable.
         **kwargs: Args passed through to the underlying rule (visibility, etc.).
@@ -198,6 +207,7 @@ def additional_rust_srcs_for_crubit_bindings(
         namespace_path = namespace_path,
         deps = deps,
         cc_deps = cc_deps,
+        generated_cpp_support_deps = generated_cpp_support_deps,
         cc_support_deps = cc_support_deps,
         unstable_rust_features = unstable_rust_features,
         crubit_features = crubit_features,

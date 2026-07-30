@@ -28,8 +28,8 @@ cc_library(
 additional_rust_srcs_for_crubit_bindings(
     name = "additional_rust_srcs",
     srcs = ["additional_rust_srcs.rs"],
-    cc_support_deps = [":other_library"],
     cpp_srcs = ["additional_cpp_srcs.cc"],
+    generated_cpp_support_deps = [":other_library"],
 )
 
 # Tests that additional Rust sources and C++ sources can be passed to Crubit and reference each other.
