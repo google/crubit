@@ -21,7 +21,7 @@ using rs_bindings_from_cc::generate_bindings::GenerateBindingsRequest;
 using rs_bindings_from_cc::generate_bindings::GenerateBindingsResponse;
 
 absl::StatusOr<Bindings> GenerateBindings(
-    const IR& ir, absl::string_view crubit_support_path_format,
+    IR ir, absl::string_view crubit_support_path_format,
     absl::string_view crubit_support_versioned_path_format,
     absl::string_view clang_format_exe_path, absl::string_view rustfmt_exe_path,
     absl::string_view rustfmt_config_path, bool generate_error_report,
@@ -29,7 +29,7 @@ absl::StatusOr<Bindings> GenerateBindings(
     absl::string_view kythe_default_corpus) {
   GenerateBindingsRequest request;
 
-  *request.mutable_ir_proto() = ir;
+  *request.mutable_ir_proto() = std::move(ir);
   request.set_crubit_support_path_format(crubit_support_path_format);
   request.set_crubit_support_versioned_path_format(
       crubit_support_versioned_path_format);

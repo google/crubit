@@ -121,15 +121,6 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
 
   bool generate_error_report = !args.error_report_out.empty();
 
-  CRUBIT_ASSIGN_OR_RETURN(
-      Bindings bindings,
-      GenerateBindings(ir, args.crubit_support_path_format,
-                       args.crubit_support_versioned_path_format,
-                       args.clang_format_exe_path, args.rustfmt_exe_path,
-                       args.rustfmt_config_path, generate_error_report,
-                       args.is_golden_test, args.kythe_annotations,
-                       args.kythe_default_corpus));
-
   absl::flat_hash_map<Identifier, Identifier> instantiations;
   if (const auto* absl_nullable ns =
           FindNamespace(ir, kInstantiationsNamespaceName)) {
@@ -141,11 +132,26 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
            Identifier(std::string(record->rs_name().identifier()))});
     }
   }
-
   auto top_level_namespaces = crubit::CollectNamespaces(ir);
 
+  IR ir_out;
+  // In development builds, if `--ir-out` is specified, copy the IR to be
+  // returned in the output.
+  if (!args.ir_out.empty()) {
+    ir_out = ir;
+  }
+
+  CRUBIT_ASSIGN_OR_RETURN(
+      Bindings bindings,
+      GenerateBindings(std::move(ir), args.crubit_support_path_format,
+                       args.crubit_support_versioned_path_format,
+                       args.clang_format_exe_path, args.rustfmt_exe_path,
+                       args.rustfmt_config_path, generate_error_report,
+                       args.is_golden_test, args.kythe_annotations,
+                       args.kythe_default_corpus));
+
   return BindingsAndMetadata{
-      .ir = ir,
+      .ir = std::move(ir_out),
       .rs_api = bindings.rs_api,
       .rs_api_impl = bindings.rs_api_impl,
       .namespaces = std::move(top_level_namespaces),
