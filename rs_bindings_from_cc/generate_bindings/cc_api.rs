@@ -7,17 +7,21 @@ use database::code_snippet::Bindings;
 use error_report::{ErrorReport, ErrorReporting, FatalErrors, SourceLanguage};
 use generate_bindings::generate_bindings as inner_generate_bindings;
 use generate_bindings_rust_proto::{GenerateBindingsRequest, GenerateBindingsResponseMut};
+use protobuf::TakeFrom;
 use std::ffi::OsString;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::process;
 
 pub fn generate_bindings(
-    request: GenerateBindingsRequest,
+    mut request: GenerateBindingsRequest,
     mut response: GenerateBindingsResponseMut<'_>,
 ) {
+    assert!(request.as_view().has_ir_proto(), "Request should have provided a valid IR protobuf.");
+    let mut ir_proto = ir_rust_proto::IRProto::new();
+    ir_proto.take_from(request.as_mut().ir_proto_mut());
+
     let request_view = request.as_view();
-    assert!(request_view.has_ir_proto(), "Request should have provided a valid IR protobuf.");
-    let ir = ir::proto_to_ir(request_view.ir_proto())
+    let ir = ir::proto_to_ir(ir_proto.as_view())
         .with_context(|| "Failed to deserialize IRProto".to_string())
         .unwrap();
     let crubit_support_path_format: &str = request_view

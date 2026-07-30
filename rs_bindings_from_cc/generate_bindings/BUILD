@@ -63,6 +63,7 @@ rust_library(
         "//common:arc_anyhow",
         "//common:error_report",
         "//rs_bindings_from_cc:ir",
+        "//rs_bindings_from_cc:ir_rust_proto",
         "//rs_bindings_from_cc/generate_bindings/database",
         "@protobuf//rust:protobuf",
     ],
