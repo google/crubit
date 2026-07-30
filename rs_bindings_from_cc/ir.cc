@@ -425,31 +425,4 @@ flat_proto::FormattedError FormattedError::ToFlatProto() const {
   return proto;
 }
 
-// We explicitly call .Reserve() on large AST subset Protobuf collections.
-// This is necessary for proto generation because `RepeatedPtrField` can
-// re-allocate memory continuously for large item counts, unlike standard C++
-// containers.
-void IR::ToFlatProto(flat_proto::IRProto* proto) const {
-  *proto = ir_proto;
-  proto->mutable_public_headers()->Reserve(public_headers.size());
-  for (const auto& h : public_headers)
-    *proto->add_public_headers() = h.ToFlatProto();
-  proto->set_current_target(current_target.value());
-
-  if (!crate_root_path.empty()) proto->set_crate_root_path(crate_root_path);
-  for (const auto& [target, features] : crubit_features) {
-    auto& set = (*proto->mutable_crubit_features())[target.value()];
-    std::vector<std::string> sorted_features(features.begin(), features.end());
-    absl::c_sort(sorted_features);
-    set.mutable_features()->Add(sorted_features.begin(), sorted_features.end());
-  }
-  for (const auto& [target, name] : crate_names) {
-    (*proto->mutable_crate_names())[target.value()] = name;
-  }
-  proto->mutable_unstable_rust_features()->Add(unstable_rust_features.begin(),
-                                               unstable_rust_features.end());
-  proto->mutable_reexported_namespaces()->Add(reexported_namespaces.begin(),
-                                              reexported_namespaces.end());
-}
-
 }  // namespace crubit

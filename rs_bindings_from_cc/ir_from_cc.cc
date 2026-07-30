@@ -53,11 +53,11 @@ struct UseModFromSrc {
 absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
     IR& ir, absl::Span<const std::string> extra_rs_srcs) {
   std::vector<ir_proto::Namespace*> all_namespaces =
-      ir.get_items_if<ir_proto::Namespace>();
+      get_items_if<ir_proto::Namespace>(ir);
   absl::flat_hash_map<std::string, ItemId> name_to_top_level_ns;
   absl::flat_hash_set<ItemId> top_level_item_id_set;
-  if (auto it = ir.ir_proto.top_level_items().find(ir.current_target.value());
-      it != ir.ir_proto.top_level_items().end()) {
+  if (auto it = ir.top_level_items().find(ir.current_target());
+      it != ir.top_level_items().end()) {
     for (const auto& item : it->second.items()) {
       if (item.has_namespace_decl()) {
         top_level_item_id_set.insert(ItemId(item.namespace_decl().id()));
@@ -66,7 +66,7 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
   }
   absl::flat_hash_map<ItemId, ir_proto::Namespace*> id_to_namespace;
   for (auto ns : all_namespaces) {
-    if (ns->owning_target() != ir.current_target.value()) {
+    if (ns->owning_target() != ir.current_target()) {
       continue;
     }
     // If a namespace is open more than once, we pick the last one of them as
@@ -171,8 +171,8 @@ absl::Status AddUseModToIr(IR& ir,
       *use_mod_from_src.enclosing_namespace.value()->add_children() =
           std::move(use_mod_from_src.use_mod_item);
     } else {
-      *(*ir.ir_proto.mutable_top_level_items())[ir.current_target.value()]
-           .add_items() = std::move(use_mod_from_src.use_mod_item);
+      *(*ir.mutable_top_level_items())[ir.current_target()].add_items() =
+          std::move(use_mod_from_src.use_mod_item);
     }
   }
   return absl::OkStatus();
@@ -258,19 +258,17 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
                         "Could not compile header contents");
   }
 
-  invocation.ir_.ir_proto = std::move(invocation.ir_proto_);
-
   if (absl::Status status =
           AddUseModToIr(invocation.ir_, options.extra_rs_srcs);
       !status.ok()) {
     return status;
   }
-  invocation.ir_.reexported_namespaces =
-      std::vector<std::string>(options.reexported_namespaces.begin(),
-                               options.reexported_namespaces.end());
-  invocation.ir_.unstable_rust_features.assign(
-      options.unstable_rust_features.begin(),
-      options.unstable_rust_features.end());
+  for (const auto& ns : options.reexported_namespaces) {
+    invocation.ir_.add_reexported_namespaces(ns);
+  }
+  for (const auto& feature : options.unstable_rust_features) {
+    invocation.ir_.add_unstable_rust_features(feature);
+  }
   return invocation.ir_;
 }
 

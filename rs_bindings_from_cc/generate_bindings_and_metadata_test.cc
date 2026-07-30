@@ -61,12 +61,12 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
                                   /*virtual_headers_contents_for_testing=*/
                                   {{HeaderName("a.h"), "namespace ns{}"}}));
 
-  ASSERT_EQ(result.ir.public_headers.size(), 1);
-  ASSERT_EQ(result.ir.public_headers.front().IncludePath(), "a.h");
+  ASSERT_EQ(result.ir.public_headers_size(), 1);
+  ASSERT_EQ(result.ir.public_headers(0).name(), "a.h");
   ASSERT_EQ(result.error_report, "");
 
   // Check that IR items have the proper owning target set.
-  auto item = result.ir.get_items_if<ir_proto::Namespace>().front();
+  auto item = get_items_if<ir_proto::Namespace>(result.ir).front();
   ASSERT_EQ(item->owning_target(), "//:target");
 }
 

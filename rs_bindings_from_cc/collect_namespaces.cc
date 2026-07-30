@@ -145,20 +145,20 @@ class NamespaceTrie {
 
 // Returns the current target's namespace hierarchy in JSON serializable format.
 NamespacesHierarchy CollectNamespaces(const IR& ir) {
-  auto all_namespaces = ir.get_items_if<ir_proto::Namespace>();
+  auto all_namespaces = get_items_if<ir_proto::Namespace>(ir);
   absl::flat_hash_map<ItemId, const ir_proto::Namespace*> id_to_namespace;
   for (auto ns : all_namespaces) {
     // We are not interested in namespaces from different targets.
-    if (ns->owning_target() != ir.current_target.value()) {
+    if (ns->owning_target() != ir.current_target()) {
       continue;
     }
     id_to_namespace.insert({ItemId(ns->id()), ns});
   }
 
-  NamespaceTrie trie(ir.current_target, id_to_namespace);
-  auto target_it =
-      ir.ir_proto.top_level_items().find(ir.current_target.value());
-  if (target_it != ir.ir_proto.top_level_items().end()) {
+  NamespaceTrie trie(BazelLabel(std::string(ir.current_target())),
+                     id_to_namespace);
+  auto target_it = ir.top_level_items().find(ir.current_target());
+  if (target_it != ir.top_level_items().end()) {
     for (const auto& item : target_it->second.items()) {
       if (item.has_namespace_decl()) {
         auto it = id_to_namespace.find(ItemId(item.namespace_decl().id()));

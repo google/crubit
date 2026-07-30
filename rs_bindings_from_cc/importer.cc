@@ -1082,7 +1082,7 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   // preserves the source order recorded in top_level_item_ids_.
   for (const auto& [target, item_ids] : invocation_.top_level_item_ids_) {
     auto& target_items =
-        (*invocation_.ir_proto_.mutable_top_level_items())[target.value()];
+        (*invocation_.ir_.mutable_top_level_items())[target.value()];
     for (ItemId id : item_ids) {
       auto it = id_to_item.find(id);
       // Remove any unsupported alien (to the current target) items.
@@ -1093,21 +1093,6 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
         target_items.add_items()->CopyFrom(*it->second);
       }
     }
-  }
-
-  invocation_.ir_proto_.set_current_target(invocation_.target_.value());
-  for (const auto& header : invocation_.public_headers_) {
-    *invocation_.ir_proto_.add_public_headers() = header.ToFlatProto();
-  }
-  for (const auto& [target, features] : invocation_.ir_.crubit_features) {
-    auto& set =
-        (*invocation_.ir_proto_.mutable_crubit_features())[target.value()];
-    std::vector<std::string> sorted_features(features.begin(), features.end());
-    absl::c_sort(sorted_features);
-    set.mutable_features()->Add(sorted_features.begin(), sorted_features.end());
-  }
-  for (const auto& [target, name] : invocation_.ir_.crate_names) {
-    (*invocation_.ir_proto_.mutable_crate_names())[target.value()] = name;
   }
 }
 
@@ -1503,9 +1488,11 @@ bool Importer::IsFromProtoTarget(const clang::Decl& decl) const {
 
 bool Importer::IsFeatureEnabledForTarget(const BazelLabel& label,
                                          absl::string_view feature) const {
-  if (auto i = invocation_.ir_.crubit_features.find(label);
-      i != invocation_.ir_.crubit_features.end()) {
-    return i->second.contains(feature);
+  if (auto i = invocation_.ir_.crubit_features().find(label.value());
+      i != invocation_.ir_.crubit_features().end()) {
+    for (const auto& f : i->second.features()) {
+      if (f == feature) return true;
+    }
   }
   return false;
 }
@@ -1705,9 +1692,9 @@ absl::StatusOr<std::optional<bool>> Importer::DetectFormatterForType(
 }
 
 bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {
-  if (auto i = invocation_.ir_.crubit_features.find(label);
-      i != invocation_.ir_.crubit_features.end()) {
-    return !i->second.empty();
+  if (auto i = invocation_.ir_.crubit_features().find(label.value());
+      i != invocation_.ir_.crubit_features().end()) {
+    return i->second.features_size() > 0;
   }
   // TODO(b/471240594): This is a hack for this specific header. We need to
   // properly fix target assignment for Crubit support libraries.

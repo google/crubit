@@ -33,7 +33,7 @@ namespace ir_proto = ::crubit::rs_bindings_from_cc::ir_proto::flat;
 
 const ir_proto::Namespace* absl_nullable FindNamespace(const IR& ir,
                                                        absl::string_view name) {
-  for (const auto* ns : ir.get_items_if<ir_proto::Namespace>()) {
+  for (const auto* ns : get_items_if<ir_proto::Namespace>(ir)) {
     if (ns->cc_name().identifier() == kInstantiationsNamespaceName) {
       return ns;
     }
@@ -44,7 +44,7 @@ const ir_proto::Namespace* absl_nullable FindNamespace(const IR& ir,
 std::vector<const ir_proto::Record* absl_nonnull> FindInstantiationsInNamespace(
     const IR& ir, ItemId namespace_id) {
   absl::flat_hash_set<ItemId> record_ids;
-  for (const auto* type_alias : ir.get_items_if<ir_proto::TypeAlias>()) {
+  for (const auto* type_alias : get_items_if<ir_proto::TypeAlias>(ir)) {
     if (ItemId(type_alias->enclosing_item_id()) == namespace_id) {
       CHECK(type_alias->underlying_type().has_decl());
       record_ids.insert(ItemId(type_alias->underlying_type().decl()));
@@ -52,7 +52,7 @@ std::vector<const ir_proto::Record* absl_nonnull> FindInstantiationsInNamespace(
   }
 
   std::vector<const ir_proto::Record* absl_nonnull> result;
-  for (const auto* record : ir.get_items_if<ir_proto::Record>()) {
+  for (const auto* record : get_items_if<ir_proto::Record>(ir)) {
     if (record_ids.find(ItemId(record->id())) != record_ids.end()) {
       result.push_back(record);
     }
@@ -116,7 +116,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
                  .carcinize = args.carcinize}));
 
   if (!args.instantiations_out.empty()) {
-    ir.crate_root_path = "__cc_template_instantiations_rs_api";
+    ir.set_crate_root_path("__cc_template_instantiations_rs_api");
   }
 
   bool generate_error_report = !args.error_report_out.empty();

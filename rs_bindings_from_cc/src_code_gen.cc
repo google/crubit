@@ -29,7 +29,7 @@ absl::StatusOr<Bindings> GenerateBindings(
     absl::string_view kythe_default_corpus) {
   GenerateBindingsRequest request;
 
-  ir.ToFlatProto(request.mutable_ir_proto());
+  *request.mutable_ir_proto() = ir;
   request.set_crubit_support_path_format(crubit_support_path_format);
   request.set_crubit_support_versioned_path_format(
       crubit_support_versioned_path_format);

@@ -5,6 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_DECL_IMPORTER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_DECL_IMPORTER_H_
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -66,11 +67,21 @@ class Invocation {
     CHECK(!public_headers_.empty());
     CHECK(!header_targets_.empty());
 
-    ir_.public_headers.insert(ir_.public_headers.end(), public_headers_.begin(),
-                              public_headers.end());
-    ir_.current_target = target_;
-    ir_.crubit_features = std::move(crubit_features);
-    ir_.crate_names = std::move(crate_names);
+    for (const auto& header : public_headers_) {
+      *ir_.add_public_headers() = header.ToFlatProto();
+    }
+    ir_.set_current_target(target_.value());
+    for (const auto& [target, features] : crubit_features) {
+      auto& set = (*ir_.mutable_crubit_features())[target.value()];
+      std::vector<std::string> sorted_features(features.begin(),
+                                               features.end());
+      std::sort(sorted_features.begin(), sorted_features.end());
+      set.mutable_features()->Add(sorted_features.begin(),
+                                  sorted_features.end());
+    }
+    for (const auto& [target, name] : crate_names) {
+      (*ir_.mutable_crate_names())[target.value()] = name;
+    }
   }
 
   // Returns the target of a header, if any.
@@ -93,7 +104,6 @@ class Invocation {
   const std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist_;
 
   // The main output of the import process
-  ir_proto::IRProto ir_proto_;
   IR ir_;
 
   // Transient map of top level items used to build the tree.
@@ -189,8 +199,8 @@ class ImportContext {
                                  /*is_hard_error=*/false);
   }
 
-  // Convenience overload for `ImportUnsupportedItem` constructing `Path`
-  // directly from an unqualified identifier.
+  // Convenience overload for `ImportUnsupportedItem` constructing a `Path`
+  // directly from an unqualified enclosing item path.
   std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
       const clang::Decl& decl, UnqualifiedIdentifier ident,
       std::optional<ItemId> enclosing_item_id,

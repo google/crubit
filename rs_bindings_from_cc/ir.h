@@ -625,111 +625,78 @@ T* absl_nullable get_item_if(ir_proto::Item& item) {
   }
 }
 
-struct IR {
-  void ToFlatProto(ir_proto::IRProto* proto) const;
-
-  template <typename T>
-  std::vector<const T* absl_nonnull> get_items_if() const {
-    std::vector<const T* absl_nonnull> filtered_items;
-    auto process_item = [&](auto& self, const ir_proto::Item& item) -> void {
-      if (const T* val = get_item_if<T>(item)) {
-        filtered_items.push_back(val);
-      }
-      if (item.has_record()) {
-        for (const auto& child : item.record().children()) {
-          self(self, child);
-        }
-      } else if (item.has_namespace_decl()) {
-        for (const auto& child : item.namespace_decl().children()) {
-          self(self, child);
-        }
-      }
-    };
-
-    // Sort target keys to iterate `top_level_items()` deterministically, this
-    // prevents non-deterministic hash bucket ordering from protobuf::Map.
-    std::vector<std::string> target_keys;
-    target_keys.reserve(ir_proto.top_level_items().size());
-    for (const auto& [target, _] : ir_proto.top_level_items()) {
-      target_keys.push_back(target);
+template <typename T>
+std::vector<const T* absl_nonnull> get_items_if(
+    const ir_proto::IRProto& ir_proto) {
+  std::vector<const T* absl_nonnull> filtered_items;
+  auto process_item = [&](auto& self, const ir_proto::Item& item) -> void {
+    if (const T* val = get_item_if<T>(item)) {
+      filtered_items.push_back(val);
     }
-    std::sort(target_keys.begin(), target_keys.end());
-
-    for (const auto& target : target_keys) {
-      const auto& item_list = ir_proto.top_level_items().at(target);
-      for (const auto& item : item_list.items()) {
-        process_item(process_item, item);
+    if (item.has_record()) {
+      for (const auto& child : item.record().children()) {
+        self(self, child);
+      }
+    } else if (item.has_namespace_decl()) {
+      for (const auto& child : item.namespace_decl().children()) {
+        self(self, child);
       }
     }
-    return filtered_items;
+  };
+
+  // Sort target keys to iterate `top_level_items()` deterministically, this
+  // prevents non-deterministic hash bucket ordering from protobuf::Map.
+  std::vector<std::string> target_keys;
+  target_keys.reserve(ir_proto.top_level_items().size());
+  for (const auto& [target, _] : ir_proto.top_level_items()) {
+    target_keys.push_back(target);
   }
+  std::sort(target_keys.begin(), target_keys.end());
 
-  template <typename T>
-  std::vector<T* absl_nonnull> get_items_if() {
-    std::vector<T* absl_nonnull> filtered_items;
-    auto process_item = [&](auto& self, ir_proto::Item& item) -> void {
-      if (T* val = get_item_if<T>(item)) {
-        filtered_items.push_back(val);
-      }
-      if (item.has_record()) {
-        for (auto& child : *item.mutable_record()->mutable_children()) {
-          self(self, child);
-        }
-      } else if (item.has_namespace_decl()) {
-        for (auto& child : *item.mutable_namespace_decl()->mutable_children()) {
-          self(self, child);
-        }
-      }
-    };
-
-    std::vector<std::string> target_keys;
-    target_keys.reserve(ir_proto.top_level_items().size());
-    for (const auto& [target, _] : ir_proto.top_level_items()) {
-      target_keys.push_back(target);
+  for (const auto& target : target_keys) {
+    const auto& item_list = ir_proto.top_level_items().at(target);
+    for (const auto& item : item_list.items()) {
+      process_item(process_item, item);
     }
-    std::sort(target_keys.begin(), target_keys.end());
-
-    for (const auto& target : target_keys) {
-      auto& item_list = (*ir_proto.mutable_top_level_items())[target];
-      for (auto& item : *item_list.mutable_items()) {
-        process_item(process_item, item);
-      }
-    }
-    return filtered_items;
   }
-
-  // Collection of public headers that were used to construct the AST this `IR`.
-  //
-  // In production, these come from the `--public_headers` cmdline flag.
-  // Note that the order of the headers might be significant and needs to be
-  // preserved.
-  std::vector<HeaderName> public_headers;
-  BazelLabel current_target;
-  ir_proto::IRProto ir_proto;
-
-  // Empty string signals that the bindings should be generated in the crate
-  // root. This is the default state.
-  //
-  // Non-empty value represents the name of the first-level submodule inside of
-  // which bindings should be generated. This is how we generate bindings for
-  // class template instantiations - we put all generated bindings into a hidden
-  // module of the user crate so everything can be compiled in one rustc
-  // invocation (this enables us to access types introduced in the user crate
-  // for template instantiations in the future).
-  std::string crate_root_path;
-
-  absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
-      crubit_features;
-
-  absl::flat_hash_map<BazelLabel, std::string> crate_names;
-
-  std::vector<std::string> reexported_namespaces;
-  std::vector<std::string> unstable_rust_features;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
-  return o << ir.ir_proto.ShortDebugString();
+  return filtered_items;
 }
+
+template <typename T>
+std::vector<T* absl_nonnull> get_items_if(ir_proto::IRProto& ir_proto) {
+  std::vector<T* absl_nonnull> filtered_items;
+  auto process_item = [&](auto& self, ir_proto::Item& item) -> void {
+    if (T* val = get_item_if<T>(item)) {
+      filtered_items.push_back(val);
+    }
+    if (item.has_record()) {
+      for (auto& child : *item.mutable_record()->mutable_children()) {
+        self(self, child);
+      }
+    } else if (item.has_namespace_decl()) {
+      for (auto& child : *item.mutable_namespace_decl()->mutable_children()) {
+        self(self, child);
+      }
+    }
+  };
+
+  std::vector<std::string> target_keys;
+  target_keys.reserve(ir_proto.top_level_items().size());
+  for (const auto& [target, _] : ir_proto.top_level_items()) {
+    target_keys.push_back(target);
+  }
+  std::sort(target_keys.begin(), target_keys.end());
+
+  for (const auto& target : target_keys) {
+    auto& item_list = (*ir_proto.mutable_top_level_items())[target];
+    for (auto& item : *item_list.mutable_items()) {
+      process_item(process_item, item);
+    }
+  }
+  return filtered_items;
+}
+
+using IR = ir_proto::IRProto;
 
 }  // namespace crubit
 

@@ -118,7 +118,7 @@ std::optional<int64_t> GetItemId(const ir_proto::Item& item) {
 }
 
 std::optional<ItemId> DeclIdForRecord(const IR& ir, absl::string_view rs_name) {
-  for (const Record* record : ir.get_items_if<Record>()) {
+  for (const Record* record : get_items_if<Record>(ir)) {
     if (record->rs_name().identifier() == rs_name) {
       return ItemId(record->id());
     }
@@ -135,7 +135,7 @@ absl::StatusOr<IR> IrFromCcWithRecordImplDebug(
 }
 
 std::optional<Item> FindItemById(const IR& ir, ItemId id) {
-  for (const auto& [target, item_list] : ir.ir_proto.top_level_items()) {
+  for (const auto& [target, item_list] : ir.top_level_items()) {
     for (const auto& item : item_list.items()) {
       if (GetItemId(item) == id.value()) return item;
     }
@@ -432,7 +432,7 @@ std::vector<Item> ItemsWithoutBuiltins(const IR& ir) {
     }
   };
 
-  for (const auto& [target, item_list] : ir.ir_proto.top_level_items()) {
+  for (const auto& [target, item_list] : ir.top_level_items()) {
     for (const auto& item : item_list.items()) {
       process_item(process_item, item);
     }
@@ -441,8 +441,8 @@ std::vector<Item> ItemsWithoutBuiltins(const IR& ir) {
 }
 
 std::vector<ir_proto::Item> GetTopLevelItems(const IR& ir) {
-  auto it = ir.ir_proto.top_level_items().find(ir.current_target.value());
-  if (it == ir.ir_proto.top_level_items().end()) {
+  auto it = ir.top_level_items().find(ir.current_target());
+  if (it == ir.top_level_items().end()) {
     return {};
   }
   return {it->second.items().begin(), it->second.items().end()};
@@ -463,7 +463,7 @@ TEST(ImporterTest, ProtoMessageBridgeType) {
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
   EXPECT_THAT(
-      ir.get_items_if<Record>(),
+      get_items_if<Record>(ir),
       AllOf(Contains(Pointee(Partially(EqualsProto(R"pb(
               rs_name { identifier: "MyMessage" }
               bridge_type { proto_message_bridge { rust_name: "MyMessage" } }
@@ -572,7 +572,7 @@ TEST(ImporterTest, InlineFunc) {
 
 TEST(ImporterTest, InlineUndefinedFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"inline void Foo();"}));
-  EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
+  EXPECT_THAT(get_items_if<UnsupportedItem>(ir),
               ElementsAre(Pointee(HasErrorMessage(
                   HasSubstr("Inline function is not defined")))));
 }
@@ -631,7 +631,7 @@ TEST(ImporterTest, TrivialCopyConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records,
               Each(Pointee(CopyConstructor(SpecialMemberFunc::kTrivial))));
@@ -654,7 +654,7 @@ TEST(ImporterTest, NontrivialUserDefinedCopyConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(CopyConstructor(
                            SpecialMemberFunc::kNontrivialUserDefined))));
@@ -675,7 +675,7 @@ TEST(ImporterTest, NontrivialMembersCopyConstructor) {
     struct Subclass : public MemberImplicit {};
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(
       records,
@@ -698,7 +698,7 @@ TEST(ImporterTest, DeletedCopyConstructor) {
     };
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records,
               Each(Pointee(CopyConstructor(SpecialMemberFunc::kUnavailable))));
@@ -717,7 +717,7 @@ TEST(ImporterTest, PublicCopyConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records,
               Each(Pointee(CopyConstructor(SpecialMemberFunc::kTrivial))));
@@ -735,7 +735,7 @@ TEST(ImporterTest, PrivateCopyConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records,
               Each(Pointee(CopyConstructor(SpecialMemberFunc::kUnavailable))));
@@ -750,7 +750,7 @@ TEST(ImporterTest, TrivialMoveConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records,
               Each(Pointee(MoveConstructor(SpecialMemberFunc::kTrivial))));
@@ -772,7 +772,7 @@ TEST(ImporterTest, NontrivialUserDefinedMoveConstructor) {
         NontrivialUserDefinedDefaulted&&) = default;
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(
                            SpecialMemberFunc::kNontrivialUserDefined))));
@@ -793,7 +793,7 @@ TEST(ImporterTest, NontrivialMembersMoveConstructor) {
     struct Subclass : public MemberImplicit {};
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(
       records,
@@ -816,7 +816,7 @@ TEST(ImporterTest, DeletedMoveConstructor) {
     };
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records,
               Each(Pointee(MoveConstructor(SpecialMemberFunc::kUnavailable))));
@@ -835,7 +835,7 @@ TEST(ImporterTest, PublicMoveConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records,
               Each(Pointee(MoveConstructor(SpecialMemberFunc::kTrivial))));
@@ -853,7 +853,7 @@ TEST(ImporterTest, PrivateMoveConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records,
               Each(Pointee(MoveConstructor(SpecialMemberFunc::kUnavailable))));
@@ -868,7 +868,7 @@ TEST(ImporterTest, TrivialDestructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records, Each(Pointee(Destructor(SpecialMemberFunc::kTrivial))));
 }
@@ -895,7 +895,7 @@ TEST(ImporterTest, NontrivialUserDefinedDestructor) {
         default;
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(
       records,
@@ -917,7 +917,7 @@ TEST(ImporterTest, NontrivialMembersDestructor) {
     struct Subclass : public MemberImplicit {};
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(
       records,
@@ -938,7 +938,7 @@ TEST(ImporterTest, DeletedDestructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records,
               Each(Pointee(Destructor(SpecialMemberFunc::kUnavailable))));
@@ -957,7 +957,7 @@ TEST(ImporterTest, PublicDestructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(Destructor(SpecialMemberFunc::kTrivial))));
 }
@@ -974,7 +974,7 @@ TEST(ImporterTest, PrivateDestructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records,
               Each(Pointee(Destructor(SpecialMemberFunc::kUnavailable))));
@@ -992,7 +992,7 @@ TEST(ImporterTest, TrivialAbi) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(IsTrivialAbi())));
 }
@@ -1005,7 +1005,7 @@ TEST(ImporterTest, NotTrivialAbi) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(1));
   EXPECT_THAT(records, Each(Pointee(Not(IsTrivialAbi()))));
 }
@@ -1084,7 +1084,7 @@ TEST(ImporterTest, RecordItemIds) {
   )cc";
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
 
-  std::vector<const Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = get_items_if<Record>(ir);
   ASSERT_EQ(records.size(), 2);
 
   std::vector<Item> items(records[0]->children().begin(),
@@ -1110,12 +1110,12 @@ TEST(ImporterTest, FailedClassTemplateMethod) {
 
   const UnsupportedItem* unsupported_a = nullptr;
   const TypeAlias* unsupported_b = nullptr;
-  for (auto unsupported_item : ir.get_items_if<UnsupportedItem>()) {
+  for (auto unsupported_item : get_items_if<UnsupportedItem>(ir)) {
     if (unsupported_item->name() == "A") {
       unsupported_a = unsupported_item;
     }
   }
-  for (auto type_alias : ir.get_items_if<TypeAlias>()) {
+  for (auto type_alias : get_items_if<TypeAlias>(ir)) {
     if (type_alias->cc_name().identifier() == "B") {
       unsupported_b = type_alias;
     }
@@ -1187,7 +1187,7 @@ TEST(ImporterTest, DetectsFormatterAsAbslStringify) {
                                struct NoFormatter {};
                              )cc"}));
   EXPECT_THAT(
-      ir.get_items_if<Record>(),
+      get_items_if<Record>(ir),
       AllOf(
           Contains(Pointee(AllOf(RsNameIs("ByRef"), HasDetectedFormatter()))),
           Contains(Pointee(AllOf(RsNameIs("ByValue"), HasDetectedFormatter()))),
@@ -1219,7 +1219,7 @@ TEST(ImporterTest, DetectsFormatterAsOstream) {
              struct NoFormatter {};
            )cc"}));
   EXPECT_THAT(
-      ir.get_items_if<Record>(),
+      get_items_if<Record>(ir),
       AllOf(
           Contains(Pointee(AllOf(RsNameIs("ByRef"), HasDetectedFormatter()))),
           Contains(Pointee(AllOf(RsNameIs("ByValue"), HasDetectedFormatter()))),
@@ -1238,7 +1238,7 @@ TEST(ImporterTest, DetectsFormatterAsPrinterOfBase) {
                                struct Derived : Base {};
                              )cc"}));
   EXPECT_THAT(
-      ir.get_items_if<Record>(),
+      get_items_if<Record>(ir),
       Contains(Pointee(AllOf(RsNameIs("Derived"), HasDetectedFormatter()))));
 }
 
@@ -1254,7 +1254,7 @@ TEST(ImporterTest, DetectsFormatterAsPrinterInCrtpBase) {
                                struct Derived : private Base<Derived> {};
                              )cc"}));
   EXPECT_THAT(
-      ir.get_items_if<Record>(),
+      get_items_if<Record>(ir),
       Contains(Pointee(AllOf(RsNameIs("Derived"), HasDetectedFormatter()))));
 }
 
@@ -1268,7 +1268,7 @@ TEST(ImporterTest, DetectsEnumFormatter) {
                                                 }
                                               )cc"}));
   EXPECT_THAT(
-      ir.get_items_if<Enum>(),
+      get_items_if<Enum>(ir),
       Contains(Pointee(AllOf(RsNameIs("Foo"), HasDetectedFormatter()))));
 }
 
@@ -1281,7 +1281,7 @@ TEST(ImporterTest, DoesNotDetectAbslStringifyMemberFunctionAsFormatter) {
                                };
                              )cc"}));
   EXPECT_THAT(
-      ir.get_items_if<Record>(),
+      get_items_if<Record>(ir),
       Contains(Pointee(AllOf(RsNameIs("Foo"), Not(HasDetectedFormatter())))));
 }
 
@@ -1294,7 +1294,7 @@ TEST(ImporterTest, DoesNotDetectOperatorLeftShiftWrongTypesAsFormatter) {
                   };
                 )cc"}));
   EXPECT_THAT(
-      ir.get_items_if<Record>(),
+      get_items_if<Record>(ir),
       Contains(Pointee(AllOf(RsNameIs("Foo"), Not(HasDetectedFormatter())))));
 }
 
@@ -1325,7 +1325,7 @@ TEST(ImporterTest, OverridesDisplayForRecord) {
                   struct NotFormattable : MaybeFormattable<false> {};
                   struct Formattable : MaybeFormattable<true> {};
                 )cc"}));
-  EXPECT_THAT(ir.get_items_if<Record>(),
+  EXPECT_THAT(get_items_if<Record>(ir),
               AllOf(Contains(Pointee(AllOf(RsNameIs("NotFormattable"),
                                            Not(HasDetectedFormatter())))),
                     Contains(Pointee(AllOf(RsNameIs("Formattable"),
@@ -1353,7 +1353,7 @@ TEST(ImporterTest, OverridesDisplayForEnum) {
                   }
                 )cc"}));
   EXPECT_THAT(
-      ir.get_items_if<Enum>(),
+      get_items_if<Enum>(ir),
       Contains(Pointee(AllOf(RsNameIs("Foo"), HasDetectedFormatter()))));
 }
 
@@ -1366,7 +1366,7 @@ TEST(ImporterTest, OverrideDisplayInconsistent) {
                                       true)]] Inconsistent;
              struct [[clang::annotate("crubit_override_display", false)]] Inconsistent {};
            )cc"}));
-  EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
+  EXPECT_THAT(get_items_if<UnsupportedItem>(ir),
               ElementsAre(Pointee(AllOf(
                   UnsupportedItemNameIs("Inconsistent"),
                   HasErrorMessage(HasSubstr("crubit_override_display"))))));
@@ -1380,7 +1380,7 @@ TEST(ImporterTest, OverrideDisplayMissingArgs) {
                   MissingArgs {};
                 )cc"}));
   EXPECT_THAT(
-      ir.get_items_if<UnsupportedItem>(),
+      get_items_if<UnsupportedItem>(ir),
       ElementsAre(Pointee(AllOf(UnsupportedItemNameIs("MissingArgs"),
                                 HasErrorMessage(HasSubstr("argument"))))));
 }
@@ -1393,7 +1393,7 @@ TEST(ImporterTest, OverrideDisplayMultipleArgs) {
                                    MultipleArgs {};
                                  )cc"}));
   EXPECT_THAT(
-      ir.get_items_if<UnsupportedItem>(),
+      get_items_if<UnsupportedItem>(ir),
       ElementsAre(Pointee(AllOf(UnsupportedItemNameIs("MultipleArgs"),
                                 HasErrorMessage(HasSubstr("argument"))))));
 }
@@ -1405,7 +1405,7 @@ TEST(ImporterTest, OverrideDisplayWrongArgType) {
                   struct [[clang::annotate("crubit_override_display", "foo")]]
                   WrongArgType {};
                 )cc"}));
-  EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
+  EXPECT_THAT(get_items_if<UnsupportedItem>(ir),
               ElementsAre(Pointee(AllOf(UnsupportedItemNameIs("WrongArgType"),
                                         HasErrorMessage(HasSubstr("bool"))))));
 }
@@ -1519,7 +1519,7 @@ TEST(ImporterTest, AssumedLifetimesCapturesImplicitThisLifetimeRvalueRef) {
 TEST(ImporterTest, ImplDebugDefaultTrue) {
   ASSERT_OK_AND_ASSIGN(const IR ir,
                        IrFromCcWithRecordImplDebug("struct S {};"));
-  EXPECT_THAT(ir.get_items_if<Record>(),
+  EXPECT_THAT(get_items_if<Record>(ir),
               ElementsAre(Pointee(AllOf(RsNameIs("S"), ImplDebug()))));
 }
 
@@ -1528,7 +1528,7 @@ TEST(ImporterTest, ImplDebugOverrideFalseIsFalse) {
       const IR ir, IrFromCcWithRecordImplDebug(R"cc(
         struct [[clang::annotate("crubit_override_debug", false)]] S {};
       )cc"));
-  EXPECT_THAT(ir.get_items_if<Record>(),
+  EXPECT_THAT(get_items_if<Record>(ir),
               ElementsAre(Pointee(AllOf(RsNameIs("S"), Not(ImplDebug())))));
 }
 
@@ -1537,7 +1537,7 @@ TEST(ImporterTest, ImplDebugOverrideTrueIsTrue) {
       const IR ir, IrFromCcWithRecordImplDebug(R"cc(
         struct [[clang::annotate("crubit_override_debug", true)]] S {};
       )cc"));
-  EXPECT_THAT(ir.get_items_if<Record>(),
+  EXPECT_THAT(get_items_if<Record>(ir),
               ElementsAre(Pointee(AllOf(RsNameIs("S"), ImplDebug()))));
 }
 
@@ -1546,8 +1546,8 @@ TEST(ImporterTest, ImplDebugUnexpectedArgsMissing) {
                          struct [[clang::annotate("crubit_override_debug")]] S {
                          };
                        )cc"));
-  EXPECT_THAT(ir.get_items_if<Record>(), IsEmpty());
-  EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
+  EXPECT_THAT(get_items_if<Record>(ir), IsEmpty());
+  EXPECT_THAT(get_items_if<UnsupportedItem>(ir),
               ElementsAre(Pointee(
                   AllOf(UnsupportedItemNameIs("S"),
                         HasErrorMessage(HasSubstr("crubit_override_debug"))))));
@@ -1558,8 +1558,8 @@ TEST(ImporterTest, ImplDebugUnexpectedArgsTooMany) {
       const IR ir, IrFromCcWithRecordImplDebug(R"cc(
         struct [[clang::annotate("crubit_override_debug", true, false)]] S {};
       )cc"));
-  EXPECT_THAT(ir.get_items_if<Record>(), IsEmpty());
-  EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
+  EXPECT_THAT(get_items_if<Record>(ir), IsEmpty());
+  EXPECT_THAT(get_items_if<UnsupportedItem>(ir),
               ElementsAre(Pointee(
                   AllOf(UnsupportedItemNameIs("S"),
                         HasErrorMessage(HasSubstr("crubit_override_debug"))))));
@@ -1570,8 +1570,8 @@ TEST(ImporterTest, ImplDebugUnexpectedArgsWrongType) {
       const IR ir, IrFromCcWithRecordImplDebug(R"cc(
         struct [[clang::annotate("crubit_override_debug", "true")]] S {};
       )cc"));
-  EXPECT_THAT(ir.get_items_if<Record>(), IsEmpty());
-  EXPECT_THAT(ir.get_items_if<UnsupportedItem>(),
+  EXPECT_THAT(get_items_if<Record>(ir), IsEmpty());
+  EXPECT_THAT(get_items_if<UnsupportedItem>(ir),
               ElementsAre(Pointee(AllOf(
                   UnsupportedItemNameIs("S"),
                   HasErrorMessage(HasSubstr("must evaluate to a bool"))))));
@@ -1581,7 +1581,7 @@ TEST(ImporterTest, ExistingRustTypeWithoutImplDebug) {
                          struct [[clang::annotate("crubit_internal_rust_type",
                                                   "::my_crate::NoDebug")]] S {};
                        )cc"));
-  EXPECT_THAT(ir.get_items_if<ExistingRustType>(),
+  EXPECT_THAT(get_items_if<ExistingRustType>(ir),
               ElementsAre(Pointee(AllOf(CcNameIs("S"), Not(ImplDebug())))));
 }
 
@@ -1607,7 +1607,7 @@ TEST(ImporterTest, ExistingRustTypeWithImplDebug) {
                          };
                          }  // namespace rs_std
                        )cc"));
-  EXPECT_THAT(ir.get_items_if<ExistingRustType>(),
+  EXPECT_THAT(get_items_if<ExistingRustType>(ir),
               ElementsAre(Pointee(AllOf(CcNameIs("S"), ImplDebug()))));
 }
 
@@ -1622,7 +1622,7 @@ TEST(ImporterTest, RecordTruncatesAndHashesRustNameWhenOver160Chars) {
            )cc"}));
 
   EXPECT_THAT(
-      ir.get_items_if<Record>(),
+      get_items_if<Record>(ir),
       ElementsAre(Pointee(AllOf(
           CcNameIs(
               "LongStructName_123456789_123456789_123456789_123456789_"
