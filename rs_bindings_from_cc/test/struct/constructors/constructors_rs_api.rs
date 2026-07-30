@@ -31,6 +31,14 @@ unsafe impl ::cxx::ExternType for StructWithUserProvidedConstructors {
     type Id = ::cxx::type_id!(":: StructWithUserProvidedConstructors");
     type Kind = ::cxx::kind::Trivial;
 }
+impl ::core::fmt::Debug for StructWithUserProvidedConstructors {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("StructWithUserProvidedConstructors")
+            .field("int_field", &self.int_field)
+            .finish()
+    }
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: StructWithUserProvidedConstructors"),
     crate::StructWithUserProvidedConstructors
@@ -94,6 +102,14 @@ unsafe impl ::cxx::ExternType for StructWithExplicitConversionConstructor {
     type Id = ::cxx::type_id!(":: StructWithExplicitConversionConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
+impl ::core::fmt::Debug for StructWithExplicitConversionConstructor {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("StructWithExplicitConversionConstructor")
+            .field("int_field", &self.int_field)
+            .finish()
+    }
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: StructWithExplicitConversionConstructor"),
     crate::StructWithExplicitConversionConstructor
@@ -136,6 +152,14 @@ impl !Sync for StructWithMultipleConstructors {}
 unsafe impl ::cxx::ExternType for StructWithMultipleConstructors {
     type Id = ::cxx::type_id!(":: StructWithMultipleConstructors");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for StructWithMultipleConstructors {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("StructWithMultipleConstructors")
+            .field("int_field", &self.int_field)
+            .finish()
+    }
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: StructWithMultipleConstructors"),
@@ -230,6 +254,14 @@ unsafe impl ::cxx::ExternType for StructWithImplicitConversionConstructor {
     type Id = ::cxx::type_id!(":: StructWithImplicitConversionConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
+impl ::core::fmt::Debug for StructWithImplicitConversionConstructor {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("StructWithImplicitConversionConstructor")
+            .field("int_field", &self.int_field)
+            .finish()
+    }
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: StructWithImplicitConversionConstructor"),
     crate::StructWithImplicitConversionConstructor
@@ -272,6 +304,11 @@ unsafe impl ::cxx::ExternType for OtherSimpleStruct {
     type Id = ::cxx::type_id!(":: OtherSimpleStruct");
     type Kind = ::cxx::kind::Trivial;
 }
+impl ::core::fmt::Debug for OtherSimpleStruct {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("OtherSimpleStruct").field("int_field", &self.int_field).finish()
+    }
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: OtherSimpleStruct"),
     crate::OtherSimpleStruct
@@ -301,6 +338,14 @@ impl !Sync for StructWithImplicitConversionFromReference {}
 unsafe impl ::cxx::ExternType for StructWithImplicitConversionFromReference {
     type Id = ::cxx::type_id!(":: StructWithImplicitConversionFromReference");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for StructWithImplicitConversionFromReference {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("StructWithImplicitConversionFromReference")
+            .field("int_field", &self.int_field)
+            .finish()
+    }
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: StructWithImplicitConversionFromReference"),
@@ -344,6 +389,14 @@ impl !Sync for StructWithInlineConstructors {}
 unsafe impl ::cxx::ExternType for StructWithInlineConstructors {
     type Id = ::cxx::type_id!(":: StructWithInlineConstructors");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for StructWithInlineConstructors {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("StructWithInlineConstructors")
+            .field("int_field", &self.int_field)
+            .finish()
+    }
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: StructWithInlineConstructors"),
@@ -427,6 +480,14 @@ unsafe impl ::cxx::ExternType for StructWithDeletedConstructors {
     type Id = ::cxx::type_id!(":: StructWithDeletedConstructors");
     type Kind = ::cxx::kind::Opaque;
 }
+impl ::core::fmt::Debug for StructWithDeletedConstructors {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("StructWithDeletedConstructors")
+            .field("int_field", &self.int_field)
+            .finish()
+    }
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: StructWithDeletedConstructors"),
     crate::StructWithDeletedConstructors
@@ -457,6 +518,11 @@ unsafe impl ::cxx::ExternType for StructWithPrivateConstructors {
     type Id = ::cxx::type_id!(":: StructWithPrivateConstructors");
     type Kind = ::cxx::kind::Opaque;
 }
+impl ::core::fmt::Debug for StructWithPrivateConstructors {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("StructWithPrivateConstructors").finish_non_exhaustive()
+    }
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: StructWithPrivateConstructors"),
     crate::StructWithPrivateConstructors
@@ -485,6 +551,15 @@ impl !Sync for StructWithExplicitlyDefaultedConstructors {}
 unsafe impl ::cxx::ExternType for StructWithExplicitlyDefaultedConstructors {
     type Id = ::cxx::type_id!(":: StructWithExplicitlyDefaultedConstructors");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for StructWithExplicitlyDefaultedConstructors {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("StructWithExplicitlyDefaultedConstructors")
+            .field("field_with_explicit_initializer", &self.field_with_explicit_initializer)
+            .field("field_with_no_initializer", &self.field_with_no_initializer)
+            .finish()
+    }
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: StructWithExplicitlyDefaultedConstructors"),
@@ -519,6 +594,14 @@ impl !Sync for NonTrivialStructWithConstructors {}
 unsafe impl ::cxx::ExternType for NonTrivialStructWithConstructors {
     type Id = ::cxx::type_id!(":: NonTrivialStructWithConstructors");
     type Kind = ::cxx::kind::Opaque;
+}
+impl ::core::fmt::Debug for NonTrivialStructWithConstructors {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("NonTrivialStructWithConstructors")
+            .field("int_field", &self.int_field)
+            .finish()
+    }
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: NonTrivialStructWithConstructors"),
@@ -630,6 +713,14 @@ impl !Sync for StructWithUnsafeConstructor {}
 unsafe impl ::cxx::ExternType for StructWithUnsafeConstructor {
     type Id = ::cxx::type_id!(":: StructWithUnsafeConstructor");
     type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for StructWithUnsafeConstructor {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("StructWithUnsafeConstructor")
+            .field("ptr_field", &self.ptr_field)
+            .finish()
+    }
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: StructWithUnsafeConstructor"),

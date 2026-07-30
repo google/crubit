@@ -88,6 +88,22 @@ fn make_rs_field_ident(field: &Field<'_>, field_index: usize) -> Ident {
     }
 }
 
+fn is_debug_formattable(db: &BindingsGenerator, ty: &ir::CcType) -> bool {
+    match ty.variant() {
+        ir::CcTypeVariant::Primitive(_)
+        | ir::CcTypeVariant::Pointer(_)
+        | ir::CcTypeVariant::FuncPointer { .. } => true,
+        ir::CcTypeVariant::Decl { id, .. } => match db.find_decl::<ir::Item>(*id) {
+            Ok(ir::Item::Record(rec)) => rec.impl_debug(),
+            Ok(ir::Item::Enum(_)) => true,
+            Ok(ir::Item::TypeAlias(alias)) => is_debug_formattable(db, &alias.underlying_type()),
+            Ok(ir::Item::ExistingRustType(existing_type)) => existing_type.impl_debug(),
+            _ => false,
+        },
+        ir::CcTypeVariant::Error(_) => false,
+    }
+}
+
 /// Gets the type of `field` for layout purposes.
 ///
 /// Note that `get_field_rs_type_kind_for_layout` may return Err even if
@@ -375,6 +391,8 @@ fn field_definition<'a>(
         visibility,
         ident,
         field_type,
+        is_debug_formattable: field.cpp_identifier().is_some()
+            && is_debug_formattable(db, &field.type_()),
     })
 }
 
@@ -680,6 +698,56 @@ pub fn generate_record<'a>(
     } else {
         None
     };
+    let debug_impl = if record.impl_debug() &&
+    // Keep the `impl Debug for raw_string_view` string_view.rs already defines.
+    !record.is_raw_string_view()
+    {
+        let fields: Vec<database::code_snippet::DebugField> = if record.is_union() {
+            vec![]
+        } else {
+            field_definitions
+                .iter()
+                .filter_map(|field_def| {
+                    let FieldDefinition::Field {
+                        ident,
+                        field_type: FieldType::Type { .. },
+                        is_debug_formattable: true,
+                        ..
+                    } = field_def
+                    else {
+                        return None;
+                    };
+                    let field_name_str = ident.to_string();
+                    let clean_field_name_str = field_name_str.trim_start_matches("r#");
+                    Some(database::code_snippet::DebugField {
+                        name: clean_field_name_str.to_string(),
+                        expr: quote! { &self.#ident },
+                    })
+                })
+                .collect()
+        };
+
+        let fields_exhaustive = field_definitions.iter().all(|field_def| {
+            matches!(
+                field_def,
+                FieldDefinition::Field {
+                    field_type: FieldType::Type { .. },
+                    is_debug_formattable: true,
+                    ..
+                }
+            )
+        });
+
+        Some(database::code_snippet::DebugImpl {
+            ident: ident.clone(),
+            stubbed_lifetime_params: stubbed_lifetime_params.clone(),
+            fields,
+            is_exhaustive: !record.is_union() && !record.is_derived_class() && fields_exhaustive,
+        })
+    } else {
+        None
+    };
+
     let no_unique_address_accessors =
         if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
             cc_struct_no_unique_address_impl(db, &record)?
@@ -774,6 +842,7 @@ pub fn generate_record<'a>(
         incomplete_definition,
         upcast_impls,
         display_impl,
+        debug_impl,
         no_unique_address_accessors,
         items,
         nested_items,

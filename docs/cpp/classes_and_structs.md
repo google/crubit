@@ -114,6 +114,41 @@ Some examples of types that are **not** Rust-movable:
     types used throughout the C++ ecosystem, even outside the standard library.
 *   `absl::Mutex`, `absl::Notification`, and other non-movable types.
 
+## Debug formatting {#debug}
+
+By default, Crubit automatically generates an `impl Debug` for C++ structs and
+classes, unless:
+
+*   The type is abstract i.e., has pure virtual functions, in which case it
+    defaults to *not* implementing `Debug`.
+*   The type explicitly opts out using `CRUBIT_OVERRIDE_DEBUG(false)`.
+
+The generated `impl Debug` formats all [supported fields](#fields) that
+implement `Debug`. If all fields are supported and debug-formattable, and the
+type has no bases, it calls `.finish()` (exhaustive). Otherwise, it calls
+`.finish_non_exhaustive()` to indicate that some C++ details may be omitted
+e.g., unsupported fields, other bases.
+
+### Opting Out or In {#override_debug}
+
+To manually control whether to generate the `impl Debug`, use the
+`CRUBIT_OVERRIDE_DEBUG` macro:
+
+```
+{{ #include ../../support/annotations.h }}
+```
+<!--  symbol:CRUBIT_OVERRIDE_DEBUG -->
+
+
+*   `CRUBIT_OVERRIDE_DEBUG(false)`: Use if the C++ type already has a
+    hand-written Rust `Debug` implementation to avoid a trait implementation
+    conflict.
+*   `CRUBIT_OVERRIDE_DEBUG(true)`: Use to force generation for an abstract type.
+
+IMPORTANT: Deriving `Debug` using `CRUBIT_TRAIT_DERIVE("Debug")` is deprecated
+and will cause a compilation error. Use the default behavior or
+`CRUBIT_OVERRIDE_DEBUG` instead.
+
 ## Attributes {#attributes}
 
 Crubit does not support most attributes on structs and their fields. If a struct

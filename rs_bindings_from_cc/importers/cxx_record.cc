@@ -1301,6 +1301,12 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
 
   bool impl_debug = false;
   if (record_impl_debug_enabled) {
+    if (trait_derives->debug != TraitImplPolarity::kNone) {
+      return unsupported(FormattedError::Static(
+          "derive(Debug) is deprecated when record_impl_debug is enabled. "
+          "Debug is implemented by default; use CRUBIT_OVERRIDE_DEBUG(false) "
+          "to opt out."));
+    }
     absl::StatusOr<std::optional<bool>> override_debug =
         ictx_.GetCrubitOverrideDebugAnnotation(*record_decl);
     if (!override_debug.ok()) {

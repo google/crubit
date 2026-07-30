@@ -1541,6 +1541,19 @@ TEST(ImporterTest, ImplDebugOverrideTrueIsTrue) {
               ElementsAre(Pointee(AllOf(RsNameIs("S"), ImplDebug()))));
 }
 
+TEST(ImporterTest, ImplDebugDeriveDebugDeprecated) {
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir, IrFromCcWithRecordImplDebug(R"cc(
+        struct [[clang::annotate("crubit_internal_trait_derive", "Debug")]] S {
+        };
+      )cc"));
+  EXPECT_THAT(get_items_if<Record>(ir), IsEmpty());
+  EXPECT_THAT(
+      get_items_if<UnsupportedItem>(ir),
+      ElementsAre(Pointee(AllOf(UnsupportedItemNameIs("S"),
+                                HasErrorMessage(HasSubstr("deprecated"))))));
+}
+
 TEST(ImporterTest, ImplDebugUnexpectedArgsMissing) {
   ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCcWithRecordImplDebug(R"cc(
                          struct [[clang::annotate("crubit_override_debug")]] S {

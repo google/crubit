@@ -541,6 +541,7 @@ pub fn generated_items_to_tokens<'db>(
                     incomplete_definition,
                     upcast_impls,
                     display_impl,
+                    debug_impl,
                     no_unique_address_accessors,
                     items,
                     nested_items,
@@ -686,6 +687,7 @@ pub fn generated_items_to_tokens<'db>(
                     #sync_impl
                     #cxx_impl
                     #display_impl
+                    #debug_impl
 
                     #incomplete_definition
 
@@ -1037,6 +1039,7 @@ pub struct Record {
     pub incomplete_definition: Option<TokenStream>,
     pub upcast_impls: Vec<Result<UpcastImpl, String>>,
     pub display_impl: Option<DisplayImpl>,
+    pub debug_impl: Option<DebugImpl>,
     pub no_unique_address_accessors: Vec<NoUniqueAddressAccessor>,
     pub items: Vec<ItemId>,
     pub nested_items: Vec<ItemId>,
@@ -1092,6 +1095,46 @@ impl ToTokens for DisplayImpl {
                     } else {
                         ::core::result::Result::Err(::core::fmt::Error)
                     }
+                }
+            }
+        }
+        .to_tokens(tokens);
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct DebugField {
+    pub name: String,
+    pub expr: TokenStream,
+}
+
+#[derive(Clone, Debug)]
+pub struct DebugImpl {
+    pub ident: Ident,
+    pub stubbed_lifetime_params: TokenStream,
+    pub fields: Vec<DebugField>,
+    pub is_exhaustive: bool,
+}
+
+impl ToTokens for DebugImpl {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let Self { ident, stubbed_lifetime_params, fields, is_exhaustive } = self;
+        let type_name_str = ident.to_string();
+        let field_calls = fields.iter().map(|f| {
+            let DebugField { name, expr } = f;
+            quote! { .field(#name, #expr) }
+        });
+        let finish_call = if *is_exhaustive {
+            quote! { .finish() }
+        } else {
+            quote! { .finish_non_exhaustive() }
+        };
+        quote! {
+            impl ::core::fmt::Debug for #ident #stubbed_lifetime_params {
+                fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    formatter.debug_struct(#type_name_str)
+                        #(#field_calls)*
+                        #finish_call
                 }
             }
         }
@@ -1266,6 +1309,7 @@ pub enum FieldDefinition {
         visibility: Visibility,
         ident: Ident,
         field_type: FieldType,
+        is_debug_formattable: bool,
     },
 }
 
@@ -1295,6 +1339,7 @@ impl ToTokens for FieldDefinition {
                 visibility,
                 ident,
                 field_type,
+                is_debug_formattable: _,
             } => {
                 let padding_field = padding.map(|padding| {
                     let padding_name =
