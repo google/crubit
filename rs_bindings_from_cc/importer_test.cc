@@ -440,6 +440,14 @@ std::vector<Item> ItemsWithoutBuiltins(const IR& ir) {
   return items;
 }
 
+std::vector<ir_proto::Item> GetTopLevelItems(const IR& ir) {
+  auto it = ir.ir_proto.top_level_items().find(ir.current_target.value());
+  if (it == ir.ir_proto.top_level_items().end()) {
+    return {};
+  }
+  return {it->second.items().begin(), it->second.items().end()};
+}
+
 TEST(ImporterTest, ProtoMessageBridgeType) {
   absl::string_view file = R"cc(
     namespace proto2 {
@@ -1020,15 +1028,8 @@ TEST(ImporterTest, TopLevelItemIds) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  std::vector<Item> items;
-  for (const auto& id : ir.top_level_item_ids(ir.current_target)) {
-    auto item = FindItemById(ir, id);
-    ASSERT_TRUE(item.has_value());
-    items.push_back(*item);
-  }
-
   EXPECT_THAT(
-      items,
+      GetTopLevelItems(ir),
       ElementsAre(
           VariantWith<IncompleteRecord>(RsNameIs("ForwardDeclaration")),
           VariantWith<Record>(RsNameIs("TopLevelStruct")),
@@ -1048,17 +1049,12 @@ TEST(ImporterTest, ForwardDeclarationAndDefinition) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  std::vector<Item> items;
-  for (const auto& id : ir.top_level_item_ids(ir.current_target)) {
-    auto item = FindItemById(ir, id);
-    items.push_back(*item);
-  }
-
   EXPECT_THAT(
-      items, ElementsAre(VariantWith<Record>(RsNameIs("ForwardDeclaredStruct")),
-                         VariantWith<Record>(RsNameIs("Struct")),
-                         VariantWith<IncompleteRecord>(RsNameIs(
-                             "ForwardDeclaredStructWithNoDefinition"))));
+      GetTopLevelItems(ir),
+      ElementsAre(VariantWith<Record>(RsNameIs("ForwardDeclaredStruct")),
+                  VariantWith<Record>(RsNameIs("Struct")),
+                  VariantWith<IncompleteRecord>(
+                      RsNameIs("ForwardDeclaredStructWithNoDefinition"))));
 }
 
 TEST(ImporterTest, DuplicateForwardDeclarations) {
@@ -1068,14 +1064,9 @@ TEST(ImporterTest, DuplicateForwardDeclarations) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  std::vector<Item> items;
-  for (const auto& id : ir.top_level_item_ids(ir.current_target)) {
-    auto item = FindItemById(ir, id);
-    items.push_back(*item);
-  }
-
-  EXPECT_THAT(items, ElementsAre(VariantWith<IncompleteRecord>(
-                         RsNameIs("ForwardDeclaredStructWithNoDefinition"))));
+  EXPECT_THAT(GetTopLevelItems(ir),
+              ElementsAre(VariantWith<IncompleteRecord>(
+                  RsNameIs("ForwardDeclaredStructWithNoDefinition"))));
 }
 
 TEST(ImporterTest, RecordItemIds) {

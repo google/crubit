@@ -172,7 +172,6 @@ absl::Status AddUseModToIr(
       *use_mod_from_src.enclosing_namespace.value()->add_children() =
           std::move(use_mod_from_src.use_mod_item);
     } else {
-      top_level_item_ids[ir.current_target].push_back(use_mod_id);
       *(*ir.ir_proto.mutable_top_level_items())[ir.current_target.value()]
            .add_items() = std::move(use_mod_from_src.use_mod_item);
     }
