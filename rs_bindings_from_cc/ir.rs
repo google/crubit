@@ -19,7 +19,6 @@ use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 
 mod proto_to_ir;
-use ir_rust_proto::IRProtoView;
 pub use proto_to_ir::proto_to_ir;
 
 /// Common data about all items.
@@ -83,50 +82,6 @@ where
     fn cc_name_as_str(&self) -> Option<&'pb str> {
         (**self).cc_name_as_str()
     }
-}
-
-/// Create a testing `IR` instance from given parts. This function does not use
-/// any mock values.
-pub fn make_ir_from_parts<'pb, CrubitFeatures>(
-    items: Vec<Item<'pb>>,
-    public_headers: Vec<HeaderName<'pb>>,
-    current_target: BazelLabel,
-    crate_root_path: Option<Rc<str>>,
-    crubit_features: BTreeMap<BazelLabel, CrubitFeatures>,
-    reexported_namespaces: Vec<Rc<str>>,
-    proto: IRProtoView<'pb>,
-) -> IR<'pb>
-where
-    CrubitFeatures: Into<flagset::FlagSet<CrubitFeature>>,
-{
-    // To avoid rewiring tests as part of migrating to nested IR, automatically populate the roots
-    // of the tree from the flat list of items.
-    let mut top_level_items: BTreeMap<BazelLabel, Vec<Item<'pb>>> = BTreeMap::new();
-    for item in &items {
-        if item.enclosing_item_id().is_none() {
-            let target = item.owning_target().unwrap_or_else(|| current_target.clone());
-            top_level_items.entry(target).or_default().push(item.clone());
-        }
-    }
-
-    make_ir_with_proto(
-        TreeIR {
-            public_headers,
-            current_target,
-            crate_root_path,
-            crubit_features: crubit_features
-                .into_iter()
-                .map(|(label, features)| {
-                    (label, crubit_feature::SerializedCrubitFeatures(features.into()))
-                })
-                .collect(),
-            reexported_namespaces,
-            crate_names: BTreeMap::new(),
-            unstable_rust_features: vec![],
-            top_level_items,
-        },
-        proto,
-    )
 }
 
 /// A pre-order depth-first search iterator over the nested IR tree.
@@ -199,7 +154,7 @@ fn populate_item_id_to_item<'pb>(
     }
 }
 
-pub fn make_ir_with_proto<'pb>(tree_ir: TreeIR<'pb>, proto: IRProtoView<'pb>) -> IR<'pb> {
+pub fn make_ir<'pb>(tree_ir: TreeIR<'pb>) -> IR<'pb> {
     let mut item_id_to_item = HashMap::new();
 
     for items in tree_ir.top_level_items.values() {
@@ -255,7 +210,6 @@ pub fn make_ir_with_proto<'pb>(tree_ir: TreeIR<'pb>, proto: IRProtoView<'pb>) ->
     }
 
     IR {
-        proto,
         tree_ir,
         item_id_to_item,
         lifetimes,
@@ -3595,9 +3549,6 @@ impl<'a, 'pb> TryFrom<&'a Item<'pb>> for &'a Rc<ExistingRustType<'pb>> {
     }
 }
 
-// TODO(b/536964606): Replace read-only IR fields with IRProtoView<'pb>.
-// There's no reason to hide TreeIR or make_ir: deserialize_ir is just make_ir(from_json("ir")),
-// and transforming the json is strictly worse than transforming the ir itself.
 #[derive(PartialEq, Eq, Clone)]
 pub struct TreeIR<'pb> {
     pub public_headers: Vec<HeaderName<'pb>>,
@@ -3654,7 +3605,6 @@ impl<'pb> Debug for TreeIR<'pb> {
 
 #[derive(Debug)]
 pub struct IR<'pb> {
-    pub(crate) proto: IRProtoView<'pb>,
     tree_ir: TreeIR<'pb>,
     item_id_to_item: HashMap<ItemId, Item<'pb>>,
     lifetimes: HashMap<LifetimeId, LifetimeName>,
@@ -3678,10 +3628,6 @@ impl<'pb> PartialEq for IR<'pb> {
 impl<'pb> Eq for IR<'pb> {}
 
 impl<'pb> IR<'pb> {
-    pub fn as_view(&self) -> IRProtoView<'pb> {
-        self.proto
-    }
-
     pub fn tree_ir(&self) -> &TreeIR<'pb> {
         &self.tree_ir
     }

@@ -872,17 +872,14 @@ pub fn lifetime_defaults_transform<'pb>(db: &BindingsGenerator<'pb>) -> Result<I
         top_level_items.insert(target.clone(), transformed_roots);
     }
 
-    Ok(ir::make_ir_with_proto(
-        TreeIR {
-            public_headers: ir.tree_ir().public_headers.clone(),
-            current_target: ir.tree_ir().current_target.clone(),
-            crate_root_path: ir.tree_ir().crate_root_path.clone(),
-            crubit_features: ir.tree_ir().crubit_features.clone(),
-            crate_names: ir.tree_ir().crate_names.clone(),
-            reexported_namespaces: ir.tree_ir().reexported_namespaces.clone(),
-            unstable_rust_features: ir.tree_ir().unstable_rust_features.clone(),
-            top_level_items,
-        },
-        ir.as_view(),
-    ))
+    Ok(ir::make_ir(TreeIR {
+        public_headers: ir.tree_ir().public_headers.clone(),
+        current_target: ir.tree_ir().current_target.clone(),
+        crate_root_path: ir.tree_ir().crate_root_path.clone(),
+        crubit_features: ir.tree_ir().crubit_features.clone(),
+        crate_names: ir.tree_ir().crate_names.clone(),
+        reexported_namespaces: ir.tree_ir().reexported_namespaces.clone(),
+        unstable_rust_features: ir.tree_ir().unstable_rust_features.clone(),
+        top_level_items,
+    }))
 }

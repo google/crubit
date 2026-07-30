@@ -10,7 +10,7 @@ use itertools::Itertools;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::{
-    self, make_ir_from_parts, Func, Identifier, Item, LifetimeId, LifetimeName, Record,
+    self, Func, GenericItem, Identifier, Item, LifetimeId, LifetimeName, Record, TreeIR,
     TypeWithDeclId, IR,
 };
 use ir_rust_proto::IRProto;
@@ -91,22 +91,25 @@ fn update_test_ir(ir: &mut IR<'_>, extra_feature: Option<&str>) {
 }
 
 /// Create a testing `IR` instance from given items, using mock values for other fields.
-/// TODO(b/532184844): Should remove this method once IRProto is fully migrated to views.
-/// For now, constructing IR<'pb> in tests requires explicitly passing in a proto reference.
-pub fn make_ir_from_items<'pb>(
-    proto: &'pb ir_rust_proto::IRProto,
-    items: impl IntoIterator<Item = Item<'pb>>,
-) -> IR<'pb> {
-    let mut ir = make_ir_from_parts(
-        items.into_iter().collect_vec(),
-        /* public_headers= */ vec![],
-        /* current_target= */ TESTING_TARGET.into(),
-        /* crate_root_path= */ None,
-        /* crubit_features= */
-        <BTreeMap<ir::BazelLabel, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new(),
-        /* reexported_namespaces= */ vec![],
-        proto.as_view(),
-    );
+pub fn make_ir_from_items<'pb>(items: impl IntoIterator<Item = Item<'pb>>) -> IR<'pb> {
+    let current_target = ir::BazelLabel::from(TESTING_TARGET);
+    let mut top_level_items: BTreeMap<ir::BazelLabel, Vec<Item<'pb>>> = BTreeMap::new();
+    for item in items {
+        if item.enclosing_item_id().is_none() {
+            let target = item.owning_target().unwrap_or_else(|| current_target.clone());
+            top_level_items.entry(target).or_default().push(item);
+        }
+    }
+    let mut ir = ir::make_ir(TreeIR {
+        public_headers: vec![],
+        current_target,
+        crate_root_path: None,
+        crubit_features: BTreeMap::new(),
+        crate_names: BTreeMap::new(),
+        unstable_rust_features: vec![],
+        reexported_namespaces: vec![],
+        top_level_items,
+    });
     update_test_ir(&mut ir, None);
     ir
 }
@@ -251,8 +254,7 @@ mod tests {
     }
     #[gtest]
     fn test_features_ir_from_items() -> Result<()> {
-        let proto = ir_rust_proto::IRProto::new();
-        let ir = make_ir_from_items(&proto, []);
+        let ir = make_ir_from_items([]);
         let enabled_features = ir.target_crubit_features(&ir::BazelLabel::from(TESTING_TARGET));
         expect_eq!(
             enabled_features,
@@ -273,6 +275,6 @@ mod tests {
         r1.set_id(ItemId::new_for_testing(42));
         let mut r2 = r1.clone();
         r2.set_rs_name(ir::Identifier::new("R2"));
-        let _ = make_ir_from_items(&proto, [Item::Record(Rc::new(r1)), Item::Record(Rc::new(r2))]);
+        let _ = make_ir_from_items([Item::Record(Rc::new(r1)), Item::Record(Rc::new(r2))]);
     }
 }

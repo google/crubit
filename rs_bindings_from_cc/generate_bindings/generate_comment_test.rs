@@ -143,7 +143,7 @@ impl<'pb> TestDbFactory<'pb> {
     }
 }
 
-fn make_factory<'pb>(proto: &'pb IRProto) -> TestDbFactory<'pb> {
+fn make_factory() -> TestDbFactory<'static> {
     let test_item = UnsupportedItem::new_raw(
         Rc::from("test_item"),
         None,
@@ -159,13 +159,12 @@ fn make_factory<'pb>(proto: &'pb IRProto) -> TestDbFactory<'pb> {
         })),
         None,
     );
-    TestDbFactory::new(make_ir_from_items(proto, [test_item.into()]))
+    TestDbFactory::new(make_ir_from_items([test_item.into()]))
 }
 
 #[gtest]
 fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
-    let proto = IRProto::new();
-    let factory = make_factory(&proto);
+    let factory = make_factory();
     let db = factory.make_db(false);
     let _scope = error_report::ItemScope::new(
         db.errors(),
@@ -194,8 +193,7 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
 
 #[gtest]
 fn test_generate_unsupported_item_with_global_cpp() -> Result<()> {
-    let proto = IRProto::new();
-    let factory = make_factory(&proto);
+    let factory = make_factory();
     let db = factory.make_db(false);
     let _scope = error_report::ItemScope::new(
         db.errors(),
@@ -228,8 +226,7 @@ fn test_generate_unsupported_item_with_global_cpp() -> Result<()> {
 
 #[gtest]
 fn test_generate_unsupported_item_no_global_cpp_if_empty_source_text() -> Result<()> {
-    let proto = IRProto::new();
-    let factory = make_factory(&proto);
+    let factory = make_factory();
     let db = factory.make_db(false);
     let _scope = error_report::ItemScope::new(
         db.errors(),
@@ -257,8 +254,7 @@ fn test_generate_unsupported_item_no_global_cpp_if_empty_source_text() -> Result
 /// For these, we omit the mention of the location.
 #[gtest]
 fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
-    let proto = IRProto::new();
-    let factory = make_factory(&proto);
+    let factory = make_factory();
     let db = factory.make_db(false);
     let _scope = error_report::ItemScope::new(
         db.errors(),
@@ -287,8 +283,7 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
 
 #[gtest]
 fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
-    let proto = IRProto::new();
-    let factory = make_factory(&proto);
+    let factory = make_factory();
     let db = factory.make_db(true);
     let _scope = error_report::ItemScope::new(
         db.errors(),
