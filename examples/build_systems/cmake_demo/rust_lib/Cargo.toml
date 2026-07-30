@@ -11,3 +11,4 @@ edition = "2021"
 blake3 = "1.5"
 flate2 = "1.0"
 tar = "0.4"
+crubit_bridge_rust = { path = "../../../../support/crubit_bridge_rust" }

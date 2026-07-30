@@ -11,3 +11,4 @@ repository = "https://github.com/google/crubit"
 
 [dependencies]
 base64 = "0.22"
+crubit_bridge_rust = { path = "../../../../support/crubit_bridge_rust" }
