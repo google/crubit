@@ -742,10 +742,19 @@ pub fn generate_record<'a>(
         },
         // TODO(b/481405536): we should do this unconditionally.
         internally_mutable_unknown_fields: !record.should_derive_copy(),
-        crubit_annotation: DocCommentAttr(intern!(
-            db.interner(),
-            "CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}"
-        )),
+        crubit_annotations: {
+            let mut annotations = vec![DocCommentAttr(intern!(
+                db.interner(),
+                "CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}"
+            ))];
+            if record.is_thread_safe() {
+                annotations.push(DocCommentAttr(intern!(
+                    db.interner(),
+                    "CRUBIT_ANNOTATE: cpp_thread_safe="
+                )));
+            }
+            annotations
+        },
         visibility: db
             .has_bindings(ir::Item::Record(record.clone()))
             .unwrap_or_default()

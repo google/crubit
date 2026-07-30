@@ -528,7 +528,7 @@ pub fn generated_items_to_tokens<'db>(
                     cfi_encoding_attr,
                     align,
                     internally_mutable_unknown_fields,
-                    crubit_annotation,
+                    crubit_annotations,
                     visibility,
                     struct_or_union,
                     ident,
@@ -677,7 +677,7 @@ pub fn generated_items_to_tokens<'db>(
                     #deprecated_attr
                     #cfi_encoding_attr
                     #[repr(#(#repr_attrs),*)]
-                    #crubit_annotation
+                    #(#crubit_annotations)*
                     #visibility #struct_or_union #ident #type_param_tokens {
                         #struct_body
                     }
@@ -1024,7 +1024,7 @@ pub struct Record {
     pub cfi_encoding_attr: CfiEncodingAttr,
     pub align: Option<usize>,
     pub internally_mutable_unknown_fields: bool,
-    pub crubit_annotation: DocCommentAttr,
+    pub crubit_annotations: Vec<DocCommentAttr>,
     pub visibility: Visibility,
     pub struct_or_union: StructOrUnion,
     pub ident: Ident,

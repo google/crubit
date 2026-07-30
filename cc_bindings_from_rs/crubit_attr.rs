@@ -119,6 +119,9 @@ pub struct CrubitAttrs {
 
     /// Whether the annotated item has the same ABI as the C++ type it maps to.
     pub same_abi: bool,
+
+    /// Whether the annotated item corresponds to a C++-originated thread-safe type.
+    pub cpp_thread_safe: bool,
 }
 
 impl CrubitAttrs {
@@ -133,6 +136,7 @@ impl CrubitAttrs {
     pub const MUST_BIND: &'static str = "must_bind";
     pub const SPECIALIZES_CPP_TYPE: &'static str = "specializes_cpp_type";
     pub const SAME_ABI: &'static str = "same_abi";
+    pub const CPP_ORIGINATED_THREAD_SAFE: &'static str = "cpp_thread_safe";
 
     fn add_attr(&mut self, name: &str, symbol: Symbol) -> Result<()> {
         let set_opt_once = |slot: &mut Option<Symbol>, symbol: Symbol| -> Result<()> {
@@ -163,6 +167,7 @@ impl CrubitAttrs {
             CrubitAttrs::MUST_BIND => set_bool_once(&mut self.must_bind)?,
             CrubitAttrs::SPECIALIZES_CPP_TYPE => set_bool_once(&mut self.specializes_cpp_type)?,
             CrubitAttrs::SAME_ABI => set_bool_once(&mut self.same_abi)?,
+            CrubitAttrs::CPP_ORIGINATED_THREAD_SAFE => set_bool_once(&mut self.cpp_thread_safe)?,
             _ => bail!("Invalid CRUBIT_ANNOTATE key: \"{name}\""),
         }
         Ok(())

@@ -117,3 +117,19 @@ fn test_include_path_multi() {
         assert_eq!(attrs, expected_attrs);
     });
 }
+
+#[test]
+fn test_cpp_thread_safe() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: cpp_thread_safe="]
+            pub struct SomeStruct;
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let attrs = attrs_for_named_def(tcx, "SomeStruct").unwrap();
+
+        let mut expected_attrs = CrubitAttrs::default();
+        expected_attrs.cpp_thread_safe = true;
+
+        assert_eq!(attrs, expected_attrs);
+    });
+}

@@ -2067,6 +2067,13 @@ fn test_thread_safe_annotation_generates_send_sync() -> Result<()> {
     // Thread-safe types should get `unsafe impl Send` and `unsafe impl Sync`.
     assert_rs_matches!(rs_api, quote! { unsafe impl Send for ThreadSafeStruct {} });
     assert_rs_matches!(rs_api, quote! { unsafe impl Sync for ThreadSafeStruct {} });
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[doc = "CRUBIT_ANNOTATE: cpp_thread_safe="]
+            pub struct ThreadSafeStruct
+        }
+    );
 
     Ok(())
 }

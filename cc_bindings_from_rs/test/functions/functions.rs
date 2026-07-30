@@ -354,3 +354,15 @@ pub mod generic_fn_tests {
         }
     }
 }
+
+pub mod thread_safety_tests {
+    #[crubit_annotate::cpp_thread_safe]
+    pub struct ThreadSafeStruct {
+        pub value: i32,
+    }
+
+    pub fn accepts_thread_safe_ref(_x: &ThreadSafeStruct) {}
+    pub fn returns_thread_safe_ref(x: &ThreadSafeStruct) -> &ThreadSafeStruct {
+        x
+    }
+}

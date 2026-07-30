@@ -250,6 +250,16 @@ Because `CRUBIT_THREAD_SAFE` makes the type internally mutable in Rust, the type
 must either also be internally mutable in C++, by making all mutated fields
 `mutable`, or else it must never be stored as a `const` object.
 
+To help prevent accidentally passing in references to C++ objects with `const`
+storage when calling back into Rust, Crubit automatically annotates generated
+Rust bindings for `CRUBIT_THREAD_SAFE` types with a Rust-side attribute
+(`#[crubit_annotate::cpp_thread_safe]`). When generating C++ bindings from Rust
+(`cc_bindings_from_rs`) for functions that accept or return shared references
+(`&MyThreadSafeType`) to these types, Crubit generates non-const references in
+C++ (`MyThreadSafeType&` instead of `const MyThreadSafeType&`). This prevents
+C++ callers from passing immutable `const` objects into Rust functions that
+might internally mutate them through a shared reference.
+
 ### Manual Approach (Legacy) {#manual_thread_safety}
 
 <section class="zippy" markdown="1">
@@ -303,6 +313,7 @@ class CRUBIT_THREAD_SAFE FakeClock {
 
 Using `const` methods, while less idiomatic in C++, structurally forces
 soundness, so that there is no UB.
+
 ````
 
 ## Working around blocking bugs in Crubit {#blockers}

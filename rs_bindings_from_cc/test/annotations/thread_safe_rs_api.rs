@@ -21,6 +21,7 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test16ThreadSafeStructE"]
         #[repr(C, align(4))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafeStruct
+        ///CRUBIT_ANNOTATE: cpp_thread_safe=
         pub struct ThreadSafeStruct {
             __opaque: ::core::cell::UnsafeCell<[::core::mem::MaybeUninit<u8>; 4]>,
         }
@@ -168,6 +169,7 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test15ThreadSafeUnpinE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafeUnpin
+        ///CRUBIT_ANNOTATE: cpp_thread_safe=
         pub struct ThreadSafeUnpin {
             __opaque: ::core::cell::UnsafeCell<[::core::mem::MaybeUninit<u8>; 1]>,
         }
@@ -259,6 +261,7 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test16ThreadSafePinnedE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafePinned
+        ///CRUBIT_ANNOTATE: cpp_thread_safe=
         pub struct ThreadSafePinned {
             __opaque: ::core::cell::UnsafeCell<[::core::mem::MaybeUninit<u8>; 1]>,
         }

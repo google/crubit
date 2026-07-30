@@ -55,6 +55,14 @@ fn is_ctor_by_value(db: &BindingsGenerator<'_>, did: DefId) -> bool {
         || matches_qualified_name(db, did, &["rust_out", "ctor", "ByValue"])
 }
 
+/// Returns true if `ty` is annotated with `cpp_thread_safe`.
+fn is_cpp_thread_safe<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<bool> {
+    let ty::TyKind::Adt(adt, _) = ty.kind() else {
+        return Ok(false);
+    };
+    Ok(crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_thread_safe)
+}
+
 fn format_non_owning_pointer_prefix<'tcx>(
     db: &BindingsGenerator<'tcx>,
     region: ty::Region<'tcx>,
@@ -607,6 +615,15 @@ pub fn format_ty_for_cc<'tcx>(
                 }
                 return Ok(format_str_ref_for_cc(db));
             }
+
+            let mutability =
+                if matches!(location, TypeLocation::FnParam { .. } | TypeLocation::FnReturn { .. })
+                    && is_cpp_thread_safe(db, referent)?
+                {
+                    Mutability::Mut
+                } else {
+                    mutability
+                };
 
             let treat_ref_as_ptr = treat_ref_as_ptr(tcx, ty, location);
 

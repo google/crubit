@@ -299,6 +299,46 @@ namespace functions::other_fn_param_tests {
 
 }
 
+namespace functions::thread_safety_tests {
+
+// CRUBIT_ANNOTATE: cpp_thread_safe=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: functions_golden :: thread_safety_tests :: ThreadSafeStruct") alignas(4)
+    [[clang::trivial_abi]] ThreadSafeStruct final {
+ public:
+  // `functions_golden::thread_safety_tests::ThreadSafeStruct` doesn't implement
+  // the `Default` trait
+  ThreadSafeStruct() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~ThreadSafeStruct() = default;
+  ThreadSafeStruct(ThreadSafeStruct&&) = default;
+  ThreadSafeStruct& operator=(ThreadSafeStruct&&) = default;
+
+  // `functions_golden::thread_safety_tests::ThreadSafeStruct` doesn't implement
+  // the `Clone` trait
+  ThreadSafeStruct(const ThreadSafeStruct&) = delete;
+  ThreadSafeStruct& operator=(const ThreadSafeStruct&) = delete;
+  ThreadSafeStruct(::crubit::UnsafeRelocateTag, ThreadSafeStruct&& value);
+
+  union {
+    ::std::int32_t value;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+void accepts_thread_safe_ref(
+    ::functions::thread_safety_tests::ThreadSafeStruct& _x);
+
+::functions::thread_safety_tests::ThreadSafeStruct& $(__anon1)
+    returns_thread_safe_ref(
+        ::functions::thread_safety_tests::ThreadSafeStruct* $(__anon1)
+            crubit_nonnull x CRUBIT_LIFETIME_BOUND);
+
+}  // namespace functions::thread_safety_tests
+
 namespace functions::unit_ret_ty_tests {
 
 extern "C" ::std::int32_t get_global_i32_via_extern_c_with_export_name();
@@ -841,6 +881,50 @@ inline ::std::int32_t add_i32_via_rust_abi_with_duplicated_param_names(
 }
 
 }  // namespace functions::other_fn_param_tests
+
+namespace functions::thread_safety_tests {
+
+static_assert(
+    sizeof(ThreadSafeStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(ThreadSafeStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<ThreadSafeStruct>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::functions::thread_safety_tests::ThreadSafeStruct>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::functions::thread_safety_tests::ThreadSafeStruct>);
+inline ::functions::thread_safety_tests::ThreadSafeStruct::ThreadSafeStruct(
+    ::crubit::UnsafeRelocateTag, ThreadSafeStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+inline void ThreadSafeStruct::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(ThreadSafeStruct, value));
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_accepts_uthread_usafe_uref(
+    ::functions::thread_safety_tests::ThreadSafeStruct&);
+}
+inline void accepts_thread_safe_ref(
+    ::functions::thread_safety_tests::ThreadSafeStruct& _x) {
+  return __crubit_internal::__crubit_thunk_accepts_uthread_usafe_uref(_x);
+}
+
+namespace __crubit_internal {
+extern "C" ::functions::thread_safety_tests::ThreadSafeStruct& $(__anon1)
+    __crubit_thunk_returns_uthread_usafe_uref(
+        ::functions::thread_safety_tests::ThreadSafeStruct* $(__anon1)
+            crubit_nonnull);
+}
+inline ::functions::thread_safety_tests::ThreadSafeStruct& $(__anon1)
+    returns_thread_safe_ref(
+        ::functions::thread_safety_tests::ThreadSafeStruct* $(__anon1)
+            crubit_nonnull x CRUBIT_LIFETIME_BOUND) {
+  return __crubit_internal::__crubit_thunk_returns_uthread_usafe_uref(x);
+}
+
+}  // namespace functions::thread_safety_tests
 
 namespace functions::unit_ret_ty_tests {
 

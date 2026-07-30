@@ -330,6 +330,27 @@ unsafe extern "C" fn __crubit_thunk_add_ui32_uvia_urust_uabi_uwith_uduplicated_u
         )
     }
 }
+const _: () = assert!(
+    ::std::mem::size_of::<::functions_golden::thread_safety_tests::ThreadSafeStruct>() == 4
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::functions_golden::thread_safety_tests::ThreadSafeStruct>() == 4
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::functions_golden::thread_safety_tests::ThreadSafeStruct, value) == 0
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_accepts_uthread_usafe_uref(
+    _x: &'static ::functions_golden::thread_safety_tests::ThreadSafeStruct,
+) -> () {
+    unsafe { ::functions_golden::thread_safety_tests::accepts_thread_safe_ref(_x) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_returns_uthread_usafe_uref(
+    x: &'static ::functions_golden::thread_safety_tests::ThreadSafeStruct,
+) -> &'static ::functions_golden::thread_safety_tests::ThreadSafeStruct {
+    unsafe { ::functions_golden::thread_safety_tests::returns_thread_safe_ref(x) }
+}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_unsafe_uadd(x: i32, y: i32) -> i32 {
     unsafe { ::functions_golden::unsafe_fn_tests::unsafe_add(x, y) }

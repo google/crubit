@@ -37,3 +37,6 @@ struct Enum(i32);
 #[crubit_annotate::cpp_enum(kind = "enum class")]
 #[repr(transparent)]
 struct EnumClass(i32);
+
+#[crubit_annotate::cpp_thread_safe]
+struct ThreadSafe {}

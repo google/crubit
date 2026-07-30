@@ -384,3 +384,35 @@ pub fn must_bind(attribute: TokenStream, input: TokenStream) -> TokenStream {
         key_value_to_doc_comment("must_bind", "")
     })
 }
+
+/// Marks a Rust type as corresponding to a C++-originated `CRUBIT_THREAD_SAFE` type.
+///
+/// Because `CRUBIT_THREAD_SAFE` types allow internal mutation through shared references (`&self`),
+/// functions accepting or returning shared references to these types are exported to C++ taking
+/// non-const references (`T&` instead of `const T&`). This prevents accidentally passing references
+/// to C++ objects with `const` storage, which would result in Undefined Behavior if mutated
+/// internally by Rust.
+///
+/// Example:
+///
+/// ```rs
+/// #[crubit_annotate::cpp_thread_safe]
+/// pub struct ThreadSafeCounter {
+///     ...
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn cpp_thread_safe(attribute: TokenStream, input: TokenStream) -> TokenStream {
+    make_prefix_for(input, || {
+        if let Some(token) = attribute.into_iter().next() {
+            return TokenStream::from(
+                syn::Error::new(
+                    token.span().into(),
+                    "The `cpp_thread_safe` annotation does not accept any arguments.",
+                )
+                .into_compile_error(),
+            );
+        }
+        key_value_to_doc_comment("cpp_thread_safe", "")
+    })
+}
