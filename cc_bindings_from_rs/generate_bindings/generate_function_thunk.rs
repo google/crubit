@@ -441,6 +441,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
     c_ptr: &Ident,
     rs_type: Ty<'tcx>,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
+    is_constructor: bool,
 ) -> Result<TokenStream> {
     let write_directly = || -> Result<TokenStream> {
         Ok(quote! { ::core::ptr::write(#c_ptr as *mut _, #rs_value); })
@@ -484,6 +485,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
     } else if is_c_abi_compatible_by_value(db, rs_type) {
         write_directly()?
     } else if let ty::TyKind::Tuple(tuple_tys) = rs_type.kind()
+        && !is_constructor
         && !db
             .crate_features(db.source_crate_num())
             .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
@@ -505,6 +507,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
                     &ptr_member_names[i],
                     tuple_tys[i],
                     extern_c_decls,
+                    /*is_constructor=*/ false,
                 )
             })
             .collect::<Result<TokenStream>>()?;
@@ -648,6 +651,7 @@ pub fn generate_thunk_impl<'tcx>(
             &return_ptr_ident,
             sig.output(),
             &mut extern_c_decls,
+            is_constructor,
         )?;
         thunk_return_expression = quote! {
             let #rs_return_value_ident = #fully_qualified_fn_name( #( #fn_args ),* );

@@ -158,6 +158,13 @@ TEST(TuplesTest, ConstructAndPassTupleCloneNoDefault) {
   EXPECT_EQ(tuples::take_tuple_clone_no_default_2(res), 42);
 }
 
+TEST(TuplesTest, CopyTupleCloneNoDefault) {
+  rs_std::Tuple<std::uint8_t, tuples::CloneNoDefault> res(
+      std::make_tuple(std::uint8_t{10}, tuples::CloneNoDefault::new_(42)));
+  rs_std::Tuple<std::uint8_t, tuples::CloneNoDefault> copy = res;
+  EXPECT_EQ(tuples::take_tuple_clone_no_default_2(copy), 42);
+}
+
 TEST(TuplesTest, ConstructAndPassTupleHasDefault) {
   rs_std::Tuple<tuples::HasDefault, std::uint8_t> res(std::make_tuple(
       tuples::HasDefault::new_("halo strategy"), std::uint8_t{15}));
