@@ -33,6 +33,11 @@ pub struct __CcTemplateInst10MyTemplateIiE {
 }
 impl !Send for __CcTemplateInst10MyTemplateIiE {}
 impl !Sync for __CcTemplateInst10MyTemplateIiE {}
+impl ::core::fmt::Debug for __CcTemplateInst10MyTemplateIiE {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("__CcTemplateInst10MyTemplateIiE").finish_non_exhaustive()
+    }
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: MyTemplate < int >"),
     crate::__CcTemplateInst10MyTemplateIiE

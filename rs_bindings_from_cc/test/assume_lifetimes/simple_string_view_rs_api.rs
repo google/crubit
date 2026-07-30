@@ -40,6 +40,11 @@ impl ::core::fmt::Display for SV<'_> {
         }
     }
 }
+impl ::core::fmt::Debug for SV<'_> {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("SV").finish()
+    }
+}
 forward_declare::unsafe_define!(forward_declare::symbol!(":: SV"), crate::SV<'_>);
 
 impl<'a> Default for SV<'a> {

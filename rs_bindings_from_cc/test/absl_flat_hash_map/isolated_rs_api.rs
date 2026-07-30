@@ -55,6 +55,11 @@ pub mod crubit {
             type Id = ::cxx::type_id!(":: crubit :: test :: NoDestructor");
             type Kind = ::cxx::kind::Opaque;
         }
+        impl ::core::fmt::Debug for NoDestructor {
+            fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                formatter.debug_struct("NoDestructor").finish()
+            }
+        }
         forward_declare::unsafe_define!(
             forward_declare::symbol!(":: crubit :: test :: NoDestructor"),
             crate::crubit::test::NoDestructor
@@ -98,6 +103,11 @@ pub mod crubit {
         unsafe impl ::cxx::ExternType for NoDelete {
             type Id = ::cxx::type_id!(":: crubit :: test :: NoDelete");
             type Kind = ::cxx::kind::Trivial;
+        }
+        impl ::core::fmt::Debug for NoDelete {
+            fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                formatter.debug_struct("NoDelete").finish()
+            }
         }
         forward_declare::unsafe_define!(
             forward_declare::symbol!(":: crubit :: test :: NoDelete"),
@@ -164,6 +174,11 @@ pub struct __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
 }
 impl !Send for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {}
 impl !Sync for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {}
+impl ::core::fmt::Debug for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter.debug_struct("__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE").finish()
+    }
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!(":: absl :: flat_hash_map < int , unsigned long , 42 >"),
     crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE

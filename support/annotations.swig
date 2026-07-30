@@ -12,6 +12,8 @@
 %enddef
 %define CRUBIT_OVERRIDE_UNSAFE(safety)
 %enddef
+%define CRUBIT_OVERRIDE_DEBUG(should_bind)
+%enddef
 %define CRUBIT_TRAIT_DERIVE(...)
 %enddef
 %define CRUBIT_BRIDGE_SLICE_PTR(abi)
