@@ -13,6 +13,14 @@ build:generic_clang --copt=-Wno-missing-braces --host_copt=-Wno-missing-braces
 # enable linking against prebuilt LLVM with no RTTI
 build:generic_clang --copt=-fno-rtti --host_copt=-fno-rtti
 
+# Extra warnings for compatibility with strict clients (like Chromium),
+# restricted to support/ libraries to avoid breaking other Crubit targets:
+# TODO(lukasza): Also apply these warnings to the generated bindings.
+# LINT.IfChange(extra_warnings)
+build:generic_clang --per_file_copt=^support/.*@-Wenum-compare-conditional,-Wexit-time-destructors,-Wextra-semi,-Wglobal-constructors,-Wgnu,-Wheader-hygiene,-Wimplicit-int-conversion,-Wloop-analysis,-Wnullability-completeness,-Wshorten-64-to-32,-Wsign-compare,-Wsign-conversion,-Wtautological-unsigned-zero-compare,-Wunguarded-availability,-Wunique-object-duplication,-Wunreachable-code-aggressive
+build:generic_clang --host_per_file_copt=^support/.*@-Wenum-compare-conditional,-Wexit-time-destructors,-Wextra-semi,-Wglobal-constructors,-Wgnu,-Wheader-hygiene,-Wimplicit-int-conversion,-Wloop-analysis,-Wnullability-completeness,-Wshorten-64-to-32,-Wsign-compare,-Wsign-conversion,-Wtautological-unsigned-zero-compare,-Wunguarded-availability,-Wunique-object-duplication,-Wunreachable-code-aggressive
+# LINT.ThenChange(//depot/METADATA:extra_warnings)
+
 build --config=generic_clang
 build --@rules_rust//rust/toolchain/channel=nightly
 
