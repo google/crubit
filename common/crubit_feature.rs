@@ -65,6 +65,9 @@ flagset::flags! {
 
         /// Reserve standard macros like stdin, stdout, stderr as keywords.
         ReserveStandardMacros,
+
+        /// Directly generate (some) accessors instead of using thunks.
+        ThunklessAccessors,
     }
 }
 
@@ -94,6 +97,7 @@ impl CrubitFeature {
             Self::RecordImplDebug => "record_impl_debug",
             Self::CtorPlainValues => "ctor_plain_values",
             Self::ReserveStandardMacros => "reserve_standard_macros",
+            Self::ThunklessAccessors => "thunkless_accessors",
         }
     }
 
@@ -124,6 +128,7 @@ impl CrubitFeature {
             Self::RecordImplDebug => "//features:record_impl_debug",
             Self::CtorPlainValues => "//features:ctor_plain_values",
             Self::ReserveStandardMacros => "//features:reserve_standard_macros",
+            Self::ThunklessAccessors => "//features:thunkless_accessors",
         }
     }
 }
@@ -157,7 +162,9 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"record_impl_debug" => CrubitFeature::RecordImplDebug.into(),
         b"ctor_plain_values" => CrubitFeature::CtorPlainValues.into(),
         b"reserve_standard_macros" => CrubitFeature::ReserveStandardMacros.into(),
+        b"thunkless_accessors" => CrubitFeature::ThunklessAccessors.into(),
         _ => return None,
+        // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
     };
     Some(features)
@@ -282,6 +289,7 @@ mod tests {
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
+                | CrubitFeature::ThunklessAccessors
         );
     }
 
@@ -319,6 +327,7 @@ mod tests {
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
+                | CrubitFeature::ThunklessAccessors
         );
     }
 
@@ -341,6 +350,7 @@ mod tests {
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
+                | CrubitFeature::ThunklessAccessors
         );
     }
 
@@ -364,6 +374,7 @@ mod tests {
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
+                | CrubitFeature::ThunklessAccessors
         );
     }
 }

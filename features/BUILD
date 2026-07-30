@@ -179,6 +179,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set that emits some accessor code directly instead of using thunks.
+#
+# See b/482092715
+crubit_feature_hint(
+    name = "thunkless_accessors",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["thunkless_accessors"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(
