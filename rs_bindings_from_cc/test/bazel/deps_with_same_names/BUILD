@@ -5,6 +5,7 @@
 load("@bazel_tools//tools/build_defs/build_test:build_test.bzl", "build_test")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
+load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 
 package(
     default_testonly = 1,
@@ -36,7 +37,7 @@ _tags = [
 cc_library(
     name = "lib_direct",
     hdrs = ["direct.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":lib_direct_rust.hint"],
     tags = _tags,
     target_compatible_with = _compatible_with_flag,
     deps = [
@@ -48,9 +49,9 @@ cc_library(
 rust_library(
     name = "lib_with_two_direct_deps_with_same_name",
     srcs = ["direct.rs"],
-    cc_deps = [":lib_direct"],
     tags = _tags,
     target_compatible_with = _compatible_with_flag,
+    deps = [":lib_direct_rust"],
 )
 
 # Indirect dependency collision test
@@ -61,7 +62,7 @@ rust_library(
 cc_library(
     name = "lib_indirect",
     hdrs = ["indirect.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":lib_indirect_rust.hint"],
     tags = _tags + ["nofixdeps"],
     target_compatible_with = _compatible_with_flag,
     deps = [
@@ -72,16 +73,16 @@ cc_library(
 rust_library(
     name = "lib_with_indirect_deps_with_same_names",
     srcs = ["indirect.rs"],
-    cc_deps = [":lib_indirect"],
     tags = _tags,
     target_compatible_with = _compatible_with_flag,
+    deps = [":lib_indirect_rust"],
 )
 
 # Proto dependency collision test
 cc_library(
     name = "lib_proto_deps",
     hdrs = ["proto_deps.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":lib_proto_deps_rust.hint"],
     tags = _tags,
     target_compatible_with = _compatible_with_flag,
     deps = [
@@ -92,16 +93,16 @@ cc_library(
 rust_library(
     name = "lib_with_proto_deps_with_same_names",
     srcs = ["proto_deps.rs"],
-    cc_deps = [":lib_proto_deps"],
     tags = _tags,
     target_compatible_with = _compatible_with_flag,
+    deps = [":lib_proto_deps_rust"],
 )
 
 # cc_public_library dependency collision test
 cc_library(
     name = "lib_public_deps",
     hdrs = ["public_deps.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":lib_public_deps_rust.hint"],
     tags = _tags,
     target_compatible_with = _compatible_with_flag,
     deps = [
@@ -112,16 +113,16 @@ cc_library(
 rust_library(
     name = "lib_with_public_deps_with_same_names",
     srcs = ["public_deps.rs"],
-    cc_deps = [":lib_public_deps"],
     tags = _tags,
     target_compatible_with = _compatible_with_flag,
+    deps = [":lib_public_deps_rust"],
 )
 
 # Mixed dependency collision test (additional_rust_srcs + regular C++ deps)
 cc_library(
     name = "lib_mixed_deps",
     hdrs = ["mixed_deps.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":lib_mixed_deps_rust.hint"],
     tags = _tags,
     target_compatible_with = _compatible_with_flag,
     deps = [
@@ -132,9 +133,9 @@ cc_library(
 rust_library(
     name = "lib_with_mixed_deps",
     srcs = ["mixed_deps.rs"],
-    cc_deps = [":lib_mixed_deps"],
     tags = _tags,
     target_compatible_with = _compatible_with_flag,
+    deps = [":lib_mixed_deps_rust"],
 )
 
 build_test(
@@ -148,4 +149,29 @@ build_test(
         ":lib_with_public_deps_with_same_names",
         ":lib_with_mixed_deps",
     ],
+)
+
+rust_api_from_cpp(
+    name = "lib_indirect_rust",
+    cpp_target = "//rs_bindings_from_cc/test/bazel/deps_with_same_names:lib_indirect",
+)
+
+rust_api_from_cpp(
+    name = "lib_mixed_deps_rust",
+    cpp_target = "//rs_bindings_from_cc/test/bazel/deps_with_same_names:lib_mixed_deps",
+)
+
+rust_api_from_cpp(
+    name = "lib_proto_deps_rust",
+    cpp_target = "//rs_bindings_from_cc/test/bazel/deps_with_same_names:lib_proto_deps",
+)
+
+rust_api_from_cpp(
+    name = "lib_public_deps_rust",
+    cpp_target = "//rs_bindings_from_cc/test/bazel/deps_with_same_names:lib_public_deps",
+)
+
+rust_api_from_cpp(
+    name = "lib_direct_rust",
+    cpp_target = "//rs_bindings_from_cc/test/bazel/deps_with_same_names:lib_direct",
 )

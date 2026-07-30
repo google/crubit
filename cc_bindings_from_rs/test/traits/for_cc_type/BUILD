@@ -18,20 +18,21 @@ load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_cc_test",
 )
+load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 
 package(default_applicable_licenses = ["//:license"])
 
 cc_library(
     name = "cc_type",
     hdrs = ["cc_type.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":cc_type_rust.hint"],
 )
 
 rust_library(
     name = "trait",
     testonly = 1,
     srcs = ["trait.rs"],
-    cc_deps = [":cc_type"],
+    deps = [":cc_type_rust"],
 )
 
 cc_bindings_from_rust(
@@ -56,4 +57,9 @@ crubit_cc_test(
         ":trait_cc_api",
         "//testing/base/public:gunit_main",
     ],
+)
+
+rust_api_from_cpp(
+    name = "cc_type_rust",
+    cpp_target = "//cc_bindings_from_rs/test/traits/for_cc_type:cc_type",
 )

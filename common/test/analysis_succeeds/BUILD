@@ -28,7 +28,7 @@ cc_library(
 rust_library(
     name = "rust_lib",
     srcs = ["rust_lib.rs"],
-    cc_deps = [":cc_lib"],
+    deps = [":cc_lib"],
 )
 
 cc_bindings_from_rust(

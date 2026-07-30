@@ -5,6 +5,10 @@ load(
     "cc_bindings_from_rust",
 )
 load(
+    "//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl",
+    "rust_api_from_cpp",
+)
+load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
     "golden_test",
 )
@@ -16,34 +20,36 @@ package(
 cc_library(
     name = "base",
     hdrs = ["base.h"],
-
-    # Opt into using Crubit.
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":base_rust.hint"],
 )
 
 cc_library(
     name = "example_lib",
     hdrs = ["example.h"],
-
-    # Opt into using Crubit.
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":example_lib_rust.hint"],
     deps = [
         ":base",
         ":definition_cc",
     ],
 )
 
+rust_api_from_cpp(
+    name = "base_rust",
+    cpp_target = ":base",
+)
+
+rust_api_from_cpp(
+    name = "example_lib_rust",
+    cpp_target = ":example_lib",
+)
+
 rust_binary(
     name = "main",
     srcs = ["main.rs"],
-
-    # Declare a dependency on Rust bindings for calling into the C++ `example_lib` library:
-    cc_deps = [
-        ":base",
-        ":example_lib",
-    ],
     deps = [
+        ":base_rust",
         ":definition",
+        ":example_lib_rust",
         "//support:ctor",
     ],
 )
@@ -58,10 +64,8 @@ golden_test(
 rust_library(
     name = "definition",
     srcs = ["definition.rs"],
-    cc_deps = [
-        ":base",
-    ],
     deps = [
+        ":base_rust",
         "//support/ffi_11",
     ],
 )

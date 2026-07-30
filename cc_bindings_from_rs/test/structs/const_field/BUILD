@@ -18,23 +18,24 @@ load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_cc_test",
 )
+load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 
 package(default_applicable_licenses = ["//:license"])
 
 cc_library(
     name = "cc_struct",
     hdrs = ["cc_struct.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":cc_struct_rust.hint"],
 )
 
 rust_library(
     name = "const_field",
     testonly = 1,
     srcs = ["lib.rs"],
-    cc_deps = [":cc_struct"],
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
+    deps = [":cc_struct_rust"],
 )
 
 cc_bindings_from_rust(
@@ -59,4 +60,9 @@ crubit_cc_test(
         ":lib_cc_api",
         "//testing/base/public:gunit_main",
     ],
+)
+
+rust_api_from_cpp(
+    name = "cc_struct_rust",
+    cpp_target = "//cc_bindings_from_rs/test/structs/const_field:cc_struct",
 )

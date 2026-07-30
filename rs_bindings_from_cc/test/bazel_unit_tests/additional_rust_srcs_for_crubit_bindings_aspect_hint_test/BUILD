@@ -3,6 +3,7 @@ load(
     "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
     "additional_rust_srcs_for_crubit_bindings",
 )
+load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(":additional_rust_srcs_for_crubit_bindings_aspect_hint_test.bzl", "additional_rust_srcs_for_crubit_bindings_aspect_hint_test_suite")
 
@@ -20,6 +21,7 @@ crubit_test_cc_library(
     hdrs = ["empty.h"],
     aspect_hints = [
         ":additional_rust_srcs_test_stub",
+        ":empty_cc_lib_with_additional_rust_srcs_rust.hint",
     ],
 )
 
@@ -43,8 +45,8 @@ additional_rust_srcs_for_crubit_bindings(
     srcs = [
         "inner.rs",
     ],
-    cc_deps = [":empty_cc_lib_with_additional_rust_srcs"],
     namespace_path = "a::b::c",
+    deps = [":empty_cc_lib_with_additional_rust_srcs_rust"],
 )
 
 crubit_test_cc_library(
@@ -93,4 +95,9 @@ crubit_rust_test(
     deps = [
         "@crate_index//:googletest",
     ],
+)
+
+rust_api_from_cpp(
+    name = "empty_cc_lib_with_additional_rust_srcs_rust",
+    cpp_target = "//rs_bindings_from_cc/test/bazel_unit_tests/additional_rust_srcs_for_crubit_bindings_aspect_hint_test:empty_cc_lib_with_additional_rust_srcs",
 )

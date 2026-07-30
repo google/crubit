@@ -7,6 +7,7 @@ load(
     "cc_bindings_from_rust",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
 package(default_applicable_licenses = ["//:license"])
@@ -16,7 +17,10 @@ crubit_test_cc_library(
     testonly = 1,
     srcs = ["test_helpers.cc"],
     hdrs = ["test_helpers.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = [
+        ":test_helpers_rust.hint",
+        "//features:experimental",
+    ],
     deps = ["//support:annotations"],
 )
 
@@ -26,9 +30,9 @@ rust_library(
     srcs = [
         "vector.rs",
     ],
-    cc_deps = [
-        ":test_helpers",
-        "//support/public:cc_std",
+    deps = [
+        ":test_helpers_rust",
+        "//support/public:cc_std_rust",
     ],
 )
 
@@ -46,4 +50,10 @@ crubit_cc_test(
         ":vector_cc_api",
         "//testing/base/public:gunit_main",
     ],
+)
+
+rust_api_from_cpp(
+    name = "test_helpers_rust",
+    testonly = True,
+    cpp_target = "//cc_bindings_from_rs/test/bridging/vector:test_helpers",
 )
