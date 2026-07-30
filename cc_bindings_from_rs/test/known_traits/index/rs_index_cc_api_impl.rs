@@ -161,9 +161,3 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003av
         )
     }
 }
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-    vec: *mut ::alloc::vec::Vec<::alloc::string::String>,
-) {
-    unsafe { ::core::ptr::drop_in_place(vec) };
-}
