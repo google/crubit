@@ -5,6 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_DECL_IMPORTER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_DECL_IMPORTER_H_
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -173,17 +174,35 @@ class ImportContext {
   // comment in the generated Rust source, allowing the rest of the target's
   // bindings to be generated.
   virtual std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
-      const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+      const clang::Decl& decl,
+      std::optional<ir_proto::UnsupportedItem::Path> path,
       std::vector<FormattedError> errors, bool is_hard_error) = 0;
 
   // Convenience wrapper for `ImportUnsupportedItem` with `is_hard_error=false`.
   // This results in a diagnostic comment in the generated Rust code rather than
   // a build failure.
   std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
-      const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+      const clang::Decl& decl,
+      std::optional<ir_proto::UnsupportedItem::Path> path,
       std::vector<FormattedError> errors) {
     return ImportUnsupportedItem(decl, std::move(path), std::move(errors),
                                  /*is_hard_error=*/false);
+  }
+
+  // Convenience overload for `ImportUnsupportedItem` constructing `Path`
+  // directly from an unqualified identifier.
+  std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
+      const clang::Decl& decl, UnqualifiedIdentifier ident,
+      std::optional<ItemId> enclosing_item_id,
+      std::vector<FormattedError> errors, bool is_hard_error = false) {
+    ir_proto::UnsupportedItem::Path path;
+    *path.mutable_ident() = ToFlatProto(ident);
+    if (enclosing_item_id.has_value()) {
+      path.set_enclosing_item_id(
+          static_cast<int64_t>(enclosing_item_id->value()));
+    }
+    return ImportUnsupportedItem(decl, std::move(path), std::move(errors),
+                                 is_hard_error);
   }
 
   // Imports a decl and creates an IR item (or error messages). This allows
@@ -230,7 +249,7 @@ class ImportContext {
   // Gets the path of an unsupported item by mangling its name and importing
   // its enclosing item. Returns `std::nullopt` if the enclosing item cannot be
   // imported.
-  virtual std::optional<UnsupportedItem::Path>
+  virtual std::optional<ir_proto::UnsupportedItem::Path>
   GetUnsupportedItemPathForTemplateDecl(
       clang::RedeclarableTemplateDecl* template_decl) = 0;
 

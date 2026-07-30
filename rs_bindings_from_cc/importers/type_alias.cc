@@ -152,9 +152,7 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
 
   if (!underlying_type.ok()) {
     return ictx_.ImportUnsupportedItem(
-        *decl,
-        UnsupportedItem::Path{.ident = (*identifier).cc_identifier,
-                              .enclosing_item_id = *enclosing_item_id},
+        *decl, (*identifier).cc_identifier, *enclosing_item_id,
         {FormattedError::FromStatus(std::move(underlying_type.status()))});
   }
   bool is_cc_template_instantiation = false;
@@ -180,9 +178,7 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
     }
     if (record_decl != nullptr && ictx_.RefersToOwnedDefinition(record_decl)) {
       return ictx_.ImportUnsupportedItem(
-          *decl,
-          UnsupportedItem::Path{.ident = (*identifier).cc_identifier,
-                                .enclosing_item_id = *enclosing_item_id},
+          *decl, (*identifier).cc_identifier, *enclosing_item_id,
           {FormattedError::Static(
               "Cannot import across-target type alias because its underlying "
               "type requires a record definition owned by a downstream "
@@ -203,9 +199,7 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
       });
   if (!unknown_attr.ok()) {
     return ictx_.ImportUnsupportedItem(
-        *decl,
-        UnsupportedItem::Path{.ident = (*identifier).cc_identifier,
-                              .enclosing_item_id = *enclosing_item_id},
+        *decl, (*identifier).cc_identifier, *enclosing_item_id,
         {FormattedError::FromStatus(std::move(unknown_attr.status()))});
   }
 

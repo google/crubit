@@ -62,7 +62,8 @@ class Importer final : public ImportContext {
   std::unique_ptr<ir_proto::Item> HardError(const clang::Decl& decl,
                                             FormattedError error) override;
   std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
-      const clang::Decl& decl, std::optional<UnsupportedItem::Path> path,
+      const clang::Decl& decl,
+      std::optional<ir_proto::UnsupportedItem::Path> path,
       std::vector<FormattedError> errors, bool is_hard_error) override;
   absl_nullable std::unique_ptr<ir_proto::Item> ImportDecl(
       clang::Decl* absl_nonnull decl) override;
@@ -92,7 +93,8 @@ class Importer final : public ImportContext {
       const clang::TranslationUnitDecl* decl) override;
   std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) override;
   std::string GetMangledName(const clang::NamedDecl* named_decl) const override;
-  std::optional<UnsupportedItem::Path> GetUnsupportedItemPathForTemplateDecl(
+  std::optional<ir_proto::UnsupportedItem::Path>
+  GetUnsupportedItemPathForTemplateDecl(
       clang::RedeclarableTemplateDecl* template_decl) override;
   BazelLabel GetOwningTarget(const clang::Decl* decl) const override;
   bool IsFromCurrentTarget(const clang::Decl* decl) const override;

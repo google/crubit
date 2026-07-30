@@ -43,13 +43,6 @@ flat_proto::HeaderName HeaderName::ToFlatProto() const {
   return proto;
 }
 
-flat_proto::LifetimeName LifetimeName::ToFlatProto() const {
-  flat_proto::LifetimeName proto;
-  proto.set_name(name);
-  proto.set_id(id.value());
-  return proto;
-}
-
 flat_proto::PointerTypeKind ToFlatProto(PointerTypeKind pointer_type_kind) {
   switch (pointer_type_kind) {
     case PointerTypeKind::kLValueRef:
@@ -214,19 +207,6 @@ flat_proto::UnqualifiedIdentifier ToFlatProto(
   return proto;
 }
 
-flat_proto::FuncParam FuncParam::ToFlatProto() const {
-  flat_proto::FuncParam proto;
-  *proto.mutable_type() = type.ToFlatProto();
-  *proto.mutable_identifier() = identifier.ToFlatProto();
-  if (unknown_attr) {
-    proto.set_unknown_attr(*unknown_attr);
-  }
-  proto.mutable_clang_lifetime_capture_by()->Add(
-      clang_lifetime_capture_by.begin(), clang_lifetime_capture_by.end());
-  proto.set_clang_lifetimebound(clang_lifetimebound);
-  return proto;
-}
-
 std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {
   return o << SpecialNameToString(special_name);
 }
@@ -245,80 +225,6 @@ Identifier& TranslatedIdentifier::rs_identifier() {
   return cc_identifier;
 }
 
-flat_proto::InstanceMethodMetadata InstanceMethodMetadata::ToFlatProto() const {
-  flat_proto::InstanceMethodMetadata proto;
-  switch (reference) {
-    case InstanceMethodMetadata::kLValue:
-      proto.set_reference(flat_proto::InstanceMethodMetadata::L_VALUE);
-      break;
-    case InstanceMethodMetadata::kRValue:
-      proto.set_reference(flat_proto::InstanceMethodMetadata::R_VALUE);
-      break;
-    case InstanceMethodMetadata::kUnqualified:
-      proto.set_reference(flat_proto::InstanceMethodMetadata::UNQUALIFIED);
-      break;
-  }
-  proto.set_is_const(is_const);
-  proto.set_is_virtual(is_virtual);
-  return proto;
-}
-
-flat_proto::Constant Constant::ToFlatProto() const {
-  flat_proto::Constant proto;
-  *proto.mutable_value() = value.ToFlatProto();
-  *proto.mutable_cc_name() = cc_name.ToFlatProto();
-  *proto.mutable_rs_name() = rs_name.ToFlatProto();
-  proto.set_unique_name(unique_name);
-  proto.set_id(id.value());
-  proto.set_owning_target(owning_target.value());
-  proto.set_source_loc(source_loc);
-  *proto.mutable_type() = type.ToFlatProto();
-  if (unknown_attr) proto.set_unknown_attr(*unknown_attr);
-  if (enclosing_item_id)
-    proto.set_enclosing_item_id(enclosing_item_id->value());
-  proto.set_must_bind(must_bind);
-  if (deprecated) proto.set_deprecated(*deprecated);
-  if (doc_comment) proto.set_doc_comment(*doc_comment);
-  return proto;
-}
-
-flat_proto::ExistingRustType ExistingRustType::ToFlatProto() const {
-  flat_proto::ExistingRustType proto;
-  proto.set_rs_name(rs_name);
-  proto.set_cc_name(cc_name);
-  proto.set_unique_name(unique_name);
-  for (const auto& arg : template_args)
-    *proto.add_template_args() = arg.ToFlatProto();
-  proto.set_owning_target(owning_target.value());
-  if (size_align) *proto.mutable_size_align() = size_align->ToFlatProto();
-  proto.set_is_same_abi(is_same_abi);
-  proto.set_id(id.value());
-  proto.set_must_bind(must_bind);
-  proto.set_impl_debug(impl_debug);
-  return proto;
-}
-
-flat_proto::UseMod UseMod::ToFlatProto() const {
-  flat_proto::UseMod proto;
-  proto.set_path(path);
-  *proto.mutable_mod_name() = mod_name.ToFlatProto();
-  proto.set_id(id.value());
-  proto.set_must_bind(must_bind);
-  return proto;
-}
-
-static std::string SafetyAnnotationToString(
-    SafetyAnnotation safety_annotation) {
-  switch (safety_annotation) {
-    case SafetyAnnotation::kDisableUnsafe:
-      return "DisableUnsafe";
-    case SafetyAnnotation::kUnsafe:
-      return "Unsafe";
-    case SafetyAnnotation::kUnannotated:
-      return "Unannotated";
-  }
-}
-
 flat_proto::SafetyAnnotation ToFlatProto(SafetyAnnotation safety_annotation) {
   switch (safety_annotation) {
     case SafetyAnnotation::kDisableUnsafe:
@@ -328,108 +234,6 @@ flat_proto::SafetyAnnotation ToFlatProto(SafetyAnnotation safety_annotation) {
     case SafetyAnnotation::kUnannotated:
       return flat_proto::SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   }
-}
-
-flat_proto::Func Func::ToFlatProto() const {
-  flat_proto::Func proto;
-  *proto.mutable_cc_name() = crubit::ToFlatProto(cc_name);
-  *proto.mutable_rs_name() = crubit::ToFlatProto(rs_name);
-  proto.set_unique_name(unique_name);
-  proto.set_owning_target(owning_target.value());
-  if (doc_comment) proto.set_doc_comment(*doc_comment);
-  proto.set_mangled_name(mangled_name);
-  *proto.mutable_return_type() = return_type.ToFlatProto();
-  for (const auto& p : params) *proto.add_params() = p.ToFlatProto();
-  for (const auto& l : lifetime_params)
-    *proto.add_lifetime_params() = l.ToFlatProto();
-  proto.set_is_inline(is_inline);
-  if (instance_method_metadata) {
-    *proto.mutable_instance_method_metadata() =
-        instance_method_metadata->ToFlatProto();
-  }
-  proto.set_is_extern_c(is_extern_c);
-  proto.set_is_noreturn(is_noreturn);
-  proto.set_is_variadic(is_variadic);
-  proto.set_is_consteval(is_consteval);
-  if (nodiscard) proto.set_nodiscard(*nodiscard);
-  if (deprecated) proto.set_deprecated(*deprecated);
-  if (unknown_attr) proto.set_unknown_attr(*unknown_attr);
-  proto.set_has_c_calling_convention(has_c_calling_convention);
-  proto.set_is_member_or_descendant_of_class_template(
-      is_member_or_descendant_of_class_template);
-  proto.set_safety_annotation(crubit::ToFlatProto(safety_annotation));
-  proto.set_source_loc(source_loc);
-  proto.set_id(id.value());
-  if (enclosing_item_id)
-    proto.set_enclosing_item_id(enclosing_item_id->value());
-  if (adl_enclosing_record)
-    proto.set_adl_enclosing_record(adl_enclosing_record->value());
-  proto.set_must_bind(must_bind);
-  proto.mutable_lifetime_inputs()->Add(lifetime_inputs.begin(),
-                                       lifetime_inputs.end());
-  if (inline_cpp_source_text) {
-    proto.set_inline_cpp_source_text(*inline_cpp_source_text);
-  }
-  proto.set_is_compiler_generated(is_compiler_generated);
-  return proto;
-}
-
-static std::string AccessToString(AccessSpecifier access) {
-  switch (access) {
-    case kPublic:
-      return "Public";
-    case kProtected:
-      return "Protected";
-    case kPrivate:
-      return "Private";
-  }
-}
-
-flat_proto::AccessSpecifier ToFlatProto(AccessSpecifier access) {
-  switch (access) {
-    case kPublic:
-      return flat_proto::PUBLIC;
-    case kProtected:
-      return flat_proto::PROTECTED;
-    case kPrivate:
-      return flat_proto::PRIVATE;
-  }
-}
-
-std::ostream& operator<<(std::ostream& o, const AccessSpecifier& access) {
-  return o << AccessToString(access);
-}
-
-flat_proto::Field Field::ToFlatProto() const {
-  flat_proto::Field proto;
-  if (rust_identifier) {
-    *proto.mutable_rust_identifier() = rust_identifier->ToFlatProto();
-  }
-  if (cpp_identifier) {
-    *proto.mutable_cpp_identifier() = cpp_identifier->ToFlatProto();
-  }
-  if (doc_comment) {
-    proto.set_doc_comment(*doc_comment);
-  }
-  *proto.mutable_type() = type.ToFlatProto();
-  proto.set_access(crubit::ToFlatProto(access));
-  proto.set_offset(offset);
-  proto.set_size(size);
-  if (unknown_attr.ok()) {
-    if (unknown_attr->has_value()) {
-      proto.mutable_unknown_attr()->set_ok_value(unknown_attr->value());
-    }
-  } else {
-    proto.mutable_unknown_attr()->set_err(unknown_attr.status().message());
-  }
-  proto.set_is_no_unique_address(is_no_unique_address);
-  proto.set_is_bitfield(is_bitfield);
-  proto.set_is_inheritable(is_inheritable);
-  proto.set_is_mutable(is_mutable);
-  if (deprecated) {
-    proto.set_deprecated(*deprecated);
-  }
-  return proto;
 }
 
 flat_proto::SpecialMemberFunc ToFlatProto(SpecialMemberFunc f) {
@@ -443,63 +247,6 @@ flat_proto::SpecialMemberFunc ToFlatProto(SpecialMemberFunc f) {
     case SpecialMemberFunc::kUnavailable:
       return flat_proto::UNAVAILABLE;
   }
-}
-
-flat_proto::BaseClass BaseClass::ToFlatProto() const {
-  flat_proto::BaseClass proto;
-  proto.set_base_record_id(base_record_id.value());
-  if (offset) {
-    proto.set_offset(*offset);
-  }
-  return proto;
-}
-
-static std::string RecordTypeToString(RecordType record_type) {
-  switch (record_type) {
-    case kStruct:
-      return "Struct";
-    case kUnion:
-      return "Union";
-    case kClass:
-      return "Class";
-  }
-}
-
-flat_proto::RecordType ToFlatProto(RecordType record_type) {
-  switch (record_type) {
-    case kStruct:
-      return flat_proto::STRUCT;
-    case kUnion:
-      return flat_proto::UNION;
-    case kClass:
-      return flat_proto::CLASS;
-  }
-}
-
-std::ostream& operator<<(std::ostream& o, const RecordType& record_type) {
-  return o << RecordTypeToString(record_type);
-}
-
-flat_proto::IncompleteRecord IncompleteRecord::ToFlatProto() const {
-  flat_proto::IncompleteRecord proto;
-  *proto.mutable_cc_name() = cc_name.ToFlatProto();
-  *proto.mutable_rs_name() = rs_name.ToFlatProto();
-  proto.set_unique_name(unique_name);
-  proto.set_id(id.value());
-  proto.set_owning_target(owning_target.value());
-  if (unknown_attr) proto.set_unknown_attr(*unknown_attr);
-  proto.set_record_type(crubit::ToFlatProto(record_type));
-  if (enclosing_item_id)
-    proto.set_enclosing_item_id(enclosing_item_id->value());
-  proto.set_must_bind(must_bind);
-  return proto;
-}
-
-flat_proto::SizeAlign SizeAlign::ToFlatProto() const {
-  flat_proto::SizeAlign proto;
-  proto.set_size(size);
-  proto.set_alignment(alignment);
-  return proto;
 }
 
 flat_proto::BridgeType BridgeType::ToFlatProto() const {
@@ -629,17 +376,6 @@ TraitImplPolarity* absl_nullable TraitDerives::Polarity(
   return nullptr;
 }
 
-static std::string TraitImplPolarityToString(TraitImplPolarity polarity) {
-  switch (polarity) {
-    case TraitImplPolarity::kNegative:
-      return "Negative";
-    case TraitImplPolarity::kNone:
-      return "None";
-    case TraitImplPolarity::kPositive:
-      return "Positive";
-  }
-}
-
 flat_proto::TraitImplPolarity ToFlatProto(TraitImplPolarity polarity) {
   switch (polarity) {
     case TraitImplPolarity::kNegative:
@@ -669,145 +405,6 @@ flat_proto::OwnedPtrConfig OwnedPtrConfig::ToFlatProto() const {
   return proto;
 }
 
-flat_proto::Record Record::ToFlatProto() const {
-  flat_proto::Record proto;
-  *proto.mutable_rs_name() = rs_name.ToFlatProto();
-  *proto.mutable_cc_name() = cc_name.ToFlatProto();
-  proto.set_unique_name(unique_name);
-  proto.set_mangled_cc_name(mangled_cc_name);
-  proto.set_id(id.value());
-  proto.set_owning_target(owning_target.value());
-  if (template_specialization)
-    *proto.mutable_template_specialization() =
-        template_specialization->ToFlatProto();
-  if (unknown_attr) proto.set_unknown_attr(*unknown_attr);
-  if (doc_comment) proto.set_doc_comment(*doc_comment);
-  if (bridge_type) *proto.mutable_bridge_type() = bridge_type->ToFlatProto();
-  if (owned_ptr_config)
-    *proto.mutable_owned_ptr_config() = owned_ptr_config->ToFlatProto();
-  proto.set_source_loc(source_loc);
-  for (const auto& b : unambiguous_public_bases)
-    *proto.add_unambiguous_public_bases() = b.ToFlatProto();
-  proto.mutable_fields()->Reserve(fields.size());
-  for (const auto& f : fields) *proto.add_fields() = f.ToFlatProto();
-  for (const auto& l : lifetime_params)
-    *proto.add_lifetime_params() = l.ToFlatProto();
-  *proto.mutable_size_align() = size_align.ToFlatProto();
-  *proto.mutable_trait_derives() = trait_derives.ToFlatProto();
-  proto.set_is_derived_class(is_derived_class);
-  proto.set_override_alignment(override_alignment);
-  proto.set_safety_annotation(crubit::ToFlatProto(safety_annotation));
-  proto.set_copy_constructor(crubit::ToFlatProto(copy_constructor));
-  proto.set_move_constructor(crubit::ToFlatProto(move_constructor));
-  proto.set_destructor(crubit::ToFlatProto(destructor));
-  proto.set_is_trivial_abi(is_trivial_abi);
-  proto.set_is_inheritable(is_inheritable);
-  proto.set_is_abstract(is_abstract);
-  if (nodiscard) proto.set_nodiscard(*nodiscard);
-  proto.set_record_type(crubit::ToFlatProto(record_type));
-  proto.set_is_aggregate(is_aggregate);
-  proto.set_is_canonical_alias(is_canonical_alias);
-  proto.mutable_children()->Reserve(children.size());
-  for (const auto& child : children) {
-    *proto.add_children() = crubit::ToFlatProto(*child);
-  }
-  if (enclosing_item_id)
-    proto.set_enclosing_item_id(enclosing_item_id->value());
-  proto.set_must_bind(must_bind);
-  proto.set_overloads_operator_delete(overloads_operator_delete);
-  proto.set_has_private_or_deleted_operator_delete(
-      has_private_or_deleted_operator_delete);
-  proto.set_impl_debug(impl_debug);
-  proto.set_has_private_pointer_or_reference_fields(
-      has_private_pointer_or_reference_fields);
-  proto.set_detected_formatter(detected_formatter);
-  proto.set_is_thread_safe(is_thread_safe);
-  proto.mutable_lifetime_inputs()->Add(lifetime_inputs.begin(),
-                                       lifetime_inputs.end());
-  if (deprecated) proto.set_deprecated(*deprecated);
-  proto.set_is_explicit_class_template_instantiation_definition(
-      is_explicit_class_template_instantiation_definition);
-  return proto;
-}
-
-flat_proto::Enumerator Enumerator::ToFlatProto() const {
-  flat_proto::Enumerator proto;
-  *proto.mutable_identifier() = identifier.ToFlatProto();
-  *proto.mutable_value() = value.ToFlatProto();
-  if (unknown_attr) proto.set_unknown_attr(*unknown_attr);
-  if (deprecated) proto.set_deprecated(*deprecated);
-  if (doc_comment) proto.set_doc_comment(*doc_comment);
-  return proto;
-}
-
-flat_proto::Enum Enum::ToFlatProto() const {
-  flat_proto::Enum proto;
-  *proto.mutable_cc_name() = cc_name.ToFlatProto();
-  *proto.mutable_rs_name() = rs_name.ToFlatProto();
-  proto.set_unique_name(unique_name);
-  proto.set_mangled_cc_name(mangled_cc_name);
-  proto.set_id(id.value());
-  proto.set_owning_target(owning_target.value());
-  proto.set_source_loc(source_loc);
-  *proto.mutable_underlying_type() = underlying_type.ToFlatProto();
-  if (enumerators) {
-    proto.mutable_enumerators()->Reserve(enumerators->size());
-    for (const auto& e : *enumerators) {
-      *proto.add_enumerators() = e.ToFlatProto();
-    }
-  } else {
-    proto.set_is_incomplete(true);
-  }
-  if (unknown_attr) proto.set_unknown_attr(*unknown_attr);
-  if (enclosing_item_id)
-    proto.set_enclosing_item_id(enclosing_item_id->value());
-  proto.set_must_bind(must_bind);
-  proto.set_detected_formatter(detected_formatter);
-  if (nodiscard) proto.set_nodiscard(nodiscard.value());
-  if (deprecated) proto.set_deprecated(*deprecated);
-  if (doc_comment) proto.set_doc_comment(*doc_comment);
-  return proto;
-}
-
-flat_proto::GlobalVar GlobalVar::ToFlatProto() const {
-  flat_proto::GlobalVar proto;
-  *proto.mutable_cc_name() = cc_name.ToFlatProto();
-  *proto.mutable_rs_name() = rs_name.ToFlatProto();
-  proto.set_unique_name(unique_name);
-  proto.set_id(id.value());
-  proto.set_owning_target(owning_target.value());
-  proto.set_source_loc(source_loc);
-  if (mangled_name) proto.set_mangled_name(*mangled_name);
-  *proto.mutable_type() = type.ToFlatProto();
-  if (unknown_attr) proto.set_unknown_attr(*unknown_attr);
-  if (enclosing_item_id)
-    proto.set_enclosing_item_id(enclosing_item_id->value());
-  proto.set_must_bind(must_bind);
-  if (deprecated) proto.set_deprecated(*deprecated);
-  if (doc_comment) proto.set_doc_comment(*doc_comment);
-  return proto;
-}
-
-flat_proto::TypeAlias TypeAlias::ToFlatProto() const {
-  flat_proto::TypeAlias proto;
-  *proto.mutable_cc_name() = cc_name.ToFlatProto();
-  *proto.mutable_rs_name() = rs_name.ToFlatProto();
-  proto.set_unique_name(unique_name);
-  proto.set_id(id.value());
-  proto.set_owning_target(owning_target.value());
-  if (doc_comment) proto.set_doc_comment(*doc_comment);
-  if (unknown_attr) proto.set_unknown_attr(*unknown_attr);
-  *proto.mutable_underlying_type() = underlying_type.ToFlatProto();
-  proto.set_source_loc(source_loc);
-  if (enclosing_item_id)
-    proto.set_enclosing_item_id(enclosing_item_id->value());
-  proto.set_must_bind(must_bind);
-  if (deprecated) proto.set_deprecated(*deprecated);
-  proto.mutable_lifetime_inputs()->Add(lifetime_inputs.begin(),
-                                       lifetime_inputs.end());
-  return proto;
-}
-
 FormattedError FormattedError::FromStatus(absl::Status status) {
   std::optional<absl::Cord> fmt_cord =
       status.GetPayload(FormattedError::kFmtPayloadTypeUrl);
@@ -825,146 +422,6 @@ flat_proto::FormattedError FormattedError::ToFlatProto() const {
   flat_proto::FormattedError proto;
   proto.set_fmt(fmt_);
   proto.set_message(message_);
-  return proto;
-}
-
-static std::string UnsupportedItemKindToString(UnsupportedItem::Kind kind) {
-  switch (kind) {
-    case UnsupportedItem::Kind::kFunc:
-      return "Func";
-    case UnsupportedItem::Kind::kGlobalVar:
-      return "GlobalVar";
-    case UnsupportedItem::Kind::kStruct:
-      return "Struct";
-    case UnsupportedItem::Kind::kUnion:
-      return "Union";
-    case UnsupportedItem::Kind::kClass:
-      return "Class";
-    case UnsupportedItem::Kind::kEnum:
-      return "Enum";
-    case UnsupportedItem::Kind::kTypeAlias:
-      return "TypeAlias";
-    case UnsupportedItem::Kind::kNamespace:
-      return "Namespace";
-    case UnsupportedItem::Kind::kConstructor:
-      return "Constructor";
-    case UnsupportedItem::Kind::kOther:
-      return "Other";
-  }
-}
-
-flat_proto::UnsupportedItem::Kind ToFlatProto(UnsupportedItem::Kind kind) {
-  switch (kind) {
-    case UnsupportedItem::Kind::kFunc:
-      return flat_proto::UnsupportedItem::FUNC;
-    case UnsupportedItem::Kind::kGlobalVar:
-      return flat_proto::UnsupportedItem::GLOBAL_VAR;
-    case UnsupportedItem::Kind::kStruct:
-      return flat_proto::UnsupportedItem::STRUCT;
-    case UnsupportedItem::Kind::kUnion:
-      return flat_proto::UnsupportedItem::UNION;
-    case UnsupportedItem::Kind::kClass:
-      return flat_proto::UnsupportedItem::CLASS;
-    case UnsupportedItem::Kind::kEnum:
-      return flat_proto::UnsupportedItem::ENUM;
-    case UnsupportedItem::Kind::kTypeAlias:
-      return flat_proto::UnsupportedItem::TYPE_ALIAS;
-    case UnsupportedItem::Kind::kNamespace:
-      return flat_proto::UnsupportedItem::NAMESPACE;
-    case UnsupportedItem::Kind::kConstructor:
-      return flat_proto::UnsupportedItem::CONSTRUCTOR;
-    case UnsupportedItem::Kind::kOther:
-      return flat_proto::UnsupportedItem::OTHER;
-  }
-}
-
-flat_proto::UnsupportedItem::Path UnsupportedItem::Path::ToFlatProto() const {
-  flat_proto::UnsupportedItem::Path proto;
-  *proto.mutable_ident() = crubit::ToFlatProto(ident);
-  if (enclosing_item_id)
-    proto.set_enclosing_item_id(enclosing_item_id->value());
-  return proto;
-}
-
-flat_proto::UnsupportedItem UnsupportedItem::ToFlatProto() const {
-  flat_proto::UnsupportedItem proto;
-  proto.set_name(name);
-  if (!unique_name.empty()) proto.set_unique_name(unique_name);
-  proto.set_kind(crubit::ToFlatProto(kind));
-  if (path) *proto.mutable_path() = path->ToFlatProto();
-  for (const auto& error : errors) *proto.add_errors() = error.ToFlatProto();
-  proto.set_source_loc(source_loc);
-  proto.set_id(id.value());
-  proto.set_must_bind(must_bind);
-  if (defining_target) proto.set_defining_target(defining_target->value());
-  if (inline_cpp_source_text) {
-    proto.set_inline_cpp_source_text(*inline_cpp_source_text);
-  }
-  proto.set_is_compiler_generated(is_compiler_generated);
-  return proto;
-}
-
-flat_proto::Comment Comment::ToFlatProto() const {
-  flat_proto::Comment proto;
-  proto.set_text(text);
-  proto.set_id(id.value());
-  proto.set_must_bind(must_bind);
-  return proto;
-}
-
-flat_proto::Namespace Namespace::ToFlatProto() const {
-  flat_proto::Namespace proto;
-  *proto.mutable_cc_name() = cc_name.ToFlatProto();
-  *proto.mutable_rs_name() = rs_name.ToFlatProto();
-  proto.set_unique_name(unique_name);
-  proto.set_id(id.value());
-  proto.set_canonical_namespace_id(canonical_namespace_id.value());
-  if (unknown_attr) proto.set_unknown_attr(*unknown_attr);
-  proto.set_owning_target(owning_target.value());
-  proto.mutable_children()->Reserve(children.size());
-  for (const auto& child : children) {
-    *proto.add_children() = crubit::ToFlatProto(*child);
-  }
-  if (enclosing_item_id)
-    proto.set_enclosing_item_id(enclosing_item_id->value());
-  proto.set_is_inline(is_inline);
-  proto.set_must_bind(must_bind);
-  if (deprecated) proto.set_deprecated(*deprecated);
-  if (doc_comment) proto.set_doc_comment(*doc_comment);
-  return proto;
-}
-
-flat_proto::Item ToFlatProto(const IR::Item& item) {
-  flat_proto::Item proto;
-  std::visit(
-      visitor{
-          [&](const Func& i) { *proto.mutable_func() = i.ToFlatProto(); },
-          [&](const Record& i) { *proto.mutable_record() = i.ToFlatProto(); },
-          [&](const IncompleteRecord& i) {
-            *proto.mutable_incomplete_record() = i.ToFlatProto();
-          },
-          [&](const Enum& i) { *proto.mutable_enum_decl() = i.ToFlatProto(); },
-          [&](const Constant& i) {
-            *proto.mutable_constant() = i.ToFlatProto();
-          },
-          [&](const TypeAlias& i) {
-            *proto.mutable_type_alias() = i.ToFlatProto();
-          },
-          [&](const GlobalVar& i) {
-            *proto.mutable_global_var() = i.ToFlatProto();
-          },
-          [&](const UnsupportedItem& i) {
-            *proto.mutable_unsupported_item() = i.ToFlatProto();
-          },
-          [&](const Comment& i) { *proto.mutable_comment() = i.ToFlatProto(); },
-          [&](const Namespace& i) {
-            *proto.mutable_namespace_decl() = i.ToFlatProto();
-          },
-          [&](const UseMod& i) { *proto.mutable_use_mod() = i.ToFlatProto(); },
-          [&](const ExistingRustType& i) {
-            *proto.mutable_existing_rust_type() = i.ToFlatProto();
-          }},
-      item.as_variant());
   return proto;
 }
 
@@ -993,20 +450,6 @@ void IR::ToFlatProto(flat_proto::IRProto* proto) const {
                                                unstable_rust_features.end());
   proto->mutable_reexported_namespaces()->Add(reexported_namespaces.begin(),
                                               reexported_namespaces.end());
-}
-
-std::string ItemToString(const IR::Item& item) {
-  return ToFlatProto(item).ShortDebugString();
-}
-
-void SetMustBindItem(IR::Item& item) {
-  // All IR::Item variants have a `must_bind` field.
-  std::visit([](auto& item_variant) { item_variant.must_bind = true; },
-             item.as_variant());
-}
-
-ItemId Item::id() const {
-  return std::visit([](const auto& val) { return val.id; }, as_variant());
 }
 
 }  // namespace crubit

@@ -1725,7 +1725,8 @@ std::unique_ptr<ir_proto::Item> Importer::HardError(const clang::Decl& decl,
 }
 
 std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
-    const clang::Decl& original_decl, std::optional<UnsupportedItem::Path> path,
+    const clang::Decl& original_decl,
+    std::optional<ir_proto::UnsupportedItem::Path> path,
     std::vector<FormattedError> errors, bool is_hard_error) {
   ir_proto::UnsupportedItem::Kind kind = ir_proto::UnsupportedItem::OTHER;
   const clang::Decl* decl = &original_decl;
@@ -1798,7 +1799,7 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
   unsupported->set_unique_name(GetUniqueName(original_decl));
   unsupported->set_kind(kind);
   if (path.has_value()) {
-    *unsupported->mutable_path() = path->ToFlatProto();
+    *unsupported->mutable_path() = std::move(*path);
   }
   for (const auto& err : errors) {
     *unsupported->add_errors() = err.ToFlatProto();
@@ -2362,7 +2363,7 @@ std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
   return name;
 }
 
-std::optional<UnsupportedItem::Path>
+std::optional<ir_proto::UnsupportedItem::Path>
 Importer::GetUnsupportedItemPathForTemplateDecl(
     clang::RedeclarableTemplateDecl* template_decl) {
   auto enclosing_item_id = GetEnclosingItemId(template_decl);
@@ -2382,10 +2383,13 @@ Importer::GetUnsupportedItemPathForTemplateDecl(
   if (!names.ok()) {
     return std::nullopt;
   }
-  return UnsupportedItem::Path{
-      .ident = names->cc_identifier,
-      .enclosing_item_id = *enclosing_item_id,
-  };
+  ir_proto::UnsupportedItem::Path path;
+  *path.mutable_ident() = crubit::ToFlatProto(names->cc_identifier);
+  if (enclosing_item_id->has_value()) {
+    path.set_enclosing_item_id(
+        static_cast<int64_t>((*enclosing_item_id)->value()));
+  }
+  return path;
 }
 
 std::string Importer::GetNameForSourceOrder(const clang::Decl* decl) const {

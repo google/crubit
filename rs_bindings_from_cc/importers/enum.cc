@@ -51,13 +51,11 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
   // This is preferred to invoking `ImportUnsupportedItem` directly because it
   // ensures that the path is set correctly. Note that this cannot be used above
   // because the enclosing item ID and translated name are not yet available.
-  auto unsupported = [this, &enum_name, &enclosing_item_id,
+  auto unsupported = [this, &enum_name = *enum_name,
+                      &enclosing_item_id = *enclosing_item_id,
                       enum_decl](FormattedError error) {
-    return ictx_.ImportUnsupportedItem(
-        *enum_decl,
-        UnsupportedItem::Path{.ident = (*enum_name).rs_identifier(),
-                              .enclosing_item_id = *enclosing_item_id},
-        {std::move(error)});
+    return ictx_.ImportUnsupportedItem(*enum_decl, enum_name.rs_identifier(),
+                                       enclosing_item_id, {std::move(error)});
   };
 
   clang::QualType cpp_type = enum_decl->getIntegerType();

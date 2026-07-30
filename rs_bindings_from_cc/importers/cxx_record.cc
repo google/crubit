@@ -211,32 +211,33 @@ absl::StatusOr<std::string> CcName(
       .getAsString(policy);
 }
 
-AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
+ir_proto::AccessSpecifier TranslateAccessSpecifier(
+    clang::AccessSpecifier access) {
   switch (access) {
     case clang::AS_public:
-      return kPublic;
+      return ir_proto::PUBLIC;
     case clang::AS_protected:
-      return kProtected;
+      return ir_proto::PROTECTED;
     case clang::AS_private:
-      return kPrivate;
+      return ir_proto::PRIVATE;
     case clang::AS_none:
       LOG(FATAL)
           << "We should never be encoding a 'none' access specifier in IR.";
       // We have to return something. Conservatively return private so we don't
       // inadvertently make a private member variable accessible in Rust.
-      return kPrivate;
+      return ir_proto::PRIVATE;
   }
 }
 
-absl::StatusOr<RecordType> TranslateRecordType(
+absl::StatusOr<ir_proto::RecordType> TranslateRecordType(
     const clang::RecordDecl& record_decl) {
   switch (record_decl.getTagKind()) {
     case clang::TagTypeKind::Struct:
-      return RecordType::kStruct;
+      return ir_proto::STRUCT;
     case clang::TagTypeKind::Union:
-      return RecordType::kUnion;
+      return ir_proto::UNION;
     case clang::TagTypeKind::Class:
-      return RecordType::kClass;
+      return ir_proto::CLASS;
     case clang::TagTypeKind::Enum:
       llvm::report_fatal_error(
           "clang::RecordDecl::getTagKind shouldn't return TagTypeKind::Enum");
@@ -1019,15 +1020,12 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   // because the enclosing item ID and translated name are not yet available.
   auto unsupported = [this, &record_decl, &rs_name,
                       &enclosing_item_id](FormattedError error) {
-    return ictx_.ImportUnsupportedItem(
-        *record_decl,
-        UnsupportedItem::Path{
-            .ident = Identifier(rs_name),
-            .enclosing_item_id = std::move(enclosing_item_id)},
-        {std::move(error)});
+    return ictx_.ImportUnsupportedItem(*record_decl, Identifier(rs_name),
+                                       enclosing_item_id, {std::move(error)});
   };
 
-  absl::StatusOr<RecordType> record_type = TranslateRecordType(*record_decl);
+  absl::StatusOr<ir_proto::RecordType> record_type =
+      TranslateRecordType(*record_decl);
   if (!record_type.ok()) {
     return unsupported(
         FormattedError::FromStatus(std::move(record_type).status()));
@@ -1223,7 +1221,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
     if (unknown_attr->has_value()) {
       incomplete->set_unknown_attr(std::move(**unknown_attr));
     }
-    incomplete->set_record_type(ToFlatProto(*record_type));
+    incomplete->set_record_type(*record_type);
     if (enclosing_item_id.has_value()) {
       incomplete->set_enclosing_item_id(enclosing_item_id->value());
     }
@@ -1374,7 +1372,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   if (nodiscard.has_value()) {
     record->set_nodiscard(std::move(*nodiscard));
   }
-  record->set_record_type(ToFlatProto(*record_type));
+  record->set_record_type(*record_type);
   record->set_is_aggregate(record_decl->isAggregate());
   record->set_is_canonical_alias(anon_typedef != nullptr ||
                                  is_canonical_template_alias);
@@ -1517,7 +1515,7 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
       proto_field.set_doc_comment(*comment);
     }
     *proto_field.mutable_type() = type.ToFlatProto();
-    proto_field.set_access(ToFlatProto(TranslateAccessSpecifier(access)));
+    proto_field.set_access(TranslateAccessSpecifier(access));
     proto_field.set_offset(layout.getFieldOffset(field_decl->getFieldIndex()));
     proto_field.set_size(size);
     if (!unknown_attr.ok() || unknown_attr->has_value()) {

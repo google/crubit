@@ -304,12 +304,11 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   // This is preferred to invoking `ImportUnsupportedItem` directly because it
   // ensures that the path is set correctly. Note that this cannot be used above
   // because the enclosing item ID and translated name are not yet available.
-  auto unsupported = [this, &translated_name, &enclosing_item_id,
+  auto unsupported = [this, &translated_name = *translated_name,
+                      &enclosing_item_id = *enclosing_item_id,
                       function_decl](FormattedError error) {
     return ictx_.ImportUnsupportedItem(
-        *function_decl,
-        UnsupportedItem::Path{.ident = translated_name->cc_identifier,
-                              .enclosing_item_id = *enclosing_item_id},
+        *function_decl, translated_name.cc_identifier, enclosing_item_id,
         {std::move(error)}, must_bind_);
   };
 
@@ -714,9 +713,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
 
   if (!errors.error_set.empty()) {
     return ictx_.ImportUnsupportedItem(
-        *function_decl,
-        UnsupportedItem::Path{.ident = translated_name->cc_identifier,
-                              .enclosing_item_id = *enclosing_item_id},
+        *function_decl, translated_name->cc_identifier, *enclosing_item_id,
         std::vector(errors.error_set.begin(), errors.error_set.end()),
         must_bind_);
   }
@@ -785,9 +782,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
       });
   if (!unknown_attr.ok()) {
     return ictx_.ImportUnsupportedItem(
-        *function_decl,
-        UnsupportedItem::Path{.ident = translated_name->cc_identifier,
-                              .enclosing_item_id = *enclosing_item_id},
+        *function_decl, translated_name->cc_identifier, *enclosing_item_id,
         {FormattedError::FromStatus(std::move(unknown_attr).status())},
         must_bind_);
   }

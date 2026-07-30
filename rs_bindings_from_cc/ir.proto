@@ -10,16 +10,29 @@ message HeaderName {
   string name = 1;
 }
 
+// A lifetime.
 message LifetimeName {
+  // Lifetime name. Unlike syn::Lifetime, this does not include the apostrophe.
+  //
+  // Note that this is not an identifier; the rules for what is a valid lifetime
+  // name are slightly different than for identifiers, so we simply use a
+  // std::string instead of an Identifier here.
   string name = 1;
   int32 id = 2;
 }
 
+// An error that stores its format string as well as the formatted message.
 message FormattedError {
+  // The format string that produced the error message, if available. This is
+  // used as an aggregation key for error reports.
   string fmt = 1;
+  // Explanation of why we couldn't generate bindings.
   string message = 2;
 }
 
+// Whether a function is annotated with `CRUBIT_UNSAFE` or
+// `CRUBIT_DISABLE_UNSAFE`. `[[clang::unsafe_buffer_usage]]` is also considered
+// unsafe.
 enum SafetyAnnotation {
   SAFETY_ANNOTATION_UNSPECIFIED = 0;
   SAFETY_ANNOTATION_DISABLE_UNSAFE = 1;
@@ -36,7 +49,17 @@ enum PointerTypeKind {
   OWNED = 5;
 }
 
+// Calling conventions for functions that are supported by Crubit.
+//
+// This is a subset of the calling conventions supported by Clang.
 enum CallingConv {
+  // TODO(agent): port this stuff over:
+  // kC,              // __attribute__((cdecl))
+  // kX86VectorCall,  // __attribute__((vectorcall))
+  // kX86FastCall,    // __attribute__((fastcall))
+  // kX864ThisCall,   // __attribute__((thiscall))
+  // kX86StdCall,     // __attribute__((stdcall))
+  // kWin64,          // __attribute__((ms_abi))
   CALLING_CONV_UNSPECIFIED = 0;
   C_DECL = 1;
   FAST_CALL = 2;
@@ -48,16 +71,37 @@ enum CallingConv {
 
 message CcType {
   message Primitive {
+    // One of: bool, void, float, double, char, signed char, unsigned char,
+    // short, int, long, long long, __int128, unsigned short, unsigned int,
+    // unsigned long, unsigned long long, unsigned __int128, char16_t, char32_t,
+    // ptrdiff_t, intptr_t, size_t, uintptr_t, std::ptrdiff_t, std::intptr_t,
+    // std::size_t, std::uintptr_t, int8_t, int16_t, int32_t, int64_t,
+    // std::int8_t, std::int16_t, std::int32_t, std::int64_t, uint8_t, uint16_t,
+    // uint32_t, uint64_t, std::uint8_t, std::uint16_t, std::uint32_t,
+    // std::uint64_t.
+    //
+    // If we wanted to be really pedantic, this could be an enum. However,
+    // this type is only read by Rust after serialization. So there's no reason
+    // to convert to an enum just to convert it back in a ToJson() method.
     string spelling = 1;
   }
   message PointerType {
     PointerTypeKind kind = 1;
+    // `LifetimeId` is present if the C++ code contained an explicit
+    // lifetime annotation or if C++ lifetime annotation elision was enabled.
+    //
+    // Today, this is rare: the Clang lifetime annotation pass isn't stable or
+    // functional.
     int32 lifetime = 2;
     CcType pointee_type = 3;
   }
   message FuncPointer {
+    // When true, this is a C++ function reference that maps to a Rust function
+    // pointer. When false, this is a C++ function pointer that maps to a Rust
+    // function pointer wrapped in an `Option`.
     bool non_null = 1;
     CallingConv call_conv = 2;
+    // param_and_return_types assumes the last type is the return type.
     repeated CcType param_and_return_types = 3;
     repeated string lifetime_inputs = 4;
   }
@@ -72,15 +116,35 @@ message CcType {
 
   bool is_const = 6;
   string unknown_attr = 7;
+  // An ordered list of lifetime variable names applied to this type. It is
+  // valid for the same name to appear multiple times.
   repeated string explicit_lifetimes = 8;
 }
 
+// An identifier involved in bindings.
+//
+// For example, the identifier for the C++ function `int Add(int a, int b);`
+// is `Identifier("Add")`.
+//
+// This also includes operator names, such as "operator==". Non-symbol tokens in
+// the operator name are separated by a single space. For example:
+//
+//  * `Identifier("operator==")`
+//  * `Identifier("operator new[]")`
+//  * `Identifier("operator co_await")`
+//
+// Invariants:
+//     `identifier` cannot be empty.
 message Identifier {
   string identifier = 1;
 }
 
+// An integer value in the range [-2**63, 2**64). This is intended to be used
+// to produce integer literals in Rust code while specifying the type
+// out-of-band.
 message IntegerConstant {
   bool is_negative = 1;
+  // value (mod 2**64)
   int64 wrapped_value = 2;
 }
 
@@ -98,6 +162,12 @@ enum SpecialName {
   CONSTRUCTOR = 2;
 }
 
+// A generalized notion of identifier, or an "Unqualified Identifier" in C++
+// jargon: https://en.cppreference.com/w/cpp/language/identifiers
+//
+// Note that constructors are given a separate variant, so that we can treat
+// them differently. After all, they are not invoked or defined like normal
+// functions.
 message UnqualifiedIdentifier {
   oneof identifier {
     Identifier ident = 1;
@@ -107,6 +177,11 @@ message UnqualifiedIdentifier {
   }
 }
 
+// A function parameter.
+//
+// Examples:
+//    FuncParam of a C++ function `void Foo(int32_t a);` will be
+//    `FuncParam{.type=Type{"i32", "int32_t"}, .identifier=Identifier("foo"))`.
 message FuncParam {
   CcType type = 1;
   Identifier identifier = 2;
@@ -118,9 +193,9 @@ message FuncParam {
 message InstanceMethodMetadata {
   enum ReferenceQualification {
     REFERENCE_QUALIFICATION_UNSPECIFIED = 0;
-    L_VALUE = 1;
-    R_VALUE = 2;
-    UNQUALIFIED = 3;
+    L_VALUE = 1;      // void Foo() &;
+    R_VALUE = 2;      // void Foo() &&;
+    UNQUALIFIED = 3;  // void Foo();
   }
   ReferenceQualification reference = 1;
   bool is_const = 2;
@@ -152,6 +227,7 @@ message Func {
   string source_loc = 22;
   int64 id = 23;
   int64 enclosing_item_id = 24;
+  // The enclosing record that this function is a friend of.
   int64 adl_enclosing_record = 25;
   bool must_bind = 26;
   repeated string lifetime_inputs = 27;
@@ -159,6 +235,7 @@ message Func {
   bool is_compiler_generated = 29;
 }
 
+// Access specifier for a member or base class.
 enum AccessSpecifier {
   ACCESS_SPECIFIER_UNSPECIFIED = 0;
   PUBLIC = 1;
@@ -174,38 +251,64 @@ message StatusOrOptionalString {
 }
 
 message Field {
+  // Name of the field. This may be missing for "unnamed members".
   Identifier rust_identifier = 1;
   Identifier cpp_identifier = 2;
   string doc_comment = 3;
   CcType type = 4;
   AccessSpecifier access = 5;
-  int64 offset = 6;
-  int64 size = 7;
+  int64 offset = 6;  // Field offset in bits.
+  int64 size = 7;    // Field size in bits.
   StatusOrOptionalString unknown_attr = 8;
-  bool is_no_unique_address = 9;
-  bool is_bitfield = 10;
-  bool is_inheritable = 11;
+  bool is_no_unique_address = 9;  // True if the field is [[no_unique_address]].
+  bool is_bitfield = 10;          // True if the field is a bitfield.
+  bool is_inheritable = 11;       // True if the field is inheritable.
   string deprecated = 12;
-  bool is_mutable = 13;
+  bool is_mutable = 13;  // True if the field is mutable.
 }
 
+// Information about special member functions.
+//
+// Nontrivial definitions are divided into two: there are nontrivial definitions
+// which are nontrivial only due to a member variable which defines the special
+// member function, and those which are nontrivial because the operation was
+// user defined for the object itself, or for any base class.
+//
+// This allows us to sidestep calling C++ implementations of special member
+// functions in narrow cases: even for a nontrivial special member function, if
+// it is kNontrivialMembers, we can directly implement it in Rust in terms of
+// the member variables.
 enum SpecialMemberFunc {
   SPECIAL_MEMBER_FUNC_UNSPECIFIED = 0;
   TRIVIAL = 1;
+  // Nontrivial, but only because of a member variable with a nontrivial special
+  // member function.
   NONTRIVIAL_MEMBERS = 2;
+  // Nontrivial because of a user-defined special member function in this or a
+  // base class.
   NONTRIVIAL_USER_DEFINED = 3;
+  // Deleted or non-public.
   UNAVAILABLE = 4;
 }
 
+// A base class subobject of a struct or class.
 message BaseClass {
   int64 base_record_id = 1;
+  // The offset the base class subobject is located at. This is always nonempty
+  // for nonvirtual inheritance, and always empty if a virtual base class is
+  // anywhere in the inheritance chain.
   int64 offset = 2;
 }
 
 enum RecordType {
   RECORD_TYPE_UNSPECIFIED = 0;
+  // `struct` in Rust and C++
   STRUCT = 1;
+  // `union` in Rust and C++
   UNION = 2;
+  // `class` in C++.  This is distinct from `kStruct` to avoid generating
+  // `struct SomeClass` in `..._rs_api_impl.cc` and getting `-Wmismatched-tags`
+  // warnings (see also b/238212337).
   CLASS = 3;
 }
 
@@ -222,7 +325,9 @@ message TemplateArg {
   }
 }
 
+// Present on records that are bridge types.
 message BridgeType {
+  // From CRUBIT_BRIDGE.
   message Bridge {
     string rust_name = 1;
     string abi_rust = 2;
@@ -268,6 +373,7 @@ message BridgeType {
   }
 }
 
+// A constant value (constexpr or const with constant initializer).
 message Constant {
   IntegerConstant value = 1;
   Identifier cc_name = 2;
@@ -284,6 +390,9 @@ message Constant {
   string doc_comment = 13;
 }
 
+// A template specialization for a template record, containing information
+// including the template name (like `ns::vector` for `ns::vector<int>`) and the
+// template arguments (like [`int`, `float`] for `ns::map<int, float>`).
 message TemplateSpecialization {
   message StdStringView {}
   message StdWStringView {}
@@ -329,6 +438,7 @@ enum TraitImplPolarity {
   POSITIVE = 3;
 }
 
+// The set of traits to derive on the Rust type.
 message TraitDerives {
   TraitImplPolarity clone = 1;
   TraitImplPolarity copy = 2;
@@ -344,11 +454,18 @@ message OwnedPtrConfig {
 }
 
 message Record {
+  // `rs_name` and `cc_name` are typically equal, but they may be different for
+  // template instantiations.
   Identifier rs_name = 1;
   Identifier cc_name = 2;
   string unique_name = 3;
+  // Mangled record names are used to 1) provide valid Rust identifiers for
+  // C++ template specializations, and 2) help build unique names for virtual
+  // upcast thunks.
   string mangled_cc_name = 4;
   int64 id = 5;
+  // The target that owns this record. If this is a template instantiation, this
+  // is the target that instantiated this type.
   string owning_target = 6;
   TemplateSpecialization template_specialization = 7;
   string unknown_attr = 8;
@@ -361,26 +478,37 @@ message Record {
   repeated LifetimeName lifetime_params = 15;
   SizeAlign size_align = 16;
   TraitDerives trait_derives = 17;
+  // True if any base classes exist.
   bool is_derived_class = 18;
+  // True if the alignment may differ from what the fields would imply.
   bool override_alignment = 19;
   SafetyAnnotation safety_annotation = 20;
   SpecialMemberFunc copy_constructor = 21;
   SpecialMemberFunc move_constructor = 22;
   SpecialMemberFunc destructor = 23;
+  // Whether this type is passed by value as if it were a trivial type.
   bool is_trivial_abi = 24;
+  // Whether this type can be inherited from.
   bool is_inheritable = 25;
+  // Whether this type is abstract.
   bool is_abstract = 26;
+  // Whether this type is annotated with [[clang::warn_unused_result]].
   string nodiscard = 27;
   RecordType record_type = 28;
+  // Whether this type can be initialized using aggregate initialization syntax.
   bool is_aggregate = 29;
+  // It is an anonymous record with a typedef name.
   bool is_canonical_alias = 30;
   int64 enclosing_item_id = 32;
   bool must_bind = 33;
   bool overloads_operator_delete = 34;
   bool detected_formatter = 35;
+  // Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
   bool is_thread_safe = 36;
   repeated string lifetime_inputs = 37;
   string deprecated = 38;
+  // True when this record is created from an explicit class template
+  // instantiation.
   bool is_explicit_class_template_instantiation_definition = 39;
   bool has_private_or_deleted_operator_delete = 40;
   repeated Item children = 41;
@@ -388,6 +516,7 @@ message Record {
   bool has_private_pointer_or_reference_fields = 43;
 }
 
+// A forward-declared record (e.g. `struct Foo;`)
 message IncompleteRecord {
   Identifier cc_name = 1;
   Identifier rs_name = 2;
@@ -444,6 +573,7 @@ message GlobalVar {
   string doc_comment = 13;
 }
 
+// A type alias (defined either using `typedef` or `using`).
 message TypeAlias {
   Identifier cc_name = 1;
   Identifier rs_name = 2;
@@ -457,9 +587,11 @@ message TypeAlias {
   int64 enclosing_item_id = 10;
   bool must_bind = 11;
   string deprecated = 12;
+  // Lifetime variable names bound by this type alias.
   repeated string lifetime_inputs = 13;
 }
 
+// A placeholder for an item that we can't generate bindings for (yet)
 message UnsupportedItem {
   enum Kind {
     KIND_UNSPECIFIED = 0;
@@ -487,6 +619,7 @@ message UnsupportedItem {
   repeated FormattedError errors = 5;
   string source_loc = 6;
   int64 id = 7;
+  // Whether the item required binding (was annotated with `CRUBIT_MUST_BIND`).
   bool must_bind = 8;
   string defining_target = 9;
   string inline_cpp_source_text = 10;
@@ -515,6 +648,8 @@ message Namespace {
   repeated Item children = 14;
 }
 
+// Declare a module and use its contents (used to support extra Rust source
+// files).
 message UseMod {
   string path = 1;
   Identifier mod_name = 2;
@@ -522,10 +657,13 @@ message UseMod {
   bool must_bind = 4;
 }
 
+// A type which has no bindings generated, and instead uses an already-existing
+// rust type.
 message ExistingRustType {
   string rs_name = 1;
   string cc_name = 2;
   string unique_name = 3;
+  // The generic/template parameters to the C++/Rust type.
   repeated TemplateArg template_args = 4;
   string owning_target = 5;
   SizeAlign size_align = 6;
@@ -562,8 +700,22 @@ message IRProto {
     repeated Item items = 1;
   }
 
+  // Collection of public headers that were used to construct the AST this `IR`.
+  //
+  // In production, these come from the `--public_headers` cmdline flag.
+  // Note that the order of the headers might be significant and needs to be
+  // preserved.
   repeated HeaderName public_headers = 1;
   string current_target = 2;
+  // Empty string signals that the bindings should be generated in the crate
+  // root. This is the default state.
+  //
+  // Non-empty value represents the name of the first-level submodule inside of
+  // which bindings should be generated. This is how we generate bindings for
+  // class template instantiations - we put all generated bindings into a hidden
+  // module of the user crate so everything can be compiled in one rustc
+  // invocation (this enables us to access types introduced in the user crate
+  // for template instantiations in the future).
   string crate_root_path = 5;
   map<string, FeatureSet> crubit_features = 6;
   repeated string unstable_rust_features = 7;

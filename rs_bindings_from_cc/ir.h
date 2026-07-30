@@ -104,24 +104,6 @@ inline std::string DebugStringFromDecl(const clang::Decl* decl) {
 // A numerical ID that uniquely identifies a lifetime.
 CRUBIT_DEFINE_STRONG_INT_TYPE(LifetimeId, int);
 
-// A lifetime.
-struct LifetimeName {
-  rs_bindings_from_cc::ir_proto::flat::LifetimeName ToFlatProto() const;
-
-  // Lifetime name. Unlike syn::Lifetime, this does not include the apostrophe.
-  //
-  // Note that this is not an identifier; the rules for what is a valid lifetime
-  // name are slightly different than for identifiers, so we simply use a
-  // std::string instead of an Identifier here.
-  std::string name;
-
-  LifetimeId id;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const LifetimeName& l) {
-  return o << l.name;
-}
-
 // An error that stores its format string as well as the formatted message.
 class FormattedError final {
  public:
@@ -242,18 +224,6 @@ struct CcType {
   };
 
   struct Primitive {
-    // One of: bool, void, float, double, char, signed char, unsigned char,
-    // short, int, long, long long, __int128, unsigned short, unsigned int,
-    // unsigned long, unsigned long long, unsigned __int128, char16_t, char32_t,
-    // ptrdiff_t, intptr_t, size_t, uintptr_t, std::ptrdiff_t, std::intptr_t,
-    // std::size_t, std::uintptr_t, int8_t, int16_t, int32_t, int64_t,
-    // std::int8_t, std::int16_t, std::int32_t, std::int64_t, uint8_t, uint16_t,
-    // uint32_t, uint64_t, std::uint8_t, std::uint16_t, std::uint32_t,
-    // std::uint64_t.
-    //
-    // If we wanted to be really pedantic, this could be an enum. However,
-    // this type is only read by Rust after serialization. So there's no reason
-    // to convert to an enum just to convert it back in a ToJson() method.
     std::string spelling;
   };
 
@@ -391,25 +361,6 @@ inline std::ostream& operator<<(std::ostream& stream, const Operator& op) {
                 << op.Name() << "`";
 }
 
-// A function parameter.
-//
-// Examples:
-//    FuncParam of a C++ function `void Foo(int32_t a);` will be
-//    `FuncParam{.type=Type{"i32", "int32_t"}, .identifier=Identifier("foo"))`.
-struct FuncParam {
-  rs_bindings_from_cc::ir_proto::flat::FuncParam ToFlatProto() const;
-
-  CcType type;
-  Identifier identifier;
-  std::vector<int> clang_lifetime_capture_by;
-  bool clang_lifetimebound = false;
-  std::optional<std::string> unknown_attr;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const FuncParam& param) {
-  return o << param.ToFlatProto().ShortDebugString();
-}
-
 enum SpecialName {
   kDestructor,
   kConstructor,
@@ -451,109 +402,6 @@ struct TranslatedIdentifier {
 // TODO(lukasza): Consider extracting a separate ConstructorMetadata struct to
 // account for the fact that `is_const` and `is_virtual` never applies to
 // constructors.
-struct InstanceMethodMetadata {
-  enum ReferenceQualification : char {
-    kLValue,       // void Foo() &;
-    kRValue,       // void Foo() &&;
-    kUnqualified,  // void Foo();
-  };
-  rs_bindings_from_cc::ir_proto::flat::InstanceMethodMetadata ToFlatProto()
-      const;
-
-  ReferenceQualification reference = kUnqualified;
-  bool is_const = false;
-  bool is_virtual = false;
-};
-
-// A function involved in the bindings.
-struct Func {
-  rs_bindings_from_cc::ir_proto::flat::Func ToFlatProto() const;
-
-  UnqualifiedIdentifier cc_name;
-  UnqualifiedIdentifier rs_name;
-  std::string unique_name;
-  BazelLabel owning_target;
-  std::optional<std::string> doc_comment;
-  std::string mangled_name;
-  CcType return_type;
-  std::vector<FuncParam> params;
-  std::vector<LifetimeName> lifetime_params;
-  bool is_inline;
-  // If null, this is not an instance method.
-  std::optional<InstanceMethodMetadata> instance_method_metadata;
-  bool is_extern_c = false;
-  bool is_noreturn = false;
-  bool is_variadic = false;
-  bool is_consteval = false;
-  std::optional<std::string> nodiscard;
-  std::optional<std::string> deprecated;
-  std::optional<std::string> unknown_attr;
-  bool has_c_calling_convention = true;
-  bool is_member_or_descendant_of_class_template = false;
-  SafetyAnnotation safety_annotation;
-  std::string source_loc;
-  ItemId id;
-  std::optional<ItemId> enclosing_item_id;
-  // The enclosing record that this function is a friend of.
-  //
-  // If present, this function should only generate top-level bindings if its
-  // arguments refer to this enclosing record according to the ADL rules.
-  // This is necessary because ADL is needed in order to find friend functions.
-  //
-  // This could in principle be resolved while generating the IR, but the richer
-  // Rust type modeling in src_code_gen makes it much easier to do on the
-  // consuming end.
-  std::optional<ItemId> adl_enclosing_record;
-  bool must_bind = false;
-  // Lifetime variable names bound by this function.
-  std::vector<std::string> lifetime_inputs;
-  std::optional<std::string> inline_cpp_source_text;
-  bool is_compiler_generated = false;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const Func& f) {
-  return o << f.ToFlatProto().ShortDebugString();
-}
-
-// Access specifier for a member or base class.
-enum AccessSpecifier {
-  kPublic,
-  kProtected,
-  kPrivate,
-};
-
-rs_bindings_from_cc::ir_proto::flat::AccessSpecifier ToFlatProto(
-    AccessSpecifier access);
-
-std::ostream& operator<<(std::ostream& o, const AccessSpecifier& access);
-
-// A field (non-static member variable) of a record.
-struct Field {
-  rs_bindings_from_cc::ir_proto::flat::Field ToFlatProto() const;
-
-  // Name of the field.  This may be missing for "unnamed members" - see:
-  // - https://en.cppreference.com/w/c/language/struct
-  // - https://rust-lang.github.io/rfcs/2102-unnamed-fields.html
-  std::optional<Identifier> rust_identifier;
-  std::optional<Identifier> cpp_identifier;
-
-  std::optional<std::string> doc_comment;
-  CcType type;
-  AccessSpecifier access;
-  uint64_t offset;  // Field offset in bits.
-  uint64_t size;    // Field size in bits.
-  absl::StatusOr<std::optional<std::string>> unknown_attr;
-  bool is_no_unique_address;  // True if the field is [[no_unique_address]].
-  bool is_bitfield;           // True if the field is a bitfield.
-  bool is_inheritable;        // True if the field is inheritable.
-  bool is_mutable;            // True if the field is mutable.
-  // Set if this is [[deprecated]]. If no message was given, will be "".
-  std::optional<std::string> deprecated;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const Field& f) {
-  return o << f.ToFlatProto().ShortDebugString();
-}
 
 // Information about special member functions.
 //
@@ -568,11 +416,11 @@ inline std::ostream& operator<<(std::ostream& o, const Field& f) {
 // the member variables.
 enum class SpecialMemberFunc : char {
   kTrivial,
-  // Nontrivial, but only because of a member variable with a nontrivial
-  // special member function.
+  // Nontrivial, but only because of a member variable with a nontrivial special
+  // member function.
   kNontrivialMembers,
   // Nontrivial because of a user-defined special member function in this or a
-  // base class. (May *also* be nontrivial due to member variables.)
+  // base class.
   kNontrivialUserDefined,
   // Deleted or non-public.
   kUnavailable,
@@ -593,42 +441,6 @@ inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
       return o << "Unavailable";
   }
 }
-
-// A base class subobject of a struct or class.
-struct BaseClass {
-  rs_bindings_from_cc::ir_proto::flat::BaseClass ToFlatProto() const;
-  ItemId base_record_id;
-
-  // The offset the base class subobject is located at. This is always nonempty
-  // for nonvirtual inheritance, and always empty if a virtual base class is
-  // anywhere in the inheritance chain.
-  std::optional<int64_t> offset;
-};
-
-enum RecordType {
-  // `struct` in Rust and C++
-  kStruct,
-
-  // `union` in Rust and C++
-  kUnion,
-
-  // `class` in C++.  This is distinct from `kStruct` to avoid generating
-  // `struct SomeClass` in `..._rs_api_impl.cc` and getting `-Wmismatched-tags`
-  // warnings (see also b/238212337).
-  kClass,
-};
-
-rs_bindings_from_cc::ir_proto::flat::RecordType ToFlatProto(
-    RecordType record_type);
-
-std::ostream& operator<<(std::ostream& o, const RecordType& record_type);
-
-struct SizeAlign {
-  rs_bindings_from_cc::ir_proto::flat::SizeAlign ToFlatProto() const;
-
-  int64_t size;
-  int64_t alignment;
-};
 
 struct TemplateArg {
   rs_bindings_from_cc::ir_proto::flat::TemplateArg ToFlatProto() const;
@@ -682,27 +494,6 @@ struct BridgeType {
   std::variant<Bridge, StdOptional, StdPair, StdString, ProtoMessageBridge,
                Callable>
       variant;
-};
-
-// A constant value (`constexpr` or `const` with constant initializer).
-struct Constant {
-  rs_bindings_from_cc::ir_proto::flat::Constant ToFlatProto() const;
-
-  IntegerConstant value;
-
-  Identifier cc_name;
-  Identifier rs_name;
-  std::string unique_name;
-  ItemId id;
-  BazelLabel owning_target;
-  std::string source_loc;
-  CcType type;
-  std::optional<std::string> unknown_attr;
-  std::optional<ItemId> enclosing_item_id;
-  bool must_bind = false;
-  // Set if this is [[deprecated]]. If no message was given, will be "".
-  std::optional<std::string> deprecated;
-  std::optional<std::string> doc_comment;
 };
 
 // A template specialization for a template record, containing information
@@ -769,380 +560,6 @@ struct OwnedPtrConfig {
 
   std::string owned_ptr_type;
   std::string drop_impl;
-};
-
-// A record (struct, class, union).
-struct Record {
-  rs_bindings_from_cc::ir_proto::flat::Record ToFlatProto() const;
-
-  // `rs_name` and `cc_name` are typically equal, but they may be different for
-  // template instantiations (when `cc_name` is similar to `MyStruct<int>` and
-  // `rs_name` is similar to "__CcTemplateInst8MyStructIiE").
-  Identifier rs_name;
-  Identifier cc_name;
-  std::string unique_name;
-  // Mangled record names are used to 1) provide valid Rust identifiers for
-  // C++ template specializations, and 2) help build unique names for virtual
-  // upcast thunks.
-  std::string mangled_cc_name;
-
-  ItemId id;
-  // The target that owns this record. If this is a template instantiation, this
-  // is the target that instantiated this type (not the target that defined the
-  // template).
-  BazelLabel owning_target;
-  std::optional<TemplateSpecialization> template_specialization;
-  std::optional<std::string> unknown_attr;
-  std::optional<std::string> doc_comment;
-  std::optional<BridgeType> bridge_type;
-  std::optional<OwnedPtrConfig> owned_ptr_config;
-  std::string source_loc;
-  std::vector<BaseClass> unambiguous_public_bases;
-  std::vector<Field> fields;
-  std::vector<LifetimeName> lifetime_params;
-  SizeAlign size_align;
-  TraitDerives trait_derives;
-
-  // True if any base classes exist.
-  bool is_derived_class;
-
-  // True if the alignment may differ from what the fields would imply.
-  //
-  // For example, a base class or [[no_unique_address]] of alignment 8 should
-  // cause the record to have alignment at least 8. Since the field cannot be
-  // aligned due to layout issues, the parent struct must instead receive an
-  // alignment adjustment as necessary, via .override_alignment=true.
-  //
-  // More information: docs/design/struct_layout.md
-  bool override_alignment = false;
-
-  // Whether the C++ type is explicitly annotated as safe or unsafe, or has no
-  // safety annotation.
-  //
-  // Note that if the C++ type is not annotated, Crubit will still mark the type
-  // as unsafe if it is a union or contains unsafe public fields.
-  SafetyAnnotation safety_annotation = SafetyAnnotation::kUnannotated;
-
-  // Special member functions.
-  SpecialMemberFunc copy_constructor = SpecialMemberFunc::kUnavailable;
-  SpecialMemberFunc move_constructor = SpecialMemberFunc::kUnavailable;
-  SpecialMemberFunc destructor = SpecialMemberFunc::kUnavailable;
-
-  // Whether this type is passed by value as if it were a trivial type (the same
-  // as it would be if it were a struct in C).
-  //
-  // This can be either due to language rules (it *is* a trivial type), or due
-  // to the usage of a Clang attribute that forces trivial for calls:
-  //
-  //  * https://eel.is/c++draft/class.temporary#3
-  //  * https://clang.llvm.org/docs/AttributeReference.html#trivial-abi
-  bool is_trivial_abi = false;
-
-  // Whether this type can be inherited from.
-  //
-  // A type might not be inheritable if:
-  // * The type was explicitly marked final
-  // * A core function like the destructor was marked final
-  // * The type is a C++ union, which does not support inheritance
-  bool is_inheritable = false;
-
-  // Whether this type is abstract.
-  bool is_abstract = false;
-
-  // Whether this type is annotated with [[clang::warn_unused_result]].
-  // https://clang.llvm.org/docs/AttributeReference.html#nodiscard-warn-unused-result
-  std::optional<std::string> nodiscard = std::nullopt;
-
-  // Whether this `Record` corresponds to a C++ `union`, `struct`, or `class`.
-  RecordType record_type;
-
-  // Whether this type can be initialized using aggregate initialization syntax.
-  //
-  // For more context, see:
-  // * https://en.cppreference.com/w/cpp/types/is_aggregate
-  // * https://en.cppreference.com/w/cpp/language/aggregate_initialization
-  bool is_aggregate = false;
-
-  // It is an anonymous record with a typedef name.
-  bool is_canonical_alias = false;
-
-  // True when this record is created from an explicit class template
-  // instantiation definition (which is also what cc_template!{} macro results
-  // in).
-  bool is_explicit_class_template_instantiation_definition = false;
-
-  std::vector<ItemId> child_item_ids() const;
-  std::optional<ItemId> enclosing_item_id;
-  bool must_bind = false;
-  bool overloads_operator_delete = false;
-  bool has_private_or_deleted_operator_delete = false;
-  bool detected_formatter = false;
-  bool impl_debug = false;
-  bool has_private_pointer_or_reference_fields = false;
-
-  // Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
-  // Thread-safe types implement Send+Sync and wrap their internals in
-  // UnsafeCell, allowing non-const C++ methods to be called via &self.
-  bool is_thread_safe = false;
-
-  // Lifetime variable names bound by this record.
-  std::vector<std::string> lifetime_inputs;
-
-  // Set if this is [[deprecated]]. If no message was given, will be "".
-  std::optional<std::string> deprecated;
-
-  std::vector<std::shared_ptr<Item>> children;
-};
-
-// A forward-declared record (e.g. `struct Foo;`)
-struct IncompleteRecord {
-  rs_bindings_from_cc::ir_proto::flat::IncompleteRecord ToFlatProto() const;
-  Identifier cc_name;
-  Identifier rs_name;
-  std::string unique_name;
-  ItemId id;
-  BazelLabel owning_target;
-  std::optional<std::string> unknown_attr;
-  RecordType record_type;
-  std::optional<ItemId> enclosing_item_id;
-  bool must_bind = false;
-};
-
-struct Enumerator {
-  rs_bindings_from_cc::ir_proto::flat::Enumerator ToFlatProto() const;
-
-  Identifier identifier;
-  IntegerConstant value;
-  std::optional<std::string> unknown_attr;
-  // Set if this is [[deprecated]]. If no message was given, will be "".
-  std::optional<std::string> deprecated;
-  std::optional<std::string> doc_comment;
-};
-
-struct Enum {
-  rs_bindings_from_cc::ir_proto::flat::Enum ToFlatProto() const;
-
-  Identifier cc_name;
-  Identifier rs_name;
-  std::string unique_name;
-  std::string mangled_cc_name;
-  ItemId id;
-  BazelLabel owning_target;
-  std::string source_loc;
-  CcType underlying_type;
-  std::optional<std::vector<Enumerator>> enumerators;
-  std::optional<std::string> unknown_attr;
-  std::optional<ItemId> enclosing_item_id;
-  bool must_bind = false;
-  bool detected_formatter = false;
-  // Set if this is [[nodiscard]]. If no message was given, will be "".
-  std::optional<std::string> nodiscard;
-  // Set if this is [[deprecated]]. If no message was given, will be "".
-  std::optional<std::string> deprecated;
-  std::optional<std::string> doc_comment;
-};
-
-struct GlobalVar {
-  rs_bindings_from_cc::ir_proto::flat::GlobalVar ToFlatProto() const;
-
-  Identifier cc_name;
-  Identifier rs_name;
-  std::string unique_name;
-  ItemId id;
-  BazelLabel owning_target;
-  std::string source_loc;
-  std::optional<std::string> mangled_name;
-  CcType type;
-  std::optional<std::string> unknown_attr;
-  std::optional<ItemId> enclosing_item_id;
-  bool must_bind = false;
-  // Set if this is [[deprecated]]. If no message was given, will be "".
-  std::optional<std::string> deprecated;
-  std::optional<std::string> doc_comment;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const Record& r) {
-  return o << r.ToFlatProto().ShortDebugString();
-}
-
-// A type alias (defined either using `typedef` or `using`).
-struct TypeAlias {
-  rs_bindings_from_cc::ir_proto::flat::TypeAlias ToFlatProto() const;
-
-  Identifier cc_name;
-  Identifier rs_name;
-  std::string unique_name;
-  ItemId id;
-  BazelLabel owning_target;
-  std::optional<std::string> doc_comment;
-  std::optional<std::string> unknown_attr;
-  CcType underlying_type;
-  std::string source_loc;
-  std::optional<ItemId> enclosing_item_id;
-  bool must_bind = false;
-  // Set if this is [[deprecated]]. If no message was given, will be "".
-  std::optional<std::string> deprecated;
-  // Lifetime variable names bound by this type alias.
-  std::vector<std::string> lifetime_inputs;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const TypeAlias& t) {
-  return o << t.ToFlatProto().ShortDebugString();
-}
-
-// A placeholder for an item that we can't generate bindings for (yet)
-struct UnsupportedItem {
-  // Kind is used to indicate which item would cannot be wrapped.
-  enum class Kind {
-    kFunc,
-    kGlobalVar,
-    kStruct,
-    kUnion,
-    kClass,
-    kEnum,
-    kTypeAlias,
-    kNamespace,
-    kConstructor,
-    // Unnameable items include things like comments that do not result in
-    // Rust types.
-    kOther,
-  };
-
-  struct Path {
-    UnqualifiedIdentifier ident;
-    std::optional<ItemId> enclosing_item_id;
-
-    rs_bindings_from_cc::ir_proto::flat::UnsupportedItem::Path ToFlatProto()
-        const;
-  };
-
-  rs_bindings_from_cc::ir_proto::flat::UnsupportedItem ToFlatProto() const;
-
-  // TODO(forster): We could show the original declaration in the generated
-  // message (potentially also for successfully imported items).
-
-  // Qualified name of the item for which we couldn't generate bindings
-  std::string name;
-  std::string unique_name;
-
-  // For unsupported items, we may generate markers in the Rust bindings to
-  // indicate that the item is not supported. This function returns the kind of
-  // unsupported item in order to generate such markers in the proper namespace
-  // (type, function, module).
-  Kind kind;
-
-  std::optional<Path> path;
-
-  std::vector<FormattedError> errors;
-  std::string source_loc;
-  ItemId id;
-  std::optional<BazelLabel> defining_target;
-
-  // Whether the item required binding (was annotated with `CRUBIT_MUST_BIND`).
-  // If this is true, binding generation will fail with a hard error.
-  bool must_bind;
-  std::optional<std::string> inline_cpp_source_text;
-  bool is_compiler_generated = false;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const UnsupportedItem& r) {
-  return o << r.ToFlatProto().ShortDebugString();
-}
-
-struct Comment {
-  rs_bindings_from_cc::ir_proto::flat::Comment ToFlatProto() const;
-
-  std::string text;
-  ItemId id;
-  bool must_bind = false;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const Comment& r) {
-  return o << r.ToFlatProto().ShortDebugString();
-}
-
-struct Namespace {
-  rs_bindings_from_cc::ir_proto::flat::Namespace ToFlatProto() const;
-
-  Identifier cc_name;
-  Identifier rs_name;
-  std::string unique_name;
-  ItemId id;
-  ItemId canonical_namespace_id;
-  std::optional<std::string> unknown_attr;
-  BazelLabel owning_target;
-  std::vector<ItemId> child_item_ids() const;
-  std::optional<ItemId> enclosing_item_id;
-  bool is_inline = false;
-  bool must_bind = false;
-  // Set if this is [[deprecated]]. If no message was given, will be "".
-  std::optional<std::string> deprecated;
-  std::optional<std::string> doc_comment;
-
-  std::vector<std::shared_ptr<Item>> children;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const Namespace& n) {
-  return o << n.ToFlatProto().ShortDebugString();
-}
-
-// Declare a module and use its contents.
-//
-// This is used to support extra Rust source files.
-struct UseMod {
-  rs_bindings_from_cc::ir_proto::flat::UseMod ToFlatProto() const;
-
-  std::string path;
-  Identifier mod_name;
-  ItemId id;
-  bool must_bind = false;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const UseMod& use_mod) {
-  return o << use_mod.ToFlatProto().ShortDebugString();
-}
-
-// A type which has no bindings generated, and instead uses an already-existing
-// rust type.
-struct ExistingRustType {
-  rs_bindings_from_cc::ir_proto::flat::ExistingRustType ToFlatProto() const;
-
-  std::string rs_name;
-  std::string cc_name;
-  std::string unique_name;
-
-  // The generic/template parameters to the C++/Rust type.
-  std::vector<TemplateArg> template_args;
-
-  BazelLabel owning_target;
-  // Size and alignment, if known.
-  // (These will not be known for a forward declaration, for example.)
-  std::optional<SizeAlign> size_align;
-
-  bool is_same_abi;
-  ItemId id;
-  bool must_bind = false;
-  bool impl_debug = false;
-};
-
-inline std::ostream& operator<<(std::ostream& o,
-                                const ExistingRustType& existing_rust_type) {
-  return o << existing_rust_type.ToFlatProto().ShortDebugString();
-}
-
-struct Item
-    : public std::variant<Func, Record, IncompleteRecord, Enum, Constant,
-                          TypeAlias, GlobalVar, UnsupportedItem, Comment,
-                          Namespace, UseMod, ExistingRustType> {
-  using Base = std::variant<Func, Record, IncompleteRecord, Enum, Constant,
-                            TypeAlias, GlobalVar, UnsupportedItem, Comment,
-                            Namespace, UseMod, ExistingRustType>;
-  using Base::Base;
-
-  const Base& as_variant() const { return *this; }
-  Base& as_variant() { return *this; }
-
-  ItemId id() const;
 };
 
 // A complete intermediate representation of bindings for publicly accessible
@@ -1287,15 +704,8 @@ struct IR {
   // Note that the order of the headers might be significant and needs to be
   // preserved.
   std::vector<HeaderName> public_headers;
-
   BazelLabel current_target;
   ir_proto::IRProto ir_proto;
-
-  using Item = ::crubit::Item;
-  // TODO(b/530340081): Should refactor this out to stage flat items elsewhere.
-  std::vector<Item> items;
-  absl::flat_hash_map<BazelLabel, std::vector<std::shared_ptr<Item>>>
-      top_level_items;
 
   // Empty string signals that the bindings should be generated in the crate
   // root. This is the default state.
@@ -1306,9 +716,6 @@ struct IR {
   // module of the user crate so everything can be compiled in one rustc
   // invocation (this enables us to access types introduced in the user crate
   // for template instantiations in the future).
-  //
-  // TODO(hlopko): Replace empty strings with std::optional<std::string>
-  // throughout the codebase
   std::string crate_root_path;
 
   absl::flat_hash_map<BazelLabel, absl::flat_hash_set<std::string>>
@@ -1320,21 +727,8 @@ struct IR {
   std::vector<std::string> unstable_rust_features;
 };
 
-rs_bindings_from_cc::ir_proto::flat::Item ToFlatProto(const IR::Item& item);
-
-void SetMustBindItem(IR::Item& item);
-
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
-  rs_bindings_from_cc::ir_proto::flat::IRProto ir_proto;
-  ir.ToFlatProto(&ir_proto);
-  return o << ir_proto.ShortDebugString();
-}
-
-// Utility function to convert items to string.
-std::string ItemToString(const IR::Item& item);
-inline std::string ItemToString(const std::optional<IR::Item>& item) {
-  if (item.has_value()) return ItemToString(*item);
-  return "null";
+  return o << ir.ir_proto.ShortDebugString();
 }
 
 }  // namespace crubit
