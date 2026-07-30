@@ -51,17 +51,18 @@ struct UseModFromSrc {
 };
 
 absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
-    IR& ir, absl::Span<const std::string> extra_rs_srcs,
-    const absl::flat_hash_map<BazelLabel, std::vector<ItemId>>&
-        top_level_item_ids,
-    const absl::flat_hash_map<ItemId, std::vector<ItemId>>& child_item_ids) {
+    IR& ir, absl::Span<const std::string> extra_rs_srcs) {
   std::vector<ir_proto::Namespace*> all_namespaces =
       ir.get_items_if<ir_proto::Namespace>();
   absl::flat_hash_map<std::string, ItemId> name_to_top_level_ns;
   absl::flat_hash_set<ItemId> top_level_item_id_set;
-  if (auto it = top_level_item_ids.find(ir.current_target);
-      it != top_level_item_ids.end()) {
-    top_level_item_id_set.insert(it->second.begin(), it->second.end());
+  if (auto it = ir.ir_proto.top_level_items().find(ir.current_target.value());
+      it != ir.ir_proto.top_level_items().end()) {
+    for (const auto& item : it->second.items()) {
+      if (item.has_namespace_decl()) {
+        top_level_item_id_set.insert(ItemId(item.namespace_decl().id()));
+      }
+    }
   }
   absl::flat_hash_map<ItemId, ir_proto::Namespace*> id_to_namespace;
   for (auto ns : all_namespaces) {
@@ -94,23 +95,28 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
     for (size_t i = 1; i < parts.size(); ++i) {
       const auto& part = parts[i];
       bool found = false;
-      if (auto child_it = child_item_ids.find(ns_id);
-          child_it != child_item_ids.end()) {
-        for (auto child_id : child_it->second) {
-          if (auto ns_it = id_to_namespace.find(child_id);
-              ns_it != id_to_namespace.end() &&
-              ns_it->second->cc_name().identifier() == part) {
-            ns_id = child_id;
-            found = true;
-            break;
-          }
+      auto ns_it = id_to_namespace.find(ns_id);
+      if (ns_it == id_to_namespace.end()) {
+        return std::nullopt;
+      }
+      auto* parent_ns = ns_it->second;
+      for (const auto& child_item : parent_ns->children()) {
+        if (child_item.has_namespace_decl() &&
+            child_item.namespace_decl().cc_name().identifier() == part) {
+          ns_id = ItemId(child_item.namespace_decl().id());
+          found = true;
+          break;
         }
       }
       if (!found) {
         return std::nullopt;
       }
     }
-    return id_to_namespace[ns_id];
+    if (auto ns_it = id_to_namespace.find(ns_id);
+        ns_it != id_to_namespace.end()) {
+      return ns_it->second;
+    }
+    return std::nullopt;
   };
 
   int i = 0;
@@ -156,19 +162,12 @@ absl::StatusOr<std::vector<UseModFromSrc>> CreateUseModsFromExtraRustSrcs(
 }
 
 // Convert the extra_rs_srcs into UseMod items and add them to the IR.
-absl::Status AddUseModToIr(
-    IR& ir, absl::Span<const std::string> extra_rs_srcs,
-    absl::flat_hash_map<BazelLabel, std::vector<ItemId>>& top_level_item_ids,
-    absl::flat_hash_map<ItemId, std::vector<ItemId>>& child_item_ids) {
-  CRUBIT_ASSIGN_OR_RETURN(
-      std::vector<UseModFromSrc> use_mods,
-      CreateUseModsFromExtraRustSrcs(ir, extra_rs_srcs, top_level_item_ids,
-                                     child_item_ids));
+absl::Status AddUseModToIr(IR& ir,
+                           absl::Span<const std::string> extra_rs_srcs) {
+  CRUBIT_ASSIGN_OR_RETURN(std::vector<UseModFromSrc> use_mods,
+                          CreateUseModsFromExtraRustSrcs(ir, extra_rs_srcs));
   for (auto& use_mod_from_src : use_mods) {
-    ItemId use_mod_id(use_mod_from_src.use_mod_item.use_mod().id());
     if (use_mod_from_src.enclosing_namespace.has_value()) {
-      child_item_ids[ItemId(use_mod_from_src.enclosing_namespace.value()->id())]
-          .push_back(use_mod_id);
       *use_mod_from_src.enclosing_namespace.value()->add_children() =
           std::move(use_mod_from_src.use_mod_item);
     } else {
@@ -261,17 +260,11 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
 
   invocation.ir_.ir_proto = std::move(invocation.ir_proto_);
 
-  absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids =
-      invocation.top_level_item_ids_;
-  absl::flat_hash_map<ItemId, std::vector<ItemId>> child_item_ids =
-      invocation.child_item_ids_;
-  if (absl::Status status = AddUseModToIr(invocation.ir_, options.extra_rs_srcs,
-                                          top_level_item_ids, child_item_ids);
+  if (absl::Status status =
+          AddUseModToIr(invocation.ir_, options.extra_rs_srcs);
       !status.ok()) {
     return status;
   }
-  invocation.ir_.BuildTree(std::move(top_level_item_ids),
-                           std::move(child_item_ids));
   invocation.ir_.reexported_namespaces =
       std::vector<std::string>(options.reexported_namespaces.begin(),
                                options.reexported_namespaces.end());

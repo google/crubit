@@ -1297,11 +1297,6 @@ struct IR {
   absl::flat_hash_map<BazelLabel, std::vector<std::shared_ptr<Item>>>
       top_level_items;
 
-  std::vector<ItemId> top_level_item_ids(const BazelLabel& target) const;
-
-  void BuildTree(
-      absl::flat_hash_map<BazelLabel, std::vector<ItemId>> top_level_item_ids,
-      absl::flat_hash_map<ItemId, std::vector<ItemId>> child_item_ids);
   // Empty string signals that the bindings should be generated in the crate
   // root. This is the default state.
   //
