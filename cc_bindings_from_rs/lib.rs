@@ -286,7 +286,7 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
         let red = "\x1B[31m";
         eprintln!(
             "{bold}Crubit {italic}{red}failed{reset} to generate C++ bindings for Rust crate \
-            {bold}`{crate_name}`{reset} due to the following errors:\n{e}"
+            {bold}`{crate_name}`{reset} due to the following errors:\n{e:#}"
         );
         std::process::exit(1);
     }
