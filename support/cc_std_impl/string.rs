@@ -55,6 +55,14 @@ impl string_wrapper {
         self.as_slice().into()
     }
 
+    pub fn to_str(&self) -> Result<&str, core::str::Utf8Error> {
+        str::from_utf8(self.as_slice())
+    }
+
+    pub fn to_string(&self) -> Result<String, core::str::Utf8Error> {
+        self.to_str().map(String::from)
+    }
+
     #[cfg(unix)]
     pub fn as_os_str(&self) -> &std::ffi::OsStr {
         std::ffi::OsStr::from_bytes(&self)

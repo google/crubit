@@ -28,35 +28,35 @@ ABI-compatible, layout-compatible, or bridged.
 The following table summarizes the mapping and compatibility of types between
 C++ and Rust:
 
-Conceptual Type        | C++ Type                     | Rust Type                    | Compatibility     | Notes
-:--------------------- | :--------------------------- | :--------------------------- | :---------------- | :----
-**Primitives**         |                              |                              |                   |
-Integers               | `int32_t`, `int64_t`, etc.   | `i32`, `i64`, etc.           | ABI compatible    | Except 128-bit integers (`i128`/`u128` are not yet supported: b/254094650)
-Floating point         | `float`, `double`            | `f32`, `f64`                 | ABI compatible    |
-**Pointers & Refs**    |                              |                              |                   |
-Raw pointers           | `T*`, `const T*`             | `*mut T`, `*const T`         | ABI compatible    | If `T` is compatible
-References             | `const T&` / `T&`            | `&T` / `&mut T`              | Layout compatible | Supported as function parameters and return types
-String slices          | `rs_std::StrRef`             | `&str`                       | Layout compatible |
-Slices                 | `rs_std::SliceRef<T>`        | `&[T]`, `&mut [T]`           | Layout compatible |
-**Smart Pointers**     |                              |                              |                   |
-Unique pointer         | `std::unique_ptr<T>`         | `cc_std::std::unique_ptr<T>` | Layout compatible |
-**Containers**         |                              |                              |                   |
-Vector (C++)           | `std::vector<T>`             | `cc_std::std::vector<T>`     | Layout compatible | C++ `std::vector` in Rust
-Vector (Rust)          | `rs_std::Vec<T>`             | `Vec<T>`                     | Layout compatible | Rust `Vec` in C++
-Fixed-size array       | `std::array<T, N>`           | `[T; N]`                     | Layout compatible |
-**Strings**            |                              |                              |                   |
-String view            | `std::string_view`           | `cc_std::std::string_view`   | Layout compatible |
-Growable string (C++)  | `std::string`                | `cc_std::std::string`        | Bridged           |
-Growable string (Rust) | `rs::alloc::string::String`  | `String`                     | Layout compatible |
-**Option & Result**    |                              |                              |                   |
-Optional (C++)         | `std::optional<T>`           | `cc_std::std::optional<T>`   | Layout compatible |
-Option (Rust)          | `rs_std::Option<T>`          | `Option<T>`                  | Layout compatible | Converts to/from `std::optional<T>` in C++
-Result                 | `rs_std::Result<T, E>`       | `Result<T, E>`               | Layout compatible |
-**Other**              |                              |                              |                   |
-User-defined types     | `struct`/`class`             | `struct`/`enum`/`union`      | Layout compatible | Must be rust-movable (trivially copyable or `[[clang::trivial_abi]]`)
-Tuples                 | `rs_std::Tuple<T1, T2, ...>` | `(T1, T2, ...)`              | Layout compatible |
-Protocol Buffers       | C++ Proto                    | Rust Proto                   | Bridged           |
-Status                 | `absl::Status`               | `absl_status::Status`        | Bridged           |
+Conceptual Type                               | C++ Type                     | Rust Type                    | Compatibility     | Notes
+:-------------------------------------------- | :--------------------------- | :--------------------------- | :---------------- | :----
+**Primitives**                                |                              |                              |                   |
+Integers                                      | `int32_t`, `int64_t`, etc.   | `i32`, `i64`, etc.           | ABI compatible    | Except 128-bit integers (`i128`/`u128` are not yet supported: b/254094650)
+Floating point                                | `float`, `double`            | `f32`, `f64`                 | ABI compatible    |
+**Pointers & Refs**                           |                              |                              |                   |
+Raw pointers                                  | `T*`, `const T*`             | `*mut T`, `*const T`         | ABI compatible    | If `T` is compatible
+References                                    | `const T&` / `T&`            | `&T` / `&mut T`              | Layout compatible | Supported as function parameters and return types
+String slices                                 | `rs_std::StrRef`             | `&str`                       | Layout compatible |
+Slices                                        | `rs_std::SliceRef<T>`        | `&[T]`, `&mut [T]`           | Layout compatible |
+**Smart Pointers**                            |                              |                              |                   |
+[Unique pointer](/cpp/std#unique_ptr)         | `std::unique_ptr<T>`         | `cc_std::std::unique_ptr<T>` | Layout compatible |
+**Containers**                                |                              |                              |                   |
+[Vector (C++)](/cpp/std#vector)               | `std::vector<T>`             | `cc_std::std::vector<T>`     | Layout compatible | C++ `std::vector` in Rust
+Vec (Rust)                                    | `rs_std::Vec<T>`             | `Vec<T>`                     | Layout compatible | Rust `Vec` in C++
+Fixed-size array                              | `std::array<T, N>`           | `[T; N]`                     | Layout compatible |
+**Strings**                                   |                              |                              |                   |
+[String view](/cpp/std#string_view)           | `std::string_view`           | `cc_std::std::string_view`   | Layout compatible |
+[Growable string (C++)](/cpp/std#string) | `std::string`                | `cc_std::std::string`        | Bridged           |
+Growable string (Rust)                        | `rs::alloc::string::String`  | `String`                     | Layout compatible |
+**Option & Result**                           |                              |                              |                   |
+[Optional (C++)](/cpp/std#optional)           | `std::optional<T>`           | `cc_std::std::optional<T>`   | Layout compatible |
+Option (Rust)                                 | `rs_std::Option<T>`          | `Option<T>`                  | Layout compatible | Converts to/from `std::optional<T>` in C++
+Result                                        | `rs_std::Result<T, E>`       | `Result<T, E>`               | Layout compatible |
+**Other**                                     |                              |                              |                   |
+User-defined types                            | `struct`/`class`             | `struct`/`enum`/`union`      | Layout compatible | Must be rust-movable (trivially copyable or `[[clang::trivial_abi]]`)
+Tuples                                        | `rs_std::Tuple<T1, T2, ...>` | `(T1, T2, ...)`              | Layout compatible |
+Protocol Buffers                              | C++ Proto                    | Rust Proto                   | Bridged           |
+Status                                        | `absl::Status`               | `absl_status::Status`        | Bridged           |
 
 ### Experimental Type Support
 

@@ -32,6 +32,8 @@
         *   [Operator overloading](/docs/cpp/operator_overloading.md)
     *   [Classes and Structs](/docs/cpp/classes_and_structs.md)
     *   [Enums](/docs/cpp/enums.md)
+    *   <hr>
+    *   [The C++ Standard Library](/docs/cpp/std.md)
 
 *   C++ Bindings for Rust Libraries
 
@@ -43,7 +45,10 @@
     *   [Type Aliases](/docs/rust/type_aliases.md)
     *   [`use` Declarations](/docs/rust/use_declarations.md)
     *   [Traits](/docs/rust/traits.md)
-    *   <hr> [Movable types](/docs/rust/movable_types.md)
+    *   <hr>
+    *   [Movable types](/docs/rust/movable_types.md)
+    *   <hr>
+    *   [The Rust Standard Library](/docs/rust/std.md)
 
 *   Design {.cnav-collapsed-by-default}
 

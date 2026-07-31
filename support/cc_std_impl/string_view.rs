@@ -61,6 +61,12 @@ impl<'a> string_view<'a> {
         unsafe { &*self.raw.as_raw_bytes() }
     }
 
+    ///  Returns a Rust byte slice referring to the string_view's data.
+    #[inline]
+    pub fn as_slice(&self) -> &'a [u8] {
+        self.as_bytes()
+    }
+
     /// Returns an [`Iterator`] over the utf-8 chunks.
     pub fn utf8_chunks(&self) -> Utf8Chunks<'a> {
         self.as_bytes().utf8_chunks()
