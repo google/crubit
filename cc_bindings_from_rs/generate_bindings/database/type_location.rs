@@ -1,6 +1,7 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+use arc_anyhow::{bail, Result};
 
 /// Location where a type is used.
 #[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
@@ -52,15 +53,21 @@ pub enum TypeLocation {
 }
 
 impl TypeLocation {
-    pub fn is_bridgeable(self) -> bool {
+    /// Returns a descriptive error if a bridge type cannot be used in this location.
+    pub fn check_bridgeable(self) -> Result<()> {
         // This match is exhaustive to force us to think about new variants when adding them.
         match self {
-            TypeLocation::FnReturn { is_constructor } => !is_constructor,
-            TypeLocation::FnParam { .. } => true,
-            TypeLocation::Const => true,
-            TypeLocation::NestedBridgeable => true,
-            TypeLocation::Other => false,
-            TypeLocation::Field => false,
+            TypeLocation::FnReturn { is_constructor: false } => Ok(()),
+            TypeLocation::FnParam { .. } => Ok(()),
+            TypeLocation::Const => Ok(()),
+            TypeLocation::NestedBridgeable => Ok(()),
+            // TODO(jeanpierreda): Why?
+            TypeLocation::FnReturn { is_constructor: true } => bail!("Constructor functions cannot return bridge types"),
+            TypeLocation::Other => bail!("crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"),
+            TypeLocation::Field => bail!("crubit.rs/errors/bridge_field: Fields containing bridge types cannot receive bindings"),
         }
+    }
+    pub fn is_bridgeable(self) -> bool {
+        self.check_bridgeable().is_ok()
     }
 }

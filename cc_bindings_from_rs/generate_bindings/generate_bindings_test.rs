@@ -726,7 +726,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error formatting function return type `&'static RustType`: Failed to format the referent of the reference type `&'static RustType`: Bridged types must appear in a bridgeable type location"
+            "Error formatting function return type `&'static RustType`: Failed to format the referent of the reference type `&'static RustType`: crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"
         );
     });
 
@@ -734,7 +734,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error formatting function return type `*const RustType`: Failed to format the pointee of the pointer type `*const RustType`: Bridged types must appear in a bridgeable type location"
+            "Error formatting function return type `*const RustType`: Failed to format the pointee of the pointer type `*const RustType`: crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"
         );
     });
 
@@ -742,7 +742,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `&'a RustType`: Failed to format the referent of the reference type `&'a RustType`: Bridged types must appear in a bridgeable type location"
+            "Error handling parameter #0 of type `&'a RustType`: Failed to format the referent of the reference type `&'a RustType`: crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"
         );
     });
 
@@ -750,7 +750,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `*const RustType`: Failed to format the pointee of the pointer type `*const RustType`: Bridged types must appear in a bridgeable type location"
+            "Error handling parameter #0 of type `*const RustType`: Failed to format the pointee of the pointer type `*const RustType`: crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"
         );
     });
 }

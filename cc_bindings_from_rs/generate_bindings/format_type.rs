@@ -499,10 +499,9 @@ pub fn format_ty_for_cc<'tcx>(
                 }
                 return Ok(CcSnippet { tokens, prereqs });
             } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
-                ensure!(
-                    location.is_bridgeable() || bridged_type.is_layout_compatible(),
-                    "Bridged types must appear in a bridgeable type location"
-                );
+                if !bridged_type.is_layout_compatible() {
+                    location.check_bridgeable()?;
+                }
                 match bridged_type {
                     BridgedType::Legacy { include_paths, cpp_type, .. } => {
                         for path in &include_paths {

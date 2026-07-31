@@ -72,7 +72,8 @@ using MyStatusAlias CRUBIT_INTERNAL_RUST_TYPE(
 // `layout_equivalent_generics_golden::MyOptional<layout_equivalent_generics_golden::ByValueBridged>`:
 // `layout_equivalent_generics_golden::ByValueBridged` has no layout-compatible
 // C++ type, but is used as a generic parameter
-//   Bridged types must appear in a bridgeable type location
+//   crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types
+//   containing bridge types cannot receive bindings
 
 // CRUBIT_ANNOTATE: must_bind=
 bool accept_status(crubit::test::MyStatus status);
