@@ -264,7 +264,7 @@ impl BindingGenerationContext {
             .and_then(|artifact_info| {
                 let path = &artifact_info.path;
                 let rel_path = path.strip_prefix(&target_dir).ok()?;
-                rel_path.parent().and_then(|p|
+                rel_path.parent().and_then(|p| {
                     // Our path can be to an intermediate that already resides in the `deps`
                     // directory. We only want the profile directory here (with an optional target
                     // specific component). We'll reconstruct the deps path ourselves later.
@@ -273,7 +273,7 @@ impl BindingGenerationContext {
                     } else {
                         Some(p)
                     }
-                ).map(|p| p.to_owned())
+                }).map(|p| p.to_owned())
             })
             .ok_or_else(|| anyhow!("Failed to find root package artifact"))?;
         let dirs = Directories::new(target_dir.to_owned(), profile_dir, out_dir)?;
@@ -484,6 +484,7 @@ extern crate proc_macro;
         let profile_dir = &self.dirs.profile_dir;
 
         fs::create_dir_all(headers_dir.join("crubit"))?;
+        fs::create_dir_all(&self.dirs.deps_dir)?;
 
         // 1. Locate standard library crates and generate bindings for them first.
         let sysroot = self.get_sysroot()?;
