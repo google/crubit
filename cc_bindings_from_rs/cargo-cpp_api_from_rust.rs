@@ -27,7 +27,7 @@ use cargo_metadata::{Artifact, Message, Metadata, Package, PackageId, Resolve};
 use clap::Parser;
 use cmdline::Cmdline;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::env;
 use std::ffi;
 use std::fs;
@@ -445,6 +445,34 @@ impl BindingGenerationContext {
                     if let Some(dep_header) = pkg_to_header.get(&dep_pkg_id.repr) {
                         current_args
                             .push(format!("--crate-header={}={}", dep_artifact.name, dep_header));
+                    }
+                }
+            }
+            // Pass --extern and -Ldependency for all transitive dependencies
+            // so that rustc uses the user-built crates instead of any sysroot
+            // copies. The nightly sysroot ships many crates (e.g. flate2,
+            // blake3, libc) that can conflict with user dependencies.
+            let transitive_externs = self
+                .pkg_to_artifact
+                .iter()
+                .filter(|&(pkg_id_repr, _)| {
+                    pkg_id_repr != info.pkg_id_repr
+                        && !resolve_node
+                            .dependencies
+                            .iter()
+                            .any(|d| d.repr == *pkg_id_repr)
+                })
+                .map(|(_, artifact)| format!("--extern={}={}", artifact.name, artifact.path));
+            current_args.extend(transitive_externs);
+
+            // Pass -Ldependency for each unique directory containing a
+            // dependency rmeta, so rustc can resolve transitive dependencies
+            // without needing to copy files into a flat deps/ directory.
+            let mut dep_dirs = HashSet::new();
+            for artifact in self.pkg_to_artifact.values() {
+                if let Some(parent) = artifact.path.parent() {
+                    if dep_dirs.insert(parent.as_str()) {
+                        current_args.push(format!("-Ldependency={}", parent));
                     }
                 }
             }
