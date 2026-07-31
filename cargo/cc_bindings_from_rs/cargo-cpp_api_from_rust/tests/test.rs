@@ -34,9 +34,9 @@ fn test_subcommand_end_to_end() -> Result<(), Box<dyn std::error::Error>> {
 
     let output = cmd.output().expect("Failed to execute");
 
+    println!("{}", String::from_utf8_lossy(&output.stdout));
+    eprintln!("{}", String::from_utf8_lossy(&output.stderr));
     if !output.status.success() {
-        println!("{}", String::from_utf8_lossy(&output.stdout));
-        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
         panic!("cargo-cpp_api_from_rust failed");
     }
 

@@ -51,6 +51,7 @@ struct Cli {
     out_dir: Option<Utf8PathBuf>,
 }
 
+#[derive(Debug)]
 struct ArtifactInfo {
     path: Utf8PathBuf,
     name: String,
@@ -196,6 +197,7 @@ fn build_crate_and_stream_artifacts(
     Ok(pkg_to_artifact)
 }
 
+#[derive(Debug)]
 struct Directories {
     /// Target-arch specific target directory, e.g.
     /// "/path/to/target/x86_64-unknown-linux-gnu/release".
@@ -242,6 +244,7 @@ struct CrateBindingInfo<'a> {
     stdlib_externs: &'a [(String, Utf8PathBuf)],
 }
 
+#[derive(Debug)]
 struct BindingGenerationContext {
     pkg_to_artifact: HashMap<String, ArtifactInfo>,
     root: Package,
@@ -297,7 +300,7 @@ impl BindingGenerationContext {
             let toposort::TopoSortResult { ordered, .. } = toposort(nodes, deps, |a, b| a.cmp(b));
             ordered
         };
-        Ok(Self { pkg_to_artifact, root, ordered, dirs, resolve: resolve.clone() })
+        Ok(dbg!(Self { pkg_to_artifact, root, ordered, dirs, resolve: resolve.clone() }))
     }
 
     fn get_sysroot(&self) -> Result<Utf8PathBuf> {
