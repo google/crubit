@@ -11,12 +11,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <ranges>  // NOLINT(build/c++20); <internal link>
-#include <span>  // NOLINT(build/c++20); <internal link>
+#include <span>    // NOLINT(build/c++20); <internal link>
 #include <string_view>
 #include <type_traits>
 
+#include "crubit/support/internal/check_no_mutable_aliasing.h"
 #include "support/annotations.h"
-#include "support/internal/check_no_mutable_aliasing.h"
 
 namespace rs_std {
 

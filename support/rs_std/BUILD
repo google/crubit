@@ -1,6 +1,7 @@
 """C++ libraries that help work with Rust types."""
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
@@ -18,11 +19,9 @@ cc_library(
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
-    tags = [
-        "alt_dep=//support/rs_std:char",
-        "avoid_dep",
+    visibility = [
+        "//visibility:public",
     ],
-    visibility = ["//visibility:public"],
 
     # It is important to be thoughtful when adding new dependencies for `char`
     # (and possibly other targets in this BUILD file).  Using mature Abseil APIs
@@ -41,10 +40,6 @@ cc_library(
     hdrs = ["int.h"],
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
-    tags = [
-        "alt_dep=//support/public:int",
-        "avoid_dep",
-    ],
     visibility = [
         "//visibility:public",
     ],
@@ -156,13 +151,7 @@ cc_library(
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
-    tags = [
-        "alt_dep=//support/rs_std:slice_ref",
-        "avoid_dep",
-    ],
-    visibility = [
-        "//visibility:public",
-    ],
+    visibility = ["//visibility:public"],
 
     # Try to avoid unnecessary dependencies, so that Crubit users have to pull in as little as
     # possible. Using mature Abseil APIs seems okay - we should be able to assume that Crubit users
@@ -192,13 +181,7 @@ cc_library(
     # Enable bidirectional bindings (via crubit_internal_rust_type).
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
-    tags = [
-        "alt_dep=//support/rs_std:str_ref",
-        "avoid_dep",
-    ],
-    visibility = [
-        "//visibility:public",
-    ],
+    visibility = ["//visibility:public"],
 
     # Try to avoid unnecessary dependencies, so that Crubit users have to pull in as little as
     # possible. Using mature Abseil APIs seems okay - we should be able to assume that Crubit users
@@ -243,10 +226,6 @@ cc_library(
         "//features:wrapper",
     ],
     compatible_with = ["//buildenv/target:non_prod"],
-    tags = [
-        "alt_dep=//support/rs_std:dyn_callable",
-        "avoid_dep",
-    ],
     visibility = ["//visibility:public"],
     deps = [
         "//support:bridge_cpp",
@@ -272,10 +251,6 @@ cc_library(
     hdrs = ["traits.h"],
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
-    tags = [
-        "alt_dep=//support/rs_std:traits",
-        "avoid_dep",
-    ],
     visibility = [
         "//visibility:public",
     ],
@@ -287,10 +262,6 @@ cc_library(
     hdrs = ["iterator_adapter.h"],
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
-    tags = [
-        "alt_dep=//support/rs_std:iterator_adapter",
-        "avoid_dep",
-    ],
     visibility = [
         "//visibility:public",
     ],
@@ -314,10 +285,6 @@ cc_library(
     hdrs = ["option.h"],
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
-    tags = [
-        "alt_dep=//support/rs_std:option",
-        "avoid_dep",
-    ],
     visibility = [
         "//visibility:public",
     ],
@@ -329,10 +296,6 @@ cc_library(
     hdrs = ["result.h"],
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
-    tags = [
-        "alt_dep=//support/rs_std:result",
-        "avoid_dep",
-    ],
     visibility = [
         "//visibility:public",
     ],
@@ -344,10 +307,6 @@ cc_library(
     hdrs = ["vec.h"],
     aspect_hints = ["//features:experimental"],
     compatible_with = ["//buildenv/target:non_prod"],
-    tags = [
-        "alt_dep=//support/rs_std:vec",
-        "avoid_dep",
-    ],
     visibility = [
         "//visibility:public",
     ],
@@ -429,5 +388,21 @@ cpp_api_from_rust_toolchain_bindings(
     deps = [
         ":rs_alloc",
         ":rs_core",
+    ],
+)
+
+crubit_cc_test(
+    name = "include_cpp_config_test",
+    srcs = ["include_cpp_config_test.cc"],
+    deps = [
+        "//support/public:cpp_config",
+    ],
+)
+
+cc_test(
+    name = "include_cpp_config_test_stable",
+    srcs = ["include_cpp_config_test.cc"],
+    deps = [
+        "//support/public:cpp_config",
     ],
 )

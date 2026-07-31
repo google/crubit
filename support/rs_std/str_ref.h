@@ -18,8 +18,8 @@
 #include <string_view>
 #include <type_traits>
 
+#include "crubit/support/internal/check_no_mutable_aliasing.h"
 #include "support/annotations_internal.h"
-#include "support/internal/check_no_mutable_aliasing.h"
 #include "support/rs_std/internal/is_utf8.h"
 #include "support/rs_std/slice_ref.h"
 
