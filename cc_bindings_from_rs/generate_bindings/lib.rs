@@ -1569,8 +1569,6 @@ fn has_move_ctor_and_assignment_operator<'tcx>(
     let is_unpin = self_ty.is_unpin(tcx, typing_env);
     if has_default_ctor && is_unpin {
         Some(MoveCtorStyle::MemSwap)
-    } else if db.has_copy_ctor_and_assignment_operator(def_id, self_ty).is_some() {
-        Some(MoveCtorStyle::Copy)
     } else {
         None
     }
@@ -1589,9 +1587,6 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
         let adt_cc_name = &core.cc_short_name;
         let qualified_adt_name = &core.cc_fully_qualified_name;
         match db.has_move_ctor_and_assignment_operator(core.def_id, core.self_ty) {
-            // We rely on the copy constructor and assignment operator to handle the move
-            // operations.
-            Some(MoveCtorStyle::Copy) => Ok(ApiSnippets::default()),
             None => {
                 bail!(
                     "C++ move operations are unavailable for this type. See \

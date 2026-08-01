@@ -1275,10 +1275,9 @@ fn test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src: &
             }
         );
 
-        // Implicit, but not `=default`-ed move constructor and move assignment
-        // operator.
-        assert_cc_not_matches!(main_api.tokens, quote! { TypeUnderTest(TypeUnderTest&&) });
-        assert_cc_not_matches!(main_api.tokens, quote! { operator=(TypeUnderTest&&) });
+        // Explicitly deleted move constructor and move assignment operator.
+        assert_cc_matches!(main_api.tokens, quote! { TypeUnderTest(TypeUnderTest&&) = delete; });
+        assert_cc_matches!(main_api.tokens, quote! { operator=(TypeUnderTest&&) = delete; });
         // No definition of a custom move constructor nor move assignment operator.
         assert_cc_not_matches!(result.cc_details.tokens, quote! { TypeUnderTest(TypeUnderTest&&) },);
         assert_cc_not_matches!(result.cc_details.tokens, quote! { operator=(TypeUnderTest&&) },);
