@@ -2,10 +2,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use core::cell::Cell;
 use ctor::CtorNew;
 use googletest::{expect_eq, gtest};
 use span::absl::{RawSpan, RawSpanMut, Span, SpanMut};
 use span_lib::{MakeNonTrivial, NonTrivial, TruncateSpan, TruncateSpanMut, TruncateSpanNonTrivial};
+use static_assertions::{assert_impl_all, assert_not_impl_any};
 
 #[gtest]
 fn test_truncate_span_mut() {
@@ -41,3 +43,19 @@ fn test_truncate_span_non_trivial() {
     let truncated_span: &[NonTrivial] = unsafe { &*truncated_span.as_slice() };
     expect_eq!(truncated_span.len(), 0);
 }
+
+assert_impl_all!(Span<'static, i32>: Send, Sync);
+assert_impl_all!(SpanMut<'static, i32>: Send, Sync);
+assert_not_impl_any!(RawSpan<i32>: Send, Sync);
+assert_not_impl_any!(RawSpanMut<i32>: Send, Sync);
+
+// Cell<i32> is !Sync, so Span<Cell<i32>> is !Send and !Sync.
+assert_not_impl_any!(Span<'static, Cell<i32>>: Send, Sync);
+
+// SpanMut is Send when T: Send, but !Sync when T: !Sync.
+assert_impl_all!(SpanMut<'static, Cell<i32>>: Send);
+assert_not_impl_any!(SpanMut<'static, Cell<i32>>: Sync);
+
+// *const i32 is !Send and !Sync.
+assert_not_impl_any!(Span<'static, *const i32>: Send, Sync);
+assert_not_impl_any!(SpanMut<'static, *const i32>: Send, Sync);
