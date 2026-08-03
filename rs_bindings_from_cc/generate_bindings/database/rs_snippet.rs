@@ -460,21 +460,32 @@ impl<'a> UniformReprTemplateType<'a> {
             }
             Self::AbslSpan { is_const, include_lifetime, element_type, lifetime } => {
                 let element_type_tokens = element_type.to_token_stream(db);
+                // Use the custom name of the span crate, if configured (e.g. if
+                // label-encoded names are used).
+                let span_crate = db
+                    .ir()
+                    .crate_name(&BazelLabel::from("@abseil-cpp//absl/types:span"))
+                    .map(|ident| quote! { ::#ident })
+                    .unwrap_or_else(|| quote! { ::span });
 
                 // Use Span when we have a lifetime parameter, and RawSpan otherwise.
                 //
                 // See http://<internal link>.
                 match (*is_const, *include_lifetime, lifetime) {
                     (true, _, Some(lifetime)) => {
-                        quote! { ::span::absl::Span<#lifetime, #element_type_tokens> }
+                        quote! { #span_crate::absl::Span<#lifetime, #element_type_tokens> }
                     }
                     (false, _, Some(lifetime)) => {
-                        quote! { ::span::absl::SpanMut<#lifetime, #element_type_tokens> }
+                        quote! { #span_crate::absl::SpanMut<#lifetime, #element_type_tokens> }
                     }
-                    (true, true, _) => quote! { ::span::absl::Span<'_, #element_type_tokens> },
-                    (false, true, _) => quote! { ::span::absl::SpanMut<'_, #element_type_tokens> },
-                    (true, false, _) => quote! { ::span::absl::RawSpan<#element_type_tokens> },
-                    (false, false, _) => quote! { ::span::absl::RawSpanMut<#element_type_tokens> },
+                    (true, true, _) => quote! { #span_crate::absl::Span<'_, #element_type_tokens> },
+                    (false, true, _) => {
+                        quote! { #span_crate::absl::SpanMut<'_, #element_type_tokens> }
+                    }
+                    (true, false, _) => quote! { #span_crate::absl::RawSpan<#element_type_tokens> },
+                    (false, false, _) => {
+                        quote! { #span_crate::absl::RawSpanMut<#element_type_tokens> }
+                    }
                 }
             }
             Self::StdStringView { in_cc_std, lifetime } => {
