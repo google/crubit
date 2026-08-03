@@ -253,19 +253,3 @@ def _get_additional_cc_deps_variant_info(cc_deps_list):
         if cc_dep[RustBindingsFromCcInfo].dep_variant_info:
             additional_cc_deps.extend([cc_dep[RustBindingsFromCcInfo].dep_variant_info])
     return collections.uniq(additional_cc_deps)
-
-def get_additional_rust_deps(aspect_ctx):
-    """Returns DepVariantInfo of `deps` and `cc_deps` associated with the `_target`.
-
-    Args:
-        aspect_ctx: The ctx from an aspect_hint.
-
-    Returns:
-        A list of `DepVariantInfo` of the given `deps` and `cc_deps`.
-    """
-    additional_rust_deps = []
-    for hint in aspect_ctx.rule.attr.aspect_hints:
-        if AdditionalRustSrcsProviderInfo in hint:
-            additional_rust_deps.extend(hint[AdditionalRustSrcsProviderInfo].deps)
-            additional_rust_deps.extend(hint[AdditionalRustSrcsProviderInfo].cc_deps)
-    return collections.uniq(additional_rust_deps)
