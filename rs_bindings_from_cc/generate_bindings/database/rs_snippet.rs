@@ -2414,6 +2414,15 @@ impl<'a> RsTypeKind<'a> {
 ///
 /// This has _very_ limited support for other type expressions, like `&T`,
 /// and special-cases well known builtin types like `char`.
+fn remap_crate_name(crate_name: &str, ir: &IR) -> Option<Ident> {
+    for (label, remapped_ident) in ir.tree_ir().crate_names.iter() {
+        if label.target_name_escaped() == crate_name {
+            return Some(remapped_ident.clone());
+        }
+    }
+    None
+}
+
 fn fully_qualify_type<'a>(
     db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
     item: ir::Item,
@@ -2426,13 +2435,15 @@ fn fully_qualify_type<'a>(
             None => quote! { crate },
         }
     };
-    fully_qualify_type_impl(type_expression, root_crate)
+    let remap = |crate_name: &str| remap_crate_name(crate_name, db.ir());
+    fully_qualify_type_impl(type_expression, root_crate, remap)
 }
 
 /// Broken out for testing :/
 fn fully_qualify_type_impl(
     type_expression: &str,
     root_crate: impl Fn() -> TokenStream,
+    remap: impl Fn(&str) -> Option<Ident>,
 ) -> TokenStream {
     let mut type_expression_suffix = type_expression;
     'fix: loop {
@@ -2479,6 +2490,17 @@ fn fully_qualify_type_impl(
         .expect("Type expression should parse as a TokenStream");
 
     if type_expression_suffix.starts_with("::") {
+        let clean_path = type_expression_suffix.strip_prefix("::").unwrap();
+        if let Some(first_part) = clean_path.split("::").next() {
+            if let Some(remapped_ident) = remap(first_part) {
+                let rest_of_path = &clean_path[first_part.len()..];
+                let rest_parts =
+                    rest_of_path.split("::").filter(|s| !s.is_empty()).map(make_rs_ident);
+                let all_parts: Vec<Ident> =
+                    std::iter::once(remapped_ident).chain(rest_parts).collect();
+                return quote! { #prefix :: #( #all_parts )::* };
+            }
+        }
         quote! { #prefix #type_expression }
     } else {
         let top_level_crate = root_crate();
@@ -2552,14 +2574,164 @@ impl<'a, 'ty> Iterator for RsTypeKindIter<'a, 'ty> {
 mod tests {
     use super::*;
     use arc_anyhow::Result;
-    use error_report::anyhow;
+    use error_report::{anyhow, ErrorReporting, FatalErrors, IgnoreErrors, ReportFatalError};
     use googletest::matchers::eq;
     use googletest::{expect_that, gtest};
     use token_stream_matchers::assert_rs_matches;
 
-    fn make_existing_rust_type(name: &'static str, is_same_abi: bool) -> RsTypeKind<'static> {
+    use crate::code_snippet::{BindingsInfo, NoBindingsReason, ResolvedName};
+    use crate::db::CodegenFunctions;
+    use crate::db::Interner;
+    use crate::function_types::{FunctionId, GeneratedFunction, ImplKind};
+    use crubit_abi_type::CrubitAbiType;
+    use ir_testing::make_ir_from_items;
+
+    struct TestFixture {
+        ir: IR<'static>,
+        errors: IgnoreErrors,
+        fatal_errors: FatalErrors,
+        interner: Interner,
+    }
+
+    fn setup_test() -> TestFixture {
+        let ir = make_ir_from_items([]);
+        TestFixture {
+            ir,
+            errors: IgnoreErrors,
+            fatal_errors: FatalErrors::new(),
+            interner: Interner::new(),
+        }
+    }
+
+    fn placeholder_rs_type_kind_safety<'db>(
+        _db: &BindingsGenerator<'db>,
+        _type_: RsTypeKind<'db>,
+    ) -> Option<UnsafeReason> {
+        None
+    }
+    fn placeholder_record_field_safety<'db>(
+        _db: &BindingsGenerator<'db>,
+        _field: Field<'db>,
+    ) -> Option<UnsafeReason> {
+        None
+    }
+    fn placeholder_record_safety<'db>(
+        _db: &BindingsGenerator<'db>,
+        _record: Rc<Record<'db>>,
+    ) -> Option<UnsafeReason> {
+        None
+    }
+    fn placeholder_has_bindings<'db>(
+        _db: &BindingsGenerator<'db>,
+        _item: Item<'db>,
+    ) -> Result<BindingsInfo, NoBindingsReason> {
+        Err(NoBindingsReason::Unsupported(anyhow!("unsupported")))
+    }
+    fn placeholder_rs_type_kind_with_lifetime_elision<'db>(
+        _db: &BindingsGenerator<'db>,
+        _cc_type: CcType,
+        _lifetime_options: LifetimeOptions,
+    ) -> Result<RsTypeKind<'db>> {
+        Err(anyhow!("not implemented"))
+    }
+    fn placeholder_generate_function<'db>(
+        _db: &BindingsGenerator<'db>,
+        _func: Rc<Func<'db>>,
+        _derived_record: Option<Rc<Record<'db>>>,
+    ) -> Result<Option<GeneratedFunction>> {
+        Ok(None)
+    }
+    fn placeholder_overload_sets<'db>(
+        _db: &BindingsGenerator<'db>,
+    ) -> Rc<std::collections::HashMap<Rc<FunctionId>, Option<ItemId>>> {
+        Rc::new(std::collections::HashMap::new())
+    }
+    fn placeholder_is_record_clonable<'db>(
+        _db: &BindingsGenerator<'db>,
+        _record: Rc<Record<'db>>,
+    ) -> bool {
+        false
+    }
+    fn placeholder_get_binding<'db>(
+        _db: &BindingsGenerator<'db>,
+        _expected_function_name: UnqualifiedIdentifier<'db>,
+        _expected_param_types: Vec<RsTypeKind<'db>>,
+    ) -> Option<(Ident, ImplKind<'db>)> {
+        None
+    }
+    fn placeholder_collect_unqualified_member_functions<'db>(
+        _db: &BindingsGenerator<'db>,
+        _record: Rc<Record<'db>>,
+    ) -> Rc<[Rc<Func<'db>>]> {
+        Rc::from([])
+    }
+    fn placeholder_crubit_abi_type<'db>(
+        _db: &BindingsGenerator<'db>,
+        _rs_type_kind: RsTypeKind<'db>,
+    ) -> Result<CrubitAbiType> {
+        Err(anyhow!("not implemented"))
+    }
+    fn placeholder_type_target_restriction<'db>(
+        _db: &BindingsGenerator<'db>,
+        _rs_type_kind: RsTypeKind<'db>,
+    ) -> Result<Option<BazelLabel>> {
+        Ok(None)
+    }
+    fn placeholder_resolve_names<'db>(
+        _db: &BindingsGenerator<'db>,
+        _parent: Rc<Record<'db>>,
+    ) -> Result<Rc<std::collections::HashMap<Rc<str>, ResolvedName>>> {
+        Ok(Rc::new(std::collections::HashMap::new()))
+    }
+    fn placeholder_mangled_name_counts<'db>(
+        _db: &BindingsGenerator<'db>,
+    ) -> Rc<std::collections::HashMap<Rc<str>, usize>> {
+        Rc::new(std::collections::HashMap::new())
+    }
+
+    fn new_database_for_testing<'db>(
+        ir: &'db IR<'db>,
+        errors: &'db dyn ErrorReporting,
+        fatal_errors: &'db dyn ReportFatalError,
+        interner: &'db Interner,
+    ) -> BindingsGenerator<'db> {
+        BindingsGenerator::new(
+            ir,
+            errors,
+            fatal_errors,
+            /*is_golden_test=*/ false,
+            /*kythe_annotations=*/ false,
+            CodegenFunctions {
+                generate_enum: |_, _| Err(anyhow!("not implemented")),
+                generate_item: |_, _| Err(anyhow!("not implemented")),
+                generate_record: |_, _| Err(anyhow!("not implemented")),
+                decl_lifetime_arity: |_, _| Err(anyhow!("not implemented")),
+            },
+            interner,
+            placeholder_rs_type_kind_safety,
+            placeholder_record_field_safety,
+            placeholder_record_safety,
+            placeholder_has_bindings,
+            placeholder_rs_type_kind_with_lifetime_elision,
+            placeholder_generate_function,
+            placeholder_overload_sets,
+            placeholder_is_record_clonable,
+            placeholder_get_binding,
+            placeholder_collect_unqualified_member_functions,
+            placeholder_crubit_abi_type,
+            placeholder_type_target_restriction,
+            placeholder_resolve_names,
+            placeholder_mangled_name_counts,
+        )
+    }
+
+    fn make_existing_rust_type<'a>(
+        db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
+        name: &'static str,
+        is_same_abi: bool,
+    ) -> RsTypeKind<'a> {
         RsTypeKind::new_existing_rust_type(
-            EmptyDatabase,
+            db,
             Rc::new(ExistingRustType::new_for_testing(
                 name,
                 "",
@@ -2573,16 +2745,24 @@ mod tests {
                 false,
             )),
         )
-        .expect("Should succeed because all fallible operations come from BindingsGenerated, which EmptyDatabase cannot successfully deref to (it panics).")
+        .expect("Should succeed")
     }
 
     #[gtest]
     fn test_dfs_iter_ordering_for_func_ptr() {
+        let fixture = setup_test();
+        let db = new_database_for_testing(
+            &fixture.ir,
+            &fixture.errors,
+            &fixture.fatal_errors,
+            &fixture.interner,
+        );
+        let db_ref = &db;
         // Set up a test input representing: fn(A, B) -> C
         let f = {
-            let a = make_existing_rust_type("::A", true);
-            let b = make_existing_rust_type("::B", true);
-            let c = make_existing_rust_type("::C", true);
+            let a = make_existing_rust_type(db_ref, "::A", true);
+            let b = make_existing_rust_type(db_ref, "::B", true);
+            let c = make_existing_rust_type(db_ref, "::C", true);
             RsTypeKind::FuncPtr {
                 option: false,
                 cc_calling_conv: CcCallingConv::C,
@@ -2603,44 +2783,56 @@ mod tests {
         assert_eq!(vec!["fn", "::A", "::B", "::C"], dfs_names);
     }
 
-    #[derive(Copy, Clone)]
-    struct EmptyDatabase;
-    impl Deref for EmptyDatabase {
-        type Target = BindingsGenerator<'static>;
-        fn deref(&self) -> &Self::Target {
-            panic!("Tried to use the empty bindings generator query group.")
-        }
-    }
-
     #[gtest]
     fn test_lifetime_elision_for_references() {
-        let referent = Rc::new(make_existing_rust_type("::T", true));
+        let fixture = setup_test();
+        let db = new_database_for_testing(
+            &fixture.ir,
+            &fixture.errors,
+            &fixture.fatal_errors,
+            &fixture.interner,
+        );
+        let db_ref = &db;
+        let referent = Rc::new(make_existing_rust_type(db_ref, "::T", true));
         let reference = RsTypeKind::Reference {
             referent,
             mutability: Mutability::Const,
             lifetime: Lifetime::new("_"),
             is_cref: false,
         };
-        assert_rs_matches!(reference.to_token_stream(EmptyDatabase), quote! {&::T});
+        assert_rs_matches!(reference.to_token_stream(db_ref), quote! {&::T});
     }
 
     #[gtest]
     fn test_lifetime_elision_for_rvalue_references() {
-        let referent = Rc::new(make_existing_rust_type("::T", true));
+        let fixture = setup_test();
+        let db = new_database_for_testing(
+            &fixture.ir,
+            &fixture.errors,
+            &fixture.fatal_errors,
+            &fixture.interner,
+        );
+        let db_ref = &db;
+        let referent = Rc::new(make_existing_rust_type(db_ref, "::T", true));
         let reference = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
             lifetime: Lifetime::new("_"),
         };
-        assert_rs_matches!(
-            reference.to_token_stream(EmptyDatabase),
-            quote! {RvalueReference<'_, ::T>}
-        );
+        assert_rs_matches!(reference.to_token_stream(db_ref), quote! {RvalueReference<'_, ::T>});
     }
 
     #[gtest]
     fn test_format_as_self_param_rvalue_reference() -> Result<()> {
-        let referent = Rc::new(make_existing_rust_type("::T", true));
+        let fixture = setup_test();
+        let db = new_database_for_testing(
+            &fixture.ir,
+            &fixture.errors,
+            &fixture.fatal_errors,
+            &fixture.interner,
+        );
+        let db_ref = &db;
+        let referent = Rc::new(make_existing_rust_type(db_ref, "::T", true));
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Mut,
@@ -2654,7 +2846,15 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_const_rvalue_reference() -> Result<()> {
-        let referent = Rc::new(make_existing_rust_type("::T", true));
+        let fixture = setup_test();
+        let db = new_database_for_testing(
+            &fixture.ir,
+            &fixture.errors,
+            &fixture.fatal_errors,
+            &fixture.interner,
+        );
+        let db_ref = &db;
+        let referent = Rc::new(make_existing_rust_type(db_ref, "::T", true));
         let result = RsTypeKind::RvalueReference {
             referent,
             mutability: Mutability::Const,
@@ -2821,9 +3021,7 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_type() {
         assert_rs_matches!(
-            fully_qualify_type_impl("A", || {
-                quote! {crate}
-            }),
+            fully_qualify_type_impl("A", || quote! {crate}, |_| None),
             quote! {crate::A},
         );
     }
@@ -2831,9 +3029,7 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_i32() {
         assert_rs_matches!(
-            fully_qualify_type_impl("i32", || {
-                quote! {crate}
-            }),
+            fully_qualify_type_impl("i32", || quote! {crate}, |_| None),
             quote! {i32},
         );
     }
@@ -2841,9 +3037,7 @@ mod tests {
     #[gtest]
     fn test_fully_qualify_ref() {
         assert_rs_matches!(
-            fully_qualify_type_impl("&mut *const X", || {
-                quote! {crate}
-            }),
+            fully_qualify_type_impl("&mut *const X", || quote! {crate}, |_| None),
             quote! {&mut *const crate::X},
         );
     }

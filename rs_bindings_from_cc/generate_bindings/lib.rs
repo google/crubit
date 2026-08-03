@@ -1844,8 +1844,17 @@ fn any_invocable_sig_spelling(callable: &Callable, db: &BindingsGenerator) -> Re
     })
 }
 
+fn remap_crate_name(crate_name: &str, ir: &IR) -> Option<Ident> {
+    for (label, remapped_ident) in ir.tree_ir().crate_names.iter() {
+        if label.target_name_escaped() == crate_name {
+            return Some(remapped_ident.clone());
+        }
+    }
+    None
+}
+
 /// Parses the given Rust path into a [`FullyQualifiedPath`].
-/// * if the path is fully qualified, it stays unchanged.
+/// * if the path is fully qualified, it stays unchanged (but crate names are remapped if needed).
 /// * else, if it is the current target, it is prepended with "crate".
 /// * else, it is prepended with the "::" and the crate name.
 fn make_rust_abi_path_from_str(
@@ -1855,25 +1864,28 @@ fn make_rust_abi_path_from_str(
 ) -> FullyQualifiedPath {
     let mut start_with_colon2 = strip_leading_colon2(&mut rust_path);
 
-    let prefix = if start_with_colon2 {
-        None
+    let mut parts: Vec<Ident> = rust_path.split("::").map(make_rs_ident).collect();
+
+    if start_with_colon2 {
+        if !parts.is_empty() {
+            let first_part = parts[0].to_string();
+            if let Some(remapped_ident) = remap_crate_name(&first_part, ir) {
+                parts[0] = remapped_ident;
+            }
+        }
     } else {
         match rs_imported_crate_name(target, ir) {
             Some(ident) => {
                 start_with_colon2 = true;
-                Some(ident)
+                parts.insert(0, ident);
             }
-            None => Some(Ident::new("crate", proc_macro2::Span::call_site())),
+            None => {
+                parts.insert(0, Ident::new("crate", proc_macro2::Span::call_site()));
+            }
         }
-    };
-
-    FullyQualifiedPath {
-        start_with_colon2,
-        parts: prefix
-            .into_iter()
-            .chain(rust_path.split("::").map(make_rs_ident))
-            .collect::<Rc<[Ident]>>(),
     }
+
+    FullyQualifiedPath { start_with_colon2, parts: parts.into() }
 }
 
 /// Parses the given C++ path into a [`FullyQualifiedPath`].

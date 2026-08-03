@@ -412,9 +412,14 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     ]
 
     if use_label_encoded_names_for_deps:
+        label_of_extra_cc_dep_to_crate_name = {}
+        for dep in extra_deps:
+            if dep.cc_info and dep.crate_info:
+                label_of_extra_cc_dep_to_crate_name[dep.crate_info.owner] = dep.crate_info.name
+
         for dep in all_deps:
             if RustBindingsFromCcInfo in dep:
-                aliases[dep] = crubit_encode_raw_string_as_crate_name(str(dep.label))
+                aliases[dep] = label_of_extra_cc_dep_to_crate_name.get(dep.label, crubit_encode_raw_string_as_crate_name(str(dep.label)))
 
     compilation_context = target[CcInfo].compilation_context
     if generated_cpp_support_deps:
