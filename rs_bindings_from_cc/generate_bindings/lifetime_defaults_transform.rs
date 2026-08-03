@@ -423,6 +423,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     ir::TemplateSpecializationKind::StdVector { raw_element_type, .. }
                     | ir::TemplateSpecializationKind::StdUniquePtr { raw_element_type, .. }
                     | ir::TemplateSpecializationKind::C9Co { raw_element_type, .. }
+                    | ir::TemplateSpecializationKind::StdAtomic { raw_element_type, .. }
                     | ir::TemplateSpecializationKind::AbslSpan { raw_element_type, .. } => {
                         Some(raw_element_type.clone())
                     }
