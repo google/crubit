@@ -96,7 +96,6 @@ fn test_ffi_livetype() {
 #[gtest]
 fn test_ffi_identity() {
     let sv = GetInvalidUTF();
-    // TODO(b/485559322): use `unsafe{}` once Identity is (correctly) marked unsafe to call.
     let sv2 = Identity(sv);
     assert_eq!(sv.as_raw_bytes(), sv2.as_raw_bytes());
 }
