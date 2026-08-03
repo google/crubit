@@ -520,11 +520,14 @@ struct TemplateSpecialization {
   struct C9Co {
     CcType element_type;
   };
+  struct StdAtomic {
+    CcType element_type;
+  };
   struct NonSpecial {};
 
   using Kind = std::variant<StdStringView, StdWStringView, StdVector,
                             StdUniquePtr, AbslSpan, AbslFlatHashMap,
-                            AbslFlatHashSet, C9Co, NonSpecial>;
+                            AbslFlatHashSet, C9Co, NonSpecial, StdAtomic>;
 
   BazelLabel defining_target;
   Kind kind = NonSpecial{};

@@ -302,6 +302,8 @@ pub enum UniformReprTemplateType<'a> {
         // No lifetime here: owned by the unique_ptr
         element_type: RsTypeKind<'a>,
     },
+    /// std::atomic<T>
+    StdAtomic { element_type: RsTypeKind<'a> },
     AbslSpan {
         is_const: bool,
         include_lifetime: bool,
@@ -406,6 +408,59 @@ impl<'a> UniformReprTemplateType<'a> {
                 }
                 Ok(Some(Rc::new(UniformReprTemplateType::StdVector { element_type })))
             }
+            Some(TemplateSpecializationKind::StdAtomic { raw_element_type }) => {
+                let element_type = choose_one_type(raw_element_type, template_args)?;
+                let element_type = type_arg(&element_type)?;
+
+                // Note: ir::Primitive::Long and ir::Primitive::UnsignedLong are intentionally omitted.
+                // Rust lacks an `AtomicCLong`, and hardcoding to AtomicI64/AtomicI32 risks ABI mismatches
+                // since C++ `long` varies by platform (e.g., 32-bit on Windows, 64-bit on Linux).
+                // They safely fall through to opaque bindings instead.
+                match &element_type {
+                    RsTypeKind::Primitive(
+                        ir::Primitive::Bool
+                        | ir::Primitive::Char
+                        | ir::Primitive::SignedChar
+                        | ir::Primitive::UnsignedChar
+                        | ir::Primitive::Short
+                        | ir::Primitive::UnsignedShort
+                        | ir::Primitive::Int
+                        | ir::Primitive::UnsignedInt
+                        | ir::Primitive::LongLong
+                        | ir::Primitive::UnsignedLongLong
+                        | ir::Primitive::SizeT
+                        | ir::Primitive::StdSizeT
+                        | ir::Primitive::PtrdiffT
+                        | ir::Primitive::StdPtrdiffT
+                        | ir::Primitive::IntptrT
+                        | ir::Primitive::StdIntptrT
+                        | ir::Primitive::UintptrT
+                        | ir::Primitive::StdUintptrT
+                        | ir::Primitive::Int8T
+                        | ir::Primitive::StdInt8T
+                        | ir::Primitive::Int16T
+                        | ir::Primitive::StdInt16T
+                        | ir::Primitive::Int32T
+                        | ir::Primitive::StdInt32T
+                        | ir::Primitive::Int64T
+                        | ir::Primitive::StdInt64T
+                        | ir::Primitive::Uint8T
+                        | ir::Primitive::StdUint8T
+                        | ir::Primitive::Uint16T
+                        | ir::Primitive::StdUint16T
+                        | ir::Primitive::Uint32T
+                        | ir::Primitive::StdUint32T
+                        | ir::Primitive::Uint64T
+                        | ir::Primitive::StdUint64T
+                        | ir::Primitive::Char16T
+                        | ir::Primitive::Char32T,
+                    )
+                    | RsTypeKind::Pointer { mutability: Mutability::Mut, .. } => {
+                        Ok(Some(Rc::new(UniformReprTemplateType::StdAtomic { element_type })))
+                    }
+                    _ => Ok(None),
+                }
+            }
             Some(TemplateSpecializationKind::AbslSpan { raw_element_type }) => {
                 let element_type = choose_one_type(raw_element_type, template_args)?;
                 let element_type_kind = type_arg(&element_type)?;
@@ -450,6 +505,72 @@ impl<'a> UniformReprTemplateType<'a> {
                 let element_type_tokens = element_type.to_token_stream(db);
                 quote! { ::cc_std::std::vector::<#element_type_tokens> }
             }
+            Self::StdAtomic { element_type } => match element_type {
+                RsTypeKind::Primitive(p) => match p {
+                    ir::Primitive::SizeT
+                    | ir::Primitive::StdSizeT
+                    | ir::Primitive::UintptrT
+                    | ir::Primitive::StdUintptrT => {
+                        quote! { ::core::sync::atomic::AtomicUsize }
+                    }
+                    ir::Primitive::PtrdiffT
+                    | ir::Primitive::StdPtrdiffT
+                    | ir::Primitive::IntptrT
+                    | ir::Primitive::StdIntptrT => {
+                        quote! { ::core::sync::atomic::AtomicIsize }
+                    }
+                    ir::Primitive::Int32T | ir::Primitive::Int | ir::Primitive::StdInt32T => {
+                        quote! { ::core::sync::atomic::AtomicI32 }
+                    }
+                    ir::Primitive::UnsignedInt
+                    | ir::Primitive::Uint32T
+                    | ir::Primitive::StdUint32T
+                    | ir::Primitive::Char32T => {
+                        quote! { ::core::sync::atomic::AtomicU32 }
+                    }
+                    ir::Primitive::Bool => quote! { ::core::sync::atomic::AtomicBool },
+                    ir::Primitive::Char => quote! { ::ffi_11::c_atomic_char },
+                    ir::Primitive::SignedChar | ir::Primitive::Int8T | ir::Primitive::StdInt8T => {
+                        quote! { ::core::sync::atomic::AtomicI8 }
+                    }
+                    ir::Primitive::UnsignedChar
+                    | ir::Primitive::Uint8T
+                    | ir::Primitive::StdUint8T => {
+                        quote! { ::core::sync::atomic::AtomicU8 }
+                    }
+                    ir::Primitive::Short | ir::Primitive::Int16T | ir::Primitive::StdInt16T => {
+                        quote! { ::core::sync::atomic::AtomicI16 }
+                    }
+                    ir::Primitive::UnsignedShort
+                    | ir::Primitive::Uint16T
+                    | ir::Primitive::StdUint16T
+                    | ir::Primitive::Char16T => {
+                        quote! { ::core::sync::atomic::AtomicU16 }
+                    }
+                    ir::Primitive::LongLong | ir::Primitive::Int64T | ir::Primitive::StdInt64T => {
+                        quote! { ::core::sync::atomic::AtomicI64 }
+                    }
+                    ir::Primitive::UnsignedLongLong
+                    | ir::Primitive::Uint64T
+                    | ir::Primitive::StdUint64T => {
+                        quote! { ::core::sync::atomic::AtomicU64 }
+                    }
+                    _ => {
+                        let type_name = element_type.display(db).to_string();
+                        let msg = format!("Unsupported StdAtomic inner type: {type_name}");
+                        quote! { ::core::compile_error!(#msg) }
+                    }
+                },
+                RsTypeKind::Pointer { pointee, mutability: Mutability::Mut, .. } => {
+                    let p_tok = pointee.to_token_stream(db);
+                    quote! { ::core::sync::atomic::AtomicPtr<#p_tok> }
+                }
+                _ => {
+                    let type_name = element_type.display(db).to_string();
+                    let msg = format!("Unsupported StdAtomic inner type: {type_name}");
+                    quote! { ::core::compile_error!(#msg) }
+                }
+            },
             Self::StdUniquePtr { element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
                 if element_type.overloads_operator_delete() {
@@ -503,6 +624,7 @@ impl<'a> UniformReprTemplateType<'a> {
         match self {
             Self::StdVector { .. } => None,
             Self::StdUniquePtr { .. } => None,
+            Self::StdAtomic { .. } => None,
             Self::AbslSpan { include_lifetime: true, .. } => Some(Lifetime::elided()),
             Self::AbslSpan { include_lifetime: false, .. } => None,
             Self::StdStringView { lifetime, .. } => Some(lifetime.clone()),
@@ -665,6 +787,7 @@ impl<'a> CustomizeMethodsKind<'a> {
                 | TemplateSpecializationKind::C9Co { .. }
                 | TemplateSpecializationKind::AbslFlatHashSet { .. }
                 | TemplateSpecializationKind::AbslSpan { .. }
+                | TemplateSpecializationKind::StdAtomic { .. }
                 | TemplateSpecializationKind::NonSpecial,
             )
             | None => Ok(None),
@@ -1925,6 +2048,16 @@ fn all_static_lifetimes_internal<'a>(
                         UniformReprTemplateType::StdStringView {
                             in_cc_std: *in_cc_std,
                             lifetime: Lifetime::new("static"),
+                        }
+                    }
+                    UniformReprTemplateType::StdAtomic { element_type } => {
+                        UniformReprTemplateType::StdAtomic {
+                            element_type: all_static_lifetimes_internal(
+                                element_type,
+                                strip_aliases,
+                            )
+                            .as_ref()
+                            .clone(),
                         }
                     }
                 })

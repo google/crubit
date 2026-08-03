@@ -1554,17 +1554,33 @@ pub enum TemplateSpecializationKind {
     /// std::basic_string_view<wchar_t, std::char_traits<wchar_t>>
     StdWStringView,
     /// std::vector<T, std::allocator<T>>
-    StdVector { raw_element_type: CcType },
+    StdVector {
+        raw_element_type: CcType,
+    },
     /// std::unique_ptr<T, std::default_delete<T>>
-    StdUniquePtr { raw_element_type: CcType },
-    /// c9::Co<T>
-    C9Co { raw_element_type: CcType },
+    StdUniquePtr {
+        raw_element_type: CcType,
+    },
+    /// std::atomic<T>
+    StdAtomic {
+        raw_element_type: CcType,
+    },
+    C9Co {
+        raw_element_type: CcType,
+    },
     /// absl::Span<T>
-    AbslSpan { raw_element_type: CcType },
+    AbslSpan {
+        raw_element_type: CcType,
+    },
     /// absl::flat_hash_map<K, V, ...>
-    AbslFlatHashMap { raw_key_type: CcType, raw_value_type: CcType },
+    AbslFlatHashMap {
+        raw_key_type: CcType,
+        raw_value_type: CcType,
+    },
     /// absl::flat_hash_set<T, ...>
-    AbslFlatHashSet { raw_element_type: CcType },
+    AbslFlatHashSet {
+        raw_element_type: CcType,
+    },
     /// Some other template specialization.
     NonSpecial,
 }
