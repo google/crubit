@@ -25,8 +25,6 @@
 #include <vector>
 
 #include "absl/base/nullability.h"
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -41,8 +39,6 @@
 #include "clang/AST/RawCommentList.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/SmallString.h"
-#include "llvm/Support/FormatVariadic.h"
-#include "llvm/Support/JSON.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {

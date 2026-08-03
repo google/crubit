@@ -13,17 +13,13 @@
 #include <variant>
 #include <vector>
 
-#include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
-#include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "common/string_type.h"
 #include "common/strong_int.h"
-#include "llvm/Support/JSON.h"
 
 namespace crubit {
 
@@ -83,33 +79,33 @@ flat_proto::CcType CcType::ToFlatProto() const {
                                           explicit_lifetimes.end());
 
   std::visit(
-      visitor{[&](const CcType::Primitive& primitive) {
-                proto.mutable_primitive()->set_spelling(primitive.spelling);
-              },
-              [&](const CcType::PointerType& pointer) {
-                auto* p = proto.mutable_pointer();
-                p->set_kind(crubit::ToFlatProto(pointer.kind));
-                if (pointer.lifetime) {
-                  p->set_lifetime((*pointer.lifetime).value());
-                }
-                *p->mutable_pointee_type() =
-                    pointer.pointee_type->ToFlatProto();
-              },
-              [&](const CcType::FuncPointer& func_value) {
-                auto* f = proto.mutable_func_pointer();
-                f->set_non_null(func_value.non_null);
-                f->set_call_conv(crubit::ToFlatProto(func_value.call_conv));
-                for (const CcType& type : func_value.param_and_return_types) {
-                  *f->add_param_and_return_types() = type.ToFlatProto();
-                }
-                f->mutable_lifetime_inputs()->Add(
-                    func_value.lifetime_inputs.begin(),
-                    func_value.lifetime_inputs.end());
-              },
-              [&](ItemId id) { proto.set_decl(id.value()); },
-              [&](const FormattedError& error) {
-                *proto.mutable_error() = error.ToFlatProto();
-              }},
+      visitor{
+          [&](const CcType::Primitive& primitive) {
+            proto.mutable_primitive()->set_spelling(primitive.spelling);
+          },
+          [&](const CcType::PointerType& pointer) {
+            auto* p = proto.mutable_pointer();
+            p->set_kind(crubit::ToFlatProto(pointer.kind));
+            if (pointer.lifetime) {
+              p->set_lifetime((*pointer.lifetime).value());
+            }
+            *p->mutable_pointee_type() = pointer.pointee_type->ToFlatProto();
+          },
+          [&](const CcType::FuncPointer& func_value) {
+            auto* f = proto.mutable_func_pointer();
+            f->set_non_null(func_value.non_null);
+            f->set_call_conv(crubit::ToFlatProto(func_value.call_conv));
+            for (const CcType& type : func_value.param_and_return_types) {
+              *f->add_param_and_return_types() = type.ToFlatProto();
+            }
+            f->mutable_lifetime_inputs()->Add(
+                func_value.lifetime_inputs.begin(),
+                func_value.lifetime_inputs.end());
+          },
+          [&](ItemId id) { proto.set_decl(static_cast<int64_t>(id.value())); },
+          [&](const FormattedError& error) {
+            *proto.mutable_error() = error.ToFlatProto();
+          }},
       variant);
   return proto;
 }
@@ -160,7 +156,7 @@ flat_proto::Identifier Identifier::ToFlatProto() const {
 flat_proto::IntegerConstant IntegerConstant::ToFlatProto() const {
   flat_proto::IntegerConstant proto;
   proto.set_is_negative(is_negative_);
-  proto.set_wrapped_value(wrapped_value_);
+  proto.set_wrapped_value(static_cast<int64_t>(wrapped_value_));
   return proto;
 }
 
