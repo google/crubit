@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "absl/flags/declare.h"
+#include "absl/strings/string_view.h"
 
 ABSL_DECLARE_FLAG(bool, do_nothing);
 ABSL_DECLARE_FLAG(std::string, rs_out);
@@ -30,5 +31,22 @@ ABSL_DECLARE_FLAG(std::string, instantiations_out);
 ABSL_DECLARE_FLAG(std::string, namespaces_out);
 ABSL_DECLARE_FLAG(std::string, error_report_out);
 ABSL_DECLARE_FLAG(bool, is_golden_test);
+
+namespace crubit {
+
+enum class CarcinizeMode {
+  kOff,     // Standard Crubit build (Carcinize is 100% OFF)
+  kStrict,  // Carcinize Mode: fails if 100% native Crubit coverage is missing
+  kIncomplete,  // Carcinize Mode: emits global_cpp! fallbacks for unsupported
+                // items
+};
+
+bool AbslParseFlag(absl::string_view text, CarcinizeMode* mode,
+                   std::string* error);
+std::string AbslUnparseFlag(CarcinizeMode mode);
+
+}  // namespace crubit
+
+ABSL_DECLARE_FLAG(crubit::CarcinizeMode, carcinize);
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_FLAGS_H_

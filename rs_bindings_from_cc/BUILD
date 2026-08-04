@@ -278,7 +278,10 @@ cc_library(
 cc_library(
     name = "cmdline_flags",
     hdrs = ["cmdline_flags.h"],
-    deps = ["@abseil-cpp//absl/flags:flag"],
+    deps = [
+        "@abseil-cpp//absl/flags:flag",
+        "@abseil-cpp//absl/strings:string_view",
+    ],
 )
 
 crubit_cc_test(
@@ -307,6 +310,7 @@ cc_library(
     deps = [
         "cc_ir",
         ":bazel_types",
+        ":cmdline_flags",
         ":ir_cc_proto",
         "//lifetime_annotations",
         "//lifetime_annotations:type_lifetimes",
@@ -534,6 +538,7 @@ cc_library(
     deps = [
         ":bazel_types",
         ":cc_ir",
+        ":cmdline_flags",
         ":decl_importer",
         ":frontend_action",
         ":profiling",
@@ -562,6 +567,7 @@ cc_library(
     deps = [
         ":bazel_types",
         ":cc_ir",
+        ":cmdline_flags",
         ":ir_from_cc",
         "//common:cc_ffi_types",
         "@abseil-cpp//absl/container:flat_hash_set",
@@ -576,6 +582,7 @@ cc_library(
     srcs = ["proto_from_cc.cc"],
     deps = [
         ":cc_ir",
+        ":cmdline_flags",
         ":ir_from_cc_dependency",
         "//common:cc_ffi_types",
         "@abseil-cpp//absl/status:statusor",

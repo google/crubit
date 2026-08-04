@@ -518,6 +518,7 @@ pub fn generated_items_to_tokens<'db>(
             GeneratedItem::Comment { message } => quote! { __COMMENT__ #message }.to_tokens(tokens),
             GeneratedItem::Enum(enum_item) => enum_item.to_tokens(tokens),
             GeneratedItem::Func(function_tokens) => function_tokens.to_tokens(tokens),
+            GeneratedItem::GlobalCpp(global_cpp_tokens) => global_cpp_tokens.to_tokens(tokens),
             GeneratedItem::Record(record_item) => {
                 let Record {
                     doc_comment_attr,
@@ -931,6 +932,7 @@ pub enum GeneratedItem {
     },
     Enum(TokenStream),
     Func(TokenStream),
+    GlobalCpp(TokenStream),
     // Box used to mitigate disproportionaly large enum variant lint
     Record(Box<Record>),
     NonCanonicalNamespace,

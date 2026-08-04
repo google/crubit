@@ -43,14 +43,12 @@ struct ExtractedBracedBody<'a> {
 }
 
 impl<'a> TokenParser<'a> {
+    /// Creates a new TokenParser for the given source and tokens.
     fn new(rust_source: &'a str, tokens: &'a [ra_ap_rustc_lexer::Token]) -> Self {
         TokenParser { tokens, rust_source, token_index: 0, byte_offset: 0, line: 1, column: 1 }
     }
 
-    fn is_eof(&self) -> bool {
-        self.token_index >= self.tokens.len()
-    }
-
+    /// Returns the next token to parse.
     fn peek(&self) -> Option<&'a ra_ap_rustc_lexer::Token> {
         self.tokens.get(self.token_index)
     }
@@ -255,8 +253,12 @@ pub fn extract_global_cpp(
         let Some(block) = extract_macro_body(&mut parser, "global_cpp", file_name)? else {
             continue;
         };
-        extracted.push_str(block.body.text);
-        extracted.push('\n');
+        let padding = " ".repeat(block.body.column - 1);
+        let _ = write!(
+            extracted,
+            "#line {} \"{}\"\n{}{}\n",
+            block.body.line, file_name, padding, block.body.text
+        );
     }
 
     Ok(extracted)
@@ -430,21 +432,63 @@ mod tests {
     #[gtest]
     fn test_basic_extract() {
         let input = "global_cpp! { int x; }";
-        let expected = " int x; \n";
+        let expected = "#line 1 \"test.rs\"\n              int x; \n";
         expect_eq!(extract_global_cpp(input, &tokenize(input), "test.rs").unwrap(), expected);
     }
 
     #[gtest]
     fn test_nested_braces() {
         let input = "global_cpp! { namespace foo { int x; } }";
-        let expected = " namespace foo { int x; } \n";
+        let expected = "#line 1 \"test.rs\"\n              namespace foo { int x; } \n";
         expect_eq!(extract_global_cpp(input, &tokenize(input), "test.rs").unwrap(), expected);
     }
 
     #[gtest]
     fn test_multiple_blocks() {
         let input = "global_cpp! { int x; } some rust code global_cpp! { int y; }";
-        let expected = " int x; \n int y; \n";
+        let expected = "#line 1 \"test.rs\"\n              int x; \n#line 1 \"test.rs\"\n                                                    int y; \n";
+        expect_eq!(extract_global_cpp(input, &tokenize(input), "test.rs").unwrap(), expected);
+    }
+
+    #[gtest]
+    fn test_extract_global_cpp_templates_and_explicit_instantiations() {
+        let input = r#"global_cpp! {
+    namespace foo::bar {
+        template <typename T>
+        class MyTemplate {
+         public:
+          T GetValue(T val) { return val; }
+        };
+
+        template class MyTemplate<int>;
+    }
+}"#;
+        let expected = concat!(
+            "#line 1 \"test.rs\"\n             \n",
+            "    namespace foo::bar {\n",
+            "        template <typename T>\n",
+            "        class MyTemplate {\n",
+            "         public:\n",
+            "          T GetValue(T val) { return val; }\n",
+            "        };\n\n",
+            "        template class MyTemplate<int>;\n",
+            "    }\n\n"
+        );
+        expect_eq!(extract_global_cpp(input, &tokenize(input), "test.rs").unwrap(), expected);
+    }
+
+    #[gtest]
+    fn test_extract_global_cpp_nested_namespaces() {
+        let input = "global_cpp! { namespace outer::inner { int x = 10; } }";
+        let expected =
+            "#line 1 \"test.rs\"\n              namespace outer::inner { int x = 10; } \n";
+        expect_eq!(extract_global_cpp(input, &tokenize(input), "test.rs").unwrap(), expected);
+    }
+
+    #[gtest]
+    fn test_extract_global_cpp_multiline_line_number_mapping() {
+        let input = "line 1\nline 2\nglobal_cpp! {\n    int x = 42;\n}\n";
+        let expected = "#line 3 \"test.rs\"\n             \n    int x = 42;\n\n";
         expect_eq!(extract_global_cpp(input, &tokenize(input), "test.rs").unwrap(), expected);
     }
 

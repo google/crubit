@@ -1764,7 +1764,7 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
   std::string source_loc =
       ConvertSourceLocation(original_decl.getBeginLoc(), nullptr);
   std::optional<std::string> inline_cpp_source_text;
-  if (invocation_.carcinize()) {
+  if (invocation_.is_carcinize()) {
     clang::SourceManager& sm = ctx_.getSourceManager();
     bool invalid = false;
     llvm::StringRef text = clang::Lexer::getSourceText(

@@ -179,7 +179,7 @@ pub fn generate_unsupported<'db>(
 
     // Note: `item.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
     let generated_item = if let Some(parsed_tokens) = item.source_text_as_token_stream() {
-        GeneratedItem::Func(quote::quote! {
+        GeneratedItem::GlobalCpp(quote::quote! {
             __COMMENT__ #message
             ::crubit_support::global_cpp! {
                 #parsed_tokens

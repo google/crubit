@@ -107,8 +107,12 @@ fn test_inline_function_with_inline_cpp() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            ::crubit_support::inline_cpp! {
-                (int a, int b) -> int { return a + b; }
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (int a, int b) -> int {
+                        return a + b;
+                    }
+                })(a, b)
             }
         }
     );
@@ -136,8 +140,12 @@ fn test_non_inline_function_with_inline_cpp() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            ::crubit_support::inline_cpp! {
-                (int a, int b) -> int { return a + b; }
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (int a, int b) -> int {
+                        return a + b;
+                    }
+                })(a, b)
             }
         }
     );
@@ -155,12 +163,100 @@ fn test_member_function_with_inline_cpp() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            ::crubit_support::inline_cpp! {
-                (int arg) -> int { return 42 + arg; }
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (struct SomeStruct const* __this, int arg) -> int {
+                        return 42 + arg;
+                    }
+                })((__this as *const _), arg)
             }
         }
     );
     assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZNK10SomeStruct9some_funcEi});
+    Ok(())
+}
+
+#[gtest]
+fn test_non_pod_param_with_inline_cpp() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        "struct NonPod { ~NonPod(); NonPod(NonPod&&) = default; }; \
+         inline void TakeNonPod(NonPod s) {}",
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn TakeNonPod(s: ::ctor::Ctor![crate::NonPod]) {
+                unsafe {
+                    (::crubit_support::inline_cpp! {
+                        (struct NonPod* __s) -> void {
+                            auto&& s = std::move(*__s);
+                            {}
+                        }
+                    })((::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(s)) as *const _))
+                }
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {TakeNonPod});
+    Ok(())
+}
+
+#[gtest]
+fn test_non_pod_return_with_inline_cpp() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        "struct NonPod { ~NonPod(); }; \
+         inline NonPod ReturnNonPod() { return NonPod(); }",
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn ReturnNonPod() -> ::ctor::Ctor![crate::NonPod] {
+                unsafe {
+                    (::crubit_support::inline_cpp! {
+                        (struct NonPod* __return) -> void {
+                            new(__return) struct NonPod(([&]() {
+                                return NonPod();
+                            })());
+                        }
+                    })()
+                }
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {ReturnNonPod});
+    Ok(())
+}
+
+#[gtest]
+fn test_non_pod_param_and_return_with_inline_cpp() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        "struct NonPod { ~NonPod(); NonPod(NonPod&&) = default; }; \
+         inline NonPod Transform(NonPod s) { return s; }",
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn Transform(s: ::ctor::Ctor![crate::NonPod]) -> ::ctor::Ctor![crate::NonPod] {
+                unsafe {
+                    (::crubit_support::inline_cpp! {
+                        (struct NonPod* __return, struct NonPod* __s) -> void {
+                            auto&& s = std::move(*__s);
+                            new(__return) struct NonPod(([&]() {
+                                return s;
+                            })());
+                        }
+                    })((::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(s)) as *const _))
+                }
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {Transform});
     Ok(())
 }
 

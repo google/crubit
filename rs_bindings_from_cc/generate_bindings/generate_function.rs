@@ -19,7 +19,8 @@ use errors::{bail_to_errors, Errors, ErrorsOr};
 use flagset::FlagSet;
 use generate_comment::{generate_doc_comment, parse_extended_source_loc};
 use generate_function_thunk::{
-    generate_function_assertion, generate_function_thunk, generate_function_thunk_impl, thunk_ident,
+    generate_function_assertion, generate_function_thunk, generate_function_thunk_impl,
+    generate_inline_cpp_call, thunk_ident,
 };
 use ir::*;
 use itertools::Itertools;
@@ -2017,12 +2018,12 @@ pub fn generate_function<'a>(
 
     let create_func_body = || -> Result<TokenStream> {
         if reportable_status.is_ok() {
-            if let Some(parsed_tokens) = func.source_text_as_token_stream() {
-                return Ok(quote! {
-                    ::crubit_support::inline_cpp! {
-                        #parsed_tokens
-                    }
-                });
+            // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
+            if let Some(body_tokens) = func.source_text_as_token_stream()
+                && let Some(inline_cpp_body) =
+                    generate_inline_cpp_call(db, &func, &thunk_args, body_tokens)?
+            {
+                return Ok(inline_cpp_body);
             }
             generate_func_body(
                 db,
@@ -2186,12 +2187,11 @@ pub fn generate_function<'a>(
 
             let free_func_body = if reportable_status.is_ok() {
                 // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
-                if let Some(parsed_tokens) = func.source_text_as_token_stream() {
-                    quote! {
-                        ::crubit_support::inline_cpp! {
-                            #parsed_tokens
-                        }
-                    }
+                if let Some(body_tokens) = func.source_text_as_token_stream()
+                    && let Some(inline_cpp_body) =
+                        generate_inline_cpp_call(db, &func, &free_thunk_args, body_tokens)?
+                {
+                    inline_cpp_body
                 } else {
                     generate_func_body(
                         db,
