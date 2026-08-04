@@ -48,7 +48,6 @@ cc_library(
 rust_api_from_cpp(
     name = "my_lib_rust",
     srcs = ["additional_rust_srcs.rs"],
-    cpp_deps = [":my_lib"],
     cpp_srcs = ["additional_cpp_srcs.cc"],
     cpp_target = ":my_lib",
 )
