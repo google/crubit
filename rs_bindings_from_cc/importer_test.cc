@@ -570,6 +570,146 @@ TEST(ImporterTest, InlineFunc) {
                   VariantWith<Func>(AllOf(IdentifierIs("Foo"), IsInline()))));
 }
 
+TEST(ImporterTest, MemberFuncSemantic_BodyInHeader) {
+  ASSERT_OK_AND_ASSIGN(
+      IR ir,
+      IrFromCc({
+          .current_target = BazelLabel{"//test:testing_target"},
+          .public_headers = {HeaderName("test/header.h")},
+          .virtual_headers_contents_for_testing =
+              {{HeaderName("test/header.h"),
+                "class S { public: int x() const { return x_; } private: int "
+                "x_; };"}},
+          .headers_to_targets =
+              {
+                  {HeaderName("test/header.h"),
+                   BazelLabel{"//test:testing_target"}},
+              },
+      }));
+  const Func* func = nullptr;
+  for (const Func* f : get_items_if<Func>(ir)) {
+    if (GetName(*f) == "x") {
+      func = f;
+      break;
+    }
+  }
+  ASSERT_NE(func, nullptr);
+  ASSERT_TRUE(func->has_semantic());
+  EXPECT_TRUE(func->semantic().has_getter());
+}
+
+TEST(ImporterTest, MemberFuncSemantic_BodyNotInHeader) {
+  ASSERT_OK_AND_ASSIGN(
+      IR ir, IrFromCc({
+                 .current_target = BazelLabel{"//test:testing_target"},
+                 .public_headers = {HeaderName("test/header.h"),
+                                    HeaderName("test/impl.cc")},
+                 .virtual_headers_contents_for_testing =
+                     {{HeaderName("test/header.h"),
+                       "class S { public: int x() const; private: int x_; };"},
+                      {HeaderName("test/impl.cc"),
+                       "inline int S::x() const { return x_; }"}},
+                 .headers_to_targets =
+                     {
+                         {HeaderName("test/header.h"),
+                          BazelLabel{"//test:testing_target"}},
+                         {HeaderName("test/impl.cc"),
+                          BazelLabel{"//test:testing_target"}},
+                     },
+             }));
+  const Func* func = nullptr;
+  for (const Func* f : get_items_if<Func>(ir)) {
+    if (GetName(*f) == "x") {
+      func = f;
+      break;
+    }
+  }
+  ASSERT_NE(func, nullptr);
+  EXPECT_FALSE(func->has_semantic());
+}
+
+TEST(ImporterTest, MemberFuncSemantic_Setter_BodyInHeader) {
+  ASSERT_OK_AND_ASSIGN(
+      IR ir,
+      IrFromCc({
+          .current_target = BazelLabel{"//test:testing_target"},
+          .public_headers = {HeaderName("test/header.h")},
+          .virtual_headers_contents_for_testing =
+              {{HeaderName("test/header.h"),
+                "class S { public: void set_x(int x) { x_ = x; } private: int "
+                "x_; };"}},
+          .headers_to_targets =
+              {
+                  {HeaderName("test/header.h"),
+                   BazelLabel{"//test:testing_target"}},
+              },
+      }));
+  const Func* func = nullptr;
+  for (const Func* f : get_items_if<Func>(ir)) {
+    if (GetName(*f) == "set_x") {
+      func = f;
+      break;
+    }
+  }
+  ASSERT_NE(func, nullptr);
+  ASSERT_TRUE(func->has_semantic());
+  EXPECT_TRUE(func->semantic().has_setter());
+}
+
+TEST(ImporterTest, MemberFuncSemantic_Setter_BodyNotInHeader) {
+  ASSERT_OK_AND_ASSIGN(
+      IR ir,
+      IrFromCc({
+          .current_target = BazelLabel{"//test:testing_target"},
+          .public_headers = {HeaderName("test/header.h"),
+                             HeaderName("test/impl.cc")},
+          .virtual_headers_contents_for_testing =
+              {{HeaderName("test/header.h"),
+                "class S { public: void set_x(int x); private: int x_; };"},
+               {HeaderName("test/impl.cc"),
+                "inline void S::set_x(int x) { x_ = x; }"}},
+          .headers_to_targets =
+              {
+                  {HeaderName("test/header.h"),
+                   BazelLabel{"//test:testing_target"}},
+                  {HeaderName("test/impl.cc"),
+                   BazelLabel{"//test:testing_target"}},
+              },
+      }));
+  const Func* func = nullptr;
+  for (const Func* f : get_items_if<Func>(ir)) {
+    if (GetName(*f) == "set_x") {
+      func = f;
+      break;
+    }
+  }
+  ASSERT_NE(func, nullptr);
+  EXPECT_FALSE(func->has_semantic());
+}
+
+TEST(ImporterTest, MemberFuncSemantic_Bitfield) {
+  ASSERT_OK_AND_ASSIGN(
+      IR ir,
+      IrFromCc({
+          .current_target = BazelLabel{"//test:testing_target"},
+          .public_headers = {HeaderName("test/header.h")},
+          .virtual_headers_contents_for_testing =
+              {{HeaderName("test/header.h"),
+                "class S { public: int x() const { return x_; } void set_x(int "
+                "x) { x_ = x; } private: int x_ : 3; };"}},
+          .headers_to_targets =
+              {
+                  {HeaderName("test/header.h"),
+                   BazelLabel{"//test:testing_target"}},
+              },
+      }));
+  for (const Func* f : get_items_if<Func>(ir)) {
+    if (GetName(*f) == "x" || GetName(*f) == "set_x") {
+      EXPECT_FALSE(f->has_semantic());
+    }
+  }
+}
+
 TEST(ImporterTest, InlineUndefinedFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"inline void Foo();"}));
   EXPECT_THAT(get_items_if<UnsupportedItem>(ir),
