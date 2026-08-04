@@ -31,6 +31,7 @@ crubit_feature_hint = rule(
         "crubit_features": attr.string_list(doc = "Feature flags to enable. e.g. 'experimental'."),
     },
     implementation = _crubit_feature_hint_impl,
+    provides = [CrubitFeaturesInfo],
 )
 
 def _add_features(features, target):

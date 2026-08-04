@@ -155,6 +155,7 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
         ),
     },
     implementation = _additional_rust_srcs_for_crubit_bindings_impl,
+    provides = [AdditionalRustSrcsProviderInfo],
 )
 
 def additional_rust_srcs_for_crubit_bindings(

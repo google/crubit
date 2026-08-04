@@ -12,7 +12,7 @@ visibility([
     "//rs_bindings_from_cc/test/namespace/...",
 ])
 
-_RustBindingsFromCcCliFlagInfo = provider(
+RustBindingsFromCcCliFlagInfo = provider(
     doc = "The provider that specifies the command line flags and values for `rs_bindings_from_cc`.",
     fields = {
         "flags": "The command line flags and values for `rs_bindings_from_cc`.",
@@ -20,7 +20,7 @@ _RustBindingsFromCcCliFlagInfo = provider(
 )
 
 def _rust_bindings_from_cc_cli_flag_impl(ctx):
-    return [_RustBindingsFromCcCliFlagInfo(
+    return [RustBindingsFromCcCliFlagInfo(
         flags = ctx.attr.flags,
     )]
 
@@ -32,6 +32,7 @@ rust_bindings_from_cc_cli_flag = rule(
         ),
     },
     implementation = _rust_bindings_from_cc_cli_flag_impl,
+    provides = [RustBindingsFromCcCliFlagInfo],
     doc = """
 Defines an aspect hint that is used to pass command line flags to the `rs_bindings_from_cc` tool,
 which affects the tool behavior when generating the Rust binding for the C++ target. This rule
@@ -52,6 +53,6 @@ def collect_rust_bindings_from_cc_cli_flags(_target, aspect_ctx):
     """
     flags = []
     for hint in aspect_ctx.rule.attr.aspect_hints:
-        if _RustBindingsFromCcCliFlagInfo in hint:
-            flags.append(hint[_RustBindingsFromCcCliFlagInfo].flags)
+        if RustBindingsFromCcCliFlagInfo in hint:
+            flags.append(hint[RustBindingsFromCcCliFlagInfo].flags)
     return flags

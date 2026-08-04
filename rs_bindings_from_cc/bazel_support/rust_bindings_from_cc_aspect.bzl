@@ -13,6 +13,7 @@ load("@bazel_skylib//lib:collections.bzl", "collections")
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load(
     "//features:crubit_feature_hint.bzl",
+    "CrubitFeaturesInfo",
     "find_crubit_features",
 )
 load(
@@ -28,6 +29,7 @@ load(
 )
 load(
     "@rules_crubit//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_cli_flag_aspect_hint.bzl",
+    "RustBindingsFromCcCliFlagInfo",
     "collect_rust_bindings_from_cc_cli_flags",
 )
 load(

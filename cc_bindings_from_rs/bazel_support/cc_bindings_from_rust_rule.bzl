@@ -37,10 +37,12 @@ load(
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_cli_flag_aspect_hint.bzl",
+    "CcBindingsFromRustCliFlagInfo",
     "collect_cc_bindings_from_rust_cli_flags",
 )
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl",
+    "CcBindingsFromRustLibraryConfigInfo",
     "crate_name_to_library_config",
     "get_additional_cc_hdrs_and_srcs",
 )
@@ -55,6 +57,7 @@ load(
 )
 load(
     "//features:crubit_feature_hint.bzl",
+    "CrubitFeaturesInfo",
     "find_crubit_features",
 )
 load(

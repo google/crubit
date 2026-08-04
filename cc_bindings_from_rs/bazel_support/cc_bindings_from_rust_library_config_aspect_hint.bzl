@@ -44,6 +44,7 @@ cc_bindings_from_rust_library_config = rule(
         ),
     },
     implementation = _cc_bindings_from_rust_library_config_impl,
+    provides = [CcBindingsFromRustLibraryConfigInfo],
     doc = """
 Defines an aspect hint that is used to pass configuration to the `cc_bindings_from_rust` tool,
 which affects the tool behavior when generating the C++ binding for the Rust target.
