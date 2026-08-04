@@ -8,6 +8,7 @@
 use arc_anyhow::{bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
+use ir_rust_proto::{ConstantView, EnumeratorView};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
@@ -217,6 +218,55 @@ pub fn make_ir<'pb>(tree_ir: TreeIR<'pb>) -> IR<'pb> {
         reopened_namespace_id_to_idx,
         function_name_to_functions,
     }
+}
+
+macro_rules! derive_debug_partialeq_eq_hash {
+    {
+        $(#[$impl_metas:meta]),*
+        impl<'pb> $name:ident<'pb> {
+            $(
+                $(#[$fn_metas:meta])*
+                $fn_vis:vis fn $fn_ident:ident(&$self_:ident) -> $ret:ty { $body:expr }
+            )*
+        }
+    } => {
+        $(#[$impl_metas])*
+        impl<'pb> $name<'pb> {
+            $(
+                $(#[$fn_metas])*
+                $fn_vis fn $fn_ident(&$self_) -> $ret { $body }
+            )*
+        }
+
+        impl std::fmt::Debug for $name<'_> {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.debug_struct(stringify!($name))
+                    $(
+                        .field(stringify!($fn_ident), &self.$fn_ident())
+                    )*
+                    .finish()
+            }
+        }
+
+        impl std::cmp::PartialEq for $name<'_> {
+            fn eq(&self, other: &Self) -> bool {
+                true
+                $(
+                    && self.$fn_ident() == other.$fn_ident()
+                )*
+            }
+        }
+
+        impl std::cmp::Eq for $name<'_> {}
+
+        impl std::hash::Hash for $name<'_> {
+            fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+                $(
+                    self.$fn_ident().hash(state);
+                )*
+            }
+        }
+    };
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -2139,9 +2189,9 @@ impl Record<'_> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct Constant<'pb> {
-    pub(crate) value: IntegerConstant,
+    pub(crate) proto: ConstantView<'pb>,
     pub(crate) cc_name: Identifier<'pb>,
     pub(crate) rs_name: Identifier<'pb>,
     pub(crate) unique_name: &'pb str,
@@ -2158,57 +2208,59 @@ pub struct Constant<'pb> {
     pub(crate) doc_comment: Option<&'pb str>,
 }
 
-impl<'pb> Constant<'pb> {
-    pub fn value(&self) -> IntegerConstant {
-        self.value
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> Constant<'pb> {
+        pub fn value(&self) -> IntegerConstant {
+            IntegerConstant::from(self.proto.value())
+        }
 
-    pub fn cc_name(&self) -> &Identifier<'pb> {
-        &self.cc_name
-    }
+        pub fn cc_name(&self) -> &Identifier<'pb> {
+            &self.cc_name
+        }
 
-    pub fn rs_name(&self) -> &Identifier<'pb> {
-        &self.rs_name
-    }
+        pub fn rs_name(&self) -> &Identifier<'pb> {
+            &self.rs_name
+        }
 
-    pub fn unique_name(&self) -> &'pb str {
-        self.unique_name
-    }
+        pub fn unique_name(&self) -> &'pb str {
+            self.unique_name
+        }
 
-    pub fn id(&self) -> ItemId {
-        self.id
-    }
+        pub fn id(&self) -> ItemId {
+            self.id
+        }
 
-    pub fn owning_target(&self) -> &BazelLabel {
-        &self.owning_target
-    }
+        pub fn owning_target(&self) -> &BazelLabel {
+            &self.owning_target
+        }
 
-    pub fn source_loc(&self) -> &'pb str {
-        self.source_loc
-    }
+        pub fn source_loc(&self) -> &'pb str {
+            self.source_loc
+        }
 
-    pub fn unknown_attr(&self) -> Option<&'pb str> {
-        self.unknown_attr
-    }
+        pub fn unknown_attr(&self) -> Option<&'pb str> {
+            self.unknown_attr
+        }
 
-    pub fn enclosing_item_id(&self) -> Option<ItemId> {
-        self.enclosing_item_id
-    }
+        pub fn enclosing_item_id(&self) -> Option<ItemId> {
+            self.enclosing_item_id
+        }
 
-    pub fn type_(&self) -> &CcType {
-        &self.type_
-    }
+        pub fn type_(&self) -> &CcType {
+            &self.type_
+        }
 
-    pub fn must_bind(&self) -> bool {
-        self.must_bind
-    }
+        pub fn must_bind(&self) -> bool {
+            self.must_bind
+        }
 
-    pub fn deprecated(&self) -> Option<&'pb str> {
-        self.deprecated
-    }
+        pub fn deprecated(&self) -> Option<&'pb str> {
+            self.deprecated
+        }
 
-    pub fn doc_comment(&self) -> Option<&'pb str> {
-        self.doc_comment
+        pub fn doc_comment(&self) -> Option<&'pb str> {
+            self.doc_comment
+        }
     }
 }
 
@@ -2502,10 +2554,10 @@ impl<'pb> GenericItem<'pb> for Enum<'pb> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct Enumerator<'pb> {
+    pub(crate) proto: EnumeratorView<'pb>,
     pub(crate) identifier: Identifier<'pb>,
-    pub(crate) value: IntegerConstant,
     /// A human-readable list of attributes that Crubit doesn't understand.
     pub(crate) unknown_attr: Option<&'pb str>,
     /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
@@ -2514,25 +2566,27 @@ pub struct Enumerator<'pb> {
     pub(crate) doc_comment: Option<&'pb str>,
 }
 
-impl<'pb> Enumerator<'pb> {
-    pub fn identifier(&self) -> &Identifier<'pb> {
-        &self.identifier
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> Enumerator<'pb> {
+        pub fn identifier(&self) -> &Identifier<'pb> {
+            &self.identifier
+        }
 
-    pub fn value(&self) -> IntegerConstant {
-        self.value
-    }
+        pub fn value(&self) -> IntegerConstant {
+            IntegerConstant::from(self.proto.value())
+        }
 
-    pub fn unknown_attr(&self) -> Option<&'pb str> {
-        self.unknown_attr
-    }
+        pub fn unknown_attr(&self) -> Option<&'pb str> {
+            self.unknown_attr
+        }
 
-    pub fn deprecated(&self) -> Option<&'pb str> {
-        self.deprecated
-    }
+        pub fn deprecated(&self) -> Option<&'pb str> {
+            self.deprecated
+        }
 
-    pub fn doc_comment(&self) -> Option<&'pb str> {
-        self.doc_comment
+        pub fn doc_comment(&self) -> Option<&'pb str> {
+            self.doc_comment
+        }
     }
 }
 
