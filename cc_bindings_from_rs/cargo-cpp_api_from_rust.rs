@@ -173,6 +173,7 @@ fn build_crate_and_stream_artifacts(
         let Some(filename) = find_metadata_file else {
             continue;
         };
+        let filename = filename.canonicalize_utf8().unwrap_or_else(|_| filename.clone());
         let hash =
             filename.file_stem().and_then(|s| s.rsplitn(2, '-').next()).unwrap_or("").to_string();
         pkg_to_artifact.insert(
@@ -224,6 +225,7 @@ impl Directories {
             })?
             .to_string();
         let profile_dir = target_dir.join(profile_dir);
+        let profile_dir = profile_dir.canonicalize_utf8().unwrap_or_else(|_| profile_dir);
         let deps_dir = profile_dir.join("deps");
         let headers_dir = out_dir.unwrap_or(profile_dir.as_path()).join("include");
         let host_deps_dir = target_dir.join(&profile_name).join("deps");
@@ -257,6 +259,7 @@ impl BindingGenerationContext {
         target_dir: &Utf8PathBuf,
         out_dir: Option<&Utf8Path>,
     ) -> Result<Self> {
+        let target_dir = target_dir.canonicalize_utf8().unwrap_or_else(|_| target_dir.clone());
         // It's important we check the path of root (and not one of our dependencies) or else we'll get
         // the wrong path.
         let profile_dir = pkg_to_artifact
@@ -484,6 +487,7 @@ extern crate proc_macro;
         let profile_dir = &self.dirs.profile_dir;
 
         fs::create_dir_all(headers_dir.join("crubit"))?;
+        fs::create_dir_all(&self.dirs.deps_dir)?;
 
         // 1. Locate standard library crates and generate bindings for them first.
         let sysroot = self.get_sysroot()?;
