@@ -82,6 +82,31 @@ If you wish to accept more than one reference/pointer in C++, a raw pointer
 (`*const T`, `*mut T`) can be used instead. However, all of the usual `unsafe`
 caveats apply.
 
+## Slice parameters
+
+Rust slice parameters (`&[T]`, `&str`) map to `rs_std::SliceRef<const T>` and
+`rs_std::StrRef` in C++.
+
+C++ callers can pass string literals (`"hello"`) or `std::string_view` directly
+to satisfy string and byte-slice parameters.
+
+```rust {.good}
+fn process_text(_: &str) {}     // C++ callers can pass "hello" or std::string_view
+fn process_bytes(_: &[u8]) {}   // C++ callers can pass "hello", std::string_view, or std::span<const uint8_t>
+```
+
+However, mutable slices cannot be constructed from string literals:
+
+```rust {.bad}
+fn process_mut_bytes(_: &mut [u8]) {}  // Cannot pass string literals to mutable byte slices
+```
+
+*   **`&str`**: Maps to `rs_std::StrRef` (`crubit/support/rs_std/str_ref.h`).
+    Converts from string literals and `std::string_view`.
+*   **`&[u8]`**: Maps to `rs_std::SliceRef<const uint8_t>`
+    (`crubit/support/rs_std/slice_ref.h`). Converts from string literals,
+    `std::string_view`, `std::vector<uint8_t>`, and `std::array<uint8_t, N>`.
+
 ## Generic functions
 
 Crubit doesn't support generating bindings for *arbitrary* generic functions.

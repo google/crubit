@@ -20,6 +20,12 @@
 
 namespace rs_std {
 
+namespace internal {
+template <typename T>
+concept ByteSliceTarget = std::is_const_v<T> && sizeof(T) == 1 &&
+                          !std::is_same_v<std::remove_cv_t<T>, char>;
+}  // namespace internal
+
 // `rs_std::SliceRef` is a C++ representation of a pointer or reference to a
 // Rust slice. `SliceRef<int const>` is like a `&[c_int]` or `*const [c_int]`,
 // while `SliceRef<int>` is like a `&mut [c_int]` or `*mut [c_int]`. `SliceRef`
@@ -34,42 +40,54 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   // To mirror slices in Rust, the data pointer is not null.
   constexpr SliceRef() noexcept : dangling_ptr_(alignof(T)), size_(0) {}
 
+  // Primary constructor that initializes dangling_ptr_ for empty slices to
+  // satisfy Rust's non-null slice invariant, or a ptr_ otherwise.
+  constexpr SliceRef(T* ptr, size_t size) noexcept
+      : dangling_ptr_(alignof(T)), size_(ptr == nullptr ? 0 : size) {
+    if (size_ > 0) {
+      ptr_ = ptr;
+    }
+  }
+
   // Style waiver for implicit conversions granted in cl/662479273.
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr SliceRef(std::span<T> span) noexcept
-      // Store a dangling pointer assuming `span` is empty-- we have to
-      // initialize the union to something.
-      : dangling_ptr_(alignof(T)), size_(span.size()) {
-    // Store a valid pointer when `span` is not empty.
-    if (!span.empty()) {
-      ptr_ = span.data();
-    }
-  }
+      : SliceRef(span.data(), span.size()) {}
 
   // Implicit conversion from mutable SliceRef to const SliceRef.
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr SliceRef(const SliceRef<std::remove_const_t<T>>& other) noexcept
     requires(std::is_const_v<T>)
-      : SliceRef(std::span<T>(other.data(), other.size())) {}
+      : SliceRef(other.data(), other.size()) {}
 
-  // Explicit conversion from `std::string_view` in order to avoid
-  // marking this case as `CRUBIT_LIFETIME_BOUND`.
-  //
-  // Note that `std::span` solves this using an `EnableIfIsView` typeclass.
+  // Implicitly converts string-like types (literals, views) to SliceRef<const
+  // T> in one conversion step.
   //
   // Style waiver for implicit conversions granted in cl/662479273.
+  template <typename S>
+    requires(internal::ByteSliceTarget<T> &&
+             std::convertible_to<S, std::string_view> &&
+             std::is_trivially_copyable_v<std::remove_cvref_t<S>> &&
+             !std::same_as<std::remove_cvref_t<S>, SliceRef>)
+  // Non-owning views (pointers, string views, and literals) are trivially
+  // copyable. These do not need lifetime annotation.
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr SliceRef(std::string_view str) noexcept
-    requires(std::is_same_v<T, const char> || std::is_same_v<T, const uint8_t>)
-      : dangling_ptr_(alignof(T)), size_(str.size()) {
-    if (!str.empty()) {
-      if constexpr (std::is_same_v<T, const char>) {
-        ptr_ = str.data();
-      } else {
-        ptr_ = reinterpret_cast<T*>(str.data());
-      }
-    }
-  }
+  constexpr SliceRef(S str) noexcept
+      : SliceRef(reinterpret_cast<T*>(std::string_view(str).data()),
+                 std::string_view(str).size()) {}
+
+  template <typename S>
+    requires(internal::ByteSliceTarget<T> &&
+             std::convertible_to<const S&, std::string_view> &&
+             !std::is_trivially_copyable_v<std::remove_cvref_t<S>> &&
+             !std::same_as<std::remove_cvref_t<S>, SliceRef>)
+  // Owning containers (like std::string) are not trivially copyable. These are
+  // marked with CRUBIT_LIFETIME_BOUND to prevent temporaries from outliving the
+  // SliceRef.
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  constexpr SliceRef(const S& str CRUBIT_LIFETIME_BOUND) noexcept
+      : SliceRef(reinterpret_cast<T*>(std::string_view(str).data()),
+                 std::string_view(str).size()) {}
 
   // Implicit conversion from views.
   template <typename View>

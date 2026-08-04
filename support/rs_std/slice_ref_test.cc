@@ -210,6 +210,45 @@ TEST(ImplicitConversionTest, ToAbslSpan) {
   EXPECT_THAT(span, ElementsAre(1, 2));
 }
 
+TEST(ImplicitConversionTest, FromStringViewUint8) {
+  constexpr std::string_view kStr = "hello";
+  // Implicit conversion enabled by the new constructor's reinterpret_cast:
+  const rs_std::SliceRef<const uint8_t> kSlice = kStr;
+  EXPECT_EQ(kSlice.size(), 5);
+  EXPECT_EQ(kSlice.data(), reinterpret_cast<const uint8_t*>(kStr.data()));
+}
+
+TEST(ImplicitConversionTest, FromStringViewChar) {
+  constexpr std::string_view kStr = "hello";
+  constexpr rs_std::SliceRef<const char> kSlice(kStr);
+  EXPECT_EQ(kSlice.size(), 5);
+  EXPECT_EQ(kSlice.data(), kStr.data());
+}
+
+TEST(ImplicitConversionTest, FromConstUint8Array) {
+  static constexpr std::array<uint8_t, 5> kArr = {'h', 'e', 'l', 'l', 'o'};
+  static constexpr rs_std::SliceRef<const uint8_t> kSlice = kArr;
+  EXPECT_EQ(kSlice.size(), 5);
+  EXPECT_EQ(kSlice.to_span()[0], 'h');
+}
+
+void TakingSliceRefUint8(rs_std::SliceRef<const uint8_t> slice) {
+  EXPECT_EQ(slice.size(), 5);
+  EXPECT_EQ(slice.to_span()[0], 'h');
+  EXPECT_EQ(slice.to_span()[4], 'o');
+}
+void TakingSliceRefChar(rs_std::SliceRef<const char> slice) {
+  EXPECT_EQ(slice.size(), 6);
+  EXPECT_EQ(slice.to_span()[0], 'h');
+  EXPECT_EQ(slice.to_span()[4], 'o');
+  EXPECT_EQ(slice.to_span()[5], '\0');
+}
+
+TEST(ImplicitConversionTest, CallWithLiteral) {
+  TakingSliceRefUint8("hello");
+  TakingSliceRefChar("hello");
+}
+
 void Fuzzer(std::vector<uint8_t> data) {
   const rs_std::SliceRef<const uint8_t> s = data;
   EXPECT_EQ(absl::Span<const uint8_t>(data), s.to_span());

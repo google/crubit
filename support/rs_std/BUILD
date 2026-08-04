@@ -166,6 +166,9 @@ cc_library(
 crubit_cc_test(
     name = "slice_ref_test",
     srcs = ["slice_ref_test.cc"],
+    # Continuous fuzzing (autofuzz) is not supported for Crubit targets because crubit_cc_test uses
+    # a custom transition to the LLVM unstable toolchain.
+    tags = ["noautofuzz"],
     deps = [
         ":slice_ref",
         "@abseil-cpp//absl/types:span",
