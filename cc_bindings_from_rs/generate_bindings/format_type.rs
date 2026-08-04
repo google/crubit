@@ -40,6 +40,10 @@ use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::symbol::Symbol;
 use std::rc::Rc;
 
+#[rustversion::since(2026-07-31)]
+#[allow(unused_imports)]
+use rustc_middle::ty::RegionExt as _;
+
 #[cfg_accessible(rustc_middle::ty::RegionUtilitiesExt)]
 use rustc_middle::ty::RegionUtilitiesExt as _;
 
