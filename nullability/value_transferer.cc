@@ -726,10 +726,36 @@ static void transferPointer(const Expr* absl_nonnull PointerExpr,
   auto* PointerVal = ensureRawPointerHasValue(PointerExpr, State.Env);
   if (!PointerVal) return;
 
+  // A pointer bitcast is null iff its operand is null, so seed the result
+  // pointer's null-state from the operand *before* falling back to type-based
+  // initialization below. This preserves the operand's flow-sensitive
+  // null-state across the cast.
+  //
+  // We copy only the null-state and keep the result pointer's own pointee
+  // storage location, since the operand and result pointee types can differ
+  // across a bitcast (e.g. `void*` -> `T*`, or base -> derived).
+  if (const auto* Cast = dyn_cast<CastExpr>(PointerExpr);
+      Cast &&
+      (Cast->getCastKind() == CK_BitCast ||
+       Cast->getCastKind() == CK_LValueBitCast) &&
+      isSupportedRawPointerType(Cast->getSubExpr()->getType()) &&
+      isSupportedRawPointerType(Cast->getType()) &&
+      !hasPointerNullState(*PointerVal)) {
+    if (const PointerValue* SrcVal =
+            getRawPointerValue(Cast->getSubExpr(), State.Env);
+        SrcVal != nullptr && hasPointerNullState(*SrcVal)) {
+      initPointerNullState(*PointerVal, State.Env.getDataflowAnalysisContext(),
+                           getPointerNullState(*SrcVal));
+    }
+  }
+
   initPointerFromTypeNullability(*PointerVal, PointerExpr, State);
 
   if (const auto* Cast = dyn_cast<CastExpr>(PointerExpr);
       Cast && Cast->getCastKind() == CK_LValueToRValue) {
+    // Forward the modeled `PointerValue` from the glvalue sub-expression's
+    // storage location. The operand and result share the same pointee type
+    // here, so forwarding the whole value is safe.
     if (StorageLocation* Loc =
             State.Env.getStorageLocation(*Cast->getSubExpr())) {
       if (PointerValue* Val = unpackPointerValue(*Loc, State.Env)) {

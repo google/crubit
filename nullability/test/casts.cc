@@ -151,6 +151,63 @@ TEST(PointerNullabilityTest, Bitcast) {
   )cc"));
 }
 
+// A pointer `reinterpret_cast` (CK_BitCast) is value-preserving on the pointer
+// bits, so flow-sensitive null-state (e.g. an `if (p != nullptr)` narrowing)
+// must survive the cast.
+TEST(PointerNullabilityTest, ReinterpretCastPreservesFlowNullState) {
+  // A guarded dereference is safe: the null check on the operand carries across
+  // the reinterpret_cast.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int* _Nullable p) {
+      if (p != nullptr) {
+        *reinterpret_cast<long*>(p);
+      }
+    }
+  )cc"));
+
+  // Without a guard, the dereference is still unsafe.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int* _Nullable p) {
+      *reinterpret_cast<long*>(p);  // [[unsafe]]
+    }
+  )cc"));
+
+  // Returning a reinterpret_cast'ed nonnull pointer from a _Nonnull function is
+  // safe.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    long* _Nonnull target(int* _Nonnull p) {
+      return reinterpret_cast<long*>(p);
+    }
+  )cc"));
+
+  // Loading a nonnull member pointer, reinterpret_cast'ing it, and returning it
+  // from a _Nonnull function is safe.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      int* _Nonnull member;
+    };
+    long* _Nonnull target(S* _Nonnull s) {
+      return reinterpret_cast<long*>(s->member);
+    }
+  )cc"));
+
+  // Regression for a crash: when the operand and result of a `reinterpret_cast`
+  // have different pointee types (here `void*` -> a class type), the operand's
+  // modeled pointee storage location has the wrong type for the result, so only
+  // its null-state -- not the whole value -- may be forwarded. This mirrors
+  // protobuf's `arena_destruct_object<T>` helper
+  // (`reinterpret_cast<T*>(object)->~T()` with a `void* object`), which used to
+  // crash the analyzer while modeling the member access on the result.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct T {
+      int* _Nullable field;
+    };
+    void target(void* _Nonnull object) {
+      reinterpret_cast<T*>(object)->field = nullptr;
+    }
+  )cc"));
+}
+
 // CK_NoOp: No-op casts preserve deep nullability
 // TODO: fix false-positives from treating untracked values as unsafe.
 TEST(PointerNullabilityTest, NoOp) {
