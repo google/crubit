@@ -193,7 +193,8 @@ bool DetectFormatterFunction(const clang::Decl& decl,
   if (const auto* function_template_decl =
           clang::dyn_cast<const clang::FunctionTemplateDecl>(&decl);
       function_template_decl != nullptr) {
-    return function_template_decl->getName() == "AbslStringify" &&
+    return function_template_decl->getDeclName().isIdentifier() &&
+           function_template_decl->getName() == "AbslStringify" &&
            function_template_decl->getAsFunction()->getNumParams() == 2 &&
            IsTypeValueOrRefToConst(
                /*candidate=*/function_template_decl->getAsFunction()
@@ -2205,7 +2206,13 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     return ConvertTypeDecl(tag_type->getDecl()->getDefinitionOrSelf());
   } else if (const auto* typedef_type =
                  type->getAsAdjusted<clang::TypedefType>()) {
-    return ConvertTypeDecl(typedef_type->getDecl());
+    if (!ctx_.getSourceManager().isInSystemHeader(
+            typedef_type->getDecl()->getLocation()) &&
+        EnsureSuccessfullyImported(typedef_type->getDecl())) {
+      return ConvertTypeDecl(typedef_type->getDecl());
+    }
+    return ConvertQualType(typedef_type->getDecl()->getUnderlyingType(),
+                           lifetimes, /*nullable=*/true, assume_lifetimes);
   } else if (const auto* using_type = type->getAs<clang::UsingType>()) {
     return ConvertTypeDecl(using_type->getDecl());
   } else if (const auto* tst_type =
