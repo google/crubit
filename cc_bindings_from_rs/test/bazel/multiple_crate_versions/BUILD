@@ -15,10 +15,19 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 package(default_applicable_licenses = ["//:license"])
 
 rust_library(
+    name = "v0_1_test",
+    testonly = 1,
+    srcs = ["v0_1.rs"],
+    crate_name = "my_crate",
+    version = "0.1.0",
+)
+
+rust_library(
     name = "v1_test",
     testonly = 1,
     srcs = ["v1.rs"],
     crate_name = "my_crate",
+    version = "1.0.0",
 )
 
 rust_library(
@@ -26,6 +35,13 @@ rust_library(
     testonly = 1,
     srcs = ["v2.rs"],
     crate_name = "my_crate",
+    version = "2.0.0",
+)
+
+cc_bindings_from_rust(
+    name = "v0_1_cc_api",
+    testonly = 1,
+    crate = ":v0_1_test",
 )
 
 cc_bindings_from_rust(
@@ -38,6 +54,17 @@ cc_bindings_from_rust(
     name = "v2_cc_api",
     testonly = 1,
     crate = ":v2_test",
+)
+
+cc_library(
+    name = "consumer_v0_1",
+    testonly = 1,
+    srcs = ["consumer_v0_1.cc"],
+    hdrs = ["consumer_v0_1.h"],
+    deps = [
+        ":v0_1_cc_api",
+        "@abseil-cpp//absl/strings",
+    ],
 )
 
 cc_library(
@@ -67,8 +94,11 @@ crubit_cc_test(
     srcs = ["multiple_crate_versions_test.cc"],
     platforms = ["android"],
     deps = [
+        ":consumer_v0_1",
         ":consumer_v1",
         ":consumer_v2",
+        ":v1_cc_api",
+        ":v2_cc_api",
         "//testing/base/public:gunit_main",
     ],
 )

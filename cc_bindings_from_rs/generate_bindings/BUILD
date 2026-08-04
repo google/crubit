@@ -25,6 +25,7 @@ rust_library(
         "generate_template_specialization.rs",
         "get_generic_args.rs",
         "lib.rs",
+        "version.rs",
     ],
     # LINT.IfChange
     rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene,cfg_accessible"],

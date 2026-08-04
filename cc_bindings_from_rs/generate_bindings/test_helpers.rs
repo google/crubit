@@ -115,6 +115,7 @@ fn bindings_db_for_tests_with_features<'tcx>(
         Rc::new(crate_name_to_include_paths),
         Rc::new(crate_name_to_features),
         Rc::new(crate_name_to_namespace),
+        /* crate_name_to_version = */ HashMap::default().into(),
         /* crate_renames= */ HashMap::default().into(),
         /* errors = */ Rc::new(IgnoreErrors),
         /* fatal_errors= */ Rc::new(FatalErrors::new()),

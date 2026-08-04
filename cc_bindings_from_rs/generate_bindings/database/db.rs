@@ -101,6 +101,12 @@ memoized::query_group! {
       fn crate_name_to_namespace(&self) -> Rc<HashMap<Rc<str>, Rc<str>>>;
 
       #[input]
+      /// A map from a crate name to the version of the crate. The special name
+      /// `self` refers to the current crate.
+      fn crate_name_to_version(&self) -> Rc<HashMap<Rc<str>, Rc<str>>>;
+
+
+      #[input]
       fn crate_renames(&self) -> Rc<HashMap<Rc<str>, Rc<str>>>;
 
       #[input]
@@ -215,6 +221,17 @@ memoized::query_group! {
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:format_top_level_ns_for_crate
       fn format_top_level_ns_for_crate(&self, krate: CrateNum) -> Rc<[Symbol]>;
+
+      /// Returns the sanitized version namespace for the given crate, if available.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:crate_version
+      fn crate_version(&self, krate: CrateNum) -> Option<Symbol>;
+
+      /// Returns the aliases for the version namespace of the given crate.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:crate_version_aliases
+      fn crate_version_aliases(&self, krate: CrateNum) -> Rc<[Symbol]>;
+
 
       /// Formats `ty` into a `CcSnippet` that represents how the type should be
       /// spelled in a C++ declaration of a function parameter or field.

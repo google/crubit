@@ -12,26 +12,26 @@
 namespace consumer_v2 {
 
 std::string GetV2String() {
-  my_crate::SomeStruct s;
+  my_crate::v2::SomeStruct s;
   return absl::StrCat(s);
 }
 
 std::string GetV2FreeFunction() {
-  return std::string(my_crate::free_function());
+  return std::string(my_crate::v2::free_function());
 }
 
 std::string GetV2Method() {
-  my_crate::SomeStruct s;
+  my_crate::v2::SomeStruct s;
   return std::string(s.method());
 }
 
 std::string GetV2AssocFunction() {
-  return std::string(my_crate::SomeStruct::assoc_function());
+  return std::string(my_crate::v2::SomeStruct::assoc_function());
 }
 
 std::string GetV2Clone() {
-  my_crate::SomeStruct s;
-  my_crate::SomeStruct s2 = s;
+  my_crate::v2::SomeStruct s;
+  my_crate::v2::SomeStruct s2 = s;
   return absl::StrCat(s2);
 }
 

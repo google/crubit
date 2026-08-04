@@ -53,7 +53,7 @@ fn new_db<'tcx>(
     tcx: TyCtxt<'tcx>,
     errors: Rc<dyn ErrorReporting>,
     fatal_errors: Rc<dyn ReportFatalError>,
-) -> BindingsGenerator<'tcx> {
+) -> Result<BindingsGenerator<'tcx>> {
     let mut crate_name_to_features =
         <HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>::new();
     for (crate_name, features) in &cmdline.crate_features {
@@ -75,8 +75,21 @@ fn new_db<'tcx>(
     };
     let mut crate_name_to_namespace = <HashMap<Rc<str>, Rc<str>>>::new();
     for (crate_name, namespace) in &cmdline.crate_namespaces {
-        // TODO: Check dup.
-        crate_name_to_namespace.insert(crate_name.as_str().into(), namespace.as_str().into());
+        if crate_name_to_namespace
+            .insert(crate_name.as_str().into(), namespace.as_str().into())
+            .is_some()
+        {
+            bail!("Duplicate namespace specified for crate {}", crate_name);
+        }
+    }
+    let mut crate_name_to_version = <HashMap<Rc<str>, Rc<str>>>::new();
+    for (crate_name, version) in &cmdline.crate_versions {
+        if crate_name_to_version
+            .insert(crate_name.as_str().into(), version.as_str().into())
+            .is_some()
+        {
+            bail!("Duplicate version specified for crate {}", crate_name);
+        }
     }
     let mut crate_renames = <HashMap<Rc<str>, Rc<str>>>::new();
     for (name, renamed) in &cmdline.crate_rename {
@@ -93,7 +106,7 @@ fn new_db<'tcx>(
     for file in &cmdline.ignore_symbols_from_files {
         ignore_symbols_from_files.insert(file.to_path_buf());
     }
-    generate_bindings::new_database(
+    Ok(generate_bindings::new_database(
         tcx,
         cmdline.source_crate_name.as_ref().map(|s| s.clone().into()),
         cmdline.crubit_support_path_format.clone(),
@@ -105,13 +118,14 @@ fn new_db<'tcx>(
         crate_name_to_include_paths.into(),
         crate_name_to_features.into(),
         crate_name_to_namespace.into(),
+        crate_name_to_version.into(),
         crate_renames.into(),
         errors,
         fatal_errors,
         cmdline.is_golden_test,
         include_guard,
         ignore_symbols_from_files.into(),
-    )
+    ))
 }
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
@@ -123,7 +137,7 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> Result<()> {
     let fatal_errors = Rc::new(FatalErrors::new());
 
     let BindingsTokens { mut cc_api, cc_api_impl } = {
-        let db = new_db(cmdline, tcx, errors, fatal_errors.clone());
+        let db = new_db(cmdline, tcx, errors, fatal_errors.clone())?;
         generate_bindings(&db)?
     };
 

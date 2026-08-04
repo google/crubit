@@ -27,7 +27,3 @@ impl SomeStruct {
 pub fn free_function() -> &'static str {
     "SomeStruct free"
 }
-
-pub fn unique_to_v2() -> &'static str {
-    "unique to v2"
-}

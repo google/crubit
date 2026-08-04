@@ -184,7 +184,7 @@ def _filter_crubit_rustc_args(ctx, original_args, toolchain, dep_info):
     )
     return args
 
-def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_flags, crate_name, basename, inputs, args, rustc_env, proto_crate_renames, self_rmeta, is_golden_test_override = None):
+def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_flags, crate_name, basename, inputs, args, rustc_env, proto_crate_renames, self_rmeta, version = None, is_golden_test_override = None):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
     Args:
@@ -201,6 +201,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
       rustc_env: `rustc` environment to use when running `cc_bindings_from_rs`
       proto_crate_renames: Mapping of the `rust_proto_library` to the `proto_library` crate name.
       self_rmeta: The rmeta file for the current crate.
+      version: The version of the crate.
       is_golden_test_override: Overrides value of `--is-golden-test` flag instead of checking for the transition.
 
     Returns:
@@ -208,6 +209,14 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
     """
     h_out_file = ctx.actions.declare_file(basename + ".h")
     rs_out_file = ctx.actions.declare_file(basename + "_cc_api_impl.rs")
+
+    toolchain_info = None
+    toolchain = ctx.toolchains["//cc_bindings_from_rs/bazel_support:toolchain_type"]
+    if toolchain != None:
+        toolchain_info = toolchain.cc_bindings_from_rs_toolchain_info
+        supports_crate_version = toolchain_info.supports_crate_version
+    else:
+        supports_crate_version = False
 
     if ctx.label in [Label(x) for x in ctx.attr._verbose_log_targets[BuildSettingInfo].value]:
         verbose_log_env = {"RUST_LOG": "info"}
@@ -226,6 +235,10 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
     crubit_args.add("--rustfmt-exe-path", ctx.file._rustfmt)
     crubit_args.add("--rustfmt-config-path", ctx.file._rustfmt_cfg)
 
+    if version and supports_crate_version:
+        crubit_args.add("--crate-version", "self=" + version)
+
+    dep_versions = {}
     for dep_bindings_info in dep_bindings_infos:
         for header in dep_bindings_info.headers:
             arg = dep_bindings_info.crate_key + "=" + header.short_path
@@ -233,6 +246,22 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
         for feature in dep_bindings_info.features:
             arg = dep_bindings_info.crate_key + "=" + feature
             crubit_args.add("--crate-feature", arg)
+        dep_version = getattr(dep_bindings_info, "crate_version", None)
+        if dep_version and supports_crate_version:
+            key = dep_bindings_info.crate_key
+            if key in dep_versions:
+                if dep_versions[key] != dep_version:
+                    # Conflict! Mark as None to not pass it.
+                    # We print a warning but don't fail, in case the conflict doesn't affect the API.
+                    # buildifier: disable=print
+                    print("Warning: crate %s has multiple versions: %s and %s. Skipping version namespace for it." % (key, dep_versions[key], dep_version))
+                    dep_versions[key] = None
+            else:
+                dep_versions[key] = dep_version
+
+    for key, dep_version in dep_versions.items():
+        if dep_version != None:
+            crubit_args.add("--crate-version", key + "=" + dep_version)
 
     crubit_args.add("--default-features", ",".join(SUPPORTED_FEATURES))
 
@@ -269,7 +298,6 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
     is_golden_test = is_golden_test_override if is_golden_test_override != None else ctx.attr._is_golden_test[BuildSettingInfo].value
     if is_golden_test:
         crubit_args.add("--is-golden-test")
-    toolchain = ctx.toolchains["//cc_bindings_from_rs/bazel_support:toolchain_type"]
     if toolchain == None:
         ctx.actions.run_shell(
             command = (
@@ -281,7 +309,6 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
             mnemonic = "CcBindingsFromRustUnsupported",
         )
     else:
-        toolchain = toolchain.cc_bindings_from_rs_toolchain_info
         ctx.actions.run(
             outputs = outputs,
             inputs = depset(
@@ -289,7 +316,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
                 transitive = [inputs],
             ),
             env = rustc_env | verbose_log_env | _rustc_lib_env(ctx),
-            tools = [toolchain.binary, ctx.executable._rustfmt, ctx.executable._clang_format],
+            tools = [toolchain_info.binary, ctx.executable._rustfmt, ctx.executable._clang_format],
             executable = ctx.executable._process_wrapper,
             mnemonic = "CcBindingsFromRust",
             progress_message = "Generating C++ bindings from Rust: %s" % h_out_file,
@@ -299,7 +326,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
             # That said, if we passed arguments to crubit via environment variables or via flags that
             # can be interleaved with rustc flags in any order, and if we used toolchain.binary
             # as the tool_path for construct_arguments, then this could be `args.all` instead.
-            arguments = [args.process_wrapper_flags, "--", toolchain.binary.path, crubit_args, args.rustc_flags],
+            arguments = [args.process_wrapper_flags, "--", toolchain_info.binary.path, crubit_args, args.rustc_flags],
             toolchain = "//cc_bindings_from_rs/bazel_support:toolchain_type",
         )
 
@@ -497,6 +524,10 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         if hdr.short_path.endswith("_extracted_cc.h"):
             cli_flags.append("--extra-rs-srcs-include=" + hdr.short_path)
 
+    version = getattr(ctx.rule.attr, "version", None)
+    if version == "" or version == "0.0.0":
+        version = None
+
     bindings_info, features, config, output_depset = _generate_bindings(
         ctx,
         dep_bindings_infos = dep_bindings_infos,
@@ -511,6 +542,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         rustc_env = env,
         proto_crate_renames = proto_crate_renames,
         self_rmeta = rmeta,
+        version = version,
     )
 
     dep_variant_info = _compile_rs_out_file(ctx, ctx.rule.attr, bindings_info.rust_file, target[CrateInfo].name, [target])
@@ -535,6 +567,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         CcBindingsFromRustInfo(
             cc_info = cc_info,
             crate_key = crate_info.name,
+            crate_version = version,
             headers = [bindings_info.h_file],
             features = features,
             configuration = config,
