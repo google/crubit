@@ -10,11 +10,13 @@
 
 #include "absl/base/nullability.h"
 #include "nullability/type_nullability.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
 #include "clang/Analysis/FlowSensitive/ASTOps.h"
 #include "clang/Analysis/FlowSensitive/CachedConstAccessorsLattice.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
 
 namespace clang::tidy::nullability {
 class PointerNullabilityLatticeBase {
@@ -30,6 +32,12 @@ class PointerNullabilityLatticeBase {
     // and take precedence over the declared type.
     llvm::DenseMap<const ValueDecl* absl_nonnull, PointerTypeNullability>
         DeclTopLevelNullability;
+
+    // Nonnull pointer fields (raw and smart) of the class whose destructor is
+    // being analyzed that must be modeled as nullable at destructor entry,
+    // because a move operation or `&&`-qualified method may have nulled them
+    // out before destruction. Empty unless analyzing such a destructor.
+    llvm::DenseSet<const FieldDecl*> FieldsToTreatAsNullableAtDestructorEntry;
   };
 
   PointerNullabilityLatticeBase(NonFlowSensitiveState &NFS) : NFS(NFS) {}
@@ -38,6 +46,13 @@ class PointerNullabilityLatticeBase {
       const Expr *absl_nonnull E) const {
     auto I = NFS.ExprToNullability.find(&dataflow::ignoreCFGOmittedNodes(*E));
     return I == NFS.ExprToNullability.end() ? nullptr : &I->second;
+  }
+
+  // Nonnull pointer fields to be modeled as nullable at destructor entry. See
+  // `NonFlowSensitiveState::FieldsToTreatAsNullableAtDestructorEntry`.
+  const llvm::DenseSet<const FieldDecl*>&
+  fieldsToTreatAsNullableAtDestructorEntry() const {
+    return NFS.FieldsToTreatAsNullableAtDestructorEntry;
   }
 
   /// Extract the nullability of the type of `D`.
@@ -89,6 +104,26 @@ inline std::ostream &operator<<(std::ostream &OS,
                                 const PointerNullabilityLattice &) {
   return OS << "nullability";
 }
+
+// If `E` accesses, through `*this`, a nonnull pointer field that is in the
+// lattice's "treat as nullable at destructor entry" set, returns that field;
+// otherwise returns nullptr. Handles both raw-pointer/smart-pointer member
+// accesses and smart-pointer `field->member` (which lowers to
+// `field.operator->()->member`) by unwrapping the `operator->()` call.
+// Used to model such fields as nullable at the entry of the destructor being
+// analyzed (see
+// `NonFlowSensitiveState::FieldsToTreatAsNullableAtDestructorEntry`).
+const clang::FieldDecl* absl_nullable fieldTreatedAsNullableAtDestructorEntry(
+    const clang::Expr* absl_nonnull E,
+    const PointerNullabilityLatticeBase& Lattice);
+
+// Returns true if `E` accesses, through `*this`, a nonnull pointer field that
+// is in the lattice's "treat as nullable at destructor entry" set. Used to
+// model such fields as nullable at the entry of the destructor being analyzed
+// (see `NonFlowSensitiveState::FieldsToTreatAsNullableAtDestructorEntry`).
+bool shouldTreatFieldAsNullableAtDestructorEntry(
+    const clang::Expr* absl_nonnull E,
+    const PointerNullabilityLatticeBase& Lattice);
 
 }  // namespace clang::tidy::nullability
 
