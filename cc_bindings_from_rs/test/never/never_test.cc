@@ -6,25 +6,35 @@
 
 #include "gtest/gtest.h"
 
+// Wrapper around EXPECT_DEATH that accommodates Android emulators/devices.
+// Android assert and panic messages are routed to logcat (/dev/log) rather than
+// stderr, so death tests cannot inspect stderr/stdout for regex matching.
+#ifdef __ANDROID__
+#define CRUBIT_EXPECT_DEATH(statement, regex) EXPECT_DEATH(statement, "")
+#else
+#define CRUBIT_EXPECT_DEATH(statement, regex) EXPECT_DEATH(statement, regex)
+#endif
+
 namespace {
 
 TEST(NeverTest, NeverReturnDoesNotReturn) {
-  EXPECT_DEATH(never::never_return(), "You can't do that!");
+  CRUBIT_EXPECT_DEATH(never::never_return(), "You can't do that!");
 }
 
 TEST(NeverTest, ExternNeverReturnDoesNotReturn) {
-  EXPECT_DEATH(never::extern_never_return(), "You can't do that directly!");
+  CRUBIT_EXPECT_DEATH(never::extern_never_return(),
+                      "You can't do that directly!");
 }
 
 TEST(NeverTest, AssocatedFnNeverReturnDoesNotReturn) {
-  EXPECT_DEATH(never::NeverStruct::associated_fn_never_return(),
-               "You can't do that as an associated fn!");
+  CRUBIT_EXPECT_DEATH(never::NeverStruct::associated_fn_never_return(),
+                      "You can't do that as an associated fn!");
 }
 
 TEST(NeverTest, MethodNeverReturnDoesNotReturn) {
   never::NeverStruct never_struct;
-  EXPECT_DEATH(never_struct.method_never_return(),
-               "You can't do that as a method!");
+  CRUBIT_EXPECT_DEATH(never_struct.method_never_return(),
+                      "You can't do that as a method!");
 }
 
 }  // namespace
