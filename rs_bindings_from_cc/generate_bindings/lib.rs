@@ -1198,13 +1198,19 @@ fn crubit_abi_type<'a>(
                 generate_dyn_callable::callable_crubit_abi_type(db, &callable)
             }
             BridgeRsTypeKind::C9Co { result_type, .. } => {
+                let co_crate = db
+                    .ir()
+                    .crate_name(&BazelLabel::from("//util/c9:co"))
+                    .map(|ident| quote! { ::#ident })
+                    .unwrap_or_else(|| quote! { ::co });
+
                 let result_type_tokens = if result_type.is_void() {
                     quote! { () }
                 } else {
                     result_type.all_static_lifetimes(false).to_token_stream(db)
                 };
                 let rust_type_tokens = quote! {
-                    ::co::internal_crubit::CoCrubitAbi<#result_type_tokens>
+                    #co_crate::internal_crubit::CoCrubitAbi<#result_type_tokens>
                 };
 
                 let result_type_crubit_abi_type = if result_type.is_void() {
@@ -1215,7 +1221,7 @@ fn crubit_abi_type<'a>(
 
                 let rust_expr_tokens = {
                     let consume_result_fn = match &result_type_crubit_abi_type {
-                        None => quote! { ::co::internal_crubit::consume_void_result },
+                        None => quote! { #co_crate::internal_crubit::consume_void_result },
                         Some(result_type_crubit_abi_type) => {
                             let result_type_crubit_abi_type_tokens =
                                 CrubitAbiTypeToRustTokens(result_type_crubit_abi_type);
@@ -1229,7 +1235,7 @@ fn crubit_abi_type<'a>(
                             // and a pointer to the buffer, and then decode the stack buffer into
                             // the native Rust value.
                             quote! {
-                                |consume_result_into_buffer: ::co::internal_crubit::ConsumeResultIntoBufferFn,
+                                |consume_result_into_buffer: #co_crate::internal_crubit::ConsumeResultIntoBufferFn,
                                  context: *mut ::core::ffi::c_void| -> #result_type_tokens {
                                     ::bridge_rust::unstable_return!(@
                                         // Crubit ABI details
@@ -1251,7 +1257,7 @@ fn crubit_abi_type<'a>(
                         }
                     };
                     quote! {
-                        ::co::internal_crubit::CoCrubitAbi::new(#consume_result_fn)
+                        #co_crate::internal_crubit::CoCrubitAbi::new(#consume_result_fn)
                     }
                 };
 

@@ -2354,6 +2354,11 @@ impl<'a> RsTypeKind<'a> {
                         quote! { ::alloc::boxed::Box<#callable_spelling> }
                     }
                     BridgeRsTypeKind::C9Co { has_reference_param, result_type, lifetime, .. } => {
+                        let co_crate = db
+                            .ir()
+                            .crate_name(&BazelLabel::from("//util/c9:co"))
+                            .map(|ident| quote! { ::#ident })
+                            .unwrap_or_else(|| quote! { ::co });
                         let result_type_tokens = if result_type.is_void() {
                             quote! { () }
                         } else {
@@ -2362,9 +2367,9 @@ impl<'a> RsTypeKind<'a> {
                         // When there are reference parameters, the coroutine must finish before they are
                         // invalidated (http://shortn/_XPma06AwZh).
                         match (lifetime, has_reference_param) {
-                            (Some(lt), _) => quote! { ::co::Co<#lt, #result_type_tokens> },
-                            (_, false) => quote! { ::co::Co<'static, #result_type_tokens> },
-                            (_, true) => quote! { ::co::Co<'_, #result_type_tokens> },
+                            (Some(lt), _) => quote! { #co_crate::Co<#lt, #result_type_tokens> },
+                            (_, false) => quote! { #co_crate::Co<'static, #result_type_tokens> },
+                            (_, true) => quote! { #co_crate::Co<'_, #result_type_tokens> },
                         }
                     }
                 }
