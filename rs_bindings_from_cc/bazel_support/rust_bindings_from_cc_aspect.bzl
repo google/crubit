@@ -424,11 +424,18 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             cc_infos = [target[CcInfo]] + generated_cpp_support_deps,
         ).compilation_context
 
-    extra_named_deps = depset(transitive = [
-        b.extra_named_deps
-        for b in binding_infos
-        if hasattr(b, "extra_named_deps")
-    ])
+    extra_named_deps = depset(
+        direct = [
+            make_aliasable_dep_info("crubit_support", dep_variant_info.crate_info)
+            for dep_variant_info in ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file
+            if dep_variant_info.crate_info and dep_variant_info.crate_info.name == "inline_cpp_macro"
+        ],
+        transitive = [
+            b.extra_named_deps
+            for b in binding_infos
+            if hasattr(b, "extra_named_deps")
+        ],
+    )
 
     return generate_and_compile_bindings(
         ctx,

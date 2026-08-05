@@ -98,6 +98,67 @@ impl<'a> TokenParser<'a> {
         false
     }
 
+    fn token_text_at(&self, idx: usize) -> &'a str {
+        if idx >= self.tokens.len() {
+            return "";
+        }
+        let mut offset = self.byte_offset;
+        for i in self.token_index..idx {
+            offset += self.tokens[i].len as usize;
+        }
+        let len = self.tokens[idx].len as usize;
+        &self.rust_source[offset..offset + len]
+    }
+
+    fn is_colon_colon_at(&self, idx: usize) -> bool {
+        idx + 1 < self.tokens.len()
+            && self.tokens[idx].kind == TokenKind::Colon
+            && self.tokens[idx + 1].kind == TokenKind::Colon
+    }
+
+    /// Returns the number of tokens in the macro path if the tokens starting at `self.token_index`
+    /// form a macro invocation path ending in `macro_name!`, such as `inline_cpp!` or
+    /// `::crubit_support::inline_cpp!` or `crubit_support::inline_cpp!`.
+    fn match_macro_invocation_path(&self, macro_name: &str) -> Option<usize> {
+        let mut idx = self.token_index;
+        if idx >= self.tokens.len() {
+            return None;
+        }
+
+        // Optional leading `::`
+        if self.is_colon_colon_at(idx) {
+            idx += 2;
+        }
+
+        while idx < self.tokens.len() {
+            if self.tokens[idx].kind != TokenKind::Ident {
+                return None;
+            }
+            let is_target_macro = self.token_text_at(idx) == macro_name;
+            // Check what follows this Ident
+            let mut next_idx = idx + 1;
+            while next_idx < self.tokens.len()
+                && self.tokens[next_idx].kind == TokenKind::Whitespace
+            {
+                next_idx += 1;
+            }
+            if is_target_macro
+                && next_idx < self.tokens.len()
+                && self.tokens[next_idx].kind == TokenKind::Bang
+            {
+                // Found path ending in `macro_name!`
+                return Some(idx + 1 - self.token_index);
+            }
+            // Otherwise, it must be followed by `::` to continue the path
+            if self.is_colon_colon_at(idx + 1) {
+                idx += 3;
+            } else {
+                return None;
+            }
+        }
+        None
+    }
+
     fn eat_braced_body(&mut self, file_name: &str) -> Result<ExtractedBracedBody<'a>, String> {
         let start_line = self.line;
         if let Some(t) = self.peek() {
@@ -159,20 +220,17 @@ fn extract_macro_body<'a>(
     macro_name: &str,
     file_name: &str,
 ) -> Result<Option<ExtractedMacro<'a>>, String> {
-    let Some(token) = parser.peek() else {
-        return Err("Unexpected end of file".to_string());
-    };
-    let token_text = parser.peek_text();
-
-    if token.kind != TokenKind::Ident || token_text != macro_name {
+    let Some(path_token_count) = parser.match_macro_invocation_path(macro_name) else {
         parser.advance();
         return Ok(None);
-    }
+    };
 
     let macro_line = parser.line;
     let macro_col = parser.column;
 
-    parser.advance();
+    for _ in 0..path_token_count {
+        parser.advance();
+    }
     parser.eat_whitespace();
 
     if !parser.eat_bang() {
@@ -498,6 +556,23 @@ mod tests {
         let thunk_name = inline_cpp_utils::compute_thunk_name(target, file_name, 1, 1);
         let expected = format!(
             "inline auto {}\n#line 1 \"test_src.rs\"\n             \n    (int a) -> int {{\n        return a;\n    }}\n\n\n",
+            thunk_name
+        );
+        expect_eq!(
+            extract_inline_cpp(input, &tokenize(input), file_name, target).unwrap(),
+            expected
+        );
+    }
+
+    #[gtest]
+    fn test_extract_inline_cpp_path_qualified() {
+        let input = "        ::crubit_support::inline_cpp! { () -> int { return 42; } };";
+        let file_name = "test_src.rs";
+        let target = "//test:target";
+        // Column 9 is the start of `::crubit_support::inline_cpp!`
+        let thunk_name = inline_cpp_utils::compute_thunk_name(target, file_name, 1, 9);
+        let expected = format!(
+            "inline auto {}\n#line 1 \"test_src.rs\"\n                                        () -> int {{ return 42; }} \n\n",
             thunk_name
         );
         expect_eq!(

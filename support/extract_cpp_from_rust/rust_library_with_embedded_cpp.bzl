@@ -49,14 +49,14 @@ def rust_library_with_embedded_cpp(name, srcs, deps = [], deps_of_cc_library = [
     merged_aliases.update({
         bindings_label: "inline_cpp_generated_bindings",
         ":" + cc_lib_name: "inline_cpp_generated_bindings",
+        "//support/extract_cpp_from_rust:inline_cpp_macro": "crubit_support",
     })
 
     rust_library(
         name = name,
         srcs = srcs,
         deps = deps + [":" + rust_bindings_name],
-        aspect_hints = [
-            "//features:supported",
+        aspect_hints = kwargs.pop("aspect_hints", ["//features:supported"]) + [
             ":" + name + "_cc_bindings_from_rust_config",
         ],
         aliases = merged_aliases,

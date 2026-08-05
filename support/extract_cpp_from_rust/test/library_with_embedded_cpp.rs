@@ -6,8 +6,8 @@ macro_rules! global_cpp {
     ($($t:tt)*) => {};
 }
 
+use crubit_support::inline_cpp;
 use inline_cpp_generated_bindings as library_with_embedded_cpp_extracted_cc;
-use inline_cpp_macro::inline_cpp;
 
 global_cpp! {
     #include "third_party/absl/strings/string_view.h"

@@ -58,6 +58,7 @@ deps_for_bindings(
         "//support/rs_std:dyn_callable_rs",
         "//support/rs_std:lossy_formatter",
         "//support:crubit_annotate",
+        "//support/extract_cpp_from_rust:inline_cpp_macro",
         # Required for `Copy` trait assertions added to the generated Rust
         # code.
         "@crate_index//:static_assertions",  # v1

@@ -13,7 +13,11 @@ pub fn inline_cpp(_input: TokenStream) -> TokenStream {
     let line = span.line();
     let col = span.column();
 
-    let target = std::env::var("CRUBIT_TARGET").unwrap_or_default();
+    let Ok(target) = std::env::var("CRUBIT_TARGET") else {
+        return TokenStream::from(quote! {
+            unreachable!()
+        });
+    };
     let name_str = inline_cpp_utils::compute_thunk_name(&target, &file, line, col);
     let thunk_name = quote::format_ident!("{}", name_str);
 
@@ -22,4 +26,9 @@ pub fn inline_cpp(_input: TokenStream) -> TokenStream {
     };
 
     TokenStream::from(expanded)
+}
+
+#[proc_macro]
+pub fn global_cpp(_input: TokenStream) -> TokenStream {
+    TokenStream::new()
 }
