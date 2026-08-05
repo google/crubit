@@ -45,7 +45,7 @@ export function decodeBase64ToUtf8(base64: string): string {
   for (let i = 0; i < binString.length; i++) {
     bytes[i] = binString.charCodeAt(i);
   }
-  return new TextDecoder().decode(bytes);
+  return new TextDecoder('utf-8', {fatal: true}).decode(bytes);
 }
 
 /**
@@ -65,24 +65,46 @@ interface RawParsedState {
   files?: InputFileState[];
 }
 
-/**
- * Decodes a URL-safe Base64 string into an explorer state object.
- */
-export function decodeState(encoded: string): ExplorerState {
+export function decodeCode(encoded: string): string {
   let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
   while (base64.length % 4 !== 0) {
     base64 += '=';
   }
-  let decodedText = '';
   try {
-    decodedText = decodeBase64ToUtf8(base64);
+    return decodeBase64ToUtf8(base64);
   } catch {
     try {
-      decodedText = decodeURIComponent(encoded);
+      return decodeURIComponent(encoded);
     } catch {
-      decodedText = encoded;
+      return encoded;
     }
   }
+}
+
+/**
+ * Decodes a URL-safe Base64 string into an explorer state object.
+ */
+export function decodeState(encoded: string): ExplorerState {
+  if (encoded.includes('code=') || encoded.includes('&tool=') ||
+      encoded.includes('&editable=') || encoded.includes('&view=')) {
+    const params = new URLSearchParams(encoded);
+    const codeParam = params.get('code') || '';
+    const decodedText = decodeCode(codeParam);
+    const validViews: ViewMode[] = ['split', 'input', 'output'];
+    const viewParam = params.get('view') as ViewMode;
+    const state: ExplorerState = {
+      v: 1,
+      tool: params.get('tool') || 'cc_bindings_from_rs',
+      editable: params.get('editable') === 'true',
+      files: [{name: 'input.rs', content: decodedText}]
+    };
+    if (validViews.includes(viewParam)) {
+      state.view = viewParam;
+    }
+    return state;
+  }
+
+  const decodedText = decodeCode(encoded);
 
   let parsed: unknown;
   try {
@@ -111,7 +133,7 @@ export function decodeState(encoded: string): ExplorerState {
     v: 1,
     tool: 'cc_bindings_from_rs',
     editable: false,
-    files: [{ name: 'input.rs', content: decodedText }]
+    files: [{name: 'input.rs', content: decodedText}]
   };
 }
 
@@ -121,28 +143,36 @@ export function decodeState(encoded: string): ExplorerState {
 export function getStateFromUrl(): ExplorerState | null {
   if (typeof window === 'undefined' || !window.location) return null;
   let codeParam: string | null = null;
+  let hashParams = new URLSearchParams();
   if (window.location.hash) {
     const hash = window.location.hash.startsWith('#')
         ? window.location.hash.slice(1)
         : window.location.hash;
-    const hashParams = new URLSearchParams(hash);
-    codeParam = hashParams.get('code') ?? hash;
+    hashParams = new URLSearchParams(hash);
+    codeParam = hashParams.get('code');
+    if (!codeParam && !hashParams.has('tool') && !hashParams.has('editable') &&
+        !hashParams.has('view')) {
+      codeParam = hash;
+    }
   }
+  const urlParams = new URLSearchParams(window.location.search);
   if (!codeParam) {
-    const urlParams = new URLSearchParams(window.location.search);
     codeParam = urlParams.get('code');
   }
   if (codeParam) {
     const state = decodeState(codeParam);
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('editable')) {
-      state.editable = urlParams.get('editable') === 'true';
+    const tool = hashParams.get('tool') || urlParams.get('tool');
+    if (tool) {
+      state.tool = tool;
     }
-    if (urlParams.has('view')) {
-      const viewParam = urlParams.get('view');
-      if (isViewMode(viewParam)) {
-        state.view = viewParam;
-      }
+    const editableParam =
+        hashParams.get('editable') ?? urlParams.get('editable');
+    if (editableParam !== null) {
+      state.editable = editableParam === 'true';
+    }
+    const viewParam = hashParams.get('view') || urlParams.get('view');
+    if (isViewMode(viewParam)) {
+      state.view = viewParam;
     }
     return state;
   }
@@ -172,14 +202,17 @@ export function updateUrl(
   if (typeof window === 'undefined' || !window.location) return;
   let files: InputFileState[];
   if (typeof filesOrContent === 'string') {
-    files = [{ name: 'input.rs', content: filesOrContent }];
+    files = [{name: 'input.rs', content: filesOrContent}];
   } else {
     files = filesOrContent;
   }
-  const state: ExplorerState = { v: 1, tool, editable, view, files };
+  const state: ExplorerState = {v: 1, tool, editable, view, files};
   const encoded = encodeState(state);
   const url = new URL(window.location.href);
   url.searchParams.delete('code');
+  url.searchParams.delete('tool');
+  url.searchParams.delete('editable');
+  url.searchParams.delete('view');
   url.hash = `code=${encoded}`;
   window.history.replaceState(null, '', url.toString());
 }

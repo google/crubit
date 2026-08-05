@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-import {decodeBase64ToUtf8, decodeState, encodeState, encodeUtf8ToBase64, getCodeFromUrl, getStateFromUrl, isViewMode, updateUrl} from './state';
+import {decodeBase64ToUtf8, decodeCode, decodeState, encodeState, encodeUtf8ToBase64, getCodeFromUrl, getStateFromUrl, isViewMode, updateUrl} from './state';
 
 describe('state', () => {
   describe('isViewMode', () => {
@@ -26,6 +26,19 @@ describe('state', () => {
       const original = 'Hello, World! 🦀';
       const encoded = encodeUtf8ToBase64(original);
       expect(decodeBase64ToUtf8(encoded)).toBe(original);
+    });
+  });
+
+  describe('decodeCode', () => {
+    it('should decode URL-safe base64 strings', () => {
+      const original = 'pub fn foo() {} 🦀';
+      const encoded = encodeUtf8ToBase64(original).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      expect(decodeCode(encoded)).toBe(original);
+    });
+
+    it('should fallback to URI decoding or raw text', () => {
+      expect(decodeCode('pub%20fn%20foo%28%29%20%7B%7D')).toBe('pub fn foo() {}');
+      expect(decodeCode('raw unencoded string')).toBe('raw unencoded string');
     });
   });
 

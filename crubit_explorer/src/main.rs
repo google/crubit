@@ -383,7 +383,7 @@ mod tests {
         let response = app
             .oneshot(
                 Request::builder()
-                    .uri("/embed#code=cHViIHN0cnVjdCBNeVN0cnVjdCB7fQ")
+                    .uri("/embed#code=cHViIHN0cnVjdCBNeVN0cnVjdCB7fQ&tool=cc_bindings_from_rs&editable=true&view=split")
                     .body(Body::empty())
                     .unwrap(),
             )
