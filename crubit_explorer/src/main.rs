@@ -347,6 +347,31 @@ mod tests {
 
     #[gtest]
     #[tokio::test]
+    async fn test_frontend_serving_with_query_params() {
+        let path = resource_locator::get_frontend_dist_path();
+        if let Some(frontend_path) = path {
+            let app = app(Some(frontend_path));
+            let response = app
+                .oneshot(
+                    Request::builder()
+                        .uri("/?code=cHViIHN0cnVjdCBNeVN0cnVjdCB7fQ")
+                        .body(Body::empty())
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+
+            expect_eq!(response.status(), StatusCode::OK);
+            let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+            let html_str = String::from_utf8(body.to_vec()).unwrap();
+            expect_that!(html_str, contains_substring("<app-root>"));
+        } else {
+            println!("Frontend dist path not found, skipping test.");
+        }
+    }
+
+    #[gtest]
+    #[tokio::test]
     async fn test_cc_bindings_from_rs_help() {
         let mut cmd = new_cc_bindings_from_rs_command()
             .expect("Failed to create cc_bindings_from_rs command");

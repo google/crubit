@@ -11,6 +11,19 @@ import {debounceTime} from 'rxjs/operators';
 import {buildFlatSymbolTree, DoxygenResponse, DoxygenSymbol, FlatSymbolNode} from './doxygen';
 import {loadMonaco} from './monaco_loader';
 
+export interface InputFileState {
+  name: string;
+  content: string;
+}
+
+export interface ExplorerState {
+  v?: number;
+  tool?: string;
+  files: InputFileState[];
+}
+
+const SHARE_BUTTON_RESET_DELAY_MS = 2000;
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -39,12 +52,149 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   selectedSymbol: FlatSymbolNode | null = null;
   doxygenError = '';
   isDoxygenCollapsed = false;
+  shareButtonText = 'Share';
+  selectedTool = 'cc_bindings_from_rs';
 
   constructor(
       private http: HttpClient,
       private cdr: ChangeDetectorRef,
       private zone: NgZone
   ) {}
+
+  encodeState(state: ExplorerState): string {
+    const jsonStr = JSON.stringify(state);
+    // encodeURIComponent encodes multibyte Unicode characters into
+    // percent sequences. `unescape` converts those into an 8 bit string,
+    // so we can safely encode non-ASCII characters to base64
+    const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  decodeState(encoded: string): ExplorerState {
+    let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4 !== 0) {
+      base64 += '=';
+    }
+    let decodedText = '';
+    try {
+      // This is the reverse of the encoding, turning base64 into the
+      // percent-encoded sequence, and then decoding that back into the
+      // non-ASCII string
+      decodedText = decodeURIComponent(escape(atob(base64)));
+    } catch {
+      try {
+        decodedText = decodeURIComponent(encoded);
+      } catch {
+        decodedText = encoded;
+      }
+    }
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(decodedText);
+    } catch {
+      // Fallback for non-JSON raw code strings
+    }
+
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.files) && parsed.files.length > 0) {
+      return {
+        v: parsed.v || 1,
+        tool: parsed.tool || 'cc_bindings_from_rs',
+        files: parsed.files
+      };
+    }
+
+    return {
+      v: 1,
+      tool: 'cc_bindings_from_rs',
+      files: [{ name: 'input.rs', content: decodedText }]
+    };
+  }
+
+  getStateFromUrl(): ExplorerState | null {
+    if (typeof window === 'undefined' || !window.location) return null;
+    let codeParam: string | null = null;
+    if (window.location.hash) {
+      const hash = window.location.hash.startsWith('#')
+          ? window.location.hash.slice(1)
+          : window.location.hash;
+      const hashParams = new URLSearchParams(hash);
+      codeParam = hashParams.get('code') || hash;
+    }
+    if (!codeParam) {
+      const urlParams = new URLSearchParams(window.location.search);
+      codeParam = urlParams.get('code');
+    }
+    if (codeParam) {
+      return this.decodeState(codeParam);
+    }
+    return null;
+  }
+
+  getCodeFromUrl(): string | null {
+    const state = this.getStateFromUrl();
+    if (state && state.files && state.files.length > 0) {
+      return state.files[0].content;
+    }
+    return null;
+  }
+
+  updateUrl(filesOrContent: InputFileState[] | string, tool = this.selectedTool): void {
+    if (typeof window === 'undefined' || !window.location) return;
+    let files: InputFileState[];
+    if (typeof filesOrContent === 'string') {
+      files = [{ name: 'input.rs', content: filesOrContent }];
+    } else {
+      files = filesOrContent;
+    }
+    const state: ExplorerState = { v: 1, tool, files };
+    const encoded = this.encodeState(state);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('code');
+    url.hash = `code=${encoded}`;
+    window.history.replaceState(null, '', url.toString());
+  }
+
+  copyShareLink(): void {
+    const code = this.inputEditor ? this.inputEditor.getValue() : '';
+    if (code) {
+      this.updateUrl(code);
+    }
+    const shareUrl = window.location.href;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        this.shareButtonText = 'Copied!';
+        setTimeout(() => {
+          this.shareButtonText = 'Share';
+          this.cdr.detectChanges();
+        }, SHARE_BUTTON_RESET_DELAY_MS);
+        this.cdr.detectChanges();
+      }).catch(() => {
+        this.fallbackCopy(shareUrl);
+      });
+    } else {
+      this.fallbackCopy(shareUrl);
+    }
+  }
+
+  private fallbackCopy(text: string): void {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    try {
+      document.execCommand('copy');
+      this.shareButtonText = 'Copied!';
+    } catch {
+      this.shareButtonText = 'Failed';
+    }
+    document.body.removeChild(el);
+    setTimeout(() => {
+      this.shareButtonText = 'Share';
+      this.cdr.detectChanges();
+    }, SHARE_BUTTON_RESET_DELAY_MS);
+    this.cdr.detectChanges();
+  }
 
   ngAfterViewInit() {
     loadMonaco().then((monaco: any) => {
@@ -53,9 +203,17 @@ export class AppComponent implements AfterViewInit, OnDestroy {
             window.matchMedia('(prefers-color-scheme: dark)').matches;
       const theme = prefersDark ? 'vs-dark' : 'vs';
 
+      const state = this.getStateFromUrl();
+      if (state?.tool) {
+        this.selectedTool = state.tool;
+      }
+
+      const initialCode = (state?.files && state.files.length > 0)
+          ? state.files[0].content
+          : '// Write Rust code here\npub struct MyStruct {\n    pub a: i32,\n}\n\npub extern "C" fn hello() {}\n';
+
       this.inputEditor = monaco.editor.create(this.inputContainer.nativeElement, {
-        value:
-            '// Write Rust code here\npub struct MyStruct {\n    pub a: i32,\n}\n\npub extern "C" fn hello() {}\n',
+        value: initialCode,
         language: 'rust',
         theme: theme,
         minimap: {enabled: false},
@@ -124,10 +282,12 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     }
     if (!content) return;
 
+    this.updateUrl(content);
+
     this.isCompiling = true;
 
     const payload = {
-      pluginName: 'cc_bindings_from_rs',
+      pluginName: this.selectedTool,
       input: {
         files: [{
           name: 'input.rs',

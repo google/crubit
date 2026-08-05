@@ -9,10 +9,13 @@
   <div class="toolbar">
     <label>
       <span class="toolbar-plugin">Tool:</span>
-      <select [disabled]="true">
-        <option>cc_bindings_from_rs</option>
+      <select [disabled]="true" [value]="selectedTool">
+        <option value="cc_bindings_from_rs">cc_bindings_from_rs</option>
       </select>
     </label>
+    <button class="share-button" (click)="copyShareLink()" title="Share link with encoded code">
+      {{ shareButtonText }}
+    </button>
   </div>
 </header>
 

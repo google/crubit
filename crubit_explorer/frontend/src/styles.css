@@ -105,6 +105,23 @@ header .toolbar > label select {
   display: inline-block;
 }
 
+header .toolbar button.share-button {
+  appearance: none;
+  cursor: pointer;
+  background: oklch(from var(--theme-color) calc(l - .24) calc(c - .008) h);
+  color: #fff;
+  border: 1px solid oklch(from var(--theme-color) calc(l - .36) c h);
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+header .toolbar button.share-button:hover {
+  background: oklch(from var(--theme-color) calc(l - .15) calc(c - .008) h);
+}
+
 app-shortn {
   display: inline-flex;
   align-items: center;

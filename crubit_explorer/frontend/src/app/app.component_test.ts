@@ -5,7 +5,7 @@
 import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 import {TestBed} from '@angular/core/testing';
 import {AppComponent} from './app.component';
-import {FlatSymbolNode} from './doxygen';
+import {buildFlatSymbolTree, FlatSymbolNode} from './doxygen';
 
 describe('AppComponent', () => {
   let component: AppComponent;
@@ -201,4 +201,199 @@ describe('AppComponent', () => {
 
     expect(component.doxygenError).toBe('Doxygen failed: Parse error');
   });
+
+  describe('decodeState', () => {
+    it('should decode a valid encoded JSON state', () => {
+      const state = {
+        v: 1,
+        tool: 'cc_bindings_from_rs',
+        files: [{name: 'input.rs', content: 'pub fn foo() {}'}],
+      };
+      const encoded = component.encodeState(state);
+      expect(component.decodeState(encoded)).toEqual(state);
+    });
+
+    it('should encode and decode state with unicode characters', () => {
+      const state = {
+        v: 1,
+        tool: 'cc_bindings_from_rs',
+        files: [{name: 'input.rs', content: '// 🚀 Unicode test: こんにちは世界'}],
+      };
+      const encoded = component.encodeState(state);
+      expect(component.decodeState(encoded)).toEqual(state);
+    });
+
+    it('should fallback for raw non-JSON code strings', () => {
+      const rawCode = 'pub fn foo() {}';
+      const decoded = component.decodeState(rawCode);
+      expect(decoded).toEqual({
+        v: 1,
+        tool: 'cc_bindings_from_rs',
+        files: [{name: 'input.rs', content: rawCode}],
+      });
+    });
+
+    it('should fallback for JSON strings that do not contain valid files array', () => {
+      const invalidJson = JSON.stringify({foo: 'bar'});
+      const decoded = component.decodeState(invalidJson);
+      expect(decoded).toEqual({
+        v: 1,
+        tool: 'cc_bindings_from_rs',
+        files: [{name: 'input.rs', content: invalidJson}],
+      });
+    });
+  });
+
+  describe('getStateFromUrl and getCodeFromUrl', () => {
+    let originalHash: string;
+    beforeEach(() => { originalHash = window.location.hash; });
+    afterEach(() => { window.location.hash = originalHash; });
+
+    it('should extract state from location.hash or return null when empty', () => {
+      window.location.hash = '';
+      expect(component.getStateFromUrl()).toBeNull();
+      expect(component.getCodeFromUrl()).toBeNull();
+
+      const state = {v: 1, tool: 'cc_bindings_from_rs', files: [{name: 'input.rs', content: 'fn main() {}'}]};
+      const encoded = component.encodeState(state);
+
+      window.location.hash = `#code=${encoded}`;
+      expect(component.getStateFromUrl()).toEqual(state);
+      expect(component.getCodeFromUrl()).toBe('fn main() {}');
+
+      window.location.hash = `#${encoded}`;
+      expect(component.getStateFromUrl()).toEqual(state);
+    });
+  });
+
+  describe('updateUrl', () => {
+    it('should encode state into location.hash via replaceState', () => {
+      const replaceSpy = spyOn(window.history, 'replaceState');
+
+      const expectedState1 = {
+        v: 1,
+        tool: 'cc_bindings_from_rs',
+        files: [{name: 'input.rs', content: 'pub fn bar() {}'}],
+      };
+      const expectedEncoded1 = component.encodeState(expectedState1);
+      component.updateUrl('pub fn bar() {}');
+      expect(replaceSpy).toHaveBeenCalled();
+      const url1 = replaceSpy.calls.mostRecent().args[2] as string;
+      expect(url1).toContain(`#code=${expectedEncoded1}`);
+
+      const expectedState2 = {
+        v: 1,
+        tool: 'custom_tool',
+        files: [{name: 'input.rs', content: 'struct S;'}],
+      };
+      const expectedEncoded2 = component.encodeState(expectedState2);
+      component.updateUrl(expectedState2.files, expectedState2.tool);
+      expect(replaceSpy).toHaveBeenCalled();
+      const url2 = replaceSpy.calls.mostRecent().args[2] as string;
+      expect(url2).toContain(`#code=${expectedEncoded2}`);
+    });
+  });
+
+  describe('copyShareLink and fallbackCopy', () => {
+    let originalClipboard: PropertyDescriptor | undefined;
+    beforeEach(() => { originalClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard'); });
+    afterEach(() => {
+      if (originalClipboard) {
+        Object.defineProperty(navigator, 'clipboard', originalClipboard);
+      } else {
+        try { delete (navigator as any).clipboard; } catch {}
+      }
+    });
+
+    it('should copy link via navigator.clipboard or fallbackCopy', async () => {
+      spyOn(window.history, 'replaceState');
+      const writeTextSpy = jasmine.createSpy('writeText').and.returnValue(Promise.resolve());
+      Object.defineProperty(navigator, 'clipboard', {value: {writeText: writeTextSpy}, configurable: true, writable: true});
+
+      component.copyShareLink();
+      expect(writeTextSpy).toHaveBeenCalledWith(window.location.href);
+      await Promise.resolve();
+      expect(component.shareButtonText).toBe('Copied!');
+
+      // Fallback when clipboard fails or is unavailable
+      const failWriteText = jasmine.createSpy('writeText').and.returnValue(Promise.reject('error'));
+      Object.defineProperty(navigator, 'clipboard', {value: {writeText: failWriteText}, configurable: true, writable: true});
+      spyOn(document, 'execCommand').and.returnValue(true);
+
+      component.copyShareLink();
+      await Promise.resolve();
+      await new Promise((r) => setTimeout(r, 0));
+      expect(document.execCommand).toHaveBeenCalledWith('copy');
+    });
+  });
+
+  describe('doxygen symbol tree and visibility', () => {
+    it('should update symbol visibility when toggling nodes', () => {
+      component.compile('pub fn foo() {}');
+      httpMock.expectOne('/api/compile').flush({output: {files: [{name: 'out.h', contentsB64: btoa('code')}]}});
+      httpMock.expectOne('/api/doxygen').flush({
+        fileSymbols: {
+          'out.h': {
+            symbols: [
+              {name: 'Outer::Inner', kind: 'struct', refid: 's1', line: 10},
+              {name: 'Outer::Inner::field', kind: 'field', refid: 'f1', line: 11},
+            ],
+          },
+        },
+      });
+
+      expect(component.flatDoxygenSymbols.length).toBe(3);
+      const [outer, inner, field] = component.flatDoxygenSymbols;
+      expect(outer.visible).toBeTrue();
+      expect(inner.visible).toBeFalse();
+
+      component.toggleSymbolNode(outer);
+      expect(inner.visible).toBeTrue();
+      expect(field.visible).toBeFalse();
+
+      component.toggleSymbolNode(inner);
+      expect(field.visible).toBeTrue();
+    });
+  });
+
+  describe('selectSymbol', () => {
+    it('should select symbol and reveal/select line in editor', () => {
+      const revealSpy = jasmine.createSpy('revealLineInCenter');
+      const setSelSpy = jasmine.createSpy('setSelection');
+      const findMatchesSpy = jasmine.createSpy('findMatches').and.returnValue([{range: {startLineNumber: 8, startColumn: 1, endLineNumber: 8, endColumn: 10}}]);
+
+      component.outputEditor = {
+        getModel: () => ({
+          getLineCount: () => 20,
+          getLineMaxColumn: () => 15,
+          findMatches: findMatchesSpy,
+        }),
+        revealLineInCenter: revealSpy,
+        setSelection: setSelSpy,
+        focus: jasmine.createSpy('focus'),
+        dispose: jasmine.createSpy('dispose'),
+      };
+
+      const nodeLine: FlatSymbolNode = {name: 'f', fullName: 'f', kind: 'fn', refid: '1', line: 5, depth: 0, hasChildren: false, collapsed: false, visible: true};
+      component.selectSymbol(nodeLine);
+      expect(revealSpy).toHaveBeenCalledWith(5);
+
+      const nodeNoLine: FlatSymbolNode = {name: 'f', fullName: 'f', kind: 'fn', refid: '1', depth: 0, hasChildren: false, collapsed: false, visible: true};
+      component.selectSymbol(nodeNoLine);
+      expect(findMatchesSpy).toHaveBeenCalledWith('f', false, false, true, null, true);
+      expect(revealSpy).toHaveBeenCalledWith(8);
+    });
+  });
+
+  describe('buildFlatSymbolTree', () => {
+    it('should build hierarchical tree sorted alphabetically', () => {
+      const flatTree = buildFlatSymbolTree([
+        {name: 'Z::foo', kind: 'function', refid: 'f1'},
+        {name: 'A::bar', kind: 'function', refid: 'f2'},
+      ]);
+      expect(flatTree.map((n) => n.name)).toEqual(['A', 'bar', 'Z', 'foo']);
+    });
+  });
 });
+
+
