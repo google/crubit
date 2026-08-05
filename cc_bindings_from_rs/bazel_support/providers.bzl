@@ -15,6 +15,7 @@ CcBindingsFromRustInfo = provider(
         "headers": "A list of C++ headers which correspond to this crate.",
         "features": "A list of features enabled for the bindings for this crate.",
         "configuration": "A CcBindingsFromRustLibraryConfigInfo provider.",
+        "crate_version": "The version of the crate, if available.",
     },
 )
 
@@ -30,5 +31,6 @@ CcBindingsFromRustToolchainInfo = provider(
     doc = """A provider for platform-specific data, provided as a toolchain.""",
     fields = {
         "binary": "The label for the cc_bindings_from_rs binary",
+        "supports_crate_version": "Whether the binary supports --crate-version flag",
     },
 )

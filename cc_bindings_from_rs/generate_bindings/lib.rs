@@ -25,12 +25,13 @@ mod generate_function_thunk;
 mod generate_struct_and_union;
 mod generate_template_specialization;
 mod get_generic_args;
+mod version;
 
 use crate::format_type::{
-    crubit_abi_type_from_ty, format_cc_ident, format_cc_ident_symbol,
-    format_param_types_for_cc_api, format_param_types_for_cc_thunk, format_region_as_cc_lifetime,
-    format_ret_ty_for_cc, format_top_level_ns_for_crate, is_bridged_type, BridgedBuiltin,
-    BridgedType, BridgedTypeConversionInfo,
+    crate_version, crate_version_aliases, crubit_abi_type_from_ty, format_cc_ident,
+    format_cc_ident_symbol, format_param_types_for_cc_api, format_param_types_for_cc_thunk,
+    format_region_as_cc_lifetime, format_ret_ty_for_cc, format_top_level_ns_for_crate,
+    is_bridged_type, BridgedBuiltin, BridgedType, BridgedTypeConversionInfo,
 };
 use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
@@ -258,6 +259,7 @@ pub fn new_database<'db>(
     crate_name_to_include_paths: Rc<HashMap<Rc<str>, Vec<CcInclude>>>,
     crate_name_to_features: Rc<HashMap<Rc<str>, flagset::FlagSet<crubit_feature::CrubitFeature>>>,
     crate_name_to_namespace: Rc<HashMap<Rc<str>, Rc<str>>>,
+    crate_name_to_version: Rc<HashMap<Rc<str>, Rc<str>>>,
     crate_renames: Rc<HashMap<Rc<str>, Rc<str>>>,
     errors: Rc<dyn ErrorReporting>,
     fatal_errors: Rc<dyn ReportFatalError>,
@@ -277,6 +279,7 @@ pub fn new_database<'db>(
         crate_name_to_include_paths,
         crate_name_to_features,
         crate_name_to_namespace,
+        crate_name_to_version,
         crate_renames,
         errors,
         fatal_errors,
@@ -295,6 +298,8 @@ pub fn new_database<'db>(
         def_id_by_symbol,
         format_cc_ident_symbol,
         format_top_level_ns_for_crate,
+        crate_version,
+        crate_version_aliases,
         format_type::format_ty_for_cc,
         format_type::format_ty_for_rs,
         has_default_ctor,
@@ -445,29 +450,87 @@ fn format_with_cc_body(
     }
     let mut namespaces = ns.parts().map(|s| format_cc_ident(db, s)).collect::<Result<Vec<_>>>()?;
 
-    // Nested namespace syntax does not accept attributes (see b/445613694), so we have to split out
-    // the with-attribute decl to contain only the trailing namespace.
-    // TODO: b/455882065 - Figure out the correct way to handle top level aliases of deprecated
-    // definitions and remove this workaround.
-    if !attributes.is_empty() && !namespaces.is_empty() {
-        let innermost_namespace = namespaces
-            .pop()
-            .expect("there should be at least one namespace if there are attributes");
-        tokens = quote! {
-            __NEWLINE__
-            namespace #(#attributes)* #innermost_namespace { __NEWLINE__
-                #tokens __NEWLINE__
-            } __NEWLINE__
-        };
-    }
+    let local_base_ns = format_top_level_ns_for_crate(db, db.source_crate_num());
+    let local_version = db.crate_version(db.source_crate_num());
 
-    if !namespaces.is_empty() {
-        tokens = quote! {
-            __NEWLINE__
-            namespace #(#namespaces)::* { __NEWLINE__
-                #tokens __NEWLINE__
-            } __NEWLINE__
-        };
+    // The index in `namespaces` where the version namespace (if any) is located.
+    // Since the version namespace is nested directly inside the crate's top-level
+    // namespace, its index is equal to the length of the top-level namespace path.
+    let version_index = local_base_ns.len();
+    let inline_index = if let Some(version) = local_version
+        && namespaces.len() > version_index
+        && let Ok(version_ident) = db.format_cc_ident(version)
+        && namespaces[version_index] == version_ident
+    {
+        Some(version_index)
+    } else {
+        None
+    };
+
+    if let Some(inline_idx) = inline_index {
+        let version_ident = namespaces[version_index].clone();
+        let mut is_first = true;
+        // Nest namespaces from the innermost to the outermost (reverse order)
+        // so that we can apply attributes to the innermost namespace and mark
+        // the version namespace as inline.
+        for (i, ns_ident) in namespaces.into_iter().enumerate().rev() {
+            let attrs = if is_first {
+                is_first = false;
+                &attributes
+            } else {
+                &vec![]
+            };
+
+            let mut alias_tokens = quote! {};
+            if i == version_index - 1 {
+                let aliases = db.crate_version_aliases(db.source_crate_num());
+                for alias_symbol in aliases.iter() {
+                    if let Ok(alias_ident) = db.format_cc_ident(*alias_symbol) {
+                        alias_tokens.extend(quote! {
+                            namespace #alias_ident = #version_ident; __NEWLINE__
+                        });
+                    }
+                }
+            }
+
+            let inline = if i == inline_idx {
+                quote! { inline }
+            } else {
+                quote! {}
+            };
+            tokens = quote! {
+                __NEWLINE__
+                #inline namespace #(#attrs)* #ns_ident { __NEWLINE__
+                    #tokens __NEWLINE__
+                    #alias_tokens
+                } __NEWLINE__
+            };
+        }
+    } else {
+        // Nested namespace syntax does not accept attributes (see b/445613694), so we have to split out
+        // the with-attribute decl to contain only the trailing namespace.
+        // TODO: b/455882065 - Figure out the correct way to handle top level aliases of deprecated
+        // definitions and remove this workaround.
+        if !attributes.is_empty() && !namespaces.is_empty() {
+            let innermost_namespace = namespaces
+                .pop()
+                .expect("there should be at least one namespace if there are attributes");
+            tokens = quote! {
+                __NEWLINE__
+                namespace #(#attributes)* #innermost_namespace { __NEWLINE__
+                    #tokens __NEWLINE__
+                } __NEWLINE__
+            };
+        }
+
+        if !namespaces.is_empty() {
+            tokens = quote! {
+                __NEWLINE__
+                namespace #(#namespaces)::* { __NEWLINE__
+                    #tokens __NEWLINE__
+                } __NEWLINE__
+            };
+        }
     }
     Ok(tokens)
 }
@@ -825,7 +888,12 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
         full_path_strs.into_iter().map(rename_clang_builtin_macros),
         use_leading_colons,
     );
-    let cpp_top_level_ns = format_top_level_ns_for_crate(db, krate_num);
+    let mut cpp_top_level_ns = format_top_level_ns_for_crate(db, krate_num).to_vec();
+    if let Some(version) = db.crate_version(krate_num) {
+        cpp_top_level_ns.push(version);
+    }
+    let cpp_top_level_ns: Rc<[Symbol]> = cpp_top_level_ns.into();
+
     Some(FullyQualifiedName {
         krate,
         krate_num,
@@ -2407,11 +2475,15 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
             .sorted_by_def(tcx)
             .map(|def_id| (Node::Def(def_id), generate_fwd_decl(db, def_id)));
 
-        let cpp_top_level_ns: Vec<Rc<str>> =
+        let mut cpp_top_level_ns: Vec<Rc<str>> =
             format_top_level_ns_for_crate(db, db.source_crate_num())
                 .iter()
                 .map(|sym| Rc::from(sym.as_str()))
                 .collect();
+        if let Some(version) = db.crate_version(db.source_crate_num()) {
+            cpp_top_level_ns.push(Rc::from(version.as_str()));
+        }
+
         // The first item of the tuple here is the DefId of the namespace.
         let ordered_cc: Vec<(Option<DefId>, NamespaceQualifier, TokenStream)> = fwd_decls
             .into_iter()

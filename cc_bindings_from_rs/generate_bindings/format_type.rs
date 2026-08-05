@@ -12,6 +12,7 @@ extern crate rustc_type_ir;
 
 use crate::generate_function::check_fn_sig;
 use crate::generate_function_thunk::is_thunk_required;
+use crate::version::{parse_and_sanitize_version, sanitize_version};
 use crate::{
     check_feature_enabled_on_self_and_all_deps, check_slice_layout, get_layout,
     matches_qualified_name, CcType,
@@ -84,11 +85,20 @@ fn format_non_owning_pointer_prefix<'tcx>(
     quote! { * #lifetime #annotation }
 }
 
+fn crate_needle_symbol(db: &BindingsGenerator<'_>, krate: CrateNum) -> Symbol {
+    let crate_name = db.tcx().crate_name(krate);
+    if krate == db.source_crate_num() {
+        Symbol::intern("self")
+    } else {
+        crate_name
+    }
+}
+
 /// Implementation of `BindingsGenerator::format_top_level_ns_for_crate`.
 pub fn format_top_level_ns_for_crate(db: &BindingsGenerator<'_>, krate: CrateNum) -> Rc<[Symbol]> {
     let crate_name = db.tcx().crate_name(krate);
-    let crate_needle_name =
-        if krate == db.source_crate_num() { "self" } else { crate_name.as_str() };
+    let crate_needle_symbol = crate_needle_symbol(db, krate);
+    let crate_needle_name = crate_needle_symbol.as_str();
     if let Some(namespaces) = db.crate_name_to_namespace().get(crate_needle_name) {
         namespaces
             .split("::")
@@ -104,6 +114,34 @@ pub fn format_top_level_ns_for_crate(db: &BindingsGenerator<'_>, krate: CrateNum
         let renamed = rename_c_stdlib_functions(renamed);
         Rc::from([Symbol::intern(renamed.as_ref())])
     }
+}
+
+/// Implementation of `BindingsGenerator::crate_version`.
+pub fn crate_version(db: &BindingsGenerator<'_>, krate: CrateNum) -> Option<Symbol> {
+    let crate_needle_symbol = crate_needle_symbol(db, krate);
+    let crate_needle_name = crate_needle_symbol.as_str();
+    let versions = db.crate_name_to_version();
+    let version_str = versions.get(crate_needle_name)?;
+    let sanitized = sanitize_version(version_str);
+    Some(Symbol::intern(&sanitized))
+}
+
+/// Implementation of `BindingsGenerator::crate_version_aliases`.
+pub fn crate_version_aliases(db: &BindingsGenerator<'_>, krate: CrateNum) -> Rc<[Symbol]> {
+    let crate_needle_symbol = crate_needle_symbol(db, krate);
+    let crate_needle_name = crate_needle_symbol.as_str();
+    let versions = db.crate_name_to_version();
+    let Some(version_str) = versions.get(crate_needle_name) else {
+        return Rc::from([]);
+    };
+    let parsed = parse_and_sanitize_version(version_str);
+    parsed
+        .aliases
+        .into_iter()
+        .map(|s| Symbol::intern(&s))
+        .collect::<Vec<_>>()
+        .into_boxed_slice()
+        .into()
 }
 
 pub fn format_cc_ident_symbol(db: &BindingsGenerator, ident: Symbol) -> Result<Ident> {

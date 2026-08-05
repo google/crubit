@@ -14,6 +14,7 @@ def _cc_bindings_from_rs_toolchain_impl(ctx):
         platform_common.ToolchainInfo(
             cc_bindings_from_rs_toolchain_info = CcBindingsFromRustToolchainInfo(
                 binary = ctx.executable.binary,
+                supports_crate_version = ctx.attr.supports_crate_version,
             ),
         ),
     ]
@@ -25,6 +26,10 @@ cc_bindings_from_rs_toolchain = rule(
             executable = True,
             allow_single_file = True,
             cfg = "exec",
+        ),
+        "supports_crate_version": attr.bool(
+            default = False,
+            doc = "Whether the binary supports --crate-version flag",
         ),
     },
 )

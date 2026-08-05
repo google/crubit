@@ -240,6 +240,7 @@ struct CrateBindingInfo<'a> {
     fresh: bool,
     is_stdlib: bool,
     stdlib_externs: &'a [(String, Utf8PathBuf)],
+    version: Option<&'a str>,
 }
 
 struct BindingGenerationContext {
@@ -248,6 +249,7 @@ struct BindingGenerationContext {
     ordered: Vec<PackageId>,
     dirs: Directories,
     resolve: Resolve,
+    versions: HashMap<String, String>,
 }
 impl BindingGenerationContext {
     fn new(
@@ -278,6 +280,12 @@ impl BindingGenerationContext {
             .ok_or_else(|| anyhow!("Failed to find root package artifact"))?;
         let dirs = Directories::new(target_dir.to_owned(), profile_dir, out_dir)?;
 
+        let versions = metadata
+            .packages
+            .iter()
+            .map(|pkg| (pkg.id.repr.clone(), pkg.version.to_string()))
+            .collect::<HashMap<_, _>>();
+
         let resolve = metadata
             .resolve
             .as_ref()
@@ -297,7 +305,7 @@ impl BindingGenerationContext {
             let toposort::TopoSortResult { ordered, .. } = toposort(nodes, deps, |a, b| a.cmp(b));
             ordered
         };
-        Ok(Self { pkg_to_artifact, root, ordered, dirs, resolve: resolve.clone() })
+        Ok(Self { pkg_to_artifact, root, ordered, dirs, resolve: resolve.clone(), versions })
     }
 
     fn get_sysroot(&self) -> Result<Utf8PathBuf> {
@@ -413,6 +421,12 @@ impl BindingGenerationContext {
             format!("-Ldependency={}", deps_dir.as_str()),
         ];
 
+        if let Some(version) = info.version
+            && !matches!(version, "0.0.0" | "")
+        {
+            current_args.push(format!("--crate-version=self={}", version));
+        }
+
         if info.is_stdlib {
             current_args.push(format!("--crate-namespace=self=rs::{}", info.crate_name));
             current_args
@@ -445,6 +459,12 @@ impl BindingGenerationContext {
                     if let Some(dep_header) = pkg_to_header.get(&dep_pkg_id.repr) {
                         current_args
                             .push(format!("--crate-header={}={}", dep_artifact.name, dep_header));
+                    }
+                    if let Some(dep_version) = self.versions.get(&dep_pkg_id.repr)
+                        && !matches!(dep_version.as_str(), "0.0.0" | "")
+                    {
+                        current_args
+                            .push(format!("--crate-version={}={}", dep_artifact.name, dep_version));
                     }
                 }
             }
@@ -501,6 +521,7 @@ extern crate proc_macro;
                     fresh: true,
                     is_stdlib: true,
                     stdlib_externs: &stdlib_externs,
+                    version: None,
                 },
                 &mut pkg_to_header,
                 &mut lib_rs_content,
@@ -520,6 +541,7 @@ extern crate proc_macro;
             let crate_name = &artifact_info.name;
             let rs_crate_name = crate_name.replace('-', "_");
             let hash = &artifact_info.hash;
+            let version = self.versions.get(&pkg_id.repr).map(|s| s.as_str());
 
             self.generate_crate_bindings(
                 CrateBindingInfo {
@@ -531,6 +553,7 @@ extern crate proc_macro;
                     fresh: artifact_info.fresh,
                     is_stdlib: false, // is_stdlib
                     stdlib_externs: &stdlib_externs,
+                    version,
                 },
                 &mut pkg_to_header,
                 &mut lib_rs_content,

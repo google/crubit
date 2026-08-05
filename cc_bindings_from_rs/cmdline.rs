@@ -135,6 +135,12 @@ pub struct Cmdline {
            value_name = "CRATE_NAME=NAMESPACE")]
     pub crate_namespaces: Vec<(String, String)>,
 
+    /// The version of a given crate. Keys are crate names, and values are
+    /// versions. Example: "--crate-version=foo=1.0.0"
+    #[clap(long = "crate-version", value_parser = parse_key_value_pair,
+           value_name = "CRATE_NAME=VERSION")]
+    pub crate_versions: Vec<(String, String)>,
+
     /// The name of a Rust crate and the new name that should be used within
     /// the generated bindings.
     #[clap(long = "crate-rename", value_parser = parse_key_value_pair,

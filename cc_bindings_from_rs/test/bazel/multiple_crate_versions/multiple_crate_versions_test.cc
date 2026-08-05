@@ -3,8 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "gtest/gtest.h"
+#include "cc_bindings_from_rs/test/bazel/multiple_crate_versions/consumer_v0_1.h"
 #include "cc_bindings_from_rs/test/bazel/multiple_crate_versions/consumer_v1.h"
 #include "cc_bindings_from_rs/test/bazel/multiple_crate_versions/consumer_v2.h"
+#include "cc_bindings_from_rs/test/bazel/multiple_crate_versions/v1_test.h"
+#include "cc_bindings_from_rs/test/bazel/multiple_crate_versions/v2_test.h"
 
 namespace crubit {
 namespace {
@@ -28,6 +31,17 @@ TEST(MultipleCrateVersionsTest, NoDuplicateLinkerSymbols) {
   EXPECT_EQ("SomeStruct method", consumer_v2::GetV2Method());
   EXPECT_EQ("SomeStruct assoc", consumer_v2::GetV2AssocFunction());
   EXPECT_EQ("SomeStruct", consumer_v2::GetV2Clone());
+
+  EXPECT_EQ("SomeStruct", consumer_v0_1::GetV0_1String());
+  EXPECT_EQ("SomeStruct free", consumer_v0_1::GetV0_1FreeFunction());
+  EXPECT_EQ("SomeStruct method", consumer_v0_1::GetV0_1Method());
+  EXPECT_EQ("SomeStruct assoc", consumer_v0_1::GetV0_1AssocFunction());
+  EXPECT_EQ("SomeStruct", consumer_v0_1::GetV0_1Clone());
+}
+
+TEST(MultipleCrateVersionsTest, CallUniqueSymbolsWithoutQualification) {
+  EXPECT_EQ("unique to v1", std::string(my_crate::unique_to_v1()));
+  EXPECT_EQ("unique to v2", std::string(my_crate::unique_to_v2()));
 }
 
 }  // namespace

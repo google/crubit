@@ -2,13 +2,15 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use std::fmt;
+
 #[derive(Default, Clone)]
 pub struct SomeStruct {
     _unused: i32,
 }
 
-impl std::fmt::Display for SomeStruct {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for SomeStruct {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "SomeStruct")
     }
 }
@@ -24,4 +26,8 @@ impl SomeStruct {
 
 pub fn free_function() -> &'static str {
     "SomeStruct free"
+}
+
+pub fn unique_to_v1() -> &'static str {
+    "unique to v1"
 }
