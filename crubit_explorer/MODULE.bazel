@@ -9,6 +9,12 @@ module(
 
 bazel_dep(name = "rules_rust", version = "0.71.3")
 bazel_dep(name = "rules_license", version = "1.0.0")
+bazel_dep(name = "rules_doxygen", version = "2.6.3")
+bazel_dep(name = "platforms", version = "1.1.0")
+
+doxygen = use_extension("@rules_doxygen//:extensions.bzl", "doxygen_extension")
+use_repo(doxygen, "doxygen")
+
 bazel_dep(name = "rules_crubit")
 local_path_override(
     module_name = "rules_crubit",
@@ -69,9 +75,9 @@ oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.pull(
     name = "distroless_cc",
     image = "gcr.io/distroless/cc-debian13",
-    tag = "latest",
     platforms = [
         "linux/amd64",
     ],
+    tag = "latest",
 )
 use_repo(oci, "distroless_cc", "distroless_cc_linux_amd64")

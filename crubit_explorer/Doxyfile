@@ -1,0 +1,17 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+PROJECT_NAME           = "Crubit Explorer"
+GENERATE_XML           = YES
+GENERATE_HTML          = NO
+GENERATE_LATEX         = NO
+XML_OUTPUT             = xml
+XML_PROGRAMLISTING     = NO
+SOURCE_BROWSER         = NO
+VERBATIM_HEADERS       = NO
+INPUT                  = .
+RECURSIVE              = YES
+QUIET                  = YES
+WARNINGS               = NO
+WARN_IF_UNDOCUMENTED   = NO

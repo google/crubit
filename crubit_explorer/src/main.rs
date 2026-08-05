@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 pub mod api;
+pub mod doxygen;
 pub mod resource_locator;
 
 use axum::body::Body;
@@ -69,7 +70,12 @@ pub(crate) fn new_cc_bindings_from_rs_command() -> Result<Command, Box<dyn Error
 
 fn app(frontend_path: Option<PathBuf>) -> Router {
     let mut app = Router::new()
-        .route("/api/compile", routing::post(api::compile_handler).get(api::compile_handler));
+        .route("/api/compile", routing::post(api::compile_handler).get(api::compile_handler))
+        .route(
+            "/api/doxygen",
+            routing::post(doxygen::doxygen_handler).get(doxygen::doxygen_handler),
+        )
+        .route("/doxygen", routing::post(doxygen::doxygen_handler).get(doxygen::doxygen_handler));
 
     if let Some(path) = frontend_path {
         println!("Serving frontend from {}", path.display());
@@ -157,6 +163,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match resource_locator::get_clang_format_path() {
         Some(path) => println!("clang-format found at: {}", path.display()),
         None => println!("clang-format not found; generated code will be unformatted"),
+    }
+
+    match resource_locator::get_doxygen_path() {
+        Ok(path) => println!("doxygen found at: {}", path.display()),
+        Err(err) => eprintln!("Error locating doxygen: {}", err),
     }
 
     let frontend_path = resource_locator::get_frontend_dist_path();
@@ -387,5 +398,63 @@ mod tests {
         );
         let path = clang_format_path.unwrap();
         expect_true!(path.exists(), "clang-format path {:?} must exist", path);
+    }
+
+    #[gtest]
+    #[tokio::test]
+    async fn test_doxygen_handler_api() {
+        let app = app(None);
+
+        let input_code = "class TestClass { public: void doSomething(); };";
+        let payload = doxygen::DoxygenRequest {
+            input: api::FileSet {
+                files: vec![api::File {
+                    name: "test.h".to_string(),
+                    contents_b64: BASE64_STANDARD.encode(input_code),
+                }],
+            },
+        };
+
+        let req_body = serde_json::to_vec(&payload).unwrap();
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/api/doxygen")
+                    .header("content-type", "application/json")
+                    .body(Body::from(req_body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        expect_eq!(response.status(), StatusCode::OK);
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let resp: doxygen::DoxygenResponse = serde_json::from_slice(&body).unwrap();
+
+        expect_true!(resp.error.is_none(), "Expected no error, got: {:?}", resp.error);
+        expect_true!(resp.xml_output.is_some());
+        expect_true!(resp.file_symbols.is_some());
+
+        let file_symbols = resp.file_symbols.unwrap();
+        expect_true!(
+            file_symbols.contains_key("test.h"),
+            "file_symbols should contain test.h, keys are: {:?}",
+            file_symbols.keys()
+        );
+        let symbols = &file_symbols["test.h"].symbols;
+        let class_symbol = symbols.iter().find(|s| s.name == "TestClass");
+        expect_true!(class_symbol.is_some(), "Expected TestClass in symbols: {:?}", symbols);
+        expect_eq!(class_symbol.unwrap().kind, doxygen::SymbolKind::Class);
+
+        let func_symbol = symbols.iter().find(|s| s.name == "TestClass::doSomething");
+        expect_true!(
+            func_symbol.is_some(),
+            "Expected TestClass::doSomething in symbols: {:?}",
+            symbols
+        );
+        expect_eq!(func_symbol.unwrap().kind, doxygen::SymbolKind::Function);
     }
 }

@@ -13,3 +13,4 @@ archs:
 packages:
   - clang-format
   - clang-format-19
+  - doxygen

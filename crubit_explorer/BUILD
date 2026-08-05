@@ -25,12 +25,15 @@ crubit_rust_binary(
     name = "server",
     srcs = [
         "src/api.rs",
+        "src/doxygen.rs",
         "src/main.rs",
         "src/resource_locator.rs",
     ],
     crate_root = "src/main.rs",
     data = [
+        "Doxyfile",
         "//frontend:build",
+        "@doxygen//:executable",
         "@rules_crubit//cc_bindings_from_rs",
         "@rules_rust//rust/toolchain:current_rustc_files",
         "@rules_rust//rust/toolchain:current_rustc_lib_files",
@@ -43,6 +46,7 @@ crubit_rust_binary(
     deps = [
         "@crubit_explorer_crates//:axum",
         "@crubit_explorer_crates//:base64",
+        "@crubit_explorer_crates//:roxmltree",
         "@crubit_explorer_crates//:serde",
         "@crubit_explorer_crates//:serde_json",
         "@crubit_explorer_crates//:tempfile",
@@ -56,12 +60,15 @@ crubit_rust_test(
     size = "small",
     srcs = [
         "src/api.rs",
+        "src/doxygen.rs",
         "src/main.rs",
         "src/resource_locator.rs",
     ],
     crate_root = "src/main.rs",
     data = [
+        "Doxyfile",
         "//frontend:build",
+        "@doxygen//:executable",
         "@rules_crubit//cc_bindings_from_rs",
         "@rules_rust//rust/toolchain:current_rustc_files",
         "@rules_rust//rust/toolchain:current_rustc_lib_files",
@@ -74,6 +81,7 @@ crubit_rust_test(
         "@crubit_explorer_crates//:axum",
         "@crubit_explorer_crates//:base64",
         "@crubit_explorer_crates//:googletest",
+        "@crubit_explorer_crates//:roxmltree",
         "@crubit_explorer_crates//:serde",
         "@crubit_explorer_crates//:serde_json",
         "@crubit_explorer_crates//:tempfile",
@@ -86,9 +94,16 @@ crubit_rust_test(
 pkg_tar(
     name = "server_layer",
     srcs = [
+        "Doxyfile",
         ":server",
         "@rules_crubit//cc_bindings_from_rs",
     ],
+    package_dir = "/",
+)
+
+pkg_tar(
+    name = "doxygen_layer",
+    srcs = ["@doxygen//:executable"],
     package_dir = "/",
 )
 
@@ -145,6 +160,7 @@ oci_image(
         ":server_layer",
         ":frontend_layer",
         ":rust_layer",
+        ":doxygen_layer",
     ] + CLANG_FORMAT_APT_TARS,
 )
 

@@ -28,19 +28,19 @@ pub struct CrubitBuildRequest {
     pub input: FileSet,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub struct FileSet {
     pub files: Vec<File>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct File {
     pub name: String,
     pub contents_b64: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct ErrorDetails {
     pub text: String,
     pub reason: String,
