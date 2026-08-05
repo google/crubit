@@ -224,7 +224,7 @@ fn find_sysroot_from_env() -> Option<PathBuf> {
     p.exists().then_some(p)
 }
 
-fn configure_from_runfiles(cmd: &mut Command, temp_dir_path: &Path) -> bool {
+fn configure_from_runfiles(cmd: &mut Command, _temp_dir_path: &Path) -> bool {
     let Ok(r) = Runfiles::create() else { return false };
     let mut found_sysroot = false;
 
