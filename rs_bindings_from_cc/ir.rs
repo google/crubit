@@ -1592,7 +1592,6 @@ pub struct Record<'pb> {
     pub(crate) rs_name: Identifier<'pb>,
     pub(crate) cc_name: Identifier<'pb>,
     pub(crate) unique_name: &'pb str,
-
     pub(crate) mangled_cc_name: &'pb str,
     pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
@@ -1624,7 +1623,6 @@ pub struct Record<'pb> {
     pub(crate) must_bind: bool,
     pub(crate) overloads_operator_delete: bool,
     pub(crate) has_private_or_deleted_operator_delete: bool,
-    // Lifetime variable names bound by this record.
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
     pub(crate) impl_debug: bool,
     pub(crate) has_private_pointer_or_reference_fields: bool,
@@ -1640,20 +1638,12 @@ impl<'pb> Record<'pb> {
         &self.rs_name
     }
 
-    pub fn set_rs_name(&mut self, rs_name: Identifier<'pb>) {
-        self.rs_name = rs_name;
-    }
-
     /// The C++ name of the record. If the record is a template specialization, the fully qualified
     /// name is used. Otherwise, the only the name of the record is used.
     /// Today, cc_name is only used for debugging, checking for names starting in __, and generating
     /// parent modules for nested items which are disallowed for template specializations in Crubit.
     pub fn cc_name(&self) -> &Identifier<'pb> {
         &self.cc_name
-    }
-
-    pub fn set_cc_name(&mut self, cc_name: Identifier<'pb>) {
-        self.cc_name = cc_name;
     }
 
     pub fn unique_name(&self) -> &'pb str {
@@ -1712,10 +1702,6 @@ impl<'pb> Record<'pb> {
         &self.fields
     }
 
-    pub fn fields_mut(&mut self) -> &mut Vec<Field<'pb>> {
-        &mut self.fields
-    }
-
     pub fn lifetime_params(&self) -> &[LifetimeName] {
         &self.lifetime_params
     }
@@ -1734,10 +1720,6 @@ impl<'pb> Record<'pb> {
 
     pub fn override_alignment(&self) -> bool {
         self.override_alignment
-    }
-
-    pub fn override_alignment_mut(&mut self) -> &mut bool {
-        &mut self.override_alignment
     }
 
     pub fn safety_annotation(&self) -> SafetyAnnotation {
@@ -1803,12 +1785,9 @@ impl<'pb> Record<'pb> {
         self.has_private_or_deleted_operator_delete
     }
 
+    /// Lifetime variable names bound by this record.
     pub fn lifetime_inputs(&self) -> &[Rc<str>] {
         &self.lifetime_inputs
-    }
-
-    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
-        &mut self.lifetime_inputs
     }
 
     pub fn impl_debug(&self) -> bool {
@@ -1817,10 +1796,6 @@ impl<'pb> Record<'pb> {
 
     pub fn has_private_pointer_or_reference_fields(&self) -> bool {
         self.has_private_pointer_or_reference_fields
-    }
-
-    pub fn impl_debug_mut(&mut self) -> &mut bool {
-        &mut self.impl_debug
     }
 
     pub fn detected_formatter(&self) -> bool {
@@ -1844,120 +1819,6 @@ impl<'pb> Record<'pb> {
 
     pub fn children(&self) -> &[Item<'pb>] {
         &self.children
-    }
-
-    pub fn children_mut(&mut self) -> &mut Vec<Item<'pb>> {
-        &mut self.children
-    }
-
-    pub fn set_children(&mut self, children: Vec<Item<'pb>>) {
-        self.children = children;
-    }
-
-    pub fn set_is_trivial_abi(&mut self, is_trivial_abi: bool) {
-        self.is_trivial_abi = is_trivial_abi;
-    }
-
-    pub fn set_copy_constructor(&mut self, copy_constructor: SpecialMemberFunc) {
-        self.copy_constructor = copy_constructor;
-    }
-
-    pub fn set_destructor(&mut self, destructor: SpecialMemberFunc) {
-        self.destructor = destructor;
-    }
-
-    pub fn set_id(&mut self, id: ItemId) {
-        self.id = id;
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_for_testing(
-        rs_name: Identifier<'pb>,
-        cc_name: Identifier<'pb>,
-        unique_name: &'pb str,
-        mangled_cc_name: &'pb str,
-        id: ItemId,
-        owning_target: BazelLabel,
-        template_specialization: Option<TemplateSpecialization>,
-        unknown_attr: Option<&'pb str>,
-        doc_comment: Option<&'pb str>,
-        bridge_type: Option<BridgeType<'pb>>,
-        owned_ptr_config: Option<OwnedPtrConfig<'pb>>,
-        source_loc: &'pb str,
-        unambiguous_public_bases: Vec<BaseClass>,
-        fields: Vec<Field<'pb>>,
-        lifetime_params: Vec<LifetimeName>,
-        size_align: SizeAlign,
-        trait_derives: TraitDerives<'pb>,
-        is_derived_class: bool,
-        override_alignment: bool,
-        safety_annotation: SafetyAnnotation,
-        copy_constructor: SpecialMemberFunc,
-        move_constructor: SpecialMemberFunc,
-        destructor: SpecialMemberFunc,
-        is_trivial_abi: bool,
-        is_inheritable: bool,
-        is_abstract: bool,
-        nodiscard: Option<&'pb str>,
-        record_type: RecordType,
-        is_aggregate: bool,
-        is_canonical_alias: bool,
-        enclosing_item_id: Option<ItemId>,
-        must_bind: bool,
-        overloads_operator_delete: bool,
-        has_private_or_deleted_operator_delete: bool,
-        lifetime_inputs: Vec<Rc<str>>,
-        impl_debug: bool,
-        detected_formatter: bool,
-        deprecated: Option<&'pb str>,
-        is_thread_safe: bool,
-        is_explicit_class_template_instantiation_definition: bool,
-        children: Vec<Item<'pb>>,
-    ) -> Self {
-        Self {
-            rs_name,
-            cc_name,
-            unique_name,
-            mangled_cc_name,
-            id,
-            owning_target,
-            template_specialization,
-            unknown_attr,
-            doc_comment,
-            bridge_type,
-            owned_ptr_config,
-            source_loc,
-            unambiguous_public_bases,
-            fields,
-            lifetime_params,
-            size_align,
-            trait_derives,
-            is_derived_class,
-            override_alignment,
-            safety_annotation,
-            copy_constructor,
-            move_constructor,
-            destructor,
-            is_trivial_abi,
-            is_inheritable,
-            is_abstract,
-            nodiscard,
-            record_type,
-            is_aggregate,
-            is_canonical_alias,
-            enclosing_item_id,
-            must_bind,
-            overloads_operator_delete,
-            has_private_or_deleted_operator_delete,
-            lifetime_inputs,
-            impl_debug,
-            has_private_pointer_or_reference_fields: false,
-            detected_formatter,
-            deprecated,
-            is_thread_safe,
-            is_explicit_class_template_instantiation_definition,
-            children,
-        }
     }
 }
 
@@ -1988,7 +1849,55 @@ impl<'pb> GenericItem<'pb> for Record<'pb> {
     }
 }
 
-impl Record<'_> {
+impl<'pb> Record<'pb> {
+    pub fn set_rs_name(&mut self, rs_name: Identifier<'pb>) {
+        self.rs_name = rs_name;
+    }
+
+    pub fn set_cc_name(&mut self, cc_name: Identifier<'pb>) {
+        self.cc_name = cc_name;
+    }
+
+    pub fn set_id(&mut self, id: ItemId) {
+        self.id = id;
+    }
+
+    pub fn fields_mut(&mut self) -> &mut Vec<Field<'pb>> {
+        &mut self.fields
+    }
+
+    pub fn override_alignment_mut(&mut self) -> &mut bool {
+        &mut self.override_alignment
+    }
+
+    pub fn set_copy_constructor(&mut self, copy_constructor: SpecialMemberFunc) {
+        self.copy_constructor = copy_constructor;
+    }
+
+    pub fn set_destructor(&mut self, destructor: SpecialMemberFunc) {
+        self.destructor = destructor;
+    }
+
+    pub fn set_is_trivial_abi(&mut self, is_trivial_abi: bool) {
+        self.is_trivial_abi = is_trivial_abi;
+    }
+
+    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
+        &mut self.lifetime_inputs
+    }
+
+    pub fn impl_debug_mut(&mut self) -> &mut bool {
+        &mut self.impl_debug
+    }
+
+    pub fn children_mut(&mut self) -> &mut Vec<Item<'pb>> {
+        &mut self.children
+    }
+
+    pub fn set_children(&mut self, children: Vec<Item<'pb>>) {
+        self.children = children;
+    }
+
     /// Whether this type has Rust-like object semantics for mutating
     /// assignment, and can be passed by mut reference as a result.
     ///
