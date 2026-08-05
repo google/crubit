@@ -213,20 +213,16 @@ mod tests {
         expect_eq!(&body[..], b"Hello, World!");
     }
 
-    #[gtest]
-    #[tokio::test]
-    async fn test_compile_handler_api() {
-        let app = app(resource_locator::get_frontend_dist_path());
-
-        let input_code = "pub struct TestStruct { pub x: i32 }";
+    async fn compile_rs_to_h(rust_src: &str) -> String {
+        let app = app(None);
         let payload = api::CrubitBuildRequest {
             plugin_name: "cc_bindings_from_rs".to_string(),
             enable_codegen_tracing: false,
             plugin_flags: vec![],
             input: api::FileSet {
                 files: vec![api::File {
-                    name: "test.rs".to_string(),
-                    contents_b64: BASE64_STANDARD.encode(input_code),
+                    name: "input.rs".to_string(),
+                    contents_b64: BASE64_STANDARD.encode(rust_src),
                 }],
             },
         };
@@ -250,23 +246,21 @@ mod tests {
         let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         let resp: api::CrubitBuildResponse = serde_json::from_slice(&body).unwrap();
 
-        match resp {
-            api::CrubitBuildResponse::Success { output } => {
-                expect_true!(!output.files.is_empty());
-                let h_file = output
-                    .files
-                    .iter()
-                    .find(|f| f.name.ends_with(".h"))
-                    .expect("Expected .h file in output");
-                let decoded =
-                    String::from_utf8(BASE64_STANDARD.decode(&h_file.contents_b64).unwrap())
-                        .unwrap();
-                expect_that!(decoded, contains_substring("#include <cstddef>"));
-            }
-            api::CrubitBuildResponse::Error { error } => {
-                panic!("Expected success response, got error: {:?}", error);
-            }
-        }
+        let api::CrubitBuildResponse::Success { output } = resp else {
+            panic!("Expected Success response, got: {:?}", resp);
+        };
+
+        let h_file =
+            output.files.iter().find(|f| f.name.ends_with(".h")).expect("Expected .h output");
+        String::from_utf8(BASE64_STANDARD.decode(&h_file.contents_b64).unwrap()).unwrap()
+    }
+
+    #[gtest]
+    #[tokio::test]
+    async fn test_compile_handler_api() {
+        let input_code = "pub struct TestStruct { pub x: i32 }";
+        let h_content = compile_rs_to_h(input_code).await;
+        expect_that!(h_content, contains_substring("#include <cstddef>"));
     }
 
     #[gtest]
@@ -476,6 +470,24 @@ mod tests {
         );
         let path = clang_format_path.unwrap();
         expect_true!(path.exists(), "clang-format path {:?} must exist", path);
+    }
+
+    #[gtest]
+    #[tokio::test]
+    async fn test_compile_handler_with_from_trait() {
+        let input_code = r#"
+pub struct Member {
+    pub age: u32,
+}
+
+impl From<u32> for Member {
+    fn from(age: u32) -> Self {
+        Member { age }
+    }
+}
+"#;
+        let h_content = compile_rs_to_h(input_code).await;
+        expect_that!(h_content, contains_substring("explicit Member(::std::uint32_t value);"));
     }
 
     #[gtest]

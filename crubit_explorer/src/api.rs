@@ -169,7 +169,13 @@ fn run_compiler_command(
 
     cmd.arg(format!("--h-out={}", env.h_out_path.display()))
         .arg(format!("--rs-out={}", env.rs_out_path.display()))
-        .arg("--crubit-support-path-format=<crubit/support/{header}>");
+        .arg("--crubit-support-path-format=<crubit/support/{header}>")
+        .arg("--crate-header=core=support/rs_std/rs_core.h")
+        .arg("--crate-header=alloc=support/rs_std/rs_alloc.h")
+        .arg("--crate-header=std=support/rs_std/rs_std.h")
+        .arg("--crate-namespace=core=rs::core")
+        .arg("--crate-namespace=alloc=rs::alloc")
+        .arg("--crate-namespace=std=rs::std");
 
     if let Some(clang_format_path) = resource_locator::get_clang_format_path() {
         cmd.arg(format!("--clang-format-exe-path={}", clang_format_path.display()));
