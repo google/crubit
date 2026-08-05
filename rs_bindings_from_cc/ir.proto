@@ -247,7 +247,6 @@ message Func {
   bool must_bind = 26;
   repeated string lifetime_inputs = 27;
   string inline_cpp_source_text = 28;
-  bool is_compiler_generated = 29;
   MemberFuncSemantic semantic = 30;
 }
 
@@ -639,7 +638,6 @@ message UnsupportedItem {
   bool must_bind = 8;
   string defining_target = 9;
   string inline_cpp_source_text = 10;
-  bool is_compiler_generated = 11;
 }
 
 message Comment {

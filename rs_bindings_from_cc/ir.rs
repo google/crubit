@@ -1116,10 +1116,6 @@ derive_debug_partialeq_eq_hash! {
         pub fn semantic(&self) -> Option<&MemberFuncSemantic> {
             self.semantic.as_ref()
         }
-
-        pub fn is_compiler_generated(&self) -> bool {
-            self.proto.is_compiler_generated()
-        }
     }
 }
 
@@ -2690,8 +2686,6 @@ pub struct UnsupportedItem<'pb> {
     pub(crate) defining_target: Option<BazelLabel>,
     pub(crate) inline_cpp_source_text: Option<Rc<str>>,
 
-    pub(crate) is_compiler_generated: bool,
-
     /// Stores either one natively generated [`arc_anyhow::Error`] or the
     /// memoized result of converting `errors`.
     cause: IgnoredField<OnceCell<Vec<Error>>>,
@@ -2796,7 +2790,6 @@ impl<'pb> UnsupportedItem<'pb> {
             must_bind,
             defining_target,
             inline_cpp_source_text: None,
-            is_compiler_generated: false,
         }
     }
 

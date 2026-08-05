@@ -1776,11 +1776,6 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
     }
   }
 
-  const auto* func_decl = clang::dyn_cast<clang::FunctionDecl>(&original_decl);
-  const bool is_compiler_generated =
-      func_decl != nullptr &&
-      (func_decl->isImplicit() || func_decl->isDefaulted());
-
   auto item = std::make_unique<ir_proto::Item>();
   auto* unsupported = item->mutable_unsupported_item();
   unsupported->set_name(std::move(name));
@@ -1799,7 +1794,6 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
   if (inline_cpp_source_text.has_value()) {
     unsupported->set_inline_cpp_source_text(*inline_cpp_source_text);
   }
-  unsupported->set_is_compiler_generated(is_compiler_generated);
   return item;
 }
 

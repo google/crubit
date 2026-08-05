@@ -1081,9 +1081,6 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   if (source_text.has_value()) {
     func->set_inline_cpp_source_text(*source_text);
   }
-  func->set_is_compiler_generated(
-      function_decl != nullptr &&
-      (function_decl->isImplicit() || function_decl->isDefaulted()));
   auto semantic = GetMemberFuncSemantic(ictx_, function_decl);
   if (semantic.has_value()) {
     *func->mutable_semantic() = std::move(*semantic);

@@ -153,7 +153,6 @@ fn test_function() {
                 inline_cpp_source_text: None,
                 lifetime_inputs: [],
                 semantic: None,
-                is_compiler_generated: false,
             }
         }
     );
