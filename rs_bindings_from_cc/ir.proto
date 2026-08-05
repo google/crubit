@@ -414,6 +414,9 @@ message TemplateSpecialization {
   message StdVector {
     CcType element_type = 1;
   }
+  message StdSharedPtr {
+    CcType element_type = 1;
+  }
   message StdUniquePtr {
     CcType element_type = 1;
   }
@@ -437,6 +440,7 @@ message TemplateSpecialization {
     StdStringView std_string_view = 2;
     StdWStringView std_w_string_view = 3;
     StdVector std_vector = 4;
+    StdSharedPtr std_shared_ptr = 11;
     StdUniquePtr std_unique_ptr = 5;
     AbslSpan absl_span = 6;
     AbslFlatHashMap absl_flat_hash_map = 9;
