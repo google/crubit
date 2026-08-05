@@ -1,0 +1,15 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Packages to install into the OCI container image
+version: 1
+sources:
+  - channel: trixie main
+    url: https://deb.debian.org/debian
+archs:
+  - amd64
+  - arm64
+packages:
+  - clang-format
+  - clang-format-19

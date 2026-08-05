@@ -106,6 +106,32 @@ pkg_tar(
     strip_prefix = "external/rules_crubit++crubit_toolchains+rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain",
 )
 
+CLANG_FORMAT_PACKAGES = [
+    "clang-format",
+    "clang-format-19",
+    "libclang-cpp19",
+    "libllvm19",
+    "libxml2",
+    "libz3-4",
+    "libtinfo6",
+    "libzstd1",
+    "zlib1g",
+    "libffi8",
+    "libedit2",
+    "libncursesw6",
+    "libbsd0",
+    "libmd0",
+    "libsqlite3-0",
+    "libexpat1",
+    "libbz2-1.0",
+    "liblzma5",
+]
+
+CLANG_FORMAT_APT_TARS = select({
+    "@platforms//cpu:x86_64": ["@apt//%s/amd64:data" % pkg for pkg in CLANG_FORMAT_PACKAGES],
+    "@platforms//cpu:aarch64": ["@apt//%s/arm64:data" % pkg for pkg in CLANG_FORMAT_PACKAGES],
+})
+
 oci_image(
     name = "image",
     base = "@distroless_cc",
@@ -117,7 +143,7 @@ oci_image(
         ":server_layer",
         ":frontend_layer",
         ":rust_layer",
-    ],
+    ] + CLANG_FORMAT_APT_TARS,
 )
 
 oci_load(

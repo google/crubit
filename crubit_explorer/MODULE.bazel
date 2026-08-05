@@ -56,6 +56,14 @@ use_repo(crate, "crubit_explorer_crates")
 # OCI Image packaging rules
 bazel_dep(name = "rules_oci", version = "2.2.0")
 bazel_dep(name = "rules_pkg", version = "1.0.1")
+bazel_dep(name = "rules_distroless", version = "0.3.8")
+
+apt = use_extension("@rules_distroless//apt:extensions.bzl", "apt")
+apt.install(
+    name = "apt",
+    manifest = "//:apt.yaml",
+)
+use_repo(apt, "apt")
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.pull(

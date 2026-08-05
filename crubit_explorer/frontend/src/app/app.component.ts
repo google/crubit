@@ -4,7 +4,7 @@
 
 import {CommonModule} from '@angular/common';
 import {HttpClient} from '@angular/common/http';
-import {AfterViewInit, Component, ElementRef, OnDestroy, ViewChild} from '@angular/core';
+import {AfterViewInit, ChangeDetectorRef, Component, ElementRef, NgZone, OnDestroy, ViewChild} from '@angular/core';
 import {Subject, Subscription} from 'rxjs';
 import {debounceTime} from 'rxjs/operators';
 
@@ -33,12 +33,17 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   outputFiles: Array<{name: string, content: string}> = [];
   selectedOutputFileIndex = 0;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+      private http: HttpClient,
+      private cdr: ChangeDetectorRef,
+      private zone: NgZone
+  ) {}
 
   ngAfterViewInit() {
     loadMonaco().then((monaco: any) => {
-      const prefersDark = window.matchMedia &&
-          window.matchMedia('(prefers-color-scheme: dark)').matches;
+      this.zone.run(() => {
+        const prefersDark = window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches;
       const theme = prefersDark ? 'vs-dark' : 'vs';
 
       this.inputEditor = monaco.editor.create(this.inputContainer.nativeElement, {
@@ -65,6 +70,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       });
 
       this.compile();
+      });
     });
 
     this.subscription =
@@ -154,6 +160,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
         this.outputEditor.setValue(currentFile.content);
         this.updateOutputEditorLanguage(currentFile.name);
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.isCompiling = false;
@@ -163,6 +170,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         if (this.outputEditor) {
           this.outputEditor.setValue('// Error:\n' + errText);
         }
+        this.cdr.detectChanges();
       }
     });
   }

@@ -169,6 +169,10 @@ fn run_compiler_command(
         .arg(format!("--rs-out={}", env.rs_out_path.display()))
         .arg("--crubit-support-path-format=<crubit/support/{header}>");
 
+    if let Some(clang_format_path) = crate::get_clang_format_path() {
+        cmd.arg(format!("--clang-format-exe-path={}", clang_format_path.display()));
+    }
+
     if payload.enable_codegen_tracing {
         cmd.arg("--enable-codegen-tracing");
     }

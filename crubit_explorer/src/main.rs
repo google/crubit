@@ -11,7 +11,6 @@ use axum::response::{IntoResponse, Response};
 use axum::{routing, Router};
 use std::env;
 use std::error::Error;
-use std::fs;
 use std::net::SocketAddr;
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
@@ -21,6 +20,8 @@ use runfiles::Runfiles;
 
 const CC_BINDINGS_FROM_RS_RLOCATION: &str =
    "rules_crubit/cc_bindings_from_rs/cc_bindings_from_rs";
+const CLANG_FORMAT_RLOCATION: &str =
+   "clang-format";
 
 fn get_cc_bindings_from_rs_path() -> Result<PathBuf, Box<dyn Error>> {
     // Environment variable for location to cc_bindings_from_rs binary
@@ -56,6 +57,41 @@ fn get_cc_bindings_from_rs_path() -> Result<PathBuf, Box<dyn Error>> {
     }
 
     Err("cc_bindings_from_rs binary not found via CC_BINDINGS_FROM_RS env var, Bazel runfiles, adjacent to executable, or in system PATH".into())
+}
+
+pub(crate) fn get_clang_format_path() -> Option<PathBuf> {
+    if let Ok(env_path) =
+        env::var("CLANG_FORMAT").or_else(|_| env::var("CRUBIT_CLANG_FORMAT_EXE_PATH"))
+        && let path = PathBuf::from(&env_path)
+        && path.exists()
+    {
+        return Some(path);
+    }
+
+    if let Ok(r) = Runfiles::create() {
+        let candidates = [
+            CLANG_FORMAT_RLOCATION,
+        ];
+        for candidate in candidates {
+            if let Some(path) = runfiles::rlocation!(r, candidate) {
+                if path.exists() {
+                    return Some(path);
+                }
+            }
+        }
+    }
+
+    if let Ok(mut exe_path) = env::current_exe() {
+        exe_path.pop();
+        for name in ["clang-format", "stable_clang-format"] {
+            let adjacent_path = exe_path.join(name);
+            if adjacent_path.exists() {
+                return Some(adjacent_path);
+            }
+        }
+    }
+
+    find_in_path("clang-format")
 }
 
 pub(crate) fn new_cc_bindings_from_rs_command() -> Result<Command, Box<dyn Error>> {
@@ -225,6 +261,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         Err(err) => eprintln!("Error locating cc_bindings_from_rs: {}", err),
     }
 
+    match get_clang_format_path() {
+        Some(path) => println!("clang-format found at: {}", path.display()),
+        None => println!("clang-format not found; generated code will be unformatted"),
+    }
+
     let frontend_path = get_frontend_dist_path();
     let app = app(frontend_path);
 
@@ -246,6 +287,7 @@ mod tests {
     use base64::prelude::BASE64_STANDARD;
     use base64::Engine;
     use googletest::prelude::*;
+    use std::fs;
     use tower::ServiceExt;
 
     #[gtest]
@@ -302,6 +344,15 @@ mod tests {
         match resp {
             api::CrubitBuildResponse::Success { output } => {
                 expect_true!(!output.files.is_empty());
+                let h_file = output
+                    .files
+                    .iter()
+                    .find(|f| f.name.ends_with(".h"))
+                    .expect("Expected .h file in output");
+                let decoded =
+                    String::from_utf8(BASE64_STANDARD.decode(&h_file.contents_b64).unwrap())
+                        .unwrap();
+                expect_that!(decoded, contains_substring("#include <cstddef>"));
             }
             api::CrubitBuildResponse::Error { error } => {
                 panic!("Expected success response, got error: {:?}", error);
@@ -431,5 +482,17 @@ mod tests {
         expect_false!(h_content.is_empty());
         expect_false!(rs_content.is_empty());
         expect_that!(h_content, contains_substring("foo"));
+    }
+
+    #[gtest]
+    #[tokio::test]
+    async fn test_get_clang_format_path() {
+        let clang_format_path = get_clang_format_path();
+        expect_true!(
+            clang_format_path.is_some(),
+            "clang-format should be found in test environment"
+        );
+        let path = clang_format_path.unwrap();
+        expect_true!(path.exists(), "clang-format path {:?} must exist", path);
     }
 }
