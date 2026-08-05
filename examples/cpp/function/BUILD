@@ -1,5 +1,6 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
     "golden_test",
@@ -12,7 +13,12 @@ cc_library(
     hdrs = ["example.h"],
 
     # Opt into using Crubit.
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":example_lib_rust.hint"],
+)
+
+rust_api_from_cpp(
+    name = "example_lib_rust",
+    cpp_target = ":example_lib",
 )
 
 rust_binary(
@@ -20,7 +26,7 @@ rust_binary(
     srcs = ["main.rs"],
 
     # Declare a dependency on Rust bindings for calling into the C++ `example_lib` library:
-    cc_deps = [":example_lib"],
+    deps = [":example_lib_rust"],
 )
 
 # This test rule is just to make sure we don't forget to keep the `example_generated.rs` updated!

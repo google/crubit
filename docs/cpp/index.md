@@ -20,13 +20,15 @@ or virtual inheritance.
 The rest of this document goes over how to create a C++ library that can be
 called from Rust, and how to actually call it from Rust. The quick summary is:
 
-1.  A `cc_library` gets (nonempty) Rust bindings if it specifies `aspect_hints =
-    ["//features:supported"]`.
+1.  Define a `rust_api_from_cpp` target in the same `BUILD` file as your
+    `cc_library`.
 
-2.  Any Rust build target can depend on the bindings for a `cc_library`, by
-    specifying `cc_deps=["//path/to:target"]`.
+2.  Add the generated `.hint` target (e.g. `:<name_of_rust_target>.hint`) to the
+    `aspect_hints` of your `cc_library`.
 
-3.  The bindings can be previewed using the following command:
+3.  Depend on the `rust_api_from_cpp` target in the `deps` of your Rust target.
+
+The bindings can be previewed using the following command:
 
     ```sh
     $ bazel build --config=crubit-genfiles //path/to:target
@@ -54,10 +56,17 @@ but we'll start from there:
 
 ### Enable Crubit on a target {#enable}
 
-To enable Crubit on a C++ target, one must pass an argument to Crubit, via
-`aspect_hints`. (Crubit is an **aspect**[^aspects] on all C++ targets, and
-arguments must be provided on the C++ target itself.) Specifically, the target
-must enable the `supported` feature:
+To enable Crubit on a C++ target, you must define a `rust_api_from_cpp` target
+associated with it, and link them using `aspect_hints`.
+
+Behind the scenes, Rust APIs are generated via Bazel aspects which run on the
+`cc_library` target. When examining a `cc_library`, Rust API generation looks
+for the `aspect_hints` so that it can find the corresponding `rust_api_from_cpp`
+target.
+
+Define a `rust_api_from_cpp` target in the same `BUILD` file as your
+`cc_library`, and add its `.hint` target to the `aspect_hints` of the
+`cc_library`:
 
 ```
 {{ #include ../../examples/cpp/function/BUILD }}
@@ -65,9 +74,15 @@ must enable the `supported` feature:
 <!--  symbol:\bexample_lib\b -->
 
 
-The `supported` aspect hint indicates that a library target supports Rust
-callers via Crubit, using the stable features. Other functions and classes might
-require `experimental`, for experimental features of Crubit.
+```
+{{ #include ../../examples/cpp/function/BUILD }}
+```
+<!--  symbol:\bexample_lib_rust\b -->
+
+
+The `.hint` target is automatically created by the `rust_api_from_cpp` macro
+(named `<name>.hint`) and is used to avoid circular dependencies between the C++
+library and the generated Rust API.
 
 Note that having Rust callers does constrain library evolution. Certain changes
 cannot be made in C++ without breaking Rust callers, unless care is taken.
@@ -116,7 +131,8 @@ actually useful API for the target:
 
 ### Use a C++ library from Rust {#use}
 
-To depend on a C++ library from Rust, add it to `cc_deps`:
+To depend on a C++ library from Rust, add the corresponding `rust_api_from_cpp`
+target to your Rust target's `deps`:
 
 ```
 {{ #include ../../examples/cpp/function/BUILD }}
