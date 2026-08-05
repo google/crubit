@@ -881,20 +881,8 @@ pub enum MemberFuncSemantic {
 pub struct FuncParam<'pb> {
     pub(crate) type_: CcType,
     pub(crate) identifier: Identifier<'pb>,
-    /// A list of parameter indexes attached to this parameter by Clang's lifetime_capture_by.
-    /// In `f(x, y)`, `x` is parameter 0 and y is parameter 1. In the member function
-    /// `S::f(x, y)`, `this` is parameter 0, `x` is 1, and `y` is 2.
     pub(crate) clang_lifetime_capture_by: Vec<i32>,
-    /// True if this parameter was annotated with Clang's lifetimebound.
     pub(crate) clang_lifetimebound: bool,
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    ///
-    /// Because attributes can change the behavior or semantics of function
-    /// parameters in ways that may affect interop, we default-closed and
-    /// do not expose functions with unknown attributes.
-    ///
-    /// One notable example is `lifetimebound`, which we might expect to map
-    /// to Rust lifetimes.
     pub(crate) unknown_attr: Option<&'pb str>,
 }
 
@@ -925,14 +913,26 @@ impl<'pb> FuncParam<'pb> {
         &self.identifier
     }
 
+    /// A list of parameter indices attached to this parameter by Clang's lifetime_capture_by.
+    /// In `f(x, y)`, `x` is parameter 0 and y is parameter 1. In the member function
+    /// `S::f(x, y)`, `this` is parameter 0, `x` is 1, and `y` is 2.
     pub fn clang_lifetime_capture_by(&self) -> &[i32] {
         &self.clang_lifetime_capture_by
     }
 
+    /// True if this parameter was annotated with Clang's lifetimebound.
     pub fn clang_lifetimebound(&self) -> bool {
         self.clang_lifetimebound
     }
 
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    ///
+    /// Because attributes can change the behavior or semantics of function
+    /// parameters in ways that may affect interop, we default-closed and
+    /// do not expose functions with unknown attributes.
+    ///
+    /// One notable example is `lifetimebound`, which we might expect to map
+    /// to Rust lifetimes.
     pub fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr
     }
@@ -955,11 +955,6 @@ pub struct Func<'pb> {
     pub(crate) doc_comment: Option<&'pb str>,
     pub(crate) return_type: CcType,
     pub(crate) params: Vec<FuncParam<'pb>>,
-    /// For tests and internal use only.
-    ///
-    /// Prefer to reconstruct the lifetime params from the parameter types, as
-    /// needed. This allows new parameters and lifetimes to be added that were
-    /// not originally part of the IR.
     pub(crate) lifetime_params: Vec<LifetimeName>,
     pub(crate) is_inline: bool,
     pub(crate) instance_method_metadata: Option<InstanceMethodMetadata>,
@@ -967,41 +962,20 @@ pub struct Func<'pb> {
     pub(crate) is_noreturn: bool,
     pub(crate) is_variadic: bool,
     pub(crate) is_consteval: bool,
-    /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
-    /// string is used.
     pub(crate) nodiscard: Option<&'pb str>,
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
     pub(crate) deprecated: Option<&'pb str>,
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    ///
-    /// Because attributes can change the behavior or semantics of functions in
-    /// fairly significant ways, and in ways that may affect interop, we
-    /// default-closed and do not expose functions with unknown attributes.
     pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) has_c_calling_convention: bool,
     pub(crate) is_member_or_descendant_of_class_template: bool,
     pub(crate) safety_annotation: SafetyAnnotation,
     pub(crate) source_loc: &'pb str,
     pub(crate) id: ItemId,
-    /// The enclosing item ID.
-    ///
-    /// If this is a free function, then this will be None or a namespace. If this is
-    /// a member function, it will be a record type in C++, but might be an
-    /// `ExistingRustType` if it was renamed.
     pub(crate) enclosing_item_id: Option<ItemId>,
 
-    /// If this function was declared as a `friend` inside of a record
-    /// definition, this ItemId refers to the record containing the `friend`
-    /// function declaration.
-    ///
-    /// The record pointed to by `ItemId` must then be ADL-visible in order to
-    /// invoke this function.
     pub(crate) adl_enclosing_record: Option<ItemId>,
     pub(crate) must_bind: bool,
     pub(crate) inline_cpp_source_text: Option<Rc<str>>,
 
-    // Lifetime variable names bound by this function.
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
 
     pub(crate) semantic: Option<MemberFuncSemantic>,
@@ -1053,6 +1027,11 @@ impl<'pb> Func<'pb> {
         &mut self.params
     }
 
+    /// For tests and internal use only.
+    ///
+    /// Prefer to reconstruct the lifetime params from the parameter types, as
+    /// needed. This allows new parameters and lifetimes to be added that were
+    /// not originally part of the IR.
     pub fn lifetime_params(&self) -> &[LifetimeName] {
         &self.lifetime_params
     }
@@ -1085,14 +1064,23 @@ impl<'pb> Func<'pb> {
         self.is_consteval
     }
 
+    /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
+    /// string is used.
     pub fn nodiscard(&self) -> Option<&'pb str> {
         self.nodiscard
     }
 
+    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+    /// string is used.
     pub fn deprecated(&self) -> Option<&'pb str> {
         self.deprecated
     }
 
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    ///
+    /// Because attributes can change the behavior or semantics of functions in
+    /// fairly significant ways, and in ways that may affect interop, we
+    /// default-closed and do not expose functions with unknown attributes.
     pub fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr
     }
@@ -1117,10 +1105,21 @@ impl<'pb> Func<'pb> {
         self.id
     }
 
+    /// The enclosing item ID.
+    ///
+    /// If this is a free function, then this will be None or a namespace. If this is
+    /// a member function, it will be a record type in C++, but might be an
+    /// `ExistingRustType` if it was renamed.
     pub fn enclosing_item_id(&self) -> Option<ItemId> {
         self.enclosing_item_id
     }
 
+    /// If this function was declared as a `friend` inside of a record
+    /// definition, this ItemId refers to the record containing the `friend`
+    /// function declaration.
+    ///
+    /// The record pointed to by `ItemId` must then be ADL-visible in order to
+    /// invoke this function.
     pub fn adl_enclosing_record(&self) -> Option<ItemId> {
         self.adl_enclosing_record
     }
@@ -1133,6 +1132,7 @@ impl<'pb> Func<'pb> {
         self.semantic.as_ref()
     }
 
+    /// Lifetime variable names bound by this function.
     pub fn lifetime_inputs(&self) -> &[Rc<str>] {
         &self.lifetime_inputs
     }
@@ -1269,7 +1269,6 @@ pub struct Field<'pb> {
     pub(crate) offset: usize,
     pub(crate) size: usize,
 
-    /// A human-readable list of attributes that Crubit doesn't understand.
     pub(crate) unknown_attr: Result<Option<&'pb str>, String>,
 
     pub(crate) is_no_unique_address: bool,
@@ -1280,8 +1279,6 @@ pub struct Field<'pb> {
     pub(crate) is_inheritable: bool,
     pub(crate) is_mutable: bool,
 
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
     pub(crate) deprecated: Option<&'pb str>,
 }
 
@@ -1322,6 +1319,7 @@ impl<'pb> Field<'pb> {
         self.size
     }
 
+    /// A human-readable list of attributes that Crubit doesn't understand.
     pub fn unknown_attr(&self) -> &Result<Option<&'pb str>, String> {
         &self.unknown_attr
     }
@@ -1342,6 +1340,8 @@ impl<'pb> Field<'pb> {
         self.is_mutable
     }
 
+    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+    /// string is used.
     pub fn deprecated(&self) -> Option<&'pb str> {
         self.deprecated
     }
@@ -1411,11 +1411,6 @@ pub struct IncompleteRecord<'pb> {
     pub(crate) unique_name: &'pb str,
     pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    ///
-    /// Because attributes can change the behavior or semantics of types in
-    /// fairly significant ways, and in ways that may affect interop, we
-    /// default-closed and do not expose functions with unknown attributes.
     pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) record_type: RecordType,
     pub(crate) enclosing_item_id: Option<ItemId>,
@@ -1443,6 +1438,11 @@ impl<'pb> IncompleteRecord<'pb> {
         &self.owning_target
     }
 
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    ///
+    /// Because attributes can change the behavior or semantics of types in
+    /// fairly significant ways, and in ways that may affect interop, we
+    /// default-closed and do not expose functions with unknown attributes.
     pub fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr
     }
@@ -1600,18 +1600,18 @@ pub enum TemplateArg {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct TemplateSpecialization {
-    /// The target containing the template definition
     pub(crate) defining_target: BazelLabel,
 
-    /// The kind of template specialization.
     pub(crate) kind: TemplateSpecializationKind,
 }
 
 impl TemplateSpecialization {
+    /// The target containing the template definition
     pub fn defining_target(&self) -> &BazelLabel {
         &self.defining_target
     }
 
+    /// The kind of template specialization.
     pub fn kind(&self) -> &TemplateSpecializationKind {
         &self.kind
     }
@@ -1671,25 +1671,13 @@ pub struct OwnedPtrConfig<'pb> {
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Record<'pb> {
     pub(crate) rs_name: Identifier<'pb>,
-    /// The C++ name of the record. If the record is a template specialization, the fully qualified
-    /// name is used. Otherwise, the only the name of the record is used.
-    /// Today, cc_name is only used for debugging, checking for names starting in __, and generating
-    /// parent modules for nested items which are disallowed for template specializations in Crubit.
     pub(crate) cc_name: Identifier<'pb>,
     pub(crate) unique_name: &'pb str,
 
-    /// Mangled record names are used to 1) provide valid Rust identifiers for
-    /// C++ template specializations, and 2) help build unique names for virtual
-    /// upcast thunks.
     pub(crate) mangled_cc_name: &'pb str,
     pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
     pub(crate) template_specialization: Option<TemplateSpecialization>,
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    ///
-    /// Because attributes can change the behavior or semantics of types in
-    /// fairly significant ways, and in ways that may affect interop, we
-    /// default-closed and do not expose functions with unknown attributes.
     pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) doc_comment: Option<&'pb str>,
     pub(crate) bridge_type: Option<BridgeType<'pb>>,
@@ -1709,15 +1697,12 @@ pub struct Record<'pb> {
     pub(crate) is_trivial_abi: bool,
     pub(crate) is_inheritable: bool,
     pub(crate) is_abstract: bool,
-    /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
-    /// string is used.
     pub(crate) nodiscard: Option<&'pb str>,
     pub(crate) record_type: RecordType,
     pub(crate) is_aggregate: bool,
     pub(crate) is_canonical_alias: bool,
     pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) must_bind: bool,
-    /// Whether this type has an overload of `operator delete`.
     pub(crate) overloads_operator_delete: bool,
     pub(crate) has_private_or_deleted_operator_delete: bool,
     // Lifetime variable names bound by this record.
@@ -1725,10 +1710,7 @@ pub struct Record<'pb> {
     pub(crate) impl_debug: bool,
     pub(crate) has_private_pointer_or_reference_fields: bool,
     pub(crate) detected_formatter: bool,
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
     pub(crate) deprecated: Option<&'pb str>,
-    /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
     pub(crate) is_thread_safe: bool,
     pub(crate) is_explicit_class_template_instantiation_definition: bool,
     pub(crate) children: Vec<Item<'pb>>,
@@ -1743,6 +1725,10 @@ impl<'pb> Record<'pb> {
         self.rs_name = rs_name;
     }
 
+    /// The C++ name of the record. If the record is a template specialization, the fully qualified
+    /// name is used. Otherwise, the only the name of the record is used.
+    /// Today, cc_name is only used for debugging, checking for names starting in __, and generating
+    /// parent modules for nested items which are disallowed for template specializations in Crubit.
     pub fn cc_name(&self) -> &Identifier<'pb> {
         &self.cc_name
     }
@@ -1755,6 +1741,9 @@ impl<'pb> Record<'pb> {
         self.unique_name
     }
 
+    /// Mangled record names are used to 1) provide valid Rust identifiers for
+    /// C++ template specializations, and 2) help build unique names for virtual
+    /// upcast thunks.
     pub fn mangled_cc_name(&self) -> &'pb str {
         self.mangled_cc_name
     }
@@ -1771,6 +1760,11 @@ impl<'pb> Record<'pb> {
         self.template_specialization.as_ref()
     }
 
+    /// A human-readable list of attributes that Crubit doesn't understand.
+    ///
+    /// Because attributes can change the behavior or semantics of types in
+    /// fairly significant ways, and in ways that may affect interop, we
+    /// default-closed and do not expose functions with unknown attributes.
     pub fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr
     }
@@ -1855,6 +1849,8 @@ impl<'pb> Record<'pb> {
         self.is_abstract
     }
 
+    /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
+    /// string is used.
     pub fn nodiscard(&self) -> Option<&'pb str> {
         self.nodiscard
     }
@@ -1879,6 +1875,7 @@ impl<'pb> Record<'pb> {
         self.must_bind
     }
 
+    /// Whether this type has an overload of `operator delete`.
     pub fn overloads_operator_delete(&self) -> bool {
         self.overloads_operator_delete
     }
@@ -1911,10 +1908,13 @@ impl<'pb> Record<'pb> {
         self.detected_formatter
     }
 
+    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+    /// string is used.
     pub fn deprecated(&self) -> Option<&'pb str> {
         self.deprecated
     }
 
+    /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
     pub fn is_thread_safe(&self) -> bool {
         self.is_thread_safe
     }
@@ -2226,8 +2226,6 @@ pub struct Constant<'pb> {
     pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) type_: CcType,
     pub(crate) must_bind: bool,
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
     pub(crate) deprecated: Option<&'pb str>,
     pub(crate) doc_comment: Option<&'pb str>,
 }
@@ -2278,6 +2276,8 @@ derive_debug_partialeq_eq_hash! {
             self.must_bind
         }
 
+        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+        /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
             self.deprecated
         }
@@ -2323,14 +2323,11 @@ pub struct GlobalVar<'pb> {
     pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
     pub(crate) source_loc: &'pb str,
-    /// A human-readable list of attributes that Crubit doesn't understand.
     pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) mangled_name: Option<&'pb str>,
     pub(crate) type_: CcType,
     pub(crate) must_bind: bool,
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
     pub(crate) deprecated: Option<&'pb str>,
     pub(crate) doc_comment: Option<&'pb str>,
 }
@@ -2360,6 +2357,7 @@ impl<'pb> GlobalVar<'pb> {
         self.source_loc
     }
 
+    /// A human-readable list of attributes that Crubit doesn't understand.
     pub fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr
     }
@@ -2380,6 +2378,8 @@ impl<'pb> GlobalVar<'pb> {
         self.must_bind
     }
 
+    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+    /// string is used.
     pub fn deprecated(&self) -> Option<&'pb str> {
         self.deprecated
     }
@@ -2426,22 +2426,12 @@ pub struct Enum<'pb> {
     pub(crate) owning_target: BazelLabel,
     pub(crate) source_loc: &'pb str,
     pub(crate) underlying_type: CcType,
-    /// The enumerators. If None, this is a forward-declared (opaque) enum.
-    ///
-    /// That is, the difference between `enum X : int {};` and `enum X : int;`
-    /// is that the former has `Some(vec![])` for the enumerators, while the
-    /// latter has `None`.
     pub(crate) enumerators: Option<Vec<Enumerator<'pb>>>,
-    /// A human-readable list of attributes that Crubit doesn't understand.
     pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) must_bind: bool,
     pub(crate) detected_formatter: bool,
-    /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
-    /// string is used.
     pub(crate) nodiscard: Option<&'pb str>,
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
     pub(crate) deprecated: Option<&'pb str>,
     pub(crate) doc_comment: Option<&'pb str>,
 }
@@ -2479,10 +2469,16 @@ impl<'pb> Enum<'pb> {
         &self.underlying_type
     }
 
+    /// The enumerators. If None, this is a forward-declared (opaque) enum.
+    ///
+    /// That is, the difference between `enum X : int {};` and `enum X : int;`
+    /// is that the former has `Some(vec![])` for the enumerators, while the
+    /// latter has `None`.
     pub fn enumerators(&self) -> Option<&[Enumerator<'pb>]> {
         self.enumerators.as_deref()
     }
 
+    /// A human-readable list of attributes that Crubit doesn't understand.
     pub fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr
     }
@@ -2499,10 +2495,14 @@ impl<'pb> Enum<'pb> {
         self.detected_formatter
     }
 
+    /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
+    /// string is used.
     pub fn nodiscard(&self) -> Option<&'pb str> {
         self.nodiscard
     }
 
+    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+    /// string is used.
     pub fn deprecated(&self) -> Option<&'pb str> {
         self.deprecated
     }
@@ -2582,10 +2582,7 @@ impl<'pb> GenericItem<'pb> for Enum<'pb> {
 pub struct Enumerator<'pb> {
     pub(crate) proto: EnumeratorView<'pb>,
     pub(crate) identifier: Identifier<'pb>,
-    /// A human-readable list of attributes that Crubit doesn't understand.
     pub(crate) unknown_attr: Option<&'pb str>,
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
     pub(crate) deprecated: Option<&'pb str>,
     pub(crate) doc_comment: Option<&'pb str>,
 }
@@ -2600,10 +2597,13 @@ derive_debug_partialeq_eq_hash! {
             IntegerConstant(self.proto.value())
         }
 
+        /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
             self.unknown_attr
         }
 
+        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+        /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
             self.deprecated
         }
@@ -2622,14 +2622,11 @@ pub struct TypeAlias<'pb> {
     pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
     pub(crate) doc_comment: Option<&'pb str>,
-    /// A human-readable list of attributes that Crubit doesn't understand.
     pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) underlying_type: CcType,
     pub(crate) source_loc: &'pb str,
     pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) must_bind: bool,
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
     pub(crate) deprecated: Option<&'pb str>,
     // Lifetime variable names bound by this type alias.
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
@@ -2660,6 +2657,7 @@ impl<'pb> TypeAlias<'pb> {
         self.doc_comment
     }
 
+    /// A human-readable list of attributes that Crubit doesn't understand.
     pub fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr
     }
@@ -2684,6 +2682,8 @@ impl<'pb> TypeAlias<'pb> {
         self.must_bind
     }
 
+    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+    /// string is used.
     pub fn deprecated(&self) -> Option<&'pb str> {
         self.deprecated
     }
@@ -2851,9 +2851,6 @@ impl<'pb> UnsupportedItemPath<'pb> {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct UnsupportedItem<'pb> {
-    /// Unlike other AST nodes that borrow from the protobuf memory, `UnsupportedItem` names are
-    /// dynamically formatted during Rust code generation. Storing `Rc<str>` here avoids requiring
-    /// unsafe string lifetime extensions at the cost of negligible string allocations.
     pub(crate) name: Rc<str>,
     pub(crate) unique_name: Option<&'pb str>,
     pub(crate) kind: UnsupportedItemKind,
@@ -2873,6 +2870,9 @@ pub struct UnsupportedItem<'pb> {
 }
 
 impl<'pb> UnsupportedItem<'pb> {
+    /// Unlike other AST nodes that borrow from the protobuf memory, `UnsupportedItem` names are
+    /// dynamically formatted during Rust code generation. Storing `Rc<str>` here avoids requiring
+    /// unsafe string lifetime extensions at the cost of negligible string allocations.
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -3040,7 +3040,6 @@ pub struct Namespace<'pb> {
     pub(crate) unique_name: &'pb str,
     pub(crate) id: ItemId,
     pub(crate) canonical_namespace_id: ItemId,
-    /// A human-readable list of attributes that Crubit doesn't understand.
     pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) owning_target: BazelLabel,
     pub(crate) enclosing_item_id: Option<ItemId>,
@@ -3072,6 +3071,7 @@ impl<'pb> Namespace<'pb> {
         self.canonical_namespace_id
     }
 
+    /// A human-readable list of attributes that Crubit doesn't understand.
     pub fn unknown_attr(&self) -> Option<&'pb str> {
         self.unknown_attr
     }
@@ -3196,14 +3196,9 @@ impl<'pb> GenericItem<'pb> for UseMod<'pb> {
 /// declarations.
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct ExistingRustType<'pb> {
-    /// The name of the existing Rust type.
-    /// Note that it may contain interpolated type parameters, like `RustType<{T}>`.
-    /// This means that it's incorrect to directly parse as an Ident.
     pub(crate) rs_name: &'pb str,
     pub(crate) cc_name: &'pb str,
     pub(crate) unique_name: &'pb str,
-    /// The template arguments on this instance of the type instantiation (empty is no template
-    /// arguments). This list parallels `template_arg_names`.
     pub(crate) template_args: Vec<TemplateArg>,
     pub(crate) owning_target: BazelLabel,
     pub(crate) size_align: Option<SizeAlign>,
@@ -3214,6 +3209,9 @@ pub struct ExistingRustType<'pb> {
 }
 
 impl<'pb> ExistingRustType<'pb> {
+    /// The name of the existing Rust type.
+    /// Note that it may contain interpolated type parameters, like `RustType<{T}>`.
+    /// This means that it's incorrect to directly parse as an Ident.
     pub fn rs_name(&self) -> &'pb str {
         self.rs_name
     }
@@ -3226,6 +3224,8 @@ impl<'pb> ExistingRustType<'pb> {
         self.unique_name
     }
 
+    /// The template arguments on this instance of the type instantiation (empty is no template
+    /// arguments). This list parallels `template_arg_names`.
     pub fn template_args(&self) -> &[TemplateArg] {
         &self.template_args
     }
