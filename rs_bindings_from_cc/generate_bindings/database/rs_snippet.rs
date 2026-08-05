@@ -852,6 +852,22 @@ impl<'a> BridgeRsTypeKind<'a> {
             }
             BridgeType::Callable { backing_type, fn_trait, return_type, param_types } => {
                 let target_identifier = record.owning_target().convert_to_cc_identifier();
+                let cpp_fn_trait = match fn_trait {
+                    ir::FnTrait::Fn => FnTrait::Fn,
+                    ir::FnTrait::FnMut => FnTrait::FnMut,
+                    ir::FnTrait::FnOnce => FnTrait::FnOnce,
+                    _ => bail!("unspecified FnTrait"),
+                };
+
+                let rust_fn_trait = if cpp_fn_trait == FnTrait::FnMut {
+                    // C++ doesn't require exclusive access to invoke a mutable function,
+                    // so to be safe we use the more conservative `Fn` trait in Rust, which
+                    // because we mark it with Send + Sync, is safe to call anywhere in
+                    // parallel.
+                    FnTrait::Fn
+                } else {
+                    cpp_fn_trait
+                };
                 BridgeRsTypeKind::Callable(Rc::new(Callable {
                     backing_type: match backing_type {
                         ir::BackingType::DynCallable => BackingType::DynCallable,
@@ -861,23 +877,10 @@ impl<'a> BridgeRsTypeKind<'a> {
                                 record.rs_name().as_str(),
                             ),
                         },
+                        _ => bail!("unspecified BackingType"),
                     },
-                    cpp_fn_trait: match fn_trait {
-                        ir::FnTrait::Fn => FnTrait::Fn,
-                        ir::FnTrait::FnMut => FnTrait::FnMut,
-                        ir::FnTrait::FnOnce => FnTrait::FnOnce,
-                    },
-                    rust_fn_trait: match fn_trait {
-                        ir::FnTrait::Fn => FnTrait::Fn,
-                        ir::FnTrait::FnMut => {
-                            // C++ doesn't require exclusive access to invoke a mutable function,
-                            // so to be safe we use the more conservative `Fn` trait in Rust, which
-                            // because we mark it with Send + Sync, is safe to call anywhere in
-                            // parallel.
-                            FnTrait::Fn
-                        }
-                        ir::FnTrait::FnOnce => FnTrait::FnOnce,
-                    },
+                    cpp_fn_trait,
+                    rust_fn_trait,
                     return_type: Rc::new(db.rs_type_kind(return_type.clone())?),
                     param_types: param_types
                         .iter()

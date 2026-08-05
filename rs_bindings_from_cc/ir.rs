@@ -22,6 +22,8 @@ use std::rc::Rc;
 mod proto_to_ir;
 pub use proto_to_ir::proto_to_ir;
 
+pub use ir_rust_proto::bridge_type::callable::{BackingType, FnTrait};
+
 /// Common data about all items.
 pub trait GenericItem<'pb> {
     fn id(&self) -> ItemId;
@@ -1484,19 +1486,6 @@ impl SizeAlign {
     pub fn alignment(&self) -> usize {
         self.alignment
     }
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub enum BackingType {
-    DynCallable,
-    AnyInvocable,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub enum FnTrait {
-    Fn,
-    FnMut,
-    FnOnce,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
