@@ -2,6 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "crubit/support/internal/cpp_config.h"  // IWYU pragma: keep
+#include "support/internal/cpp_config.h"  // IWYU pragma: keep
 
 int main() {}

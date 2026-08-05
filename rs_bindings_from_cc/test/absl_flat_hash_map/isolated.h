@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-#include "crubit/support/annotations.h"
+#include "support/annotations.h"
 
 namespace absl {
 

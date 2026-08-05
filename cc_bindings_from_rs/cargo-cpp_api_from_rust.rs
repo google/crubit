@@ -27,7 +27,7 @@ use cargo_metadata::{Artifact, Message, Metadata, Package, PackageId, Resolve};
 use clap::Parser;
 use cmdline::Cmdline;
 
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::env;
 use std::ffi;
 use std::fs;
@@ -93,10 +93,10 @@ fn main() -> Result<()> {
     }
     build_args.extend(cli.build_args.clone());
 
-    let pkg_to_artifact = build_crate_and_stream_artifacts(&build_args)?;
+    let build_artifacts = build_crate_and_stream_artifacts(&build_args)?;
 
     let ctx = BindingGenerationContext::new(
-        pkg_to_artifact,
+        build_artifacts,
         root.clone(),
         &metadata,
         target_dir,
@@ -146,9 +146,12 @@ fn stream_cargo_build(
     ))
 }
 
-fn build_crate_and_stream_artifacts(
-    build_args: &[String],
-) -> Result<HashMap<String, ArtifactInfo>> {
+struct BuildArtifacts {
+    pkg_to_artifact: HashMap<String, ArtifactInfo>,
+    dep_dirs: Vec<Utf8PathBuf>,
+}
+
+fn build_crate_and_stream_artifacts(build_args: &[String]) -> Result<BuildArtifacts> {
     let mut args = vec!["rustc".to_string(), "--message-format=json".to_string()];
     args.extend(build_args.iter().cloned());
     // We rely on filename to extract the metadata hash cargo used for our current build.
@@ -163,9 +166,15 @@ fn build_crate_and_stream_artifacts(
     }
 
     let mut pkg_to_artifact = HashMap::new();
+    let mut dep_dirs = BTreeSet::new();
     let (command, stream) = stream_cargo_build(&args)?;
     for artifact in stream {
         let artifact = artifact.map_err(|err| anyhow!("Failed to parse cargo message: {}", err))?;
+        for filename in &artifact.filenames {
+            if let Some(parent) = filename.parent() {
+                dep_dirs.insert(parent.to_owned());
+            }
+        }
         let find_metadata_file = artifact
             .filenames
             .iter()
@@ -193,7 +202,7 @@ fn build_crate_and_stream_artifacts(
         bail!("Exiting early due to cargo build failure");
     }
 
-    Ok(pkg_to_artifact)
+    Ok(BuildArtifacts { pkg_to_artifact, dep_dirs: dep_dirs.into_iter().collect() })
 }
 
 struct Directories {
@@ -244,14 +253,52 @@ struct CrateBindingInfo<'a> {
 
 struct BindingGenerationContext {
     pkg_to_artifact: HashMap<String, ArtifactInfo>,
+    dep_dirs: Vec<Utf8PathBuf>,
     root: Package,
     ordered: Vec<PackageId>,
     dirs: Directories,
     resolve: Resolve,
 }
+
+fn determine_profile_dir(
+    pkg_to_artifact: &HashMap<String, ArtifactInfo>,
+    root: &Package,
+    target_dir: &Utf8Path,
+) -> Result<Utf8PathBuf> {
+    let artifact_path = pkg_to_artifact
+        .get(&root.id.repr)
+        .map(|info| info.path.as_path())
+        .ok_or_else(|| anyhow!("Failed to find root package artifact"))?;
+    let rel_path = artifact_path.strip_prefix(target_dir).map_err(|_| {
+        anyhow!("Artifact path '{artifact_path}' is not under target dir '{target_dir}'")
+    })?;
+    let mut components = rel_path.components();
+    let first = components
+        .next()
+        .ok_or_else(|| anyhow!("Artifact path '{artifact_path}' has no relative components"))?
+        .as_str();
+
+    // Target triples contain hyphens (e.g. "x86_64-unknown-linux-gnu"),
+    // whereas standard/custom profile names ("debug", "release", etc.) do not.
+    let is_target_triple = first.contains('-') && !["debug", "release"].contains(&first);
+    let mut path = Utf8PathBuf::from(first);
+    if is_target_triple {
+        let second = components
+            .next()
+            .ok_or_else(|| {
+                anyhow!(
+                    "Artifact path '{artifact_path}' missing profile component after target triple"
+                )
+            })?
+            .as_str();
+        path = path.join(second);
+    }
+    Ok(path)
+}
+
 impl BindingGenerationContext {
     fn new(
-        pkg_to_artifact: HashMap<String, ArtifactInfo>,
+        build_artifacts: BuildArtifacts,
         root: Package,
         metadata: &Metadata,
         target_dir: &Utf8PathBuf,
@@ -259,23 +306,8 @@ impl BindingGenerationContext {
     ) -> Result<Self> {
         // It's important we check the path of root (and not one of our dependencies) or else we'll get
         // the wrong path.
-        let profile_dir = pkg_to_artifact
-            .get(&root.id.repr)
-            .and_then(|artifact_info| {
-                let path = &artifact_info.path;
-                let rel_path = path.strip_prefix(&target_dir).ok()?;
-                rel_path.parent().and_then(|p|
-                    // Our path can be to an intermediate that already resides in the `deps`
-                    // directory. We only want the profile directory here (with an optional target
-                    // specific component). We'll reconstruct the deps path ourselves later.
-                    if p.file_name() == Some("deps") {
-                        p.parent()
-                    } else {
-                        Some(p)
-                    }
-                ).map(|p| p.to_owned())
-            })
-            .ok_or_else(|| anyhow!("Failed to find root package artifact"))?;
+        let profile_dir =
+            determine_profile_dir(&build_artifacts.pkg_to_artifact, &root, target_dir)?;
         let dirs = Directories::new(target_dir.to_owned(), profile_dir, out_dir)?;
 
         let resolve = metadata
@@ -297,7 +329,14 @@ impl BindingGenerationContext {
             let toposort::TopoSortResult { ordered, .. } = toposort(nodes, deps, |a, b| a.cmp(b));
             ordered
         };
-        Ok(Self { pkg_to_artifact, root, ordered, dirs, resolve: resolve.clone() })
+        Ok(Self {
+            pkg_to_artifact: build_artifacts.pkg_to_artifact,
+            dep_dirs: build_artifacts.dep_dirs,
+            root,
+            ordered,
+            dirs,
+            resolve: resolve.clone(),
+        })
     }
 
     fn get_sysroot(&self) -> Result<Utf8PathBuf> {
@@ -410,15 +449,21 @@ impl BindingGenerationContext {
             format!("--h-out={}", intermediate_h),
             format!("--rs-out={}", intermediate_rs),
             format!("--extern={}={}", info.crate_name, info.artifact_path),
-            format!("-Ldependency={}", deps_dir.as_str()),
         ];
+
+        if !self.dep_dirs.contains(deps_dir) && deps_dir.exists() {
+            current_args.push(format!("-Ldependency={}", deps_dir));
+        }
+        if !self.dep_dirs.contains(host_deps_dir) && host_deps_dir.exists() {
+            current_args.push(format!("-Ldependency={}", host_deps_dir));
+        }
+        current_args
+            .extend(self.dep_dirs.iter().map(|dir| format!("-Ldependency={}", dir.as_str())));
 
         if info.is_stdlib {
             current_args.push(format!("--crate-namespace=self=rs::{}", info.crate_name));
             current_args
                 .push(format!("--crate-namespace={}=rs::{}", info.crate_name, info.crate_name));
-        } else {
-            current_args.push(format!("-Ldependency={}", host_deps_dir.as_str()));
         }
 
         // Pass preceding stdlib dependencies to the current crate
@@ -484,6 +529,8 @@ extern crate proc_macro;
         let profile_dir = &self.dirs.profile_dir;
 
         fs::create_dir_all(headers_dir.join("crubit"))?;
+        fs::create_dir_all(&self.dirs.deps_dir)?;
+        fs::create_dir_all(&self.dirs.host_deps_dir)?;
 
         // 1. Locate standard library crates and generate bindings for them first.
         let sysroot = self.get_sysroot()?;

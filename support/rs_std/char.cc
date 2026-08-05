@@ -9,7 +9,7 @@
 #include <span>
 #include <string_view>
 
-#include "crubit/support/internal/check.h"
+#include "support/internal/check.h"
 #include "support/rs_std/str_ref.h"
 
 namespace rs_std {

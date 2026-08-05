@@ -6,7 +6,7 @@
 
 // The generated bindings are in a header at the same path as the
 // `example_crate` rust_library, with a `.h` suffix.
-#include "crubit/support/rs_std/str_ref.h"
+#include "support/rs_std/str_ref.h"
 #include "examples/rust/std/example_crate.h"
 #include "support/rs_std/rs_alloc.h"
 

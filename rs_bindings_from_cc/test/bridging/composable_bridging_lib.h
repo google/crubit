@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-#include "crubit/support/annotations.h"
+#include "support/annotations.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
 #include "rs_bindings_from_cc/test/bridging/rust_library.h"

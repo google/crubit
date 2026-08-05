@@ -12,8 +12,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "crubit/support/internal/check.h"
-#include "crubit/support/internal/move_assign.h"
+#include "support/internal/check.h"
+#include "support/internal/move_assign.h"
 
 namespace rs_std {
 

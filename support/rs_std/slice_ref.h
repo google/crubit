@@ -15,7 +15,7 @@
 #include <string_view>
 #include <type_traits>
 
-#include "crubit/support/internal/check_no_mutable_aliasing.h"
+#include "support/internal/check_no_mutable_aliasing.h"
 #include "support/annotations.h"
 
 namespace rs_std {

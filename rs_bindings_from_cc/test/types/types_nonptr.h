@@ -11,8 +11,8 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "crubit/support/annotations_internal.h"
-#include "crubit/support/rs_std/slice_ref.h"
+#include "support/annotations_internal.h"
+#include "support/rs_std/slice_ref.h"
 
 // Not a template, so that it isn't visible to the bindings generator.
 // We're just here to save typing.
