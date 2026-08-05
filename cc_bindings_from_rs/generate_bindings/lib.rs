@@ -54,7 +54,7 @@ pub use database::{
 };
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
 use itertools::Itertools;
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use query_compiler::{
     does_type_implement_trait, get_layout, get_scalar_int_type, get_tag_size_with_padding,
     is_c_abi_compatible_by_value, is_copy, liberate_and_deanonymize_late_bound_regions,
@@ -1403,16 +1403,21 @@ fn generate_default_ctor<'tcx>(
         Ok(ApiSnippets { main_api, cc_details, rs_details })
     }
     fallible_format_default_ctor(db, core.clone()).map_err(|err| {
-        let msg = format!("{err:#}");
-        let adt_cc_name = &core.common.cc_short_name;
-        ApiSnippets {
-            main_api: CcSnippet::new(quote! {
-                __NEWLINE__ __COMMENT__ #msg
-                #adt_cc_name() = delete; __NEWLINE__
-            }),
-            ..Default::default()
-        }
+        generate_deleted_default_ctor(&core.common.cc_short_name, &format!("{err:#}"))
     })
+}
+
+fn generate_deleted_default_ctor<'tcx>(
+    adt_cc_name: &Ident,
+    doc_comment: &str,
+) -> ApiSnippets<'tcx> {
+    ApiSnippets {
+        main_api: CcSnippet::new(quote! {
+            __NEWLINE__ __COMMENT__ #doc_comment
+            #adt_cc_name() = delete; __NEWLINE__
+        }),
+        ..Default::default()
+    }
 }
 
 fn has_copy_ctor_and_assignment_operator<'tcx>(
