@@ -9,6 +9,7 @@ use crubit_abi_type::{
 };
 use database::db::BindingsGenerator;
 use database::rs_snippet::{BackingType, Callable, FnTrait, PassingConvention, RsTypeKind};
+use ir::BazelLabel;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 
@@ -27,12 +28,18 @@ pub fn callable_crubit_abi_type<'a>(
     }
     let dyn_fn_spelling = callable.dyn_fn_spelling(db);
 
+    let any_invocable_crate = db
+        .ir()
+        .crate_name(&BazelLabel::from("@abseil-cpp//absl/functional:any_invocable"))
+        .map(|ident| quote! { ::#ident })
+        .unwrap_or_else(|| quote! { ::any_invocable });
+
     let rust_type_tokens = match &callable.backing_type {
         BackingType::DynCallable => quote! {
             ::dyn_callable_rs::DynCallableAbi<#dyn_fn_spelling>
         },
         BackingType::AnyInvocable { .. } => quote! {
-            ::any_invocable::AnyInvocableAbi<#dyn_fn_spelling>
+            #any_invocable_crate::AnyInvocableAbi<#dyn_fn_spelling>
         },
     };
 
@@ -58,7 +65,7 @@ pub fn callable_crubit_abi_type<'a>(
             let make_cpp_invoker_tokens =
                 generate_make_cpp_invoker_tokens(db, callable, invoke_any_invocable_ident)?;
             quote! {
-                ::any_invocable::AnyInvocableAbi::<#dyn_fn_spelling>::new(
+                #any_invocable_crate::AnyInvocableAbi::<#dyn_fn_spelling>::new(
                     #on_empty_tokens,
                     #make_cpp_invoker_tokens,
                 )
@@ -263,6 +270,12 @@ fn generate_make_cpp_invoker_tokens<'a>(
     callable: &Callable<'a>,
     invoke_any_invocable_ident: &Ident,
 ) -> Result<TokenStream> {
+    let any_invocable_crate = db
+        .ir()
+        .crate_name(&BazelLabel::from("@abseil-cpp//absl/functional:any_invocable"))
+        .map(|ident| quote! { ::#ident })
+        .unwrap_or_else(|| quote! { ::any_invocable });
+
     let rust_return_type_fragment = callable.rust_return_type_fragment(db);
 
     let mut params = Vec::with_capacity(callable.param_types.len());
@@ -371,7 +384,7 @@ fn generate_make_cpp_invoker_tokens<'a>(
     let dyn_fn_spelling = callable.dyn_fn_spelling(db);
 
     Ok(quote! {
-        |raw_any_invocable: ::cc_std::std::unique_ptr<::any_invocable::RawAnyInvocable>|
+        |raw_any_invocable: ::cc_std::std::unique_ptr<#any_invocable_crate::RawAnyInvocable>|
             -> ::alloc::boxed::Box<#dyn_fn_spelling>
         {
             ::alloc::boxed::Box::new(

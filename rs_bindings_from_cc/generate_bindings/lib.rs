@@ -1661,10 +1661,16 @@ fn generate_any_invocable_invoker_decl<'a>(
         }
     }
 
+    let any_invocable_crate = db
+        .ir()
+        .crate_name(&BazelLabel::from("@abseil-cpp//absl/functional:any_invocable"))
+        .map(|ident| quote! { ::#ident })
+        .unwrap_or_else(|| quote! { ::any_invocable });
+
     Some(quote! {
         unsafe extern "C" {
             pub(crate) unsafe fn #invoke_any_invocable_ident(
-                f: *mut ::any_invocable::RawAnyInvocable,
+                f: *mut #any_invocable_crate::RawAnyInvocable,
                 #params
                 #out_param
             ) #return_type_fragment;
