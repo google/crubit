@@ -26,6 +26,7 @@ crubit_rust_binary(
     srcs = [
         "src/api.rs",
         "src/main.rs",
+        "src/resource_locator.rs",
     ],
     crate_root = "src/main.rs",
     data = [
@@ -56,6 +57,7 @@ crubit_rust_test(
     srcs = [
         "src/api.rs",
         "src/main.rs",
+        "src/resource_locator.rs",
     ],
     crate_root = "src/main.rs",
     data = [

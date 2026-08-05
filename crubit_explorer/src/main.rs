@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 pub mod api;
+pub mod resource_locator;
 
 use axum::body::Body;
 use axum::extract::State;
@@ -18,84 +19,8 @@ use tokio::net::TcpListener;
 
 use runfiles::Runfiles;
 
-const CC_BINDINGS_FROM_RS_RLOCATION: &str =
-   "rules_crubit/cc_bindings_from_rs/cc_bindings_from_rs";
-const CLANG_FORMAT_RLOCATION: &str =
-   "clang-format";
-
-fn get_cc_bindings_from_rs_path() -> Result<PathBuf, Box<dyn Error>> {
-    // Environment variable for location to cc_bindings_from_rs binary
-    if let Ok(env_path) = env::var("CC_BINDINGS_FROM_RS")
-        && let path = PathBuf::from(env_path)
-        && path.exists()
-    {
-        return Ok(path);
-    }
-
-    // Check bazel runfiles tree
-    if let Ok(r) = Runfiles::create()
-        && let Some(path) = runfiles::rlocation!(r, CC_BINDINGS_FROM_RS_RLOCATION)
-        && path.exists()
-    {
-        return Ok(path);
-    }
-
-    // Check if cc_bindings_from_rs is in the same directory as the executable
-    // This is useful when crubit_explorer is run in a tarball or Docker container with
-    // a specific directory structure
-    if let Ok(mut exe_path) = env::current_exe() {
-        exe_path.pop(); // Remove the executable name, leaving the directory
-        let adjacent_path = exe_path.join("cc_bindings_from_rs");
-        if adjacent_path.exists() {
-            return Ok(adjacent_path);
-        }
-    }
-
-    // Check system PATH
-    if let Some(path) = find_in_path("cc_bindings_from_rs") {
-        return Ok(path);
-    }
-
-    Err("cc_bindings_from_rs binary not found via CC_BINDINGS_FROM_RS env var, Bazel runfiles, adjacent to executable, or in system PATH".into())
-}
-
-pub(crate) fn get_clang_format_path() -> Option<PathBuf> {
-    if let Ok(env_path) =
-        env::var("CLANG_FORMAT").or_else(|_| env::var("CRUBIT_CLANG_FORMAT_EXE_PATH"))
-        && let path = PathBuf::from(&env_path)
-        && path.exists()
-    {
-        return Some(path);
-    }
-
-    if let Ok(r) = Runfiles::create() {
-        let candidates = [
-            CLANG_FORMAT_RLOCATION,
-        ];
-        for candidate in candidates {
-            if let Some(path) = runfiles::rlocation!(r, candidate) {
-                if path.exists() {
-                    return Some(path);
-                }
-            }
-        }
-    }
-
-    if let Ok(mut exe_path) = env::current_exe() {
-        exe_path.pop();
-        for name in ["clang-format", "stable_clang-format"] {
-            let adjacent_path = exe_path.join(name);
-            if adjacent_path.exists() {
-                return Some(adjacent_path);
-            }
-        }
-    }
-
-    find_in_path("clang-format")
-}
-
 pub(crate) fn new_cc_bindings_from_rs_command() -> Result<Command, Box<dyn Error>> {
-    let binary_path = get_cc_bindings_from_rs_path()?;
+    let binary_path = resource_locator::get_cc_bindings_from_rs_path()?;
     let mut cmd = Command::new(binary_path);
 
     let mut extra_lib_dirs = Vec::new();
@@ -140,38 +65,6 @@ pub(crate) fn new_cc_bindings_from_rs_command() -> Result<Command, Box<dyn Error
     }
 
     Ok(cmd)
-}
-
-fn find_in_path(name: &str) -> Option<PathBuf> {
-    let paths = env::var_os("PATH")?;
-    env::split_paths(&paths).find_map(|dir| {
-        let full_path = dir.join(name);
-        full_path.exists().then_some(full_path)
-    })
-}
-
-fn get_frontend_dist_path() -> Option<PathBuf> {
-    if let Ok(r) = Runfiles::create() {
-        if let Some(path) = runfiles::rlocation!(r, "crubit_explorer/frontend/dist/frontend") {
-            if path.exists() {
-                return Some(path);
-            }
-        }
-    }
-
-    if let Ok(mut exe_path) = env::current_exe() {
-        exe_path.pop();
-        let adjacent_path = exe_path.join("frontend/dist/frontend");
-        if adjacent_path.exists() {
-            return Some(adjacent_path);
-        }
-        let adjacent_path2 = exe_path.join("dist/frontend");
-        if adjacent_path2.exists() {
-            return Some(adjacent_path2);
-        }
-    }
-
-    None
 }
 
 fn app(frontend_path: Option<PathBuf>) -> Router {
@@ -256,17 +149,17 @@ fn mime_guess_fallback(path: &Path) -> &'static str {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    match get_cc_bindings_from_rs_path() {
+    match resource_locator::get_cc_bindings_from_rs_path() {
         Ok(path) => println!("cc_bindings_from_rs found at: {}", path.display()),
         Err(err) => eprintln!("Error locating cc_bindings_from_rs: {}", err),
     }
 
-    match get_clang_format_path() {
+    match resource_locator::get_clang_format_path() {
         Some(path) => println!("clang-format found at: {}", path.display()),
         None => println!("clang-format not found; generated code will be unformatted"),
     }
 
-    let frontend_path = get_frontend_dist_path();
+    let frontend_path = resource_locator::get_frontend_dist_path();
     let app = app(frontend_path);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
@@ -307,7 +200,7 @@ mod tests {
     #[gtest]
     #[tokio::test]
     async fn test_compile_handler_api() {
-        let app = app(get_frontend_dist_path());
+        let app = app(resource_locator::get_frontend_dist_path());
 
         let input_code = "pub struct TestStruct { pub x: i32 }";
         let payload = api::CrubitBuildRequest {
@@ -363,7 +256,7 @@ mod tests {
     #[gtest]
     #[tokio::test]
     async fn test_compile_handler_api_invalid_payload() {
-        let app = app(get_frontend_dist_path());
+        let app = app(resource_locator::get_frontend_dist_path());
 
         // Send invalid JSON body
         let response = app
@@ -396,7 +289,7 @@ mod tests {
     #[gtest]
     #[tokio::test]
     async fn test_api_not_found() {
-        let app = app(get_frontend_dist_path());
+        let app = app(resource_locator::get_frontend_dist_path());
 
         let response = app
             .oneshot(
@@ -419,7 +312,7 @@ mod tests {
     #[gtest]
     #[tokio::test]
     async fn test_frontend_serving() {
-        let path = get_frontend_dist_path();
+        let path = resource_locator::get_frontend_dist_path();
         if let Some(frontend_path) = path {
             let app = app(Some(frontend_path));
             let response = app
@@ -487,7 +380,7 @@ mod tests {
     #[gtest]
     #[tokio::test]
     async fn test_get_clang_format_path() {
-        let clang_format_path = get_clang_format_path();
+        let clang_format_path = resource_locator::get_clang_format_path();
         expect_true!(
             clang_format_path.is_some(),
             "clang-format should be found in test environment"

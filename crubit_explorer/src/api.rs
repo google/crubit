@@ -15,6 +15,8 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use tempfile::{Builder, TempDir};
 
+use crate::resource_locator;
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CrubitBuildRequest {
@@ -169,7 +171,7 @@ fn run_compiler_command(
         .arg(format!("--rs-out={}", env.rs_out_path.display()))
         .arg("--crubit-support-path-format=<crubit/support/{header}>");
 
-    if let Some(clang_format_path) = crate::get_clang_format_path() {
+    if let Some(clang_format_path) = resource_locator::get_clang_format_path() {
         cmd.arg(format!("--clang-format-exe-path={}", clang_format_path.display()));
     }
 
@@ -222,14 +224,12 @@ fn configure_from_runfiles(cmd: &mut Command, temp_dir_path: &Path) -> bool {
     let Ok(r) = Runfiles::create() else { return false };
     let mut found_sysroot = false;
 
-    if !found_sysroot {
-        if let Ok(rustc_rf) = env::var("RUSTC_RUNFILES_PATH") {
-            if let Some(rustc_path) = runfiles::rlocation!(r, &rustc_rf) {
-                if let Some(sysroot_path) = rustc_path.parent().and_then(|p| p.parent()) {
-                    if sysroot_path.exists() {
-                        cmd.arg(format!("--sysroot={}", sysroot_path.display()));
-                        found_sysroot = true;
-                    }
+    if !found_sysroot && let Ok(rustc_rf) = env::var("RUSTC_RUNFILES_PATH") {
+        if let Some(rustc_path) = runfiles::rlocation!(r, &rustc_rf) {
+            if let Some(sysroot_path) = rustc_path.parent().and_then(|p| p.parent()) {
+                if sysroot_path.exists() {
+                    cmd.arg(format!("--sysroot={}", sysroot_path.display()));
+                    found_sysroot = true;
                 }
             }
         }
