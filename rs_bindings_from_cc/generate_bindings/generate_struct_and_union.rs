@@ -96,7 +96,7 @@ fn is_debug_formattable(db: &BindingsGenerator, ty: &ir::CcType) -> bool {
         ir::CcTypeVariant::Decl { id, .. } => match db.find_decl::<ir::Item>(*id) {
             Ok(ir::Item::Record(rec)) => rec.impl_debug(),
             Ok(ir::Item::Enum(_)) => true,
-            Ok(ir::Item::TypeAlias(alias)) => is_debug_formattable(db, &alias.underlying_type()),
+            Ok(ir::Item::TypeAlias(alias)) => is_debug_formattable(db, alias.underlying_type()),
             Ok(ir::Item::ExistingRustType(existing_type)) => existing_type.impl_debug(),
             _ => false,
         },
@@ -392,7 +392,7 @@ fn field_definition<'a>(
         ident,
         field_type,
         is_debug_formattable: field.cpp_identifier().is_some()
-            && is_debug_formattable(db, &field.type_()),
+            && is_debug_formattable(db, field.type_()),
     })
 }
 
