@@ -8,7 +8,7 @@
 use arc_anyhow::{bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
-use ir_rust_proto::{ConstantView, EnumeratorView, IntegerConstantView};
+use ir_rust_proto::{ConstantView, EnumeratorView, FuncView, IntegerConstantView};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
@@ -945,8 +945,9 @@ pub enum SafetyAnnotation {
     Unannotated,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct Func<'pb> {
+    pub(crate) proto: FuncView<'pb>,
     pub(crate) cc_name: UnqualifiedIdentifier<'pb>,
     pub(crate) rs_name: UnqualifiedIdentifier<'pb>,
     pub(crate) unique_name: &'pb str,
@@ -956,183 +957,173 @@ pub struct Func<'pb> {
     pub(crate) return_type: CcType,
     pub(crate) params: Vec<FuncParam<'pb>>,
     pub(crate) lifetime_params: Vec<LifetimeName>,
-    pub(crate) is_inline: bool,
     pub(crate) instance_method_metadata: Option<InstanceMethodMetadata>,
-    pub(crate) is_extern_c: bool,
-    pub(crate) is_noreturn: bool,
-    pub(crate) is_variadic: bool,
-    pub(crate) is_consteval: bool,
     pub(crate) nodiscard: Option<&'pb str>,
     pub(crate) deprecated: Option<&'pb str>,
     pub(crate) unknown_attr: Option<&'pb str>,
-    pub(crate) has_c_calling_convention: bool,
-    pub(crate) is_member_or_descendant_of_class_template: bool,
     pub(crate) safety_annotation: SafetyAnnotation,
     pub(crate) source_loc: &'pb str,
-    pub(crate) id: ItemId,
-    pub(crate) enclosing_item_id: Option<ItemId>,
 
-    pub(crate) adl_enclosing_record: Option<ItemId>,
-    pub(crate) must_bind: bool,
     pub(crate) inline_cpp_source_text: Option<Rc<str>>,
 
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
 
     pub(crate) semantic: Option<MemberFuncSemantic>,
-    pub(crate) is_compiler_generated: bool,
 }
 
-impl<'pb> Func<'pb> {
-    pub fn cc_name(&self) -> &UnqualifiedIdentifier<'pb> {
-        &self.cc_name
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> Func<'pb> {
+        pub fn cc_name(&self) -> &UnqualifiedIdentifier<'pb> {
+            &self.cc_name
+        }
 
-    pub fn rs_name(&self) -> &UnqualifiedIdentifier<'pb> {
-        &self.rs_name
-    }
+        pub fn rs_name(&self) -> &UnqualifiedIdentifier<'pb> {
+            &self.rs_name
+        }
 
-    pub fn unique_name(&self) -> &'pb str {
-        self.unique_name
-    }
+        pub fn unique_name(&self) -> &'pb str {
+            self.unique_name
+        }
 
-    pub fn owning_target(&self) -> &BazelLabel {
-        &self.owning_target
-    }
+        pub fn owning_target(&self) -> &BazelLabel {
+            &self.owning_target
+        }
 
-    pub fn mangled_name(&self) -> &'pb str {
-        self.mangled_name
-    }
+        pub fn mangled_name(&self) -> &'pb str {
+            self.mangled_name
+        }
 
-    pub fn doc_comment(&self) -> Option<&'pb str> {
-        self.doc_comment
-    }
+        pub fn doc_comment(&self) -> Option<&'pb str> {
+            self.doc_comment
+        }
 
-    pub fn return_type(&self) -> &CcType {
-        &self.return_type
-    }
+        pub fn return_type(&self) -> &CcType {
+            &self.return_type
+        }
 
-    pub fn params(&self) -> &[FuncParam<'pb>] {
-        &self.params
-    }
+        pub fn params(&self) -> &[FuncParam<'pb>] {
+            &self.params
+        }
 
-    /// For tests and internal use only.
-    ///
-    /// Prefer to reconstruct the lifetime params from the parameter types, as
-    /// needed. This allows new parameters and lifetimes to be added that were
-    /// not originally part of the IR.
-    pub fn lifetime_params(&self) -> &[LifetimeName] {
-        &self.lifetime_params
-    }
+        /// For tests and internal use only.
+        ///
+        /// Prefer to reconstruct the lifetime params from the parameter types, as
+        /// needed. This allows new parameters and lifetimes to be added that were
+        /// not originally part of the IR.
+        pub fn lifetime_params(&self) -> &[LifetimeName] {
+            &self.lifetime_params
+        }
 
-    pub fn is_inline(&self) -> bool {
-        self.is_inline
-    }
+        pub fn is_inline(&self) -> bool {
+            self.proto.is_inline()
+        }
 
-    pub fn instance_method_metadata(&self) -> Option<&InstanceMethodMetadata> {
-        self.instance_method_metadata.as_ref()
-    }
+        pub fn instance_method_metadata(&self) -> Option<&InstanceMethodMetadata> {
+            self.instance_method_metadata.as_ref()
+        }
 
-    pub fn is_extern_c(&self) -> bool {
-        self.is_extern_c
-    }
+        pub fn is_extern_c(&self) -> bool {
+            self.proto.is_extern_c()
+        }
 
-    pub fn is_noreturn(&self) -> bool {
-        self.is_noreturn
-    }
+        pub fn is_noreturn(&self) -> bool {
+            self.proto.is_noreturn()
+        }
 
-    pub fn is_variadic(&self) -> bool {
-        self.is_variadic
-    }
+        pub fn is_variadic(&self) -> bool {
+            self.proto.is_variadic()
+        }
 
-    pub fn is_consteval(&self) -> bool {
-        self.is_consteval
-    }
+        pub fn is_consteval(&self) -> bool {
+            self.proto.is_consteval()
+        }
 
-    /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
-    /// string is used.
-    pub fn nodiscard(&self) -> Option<&'pb str> {
-        self.nodiscard
-    }
+        /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
+        /// string is used.
+        pub fn nodiscard(&self) -> Option<&'pb str> {
+            self.nodiscard
+        }
 
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
-    pub fn deprecated(&self) -> Option<&'pb str> {
-        self.deprecated
-    }
+        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+        /// string is used.
+        pub fn deprecated(&self) -> Option<&'pb str> {
+            self.deprecated
+        }
 
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    ///
-    /// Because attributes can change the behavior or semantics of functions in
-    /// fairly significant ways, and in ways that may affect interop, we
-    /// default-closed and do not expose functions with unknown attributes.
-    pub fn unknown_attr(&self) -> Option<&'pb str> {
-        self.unknown_attr
-    }
+        /// A human-readable list of attributes that Crubit doesn't understand.
+        ///
+        /// Because attributes can change the behavior or semantics of functions in
+        /// fairly significant ways, and in ways that may affect interop, we
+        /// default-closed and do not expose functions with unknown attributes.
+        pub fn unknown_attr(&self) -> Option<&'pb str> {
+            self.unknown_attr
+        }
 
-    pub fn has_c_calling_convention(&self) -> bool {
-        self.has_c_calling_convention
-    }
+        pub fn has_c_calling_convention(&self) -> bool {
+            self.proto.has_c_calling_convention()
+        }
 
-    pub fn is_member_or_descendant_of_class_template(&self) -> bool {
-        self.is_member_or_descendant_of_class_template
-    }
+        pub fn is_member_or_descendant_of_class_template(&self) -> bool {
+            self.proto.is_member_or_descendant_of_class_template()
+        }
 
-    pub fn safety_annotation(&self) -> SafetyAnnotation {
-        self.safety_annotation
-    }
+        pub fn safety_annotation(&self) -> SafetyAnnotation {
+            self.safety_annotation
+        }
 
-    pub fn source_loc(&self) -> &'pb str {
-        self.source_loc
-    }
+        pub fn source_loc(&self) -> &'pb str {
+            self.source_loc
+        }
 
-    pub fn id(&self) -> ItemId {
-        self.id
-    }
+        pub fn id(&self) -> ItemId {
+            ItemId(self.proto.id() as usize)
+        }
 
-    /// The enclosing item ID.
-    ///
-    /// If this is a free function, then this will be None or a namespace. If this is
-    /// a member function, it will be a record type in C++, but might be an
-    /// `ExistingRustType` if it was renamed.
-    pub fn enclosing_item_id(&self) -> Option<ItemId> {
-        self.enclosing_item_id
-    }
+        /// The enclosing item ID.
+        ///
+        /// If this is a free function, then this will be None or a namespace. If this is
+        /// a member function, it will be a record type in C++, but might be an
+        /// `ExistingRustType` if it was renamed.
+        pub fn enclosing_item_id(&self) -> Option<ItemId> {
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+        }
 
-    /// If this function was declared as a `friend` inside of a record
-    /// definition, this ItemId refers to the record containing the `friend`
-    /// function declaration.
-    ///
-    /// The record pointed to by `ItemId` must then be ADL-visible in order to
-    /// invoke this function.
-    pub fn adl_enclosing_record(&self) -> Option<ItemId> {
-        self.adl_enclosing_record
-    }
+        /// If this function was declared as a `friend` inside of a record
+        /// definition, this ItemId refers to the record containing the `friend`
+        /// function declaration.
+        ///
+        /// The record pointed to by `ItemId` must then be ADL-visible in order to
+        /// invoke this function.
+        pub fn adl_enclosing_record(&self) -> Option<ItemId> {
+            self.proto.adl_enclosing_record_opt().map(|id| ItemId(id as usize))
+        }
 
-    pub fn must_bind(&self) -> bool {
-        self.must_bind
-    }
+        pub fn must_bind(&self) -> bool {
+            self.proto.must_bind()
+        }
 
-    pub fn inline_cpp_source_text(&self) -> Option<&str> {
-        self.inline_cpp_source_text.as_deref()
-    }
+        pub fn inline_cpp_source_text(&self) -> Option<&str> {
+            self.inline_cpp_source_text.as_deref()
+        }
 
-    /// Lifetime variable names bound by this function.
-    pub fn lifetime_inputs(&self) -> &[Rc<str>] {
-        &self.lifetime_inputs
-    }
+        /// Lifetime variable names bound by this function.
+        pub fn lifetime_inputs(&self) -> &[Rc<str>] {
+            &self.lifetime_inputs
+        }
 
-    pub fn semantic(&self) -> Option<&MemberFuncSemantic> {
-        self.semantic.as_ref()
-    }
+        pub fn semantic(&self) -> Option<&MemberFuncSemantic> {
+            self.semantic.as_ref()
+        }
 
-    pub fn is_compiler_generated(&self) -> bool {
-        self.is_compiler_generated
+        pub fn is_compiler_generated(&self) -> bool {
+            self.proto.is_compiler_generated()
+        }
     }
 }
 
 impl<'pb> GenericItem<'pb> for Func<'pb> {
     fn id(&self) -> ItemId {
-        self.id
+        self.id()
     }
     fn unique_name(&self) -> Option<&'pb str> {
         Some(self.unique_name())
@@ -1154,7 +1145,7 @@ impl<'pb> GenericItem<'pb> for Func<'pb> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
-        self.must_bind
+        self.must_bind()
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
         self.cc_name.identifier_as_str()
@@ -3369,7 +3360,7 @@ impl<'pb> Item<'pb> {
             Item::Enum(enum_) => enum_.enclosing_item_id,
             Item::Constant(constant) => constant.enclosing_item_id,
             Item::GlobalVar(type_) => type_.enclosing_item_id,
-            Item::Func(func) => func.enclosing_item_id,
+            Item::Func(func) => func.enclosing_item_id(),
             Item::Namespace(namespace) => namespace.enclosing_item_id,
             Item::TypeAlias(type_alias) => type_alias.enclosing_item_id,
             Item::Comment(..) => None,
