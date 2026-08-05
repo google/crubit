@@ -847,9 +847,9 @@ fn generate_constructor_impls<'tcx>(
                     } else {
                         let static_src_ty = replace_all_regions_with_static(tcx, src_ty);
                         let src_rs = db.format_ty_for_rs(static_src_ty).ok()?;
-                        let foo_rs = &core.rs_fully_qualified_name;
+                        let rs_fully_qualified_name = &core.rs_fully_qualified_name;
                         let fully_qualified_fn_name =
-                            quote! { <#src_rs as ::core::convert::Into<#foo_rs>>::into };
+                            quote! { <#src_rs as ::core::convert::Into<#rs_fully_qualified_name>>::into };
                         generate_thunk_impl(
                             db,
                             into_trait_assoc_fn.def_id,
