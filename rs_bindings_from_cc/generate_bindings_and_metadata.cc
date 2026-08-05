@@ -132,7 +132,11 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
            Identifier(std::string(record->rs_name().identifier()))});
     }
   }
-  auto top_level_namespaces = crubit::CollectNamespaces(ir);
+
+  NamespacesHierarchy top_level_namespaces;
+  if (!args.namespaces_out.empty()) {
+    top_level_namespaces = crubit::CollectNamespaces(ir);
+  }
 
   IR ir_out;
   // In development builds, if `--ir-out` is specified, copy the IR to be
