@@ -1421,14 +1421,11 @@ fn has_copy_ctor_and_assignment_operator<'tcx>(
     self_ty: Ty<'tcx>,
 ) -> Option<CopyCtorStyle> {
     let tcx = db.tcx();
-    let trait_id = tcx.lang_items().clone_trait().expect("Can't find the `Clone` trait");
-    if is_copy(tcx, def_id, self_ty) {
-        Some(CopyCtorStyle::Copy)
-    } else if does_type_implement_trait(tcx, self_ty, trait_id, []) {
-        Some(CopyCtorStyle::Clone)
-    } else {
-        None
-    }
+    let clone_trait_id = tcx.lang_items().clone_trait().expect("Can't find the `Clone` trait");
+    CopyCtorStyle::from_available_traits(
+        is_copy(tcx, def_id, self_ty),
+        does_type_implement_trait(tcx, self_ty, clone_trait_id, []),
+    )
 }
 
 /// Implementation of `BindingsGenerator::generate_copy_ctor_and_assignment_operator`.
@@ -1560,19 +1557,12 @@ fn has_move_ctor_and_assignment_operator<'tcx>(
     let typing_env = def_id
         .map(|id| post_analysis_typing_env(tcx, id))
         .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
-    // If our type has no drop glue we can use the default move constructor and assignment operator.
-    if !self_ty.needs_drop(tcx, typing_env) {
-        return Some(MoveCtorStyle::Default);
-    }
-    let has_default_ctor = db.has_default_ctor(self_ty);
-    let is_unpin = self_ty.is_unpin(tcx, typing_env);
-    if has_default_ctor && is_unpin {
-        Some(MoveCtorStyle::MemSwap)
-    } else if db.has_copy_ctor_and_assignment_operator(def_id, self_ty).is_some() {
-        Some(MoveCtorStyle::Copy)
-    } else {
-        None
-    }
+    MoveCtorStyle::from_available_traits(
+        !self_ty.needs_drop(tcx, typing_env),
+        db.has_default_ctor(self_ty),
+        self_ty.is_unpin(tcx, typing_env),
+        db.has_copy_ctor_and_assignment_operator(def_id, self_ty).is_some(),
+    )
 }
 
 /// Implementation of `BindingsGenerator::generate_move_ctor_and_assignment_operator`.

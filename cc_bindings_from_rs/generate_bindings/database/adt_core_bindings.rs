@@ -114,6 +114,19 @@ pub enum CopyCtorStyle {
     Clone,
 }
 
+impl CopyCtorStyle {
+    /// Returns a `CopyCtorStyle` based on what combination of Copy and Clone the type implements.
+    pub fn from_available_traits(implements_copy: bool, implements_clone: bool) -> Option<Self> {
+        if implements_copy {
+            Some(CopyCtorStyle::Copy)
+        } else if implements_clone {
+            Some(CopyCtorStyle::Clone)
+        } else {
+            None
+        }
+    }
+}
+
 // The style of move constructor and assignment operator to generate for an ADT.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum MoveCtorStyle {
@@ -125,4 +138,26 @@ pub enum MoveCtorStyle {
     // The type cannot be moved but has a copy constructor and assignment operator that are used in
     // lieu of the move constructor and assignment operator.
     Copy,
+}
+
+impl MoveCtorStyle {
+    /// Returns a `MoveCtorStyle` based on what combination of Default, Unpin, Copy, and Clone the
+    /// type implements.
+    pub fn from_available_traits(
+        does_not_need_drop: bool,
+        has_default_ctor: bool,
+        is_unpin: bool,
+        has_copy_ctor_and_assignment_operator: bool,
+    ) -> Option<Self> {
+        // If our type has no drop glue we can use the default move constructor and assignment operator.
+        if does_not_need_drop {
+            Some(MoveCtorStyle::Default)
+        } else if has_default_ctor && is_unpin {
+            Some(MoveCtorStyle::MemSwap)
+        } else if has_copy_ctor_and_assignment_operator {
+            Some(MoveCtorStyle::Copy)
+        } else {
+            None
+        }
+    }
 }
