@@ -1,0 +1,105 @@
+<!--
+  Part of the Crubit project, under the Apache License v2.0 with LLVM
+  Exceptions. See /LICENSE for license information.
+  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+-->
+
+<header>
+  <h1>Crubit Explorer</h1>
+  <div class="toolbar">
+    <label>
+      <span class="toolbar-plugin">Tool:</span>
+      <select [disabled]="true" [value]="selectedTool">
+        <option value="cc_bindings_from_rs">cc_bindings_from_rs</option>
+      </select>
+    </label>
+    <button class="share-button" (click)="copyShareLink()" title="Share link with encoded code">
+      {{ shareButtonText }}
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="pane">
+    <div class="tab-bar">
+      <div class="app-tabs">
+        <div class="tab selected">
+          <span>input.rs</span>
+        </div>
+      </div>
+    </div>
+    <div #inputEditorContainer class="editor-container"></div>
+  </div>
+
+  <div class="resizer"></div>
+
+  <div class="pane">
+    <div class="tab-bar">
+      <div class="app-tabs">
+        <ng-container *ngIf="outputFiles.length > 0; else defaultTab">
+          <div *ngFor="let file of outputFiles; let i = index"
+               class="tab"
+               [class.selected]="selectedOutputFileIndex === i"
+               (click)="selectOutputFile(i)">
+            <span>{{ file.name }}</span>
+          </div>
+        </ng-container>
+        <ng-template #defaultTab>
+          <div class="tab selected">
+            <span>bindings.h</span>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+    <div #outputEditorContainer class="editor-container"></div>
+
+    <div class="doxygen-section" [class.collapsed]="isDoxygenCollapsed">
+      <div class="doxygen-header-container" (click)="toggleDoxygenPanel()">
+        <h3 class="doxygen-header">Symbols in this file</h3>
+        <span class="doxygen-panel-toggle-icon">
+          {{ isDoxygenCollapsed ? '▲' : '▼' }}
+        </span>
+      </div>
+      <div class="doxygen-content">
+        <div *ngIf="doxygenError" class="doxygen-error">
+          {{ doxygenError }}
+        </div>
+        <div *ngIf="flatDoxygenSymbols.length === 0 && !doxygenError" class="doxygen-empty">
+          No symbols found in this file.
+        </div>
+        <div *ngIf="flatDoxygenSymbols.length > 0" class="symbol-tree-container">
+          <ng-container *ngFor="let sym of flatDoxygenSymbols">
+            <div *ngIf="sym.visible"
+                 class="symbol-tree-row"
+                 [class.selected]="selectedSymbol === sym"
+                 [style.padding-left.px]="sym.depth * 20"
+                 [class.has-children]="sym.hasChildren"
+                 (click)="selectSymbol(sym, $event)">
+
+              <!-- Collapse/Expand Icon -->
+              <span class="symbol-toggle-icon" (click)="toggleSymbolNode(sym, $event)">
+                <ng-container *ngIf="sym.hasChildren">
+                  {{ sym.collapsed ? '▶' : '▼' }}
+                </ng-container>
+              </span>
+
+              <!-- Kind Badge -->
+              <span class="symbol-kind-badge" [attr.data-kind]="sym.kind">
+                {{ sym.kind }}
+              </span>
+
+              <!-- Symbol Name -->
+              <span class="symbol-name">{{ sym.name }}</span>
+
+              <!-- Location (Optional) -->
+              <span *ngIf="sym.line || sym.refid" class="symbol-location">
+                {{ sym.line ? ':' + sym.line : sym.refid }}
+              </span>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+

@@ -8,7 +8,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": []
+    "types": [
+      "monaco-editor"
+    ]
   },
   "files": [
     "src/main.ts"

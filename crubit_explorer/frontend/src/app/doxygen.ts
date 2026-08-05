@@ -48,12 +48,16 @@ interface SymbolTreeNode {
   children: SymbolTreeNode[];
 }
 
+/**
+ * Builds a flattened array of symbol nodes representing the symbol hierarchy for display.
+ */
 export function buildFlatSymbolTree(
   symbols: readonly DoxygenSymbol[],
 ): FlatSymbolNode[] {
   const rootNodes: SymbolTreeNode[] = [];
   const nodeMap = new Map<string, SymbolTreeNode>();
 
+  /** Returns existing node or creates a new tree node for the symbol path. */
   function getOrCreateNode(
     fullName: string,
     originalSymbol?: DoxygenSymbol,
@@ -110,6 +114,9 @@ export function buildFlatSymbolTree(
   return flattenTree(rootNodes);
 }
 
+/**
+ * Recursively flattens a symbol node tree into an array with depth and visibility metadata.
+ */
 function flattenTree(
   nodes: readonly SymbolTreeNode[],
   depth = 0,

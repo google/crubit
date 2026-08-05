@@ -26,6 +26,7 @@
     "@angular-devkit/build-angular": "^18.2.21",
     "@angular/cli": "^18.2.21",
     "@angular/compiler-cli": "^18.2.0",
+    "monaco-editor": "^0.51.0",
     "typescript": "~5.5.2"
   },
   "pnpm": {

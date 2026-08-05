@@ -4,19 +4,20 @@
 
 import {HttpClientTestingModule, HttpTestingController} from '@angular/common/http/testing';
 import {TestBed} from '@angular/core/testing';
-import {AppComponent} from './app.component';
 import {buildFlatSymbolTree, FlatSymbolNode} from './doxygen';
+import {MainComponent} from './main.component';
+import type * as monaco from 'monaco-editor';
 
-describe('AppComponent', () => {
-  let component: AppComponent;
+describe('MainComponent', () => {
+  let component: MainComponent;
   let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, HttpClientTestingModule],
+      imports: [MainComponent, HttpClientTestingModule],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(MainComponent);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
   });
@@ -202,128 +203,72 @@ describe('AppComponent', () => {
     expect(component.doxygenError).toBe('Doxygen failed: Parse error');
   });
 
-  describe('decodeState', () => {
-    it('should decode a valid encoded JSON state', () => {
-      const state = {
-        v: 1,
-        tool: 'cc_bindings_from_rs',
-        files: [{name: 'input.rs', content: 'pub fn foo() {}'}],
-      };
-      const encoded = component.encodeState(state);
-      expect(component.decodeState(encoded)).toEqual(state);
+  describe('copyShareLink', () => {
+    let originalClipboardDesc: PropertyDescriptor | undefined;
+
+    beforeEach(() => {
+      originalClipboardDesc = Object.getOwnPropertyDescriptor(Navigator.prototype, 'clipboard') ||
+                              Object.getOwnPropertyDescriptor(navigator, 'clipboard');
     });
 
-    it('should encode and decode state with unicode characters', () => {
-      const state = {
-        v: 1,
-        tool: 'cc_bindings_from_rs',
-        files: [{name: 'input.rs', content: '// 🚀 Unicode test: こんにちは世界'}],
-      };
-      const encoded = component.encodeState(state);
-      expect(component.decodeState(encoded)).toEqual(state);
-    });
-
-    it('should fallback for raw non-JSON code strings', () => {
-      const rawCode = 'pub fn foo() {}';
-      const decoded = component.decodeState(rawCode);
-      expect(decoded).toEqual({
-        v: 1,
-        tool: 'cc_bindings_from_rs',
-        files: [{name: 'input.rs', content: rawCode}],
-      });
-    });
-
-    it('should fallback for JSON strings that do not contain valid files array', () => {
-      const invalidJson = JSON.stringify({foo: 'bar'});
-      const decoded = component.decodeState(invalidJson);
-      expect(decoded).toEqual({
-        v: 1,
-        tool: 'cc_bindings_from_rs',
-        files: [{name: 'input.rs', content: invalidJson}],
-      });
-    });
-  });
-
-  describe('getStateFromUrl and getCodeFromUrl', () => {
-    let originalHash: string;
-    beforeEach(() => { originalHash = window.location.hash; });
-    afterEach(() => { window.location.hash = originalHash; });
-
-    it('should extract state from location.hash or return null when empty', () => {
-      window.location.hash = '';
-      expect(component.getStateFromUrl()).toBeNull();
-      expect(component.getCodeFromUrl()).toBeNull();
-
-      const state = {v: 1, tool: 'cc_bindings_from_rs', files: [{name: 'input.rs', content: 'fn main() {}'}]};
-      const encoded = component.encodeState(state);
-
-      window.location.hash = `#code=${encoded}`;
-      expect(component.getStateFromUrl()).toEqual(state);
-      expect(component.getCodeFromUrl()).toBe('fn main() {}');
-
-      window.location.hash = `#${encoded}`;
-      expect(component.getStateFromUrl()).toEqual(state);
-    });
-  });
-
-  describe('updateUrl', () => {
-    it('should encode state into location.hash via replaceState', () => {
-      const replaceSpy = spyOn(window.history, 'replaceState');
-
-      const expectedState1 = {
-        v: 1,
-        tool: 'cc_bindings_from_rs',
-        files: [{name: 'input.rs', content: 'pub fn bar() {}'}],
-      };
-      const expectedEncoded1 = component.encodeState(expectedState1);
-      component.updateUrl('pub fn bar() {}');
-      expect(replaceSpy).toHaveBeenCalled();
-      const url1 = replaceSpy.calls.mostRecent().args[2] as string;
-      expect(url1).toContain(`#code=${expectedEncoded1}`);
-
-      const expectedState2 = {
-        v: 1,
-        tool: 'custom_tool',
-        files: [{name: 'input.rs', content: 'struct S;'}],
-      };
-      const expectedEncoded2 = component.encodeState(expectedState2);
-      component.updateUrl(expectedState2.files, expectedState2.tool);
-      expect(replaceSpy).toHaveBeenCalled();
-      const url2 = replaceSpy.calls.mostRecent().args[2] as string;
-      expect(url2).toContain(`#code=${expectedEncoded2}`);
-    });
-  });
-
-  describe('copyShareLink and fallbackCopy', () => {
-    let originalClipboard: PropertyDescriptor | undefined;
-    beforeEach(() => { originalClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard'); });
     afterEach(() => {
-      if (originalClipboard) {
-        Object.defineProperty(navigator, 'clipboard', originalClipboard);
+      if (originalClipboardDesc) {
+        try {
+          Object.defineProperty(Navigator.prototype, 'clipboard', originalClipboardDesc);
+        } catch {
+          // Ignore if unable to redefine
+        }
       } else {
-        try { delete (navigator as any).clipboard; } catch {}
+        try {
+          delete (navigator as unknown as Record<string, unknown>)['clipboard'];
+        } catch {
+          // Ignore if unable to delete
+        }
       }
     });
 
-    it('should copy link via navigator.clipboard or fallbackCopy', async () => {
-      spyOn(window.history, 'replaceState');
+    it('should copy share link using navigator.clipboard.writeText when available', async () => {
       const writeTextSpy = jasmine.createSpy('writeText').and.returnValue(Promise.resolve());
-      Object.defineProperty(navigator, 'clipboard', {value: {writeText: writeTextSpy}, configurable: true, writable: true});
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: writeTextSpy },
+        configurable: true,
+        writable: true,
+      });
 
-      component.copyShareLink();
+      await component.copyShareLink();
+
       expect(writeTextSpy).toHaveBeenCalledWith(window.location.href);
-      await Promise.resolve();
       expect(component.shareButtonText).toBe('Copied!');
+    });
 
-      // Fallback when clipboard fails or is unavailable
-      const failWriteText = jasmine.createSpy('writeText').and.returnValue(Promise.reject('error'));
-      Object.defineProperty(navigator, 'clipboard', {value: {writeText: failWriteText}, configurable: true, writable: true});
-      spyOn(document, 'execCommand').and.returnValue(true);
+    it('should fallback to execCommand when writeText fails', async () => {
+      const writeTextSpy = jasmine.createSpy('writeText').and.returnValue(Promise.reject(new Error('Denied')));
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: writeTextSpy },
+        configurable: true,
+        writable: true,
+      });
+      const execSpy = spyOn(document, 'execCommand').and.returnValue(true);
 
-      component.copyShareLink();
-      await Promise.resolve();
-      await new Promise((r) => setTimeout(r, 0));
-      expect(document.execCommand).toHaveBeenCalledWith('copy');
+      await component.copyShareLink();
+
+      expect(writeTextSpy).toHaveBeenCalledWith(window.location.href);
+      expect(execSpy).toHaveBeenCalledWith('copy');
+      expect(component.shareButtonText).toBe('Copied!');
+    });
+
+    it('should fallback to execCommand when navigator.clipboard is absent', async () => {
+      Object.defineProperty(navigator, 'clipboard', {
+        value: undefined,
+        configurable: true,
+        writable: true,
+      });
+      const execSpy = spyOn(document, 'execCommand').and.returnValue(true);
+
+      await component.copyShareLink();
+
+      expect(execSpy).toHaveBeenCalledWith('copy');
+      expect(component.shareButtonText).toBe('Copied!');
     });
   });
 
@@ -367,12 +312,12 @@ describe('AppComponent', () => {
           getLineCount: () => 20,
           getLineMaxColumn: () => 15,
           findMatches: findMatchesSpy,
-        }),
+        } as unknown as monaco.editor.ITextModel),
         revealLineInCenter: revealSpy,
         setSelection: setSelSpy,
         focus: jasmine.createSpy('focus'),
         dispose: jasmine.createSpy('dispose'),
-      };
+      } as unknown as monaco.editor.IStandaloneCodeEditor;
 
       const nodeLine: FlatSymbolNode = {name: 'f', fullName: 'f', kind: 'fn', refid: '1', line: 5, depth: 0, hasChildren: false, collapsed: false, visible: true};
       component.selectSymbol(nodeLine);
