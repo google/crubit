@@ -1011,20 +1011,8 @@ impl<'pb> Func<'pb> {
         &self.return_type
     }
 
-    pub fn return_type_mut(&mut self) -> &mut CcType {
-        &mut self.return_type
-    }
-
-    pub fn set_return_type(&mut self, return_type: CcType) {
-        self.return_type = return_type;
-    }
-
     pub fn params(&self) -> &[FuncParam<'pb>] {
         &self.params
-    }
-
-    pub fn params_mut(&mut self) -> &mut Vec<FuncParam<'pb>> {
-        &mut self.params
     }
 
     /// For tests and internal use only.
@@ -1042,10 +1030,6 @@ impl<'pb> Func<'pb> {
 
     pub fn instance_method_metadata(&self) -> Option<&InstanceMethodMetadata> {
         self.instance_method_metadata.as_ref()
-    }
-
-    pub fn is_instance_method(&self) -> bool {
-        self.instance_method_metadata.is_some()
     }
 
     pub fn is_extern_c(&self) -> bool {
@@ -1128,8 +1112,8 @@ impl<'pb> Func<'pb> {
         self.must_bind
     }
 
-    pub fn semantic(&self) -> Option<&MemberFuncSemantic> {
-        self.semantic.as_ref()
+    pub fn inline_cpp_source_text(&self) -> Option<&str> {
+        self.inline_cpp_source_text.as_deref()
     }
 
     /// Lifetime variable names bound by this function.
@@ -1137,73 +1121,12 @@ impl<'pb> Func<'pb> {
         &self.lifetime_inputs
     }
 
-    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
-        &mut self.lifetime_inputs
+    pub fn semantic(&self) -> Option<&MemberFuncSemantic> {
+        self.semantic.as_ref()
     }
 
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_for_testing(
-        cc_name: UnqualifiedIdentifier<'pb>,
-        rs_name: UnqualifiedIdentifier<'pb>,
-        unique_name: &'pb str,
-        owning_target: BazelLabel,
-        mangled_name: &'pb str,
-        doc_comment: Option<&'pb str>,
-        return_type: CcType,
-        params: Vec<FuncParam<'pb>>,
-        lifetime_params: Vec<LifetimeName>,
-        is_inline: bool,
-        instance_method_metadata: Option<InstanceMethodMetadata>,
-        is_extern_c: bool,
-        is_noreturn: bool,
-        is_variadic: bool,
-        is_consteval: bool,
-        nodiscard: Option<&'pb str>,
-        deprecated: Option<&'pb str>,
-        unknown_attr: Option<&'pb str>,
-        has_c_calling_convention: bool,
-        is_member_or_descendant_of_class_template: bool,
-        safety_annotation: SafetyAnnotation,
-        source_loc: &'pb str,
-        id: ItemId,
-        enclosing_item_id: Option<ItemId>,
-        adl_enclosing_record: Option<ItemId>,
-        must_bind: bool,
-        lifetime_inputs: Vec<Rc<str>>,
-        semantic: Option<MemberFuncSemantic>,
-    ) -> Self {
-        Self {
-            cc_name,
-            rs_name,
-            unique_name,
-            owning_target,
-            mangled_name,
-            doc_comment,
-            return_type,
-            params,
-            lifetime_params,
-            is_inline,
-            instance_method_metadata,
-            is_extern_c,
-            is_noreturn,
-            is_variadic,
-            is_consteval,
-            nodiscard,
-            deprecated,
-            unknown_attr,
-            has_c_calling_convention,
-            is_member_or_descendant_of_class_template,
-            safety_annotation,
-            source_loc,
-            id,
-            enclosing_item_id,
-            adl_enclosing_record,
-            must_bind,
-            lifetime_inputs,
-            semantic,
-            inline_cpp_source_text: None,
-            is_compiler_generated: false,
-        }
+    pub fn is_compiler_generated(&self) -> bool {
+        self.is_compiler_generated
     }
 }
 
@@ -1239,8 +1162,8 @@ impl<'pb> GenericItem<'pb> for Func<'pb> {
 }
 
 impl<'pb> Func<'pb> {
-    pub fn inline_cpp_source_text(&self) -> Option<&str> {
-        self.inline_cpp_source_text.as_deref()
+    pub fn is_instance_method(&self) -> bool {
+        self.instance_method_metadata.is_some()
     }
 
     pub fn source_text_as_token_stream(&self) -> Option<proc_macro2::TokenStream> {
@@ -1249,6 +1172,22 @@ impl<'pb> Func<'pb> {
 
     pub fn set_inline_cpp_source_text(&mut self, text: Option<Rc<str>>) {
         self.inline_cpp_source_text = text;
+    }
+
+    pub fn return_type_mut(&mut self) -> &mut CcType {
+        &mut self.return_type
+    }
+
+    pub fn set_return_type(&mut self, return_type: CcType) {
+        self.return_type = return_type;
+    }
+
+    pub fn params_mut(&mut self) -> &mut Vec<FuncParam<'pb>> {
+        &mut self.params
+    }
+
+    pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
+        &mut self.lifetime_inputs
     }
 }
 
