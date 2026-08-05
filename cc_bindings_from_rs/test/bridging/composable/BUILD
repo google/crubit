@@ -22,14 +22,12 @@ rust_library(
     srcs = [
         "composable_bridging.rs",
     ],
-    cc_deps = [
-        "//support/cc_std",
-    ],
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
     deps = [
         "//support:bridge_rust",
+        "//support/cc_std:cc_std_rust",
     ],
 )
 

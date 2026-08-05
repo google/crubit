@@ -18,7 +18,7 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "string_view_rs_apis",
     srcs = ["string_view_rs_apis.rs"],
-    cc_deps = ["//support/cc_std"],
+    deps = ["//support/cc_std:cc_std_rust"],
 )
 
 cc_bindings_from_rust(

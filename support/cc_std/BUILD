@@ -2,6 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load(
     "//rs_bindings_from_cc/bazel_support:toolchain_headers.bzl",
     "bindings_for_toolchain_headers",
@@ -16,6 +17,7 @@ package(default_applicable_licenses = ["//:license"])
 
 bindings_for_toolchain_headers(
     name = "cc_std",
+    aspect_hints = [":cc_std_rust.hint"],
     compatible_with = [
         "//buildenv/target:non_prod",
     ],
@@ -31,4 +33,11 @@ bindings_for_toolchain_headers(
     visibility = [
         "//visibility:public",
     ],
+)
+
+rust_api_from_cpp(
+    name = "cc_std_rust",
+    compatible_with = ["//buildenv/target:non_prod"],
+    cpp_target = "//support/cc_std",
+    visibility = ["//:__subpackages__"],
 )

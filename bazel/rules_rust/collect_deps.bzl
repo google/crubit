@@ -78,6 +78,12 @@ def get_cc_import_namespace_variable(ctx):
             for dep in ctx.attr.cc_deps
             if RustBindingsFromCcInfo in dep
         ])
+    if hasattr(ctx.attr, "deps"):
+        for dep in ctx.attr.deps:
+            if RustBindingsFromCcInfo in dep and dep[RustBindingsFromCcInfo].namespaces:
+                path = dep[RustBindingsFromCcInfo].namespaces.path
+                if path not in namespace_json_filepaths:
+                    namespace_json_filepaths.append(path)
 
     cc_import_namespaces_var_name = "CC_IMPORT_NAMESPACES"
 
@@ -106,10 +112,23 @@ def get_namespace_json_files(ctx):
     Returns:
         list[Artifact]: The C++ dependencies' namespace json files.
     """
+    files = []
     if hasattr(ctx.attr, "cc_deps"):
-        return [
+        files.extend([
             dep[RustBindingsFromCcInfo].namespaces
             for dep in ctx.attr.cc_deps
             if RustBindingsFromCcInfo in dep
-        ]
-    return []
+        ])
+    if hasattr(ctx.attr, "deps"):
+        files.extend([
+            dep[RustBindingsFromCcInfo].namespaces
+            for dep in ctx.attr.deps
+            if RustBindingsFromCcInfo in dep and dep[RustBindingsFromCcInfo].namespaces
+        ])
+    seen = {}
+    deduped_files = []
+    for f in files:
+        if f.path not in seen:
+            seen[f.path] = True
+            deduped_files.append(f)
+    return deduped_files

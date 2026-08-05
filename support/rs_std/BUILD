@@ -9,6 +9,7 @@ load(
     "cpp_api_from_rust_toolchain_bindings",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
+load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -86,7 +87,7 @@ cc_library(
     name = "cpp_waker",
     srcs = ["cpp_waker.cc"],
     hdrs = ["cpp_waker.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":cpp_waker_rust.hint"],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],
 )
@@ -429,4 +430,11 @@ cc_test(
     deps = [
         "//support/public:cpp_config",
     ],
+)
+
+rust_api_from_cpp(
+    name = "cpp_waker_rust",
+    compatible_with = ["//buildenv/target:non_prod"],
+    cpp_target = "//support/rs_std:cpp_waker",
+    visibility = ["//visibility:public"],
 )

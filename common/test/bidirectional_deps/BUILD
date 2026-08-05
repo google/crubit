@@ -8,6 +8,7 @@ load(
     rust_golden_test = "golden_test",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
+load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 # TODO(jeanpierreda): Uncomment this, see below.
 # load(
@@ -69,14 +70,14 @@ crubit_rust_test(
 crubit_test_cc_library(
     name = "leaf_cc_lib",
     hdrs = ["leaf_cc_lib.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":leaf_cc_lib_rust.hint"],
 )
 
 rust_library(
     name = "middle_rs_lib",
     srcs = ["middle_rs_lib.rs"],
     aspect_hints = ["//features:supported"],
-    cc_deps = [":leaf_cc_lib"],
+    deps = [":leaf_cc_lib_rust"],
 )
 
 cc_bindings_from_rust(
@@ -92,4 +93,9 @@ crubit_cc_test(
         ":middle_rs_lib_cc_api",
         "//testing/base/public:gunit_main",
     ],
+)
+
+rust_api_from_cpp(
+    name = "leaf_cc_lib_rust",
+    cpp_target = "//common/test/bidirectional_deps:leaf_cc_lib",
 )
