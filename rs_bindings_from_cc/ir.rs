@@ -8,7 +8,7 @@
 use arc_anyhow::{bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
-use ir_rust_proto::{ConstantView, EnumeratorView};
+use ir_rust_proto::{ConstantView, EnumeratorView, IntegerConstantView};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
@@ -689,19 +689,18 @@ impl PartialEq<&str> for Identifier<'_> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub struct IntegerConstant {
-    pub(crate) is_negative: bool,
-    pub(crate) wrapped_value: u64,
-}
+#[derive(Copy, Clone)]
+pub struct IntegerConstant<'pb>(pub(crate) IntegerConstantView<'pb>);
 
-impl IntegerConstant {
-    pub fn is_negative(&self) -> bool {
-        self.is_negative
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> IntegerConstant<'pb> {
+        pub fn is_negative(&self) -> bool {
+            self.0.is_negative()
+        }
 
-    pub fn wrapped_value(&self) -> u64 {
-        self.wrapped_value
+        pub fn wrapped_value(&self) -> u64 {
+            self.0.wrapped_value() as u64
+        }
     }
 }
 
@@ -2235,8 +2234,8 @@ pub struct Constant<'pb> {
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> Constant<'pb> {
-        pub fn value(&self) -> IntegerConstant {
-            IntegerConstant::from(self.proto.value())
+        pub fn value(&self) -> IntegerConstant<'pb> {
+            IntegerConstant(self.proto.value())
         }
 
         pub fn cc_name(&self) -> &Identifier<'pb> {
@@ -2597,8 +2596,8 @@ derive_debug_partialeq_eq_hash! {
             &self.identifier
         }
 
-        pub fn value(&self) -> IntegerConstant {
-            IntegerConstant::from(self.proto.value())
+        pub fn value(&self) -> IntegerConstant<'pb> {
+            IntegerConstant(self.proto.value())
         }
 
         pub fn unknown_attr(&self) -> Option<&'pb str> {
