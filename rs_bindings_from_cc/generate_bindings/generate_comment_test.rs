@@ -87,6 +87,7 @@ fn test_generate_doc_comment_with_safety() {
 
 struct TestItem {
     source_loc: Option<&'static str>,
+    must_bind: bool,
 }
 
 const TEST_ITEM_ID: ItemId = ItemId::new_for_testing(123);
@@ -111,7 +112,7 @@ impl<'a> ir::GenericItem<'a> for TestItem {
         UnsupportedItemKind::Other
     }
     fn must_bind(&self) -> bool {
-        false
+        self.must_bind
     }
 }
 
@@ -176,7 +177,10 @@ fn test_generate_unsupported_item_with_environment_production() -> Result<()> {
     let actual = generate_unsupported(
         &db,
         db.new_unsupported_item_with_static_message(
-            &TestItem { source_loc: Some("Generated from: some/header;l=1".into()) },
+            &TestItem {
+                source_loc: Some("Generated from: some/header;l=1".into()),
+                must_bind: false,
+            },
             /* path= */ None,
             "unsupported_message",
         )
@@ -203,7 +207,7 @@ fn test_generate_unsupported_item_with_global_cpp() -> Result<()> {
         },
     );
     let mut unsupported_item = db.new_unsupported_item_with_static_message(
-        &TestItem { source_loc: Some("Generated from: some/header;l=1") },
+        &TestItem { source_loc: Some("Generated from: some/header;l=1"), must_bind: false },
         /* path= */ None,
         "unsupported_message",
     );
@@ -236,7 +240,7 @@ fn test_generate_unsupported_item_no_global_cpp_if_empty_source_text() -> Result
         },
     );
     let mut unsupported_item = db.new_unsupported_item_with_static_message(
-        &TestItem { source_loc: Some("Generated from: some/header;l=1") },
+        &TestItem { source_loc: Some("Generated from: some/header;l=1"), must_bind: false },
         /* path= */ None,
         "unsupported_message",
     );
@@ -266,7 +270,7 @@ fn test_generate_unsupported_item_with_missing_source_loc() -> Result<()> {
     let actual = generate_unsupported(
         &db,
         db.new_unsupported_item_with_static_message(
-            &TestItem { source_loc: None },
+            &TestItem { source_loc: None, must_bind: false },
             /* path= */ None,
             "unsupported_message",
         )
@@ -295,7 +299,10 @@ fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
     let actual = generate_unsupported(
         &db,
         db.new_unsupported_item_with_static_message(
-            &TestItem { source_loc: Some("Generated from: some/header;l=1".into()) },
+            &TestItem {
+                source_loc: Some("Generated from: some/header;l=1".into()),
+                must_bind: false,
+            },
             /* path= */ None,
             "unsupported_message",
         )
@@ -305,5 +312,67 @@ fn test_generate_unsupported_item_with_environment_golden_test() -> Result<()> {
     let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
     let expected = "error: item `test_item` could not be bound\n  unsupported_message";
     assert_rs_matches!(quote! { #actual }, quote! { __COMMENT__ #expected});
+    Ok(())
+}
+
+#[gtest]
+fn test_generate_unsupported_function_template_with_global_cpp() -> Result<()> {
+    let factory = make_factory();
+    let db = factory.make_db(false);
+    let _scope = error_report::ItemScope::new(
+        db.errors(),
+        error_report::ItemName {
+            name: "test_item".into(),
+            id: TEST_ITEM_ID.as_u64(),
+            unique_name: None,
+            defining_target: None,
+        },
+    );
+    let mut unsupported_item = db.new_unsupported_item_with_static_message(
+        &TestItem { source_loc: Some("Generated from: some/header;l=1".into()), must_bind: false },
+        /* path= */ None,
+        "unsupported_message",
+    );
+    unsupported_item.set_inline_cpp_source_text(Some(
+        "template <typename T> T Add(T a, T b) { return a + b; }".into(),
+    ));
+    let actual = generate_unsupported(&db, unsupported_item.into()).generated_items;
+    let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
+    let expected_comment =
+        "Generated from: some/header;l=1\nerror: item `test_item` could not be bound\n  unsupported_message";
+    let expected = quote! {
+        __COMMENT__ #expected_comment
+        ::crubit_support::global_cpp! {
+            template <typename T> T Add(T a, T b) { return a + b; }
+        }
+    };
+    assert_rs_matches!(quote! { #actual }, expected);
+    assert!(factory.fatal_errors.take_string().is_empty());
+    Ok(())
+}
+
+#[gtest]
+fn test_generate_unsupported_function_template_strict_mode_fatal_error() -> Result<()> {
+    let factory = make_factory();
+    let db = factory.make_db(false);
+    let _scope = error_report::ItemScope::new(
+        db.errors(),
+        error_report::ItemName {
+            name: "test_item".into(),
+            id: TEST_ITEM_ID.as_u64(),
+            unique_name: None,
+            defining_target: None,
+        },
+    );
+    let mut unsupported_item = db.new_unsupported_item_with_static_message(
+        &TestItem { source_loc: Some("Generated from: some/header;l=1".into()), must_bind: true },
+        /* path= */ None,
+        "unsupported_message",
+    );
+    unsupported_item.set_inline_cpp_source_text(Some(
+        "template <typename T> T Add(T a, T b) { return a + b; }".into(),
+    ));
+    let _ = generate_unsupported(&db, unsupported_item.into());
+    assert!(!factory.fatal_errors.take_string().is_empty());
     Ok(())
 }

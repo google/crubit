@@ -8,6 +8,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "common/ffi_types.h"
+#include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
 
 namespace crubit {
@@ -19,11 +20,10 @@ inline constexpr absl::string_view kDependencyHeaderName =
     "test/dependency_header.h";
 // LINT.ThenChange(//depot/rs_bindings_from_cc/ir_testing.rs)
 
-absl::StatusOr<IR> IrFromCcDependency(FfiU8Slice target_triple,
-                                      FfiU8Slice header_source,
-                                      FfiU8Slice dependency_header_source,
-                                      FfiU8Slice extra_feature,
-                                      bool kythe_annotations, bool carcinize);
+absl::StatusOr<IR> IrFromCcDependency(
+    FfiU8Slice target_triple, FfiU8Slice header_source,
+    FfiU8Slice dependency_header_source, FfiU8Slice extra_feature,
+    bool kythe_annotations, CarcinizeMode carcinize_mode = CarcinizeMode::kOff);
 
 }  // namespace crubit
 

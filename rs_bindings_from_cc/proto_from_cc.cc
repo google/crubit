@@ -4,6 +4,7 @@
 
 #include "absl/status/statusor.h"
 #include "common/ffi_types.h"
+#include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc_dependency.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -16,9 +17,10 @@ extern "C" FfiU8SliceBox proto_from_cc_dependency(
     FfiU8Slice target_triple, FfiU8Slice header_source,
     FfiU8Slice dependency_header_source, FfiU8Slice extra_feature,
     bool kythe_annotations, bool carcinize) {
-  absl::StatusOr<IR> ir =
-      IrFromCcDependency(target_triple, header_source, dependency_header_source,
-                         extra_feature, kythe_annotations, carcinize);
+  absl::StatusOr<IR> ir = IrFromCcDependency(
+      target_triple, header_source, dependency_header_source, extra_feature,
+      kythe_annotations,
+      carcinize ? CarcinizeMode::kStrict : CarcinizeMode::kOff);
 
   if (!ir.ok()) {
     llvm::report_fatal_error(llvm::formatv("IrFromCc reported an error: {0}",

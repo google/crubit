@@ -17,6 +17,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
 
 namespace crubit {
@@ -59,7 +60,7 @@ struct CmdlineArgs {
   std::optional<std::vector<std::string>> do_not_bind_allowlist;
 
   std::string template_blocklist_path_regex;
-  bool carcinize = false;
+  CarcinizeMode carcinize_mode = CarcinizeMode::kOff;
 };
 
 // A valid command line invocation.

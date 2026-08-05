@@ -437,33 +437,21 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
 std::optional<std::string> GetFunctionSourceText(
     const clang::ASTContext& ast_ctx, const clang::SourceManager& sm,
     const clang::FunctionDecl* function_decl, bool carcinize) {
-  if (!carcinize || !function_decl->hasBody() || function_decl->isImplicit()) {
+  const clang::Stmt* body = function_decl->getBody();
+  if (!carcinize || body == nullptr || function_decl->isImplicit()) {
     return std::nullopt;
   }
 
   bool invalid = false;
   llvm::StringRef body_text =
       clang::Lexer::getSourceText(clang::CharSourceRange::getTokenRange(
-                                      function_decl->getBody()->getBeginLoc(),
-                                      function_decl->getBody()->getEndLoc()),
+                                      body->getBeginLoc(), body->getEndLoc()),
                                   sm, ast_ctx.getLangOpts(), &invalid);
   if (invalid) {
     return std::nullopt;
   }
 
-  std::string sig;
-  llvm::raw_string_ostream os(sig);
-  os << "(";
-  for (unsigned i = 0; i < function_decl->getNumParams(); ++i) {
-    if (i > 0) os << ", ";
-    function_decl->getParamDecl(i)->print(os, ast_ctx.getPrintingPolicy());
-  }
-  os << ") -> ";
-  os << function_decl->getReturnType().getAsString(ast_ctx.getPrintingPolicy());
-  os << " ";
-  os << body_text;
-
-  return sig;
+  return body_text.str();
 }
 
 }  // namespace
@@ -1023,7 +1011,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
 
   std::optional<std::string> source_text =
       GetFunctionSourceText(ictx_.ctx_, ictx_.ctx_.getSourceManager(),
-                            function_decl, ictx_.invocation_.carcinize());
+                            function_decl, ictx_.invocation_.is_carcinize());
 
   auto name_info = function_decl->getNameInfo();
   auto item = std::make_unique<ir_proto::Item>();
