@@ -203,7 +203,7 @@ describe('MainComponent', () => {
     expect(component.doxygenError).toBe('Doxygen failed: Parse error');
   });
 
-  describe('copyShareLink', () => {
+  describe('copyDirectLink', () => {
     let originalClipboardDesc: PropertyDescriptor | undefined;
 
     beforeEach(() => {
@@ -228,17 +228,17 @@ describe('MainComponent', () => {
     });
 
     it('should copy share link using navigator.clipboard.writeText when available', async () => {
-      const writeTextSpy = jasmine.createSpy('writeText').and.returnValue(Promise.resolve());
+      const writeTextSpy = jasmine.createSpy('writeText').and.resolveTo();
       Object.defineProperty(navigator, 'clipboard', {
         value: { writeText: writeTextSpy },
         configurable: true,
         writable: true,
       });
 
-      await component.copyShareLink();
+      await component.copyDirectLink();
 
       expect(writeTextSpy).toHaveBeenCalledWith(window.location.href);
-      expect(component.shareButtonText).toBe('Copied!');
+      expect(component.directLinkCopyText).toBe('Copied!');
     });
 
     it('should fallback to execCommand when writeText fails', async () => {
@@ -250,11 +250,11 @@ describe('MainComponent', () => {
       });
       const execSpy = spyOn(document, 'execCommand').and.returnValue(true);
 
-      await component.copyShareLink();
+      await component.copyDirectLink();
 
       expect(writeTextSpy).toHaveBeenCalledWith(window.location.href);
       expect(execSpy).toHaveBeenCalledWith('copy');
-      expect(component.shareButtonText).toBe('Copied!');
+      expect(component.directLinkCopyText).toBe('Copied!');
     });
 
     it('should fallback to execCommand when navigator.clipboard is absent', async () => {
@@ -265,10 +265,56 @@ describe('MainComponent', () => {
       });
       const execSpy = spyOn(document, 'execCommand').and.returnValue(true);
 
-      await component.copyShareLink();
+      await component.copyDirectLink();
 
       expect(execSpy).toHaveBeenCalledWith('copy');
-      expect(component.shareButtonText).toBe('Copied!');
+      expect(component.directLinkCopyText).toBe('Copied!');
+    });
+
+    it('should copy embed code using copyEmbedCode', async () => {
+      const writeTextSpy = jasmine.createSpy('writeText').and.resolveTo();
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: writeTextSpy },
+        configurable: true,
+        writable: true,
+      });
+
+      await component.copyEmbedCode();
+
+      expect(writeTextSpy).toHaveBeenCalledWith(component.embedIframeCode);
+      expect(component.embedCodeCopyText).toBe('Copied!');
+    });
+  });
+
+  describe('share modal', () => {
+    it('should open and close share modal', () => {
+      expect(component.isShareModalOpen).toBeFalse();
+      component.openShareModal();
+      expect(component.isShareModalOpen).toBeTrue();
+      component.closeShareModal();
+      expect(component.isShareModalOpen).toBeFalse();
+    });
+
+    it('should update URL when opening share modal if inputEditor exists', () => {
+      const replaceSpy = spyOn(window.history, 'replaceState');
+      component.inputEditor = {
+        getValue: () => 'pub fn test() {}',
+      } as unknown as monaco.editor.IStandaloneCodeEditor;
+      component.openShareModal();
+      expect(replaceSpy).toHaveBeenCalled();
+      expect(component.isShareModalOpen).toBeTrue();
+    });
+
+    it('should provide shareDirectUrl', () => {
+      expect(component.shareDirectUrl).toBe(window.location.href);
+    });
+
+    it('should construct embedUrl and embedIframeCode', () => {
+      component.selectedTool = 'cc_bindings_from_rs';
+      component.isEmbedEditable = true;
+      component.embedViewMode = 'split';
+      expect(component.embedUrl).toContain('/embed#');
+      expect(component.embedIframeCode).toContain(`<iframe src="${component.embedUrl}"`);
     });
   });
 

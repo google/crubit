@@ -12,7 +12,7 @@ import {buildFlatSymbolTree, DoxygenResponse, DoxygenSymbol, FlatSymbolNode} fro
 import {loadMonaco} from './monaco_loader';
 import type * as monaco from 'monaco-editor';
 
-import {decodeBase64ToUtf8, encodeUtf8ToBase64, getCodeFromUrl, getStateFromUrl, updateUrl} from './state';
+import {decodeBase64ToUtf8, encodeState, encodeUtf8ToBase64, ExplorerState, getCodeFromUrl, getStateFromUrl, updateUrl} from './state';
 
 const SHARE_BUTTON_RESET_DELAY_MS = 2000;
 
@@ -68,7 +68,11 @@ export class MainComponent implements AfterViewInit, OnDestroy {
   isDoxygenCollapsed = false;
   selectedTool = 'cc_bindings_from_rs';
 
-  shareButtonText = 'Share';
+  isShareModalOpen = false;
+  isEmbedEditable = false;
+  embedViewMode: 'split'|'input'|'output' = 'split';
+  directLinkCopyText = 'Copy Link';
+  embedCodeCopyText = 'Copy Embed Code';
 
   constructor(
       private http: HttpClient,
@@ -76,51 +80,88 @@ export class MainComponent implements AfterViewInit, OnDestroy {
       private zone: NgZone
   ) {}
 
-  /**
-   * Copies the URL containing the current editor state to the clipboard.
-   */
-  async copyShareLink(): Promise<void> {
+  openShareModal(): void {
     const code = this.inputEditor ? this.inputEditor.getValue() : '';
     if (code) {
       updateUrl(code, this.selectedTool);
     }
-    const shareUrl = window.location.href;
-    if (navigator.clipboard?.writeText) {
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        this.shareButtonText = 'Copied!';
-        setTimeout(() => {
-          this.shareButtonText = 'Share';
-          this.cdr.detectChanges();
-        }, SHARE_BUTTON_RESET_DELAY_MS);
-        this.cdr.detectChanges();
-        return;
-      } catch {
-        // Fall back to fallbackCopy if clipboard write fails.
-      }
-    }
-    this.fallbackCopy(shareUrl);
+    this.isShareModalOpen = true;
   }
 
-  /**
-   * Fallback clipboard copy mechanism using a temporary DOM element.
-   */
-  private fallbackCopy(text: string): void {
+  closeShareModal(): void {
+    this.isShareModalOpen = false;
+  }
+
+  get shareDirectUrl(): string {
+    if (typeof window === 'undefined') return '';
+    return window.location.href;
+  }
+
+  get embedUrl(): string {
+    if (typeof window === 'undefined') return '';
+    const code = this.inputEditor ? this.inputEditor.getValue() : '';
+    const state: ExplorerState = {
+      v: 1,
+      tool: this.selectedTool,
+      editable: this.isEmbedEditable,
+      view: this.embedViewMode,
+      files: [{name: 'input.rs', content: code}]
+    };
+    const encoded = encodeState(state);
+    return `${window.location.origin}/embed#${encoded}`;
+  }
+
+  get embedIframeCode(): string {
+    return `<iframe src="${
+        this.embedUrl}" width="100%" height="450" frameborder="0"></iframe>`;
+  }
+
+  async copyDirectLink(): Promise<void> {
+    const success = await this.copyToClipboard(this.shareDirectUrl);
+    this.directLinkCopyText = success ? 'Copied!' : 'Failed';
+    setTimeout(() => {
+      this.directLinkCopyText = 'Copy Link';
+      this.cdr.detectChanges();
+    }, SHARE_BUTTON_RESET_DELAY_MS);
+    this.cdr.detectChanges();
+  }
+
+  async copyEmbedCode(): Promise<void> {
+    const success = await this.copyToClipboard(this.embedIframeCode);
+    this.embedCodeCopyText = success ? 'Copied!' : 'Failed';
+    setTimeout(() => {
+      this.embedCodeCopyText = 'Copy Embed Code';
+      this.cdr.detectChanges();
+    }, SHARE_BUTTON_RESET_DELAY_MS);
+    this.cdr.detectChanges();
+  }
+
+  private async copyToClipboard(text: string): Promise<boolean> {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        return this.fallbackCopyText(text);
+      }
+    } else {
+      return this.fallbackCopyText(text);
+    }
+  }
+
+  private fallbackCopyText(text: string): boolean {
     const el = document.createElement('textarea');
     el.value = text;
     document.body.appendChild(el);
     el.select();
+    let success = false;
     try {
-      document.execCommand('copy');
-      this.shareButtonText = 'Copied!';
+      success = document.execCommand('copy');
     } catch {
-      this.shareButtonText = 'Failed';
+      success = false;
     }
     document.body.removeChild(el);
-    setTimeout(() => {
-      this.shareButtonText = 'Share';
-      this.cdr.detectChanges();
-    }, SHARE_BUTTON_RESET_DELAY_MS);
+    return success;
   }
 
   /**

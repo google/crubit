@@ -1,0 +1,52 @@
+<!--
+  Part of the Crubit project, under the Apache License v2.0 with LLVM
+  Exceptions. See /LICENSE for license information.
+  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+-->
+
+<div class="embed-container">
+  <header class="embed-header">
+    <div class="embed-title">
+      <span class="logo">Crubit Explorer</span>
+      <span class="badge">{{ selectedTool }}</span>
+      <button class="mode-badge-btn" [class.is-editable]="isEditable" (click)="toggleEditable()" title="Click to toggle edit mode">
+        {{ isEditable ? 'Editable' : 'Read Only' }}
+      </button>
+    </div>
+    <div class="embed-actions">
+      <div class="view-mode-toggle">
+        <button [class.active]="viewMode === 'split'" (click)="setViewMode('split')">Split</button>
+        <button [class.active]="viewMode === 'input'" (click)="setViewMode('input')">Input</button>
+        <button [class.active]="viewMode === 'output'" (click)="setViewMode('output')">Output</button>
+      </div>
+      <a class="open-external-btn" [href]="'/' + currentHash" target="_blank" rel="noopener noreferrer" title="Open full explorer in new tab">
+        Open in Explorer ↗
+      </a>
+    </div>
+  </header>
+
+  <main class="embed-main" [class.view-split]="viewMode === 'split'" [class.view-input]="viewMode === 'input'" [class.view-output]="viewMode === 'output'">
+    <div class="embed-pane input-pane" [class.hidden]="viewMode === 'output'">
+      <div class="pane-tab-bar">
+        <div class="pane-tab selected">input.rs</div>
+      </div>
+      <div #inputEditorContainer class="editor-container"></div>
+    </div>
+    <div class="embed-pane output-pane" [class.hidden]="viewMode === 'input'">
+      <div class="pane-tab-bar">
+        <ng-container *ngIf="outputFiles.length > 0; else defaultTab">
+          <div *ngFor="let file of outputFiles; let i = index"
+               class="pane-tab"
+               [class.selected]="selectedOutputFileIndex === i"
+               (click)="selectOutputFile(i)">
+            {{ file.name }}
+          </div>
+        </ng-container>
+        <ng-template #defaultTab>
+          <div class="pane-tab selected">bindings.h</div>
+        </ng-template>
+      </div>
+      <div #outputEditorContainer class="editor-container"></div>
+    </div>
+  </main>
+</div>

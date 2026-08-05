@@ -13,8 +13,8 @@
         <option value="cc_bindings_from_rs">cc_bindings_from_rs</option>
       </select>
     </label>
-    <button class="share-button" (click)="copyShareLink()" title="Share link with encoded code">
-      {{ shareButtonText }}
+    <button class="share-button" (click)="openShareModal()" title="Share link or embed snippet">
+      Share
     </button>
   </div>
 </header>
@@ -103,3 +103,50 @@
   </div>
 </main>
 
+<!-- Share Modal -->
+<div class="modal-backdrop" *ngIf="isShareModalOpen" (click)="closeShareModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Share Code</h2>
+      <button class="modal-close-btn" (click)="closeShareModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Direct Link Section -->
+      <div class="share-section">
+        <label class="share-label">Direct Link</label>
+        <div class="share-input-group">
+          <input type="text" readonly [value]="shareDirectUrl" (click)="$any($event.target).select()" />
+          <button (click)="copyDirectLink()">{{ directLinkCopyText }}</button>
+        </div>
+      </div>
+
+      <hr class="share-divider" />
+
+      <!-- iFrame Embed Section -->
+      <div class="share-section">
+        <div class="share-section-title-row">
+          <label class="share-label">Embed in Codelab (iFrame)</label>
+          <label class="editable-toggle-label">
+            <input type="checkbox" [checked]="isEmbedEditable" (change)="isEmbedEditable = $any($event.target).checked" />
+            <span>Allow editing in embed</span>
+          </label>
+        </div>
+
+        <div class="embed-options-row">
+          <label class="share-sublabel">Default View:</label>
+          <div class="view-mode-selector">
+            <button [class.active]="embedViewMode === 'split'" (click)="embedViewMode = 'split'">Split</button>
+            <button [class.active]="embedViewMode === 'input'" (click)="embedViewMode = 'input'">Input</button>
+            <button [class.active]="embedViewMode === 'output'" (click)="embedViewMode = 'output'">Output</button>
+          </div>
+        </div>
+
+        <div class="share-input-group vertical">
+          <textarea readonly [value]="embedIframeCode" rows="3" (click)="$any($event.target).select()"></textarea>
+          <button (click)="copyEmbedCode()">{{ embedCodeCopyText }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
