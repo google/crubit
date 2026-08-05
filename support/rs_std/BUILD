@@ -142,7 +142,10 @@ cc_library(
     visibility = [
         "//:__subpackages__",
     ],
-    deps = [":waker"],
+    deps = [
+        ":dyn_erased_future",  # build_cleaner: keep, defines extern "C" functions we declare.
+        ":waker",
+    ],
 )
 
 cc_library(

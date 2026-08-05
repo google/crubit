@@ -61,6 +61,7 @@ source_set("dyn_erased_future_cc") {
     "dyn_erased_future.h",
   ]
   deps = [
+    "$crubit_src_dir/support/rs_std:dyn_erased_future",
     "$crubit_src_dir/support/rs_std:waker",
   ]
 }
