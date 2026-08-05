@@ -659,11 +659,13 @@ pub fn generate_record<'a>(
         lifetime_params =
             record.lifetime_inputs().iter().map(|id| make_rs_lifetime_ident(id)).collect();
     }
+    let mut upcastable_bases = vec![];
     if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
-        let (new_upcast_impls, thunks, thunk_impls) = cc_struct_upcast_impl(db, &record, ir)?;
-        upcast_impls = new_upcast_impls;
-        api_snippets.thunks.extend(thunks);
-        api_snippets.cc_details.extend(thunk_impls);
+        let implementation: UpcastImplementation = cc_struct_upcast_impl(db, &record, ir)?;
+        upcast_impls = implementation.upcast_impls;
+        upcastable_bases = implementation.upcastable_bases;
+        api_snippets.thunks.extend(implementation.thunks);
+        api_snippets.cc_details.extend(implementation.thunk_impls);
     }
     if record.overloads_operator_delete()
         && !record.has_private_or_deleted_operator_delete()
@@ -702,30 +704,38 @@ pub fn generate_record<'a>(
     // Keep the `impl Debug for raw_string_view` string_view.rs already defines.
     !record.is_raw_string_view()
     {
-        let fields: Vec<database::code_snippet::DebugField> = if record.is_union() {
-            vec![]
-        } else {
-            field_definitions
-                .iter()
-                .filter_map(|field_def| {
-                    let FieldDefinition::Field {
-                        ident,
-                        field_type: FieldType::Type { .. },
-                        is_debug_formattable: true,
-                        ..
-                    } = field_def
-                    else {
-                        return None;
-                    };
-                    let field_name_str = ident.to_string();
-                    let clean_field_name_str = field_name_str.trim_start_matches("r#");
-                    Some(database::code_snippet::DebugField {
-                        name: clean_field_name_str.to_string(),
-                        expr: quote! { &self.#ident },
-                    })
-                })
-                .collect()
-        };
+        let mut fields: Vec<database::code_snippet::DebugField> = vec![];
+        if !record.is_union() {
+            for base_record in &upcastable_bases {
+                if !base_record.impl_debug() {
+                    continue;
+                }
+                let base_type = db.rs_type_kind(base_record.as_ref().into())?;
+                let base_name = base_type.to_token_stream(db);
+                fields.push(database::code_snippet::DebugField {
+                    name: "".to_string(),
+                    expr: quote! { ::oops::Upcast::<&#base_name>::upcast(self) },
+                });
+            }
+
+            for field_def in &field_definitions {
+                let FieldDefinition::Field {
+                    ident,
+                    field_type: FieldType::Type { .. },
+                    is_debug_formattable: true,
+                    ..
+                } = field_def
+                else {
+                    continue;
+                };
+                let field_name_str = ident.to_string();
+                let clean_field_name_str = field_name_str.trim_start_matches("r#");
+                fields.push(database::code_snippet::DebugField {
+                    name: clean_field_name_str.to_string(),
+                    expr: quote! { &self.#ident },
+                });
+            }
+        }
 
         let fields_exhaustive = field_definitions.iter().all(|field_def| {
             matches!(
@@ -1059,16 +1069,24 @@ fn cc_struct_no_unique_address_impl(
 
 type UpcastImplResult = Result<UpcastImpl, String>;
 
+struct UpcastImplementation<'pb> {
+    upcast_impls: Vec<UpcastImplResult>,
+    thunks: Vec<Thunk>,
+    thunk_impls: Vec<ThunkImpl>,
+    upcastable_bases: Vec<Rc<Record<'pb>>>,
+}
+
 /// Returns the implementation of base class conversions, for converting a type
 /// to its unambiguous public base classes.
-fn cc_struct_upcast_impl(
-    db: &BindingsGenerator,
+fn cc_struct_upcast_impl<'pb>(
+    db: &BindingsGenerator<'pb>,
     record: &Rc<Record>,
     ir: &IR,
-) -> Result<(Vec<UpcastImplResult>, Vec<Thunk>, Vec<ThunkImpl>)> {
+) -> Result<UpcastImplementation<'pb>> {
     let mut thunks = vec![];
     let mut thunk_impls = vec![];
     let mut upcast_impls = vec![];
+    let mut upcastable_bases = vec![];
     let derived_name = db.rs_type_kind(record.as_ref().into())?.to_token_stream(db);
     for base in record.unambiguous_public_bases() {
         let base_record: &Rc<Record> = db
@@ -1125,9 +1143,10 @@ fn cc_struct_upcast_impl(
             derived_name: derived_name.clone(),
             body,
         }));
+        upcastable_bases.push(base_record.clone());
     }
 
-    Ok((upcast_impls, thunks, thunk_impls))
+    Ok(UpcastImplementation { upcast_impls, thunks, thunk_impls, upcastable_bases })
 }
 
 fn cc_struct_operator_delete_impl(

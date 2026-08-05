@@ -51,3 +51,28 @@ crubit_rust_test(
         "@crate_index//:static_assertions",  # v1
     ],
 )
+
+cc_library(
+    name = "derived_debuggables",
+    hdrs = ["derived_debuggables.h"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    deps = [
+        "//support:annotations",
+    ],
+)
+
+crubit_rust_test(
+    name = "derived_debuggables_test",
+    srcs = ["derived_debuggables_test.rs"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    cc_deps = [
+        ":derived_debuggables",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)

@@ -132,7 +132,10 @@ unsafe impl ::cxx::ExternType for Derived {
 }
 impl ::core::fmt::Debug for Derived {
     fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter.debug_struct("Derived").finish_non_exhaustive()
+        formatter
+            .debug_struct("Derived")
+            .field("", ::oops::Upcast::<&crate::Base>::upcast(self))
+            .finish_non_exhaustive()
     }
 }
 forward_declare::unsafe_define!(forward_declare::symbol!(":: Derived"), crate::Derived);
