@@ -2016,7 +2016,6 @@ pub fn generate_function<'a>(
 
     let create_func_body = || -> Result<TokenStream> {
         if reportable_status.is_ok() {
-            // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
             if let Some(parsed_tokens) = func.source_text_as_token_stream() {
                 return Ok(quote! {
                     ::crubit_support::inline_cpp! {
