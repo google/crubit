@@ -15,3 +15,11 @@ RECURSIVE              = YES
 QUIET                  = YES
 WARNINGS               = NO
 WARN_IF_UNDOCUMENTED   = NO
+EXTRACT_ALL            = YES
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = "CRUBIT_INTERNAL_RUST_TYPE(x)=" \
+                         "alignas(x)=" \
+                         "CRUBIT_INTERNAL_RUST_TYPE="
+

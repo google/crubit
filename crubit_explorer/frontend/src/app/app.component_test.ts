@@ -34,6 +34,7 @@ describe('AppComponent', () => {
     expect(component.outputFiles).toEqual([]);
     expect(component.selectedOutputFileIndex).toBe(0);
     expect(component.flatDoxygenSymbols).toEqual([]);
+    expect(component.selectedSymbol).toBeNull();
     expect(component.doxygenError).toBe('');
     expect(component.isDoxygenCollapsed).toBeFalse();
   });
@@ -57,8 +58,11 @@ describe('AppComponent', () => {
       collapsed: true,
       visible: true,
     };
+    const mockEvent = jasmine.createSpyObj<MouseEvent>('MouseEvent', ['stopPropagation']);
 
-    component.toggleSymbolNode(node);
+    component.toggleSymbolNode(node, mockEvent);
+
+    expect(mockEvent.stopPropagation).toHaveBeenCalled();
     expect(node.collapsed).toBeFalse();
 
     component.toggleSymbolNode(node);
@@ -82,6 +86,25 @@ describe('AppComponent', () => {
     expect(node.collapsed).toBeTrue();
   });
 
+  it('should select a symbol and stop event propagation', () => {
+    const node: FlatSymbolNode = {
+      name: 'hello',
+      fullName: 'hello',
+      kind: 'function',
+      refid: '3',
+      depth: 0,
+      hasChildren: false,
+      collapsed: false,
+      visible: true,
+    };
+    const mockEvent = jasmine.createSpyObj<MouseEvent>('MouseEvent', ['stopPropagation']);
+
+    component.selectSymbol(node, mockEvent);
+
+    expect(mockEvent.stopPropagation).toHaveBeenCalled();
+    expect(component.selectedSymbol).toBe(node);
+  });
+
   it('should handle selectOutputFile with index', () => {
     component.outputFiles = [
       {name: 'file1.cc', content: 'content 1'},
@@ -93,10 +116,6 @@ describe('AppComponent', () => {
   });
 
   it('should send compile request and process output and doxygen responses', () => {
-    component.outputEditor = {
-      setValue: () => {},
-      getModel: () => ({}),
-    };
     const rustCode = 'pub fn foo() {}';
     component.compile(rustCode);
 
@@ -125,7 +144,7 @@ describe('AppComponent', () => {
       fileSymbols: {
         'input_rs_api.h': {
           symbols: [
-            {name: 'foo', kind: 'function', refid: 'sym_foo'},
+            {name: 'foo', kind: 'function', refid: 'sym_foo', line: 5},
           ],
         },
       },
@@ -163,10 +182,6 @@ describe('AppComponent', () => {
   });
 
   it('should handle doxygen error response', () => {
-    component.outputEditor = {
-      setValue: () => {},
-      getModel: () => ({}),
-    };
     component.compile('pub fn foo() {}');
 
     const compileReq = httpMock.expectOne('/api/compile');

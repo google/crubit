@@ -12,7 +12,7 @@ use std::fs;
 use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
-use std::str::FromStr;
+use std::str::{self, FromStr};
 use tempfile::Builder;
 
 use crate::api::{ErrorDetails, File, FileSet};
@@ -99,6 +99,8 @@ pub struct Symbol {
     pub kind: SymbolKind,
     pub refid: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub line: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 
@@ -167,7 +169,15 @@ fn execute_doxygen(payload: DoxygenRequest) -> Result<DoxygenResponse, ErrorDeta
         let bytes = BASE64_STANDARD
             .decode(&file.contents_b64)
             .map_err(|e| ErrorDetails::new("Base64 decode failed", e.to_string()))?;
-        fs::write(&file_path, bytes)
+        let processed_bytes =
+            if [".h", ".hpp", ".cc", ".cpp"].iter().any(|ext| file.name.ends_with(ext))
+                && let Ok(text) = str::from_utf8(&bytes)
+            {
+                preprocess_code_for_doxygen(text).into_bytes()
+            } else {
+                bytes
+            };
+        fs::write(&file_path, processed_bytes)
             .map_err(|e| ErrorDetails::new("Failed to write temporary file", e.to_string()))?;
     }
 
@@ -220,7 +230,7 @@ fn execute_doxygen(payload: DoxygenRequest) -> Result<DoxygenResponse, ErrorDeta
     let mut file_symbols = HashMap::new();
     let index_xml_path = xml_dir.join("index.xml");
     if index_xml_path.exists() {
-        parse_doxygen_xml(&xml_dir, &mut file_symbols);
+        parse_doxygen_xml(&xml_dir, &mut file_symbols)?;
     }
 
     let mut output_files = Vec::new();
@@ -231,6 +241,52 @@ fn execute_doxygen(payload: DoxygenRequest) -> Result<DoxygenResponse, ErrorDeta
         error: None,
         file_symbols: Some(file_symbols),
     })
+}
+
+/// Preprocesses C++ source code before feeding it to Doxygen.
+///
+/// Replaces macros, attributes, and specifiers (such as `CRUBIT_INTERNAL_RUST_TYPE`,
+/// `alignas(...)`, `[[...]]`, and `final`) with equal-length whitespace. This prevents Doxygen
+/// syntax errors and unexpected symbol output while preserving line numbers and column offsets
+/// for source location mapping.
+/// TODO: b/540507040 support newer doxygen version so this is no longer needed.
+fn preprocess_code_for_doxygen(content: &str) -> String {
+    let mut result = String::with_capacity(content.len());
+    for line in content.lines() {
+        let mut cleaned = line.to_string();
+        while let Some(start) = cleaned.find("CRUBIT_INTERNAL_RUST_TYPE(") {
+            if let Some(end) = cleaned[start..].find(')') {
+                let match_len = end + 1;
+                cleaned.replace_range(start..start + match_len, &" ".repeat(match_len));
+            } else {
+                break;
+            }
+        }
+        while let Some(start) = cleaned.find("alignas(") {
+            if let Some(end) = cleaned[start..].find(')') {
+                let match_len = end + 1;
+                cleaned.replace_range(start..start + match_len, &" ".repeat(match_len));
+            } else {
+                break;
+            }
+        }
+        while let Some(start) = cleaned.find("[[") {
+            if let Some(end) = cleaned[start..].find("]]") {
+                let match_len = end + 2;
+                cleaned.replace_range(start..start + match_len, &" ".repeat(match_len));
+            } else {
+                break;
+            }
+        }
+        if cleaned.contains("struct ") || cleaned.contains("class ") {
+            if let Some(pos) = cleaned.find(" final") {
+                cleaned.replace_range(pos..pos + 6, "      ");
+            }
+        }
+        result.push_str(&cleaned);
+        result.push('\n');
+    }
+    result
 }
 
 fn collect_xml_files(
@@ -259,15 +315,16 @@ fn collect_xml_files(
     Ok(())
 }
 
-fn parse_doxygen_xml(xml_dir: &Path, file_symbols_map: &mut HashMap<String, SymbolList>) {
+fn parse_doxygen_xml(
+    xml_dir: &Path,
+    file_symbols_map: &mut HashMap<String, SymbolList>,
+) -> Result<(), ErrorDetails> {
     let index_xml_path = xml_dir.join("index.xml");
-    let Ok(content) = fs::read_to_string(&index_xml_path) else {
-        return;
-    };
+    let content = fs::read_to_string(&index_xml_path)
+        .map_err(|e| ErrorDetails::new("Failed to read index.xml", e.to_string()))?;
 
-    let Ok(doc) = roxmltree::Document::parse(&content) else {
-        return;
-    };
+    let doc = roxmltree::Document::parse(&content)
+        .map_err(|e| ErrorDetails::new("Failed to parse index.xml", e.to_string()))?;
 
     for compound in doc.descendants().filter(|n| n.has_tag_name("compound")) {
         let refid = compound.attribute("refid").unwrap_or("").to_string();
@@ -280,30 +337,34 @@ fn parse_doxygen_xml(xml_dir: &Path, file_symbols_map: &mut HashMap<String, Symb
             .trim()
             .to_string();
 
-        let compound_xml_path = xml_dir.join(format!("{}.xml", refid));
-        let compound_content = if compound_xml_path.exists() {
-            fs::read_to_string(&compound_xml_path).ok()
-        } else {
-            None
-        };
-
-        let compound_doc =
-            compound_content.as_deref().and_then(|c| roxmltree::Document::parse(c).ok());
+        let compound_xml_path = xml_dir.join(format!("{refid}.xml"));
+        let compound_content = fs::read_to_string(&compound_xml_path).map_err(|e| {
+            ErrorDetails::new(format!("Failed to read compound XML: {refid}.xml"), e.to_string())
+        })?;
+        let compound_doc = roxmltree::Document::parse(&compound_content).map_err(|e| {
+            ErrorDetails::new(format!("Failed to parse compound XML: {refid}.xml"), e.to_string())
+        })?;
 
         let mut compound_file = String::new();
-        if let Some(ref c_doc) = compound_doc {
-            if let Some(loc) = c_doc
-                .descendants()
-                .find(|n| n.has_tag_name("compounddef"))
-                .and_then(|cdef| cdef.children().find(|n| n.has_tag_name("location")))
+        let mut compound_line = None;
+        if let Some(loc) = compound_doc
+            .descendants()
+            .find(|n| n.has_tag_name("compounddef"))
+            .and_then(|cdef| cdef.children().find(|n| n.has_tag_name("location")))
+        {
+            if let Some(f) = loc.attribute("file")
+                && !f.is_empty()
+                && let Some(name) = Path::new(f).file_name()
             {
-                if let Some(f) = loc.attribute("file") {
-                    if !f.is_empty() {
-                        if let Some(name) = Path::new(f).file_name() {
-                            compound_file = name.to_string_lossy().to_string();
-                        }
-                    }
-                }
+                compound_file = name.to_string_lossy().to_string();
+            }
+            if let Some(l) = loc.attribute("line") {
+                compound_line = Some(l.parse::<u32>().map_err(|e| {
+                    ErrorDetails::new(
+                        "Failed to parse line number",
+                        format!("Invalid line number '{l}' for compound '{refid}': {e}"),
+                    )
+                })?);
             }
         }
 
@@ -315,6 +376,7 @@ fn parse_doxygen_xml(xml_dir: &Path, file_symbols_map: &mut HashMap<String, Symb
                 name: compound_name.clone(),
                 kind: kind.parse().unwrap_or(SymbolKind::Unspecified),
                 refid: refid.clone(),
+                line: compound_line,
                 description: None,
             });
 
@@ -330,19 +392,25 @@ fn parse_doxygen_xml(xml_dir: &Path, file_symbols_map: &mut HashMap<String, Symb
                 .to_string();
 
             let mut member_file = compound_file.clone();
-            if let Some(ref c_doc) = compound_doc {
-                if let Some(m_def) = c_doc.descendants().find(|n| {
-                    n.has_tag_name("memberdef") && n.attribute("id") == Some(&member_refid)
-                }) {
-                    if let Some(loc) = m_def.children().find(|n| n.has_tag_name("location")) {
-                        if let Some(f) = loc.attribute("file") {
-                            if !f.is_empty() {
-                                if let Some(name) = Path::new(f).file_name() {
-                                    member_file = name.to_string_lossy().to_string();
-                                }
-                            }
-                        }
-                    }
+            let mut member_line = None;
+            if let Some(m_def) = compound_doc
+                .descendants()
+                .find(|n| n.has_tag_name("memberdef") && n.attribute("id") == Some(&member_refid))
+                && let Some(loc) = m_def.children().find(|n| n.has_tag_name("location"))
+            {
+                if let Some(f) = loc.attribute("file")
+                    && !f.is_empty()
+                    && let Some(name) = Path::new(f).file_name()
+                {
+                    member_file = name.to_string_lossy().to_string();
+                }
+                if let Some(l) = loc.attribute("line") {
+                    member_line = Some(l.parse::<u32>().map_err(|e| {
+                        ErrorDetails::new(
+                            "Failed to parse line number",
+                            format!("Invalid line number '{l}' for member '{member_refid}': {e}"),
+                        )
+                    })?);
                 }
             }
 
@@ -360,10 +428,12 @@ fn parse_doxygen_xml(xml_dir: &Path, file_symbols_map: &mut HashMap<String, Symb
                     name: full_name,
                     kind: member_kind.parse().unwrap_or(SymbolKind::Unspecified),
                     refid: member_refid,
+                    line: member_line,
                     description: None,
                 });
         }
     }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -399,5 +469,135 @@ mod tests {
     fn test_get_doxyfile_path() {
         let p = get_doxyfile_path().expect("Doxyfile path should be resolved");
         expect_true!(p.exists(), "Doxyfile path {:?} must exist", p);
+    }
+
+    #[gtest]
+    fn test_parse_doxygen_xml_location() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let index_xml = r#"<doxygenindex>
+            <compound refid="class_foo" kind="class">
+                <name>Foo</name>
+                <member refid="class_foo_1a1" kind="function">
+                    <name>bar</name>
+                </member>
+            </compound>
+        </doxygenindex>"#;
+        fs::write(temp_dir.path().join("index.xml"), index_xml).unwrap();
+
+        let class_xml = r#"<doxygen>
+            <compounddef id="class_foo" kind="class">
+                <compoundname>Foo</compoundname>
+                <location file="foo.h" line="10" column="1"/>
+                <sectiondef kind="public-func">
+                    <memberdef id="class_foo_1a1" kind="function">
+                        <name>bar</name>
+                        <location file="foo.h" line="15" column="5"/>
+                    </memberdef>
+                </sectiondef>
+            </compounddef>
+        </doxygen>"#;
+        fs::write(temp_dir.path().join("class_foo.xml"), class_xml).unwrap();
+
+        let mut file_symbols = HashMap::new();
+        parse_doxygen_xml(temp_dir.path(), &mut file_symbols).unwrap();
+
+        expect_true!(file_symbols.contains_key("foo.h"));
+        let symbols = &file_symbols["foo.h"].symbols;
+        let foo_sym = symbols.iter().find(|s| s.name == "Foo").unwrap();
+        expect_eq!(foo_sym.line, Some(10));
+        let bar_sym = symbols.iter().find(|s| s.name == "Foo::bar").unwrap();
+        expect_eq!(bar_sym.line, Some(15));
+    }
+
+    #[gtest]
+    fn test_parse_doxygen_xml_invalid_line() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let index_xml = r#"<doxygenindex>
+            <compound refid="class_foo" kind="class">
+                <name>Foo</name>
+            </compound>
+        </doxygenindex>"#;
+        fs::write(temp_dir.path().join("index.xml"), index_xml).unwrap();
+
+        let class_xml = r#"<doxygen>
+            <compounddef id="class_foo" kind="class">
+                <compoundname>Foo</compoundname>
+                <location file="foo.h" line="invalid_line_number"/>
+            </compounddef>
+        </doxygen>"#;
+        fs::write(temp_dir.path().join("class_foo.xml"), class_xml).unwrap();
+
+        let mut file_symbols = HashMap::new();
+        let result = parse_doxygen_xml(temp_dir.path(), &mut file_symbols);
+        expect_true!(result.is_err());
+    }
+
+    #[gtest]
+    fn test_parse_doxygen_xml_missing_index_xml() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let mut file_symbols = HashMap::new();
+        let result = parse_doxygen_xml(temp_dir.path(), &mut file_symbols);
+        expect_true!(result.is_err());
+        let err = result.unwrap_err();
+        expect_eq!(err.text, "Failed to read index.xml");
+    }
+
+    #[gtest]
+    fn test_parse_doxygen_xml_malformed_index_xml() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        fs::write(temp_dir.path().join("index.xml"), "<doxygenindex><unclosed_tag>").unwrap();
+
+        let mut file_symbols = HashMap::new();
+        let result = parse_doxygen_xml(temp_dir.path(), &mut file_symbols);
+        expect_true!(result.is_err());
+        let err = result.unwrap_err();
+        expect_eq!(err.text, "Failed to parse index.xml");
+    }
+
+    #[gtest]
+    fn test_parse_doxygen_xml_missing_compound_xml() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let index_xml = r#"<doxygenindex>
+            <compound refid="class_foo" kind="class">
+                <name>Foo</name>
+            </compound>
+        </doxygenindex>"#;
+        fs::write(temp_dir.path().join("index.xml"), index_xml).unwrap();
+
+        let mut file_symbols = HashMap::new();
+        let result = parse_doxygen_xml(temp_dir.path(), &mut file_symbols);
+        expect_true!(result.is_err());
+        let err = result.unwrap_err();
+        expect_eq!(err.text, "Failed to read compound XML: class_foo.xml");
+    }
+
+    #[gtest]
+    fn test_parse_doxygen_xml_malformed_compound_xml() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let index_xml = r#"<doxygenindex>
+            <compound refid="class_foo" kind="class">
+                <name>Foo</name>
+            </compound>
+        </doxygenindex>"#;
+        fs::write(temp_dir.path().join("index.xml"), index_xml).unwrap();
+        fs::write(temp_dir.path().join("class_foo.xml"), "<doxygen><invalid>").unwrap();
+
+        let mut file_symbols = HashMap::new();
+        let result = parse_doxygen_xml(temp_dir.path(), &mut file_symbols);
+        expect_true!(result.is_err());
+        let err = result.unwrap_err();
+        expect_eq!(err.text, "Failed to parse compound XML: class_foo.xml");
+    }
+
+    #[gtest]
+    fn test_preprocess_code_for_doxygen() {
+        let input = "CRUBIT_INTERNAL_RUST_TYPE(i32) alignas(4) [[nodiscard]] class Foo final {};";
+        let processed = preprocess_code_for_doxygen(input);
+        expect_eq!(processed.len(), input.len() + 1);
+        expect_false!(processed.contains("CRUBIT_INTERNAL_RUST_TYPE"));
+        expect_false!(processed.contains("alignas"));
+        expect_false!(processed.contains("[[nodiscard]]"));
+        expect_false!(processed.contains("final"));
+        expect_true!(processed.contains("class Foo"));
     }
 }

@@ -457,4 +457,53 @@ mod tests {
         );
         expect_eq!(func_symbol.unwrap().kind, doxygen::SymbolKind::Function);
     }
+
+    #[gtest]
+    #[tokio::test]
+    async fn test_doxygen_handler_crubit_internal_rust_type() {
+        let app = app(None);
+
+        let input_code = r#"
+namespace input {
+struct CRUBIT_INTERNAL_RUST_TYPE(":: input :: MyStruct") alignas(4) [[clang::trivial_abi]] MyStruct final {
+  union { ::std::int32_t a; };
+};
+::input::MyStruct hello();
+}
+"#;
+        let payload = doxygen::DoxygenRequest {
+            input: api::FileSet {
+                files: vec![api::File {
+                    name: "bindings.h".to_string(),
+                    contents_b64: BASE64_STANDARD.encode(input_code),
+                }],
+            },
+        };
+
+        let req_body = serde_json::to_vec(&payload).unwrap();
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/api/doxygen")
+                    .header("content-type", "application/json")
+                    .body(Body::from(req_body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        expect_eq!(response.status(), StatusCode::OK);
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let resp: doxygen::DoxygenResponse = serde_json::from_slice(&body).unwrap();
+
+        expect_true!(resp.error.is_none(), "Expected no error, got: {:?}", resp.error);
+        let file_symbols = resp.file_symbols.unwrap();
+        expect_true!(file_symbols.contains_key("bindings.h"));
+        let symbols = &file_symbols["bindings.h"].symbols;
+        let struct_symbol = symbols.iter().find(|s| s.name.contains("MyStruct"));
+        expect_true!(struct_symbol.is_some(), "Expected MyStruct in symbols, got: {:?}", symbols);
+    }
 }

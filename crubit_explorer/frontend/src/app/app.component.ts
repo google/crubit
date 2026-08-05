@@ -36,6 +36,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   private doxygenSymbols: Record<string, {symbols?: DoxygenSymbol[]}> = {};
   flatDoxygenSymbols: FlatSymbolNode[] = [];
+  selectedSymbol: FlatSymbolNode | null = null;
   doxygenError = '';
   isDoxygenCollapsed = false;
 
@@ -164,12 +165,14 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         }
 
         const currentFile = this.outputFiles[this.selectedOutputFileIndex];
-        if (!this.outputEditor || !currentFile) {
+        if (!currentFile) {
           return;
         }
 
-        this.outputEditor.setValue(currentFile.content);
-        this.updateOutputEditorLanguage(currentFile.name);
+        if (this.outputEditor) {
+          this.outputEditor.setValue(currentFile.content);
+          this.updateOutputEditorLanguage(currentFile.name);
+        }
 
         const doxygenPayload = {
           input: {
@@ -218,6 +221,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   }
 
   private updateFilteredDoxygenSymbols(): void {
+    this.selectedSymbol = null;
     if (this.selectedOutputFileIndex < 0 ||
         !this.outputFiles[this.selectedOutputFileIndex]) {
       this.flatDoxygenSymbols = [];
@@ -229,7 +233,50 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     this.updateSymbolVisibility();
   }
 
-  toggleSymbolNode(node: FlatSymbolNode): void {
+  selectSymbol(node: FlatSymbolNode, event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.selectedSymbol = node;
+
+    if (!this.outputEditor) {
+      return;
+    }
+
+    const model = this.outputEditor.getModel();
+    if (!model) {
+      return;
+    }
+
+    let targetLine: number | null = null;
+
+    if (node.line && node.line > 0 && node.line <= model.getLineCount()) {
+      targetLine = node.line;
+    } else {
+      const searchName = node.name;
+      const matches = model.findMatches(searchName, false, false, true, null, true);
+      if (matches && matches.length > 0) {
+        targetLine = matches[0].range.startLineNumber;
+      }
+    }
+
+    if (targetLine !== null) {
+      const maxCol = model.getLineMaxColumn(targetLine);
+      this.outputEditor.revealLineInCenter(targetLine);
+      this.outputEditor.setSelection({
+        startLineNumber: targetLine,
+        startColumn: 1,
+        endLineNumber: targetLine,
+        endColumn: maxCol
+      });
+      this.outputEditor.focus();
+    }
+  }
+
+  toggleSymbolNode(node: FlatSymbolNode, event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+    }
     if (!node.hasChildren) return;
     node.collapsed = !node.collapsed;
     this.updateSymbolVisibility();

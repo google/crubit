@@ -68,12 +68,13 @@
           <ng-container *ngFor="let sym of flatDoxygenSymbols">
             <div *ngIf="sym.visible"
                  class="symbol-tree-row"
+                 [class.selected]="selectedSymbol === sym"
                  [style.padding-left.px]="sym.depth * 20"
                  [class.has-children]="sym.hasChildren"
-                 (click)="toggleSymbolNode(sym)">
+                 (click)="selectSymbol(sym, $event)">
 
               <!-- Collapse/Expand Icon -->
-              <span class="symbol-toggle-icon">
+              <span class="symbol-toggle-icon" (click)="toggleSymbolNode(sym, $event)">
                 <ng-container *ngIf="sym.hasChildren">
                   {{ sym.collapsed ? '▶' : '▼' }}
                 </ng-container>
@@ -88,8 +89,8 @@
               <span class="symbol-name">{{ sym.name }}</span>
 
               <!-- Location (Optional) -->
-              <span *ngIf="sym.refid" class="symbol-location">
-                {{ sym.refid }}
+              <span *ngIf="sym.line || sym.refid" class="symbol-location">
+                {{ sym.line ? ':' + sym.line : sym.refid }}
               </span>
             </div>
           </ng-container>

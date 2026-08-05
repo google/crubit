@@ -6,6 +6,7 @@ export interface DoxygenSymbol {
   readonly name: string;
   readonly kind: string;
   readonly refid: string;
+  readonly line?: number;
   readonly description?: string;
 }
 
@@ -31,6 +32,7 @@ export interface FlatSymbolNode {
   readonly fullName: string;
   readonly kind: string;
   readonly refid: string;
+  readonly line?: number;
   readonly depth: number;
   readonly hasChildren: boolean;
   collapsed: boolean;
@@ -42,6 +44,7 @@ interface SymbolTreeNode {
   fullName: string;
   kind: string;
   refid: string;
+  line?: number;
   children: SymbolTreeNode[];
 }
 
@@ -57,9 +60,14 @@ export function buildFlatSymbolTree(
   ): SymbolTreeNode {
     const existing = nodeMap.get(fullName);
     if (existing !== undefined) {
-      if (originalSymbol && !existing.refid) {
-        existing.kind = originalSymbol.kind.toLowerCase();
-        existing.refid = originalSymbol.refid;
+      if (originalSymbol) {
+        if (!existing.refid) {
+          existing.kind = originalSymbol.kind.toLowerCase();
+          existing.refid = originalSymbol.refid;
+        }
+        if (existing.line === undefined && originalSymbol.line !== undefined) {
+          existing.line = originalSymbol.line;
+        }
       }
       return existing;
     }
@@ -73,6 +81,7 @@ export function buildFlatSymbolTree(
       fullName,
       kind: originalSymbol ? originalSymbol.kind.toLowerCase() : 'namespace',
       refid: originalSymbol ? originalSymbol.refid : '',
+      line: originalSymbol?.line,
       children: [],
     };
 
@@ -112,9 +121,10 @@ function flattenTree(
       fullName: node.fullName,
       kind: node.kind,
       refid: node.refid,
+      line: node.line,
       depth,
       hasChildren: node.children.length > 0,
-      collapsed: false,
+      collapsed: true,
       visible: true,
     });
     if (node.children.length > 0) {

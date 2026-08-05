@@ -350,18 +350,18 @@ main .resizer {
   display: flex;
   align-items: center;
   padding: 4px 8px;
-  cursor: default;
+  cursor: pointer;
   border-radius: 4px;
   user-select: none;
   transition: background-color 0.1s ease;
 }
 
-.symbol-tree-row.has-children {
-  cursor: pointer;
-}
-
 .symbol-tree-row:hover {
   background-color: #f0f0f0;
+}
+
+.symbol-tree-row.selected {
+  background-color: #e0e0e0;
 }
 
 .symbol-toggle-icon {
@@ -439,6 +439,10 @@ main .resizer {
 
   .symbol-tree-row:hover {
     background-color: #2d2d2d;
+  }
+
+  .symbol-tree-row.selected {
+    background-color: #383838;
   }
 
   .symbol-name {
