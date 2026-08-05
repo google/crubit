@@ -703,5 +703,22 @@ TEST(SmartPointerTest, DerivedSmartPointerWithPointerTemplateArg) {
   )cc"));
 }
 
+TEST(SmartPointerTest,
+     NonnullSmartPointerFieldMovedFromInRValueRefQualifiedMethod) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+#include <memory>
+    struct SomeResource {};
+    class A {
+     public:
+      void target() && {
+        std::unique_ptr<SomeResource> some_resource = std::move(some_resource_);
+      }
+
+     private:
+      _Nonnull std::unique_ptr<SomeResource> some_resource_;
+    };
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
