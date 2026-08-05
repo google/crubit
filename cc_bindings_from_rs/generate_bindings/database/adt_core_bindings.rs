@@ -10,6 +10,44 @@ use proc_macro2::{Ident, TokenStream};
 use rustc_middle::ty::Ty;
 use rustc_span::def_id::DefId;
 use std::hash::{Hash, Hasher};
+use std::rc::Rc;
+
+/// Common bindings for all generated types.
+#[derive(Clone)]
+pub struct CoreBindingsCommon<'tcx> {
+    /// C++ tag - e.g. `struct`, `class`, `enum`, or `union`.  This isn't always
+    /// a direct mapping from Rust (e.g. a Rust `enum` might end up being
+    /// represented as an opaque C++ `struct`).
+    pub keyword: TokenStream,
+
+    /// C++ translation of the ADT identifier - e.g. `SomeStruct`.
+    ///
+    /// A _short_ name is sufficient (i.e. there is no need to use a
+    /// namespace-qualified name), for `CcSnippet`s that are emitted into
+    /// the same namespace as the ADT.  (This seems to be all the snippets
+    /// today.)
+    pub cc_short_name: Ident,
+
+    pub cc_fully_qualified_name: TokenStream,
+
+    pub self_ty: Ty<'tcx>,
+    pub alignment_in_bytes: u64,
+    pub size_in_bytes: u64,
+}
+
+// CoreBindingsCommon is a pure (and memoized...) function of the self_ty.
+impl PartialEq for CoreBindingsCommon<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.self_ty == other.self_ty
+    }
+}
+
+impl Eq for CoreBindingsCommon<'_> {}
+impl Hash for CoreBindingsCommon<'_> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.self_ty.hash(state);
+    }
+}
 
 /// Represents bindings for the "core" part of an algebraic data type (an ADT -
 /// a struct, an enum, or a union) in a way that supports later injecting the
@@ -28,36 +66,20 @@ use std::hash::{Hash, Hasher};
 /// forward declaration - e.g. `struct SomeStruct`.
 #[derive(Clone)]
 pub struct AdtCoreBindings<'tcx> {
-    /// DefId of the ADT.
+    pub common: Rc<CoreBindingsCommon<'tcx>>,
+
+    /// Structs, enums, and unions. None for tuples.
     pub def_id: Option<DefId>,
-
-    /// C++ tag - e.g. `struct`, `class`, `enum`, or `union`.  This isn't always
-    /// a direct mapping from Rust (e.g. a Rust `enum` might end up being
-    /// represented as an opaque C++ `struct`).
-    pub keyword: TokenStream,
-
-    /// C++ translation of the ADT identifier - e.g. `SomeStruct`.
-    ///
-    /// A _short_ name is sufficient (i.e. there is no need to use a
-    /// namespace-qualified name), for `CcSnippet`s that are emitted into
-    /// the same namespace as the ADT.  (This seems to be all the snippets
-    /// today.)
-    pub cc_short_name: Ident,
 
     /// Rust spelling of the ADT type - e.g.
     /// `::some_crate::some_module::SomeStruct`.
     pub rs_fully_qualified_name: TokenStream,
-    pub cc_fully_qualified_name: TokenStream,
-
-    pub self_ty: Ty<'tcx>,
-    pub alignment_in_bytes: u64,
-    pub size_in_bytes: u64,
 }
 
 // AdtCoreBindings are a pure (and memoized...) function of the def_id.
 impl PartialEq for AdtCoreBindings<'_> {
     fn eq(&self, other: &Self) -> bool {
-        self.def_id == other.def_id && self.self_ty == other.self_ty
+        self.def_id == other.def_id && self.common == other.common
     }
 }
 
@@ -65,7 +87,7 @@ impl Eq for AdtCoreBindings<'_> {}
 impl Hash for AdtCoreBindings<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.def_id.hash(state);
-        self.self_ty.hash(state);
+        self.common.hash(state);
     }
 }
 

@@ -31,7 +31,9 @@ use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, TemplateSpecialization,
     TraitImplTemplateSpecialization,
 };
-use database::{AdtCoreBindings, BindingsGenerator, StaticMethodMode, TypeLocation};
+use database::{
+    AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, StaticMethodMode, TypeLocation,
+};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
@@ -74,7 +76,7 @@ pub(crate) fn adt_core_bindings_needs_drop<'tcx>(
         .def_id
         .map(|id| post_analysis_typing_env(tcx, id))
         .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
-    bindings.self_ty.needs_drop(tcx, typing_env)
+    bindings.common.self_ty.needs_drop(tcx, typing_env)
 }
 
 /// Returns the Rust underlying type of the `cpp_enum` struct specified by the given def id.
@@ -207,7 +209,7 @@ fn generate_cpp_enum<'tcx>(
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
-    let enumeration_cc_name = &core.cc_short_name;
+    let enumeration_cc_name = &core.common.cc_short_name;
 
     let mut main_api_prereqs = CcPrerequisites::default();
     main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
@@ -267,7 +269,7 @@ fn generate_cpp_enum<'tcx>(
         .collect();
 
     let doc_comment = generate_doc_comment(db, def_id);
-    let keyword = &core.keyword;
+    let keyword = &core.common.keyword;
     let underlying_cc_type_snippet = cpp_enum_cpp_underlying_type(db, def_id).unwrap();
     let underlying_cc_type = underlying_cc_type_snippet.tokens;
     let bracketed_enumeration_cc_name = if db.kythe_annotations() {
@@ -502,7 +504,7 @@ fn generate_into_impls<'tcx>(
     core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
-    let cc_struct_name = &core.cc_short_name;
+    let cc_struct_name = &core.common.cc_short_name;
 
     let into_trait = tcx.get_diagnostic_item(sym::Into).expect("Could not find Into trait");
     let Some(def_id) = core.def_id else {
@@ -511,8 +513,11 @@ fn generate_into_impls<'tcx>(
     };
 
     let from_map = db.from_trait_impls_by_argument(def_id.krate);
-    let from_impls = from_map.get(&core.self_ty).into_iter().flat_map(|vec| vec.iter()).filter_map(
-        |from_impl_id| {
+    let from_impls = from_map
+        .get(&core.common.self_ty)
+        .into_iter()
+        .flat_map(|vec| vec.iter())
+        .filter_map(|from_impl_id| {
             let trait_ref = get_trait_ref_from_impl_id(tcx, *from_impl_id);
             let from_middle_ty = trait_ref.args.type_at(0);
 
@@ -527,10 +532,9 @@ fn generate_into_impls<'tcx>(
                 .format_ty_for_cc(from_middle_ty, TypeLocation::FnReturn { is_constructor: false })
                 .ok()?;
             Some((from_middle_ty, cc_ty, *from_impl_id))
-        },
-    );
+        });
     let into_impls =
-        tcx.non_blanket_impls_for_ty(into_trait, core.self_ty).filter_map(|into_impl_id| {
+        tcx.non_blanket_impls_for_ty(into_trait, core.common.self_ty).filter_map(|into_impl_id| {
             let trait_ref = get_trait_ref_from_impl_id(tcx, into_impl_id);
             // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
             // into.
@@ -575,7 +579,7 @@ fn generate_into_impls<'tcx>(
                 db,
                 into_trait,
                 &[middle_ty],
-                core.self_ty,
+                core.common.self_ty,
                 core.def_id,
                 core.rs_fully_qualified_name.clone(),
                 /*is_constructor=*/ false,
@@ -593,7 +597,7 @@ fn generate_into_impls<'tcx>(
 
             let self_cpp_ty = db
                 .format_ty_for_cc(
-                    core.self_ty,
+                    core.common.self_ty,
                     TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
                 )
                 .expect(
@@ -607,7 +611,7 @@ fn generate_into_impls<'tcx>(
                 middle_ty,
                 ThunkSelfParameter::new(
                     /*has_self=*/ true,
-                    is_copy(tcx, def_id, core.self_ty),
+                    is_copy(tcx, def_id, core.common.self_ty),
                     /*is_trait_method =*/ false,
                 ),
                 &[Param {
@@ -616,7 +620,7 @@ fn generate_into_impls<'tcx>(
                         snippet: CcSnippet::new(self_cpp_ty),
                         is_lifetime_bound: false,
                     },
-                    ty: core.self_ty,
+                    ty: core.common.self_ty,
                 }],
                 /*is_async=*/ false,
             )
@@ -673,51 +677,25 @@ fn generate_constructor_impls<'tcx>(
     core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
-    let cc_struct_name = &core.cc_short_name;
+    let cc_struct_name = &core.common.cc_short_name;
 
     // We need there to be a `def_id` to generate a constructor from.
     let def_id = core.def_id.expect("ADT must have a def_id");
 
     // Find From impls from the selected ADT
     let from_trait = tcx.get_diagnostic_item(sym::From).expect("Could not find From trait");
-    let from_impls = tcx.non_blanket_impls_for_ty(from_trait, core.self_ty).filter_map(|impl_id| {
-        let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
-        let src_ty = trait_ref.args.type_at(1);
-        if src_ty.flags().intersects(has_type_or_const_vars()) {
-            return None;
-        }
-        // Skip generating a constructor for the `From` impl if the target type is a
-        // newtype with a public field of the same type. In this case, we already
-        // synthesize a tuple constructor with the same signature, and generating
-        // another one would cause duplicate definition conflicts in C++.
-        if is_newtype_relationship(tcx, core.self_ty, src_ty) {
-            return None;
-        }
-        // Skip if source type is Self or a reference to Self (e.g. &Self)
-        let src_referent_ty = match src_ty.kind() {
-            ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
-            _ => src_ty,
-        };
-        if src_referent_ty == core.self_ty {
-            return None;
-        }
-        let cc_ty = db
-            .format_ty_for_cc(
-                src_ty,
-                TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-            )
-            .ok()?;
-
-        Some((src_ty, cc_ty, impl_id, /*is_from=*/ true))
-    });
-
-    // Find Into impls to the selected ADT
-    let into_map = db.into_trait_impls_by_destination(def_id.krate);
-    let into_impls =
-        into_map.get(&core.self_ty).into_iter().flat_map(|vec| vec.iter()).filter_map(|impl_id| {
-            let trait_ref = get_trait_ref_from_impl_id(tcx, *impl_id);
-            let src_ty = trait_ref.args.type_at(0);
+    let from_impls =
+        tcx.non_blanket_impls_for_ty(from_trait, core.common.self_ty).filter_map(|impl_id| {
+            let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
+            let src_ty = trait_ref.args.type_at(1);
             if src_ty.flags().intersects(has_type_or_const_vars()) {
+                return None;
+            }
+            // Skip generating a constructor for the `From` impl if the target type is a
+            // newtype with a public field of the same type. In this case, we already
+            // synthesize a tuple constructor with the same signature, and generating
+            // another one would cause duplicate definition conflicts in C++.
+            if is_newtype_relationship(tcx, core.common.self_ty, src_ty) {
                 return None;
             }
             // Skip if source type is Self or a reference to Self (e.g. &Self)
@@ -725,7 +703,7 @@ fn generate_constructor_impls<'tcx>(
                 ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
                 _ => src_ty,
             };
-            if src_referent_ty == core.self_ty {
+            if src_referent_ty == core.common.self_ty {
                 return None;
             }
             let cc_ty = db
@@ -735,8 +713,37 @@ fn generate_constructor_impls<'tcx>(
                 )
                 .ok()?;
 
-            Some((src_ty, cc_ty, *impl_id, /*is_from=*/ false))
+            Some((src_ty, cc_ty, impl_id, /*is_from=*/ true))
         });
+
+    // Find Into impls to the selected ADT
+    let into_map = db.into_trait_impls_by_destination(def_id.krate);
+    let into_impls =
+        into_map.get(&core.common.self_ty).into_iter().flat_map(|vec| vec.iter()).filter_map(
+            |impl_id| {
+                let trait_ref = get_trait_ref_from_impl_id(tcx, *impl_id);
+                let src_ty = trait_ref.args.type_at(0);
+                if src_ty.flags().intersects(has_type_or_const_vars()) {
+                    return None;
+                }
+                // Skip if source type is Self or a reference to Self (e.g. &Self)
+                let src_referent_ty = match src_ty.kind() {
+                    ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
+                    _ => src_ty,
+                };
+                if src_referent_ty == core.common.self_ty {
+                    return None;
+                }
+                let cc_ty = db
+                    .format_ty_for_cc(
+                        src_ty,
+                        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                    )
+                    .ok()?;
+
+                Some((src_ty, cc_ty, *impl_id, /*is_from=*/ false))
+            },
+        );
 
     // Avoid collisions in cases where types may map to the same underlying C++ type.
     from_impls
@@ -773,7 +780,7 @@ fn generate_constructor_impls<'tcx>(
                     db,
                     from_trait,
                     &[src_ty],
-                    core.self_ty,
+                    core.common.self_ty,
                     core.def_id,
                     core.rs_fully_qualified_name.clone(),
                     /*is_constructor=*/ true,
@@ -795,7 +802,7 @@ fn generate_constructor_impls<'tcx>(
                     .find(|item| matches!(item.kind, ty::AssocKind::Fn { .. }))
                     .expect("Into should have a method");
 
-                let trait_args = tcx.mk_args_trait(src_ty, once(core.self_ty.into()));
+                let trait_args = tcx.mk_args_trait(src_ty, once(core.common.self_ty.into()));
                 let sig = tcx.fn_sig(into_trait_assoc_fn.def_id).instantiate(tcx, trait_args);
 
                 let sig = liberate_and_deanonymize_late_bound_regions(
@@ -870,7 +877,7 @@ fn generate_constructor_impls<'tcx>(
             )
             .ok()?;
 
-            let returns_by_value = is_c_abi_compatible_by_value(db, core.self_ty);
+            let returns_by_value = is_c_abi_compatible_by_value(db, core.common.self_ty);
             let impl_body_tokens = if returns_by_value {
                 quote! {
                     #statements
@@ -916,7 +923,7 @@ fn generate_trait_operator_impls<'tcx>(
      -> Vec<ApiSnippets<'_>> {
         let trait_name = tcx.item_name(trait_def_id).to_string();
 
-        tcx.non_blanket_impls_for_ty(trait_def_id, core.self_ty)
+        tcx.non_blanket_impls_for_ty(trait_def_id, core.common.self_ty)
             .map(|impl_id| {
                 let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
                 // Index 0 of our trait ref is the self type.
@@ -1116,7 +1123,7 @@ fn generate_ord_and_partialord_impls<'tcx>(
     let mut snippets = Vec::new();
 
     // Handle Ord impls (Rhs is always Self)
-    for impl_id in tcx.non_blanket_impls_for_ty(ord_trait_id, core.self_ty) {
+    for impl_id in tcx.non_blanket_impls_for_ty(ord_trait_id, core.common.self_ty) {
         match generate_ord_impls(db, core) {
             Ok(s) => snippets.push(s),
             Err(err) => snippets.push(generate_unsupported_def(db, impl_id, err).into_main_api()),
@@ -1125,12 +1132,13 @@ fn generate_ord_and_partialord_impls<'tcx>(
 
     // Handle PartialOrd impls
     let mut ord_rhs_types = HashSet::new();
-    let implements_ord = tcx.non_blanket_impls_for_ty(ord_trait_id, core.self_ty).next().is_some();
+    let implements_ord =
+        tcx.non_blanket_impls_for_ty(ord_trait_id, core.common.self_ty).next().is_some();
     if implements_ord {
-        ord_rhs_types.insert(erase_regions(tcx, core.self_ty));
+        ord_rhs_types.insert(erase_regions(tcx, core.common.self_ty));
     }
 
-    for impl_id in tcx.non_blanket_impls_for_ty(partial_ord_trait_id, core.self_ty) {
+    for impl_id in tcx.non_blanket_impls_for_ty(partial_ord_trait_id, core.common.self_ty) {
         let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
         let rhs_ty = trait_ref.args.type_at(1);
         let erased_rhs_ty = erase_regions(tcx, rhs_ty);
@@ -1153,14 +1161,15 @@ fn generate_ord_impls<'tcx>(
     core: &AdtCoreBindings<'tcx>,
 ) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
-    let adt_cc_short_name = &core.cc_short_name;
+    let adt_cc_short_name = &core.common.cc_short_name;
 
-    let static_self_ty = replace_all_regions_with_static(tcx, core.self_ty);
+    let static_self_ty = replace_all_regions_with_static(tcx, core.common.self_ty);
     let self_rs_ty = db.format_ty_for_rs(static_self_ty)?;
 
     let ord_trait_id =
         tcx.get_diagnostic_item(sym::Ord).ok_or_else(|| anyhow!("Could not find Ord trait"))?;
-    let thunk_name_str = trait_method_thunk_name(db, ord_trait_id, "cmp", core.self_ty, &[])?;
+    let thunk_name_str =
+        trait_method_thunk_name(db, ord_trait_id, "cmp", core.common.self_ty, &[])?;
     let thunk_name = format_ident!("{}", thunk_name_str);
 
     let main_api = CcSnippet::new(quote! {
@@ -1172,7 +1181,7 @@ fn generate_ord_impls<'tcx>(
     let mut cc_details_prereqs = CcPrerequisites::default();
     cc_details_prereqs.includes.insert(CcInclude::compare());
 
-    let ref_self_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, core.self_ty);
+    let ref_self_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, core.common.self_ty);
     let ref_self_cc_ty = db.format_ty_for_cc(
         ref_self_ty,
         TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
@@ -1216,9 +1225,9 @@ fn generate_partial_ord_impls<'tcx>(
     rhs_ty: Ty<'tcx>,
 ) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
-    let adt_cc_short_name = &core.cc_short_name;
+    let adt_cc_short_name = &core.common.cc_short_name;
 
-    let static_self_ty = replace_all_regions_with_static(tcx, core.self_ty);
+    let static_self_ty = replace_all_regions_with_static(tcx, core.common.self_ty);
     let self_rs_ty = db.format_ty_for_rs(static_self_ty)?;
 
     let rhs_ty = replace_all_regions_with_static(tcx, rhs_ty);
@@ -1250,8 +1259,13 @@ fn generate_partial_ord_impls<'tcx>(
     let partial_ord_trait_id = tcx
         .get_diagnostic_item(sym::PartialOrd)
         .ok_or_else(|| anyhow!("Could not find PartialOrd trait"))?;
-    let thunk_name_str =
-        trait_method_thunk_name(db, partial_ord_trait_id, "partial_cmp", core.self_ty, &[rhs_ty])?;
+    let thunk_name_str = trait_method_thunk_name(
+        db,
+        partial_ord_trait_id,
+        "partial_cmp",
+        core.common.self_ty,
+        &[rhs_ty],
+    )?;
     let thunk_name = format_ident!("{}", thunk_name_str);
 
     let main_api = CcSnippet {
@@ -1266,7 +1280,7 @@ fn generate_partial_ord_impls<'tcx>(
     let mut cc_details_prereqs = CcPrerequisites::default();
     let rhs_cc_tokens_for_impl = rhs_cc_ty_for_impl.into_tokens(&mut cc_details_prereqs);
 
-    let ref_self_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, core.self_ty);
+    let ref_self_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, core.common.self_ty);
     let ref_self_cc_ty = db.format_ty_for_cc(
         ref_self_ty,
         TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
@@ -1329,7 +1343,7 @@ fn generate_display_impl<'tcx>(
         ));
     };
 
-    if !does_type_implement_trait(tcx, core.self_ty, display_trait_id, []) {
+    if !does_type_implement_trait(tcx, core.common.self_ty, display_trait_id, []) {
         // This isn't an error, our type doesn't implement `Display` and so we don't generate
         // any bindings.
         return ApiSnippets::default();
@@ -1352,7 +1366,7 @@ fn generate_display_impl<'tcx>(
             db,
             to_string_trait_id,
             &[],
-            core.self_ty,
+            core.common.self_ty,
             core.def_id,
             core.rs_fully_qualified_name.clone(),
             /*is_constructor=*/ false,
@@ -1366,7 +1380,7 @@ fn generate_display_impl<'tcx>(
         .into_values()
         .exactly_one()
         .expect("Expecting a single `to_string` method");
-    let adt_cc_short_name = &core.cc_short_name;
+    let adt_cc_short_name = &core.common.cc_short_name;
 
     let main_api = CcSnippet::new(quote! {
         __NEWLINE__ __COMMENT__ "AbslStringify and std::ostream support via std::fmt::Display"
@@ -1411,7 +1425,7 @@ pub fn generate_adt<'tcx>(
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
-    let adt_cc_name = &core.cc_short_name;
+    let adt_cc_name = &core.common.cc_short_name;
 
     // Handle `cpp_enum` structs.
     let crubit_attrs =
@@ -1433,7 +1447,7 @@ pub fn generate_adt<'tcx>(
             db,
             drop_trait_id,
             &[],
-            core.self_ty,
+            core.common.self_ty,
             core.def_id,
             core.rs_fully_qualified_name.clone(),
             /*is_constructor=*/ false,
@@ -1483,8 +1497,11 @@ pub fn generate_adt<'tcx>(
         .generate_move_ctor_and_assignment_operator(core.clone())
         .unwrap_or_else(|err| err.explicitly_deleted);
 
-    let relocating_ctor_snippets =
-        generate_relocating_ctor(db, &core.cc_short_name, &core.cc_fully_qualified_name);
+    let relocating_ctor_snippets = generate_relocating_ctor(
+        db,
+        &core.common.cc_short_name,
+        &core.common.cc_fully_qualified_name,
+    );
 
     let mut member_function_names = HashSet::<String>::new();
     let impl_items_snippets = core
@@ -1550,18 +1567,18 @@ pub fn generate_adt<'tcx>(
         rs_details: fields_rs_details,
     } = generate_fields(
         db,
-        core.self_ty,
-        &core.cc_short_name,
+        core.common.self_ty,
+        &core.common.cc_short_name,
         &core.rs_fully_qualified_name,
-        core.size_in_bytes,
-        core.alignment_in_bytes,
+        core.common.size_in_bytes,
+        core.common.alignment_in_bytes,
         &member_function_names,
     );
 
-    fields_main_api.prereqs.forward_declare_type(core.self_ty);
+    fields_main_api.prereqs.forward_declare_type(core.common.self_ty);
 
-    let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
-    let size = Literal::u64_unsuffixed(core.size_in_bytes);
+    let alignment = Literal::u64_unsuffixed(core.common.alignment_in_bytes);
+    let size = Literal::u64_unsuffixed(core.common.size_in_bytes);
     let main_api = {
         let rs_type = core.rs_fully_qualified_name.to_string();
         let mut attributes = vec![
@@ -1590,7 +1607,7 @@ pub fn generate_adt<'tcx>(
         }
 
         let doc_comment = core.def_id.map(|id| generate_doc_comment(db, id)).unwrap_or_default();
-        let keyword = &core.keyword;
+        let keyword = &core.common.keyword;
 
         let mut prereqs = CcPrerequisites::default();
         prereqs.includes.insert(db.support_header("annotations_internal.h"));
@@ -1775,14 +1792,16 @@ pub fn generate_adt_core<'tcx>(
     ensure!(size_in_bytes != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
 
     Ok(Rc::new(AdtCoreBindings {
+        common: Rc::new(CoreBindingsCommon {
+            keyword,
+            cc_short_name: cpp_name,
+            cc_fully_qualified_name,
+            self_ty,
+            alignment_in_bytes,
+            size_in_bytes,
+        }),
         def_id: Some(def_id),
-        keyword,
-        cc_short_name: cpp_name,
         rs_fully_qualified_name,
-        cc_fully_qualified_name,
-        self_ty,
-        alignment_in_bytes,
-        size_in_bytes,
     }))
 }
 
@@ -1802,8 +1821,8 @@ fn generate_adt_based_ctors<'tcx>(
     core: Rc<AdtCoreBindings<'tcx>>,
     member_function_names: &mut HashSet<String>,
 ) -> ApiSnippets<'tcx> {
-    let TyKind::Adt(adt_def, _) = core.self_ty.kind() else {
-        panic!("Attempted to generate constructor for a non-ADT type: {:?}", core.self_ty)
+    let TyKind::Adt(adt_def, _) = core.common.self_ty.kind() else {
+        panic!("Attempted to generate constructor for a non-ADT type: {:?}", core.common.self_ty)
     };
 
     // Silently suppress errors for synthesized constructors (e.g. a tuple struct constructor
@@ -1866,8 +1885,8 @@ fn generate_variant_ctor<'tcx>(
         bail!("`#[non_exhaustive]` structs don't get public constructors");
     }
 
-    let TyKind::Adt(adt_def, adt_generic_args) = core.self_ty.kind() else {
-        panic!("Attempted to generate constructor for a non-ADT type: {:?}", core.self_ty)
+    let TyKind::Adt(adt_def, adt_generic_args) = core.common.self_ty.kind() else {
+        panic!("Attempted to generate constructor for a non-ADT type: {:?}", core.common.self_ty)
     };
 
     let default_trait_id = tcx.get_diagnostic_item(sym::Default).expect("Default trait not found");
@@ -1925,7 +1944,7 @@ fn generate_variant_ctor<'tcx>(
         bail!("Constructing non-tuple, struct-like enum variants is not supported: b/487357254");
     };
 
-    let adt_cc_name = &core.cc_short_name;
+    let adt_cc_name = &core.common.cc_short_name;
     match adt_def.adt_kind() {
         ty::AdtKind::Struct => {
             let explicit = (main_api_params.len() == 1).then_some(quote! { explicit });
@@ -1967,6 +1986,7 @@ fn generate_variant_ctor<'tcx>(
             let body = match enum_kind {
                 EnumKind::ReprC => {
                     let discr = core
+                        .common
                         .self_ty
                         .discriminant_for_variant(tcx, variant_index)
                         .expect("Invalid VariantIdx");
@@ -1983,8 +2003,8 @@ fn generate_variant_ctor<'tcx>(
                 }
                 EnumKind::OpaqueBlobOfBytes => {
                     let (tag_val, tag_size, tag_offset) = {
-                        let layout =
-                            get_layout(tcx, core.self_ty).expect("Should verify layout earlier");
+                        let layout = get_layout(tcx, core.common.self_ty)
+                            .expect("Should verify layout earlier");
                         match layout.variants() {
                             rustc_abi::Variants::Empty => {
                                 unreachable!("Uninhabited types should be rejected earlier")
@@ -1996,7 +2016,7 @@ fn generate_variant_ctor<'tcx>(
                                     core.def_id.expect("Enums must have a DefId"),
                                 );
                                 let tag = tcx.tag_for_variant(typing_env.as_query_input((
-                                    tcx.erase_and_anonymize_regions(core.self_ty),
+                                    tcx.erase_and_anonymize_regions(core.common.self_ty),
                                     variant_index,
                                 )));
                                 let (val, size) = match tag {
@@ -2009,7 +2029,7 @@ fn generate_variant_ctor<'tcx>(
                             }
                         }
                     };
-                    let adt_size = core.size_in_bytes as usize;
+                    let adt_size = core.common.size_in_bytes as usize;
                     let discr_bytesize = (adt_size - tag_offset).min(tag_size.bytes() as usize);
                     let tag_bytes = match tcx.sess.target.endian {
                         Endian::Little => &tag_val.to_le_bytes()[..discr_bytesize],
@@ -3061,7 +3081,7 @@ fn generate_begin_and_end_for_type<'tcx>(
     passing_mode: PassingMode,
 ) -> Result<Option<ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
-    let self_ty = core.self_ty;
+    let self_ty = core.common.self_ty;
 
     let check_ty = match passing_mode {
         PassingMode::Value => self_ty,
@@ -3076,7 +3096,7 @@ fn generate_begin_and_end_for_type<'tcx>(
             return Ok(None);
         };
 
-        let adt_cc_name = &core.cc_short_name;
+        let adt_cc_name = &core.common.cc_short_name;
         let mut main_api_prereqs = CcPrerequisites::default();
         main_api_prereqs.includes.insert(db.support_header("rs_std/iterator_adapter.h"));
         main_api_prereqs.move_only_defs_to_fwd_decls();
@@ -3139,7 +3159,7 @@ fn generate_begin_and_end_for_type<'tcx>(
         .expect("IntoIterator should have into_iter method");
     let into_iter_fn_id = into_iter_fn_assoc_item.def_id;
 
-    let adt_cc_name = &core.cc_short_name;
+    let adt_cc_name = &core.common.cc_short_name;
     let param_cc_type_tokens = match passing_mode {
         PassingMode::Value => quote! { #adt_cc_name && },
         PassingMode::SharedRef => quote! { const #adt_cc_name & },
@@ -3284,16 +3304,19 @@ fn generate_into_iterator_impls<'tcx>(
         || member_function_names.contains("end")
         || member_function_names.contains("into_iter")
     {
-        bail!("{} has a method named `begin`, `end`, or `into_iter`, which prevents binding methods for IntoIterator.", core.self_ty);
+        bail!("{} has a method named `begin`, `end`, or `into_iter`, which prevents binding methods for IntoIterator.", core.common.self_ty);
     }
 
-    let adt_def =
-        core.self_ty.ty_adt_def().expect("generate_adt_core should have confirmed this was an ADT");
+    let adt_def = core
+        .common
+        .self_ty
+        .ty_adt_def()
+        .expect("generate_adt_core should have confirmed this was an ADT");
     let has_conflicting_field = adt_def
         .all_fields()
         .any(|field| matches!(field.name.as_str(), "begin" | "end" | "into_iter"));
     if has_conflicting_field {
-        bail!("{} has a field named `begin`, `end`, or `into_iter`, which prevents binding methods for IntoIterator.", core.self_ty);
+        bail!("{} has a field named `begin`, `end`, or `into_iter`, which prevents binding methods for IntoIterator.", core.common.self_ty);
     }
 
     let into_iterator_trait_id = tcx

@@ -15,7 +15,9 @@ use database::code_snippet::{
     NegativeAutoTraitImplTemplateSpecialization, RsStdEnumSpecialization, RsStdSpecializationArgs,
     RsStdTemplateSpecialization, TemplateSpecialization, TraitImplTemplateSpecialization,
 };
-use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
+use database::{
+    AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, StaticMethodMode, TypeLocation,
+};
 use error_report::anyhow;
 use itertools::Itertools;
 use proc_macro2::Literal;
@@ -720,15 +722,17 @@ fn specialize_tuple<'tcx>(
     };
     let cc_fully_qualified_name = quote! { ::rs_std::Tuple<#(#element_cc_tys),*> };
 
-    let core = Rc::new(database::AdtCoreBindings {
+    let core = Rc::new(AdtCoreBindings {
+        common: Rc::new(CoreBindingsCommon {
+            keyword: quote! { struct },
+            cc_short_name: format_ident!("Tuple"),
+            cc_fully_qualified_name: cc_fully_qualified_name.clone(),
+            self_ty: rs_std.self_ty_rs,
+            alignment_in_bytes: layout.align().abi.bytes(),
+            size_in_bytes: layout.size().bytes(),
+        }),
         def_id: None,
-        keyword: quote! { struct },
-        cc_short_name: format_ident!("Tuple"),
         rs_fully_qualified_name: rs_fully_qualified_name.clone(),
-        cc_fully_qualified_name: cc_fully_qualified_name.clone(),
-        self_ty: rs_std.self_ty_rs,
-        alignment_in_bytes: layout.align().abi.bytes(),
-        size_in_bytes: layout.size().bytes(),
     });
 
     let copy_ctor_and_assignment_snippets =
@@ -736,8 +740,11 @@ fn specialize_tuple<'tcx>(
     let move_ctor_and_assignment_snippets = db
         .generate_move_ctor_and_assignment_operator(core.clone())
         .unwrap_or_else(|err| err.explicitly_deleted);
-    let relocating_ctor_snippets =
-        generate_relocating_ctor(db, &core.cc_short_name, &core.cc_fully_qualified_name);
+    let relocating_ctor_snippets = generate_relocating_ctor(
+        db,
+        &core.common.cc_short_name,
+        &core.common.cc_fully_qualified_name,
+    );
     let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
 
     let ApiSnippets { main_api, cc_details, rs_details } = [
@@ -900,17 +907,18 @@ fn specialize_vec<'tcx>(
     let cc_fully_qualified_name = quote! { rs_std::Vec<#inner_ty_cc> };
 
     let adt_def = rs_std.self_ty_rs.ty_adt_def().expect("Vec should be an ADT");
-    let def_id = Some(adt_def.did());
 
-    let core = Rc::new(database::AdtCoreBindings {
-        def_id,
-        keyword: quote! { struct },
-        cc_short_name: format_ident!("Vec"),
+    let core = Rc::new(AdtCoreBindings {
+        common: Rc::new(CoreBindingsCommon {
+            keyword: quote! { struct },
+            cc_short_name: format_ident!("Vec"),
+            cc_fully_qualified_name: cc_fully_qualified_name.clone(),
+            self_ty: rs_std.self_ty_rs,
+            alignment_in_bytes: layout.align().abi.bytes(),
+            size_in_bytes: layout.size().bytes(),
+        }),
+        def_id: Some(adt_def.did()),
         rs_fully_qualified_name: rs_fully_qualified_name.clone(),
-        cc_fully_qualified_name: cc_fully_qualified_name.clone(),
-        self_ty: rs_std.self_ty_rs,
-        alignment_in_bytes: layout.align().abi.bytes(),
-        size_in_bytes: layout.size().bytes(),
     });
 
     let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
@@ -919,8 +927,11 @@ fn specialize_vec<'tcx>(
     let move_ctor_and_assignment_snippets = db
         .generate_move_ctor_and_assignment_operator(core.clone())
         .unwrap_or_else(|err| err.explicitly_deleted);
-    let relocating_ctor_snippets =
-        generate_relocating_ctor(db, &core.cc_short_name, &core.cc_fully_qualified_name);
+    let relocating_ctor_snippets = generate_relocating_ctor(
+        db,
+        &core.common.cc_short_name,
+        &core.common.cc_fully_qualified_name,
+    );
 
     let qualified_name = cc_fully_qualified_name.to_string();
     let name = escape_non_identifier_chars(&qualified_name);
@@ -1238,15 +1249,17 @@ fn specialize_result<'tcx>(
 
     let rs_fully_qualified_name = quote! { std::result::Result<#ok_ty_for_rs, #err_ty_for_rs> };
     let cc_fully_qualified_name = quote! { rs_std::Result<#ok_ty_tokens, #err_ty_tokens> };
-    let core = Rc::new(database::AdtCoreBindings {
+    let core = Rc::new(AdtCoreBindings {
+        common: Rc::new(CoreBindingsCommon {
+            keyword: quote! { struct },
+            cc_short_name: format_ident!("Result"),
+            cc_fully_qualified_name: cc_fully_qualified_name.clone(),
+            self_ty: rs_std.self_ty_rs,
+            alignment_in_bytes: layout.align().abi.bytes(),
+            size_in_bytes: layout.size().bytes(),
+        }),
         def_id: Some(adt.did()),
-        keyword: quote! { struct },
-        cc_short_name: format_ident!("Result"),
         rs_fully_qualified_name: rs_fully_qualified_name.clone(),
-        cc_fully_qualified_name: cc_fully_qualified_name.clone(),
-        self_ty: rs_std.self_ty_rs,
-        alignment_in_bytes: layout.align().abi.bytes(),
-        size_in_bytes: layout.size().bytes(),
     });
 
     let copy_ctor_and_assignment_snippets =
@@ -1254,8 +1267,11 @@ fn specialize_result<'tcx>(
     let move_ctor_and_assignment_snippets = db
         .generate_move_ctor_and_assignment_operator(core.clone())
         .unwrap_or_else(|err| err.explicitly_deleted);
-    let relocating_ctor_snippets =
-        generate_relocating_ctor(db, &core.cc_short_name, &core.cc_fully_qualified_name);
+    let relocating_ctor_snippets = generate_relocating_ctor(
+        db,
+        &core.common.cc_short_name,
+        &core.common.cc_fully_qualified_name,
+    );
 
     let ApiSnippets { main_api, cc_details, rs_details } = [
         copy_ctor_and_assignment_snippets,
@@ -1450,15 +1466,17 @@ fn specialize_option<'tcx>(
     };
     let rs_fully_qualified_name = quote! { std::option::Option<#arg_ty_for_rs> };
     let cc_fully_qualified_name = quote! { rs_std::Option<#ty_tokens> };
-    let core = Rc::new(database::AdtCoreBindings {
+    let core = Rc::new(AdtCoreBindings {
+        common: Rc::new(CoreBindingsCommon {
+            keyword: quote! { struct },
+            cc_short_name: format_ident!("Option"),
+            cc_fully_qualified_name: cc_fully_qualified_name.clone(),
+            self_ty: rs_std.self_ty_rs,
+            alignment_in_bytes: layout.align().abi.bytes(),
+            size_in_bytes: layout.size().bytes(),
+        }),
         def_id: Some(adt.did()),
-        keyword: quote! { struct },
-        cc_short_name: format_ident!("Option"),
         rs_fully_qualified_name: rs_fully_qualified_name.clone(),
-        cc_fully_qualified_name: cc_fully_qualified_name.clone(),
-        self_ty: rs_std.self_ty_rs,
-        alignment_in_bytes: layout.align().abi.bytes(),
-        size_in_bytes: layout.size().bytes(),
     });
 
     let copy_ctor_and_assignment_snippets =
@@ -1468,8 +1486,11 @@ fn specialize_option<'tcx>(
         .generate_move_ctor_and_assignment_operator(core.clone())
         .unwrap_or_else(|err| err.explicitly_deleted);
 
-    let relocating_ctor_snippets =
-        generate_relocating_ctor(db, &core.cc_short_name, &core.cc_fully_qualified_name);
+    let relocating_ctor_snippets = generate_relocating_ctor(
+        db,
+        &core.common.cc_short_name,
+        &core.common.cc_fully_qualified_name,
+    );
 
     let ApiSnippets { main_api, cc_details, rs_details } = [
         copy_ctor_and_assignment_snippets,

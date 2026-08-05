@@ -9,7 +9,9 @@ extern crate rustc_middle;
 pub mod code_snippet;
 
 mod adt_core_bindings;
-pub use adt_core_bindings::{AdtCoreBindings, CopyCtorStyle, MoveCtorStyle, NoMoveOrAssign};
+pub use adt_core_bindings::{
+    AdtCoreBindings, CopyCtorStyle, CoreBindingsCommon, MoveCtorStyle, NoMoveOrAssign,
+};
 mod db;
 pub use db::{BindingsGenerator, CppTypeSpecialization};
 mod fine_grained_feature;

@@ -45,9 +45,9 @@ use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet, TemplateSpecialization,
 };
 use database::{
-    rename_clang_builtin_macros, AdtCoreBindings, ExportedPath, FineGrainedFeature,
-    FullyQualifiedName, NoMoveOrAssign, PublicPaths, StaticMethodMode, TypeLocation,
-    UnqualifiedName,
+    rename_clang_builtin_macros, AdtCoreBindings, CoreBindingsCommon, ExportedPath,
+    FineGrainedFeature, FullyQualifiedName, NoMoveOrAssign, PublicPaths, StaticMethodMode,
+    TypeLocation, UnqualifiedName,
 };
 pub use database::{
     BindingsGenerator, CopyCtorStyle, CppTypeSpecialization, IncludeGuard, MoveCtorStyle,
@@ -1356,14 +1356,14 @@ fn generate_default_ctor<'tcx>(
             db,
             trait_id,
             &[],
-            core.self_ty,
+            core.common.self_ty,
             core.def_id,
             core.rs_fully_qualified_name.clone(),
             /*is_constructor=*/ true,
             /*within_template=*/ false,
         )?;
 
-        let cc_struct_name = &core.cc_short_name;
+        let cc_struct_name = &core.common.cc_short_name;
         let main_api = CcSnippet::new(quote! {
             __NEWLINE__ __COMMENT__ "Default::default"
             #cc_struct_name(); __NEWLINE__ __NEWLINE__
@@ -1377,11 +1377,11 @@ fn generate_default_ctor<'tcx>(
             let mut prereqs = CcPrerequisites::default();
             let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
 
-            let fully_qualified_name = &core.cc_fully_qualified_name;
+            let fully_qualified_name = &core.common.cc_fully_qualified_name;
             // This might be the case for `#[repr(transparent)]` types.
             // TODO: b/459482188 - This is ultimately dependent on the return ABI of the thunk and
             // should be centralized with the other callsites that depend on return type ABI.
-            let ctor_impl = if is_c_abi_compatible_by_value(db, core.self_ty) {
+            let ctor_impl = if is_c_abi_compatible_by_value(db, core.common.self_ty) {
                 quote! {
                     inline #fully_qualified_name::#cc_struct_name() {
                        *this = __crubit_internal::#thunk_name();
@@ -1404,7 +1404,7 @@ fn generate_default_ctor<'tcx>(
     }
     fallible_format_default_ctor(db, core.clone()).map_err(|err| {
         let msg = format!("{err:#}");
-        let adt_cc_name = &core.cc_short_name;
+        let adt_cc_name = &core.common.cc_short_name;
         ApiSnippets {
             main_api: CcSnippet::new(quote! {
                 __NEWLINE__ __COMMENT__ #msg
@@ -1441,10 +1441,9 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
         core: Rc<AdtCoreBindings<'tcx>>,
     ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
-        let cc_struct_name = &core.cc_short_name;
-        let qualified_adt_name = &core.cc_fully_qualified_name;
-
-        match db.has_copy_ctor_and_assignment_operator(core.def_id, core.self_ty) {
+        let cc_struct_name = &core.common.cc_short_name;
+        let qualified_adt_name = &core.common.cc_fully_qualified_name;
+        match db.has_copy_ctor_and_assignment_operator(core.def_id, core.common.self_ty) {
             Some(CopyCtorStyle::Copy) => {
                 let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
                         and assignment operator.";
@@ -1476,7 +1475,7 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
                     db,
                     trait_id,
                     &[],
-                    core.self_ty,
+                    core.common.self_ty,
                     core.def_id,
                     core.rs_fully_qualified_name.clone(),
                     /*is_constructor=*/ true,
@@ -1499,7 +1498,7 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
 
                     // TODO: b/459482188 - This is ultimately dependent on the return ABI of the thunk and
                     // should be centralized with the other callsites that depend on return type ABI.
-                    let ctor_body = if is_c_abi_compatible_by_value(db, core.self_ty) {
+                    let ctor_body = if is_c_abi_compatible_by_value(db, core.common.self_ty) {
                         quote! {
                             *this = __crubit_internal::#clone_thunk_name(other);
                         }
@@ -1533,14 +1532,14 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
                             canon.rs_name_parts().map(|s| format!("{}", s)).collect::<Vec<_>>();
                         parts.join("::")
                     })
-                    .unwrap_or_else(|| format!("{}", core.self_ty));
+                    .unwrap_or_else(|| format!("{}", core.common.self_ty));
                 bail!("`{display_name}` doesn't implement the `Clone` trait");
             }
         }
     }
     fallible_format_copy_ctor_and_assignment_operator(db, core.clone()).map_err(|err| {
         let msg = format!("{err:#}");
-        let adt_cc_name = &core.cc_short_name;
+        let adt_cc_name = &core.common.cc_short_name;
         ApiSnippets {
             main_api: CcSnippet::new(quote! {
                 __NEWLINE__ __COMMENT__ #msg
@@ -1586,9 +1585,9 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
         db: &BindingsGenerator<'tcx>,
         core: Rc<AdtCoreBindings<'tcx>>,
     ) -> Result<ApiSnippets<'tcx>> {
-        let adt_cc_name = &core.cc_short_name;
-        let qualified_adt_name = &core.cc_fully_qualified_name;
-        match db.has_move_ctor_and_assignment_operator(core.def_id, core.self_ty) {
+        let adt_cc_name = &core.common.cc_short_name;
+        let qualified_adt_name = &core.common.cc_fully_qualified_name;
+        match db.has_move_ctor_and_assignment_operator(core.def_id, core.common.self_ty) {
             // We rely on the copy constructor and assignment operator to handle the move
             // operations.
             Some(MoveCtorStyle::Copy) => Ok(ApiSnippets::default()),
@@ -1667,8 +1666,8 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
     }
     fallible_format_move_ctor_and_assignment_operator(db, core.clone()).map_err(|err| {
         let msg = format!("{err:#}");
-        let adt_cc_name = &core.cc_short_name;
-        let qualified_adt_name = &core.cc_fully_qualified_name;
+        let adt_cc_name = &core.common.cc_short_name;
+        let qualified_adt_name = &core.common.cc_fully_qualified_name;
         NoMoveOrAssign {
             err,
             explicitly_deleted: ApiSnippets {
@@ -1696,7 +1695,7 @@ fn generate_fwd_decl(db: &BindingsGenerator<'_>, def_id: DefId) -> TokenStream {
     let core_bindings = db
         .generate_adt_core(def_id)
         .expect("`generate_fwd_decl` should only be called if `generate_adt_core` succeeded");
-    let AdtCoreBindings { keyword, cc_short_name, .. } = &*core_bindings;
+    let CoreBindingsCommon { keyword, cc_short_name, .. } = &*core_bindings.common;
 
     // If we're forward declaring a C++ enum, we need to include the underlying type in the forward
     // declaration. Otherwise, it will default to `int` and cause a compilation error.
