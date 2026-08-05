@@ -231,12 +231,22 @@ main {
   display: grid;
   flex-grow: 1;
   grid-template-columns: 4fr 4px 6fr;
+  min-height: 0;
+  overflow: hidden;
 }
 
 main .pane {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.editor-container {
+  flex: 1 1 0;
+  min-height: 0;
+  position: relative;
 }
 
 main .pane > monaco-editor {
@@ -258,6 +268,9 @@ main .resizer {
 /* Doxygen Section styling */
 .doxygen-section {
   height: 250px;
+  min-height: 0;
+  flex-shrink: 0;
+  overflow: hidden;
   border-top: 1px solid #ccc;
   padding: 10px;
   background: #f9f9f9;

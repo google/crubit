@@ -64,6 +64,15 @@ pub fn find_resource(config: &ResourceSearchConfig) -> Option<PathBuf> {
         }
     }
 
+    if let Ok(cwd) = env::current_dir() {
+        for &adjacent_name in config.adjacent_candidates {
+            let cwd_path = cwd.join(adjacent_name);
+            if config.is_valid_match(&cwd_path) {
+                return Some(cwd_path);
+            }
+        }
+    }
+
     for &bin_name in config.path_binaries {
         if let Some(path) = find_in_path(bin_name)
             && config.is_valid_match(&path)

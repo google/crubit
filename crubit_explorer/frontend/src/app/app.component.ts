@@ -8,6 +8,7 @@ import {AfterViewInit, ChangeDetectorRef, Component, ElementRef, NgZone, OnDestr
 import {Subject, Subscription} from 'rxjs';
 import {debounceTime} from 'rxjs/operators';
 
+import {buildFlatSymbolTree, DoxygenResponse, DoxygenSymbol, FlatSymbolNode} from './doxygen';
 import {loadMonaco} from './monaco_loader';
 
 @Component({
@@ -32,6 +33,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   outputFiles: Array<{name: string, content: string}> = [];
   selectedOutputFileIndex = 0;
+
+  private doxygenSymbols: Record<string, {symbols?: DoxygenSymbol[]}> = {};
+  flatDoxygenSymbols: FlatSymbolNode[] = [];
+  doxygenError = '';
+  isDoxygenCollapsed = false;
 
   constructor(
       private http: HttpClient,
@@ -81,6 +87,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   selectOutputFile(index: number) {
     this.selectedOutputFileIndex = index;
+    this.updateFilteredDoxygenSymbols();
+
     if (!this.outputEditor || !this.outputFiles[index]) {
       return;
     }
@@ -132,6 +140,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         this.isCompiling = false;
         if (res.error) {
           this.outputFiles = [];
+          this.setDoxygen({}, res.error.reason || res.error.text);
           if (this.outputEditor) {
             this.outputEditor.setValue(
                 '// Error:\n' + (res.error.reason || res.error.text));
@@ -140,6 +149,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         }
 
         if (!res.output?.files?.length) {
+          this.setDoxygen();
           return;
         }
 
@@ -160,11 +170,34 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
         this.outputEditor.setValue(currentFile.content);
         this.updateOutputEditorLanguage(currentFile.name);
+
+        const doxygenPayload = {
+          input: {
+            files: res.output.files
+          }
+        };
+
+        this.http.post<DoxygenResponse>('/api/doxygen', doxygenPayload).subscribe({
+          next: (doxyRes) => {
+            if (doxyRes.error) {
+              this.setDoxygen({}, `${doxyRes.error.text}: ${doxyRes.error.reason}`);
+            } else {
+              this.setDoxygen(doxyRes.fileSymbols ?? {});
+            }
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            this.setDoxygen({}, err.message || 'Doxygen request failed');
+            this.cdr.detectChanges();
+          }
+        });
+
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.isCompiling = false;
         this.outputFiles = [];
+        this.setDoxygen();
         const errText =
             err.error?.error?.reason || err.message || 'Unknown Error';
         if (this.outputEditor) {
@@ -173,6 +206,53 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private setDoxygen(
+      symbols: Record<string, {symbols?: DoxygenSymbol[]}> = {},
+      error = ''
+  ): void {
+    this.doxygenSymbols = symbols;
+    this.doxygenError = error;
+    this.updateFilteredDoxygenSymbols();
+  }
+
+  private updateFilteredDoxygenSymbols(): void {
+    if (this.selectedOutputFileIndex < 0 ||
+        !this.outputFiles[this.selectedOutputFileIndex]) {
+      this.flatDoxygenSymbols = [];
+      return;
+    }
+    const selectedName = this.outputFiles[this.selectedOutputFileIndex].name;
+    const fileSymbols = this.doxygenSymbols[selectedName]?.symbols ?? [];
+    this.flatDoxygenSymbols = buildFlatSymbolTree(fileSymbols);
+    this.updateSymbolVisibility();
+  }
+
+  toggleSymbolNode(node: FlatSymbolNode): void {
+    if (!node.hasChildren) return;
+    node.collapsed = !node.collapsed;
+    this.updateSymbolVisibility();
+  }
+
+  toggleDoxygenPanel(): void {
+    this.isDoxygenCollapsed = !this.isDoxygenCollapsed;
+  }
+
+  private updateSymbolVisibility(): void {
+    let hiddenDepth = Infinity;
+    for (const node of this.flatDoxygenSymbols) {
+      if (node.depth >= hiddenDepth) {
+        node.visible = false;
+      } else {
+        node.visible = true;
+        if (node.collapsed) {
+          hiddenDepth = node.depth + 1;
+        } else {
+          hiddenDepth = Infinity;
+        }
+      }
+    }
   }
 
   ngOnDestroy() {

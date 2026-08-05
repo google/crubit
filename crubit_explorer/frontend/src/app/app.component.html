@@ -25,7 +25,7 @@
         </div>
       </div>
     </div>
-    <div #inputEditorContainer style="flex-grow: 1; position: relative;"></div>
+    <div #inputEditorContainer class="editor-container"></div>
   </div>
 
   <div class="resizer"></div>
@@ -48,6 +48,53 @@
         </ng-template>
       </div>
     </div>
-    <div #outputEditorContainer style="flex-grow: 1; position: relative;"></div>
+    <div #outputEditorContainer class="editor-container"></div>
+
+    <div class="doxygen-section" [class.collapsed]="isDoxygenCollapsed">
+      <div class="doxygen-header-container" (click)="toggleDoxygenPanel()">
+        <h3 class="doxygen-header">Symbols in this file</h3>
+        <span class="doxygen-panel-toggle-icon">
+          {{ isDoxygenCollapsed ? '▲' : '▼' }}
+        </span>
+      </div>
+      <div class="doxygen-content">
+        <div *ngIf="doxygenError" class="doxygen-error">
+          {{ doxygenError }}
+        </div>
+        <div *ngIf="flatDoxygenSymbols.length === 0 && !doxygenError" class="doxygen-empty">
+          No symbols found in this file.
+        </div>
+        <div *ngIf="flatDoxygenSymbols.length > 0" class="symbol-tree-container">
+          <ng-container *ngFor="let sym of flatDoxygenSymbols">
+            <div *ngIf="sym.visible"
+                 class="symbol-tree-row"
+                 [style.padding-left.px]="sym.depth * 20"
+                 [class.has-children]="sym.hasChildren"
+                 (click)="toggleSymbolNode(sym)">
+
+              <!-- Collapse/Expand Icon -->
+              <span class="symbol-toggle-icon">
+                <ng-container *ngIf="sym.hasChildren">
+                  {{ sym.collapsed ? '▶' : '▼' }}
+                </ng-container>
+              </span>
+
+              <!-- Kind Badge -->
+              <span class="symbol-kind-badge" [attr.data-kind]="sym.kind">
+                {{ sym.kind }}
+              </span>
+
+              <!-- Symbol Name -->
+              <span class="symbol-name">{{ sym.name }}</span>
+
+              <!-- Location (Optional) -->
+              <span *ngIf="sym.refid" class="symbol-location">
+                {{ sym.refid }}
+              </span>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
