@@ -175,6 +175,10 @@ fn run_compiler_command(
         cmd.arg(format!("--clang-format-exe-path={}", clang_format_path.display()));
     }
 
+    if let Some(rustfmt_path) = resource_locator::get_rustfmt_path() {
+        cmd.arg(format!("--rustfmt-exe-path={}", rustfmt_path.display()));
+    }
+
     if payload.enable_codegen_tracing {
         cmd.arg("--enable-codegen-tracing");
     }

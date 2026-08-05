@@ -37,6 +37,7 @@ crubit_rust_binary(
         "@rules_crubit//cc_bindings_from_rs",
         "@rules_rust//rust/toolchain:current_rustc_files",
         "@rules_rust//rust/toolchain:current_rustc_lib_files",
+        "@rules_rust//rust/toolchain:current_rustfmt_files",
     ],
     edition = "2024",
     env = {
@@ -72,6 +73,7 @@ crubit_rust_test(
         "@rules_crubit//cc_bindings_from_rs",
         "@rules_rust//rust/toolchain:current_rustc_files",
         "@rules_rust//rust/toolchain:current_rustc_lib_files",
+        "@rules_rust//rust/toolchain:current_rustfmt_files",
     ],
     edition = "2024",
     env = {
@@ -123,6 +125,15 @@ pkg_tar(
     strip_prefix = "external/rules_crubit++crubit_toolchains+rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain",
 )
 
+pkg_tar(
+    name = "rustfmt_layer",
+    srcs = [
+        "@rules_rust//rust/toolchain:current_rustfmt_files",
+    ],
+    package_dir = "/",
+    strip_prefix = "external/rules_crubit++crubit_toolchains+rustfmt_nightly-2026-07-01__x86_64-unknown-linux-gnu_tools/bin",
+)
+
 CLANG_FORMAT_PACKAGES = [
     "clang-format",
     "clang-format-19",
@@ -161,6 +172,7 @@ oci_image(
         ":frontend_layer",
         ":rust_layer",
         ":doxygen_layer",
+        ":rustfmt_layer",
     ] + CLANG_FORMAT_APT_TARS,
 )
 

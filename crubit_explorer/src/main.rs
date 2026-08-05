@@ -165,6 +165,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         None => println!("clang-format not found; generated code will be unformatted"),
     }
 
+    match resource_locator::get_rustfmt_path() {
+        Some(path) => println!("rustfmt found at: {}", path.display()),
+        None => println!("rustfmt not found; generated Rust code will be unformatted"),
+    }
+
     match resource_locator::get_doxygen_path() {
         Ok(path) => println!("doxygen found at: {}", path.display()),
         Err(err) => eprintln!("Error locating doxygen: {}", err),

@@ -13,6 +13,9 @@ const CC_BINDINGS_FROM_RS_RLOCATION: &str =
 const CLANG_FORMAT_RLOCATION: &str =
 "clang-format";
 
+const RUSTFMT_RLOCATION: &str =
+"rustfmt";
+
 const DOXYGEN_RLOCATION: &str =
 "rules_doxygen/doxygen";
 
@@ -117,6 +120,18 @@ pub fn get_clang_format_path() -> Option<PathBuf> {
     })
 }
 
+pub fn get_rustfmt_path() -> Option<PathBuf> {
+    find_resource(&ResourceSearchConfig {
+        env_vars: &["RUSTFMT", "CRUBIT_RUSTFMT_EXE_PATH"],
+        runfile_candidates: &[
+            RUSTFMT_RLOCATION,
+        ],
+        adjacent_candidates: &["rustfmt"],
+        path_binaries: &["rustfmt"],
+        allow_directory: false,
+    })
+}
+
 pub fn get_frontend_dist_path() -> Option<PathBuf> {
     find_resource(&ResourceSearchConfig {
         runfile_candidates: &[
@@ -179,5 +194,23 @@ mod tests {
         expect_true!(config.runfile_candidates.is_empty());
         expect_true!(config.adjacent_candidates.is_empty());
         expect_true!(config.path_binaries.is_empty());
+        expect_true!(!config.allow_directory);
+    }
+
+    #[gtest]
+    fn test_is_valid_match() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let dir_path = temp_dir.path();
+        let file_path = dir_path.join("test_file");
+        std::fs::write(&file_path, "hello").unwrap();
+
+        let config_no_dir = ResourceSearchConfig { allow_directory: false, ..Default::default() };
+        let config_allow_dir = ResourceSearchConfig { allow_directory: true, ..Default::default() };
+
+        expect_true!(config_no_dir.is_valid_match(&file_path));
+        expect_true!(config_allow_dir.is_valid_match(&file_path));
+
+        expect_true!(!config_no_dir.is_valid_match(dir_path));
+        expect_true!(config_allow_dir.is_valid_match(dir_path));
     }
 }
