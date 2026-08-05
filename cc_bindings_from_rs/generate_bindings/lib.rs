@@ -1433,19 +1433,21 @@ fn has_copy_ctor_and_assignment_operator<'tcx>(
     )
 }
 
-/// Implementation of `BindingsGenerator::generate_copy_ctor_and_assignment_operator`.
-fn generate_copy_ctor_and_assignment_operator<'tcx>(
+/// Implementation detail of `generate_copy_ctor_and_assignment_operator`.
+fn copy_ctor_style_to_snippets<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
+    copy_ctor_style: Option<CopyCtorStyle>,
 ) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>> {
     fn fallible_format_copy_ctor_and_assignment_operator<'tcx>(
         db: &BindingsGenerator<'tcx>,
         core: Rc<AdtCoreBindings<'tcx>>,
+        copy_ctor_style: Option<CopyCtorStyle>,
     ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
         let cc_struct_name = &core.common.cc_short_name;
         let qualified_adt_name = &core.common.cc_fully_qualified_name;
-        match db.has_copy_ctor_and_assignment_operator(core.def_id, core.common.self_ty) {
+        match copy_ctor_style {
             Some(CopyCtorStyle::Copy) => {
                 let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
                         and assignment operator.";
@@ -1539,18 +1541,30 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
             }
         }
     }
-    fallible_format_copy_ctor_and_assignment_operator(db, core.clone()).map_err(|err| {
-        let msg = format!("{err:#}");
-        let adt_cc_name = &core.common.cc_short_name;
-        ApiSnippets {
-            main_api: CcSnippet::new(quote! {
-                __NEWLINE__ __COMMENT__ #msg
-                #adt_cc_name(const #adt_cc_name&) = delete;  __NEWLINE__
-                #adt_cc_name& operator=(const #adt_cc_name&) = delete;
-            }),
-            ..Default::default()
-        }
-    })
+    fallible_format_copy_ctor_and_assignment_operator(db, core.clone(), copy_ctor_style).map_err(
+        |err| {
+            let msg = format!("{err:#}");
+            let adt_cc_name = &core.common.cc_short_name;
+            ApiSnippets {
+                main_api: CcSnippet::new(quote! {
+                    __NEWLINE__ __COMMENT__ #msg
+                    #adt_cc_name(const #adt_cc_name&) = delete;  __NEWLINE__
+                    #adt_cc_name& operator=(const #adt_cc_name&) = delete;
+                }),
+                ..Default::default()
+            }
+        },
+    )
+}
+
+/// Implementation of `BindingsGenerator::generate_copy_ctor_and_assignment_operator`.
+fn generate_copy_ctor_and_assignment_operator<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    core: Rc<AdtCoreBindings<'tcx>>,
+) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>> {
+    let copy_ctor_style =
+        db.has_copy_ctor_and_assignment_operator(core.def_id, core.common.self_ty);
+    copy_ctor_style_to_snippets(db, core, copy_ctor_style)
 }
 
 fn has_move_ctor_and_assignment_operator<'tcx>(
@@ -1572,17 +1586,19 @@ fn has_move_ctor_and_assignment_operator<'tcx>(
 
 /// Implementation of `BindingsGenerator::generate_move_ctor_and_assignment_operator`.
 #[allow(clippy::result_large_err)]
-fn generate_move_ctor_and_assignment_operator<'tcx>(
+fn move_ctor_style_to_snippets<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    core: Rc<AdtCoreBindings<'tcx>>,
+    common: &CoreBindingsCommon<'tcx>,
+    move_ctor_style: Option<MoveCtorStyle>,
 ) -> Result<ApiSnippets<'tcx>, NoMoveOrAssign<'tcx>> {
     fn fallible_format_move_ctor_and_assignment_operator<'tcx>(
         db: &BindingsGenerator<'tcx>,
-        core: Rc<AdtCoreBindings<'tcx>>,
+        common: &CoreBindingsCommon<'tcx>,
+        move_ctor_style: Option<MoveCtorStyle>,
     ) -> Result<ApiSnippets<'tcx>> {
-        let adt_cc_name = &core.common.cc_short_name;
-        let qualified_adt_name = &core.common.cc_fully_qualified_name;
-        match db.has_move_ctor_and_assignment_operator(core.def_id, core.common.self_ty) {
+        let adt_cc_name = &common.cc_short_name;
+        let qualified_adt_name = &common.cc_fully_qualified_name;
+        match move_ctor_style {
             // We rely on the copy constructor and assignment operator to handle the move
             // operations.
             Some(MoveCtorStyle::Copy) => Ok(ApiSnippets::default()),
@@ -1659,10 +1675,10 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
             }
         }
     }
-    fallible_format_move_ctor_and_assignment_operator(db, core.clone()).map_err(|err| {
+    fallible_format_move_ctor_and_assignment_operator(db, common, move_ctor_style).map_err(|err| {
         let msg = format!("{err:#}");
-        let adt_cc_name = &core.common.cc_short_name;
-        let qualified_adt_name = &core.common.cc_fully_qualified_name;
+        let adt_cc_name = &common.cc_short_name;
+        let qualified_adt_name = &common.cc_fully_qualified_name;
         NoMoveOrAssign {
             err,
             explicitly_deleted: ApiSnippets {
@@ -1675,6 +1691,17 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
             },
         }
     })
+}
+
+/// Implementation of `BindingsGenerator::generate_move_ctor_and_assignment_operator`.
+#[allow(clippy::result_large_err)]
+fn generate_move_ctor_and_assignment_operator<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    core: Rc<AdtCoreBindings<'tcx>>,
+) -> Result<ApiSnippets<'tcx>, NoMoveOrAssign<'tcx>> {
+    let move_ctor_style =
+        db.has_move_ctor_and_assignment_operator(core.def_id, core.common.self_ty);
+    move_ctor_style_to_snippets(db, &core.common, move_ctor_style)
 }
 
 /// Formats the forward declaration of an algebraic data type (an ADT - a
