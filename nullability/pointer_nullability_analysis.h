@@ -8,6 +8,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <utility>
 
 #include "absl/base/nullability.h"
 #include "nullability/pointer_nullability_lattice.h"
@@ -28,6 +29,7 @@
 #include "clang/Analysis/FlowSensitive/StorageLocation.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
 
 namespace clang::tidy::nullability {
 
@@ -53,6 +55,14 @@ class PointerNullabilityAnalysis
 
   PointerNullabilityLattice initialElement() {
     return PointerNullabilityLattice(NFS);
+  }
+
+  // Installs the set of nonnull pointer fields that must be modeled as nullable
+  // at destructor entry because the enclosing object may have been moved from.
+  // Should be called before running the analysis on a destructor.
+  void setFieldsToTreatAsNullableAtDestructorEntry(
+      llvm::DenseSet<const clang::FieldDecl*> Fields) {
+    NFS.FieldsToTreatAsNullableAtDestructorEntry = std::move(Fields);
   }
 
   // Instead of fixing D's nullability invariants from its annotations,

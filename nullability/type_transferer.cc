@@ -295,7 +295,15 @@ static void transferMemberExpr(
     if (ME->hasExplicitTemplateArgs())
       Resugar.addTemplateArgs(ME->getMemberDecl(), ME->template_arguments());
 
-    return State.Lattice.getTypeNullabilityWithOverrides(*Member, Resugar);
+    TypeNullability N =
+        State.Lattice.getTypeNullabilityWithOverrides(*Member, Resugar);
+    // Check if a nonnull pointer field may have been moved from and should be
+    // downgraded to nullable.
+    if (!N.empty() && N.front().concrete() == NullabilityKind::NonNull &&
+        shouldTreatFieldAsNullableAtDestructorEntry(*ME, State.Lattice)) {
+      N.front() = NullabilityKind::Nullable;
+    }
+    return N;
   });
 }
 
