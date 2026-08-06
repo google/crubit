@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/int.h"
 #include "support/rs_std/option.h"
 #include "support/rs_std/traits.h"
 

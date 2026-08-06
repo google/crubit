@@ -1211,6 +1211,7 @@ fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
                 tcx.get_diagnostic_item(sym::From),
                 tcx.get_diagnostic_item(sym::PartialEq),
                 tcx.get_diagnostic_item(sym::Default),
+                tcx.get_diagnostic_item(sym::Hash),
                 lang_items.partial_ord_trait(),
                 // std::ops traits:
                 lang_items.add_trait(),
@@ -2256,6 +2257,15 @@ impl NodeSortKey {
                 // a path string manually.
                 let path_str = format!("{} as !{trait_name}", tcx.def_path_str(u.self_def_id));
                 let hash = tcx.def_path_hash(u.self_def_id).local_hash().as_u64();
+                NodeSortKey { hash, path_str }
+            }
+            TemplateSpecialization::StdHash(h) => {
+                let path_str = format!("{} as std::hash::Hash", h.self_ty);
+                let hash = if let Some(adt) = h.self_ty.ty_adt_def() {
+                    tcx.def_path_hash(adt.did()).local_hash().as_u64()
+                } else {
+                    0
+                };
                 NodeSortKey { hash, path_str }
             }
         }

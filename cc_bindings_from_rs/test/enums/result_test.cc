@@ -163,4 +163,16 @@ TEST(ResultTest, ResultUnitErr) {
   EXPECT_FALSE(res_unexpect.has_value());
 }
 
+TEST(ResultTest, ResultWithSizeTypes) {
+  auto s = result::ResultWithSizeTypes::new_();
+  EXPECT_TRUE(s.uval_in_ok.has_value());
+  EXPECT_EQ(s.uval_in_ok.value(), 42);
+  EXPECT_FALSE(s.uval_in_err.has_value());
+  EXPECT_EQ(s.uval_in_err.error(), 99);
+  EXPECT_TRUE(s.ival_in_ok.has_value());
+  EXPECT_EQ(s.ival_in_ok.value(), -42);
+  EXPECT_FALSE(s.ival_in_err.has_value());
+  EXPECT_EQ(s.ival_in_err.error(), -99);
+}
+
 }  // namespace

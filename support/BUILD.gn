@@ -225,6 +225,23 @@ rust_macro("forward_declare_proc_macros") {
   no_clippy = true
 }
 
+rust_static_library("hash_rust") {
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+  crate_name = "hash_rust"
+  crate_root = "crubit_hash_rust/src/hash.rs"
+  edition = "2024"
+  sources = [
+    "crubit_hash_rust/src/hash.rs",
+  ]
+  allow_unsafe = true
+  no_clippy = true
+}
+
 rust_static_library("oops") {
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
@@ -278,6 +295,7 @@ group("support_rust") {
     ":crubit_annotate",
     ":forward_declare",
     ":forward_declare_proc_macros",
+    ":hash_rust",
     ":oops",
     ":operator",
   ]

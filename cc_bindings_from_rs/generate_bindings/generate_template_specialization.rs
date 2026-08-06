@@ -13,7 +13,8 @@ use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, EnumSpecializationKind, FormattedTy,
     NegativeAutoTraitImplTemplateSpecialization, RsStdEnumSpecialization, RsStdSpecializationArgs,
-    RsStdTemplateSpecialization, TemplateSpecialization, TraitImplTemplateSpecialization,
+    RsStdTemplateSpecialization, StdHashTemplateSpecialization, TemplateSpecialization,
+    TraitImplTemplateSpecialization,
 };
 use database::{
     AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, StaticMethodMode, TypeLocation,
@@ -106,11 +107,13 @@ fn parse_adt_template_specialization<'tcx>(
     BridgedBuiltin::new(db, adt).map(|bridged_builtin| {
         match bridged_builtin {
             BridgedBuiltin::Option => {
+                let mut some_template_ty = None;
                 let some_ty = parse_unit_in_specialization(db, substs.type_at(0))
                         .unwrap_or_else(|| {
+                            some_template_ty = Some(db.format_ty_for_cc(substs.type_at(0), TypeLocation::TemplateArg)?);
                             FormattedTy::try_from_ty(
                                 substs.type_at(0),
-                                TypeLocation::TemplateArg,
+                                TypeLocation::Field,
                                 db,
                             )
                         })?;
@@ -134,7 +137,7 @@ fn parse_adt_template_specialization<'tcx>(
                 let tag_type_cc = db.format_ty_for_cc(tag_type_rs, TypeLocation::Other)?;
                 let self_ty_cc = {
                     let mut prereqs = CcPrerequisites::default();
-                    let some_ty_cc = some_ty.for_cc.clone().into_tokens(&mut prereqs);
+                    let some_ty_cc = some_template_ty.clone().unwrap_or_else(|| some_ty.for_cc.clone()).into_tokens(&mut prereqs);
                     prereqs.forward_declare_type(substs.type_at(0));
                     CcSnippet { tokens: quote! { rs_std::Option<#some_ty_cc> }, prereqs }
                 };
@@ -145,23 +148,31 @@ fn parse_adt_template_specialization<'tcx>(
                     args: RsStdSpecializationArgs::Enum(RsStdEnumSpecialization {
                         tag_type_rs,
                         tag_type_cc: tag_type_cc.clone(),
-                        kind: EnumSpecializationKind::Option { some_ty },
+                        kind: EnumSpecializationKind::Option { some_ty, some_template_ty },
                     }),
                 })
             }
             BridgedBuiltin::Result => {
+                let mut ok_template_ty = None;
                 let ok_ty = parse_unit_in_specialization(db, substs.type_at(0))
-                    .unwrap_or_else(|| FormattedTy::try_from_ty(
-                        substs.type_at(0),
-                        TypeLocation::TemplateArg,
-                        db,
-                    ))?;
+                    .unwrap_or_else(|| {
+                        ok_template_ty = Some(db.format_ty_for_cc(substs.type_at(0), TypeLocation::TemplateArg)?);
+                        FormattedTy::try_from_ty(
+                            substs.type_at(0),
+                            TypeLocation::Field,
+                            db,
+                        )
+                    })?;
+                let mut err_template_ty = None;
                 let err_ty = parse_unit_in_specialization(db, substs.type_at(1))
-                    .unwrap_or_else(|| FormattedTy::try_from_ty(
-                        substs.type_at(1),
-                        TypeLocation::TemplateArg,
-                        db,
-                    ))?;
+                    .unwrap_or_else(|| {
+                        err_template_ty = Some(db.format_ty_for_cc(substs.type_at(1), TypeLocation::TemplateArg)?);
+                        FormattedTy::try_from_ty(
+                            substs.type_at(1),
+                            TypeLocation::Field,
+                            db,
+                        )
+                    })?;
 
                 let layout = get_layout(tcx, self_ty)?;
                 let tag = match layout.variants() {
@@ -190,8 +201,8 @@ fn parse_adt_template_specialization<'tcx>(
                 let tag_type_cc = db.format_ty_for_cc(tag_type_rs, TypeLocation::Other)?;
                 let self_ty_cc = {
                     let mut prereqs = CcPrerequisites::default();
-                    let ok_ty_cc = ok_ty.for_cc.clone().into_tokens(&mut prereqs);
-                    let err_ty_cc = err_ty.for_cc.clone().into_tokens(&mut prereqs);
+                    let ok_ty_cc = ok_template_ty.clone().unwrap_or_else(|| ok_ty.for_cc.clone()).into_tokens(&mut prereqs);
+                    let err_ty_cc = err_template_ty.clone().unwrap_or_else(|| err_ty.for_cc.clone()).into_tokens(&mut prereqs);
                     prereqs.forward_declare_type(substs.type_at(0));
                     prereqs.forward_declare_type(substs.type_at(1));
                     CcSnippet {
@@ -206,7 +217,7 @@ fn parse_adt_template_specialization<'tcx>(
                     args: RsStdSpecializationArgs::Enum(RsStdEnumSpecialization {
                         tag_type_rs,
                         tag_type_cc: tag_type_cc.clone(),
-                        kind: EnumSpecializationKind::Result { ok_ty, err_ty },
+                        kind: EnumSpecializationKind::Result { ok_ty, err_ty, ok_template_ty, err_template_ty },
                     }),
                 })
             }
@@ -240,16 +251,22 @@ fn parse_tuple_template_specialization<'tcx>(
     types: &'tcx ty::List<Ty<'tcx>>,
 ) -> Option<Result<RsStdTemplateSpecialization<'tcx>>> {
     let tcx = db.tcx();
-    let element_tys = types
+    let element_template_tys = types
         .iter()
         .map(|ty| FormattedTy::try_from_ty(ty, TypeLocation::TemplateArg, db))
+        .collect::<Result<Vec<_>>>()
+        .ok()?;
+
+    let element_tys = types
+        .iter()
+        .map(|ty| FormattedTy::try_from_ty(ty, TypeLocation::Field, db))
         .collect::<Result<Vec<_>>>()
         .ok()?;
 
     let layout = get_layout(tcx, self_ty).ok()?;
     let self_ty_cc = {
         let mut prereqs = CcPrerequisites::default();
-        let element_tys_cc = element_tys
+        let element_tys_cc = element_template_tys
             .iter()
             .map(|ty| {
                 prereqs.forward_declare_type(ty.ty);
@@ -262,12 +279,13 @@ fn parse_tuple_template_specialization<'tcx>(
         layout,
         self_ty_rs: self_ty,
         self_ty_cc,
-        args: RsStdSpecializationArgs::Tuple(element_tys),
+        args: RsStdSpecializationArgs::Tuple { element_tys, element_template_tys },
     }))
 }
 
 struct OptionApiGenerator<'tcx> {
     arg_ty: TokenStream,
+    arg_template_ty: TokenStream,
     needs_drop: bool,
     // Reads our tag out of our Option<T> and defines a variable `tag` pointing at its value.
     // This is complicated by the niche optimization, so we abstract it as this reference so it's
@@ -284,6 +302,7 @@ impl<'tcx> OptionApiGenerator<'tcx> {
     fn api_snippets(self) -> ApiSnippets<'tcx> {
         let Self {
             arg_ty,
+            arg_template_ty,
             needs_drop,
             tag_method,
             none_val,
@@ -294,6 +313,7 @@ impl<'tcx> OptionApiGenerator<'tcx> {
             ..
         } = self;
         let mut prereqs = CcPrerequisites::default();
+        let full_self_ty = quote! { rs_std::Option<#arg_template_ty> };
 
         let (drop, drop_details) = if needs_drop {
             (
@@ -301,7 +321,7 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                     constexpr ~Option() noexcept;
                 },
                 quote! {
-                    inline constexpr rs_std::Option<#arg_ty>::~Option() noexcept {
+                    inline constexpr #full_self_ty::~Option() noexcept {
                         this->reset();
                     }
                 },
@@ -312,12 +332,11 @@ impl<'tcx> OptionApiGenerator<'tcx> {
                 quote! {
                     ~Option() noexcept = default;
                 },
-                quote! { static_assert(::std::is_trivially_destructible_v<rs_std::Option<#arg_ty>>); },
+                quote! { static_assert(::std::is_trivially_destructible_v<#full_self_ty>); },
             )
         };
 
         let tag_method_main_api = tag_method.main_api.into_tokens(&mut prereqs);
-        let full_self_ty = quote! { rs_std::Option<#arg_ty> };
 
         let main_api = CcSnippet {
             tokens: quote! {
@@ -475,6 +494,8 @@ fn get_result_variant_indices<'tcx>(tcx: TyCtxt<'tcx>, adt: AdtDef<'tcx>) -> Res
 struct ResultApiGenerator<'tcx> {
     ok_ty_cpp: TokenStream,
     err_ty_cpp: TokenStream,
+    ok_template_ty_cpp: TokenStream,
+    err_template_ty_cpp: TokenStream,
     needs_drop: bool,
     tag_method: ApiSnippets<'tcx>,
     has_value_impl: TokenStream,
@@ -489,6 +510,8 @@ impl<'tcx> ResultApiGenerator<'tcx> {
         let Self {
             ok_ty_cpp,
             err_ty_cpp,
+            ok_template_ty_cpp,
+            err_template_ty_cpp,
             needs_drop,
             tag_method,
             has_value_impl,
@@ -499,7 +522,7 @@ impl<'tcx> ResultApiGenerator<'tcx> {
             ..
         } = self;
         let mut prereqs = CcPrerequisites::default();
-        let full_self_ty = quote! { rs_std::Result<#ok_ty_cpp, #err_ty_cpp> };
+        let full_self_ty = quote! { rs_std::Result<#ok_template_ty_cpp, #err_template_ty_cpp> };
 
         let (drop, drop_details) = if needs_drop {
             (
@@ -625,6 +648,7 @@ impl<'tcx> ResultApiGenerator<'tcx> {
 struct TupleApiGenerator<'a, 'tcx> {
     db: &'a BindingsGenerator<'tcx>,
     element_tys: Vec<FormattedTy<'tcx>>,
+    element_template_tys: Vec<FormattedTy<'tcx>>,
     self_ty: Ty<'tcx>,
     layout: rustc_abi::Layout<'tcx>,
 }
@@ -635,15 +659,23 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
         prereqs.includes.insert(CcInclude::tuple());
         prereqs.includes.insert(CcInclude::utility());
 
-        let element_cc_tys: Vec<_> =
+        prereqs.includes.insert(self.db.support_header("rs_std/int.h"));
+
+        let element_field_cc_tys: Vec<_> =
             self.element_tys.iter().map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs)).collect();
-        let full_self_ty = quote! { rs_std::Tuple<#(#element_cc_tys),*> };
+        let element_template_cc_tys: Vec<_> = self
+            .element_template_tys
+            .iter()
+            .map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs))
+            .collect();
+        let full_self_ty = quote! { rs_std::Tuple<#(#element_template_cc_tys),*> };
 
         let mut construct_elements = quote! {};
         let mut convert_elements = Vec::new();
-        for (i, element_cc_ty) in element_cc_tys.iter().enumerate() {
+        for (i, element_field_cc_ty) in element_field_cc_tys.iter().enumerate() {
             let offset = Literal::u64_unsuffixed(self.layout.fields().offset(i).bytes());
-            let element_ptr = quote! { reinterpret_cast<#element_cc_ty*>(storage_ + #offset) };
+            let element_ptr =
+                quote! { reinterpret_cast<#element_field_cc_ty*>(storage_ + #offset) };
             let i_idx = Literal::usize_unsuffixed(i);
 
             construct_elements.extend(quote! {
@@ -658,10 +690,10 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
 
         let (drop_decl, drop_impl) = if needs_drop {
             let mut drop_elements = quote! {};
-            for (i, element_cc_ty) in element_cc_tys.iter().enumerate() {
+            for (i, element_field_cc_ty) in element_field_cc_tys.iter().enumerate() {
                 let offset = Literal::u64_unsuffixed(self.layout.fields().offset(i).bytes());
                 drop_elements.extend(quote! {
-                    std::destroy_at(reinterpret_cast<#element_cc_ty*>(storage_ + #offset));
+                    std::destroy_at(reinterpret_cast<#element_field_cc_ty*>(storage_ + #offset));
                 });
             }
             (
@@ -683,21 +715,21 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
         let (std_tuple_main_api_ctor, std_tuple_main_api_conv, std_tuple_cc_details) =
             if all_elements_cpp_movable {
                 (
-                    quote! { Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) noexcept; },
-                    quote! { operator std::tuple<#(#element_cc_tys),*>() && noexcept; },
+                    quote! { Tuple(std::tuple<#(#element_template_cc_tys),*>&& tuple) noexcept; },
+                    quote! { operator std::tuple<#(#element_template_cc_tys),*>() && noexcept; },
                     quote! {
-                        inline #full_self_ty::Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) noexcept {
+                        inline #full_self_ty::Tuple(std::tuple<#(#element_template_cc_tys),*>&& tuple) noexcept {
                             #construct_elements
                         } __NEWLINE__
-                        inline #full_self_ty::operator std::tuple<#(#element_cc_tys),*>() && noexcept {
-                            return std::tuple<#(#element_cc_tys),*>(#(#convert_elements),*);
+                        inline #full_self_ty::operator std::tuple<#(#element_template_cc_tys),*>() && noexcept {
+                            return std::tuple<#(#element_template_cc_tys),*>(#(#convert_elements),*);
                         }
                     },
                 )
             } else {
                 (
-                    quote! { Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) = delete; },
-                    quote! { operator std::tuple<#(#element_cc_tys),*>() && = delete; },
+                    quote! { Tuple(std::tuple<#(#element_template_cc_tys),*>&& tuple) = delete; },
+                    quote! { operator std::tuple<#(#element_template_cc_tys),*>() && = delete; },
                     quote! {},
                 )
             };
@@ -724,15 +756,19 @@ fn specialize_tuple<'tcx>(
     db: &BindingsGenerator<'tcx>,
     rs_std: &RsStdTemplateSpecialization<'tcx>,
     element_tys: Vec<FormattedTy<'tcx>>,
+    element_template_tys: Vec<FormattedTy<'tcx>>,
 ) -> ApiSnippets<'tcx> {
     let layout = rs_std.layout;
     let mut prereqs = CcPrerequisites::default();
-    let element_cc_tys =
-        element_tys.iter().map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs)).collect_vec();
+    let element_cc_tys = element_template_tys
+        .iter()
+        .map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs))
+        .collect_vec();
 
     let tuple_api = TupleApiGenerator {
         db,
         element_tys: element_tys.clone(),
+        element_template_tys: element_template_tys.clone(),
         self_ty: rs_std.self_ty_rs,
         layout,
     };
@@ -1099,11 +1135,18 @@ fn specialize_result<'tcx>(
     enum_spec: &RsStdEnumSpecialization<'tcx>,
     ok_ty: FormattedTy<'tcx>,
     err_ty: FormattedTy<'tcx>,
+    ok_template_ty: Option<CcSnippet<'tcx>>,
+    err_template_ty: Option<CcSnippet<'tcx>>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
+    prereqs.includes.insert(db.support_header("rs_std/int.h"));
     let ok_ty_tokens = ok_ty.for_cc.clone().into_tokens(&mut prereqs);
+    let ok_template_ty_tokens =
+        ok_template_ty.map(|t| t.into_tokens(&mut prereqs)).unwrap_or(ok_ty_tokens.clone());
     let err_ty_tokens = err_ty.for_cc.clone().into_tokens(&mut prereqs);
+    let err_template_ty_tokens =
+        err_template_ty.map(|t| t.into_tokens(&mut prereqs)).unwrap_or(err_ty_tokens.clone());
     let layout = rs_std.layout;
     let (tag_encoding, tag_field) = match layout.variants() {
         rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
@@ -1138,7 +1181,7 @@ fn specialize_result<'tcx>(
         }),
         cc_details: CcSnippet::with_include(
             quote! {
-                inline constexpr #tag_type_cc_tokens rs_std::Result<#ok_ty_tokens, #err_ty_tokens>::tag() const& noexcept {
+                inline constexpr #tag_type_cc_tokens rs_std::Result<#ok_template_ty_tokens, #err_template_ty_tokens>::tag() const& noexcept {
                     std::array<unsigned char, sizeof(#tag_type_cc_tokens)> __bytes = {};
                     for (std::size_t i = 0; i < sizeof(#tag_type_cc_tokens); ++i) {
                         __bytes[#byte_index_read] = __storage[#tag_offset + i];
@@ -1146,7 +1189,7 @@ fn specialize_result<'tcx>(
                     return std::bit_cast<#tag_type_cc_tokens>(__bytes);
                 }
                 __NEWLINE__
-                inline constexpr void rs_std::Result<#ok_ty_tokens, #err_ty_tokens>::set_tag(#tag_type_cc_tokens tag) noexcept {
+                inline constexpr void rs_std::Result<#ok_template_ty_tokens, #err_template_ty_tokens>::set_tag(#tag_type_cc_tokens tag) noexcept {
                     auto __bytes = std::bit_cast<std::array<unsigned char, sizeof(#tag_type_cc_tokens)>>(tag);
                     for (std::size_t i = 0; i < sizeof(#tag_type_cc_tokens); ++i) {
                         __storage[#tag_offset + i] = __bytes[#byte_index_write];
@@ -1197,6 +1240,8 @@ fn specialize_result<'tcx>(
         rustc_abi::TagEncoding::Direct => ResultApiGenerator {
             ok_ty_cpp: ok_ty_tokens.clone(),
             err_ty_cpp: err_ty_tokens.clone(),
+            ok_template_ty_cpp: ok_template_ty_tokens.clone(),
+            err_template_ty_cpp: err_template_ty_tokens.clone(),
             needs_drop,
             tag_method,
             has_value_impl: quote! { tag() == #ok_discr_val },
@@ -1254,6 +1299,8 @@ fn specialize_result<'tcx>(
             ResultApiGenerator {
                 ok_ty_cpp: ok_ty_tokens.clone(),
                 err_ty_cpp: err_ty_tokens.clone(),
+                ok_template_ty_cpp: ok_template_ty_tokens.clone(),
+                err_template_ty_cpp: err_template_ty_tokens.clone(),
                 needs_drop,
                 tag_method,
                 has_value_impl,
@@ -1266,7 +1313,8 @@ fn specialize_result<'tcx>(
     };
 
     let rs_fully_qualified_name = quote! { std::result::Result<#ok_ty_for_rs, #err_ty_for_rs> };
-    let cc_fully_qualified_name = quote! { rs_std::Result<#ok_ty_tokens, #err_ty_tokens> };
+    let cc_fully_qualified_name =
+        quote! { rs_std::Result<#ok_template_ty_tokens, #err_template_ty_tokens> };
     let core = Rc::new(AdtCoreBindings {
         common: Rc::new(CoreBindingsCommon {
             keyword: quote! { struct },
@@ -1314,8 +1362,8 @@ fn specialize_result<'tcx>(
         struct
         alignas(#align_literal) __NEWLINE__
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
-        rs_std::Result<#ok_ty_tokens, #err_ty_tokens>
-            : public rs_std::ResultBase<rs_std::Result<#ok_ty_tokens, #err_ty_tokens>, #ok_ty_tokens, #err_ty_tokens> { __NEWLINE__
+        rs_std::Result<#ok_template_ty_tokens, #err_template_ty_tokens>
+            : public rs_std::ResultBase<rs_std::Result<#ok_template_ty_tokens, #err_template_ty_tokens>, #ok_ty_tokens, #err_ty_tokens> { __NEWLINE__
         public:
             #main_api_tokens __NEWLINE__
 
@@ -1349,10 +1397,13 @@ fn specialize_option<'tcx>(
     rs_std: &RsStdTemplateSpecialization<'tcx>,
     enum_spec: &RsStdEnumSpecialization<'tcx>,
     arg_ty: FormattedTy<'tcx>,
+    arg_template_ty: Option<CcSnippet<'tcx>>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
     let ty_tokens = arg_ty.for_cc.clone().into_tokens(&mut prereqs);
+    let template_ty_tokens =
+        arg_template_ty.map(|t| t.into_tokens(&mut prereqs)).unwrap_or(ty_tokens.clone());
     let layout = rs_std.layout;
 
     let (tag_encoding, tag_field) = match layout.variants() {
@@ -1373,6 +1424,7 @@ fn specialize_option<'tcx>(
     let OptionVariantIndices { some_idx, none_idx } = get_option_variant_indices(tcx, *adt);
 
     prereqs.includes.insert(CcInclude::optional());
+    prereqs.includes.insert(db.support_header("rs_std/int.h"));
     let tag_offset = Literal::u64_unsuffixed(layout.fields().offset(tag_field.as_usize()).bytes());
 
     let endian = tcx.sess.target.options.endian;
@@ -1387,7 +1439,7 @@ fn specialize_option<'tcx>(
         }),
         cc_details: CcSnippet::with_include(
             quote! {
-                inline constexpr #tag_type_cc rs_std::Option<#ty_tokens>::tag() const& noexcept {
+                inline constexpr #tag_type_cc rs_std::Option<#template_ty_tokens>::tag() const& noexcept {
                     ::std::array<unsigned char, sizeof(#tag_type_cc)> __bytes = {};
                     for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
                         __bytes[#endian_index] = storage_[#tag_offset + i];
@@ -1395,7 +1447,7 @@ fn specialize_option<'tcx>(
                     return ::std::bit_cast<#tag_type_cc>(__bytes);
                 }
                 __NEWLINE__
-                inline constexpr void rs_std::Option<#ty_tokens>::set_tag(#tag_type_cc tag) noexcept {
+                inline constexpr void rs_std::Option<#template_ty_tokens>::set_tag(#tag_type_cc tag) noexcept {
                     auto __bytes = ::std::bit_cast<::std::array<unsigned char, sizeof(#tag_type_cc)>>(tag);
                     for (::std::size_t i = 0; i < sizeof(#tag_type_cc); ++i) {
                         storage_[#tag_offset + i] = __bytes[#endian_index];
@@ -1441,6 +1493,7 @@ fn specialize_option<'tcx>(
 
             OptionApiGenerator {
                 arg_ty: ty_tokens.clone(),
+                arg_template_ty: template_ty_tokens.clone(),
                 needs_drop,
                 tag_method,
                 none_val: quote! { #none_discr_val },
@@ -1465,6 +1518,7 @@ fn specialize_option<'tcx>(
                 literal_of_tag_ty(tcx, niche_start + none_relative_idx, tag_type);
             OptionApiGenerator {
                 arg_ty: ty_tokens.clone(),
+                arg_template_ty: template_ty_tokens.clone(),
                 needs_drop,
                 tag_method,
                 none_val: quote! { #none_relative_val },
@@ -1482,7 +1536,7 @@ fn specialize_option<'tcx>(
         }
     };
     let rs_fully_qualified_name = quote! { std::option::Option<#arg_ty_for_rs> };
-    let cc_fully_qualified_name = quote! { rs_std::Option<#ty_tokens> };
+    let cc_fully_qualified_name = quote! { rs_std::Option<#template_ty_tokens> };
     let core = Rc::new(AdtCoreBindings {
         common: Rc::new(CoreBindingsCommon {
             keyword: quote! { struct },
@@ -1533,8 +1587,8 @@ fn specialize_option<'tcx>(
         template<> __NEWLINE__
         struct alignas(#align_literal)
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
-        rs_std::Option<#ty_tokens>
-            : public rs_std::OptionBase<rs_std::Option<#ty_tokens>, #ty_tokens> { __NEWLINE__
+        rs_std::Option<#template_ty_tokens>
+            : public rs_std::OptionBase<rs_std::Option<#template_ty_tokens>, #ty_tokens> { __NEWLINE__
         public:
             #main_api_tokens __NEWLINE__
 
@@ -1571,24 +1625,43 @@ impl<'tcx> TemplateSpecializationExt<'tcx> for RsStdTemplateSpecialization<'tcx>
     fn api_snippets(self, db: &BindingsGenerator<'tcx>) -> ApiSnippets<'tcx> {
         match &self.args {
             RsStdSpecializationArgs::Enum(enum_spec) => match &enum_spec.kind {
-                EnumSpecializationKind::Option { some_ty } => {
+                EnumSpecializationKind::Option { some_ty, some_template_ty } => {
                     let some_ty_ty = some_ty.ty;
-                    let mut snippets = specialize_option(db, &self, enum_spec, some_ty.clone());
+                    let mut snippets = specialize_option(
+                        db,
+                        &self,
+                        enum_spec,
+                        some_ty.clone(),
+                        some_template_ty.clone(),
+                    );
                     snippets.main_api.prereqs.forward_declare_type(some_ty_ty);
                     snippets
                 }
-                EnumSpecializationKind::Result { ok_ty, err_ty } => {
+                EnumSpecializationKind::Result {
+                    ok_ty,
+                    err_ty,
+                    ok_template_ty,
+                    err_template_ty,
+                } => {
                     let ok_ty_ty = ok_ty.ty;
                     let err_ty_ty = err_ty.ty;
-                    let mut snippets =
-                        specialize_result(db, &self, enum_spec, ok_ty.clone(), err_ty.clone());
+                    let mut snippets = specialize_result(
+                        db,
+                        &self,
+                        enum_spec,
+                        ok_ty.clone(),
+                        err_ty.clone(),
+                        ok_template_ty.clone(),
+                        err_template_ty.clone(),
+                    );
                     snippets.main_api.prereqs.forward_declare_type(ok_ty_ty);
                     snippets.main_api.prereqs.forward_declare_type(err_ty_ty);
                     snippets
                 }
             },
-            RsStdSpecializationArgs::Tuple(element_tys) => {
-                let mut snippets = specialize_tuple(db, &self, element_tys.clone());
+            RsStdSpecializationArgs::Tuple { element_tys, element_template_tys } => {
+                let mut snippets =
+                    specialize_tuple(db, &self, element_tys.clone(), element_template_tys.clone());
                 for element_ty in element_tys {
                     snippets.main_api.prereqs.forward_declare_type(element_ty.ty);
                 }
@@ -1880,6 +1953,41 @@ fn generate_negative_auto_trait_impl_specialization<'tcx>(
     })
 }
 
+/// Generates a `std::hash<T>` template specialization for a type `T` implementing `Hash`.
+fn generate_std_hash_specialization<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    spec: &StdHashTemplateSpecialization<'tcx>,
+) -> Result<ApiSnippets<'tcx>> {
+    let mut prereqs = CcPrerequisites::default();
+    prereqs.includes.insert(CcInclude::cstddef());
+    prereqs.includes.insert(CcInclude::cstdint());
+    prereqs.includes.insert(CcInclude::SystemHeader("functional".into()));
+    if let Some(adt) = spec.self_ty.ty_adt_def() {
+        add_specialization_prereqs(db, &mut prereqs, adt.did())?;
+    }
+    let self_ty_cc_name = &spec.self_ty_cc_name;
+    let thunk_name = &spec.thunk_name;
+    let main_api = CcSnippet {
+        tokens: quote! {
+            __NEWLINE__
+            namespace __crubit_internal {
+                extern "C" ::std::uint64_t #thunk_name(const #self_ty_cc_name&);
+            }
+            namespace std {
+            template <>
+            struct hash<#self_ty_cc_name> {
+                ::std::size_t operator()(const #self_ty_cc_name& self) const {
+                    return static_cast<::std::size_t>(__crubit_internal::#thunk_name(self));
+                }
+            };
+            }
+            __NEWLINE__
+        },
+        prereqs,
+    };
+    Ok(ApiSnippets { main_api, ..Default::default() })
+}
+
 /// Generate a template specialization.
 pub fn generate_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -1899,6 +2007,14 @@ pub fn generate_template_specialization<'tcx>(
                         .into_main_api()
                 })
         }
+        TemplateSpecialization::StdHash(std_hash) => generate_std_hash_specialization(db, std_hash)
+            .unwrap_or_else(|err| {
+                if let Some(adt) = std_hash.self_ty.ty_adt_def() {
+                    generate_unsupported_def(db, adt.did(), err).into_main_api()
+                } else {
+                    ApiSnippets::default()
+                }
+            }),
     };
     // Because we reuse logic from generate_struct_and_union here, we will add our `self_ty` as a template specialization of its own specialization creating a dependency cycle.
     // We break that loop manually here to avoid that.

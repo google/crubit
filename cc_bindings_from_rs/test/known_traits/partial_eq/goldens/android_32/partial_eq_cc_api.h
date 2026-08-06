@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/int.h"
 #include "support/rs_std/tuple.h"
 
 #include <cstddef>
@@ -91,7 +92,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // PartialEq implementation for `(u64, bool)` is not supported when
   // `PartialEq<(usize, bool)>` is implemented as it may overlap.
 
-  bool operator==(rs_std::Tuple<::std::uint32_t, bool> const& _other) const;
+  bool operator==(rs_std::Tuple<rs_std::usize, bool> const& _other) const;
 
  private:
   union {
@@ -140,11 +141,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 }  // namespace partial_eq::usize_rhs
 
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "(usize , bool ,)") rs_std::Tuple<::std::uint32_t, bool> {
+    "(usize , bool ,)") rs_std::Tuple<rs_std::usize, bool> {
  public:
   // Default::default
   Tuple();
@@ -157,9 +158,9 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
-  Tuple(std::tuple<::std::uint32_t, bool>&& tuple) noexcept;
+  Tuple(std::tuple<rs_std::usize, bool>&& tuple) noexcept;
   ~Tuple() = default;
-  operator std::tuple<::std::uint32_t, bool>() && noexcept;
+  operator std::tuple<rs_std::usize, bool>() && noexcept;
 
  private:
   unsigned char storage_[8];
@@ -249,10 +250,10 @@ namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003atuple_ucollision_x0000003a_x0000003aMyStruct_u_x00000028usize_x0000002c_x00000020bool_x00000029(
     ::partial_eq::tuple_collision::MyStruct const&,
-    rs_std::Tuple<::std::uint32_t, bool> const&);
+    rs_std::Tuple<rs_std::usize, bool> const&);
 }
 inline bool MyStruct::operator==(
-    rs_std::Tuple<::std::uint32_t, bool> const& _other) const {
+    rs_std::Tuple<rs_std::usize, bool> const& _other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003atuple_ucollision_x0000003a_x0000003aMyStruct_u_x00000028usize_x0000002c_x00000020bool_x00000029(
@@ -308,41 +309,41 @@ inline void MyStruct::__crubit_field_offset_assertions() {
 }
 }  // namespace partial_eq::usize_rhs
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020bool_x00000029(
-    rs_std::Tuple<::std::uint32_t, bool>* __ret_ptr);
+    rs_std::Tuple<rs_std::usize, bool>* __ret_ptr);
 }
-inline ::rs_std::Tuple<::std::uint32_t, bool>::Tuple() {
+inline ::rs_std::Tuple<rs_std::usize, bool>::Tuple() {
   __crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020bool_x00000029(
           this);
 }
 static_assert(::std::is_trivially_copy_constructible_v<
-              ::rs_std::Tuple<::std::uint32_t, bool>>);
+              ::rs_std::Tuple<rs_std::usize, bool>>);
 static_assert(::std::is_trivially_copy_assignable_v<
-              ::rs_std::Tuple<::std::uint32_t, bool>>);
+              ::rs_std::Tuple<rs_std::usize, bool>>);
 static_assert(::std::is_trivially_move_constructible_v<
-              ::rs_std::Tuple<::std::uint32_t, bool>>);
+              ::rs_std::Tuple<rs_std::usize, bool>>);
 static_assert(::std::is_trivially_move_assignable_v<
-              ::rs_std::Tuple<::std::uint32_t, bool>>);
-inline ::rs_std::Tuple<::std::uint32_t, bool>::Tuple(
-    ::crubit::UnsafeRelocateTag, Tuple&& value) {
+              ::rs_std::Tuple<rs_std::usize, bool>>);
+inline ::rs_std::Tuple<rs_std::usize, bool>::Tuple(::crubit::UnsafeRelocateTag,
+                                                   Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline rs_std::Tuple<::std::uint32_t, bool>::Tuple(
-    std::tuple<::std::uint32_t, bool>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::uint32_t*>(storage_ + 0),
+inline rs_std::Tuple<rs_std::usize, bool>::Tuple(
+    std::tuple<rs_std::usize, bool>&& tuple) noexcept {
+  std::construct_at(reinterpret_cast<::std::uintptr_t*>(storage_ + 0),
                     std::move(std::get<0>(tuple)));
   std::construct_at(reinterpret_cast<bool*>(storage_ + 4),
                     std::move(std::get<1>(tuple)));
 }
-inline rs_std::Tuple<::std::uint32_t, bool>::operator std::tuple<
-    ::std::uint32_t, bool>() && noexcept {
-  return std::tuple<::std::uint32_t, bool>(
-      std::move(*reinterpret_cast<::std::uint32_t*>(storage_ + 0)),
+inline rs_std::Tuple<rs_std::usize, bool>::operator std::tuple<
+    rs_std::usize, bool>() && noexcept {
+  return std::tuple<rs_std::usize, bool>(
+      std::move(*reinterpret_cast<::std::uintptr_t*>(storage_ + 0)),
       std::move(*reinterpret_cast<bool*>(storage_ + 4)));
 }
 

@@ -130,6 +130,13 @@ const _: () = assert!(::core::mem::offset_of!(::result_golden::NestedResult, in_
 const _: () = assert!(::core::mem::offset_of!(::result_golden::NestedResult, in_err) == 8);
 const _: () = assert!(::std::mem::size_of::<::result_golden::ResultWithSizeTypes>() == 32);
 const _: () = assert!(::std::mem::align_of::<::result_golden::ResultWithSizeTypes>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::result_golden::ResultWithSizeTypes::new();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
 const _: () =
     assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, uval_in_ok) == 0);
 const _: () =

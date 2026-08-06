@@ -313,12 +313,24 @@ impl StructWithOptionTuple {
     }
 }
 
+#[must_bind]
 pub struct TupleWithSizeTypes {
-    // b/491106325 - We expect these not to get bindings.
     pub uval_in_tuple1: (usize, u8),
     pub uval_in_tuple2: (u8, usize),
     pub ival_in_tuple1: (isize, i8),
     pub ival_in_tuple2: (i8, isize),
+}
+
+impl TupleWithSizeTypes {
+    #[must_bind]
+    pub fn new() -> Self {
+        TupleWithSizeTypes {
+            uval_in_tuple1: (10, 20),
+            uval_in_tuple2: (30, 40),
+            ival_in_tuple1: (-10, 20),
+            ival_in_tuple2: (30, -40),
+        }
+    }
 }
 
 pub struct TuplesWithU64 {

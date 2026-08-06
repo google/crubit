@@ -12,7 +12,7 @@ use code_gen_utils::CcInclude;
 use crubit_abi_type::CrubitAbiType;
 use error_report::bail;
 use itertools::Itertools;
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use rustc_middle::ty::Ty;
 use rustc_span::def_id::DefId;
 use rustc_span::Symbol;
@@ -87,6 +87,25 @@ pub enum TemplateSpecialization<'tcx> {
     RsStd(RsStdTemplateSpecialization<'tcx>),
     TraitImpl(TraitImplTemplateSpecialization),
     NegativeAutoTraitImpl(NegativeAutoTraitImplTemplateSpecialization),
+    StdHash(StdHashTemplateSpecialization<'tcx>),
+}
+
+#[derive(Clone, Debug)]
+pub struct StdHashTemplateSpecialization<'tcx> {
+    pub self_ty: Ty<'tcx>,
+    pub self_ty_cc_name: TokenStream,
+    pub thunk_name: Ident,
+}
+impl PartialEq for StdHashTemplateSpecialization<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.self_ty == other.self_ty
+    }
+}
+impl Eq for StdHashTemplateSpecialization<'_> {}
+impl Hash for StdHashTemplateSpecialization<'_> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.self_ty.hash(state);
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -162,7 +181,7 @@ impl<'tcx> RsStdTemplateSpecialization<'tcx> {
                 EnumSpecializationKind::Option { .. } => db.support_header("rs_std/option.h"),
                 EnumSpecializationKind::Result { .. } => db.support_header("rs_std/result.h"),
             },
-            RsStdSpecializationArgs::Tuple(_) => db.support_header("rs_std/tuple.h"),
+            RsStdSpecializationArgs::Tuple { .. } => db.support_header("rs_std/tuple.h"),
             RsStdSpecializationArgs::Vec(_) => db.support_header("rs_std/vec.h"),
         }
     }
@@ -186,7 +205,7 @@ impl Hash for RsStdTemplateSpecialization<'_> {
 #[allow(clippy::large_enum_variant)]
 pub enum RsStdSpecializationArgs<'tcx> {
     Enum(RsStdEnumSpecialization<'tcx>),
-    Tuple(Vec<FormattedTy<'tcx>>),
+    Tuple { element_tys: Vec<FormattedTy<'tcx>>, element_template_tys: Vec<FormattedTy<'tcx>> },
     Vec(FormattedTy<'tcx>),
 }
 
@@ -200,20 +219,28 @@ pub struct RsStdEnumSpecialization<'tcx> {
 #[derive(Clone, Debug)]
 #[allow(clippy::large_enum_variant)]
 pub enum EnumSpecializationKind<'tcx> {
-    Option { some_ty: FormattedTy<'tcx> },
-    Result { ok_ty: FormattedTy<'tcx>, err_ty: FormattedTy<'tcx> },
+    Option {
+        some_ty: FormattedTy<'tcx>,
+        some_template_ty: Option<CcSnippet<'tcx>>,
+    },
+    Result {
+        ok_ty: FormattedTy<'tcx>,
+        err_ty: FormattedTy<'tcx>,
+        ok_template_ty: Option<CcSnippet<'tcx>>,
+        err_template_ty: Option<CcSnippet<'tcx>>,
+    },
 }
 
 impl PartialEq for EnumSpecializationKind<'_> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (
-                EnumSpecializationKind::Option { some_ty: self_some_ty },
-                EnumSpecializationKind::Option { some_ty: other_some_ty },
+                EnumSpecializationKind::Option { some_ty: self_some_ty, .. },
+                EnumSpecializationKind::Option { some_ty: other_some_ty, .. },
             ) => self_some_ty == other_some_ty,
             (
-                EnumSpecializationKind::Result { ok_ty: self_ok_ty, err_ty: self_err_ty },
-                EnumSpecializationKind::Result { ok_ty: other_ok_ty, err_ty: other_err_ty },
+                EnumSpecializationKind::Result { ok_ty: self_ok_ty, err_ty: self_err_ty, .. },
+                EnumSpecializationKind::Result { ok_ty: other_ok_ty, err_ty: other_err_ty, .. },
             ) => self_ok_ty == other_ok_ty && self_err_ty == other_err_ty,
             _ => false,
         }
@@ -225,11 +252,11 @@ impl Eq for EnumSpecializationKind<'_> {}
 impl Hash for EnumSpecializationKind<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            EnumSpecializationKind::Option { some_ty } => {
+            EnumSpecializationKind::Option { some_ty, .. } => {
                 state.write_u8(0);
                 some_ty.hash(state);
             }
-            EnumSpecializationKind::Result { ok_ty, err_ty } => {
+            EnumSpecializationKind::Result { ok_ty, err_ty, .. } => {
                 state.write_u8(1);
                 ok_ty.hash(state);
                 err_ty.hash(state);

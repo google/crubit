@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs_std/int.h"
 #include "support/rs_std/traits.h"
 #include "support/rs_std/tuple.h"
 

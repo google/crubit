@@ -38,7 +38,6 @@ use rustc_hir::attrs::lang_items::LangItem;
 #[rustversion::before(2026-08-09)]
 use rustc_hir::lang_items::LangItem;
 use rustc_middle::mir::Mutability;
-use rustc_middle::ty::layout::IntegerExt;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::symbol::Symbol;
@@ -280,7 +279,7 @@ fn cstdint<'tcx>(tokens: TokenStream) -> CcSnippet<'tcx> {
 }
 
 fn format_int_ty_for_cc<'tcx>(
-    tcx: TyCtxt<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     int_ty: ty::IntTy,
     location: TypeLocation,
 ) -> Result<CcSnippet<'tcx>> {
@@ -291,10 +290,10 @@ fn format_int_ty_for_cc<'tcx>(
         ty::IntTy::I64 => Ok(cstdint(quote! { ::std::int64_t })),
         ty::IntTy::Isize => {
             if matches!(location, TypeLocation::TemplateArg) {
-                let fixed_ty =
-                    tcx.data_layout.ptr_sized_integer().to_ty(tcx, /*signed=*/ true);
-                let ty::TyKind::Int(fixed_int) = fixed_ty.kind() else { unreachable!() };
-                format_int_ty_for_cc(tcx, *fixed_int, location)
+                Ok(CcSnippet::with_include(
+                    quote! { rs_std::isize },
+                    db.support_header("rs_std/int.h"),
+                ))
             } else {
                 Ok(cstdint(quote! { ::std::intptr_t }))
             }
@@ -312,7 +311,7 @@ fn format_int_ty_for_cc<'tcx>(
 }
 
 fn format_uint_ty_for_cc<'tcx>(
-    tcx: TyCtxt<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     uint_ty: ty::UintTy,
     location: TypeLocation,
 ) -> Result<CcSnippet<'tcx>> {
@@ -323,10 +322,10 @@ fn format_uint_ty_for_cc<'tcx>(
         ty::UintTy::U64 => Ok(cstdint(quote! { ::std::uint64_t })),
         ty::UintTy::Usize => {
             if matches!(location, TypeLocation::TemplateArg) {
-                let fixed_ty =
-                    tcx.data_layout.ptr_sized_integer().to_ty(tcx, /*signed=*/ false);
-                let ty::TyKind::Uint(fixed_uint) = fixed_ty.kind() else { unreachable!() };
-                format_uint_ty_for_cc(tcx, *fixed_uint, location)
+                Ok(CcSnippet::with_include(
+                    quote! { rs_std::usize },
+                    db.support_header("rs_std/int.h"),
+                ))
             } else {
                 Ok(cstdint(quote! { ::std::uintptr_t }))
             }
@@ -507,8 +506,8 @@ pub fn format_ty_for_cc<'tcx>(
         // documents that "Rust does not support C platforms on which the C native integer type are
         // not compatible with any of Rust's fixed-width integer type (e.g. because of
         // padding-bits, lack of 2's complement, etc.)."
-        ty::TyKind::Int(int_ty) => format_int_ty_for_cc(tcx, int_ty, location)?,
-        ty::TyKind::Uint(uint_ty) => format_uint_ty_for_cc(tcx, uint_ty, location)?,
+        ty::TyKind::Int(int_ty) => format_int_ty_for_cc(db, int_ty, location)?,
+        ty::TyKind::Uint(uint_ty) => format_uint_ty_for_cc(db, uint_ty, location)?,
 
         ty::TyKind::Adt(adt, substs)
             if is_rvalue_reference(db, adt.did()) || is_ctor_by_value(db, adt.did()) =>

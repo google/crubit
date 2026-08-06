@@ -201,5 +201,15 @@ TEST(TuplesTest, StructWithOptionTuple) {
   EXPECT_EQ(res.value(), 42);
 }
 
+TEST(TuplesTest, TupleWithSizeTypes) {
+  auto s = tuples::TupleWithSizeTypes::new_();
+  std::tuple<rs_std::usize, std::uint8_t> t1 = std::move(s.uval_in_tuple1);
+  EXPECT_EQ(std::get<0>(t1), rs_std::usize(10));
+  EXPECT_EQ(std::get<1>(t1), 20);
+  std::tuple<std::int8_t, rs_std::isize> t4 = std::move(s.ival_in_tuple2);
+  EXPECT_EQ(std::get<0>(t4), 30);
+  EXPECT_EQ(std::get<1>(t4), rs_std::isize(-40));
+}
+
 }  // namespace
 }  // namespace crubit

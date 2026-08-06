@@ -2077,3 +2077,54 @@ fn test_trait_impl_for_mapped_cpp_type() {
         assert!(!bindings.cc_api.to_string().contains("struct SomeCppStruct;"));
     });
 }
+
+#[test]
+fn test_generated_bindings_hash_trait() {
+    let test_src = r#"
+        #[derive(Hash)]
+        pub struct Point {
+            pub x: i32,
+            pub y: i32,
+        }
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                namespace rust_out {
+                    ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] Point final {
+                        ...
+                        template <typename H>
+                        friend H AbslHashValue(H h, const Point& self);
+                        ...
+                    };
+                    ...
+                }
+                ...
+                namespace std {
+                template <>
+                struct hash<::rust_out::Point> {
+                    ::std::size_t operator()(const ::rust_out::Point& self) const {
+                        return static_cast<::std::size_t>(__crubit_internal::__crubit_thunk_Hash_uhash_uPoint(self));
+                    }
+                };
+                }
+                ...
+                namespace rust_out {
+                    ...
+                    namespace __crubit_internal {
+                        extern "C" ::std::uint64_t __crubit_thunk_Hash_uhash_uPoint(...);
+                    }
+                    template <typename H>
+                    inline H AbslHashValue(H h, const Point& self) {
+                        return H::combine(::std::move(h), __crubit_internal::__crubit_thunk_Hash_uhash_uPoint(self));
+                    }
+                    ...
+                }
+            }
+        );
+    });
+}

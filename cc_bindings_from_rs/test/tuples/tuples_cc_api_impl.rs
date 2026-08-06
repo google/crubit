@@ -205,6 +205,13 @@ const _: () =
     assert!(::core::mem::offset_of!(::tuples_golden::TupleStruct, empty_tuple_field) == 4);
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::TupleWithSizeTypes>() == 64);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::TupleWithSizeTypes>() == 8);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::tuples_golden::TupleWithSizeTypes::new();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
 const _: () =
     assert!(::core::mem::offset_of!(::tuples_golden::TupleWithSizeTypes, uval_in_tuple1) == 0);
 const _: () =

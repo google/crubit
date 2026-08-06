@@ -565,8 +565,59 @@ extern crate proc_macro;
 
         let lib_rs_path = project_dir.join(format!("{}_cc_api.rs", root_name));
         fs::write(&lib_rs_path, lib_rs_content)?;
-
         let static_lib_path = profile_dir.join(format!("lib{}.a", root_name));
+
+        let get_support_dep = |env_var: &str,
+                               dep_name: &str,
+                               pkg_name: &str,
+                               relative_path: &str|
+         -> String {
+            if let Ok(override_path) = env::var(env_var) {
+                format!("{dep_name} = {{ package = {:?}, path = {:?} }}\n", pkg_name, override_path)
+            } else if let Some(pkg) = metadata.packages.iter().find(|p| p.name == pkg_name) {
+                if pkg.source.as_ref().is_some_and(|source| source.is_crates_io()) {
+                    format!(
+                        "{dep_name} = {{ package = {:?}, version = \"{}\" }}\n",
+                        pkg_name, pkg.version
+                    )
+                } else {
+                    format!(
+                        "{dep_name} = {{ package = {:?}, path = {:?} }}\n",
+                        pkg_name,
+                        pkg.manifest_path
+                            .parent()
+                            .expect("Manifest path expected to have at least a Cargo.toml segment")
+                    )
+                }
+            } else if let Some(manifest_dir) = option_env!("CARGO_MANIFEST_DIR") {
+                let local_path = std::path::Path::new(manifest_dir).join(relative_path);
+                if local_path.exists() {
+                    format!(
+                        "{dep_name} = {{ package = {:?}, path = {:?} }}\n",
+                        pkg_name,
+                        local_path.canonicalize().unwrap_or(local_path)
+                    )
+                } else {
+                    format!("{dep_name} = {{ package = {:?}, version = \"0.1.0\" }}\n", pkg_name)
+                }
+            } else {
+                format!("{dep_name} = {{ package = {:?}, version = \"0.1.0\" }}\n", pkg_name)
+            }
+        };
+
+        let bridge_rust_dep = get_support_dep(
+            "CRUBIT_BRIDGE_RUST_PATH",
+            "bridge_rust",
+            "crubit_bridge_rust",
+            "../../../support/crubit_bridge_rust",
+        );
+        let hash_rust_dep = get_support_dep(
+            "CRUBIT_HASH_RUST_PATH",
+            "hash_rust",
+            "crubit_hash_rust",
+            "../../../support/crubit_hash_rust",
+        );
+
         let mut cargo_toml_content = format!(
             r#"[package]
 name = "{root_name}-cc-api"
@@ -580,11 +631,12 @@ path = "{lib_rs_filename}"
 crate-type = ["staticlib"]
 
 [dependencies]
-bridge_rust = {{ package = "crubit_bridge_rust", version = "0.0.1" }}
-    "#,
+{bridge_rust_dep}{hash_rust_dep}    "#,
             root_name = root_name,
             edition = self.root.edition,
             lib_rs_filename = lib_rs_path.file_name().unwrap(),
+            bridge_rust_dep = bridge_rust_dep,
+            hash_rust_dep = hash_rust_dep,
         );
 
         let pkg_id_to_package: HashMap<_, _> =
