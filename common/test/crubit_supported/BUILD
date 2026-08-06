@@ -13,7 +13,7 @@ package(
 platform(
     name = "unsupported_platform",
     constraint_values = [
-        "@platforms//os:android",
+        "@platforms//os:freebsd",
         "@platforms//cpu:aarch64",
     ],
 )
