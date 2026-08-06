@@ -25,7 +25,7 @@
 #include <utility>
 
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo.proto.h"
-#include "cc_bindings_from_rs/test/bridging/protobuf/foo_cpp_rust_proto.h"
+#include "cc_bindings_from_rs/test/bridging/protobuf/foo_rust_proto_cpp.h"
 
 namespace rust_lib {
 
