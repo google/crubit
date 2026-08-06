@@ -81,7 +81,7 @@ fn test_format_bridged_type_in_generic_types() {
         assert_eq!(
             err,
             "Error handling parameter #0 of type `std::boxed::Box<RustType>`: \
-            Can't format ADT as it has a generic type `RustType` that is a bridged type"
+            crubit.rs/errors/unsupported_type: Types containing generic parameter `RustType` (which is a bridged type) are not supported."
         );
     });
 

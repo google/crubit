@@ -191,11 +191,11 @@ struct alignas(4)
 namespace type_aliases::test_generics_matching {
 
 // Error generating bindings for enum `std::result::Result` defined at
-// third_party/rust_toolchain/library/core/src/result.rs;l=558:
+// third_party/rust_toolchain/library/core/src/result.rs;l=557:
 // The following Rust type is not supported yet: T
 
 // Error generating bindings for enum `std::result::Result` defined at
-// third_party/rust_toolchain/library/core/src/result.rs;l=558:
+// third_party/rust_toolchain/library/core/src/result.rs;l=557:
 // The following Rust type is not supported yet: T
 
 }  // namespace type_aliases::test_generics_matching
