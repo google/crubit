@@ -24,6 +24,13 @@ extern "C" void __rust_thunk___Z3RTSv(struct TS<int>* __return) {
 
 static_assert((struct TS<int> (*)()) & ::RTS);
 
+static_assert(sizeof(class NormalClass) == 1);
+static_assert(alignof(class NormalClass) == 1);
+
+extern "C" void __rust_thunk___ZN11NormalClassC1Ev(class NormalClass* __this) {
+  crubit::construct_at(__this);
+}
+
 static_assert(sizeof(struct TS<int>) == 1);
 static_assert(alignof(struct TS<int>) == 1);
 

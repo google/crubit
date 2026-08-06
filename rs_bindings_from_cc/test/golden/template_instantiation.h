@@ -12,4 +12,11 @@ struct TS {
 
 TS<int> RTS();
 
+class NormalClass {};
+
+template <typename T>
+bool operator==(const NormalClass&, const T&) {
+  return true;
+}
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATE_INSTANTIATION_H_

@@ -28,6 +28,34 @@ pub fn RTS() -> crate::__CcTemplateInst2TSIiE {
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "11NormalClass"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=NormalClass
+pub struct NormalClass {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for NormalClass {}
+impl !Sync for NormalClass {}
+unsafe impl ::cxx::ExternType for NormalClass {
+    type Id = ::cxx::type_id!("NormalClass");
+    type Kind = ::cxx::kind::Trivial;
+}
+
+impl Default for NormalClass {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN11NormalClassC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+// error: function `operator==` could not be bound
+//   Function templates are not yet supported
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst2TSIiE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TS < int >
@@ -53,11 +81,17 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z3RTSv(__return: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN11NormalClassC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk__20ba560a__ZN2TSIiEC1Ev(__this: *mut ::core::ffi::c_void);
     }
 }
 
 const _: () = {
+    assert!(::core::mem::size_of::<crate::NormalClass>() == 1);
+    assert!(::core::mem::align_of::<crate::NormalClass>() == 1);
+    static_assertions::assert_impl_all!(crate::NormalClass: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::NormalClass: Drop);
+
     assert!(::core::mem::size_of::<crate::__CcTemplateInst2TSIiE>() == 1);
     assert!(::core::mem::align_of::<crate::__CcTemplateInst2TSIiE>() == 1);
     static_assertions::assert_impl_all!(crate::__CcTemplateInst2TSIiE: Copy,Clone);
