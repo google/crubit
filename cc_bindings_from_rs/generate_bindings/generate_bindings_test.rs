@@ -815,6 +815,28 @@ fn test_format_item_slice_of_const_pointers() {
 }
 
 #[test]
+fn test_format_item_slice_of_mut_pointers() {
+    let test_src = r#"
+            #![allow(dead_code)]
+            use std::ffi::c_void;
+
+            pub fn to_vec(slice: &[*mut c_void]) -> Vec<*mut c_void> {
+                slice.into()
+            }
+        "#;
+    test_format_item(test_src, "to_vec", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                rs_std::Vec<void*> to_vec(rs_std::SliceRef<void* const> slice);
+            }
+        );
+    });
+}
+
+#[test]
 fn test_format_item_static_method() {
     let test_src = r#"
             #![allow(dead_code)]

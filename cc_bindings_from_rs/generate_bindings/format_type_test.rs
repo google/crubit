@@ -242,8 +242,18 @@ fn test_format_ty_for_cc_successes() {
             includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
+            rs: "&'static [*mut core::ffi::c_void]",
+            cc: "rs_std::SliceRef< void * const >",
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
             rs: "&'static mut [*const core::ffi::c_void]",
             cc: "rs_std::SliceRef< const void * >",
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "&'static mut [*mut core::ffi::c_void]",
+            cc: "rs_std::SliceRef< void * >",
             includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
         case!(
