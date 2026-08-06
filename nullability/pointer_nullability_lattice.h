@@ -6,6 +6,7 @@
 #define CRUBIT_NULLABILITY_POINTER_NULLABILITY_LATTICE_H_
 
 #include <functional>
+#include <optional>
 #include <ostream>
 
 #include "absl/base/nullability.h"
@@ -38,6 +39,14 @@ class PointerNullabilityLatticeBase {
     // because a move operation or `&&`-qualified method may have nulled them
     // out before destruction. Empty unless analyzing such a destructor.
     llvm::DenseSet<const FieldDecl*> FieldsToTreatAsNullableAtDestructorEntry;
+
+    // Flow-narrowed nullability of by-value captured pointer variables (raw or
+    // smart) of the lambda whose call operator is being analyzed, as proven at
+    // the capture site in the enclosing function. Used to model each such
+    // capture at call-operator entry instead of using its declared, possibly
+    // less precise, type. Only provably NonNull or Nullable captures are
+    // recorded. Empty unless analyzing such a call operator.
+    llvm::DenseMap<const ValueDecl*, NullabilityKind> CapturedVarNullability;
   };
 
   PointerNullabilityLatticeBase(NonFlowSensitiveState &NFS) : NFS(NFS) {}
@@ -52,6 +61,13 @@ class PointerNullabilityLatticeBase {
   const llvm::DenseSet<const FieldDecl*>&
   fieldsToTreatAsNullableAtDestructorEntry() const {
     return NFS.FieldsToTreatAsNullableAtDestructorEntry;
+  }
+
+  // Flow-narrowed nullability of by-value captures to model at lambda
+  // call-operator entry.
+  const llvm::DenseMap<const ValueDecl*, NullabilityKind>&
+  capturedVarNullability() const {
+    return NFS.CapturedVarNullability;
   }
 
   /// Extract the nullability of the type of `D`.
@@ -113,6 +129,12 @@ const clang::FieldDecl* absl_nullable fieldTreatedAsNullableAtDestructorEntry(
 // Returns true if `E` accesses, through `*this`, a nonnull pointer field that
 // is in the lattice's "treat as nullable at destructor entry" set.
 bool shouldTreatFieldAsNullableAtDestructorEntry(
+    const clang::Expr& E, const PointerNullabilityLatticeBase& Lattice);
+
+// If `E` reads a by-value captured pointer variable (raw or smart) whose
+// flow-narrowed nullability was recorded at the capture site, returns that
+// nullability; otherwise returns std::nullopt.
+std::optional<NullabilityKind> getCapturedVarNullability(
     const clang::Expr& E, const PointerNullabilityLatticeBase& Lattice);
 
 }  // namespace clang::tidy::nullability
