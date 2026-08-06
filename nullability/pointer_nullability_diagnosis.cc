@@ -26,6 +26,7 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#include "clang/AST/LambdaCapture.h"
 #include "clang/AST/OperationKinds.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/TemplateBase.h"
@@ -47,9 +48,11 @@
 #include "clang/Analysis/FlowSensitive/WatchedLiteralsSolver.h"
 #include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/Lambda.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Tooling/Transformer/SourceCode.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
@@ -261,9 +264,10 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
          .NoteRange = Range,
          .NoteMessage =
              "This pointer is captured and dereferenced in a lambda. If it is "
-             "null-checked outside the lambda, consider capturing the pointee "
-             "by value or reference (possibly with an init-capture). Otherwise "
-             "do a null check inside the lambda body to ensure null safety."}};
+             "null-checked outside the lambda, consider capturing it by "
+             "value, or capturing the pointee instead (possibly with an "
+             "init-capture). Otherwise, do a null check inside the lambda "
+             "body to ensure null safety."}};
 
   PointerNullabilityDiagnostic Diag{
       .Code = PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
@@ -1578,10 +1582,60 @@ computeFieldsToTreatAsNullableAtDestructorEntry(
   return Result;
 }
 
+// Records the flow-narrowed nullability of each by-value pointer capture of the
+// lambda constructed at this program point, keyed by (closure record, capture
+// field).
+static void recordLambdaCaptureNullability(
+    const CFGElement& Elt, const dataflow::Environment& Env,
+    LambdaCaptureNullabilityMap& CaptureMap) {
+  std::optional<CFGStmt> S = Elt.getAs<CFGStmt>();
+  if (!S) return;
+  const auto* LE = dyn_cast<LambdaExpr>(S->getStmt());
+  if (LE == nullptr) return;
+  const CXXRecordDecl* Closure = LE->getLambdaClass();
+
+  auto Field = Closure->field_begin();
+  const auto* Capture = LE->capture_begin();
+  const auto* Init = LE->capture_init_begin();
+  for (; Capture != LE->capture_end() && Field != Closure->field_end() &&
+         Init != LE->capture_init_end();
+       ++Capture, ++Field, ++Init) {
+    // Only by-value pointer captures of variables are modeled. By-reference
+    // and this/*this captures alias mutable outer state and retain declared
+    // nullability state.
+    if (const Expr* InitExpr = *Init;
+        Capture->getCaptureKind() == LCK_ByCopy &&
+        Capture->capturesVariable() && InitExpr != nullptr &&
+        isSupportedPointerType(InitExpr->getType())) {
+      NullabilityKind Kind = getNullability(InitExpr, Env);
+      if (Kind == NullabilityKind::NonNull || Kind == NullabilityKind::Nullable)
+        CaptureMap.insert({{Closure, *Field}, Kind});
+    }
+  }
+}
+
+// Translates the (closure, field) entries recorded for `Closure` into the
+// captured variables that its in-lambda `DeclRefExpr`s resolve to.
+static llvm::DenseMap<const ValueDecl*, NullabilityKind>
+computeCapturedVarNullability(const CXXRecordDecl& Closure,
+                              const LambdaCaptureNullabilityMap& CaptureMap) {
+  llvm::DenseMap<const ValueDecl*, NullabilityKind> Result;
+  auto Field = Closure.field_begin();
+  const auto* Capture = Closure.captures_begin();
+  for (; Capture != Closure.captures_end() && Field != Closure.field_end();
+       ++Capture, ++Field) {
+    if (!Capture->capturesVariable()) continue;
+    if (auto It = CaptureMap.find({&Closure, *Field}); It != CaptureMap.end())
+      Result.insert({Capture->getCapturedVar(), It->second});
+  }
+  return Result;
+}
+
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
-diagnosePointerNullability(const ValueDecl* VD,
-                           const NullabilityPragmas& Pragmas,
-                           const SolverFactory& MakeSolver) {
+diagnosePointerNullability(
+    const ValueDecl* absl_nonnull VD, const NullabilityPragmas& Pragmas,
+    const SolverFactory& MakeSolver,
+    LambdaCaptureNullabilityMap* absl_nullable CaptureMap) {
   // This limit is set based on empirical observations. Mostly, it is a rough
   // proxy for a line between "finite" and "effectively infinite", rather than a
   // strict limit on resource use.
@@ -1634,6 +1688,16 @@ diagnosePointerNullability(const ValueDecl* VD,
         computeFieldsToTreatAsNullableAtDestructorEntry(*Dtor, Defaults));
   }
 
+  // If analyzing a lambda call operator, install the capture-time nonnull
+  // nullabilities recorded while analyzing the enclosing function.
+  if (CaptureMap != nullptr) {
+    if (const auto* Method = dyn_cast<CXXMethodDecl>(Func);
+        Method != nullptr && Method->getParent()->isLambda()) {
+      Analysis.setCapturedVarNullability(
+          computeCapturedVarNullability(*Method->getParent(), *CaptureMap));
+    }
+  }
+
   dataflow::CFGEltCallbacks<PointerNullabilityAnalysis> PostAnalysisCallbacks;
   PostAnalysisCallbacks.Before =
       [&, Diagnoser = pointerNullabilityDiagnoserBefore()](
@@ -1651,6 +1715,10 @@ diagnosePointerNullability(const ValueDecl* VD,
               State) mutable {
         auto EltDiagnostics = Diagnoser(Elt, Ctx, {State.Lattice, State.Env});
         llvm::move(EltDiagnostics, std::back_inserter(Diags));
+        // Record the capture-time nullability of any lambda constructed here,
+        // for use when its call operator is later analyzed.
+        if (CaptureMap != nullptr)
+          recordLambdaCaptureNullability(Elt, State.Env, *CaptureMap);
       };
   auto Result = dataflow::runDataflowAnalysis(
       *CFG, Analysis, Env, PostAnalysisCallbacks, MaxBlockVisits);

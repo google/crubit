@@ -7,14 +7,18 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "absl/base/nullability.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pragma.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/Analysis/FlowSensitive/Solver.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Error.h"
 
@@ -78,6 +82,13 @@ struct PointerNullabilityDiagnostic {
 /// `diagnosePointerNullability()`.
 std::unique_ptr<dataflow::Solver> makeDefaultSolverForDiagnosis();
 
+/// TU-scoped side table recording the flow-narrowed nullability of by-value
+/// lambda captures, keyed by (closure record, capture field). Only captures
+/// proven NonNull or Nullable at the capture site are recorded.
+using LambdaCaptureNullabilityMap = llvm::DenseMap<
+    std::pair<const clang::CXXRecordDecl*, const clang::FieldDecl*>,
+    clang::NullabilityKind>;
+
 /// Checks that nullable pointers are used safely, using nullability information
 /// that is collected by `PointerNullabilityAnalysis`.
 ///
@@ -88,11 +99,16 @@ std::unique_ptr<dataflow::Solver> makeDefaultSolverForDiagnosis();
 /// If `VD` is not a function, this merely checks that the annotations on `VD`
 /// are consistent with the annotations on its canonical declaration.
 ///
+/// If `CaptureMap` is non-null, it is populated when analyzing a function that
+/// constructs lambdas and consulted when analyzing a lambda call operator, to
+/// preserve the nullability of by-value captures.
+///
 /// Returns an empty vector when no issues are found in the code.
 llvm::Expected<llvm::SmallVector<PointerNullabilityDiagnostic>>
 diagnosePointerNullability(
-    const ValueDecl *VD, const NullabilityPragmas &Pragmas,
-    const SolverFactory &MakeSolver = makeDefaultSolverForDiagnosis);
+    const ValueDecl* absl_nonnull VD, const NullabilityPragmas& Pragmas,
+    const SolverFactory& MakeSolver = makeDefaultSolverForDiagnosis,
+    LambdaCaptureNullabilityMap* absl_nullable CaptureMap = nullptr);
 
 }  // namespace clang::tidy::nullability
 
