@@ -8,7 +8,7 @@
 use arc_anyhow::{bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
-use ir_rust_proto::{ConstantView, EnumeratorView, FuncView, IntegerConstantView};
+use ir_rust_proto::{ConstantView, EnumeratorView, FuncView, IntegerConstantView, RecordView};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
@@ -357,7 +357,7 @@ impl CcType {
 impl From<&Record<'_>> for CcType {
     fn from(record: &Record) -> Self {
         CcType {
-            variant: CcTypeVariant::Decl { id: record.id, template_args: None },
+            variant: CcTypeVariant::Decl { id: record.id(), template_args: None },
             is_const: false,
             unknown_attr: Rc::default(),
             explicit_lifetimes: Vec::default(),
@@ -1583,13 +1583,13 @@ pub struct OwnedPtrConfig<'pb> {
     pub drop_impl: &'pb str,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct Record<'pb> {
+    pub(crate) proto: RecordView<'pb>,
     pub(crate) rs_name: Identifier<'pb>,
     pub(crate) cc_name: Identifier<'pb>,
     pub(crate) unique_name: &'pb str,
     pub(crate) mangled_cc_name: &'pb str,
-    pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
     pub(crate) template_specialization: Option<TemplateSpecialization>,
     pub(crate) unknown_attr: Option<&'pb str>,
@@ -1602,225 +1602,211 @@ pub struct Record<'pb> {
     pub(crate) lifetime_params: Vec<LifetimeName>,
     pub(crate) size_align: SizeAlign,
     pub(crate) trait_derives: TraitDerives<'pb>,
-    pub(crate) is_derived_class: bool,
-    pub(crate) override_alignment: bool,
     pub(crate) safety_annotation: SafetyAnnotation,
     pub(crate) copy_constructor: SpecialMemberFunc,
     pub(crate) move_constructor: SpecialMemberFunc,
     pub(crate) destructor: SpecialMemberFunc,
-    pub(crate) is_trivial_abi: bool,
-    pub(crate) is_inheritable: bool,
-    pub(crate) is_abstract: bool,
     pub(crate) nodiscard: Option<&'pb str>,
     pub(crate) record_type: RecordType,
-    pub(crate) is_aggregate: bool,
-    pub(crate) is_canonical_alias: bool,
-    pub(crate) enclosing_item_id: Option<ItemId>,
-    pub(crate) must_bind: bool,
-    pub(crate) overloads_operator_delete: bool,
-    pub(crate) has_private_or_deleted_operator_delete: bool,
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
-    pub(crate) impl_debug: bool,
-    pub(crate) has_private_pointer_or_reference_fields: bool,
-    pub(crate) detected_formatter: bool,
     pub(crate) deprecated: Option<&'pb str>,
-    pub(crate) is_thread_safe: bool,
-    pub(crate) is_explicit_class_template_instantiation_definition: bool,
     pub(crate) children: Vec<Item<'pb>>,
 }
 
-impl<'pb> Record<'pb> {
-    pub fn rs_name(&self) -> &Identifier<'pb> {
-        &self.rs_name
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> Record<'pb> {
+        pub fn rs_name(&self) -> &Identifier<'pb> {
+            &self.rs_name
+        }
 
-    /// The C++ name of the record. If the record is a template specialization, the fully qualified
-    /// name is used. Otherwise, the only the name of the record is used.
-    /// Today, cc_name is only used for debugging, checking for names starting in __, and generating
-    /// parent modules for nested items which are disallowed for template specializations in Crubit.
-    pub fn cc_name(&self) -> &Identifier<'pb> {
-        &self.cc_name
-    }
+        /// The C++ name of the record. If the record is a template specialization, the fully qualified
+        /// name is used. Otherwise, the only the name of the record is used.
+        /// Today, cc_name is only used for debugging, checking for names starting in __, and generating
+        /// parent modules for nested items which are disallowed for template specializations in Crubit.
+        pub fn cc_name(&self) -> &Identifier<'pb> {
+            &self.cc_name
+        }
 
-    pub fn unique_name(&self) -> &'pb str {
-        self.unique_name
-    }
+        pub fn unique_name(&self) -> &'pb str {
+            self.unique_name
+        }
 
-    /// Mangled record names are used to 1) provide valid Rust identifiers for
-    /// C++ template specializations, and 2) help build unique names for virtual
-    /// upcast thunks.
-    pub fn mangled_cc_name(&self) -> &'pb str {
-        self.mangled_cc_name
-    }
+        /// Mangled record names are used to 1) provide valid Rust identifiers for
+        /// C++ template specializations, and 2) help build unique names for virtual
+        /// upcast thunks.
+        pub fn mangled_cc_name(&self) -> &'pb str {
+            self.mangled_cc_name
+        }
 
-    pub fn id(&self) -> ItemId {
-        self.id
-    }
+        pub fn id(&self) -> ItemId {
+            ItemId(self.proto.id() as usize)
+        }
 
-    pub fn owning_target(&self) -> &BazelLabel {
-        &self.owning_target
-    }
+        pub fn owning_target(&self) -> &BazelLabel {
+            &self.owning_target
+        }
 
-    pub fn template_specialization(&self) -> Option<&TemplateSpecialization> {
-        self.template_specialization.as_ref()
-    }
+        pub fn template_specialization(&self) -> Option<&TemplateSpecialization> {
+            self.template_specialization.as_ref()
+        }
 
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    ///
-    /// Because attributes can change the behavior or semantics of types in
-    /// fairly significant ways, and in ways that may affect interop, we
-    /// default-closed and do not expose functions with unknown attributes.
-    pub fn unknown_attr(&self) -> Option<&'pb str> {
-        self.unknown_attr
-    }
+        /// A human-readable list of attributes that Crubit doesn't understand.
+        ///
+        /// Because attributes can change the behavior or semantics of types in
+        /// fairly significant ways, and in ways that may affect interop, we
+        /// default-closed and do not expose functions with unknown attributes.
+        pub fn unknown_attr(&self) -> Option<&'pb str> {
+            self.unknown_attr
+        }
 
-    pub fn doc_comment(&self) -> Option<&'pb str> {
-        self.doc_comment
-    }
+        pub fn doc_comment(&self) -> Option<&'pb str> {
+            self.doc_comment
+        }
 
-    pub fn bridge_type(&self) -> Option<&BridgeType<'pb>> {
-        self.bridge_type.as_ref()
-    }
+        pub fn bridge_type(&self) -> Option<&BridgeType<'pb>> {
+            self.bridge_type.as_ref()
+        }
 
-    pub fn owned_ptr_config(&self) -> Option<&OwnedPtrConfig<'pb>> {
-        self.owned_ptr_config.as_ref()
-    }
+        pub fn owned_ptr_config(&self) -> Option<&OwnedPtrConfig<'pb>> {
+            self.owned_ptr_config.as_ref()
+        }
 
-    pub fn source_loc(&self) -> &'pb str {
-        self.source_loc
-    }
+        pub fn source_loc(&self) -> &'pb str {
+            self.source_loc
+        }
 
-    pub fn unambiguous_public_bases(&self) -> &[BaseClass] {
-        &self.unambiguous_public_bases
-    }
+        pub fn unambiguous_public_bases(&self) -> &[BaseClass] {
+            &self.unambiguous_public_bases
+        }
 
-    pub fn fields(&self) -> &[Field<'pb>] {
-        &self.fields
-    }
+        pub fn fields(&self) -> &[Field<'pb>] {
+            &self.fields
+        }
 
-    pub fn lifetime_params(&self) -> &[LifetimeName] {
-        &self.lifetime_params
-    }
+        pub fn lifetime_params(&self) -> &[LifetimeName] {
+            &self.lifetime_params
+        }
 
-    pub fn size_align(&self) -> SizeAlign {
-        self.size_align
-    }
+        pub fn size_align(&self) -> SizeAlign {
+            self.size_align
+        }
 
-    pub fn trait_derives(&self) -> &TraitDerives<'pb> {
-        &self.trait_derives
-    }
+        pub fn trait_derives(&self) -> &TraitDerives<'pb> {
+            &self.trait_derives
+        }
 
-    pub fn is_derived_class(&self) -> bool {
-        self.is_derived_class
-    }
+        pub fn is_derived_class(&self) -> bool {
+            self.proto.is_derived_class()
+        }
 
-    pub fn override_alignment(&self) -> bool {
-        self.override_alignment
-    }
+        pub fn override_alignment(&self) -> bool {
+            self.proto.override_alignment()
+        }
 
-    pub fn safety_annotation(&self) -> SafetyAnnotation {
-        self.safety_annotation
-    }
+        pub fn safety_annotation(&self) -> SafetyAnnotation {
+            self.safety_annotation
+        }
 
-    pub fn copy_constructor(&self) -> SpecialMemberFunc {
-        self.copy_constructor
-    }
+        pub fn copy_constructor(&self) -> SpecialMemberFunc {
+            self.copy_constructor
+        }
 
-    pub fn move_constructor(&self) -> SpecialMemberFunc {
-        self.move_constructor
-    }
+        pub fn move_constructor(&self) -> SpecialMemberFunc {
+            self.move_constructor
+        }
 
-    pub fn destructor(&self) -> SpecialMemberFunc {
-        self.destructor
-    }
+        pub fn destructor(&self) -> SpecialMemberFunc {
+            self.destructor
+        }
 
-    pub fn is_trivial_abi(&self) -> bool {
-        self.is_trivial_abi
-    }
+        pub fn is_trivial_abi(&self) -> bool {
+            self.proto.is_trivial_abi()
+        }
 
-    pub fn is_inheritable(&self) -> bool {
-        self.is_inheritable
-    }
+        pub fn is_inheritable(&self) -> bool {
+            self.proto.is_inheritable()
+        }
 
-    pub fn is_abstract(&self) -> bool {
-        self.is_abstract
-    }
+        pub fn is_abstract(&self) -> bool {
+            self.proto.is_abstract()
+        }
 
-    /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
-    /// string is used.
-    pub fn nodiscard(&self) -> Option<&'pb str> {
-        self.nodiscard
-    }
+        /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
+        /// string is used.
+        pub fn nodiscard(&self) -> Option<&'pb str> {
+            self.nodiscard
+        }
 
-    pub fn record_type(&self) -> RecordType {
-        self.record_type
-    }
+        pub fn record_type(&self) -> RecordType {
+            self.record_type
+        }
 
-    pub fn is_aggregate(&self) -> bool {
-        self.is_aggregate
-    }
+        pub fn is_aggregate(&self) -> bool {
+            self.proto.is_aggregate()
+        }
 
-    pub fn is_canonical_alias(&self) -> bool {
-        self.is_canonical_alias
-    }
+        pub fn is_canonical_alias(&self) -> bool {
+            self.proto.is_canonical_alias()
+        }
 
-    pub fn enclosing_item_id(&self) -> Option<ItemId> {
-        self.enclosing_item_id
-    }
+        pub fn enclosing_item_id(&self) -> Option<ItemId> {
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+        }
 
-    pub fn must_bind(&self) -> bool {
-        self.must_bind
-    }
+        pub fn must_bind(&self) -> bool {
+            self.proto.must_bind()
+        }
 
-    /// Whether this type has an overload of `operator delete`.
-    pub fn overloads_operator_delete(&self) -> bool {
-        self.overloads_operator_delete
-    }
+        /// Whether this type has an overload of `operator delete`.
+        pub fn overloads_operator_delete(&self) -> bool {
+            self.proto.overloads_operator_delete()
+        }
 
-    pub fn has_private_or_deleted_operator_delete(&self) -> bool {
-        self.has_private_or_deleted_operator_delete
-    }
+        pub fn has_private_or_deleted_operator_delete(&self) -> bool {
+            self.proto.has_private_or_deleted_operator_delete()
+        }
 
-    /// Lifetime variable names bound by this record.
-    pub fn lifetime_inputs(&self) -> &[Rc<str>] {
-        &self.lifetime_inputs
-    }
+        /// Lifetime variable names bound by this record.
+        pub fn lifetime_inputs(&self) -> &[Rc<str>] {
+            &self.lifetime_inputs
+        }
 
-    pub fn impl_debug(&self) -> bool {
-        self.impl_debug
-    }
+        pub fn impl_debug(&self) -> bool {
+            self.proto.impl_debug()
+        }
 
-    pub fn has_private_pointer_or_reference_fields(&self) -> bool {
-        self.has_private_pointer_or_reference_fields
-    }
+        pub fn has_private_pointer_or_reference_fields(&self) -> bool {
+            self.proto.has_private_pointer_or_reference_fields()
+        }
 
-    pub fn detected_formatter(&self) -> bool {
-        self.detected_formatter
-    }
+        pub fn detected_formatter(&self) -> bool {
+            self.proto.detected_formatter()
+        }
 
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
-    pub fn deprecated(&self) -> Option<&'pb str> {
-        self.deprecated
-    }
+        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+        /// string is used.
+        pub fn deprecated(&self) -> Option<&'pb str> {
+            self.deprecated
+        }
 
-    /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
-    pub fn is_thread_safe(&self) -> bool {
-        self.is_thread_safe
-    }
+        /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
+        pub fn is_thread_safe(&self) -> bool {
+            self.proto.is_thread_safe()
+        }
 
-    pub fn is_explicit_class_template_instantiation_definition(&self) -> bool {
-        self.is_explicit_class_template_instantiation_definition
-    }
+        pub fn is_explicit_class_template_instantiation_definition(&self) -> bool {
+            self.proto.is_explicit_class_template_instantiation_definition()
+        }
 
-    pub fn children(&self) -> &[Item<'pb>] {
-        &self.children
+        pub fn children(&self) -> &[Item<'pb>] {
+            &self.children
+        }
     }
 }
 
 impl<'pb> GenericItem<'pb> for Record<'pb> {
     fn id(&self) -> ItemId {
-        self.id
+        Record::id(self)
     }
     fn unique_name(&self) -> Option<&'pb str> {
         Some(self.unique_name())
@@ -1838,7 +1824,7 @@ impl<'pb> GenericItem<'pb> for Record<'pb> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
-        self.must_bind
+        Record::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
         Some(self.cc_name.as_str())
@@ -1878,7 +1864,7 @@ impl<'pb> Record<'pb> {
     ///
     /// Described in more detail at: docs/design/unpin.md
     pub fn is_unpin(&self) -> bool {
-        self.is_trivial_abi
+        self.is_trivial_abi()
     }
 
     // TODO(b/498977848): The record with cc_name
@@ -1932,7 +1918,7 @@ impl<'pb> Record<'pb> {
     /// to a record type. (For example, typedefs to anonymous records, or template specializations
     /// with a `preferred_name`.)
     pub fn cc_tag_kind(&self) -> TokenStream {
-        if self.is_canonical_alias {
+        if self.is_canonical_alias() {
             quote! {}
         } else {
             self.record_type.into_token_stream()
@@ -1964,7 +1950,7 @@ impl<'pb> Record<'pb> {
     pub fn should_derive_copy(&self) -> bool {
         // Thread-safe types wrap their fields in UnsafeCell<[MaybeUninit<u8>; N]>,
         // which prevents them from deriving Copy.
-        if self.is_thread_safe {
+        if self.is_thread_safe() {
             return false;
         }
         match self.trait_derives.copy {
@@ -1993,7 +1979,7 @@ impl<'pb> Record<'pb> {
             self.cc_name
         );
         ensure!(
-            !self.is_abstract,
+            !self.is_abstract(),
             "`{}` can be used by-value because it has pure virtual functions that are not overridden",
             self.cc_name
         );
@@ -2005,7 +1991,7 @@ impl<'pb> Record<'pb> {
     /// Notably, all records that have a unique owning target are supported, e.g. `std::string`, but
     /// not all supported records have a unique owning target, e.g. `std::vector<int>`.
     pub fn has_unique_owning_target(&self) -> bool {
-        self.template_specialization.is_none() || self.is_canonical_alias
+        self.template_specialization.is_none() || self.is_canonical_alias()
     }
 }
 
@@ -3218,7 +3204,7 @@ impl<'pb> Item<'pb> {
 
     pub fn enclosing_item_id(&self) -> Option<ItemId> {
         match self {
-            Item::Record(record) => record.enclosing_item_id,
+            Item::Record(record) => record.enclosing_item_id(),
             Item::IncompleteRecord(record) => record.enclosing_item_id,
             Item::Enum(enum_) => enum_.enclosing_item_id,
             Item::Constant(constant) => constant.enclosing_item_id,
