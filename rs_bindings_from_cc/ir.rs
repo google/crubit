@@ -1489,6 +1489,8 @@ pub enum TemplateSpecializationKind {
     StdWStringView,
     /// std::vector<T, std::allocator<T>>
     StdVector { raw_element_type: CcType },
+    /// std::shared_ptr<T>
+    StdSharedPtr { raw_element_type: CcType },
     /// std::unique_ptr<T, std::default_delete<T>>
     StdUniquePtr { raw_element_type: CcType },
     /// c9::Co<T>

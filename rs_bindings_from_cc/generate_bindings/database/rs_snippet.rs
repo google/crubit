@@ -302,6 +302,11 @@ pub enum UniformReprTemplateType<'a> {
         // No lifetime here: owned by the unique_ptr
         element_type: RsTypeKind<'a>,
     },
+    /// std::shared_ptr<const T>
+    StdSharedPtr {
+        // No lifetime here: owned by the shared_ptr
+        element_type: RsTypeKind<'a>,
+    },
     AbslSpan {
         is_const: bool,
         include_lifetime: bool,
@@ -377,6 +382,18 @@ impl<'a> UniformReprTemplateType<'a> {
             Ok(arg_type_kind)
         };
         match template_specialization_kind {
+            Some(TemplateSpecializationKind::StdSharedPtr { raw_element_type }) => {
+                let element_type_kind = type_arg(raw_element_type)?;
+                ensure!(raw_element_type.is_const(), "b/485328340: Crubit does not yet support std::shared_ptr<non-const T>, got: {}", element_type_kind.display(db));
+                ensure!(
+                    element_type_kind.is_complete(),
+                    "Crubit does not support std::shared_ptr<incomplete T>, got: `{}`",
+                    element_type_kind.display(db)
+                );
+                Ok(Some(Rc::new(UniformReprTemplateType::StdSharedPtr {
+                    element_type: element_type_kind,
+                })))
+            }
             Some(TemplateSpecializationKind::StdUniquePtr { raw_element_type }) => {
                 let element_type = choose_one_type(raw_element_type, template_args)?;
                 let element_type = type_arg(&element_type)?;
@@ -458,6 +475,10 @@ impl<'a> UniformReprTemplateType<'a> {
                     quote! { ::cc_std::std::unique_ptr::<#element_type_tokens> }
                 }
             }
+            Self::StdSharedPtr { element_type } => {
+                let element_type_tokens = element_type.to_token_stream(db);
+                quote! { ::cc_std::std::shared_ptr_const::<#element_type_tokens> }
+            }
             Self::AbslSpan { is_const, include_lifetime, element_type, lifetime } => {
                 let element_type_tokens = element_type.to_token_stream(db);
                 // Use the custom name of the span crate, if configured (e.g. if
@@ -503,6 +524,7 @@ impl<'a> UniformReprTemplateType<'a> {
         match self {
             Self::StdVector { .. } => None,
             Self::StdUniquePtr { .. } => None,
+            Self::StdSharedPtr { .. } => None,
             Self::AbslSpan { include_lifetime: true, .. } => Some(Lifetime::elided()),
             Self::AbslSpan { include_lifetime: false, .. } => None,
             Self::StdStringView { lifetime, .. } => Some(lifetime.clone()),
@@ -661,6 +683,7 @@ impl<'a> CustomizeMethodsKind<'a> {
                 TemplateSpecializationKind::StdStringView
                 | TemplateSpecializationKind::StdWStringView
                 | TemplateSpecializationKind::StdVector { .. }
+                | TemplateSpecializationKind::StdSharedPtr { .. }
                 | TemplateSpecializationKind::StdUniquePtr { .. }
                 | TemplateSpecializationKind::C9Co { .. }
                 | TemplateSpecializationKind::AbslFlatHashSet { .. }
@@ -1893,6 +1916,16 @@ fn all_static_lifetimes_internal<'a>(
                 Rc::new(match r.as_ref() {
                     UniformReprTemplateType::StdVector { element_type } => {
                         UniformReprTemplateType::StdVector {
+                            element_type: all_static_lifetimes_internal(
+                                element_type,
+                                strip_aliases,
+                            )
+                            .as_ref()
+                            .clone(),
+                        }
+                    }
+                    UniformReprTemplateType::StdSharedPtr { element_type } => {
+                        UniformReprTemplateType::StdSharedPtr {
                             element_type: all_static_lifetimes_internal(
                                 element_type,
                                 strip_aliases,

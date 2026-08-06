@@ -5,6 +5,7 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_STD_ALLOCATOR_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_STD_ALLOCATOR_H_
 
+#include <__memory/shared_count.h>
 #include <stdio.h>
 
 #include <cstddef>
@@ -38,6 +39,24 @@ inline void cpp_delete(void* ptr, size_t n, size_t align) {
     operator delete(ptr, static_cast<std::align_val_t>(align));
   }
 #endif
+}
+
+// `cntrl` is type-erased as `void*` because ThreadSanitizer (TSan) changes the
+// concrete type name from `std::__u::__shared_weak_count` to
+// `std::__tsan::_shared_weak_count`.
+inline void shared_ptr_ref(void* cntrl) {
+  if (cntrl != nullptr) {
+    static_cast<std::__shared_weak_count*>(cntrl)->__add_shared();
+  }
+}
+
+// `cntrl` is type-erased as `void*` because ThreadSanitizer (TSan) changes the
+// concrete type name from `std::__u::__shared_weak_count` to
+// `std::__tsan::_shared_weak_count`.
+inline void shared_ptr_unref(void* cntrl) {
+  if (cntrl != nullptr) {
+    static_cast<std::__shared_weak_count*>(cntrl)->__release_shared();
+  }
 }
 
 }  // namespace crubit_cc_std_internal::std_allocator

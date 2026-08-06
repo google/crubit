@@ -332,6 +332,10 @@ flat_proto::TemplateSpecialization TemplateSpecialization::ToFlatProto() const {
             *proto.mutable_std_vector()->mutable_element_type() =
                 std_vector.element_type.ToFlatProto();
           },
+          [&](const StdSharedPtr& std_shared_ptr) {
+            *proto.mutable_std_shared_ptr()->mutable_element_type() =
+                std_shared_ptr.element_type.ToFlatProto();
+          },
           [&](const StdUniquePtr& std_unique_ptr) {
             *proto.mutable_std_unique_ptr()->mutable_element_type() =
                 std_unique_ptr.element_type.ToFlatProto();
