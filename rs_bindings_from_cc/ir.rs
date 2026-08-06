@@ -8,7 +8,9 @@
 use arc_anyhow::{bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
-use ir_rust_proto::{ConstantView, EnumeratorView, FuncView, IntegerConstantView, RecordView};
+use ir_rust_proto::{
+    ConstantView, EnumeratorView, FuncView, IntegerConstantView, RecordView, SizeAlignView,
+};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
@@ -1410,19 +1412,18 @@ impl ToTokens for RecordType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub struct SizeAlign {
-    pub(crate) size: usize,
-    pub(crate) alignment: usize,
-}
+#[derive(Copy, Clone)]
+pub struct SizeAlign<'pb>(pub(crate) SizeAlignView<'pb>);
 
-impl SizeAlign {
-    pub fn size(&self) -> usize {
-        self.size
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> SizeAlign<'pb> {
+        pub fn size(&self) -> usize {
+            self.0.size() as usize
+        }
 
-    pub fn alignment(&self) -> usize {
-        self.alignment
+        pub fn alignment(&self) -> usize {
+            self.0.alignment() as usize
+        }
     }
 }
 
@@ -1542,7 +1543,6 @@ pub struct Record<'pb> {
     pub(crate) unambiguous_public_bases: Vec<BaseClass>,
     pub(crate) fields: Vec<Field<'pb>>,
     pub(crate) lifetime_params: Vec<LifetimeName>,
-    pub(crate) size_align: SizeAlign,
     pub(crate) trait_derives: TraitDerives<'pb>,
     pub(crate) safety_annotation: SafetyAnnotation,
     pub(crate) copy_constructor: SpecialMemberFunc,
@@ -1629,8 +1629,8 @@ derive_debug_partialeq_eq_hash! {
             &self.lifetime_params
         }
 
-        pub fn size_align(&self) -> SizeAlign {
-            self.size_align
+        pub fn size_align(&self) -> SizeAlign<'pb> {
+            SizeAlign(self.proto.size_align())
         }
 
         pub fn trait_derives(&self) -> &TraitDerives<'pb> {
@@ -2850,7 +2850,7 @@ pub struct ExistingRustType<'pb> {
     pub(crate) unique_name: &'pb str,
     pub(crate) template_args: Vec<TemplateArg>,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) size_align: Option<SizeAlign>,
+    pub(crate) size_align: Option<SizeAlign<'pb>>,
     pub(crate) is_same_abi: bool,
     pub(crate) id: ItemId,
     pub(crate) must_bind: bool,
@@ -2883,7 +2883,7 @@ impl<'pb> ExistingRustType<'pb> {
         &self.owning_target
     }
 
-    pub fn size_align(&self) -> Option<SizeAlign> {
+    pub fn size_align(&self) -> Option<SizeAlign<'pb>> {
         self.size_align
     }
 
