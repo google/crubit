@@ -9,7 +9,8 @@ use arc_anyhow::{bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
 use ir_rust_proto::{
-    ConstantView, EnumeratorView, FuncView, IntegerConstantView, RecordView, SizeAlignView,
+    ConstantView, EnumeratorView, ExistingRustTypeView, FuncView, IntegerConstantView, RecordView,
+    SizeAlignView,
 };
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -381,7 +382,7 @@ impl From<&TypeAlias<'_>> for CcType {
 impl From<&ExistingRustType<'_>> for CcType {
     fn from(existing_rust_type: &ExistingRustType) -> Self {
         CcType {
-            variant: CcTypeVariant::Decl { id: existing_rust_type.id, template_args: None },
+            variant: CcTypeVariant::Decl { id: existing_rust_type.id(), template_args: None },
             is_const: false,
             unknown_attr: Rc::default(),
             explicit_lifetimes: Vec::default(),
@@ -2843,70 +2844,68 @@ impl<'pb> GenericItem<'pb> for UseMod<'pb> {
 /// existing Rust type instead of generating a new Rust type. Note that this corresponds to concrete
 /// types, meaning non-template types or template instantiations, but not uninstantiated template
 /// declarations.
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct ExistingRustType<'pb> {
+    pub(crate) proto: ExistingRustTypeView<'pb>,
     pub(crate) rs_name: &'pb str,
     pub(crate) cc_name: &'pb str,
     pub(crate) unique_name: &'pb str,
     pub(crate) template_args: Vec<TemplateArg>,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) size_align: Option<SizeAlign<'pb>>,
-    pub(crate) is_same_abi: bool,
-    pub(crate) id: ItemId,
-    pub(crate) must_bind: bool,
-    pub(crate) impl_debug: bool,
 }
 
-impl<'pb> ExistingRustType<'pb> {
-    /// The name of the existing Rust type.
-    /// Note that it may contain interpolated type parameters, like `RustType<{T}>`.
-    /// This means that it's incorrect to directly parse as an Ident.
-    pub fn rs_name(&self) -> &'pb str {
-        self.rs_name
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> ExistingRustType<'pb> {
+        /// The name of the existing Rust type.
+        /// Note that it may contain interpolated type parameters, like `RustType<{T}>`.
+        /// This means that it's incorrect to directly parse as an Ident.
+        pub fn rs_name(&self) -> &'pb str {
+            self.rs_name
+        }
 
-    pub fn cc_name(&self) -> &'pb str {
-        self.cc_name
-    }
+        pub fn cc_name(&self) -> &'pb str {
+            self.cc_name
+        }
 
-    pub fn unique_name(&self) -> &'pb str {
-        self.unique_name
-    }
+        pub fn unique_name(&self) -> &'pb str {
+            self.unique_name
+        }
 
-    /// The template arguments on this instance of the type instantiation (empty is no template
-    /// arguments). This list parallels `template_arg_names`.
-    pub fn template_args(&self) -> &[TemplateArg] {
-        &self.template_args
-    }
+        /// The template arguments on this instance of the type instantiation (empty is no template
+        /// arguments). This list parallels `template_arg_names`.
+        pub fn template_args(&self) -> &[TemplateArg] {
+            &self.template_args
+        }
 
-    pub fn owning_target(&self) -> &BazelLabel {
-        &self.owning_target
-    }
+        pub fn owning_target(&self) -> &BazelLabel {
+            &self.owning_target
+        }
 
-    pub fn size_align(&self) -> Option<SizeAlign<'pb>> {
-        self.size_align
-    }
+        pub fn size_align(&self) -> Option<SizeAlign<'pb>> {
+            self.proto.has_size_align().then(|| SizeAlign(self.proto.size_align()))
+        }
 
-    pub fn is_same_abi(&self) -> bool {
-        self.is_same_abi
-    }
+        pub fn is_same_abi(&self) -> bool {
+            self.proto.is_same_abi()
+        }
 
-    pub fn id(&self) -> ItemId {
-        self.id
-    }
+        pub fn id(&self) -> ItemId {
+            ItemId(self.proto.id() as usize)
+        }
 
-    pub fn must_bind(&self) -> bool {
-        self.must_bind
-    }
+        pub fn must_bind(&self) -> bool {
+            self.proto.must_bind()
+        }
 
-    pub fn impl_debug(&self) -> bool {
-        self.impl_debug
+        pub fn impl_debug(&self) -> bool {
+            self.proto.impl_debug()
+        }
     }
 }
 
 impl<'pb> GenericItem<'pb> for ExistingRustType<'pb> {
     fn id(&self) -> ItemId {
-        self.id
+        ExistingRustType::id(self)
     }
     fn unique_name(&self) -> Option<&'pb str> {
         Some(self.unique_name())
@@ -2924,7 +2923,7 @@ impl<'pb> GenericItem<'pb> for ExistingRustType<'pb> {
         None
     }
     fn must_bind(&self) -> bool {
-        self.must_bind
+        ExistingRustType::must_bind(self)
     }
 }
 
@@ -3100,7 +3099,7 @@ impl<'pb> Item<'pb> {
             Item::UnsupportedItem(_) => None,
             Item::Comment(_) => None,
             Item::UseMod(_) => None,
-            Item::ExistingRustType(existing_rust_type) => Some(existing_rust_type.cc_name),
+            Item::ExistingRustType(existing_rust_type) => Some(existing_rust_type.cc_name()),
         }
     }
 
