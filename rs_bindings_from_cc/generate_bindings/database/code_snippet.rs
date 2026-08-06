@@ -709,10 +709,20 @@ pub fn generated_items_to_tokens<'db>(
                 for upcast_impl_or_err in upcast_impls {
                     match upcast_impl_or_err {
                         Ok(UpcastImpl { base_name, derived_name, body }) => {
-                            let body = match body {
+                            match body {
                                 UpcastImplBody::PointerOffset { offset } => {
                                     let offset = Literal::i64_unsuffixed(*offset);
-                                    quote! { (derived as *const _ as *const u8).offset(#offset) as *const #base_name }
+                                    let body = quote! { (derived as *const _ as *const u8).offset(#offset) as *const #base_name };
+                                    quote! {
+                                        impl oops::Inherits<#base_name> for #derived_name {
+                                            fn upcast_ptr(derived: *const Self) -> *const #base_name {
+                                                unsafe { #body }
+                                            }
+                                        }
+                                        __NEWLINE__
+                                        __NEWLINE__
+                                    }
+                                    .to_tokens(tokens);
                                 }
                                 UpcastImplBody::CastThunk { crate_root_path, cast_fn_name } => {
                                     let path = if let Some(crate_root_path) = crate_root_path {
@@ -720,20 +730,19 @@ pub fn generated_items_to_tokens<'db>(
                                     } else {
                                         quote! { crate }
                                     };
-                                    quote! { #path::detail::#cast_fn_name(derived) }
+                                    let body = quote! { #path::detail::#cast_fn_name(derived) };
+                                    quote! {
+                                        unsafe impl oops::InheritsVirtual<#base_name> for #derived_name {
+                                            unsafe fn upcast_ptr_to_virtual_base(derived: *const Self) -> *const #base_name {
+                                                unsafe { #body }
+                                            }
+                                        }
+                                        __NEWLINE__
+                                        __NEWLINE__
+                                    }
+                                    .to_tokens(tokens);
                                 }
                             };
-
-                            quote! {
-                                unsafe impl oops::Inherits<#base_name> for #derived_name {
-                                    unsafe fn upcast_ptr(derived: *const Self) -> *const #base_name {
-                                        unsafe { #body }
-                                    }
-                                }
-                                __NEWLINE__
-                                __NEWLINE__
-                            }
-                            .to_tokens(tokens);
                         }
                         Err(err) => {
                             quote! {

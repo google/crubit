@@ -707,7 +707,7 @@ pub fn generate_record<'a>(
     {
         let mut fields: Vec<database::code_snippet::DebugField> = vec![];
         if !record.is_union() {
-            for base_record in &upcastable_bases {
+            for (base_record, should_virtual_upcast) in &upcastable_bases {
                 if !base_record.impl_debug() {
                     continue;
                 }
@@ -715,7 +715,11 @@ pub fn generate_record<'a>(
                 let base_name = base_type.to_token_stream(db);
                 fields.push(database::code_snippet::DebugField {
                     name: "".to_string(),
-                    expr: quote! { ::oops::Upcast::<&#base_name>::upcast(self) },
+                    expr: if *should_virtual_upcast {
+                        quote! { unsafe {&*::oops::VirtualUpcast::<*const #base_name>::virtual_upcast(self as *const _)} }
+                    } else {
+                        quote! { ::oops::Upcast::<&#base_name>::upcast(self) }
+                    },
                 });
             }
 
@@ -1074,7 +1078,7 @@ struct UpcastImplementation<'pb> {
     upcast_impls: Vec<UpcastImplResult>,
     thunks: Vec<Thunk>,
     thunk_impls: Vec<ThunkImpl>,
-    upcastable_bases: Vec<Rc<Record<'pb>>>,
+    upcastable_bases: Vec<(Rc<Record<'pb>>, bool)>,
 }
 
 /// Returns the implementation of base class conversions, for converting a type
@@ -1111,6 +1115,7 @@ fn cc_struct_upcast_impl<'pb>(
         }
         let base_name = base_type.to_token_stream(db);
         let body = if let Some(offset) = base.offset() {
+            upcastable_bases.push((base_record.clone(), false));
             UpcastImplBody::PointerOffset { offset }
         } else {
             let cast_fn_name = make_rs_ident(&format!(
@@ -1133,6 +1138,7 @@ fn cc_struct_upcast_impl<'pb>(
                 derived_cc_name: derived_cc_name.clone(),
             });
 
+            upcastable_bases.push((base_record.clone(), true));
             UpcastImplBody::CastThunk {
                 crate_root_path: ir.crate_root_path().as_deref().map(make_rs_ident),
                 cast_fn_name,
@@ -1144,7 +1150,6 @@ fn cc_struct_upcast_impl<'pb>(
             derived_name: derived_name.clone(),
             body,
         }));
-        upcastable_bases.push(base_record.clone());
     }
 
     Ok(UpcastImplementation { upcast_impls, thunks, thunk_impls, upcastable_bases })

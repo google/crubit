@@ -246,6 +246,7 @@ rust_library(
 rust_test(
     name = "oops_test",
     srcs = ["oops.rs"],
+    harness = "libtest",
     deps = [
         "@crate_index//:googletest",
     ],
