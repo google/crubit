@@ -216,6 +216,71 @@ fn test_format_ty_for_cc_successes() {
             cc: "rs_std::SliceRef< ::std::int32_t>",
             includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
         ),
+        case!(
+            rs: "*const [*const core::ffi::c_void]",
+            cc: "rs_std::SliceRef< const void * const >",
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "*const [*mut core::ffi::c_void]",
+            cc: "rs_std::SliceRef< void * const >",
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "*mut [*const core::ffi::c_void]",
+            cc: "rs_std::SliceRef< const void * >",
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "*mut [*mut core::ffi::c_void]",
+            cc: "rs_std::SliceRef< void * >",
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "&'static [*const core::ffi::c_void]",
+            cc: "rs_std::SliceRef< const void * const >",
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "&'static mut [*const core::ffi::c_void]",
+            cc: "rs_std::SliceRef< const void * >",
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "&'static [*const i32]",
+            cc: "rs_std::SliceRef< ::std::int32_t const * const >",
+            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "&'static [*mut i32]",
+            cc: "rs_std::SliceRef< ::std::int32_t * const >",
+            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "&'static mut [*const i32]",
+            cc: "rs_std::SliceRef< ::std::int32_t const * >",
+            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "&'static mut [*mut i32]",
+            cc: "rs_std::SliceRef< ::std::int32_t * >",
+            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "*const [ConstVoidPtr]",
+            cc: "rs_std::SliceRef< const void * const >",
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "&'static [ConstVoidPtr]",
+            cc: "rs_std::SliceRef< const void * const >",
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
+        case!(
+            rs: "&'static [Identity<*const i32>]",
+            cc: "rs_std::SliceRef< ::std::int32_t const * const >",
+            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+        ),
         // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
         case!(
             rs: "*mut SomeStruct",
@@ -325,6 +390,8 @@ fn test_format_ty_for_cc_successes() {
 
         #[allow(unused)]
         type Identity<T> = T;
+        #[allow(unused)]
+        type ConstVoidPtr = *const core::ffi::c_void;
     };
     test_ty(
         TypeLocation::FnParam { is_self_param: false, elided_is_output: false },

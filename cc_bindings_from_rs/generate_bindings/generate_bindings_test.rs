@@ -779,6 +779,42 @@ fn test_format_item_slice() {
 }
 
 #[test]
+fn test_format_item_slice_of_const_pointers() {
+    let test_src = r#"
+            #![allow(dead_code)]
+            use std::ffi::c_void;
+
+            #[derive(Default)]
+            pub struct PtrVec(Vec<*mut c_void>);
+
+            impl PtrVec {
+                pub fn new(contents: &[*const c_void]) -> Self {
+                    Self(contents.into_iter().map(|p| *p as *mut c_void).collect())
+                }
+            }
+        "#;
+    test_format_item(test_src, "PtrVec", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                struct ... PtrVec final {
+                    ...
+                    public:
+                      ...
+                      static ::rust_out::PtrVec new_(
+                          rs_std::SliceRef<const void* const> contents
+                      );
+                    ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
 fn test_format_item_static_method() {
     let test_src = r#"
             #![allow(dead_code)]

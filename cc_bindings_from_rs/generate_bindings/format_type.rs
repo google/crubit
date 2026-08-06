@@ -152,23 +152,40 @@ fn format_slice_ref_for_cc<'tcx>(
     element_ty: Ty<'tcx>,
     mutability: rustc_middle::mir::Mutability,
 ) -> Result<CcSnippet<'tcx>> {
-    let const_qualifier = match mutability {
-        Mutability::Mut => quote! {},
-        Mutability::Not => quote! { const },
-    };
-
-    let CcSnippet { tokens, mut prereqs } =
+    let CcSnippet { mut tokens, mut prereqs } =
         db.format_ty_for_cc(element_ty, TypeLocation::Other).with_context(|| {
             format!("Failed to format the element type of the slice type `{element_ty}`")
         })?;
     prereqs.includes.insert(db.support_header("rs_std/slice_ref.h"));
 
+    if let Mutability::Not = mutability {
+        // For immutable slices (`&[T]` or `*const [T]`), the elements of the slice
+        // must be const-qualified in C++.
+        tokens = match element_ty.kind() {
+            ty::TyKind::RawPtr(..) | ty::TyKind::Ref(..) | ty::TyKind::FnPtr(..) => {
+                // For pointer/reference types (e.g., `*const c_void` formatted as `const void*`,
+                // or `*const i32` formatted as `::std::int32_t const *`), prepending `const`
+                // would result in invalid C++ with duplicate `const` declaration specifiers
+                // (e.g., `const const void*`) or incorrectly qualify the pointee instead of
+                // the pointer. Placing `const` after the pointer tokens (`#tokens const`)
+                // produces valid C++ types like `SliceRef<const void* const>` or
+                // `SliceRef<void* const>`.
+                quote! { #tokens const }
+            }
+            _ => {
+                // For non-pointer types, placing `const` before the type (`const #tokens`)
+                // produces the standard canonical formatting (e.g., `SliceRef<const uint8_t>`).
+                // Although we could always do east const, west const is considered better style so
+                // we prefer it when possible.
+                quote! { const #tokens }
+            }
+        };
+    }
+
     Ok(CcSnippet {
         prereqs,
         tokens: quote! {
-            rs_std::SliceRef<
-                #const_qualifier #tokens
-            >
+            rs_std::SliceRef<#tokens>
         },
     })
 }
