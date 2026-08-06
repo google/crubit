@@ -9,8 +9,9 @@ use arc_anyhow::{bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
 use ir_rust_proto::{
-    ConstantView, EnumeratorView, ExistingRustTypeView, FuncView, IntegerConstantView, RecordView,
-    SizeAlignView,
+    CommentView, ConstantView, EnumView, EnumeratorView, ExistingRustTypeView, FuncView,
+    GlobalVarView, IncompleteRecordView, IntegerConstantView, NamespaceView, RecordView,
+    SizeAlignView, TypeAliasView, UseModView,
 };
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -201,12 +202,12 @@ pub fn make_ir<'pb>(tree_ir: TreeIR<'pb>) -> IR<'pb> {
         }
 
         if let Item::Namespace(ns) = item
-            && ns.owning_target == tree_ir.current_target
+            && Namespace::owning_target(ns) == &tree_ir.current_target
         {
-            let canonical_id = ns.canonical_namespace_id;
+            let canonical_id = ns.canonical_namespace_id();
             let current_count =
                 *namespace_id_to_number_of_reopened_namespaces.entry(canonical_id).or_insert(0);
-            reopened_namespace_id_to_idx.insert(ns.id, current_count);
+            reopened_namespace_id_to_idx.insert(ns.id(), current_count);
             namespace_id_to_number_of_reopened_namespaces.insert(canonical_id, current_count + 1);
         }
 
@@ -371,7 +372,7 @@ impl From<&Record<'_>> for CcType {
 impl From<&TypeAlias<'_>> for CcType {
     fn from(alias: &TypeAlias) -> Self {
         CcType {
-            variant: CcTypeVariant::Decl { id: alias.id, template_args: None },
+            variant: CcTypeVariant::Decl { id: alias.id(), template_args: None },
             is_const: false,
             unknown_attr: Rc::default(),
             explicit_lifetimes: Vec::default(),
@@ -1302,65 +1303,65 @@ impl BaseClass {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct IncompleteRecord<'pb> {
+    pub(crate) proto: IncompleteRecordView<'pb>,
     pub(crate) cc_name: Identifier<'pb>,
     pub(crate) rs_name: Identifier<'pb>,
     pub(crate) unique_name: &'pb str,
-    pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
     pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) record_type: RecordType,
-    pub(crate) enclosing_item_id: Option<ItemId>,
-    pub(crate) must_bind: bool,
 }
 
-impl<'pb> IncompleteRecord<'pb> {
-    pub fn cc_name(&self) -> &Identifier<'pb> {
-        &self.cc_name
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> IncompleteRecord<'pb> {
+        pub fn cc_name(&self) -> &Identifier<'pb> {
+            &self.cc_name
+        }
 
-    pub fn rs_name(&self) -> &Identifier<'pb> {
-        &self.rs_name
-    }
+        pub fn rs_name(&self) -> &Identifier<'pb> {
+            &self.rs_name
+        }
 
-    pub fn unique_name(&self) -> &'pb str {
-        self.unique_name
-    }
+        pub fn unique_name(&self) -> &'pb str {
+            self.unique_name
+        }
 
-    pub fn id(&self) -> ItemId {
-        self.id
-    }
+        pub fn id(&self) -> ItemId {
+            ItemId(self.proto.id() as usize)
+        }
 
-    pub fn owning_target(&self) -> &BazelLabel {
-        &self.owning_target
-    }
+        pub fn owning_target(&self) -> &BazelLabel {
+            &self.owning_target
+        }
 
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    ///
-    /// Because attributes can change the behavior or semantics of types in
-    /// fairly significant ways, and in ways that may affect interop, we
-    /// default-closed and do not expose functions with unknown attributes.
-    pub fn unknown_attr(&self) -> Option<&'pb str> {
-        self.unknown_attr
-    }
+        /// A human-readable list of attributes that Crubit doesn't understand.
+        ///
+        /// Because attributes can change the behavior or semantics of types in
+        /// fairly significant ways, and in ways that may affect interop, we
+        /// default-closed and do not expose functions with unknown attributes.
+        pub fn unknown_attr(&self) -> Option<&'pb str> {
+            self.unknown_attr
+        }
 
-    pub fn record_type(&self) -> RecordType {
-        self.record_type
-    }
+        pub fn record_type(&self) -> RecordType {
+            self.record_type
+        }
 
-    pub fn enclosing_item_id(&self) -> Option<ItemId> {
-        self.enclosing_item_id
-    }
+        pub fn enclosing_item_id(&self) -> Option<ItemId> {
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+        }
 
-    pub fn must_bind(&self) -> bool {
-        self.must_bind
+        pub fn must_bind(&self) -> bool {
+            self.proto.must_bind()
+        }
     }
 }
 
 impl<'pb> GenericItem<'pb> for IncompleteRecord<'pb> {
     fn id(&self) -> ItemId {
-        self.id
+        IncompleteRecord::id(self)
     }
     fn unique_name(&self) -> Option<&'pb str> {
         Some(self.unique_name())
@@ -1378,7 +1379,7 @@ impl<'pb> GenericItem<'pb> for IncompleteRecord<'pb> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
-        self.must_bind
+        IncompleteRecord::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
         Some(self.cc_name.as_str())
@@ -1944,13 +1945,10 @@ pub struct Constant<'pb> {
     pub(crate) cc_name: Identifier<'pb>,
     pub(crate) rs_name: Identifier<'pb>,
     pub(crate) unique_name: &'pb str,
-    pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
     pub(crate) source_loc: &'pb str,
     pub(crate) unknown_attr: Option<&'pb str>,
-    pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) type_: CcType,
-    pub(crate) must_bind: bool,
     pub(crate) deprecated: Option<&'pb str>,
     pub(crate) doc_comment: Option<&'pb str>,
 }
@@ -1974,7 +1972,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn id(&self) -> ItemId {
-            self.id
+            ItemId(self.proto.id() as usize)
         }
 
         pub fn owning_target(&self) -> &BazelLabel {
@@ -1990,7 +1988,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.enclosing_item_id
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
         }
 
         pub fn type_(&self) -> &CcType {
@@ -1998,7 +1996,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn must_bind(&self) -> bool {
-            self.must_bind
+            self.proto.must_bind()
         }
 
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
@@ -2015,7 +2013,7 @@ derive_debug_partialeq_eq_hash! {
 
 impl<'pb> GenericItem<'pb> for Constant<'pb> {
     fn id(&self) -> ItemId {
-        self.id
+        Constant::id(self)
     }
     fn unique_name(&self) -> Option<&'pb str> {
         Some(self.unique_name())
@@ -2033,90 +2031,90 @@ impl<'pb> GenericItem<'pb> for Constant<'pb> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
-        self.must_bind
+        Constant::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
         Some(self.cc_name.as_str())
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct GlobalVar<'pb> {
+    pub(crate) proto: GlobalVarView<'pb>,
     pub(crate) cc_name: Identifier<'pb>,
     pub(crate) rs_name: Identifier<'pb>,
     pub(crate) unique_name: &'pb str,
-    pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
     pub(crate) source_loc: &'pb str,
     pub(crate) unknown_attr: Option<&'pb str>,
-    pub(crate) enclosing_item_id: Option<ItemId>,
     pub(crate) mangled_name: Option<&'pb str>,
     pub(crate) type_: CcType,
-    pub(crate) must_bind: bool,
     pub(crate) deprecated: Option<&'pb str>,
     pub(crate) doc_comment: Option<&'pb str>,
 }
 
-impl<'pb> GlobalVar<'pb> {
-    pub fn cc_name(&self) -> &Identifier<'pb> {
-        &self.cc_name
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> GlobalVar<'pb> {
+        pub fn cc_name(&self) -> &Identifier<'pb> {
+            &self.cc_name
+        }
 
-    pub fn rs_name(&self) -> &Identifier<'pb> {
-        &self.rs_name
-    }
+        pub fn rs_name(&self) -> &Identifier<'pb> {
+            &self.rs_name
+        }
 
-    pub fn unique_name(&self) -> &'pb str {
-        self.unique_name
-    }
+        pub fn unique_name(&self) -> &'pb str {
+            self.unique_name
+        }
 
-    pub fn id(&self) -> ItemId {
-        self.id
-    }
+        pub fn id(&self) -> ItemId {
+            ItemId(self.proto.id() as usize)
+        }
 
-    pub fn owning_target(&self) -> &BazelLabel {
-        &self.owning_target
-    }
+        pub fn owning_target(&self) -> &BazelLabel {
+            &self.owning_target
+        }
 
-    pub fn source_loc(&self) -> &'pb str {
-        self.source_loc
-    }
+        pub fn source_loc(&self) -> &'pb str {
+            self.source_loc
+        }
 
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    pub fn unknown_attr(&self) -> Option<&'pb str> {
-        self.unknown_attr
-    }
+        /// A human-readable list of attributes that Crubit doesn't understand.
+        pub fn unknown_attr(&self) -> Option<&'pb str> {
+            self.unknown_attr
+        }
 
-    pub fn enclosing_item_id(&self) -> Option<ItemId> {
-        self.enclosing_item_id
-    }
+        pub fn enclosing_item_id(&self) -> Option<ItemId> {
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+        }
 
-    pub fn mangled_name(&self) -> Option<&'pb str> {
-        self.mangled_name
-    }
+        pub fn mangled_name(&self) -> Option<&'pb str> {
+            self.mangled_name
+        }
 
-    pub fn type_(&self) -> &CcType {
-        &self.type_
-    }
+        pub fn type_(&self) -> &CcType {
+            &self.type_
+        }
 
-    pub fn must_bind(&self) -> bool {
-        self.must_bind
-    }
+        pub fn must_bind(&self) -> bool {
+            self.proto.must_bind()
+        }
 
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
-    pub fn deprecated(&self) -> Option<&'pb str> {
-        self.deprecated
-    }
+        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+        /// string is used.
+        pub fn deprecated(&self) -> Option<&'pb str> {
+            self.deprecated
+        }
 
-    pub fn doc_comment(&self) -> Option<&'pb str> {
-        self.doc_comment
+        pub fn doc_comment(&self) -> Option<&'pb str> {
+            self.doc_comment
+        }
     }
 }
 
 impl<'pb> GenericItem<'pb> for GlobalVar<'pb> {
     fn id(&self) -> ItemId {
-        self.id
+        GlobalVar::id(self)
     }
     fn unique_name(&self) -> Option<&'pb str> {
         Some(self.unique_name())
@@ -2134,112 +2132,111 @@ impl<'pb> GenericItem<'pb> for GlobalVar<'pb> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
-        self.must_bind
+        GlobalVar::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
         Some(self.cc_name.as_str())
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct Enum<'pb> {
+    pub(crate) proto: EnumView<'pb>,
     pub(crate) cc_name: Identifier<'pb>,
     pub(crate) rs_name: Identifier<'pb>,
     pub(crate) unique_name: &'pb str,
     pub(crate) mangled_cc_name: &'pb str,
-    pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
     pub(crate) source_loc: &'pb str,
     pub(crate) underlying_type: CcType,
     pub(crate) enumerators: Option<Vec<Enumerator<'pb>>>,
     pub(crate) unknown_attr: Option<&'pb str>,
-    pub(crate) enclosing_item_id: Option<ItemId>,
-    pub(crate) must_bind: bool,
-    pub(crate) detected_formatter: bool,
     pub(crate) nodiscard: Option<&'pb str>,
     pub(crate) deprecated: Option<&'pb str>,
     pub(crate) doc_comment: Option<&'pb str>,
 }
 
-impl<'pb> Enum<'pb> {
-    pub fn cc_name(&self) -> &Identifier<'pb> {
-        &self.cc_name
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> Enum<'pb> {
+        pub fn cc_name(&self) -> &Identifier<'pb> {
+            &self.cc_name
+        }
 
-    pub fn rs_name(&self) -> &Identifier<'pb> {
-        &self.rs_name
-    }
+        pub fn rs_name(&self) -> &Identifier<'pb> {
+            &self.rs_name
+        }
 
-    pub fn unique_name(&self) -> &'pb str {
-        self.unique_name
-    }
+        pub fn unique_name(&self) -> &'pb str {
+            self.unique_name
+        }
 
-    pub fn mangled_cc_name(&self) -> &'pb str {
-        self.mangled_cc_name
-    }
+        pub fn mangled_cc_name(&self) -> &'pb str {
+            self.mangled_cc_name
+        }
 
-    pub fn id(&self) -> ItemId {
-        self.id
-    }
+        pub fn id(&self) -> ItemId {
+            ItemId(self.proto.id() as usize)
+        }
 
-    pub fn owning_target(&self) -> &BazelLabel {
-        &self.owning_target
-    }
+        pub fn owning_target(&self) -> &BazelLabel {
+            &self.owning_target
+        }
 
-    pub fn source_loc(&self) -> &'pb str {
-        self.source_loc
-    }
+        pub fn source_loc(&self) -> &'pb str {
+            self.source_loc
+        }
 
-    pub fn underlying_type(&self) -> &CcType {
-        &self.underlying_type
-    }
+        pub fn underlying_type(&self) -> &CcType {
+            &self.underlying_type
+        }
 
-    /// The enumerators. If None, this is a forward-declared (opaque) enum.
-    ///
-    /// That is, the difference between `enum X : int {};` and `enum X : int;`
-    /// is that the former has `Some(vec![])` for the enumerators, while the
-    /// latter has `None`.
-    pub fn enumerators(&self) -> Option<&[Enumerator<'pb>]> {
-        self.enumerators.as_deref()
-    }
+        /// The enumerators. If None, this is a forward-declared (opaque) enum.
+        ///
+        /// That is, the difference between `enum X : int {};` and `enum X : int;`
+        /// is that the former has `Some(vec![])` for the enumerators, while the
+        /// latter has `None`.
+        pub fn enumerators(&self) -> Option<&[Enumerator<'pb>]> {
+            self.enumerators.as_deref()
+        }
 
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    pub fn unknown_attr(&self) -> Option<&'pb str> {
-        self.unknown_attr
-    }
+        /// A human-readable list of attributes that Crubit doesn't understand.
+        pub fn unknown_attr(&self) -> Option<&'pb str> {
+            self.unknown_attr
+        }
 
-    pub fn enclosing_item_id(&self) -> Option<ItemId> {
-        self.enclosing_item_id
-    }
+        pub fn enclosing_item_id(&self) -> Option<ItemId> {
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+        }
 
-    pub fn must_bind(&self) -> bool {
-        self.must_bind
-    }
+        pub fn must_bind(&self) -> bool {
+            self.proto.must_bind()
+        }
 
-    pub fn detected_formatter(&self) -> bool {
-        self.detected_formatter
-    }
+        pub fn detected_formatter(&self) -> bool {
+            self.proto.detected_formatter()
+        }
 
-    /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
-    /// string is used.
-    pub fn nodiscard(&self) -> Option<&'pb str> {
-        self.nodiscard
-    }
+        /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
+        /// string is used.
+        pub fn nodiscard(&self) -> Option<&'pb str> {
+            self.nodiscard
+        }
 
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
-    pub fn deprecated(&self) -> Option<&'pb str> {
-        self.deprecated
-    }
+        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+        /// string is used.
+        pub fn deprecated(&self) -> Option<&'pb str> {
+            self.deprecated
+        }
 
-    pub fn doc_comment(&self) -> Option<&'pb str> {
-        self.doc_comment
+        pub fn doc_comment(&self) -> Option<&'pb str> {
+            self.doc_comment
+        }
     }
 }
 
 impl<'pb> GenericItem<'pb> for Enum<'pb> {
     fn id(&self) -> ItemId {
-        self.id
+        Enum::id(self)
     }
     fn unique_name(&self) -> Option<&'pb str> {
         Some(self.unique_name())
@@ -2257,7 +2254,7 @@ impl<'pb> GenericItem<'pb> for Enum<'pb> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
-        self.must_bind
+        Enum::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
         Some(self.cc_name.as_str())
@@ -2300,82 +2297,84 @@ derive_debug_partialeq_eq_hash! {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct TypeAlias<'pb> {
+    pub(crate) proto: TypeAliasView<'pb>,
     pub(crate) cc_name: Identifier<'pb>,
     pub(crate) rs_name: Identifier<'pb>,
     pub(crate) unique_name: &'pb str,
-    pub(crate) id: ItemId,
     pub(crate) owning_target: BazelLabel,
     pub(crate) doc_comment: Option<&'pb str>,
     pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) underlying_type: CcType,
     pub(crate) source_loc: &'pb str,
-    pub(crate) enclosing_item_id: Option<ItemId>,
-    pub(crate) must_bind: bool,
     pub(crate) deprecated: Option<&'pb str>,
     // Lifetime variable names bound by this type alias.
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
 }
 
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> TypeAlias<'pb> {
+        pub fn cc_name(&self) -> &Identifier<'pb> {
+            &self.cc_name
+        }
+
+        pub fn rs_name(&self) -> &Identifier<'pb> {
+            &self.rs_name
+        }
+
+        pub fn unique_name(&self) -> &'pb str {
+            self.unique_name
+        }
+
+        pub fn id(&self) -> ItemId {
+            ItemId(self.proto.id() as usize)
+        }
+
+        pub fn owning_target(&self) -> &BazelLabel {
+            &self.owning_target
+        }
+
+        pub fn doc_comment(&self) -> Option<&'pb str> {
+            self.doc_comment
+        }
+
+        /// A human-readable list of attributes that Crubit doesn't understand.
+        pub fn unknown_attr(&self) -> Option<&'pb str> {
+            self.unknown_attr
+        }
+
+        pub fn underlying_type(&self) -> &CcType {
+            &self.underlying_type
+        }
+
+        pub fn source_loc(&self) -> &'pb str {
+            self.source_loc
+        }
+
+        pub fn enclosing_item_id(&self) -> Option<ItemId> {
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+        }
+
+        pub fn must_bind(&self) -> bool {
+            self.proto.must_bind()
+        }
+
+        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+        /// string is used.
+        pub fn deprecated(&self) -> Option<&'pb str> {
+            self.deprecated
+        }
+
+        pub fn lifetime_inputs(&self) -> &[Rc<str>] {
+            &self.lifetime_inputs
+        }
+    }
+}
+
 impl<'pb> TypeAlias<'pb> {
-    pub fn cc_name(&self) -> &Identifier<'pb> {
-        &self.cc_name
-    }
-
-    pub fn rs_name(&self) -> &Identifier<'pb> {
-        &self.rs_name
-    }
-
-    pub fn unique_name(&self) -> &'pb str {
-        self.unique_name
-    }
-
-    pub fn id(&self) -> ItemId {
-        self.id
-    }
-
-    pub fn owning_target(&self) -> &BazelLabel {
-        &self.owning_target
-    }
-
-    pub fn doc_comment(&self) -> Option<&'pb str> {
-        self.doc_comment
-    }
-
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    pub fn unknown_attr(&self) -> Option<&'pb str> {
-        self.unknown_attr
-    }
-
-    pub fn underlying_type(&self) -> &CcType {
-        &self.underlying_type
-    }
-
     pub fn underlying_type_mut(&mut self) -> &mut CcType {
         &mut self.underlying_type
-    }
-
-    pub fn source_loc(&self) -> &'pb str {
-        self.source_loc
-    }
-
-    pub fn enclosing_item_id(&self) -> Option<ItemId> {
-        self.enclosing_item_id
-    }
-
-    pub fn must_bind(&self) -> bool {
-        self.must_bind
-    }
-
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
-    pub fn deprecated(&self) -> Option<&'pb str> {
-        self.deprecated
-    }
-
-    pub fn lifetime_inputs(&self) -> &[Rc<str>] {
-        &self.lifetime_inputs
     }
 
     pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
@@ -2385,7 +2384,7 @@ impl<'pb> TypeAlias<'pb> {
 
 impl<'pb> GenericItem<'pb> for TypeAlias<'pb> {
     fn id(&self) -> ItemId {
-        self.id
+        TypeAlias::id(self)
     }
     fn unique_name(&self) -> Option<&'pb str> {
         Some(self.unique_name())
@@ -2403,7 +2402,7 @@ impl<'pb> GenericItem<'pb> for TypeAlias<'pb> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
-        self.must_bind
+        TypeAlias::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
         Some(self.cc_name.as_str())
@@ -2638,30 +2637,31 @@ impl<'pb> UnsupportedItem<'pb> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct Comment<'pb> {
+    pub(crate) proto: CommentView<'pb>,
     pub(crate) text: &'pb str,
-    pub(crate) id: ItemId,
-    pub(crate) must_bind: bool,
 }
 
-impl<'pb> Comment<'pb> {
-    pub fn text(&self) -> &'pb str {
-        self.text
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> Comment<'pb> {
+        pub fn text(&self) -> &'pb str {
+            self.text
+        }
 
-    pub fn id(&self) -> ItemId {
-        self.id
-    }
+        pub fn id(&self) -> ItemId {
+            ItemId(self.proto.id() as usize)
+        }
 
-    pub fn must_bind(&self) -> bool {
-        self.must_bind
+        pub fn must_bind(&self) -> bool {
+            self.proto.must_bind()
+        }
     }
 }
 
 impl<'pb> GenericItem<'pb> for Comment<'pb> {
     fn id(&self) -> ItemId {
-        self.id
+        Comment::id(self)
     }
     fn unique_name(&self) -> Option<&'pb str> {
         None
@@ -2679,81 +2679,81 @@ impl<'pb> GenericItem<'pb> for Comment<'pb> {
         None
     }
     fn must_bind(&self) -> bool {
-        self.must_bind
+        Comment::must_bind(self)
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct Namespace<'pb> {
+    pub(crate) proto: NamespaceView<'pb>,
     pub(crate) cc_name: Identifier<'pb>,
     pub(crate) rs_name: Identifier<'pb>,
     pub(crate) unique_name: &'pb str,
-    pub(crate) id: ItemId,
-    pub(crate) canonical_namespace_id: ItemId,
     pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) enclosing_item_id: Option<ItemId>,
-    pub(crate) is_inline: bool,
-    pub(crate) must_bind: bool,
     pub(crate) deprecated: Option<&'pb str>,
     pub(crate) doc_comment: Option<&'pb str>,
     pub(crate) children: Vec<Item<'pb>>,
 }
 
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> Namespace<'pb> {
+        pub fn cc_name(&self) -> &Identifier<'pb> {
+            &self.cc_name
+        }
+
+        pub fn rs_name(&self) -> &Identifier<'pb> {
+            &self.rs_name
+        }
+
+        pub fn unique_name(&self) -> &'pb str {
+            self.unique_name
+        }
+
+        pub fn id(&self) -> ItemId {
+            ItemId(self.proto.id() as usize)
+        }
+
+        pub fn canonical_namespace_id(&self) -> ItemId {
+            ItemId(self.proto.canonical_namespace_id() as usize)
+        }
+
+        /// A human-readable list of attributes that Crubit doesn't understand.
+        pub fn unknown_attr(&self) -> Option<&'pb str> {
+            self.unknown_attr
+        }
+
+        pub fn owning_target(&self) -> &BazelLabel {
+            &self.owning_target
+        }
+
+        pub fn enclosing_item_id(&self) -> Option<ItemId> {
+            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+        }
+
+        pub fn is_inline(&self) -> bool {
+            self.proto.is_inline()
+        }
+
+        pub fn must_bind(&self) -> bool {
+            self.proto.must_bind()
+        }
+
+        pub fn deprecated(&self) -> Option<&'pb str> {
+            self.deprecated
+        }
+
+        pub fn doc_comment(&self) -> Option<&'pb str> {
+            self.doc_comment
+        }
+
+        pub fn children(&self) -> &[Item<'pb>] {
+            &self.children
+        }
+    }
+}
+
 impl<'pb> Namespace<'pb> {
-    pub fn cc_name(&self) -> &Identifier<'pb> {
-        &self.cc_name
-    }
-
-    pub fn rs_name(&self) -> &Identifier<'pb> {
-        &self.rs_name
-    }
-
-    pub fn unique_name(&self) -> &'pb str {
-        self.unique_name
-    }
-
-    pub fn id(&self) -> ItemId {
-        self.id
-    }
-
-    pub fn canonical_namespace_id(&self) -> ItemId {
-        self.canonical_namespace_id
-    }
-
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    pub fn unknown_attr(&self) -> Option<&'pb str> {
-        self.unknown_attr
-    }
-
-    pub fn owning_target(&self) -> &BazelLabel {
-        &self.owning_target
-    }
-
-    pub fn enclosing_item_id(&self) -> Option<ItemId> {
-        self.enclosing_item_id
-    }
-
-    pub fn is_inline(&self) -> bool {
-        self.is_inline
-    }
-
-    pub fn must_bind(&self) -> bool {
-        self.must_bind
-    }
-
-    pub fn deprecated(&self) -> Option<&'pb str> {
-        self.deprecated
-    }
-
-    pub fn doc_comment(&self) -> Option<&'pb str> {
-        self.doc_comment
-    }
-
-    pub fn children(&self) -> &[Item<'pb>] {
-        &self.children
-    }
-
     pub fn children_mut(&mut self) -> &mut Vec<Item<'pb>> {
         &mut self.children
     }
@@ -2765,13 +2765,13 @@ impl<'pb> Namespace<'pb> {
 
 impl<'pb> GenericItem<'pb> for Namespace<'pb> {
     fn id(&self) -> ItemId {
-        self.id
+        Namespace::id(self)
     }
     fn unique_name(&self) -> Option<&'pb str> {
         Some(self.unique_name())
     }
     fn owning_target(&self) -> Option<BazelLabel> {
-        Some(self.owning_target.clone())
+        Some(self.owning_target().clone())
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
         UnsupportedItemKind::Namespace
@@ -2783,42 +2783,43 @@ impl<'pb> GenericItem<'pb> for Namespace<'pb> {
         self.unknown_attr()
     }
     fn must_bind(&self) -> bool {
-        self.must_bind
+        Namespace::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
         Some(self.cc_name.as_str())
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct UseMod<'pb> {
+    pub(crate) proto: UseModView<'pb>,
     pub(crate) path: Rc<str>,
     pub(crate) mod_name: Identifier<'pb>,
-    pub(crate) id: ItemId,
-    pub(crate) must_bind: bool,
 }
 
-impl<'pb> UseMod<'pb> {
-    pub fn path(&self) -> &str {
-        &self.path
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> UseMod<'pb> {
+        pub fn path(&self) -> &str {
+            &self.path
+        }
 
-    pub fn mod_name(&self) -> &Identifier<'pb> {
-        &self.mod_name
-    }
+        pub fn mod_name(&self) -> &Identifier<'pb> {
+            &self.mod_name
+        }
 
-    pub fn id(&self) -> ItemId {
-        self.id
-    }
+        pub fn id(&self) -> ItemId {
+            ItemId(self.proto.id() as usize)
+        }
 
-    pub fn must_bind(&self) -> bool {
-        self.must_bind
+        pub fn must_bind(&self) -> bool {
+            self.proto.must_bind()
+        }
     }
 }
 
 impl<'pb> GenericItem<'pb> for UseMod<'pb> {
     fn id(&self) -> ItemId {
-        self.id
+        UseMod::id(self)
     }
     fn unique_name(&self) -> Option<&'pb str> {
         None
@@ -2836,7 +2837,7 @@ impl<'pb> GenericItem<'pb> for UseMod<'pb> {
         None
     }
     fn must_bind(&self) -> bool {
-        self.must_bind
+        UseMod::must_bind(self)
     }
 }
 
@@ -3047,13 +3048,13 @@ impl<'pb> Item<'pb> {
     pub fn enclosing_item_id(&self) -> Option<ItemId> {
         match self {
             Item::Record(record) => record.enclosing_item_id(),
-            Item::IncompleteRecord(record) => record.enclosing_item_id,
-            Item::Enum(enum_) => enum_.enclosing_item_id,
-            Item::Constant(constant) => constant.enclosing_item_id,
-            Item::GlobalVar(type_) => type_.enclosing_item_id,
+            Item::IncompleteRecord(record) => record.enclosing_item_id(),
+            Item::Enum(enum_) => enum_.enclosing_item_id(),
+            Item::Constant(constant) => constant.enclosing_item_id(),
+            Item::GlobalVar(type_) => type_.enclosing_item_id(),
             Item::Func(func) => func.enclosing_item_id(),
-            Item::Namespace(namespace) => namespace.enclosing_item_id,
-            Item::TypeAlias(type_alias) => type_alias.enclosing_item_id,
+            Item::Namespace(namespace) => namespace.enclosing_item_id(),
+            Item::TypeAlias(type_alias) => type_alias.enclosing_item_id(),
             Item::Comment(..) => None,
             Item::UnsupportedItem(unsupported) => {
                 unsupported.path.as_ref().and_then(|p| p.enclosing_item_id)
@@ -3125,7 +3126,7 @@ impl<'pb> Item<'pb> {
     /// Returns whether this item is a namespace whose namespace_id matches
     /// `canonical_namespace_id`.
     pub fn is_canonical_namespace(&self, canonical_namespace_id: ItemId) -> bool {
-        matches!(self, Item::Namespace(ns) if ns.id == canonical_namespace_id)
+        matches!(self, Item::Namespace(ns) if ns.id() == canonical_namespace_id)
     }
 
     /// If this item is a child item of a Record, returns true if it should be
