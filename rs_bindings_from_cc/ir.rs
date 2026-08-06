@@ -19,8 +19,8 @@ use quote::{quote, ToTokens};
 use std::cell::OnceCell;
 use std::collections::hash_map::{Entry, HashMap};
 use std::collections::{BTreeMap, HashSet};
-use std::fmt::{self, Debug, Display, Formatter};
-use std::hash::{Hash, Hasher};
+use std::fmt::{self, Debug, Display};
+use std::hash::Hash;
 use std::rc::Rc;
 
 mod proto_to_ir;
@@ -2415,29 +2415,6 @@ impl Display for TypeAlias<'_> {
     }
 }
 
-/// A wrapper type that does not contribute to equality or hashing. All
-/// instances are equal.
-#[derive(Clone, Copy, Default)]
-struct IgnoredField<T>(T);
-
-impl<T> Debug for IgnoredField<T> {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "_")
-    }
-}
-
-impl<T> PartialEq for IgnoredField<T> {
-    fn eq(&self, _other: &Self) -> bool {
-        true
-    }
-}
-
-impl<T> Eq for IgnoredField<T> {}
-
-impl<T> Hash for IgnoredField<T> {
-    fn hash<H: Hasher>(&self, _state: &mut H) {}
-}
-
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct FormattedError {
     pub fmt: Rc<str>,
@@ -2501,7 +2478,7 @@ impl<'pb> UnsupportedItemPath<'pb> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct UnsupportedItem<'pb> {
     pub(crate) name: Rc<str>,
     pub(crate) unique_name: Option<&'pb str>,
@@ -2515,56 +2492,68 @@ pub struct UnsupportedItem<'pb> {
     pub(crate) inline_cpp_source_text: Option<Rc<str>>,
 
     /// Stores either one natively generated [`arc_anyhow::Error`] or the
-    /// memoized result of converting `errors`.
-    cause: IgnoredField<OnceCell<Vec<Error>>>,
+    /// memoized result of converting `errors`. This field explicitly doesn't contribute to the
+    /// Debug, PartialEq, Eq, or Hash impls.
+    cause: OnceCell<Vec<Error>>,
+}
+
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> UnsupportedItem<'pb> {
+        /// Unlike other AST nodes that borrow from the protobuf memory, `UnsupportedItem` names are
+        /// dynamically formatted during Rust code generation. Storing `Rc<str>` here avoids requiring
+        /// unsafe string lifetime extensions at the cost of negligible string allocations.
+        pub fn name(&self) -> &str {
+            &self.name
+        }
+
+        pub fn unique_name(&self) -> Option<&'pb str> {
+            self.unique_name
+        }
+
+        pub fn kind(&self) -> UnsupportedItemKind {
+            self.kind
+        }
+
+        pub fn path(&self) -> Option<&UnsupportedItemPath<'pb>> {
+            self.path.as_ref()
+        }
+
+        // Private function just to expose the errors to the trait impls.
+        fn raw_errors(&self) -> &[Rc<FormattedError>] {
+            self.errors.as_slice()
+        }
+
+        pub fn source_loc(&self) -> Option<&'pb str> {
+            self.source_loc
+        }
+
+        pub fn id(&self) -> ItemId {
+            self.id
+        }
+
+        pub fn must_bind(&self) -> bool {
+            self.must_bind
+        }
+
+        pub fn defining_target(&self) -> Option<&BazelLabel> {
+            self.defining_target.as_ref()
+        }
+
+        pub fn inline_cpp_source_text(&self) -> Option<&str> {
+            self.inline_cpp_source_text.as_deref()
+        }
+
+        // Explicitly omit a getter for `cause`.
+    }
 }
 
 impl<'pb> UnsupportedItem<'pb> {
-    /// Unlike other AST nodes that borrow from the protobuf memory, `UnsupportedItem` names are
-    /// dynamically formatted during Rust code generation. Storing `Rc<str>` here avoids requiring
-    /// unsafe string lifetime extensions at the cost of negligible string allocations.
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn unique_name(&self) -> Option<&'pb str> {
-        self.unique_name
-    }
-
-    pub fn kind(&self) -> UnsupportedItemKind {
-        self.kind
-    }
-
-    pub fn path(&self) -> Option<&UnsupportedItemPath<'pb>> {
-        self.path.as_ref()
-    }
-
-    pub fn source_loc(&self) -> Option<&'pb str> {
-        self.source_loc
-    }
-
-    pub fn inline_cpp_source_text(&self) -> Option<&str> {
-        self.inline_cpp_source_text.as_deref()
-    }
-
     pub fn source_text_as_token_stream(&self) -> Option<proc_macro2::TokenStream> {
         self.inline_cpp_source_text()?.parse::<proc_macro2::TokenStream>().ok()
     }
 
     pub fn set_inline_cpp_source_text(&mut self, text: Option<Rc<str>>) {
         self.inline_cpp_source_text = text;
-    }
-
-    pub fn id(&self) -> ItemId {
-        self.id
-    }
-
-    pub fn must_bind(&self) -> bool {
-        self.must_bind
-    }
-
-    pub fn defining_target(&self) -> Option<&BazelLabel> {
-        self.defining_target.as_ref()
     }
 }
 
@@ -2614,7 +2603,7 @@ impl<'pb> UnsupportedItem<'pb> {
             path,
             source_loc,
             id,
-            cause: IgnoredField(cause.map(|e| OnceCell::from(vec![e])).unwrap_or_default()),
+            cause: cause.map(|e| OnceCell::from(vec![e])).unwrap_or_default(),
             must_bind,
             defining_target,
             inline_cpp_source_text: None,
@@ -2622,8 +2611,8 @@ impl<'pb> UnsupportedItem<'pb> {
     }
 
     pub fn errors(&self) -> &[Error] {
-        self.cause.0.get_or_init(|| {
-            self.errors
+        self.cause.get_or_init(|| {
+            self.raw_errors()
                 .iter()
                 .map(|e| {
                     error_report::FormattedError::new(
