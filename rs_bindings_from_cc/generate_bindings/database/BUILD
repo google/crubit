@@ -53,6 +53,8 @@ multiplatform_rust_test(
         "//common:multiplatform_testing",
         "//common:token_stream_matchers",
         "//rs_bindings_from_cc:ir_matchers",
+        "//rs_bindings_from_cc:ir_rust_proto",
         "@crate_index//:googletest",
+        "@protobuf//rust:protobuf",
     ],
 )

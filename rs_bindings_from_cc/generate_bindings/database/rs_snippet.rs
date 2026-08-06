@@ -2563,40 +2563,63 @@ mod tests {
     use error_report::anyhow;
     use googletest::matchers::eq;
     use googletest::{expect_that, gtest};
+    use protobuf::proto;
+    use std::marker::PhantomData;
     use token_stream_matchers::assert_rs_matches;
 
-    fn make_existing_rust_type(name: &'static str, is_same_abi: bool) -> RsTypeKind<'static> {
+    #[derive(Copy, Clone)]
+    struct EmptyDatabase<'a>(PhantomData<&'a ()>);
+    impl<'a> EmptyDatabase<'a> {
+        const fn new() -> Self {
+            Self(PhantomData)
+        }
+    }
+    impl<'a> Deref for EmptyDatabase<'a> {
+        type Target = BindingsGenerator<'a>;
+        fn deref(&self) -> &Self::Target {
+            panic!("Tried to use the empty bindings generator query group.")
+        }
+    }
+
+    fn existing_rust_type_proto_to_rs_type_kind(
+        proto: ir_rust_proto::ExistingRustTypeView<'_>,
+    ) -> RsTypeKind<'_> {
         RsTypeKind::new_existing_rust_type(
-            EmptyDatabase,
-            Rc::new(ExistingRustType::new_for_testing(
-                name,
-                "",
-                name,
-                Vec::new(),
-                BazelLabel::from("//new/for/testing"),
-                None,
-                is_same_abi,
-                ItemId::new_for_testing(0),
-                false,
-                false,
-            )),
+            EmptyDatabase::new(),
+            Rc::new(ExistingRustType::try_from(proto).unwrap()),
         )
         .expect("Should succeed because all fallible operations come from BindingsGenerated, which EmptyDatabase cannot successfully deref to (it panics).")
+    }
+
+    fn make_existing_rust_type_proto(
+        name: &str,
+        is_same_abi: bool,
+    ) -> ir_rust_proto::ExistingRustType {
+        proto! {
+            ir_rust_proto::ExistingRustType {
+                rs_name: name,
+                unique_name: name,
+                is_same_abi: is_same_abi,
+                owning_target: "//new/for/testing",
+            }
+        }
     }
 
     #[gtest]
     fn test_dfs_iter_ordering_for_func_ptr() {
         // Set up a test input representing: fn(A, B) -> C
-        let f = {
-            let a = make_existing_rust_type("::A", true);
-            let b = make_existing_rust_type("::B", true);
-            let c = make_existing_rust_type("::C", true);
-            RsTypeKind::FuncPtr {
-                option: false,
-                cc_calling_conv: CcCallingConv::C,
-                param_types: Rc::from([a, b]),
-                return_type: Rc::new(c),
-            }
+        let a_proto = make_existing_rust_type_proto("::A", true);
+        let b_proto = make_existing_rust_type_proto("::B", true);
+        let c_proto = make_existing_rust_type_proto("::C", true);
+
+        let f = RsTypeKind::FuncPtr {
+            option: false,
+            cc_calling_conv: CcCallingConv::C,
+            param_types: Rc::from([
+                existing_rust_type_proto_to_rs_type_kind(a_proto.as_view()),
+                existing_rust_type_proto_to_rs_type_kind(b_proto.as_view()),
+            ]),
+            return_type: Rc::new(existing_rust_type_proto_to_rs_type_kind(c_proto.as_view())),
         };
         let dfs_names: Vec<String> = f
             .dfs_iter()
@@ -2611,46 +2634,37 @@ mod tests {
         assert_eq!(vec!["fn", "::A", "::B", "::C"], dfs_names);
     }
 
-    #[derive(Copy, Clone)]
-    struct EmptyDatabase;
-    impl Deref for EmptyDatabase {
-        type Target = BindingsGenerator<'static>;
-        fn deref(&self) -> &Self::Target {
-            panic!("Tried to use the empty bindings generator query group.")
-        }
-    }
-
     #[gtest]
     fn test_lifetime_elision_for_references() {
-        let referent = Rc::new(make_existing_rust_type("::T", true));
+        let t_proto = make_existing_rust_type_proto("::T", true);
         let reference = RsTypeKind::Reference {
-            referent,
+            referent: Rc::new(existing_rust_type_proto_to_rs_type_kind(t_proto.as_view())),
             mutability: Mutability::Const,
             lifetime: Lifetime::new("_"),
             is_cref: false,
         };
-        assert_rs_matches!(reference.to_token_stream(EmptyDatabase), quote! {&::T});
+        assert_rs_matches!(reference.to_token_stream(EmptyDatabase::new()), quote! {&::T});
     }
 
     #[gtest]
     fn test_lifetime_elision_for_rvalue_references() {
-        let referent = Rc::new(make_existing_rust_type("::T", true));
+        let t_proto = make_existing_rust_type_proto("::T", true);
         let reference = RsTypeKind::RvalueReference {
-            referent,
+            referent: Rc::new(existing_rust_type_proto_to_rs_type_kind(t_proto.as_view())),
             mutability: Mutability::Mut,
             lifetime: Lifetime::new("_"),
         };
         assert_rs_matches!(
-            reference.to_token_stream(EmptyDatabase),
+            reference.to_token_stream(EmptyDatabase::new()),
             quote! {RvalueReference<'_, ::T>}
         );
     }
 
     #[gtest]
     fn test_format_as_self_param_rvalue_reference() -> Result<()> {
-        let referent = Rc::new(make_existing_rust_type("::T", true));
+        let t_proto = make_existing_rust_type_proto("::T", true);
         let result = RsTypeKind::RvalueReference {
-            referent,
+            referent: Rc::new(existing_rust_type_proto_to_rs_type_kind(t_proto.as_view())),
             mutability: Mutability::Mut,
             lifetime: Lifetime::new("a"),
         }
@@ -2662,9 +2676,9 @@ mod tests {
 
     #[gtest]
     fn test_format_as_self_param_const_rvalue_reference() -> Result<()> {
-        let referent = Rc::new(make_existing_rust_type("::T", true));
+        let t_proto = make_existing_rust_type_proto("::T", true);
         let result = RsTypeKind::RvalueReference {
-            referent,
+            referent: Rc::new(existing_rust_type_proto_to_rs_type_kind(t_proto.as_view())),
             mutability: Mutability::Const,
             lifetime: Lifetime::new("a"),
         }
@@ -2737,25 +2751,24 @@ mod tests {
         expect_that!(prim.allowed_behind_single_element_ptr(), eq(true));
         expect_that!(prim.allowed_behind_multi_element_ptr(), eq(true));
 
+        let enum_proto = proto! {
+            ir_rust_proto::Enum {
+                cc_name: ir_rust_proto::Identifier { identifier: "MyEnum" },
+                rs_name: ir_rust_proto::Identifier { identifier: "MyEnum" },
+                unique_name: "MyEnum",
+                mangled_cc_name: "6MyEnum",
+                id: 0,
+                owning_target: "//foo/bar",
+                source_loc: "some_file.h:123",
+                underlying_type: ir_rust_proto::CcType {
+                    primitive: ir_rust_proto::cc_type::Primitive {
+                        spelling: "int",
+                    },
+                },
+            }
+        };
         let enum_ = RsTypeKind::Enum {
-            enum_: Rc::new(ir::Enum::new_for_testing(
-                Identifier::new("MyEnum"),
-                Identifier::new("MyEnum"),
-                "MyEnum".into(),
-                "6MyEnum".into(),
-                ItemId::new_for_testing(0),
-                BazelLabel::from("//foo/bar"),
-                "some_file.h:123".into(),
-                CcType::new(CcTypeVariant::Primitive(Primitive::Int32T), false, "", vec![]),
-                Some(vec![]),
-                None,
-                None,
-                false,
-                false,
-                None,
-                None,
-                None,
-            )),
+            enum_: Rc::new(Enum::try_from(enum_proto.as_view()).unwrap()),
             crate_path: make_crate_path(),
         };
 
@@ -2763,54 +2776,57 @@ mod tests {
         expect_that!(enum_.allowed_behind_multi_element_ptr(), eq(true));
     }
 
-    fn make_incomplete_record() -> RsTypeKind<'static> {
+    fn make_incomplete_record_proto() -> ir_rust_proto::IncompleteRecord {
+        proto! {
+            ir_rust_proto::IncompleteRecord {
+                cc_name: ir_rust_proto::Identifier { identifier: "MyStruct" },
+                rs_name: ir_rust_proto::Identifier { identifier: "MyStruct" },
+                unique_name: "MyStruct",
+                id: 0,
+                owning_target: "//foo/bar",
+                record_type: ir_rust_proto::RecordType::Class,
+            }
+        }
+    }
+
+    fn incomplete_record_proto_to_rs_type_kind(
+        proto: ir_rust_proto::IncompleteRecordView<'_>,
+    ) -> RsTypeKind<'_> {
         RsTypeKind::IncompleteRecord {
-            incomplete_record: Rc::new(IncompleteRecord::new_for_testing(
-                Identifier::new("MyStruct"),
-                Identifier::new("MyStruct"),
-                "MyStruct".into(),
-                ItemId::new_for_testing(0),
-                BazelLabel::from("//foo/bar"),
-                None,
-                RecordType::Class,
-                None,
-                false,
-            )),
+            incomplete_record: Rc::new(IncompleteRecord::try_from(proto).unwrap()),
             crate_path: make_crate_path(),
         }
     }
 
     #[gtest]
     fn test_incomplete_record_only_allowed_behind_single_element_ptr() {
-        let incomplete_record = make_incomplete_record();
+        let proto = make_incomplete_record_proto();
+        let incomplete_record = incomplete_record_proto_to_rs_type_kind(proto.as_view());
         expect_that!(incomplete_record.allowed_behind_single_element_ptr(), eq(true));
         expect_that!(incomplete_record.allowed_behind_multi_element_ptr(), eq(false));
     }
 
     #[gtest]
     fn test_alias_incomplete_record_only_allowed_behind_single_element_ptr() {
+        let proto = make_incomplete_record_proto();
+        let alias_proto = proto! {
+            ir_rust_proto::TypeAlias {
+                cc_name: ir_rust_proto::Identifier { identifier: "MyAlias" },
+                rs_name: ir_rust_proto::Identifier { identifier: "MyAlias" },
+                unique_name: "MyAlias",
+                id: 1,
+                owning_target: "//foo/bar",
+                underlying_type: ir_rust_proto::CcType {
+                    primitive: ir_rust_proto::cc_type::Primitive {
+                        spelling: "int",
+                    },
+                },
+                source_loc: "some_file.h:123",
+            }
+        };
         let alias_incomplete_record = RsTypeKind::TypeAlias {
-            type_alias: Rc::new(TypeAlias::new_for_testing(
-                Identifier::new("MyAlias"),
-                Identifier::new("MyAlias"),
-                "MyAlias".into(),
-                ItemId::new_for_testing(1),
-                BazelLabel::from("//foo/bar"),
-                None,
-                None,
-                CcType::new(
-                    CcTypeVariant::Decl { id: ItemId::new_for_testing(0), template_args: None },
-                    false,
-                    "",
-                    vec![],
-                ),
-                "some_file.h:123".into(),
-                None,
-                false,
-                None,
-                vec![],
-            )),
-            underlying_type: Rc::new(make_incomplete_record()),
+            type_alias: Rc::new(TypeAlias::try_from(alias_proto.as_view()).unwrap()),
+            underlying_type: Rc::new(incomplete_record_proto_to_rs_type_kind(proto.as_view())),
             crate_path: make_crate_path(),
             lifetimes: vec![],
         };

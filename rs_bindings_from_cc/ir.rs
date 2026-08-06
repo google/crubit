@@ -1273,39 +1273,6 @@ impl<'pb> Field<'pb> {
     pub fn deprecated(&self) -> Option<&'pb str> {
         self.deprecated
     }
-
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_for_testing(
-        rust_identifier: Option<Identifier<'pb>>,
-        cpp_identifier: Option<Identifier<'pb>>,
-        doc_comment: Option<&'pb str>,
-        type_: CcType,
-        access: AccessSpecifier,
-        offset: usize,
-        size: usize,
-        unknown_attr: Result<Option<&'pb str>, String>,
-        is_no_unique_address: bool,
-        is_bitfield: bool,
-        is_inheritable: bool,
-        is_mutable: bool,
-        deprecated: Option<&'pb str>,
-    ) -> Self {
-        Self {
-            rust_identifier,
-            cpp_identifier,
-            doc_comment,
-            type_,
-            access,
-            offset,
-            size,
-            unknown_attr,
-            is_no_unique_address,
-            is_bitfield,
-            is_inheritable,
-            is_mutable,
-            deprecated,
-        }
-    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -1385,31 +1352,6 @@ impl<'pb> IncompleteRecord<'pb> {
 
     pub fn must_bind(&self) -> bool {
         self.must_bind
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_for_testing(
-        cc_name: Identifier<'pb>,
-        rs_name: Identifier<'pb>,
-        unique_name: &'pb str,
-        id: ItemId,
-        owning_target: BazelLabel,
-        unknown_attr: Option<&'pb str>,
-        record_type: RecordType,
-        enclosing_item_id: Option<ItemId>,
-        must_bind: bool,
-    ) -> Self {
-        Self {
-            cc_name,
-            rs_name,
-            unique_name,
-            id,
-            owning_target,
-            unknown_attr,
-            record_type,
-            enclosing_item_id,
-            must_bind,
-        }
     }
 }
 
@@ -2292,45 +2234,6 @@ impl<'pb> Enum<'pb> {
     pub fn doc_comment(&self) -> Option<&'pb str> {
         self.doc_comment
     }
-
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_for_testing(
-        cc_name: Identifier<'pb>,
-        rs_name: Identifier<'pb>,
-        unique_name: &'pb str,
-        mangled_cc_name: &'pb str,
-        id: ItemId,
-        owning_target: BazelLabel,
-        source_loc: &'pb str,
-        underlying_type: CcType,
-        enumerators: Option<Vec<Enumerator<'pb>>>,
-        unknown_attr: Option<&'pb str>,
-        enclosing_item_id: Option<ItemId>,
-        must_bind: bool,
-        detected_formatter: bool,
-        nodiscard: Option<&'pb str>,
-        deprecated: Option<&'pb str>,
-        doc_comment: Option<&'pb str>,
-    ) -> Self {
-        Self {
-            cc_name,
-            rs_name,
-            unique_name,
-            mangled_cc_name,
-            id,
-            owning_target,
-            source_loc,
-            underlying_type,
-            enumerators,
-            unknown_attr,
-            enclosing_item_id,
-            must_bind,
-            detected_formatter,
-            nodiscard,
-            deprecated,
-            doc_comment,
-        }
-    }
 }
 
 impl<'pb> GenericItem<'pb> for Enum<'pb> {
@@ -2476,39 +2379,6 @@ impl<'pb> TypeAlias<'pb> {
 
     pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
         &mut self.lifetime_inputs
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_for_testing(
-        cc_name: Identifier<'pb>,
-        rs_name: Identifier<'pb>,
-        unique_name: &'pb str,
-        id: ItemId,
-        owning_target: BazelLabel,
-        doc_comment: Option<&'pb str>,
-        unknown_attr: Option<&'pb str>,
-        underlying_type: CcType,
-        source_loc: &'pb str,
-        enclosing_item_id: Option<ItemId>,
-        must_bind: bool,
-        deprecated: Option<&'pb str>,
-        lifetime_inputs: Vec<Rc<str>>,
-    ) -> Self {
-        Self {
-            cc_name,
-            rs_name,
-            unique_name,
-            id,
-            owning_target,
-            doc_comment,
-            unknown_attr,
-            underlying_type,
-            source_loc,
-            enclosing_item_id,
-            must_bind,
-            deprecated,
-            lifetime_inputs,
-        }
     }
 }
 
@@ -3031,33 +2901,6 @@ impl<'pb> ExistingRustType<'pb> {
 
     pub fn impl_debug(&self) -> bool {
         self.impl_debug
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    pub fn new_for_testing(
-        rs_name: &'pb str,
-        cc_name: &'pb str,
-        unique_name: &'pb str,
-        template_args: Vec<TemplateArg>,
-        owning_target: BazelLabel,
-        size_align: Option<SizeAlign>,
-        is_same_abi: bool,
-        id: ItemId,
-        must_bind: bool,
-        impl_debug: bool,
-    ) -> Self {
-        Self {
-            rs_name,
-            cc_name,
-            unique_name,
-            template_args,
-            owning_target,
-            size_align,
-            is_same_abi,
-            id,
-            must_bind,
-            impl_debug,
-        }
     }
 }
 
