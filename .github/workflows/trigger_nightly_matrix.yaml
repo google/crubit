@@ -16,12 +16,13 @@ jobs:
       actions: write # Required to trigger workflows
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           # submodules: true ensures the submodule folder exists to be updated
           submodules: true
           # fetch-depth: 0 ensures we have history to push back
           fetch-depth: 0
+          persist-credentials: false
       - name: Trigger Workflow on Target Branch
         env:
           GH_TOKEN: ${{ github.token }}
