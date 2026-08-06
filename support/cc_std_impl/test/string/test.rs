@@ -2,8 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use cc_std::std::new_string;
 use cc_std::std::string;
 use cc_std::std::string_view;
+use ctor::{emplace, CtorNew};
 use googletest::{expect_eq, expect_ne, expect_that, gtest, matchers::container_eq};
 use rstest::rstest;
 use test_helpers::cpp_std_string_test::RoundTrip;
@@ -121,7 +123,7 @@ fn test_display_success() {
 fn test_display_error() {
     let non_utf8_str: &[u8] = b"Hello \xF0\xF0World";
     let non_utf8_str_formatted = string::from(non_utf8_str);
-    expect_eq!(format!("{}", non_utf8_str_formatted.display()), "Hello ��World");
+    expect_eq!(format!("{}", non_utf8_str_formatted.display()), "Hello \u{FFFD}\u{FFFD}World");
 }
 
 #[gtest]
@@ -135,4 +137,69 @@ fn test_debug() {
 fn test_string_alias() {
     let _: cc_std::std::string = cc_std::std::string_wrapper::from("hello");
     let _: cc_std::std::string_wrapper = cc_std::std::string::from("world");
+}
+
+#[gtest]
+fn test_new_string_construction() {
+    let s = emplace!(new_string::ctor_new("Hello new_string"));
+    expect_eq!(s.as_slice(), b"Hello new_string");
+    expect_eq!(s.to_str().unwrap(), "Hello new_string");
+}
+
+#[gtest]
+fn test_new_string_as_mut_slice() {
+    let mut s = emplace!(new_string::ctor_new("hello"));
+    let mut_slice = s.as_mut().as_mut_slice();
+    mut_slice[0] = b'H';
+    expect_eq!(s.as_slice(), b"Hello");
+}
+
+#[gtest]
+fn test_new_string_comparisons() {
+    let s1 = emplace!(new_string::ctor_new("abc"));
+    let s2 = emplace!(new_string::ctor_new("abc"));
+    let s3 = emplace!(new_string::ctor_new("def"));
+
+    // PartialEq, Eq
+    expect_eq!(*s1, *s2);
+    expect_ne!(*s1, *s3);
+
+    // PartialOrd, Ord
+    assert!(*s1 < *s3);
+    assert!(*s3 > *s1);
+    expect_eq!((*s1).cmp(&*s2), core::cmp::Ordering::Equal);
+    expect_eq!((*s1).cmp(&*s3), core::cmp::Ordering::Less);
+
+    // Hash
+    use core::hash::{Hash, Hasher};
+    let mut h1 = std::collections::hash_map::DefaultHasher::new();
+    let mut h2 = std::collections::hash_map::DefaultHasher::new();
+    (*s1).hash(&mut h1);
+    (*s2).hash(&mut h2);
+    expect_eq!(h1.finish(), h2.finish());
+
+    // PartialEq with other types
+    let view: string_view = "abc".into();
+    expect_eq!(*s1, view);
+    expect_eq!(*s1, "abc");
+    expect_eq!(*s1, *"abc");
+    expect_eq!(*s1, &b"abc"[..]);
+}
+
+#[gtest]
+fn test_new_string_display() {
+    let s = emplace!(new_string::ctor_new("hello"));
+    expect_eq!(format!("{}", s.display()), "hello");
+
+    let s_invalid = emplace!(new_string::ctor_new(b"hello \xffworld" as &[u8]));
+    expect_eq!(format!("{}", s_invalid.display()), "hello \u{FFFD}world");
+}
+
+#[gtest]
+fn test_new_string_debug() {
+    let s = emplace!(new_string::ctor_new("hello"));
+    expect_eq!(format!("{:?}", s), "\"hello\"");
+
+    let s_invalid = emplace!(new_string::ctor_new(b"hello \xffworld" as &[u8]));
+    expect_eq!(format!("{:?}", s_invalid), "\"hello \\xffworld\"");
 }

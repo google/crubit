@@ -4,7 +4,7 @@
 
 extern crate std;
 
-use crate::lossy_utf8::LossyUtf8Display;
+use crate::lossy_utf8::{debug_bytes, LossyUtf8Display};
 use crate::slice_ptr::get_raw_parts;
 use crate::std::raw_string_view;
 use core::fmt::Display;
@@ -132,21 +132,7 @@ impl<'a> AsRef<[u8]> for string_view<'a> {
 /// Presents the bytes as a normal string, with invalid UTF-8 presented as hex escape sequences.
 impl<'a> core::fmt::Debug for string_view<'a> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        // This implementation is the same as that of ByteStr:
-        //   https://doc.rust-lang.org/beta/std/bstr/struct.ByteStr.html#impl-Debug-for-ByteStr
-        write!(f, "\"")?;
-        for chunk in self.utf8_chunks() {
-            for c in chunk.valid().chars() {
-                match c {
-                    '\0' => write!(f, "\\0")?,
-                    '\x01'..='\x7f' => write!(f, "{}", (c as u8).escape_ascii())?,
-                    _ => write!(f, "{}", c.escape_debug())?,
-                }
-            }
-            write!(f, "{}", chunk.invalid().escape_ascii())?;
-        }
-        write!(f, "\"")?;
-        Ok(())
+        debug_bytes(self.as_bytes(), f)
     }
 }
 

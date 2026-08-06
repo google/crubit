@@ -6,7 +6,8 @@ extern crate alloc;
 extern crate std;
 
 use crate::crubit_cc_std_internal::conversion_function_helpers;
-use crate::lossy_utf8::LossyUtf8Display;
+use crate::lossy_utf8::{debug_bytes, LossyUtf8Display};
+use crate::std::string_view;
 use alloc::string::String;
 use alloc::vec::Vec;
 use bridge_rust::{transmute_abi, CrubitAbi, Decoder, Encoder};
@@ -17,6 +18,7 @@ use core::ffi::c_void;
 use core::mem::{ManuallyDrop, MaybeUninit};
 use core::ops::Deref;
 use core::ptr::NonNull;
+use ctor::{Ctor, CtorNew, FnCtor, Infallible, PinnedDrop, RvalueReference};
 use std::fmt::Display;
 
 #[cfg(unix)]
@@ -42,8 +44,10 @@ pub struct string_wrapper {
 
 pub type string = string_wrapper;
 
-// We have no reason to restrict access to the string data to particular threads.
+// SAFETY: the string is owned, and mutation is only allowed via `Pin<&mut Self>`.
 unsafe impl Send for string_wrapper {}
+
+// SAFETY: the string is owned, and mutation is only allowed via `Pin<&mut Self>`.
 unsafe impl Sync for string_wrapper {}
 
 impl string_wrapper {
@@ -116,9 +120,9 @@ impl string_wrapper {
 
 impl PartialEq for string_wrapper {
     fn eq(&self, other: &Self) -> bool {
+        // SAFETY: `owned_cpp_string` is guaranteed to be a non-null C++ allocated
+        // pointer to std::string.
         unsafe {
-            // SAFETY: `owned_cpp_string` is guaranteed to be a non-null C++ allocated
-            // pointer to std::string.
             conversion_function_helpers::StringEqual(
                 self.owned_cpp_string.as_ptr(),
                 other.owned_cpp_string.as_ptr(),
@@ -313,5 +317,291 @@ pub unsafe extern "C" fn cpp_string_to_rust_string(input: *mut c_void, output: *
         }
     } else {
         panic!("Failed to create owned string");
+    }
+}
+
+/// A layout-compatible `std::string` wrapper.
+///
+/// NOTE: b/408961701 - This will eventually replace the existing `string` alias,
+/// and the old wrapper-based type will be renamed/migrated to `string_wrapper`.
+/// For now, use `new_string` for layout compatibility, and `string_wrapper` (or `string`)
+/// for the old wrapper.
+///
+/// # Differences from Rust String types
+///
+/// * **Rust `String`**:
+///   - **Movability**: Rust's `String` is trivially relocatable (can be moved with `memcpy`).
+///     `new_string` (wrapping C++ `std::string`) is **not** trivially relocatable. On some
+///     platforms (e.g., `libstdc++` with Short String Optimization), `std::string` may contain
+///     self-references (pointers pointing to its own internal buffer). Moving it in memory
+///     without running its C++ move constructor would invalidate these pointers. Thus, in Rust,
+///     it is `!Unpin` and must be pinned.
+///   - **Layout**: Rust's `String` has a fixed layout of 3 fields (pointer, capacity, length).
+///     `new_string` has a platform-dependent layout that matches C++ `std::string`.
+///
+/// * **Rust `Vec<u8>`**:
+///   - **Movability and Layout**: Like `String`, `Vec<u8>` is trivially relocatable and has a
+///     fixed Rust layout, unlike `new_string`.
+///   - **Intent**: `Vec<u8>` is a general-purpose byte container, whereas `new_string` represents
+///     a C++ string, typically used for textual data (though C++ `std::string` can contain arbitrary
+///     bytes including nulls).
+///
+/// * **Byte String types (e.g., `bstr::BStr`)**:
+///   - **Movability and Layout**: These are slice types or wrapper types that are trivially
+///     relocatable, unlike `new_string`.
+///   - `new_string` is most similar to these in that it does not enforce UTF-8 validation, but it
+///     retains the C++ layout and non-movability constraints.
+///
+/// # Examples
+///
+/// ```
+/// use cc_std::std::new_string;
+/// use ctor::{emplace, CtorNew};
+///
+/// // Create a new_string using emplace! and CtorNew:
+/// let my_string = emplace!(new_string::ctor_new("Hello, C++!"));
+///
+/// // Access it as a slice:
+/// assert_eq!(my_string.as_slice(), b"Hello, C++!");
+///
+/// // Convert to Rust str (if valid UTF-8):
+/// assert_eq!(my_string.to_str().unwrap(), "Hello, C++!");
+/// ```
+#[crubit_annotate::cpp_layout_equivalent(cpp_type = "::std::string", include_path = "<string>")]
+#[repr(C, align(8))]
+#[allow(non_camel_case_types)]
+pub struct new_string {
+    _opaque: core::cfg_select! {
+        any(target_arch = "x86_64", target_arch = "aarch64") => [u8; 24],
+        _ => compile_error!("new_string is only supported on x86_64 and aarch64"),
+    },
+    _pinned: core::marker::PhantomPinned,
+}
+
+// SAFETY: the string is owned, and mutation is only allowed via `Pin<&mut Self>`.
+unsafe impl Send for new_string {}
+
+// SAFETY: the string is owned, and mutation is only allowed via `Pin<&mut Self>`.
+unsafe impl Sync for new_string {}
+
+impl PinnedDrop for new_string {
+    unsafe fn pinned_drop(self: core::pin::Pin<&mut Self>) {
+        // SAFETY: `self` is a valid, pinned reference to a `new_string`.
+        unsafe {
+            conversion_function_helpers::StringDestroyInPlace(
+                self.get_unchecked_mut() as *mut _ as *mut c_void
+            );
+        }
+    }
+}
+
+impl CtorNew<()> for new_string {
+    type CtorType = impl Ctor<Output = Self, Error = Infallible>;
+    type Error = Infallible;
+
+    fn ctor_new(_args: ()) -> Self::CtorType {
+        unsafe {
+            // SAFETY: `dest` is a valid, pinned reference to a `new_string`.
+            FnCtor::new(|dest| {
+                conversion_function_helpers::StringCreateDefaultInPlace(dest as *mut c_void);
+            })
+        }
+    }
+}
+
+impl<'a> CtorNew<&'a [u8]> for new_string {
+    type CtorType = impl Ctor<Output = Self, Error = Infallible> + use<'a>;
+    type Error = Infallible;
+
+    fn ctor_new(args: &'a [u8]) -> Self::CtorType {
+        // SAFETY: `dest` is a valid, pinned reference to a `new_string`.
+        unsafe {
+            FnCtor::new(move |dest| {
+                conversion_function_helpers::StringCreateFromBufferInPlace(
+                    dest as *mut c_void,
+                    args.as_ptr() as _,
+                    args.len(),
+                );
+            })
+        }
+    }
+}
+
+impl<'a> CtorNew<&'a str> for new_string {
+    type CtorType = impl Ctor<Output = Self, Error = Infallible> + use<'a>;
+    type Error = Infallible;
+
+    fn ctor_new(args: &'a str) -> Self::CtorType {
+        Self::ctor_new(args.as_bytes())
+    }
+}
+
+impl<'a> CtorNew<&'a new_string> for new_string {
+    type CtorType = impl Ctor<Output = Self, Error = Infallible> + use<'a>;
+    type Error = Infallible;
+
+    fn ctor_new(args: &'a new_string) -> Self::CtorType {
+        // SAFETY: `dest` is a valid, pinned reference to a `new_string`.
+        unsafe {
+            FnCtor::new(move |dest| {
+                conversion_function_helpers::StringCreateCopyInPlace(
+                    dest as *mut c_void,
+                    args as *const new_string as *const c_void,
+                );
+            })
+        }
+    }
+}
+
+impl<'a> CtorNew<RvalueReference<'a, new_string>> for new_string {
+    type CtorType = impl Ctor<Output = Self, Error = Infallible> + use<'a>;
+    type Error = Infallible;
+
+    fn ctor_new(args: RvalueReference<'a, new_string>) -> Self::CtorType {
+        // SAFETY: `dest` is a valid, pinned reference to a `new_string`.
+        unsafe {
+            FnCtor::new(move |dest| {
+                let src = args.0.get_unchecked_mut() as *mut new_string;
+                conversion_function_helpers::StringCreateInPlace(
+                    dest as *mut c_void,
+                    src as *mut c_void,
+                );
+            })
+        }
+    }
+}
+
+impl new_string {
+    /// Returns a shared slice of the string's bytes.
+    pub fn as_slice(&self) -> &[u8] {
+        self
+    }
+
+    /// Returns a mutable slice of the string's bytes.
+    ///
+    /// Since `new_string` is `!Unpin`, this requires pinning.
+    pub fn as_mut_slice(self: core::pin::Pin<&mut Self>) -> &mut [u8] {
+        // SAFETY: `self` is a valid, pinned reference to a `new_string`.
+        unsafe {
+            let ptr = self.get_unchecked_mut() as *mut new_string as *mut c_void;
+            let len = conversion_function_helpers::StringGetSize(ptr);
+            core::slice::from_raw_parts_mut(
+                conversion_function_helpers::StringGetMutData(ptr) as _,
+                len,
+            )
+        }
+    }
+
+    /// Returns a raw pointer to the C++ `std::string` object.
+    pub fn as_ptr(&self) -> *const Self {
+        self as *const Self
+    }
+
+    /// Returns a raw mutable pointer to the C++ `std::string` object.
+    pub fn as_mut_ptr(self: core::pin::Pin<&mut Self>) -> *mut Self {
+        // SAFETY: `self` is a valid, pinned reference to a `new_string`.
+        unsafe { self.get_unchecked_mut() as *mut Self }
+    }
+
+    /// Returns a copy of the string's bytes as a `Vec<u8>`.
+    pub fn to_vec(&self) -> Vec<u8> {
+        self.as_slice().into()
+    }
+
+    /// Yields a `&str` slice if the string contains valid UTF-8.
+    pub fn to_str(&self) -> Result<&str, core::str::Utf8Error> {
+        core::str::from_utf8(self.as_slice())
+    }
+
+    /// Yields a Rust `String` if the string contains valid UTF-8.
+    pub fn to_string(&self) -> Result<String, core::str::Utf8Error> {
+        self.to_str().map(String::from)
+    }
+
+    /// Returns an object that implements `Display` for safely printing the string,
+    /// replacing invalid UTF-8 with the Unicode replacement character.
+    pub fn display(&self) -> impl Display + '_ {
+        LossyUtf8Display(self.as_slice())
+    }
+}
+
+impl Deref for new_string {
+    type Target = [u8];
+    fn deref(&self) -> &Self::Target {
+        // SAFETY: `self` is a valid, pinned reference to a `new_string`.
+        unsafe {
+            let ptr = self as *const new_string as *const c_void;
+            let len = conversion_function_helpers::StringGetSize(ptr);
+            core::slice::from_raw_parts(conversion_function_helpers::StringGetData(ptr) as _, len)
+        }
+    }
+}
+
+impl core::convert::AsRef<[u8]> for new_string {
+    fn as_ref(&self) -> &[u8] {
+        &*self
+    }
+}
+
+impl PartialEq for new_string {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_slice() == other.as_slice()
+    }
+}
+
+impl Eq for new_string {}
+
+impl PartialOrd for new_string {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for new_string {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.as_slice().cmp(other.as_slice())
+    }
+}
+
+impl core::hash::Hash for new_string {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.as_slice().hash(state);
+    }
+}
+
+// PartialEq impls for comparing to string_view, str, and [u8]
+impl<'a> PartialEq<string_view<'a>> for new_string {
+    fn eq(&self, other: &string_view<'a>) -> bool {
+        self.as_slice() == other.as_bytes()
+    }
+}
+
+impl PartialEq<str> for new_string {
+    fn eq(&self, other: &str) -> bool {
+        self.as_slice() == other.as_bytes()
+    }
+}
+
+impl<'a> PartialEq<&'a str> for new_string {
+    fn eq(&self, other: &&'a str) -> bool {
+        self.as_slice() == other.as_bytes()
+    }
+}
+
+impl PartialEq<[u8]> for new_string {
+    fn eq(&self, other: &[u8]) -> bool {
+        self.as_slice() == other
+    }
+}
+
+impl<'a> PartialEq<&'a [u8]> for new_string {
+    fn eq(&self, other: &&'a [u8]) -> bool {
+        self.as_slice() == *other
+    }
+}
+
+impl core::fmt::Debug for new_string {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        debug_bytes(self.as_slice(), f)
     }
 }

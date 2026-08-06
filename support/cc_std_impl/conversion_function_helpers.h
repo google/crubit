@@ -18,6 +18,10 @@ inline const char* StringGetData(const void* s) {
   return reinterpret_cast<const std::string*>(s)->data();
 }
 
+inline char* StringGetMutData(void* s) {
+  return reinterpret_cast<std::string*>(s)->data();
+}
+
 // Move-constructs a `std::string` `dst` from `src`.
 //
 // `src` and `dst` must point to a `std::string`, and `dst` must be
@@ -55,6 +59,21 @@ inline bool StringEqual(const void* s1, const void* s2) {
 }
 
 inline void StringDelete(void* s) { delete reinterpret_cast<std::string*>(s); }
+
+inline void StringCreateDefaultInPlace(void* dst) { new (dst) std::string(); }
+
+inline void StringCreateFromBufferInPlace(void* dst, const char* buffer,
+                                          size_t size) {
+  new (dst) std::string(buffer, size);
+}
+
+inline void StringCreateCopyInPlace(void* dst, const void* src) {
+  new (dst) std::string(*reinterpret_cast<const std::string*>(src));
+}
+
+inline void StringDestroyInPlace(void* s) {
+  reinterpret_cast<std::string*>(s)->~basic_string();
+}
 // std::string helpers end
 
 }  // namespace crubit_cc_std_internal::conversion_function_helpers
