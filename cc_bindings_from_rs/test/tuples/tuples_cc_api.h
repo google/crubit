@@ -1228,6 +1228,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace tuples {
 
+// CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: TupleWithSizeTypes") alignas(8) [[clang::trivial_abi]]
 TupleWithSizeTypes final {
@@ -1244,6 +1245,9 @@ TupleWithSizeTypes final {
   TupleWithSizeTypes(const TupleWithSizeTypes&) = delete;
   TupleWithSizeTypes& operator=(const TupleWithSizeTypes&) = delete;
   TupleWithSizeTypes(::crubit::UnsafeRelocateTag, TupleWithSizeTypes&& value);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  static ::tuples::TupleWithSizeTypes new_();
 
   union {
     rs_std::Tuple<::rs_std::usize, ::std::uint8_t> uval_in_tuple1;
@@ -2046,6 +2050,16 @@ static_assert(
 inline ::tuples::TupleWithSizeTypes::TupleWithSizeTypes(
     ::crubit::UnsafeRelocateTag, TupleWithSizeTypes&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::tuples::TupleWithSizeTypes* __ret_ptr);
+}
+inline ::tuples::TupleWithSizeTypes TupleWithSizeTypes::new_() {
+  crubit::Slot<::tuples::TupleWithSizeTypes> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void TupleWithSizeTypes::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TupleWithSizeTypes, uval_in_tuple1));

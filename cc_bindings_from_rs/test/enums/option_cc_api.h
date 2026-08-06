@@ -39,7 +39,7 @@ namespace option {
 struct HasOptions;
 
 // Error generating bindings for struct `option_golden::BridgedType` defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=228:
+// cc_bindings_from_rs/test/enums/option.rs;l=234:
 // Type bindings for option_golden::BridgedType suppressed due to being mapped
 // to an existing C++ type (int)
 
@@ -317,7 +317,7 @@ rs_std::Option<::std::uint32_t> stringify_len(
 
 // Error generating bindings for function `option_golden::take_option_bridged`
 // defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=230:
+// cc_bindings_from_rs/test/enums/option.rs;l=236:
 // Error handling parameter #0 of type
 // `std::option::Option<option_golden::BridgedType>`: Generic types are not
 // supported yet (b/259749095)
@@ -1551,6 +1551,9 @@ OptionWithSizeTypes final {
   OptionWithSizeTypes(const OptionWithSizeTypes&) = delete;
   OptionWithSizeTypes& operator=(const OptionWithSizeTypes&) = delete;
   OptionWithSizeTypes(::crubit::UnsafeRelocateTag, OptionWithSizeTypes&& value);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  static ::option::OptionWithSizeTypes new_();
 
   union {
     rs_std::Option<::rs_std::usize> uval;
@@ -2803,6 +2806,16 @@ static_assert(
 inline ::option::OptionWithSizeTypes::OptionWithSizeTypes(
     ::crubit::UnsafeRelocateTag, OptionWithSizeTypes&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::option::OptionWithSizeTypes* __ret_ptr);
+}
+inline ::option::OptionWithSizeTypes OptionWithSizeTypes::new_() {
+  crubit::Slot<::option::OptionWithSizeTypes> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void OptionWithSizeTypes::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OptionWithSizeTypes, uval));

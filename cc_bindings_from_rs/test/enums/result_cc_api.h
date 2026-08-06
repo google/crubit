@@ -1604,6 +1604,8 @@ ResultWithSizeTypes final {
   ResultWithSizeTypes& operator=(const ResultWithSizeTypes&) = delete;
   ResultWithSizeTypes(::crubit::UnsafeRelocateTag, ResultWithSizeTypes&& value);
 
+  static ::result::ResultWithSizeTypes new_();
+
   union {
     rs_std::Result<::rs_std::usize, ::std::uint8_t> uval_in_ok;
   };
@@ -1977,6 +1979,16 @@ static_assert(
 inline ::result::ResultWithSizeTypes::ResultWithSizeTypes(
     ::crubit::UnsafeRelocateTag, ResultWithSizeTypes&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::result::ResultWithSizeTypes* __ret_ptr);
+}
+inline ::result::ResultWithSizeTypes ResultWithSizeTypes::new_() {
+  crubit::Slot<::result::ResultWithSizeTypes> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void ResultWithSizeTypes::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ResultWithSizeTypes, uval_in_ok));

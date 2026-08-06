@@ -214,4 +214,14 @@ TEST(OptionTest, OverlappingOptions) {
   EXPECT_TRUE(opt.size.has_value());
 }
 
+TEST(OptionTest, OptionWithSizeTypes) {
+  auto s = option::OptionWithSizeTypes::new_();
+  std::optional<rs_std::usize> uval = std::move(s.uval);
+  EXPECT_TRUE(uval.has_value());
+  EXPECT_EQ(uval.value(), rs_std::usize(100));
+  std::optional<rs_std::isize> ival = std::move(s.ival);
+  EXPECT_TRUE(ival.has_value());
+  EXPECT_EQ(ival.value(), rs_std::isize(-200));
+}
+
 }  // namespace

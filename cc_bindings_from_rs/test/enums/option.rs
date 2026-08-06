@@ -218,9 +218,15 @@ pub fn stringify_len(x: &Option<HasDefault>) -> Option<u32> {
 
 #[must_bind]
 pub struct OptionWithSizeTypes {
-    // b/491106325 - We expect these not to get bindings.
     pub uval: Option<usize>,
     pub ival: Option<isize>,
+}
+
+impl OptionWithSizeTypes {
+    #[must_bind]
+    pub fn new() -> Self {
+        OptionWithSizeTypes { uval: Some(100), ival: Some(-200) }
+    }
 }
 
 #[doc = "CRUBIT_ANNOTATE: cpp_type=int"]

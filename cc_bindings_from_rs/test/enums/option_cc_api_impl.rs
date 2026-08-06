@@ -248,6 +248,13 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptZst, val) == 0);
 const _: () = assert!(::std::mem::size_of::<::option_golden::OptionWithSizeTypes>() == 32);
 const _: () = assert!(::std::mem::align_of::<::option_golden::OptionWithSizeTypes>() == 8);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::option_golden::OptionWithSizeTypes::new();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptionWithSizeTypes, uval) == 0);
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptionWithSizeTypes, ival) == 16);
 const _: () = assert!(::std::mem::size_of::<::option_golden::OverlappingOptions>() == 40);
