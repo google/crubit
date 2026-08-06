@@ -634,52 +634,52 @@ fn test_copy_derives() {
 
 #[gtest]
 fn test_copy_derives_not_is_trivial_abi() {
-    let proto = ir_proto_from_cc("struct S final {};").unwrap();
+    let proto = ir_proto_from_cc("struct S final { ~S() {} };").unwrap();
     let ir = make_test_ir(&proto).unwrap();
-    let mut record = retrieve_record(&ir, "S").clone();
-    record.set_is_trivial_abi(false);
-    assert_derives(&record, &[]);
+    let record = retrieve_record(&ir, "S");
+    assert_derives(record, &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_deleted() {
-    let proto = ir_proto_from_cc("struct S final {};").unwrap();
+    let proto = ir_proto_from_cc("struct S final { S(const S&) = delete; };").unwrap();
     let ir = make_test_ir(&proto).unwrap();
-    let mut record = retrieve_record(&ir, "S").clone();
-    record.set_copy_constructor(ir::SpecialMemberFunc::Unavailable);
+    let record = retrieve_record(&ir, "S");
     assert_derives(&record, &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_nontrivial_members() {
-    let proto = ir_proto_from_cc("struct S final {};").unwrap();
+    let proto =
+        ir_proto_from_cc("struct A { A(const A&) = delete; }; struct S final { A a; };").unwrap();
     let ir = make_test_ir(&proto).unwrap();
-    let mut record = retrieve_record(&ir, "S").clone();
-    record.set_copy_constructor(ir::SpecialMemberFunc::NontrivialMembers);
-    assert_derives(&record, &[]);
+    let record = retrieve_record(&ir, "S");
+    assert_derives(record, &[]);
 }
 
 #[gtest]
 fn test_copy_derives_ctor_nontrivial_self() {
-    let proto = ir_proto_from_cc("struct S final {};").unwrap();
+    let proto = ir_proto_from_cc("struct S final { S(const S&) {} };").unwrap();
     let ir = make_test_ir(&proto).unwrap();
-    let mut record = retrieve_record(&ir, "S").clone();
-    record.set_copy_constructor(ir::SpecialMemberFunc::NontrivialUserDefined);
-    assert_derives(&record, &[]);
+    let record = retrieve_record(&ir, "S");
+    assert_derives(record, &[]);
 }
 
 /// In Rust, a Drop type cannot be Copy.
 #[gtest]
-fn test_copy_derives_dtor_nontrivial_self() {
-    let proto = ir_proto_from_cc("struct S final {};").unwrap();
+fn test_copy_derives_dtor_nontrivial_self_because_of_direct_dtor() {
+    let proto = ir_proto_from_cc("struct S final { ~S() {} };").unwrap();
     let ir = make_test_ir(&proto).unwrap();
-    let mut record = retrieve_record(&ir, "S").clone();
-    for definition in
-        [ir::SpecialMemberFunc::NontrivialUserDefined, ir::SpecialMemberFunc::NontrivialMembers]
-    {
-        record.set_destructor(definition);
-        assert_derives(&record, &["Clone"]);
-    }
+    let record = retrieve_record(&ir, "S");
+    assert_derives(record, &[]);
+}
+
+#[gtest]
+fn test_copy_derives_dtor_nontrivial_self_because_of_indirect_dtor() {
+    let proto = ir_proto_from_cc("struct A { ~A() {} }; struct S final { A a; };").unwrap();
+    let ir = make_test_ir(&proto).unwrap();
+    let record = retrieve_record(&ir, "S");
+    assert_derives(record, &[]);
 }
 
 #[gtest]

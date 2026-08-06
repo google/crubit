@@ -6,7 +6,6 @@ use std::collections::BTreeMap;
 use std::sync::LazyLock;
 
 use arc_anyhow::Result;
-use itertools::Itertools;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::{
@@ -233,7 +232,6 @@ mod tests {
     use arc_anyhow::Result;
     use crubit_feature::CrubitFeature;
     use googletest::{expect_eq, gtest};
-    use ir::ItemId;
     use multiplatform_testing::Platform;
     use std::rc::Rc;
 
@@ -271,8 +269,7 @@ mod tests {
     fn test_duplicate_decl_ids_err() {
         let proto = ir_proto_from_cc(Platform::X86Linux, "struct R1 {};").unwrap();
         let ir = make_test_ir(&proto).unwrap();
-        let mut r1 = retrieve_record(&ir, "R1").clone();
-        r1.set_id(ItemId::new_for_testing(42));
+        let r1 = retrieve_record(&ir, "R1").clone();
         let mut r2 = r1.clone();
         r2.set_rs_name(ir::Identifier::new("R2"));
         let _ = make_ir_from_items([Item::Record(Rc::new(r1)), Item::Record(Rc::new(r2))]);

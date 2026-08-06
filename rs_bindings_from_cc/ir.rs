@@ -1854,40 +1854,12 @@ impl<'pb> Record<'pb> {
         self.cc_name = cc_name;
     }
 
-    pub fn set_id(&mut self, id: ItemId) {
-        self.id = id;
-    }
-
     pub fn fields_mut(&mut self) -> &mut Vec<Field<'pb>> {
         &mut self.fields
     }
 
-    pub fn override_alignment_mut(&mut self) -> &mut bool {
-        &mut self.override_alignment
-    }
-
-    pub fn set_copy_constructor(&mut self, copy_constructor: SpecialMemberFunc) {
-        self.copy_constructor = copy_constructor;
-    }
-
-    pub fn set_destructor(&mut self, destructor: SpecialMemberFunc) {
-        self.destructor = destructor;
-    }
-
-    pub fn set_is_trivial_abi(&mut self, is_trivial_abi: bool) {
-        self.is_trivial_abi = is_trivial_abi;
-    }
-
     pub fn lifetime_inputs_mut(&mut self) -> &mut Vec<Rc<str>> {
         &mut self.lifetime_inputs
-    }
-
-    pub fn impl_debug_mut(&mut self) -> &mut bool {
-        &mut self.impl_debug
-    }
-
-    pub fn children_mut(&mut self) -> &mut Vec<Item<'pb>> {
-        &mut self.children
     }
 
     pub fn set_children(&mut self, children: Vec<Item<'pb>>) {
