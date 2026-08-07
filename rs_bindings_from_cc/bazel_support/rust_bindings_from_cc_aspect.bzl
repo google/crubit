@@ -525,8 +525,6 @@ rust_bindings_from_cc_aspect = aspect(
     attr_aspects = [
         # for cc_library and similar rules
         "deps",
-        # for cc_proto_aspect implicit deps
-        "_cc_lib",
         # for cc_stubby_library implicit deps
         "implicit_cc_deps",
         "implicit_rust_deps",
