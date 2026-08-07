@@ -598,6 +598,33 @@ TEST(ImporterTest, MemberFuncSemantic_BodyInHeader) {
   EXPECT_TRUE(func->semantic().has_getter());
 }
 
+TEST(ImporterTest, MemberFuncSemantic_NonConstGetter) {
+  ASSERT_OK_AND_ASSIGN(
+      IR ir, IrFromCc({
+                 .current_target = BazelLabel{"//test:testing_target"},
+                 .public_headers = {HeaderName("test/header.h")},
+                 .virtual_headers_contents_for_testing =
+                     {{HeaderName("test/header.h"),
+                       "class S { public: int x() { return x_; } private: int "
+                       "x_; };"}},
+                 .headers_to_targets =
+                     {
+                         {HeaderName("test/header.h"),
+                          BazelLabel{"//test:testing_target"}},
+                     },
+             }));
+  const Func* func = nullptr;
+  for (const Func* f : get_items_if<Func>(ir)) {
+    if (GetName(*f) == "x") {
+      func = f;
+      break;
+    }
+  }
+  ASSERT_NE(func, nullptr);
+  ASSERT_TRUE(func->has_semantic());
+  EXPECT_TRUE(func->semantic().has_getter());
+}
+
 TEST(ImporterTest, MemberFuncSemantic_BodyNotInHeader) {
   ASSERT_OK_AND_ASSIGN(
       IR ir, IrFromCc({

@@ -2719,3 +2719,82 @@ fn test_function_using_error_type_by_value() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_thunkless_accessors_enabled() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class S {
+         public:
+          int x() const { return x_; }
+          void set_x(int x) { x_ = x; }
+         private:
+          int x_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
+                as ::ffi_11::c_int
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZNK1S1xEv });
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZN1S5set_xEi });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_non_const_getter() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class S {
+         public:
+          int x() { return x_; }
+         private:
+          int x_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
+                as ::ffi_11::c_int
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZN1S1xEv });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_disabled() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class S {
+         public:
+          int x() const { return x_; }
+          void set_x(int x) { x_ = x; }
+         private:
+          int x_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
+                as ::ffi_11::c_int
+        }
+    );
+    assert_cc_matches!(rs_api_impl, quote! { __rust_thunk___ZNK1S1xEv });
+    assert_cc_matches!(rs_api_impl, quote! { __rust_thunk___ZN1S5set_xEi });
+    Ok(())
+}

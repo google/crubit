@@ -267,6 +267,7 @@ bool FunctionBodyIsDefinedInHeader(const clang::FunctionDecl* function_decl) {
 struct PropertyFieldInfo {
   CcType type;
   int64_t offset;
+  clang::QualType qual_type;
 };
 
 std::optional<PropertyFieldInfo> GetPropertyFieldInfo(ImportContext& ictx,
@@ -307,6 +308,7 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(ImportContext& ictx,
   return PropertyFieldInfo{
       .type = std::move(type),
       .offset = offset,
+      .qual_type = field_decl->getType(),
   };
 }
 
@@ -317,9 +319,8 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
     return std::nullopt;
   }
 
-  bool is_getter_candidate = method_decl->isConst() &&
-                             method_decl->param_empty() &&
-                             !method_decl->getReturnType()->isVoidType();
+  bool is_getter_candidate =
+      method_decl->param_empty() && !method_decl->getReturnType()->isVoidType();
   bool is_setter_candidate = !method_decl->isConst() &&
                              method_decl->getNumParams() == 1 &&
                              method_decl->getReturnType()->isVoidType();
@@ -335,8 +336,10 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
   if (!method_def || !method_def->isInstance()) {
     return std::nullopt;
   }
+
+  // Extra checks against the definition.
   if (is_getter_candidate) {
-    if (!method_def->isConst() || !method_def->param_empty() ||
+    if (!method_def->param_empty() ||
         method_def->getReturnType()->isVoidType()) {
       return std::nullopt;
     }
@@ -369,6 +372,12 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
     std::optional<PropertyFieldInfo> field_info =
         GetPropertyFieldInfo(ictx, ret_expr);
     if (!field_info) {
+      return std::nullopt;
+    }
+    // TODO(b/482092715): relax this restriction and allow conversions where
+    // possible.
+    if (method_def->getReturnType().getCanonicalType() !=
+        field_info->qual_type.getCanonicalType()) {
       return std::nullopt;
     }
     ir_proto::MemberFuncSemantic semantic;
@@ -420,6 +429,12 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
     std::optional<PropertyFieldInfo> field_info =
         GetPropertyFieldInfo(ictx, lhs);
     if (!field_info) {
+      return std::nullopt;
+    }
+    // TODO(b/482092715): relax this restriction and allow conversions where
+    // possible.
+    if (method_def->getParamDecl(0)->getType().getCanonicalType() !=
+        field_info->qual_type.getCanonicalType()) {
       return std::nullopt;
     }
     ir_proto::MemberFuncSemantic semantic;
