@@ -18,7 +18,22 @@ types, with some restrictions to ensure safety. See [References](#references).
 
 ## Example
 
-<iframe src="https://crubit-explorer-749456143212.us-central1.run.app/embed#code=eyJ2IjoxLCJ0b29sIjoiY2NfYmluZGluZ3NfZnJvbV9ycyIsImZpbGVzIjpbeyJuYW1lIjoiaW5wdXQucnMiLCJjb250ZW50IjoicHViIGZuIGFkZF90d29faW50ZWdlcnMoeDogaTMyLCB5OiBpMzIpIC0-IGkzMiB7XG4gICAgeCArIHlcbn0ifV19" width="100%" height="450" frameborder="0"></iframe>
+Given the following Rust crate:
+
+```
+{{ #include ../../examples/rust/function/example.rs }}
+```
+<!--  function:add_two_integers -->
+
+
+Crubit will generate the following function declaration, which calls into
+accompanying glue code:
+
+```
+{{ #include ../../examples/rust/function/example_generated.h }}
+```
+<!--  function:add_two_integers -->
+
 
 ## `unsafe` functions
 
