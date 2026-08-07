@@ -79,19 +79,39 @@ jobs:
   test_bazel:
 
     runs-on: ubuntu-latest
+    env:
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
 
     steps:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
         persist-credentials: false
+    - name: Authenticate to Google Cloud
+      id: auth
+      env:
+        GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+      if: ${{ env.GCP_SA_KEY != '' }}
+      uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
     - name: Setup Bazel
       uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
       with:
         bazelisk-cache: true
         disk-cache: ${{ github.workflow }}-${{ github.job }}
         repository-cache: true
-    - name: Build Bazel test project
+    - name: Setup Bazel Remote Cache Flags
+      id: bazel_cache_flags
+      run: |
+        if [[ -n "$GCP_SA_KEY" ]]; then
+          echo "RCACHE_FLAGS=--remote_cache=https://storage.googleapis.com/crubit-ci-bazel --google_default_credentials" >> $GITHUB_ENV
+          echo "Using GCS Remote Cache"
+        else
+          echo "RCACHE_FLAGS=" >> $GITHUB_ENV
+          echo "Skipping GCS Remote Cache"
+        fi
+    - name: Build Bazel test project (example)
       run: |
         cd examples/build_systems/bazel
-        bazel build //:main
+        bazelisk build ${RCACHE_FLAGS} //:main
 # LINT.ThenChange(//depot/copy.bara.sky)
