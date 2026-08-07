@@ -16,6 +16,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/profiling.h"
 #include "llvm/Support/Regex.h"
@@ -65,7 +66,7 @@ struct IrFromCcOptions final {
   absl_nullable std::shared_ptr<const llvm::Regex>
       template_blocklist_path_regex = nullptr;
 
-  bool carcinize = false;
+  CarcinizeMode carcinize_mode = CarcinizeMode::kOff;
 };
 
 static_assert(std::is_aggregate_v<IrFromCcOptions>);

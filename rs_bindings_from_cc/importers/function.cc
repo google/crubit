@@ -1011,7 +1011,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
 
   std::optional<std::string> source_text =
       GetFunctionSourceText(ictx_.ctx_, ictx_.ctx_.getSourceManager(),
-                            function_decl, ictx_.invocation_.carcinize());
+                            function_decl, ictx_.invocation_.is_carcinize());
 
   auto name_info = function_decl->getNameInfo();
   auto item = std::make_unique<ir_proto::Item>();
