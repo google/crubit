@@ -41,21 +41,19 @@ inline void cpp_delete(void* ptr, size_t n, size_t align) {
 #endif
 }
 
-// `cntrl` is type-erased as `void*` because ThreadSanitizer (TSan) changes the
-// concrete type name from `std::__u::__shared_weak_count` to
-// `std::__tsan::_shared_weak_count`.
-inline void shared_ptr_ref(void* cntrl) {
+// Newtype wrapper around `std::__shared_weak_count` because Crubit doesn't
+// bind to standard library internals nor aliases to them.
+struct shared_weak_count : std::__shared_weak_count {};
+
+inline void shared_ptr_ref(shared_weak_count* cntrl) {
   if (cntrl != nullptr) {
-    static_cast<std::__shared_weak_count*>(cntrl)->__add_shared();
+    cntrl->__add_shared();
   }
 }
 
-// `cntrl` is type-erased as `void*` because ThreadSanitizer (TSan) changes the
-// concrete type name from `std::__u::__shared_weak_count` to
-// `std::__tsan::_shared_weak_count`.
-inline void shared_ptr_unref(void* cntrl) {
+inline void shared_ptr_unref(shared_weak_count* cntrl) {
   if (cntrl != nullptr) {
-    static_cast<std::__shared_weak_count*>(cntrl)->__release_shared();
+    cntrl->__release_shared();
   }
 }
 
