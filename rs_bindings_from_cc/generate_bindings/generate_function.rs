@@ -2736,8 +2736,8 @@ fn function_signature<'a>(
         ensure!(
             db.ir()
                 .target_crubit_features(derived_record.owning_target())
-                .contains(crubit_feature::CrubitFeature::Experimental),
-            "upcasting is currently experimental, see b/216195042"
+                .contains(crubit_feature::CrubitFeature::OoCasting),
+            "upcasting requires //features:oo_casting, see b/216195042"
         );
     }
 

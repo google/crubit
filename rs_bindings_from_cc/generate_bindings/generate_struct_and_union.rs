@@ -661,7 +661,7 @@ pub fn generate_record<'a>(
             record.lifetime_inputs().iter().map(|id| make_rs_lifetime_ident(id)).collect();
     }
     let mut upcastable_bases = vec![];
-    if crubit_features.contains(crubit_feature::CrubitFeature::Experimental) {
+    if crubit_features.contains(crubit_feature::CrubitFeature::OoCasting) {
         let implementation: UpcastImplementation = cc_struct_upcast_impl(db, &record, ir)?;
         upcast_impls = implementation.upcast_impls;
         upcastable_bases = implementation.upcastable_bases;

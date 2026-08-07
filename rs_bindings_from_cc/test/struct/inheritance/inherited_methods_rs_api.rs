@@ -17,22 +17,16 @@
 #[::ctor::recursively_pinned]
 #[cfi_encoding = "10Nonmovable"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: Nonmovable
+///CRUBIT_ANNOTATE: cpp_type=Nonmovable
 pub struct Nonmovable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 1],
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}
 unsafe impl ::cxx::ExternType for Nonmovable {
-    type Id = ::cxx::type_id!(":: Nonmovable");
+    type Id = ::cxx::type_id!("Nonmovable");
     type Kind = ::cxx::kind::Opaque;
 }
-impl ::core::fmt::Debug for Nonmovable {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter.debug_struct("Nonmovable").finish()
-    }
-}
-forward_declare::unsafe_define!(forward_declare::symbol!(":: Nonmovable"), crate::Nonmovable);
 
 impl ::ctor::CtorNew<()> for Nonmovable {
     type CtorType = ::ctor::Ctor![Self];
@@ -53,22 +47,16 @@ impl ::ctor::CtorNew<()> for Nonmovable {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "4Base"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: Base
+///CRUBIT_ANNOTATE: cpp_type=Base
 pub struct Base {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Base {}
 impl !Sync for Base {}
 unsafe impl ::cxx::ExternType for Base {
-    type Id = ::cxx::type_id!(":: Base");
+    type Id = ::cxx::type_id!("Base");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for Base {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter.debug_struct("Base").finish()
-    }
-}
-forward_declare::unsafe_define!(forward_declare::symbol!(":: Base"), crate::Base);
 impl Base {
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {
@@ -120,25 +108,16 @@ pub mod base {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "7Derived"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: Derived
+///CRUBIT_ANNOTATE: cpp_type=Derived
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for Derived {}
 impl !Sync for Derived {}
 unsafe impl ::cxx::ExternType for Derived {
-    type Id = ::cxx::type_id!(":: Derived");
+    type Id = ::cxx::type_id!("Derived");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for Derived {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("Derived")
-            .field("", ::oops::Upcast::<&crate::Base>::upcast(self))
-            .finish_non_exhaustive()
-    }
-}
-forward_declare::unsafe_define!(forward_declare::symbol!(":: Derived"), crate::Derived);
 impl Derived {
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {
