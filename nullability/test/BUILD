@@ -382,6 +382,16 @@ cc_test(
 )
 
 cc_test(
+    name = "lambda_captures_diagnosis",
+    srcs = ["lambda_captures_diagnosis.cc"],
+    deps = [
+        ":check_diagnostics",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
     name = "struct_initialization",
     srcs = ["struct_initialization.cc"],
     deps = [
