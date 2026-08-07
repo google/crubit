@@ -53,26 +53,28 @@ jobs:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
         persist-credentials: false
-    - name: Install ccache
-      run: |
-        curl -sL -o ccache.tar.xz https://github.com/ccache/ccache/releases/download/v4.13.6/ccache-4.13.6-linux-x86_64-glibc.tar.xz
-        echo "508b2a1217dc6e04a23e967c7b95a0fb45d8a7e16fde9e180919698f2e2be060  ccache.tar.xz" | sha256sum --check
-        sudo tar -xJf ccache.tar.xz -C /usr/local/bin --strip-components=1 ccache-4.13.6-linux-x86_64-glibc/ccache
-    - name: Cache CMake with ccache
-      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+    - name: Authenticate to Google Cloud
+      id: auth
+      uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
       with:
-        path: ~/.cache/ccache
-        key: ${{ runner.os }}-ccache-${{ matrix.project }}-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-ccache-${{ matrix.project }}-
-          ${{ runner.os }}-ccache-
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+    - name: Install sccache
+      uses: mozilla-actions/sccache-action@65101d47ea8028ed0c98a1cdea8dd9182e9b5133 # v0.0.8
     - name: Test CMake project
+      env:
+        SCCACHE_GCS_BUCKET: crubit-ci-cmake
+        SCCACHE_GCS_RW_MODE: READ_WRITE
+        SCCACHE_GCS_KEY_PATH: ${{ steps.auth.outputs.credentials_file_path }}
+        SCCACHE_GCS_KEY_PREFIX: sccache/${{ matrix.project }}
       run: |
         cd examples/build_systems/${{ matrix.project }}
-        cmake -B build -S . -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        cmake -B build -S . -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
         cmake --build build --parallel
         cd build
         ctest --output-on-failure --parallel 2
+    - name: Show sccache stats
+      if: always()
+      run: sccache --show-stats
 
   test_bazel:
 
