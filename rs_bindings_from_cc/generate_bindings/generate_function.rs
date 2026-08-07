@@ -2089,27 +2089,7 @@ pub fn generate_function<'a>(
         );
 
     let create_func_body = || -> Result<TokenStream> {
-        if reportable_status.is_ok() {
-            // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
-            if let Some(body_tokens) = func.source_text_as_token_stream()
-                && let Some(inline_cpp_body) =
-                    generate_inline_cpp_call(db, &func, &thunk_args, body_tokens)?
-            {
-                return Ok(inline_cpp_body);
-            }
-            generate_func_body(
-                db,
-                &func,
-                &impl_kind,
-                &crate_root_path,
-                &return_type,
-                &param_types,
-                &param_value_adjustments,
-                thunk_ident(db, &func),
-                thunk_prepare,
-                thunk_args,
-            )
-        } else {
+        if !reportable_status.is_ok() {
             let mut result = quote! {
                 #![allow(unused_variables)]
                 unreachable!(
@@ -2123,8 +2103,44 @@ pub fn generate_function<'a>(
                     ::ctor::UnreachableCtor::new()
                 });
             }
-            Ok(result)
+            return Ok(result);
         }
+
+        if let Some(body_tokens) = func.source_text_as_token_stream() {
+            if func.cc_name().is_constructor() {
+                let mut ctor_thunk_args = vec![quote! { &mut *ret_val.as_mut_ptr() }];
+                ctor_thunk_args.extend(thunk_args.iter().cloned());
+                if let Some(inline_cpp_body) =
+                    generate_inline_cpp_call(db, &func, &ctor_thunk_args, body_tokens)?
+                {
+                    return Ok(quote! {
+                        let mut ret_val = ::core::mem::MaybeUninit::<Self>::uninit();
+                        unsafe {
+                            #thunk_prepare
+                            #inline_cpp_body;
+                            ret_val.assume_init()
+                        }
+                    });
+                }
+            } else if let Some(inline_cpp_body) =
+                generate_inline_cpp_call(db, &func, &thunk_args, body_tokens)?
+            {
+                return Ok(inline_cpp_body);
+            }
+        }
+
+        generate_func_body(
+            db,
+            &func,
+            &impl_kind,
+            &crate_root_path,
+            &return_type,
+            &param_types,
+            &param_value_adjustments,
+            thunk_ident(db, &func),
+            thunk_prepare,
+            thunk_args,
+        )
     };
 
     // Check to see if we can get precise location information. If it's not available, emit a stub

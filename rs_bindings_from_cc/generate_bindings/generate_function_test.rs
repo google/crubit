@@ -168,11 +168,158 @@ fn test_member_function_with_inline_cpp() -> Result<()> {
                     (struct SomeStruct const* __this, int arg) -> int {
                         return 42 + arg;
                     }
-                })((__this as *const _), arg)
+                })(__this, arg)
             }
         }
     );
     assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZNK10SomeStruct9some_funcEi});
+    Ok(())
+}
+
+#[gtest]
+fn test_mut_member_function_with_inline_cpp() -> Result<()> {
+    let proto =
+        ir_proto_from_cc_with_inline_cpp("struct SomeStruct { inline void mutate(int arg) { } };")?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (struct SomeStruct* __this, int arg) -> void {
+                    }
+                })(__this, arg)
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZN10SomeStruct6mutateEi});
+    Ok(())
+}
+
+#[gtest]
+fn test_member_function_rewrites_implicit_member_variables() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        r#"
+        struct Rectangle {
+            int width_;
+            int height_;
+            inline int Area() const { return width_ * height_; }
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (struct Rectangle const* __this) -> int {
+                        return __this->width_ * __this->height_;
+                    }
+                })(__this)
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZNK9Rectangle4AreaEv});
+    Ok(())
+}
+
+#[gtest]
+fn test_member_function_rewrites_explicit_this() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        r#"
+        struct Rectangle {
+            int width_;
+            inline int GetWidth() const { return this->width_; }
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (struct Rectangle const* __this) -> int {
+                        return __this->width_;
+                    }
+                })(__this)
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZNK9Rectangle8GetWidthEv});
+    Ok(())
+}
+
+#[gtest]
+fn test_member_function_rewrites_implicit_member_calls() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        r#"
+        struct Rectangle {
+            int width_;
+            int height_;
+            inline int Area() const { return width_ * height_; }
+            inline int DoubleArea() const { return Area() * 2; }
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (struct Rectangle const* __this) -> int {
+                        return __this->Area() * 2;
+                    }
+                })(__this)
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZNK9Rectangle10DoubleAreaEv});
+    Ok(())
+}
+
+#[gtest]
+fn test_constructor_with_inline_cpp() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        r#"
+        struct Point {
+            int x_;
+            int y_;
+            inline Point(int x, int y) : x_(x), y_(y) {}
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for Point {
+                #[inline(always)]
+                fn from(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
+                    let mut ret_val = ::core::mem::MaybeUninit::<Self>::uninit();
+                    unsafe {
+                        let (mut x, mut y) = args;
+                        unsafe {
+                            (::crubit_support::inline_cpp! {
+                                (struct Point* __this, int x, int y) -> void {
+                                    ::new (static_cast<void*>(__this)) struct Point(x, y);
+                                }
+                            })(&mut *ret_val.as_mut_ptr(), x, y)
+                        };
+                        ret_val.assume_init()
+                    }
+                }
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZN5PointC1Eii});
     Ok(())
 }
 
@@ -194,7 +341,7 @@ fn test_non_pod_param_with_inline_cpp() -> Result<()> {
                             auto&& s = std::move(*__s);
                             {}
                         }
-                    })((::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(s)) as *const _))
+                    })(::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(s)))
                 }
             }
         }
@@ -251,7 +398,7 @@ fn test_non_pod_param_and_return_with_inline_cpp() -> Result<()> {
                                 return s;
                             })());
                         }
-                    })((::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(s)) as *const _))
+                    })(::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(s)))
                 }
             }
         }
