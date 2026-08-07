@@ -770,20 +770,6 @@ pub fn generate_inline_cpp_call<'a>(
     let CcThunkParts { return_type_name, param_types, param_idents, conversion_stmts, return_stmt } =
         generate_cc_thunk_parts(db, func, ThunkCallKind::InlineCpp(body_tokens))?;
 
-    let adjusted_thunk_args = thunk_args
-        .iter()
-        .zip(func.params().iter())
-        .map(|(arg, param)| {
-            let rs_type = db.rs_type_kind(param.type_().clone())?;
-            Ok(match rs_type {
-                RsTypeKind::Record { .. }
-                | RsTypeKind::Reference { .. }
-                | RsTypeKind::Pointer { .. } => quote! { (#arg as *const _) },
-                _ => quote! { #arg },
-            })
-        })
-        .collect::<Result<Vec<_>>>()?;
-
     let return_type_kind = db.rs_type_kind(func.return_type().clone())?;
     let body_block = if conversion_stmts.is_empty() {
         match return_type_kind.passing_convention() {
@@ -815,7 +801,7 @@ pub fn generate_inline_cpp_call<'a>(
         unsafe {
             (::crubit_support::inline_cpp! {
                 ( #( #param_types #param_idents ),* ) -> #return_type_name #body_block
-            })( #( #adjusted_thunk_args ),* )
+            })( #( #thunk_args ),* )
         }
     }))
 }
