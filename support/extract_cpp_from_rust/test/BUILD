@@ -13,6 +13,9 @@ rust_library_with_embedded_cpp(
     deps_of_cc_library = [
         "@abseil-cpp//absl/strings:string_view",
     ],
+    deps = [
+        "//support:ctor",
+    ],
 )
 
 cc_test(
