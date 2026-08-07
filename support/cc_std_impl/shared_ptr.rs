@@ -6,6 +6,10 @@ use crate::crubit_cc_std_internal::std_allocator::{self, shared_weak_count};
 
 /// A smart pointer that shares ownership of another object of type `T` via a pointer,
 /// ABI-compatible with `std::shared_ptr<T>`.
+#[crubit_annotate::cpp_layout_equivalent(
+    cpp_type = "::std::shared_ptr<{T}>",
+    include_path = "<memory>"
+)]
 #[allow(non_snake_case)]
 #[repr(C)]
 pub struct shared_ptr<T: Sized> {
