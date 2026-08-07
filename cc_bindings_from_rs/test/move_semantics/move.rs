@@ -46,3 +46,34 @@ impl Copyable {
         old
     }
 }
+
+pub struct UnmovableFoo {
+    buf: Box<u8>,
+}
+
+impl UnmovableFoo {
+    pub fn from_byte(byte: u8) -> Self {
+        Self { buf: Box::new(byte) }
+    }
+
+    pub fn read_byte(&self) -> u8 {
+        *self.buf
+    }
+}
+
+/// Initializes an `UnmovableFoo` in the given memory location.
+///
+/// # Safety
+///
+/// * `out` must be valid for writes.
+/// * `out` must be properly aligned.
+/// * `out` must point to uninitialized memory (otherwise the previous value will be leaked).
+pub unsafe fn initialize_unmovable_foo(out: *mut UnmovableFoo, byte: u8) {
+    unsafe {
+        out.write(UnmovableFoo::from_byte(byte));
+    }
+}
+
+pub fn new_unmovable_foo(byte: u8) -> UnmovableFoo {
+    UnmovableFoo::from_byte(byte)
+}
