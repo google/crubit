@@ -88,7 +88,9 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
     # TODO(b/336367148): We should inherit almost nothing from `attr`, but for now, at least, we
     # should omit the rustc_flags.
     attr_args = structs.to_dict(attr)
-    attr_args["rustc_flags"] = []
+
+    # b/540237308: Hide thunk symbols to avoid unnecessary GOT/PLT overhead.
+    attr_args["rustc_flags"] = ["-Zdefault-visibility=hidden"]
 
     if _rust_version_ge("0.67"):
         srcs = [src] + extra_srcs
