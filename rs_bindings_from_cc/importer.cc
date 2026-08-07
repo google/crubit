@@ -226,17 +226,17 @@ absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
     clang::CallingConv cc_call_conv) {
   switch (cc_call_conv) {
     case clang::CC_C:  // __attribute__((cdecl))
-      return CallingConv::kC;
+      return CallingConv::C_DECL;
     case clang::CC_X86FastCall:  // __attribute__((fastcall))
-      return CallingConv::kX86FastCall;
+      return CallingConv::FAST_CALL;
     case clang::CC_X86VectorCall:  // __attribute__((vectorcall))
-      return CallingConv::kX86VectorCall;
+      return CallingConv::VECTOR_CALL;
     case clang::CC_X86ThisCall:  // __attribute__((thiscall))
-      return CallingConv::kX864ThisCall;
+      return CallingConv::THIS_CALL;
     case clang::CC_X86StdCall:  // __attribute__((stdcall))
-      return CallingConv::kX86StdCall;
+      return CallingConv::STD_CALL;
     case clang::CC_Win64:  // __attribute__((ms_abi))
-      return CallingConv::kWin64;
+      return CallingConv::MS_ABI;
     case clang::CC_AAPCS:      // __attribute__((pcs("aapcs")))
     case clang::CC_AAPCS_VFP:  // __attribute__((pcs("aapcs-vfp")))
       // TODO(lukasza): Should both map to "aapcs"?
@@ -2446,12 +2446,12 @@ absl::StatusOr<TranslatedUnqualifiedIdentifier> Importer::GetTranslatedName(
     }
     case clang::DeclarationName::CXXConstructorName:
       return TranslatedUnqualifiedIdentifier{
-          .cc_identifier = SpecialName::kConstructor,
+          .cc_identifier = SpecialName::CONSTRUCTOR,
           .crubit_rust_name = crubit_rust_name,
       };
     case clang::DeclarationName::CXXDestructorName:
       return TranslatedUnqualifiedIdentifier{
-          .cc_identifier = SpecialName::kDestructor,
+          .cc_identifier = SpecialName::DESTRUCTOR,
           .crubit_rust_name = crubit_rust_name,
       };
     case clang::DeclarationName::CXXOperatorName:

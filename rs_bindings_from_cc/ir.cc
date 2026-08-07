@@ -33,38 +33,6 @@ struct visitor : Ts... {
 };
 }  // namespace
 
-flat_proto::PointerTypeKind ToFlatProto(PointerTypeKind pointer_type_kind) {
-  switch (pointer_type_kind) {
-    case PointerTypeKind::kLValueRef:
-      return flat_proto::L_VALUE_REF;
-    case PointerTypeKind::kRValueRef:
-      return flat_proto::R_VALUE_REF;
-    case PointerTypeKind::kNullable:
-      return flat_proto::NULLABLE;
-    case PointerTypeKind::kNonNull:
-      return flat_proto::NON_NULL;
-    case PointerTypeKind::kOwned:
-      return flat_proto::OWNED;
-  }
-}
-
-flat_proto::CallingConv ToFlatProto(CallingConv calling_conv) {
-  switch (calling_conv) {
-    case CallingConv::kC:
-      return flat_proto::C_DECL;
-    case CallingConv::kX86FastCall:
-      return flat_proto::FAST_CALL;
-    case CallingConv::kX86VectorCall:
-      return flat_proto::VECTOR_CALL;
-    case CallingConv::kX864ThisCall:
-      return flat_proto::THIS_CALL;
-    case CallingConv::kX86StdCall:
-      return flat_proto::STD_CALL;
-    case CallingConv::kWin64:
-      return flat_proto::MS_ABI;
-  }
-}
-
 flat_proto::CcType CcType::ToFlatProto() const {
   flat_proto::CcType proto;
   proto.set_is_const(is_const);
@@ -79,7 +47,7 @@ flat_proto::CcType CcType::ToFlatProto() const {
           },
           [&](const CcType::PointerType& pointer) {
             auto* p = proto.mutable_pointer();
-            p->set_kind(crubit::ToFlatProto(pointer.kind));
+            p->set_kind(pointer.kind);
             if (pointer.lifetime) {
               p->set_lifetime((*pointer.lifetime).value());
             }
@@ -88,7 +56,7 @@ flat_proto::CcType CcType::ToFlatProto() const {
           [&](const CcType::FuncPointer& func_value) {
             auto* f = proto.mutable_func_pointer();
             f->set_non_null(func_value.non_null);
-            f->set_call_conv(crubit::ToFlatProto(func_value.call_conv));
+            f->set_call_conv(func_value.call_conv);
             for (const CcType& type : func_value.param_and_return_types) {
               *f->add_param_and_return_types() = type.ToFlatProto();
             }
@@ -119,26 +87,26 @@ CcType CcType::PointerTo(CcType pointee_type,
                          std::optional<LifetimeId> lifetime, bool nullable) {
   return PointerOrReferenceTo(
       std::move(pointee_type),
-      nullable ? PointerTypeKind::kNullable : PointerTypeKind::kNonNull,
+      nullable ? PointerTypeKind::NULLABLE : PointerTypeKind::NON_NULL,
       lifetime);
 }
 
 CcType CcType::OwnedPointerTo(CcType pointee_type,
                               std::optional<LifetimeId> lifetime) {
-  return PointerOrReferenceTo(std::move(pointee_type), PointerTypeKind::kOwned,
+  return PointerOrReferenceTo(std::move(pointee_type), PointerTypeKind::OWNED,
                               lifetime);
 }
 
 CcType CcType::LValueReferenceTo(CcType pointee_type,
                                  std::optional<LifetimeId> lifetime) {
   return PointerOrReferenceTo(std::move(pointee_type),
-                              PointerTypeKind::kLValueRef, lifetime);
+                              PointerTypeKind::L_VALUE_REF, lifetime);
 }
 
 CcType CcType::RValueReferenceTo(CcType pointee_type,
                                  std::optional<LifetimeId> lifetime) {
   return PointerOrReferenceTo(std::move(pointee_type),
-                              PointerTypeKind::kRValueRef, lifetime);
+                              PointerTypeKind::R_VALUE_REF, lifetime);
 }
 
 void HeaderName::WriteToProto(ir_proto::HeaderName& proto) const {
@@ -165,37 +133,30 @@ void Operator::WriteToProto(ir_proto::Operator& proto) const {
 
 static std::string SpecialNameToString(SpecialName special_name) {
   switch (special_name) {
-    case SpecialName::kDestructor:
+    case SpecialName::DESTRUCTOR:
       return "Destructor";
-    case SpecialName::kConstructor:
+    case SpecialName::CONSTRUCTOR:
       return "Constructor";
-  }
-}
-
-flat_proto::SpecialName ToFlatProto(SpecialName special_name) {
-  switch (special_name) {
-    case SpecialName::kDestructor:
-      return flat_proto::DESTRUCTOR;
-    case SpecialName::kConstructor:
-      return flat_proto::CONSTRUCTOR;
+    default:
+      return "Unspecified";
   }
 }
 
 void WriteToProto(const UnqualifiedIdentifier& unqualified_identifier,
                   ir_proto::UnqualifiedIdentifier& proto) {
-  std::visit(
-      visitor{
-          [&](const Identifier& id) {
-            id.WriteToProto(*proto.mutable_ident());
-          },
-          [&](const Operator& op) { op.WriteToProto(*proto.mutable_oper()); },
-          [&](const SpecialName& special_name) {
-            proto.set_special_name(crubit::ToFlatProto(special_name));
-          },
-          [&](const ConversionOperator& conversion_operator) {
-            proto.mutable_conversion_operator();
-          }},
-      unqualified_identifier);
+  std::visit(visitor{[&](const Identifier& id) {
+                       id.WriteToProto(*proto.mutable_ident());
+                     },
+                     [&](const Operator& op) {
+                       op.WriteToProto(*proto.mutable_oper());
+                     },
+                     [&](const SpecialName& special_name) {
+                       proto.set_special_name(special_name);
+                     },
+                     [&](const ConversionOperator& conversion_operator) {
+                       proto.mutable_conversion_operator();
+                     }},
+             unqualified_identifier);
 }
 
 std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {
@@ -214,30 +175,6 @@ Identifier& TranslatedIdentifier::rs_identifier() {
     return *crubit_rust_name;
   }
   return cc_identifier;
-}
-
-flat_proto::SafetyAnnotation ToFlatProto(SafetyAnnotation safety_annotation) {
-  switch (safety_annotation) {
-    case SafetyAnnotation::kDisableUnsafe:
-      return flat_proto::SafetyAnnotation::SAFETY_ANNOTATION_DISABLE_UNSAFE;
-    case SafetyAnnotation::kUnsafe:
-      return flat_proto::SafetyAnnotation::SAFETY_ANNOTATION_UNSAFE;
-    case SafetyAnnotation::kUnannotated:
-      return flat_proto::SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
-  }
-}
-
-flat_proto::SpecialMemberFunc ToFlatProto(SpecialMemberFunc f) {
-  switch (f) {
-    case SpecialMemberFunc::kTrivial:
-      return flat_proto::TRIVIAL;
-    case SpecialMemberFunc::kNontrivialMembers:
-      return flat_proto::NONTRIVIAL_MEMBERS;
-    case SpecialMemberFunc::kNontrivialUserDefined:
-      return flat_proto::NONTRIVIAL_USER_DEFINED;
-    case SpecialMemberFunc::kUnavailable:
-      return flat_proto::UNAVAILABLE;
-  }
 }
 
 flat_proto::BridgeType BridgeType::ToFlatProto() const {
@@ -374,22 +311,11 @@ TraitImplPolarity* absl_nullable TraitDerives::Polarity(
   return nullptr;
 }
 
-flat_proto::TraitImplPolarity ToFlatProto(TraitImplPolarity polarity) {
-  switch (polarity) {
-    case TraitImplPolarity::kNegative:
-      return flat_proto::NEGATIVE;
-    case TraitImplPolarity::kNone:
-      return flat_proto::NONE;
-    case TraitImplPolarity::kPositive:
-      return flat_proto::POSITIVE;
-  }
-}
-
 flat_proto::TraitDerives TraitDerives::ToFlatProto() const {
   flat_proto::TraitDerives proto;
-  proto.set_clone(crubit::ToFlatProto(clone));
-  proto.set_copy(crubit::ToFlatProto(copy));
-  proto.set_debug(crubit::ToFlatProto(debug));
+  proto.set_clone(clone);
+  proto.set_copy(copy);
+  proto.set_debug(debug);
   proto.set_send(send);
   proto.set_sync(sync);
   proto.mutable_custom()->Add(custom.begin(), custom.end());
