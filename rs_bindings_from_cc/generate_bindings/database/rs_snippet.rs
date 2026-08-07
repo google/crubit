@@ -789,6 +789,7 @@ pub enum BridgeRsTypeKind<'a> {
         abi_rust: Rc<str>,
         abi_cpp: Rc<str>,
         generic_types: Rc<[RsTypeKind<'a>]>,
+        label_hint: Option<BazelLabel>,
     },
     ProtoMessageBridge {
         rust_name: Rc<str>,
@@ -806,6 +807,27 @@ pub enum BridgeRsTypeKind<'a> {
         result_type: Rc<RsTypeKind<'a>>,
         lifetime: Option<Lifetime>,
     },
+}
+
+/// Validates that the first component of a Rust path (representing the crate name)
+/// matches the target name of the provided Bazel label hint.
+///
+/// Returns an error if there is a mismatch, using `field_name` to customize the error message.
+fn validate_bridge_path_prefix(path: &str, label: &BazelLabel, field_name: &str) -> Result<()> {
+    let starts_with_colon2 = path.starts_with("::");
+    let path_without_colon = if starts_with_colon2 { &path[2..] } else { path };
+    let parts: Vec<&str> = path_without_colon.split("::").collect();
+    if !parts.is_empty() {
+        let crate_name = parts[0];
+        let target_name = label.target_name();
+        if crate_name != target_name {
+            return Err(anyhow!(
+                "CRUBIT_BRIDGE error: crate name `{}` in {} `{}` does not match target name `{}` in hint `{}`",
+                crate_name, field_name, path, target_name, label.as_str()
+            ));
+        }
+    }
+    Ok(())
 }
 
 impl<'a> BridgeRsTypeKind<'a> {
@@ -836,6 +858,7 @@ impl<'a> BridgeRsTypeKind<'a> {
                 abi_rust,
                 abi_cpp,
                 template_args: bridge_template_args,
+                label_hint,
             } => {
                 let template_args = match template_args {
                     Some(a) => {
@@ -850,6 +873,21 @@ impl<'a> BridgeRsTypeKind<'a> {
                     }
                     None => bridge_template_args.clone(),
                 };
+                let parsed_hint = if let Some(hint_str) = label_hint {
+                    if hint_str.starts_with("//") {
+                        let label = BazelLabel::from(hint_str);
+                        validate_bridge_path_prefix(rust_name, &label, "Rust path")?;
+                        validate_bridge_path_prefix(abi_rust, &label, "Rust ABI path")?;
+                        Some(label)
+                    } else {
+                        return Err(anyhow!(
+                            "Invalid CRUBIT_BRIDGE label hint format: `{}`. Expected `//package:target` or `//package`",
+                            hint_str
+                        ));
+                    }
+                } else {
+                    None
+                };
                 BridgeRsTypeKind::Bridge {
                     rust_name: Rc::from(rust_name),
                     abi_rust: Rc::from(abi_rust),
@@ -858,6 +896,7 @@ impl<'a> BridgeRsTypeKind<'a> {
                         .iter()
                         .map(|template_arg| db.rs_type_kind(template_arg.clone()))
                         .collect::<Result<Rc<[RsTypeKind]>>>()?,
+                    label_hint: parsed_hint,
                 }
             }
             BridgeType::StdOptional(t) => {
@@ -1998,21 +2037,26 @@ fn all_static_lifetimes_internal<'a>(
         RsTypeKind::Primitive(_) => Rc::new(t.clone()),
         RsTypeKind::BridgeType { bridge_type, original_type } => Rc::new(RsTypeKind::BridgeType {
             bridge_type: match bridge_type {
-                BridgeRsTypeKind::Bridge { rust_name, abi_rust, abi_cpp, generic_types } => {
-                    BridgeRsTypeKind::Bridge {
-                        rust_name: rust_name.clone(),
-                        abi_rust: abi_rust.clone(),
-                        abi_cpp: abi_cpp.clone(),
-                        generic_types: generic_types
-                            .iter()
-                            .map(|generic_type| {
-                                all_static_lifetimes_internal(generic_type, strip_aliases)
-                                    .as_ref()
-                                    .clone()
-                            })
-                            .collect(),
-                    }
-                }
+                BridgeRsTypeKind::Bridge {
+                    rust_name,
+                    abi_rust,
+                    abi_cpp,
+                    generic_types,
+                    label_hint,
+                } => BridgeRsTypeKind::Bridge {
+                    rust_name: rust_name.clone(),
+                    abi_rust: abi_rust.clone(),
+                    abi_cpp: abi_cpp.clone(),
+                    generic_types: generic_types
+                        .iter()
+                        .map(|generic_type| {
+                            all_static_lifetimes_internal(generic_type, strip_aliases)
+                                .as_ref()
+                                .clone()
+                        })
+                        .collect(),
+                    label_hint: label_hint.clone(),
+                },
                 BridgeRsTypeKind::ProtoMessageBridge { .. } => bridge_type.clone(),
                 BridgeRsTypeKind::StdOptional(element_type) => BridgeRsTypeKind::StdOptional(
                     all_static_lifetimes_internal(element_type, strip_aliases),
@@ -2342,11 +2386,12 @@ impl<'a> RsTypeKind<'a> {
             }
             RsTypeKind::BridgeType { bridge_type, original_type } => {
                 match bridge_type {
-                    BridgeRsTypeKind::Bridge { rust_name, generic_types, .. } => {
+                    BridgeRsTypeKind::Bridge { rust_name, generic_types, label_hint, .. } => {
+                        let resolved_name = resolve_bridge_rust_name(rust_name, label_hint, db.ir());
                         let path = fully_qualify_type(
                             db,
                             ir::Item::Record(original_type.clone()),
-                            rust_name,
+                            &resolved_name,
                         );
 
                         let arity = (db.codegen_functions().decl_lifetime_arity)(
@@ -2587,6 +2632,47 @@ impl<'a, 'ty> Iterator for RsTypeKindIter<'a, 'ty> {
             }
         }
     }
+}
+
+/// Resolves a Rust path for a bridge type using a label hint.
+///
+/// If a hint is provided and the first part of the `rust_path` matches the hint's target name,
+/// this function looks up the hint's `label` in the IR's `crate_names` to find the mangled
+/// crate name. If found, it replaces the matching prefix in `rust_path` with the mangled name.
+/// Otherwise, it returns the original `rust_path`.
+pub fn resolve_bridge_rust_name(rust_path: &str, hint: &Option<BazelLabel>, ir: &IR) -> String {
+    let starts_with_colon2 = rust_path.starts_with("::");
+    let path_without_colon = if starts_with_colon2 { &rust_path[2..] } else { rust_path };
+
+    if let Some(label) = hint {
+        let parts: Vec<&str> = path_without_colon.split("::").collect();
+        if !parts.is_empty() {
+            let crate_name = parts[0];
+            let target_name = label.target_name();
+            if crate_name == target_name {
+                if label == ir.current_target() {
+                    // If it points to the current target, we resolve it as a relative path
+                    // (relative to the current crate root), so we strip the prefix and
+                    // do not prepend "::".
+                    return parts[1..].join("::");
+                }
+                if let Some(mangled_name) = ir.crate_name(label) {
+                    let mangled_name_str = mangled_name.to_string();
+                    let mut new_parts = vec![mangled_name_str.as_str()];
+                    new_parts.extend_from_slice(&parts[1..]);
+                    let resolved = new_parts.join("::");
+                    return if starts_with_colon2 { format!("::{}", resolved) } else { resolved };
+                }
+            } else {
+                panic!(
+                    "Internal error: validated hint mismatch slipped through: crate name `{}` in Rust path `{}` does not match target name `{}` in hint `{}`",
+                    crate_name, rust_path, target_name, label.as_str()
+                );
+            }
+        }
+    }
+
+    rust_path.to_string()
 }
 
 #[cfg(test)]
@@ -2902,6 +2988,124 @@ mod tests {
                 quote! {crate}
             }),
             quote! {&mut *const crate::X},
+        );
+    }
+
+    #[gtest]
+    fn test_resolve_bridge_rust_name_success() {
+        use ir_rust_proto::IRProto;
+
+        let proto = protobuf::proto!(IRProto {
+            current_target: "//foo:bar",
+            crate_names: [("@abseil-cpp//absl/status:status", "absl_status")]
+        });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
+
+        // 1. No hint
+        assert_eq!(
+            resolve_bridge_rust_name("::status::absl::StatusOr", &None, &ir),
+            "::status::absl::StatusOr"
+        );
+
+        // 2. Hint present, crate_name matches, but label not in crate_names
+        let hint_missing_label = Some(BazelLabel::from("//not/in/crate_names:status"));
+        assert_eq!(
+            resolve_bridge_rust_name("::status::absl::StatusOr", &hint_missing_label, &ir),
+            "::status::absl::StatusOr"
+        );
+
+        // 3. Hint present, crate_name matches, label in crate_names
+        let hint_ok = Some(BazelLabel::from("@abseil-cpp//absl/status:status"));
+        assert_eq!(
+            resolve_bridge_rust_name("::status::absl::StatusOr", &hint_ok, &ir),
+            "::absl_status::absl::StatusOr"
+        );
+
+        // 4. Path doesn't start with :: and resolves
+        assert_eq!(
+            resolve_bridge_rust_name("status::absl::StatusOr", &hint_ok, &ir),
+            "absl_status::absl::StatusOr"
+        );
+
+        // 5. Hint points to current target (resolves to relative path)
+        let hint_current = Some(BazelLabel::from("//foo:bar"));
+        assert_eq!(
+            resolve_bridge_rust_name("::bar::absl::StatusOr", &hint_current, &ir),
+            "absl::StatusOr"
+        );
+        assert_eq!(
+            resolve_bridge_rust_name("bar::absl::StatusOr", &hint_current, &ir),
+            "absl::StatusOr"
+        );
+
+        // 6. Shorthand hint (no :target, defaults to last package component)
+        let hint_shorthand = Some(BazelLabel::from("@abseil-cpp//absl/status"));
+        assert_eq!(
+            resolve_bridge_rust_name("::status::absl::StatusOr", &hint_shorthand, &ir),
+            "::absl_status::absl::StatusOr"
+        );
+    }
+
+    #[gtest]
+    #[should_panic(
+        expected = "Internal error: validated hint mismatch slipped through: crate name `status` in Rust path `::status::absl::StatusOr` does not match target name `other` in hint `@abseil-cpp//absl/status:other`"
+    )]
+    fn test_resolve_bridge_rust_name_mismatch_panics() {
+        use ir_rust_proto::IRProto;
+
+        let proto = protobuf::proto!(IRProto {
+            current_target: "//foo:bar",
+            crate_names: [("@abseil-cpp//absl/status:other", "absl_status")]
+        });
+        let ir = proto_to_ir(proto.as_view()).unwrap();
+
+        let hint_mismatch = Some(BazelLabel::from("@abseil-cpp//absl/status:other"));
+        resolve_bridge_rust_name("::status::absl::StatusOr", &hint_mismatch, &ir);
+    }
+
+    #[gtest]
+    fn test_validate_bridge_path_prefix() {
+        assert!(validate_bridge_path_prefix(
+            "::status::absl::StatusOr",
+            &BazelLabel::from("@abseil-cpp//absl/status:status"),
+            "Rust path"
+        )
+        .is_ok());
+
+        assert!(validate_bridge_path_prefix(
+            "status::absl::StatusOr",
+            &BazelLabel::from("@abseil-cpp//absl/status:status"),
+            "Rust path"
+        )
+        .is_ok());
+
+        assert!(validate_bridge_path_prefix(
+            "::status::absl::StatusOr",
+            &BazelLabel::from("@abseil-cpp//absl/status"),
+            "Rust path"
+        )
+        .is_ok());
+
+        let err = validate_bridge_path_prefix(
+            "::status::absl::StatusOr",
+            &BazelLabel::from("@abseil-cpp//absl/status:other"),
+            "Rust path",
+        )
+        .unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "CRUBIT_BRIDGE error: crate name `status` in Rust path `::status::absl::StatusOr` does not match target name `other` in hint `@abseil-cpp//absl/status:other`"
+        );
+
+        let err2 = validate_bridge_path_prefix(
+            "status::absl::StatusOr",
+            &BazelLabel::from("@abseil-cpp//absl/status:other"),
+            "Rust ABI path",
+        )
+        .unwrap_err();
+        assert_eq!(
+            err2.to_string(),
+            "CRUBIT_BRIDGE error: crate name `status` in Rust ABI path `status::absl::StatusOr` does not match target name `other` in hint `@abseil-cpp//absl/status:other`"
         );
     }
 }

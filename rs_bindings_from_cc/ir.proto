@@ -348,6 +348,7 @@ message BridgeType {
     string abi_rust = 2;
     string abi_cpp = 3;
     repeated CcType template_args = 4;
+    string label_hint = 5;
   }
   message StdOptional {
     CcType inner_type = 1;

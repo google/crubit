@@ -18,8 +18,8 @@ use database::code_snippet::{
 use database::db::{BindingsGenerator, CodegenFunctions, Interner};
 use database::intern;
 use database::rs_snippet::{
-    BackingType, BridgeRsTypeKind, Callable, CustomizeMethodsKind, FnTrait, LifetimeOptions,
-    Mutability, PassingConvention, RsTypeKind, RustPtrKind, UniformReprTemplateType, UnsafeReason,
+    resolve_bridge_rust_name, BackingType, BridgeRsTypeKind, Callable, FnTrait, LifetimeOptions,
+    Mutability, PassingConvention, RsTypeKind, RustPtrKind, UnsafeReason,
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -1168,12 +1168,13 @@ fn crubit_abi_type<'a>(
                     cpp_proto_path: make_cpp_abi_path_from_str(&merged_cpp_abi_path)?,
                 })
             }
-            BridgeRsTypeKind::Bridge { abi_rust, abi_cpp, generic_types, .. } => {
+            BridgeRsTypeKind::Bridge { abi_rust, abi_cpp, generic_types, label_hint, .. } => {
                 let ir = db.ir();
                 let target = db
                     .defining_target(original_type.id())
                     .unwrap_or_else(|| original_type.as_ref().owning_target().clone());
-                let rust_abi_path = make_rust_abi_path_from_str(&abi_rust, ir, &target);
+                let resolved_abi_rust = resolve_bridge_rust_name(&abi_rust, &label_hint, ir);
+                let rust_abi_path = make_rust_abi_path_from_str(&resolved_abi_rust, ir, &target);
 
                 let cpp_abi_path = make_cpp_abi_path_from_str(&abi_cpp)?;
 

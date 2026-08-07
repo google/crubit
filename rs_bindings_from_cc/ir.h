@@ -456,6 +456,7 @@ struct BridgeType {
     std::string abi_rust;
     std::string abi_cpp;
     std::vector<CcType> template_args;
+    std::optional<std::string> label_hint;
   };
 
   struct StdOptional {

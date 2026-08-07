@@ -337,11 +337,20 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
       }
     }
     auto [rust_name, abi_rust, abi_cpp] = *crubit_abi_values;
+    std::optional<std::string> label_hint;
+    absl::StatusOr<std::optional<std::string>> hint_val =
+        GetAnnotationWithStringArg(record_decl, "crubit_bridge_label_hint");
+    CHECK_OK(hint_val);
+    if (hint_val->has_value()) {
+      label_hint = **std::move(hint_val);
+    }
+
     return BridgeType{BridgeType::Bridge{
         .rust_name = std::move(rust_name),
         .abi_rust = std::move(abi_rust),
         .abi_cpp = std::move(abi_cpp),
         .template_args = std::move(template_args),
+        .label_hint = std::move(label_hint),
     }};
   }
   return std::nullopt;

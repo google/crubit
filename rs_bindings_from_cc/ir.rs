@@ -1439,6 +1439,7 @@ pub enum BridgeType<'pb> {
         abi_rust: &'pb str,
         abi_cpp: &'pb str,
         template_args: Rc<[CcType]>,
+        label_hint: Option<&'pb str>,
     },
     StdOptional(CcType),
     StdPair(CcType, CcType),

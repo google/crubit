@@ -222,19 +222,35 @@
 // * rust_name: The name of the Rust type.
 // * abi_rust: The Crubit ABI of the Rust type.
 // * abi_cpp: The Crubit ABI of the C++ type.
+// * label_hint: (Optional) The target that owns the Rust type.
+//   Format: "//package:target" or a short-form like
+//   "@abseil-cpp//absl/status".
 //
 // From absl::StatusOr:
 //
 // ```c++
+// #include "absl/status/status.h"  # from
+// @abseil-cpp//absl/status:status
+//
 // template <typename T>
 // class
 // CRUBIT_BRIDGE("::status::absl::StatusOr", "::status::absl::StatusOrAbi",
-//               "::crubit::StatusOrAbi") StatusOr;
+//               "::crubit::StatusOrAbi", "@abseil-cpp//absl/status:status")
+//               StatusOr;
 // ```
-#define CRUBIT_BRIDGE(rust_name, abi_rust, abi_cpp)              \
+#define CRUBIT_BRIDGE_3(rust_name, abi_rust, abi_cpp)            \
   CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_rust_name", rust_name) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_abi_rust", abi_rust)   \
   CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_abi_cpp", abi_cpp)
+
+#define CRUBIT_BRIDGE_4(rust_name, abi_rust, abi_cpp, label_hint) \
+  CRUBIT_BRIDGE_3(rust_name, abi_rust, abi_cpp)                   \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_bridge_label_hint", label_hint)
+
+#define CRUBIT_BRIDGE_GET_MACRO(_1, _2, _3, _4, NAME, ...) NAME
+#define CRUBIT_BRIDGE(...)                              \
+  CRUBIT_BRIDGE_GET_MACRO(__VA_ARGS__, CRUBIT_BRIDGE_4, \
+                          CRUBIT_BRIDGE_3)(__VA_ARGS__)
 
 // Prevents Crubit from interpreting one or more named attributes on this
 // declaration.

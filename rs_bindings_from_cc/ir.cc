@@ -257,6 +257,9 @@ flat_proto::BridgeType BridgeType::ToFlatProto() const {
             for (const auto& arg : annotation.template_args) {
               *b->add_template_args() = arg.ToFlatProto();
             }
+            if (annotation.label_hint.has_value()) {
+              b->set_label_hint(*annotation.label_hint);
+            }
           },
           [&](const BridgeType::StdOptional& std_optional) {
             *proto.mutable_std_optional()->mutable_inner_type() =
