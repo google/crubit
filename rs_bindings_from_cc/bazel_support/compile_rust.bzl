@@ -18,6 +18,11 @@ load(
 
 load("@bazel_skylib//lib:structs.bzl", "structs")
 
+_extra_rustc_flags = [
+    # b/540237308: Hide thunk symbols to avoid unnecessary GOT/PLT overhead.
+    "-Zdefault-visibility=hidden",
+]
+
 def _version_parts(version):
     major, minor = version.split(".")[0:2]
     return (int(major), int(minor))
@@ -43,6 +48,20 @@ def _get_cc_info(providers):
         if hasattr(provider, "linking_context"):
             return provider
     fail("Couldn't find a CcInfo in the list of providers")
+
+def _filter_rustc_flags(flags):
+    ALLOWED_PREFIXES = [
+        # Flags that logically apply to the whole program.
+        "-Ccode-model=",
+    ]
+    return [
+        flag
+        for flag in flags
+        if any([
+            flag.startswith(prefix)
+            for prefix in ALLOWED_PREFIXES
+        ])
+    ]
 
 def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage, allow_lto = True, aliases = {}, remap_path_prefix = {}, extra_named_deps = depset()):
     """Compiles a Rust source file.
@@ -88,9 +107,8 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
     # TODO(b/336367148): We should inherit almost nothing from `attr`, but for now, at least, we
     # should omit the rustc_flags.
     attr_args = structs.to_dict(attr)
-
-    # b/540237308: Hide thunk symbols to avoid unnecessary GOT/PLT overhead.
-    attr_args["rustc_flags"] = ["-Zdefault-visibility=hidden"]
+    if "rustc_flags" in attr_args:
+        attr_args["rustc_flags"] = _filter_rustc_flags(attr_args["rustc_flags"])
 
     if _rust_version_ge("0.67"):
         srcs = [src] + extra_srcs
@@ -122,7 +140,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             compile_data_targets = depset([]),
             owner = ctx.label,
         ),
-        rust_flags = remapped_flags,
+        rust_flags = remapped_flags + _extra_rustc_flags,
         output_hash = output_hash,
         include_coverage = include_coverage,
         # LINT.IfChange
