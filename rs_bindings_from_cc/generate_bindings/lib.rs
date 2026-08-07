@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![allow(clippy::collapsible_else_if)]
 
-use arc_anyhow::{anyhow, ensure, Context, Result};
+use arc_anyhow::{anyhow, ensure, Context, Error, Result};
 use code_gen_utils::make_rs_lifetime_ident;
 use code_gen_utils::{format_cc_includes, is_cpp_reserved_keyword, make_rs_ident, CcInclude};
 use cpp_type_name::format_cpp_type_with_references;
@@ -446,6 +446,7 @@ pub fn new_database<'db>(
         has_bindings::type_target_restriction,
         has_bindings::resolve_names,
         generate_function::mangled_name_counts,
+        unsupported_item_errors,
     )
 }
 
@@ -837,6 +838,23 @@ fn record_field_safety<'a>(db: &BindingsGenerator<'a>, field: Field<'a>) -> Opti
         }
     };
     db.rs_type_kind_safety(field_rs_type_kind)
+}
+
+/// Implementation of `BindingsGenerator::unsupported_item_errors`.
+fn unsupported_item_errors<'db>(
+    _db: &BindingsGenerator<'db>,
+    item: Rc<ir::UnsupportedItem<'db>>,
+) -> Rc<[Error]> {
+    item.errors()
+        .iter()
+        .map(|e| {
+            error_report::FormattedError::new(
+                e.fmt.to_string().into(),
+                e.message.to_string().into(),
+            )
+            .into()
+        })
+        .collect()
 }
 
 /// Implementation of `BindingsGenerator::record_safety`.

@@ -12,7 +12,6 @@ use generate_bindings::new_database;
 use generate_comment::{generate_doc_comment, generate_unsupported};
 use googletest::prelude::gtest;
 use ir::{BazelLabel, ItemId, UnsupportedItem, UnsupportedItemKind, IR};
-use ir_rust_proto::IRProto;
 use ir_testing::make_ir_from_items;
 use quote::quote;
 use std::rc::Rc;
@@ -157,7 +156,6 @@ fn make_factory() -> TestDbFactory<'static> {
             fmt: "unsupported_message".into(),
             message: "unsupported_message".into(),
         })),
-        None,
     );
     TestDbFactory::new(make_ir_from_items([test_item.into()]))
 }

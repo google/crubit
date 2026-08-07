@@ -244,6 +244,11 @@ memoized::query_group! {
         ///
         /// Implementation: rs_bindings_from_cc/generate_bindings/generate_function.rs?q=function:mangled_name_counts
         fn mangled_name_counts(&self) -> Rc<HashMap<Rc<str>, usize>>;
+
+        /// Returns the formatted errors for the given unsupported item.
+        ///
+        /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:unsupported_item_errors
+        fn unsupported_item_errors(&self, item: Rc<ir::UnsupportedItem<'db>>) -> Rc<[Error]>;
     }
 }
 
@@ -505,7 +510,6 @@ impl<'db> BindingsGenerator<'db> {
         item: &impl GenericItem<'db>,
         path: Option<ir::UnsupportedItemPath<'db>>,
         error: Option<Rc<ir::FormattedError>>,
-        cause: Option<Error>,
         must_bind: bool,
     ) -> ir::UnsupportedItem<'db> {
         ir::UnsupportedItem::new_raw(
@@ -518,7 +522,6 @@ impl<'db> BindingsGenerator<'db> {
             must_bind,
             path,
             error,
-            cause,
         )
     }
 
@@ -533,7 +536,6 @@ impl<'db> BindingsGenerator<'db> {
             item,
             path,
             Some(Rc::new(ir::FormattedError { fmt: Rc::clone(&message), message })),
-            None,
             item.must_bind(),
         )
     }
@@ -544,7 +546,13 @@ impl<'db> BindingsGenerator<'db> {
         path: Option<ir::UnsupportedItemPath<'db>>,
         cause: Error,
     ) -> ir::UnsupportedItem<'db> {
-        self.new_unsupported_item(item, path, None, Some(cause), item.must_bind())
+        let message = intern!(self.interner(), "{}", cause);
+        self.new_unsupported_item(
+            item,
+            path,
+            Some(Rc::new(ir::FormattedError { fmt: Rc::clone(&message), message })),
+            item.must_bind(),
+        )
     }
 
     pub fn error_item_name(&self, item_id: ir::ItemId) -> error_report::ItemName {

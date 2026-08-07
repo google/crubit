@@ -120,7 +120,10 @@ pub fn generate_doc_comment(
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.
-pub fn generate_unsupported(db: &BindingsGenerator, item: Rc<UnsupportedItem>) -> ApiSnippets {
+pub fn generate_unsupported<'db>(
+    db: &BindingsGenerator<'db>,
+    item: Rc<UnsupportedItem<'db>>,
+) -> ApiSnippets {
     db.assert_in_error_scope(item.id());
 
     // Avoid generating unsupported item comments for standard library templates.
@@ -132,7 +135,7 @@ pub fn generate_unsupported(db: &BindingsGenerator, item: Rc<UnsupportedItem>) -
         }
     }
 
-    for error in item.errors() {
+    for error in db.unsupported_item_errors(Rc::clone(&item)).iter() {
         db.errors().report(error);
     }
 
@@ -162,7 +165,7 @@ pub fn generate_unsupported(db: &BindingsGenerator, item: Rc<UnsupportedItem>) -
         item.name()
     )
     .unwrap();
-    for (index, error) in item.errors().iter().enumerate() {
+    for (index, error) in db.unsupported_item_errors(Rc::clone(&item)).iter().enumerate() {
         if index != 0 {
             message.push_str("\n\n");
         }

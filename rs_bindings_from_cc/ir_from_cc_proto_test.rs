@@ -134,7 +134,7 @@ fn test_unescapable_rust_keywords_in_struct_name_proto() -> Result<()> {
         .errors()
         .first()
         .expect("should have an error for unescapable identifier")
-        .to_string()
+        .message
         .contains("Record name is not supported: Unescapable identifier: Self"));
     Ok(())
 }
