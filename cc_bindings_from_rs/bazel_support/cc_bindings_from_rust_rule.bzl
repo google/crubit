@@ -558,6 +558,7 @@ private_common_attrs = {
             "//support:annotations_internal",
             "//support:lifetime_annotations",
             "//support/rs_std:char",
+            "//support/rs_std:int",
             "//support/rs_std:slice_ref",
             "//support/rs_std:str_ref",
             "//support:bridge_cpp",
