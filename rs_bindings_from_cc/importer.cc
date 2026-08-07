@@ -1785,7 +1785,7 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
     *unsupported->mutable_path() = std::move(*path);
   }
   for (const auto& err : errors) {
-    *unsupported->add_errors() = err.ToFlatProto();
+    err.WriteToProto(*unsupported->add_errors());
   }
   unsupported->set_source_loc(std::move(source_loc));
   unsupported->set_id(GenerateItemId(&original_decl).value());
@@ -2372,7 +2372,7 @@ Importer::GetUnsupportedItemPathForTemplateDecl(
     return std::nullopt;
   }
   ir_proto::UnsupportedItem::Path path;
-  *path.mutable_ident() = crubit::ToFlatProto(names->cc_identifier);
+  WriteToProto(names->cc_identifier, *path.mutable_ident());
   if (enclosing_item_id->has_value()) {
     path.set_enclosing_item_id(
         static_cast<int64_t>((*enclosing_item_id)->value()));

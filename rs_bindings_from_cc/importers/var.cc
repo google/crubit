@@ -132,7 +132,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
     ictx_.MarkAsSuccessfullyImported(var_decl);
     auto item = std::make_unique<ir_proto::Item>();
     auto* constant = item->mutable_constant();
-    *constant->mutable_value() = integer_constant->ToFlatProto();
+    integer_constant->WriteToProto(*constant->mutable_value());
     constant->mutable_cc_name()->set_identifier(
         var_name->cc_identifier.Ident());
     constant->mutable_rs_name()->set_identifier(

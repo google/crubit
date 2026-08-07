@@ -33,12 +33,6 @@ struct visitor : Ts... {
 };
 }  // namespace
 
-flat_proto::HeaderName HeaderName::ToFlatProto() const {
-  flat_proto::HeaderName proto;
-  proto.set_name(name_);
-  return proto;
-}
-
 flat_proto::PointerTypeKind ToFlatProto(PointerTypeKind pointer_type_kind) {
   switch (pointer_type_kind) {
     case PointerTypeKind::kLValueRef:
@@ -104,7 +98,7 @@ flat_proto::CcType CcType::ToFlatProto() const {
           },
           [&](ItemId id) { proto.set_decl(static_cast<int64_t>(id.value())); },
           [&](const FormattedError& error) {
-            *proto.mutable_error() = error.ToFlatProto();
+            error.WriteToProto(*proto.mutable_error());
           }},
       variant);
   return proto;
@@ -147,23 +141,26 @@ CcType CcType::RValueReferenceTo(CcType pointee_type,
                               PointerTypeKind::kRValueRef, lifetime);
 }
 
-flat_proto::Identifier Identifier::ToFlatProto() const {
-  flat_proto::Identifier proto;
-  proto.set_identifier(identifier_);
-  return proto;
+void HeaderName::WriteToProto(ir_proto::HeaderName& proto) const {
+  proto.set_name(name_);
 }
 
-flat_proto::IntegerConstant IntegerConstant::ToFlatProto() const {
-  flat_proto::IntegerConstant proto;
+void FormattedError::WriteToProto(ir_proto::FormattedError& proto) const {
+  proto.set_fmt(fmt_);
+  proto.set_message(message_);
+}
+
+void Identifier::WriteToProto(ir_proto::Identifier& proto) const {
+  proto.set_identifier(identifier_);
+}
+
+void IntegerConstant::WriteToProto(ir_proto::IntegerConstant& proto) const {
   proto.set_is_negative(is_negative_);
   proto.set_wrapped_value(static_cast<int64_t>(wrapped_value_));
-  return proto;
 }
 
-flat_proto::Operator Operator::ToFlatProto() const {
-  flat_proto::Operator proto;
+void Operator::WriteToProto(ir_proto::Operator& proto) const {
   proto.set_name(name_);
-  return proto;
 }
 
 static std::string SpecialNameToString(SpecialName special_name) {
@@ -184,15 +181,14 @@ flat_proto::SpecialName ToFlatProto(SpecialName special_name) {
   }
 }
 
-flat_proto::UnqualifiedIdentifier ToFlatProto(
-    const UnqualifiedIdentifier& unqualified_identifier) {
-  flat_proto::UnqualifiedIdentifier proto;
+void WriteToProto(const UnqualifiedIdentifier& unqualified_identifier,
+                  ir_proto::UnqualifiedIdentifier& proto) {
   std::visit(
       visitor{
           [&](const Identifier& id) {
-            *proto.mutable_ident() = id.ToFlatProto();
+            id.WriteToProto(*proto.mutable_ident());
           },
-          [&](const Operator& op) { *proto.mutable_oper() = op.ToFlatProto(); },
+          [&](const Operator& op) { op.WriteToProto(*proto.mutable_oper()); },
           [&](const SpecialName& special_name) {
             proto.set_special_name(crubit::ToFlatProto(special_name));
           },
@@ -200,7 +196,6 @@ flat_proto::UnqualifiedIdentifier ToFlatProto(
             proto.mutable_conversion_operator();
           }},
       unqualified_identifier);
-  return proto;
 }
 
 std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {
@@ -419,13 +414,6 @@ FormattedError FormattedError::FromStatus(absl::Status status) {
                        absl::StatusCodeToString(status.code()), "` status)");
   }
   return FormattedError(fmt, std::string(status.message()));
-}
-
-flat_proto::FormattedError FormattedError::ToFlatProto() const {
-  flat_proto::FormattedError proto;
-  proto.set_fmt(fmt_);
-  proto.set_message(message_);
-  return proto;
 }
 
 }  // namespace crubit

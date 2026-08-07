@@ -68,7 +68,7 @@ class Invocation {
     CHECK(!header_targets_.empty());
 
     for (const auto& header : public_headers_) {
-      *ir_.add_public_headers() = header.ToFlatProto();
+      header.WriteToProto(*ir_.add_public_headers());
     }
     ir_.set_current_target(target_.value());
     for (const auto& [target, features] : crubit_features) {
@@ -206,7 +206,7 @@ class ImportContext {
       std::optional<ItemId> enclosing_item_id,
       std::vector<FormattedError> errors, bool is_hard_error = false) {
     ir_proto::UnsupportedItem::Path path;
-    *path.mutable_ident() = ToFlatProto(ident);
+    WriteToProto(ident, *path.mutable_ident());
     if (enclosing_item_id.has_value()) {
       path.set_enclosing_item_id(
           static_cast<int64_t>(enclosing_item_id->value()));

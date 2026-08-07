@@ -58,7 +58,7 @@ class HeaderName {
 
   absl::string_view IncludePath() const { return name_; }
 
-  rs_bindings_from_cc::ir_proto::flat::HeaderName ToFlatProto() const;
+  void WriteToProto(ir_proto::HeaderName& proto) const;
 
   template <typename H>
   friend H AbslHashValue(H h, const HeaderName& header_name) {
@@ -141,7 +141,7 @@ class FormattedError final {
   absl::string_view fmt() const { return fmt_; }
   absl::string_view message() const { return message_; }
 
-  rs_bindings_from_cc::ir_proto::flat::FormattedError ToFlatProto() const;
+  void WriteToProto(ir_proto::FormattedError& proto) const;
 
   // Type URL for use as an `absl::Status` payload.
   static constexpr absl::string_view kFmtPayloadTypeUrl =
@@ -279,7 +279,7 @@ class Identifier {
   }
 
   absl::string_view Ident() const { return identifier_; }
-  rs_bindings_from_cc::ir_proto::flat::Identifier ToFlatProto() const;
+  void WriteToProto(ir_proto::Identifier& proto) const;
 
   template <typename H>
   friend H AbslHashValue(H h, const Identifier& i) {
@@ -316,7 +316,7 @@ class IntegerConstant {
 
   IntegerConstant(const IntegerConstant& other) = default;
   IntegerConstant& operator=(const IntegerConstant& other) = default;
-  rs_bindings_from_cc::ir_proto::flat::IntegerConstant ToFlatProto() const;
+  void WriteToProto(ir_proto::IntegerConstant& proto) const;
 
  private:
   explicit IntegerConstant(const llvm::APSInt& value) {
@@ -344,7 +344,7 @@ class Operator {
 
   absl::string_view Name() const { return name_; }
 
-  rs_bindings_from_cc::ir_proto::flat::Operator ToFlatProto() const;
+  void WriteToProto(ir_proto::Operator& proto) const;
 
  private:
   std::string name_;
@@ -379,8 +379,8 @@ std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
 // functions.
 using UnqualifiedIdentifier =
     std::variant<Identifier, Operator, SpecialName, ConversionOperator>;
-rs_bindings_from_cc::ir_proto::flat::UnqualifiedIdentifier ToFlatProto(
-    const UnqualifiedIdentifier& unqualified_identifier);
+void WriteToProto(const UnqualifiedIdentifier& unqualified_identifier,
+                  ir_proto::UnqualifiedIdentifier& proto);
 
 struct TranslatedUnqualifiedIdentifier {
   UnqualifiedIdentifier cc_identifier;

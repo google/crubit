@@ -1530,11 +1530,11 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
     ir_proto::Field proto_field;
     if (auto rust_id = GetTranslatedFieldName(field_decl);
         rust_id.has_value()) {
-      *proto_field.mutable_rust_identifier() = rust_id->ToFlatProto();
+      proto_field.mutable_rust_identifier()->set_identifier(rust_id->Ident());
     }
     if (auto cpp_id = StringRefToOptionalIdentifier(field_decl->getName());
         cpp_id.has_value()) {
-      *proto_field.mutable_cpp_identifier() = cpp_id->ToFlatProto();
+      proto_field.mutable_cpp_identifier()->set_identifier(cpp_id->Ident());
     }
     if (auto comment = ictx_.GetComment(field_decl); comment.has_value()) {
       proto_field.set_doc_comment(*comment);

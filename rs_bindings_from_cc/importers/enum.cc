@@ -113,7 +113,7 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
     ir_proto::Enumerator proto_enum_val;
     proto_enum_val.mutable_identifier()->set_identifier(
         (*enumerator_name).rs_identifier().Ident());
-    *proto_enum_val.mutable_value() = value->ToFlatProto();
+    value->WriteToProto(*proto_enum_val.mutable_value());
     if (unknown_attr->has_value()) {
       proto_enum_val.set_unknown_attr(std::move(**unknown_attr));
     }

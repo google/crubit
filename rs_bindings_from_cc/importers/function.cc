@@ -1028,10 +1028,8 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   auto name_info = function_decl->getNameInfo();
   auto item = std::make_unique<ir_proto::Item>();
   auto* func = item->mutable_func();
-  *func->mutable_cc_name() =
-      crubit::ToFlatProto(translated_name->cc_identifier);
-  *func->mutable_rs_name() =
-      crubit::ToFlatProto(translated_name->rs_identifier());
+  WriteToProto(translated_name->cc_identifier, *func->mutable_cc_name());
+  WriteToProto(translated_name->rs_identifier(), *func->mutable_rs_name());
   func->set_unique_name(ictx_.GetUniqueName(*function_decl));
   func->set_owning_target(ictx_.GetOwningTarget(function_decl).value());
   if (doc_comment.has_value()) {

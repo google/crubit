@@ -85,7 +85,7 @@ std::unique_ptr<ir_proto::Item> EnumConstantDeclImporter::Import(
 
   auto item = std::make_unique<ir_proto::Item>();
   auto* constant = item->mutable_constant();
-  *constant->mutable_value() = value->ToFlatProto();
+  value->WriteToProto(*constant->mutable_value());
   constant->mutable_cc_name()->set_identifier(
       enumerator_name->cc_identifier.Ident());
   constant->mutable_rs_name()->set_identifier(
