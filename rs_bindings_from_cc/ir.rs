@@ -161,6 +161,7 @@ fn populate_item_id_to_item<'pb>(
     }
 }
 
+#[cfg_attr(enable_heap_profiling, inline(never))]
 pub fn make_ir<'pb>(tree_ir: TreeIR<'pb>) -> IR<'pb> {
     let mut item_id_to_item = HashMap::new();
 

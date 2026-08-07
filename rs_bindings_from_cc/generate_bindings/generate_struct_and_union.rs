@@ -397,6 +397,7 @@ fn field_definition<'a>(
 }
 
 /// Implementation of `BindingsGenerator::generate_record`.
+#[cfg_attr(enable_heap_profiling, inline(never))]
 pub fn generate_record<'a>(
     db: &BindingsGenerator<'a>,
     record: Rc<Record<'a>>,

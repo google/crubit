@@ -59,6 +59,7 @@ fn has_members_with_lifetimes(db: &BindingsGenerator, rc: &Record) -> bool {
     false
 }
 
+#[cfg_attr(enable_heap_profiling, inline(never))]
 pub fn record_lifetime_arity(
     db: &BindingsGenerator,
     rc: &Record,

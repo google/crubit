@@ -13,6 +13,7 @@
 #include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/collect_namespaces.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/profiling.h"
 
 namespace crubit {
 // Contains generated bindings and all related metadata, such as the IR.
@@ -34,6 +35,7 @@ struct BindingsAndMetadata {
 };
 
 // Returns `BindingsAndMetadata` as requested by the user on the command line.
+CRUBIT_PROFILE_NOINLINE
 absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
     Cmdline& cmdline, std::vector<std::string> clang_args,
     absl::flat_hash_map<HeaderName, std::string>

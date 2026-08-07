@@ -7,6 +7,7 @@
 // * a C++ source file with the implementation of the bindings
 
 #include <cstddef>
+#include <cstdlib>
 #include <string>
 #include <utility>
 #include <vector>
@@ -22,6 +23,7 @@
 #include "rs_bindings_from_cc/collect_namespaces.h"
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/profiling.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
@@ -115,7 +117,11 @@ extern "C" int crubit_rs_bindings_from_cc_main(int argc, char* argv[]) {
   crubit::ExpandParamfiles(argc, argv);
   crubit::PreprocessTargetArgs(argc, argv);
   auto args = absl::ParseCommandLine(argc, argv);
+  if (const char* prefix = getenv("RS_BINDINGS_ALLOC_RECORDER_PREFIX")) {
+    crubit::StartHeapProfiling(prefix);
+  }
   absl::Status status = crubit::Main(args);
+  crubit::StopHeapProfiling();
   if (!status.ok()) {
     llvm::errs() << status.message() << "\n";
     return -1;

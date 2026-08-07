@@ -1866,6 +1866,7 @@ fn generate_func_safety_doc<'a>(
 }
 
 /// Implementation of `BindingsGenerator::generate_function`.
+#[cfg_attr(enable_heap_profiling, inline(never))]
 pub fn generate_function<'a>(
     db: &BindingsGenerator<'a>,
     func: Rc<Func<'a>>,

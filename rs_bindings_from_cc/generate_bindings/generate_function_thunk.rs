@@ -126,6 +126,7 @@ pub fn can_skip_cc_thunk<'a>(db: &BindingsGenerator<'a>, func: &Func<'a>) -> boo
     true
 }
 
+#[cfg_attr(enable_heap_profiling, inline(never))]
 pub fn generate_function_thunk<'a>(
     db: &BindingsGenerator<'a>,
     func: &Func<'a>,

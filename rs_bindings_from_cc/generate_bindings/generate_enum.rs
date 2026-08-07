@@ -20,6 +20,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::generate_enum`.
+#[cfg_attr(enable_heap_profiling, inline(never))]
 pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Type);
     let features = db.ir().target_crubit_features(enum_.owning_target());

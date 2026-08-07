@@ -11,6 +11,11 @@ load(
     "multiplatform_rust_test",
 )
 
+_PROFILING_RUSTC_FLAGS = select({
+    "//rs_bindings_from_cc:enable_heap_profiling": ["--cfg=enable_heap_profiling"],
+    "//conditions:default": [],
+})
+
 proto_library(
     name = "generate_bindings_proto",
     srcs = ["generate_bindings.proto"],
@@ -161,6 +166,7 @@ rust_library(
     srcs = [
         "generate_struct_and_union.rs",
     ],
+    rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -300,6 +306,7 @@ rust_library(
     srcs = [
         "generate_enum.rs",
     ],
+    rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -344,6 +351,7 @@ rust_library(
     srcs = [
         "generate_function_thunk.rs",
     ],
+    rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -372,6 +380,7 @@ rust_library(
     srcs = [
         "generate_function.rs",
     ],
+    rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -453,6 +462,7 @@ rust_library(
     srcs = [
         "lifetime_defaults_transform.rs",
     ],
+    rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",

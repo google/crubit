@@ -33,6 +33,16 @@ package(
     default_visibility = ["//:__subpackages__"],
 )
 
+config_setting(
+    name = "enable_heap_profiling",
+    define_values = {"enable_heap_profiling": "1"},
+)
+
+_PROFILING_RUSTC_FLAGS = select({
+    ":enable_heap_profiling": ["--cfg=enable_heap_profiling"],
+    "//conditions:default": [],
+})
+
 rust_bindings_from_cc_binary(
     name = "rs_bindings_from_cc",
     binary = ":rs_bindings_from_cc_main",
@@ -83,11 +93,18 @@ crubit_rust_binary(
 cc_library(
     name = "rs_bindings_from_cc_impl",
     srcs = ["rs_bindings_from_cc.cc"],
+    # Defines CRUBIT_HEAP_PROFILING when --define=enable_heap_profiling=1 is passed,
+    # enabling heap profile recording in rs_bindings_from_cc.cc.
+    defines = select({
+        ":enable_heap_profiling": ["CRUBIT_HEAP_PROFILING"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":cc_ir",
         ":cmdline",
         ":collect_namespaces",
         ":generate_bindings_and_metadata",
+        ":profiling",
         "//common:file_io",
         "//common:status_macros",
         "//third_party/protobuf",
@@ -114,6 +131,7 @@ cc_library(
         ":cmdline",
         ":collect_namespaces",
         ":ir_from_cc",
+        ":profiling",
         ":src_code_gen",
         "//common:status_macros",
         "@abseil-cpp//absl/base:nullability",
@@ -186,6 +204,21 @@ cc_library(
     srcs = [],
     hdrs = ["bazel_types.h"],
     deps = ["//common:string_type"],
+)
+
+cc_library(
+    name = "profiling",
+    srcs = ["profiling.cc"],
+    hdrs = ["profiling.h"],
+    deps = [
+        "@abseil-cpp//absl/strings:string_view",
+    ] + select({
+        ":enable_heap_profiling": [
+            "//file/localfile",
+            "//perftools/profiles/collector/heap:alloc_recorder",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 cc_library(
@@ -435,6 +468,7 @@ rust_library(
     srcs = [
         "ir.rs",
     ],
+    rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = ["//:__subpackages__"],
     deps = [
         ":bazel_label",
@@ -502,6 +536,7 @@ cc_library(
         ":cc_ir",
         ":decl_importer",
         ":frontend_action",
+        ":profiling",
         "//common:status_macros",
         "//common:string_view_conversion",
         "@abseil-cpp//absl/base:nullability",
@@ -578,6 +613,7 @@ cc_library(
     ],
     hdrs = ["src_code_gen_ffi.h"],
     deps = [
+        ":profiling",
         "//common:cc_ffi_types",
         "//rs_bindings_from_cc/generate_bindings:generate_bindings_cc_proto",
         "@abseil-cpp//absl/strings:string_view",
@@ -605,6 +641,7 @@ cc_library(
     hdrs = ["src_code_gen.h"],
     deps = [
         ":cc_ir",
+        ":profiling",
         ":src_code_gen_ffi",
         "//rs_bindings_from_cc/generate_bindings:cc_api_ffi",  # buildcleaner: keep
         "//rs_bindings_from_cc/generate_bindings:generate_bindings_cc_proto",

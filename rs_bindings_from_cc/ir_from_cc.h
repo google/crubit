@@ -17,6 +17,7 @@
 #include "absl/types/span.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/profiling.h"
 #include "llvm/Support/Regex.h"
 
 namespace crubit {
@@ -94,7 +95,7 @@ static_assert(std::is_aggregate_v<IrFromCcOptions>);
 //   to instantiate and generate bindings from.
 // * `crubit_features`: The set of Crubit features to enable for each target.
 //
-absl::StatusOr<IR> IrFromCc(IrFromCcOptions options);
+CRUBIT_PROFILE_NOINLINE absl::StatusOr<IR> IrFromCc(IrFromCcOptions options);
 
 }  // namespace crubit
 
