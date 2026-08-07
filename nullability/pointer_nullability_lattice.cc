@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <functional>
+#include <optional>
 
 #include "absl/base/nullability.h"
 #include "nullability/type_nullability.h"
@@ -17,6 +18,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
+#include "clang/Basic/Specifiers.h"
 #include "llvm/Support/ErrorHandling.h"
 
 namespace clang::tidy::nullability {
@@ -91,6 +93,18 @@ const FieldDecl* absl_nullable fieldTreatedAsNullableAtDestructorEntry(
 bool shouldTreatFieldAsNullableAtDestructorEntry(
     const Expr& E, const PointerNullabilityLatticeBase& Lattice) {
   return fieldTreatedAsNullableAtDestructorEntry(E, Lattice) != nullptr;
+}
+
+std::optional<NullabilityKind> getCapturedVarNullability(
+    const Expr& E, const PointerNullabilityLatticeBase& Lattice) {
+  const auto& Vars = Lattice.capturedVarNullability();
+  if (Vars.empty()) return std::nullopt;
+  const auto* DRE = dyn_cast<DeclRefExpr>(E.IgnoreParenImpCasts());
+  if (DRE == nullptr || !DRE->refersToEnclosingVariableOrCapture())
+    return std::nullopt;
+  auto It = Vars.find(DRE->getDecl());
+  if (It == Vars.end()) return std::nullopt;
+  return It->second;
 }
 
 LatticeJoinEffect PointerNullabilityLatticeBase::join(
