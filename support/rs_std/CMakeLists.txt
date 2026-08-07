@@ -167,6 +167,10 @@ target_include_directories(crubit_support_rs_std_vec INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
+target_link_libraries(crubit_support_rs_std_vec INTERFACE
+crubit_support_internal_bindings_support
+)
+
 add_library(crubit_support_rs_std_waker STATIC
 "waker.cc"
 "waker.h"

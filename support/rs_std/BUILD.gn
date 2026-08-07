@@ -229,6 +229,9 @@ source_set("vec") {
   public = [
     "vec.h",
   ]
+  deps = [
+    "$crubit_src_dir/support/internal:bindings_support",
+  ]
 }
 
 source_set("waker") {

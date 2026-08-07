@@ -857,6 +857,50 @@ fn find_pointer_field_offset_impl<'tcx>(
 struct VecLayoutOffsets {
     ptr_offset: u64,
     len_offset: u64,
+    cap_offset: u64,
+}
+
+fn find_capacity_field_offset<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Option<u64> {
+    find_capacity_field_offset_impl(tcx, ty, 0)
+}
+
+fn find_capacity_field_offset_impl<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    ty: Ty<'tcx>,
+    current_offset: u64,
+) -> Option<u64> {
+    let kind = ty.kind();
+
+    if let ty::TyKind::Pat(underlying_ty, _) = kind {
+        return find_capacity_field_offset_impl(tcx, *underlying_ty, current_offset);
+    }
+
+    if matches!(ty.kind(), ty::TyKind::Uint(ty::UintTy::Usize)) {
+        return Some(current_offset);
+    }
+
+    if let ty::TyKind::Adt(adt_def, args) = kind {
+        if adt_def.is_enum() {
+            return None;
+        }
+
+        let layout = get_layout(tcx, ty).ok()?;
+        let variant = adt_def.non_enum_variant();
+
+        for (i, field) in variant.fields.iter().enumerate() {
+            let field_offset = layout.fields().offset(i).bytes();
+            let field_ty = field.ty(tcx, args);
+            let field_ty = crate::normalize_ty(tcx, tcx.param_env(field.did), field_ty);
+
+            if let Some(offset) =
+                find_capacity_field_offset_impl(tcx, field_ty, current_offset + field_offset)
+            {
+                return Some(offset);
+            }
+        }
+    }
+
+    None
 }
 
 fn compute_vec_layout_offsets<'tcx>(
@@ -872,6 +916,7 @@ fn compute_vec_layout_offsets<'tcx>(
 
     let mut len_offset_val = None;
     let mut ptr_offset_val = None;
+    let mut cap_offset_val = None;
 
     for (i, field) in variant.fields.iter().enumerate() {
         let field_ty = field.ty(tcx, adt_generic_args);
@@ -882,13 +927,20 @@ fn compute_vec_layout_offsets<'tcx>(
             len_offset_val = Some(field_offset);
         } else if let Some(nested_ptr_offset) = find_pointer_field_offset(tcx, field_ty) {
             ptr_offset_val = Some(field_offset + nested_ptr_offset);
+            if let Some(nested_cap_offset) = find_capacity_field_offset(tcx, field_ty) {
+                cap_offset_val = Some(field_offset + nested_cap_offset);
+            }
         }
     }
 
-    let len_offset = len_offset_val.expect("Failed to find len field in Vec");
-    let ptr_offset = ptr_offset_val.expect("Failed to find ptr field in Vec");
+    let len_offset = len_offset_val
+        .unwrap_or_else(|| panic!("Failed to find len field in Vec type {:?}", self_ty));
+    let ptr_offset = ptr_offset_val
+        .unwrap_or_else(|| panic!("Failed to find ptr field in Vec type {:?}", self_ty));
+    let cap_offset = cap_offset_val
+        .unwrap_or_else(|| panic!("Failed to find cap field in Vec type {:?}", self_ty));
 
-    VecLayoutOffsets { ptr_offset, len_offset }
+    VecLayoutOffsets { ptr_offset, len_offset, cap_offset }
 }
 
 fn specialize_vec<'tcx>(
@@ -935,33 +987,12 @@ fn specialize_vec<'tcx>(
 
     let qualified_name = cc_fully_qualified_name.to_string();
     let name = escape_non_identifier_chars(&qualified_name);
-    let drop_trait = tcx.lang_items().drop_trait().expect("Could not find Drop trait");
-    let drop_assoc_fn = tcx
-        .associated_items(drop_trait)
-        .in_definition_order()
-        .find(|item| matches!(item.kind, ty::AssocKind::Fn { .. }))
-        .expect("Drop should have a method");
-    let substs = tcx.mk_args_trait(rs_std.self_ty_rs, std::iter::empty());
-    let drop_thunk_name = format_ident!(
-        "{}",
-        make_thunk_name(db, ThunkKind::TraitMethod { method: drop_assoc_fn, substs })
-    );
-
-    let rs_drop = quote! {
-        #[unsafe(no_mangle)]
-        unsafe extern "C" fn #drop_thunk_name(vec: *mut #rs_fully_qualified_name) {
-            // SAFETY: The caller guarantees `vec` is a valid pointer to an initialized Vec.
-            unsafe { ::core::ptr::drop_in_place(vec) };
-        }
-    };
-
     let drop_decl = quote! {
         ~Vec() noexcept;
     };
     let drop_impl = quote! {
-        extern "C" void #drop_thunk_name(void* vec) noexcept;
         inline rs_std::Vec<#inner_ty_cc>::~Vec() noexcept {
-            #drop_thunk_name(this);
+            destroy();
         }
     };
 
@@ -969,22 +1000,28 @@ fn specialize_vec<'tcx>(
 
     let ptr_offset = Literal::u64_unsuffixed(offsets.ptr_offset);
     let len_offset = Literal::u64_unsuffixed(offsets.len_offset);
+    let cap_offset = Literal::u64_unsuffixed(offsets.cap_offset);
 
     prereqs.includes.insert(CcInclude::bit());
     prereqs.includes.insert(CcInclude::cstddef());
     prereqs.includes.insert(CcInclude::cstdint());
+    prereqs.includes.insert(CcInclude::cstring());
+    prereqs.includes.insert(CcInclude::utility());
+    prereqs.includes.insert(CcInclude::new_header());
+    prereqs.includes.insert(CcInclude::type_traits());
+    prereqs.includes.insert(CcInclude::memory());
     prereqs.includes.insert(db.support_header("internal/check.h"));
 
     let accessors_decl = quote! {
         #inner_ty_cc* data() noexcept;
         #inner_ty_cc const* data() const noexcept;
         std::size_t size() const noexcept;
-        #inner_ty_cc& operator[](std::size_t index) noexcept;
-        #inner_ty_cc const& operator[](std::size_t index) const noexcept;
-        #inner_ty_cc* begin() noexcept;
-        #inner_ty_cc const* begin() const noexcept;
-        #inner_ty_cc* end() noexcept;
-        #inner_ty_cc const* end() const noexcept;
+        std::size_t capacity() const noexcept;
+    private:
+        friend class rs_std::VecBase<rs_std::Vec<#inner_ty_cc>, #inner_ty_cc>;
+        void set_ptr(#inner_ty_cc* ptr) noexcept;
+        void set_len(std::size_t len) noexcept;
+        void set_cap(std::size_t cap) noexcept;
     };
 
     let full_self_ty = quote! { rs_std::Vec<#inner_ty_cc> };
@@ -1001,18 +1038,20 @@ fn specialize_vec<'tcx>(
             return std::bit_cast<std::size_t>(
                 *reinterpret_cast<const std::size_t*>(&storage_[#len_offset]));
         }
-        inline #inner_ty_cc& #full_self_ty::operator[](std::size_t index) noexcept {
-            CRUBIT_CHECK(index < size());
-            return data()[index];
+        inline std::size_t #full_self_ty::capacity() const noexcept {
+            return std::bit_cast<std::size_t>(
+                *reinterpret_cast<const std::size_t*>(&storage_[#cap_offset]));
         }
-        inline #inner_ty_cc const& #full_self_ty::operator[](std::size_t index) const noexcept {
-            CRUBIT_CHECK(index < size());
-            return data()[index];
+        inline void #full_self_ty::set_ptr(#inner_ty_cc* ptr) noexcept {
+            *reinterpret_cast<std::uintptr_t*>(&storage_[#ptr_offset]) =
+                std::bit_cast<std::uintptr_t>(ptr);
         }
-        inline #inner_ty_cc* #full_self_ty::begin() noexcept { return data(); }
-        inline #inner_ty_cc const* #full_self_ty::begin() const noexcept { return data(); }
-        inline #inner_ty_cc* #full_self_ty::end() noexcept { return data() + size(); }
-        inline #inner_ty_cc const* #full_self_ty::end() const noexcept { return data() + size(); }
+        inline void #full_self_ty::set_len(std::size_t len) noexcept {
+            *reinterpret_cast<std::size_t*>(&storage_[#len_offset]) = len;
+        }
+        inline void #full_self_ty::set_cap(std::size_t cap) noexcept {
+            *reinterpret_cast<std::size_t*>(&storage_[#cap_offset]) = cap;
+        }
     };
 
     let ApiSnippets { main_api, cc_details, rs_details } = [
@@ -1023,9 +1062,6 @@ fn specialize_vec<'tcx>(
     ]
     .into_iter()
     .collect();
-
-    let mut rs_details = rs_details;
-    rs_details.tokens.extend(rs_drop);
 
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
     let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
@@ -1039,7 +1075,7 @@ fn specialize_vec<'tcx>(
         template<> __NEWLINE__
         struct alignas(#align_literal)
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
-        rs_std::Vec<#inner_ty_cc> { __NEWLINE__
+        rs_std::Vec<#inner_ty_cc> : public rs_std::VecBase<rs_std::Vec<#inner_ty_cc>, #inner_ty_cc> { __NEWLINE__
         public:
             #main_api_tokens __NEWLINE__
             #drop_decl __NEWLINE__
@@ -1060,6 +1096,7 @@ fn specialize_vec<'tcx>(
         __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
         __HASH_TOKEN__ define #guard_name __NEWLINE__
         #cc_details_tokens __NEWLINE__
+        __NEWLINE__
         #drop_impl __NEWLINE__
         #accessors_impl __NEWLINE__
         __HASH_TOKEN__ endif __NEWLINE__
