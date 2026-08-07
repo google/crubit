@@ -1617,8 +1617,7 @@ pub fn is_bridged_type<'tcx>(
                     }
                 }
                 bail!(
-                    "Can't format reference type `{ty}` because the referent is a bridged type. \
-                        Passing bridged types by reference is not supported."
+                    "crubit.rs/errors/unsupported_type: Passing bridged type `{referent}` by reference is not supported."
                 )
             }
             Ok(None)
@@ -1628,8 +1627,7 @@ pub fn is_bridged_type<'tcx>(
                 && !bridged.is_layout_compatible()
             {
                 bail!(
-                    "Can't format pointer type `{ty}` because the pointee is a bridged type. \
-                        Passing bridged types by pointer is not supported."
+                    "crubit.rs/errors/unsupported_type: Passing bridged type `{pointee}` by pointer is not supported."
                 )
             }
             Ok(None)
@@ -1676,7 +1674,7 @@ pub fn is_bridged_type<'tcx>(
                     && !bridged.is_layout_compatible()
                 {
                     bail!(
-                        "Can't format ADT as it has a generic type `{ty}` that is a bridged type"
+                        "crubit.rs/errors/unsupported_type: Types containing generic parameter `{ty}` (which is a bridged type) are not supported."
                     );
                 }
             }
