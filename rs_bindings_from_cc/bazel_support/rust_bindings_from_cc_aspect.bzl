@@ -520,17 +520,16 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         use_label_encoded_names_for_deps = use_label_encoded_names_for_deps,
     )
 
-rust_bindings_from_cc_aspect = aspect(
-    implementation = _rust_bindings_from_cc_aspect_impl,
-    attr_aspects = [
-        # for cc_library and similar rules
+def _attr_predicate(_ctx):
+    return [
         "deps",
-        # for cc_proto_aspect implicit deps
-        "_cc_lib",
-        # for cc_stubby_library implicit deps
         "implicit_cc_deps",
         "implicit_rust_deps",
-    ],
+    ]
+
+rust_bindings_from_cc_aspect = aspect(
+    implementation = _rust_bindings_from_cc_aspect_impl,
+    attr_aspects = _attr_predicate,
     requires = [rust_cc_proto_library_aspect],
     required_aspect_providers = [CcInfo],
     attrs = bindings_attrs | {
