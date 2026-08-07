@@ -74,12 +74,12 @@ SpecialMemberFunc GetSpecialMemberFunc(
     absl::FunctionRef<clang::CXXMethodDecl*(clang::CXXRecordDecl*)> getter) {
   auto* cxx_record_decl = clang::dyn_cast<clang::CXXRecordDecl>(&record_decl);
   if (cxx_record_decl == nullptr) {
-    return SpecialMemberFunc::kTrivial;
+    return SpecialMemberFunc::TRIVIAL;
   }
 
   clang::CXXMethodDecl* decl = getter(cxx_record_decl);
   if (decl == nullptr) {
-    return SpecialMemberFunc::kUnavailable;
+    return SpecialMemberFunc::UNAVAILABLE;
   }
 
   switch (decl->getAccess()) {
@@ -87,12 +87,12 @@ SpecialMemberFunc GetSpecialMemberFunc(
       break;
     case clang::AS_protected:
     case clang::AS_private:
-      return SpecialMemberFunc::kUnavailable;
+      return SpecialMemberFunc::UNAVAILABLE;
     case clang::AS_none:
       CHECK(false &&
             "We should never be encoding a 'none' access specifier in IR.");
       // We have to return something. kDeleted seems like a safe fallback.
-      return SpecialMemberFunc::kUnavailable;
+      return SpecialMemberFunc::UNAVAILABLE;
   }
 
   if (auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(decl);
@@ -118,20 +118,20 @@ SpecialMemberFunc GetSpecialMemberFunc(
           ictx->sema_.SetCtorInitializers(mutable_ctor, false);
         });
     if (diagnostic_recorder.getNumErrors() != 0) {
-      return SpecialMemberFunc::kUnavailable;
+      return SpecialMemberFunc::UNAVAILABLE;
     }
   }
   if (ictx != nullptr && !GetInvalidCallTarget(*ictx, decl).empty()) {
-    return SpecialMemberFunc::kUnavailable;
+    return SpecialMemberFunc::UNAVAILABLE;
   }
   if (decl->isDeleted()) {
-    return SpecialMemberFunc::kUnavailable;
+    return SpecialMemberFunc::UNAVAILABLE;
   } else if (decl->isTrivial()) {
-    return SpecialMemberFunc::kTrivial;
+    return SpecialMemberFunc::TRIVIAL;
   } else if (HasNoUserProvidedSpecialMember(cxx_record_decl, getter)) {
-    return SpecialMemberFunc::kNontrivialMembers;
+    return SpecialMemberFunc::NONTRIVIAL_MEMBERS;
   } else {
-    return SpecialMemberFunc::kNontrivialUserDefined;
+    return SpecialMemberFunc::NONTRIVIAL_USER_DEFINED;
   }
 }
 

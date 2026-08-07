@@ -206,7 +206,7 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
   proto_enum->set_owning_target(std::move(owning_target).value());
   proto_enum->set_source_loc(
       ictx_.ConvertSourceLocation(enum_decl->getBeginLoc(), &name_info));
-  *proto_enum->mutable_underlying_type() = type->ToFlatProto();
+  type->WriteToProto(*proto_enum->mutable_underlying_type());
   if (enum_decl->isCompleteDefinition()) {
     for (auto& enumerator : enumerators) {
       *proto_enum->add_enumerators() = std::move(enumerator);

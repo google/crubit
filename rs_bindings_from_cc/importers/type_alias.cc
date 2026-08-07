@@ -227,7 +227,7 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
   if (unknown_attr->has_value()) {
     type_alias->set_unknown_attr(std::move(**unknown_attr));
   }
-  *type_alias->mutable_underlying_type() = underlying_type->ToFlatProto();
+  underlying_type->WriteToProto(*type_alias->mutable_underlying_type());
   type_alias->set_source_loc(
       ictx_.ConvertSourceLocation(decl->getBeginLoc(), nullptr));
   if (enclosing_item_id->has_value()) {
