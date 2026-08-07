@@ -5,34 +5,34 @@
 use crate::crubit_cc_std_internal::std_allocator::{self, shared_weak_count};
 
 /// A smart pointer that shares ownership of another object of type `T` via a pointer,
-/// ABI-compatible with `std::shared_ptr<const T>`.
+/// ABI-compatible with `std::shared_ptr<T>`.
 #[allow(non_snake_case)]
 #[repr(C)]
-pub struct shared_ptr_const<T: Sized> {
-    // Safety: `ptr` and `cntrl` come from a valid `std::shared_ptr<const T>`
+pub struct shared_ptr<T: Sized> {
+    // Safety: `ptr` and `cntrl` come from a valid `std::shared_ptr<T>`
     ptr: *const T,
     // Safety: `cntrl` is a nullable pointer to a valid  `std::__shared_weak_count`
     cntrl: *mut shared_weak_count,
 }
 
-// SAFETY: shared_ptr_const is Send and Sync if T is Send and Sync. Anything less is too restrictive
-// since a &shared_ptr_const<T> can be cloned by another thread, effectively moving the `T` to the
+// SAFETY: shared_ptr is Send and Sync if T is Send and Sync. Anything less is too restrictive
+// since a &shared_ptr<T> can be cloned by another thread, effectively moving the `T` to the
 // other thread.
-unsafe impl<T: Sized + Send + Sync> Send for shared_ptr_const<T> {}
-unsafe impl<T: Sized + Send + Sync> Sync for shared_ptr_const<T> {}
+unsafe impl<T: Sized + Send + Sync> Send for shared_ptr<T> {}
+unsafe impl<T: Sized + Send + Sync> Sync for shared_ptr<T> {}
 
-impl<T: Sized> shared_ptr_const<T> {
-    /// Creates a `shared_ptr_const` from a raw pointer and a control block pointer.
+impl<T: Sized> shared_ptr<T> {
+    /// Creates a `shared_ptr` from a raw pointer and a control block pointer.
     ///
     /// # Safety
     ///
     /// - `ptr` must be a valid pointer to a `T` or null.
     /// - `ptr` and `cntrl` must have come from `into_raw_parts` or `release` of a
-    ///   `shared_ptr_const`, i.e. they constitute a valid `std::shared_ptr<const T>`.
-    /// - The reference count must already account for the returned `shared_ptr_const`; this
+    ///   `shared_ptr`, i.e. they constitute a valid `std::shared_ptr<T>`.
+    /// - The reference count must already account for the returned `shared_ptr`; this
     ///   function does not increment it.
     pub unsafe fn from_raw_parts(ptr: *const T, cntrl: *mut shared_weak_count) -> Self {
-        shared_ptr_const { ptr, cntrl }
+        shared_ptr { ptr, cntrl }
     }
 
     /// Returns `true` if `this` is a null pointer.
@@ -46,9 +46,9 @@ impl<T: Sized> shared_ptr_const<T> {
     }
 
     /// Releases the ownership of the object and control block pointed to by `this` without
-    /// decrementing the reference count, replacing this `shared_ptr_const` with a null pointer.
+    /// decrementing the reference count, replacing this `shared_ptr` with a null pointer.
     ///
-    /// Where possible, prefer `into_raw_parts` in order to avoid null `shared_ptr_const`s.
+    /// Where possible, prefer `into_raw_parts` in order to avoid null `shared_ptr`s.
     pub fn release(this: &mut Self) -> (*const T, *mut shared_weak_count) {
         (
             core::mem::replace(&mut this.ptr, core::ptr::null()),
@@ -56,7 +56,7 @@ impl<T: Sized> shared_ptr_const<T> {
         )
     }
 
-    /// Consumes the `shared_ptr_const` without decrementing the reference count, returning the
+    /// Consumes the `shared_ptr` without decrementing the reference count, returning the
     /// owned raw pointer and control block pointer.
     pub fn into_raw_parts(mut this: Self) -> (*const T, *mut shared_weak_count) {
         Self::release(&mut this)
@@ -70,17 +70,17 @@ impl<T: Sized> shared_ptr_const<T> {
     }
 }
 
-impl<T: Sized> Clone for shared_ptr_const<T> {
+impl<T: Sized> Clone for shared_ptr<T> {
     fn clone(&self) -> Self {
         // SAFETY: `self.cntrl` is a nullable pointer to a valid  `std::__shared_weak_count`
         unsafe {
             std_allocator::shared_ptr_ref(self.cntrl);
         }
-        shared_ptr_const { ptr: self.ptr, cntrl: self.cntrl }
+        shared_ptr { ptr: self.ptr, cntrl: self.cntrl }
     }
 }
 
-impl<T: Sized> Drop for shared_ptr_const<T> {
+impl<T: Sized> Drop for shared_ptr<T> {
     fn drop(&mut self) {
         // SAFETY: `self.cntrl` is a nullable pointer to a valid  `std::__shared_weak_count`
         unsafe {

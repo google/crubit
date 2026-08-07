@@ -477,7 +477,7 @@ impl<'a> UniformReprTemplateType<'a> {
             }
             Self::StdSharedPtr { element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
-                quote! { ::cc_std::std::shared_ptr_const::<#element_type_tokens> }
+                quote! { ::cc_std::std::shared_ptr::<#element_type_tokens> }
             }
             Self::AbslSpan { is_const, include_lifetime, element_type, lifetime } => {
                 let element_type_tokens = element_type.to_token_stream(db);
