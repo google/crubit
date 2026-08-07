@@ -10,8 +10,8 @@ use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
 use ir_rust_proto::{
     CommentView, ConstantView, EnumView, EnumeratorView, ExistingRustTypeView, FuncView,
-    GlobalVarView, IncompleteRecordView, IntegerConstantView, NamespaceView, RecordView,
-    SizeAlignView, TypeAliasView, UseModView,
+    GlobalVarView, IdentifierView, IncompleteRecordView, IntegerConstantView, NamespaceView,
+    RecordView, SizeAlignView, TypeAliasView, UseModView,
 };
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -19,13 +19,29 @@ use quote::{quote, ToTokens};
 use std::collections::hash_map::{Entry, HashMap};
 use std::collections::{BTreeMap, HashSet};
 use std::fmt::{self, Debug, Display};
-use std::hash::Hash;
+use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 
 mod proto_to_ir;
 pub use proto_to_ir::proto_to_ir;
 
 pub use ir_rust_proto::bridge_type::callable::{BackingType, FnTrait};
+
+/// Trait for validating a proto before converting it to an IR item.
+///
+/// Separates eager validation from lazy, infallible construction later.
+trait ProtoWrapper<'pb>: Sized {
+    type ProtoView;
+
+    /// Validates the proto, returning an error if it is invalid.
+    fn validate(proto: Self::ProtoView) -> Result<()>;
+
+    /// Converts the proto to the IR item.
+    ///
+    /// This function should only be called after `validate` has returned `Ok`. If the proto isn't
+    /// validated, methods on the resulting IR item may panic.
+    fn from_proto(proto: Self::ProtoView) -> Self;
+}
 
 /// Common data about all items.
 pub trait GenericItem<'pb> {
@@ -656,36 +672,62 @@ impl TypeWithDeclId for CcType {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Identifier<'pb> {
-    pub(crate) identifier: &'pb str,
+    proto: IdentifierView<'pb>,
+}
+
+impl<'pb> ProtoWrapper<'pb> for Identifier<'pb> {
+    type ProtoView = IdentifierView<'pb>;
+
+    fn validate(proto: IdentifierView<'pb>) -> Result<()> {
+        let _ = proto.identifier().to_str()?;
+        Ok(())
+    }
+
+    fn from_proto(proto: IdentifierView<'pb>) -> Self {
+        Identifier { proto }
+    }
 }
 
 impl<'pb> Identifier<'pb> {
-    pub fn new(identifier: &'pb str) -> Self {
-        Self { identifier }
-    }
-
     pub fn as_str(&self) -> &'pb str {
-        self.identifier
+        self.proto
+            .identifier()
+            .to_str()
+            .expect("`identifier` should have been validated by `Identifier::validate`")
     }
 }
 
 impl Display for Identifier<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.identifier)
+        write!(f, "{}", self.as_str())
     }
 }
 
 impl Debug for Identifier<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "\"{}\"", self.identifier)
+        write!(f, "\"{}\"", self.as_str())
+    }
+}
+
+impl PartialEq for Identifier<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_str() == other.as_str()
+    }
+}
+
+impl Eq for Identifier<'_> {}
+
+impl Hash for Identifier<'_> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_str().hash(state);
     }
 }
 
 impl PartialEq<str> for Identifier<'_> {
     fn eq(&self, other: &str) -> bool {
-        self.identifier == other
+        self.as_str() == other
     }
 }
 
@@ -801,7 +843,7 @@ impl<'pb> UnqualifiedIdentifier<'pb> {
         }
     }
     pub fn identifier_as_str(&self) -> Option<&'pb str> {
-        self.as_identifier().map(|id| id.identifier)
+        self.as_identifier().map(|id| id.as_str())
     }
 }
 
@@ -820,7 +862,7 @@ impl Debug for UnqualifiedIdentifier<'_> {
 impl PartialEq<str> for UnqualifiedIdentifier<'_> {
     fn eq(&self, other: &str) -> bool {
         if let UnqualifiedIdentifier::Identifier(identifier) = self {
-            identifier.identifier == other
+            identifier.as_str() == other
         } else {
             false
         }
@@ -1849,7 +1891,7 @@ impl<'pb> Record<'pb> {
         matches!(
             self.template_specialization,
             Some(TemplateSpecialization { kind: TemplateSpecializationKind::StdStringView, .. })
-        ) && self.rs_name.identifier == "raw_string_view"
+        ) && self.rs_name.as_str() == "raw_string_view"
     }
 
     pub fn is_union(&self) -> bool {
@@ -3513,18 +3555,16 @@ mod tests {
 
     #[gtest]
     fn test_identifier_debug_print() {
-        assert_eq!(format!("{:?}", Identifier { identifier: "hello".into() }), "\"hello\"");
+        let proto = protobuf::proto!(ir_rust_proto::Identifier { identifier: "hello" });
+        let identifier = Identifier::try_from(proto.as_view()).unwrap();
+        assert_eq!(format!("{identifier:?}"), "\"hello\"");
     }
 
     #[gtest]
     fn test_unqualified_identifier_debug_print() {
-        assert_eq!(
-            format!(
-                "{:?}",
-                UnqualifiedIdentifier::Identifier(Identifier { identifier: "hello".into() })
-            ),
-            "\"hello\""
-        );
+        let proto = protobuf::proto!(ir_rust_proto::Identifier { identifier: "hello" });
+        let identifier = Identifier::try_from(proto.as_view()).unwrap();
+        assert_eq!(format!("{:?}", UnqualifiedIdentifier::Identifier(identifier)), "\"hello\"");
         assert_eq!(format!("{:?}", UnqualifiedIdentifier::Constructor), "Constructor");
         assert_eq!(format!("{:?}", UnqualifiedIdentifier::Destructor), "Destructor");
     }

@@ -9,8 +9,7 @@ use arc_anyhow::Result;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::{
-    self, Func, GenericItem, Identifier, Item, LifetimeId, LifetimeName, Record, TreeIR,
-    TypeWithDeclId, IR,
+    self, Func, GenericItem, Item, LifetimeId, LifetimeName, Record, TreeIR, TypeWithDeclId, IR,
 };
 use ir_rust_proto::IRProto;
 use protobuf::Parse;
@@ -172,11 +171,6 @@ pub fn make_test_ir_dependency<'pb>(
     Ok(ir)
 }
 
-/// Creates an identifier
-pub fn ir_id(name: &str) -> Identifier {
-    Identifier::new(name)
-}
-
 pub fn retrieve_lifetime_param_id(names: &[LifetimeName], name: &str) -> LifetimeId {
     for param in names {
         if param.name() == name {
@@ -232,6 +226,7 @@ mod tests {
     use arc_anyhow::Result;
     use crubit_feature::CrubitFeature;
     use googletest::{expect_eq, gtest};
+    use ir::Identifier;
     use multiplatform_testing::Platform;
     use std::rc::Rc;
 
@@ -271,7 +266,8 @@ mod tests {
         let ir = make_test_ir(&proto).unwrap();
         let r1 = retrieve_record(&ir, "R1").clone();
         let mut r2 = r1.clone();
-        r2.set_rs_name(ir::Identifier::new("R2"));
+        let r2_name_proto = protobuf::proto!(ir_rust_proto::Identifier { identifier: "R2" });
+        r2.set_rs_name(Identifier::try_from(r2_name_proto.as_view()).unwrap());
         let _ = make_ir_from_items([Item::Record(Rc::new(r1)), Item::Record(Rc::new(r2))]);
     }
 }
