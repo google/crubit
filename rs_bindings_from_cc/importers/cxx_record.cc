@@ -374,14 +374,14 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
     TraitImplPolarity polarity;
     if (derived_trait.starts_with('!')) {
       trait = derived_trait.substr(1);
-      polarity = TraitImplPolarity::kNegative;
+      polarity = TraitImplPolarity::NEGATIVE;
     } else {
       trait = derived_trait;
-      polarity = TraitImplPolarity::kPositive;
+      polarity = TraitImplPolarity::POSITIVE;
     }
 
     if (trait == "Send" || trait == "Sync") {
-      if (polarity == TraitImplPolarity::kNegative) {
+      if (polarity == TraitImplPolarity::NEGATIVE) {
         return absl::InvalidArgumentError(absl::StrCat(
             "Trait '", trait, "' is negatively derived by default."));
       }
@@ -395,7 +395,7 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
     TraitImplPolarity* absl_nullable selected = result.Polarity(trait);
     if (selected == nullptr) {
       // Custom (unrecognized) trait.
-      if (polarity == TraitImplPolarity::kNegative) {
+      if (polarity == TraitImplPolarity::NEGATIVE) {
         return absl::InvalidArgumentError(absl::StrCat(
             "Custom trait '", trait, "' cannot be negatively derived."));
       }
@@ -406,7 +406,7 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
           "Custom trait '", trait, "' is derived multiple times."));
     }
 
-    if (*selected == TraitImplPolarity::kNone) {
+    if (*selected == TraitImplPolarity::NONE) {
       // Trait is not yet derived, happy path :)
       *selected = polarity;
       continue;
@@ -860,18 +860,18 @@ absl::StatusOr<SafetyAnnotation> CXXRecordDeclImporter::GetSafetyAnnotation(
           "`crubit_override_unsafe` annotation must have a bool argument");
     }
     if (*is_unsafe) {
-      return SafetyAnnotation::kUnsafe;
+      return SafetyAnnotation::SAFETY_ANNOTATION_UNSAFE;
     } else {
-      return SafetyAnnotation::kDisableUnsafe;
+      return SafetyAnnotation::SAFETY_ANNOTATION_DISABLE_UNSAFE;
     }
   }
 
   if (decl.hasAttr<clang::PointerAttr>() &&
       ictx_.IsUnsafeViewEnabledForTarget(ictx_.GetOwningTarget(&decl))) {
-    return SafetyAnnotation::kUnsafe;
+    return SafetyAnnotation::SAFETY_ANNOTATION_UNSAFE;
   }
 
-  return SafetyAnnotation::kUnannotated;
+  return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
 }
 
 std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
@@ -1320,7 +1320,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
 
   bool impl_debug = false;
   if (record_impl_debug_enabled) {
-    if (trait_derives->debug != TraitImplPolarity::kNone) {
+    if (trait_derives->debug != TraitImplPolarity::NONE) {
       return unsupported(FormattedError::Static(
           "derive(Debug) is deprecated when record_impl_debug is enabled. "
           "Debug is implemented by default; use CRUBIT_OVERRIDE_DEBUG(false) "
@@ -1384,13 +1384,12 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   *record->mutable_trait_derives() = trait_derives->ToFlatProto();
   record->set_is_derived_class(is_derived_class);
   record->set_override_alignment(override_alignment);
-  record->set_safety_annotation(ToFlatProto(*safety_annotation));
+  record->set_safety_annotation(*safety_annotation);
   record->set_copy_constructor(
-      ToFlatProto(GetCopyCtorSpecialMemberFunc(ictx_, *record_decl)));
+      GetCopyCtorSpecialMemberFunc(ictx_, *record_decl));
   record->set_move_constructor(
-      ToFlatProto(GetMoveCtorSpecialMemberFunc(ictx_, *record_decl)));
-  record->set_destructor(
-      ToFlatProto(GetDestructorSpecialMemberFunc(*record_decl)));
+      GetMoveCtorSpecialMemberFunc(ictx_, *record_decl));
+  record->set_destructor(GetDestructorSpecialMemberFunc(*record_decl));
   record->set_is_trivial_abi(record_decl->canPassInRegisters());
   record->set_is_inheritable(!is_effectively_final);
   record->set_is_abstract(record_decl->isAbstract());

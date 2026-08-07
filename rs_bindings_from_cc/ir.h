@@ -158,39 +158,9 @@ class FormattedError final {
   std::string message_;
 };
 
-// Whether a function is annotated with `CRUBIT_UNSAFE` or
-// `CRUBIT_DISABLE_UNSAFE`. `[[clang::unsafe_buffer_usage]]` is also considered
-// unsafe.
-enum class SafetyAnnotation : char { kDisableUnsafe, kUnsafe, kUnannotated };
-
-rs_bindings_from_cc::ir_proto::flat::SafetyAnnotation ToFlatProto(
-    SafetyAnnotation safety_annotation);
-
-enum class PointerTypeKind {
-  kRValueRef,
-  kLValueRef,
-  kNullable,
-  kNonNull,
-  kOwned
-};
-
-rs_bindings_from_cc::ir_proto::flat::PointerTypeKind ToFlatProto(
-    PointerTypeKind pointer_type_kind);
-
-// Calling conventions for functions that are supported by Crubit.
-//
-// This is a subset of the calling conventions supported by Clang.
-enum class CallingConv {
-  kC,              // __attribute__((cdecl))
-  kX86VectorCall,  // __attribute__((vectorcall))
-  kX86FastCall,    // __attribute__((fastcall))
-  kX864ThisCall,   // __attribute__((thiscall))
-  kX86StdCall,     // __attribute__((stdcall))
-  kWin64,          // __attribute__((ms_abi))
-};
-
-rs_bindings_from_cc::ir_proto::flat::CallingConv ToFlatProto(
-    CallingConv calling_conv);
+using ir_proto::CallingConv;
+using ir_proto::PointerTypeKind;
+using ir_proto::SafetyAnnotation;
 
 struct CcType {
   rs_bindings_from_cc::ir_proto::flat::CcType ToFlatProto() const;
@@ -357,17 +327,11 @@ inline std::ostream& operator<<(std::ostream& stream, const Operator& op) {
                 << op.Name() << "`";
 }
 
-enum SpecialName {
-  kDestructor,
-  kConstructor,
-};
+using ir_proto::SpecialName;
 
 // The target type of the conversion operator is not stored in the struct but
 // rather is resolved using the enclosing Func's return type.
 struct ConversionOperator {};
-
-rs_bindings_from_cc::ir_proto::flat::SpecialName ToFlatProto(
-    SpecialName special_name);
 
 std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
 
@@ -410,31 +374,20 @@ struct TranslatedIdentifier {
 // functions in narrow cases: even for a nontrivial special member function, if
 // it is kNontrivialMembers, we can directly implement it in Rust in terms of
 // the member variables.
-enum class SpecialMemberFunc : char {
-  kTrivial,
-  // Nontrivial, but only because of a member variable with a nontrivial special
-  // member function.
-  kNontrivialMembers,
-  // Nontrivial because of a user-defined special member function in this or a
-  // base class.
-  kNontrivialUserDefined,
-  // Deleted or non-public.
-  kUnavailable,
-};
-
-rs_bindings_from_cc::ir_proto::flat::SpecialMemberFunc ToFlatProto(
-    SpecialMemberFunc f);
+using ir_proto::SpecialMemberFunc;
 
 inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
   switch (f) {
-    case SpecialMemberFunc::kTrivial:
+    case SpecialMemberFunc::TRIVIAL:
       return o << "Trivial";
-    case SpecialMemberFunc::kNontrivialMembers:
+    case SpecialMemberFunc::NONTRIVIAL_MEMBERS:
       return o << "NontrivialMembers";
-    case SpecialMemberFunc::kNontrivialUserDefined:
+    case SpecialMemberFunc::NONTRIVIAL_USER_DEFINED:
       return o << "NontrivialUserDefined";
-    case SpecialMemberFunc::kUnavailable:
+    case SpecialMemberFunc::UNAVAILABLE:
       return o << "Unavailable";
+    default:
+      return o << "Unspecified";
   }
 }
 
@@ -534,10 +487,7 @@ struct TemplateSpecialization {
   Kind kind = NonSpecial{};
 };
 
-enum class TraitImplPolarity : int8_t { kNegative, kNone, kPositive };
-
-rs_bindings_from_cc::ir_proto::flat::TraitImplPolarity ToFlatProto(
-    TraitImplPolarity trait_impl_polarity);
+using ir_proto::TraitImplPolarity;
 
 // The set of traits to derive on the Rust type.
 struct TraitDerives {
@@ -546,9 +496,9 @@ struct TraitDerives {
   TraitImplPolarity* absl_nullable Polarity(absl::string_view trait);
 
   // <internal link> start
-  TraitImplPolarity clone = TraitImplPolarity::kNone;
-  TraitImplPolarity copy = TraitImplPolarity::kNone;
-  TraitImplPolarity debug = TraitImplPolarity::kNone;
+  TraitImplPolarity clone = TraitImplPolarity::NONE;
+  TraitImplPolarity copy = TraitImplPolarity::NONE;
+  TraitImplPolarity debug = TraitImplPolarity::NONE;
   // <internal link> end
   bool send = false;
   bool sync = false;
