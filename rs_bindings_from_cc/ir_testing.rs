@@ -190,7 +190,7 @@ pub fn retrieve_lifetime_param_id(names: &[LifetimeName], name: &str) -> Lifetim
 /// Panics if no such function could be found.
 pub fn retrieve_func<'pb>(ir: &'pb IR<'pb>, name: &str) -> &'pb Func<'pb> {
     for func in ir.functions() {
-        if *func.rs_name() == ir::UnqualifiedIdentifier::Identifier(ir_id(name)) {
+        if *func.rs_name() == name {
             return func;
         }
     }

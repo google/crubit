@@ -10,7 +10,7 @@ use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
 use ir_rust_proto::IRProto;
 use ir_testing::{
-    ir_id, make_test_ir, retrieve_func, retrieve_record, retrieve_type_alias_record,
+    make_test_ir, retrieve_func, retrieve_record, retrieve_type_alias_record,
     with_full_lifetime_macros, DEPENDENCY_TARGET, TESTING_TARGET,
 };
 use itertools::Itertools;
@@ -1675,10 +1675,7 @@ fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
     // Verify that there is only 1 record for each specialization.
     assert_eq!(1, ir.records().filter(|r| r.cc_name().as_str() == "MyStruct<int>").count());
     assert_eq!(1, ir.records().filter(|r| r.cc_name().as_str() == "MyStruct<float>").count());
-    let functions = ir
-        .functions()
-        .filter(|f| *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("MyMethod")))
-        .collect_vec();
+    let functions = ir.functions().filter(|f| *f.rs_name() == "MyMethod").collect_vec();
 
     // Verify that there is only 1 function per instantiation.
     assert_eq!(2, functions.len());
@@ -1735,12 +1732,8 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
 
     let method_mangled_names = ir
         .functions()
-        .filter_map(|f| match f.rs_name() {
-            UnqualifiedIdentifier::Identifier(id) if id.as_str() == "MyMethod" => {
-                Some(f.mangled_name())
-            }
-            _ => None,
-        })
+        .filter(|f| *f.rs_name() == "MyMethod")
+        .map(|f| f.mangled_name())
         .collect_vec();
     assert_eq!(
         vec![
@@ -3115,10 +3108,7 @@ fn test_member_function_params() {
     .unwrap();
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
-    let foo_func = ir
-        .functions()
-        .find(|f| *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("Foo")))
-        .unwrap();
+    let foo_func = ir.functions().find(|f| *f.rs_name() == "Foo").unwrap();
     let param_names: Vec<_> = foo_func.params().iter().map(|p| p.identifier().as_str()).collect();
     assert_eq!(param_names, vec!["__this", "x", "y"]);
 }
@@ -3152,7 +3142,7 @@ fn assert_member_function_has_instance_method_metadata(
     assert_member_function_with_predicate_has_instance_method_metadata(
         &ir,
         "Struct",
-        |f| *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id(name)),
+        |f| *f.rs_name() == name,
         expected_metadata,
     );
 }
@@ -3237,23 +3227,14 @@ fn test_member_function_rvalue_ref_qualified_this_param_type() {
 
     let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
 
-    let rvalue_ref_method = ir
-        .functions()
-        .find(|f| {
-            *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_qualified_method"))
-        })
-        .unwrap();
+    let rvalue_ref_method =
+        ir.functions().find(|f| *f.rs_name() == "rvalue_ref_qualified_method").unwrap();
     let this_param = &rvalue_ref_method.params()[0].type_().variant().as_pointer().unwrap();
     assert_eq!(this_param.kind(), PointerTypeKind::RValueRef);
     assert!(!this_param.pointee_type().is_const());
 
-    let rvalue_ref_const_method = ir
-        .functions()
-        .find(|f| {
-            *f.rs_name()
-                == UnqualifiedIdentifier::Identifier(ir_id("rvalue_ref_const_qualified_method"))
-        })
-        .unwrap();
+    let rvalue_ref_const_method =
+        ir.functions().find(|f| *f.rs_name() == "rvalue_ref_const_qualified_method").unwrap();
     let const_this_param =
         rvalue_ref_const_method.params()[0].type_().variant().as_pointer().unwrap();
     assert_eq!(const_this_param.kind(), PointerTypeKind::RValueRef);
@@ -3318,10 +3299,9 @@ fn get_func_names<'pb>(proto: &'pb ir_rust_proto::IRProto) -> Vec<ir::Unqualifie
 #[gtest]
 fn test_identifier_function_name() {
     let proto = ir_proto_from_cc("void Function();").unwrap();
-    assert_eq!(
-        get_func_names(&proto),
-        vec![ir::UnqualifiedIdentifier::Identifier(ir_id("Function"))],
-    );
+    let func_names = get_func_names(&proto);
+    assert_eq!(func_names.len(), 1);
+    assert_eq!(func_names[0], "Function");
 }
 
 #[gtest]
@@ -3431,12 +3411,12 @@ fn test_elided_lifetimes() {
     let b_id = lifetime_params[1].id();
     assert_eq!(func.return_type().variant().as_pointer().unwrap().lifetime().unwrap(), a_id);
 
-    assert_eq!(*func.params()[0].identifier(), ir_id("__this"));
+    assert_eq!(*func.params()[0].identifier(), "__this");
     let ptr = &func.params()[0].type_().variant().as_pointer().unwrap();
     assert!(!ptr.pointee_type().is_const());
     assert_eq!(ptr.lifetime().unwrap(), a_id);
 
-    assert_eq!(*func.params()[1].identifier(), ir_id("i"));
+    assert_eq!(*func.params()[1].identifier(), "i");
     let ptr = &func.params()[1].type_().variant().as_pointer().unwrap();
     assert!(!ptr.pointee_type().is_const());
     assert_eq!(ptr.lifetime().unwrap(), b_id);
@@ -3456,7 +3436,7 @@ fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     assert_eq!(f.lifetime_params().len(), 1);
 
     let p = f.params().first().expect("IR should contain `__this` parameter");
-    assert_eq!(*p.identifier(), ir_id("__this"));
+    assert_eq!(*p.identifier(), "__this");
 
     let p_ptr = p.type_().variant().as_pointer().unwrap();
     assert_eq!(p_ptr.lifetime().unwrap(), f.lifetime_params()[0].id());
@@ -3716,10 +3696,7 @@ fn test_function_has_item_id() {
     let proto = ir_proto_from_cc("int foo();").unwrap();
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
-    let function = ir
-        .functions()
-        .find(|i| *i.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("foo")))
-        .unwrap();
+    let function = ir.functions().find(|i| *i.rs_name() == "foo").unwrap();
     assert_ne!(function.id(), ItemId::new_for_testing(0));
 }
 
@@ -3875,8 +3852,7 @@ fn test_namespaces() {
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
 
-    let namespace =
-        ir.namespaces().find(|n| n.rs_name() == &ir_id("test_namespace_bindings")).unwrap();
+    let namespace = ir.namespaces().find(|n| *n.rs_name() == "test_namespace_bindings").unwrap();
     let namespace_items = namespace.children().iter().collect_vec();
 
     assert_ir_matches!(
@@ -3934,8 +3910,7 @@ fn test_nested_namespace_definition() {
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
 
-    let namespace =
-        ir.namespaces().find(|n| n.rs_name() == &ir_id("test_namespace_bindings")).unwrap();
+    let namespace = ir.namespaces().find(|n| *n.rs_name() == "test_namespace_bindings").unwrap();
     let namespace_items = namespace.children().iter().collect_vec();
 
     assert_items_match!(
@@ -3945,7 +3920,7 @@ fn test_nested_namespace_definition() {
         },]
     );
 
-    let inner_namespace = ir.namespaces().find(|n| n.rs_name() == &ir_id("inner")).unwrap();
+    let inner_namespace = ir.namespaces().find(|n| *n.rs_name() == "inner").unwrap();
     let inner_namespace_items = inner_namespace.children().iter().collect_vec();
 
     assert_items_match!(
@@ -3982,14 +3957,13 @@ fn test_enclosing_item_ids() {
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
 
-    let namespace =
-        ir.namespaces().find(|n| n.rs_name() == &ir_id("test_namespace_bindings")).unwrap();
+    let namespace = ir.namespaces().find(|n| *n.rs_name() == "test_namespace_bindings").unwrap();
     let namespace_items: Vec<&Item> = namespace.children().iter().collect_vec();
 
     assert_eq!(namespace.enclosing_item_id(), None);
     assert!(namespace_items.iter().all(|item| item.enclosing_item_id() == Some(namespace.id())));
 
-    let inner_namespace = ir.namespaces().find(|n| n.rs_name() == &ir_id("inner")).unwrap();
+    let inner_namespace = ir.namespaces().find(|n| *n.rs_name() == "inner").unwrap();
     let inner_namespace_items: Vec<&Item> = inner_namespace.children().iter().collect_vec();
 
     assert!(inner_namespace_items
@@ -4109,10 +4083,8 @@ fn test_namespace_stored_data_in_ir() {
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
 
-    let outer_namespaces = ir
-        .namespaces()
-        .filter(|ns| ns.rs_name() == &ir_id("test_namespace_bindings"))
-        .collect_vec();
+    let outer_namespaces =
+        ir.namespaces().filter(|ns| *ns.rs_name() == "test_namespace_bindings").collect_vec();
     assert_eq!(outer_namespaces.len(), 2);
 
     assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[0].id()).unwrap(), 0);
@@ -4131,8 +4103,7 @@ fn test_namespace_stored_data_in_ir() {
         )
         .unwrap());
 
-    let inner_namespaces =
-        ir.namespaces().filter(|ns| ns.rs_name() == &ir_id("inner")).collect_vec();
+    let inner_namespaces = ir.namespaces().filter(|ns| *ns.rs_name() == "inner").collect_vec();
     assert_eq!(inner_namespaces.len(), 3);
 
     assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[0].id()).unwrap(), 0);
@@ -4316,10 +4287,7 @@ fn test_friend_not_definition_not_redeclared() {
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
 
-    let functions = ir
-        .functions()
-        .filter(|f| *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("some_friend_func")))
-        .collect_vec();
+    let functions = ir.functions().filter(|f| *f.rs_name() == "some_friend_func").collect_vec();
     assert_eq!(1, functions.len());
 }
 
@@ -4338,10 +4306,7 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
     // The function should appear only once in IR items.  (This is a bit redundant
     // with the assert below, but double-checks that `...` didn't miss a Func
     // item.)
-    let functions = ir
-        .functions()
-        .filter(|f| *f.rs_name() == UnqualifiedIdentifier::Identifier(ir_id("f")))
-        .collect_vec();
+    let functions = ir.functions().filter(|f| *f.rs_name() == "f").collect_vec();
     assert_eq!(1, functions.len());
 
     // The function should appear only once.
