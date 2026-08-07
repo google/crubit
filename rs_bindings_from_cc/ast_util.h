@@ -8,8 +8,10 @@
 #include <optional>
 #include <string>
 
+#include "absl/container/flat_hash_set.h"
 #include "absl/functional/function_ref.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
@@ -30,6 +32,31 @@ bool IsClangLifetimeAnnotation(const clang::Attr& attr);
 // Returns true if `attr` is a Clang coroutine attribute.
 bool IsClangCoroAnnotation(const clang::Attr& attr);
 
+// Returns the set of ignored attribute names.
+absl::flat_hash_set<absl::string_view> GetIgnoredAttrs(const clang::Decl* decl);
+
+// Wrappers that respect CRUBIT_UNSAFE_IGNORE_ATTR
+template <typename T>
+bool HasAttr(const clang::Decl* decl) {
+  if (!decl->hasAttr<T>()) return false;
+
+  // Fast path: if there are no annotations at all, nothing can be ignored.
+  if (!decl->hasAttr<clang::AnnotateAttr>()) return true;
+
+  absl::flat_hash_set<absl::string_view> ignored = GetIgnoredAttrs(decl);
+  for (const auto* attr : decl->specific_attrs<T>()) {
+    if (attr->getAttrName()) {
+      if (!ignored.contains(attr->getNormalizedFullName())) {
+        return true;
+      }
+    } else {
+      if (!ignored.contains(attr->getSpelling())) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 // Returns a human-readable string containing the list of unknown attrs.
 //
 // is_known is called exactly once on every attribute, and returns true if the
