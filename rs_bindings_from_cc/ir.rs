@@ -1133,7 +1133,7 @@ derive_debug_partialeq_eq_hash! {
         /// a member function, it will be a record type in C++, but might be an
         /// `ExistingRustType` if it was renamed.
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         /// If this function was declared as a `friend` inside of a record
@@ -1143,7 +1143,7 @@ derive_debug_partialeq_eq_hash! {
         /// The record pointed to by `ItemId` must then be ADL-visible in order to
         /// invoke this function.
         pub fn adl_enclosing_record(&self) -> Option<ItemId> {
-            self.proto.adl_enclosing_record_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.adl_enclosing_record_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -1392,7 +1392,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -1739,7 +1739,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -2033,7 +2033,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn type_(&self) -> &CcType {
@@ -2130,7 +2130,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn mangled_name(&self) -> Option<&'pb str> {
@@ -2250,7 +2250,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -2398,7 +2398,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -2737,7 +2737,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn is_inline(&self) -> bool {

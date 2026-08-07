@@ -126,14 +126,14 @@ variables](https://doc.rust-lang.org/cargo/reference/environment-variables.html)
 The following command-line flags should work (they are based on [`x.py`'s
 sources](https://github.com/rust-lang/rust/blob/b889870082dd0b0e3594bbfbebb4545d54710829/src/bootstrap/src/core/builder/cargo.rs#L285-L306)):
 
-  * Linux:
-      - `-Clink-args=-Wl,-z,origin`
-      - `-Clink-args=-Wl,-rpath,$ORIGIN/../lib`
-  * Mac:
-      - `-Zosx-rpath-install-name`
-      - `-Clink-args=-Wl,-rpath,@loader_path/../lib`
-  * Windows:
-      - no extra command-line flags needed (TODO: verify this)
+*   Linux:
+    -   `-Clink-args=-Wl,-z,origin`
+    -   `-Clink-args=-Wl,-rpath,$ORIGIN/../lib`
+*   Mac:
+    -   `-Zosx-rpath-install-name`
+    -   `-Clink-args=-Wl,-rpath,@loader_path/../lib`
+*   Windows:
+    -   no extra command-line flags needed (TODO: verify this)
 
 ## rs_bindings_from_cc
 
