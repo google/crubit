@@ -23,6 +23,7 @@
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir.pb.h"
 #include "clang/AST/Decl.h"
@@ -52,7 +53,7 @@ class Invocation {
       absl::flat_hash_map<BazelLabel, std::string> crate_names,
       bool kythe_annotations,
       std::shared_ptr<const llvm::Regex> template_blocklist_path_regex,
-      bool carcinize)
+      CarcinizeMode carcinize_mode = CarcinizeMode::kOff)
       : target_(target),
         public_headers_(public_headers),
         lifetime_context_(std::make_shared<
@@ -62,7 +63,7 @@ class Invocation {
         kythe_annotations_(kythe_annotations),
         template_blocklist_path_regex_(
             std::move(template_blocklist_path_regex)),
-        carcinize_(carcinize) {
+        carcinize_mode_(carcinize_mode) {
     // Caller should verify that the inputs are non-empty.
     CHECK(!public_headers_.empty());
     CHECK(!header_targets_.empty());
@@ -115,7 +116,11 @@ class Invocation {
   // Returns whether to record extra location information for Kythe annotations.
   bool kythe_annotations() const { return kythe_annotations_; }
 
-  bool carcinize() const { return carcinize_; }
+  CarcinizeMode carcinize_mode() const { return carcinize_mode_; }
+  bool is_carcinize() const { return carcinize_mode_ != CarcinizeMode::kOff; }
+  bool allow_incomplete_migration() const {
+    return carcinize_mode_ == CarcinizeMode::kIncomplete;
+  }
 
   // Returns true if we should instantiate a template defined at `loc`.
   // (`loc` is the definition location of the primary or partial template,
@@ -154,7 +159,7 @@ class Invocation {
   // templates that should not be instantiated.
   std::shared_ptr<const llvm::Regex> template_blocklist_path_regex_;
 
-  bool carcinize_;
+  CarcinizeMode carcinize_mode_;
 };
 
 // Explicitly defined interface that defines how `DeclImporter`s are allowed to

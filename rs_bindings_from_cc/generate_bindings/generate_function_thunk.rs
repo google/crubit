@@ -476,37 +476,96 @@ pub fn generate_function_thunk_impl<'a>(
         }
     };
 
-    let features = db.ir().target_crubit_features(func.owning_target());
-    let mut param_idents = func
-        .params()
-        .iter()
-        .map(|p| format_nonportable_cc_ident(p.identifier().as_str()))
-        .collect::<Result<Vec<_>>>()?;
+    let CcThunkParts { return_type_name, param_types, param_idents, conversion_stmts, return_stmt } =
+        generate_cc_thunk_parts(db, func, ThunkCallKind::Normal(implementation_function))?;
 
+    Ok(Some(ThunkImpl::Function {
+        return_type_name,
+        thunk_ident,
+        param_types,
+        param_idents,
+        conversion_stmts,
+        return_stmt,
+    }))
+}
+
+/// The lowered C++ components of a function thunk, including parameter types,
+/// identifiers, conversion statements, and the return expression.
+pub struct CcThunkParts {
+    pub return_type_name: TokenStream,
+    pub param_types: Vec<TokenStream>,
+    pub param_idents: Vec<Ident>,
+    pub conversion_stmts: TokenStream,
+    pub return_stmt: TokenStream,
+}
+
+/// Specifies the type of C++ thunk invocation being lowered: a normal named C++
+/// thunk function or an inline C++ body (`inline_cpp!`).
+pub enum ThunkCallKind {
+    Normal(TokenStream),
+    InlineCpp(TokenStream),
+}
+
+/// Lowers the parameters, return type, and C-ABI type conversions for a function
+/// thunk, returning the structured C++ parts needed to emit a C++ thunk definition.
+pub fn generate_cc_thunk_parts<'a>(
+    db: &BindingsGenerator<'a>,
+    func: &Func<'a>,
+    kind: ThunkCallKind,
+) -> Result<CcThunkParts> {
+    let features = db.ir().target_crubit_features(func.owning_target());
+    let mut param_idents = Vec::new();
+    let mut param_types = Vec::new();
     let mut conversion_stmts = quote! {};
-    let mut param_types = func
-        .params()
-        .iter()
-        .map(|p| {
-            let arg_type = db.rs_type_kind(p.type_().clone())?;
-            let cpp_type = cpp_type_name::format_cpp_type(&arg_type, db)?;
+
+    for p in func.params().iter() {
+        let ident = format_nonportable_cc_ident(p.identifier().as_str())?;
+        let arg_type = db.rs_type_kind(p.type_().clone())?;
+        let cpp_type = cpp_type_name::format_cpp_type(&arg_type, db)?;
+
+        if matches!(kind, ThunkCallKind::InlineCpp(_)) {
             if arg_type.is_bridge_type() {
-                let ident = format_nonportable_cc_ident(p.identifier().as_str())?;
+                let ffi_ident = format_ident!("__{ident}");
                 let crubit_abi_type = db.crubit_abi_type(arg_type)?;
                 let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
                 let decoder = format_ident!("__{ident}_decoder");
                 conversion_stmts.extend(quote! {
-                    ::crubit::Decoder #decoder(#crubit_abi_type_tokens::kSize, #ident);
+                    ::crubit::Decoder #decoder(#crubit_abi_type_tokens::kSize, #ffi_ident);
+                    auto #ident = #crubit_abi_type_expr_tokens.Decode(#decoder);
                 });
-                Ok(quote! { const unsigned char* })
+                param_idents.push(ffi_ident);
+                param_types.push(quote! { const unsigned char* });
             } else if !arg_type.is_c_abi_compatible_by_value() {
-                // non-Unpin types are wrapped by a pointer in the thunk.
-                Ok(quote! {#cpp_type *})
+                // non-Unpin / non-POD types are passed by pointer across FFI;
+                // unpack into local reference for the inline C++ body.
+                let ffi_ident = format_ident!("__{ident}");
+                conversion_stmts.extend(quote! {
+                    auto&& #ident = std::move(*#ffi_ident);
+                });
+                param_idents.push(ffi_ident);
+                param_types.push(quote! { #cpp_type * });
             } else {
-                Ok(cpp_type)
+                param_idents.push(ident);
+                param_types.push(cpp_type);
             }
-        })
-        .collect::<Result<Vec<_>>>()?;
+        } else if arg_type.is_bridge_type() {
+            let crubit_abi_type = db.crubit_abi_type(arg_type)?;
+            let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+            let decoder = format_ident!("__{ident}_decoder");
+            conversion_stmts.extend(quote! {
+                ::crubit::Decoder #decoder(#crubit_abi_type_tokens::kSize, #ident);
+            });
+            param_idents.push(ident);
+            param_types.push(quote! { const unsigned char* });
+        } else if !arg_type.is_c_abi_compatible_by_value() {
+            param_idents.push(ident);
+            param_types.push(quote! { #cpp_type * });
+        } else {
+            param_idents.push(ident);
+            param_types.push(cpp_type);
+        }
+    }
 
     let arg_expressions = func
         .params()
@@ -562,20 +621,20 @@ pub fn generate_function_thunk_impl<'a>(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    // Here, we add a `__return` parameter if the return type can't be passed by
-    // value across `extern "C"` ABI.  (We do this after the arg_expressions
-    // computation, so that it's only in the parameter list, not the argument
-    // list.)
     let return_type_kind = db.rs_type_kind(func.return_type().clone())?;
     let return_type_cpp_spelling = cpp_type_name::format_cpp_type(&return_type_kind, db)?;
 
     let return_type_name = match return_type_kind.passing_convention() {
         PassingConvention::ComposablyBridged => {
+            // Here, we add a `__return_abi_buffer` parameter if the return type can't be passed by
+            // value across `extern "C"` ABI.
             param_idents.insert(0, format_cc_ident("__return_abi_buffer", features)?);
             param_types.insert(0, quote! {unsigned char *});
             quote! { void }
         }
         PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+            // Here, we add a `__return` parameter if the return type can't be passed by
+            // value across `extern "C"` ABI.
             param_idents.insert(0, format_cc_ident("__return", features)?);
             param_types.insert(0, quote! {#return_type_cpp_spelling *});
             quote! {void}
@@ -585,86 +644,178 @@ pub fn generate_function_thunk_impl<'a>(
         | PassingConvention::Void => return_type_cpp_spelling.clone(),
     };
 
-    let mut this_ref_qualification = match func.rs_name() {
-        UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => None,
-        UnqualifiedIdentifier::Identifier(_)
-        | UnqualifiedIdentifier::Operator(_)
-        | UnqualifiedIdentifier::ConversionOperator => {
-            func.instance_method_metadata().as_ref().map(|meta| meta.reference())
-        }
-    };
-    if func.cc_name().is_constructor() {
-        this_ref_qualification = None;
-    }
-    let (implementation_function, arg_expressions) =
-        if let Some(this_ref_qualification) = this_ref_qualification {
-            let this_param = func
-                .params()
-                .first()
-                .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
-
-            let this_arg = format_nonportable_cc_ident(this_param.identifier().as_str())?;
-            let this_dot = if this_ref_qualification == ir::ReferenceQualification::RValue {
-                quote! {std::move(*#this_arg).}
-            } else {
-                quote! {#this_arg->}
-            };
-            (quote! { #this_dot #implementation_function}, &arg_expressions[1..])
-        } else {
-            (implementation_function, &arg_expressions[..])
-        };
-
-    let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
-    let return_stmt = match return_type_kind.passing_convention() {
-        PassingConvention::ComposablyBridged => {
-            let out_param = &param_idents[0];
-            let crubit_abi_type = db.crubit_abi_type(return_type_kind)?;
-            let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-            let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
-            quote! {
-                ::crubit::Encoder __return_encoder(#crubit_abi_type_tokens::kSize, #out_param);
-                #crubit_abi_type_expr_tokens.Encode(
-                    #return_expr,
-                    __return_encoder
-                )
-            }
-        }
-        PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
-            let out_param = &param_idents[0];
-            // Explicitly use placement `new` so that we get guaranteed copy elision in
-            // C++17.
-            quote! {new(#out_param) auto(#return_expr)}
-        }
-        PassingConvention::Void => return_expr,
-        PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
-            match func.return_type().variant() {
-                CcTypeVariant::Pointer(pointer) if pointer.kind() == PointerTypeKind::LValueRef => {
-                    quote! { return std::addressof( #return_expr ) }
+    let return_stmt = match kind {
+        ThunkCallKind::InlineCpp(ref body_tokens) => match return_type_kind.passing_convention() {
+            PassingConvention::ComposablyBridged => {
+                let out_param = &param_idents[0];
+                let crubit_abi_type = db.crubit_abi_type(return_type_kind)?;
+                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                let return_expr = quote! { ([&]() #body_tokens)() };
+                quote! {
+                    ::crubit::Encoder __return_encoder(#crubit_abi_type_tokens::kSize, #out_param);
+                    #crubit_abi_type_expr_tokens.Encode(
+                        #return_expr,
+                        __return_encoder
+                    )
                 }
-                CcTypeVariant::Pointer(pointer) if pointer.kind() == PointerTypeKind::RValueRef => {
-                    let nested_type = cpp_type_name::format_cpp_type_with_references(
-                        &db.rs_type_kind(func.return_type().clone())?,
-                        db,
-                    )?;
+            }
+            PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+                let out_param = &param_idents[0];
+                let return_expr = quote! { ([&]() #body_tokens)() };
+                quote! { new(#out_param) #return_type_cpp_spelling(#return_expr) }
+            }
+            PassingConvention::Void
+            | PassingConvention::AbiCompatible
+            | PassingConvention::OwnedPtr => quote! { #body_tokens },
+        },
+        ThunkCallKind::Normal(implementation_function) => {
+            let (implementation_function, arg_expressions) = {
+                let mut this_ref_qualification = match func.rs_name() {
+                    UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => None,
+                    UnqualifiedIdentifier::Identifier(_)
+                    | UnqualifiedIdentifier::Operator(_)
+                    | UnqualifiedIdentifier::ConversionOperator => {
+                        func.instance_method_metadata().as_ref().map(|meta| meta.reference())
+                    }
+                };
+                if func.cc_name().is_constructor() {
+                    this_ref_qualification = None;
+                }
+                if let Some(this_ref_qualification) = this_ref_qualification {
+                    let this_param = func
+                        .params()
+                        .first()
+                        .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
+
+                    let this_arg = format_nonportable_cc_ident(this_param.identifier().as_str())?;
+                    let this_dot = if this_ref_qualification == ir::ReferenceQualification::RValue {
+                        quote! {std::move(*#this_arg).}
+                    } else {
+                        quote! {#this_arg->}
+                    };
+                    (quote! { #this_dot #implementation_function}, arg_expressions[1..].to_vec())
+                } else {
+                    (implementation_function, arg_expressions)
+                }
+            };
+            let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
+            match return_type_kind.passing_convention() {
+                PassingConvention::ComposablyBridged => {
+                    let out_param = &param_idents[0];
+                    let crubit_abi_type = db.crubit_abi_type(return_type_kind)?;
+                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                    let crubit_abi_type_expr_tokens =
+                        CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
                     quote! {
-                        #nested_type lvalue = #return_expr;
-                        return &lvalue
+                        ::crubit::Encoder __return_encoder(#crubit_abi_type_tokens::kSize, #out_param);
+                        #crubit_abi_type_expr_tokens.Encode(
+                            #return_expr,
+                            __return_encoder
+                        )
                     }
                 }
-                CcTypeVariant::FuncPointer { non_null: true, .. } => {
-                    quote! { return & #return_expr }
+                PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+                    let out_param = &param_idents[0];
+                    quote! {new(#out_param) auto(#return_expr)}
                 }
-                _ => quote! { return #return_expr },
+                PassingConvention::Void => return_expr,
+                PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
+                    match func.return_type().variant() {
+                        CcTypeVariant::Pointer(pointer)
+                            if pointer.kind() == PointerTypeKind::LValueRef =>
+                        {
+                            quote! { return std::addressof( #return_expr ) }
+                        }
+                        CcTypeVariant::Pointer(pointer)
+                            if pointer.kind() == PointerTypeKind::RValueRef =>
+                        {
+                            let nested_type = cpp_type_name::format_cpp_type_with_references(
+                                &db.rs_type_kind(func.return_type().clone())?,
+                                db,
+                            )?;
+                            quote! {
+                                #nested_type lvalue = #return_expr;
+                                return &lvalue
+                            }
+                        }
+                        CcTypeVariant::FuncPointer { non_null: true, .. } => {
+                            quote! { return & #return_expr }
+                        }
+                        _ => quote! { return #return_expr },
+                    }
+                }
             }
         }
     };
 
-    Ok(Some(ThunkImpl::Function {
-        return_type_name,
-        thunk_ident,
-        param_types,
-        param_idents,
-        conversion_stmts,
-        return_stmt,
+    Ok(CcThunkParts { return_type_name, param_types, param_idents, conversion_stmts, return_stmt })
+}
+
+/// Generates an `inline_cpp!` macro invocation expression in Rust for `func`,
+/// reusing standard C-ABI parameter and return type lowering logic.
+///
+/// Returns `Ok(None)` if the function cannot be emitted as an `inline_cpp!` expression,
+/// such as constructors and destructors which cannot be called directly as free expressions.
+pub fn generate_inline_cpp_call<'a>(
+    db: &BindingsGenerator<'a>,
+    func: &Func<'a>,
+    thunk_args: &[TokenStream],
+    body_tokens: TokenStream,
+) -> Result<Option<TokenStream>> {
+    if func.cc_name().is_constructor() || func.cc_name().is_destructor() {
+        return Ok(None);
+    }
+
+    let CcThunkParts { return_type_name, param_types, param_idents, conversion_stmts, return_stmt } =
+        generate_cc_thunk_parts(db, func, ThunkCallKind::InlineCpp(body_tokens))?;
+
+    let adjusted_thunk_args = thunk_args
+        .iter()
+        .zip(func.params().iter())
+        .map(|(arg, param)| {
+            let rs_type = db.rs_type_kind(param.type_().clone())?;
+            Ok(match rs_type {
+                RsTypeKind::Record { .. }
+                | RsTypeKind::Reference { .. }
+                | RsTypeKind::Pointer { .. } => quote! { (#arg as *const _) },
+                _ => quote! { #arg },
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let return_type_kind = db.rs_type_kind(func.return_type().clone())?;
+    let body_block = if conversion_stmts.is_empty() {
+        match return_type_kind.passing_convention() {
+            PassingConvention::ComposablyBridged
+            | PassingConvention::LayoutCompatible
+            | PassingConvention::Ctor => quote! { { #return_stmt; } },
+            _ => quote! { #return_stmt },
+        }
+    } else {
+        match return_type_kind.passing_convention() {
+            PassingConvention::ComposablyBridged
+            | PassingConvention::LayoutCompatible
+            | PassingConvention::Ctor => quote! {
+                {
+                    #conversion_stmts
+                    #return_stmt;
+                }
+            },
+            _ => quote! {
+                {
+                    #conversion_stmts
+                    #return_stmt
+                }
+            },
+        }
+    };
+
+    Ok(Some(quote! {
+        unsafe {
+            (::crubit_support::inline_cpp! {
+                ( #( #param_types #param_idents ),* ) -> #return_type_name #body_block
+            })( #( #adjusted_thunk_args ),* )
+        }
     }))
 }

@@ -76,3 +76,13 @@ fn test_inline_max_ptr() {
     let val2 = 200;
     assert_eq!(library_with_embedded_cpp::call_inline_max_ptr(&val1, &val2), &val2);
 }
+
+#[gtest]
+fn test_inline_non_pod_transform() {
+    assert_eq!(library_with_embedded_cpp::call_inline_non_pod_transform(5), 15);
+}
+
+#[gtest]
+fn test_inline_non_pod_return_transform() {
+    assert_eq!(library_with_embedded_cpp::call_inline_non_pod_return_transform(42), 42);
+}

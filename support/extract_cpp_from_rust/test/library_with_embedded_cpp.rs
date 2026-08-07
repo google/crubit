@@ -68,6 +68,17 @@ global_cpp! {
     absl::string_view RetrieveStringView() {
         return "Hello absl!";
     }
+
+    struct NonPodStruct {
+        int val;
+        NonPodStruct(int v) : val(v) {}
+        ~NonPodStruct() {}
+        NonPodStruct(NonPodStruct&&) = default;
+    };
+
+    NonPodStruct make_non_pod(int v) {
+        return NonPodStruct{v};
+    }
 }
 
 pub fn call_add_two_ints(a: i32, b: i32) -> i32 {
@@ -153,4 +164,26 @@ pub fn call_inline_max_ptr<'a>(a: &'a i32, b: &'a i32) -> &'a i32 {
         }
     };
     unsafe { &*max_ptr(a, b) }
+}
+
+pub fn call_inline_non_pod_transform(v: i32) -> i32 {
+    let non_pod = library_with_embedded_cpp_extracted_cc::make_non_pod(v);
+    let transform = inline_cpp! {
+        (NonPodStruct s) -> int {
+            return s.val + 10;
+        }
+    };
+    transform(non_pod)
+}
+
+pub fn call_inline_non_pod_return_transform(v: i32) -> i32 {
+    let non_pod = library_with_embedded_cpp_extracted_cc::make_non_pod(v);
+    let transform = inline_cpp! {
+        (NonPodStruct s) -> NonPodStruct {
+            return s;
+        }
+    };
+    let result = transform(non_pod);
+    let non_pod_result = ctor::emplace!(result);
+    non_pod_result.val
 }

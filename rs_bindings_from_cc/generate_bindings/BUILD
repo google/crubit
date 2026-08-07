@@ -387,6 +387,7 @@ rust_library(
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
+        ":cpp_type_name",
         ":generate_comment",
         ":generate_function_thunk",
         ":has_bindings",
