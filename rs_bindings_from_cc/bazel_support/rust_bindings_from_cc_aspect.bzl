@@ -55,6 +55,9 @@ def _is_hdr(input):
 def _filter_hdrs(input_list):
     return [hdr for hdr in input_list if _is_hdr(hdr)]
 
+def _should_encode_label_in_crate_name(workspace_name, label):
+    return False
+
 # Targets which do not receive rust bindings at all. Most significantly, the header is not
 # attributed to belonging to this target. So, the main use for this list is to resolve
 # ambiguously-owned headers by disabling one of the targets.
@@ -377,7 +380,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     if features:
         direct_target_args["f"] = features
     if use_label_encoded_names_for_deps:
-        direct_target_args["c"] = crubit_encode_raw_string_as_crate_name(str(ctx.label))
+        if _should_encode_label_in_crate_name(ctx.workspace_name, ctx.label):
+            direct_target_args["c"] = crubit_encode_raw_string_as_crate_name(str(ctx.label))
 
     if direct_target_args:
         direct_target_args["t"] = str(ctx.label)
@@ -421,7 +425,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         # crate_info.name unless overridden by `aliases`.
         for dep in all_deps:
             if RustBindingsFromCcInfo in dep:
-                aliases[dep] = crubit_encode_raw_string_as_crate_name(str(dep.label))
+                if _should_encode_label_in_crate_name(ctx.workspace_name, dep.label):
+                    aliases[dep] = crubit_encode_raw_string_as_crate_name(str(dep.label))
 
         # Collect dependencies of manual bindings attached to this target.
         # The Rust sources of manual bindings expect their dependencies to be

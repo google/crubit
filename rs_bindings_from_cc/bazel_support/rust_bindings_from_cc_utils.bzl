@@ -37,6 +37,9 @@ load(
 )
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
+def _should_encode_label_in_crate_name(workspace_name, label):
+    return False
+
 def generate_and_compile_bindings(
         ctx,
         attr,
@@ -191,7 +194,7 @@ def generate_and_compile_bindings(
         extra_named_deps = extra_named_deps,
     )
 
-    if use_label_encoded_names_for_deps:
+    if use_label_encoded_names_for_deps and _should_encode_label_in_crate_name(ctx.workspace_name, Label(dep_variant_info.crate_info.owner)):
         name = encode_raw_string_as_crate_name(str(dep_variant_info.crate_info.owner))
     else:
         name = dep_variant_info.crate_info.name
