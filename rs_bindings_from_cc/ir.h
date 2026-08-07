@@ -158,42 +158,12 @@ class FormattedError final {
   std::string message_;
 };
 
-// Whether a function is annotated with `CRUBIT_UNSAFE` or
-// `CRUBIT_DISABLE_UNSAFE`. `[[clang::unsafe_buffer_usage]]` is also considered
-// unsafe.
-enum class SafetyAnnotation : char { kDisableUnsafe, kUnsafe, kUnannotated };
-
-rs_bindings_from_cc::ir_proto::flat::SafetyAnnotation ToFlatProto(
-    SafetyAnnotation safety_annotation);
-
-enum class PointerTypeKind {
-  kRValueRef,
-  kLValueRef,
-  kNullable,
-  kNonNull,
-  kOwned
-};
-
-rs_bindings_from_cc::ir_proto::flat::PointerTypeKind ToFlatProto(
-    PointerTypeKind pointer_type_kind);
-
-// Calling conventions for functions that are supported by Crubit.
-//
-// This is a subset of the calling conventions supported by Clang.
-enum class CallingConv {
-  kC,              // __attribute__((cdecl))
-  kX86VectorCall,  // __attribute__((vectorcall))
-  kX86FastCall,    // __attribute__((fastcall))
-  kX864ThisCall,   // __attribute__((thiscall))
-  kX86StdCall,     // __attribute__((stdcall))
-  kWin64,          // __attribute__((ms_abi))
-};
-
-rs_bindings_from_cc::ir_proto::flat::CallingConv ToFlatProto(
-    CallingConv calling_conv);
+using ir_proto::CallingConv;
+using ir_proto::PointerTypeKind;
+using ir_proto::SafetyAnnotation;
 
 struct CcType {
-  rs_bindings_from_cc::ir_proto::flat::CcType ToFlatProto() const;
+  void WriteToProto(ir_proto::CcType& proto) const;
 
   struct FuncPointer {
     // When true, this is a C++ function reference that maps to a Rust function
@@ -254,7 +224,9 @@ struct CcType {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const CcType& type) {
-  return o << type.ToFlatProto().ShortDebugString();
+  ir_proto::CcType proto;
+  type.WriteToProto(proto);
+  return o << proto.ShortDebugString();
 }
 
 // An identifier involved in bindings.
@@ -357,17 +329,11 @@ inline std::ostream& operator<<(std::ostream& stream, const Operator& op) {
                 << op.Name() << "`";
 }
 
-enum SpecialName {
-  kDestructor,
-  kConstructor,
-};
+using ir_proto::SpecialName;
 
 // The target type of the conversion operator is not stored in the struct but
 // rather is resolved using the enclosing Func's return type.
 struct ConversionOperator {};
-
-rs_bindings_from_cc::ir_proto::flat::SpecialName ToFlatProto(
-    SpecialName special_name);
 
 std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
 
@@ -410,36 +376,25 @@ struct TranslatedIdentifier {
 // functions in narrow cases: even for a nontrivial special member function, if
 // it is kNontrivialMembers, we can directly implement it in Rust in terms of
 // the member variables.
-enum class SpecialMemberFunc : char {
-  kTrivial,
-  // Nontrivial, but only because of a member variable with a nontrivial special
-  // member function.
-  kNontrivialMembers,
-  // Nontrivial because of a user-defined special member function in this or a
-  // base class.
-  kNontrivialUserDefined,
-  // Deleted or non-public.
-  kUnavailable,
-};
-
-rs_bindings_from_cc::ir_proto::flat::SpecialMemberFunc ToFlatProto(
-    SpecialMemberFunc f);
+using ir_proto::SpecialMemberFunc;
 
 inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
   switch (f) {
-    case SpecialMemberFunc::kTrivial:
+    case SpecialMemberFunc::TRIVIAL:
       return o << "Trivial";
-    case SpecialMemberFunc::kNontrivialMembers:
+    case SpecialMemberFunc::NONTRIVIAL_MEMBERS:
       return o << "NontrivialMembers";
-    case SpecialMemberFunc::kNontrivialUserDefined:
+    case SpecialMemberFunc::NONTRIVIAL_USER_DEFINED:
       return o << "NontrivialUserDefined";
-    case SpecialMemberFunc::kUnavailable:
+    case SpecialMemberFunc::UNAVAILABLE:
       return o << "Unavailable";
+    default:
+      return o << "Unspecified";
   }
 }
 
 struct TemplateArg {
-  rs_bindings_from_cc::ir_proto::flat::TemplateArg ToFlatProto() const;
+  void WriteToProto(ir_proto::TemplateArg& proto) const;
 
   using Variant = std::variant<CcType, bool, int64_t>;
 
@@ -448,7 +403,7 @@ struct TemplateArg {
 
 // Present on records that are bridge types.
 struct BridgeType {
-  rs_bindings_from_cc::ir_proto::flat::BridgeType ToFlatProto() const;
+  void WriteToProto(ir_proto::BridgeType& proto) const;
 
   // From CRUBIT_BRIDGE.
   struct Bridge {
@@ -497,8 +452,7 @@ struct BridgeType {
 // including the template name (like `ns::vector` for `ns::vector<int>`) and the
 // template arguments (like [`int`, `float`] for `ns::map<int, float>`).
 struct TemplateSpecialization {
-  rs_bindings_from_cc::ir_proto::flat::TemplateSpecialization ToFlatProto()
-      const;
+  void WriteToProto(ir_proto::TemplateSpecialization& proto) const;
 
   struct StdStringView {};
   struct StdWStringView {};
@@ -534,21 +488,18 @@ struct TemplateSpecialization {
   Kind kind = NonSpecial{};
 };
 
-enum class TraitImplPolarity : int8_t { kNegative, kNone, kPositive };
-
-rs_bindings_from_cc::ir_proto::flat::TraitImplPolarity ToFlatProto(
-    TraitImplPolarity trait_impl_polarity);
+using ir_proto::TraitImplPolarity;
 
 // The set of traits to derive on the Rust type.
 struct TraitDerives {
-  rs_bindings_from_cc::ir_proto::flat::TraitDerives ToFlatProto() const;
+  void WriteToProto(ir_proto::TraitDerives& proto) const;
 
   TraitImplPolarity* absl_nullable Polarity(absl::string_view trait);
 
   // <internal link> start
-  TraitImplPolarity clone = TraitImplPolarity::kNone;
-  TraitImplPolarity copy = TraitImplPolarity::kNone;
-  TraitImplPolarity debug = TraitImplPolarity::kNone;
+  TraitImplPolarity clone = TraitImplPolarity::NONE;
+  TraitImplPolarity copy = TraitImplPolarity::NONE;
+  TraitImplPolarity debug = TraitImplPolarity::NONE;
   // <internal link> end
   bool send = false;
   bool sync = false;
@@ -556,7 +507,7 @@ struct TraitDerives {
 };
 
 struct OwnedPtrConfig {
-  rs_bindings_from_cc::ir_proto::flat::OwnedPtrConfig ToFlatProto() const;
+  void WriteToProto(ir_proto::OwnedPtrConfig& proto) const;
 
   std::string owned_ptr_type;
   std::string drop_impl;

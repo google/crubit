@@ -83,26 +83,26 @@ SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
       GetAnnotateAttrArgs(decl, "crubit_override_unsafe");
   if (!maybe_args.ok()) {
     errors.AddStatus(std::move(maybe_args).status());
-    return SafetyAnnotation::kUnannotated;
+    return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   }
   if (!maybe_args->has_value()) {
-    return SafetyAnnotation::kUnannotated;
+    return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   }
   const AnnotateArgs& args = **maybe_args;
   if (args.size() != 1) {
     errors.AddStatus(absl::InvalidArgumentError(
         "`crubit_override_unsafe` annotation must have exactly one argument"));
-    return SafetyAnnotation::kUnannotated;
+    return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   }
   absl::StatusOr<bool> is_unsafe =
       GetExprAsBool(*args[0], decl.getASTContext());
   if (!is_unsafe.ok()) {
     errors.AddStatus(std::move(is_unsafe).status());
-    return SafetyAnnotation::kUnannotated;
+    return SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
   } else if (*is_unsafe) {
-    return SafetyAnnotation::kUnsafe;
+    return SafetyAnnotation::SAFETY_ANNOTATION_UNSAFE;
   } else {
-    return SafetyAnnotation::kDisableUnsafe;
+    return SafetyAnnotation::SAFETY_ANNOTATION_DISABLE_UNSAFE;
   }
 }
 
@@ -120,12 +120,12 @@ void CollectUnsafeAttr(const clang::Decl& decl, Errors& errors, bool is_safe,
                                    attrs.begin()->getSpelling()));
     return;
   }
-  safety = SafetyAnnotation::kUnsafe;
+  safety = SafetyAnnotation::SAFETY_ANNOTATION_UNSAFE;
 }
 
 SafetyAnnotation GetSafetyAnnotation(const clang::Decl& decl, Errors& errors) {
   SafetyAnnotation safety = GetCrubitSafetyAnnotation(decl, errors);
-  bool is_safe = safety == SafetyAnnotation::kDisableUnsafe;
+  bool is_safe = safety == SafetyAnnotation::SAFETY_ANNOTATION_DISABLE_UNSAFE;
   CollectUnsafeAttr<clang::UnsafeBufferUsageAttr>(decl, errors, is_safe,
                                                   safety);
 
@@ -153,8 +153,8 @@ void ApplyRefQualifierToThisPointer(CcType& this_param_type,
       ref_qualifier_kind == clang::RefQualifierKind::RQ_RValue) {
     // It was just a non null pointer, but because of the rvalue ref
     // qualification, it should be an rvalue reference.
-    CHECK(pointer->kind == PointerTypeKind::kNonNull);
-    pointer->kind = PointerTypeKind::kRValueRef;
+    CHECK(pointer->kind == PointerTypeKind::NON_NULL);
+    pointer->kind = PointerTypeKind::R_VALUE_REF;
   }
 }
 
@@ -372,7 +372,7 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
       return std::nullopt;
     }
     ir_proto::MemberFuncSemantic semantic;
-    *semantic.mutable_getter()->mutable_type() = field_info->type.ToFlatProto();
+    field_info->type.WriteToProto(*semantic.mutable_getter()->mutable_type());
     semantic.mutable_getter()->set_offset(field_info->offset);
     return semantic;
   } else {
@@ -423,7 +423,7 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
       return std::nullopt;
     }
     ir_proto::MemberFuncSemantic semantic;
-    *semantic.mutable_setter()->mutable_type() = field_info->type.ToFlatProto();
+    field_info->type.WriteToProto(*semantic.mutable_setter()->mutable_type());
     semantic.mutable_setter()->set_offset(field_info->offset);
     return semantic;
   }
@@ -758,7 +758,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
                                      method_decl->getRefQualifier(),
                                      assumed_lifetimes_enabled);
       ir_proto::FuncParam this_param;
-      *this_param.mutable_type() = this_param_type.ToFlatProto();
+      this_param_type.WriteToProto(*this_param.mutable_type());
       this_param.mutable_identifier()->set_identifier("__this");
       // TODO(b/319524852): catch `[[clang::lifetimebound]]` on `this`.
       if (assumed_lifetimes_enabled && !method_decl->getType().isNull()) {
@@ -811,7 +811,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     }
 
     ir_proto::FuncParam proto_param;
-    *proto_param.mutable_type() = param_type.ToFlatProto();
+    param_type.WriteToProto(*proto_param.mutable_type());
     proto_param.mutable_identifier()->set_identifier(param_name->Ident());
     if (unknown_attr->has_value()) {
       proto_param.set_unknown_attr(std::move(**unknown_attr));
@@ -1036,7 +1036,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     func->set_doc_comment(*doc_comment);
   }
   func->set_mangled_name(ictx_.GetMangledName(function_decl));
-  *func->mutable_return_type() = return_type->ToFlatProto();
+  return_type->WriteToProto(*func->mutable_return_type());
   for (auto& param : params) {
     *func->add_params() = std::move(param);
   }
@@ -1063,7 +1063,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   func->set_has_c_calling_convention(has_c_calling_convention);
   func->set_is_member_or_descendant_of_class_template(
       is_member_or_descendant_of_class_template);
-  func->set_safety_annotation(ToFlatProto(safety_annotation));
+  func->set_safety_annotation(safety_annotation);
   func->set_source_loc(
       ictx_.ConvertSourceLocation(function_decl->getBeginLoc(), &name_info));
   func->set_id(ictx_.GenerateItemId(function_decl).value());

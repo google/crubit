@@ -33,40 +33,7 @@ struct visitor : Ts... {
 };
 }  // namespace
 
-flat_proto::PointerTypeKind ToFlatProto(PointerTypeKind pointer_type_kind) {
-  switch (pointer_type_kind) {
-    case PointerTypeKind::kLValueRef:
-      return flat_proto::L_VALUE_REF;
-    case PointerTypeKind::kRValueRef:
-      return flat_proto::R_VALUE_REF;
-    case PointerTypeKind::kNullable:
-      return flat_proto::NULLABLE;
-    case PointerTypeKind::kNonNull:
-      return flat_proto::NON_NULL;
-    case PointerTypeKind::kOwned:
-      return flat_proto::OWNED;
-  }
-}
-
-flat_proto::CallingConv ToFlatProto(CallingConv calling_conv) {
-  switch (calling_conv) {
-    case CallingConv::kC:
-      return flat_proto::C_DECL;
-    case CallingConv::kX86FastCall:
-      return flat_proto::FAST_CALL;
-    case CallingConv::kX86VectorCall:
-      return flat_proto::VECTOR_CALL;
-    case CallingConv::kX864ThisCall:
-      return flat_proto::THIS_CALL;
-    case CallingConv::kX86StdCall:
-      return flat_proto::STD_CALL;
-    case CallingConv::kWin64:
-      return flat_proto::MS_ABI;
-  }
-}
-
-flat_proto::CcType CcType::ToFlatProto() const {
-  flat_proto::CcType proto;
+void CcType::WriteToProto(ir_proto::CcType& proto) const {
   proto.set_is_const(is_const);
   proto.set_unknown_attr(unknown_attr);
   proto.mutable_explicit_lifetimes()->Add(explicit_lifetimes.begin(),
@@ -79,18 +46,18 @@ flat_proto::CcType CcType::ToFlatProto() const {
           },
           [&](const CcType::PointerType& pointer) {
             auto* p = proto.mutable_pointer();
-            p->set_kind(crubit::ToFlatProto(pointer.kind));
+            p->set_kind(pointer.kind);
             if (pointer.lifetime) {
               p->set_lifetime((*pointer.lifetime).value());
             }
-            *p->mutable_pointee_type() = pointer.pointee_type->ToFlatProto();
+            pointer.pointee_type->WriteToProto(*p->mutable_pointee_type());
           },
           [&](const CcType::FuncPointer& func_value) {
             auto* f = proto.mutable_func_pointer();
             f->set_non_null(func_value.non_null);
-            f->set_call_conv(crubit::ToFlatProto(func_value.call_conv));
+            f->set_call_conv(func_value.call_conv);
             for (const CcType& type : func_value.param_and_return_types) {
-              *f->add_param_and_return_types() = type.ToFlatProto();
+              type.WriteToProto(*f->add_param_and_return_types());
             }
             f->mutable_lifetime_inputs()->Add(
                 func_value.lifetime_inputs.begin(),
@@ -101,7 +68,6 @@ flat_proto::CcType CcType::ToFlatProto() const {
             error.WriteToProto(*proto.mutable_error());
           }},
       variant);
-  return proto;
 }
 
 namespace {
@@ -119,26 +85,26 @@ CcType CcType::PointerTo(CcType pointee_type,
                          std::optional<LifetimeId> lifetime, bool nullable) {
   return PointerOrReferenceTo(
       std::move(pointee_type),
-      nullable ? PointerTypeKind::kNullable : PointerTypeKind::kNonNull,
+      nullable ? PointerTypeKind::NULLABLE : PointerTypeKind::NON_NULL,
       lifetime);
 }
 
 CcType CcType::OwnedPointerTo(CcType pointee_type,
                               std::optional<LifetimeId> lifetime) {
-  return PointerOrReferenceTo(std::move(pointee_type), PointerTypeKind::kOwned,
+  return PointerOrReferenceTo(std::move(pointee_type), PointerTypeKind::OWNED,
                               lifetime);
 }
 
 CcType CcType::LValueReferenceTo(CcType pointee_type,
                                  std::optional<LifetimeId> lifetime) {
   return PointerOrReferenceTo(std::move(pointee_type),
-                              PointerTypeKind::kLValueRef, lifetime);
+                              PointerTypeKind::L_VALUE_REF, lifetime);
 }
 
 CcType CcType::RValueReferenceTo(CcType pointee_type,
                                  std::optional<LifetimeId> lifetime) {
   return PointerOrReferenceTo(std::move(pointee_type),
-                              PointerTypeKind::kRValueRef, lifetime);
+                              PointerTypeKind::R_VALUE_REF, lifetime);
 }
 
 void HeaderName::WriteToProto(ir_proto::HeaderName& proto) const {
@@ -165,37 +131,30 @@ void Operator::WriteToProto(ir_proto::Operator& proto) const {
 
 static std::string SpecialNameToString(SpecialName special_name) {
   switch (special_name) {
-    case SpecialName::kDestructor:
+    case SpecialName::DESTRUCTOR:
       return "Destructor";
-    case SpecialName::kConstructor:
+    case SpecialName::CONSTRUCTOR:
       return "Constructor";
-  }
-}
-
-flat_proto::SpecialName ToFlatProto(SpecialName special_name) {
-  switch (special_name) {
-    case SpecialName::kDestructor:
-      return flat_proto::DESTRUCTOR;
-    case SpecialName::kConstructor:
-      return flat_proto::CONSTRUCTOR;
+    default:
+      return "Unspecified";
   }
 }
 
 void WriteToProto(const UnqualifiedIdentifier& unqualified_identifier,
                   ir_proto::UnqualifiedIdentifier& proto) {
-  std::visit(
-      visitor{
-          [&](const Identifier& id) {
-            id.WriteToProto(*proto.mutable_ident());
-          },
-          [&](const Operator& op) { op.WriteToProto(*proto.mutable_oper()); },
-          [&](const SpecialName& special_name) {
-            proto.set_special_name(crubit::ToFlatProto(special_name));
-          },
-          [&](const ConversionOperator& conversion_operator) {
-            proto.mutable_conversion_operator();
-          }},
-      unqualified_identifier);
+  std::visit(visitor{[&](const Identifier& id) {
+                       id.WriteToProto(*proto.mutable_ident());
+                     },
+                     [&](const Operator& op) {
+                       op.WriteToProto(*proto.mutable_oper());
+                     },
+                     [&](const SpecialName& special_name) {
+                       proto.set_special_name(special_name);
+                     },
+                     [&](const ConversionOperator& conversion_operator) {
+                       proto.mutable_conversion_operator();
+                     }},
+             unqualified_identifier);
 }
 
 std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {
@@ -216,32 +175,7 @@ Identifier& TranslatedIdentifier::rs_identifier() {
   return cc_identifier;
 }
 
-flat_proto::SafetyAnnotation ToFlatProto(SafetyAnnotation safety_annotation) {
-  switch (safety_annotation) {
-    case SafetyAnnotation::kDisableUnsafe:
-      return flat_proto::SafetyAnnotation::SAFETY_ANNOTATION_DISABLE_UNSAFE;
-    case SafetyAnnotation::kUnsafe:
-      return flat_proto::SafetyAnnotation::SAFETY_ANNOTATION_UNSAFE;
-    case SafetyAnnotation::kUnannotated:
-      return flat_proto::SafetyAnnotation::SAFETY_ANNOTATION_UNANNOTATED;
-  }
-}
-
-flat_proto::SpecialMemberFunc ToFlatProto(SpecialMemberFunc f) {
-  switch (f) {
-    case SpecialMemberFunc::kTrivial:
-      return flat_proto::TRIVIAL;
-    case SpecialMemberFunc::kNontrivialMembers:
-      return flat_proto::NONTRIVIAL_MEMBERS;
-    case SpecialMemberFunc::kNontrivialUserDefined:
-      return flat_proto::NONTRIVIAL_USER_DEFINED;
-    case SpecialMemberFunc::kUnavailable:
-      return flat_proto::UNAVAILABLE;
-  }
-}
-
-flat_proto::BridgeType BridgeType::ToFlatProto() const {
-  flat_proto::BridgeType proto;
+void BridgeType::WriteToProto(ir_proto::BridgeType& proto) const {
   std::visit(
       visitor{
           [&](const BridgeType::Bridge& annotation) {
@@ -250,20 +184,20 @@ flat_proto::BridgeType BridgeType::ToFlatProto() const {
             b->set_abi_rust(annotation.abi_rust);
             b->set_abi_cpp(annotation.abi_cpp);
             for (const auto& arg : annotation.template_args) {
-              *b->add_template_args() = arg.ToFlatProto();
+              arg.WriteToProto(*b->add_template_args());
             }
             if (annotation.label_hint.has_value()) {
               b->set_label_hint(*annotation.label_hint);
             }
           },
           [&](const BridgeType::StdOptional& std_optional) {
-            *proto.mutable_std_optional()->mutable_inner_type() =
-                std_optional.inner_type->ToFlatProto();
+            std_optional.inner_type->WriteToProto(
+                *proto.mutable_std_optional()->mutable_inner_type());
           },
           [&](const BridgeType::StdPair& std_pair) {
             auto* p = proto.mutable_std_pair();
-            *p->mutable_first_type() = std_pair.first_type->ToFlatProto();
-            *p->mutable_second_type() = std_pair.second_type->ToFlatProto();
+            std_pair.first_type->WriteToProto(*p->mutable_first_type());
+            std_pair.second_type->WriteToProto(*p->mutable_second_type());
           },
           [&](const BridgeType::StdString& std_string) {
             // Calling mutable_std_string instantiates the message field to
@@ -297,71 +231,65 @@ flat_proto::BridgeType BridgeType::ToFlatProto() const {
                 c->set_fn_trait(flat_proto::BridgeType::Callable::FN_ONCE);
                 break;
             }
-            *c->mutable_return_type() = callable.return_type->ToFlatProto();
+            callable.return_type->WriteToProto(*c->mutable_return_type());
             for (const auto& param : callable.param_types) {
-              *c->add_param_types() = param.ToFlatProto();
+              param.WriteToProto(*c->add_param_types());
             }
           },
       },
       variant);
-  return proto;
 }
 
-flat_proto::TemplateArg TemplateArg::ToFlatProto() const {
-  flat_proto::TemplateArg proto;
+void TemplateArg::WriteToProto(ir_proto::TemplateArg& proto) const {
   std::visit(
-      visitor{[&](const CcType& type) {
-                *proto.mutable_type() = type.ToFlatProto();
-              },
-              [&](bool bool_value) { proto.set_bool_value(bool_value); },
-              [&](int64_t int_value) { proto.set_int_value(int_value); }},
+      visitor{
+          [&](const CcType& type) { type.WriteToProto(*proto.mutable_type()); },
+          [&](bool bool_value) { proto.set_bool_value(bool_value); },
+          [&](int64_t int_value) { proto.set_int_value(int_value); }},
       variant);
-  return proto;
 }
 
-flat_proto::TemplateSpecialization TemplateSpecialization::ToFlatProto() const {
-  flat_proto::TemplateSpecialization proto;
+void TemplateSpecialization::WriteToProto(
+    ir_proto::TemplateSpecialization& proto) const {
   proto.set_defining_target(defining_target.value());
   std::visit(
       visitor{
           [&](const StdStringView&) { proto.mutable_std_string_view(); },
           [&](const StdWStringView&) { proto.mutable_std_w_string_view(); },
           [&](const StdVector& std_vector) {
-            *proto.mutable_std_vector()->mutable_element_type() =
-                std_vector.element_type.ToFlatProto();
+            std_vector.element_type.WriteToProto(
+                *proto.mutable_std_vector()->mutable_element_type());
           },
           [&](const StdSharedPtr& std_shared_ptr) {
-            *proto.mutable_std_shared_ptr()->mutable_element_type() =
-                std_shared_ptr.element_type.ToFlatProto();
+            std_shared_ptr.element_type.WriteToProto(
+                *proto.mutable_std_shared_ptr()->mutable_element_type());
           },
           [&](const StdUniquePtr& std_unique_ptr) {
-            *proto.mutable_std_unique_ptr()->mutable_element_type() =
-                std_unique_ptr.element_type.ToFlatProto();
+            std_unique_ptr.element_type.WriteToProto(
+                *proto.mutable_std_unique_ptr()->mutable_element_type());
           },
           [&](const AbslSpan& absl_span) {
-            *proto.mutable_absl_span()->mutable_element_type() =
-                absl_span.element_type.ToFlatProto();
+            absl_span.element_type.WriteToProto(
+                *proto.mutable_absl_span()->mutable_element_type());
           },
           [&](const AbslFlatHashMap& absl_flat_hash_map) {
             auto* msg = proto.mutable_absl_flat_hash_map();
-            *msg->mutable_key_type() =
-                absl_flat_hash_map.key_type.ToFlatProto();
-            *msg->mutable_value_type() =
-                absl_flat_hash_map.value_type.ToFlatProto();
+            absl_flat_hash_map.key_type.WriteToProto(*msg->mutable_key_type());
+            absl_flat_hash_map.value_type.WriteToProto(
+                *msg->mutable_value_type());
           },
           [&](const AbslFlatHashSet& absl_flat_hash_set) {
             auto* msg = proto.mutable_absl_flat_hash_set();
-            *msg->mutable_element_type() =
-                absl_flat_hash_set.element_type.ToFlatProto();
+            absl_flat_hash_set.element_type.WriteToProto(
+                *msg->mutable_element_type());
           },
           [&](const C9Co& c9_co) {
-            *proto.mutable_c9_co()->mutable_element_type() =
-                c9_co.element_type.ToFlatProto();
+            c9_co.element_type.WriteToProto(
+                *proto.mutable_c9_co()->mutable_element_type());
           },
           [&](const NonSpecial&) { proto.mutable_non_special(); },
       },
       kind);
-  return proto;
 }
 
 TraitImplPolarity* absl_nullable TraitDerives::Polarity(
@@ -374,33 +302,18 @@ TraitImplPolarity* absl_nullable TraitDerives::Polarity(
   return nullptr;
 }
 
-flat_proto::TraitImplPolarity ToFlatProto(TraitImplPolarity polarity) {
-  switch (polarity) {
-    case TraitImplPolarity::kNegative:
-      return flat_proto::NEGATIVE;
-    case TraitImplPolarity::kNone:
-      return flat_proto::NONE;
-    case TraitImplPolarity::kPositive:
-      return flat_proto::POSITIVE;
-  }
-}
-
-flat_proto::TraitDerives TraitDerives::ToFlatProto() const {
-  flat_proto::TraitDerives proto;
-  proto.set_clone(crubit::ToFlatProto(clone));
-  proto.set_copy(crubit::ToFlatProto(copy));
-  proto.set_debug(crubit::ToFlatProto(debug));
+void TraitDerives::WriteToProto(ir_proto::TraitDerives& proto) const {
+  proto.set_clone(clone);
+  proto.set_copy(copy);
+  proto.set_debug(debug);
   proto.set_send(send);
   proto.set_sync(sync);
   proto.mutable_custom()->Add(custom.begin(), custom.end());
-  return proto;
 }
 
-flat_proto::OwnedPtrConfig OwnedPtrConfig::ToFlatProto() const {
-  flat_proto::OwnedPtrConfig proto;
+void OwnedPtrConfig::WriteToProto(ir_proto::OwnedPtrConfig& proto) const {
   proto.set_owned_ptr_type(owned_ptr_type);
   proto.set_drop_impl(drop_impl);
-  return proto;
 }
 
 FormattedError FormattedError::FromStatus(absl::Status status) {
