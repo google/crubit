@@ -6,6 +6,60 @@ load("@rules_cc//cc:cc_test.bzl", "cc_test")
 package(default_applicable_licenses = ["//:license"])
 
 cc_library(
+    name = "googlesql_value_nullability_lattice",
+    hdrs = ["googlesql_value_nullability_lattice.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@llvm-project//clang:analysis",
+    ],
+)
+
+cc_library(
+    name = "googlesql_value_nullability_analysis",
+    srcs = ["googlesql_value_nullability_analysis.cc"],
+    hdrs = ["googlesql_value_nullability_analysis.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":googlesql_value_nullability",
+        ":googlesql_value_nullability_lattice",
+        "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:basic",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "googlesql_value_nullability",
+    srcs = ["googlesql_value_nullability.cc"],
+    hdrs = ["googlesql_value_nullability.h"],
+    deps = [
+        "@abseil-cpp//absl/base:nullability",
+        "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
+    ],
+)
+
+cc_test(
+    name = "googlesql_value_nullability_analysis_test",
+    srcs = ["googlesql_value_nullability_analysis_test.cc"],
+    deps = [
+        ":googlesql_value_nullability_analysis",
+        ":googlesql_value_nullability_lattice",
+        "@llvm-project//clang:analysis",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:testing",
+        "@llvm-project//llvm:Support",
+        "@llvm-project//llvm:TestingAnnotations",
+        "@llvm-project//third-party/unittest:gmock",
+        "@llvm-project//third-party/unittest:gtest",
+        "@llvm-project//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_library(
     name = "ast_helpers",
     hdrs = ["ast_helpers.h"],
     visibility = ["//nullability/inference:__pkg__"],
