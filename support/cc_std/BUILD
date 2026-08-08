@@ -29,6 +29,7 @@ bindings_for_toolchain_headers(
     public_libc_hdrs = LIBC_HEADERS,
     public_libcxx_hdrs = LIBCXX_HEADERS,
     visibility = [
+        "//security/deflate/rust:__pkg__",
         "//visibility:public",
     ],
 )
