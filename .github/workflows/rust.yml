@@ -45,6 +45,8 @@ jobs:
   test_cmake:
 
     runs-on: ubuntu-latest
+    env:
+      HAS_GCP_SA_KEY: ${{ secrets.GCP_SA_KEY && 'true' || 'false' }}
     strategy:
       matrix:
         project: [cmake, cmake_demo]
@@ -54,11 +56,14 @@ jobs:
       with:
         persist-credentials: false
     - name: Authenticate to Google Cloud
+      if: env.HAS_GCP_SA_KEY == 'true'
       id: auth
       uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
       with:
         credentials_json: '${{ secrets.GCP_SA_KEY }}'
     - name: Install sccache
+      id: install_sccache
+      if: env.HAS_GCP_SA_KEY == 'true'
       uses: mozilla-actions/sccache-action@65101d47ea8028ed0c98a1cdea8dd9182e9b5133 # v0.0.8
     - name: Test CMake project
       env:
@@ -68,12 +73,17 @@ jobs:
         SCCACHE_GCS_KEY_PREFIX: sccache/${{ matrix.project }}
       run: |
         cd examples/build_systems/${{ matrix.project }}
-        cmake -B build -S . -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        if [[ "$HAS_GCP_SA_KEY" == "true" ]]; then
+          LAUNCHER_FLAGS="-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+        else
+          LAUNCHER_FLAGS=""
+        fi
+        cmake -B build -S . $LAUNCHER_FLAGS
         cmake --build build --parallel
         cd build
         ctest --output-on-failure --parallel 2
     - name: Show sccache stats
-      if: always()
+      if: steps.install_sccache.outcome == 'success' && always()
       run: sccache --show-stats
 
   test_bazel:
@@ -98,8 +108,9 @@ jobs:
       uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
       with:
         bazelisk-cache: true
-        disk-cache: ${{ github.workflow }}-${{ github.job }}
         repository-cache: true
+        external-cache: true
+        disk-cache: ${{ env.GCP_SA_KEY == '' && 'crubit-local-disk-cache' || 'false' }}
     - name: Setup Bazel Remote Cache Flags
       id: bazel_cache_flags
       run: |
@@ -114,4 +125,12 @@ jobs:
       run: |
         cd examples/build_systems/bazel
         bazelisk build ${RCACHE_FLAGS} //:main
+
+    - name: "Build Crubit using Bazel"
+      run: >
+        bazelisk build
+        --lockfile_mode=error
+        ${RCACHE_FLAGS}
+        rs_bindings_from_cc:bazel_types
+        rs_bindings_from_cc:cmdline_flags
 # LINT.ThenChange(//depot/copy.bara.sky)
