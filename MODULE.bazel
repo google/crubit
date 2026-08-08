@@ -11,13 +11,7 @@ module(
 bazel_dep(name = "rules_rust", version = "0.71.3")
 bazel_dep(name = "rules_cc", version = "0.2.19")
 bazel_dep(name = "rules_shell", version = "0.6.1")
-bazel_dep(name = "abseil-cpp", version = "20250127.1")
-git_override(
-    # with nullability support
-    module_name = "abseil-cpp",
-    commit = "e3a2008867c5dc5c0f4c7a4e64fb568df70f23be",
-    remote = "https://github.com/abseil/abseil-cpp",
-)
+bazel_dep(name = "abseil-cpp", version = "20260526.0")
 
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "fuzztest", version = "20250214.0")

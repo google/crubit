@@ -108,8 +108,9 @@ jobs:
       uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
       with:
         bazelisk-cache: true
-        disk-cache: ${{ github.workflow }}-${{ github.job }}
         repository-cache: true
+        external-cache: true
+        disk-cache: ${{ env.GCP_SA_KEY == '' && 'crubit-local-disk-cache' || 'false' }}
     - name: Setup Bazel Remote Cache Flags
       id: bazel_cache_flags
       run: |
@@ -124,4 +125,12 @@ jobs:
       run: |
         cd examples/build_systems/bazel
         bazelisk build ${RCACHE_FLAGS} //:main
+
+    - name: "Build Crubit using Bazel"
+      run: >
+        bazelisk build
+        --lockfile_mode=error
+        ${RCACHE_FLAGS}
+        rs_bindings_from_cc:bazel_types
+        rs_bindings_from_cc:cmdline_flags
 # LINT.ThenChange(//depot/copy.bara.sky)
