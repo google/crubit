@@ -43,6 +43,12 @@ API: support/cc_std_impl/unique_ptr.rs
 
 See also: crubit.rs/errors/delete
 
+## `std::shared_ptr<T>` {#shared_ptr}
+
+A C++ `shared_ptr<T>` becomes a Rust `cc_std::std::shared_ptr<T>`.
+
+API: support/cc_std_impl/shared_ptr.rs
+
 ## `std::vector<T>` {#vector}
 
 A C++ `vector<T>` becomes a Rust `cc_std::std::vector<T>`.

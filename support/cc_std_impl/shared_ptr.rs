@@ -6,6 +6,15 @@ use crate::crubit_cc_std_internal::std_allocator::{self, shared_weak_count};
 
 /// A smart pointer that shares ownership of another object of type `T` via a pointer,
 /// ABI-compatible with `std::shared_ptr<T>`.
+///
+/// # Thread Safety
+///
+/// Like `Arc<T>`, `shared_ptr<T>` implements [`Send`] and [`Sync`] only if `T` implements both
+/// [`Send`] and [`Sync`], and only offers access to the underlying `T` via shared references.
+/// If `T` is a C++ type with thread-safe methods, ensure that the type is annotated with
+/// `CRUBIT_THREAD_SAFE` on its C++ definition so its methods are callable from within a shared_ptr.
+///
+/// See crubit.rs/cpp/cookbook#thread_safety for more details.
 #[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "::std::shared_ptr<{T}>",
     include_path = "<memory>"
