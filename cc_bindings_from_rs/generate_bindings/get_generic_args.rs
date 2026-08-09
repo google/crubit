@@ -248,7 +248,7 @@ fn is_valid_replacement_for_generic_type_param<'tcx>(
         ocx.register_obligation(Obligation::new(tcx, cause, param_env, predicate));
     }
     let errors = ocx.evaluate_obligations_error_on_ambiguity();
-    errors.is_empty()
+    errors.into_iter().next().is_none()
 }
 
 /// Given a `generic_type_param` (e.g. `T` in `fn foo<T>(...)`) tries to find
