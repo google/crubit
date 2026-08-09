@@ -3,3 +3,4 @@
 /target
 bazelisk
 MODULE.bazel.lock
+/external/
