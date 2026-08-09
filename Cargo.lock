@@ -777,6 +777,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "rs_bindings_from_cc_cc_ir_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
+]
+
+[[package]]
 name = "rs_bindings_from_cc_cmdline_flags_sys"
 version = "0.0.0"
 dependencies = [

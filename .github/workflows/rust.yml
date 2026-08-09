@@ -24,6 +24,10 @@ jobs:
     env:
       ABSEIL_VERSION: "20260526.0"
       ABSEIL_INSTALL_DIR: ${{ github.workspace }}/external/abseil-install
+      LLVM_VERSION: "22.1.0"
+      LLVM_INSTALL_DIR: ${{ github.workspace }}/external/llvm-install
+      PROTOBUF_VERSION: "35.1"
+      PROTOBUF_INSTALL_DIR: ${{ github.workspace }}/external/protobuf-install
 
     steps:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -62,18 +66,52 @@ jobs:
           -DCMAKE_CXX_STANDARD=20 \
           -DCMAKE_CXX_STANDARD_REQUIRED=ON
         cmake --build external/abseil-cpp/build --target install --parallel
-    - name: Create fake Clang dir
-      run: mkdir -p /tmp/empty_clang
-    - name: Build Abseil-dependent Cargo targets
+    - name: Cache Protobuf
+      id: cache-protobuf
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ env.PROTOBUF_INSTALL_DIR }}
+        key: protobuf-install-${{ runner.os }}-${{ env.PROTOBUF_VERSION }}
+    - name: Build Protobuf
+      if: steps.cache-protobuf.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p external
+        git clone --depth 1 --branch "v$PROTOBUF_VERSION" https://github.com/protocolbuffers/protobuf.git external/protobuf
+        cd external/protobuf
+        git submodule update --init --recursive
+        cmake -S . -B build \
+          -DCMAKE_INSTALL_PREFIX="$PROTOBUF_INSTALL_DIR" \
+          -Dprotobuf_BUILD_TESTS=OFF \
+          -Dprotobuf_ABSL_PROVIDER=package \
+          -DCMAKE_PREFIX_PATH="$ABSEIL_INSTALL_DIR" \
+          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+          -DCMAKE_CXX_STANDARD=20
+        cmake --build build --target install --parallel
+    - name: Cache LLVM
+      id: cache-llvm
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ env.LLVM_INSTALL_DIR }}
+        key: llvm-install-${{ runner.os }}-${{ env.LLVM_VERSION }}
+    - name: Download LLVM
+      if: steps.cache-llvm.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p "$LLVM_INSTALL_DIR"
+        curl -sSL "https://github.com/llvm/llvm-project/releases/download/llvmorg-$LLVM_VERSION/LLVM-$LLVM_VERSION-Linux-X64.tar.xz" | tar -xJ -C "$LLVM_INSTALL_DIR" --strip-components=1
+    - name: Build sys Cargo targets
       env:
         ABSL_INCLUDE_PATH: ${{ env.ABSEIL_INSTALL_DIR }}/include
         ABSL_LIB_STATIC_PATH: ${{ env.ABSEIL_INSTALL_DIR }}/lib
-        CLANG_INCLUDE_PATH: /tmp/empty_clang
-        CLANG_LIB_STATIC_PATH: /tmp/empty_clang
+        CLANG_INCLUDE_PATH: ${{ env.LLVM_INSTALL_DIR }}/include
+        CLANG_LIB_STATIC_PATH: ${{ env.LLVM_INSTALL_DIR }}/lib
+        PROTOC: ${{ env.PROTOBUF_INSTALL_DIR }}/bin/protoc
+        PROTOBUF_INCLUDE_PATH: ${{ env.PROTOBUF_INSTALL_DIR }}/include
+        PROTOBUF_LIB_STATIC_PATH: ${{ env.PROTOBUF_INSTALL_DIR }}/lib
       run: >
         cargo build --verbose --locked
         --package rs_bindings_from_cc_bazel_types_sys
         --package rs_bindings_from_cc_cmdline_flags_sys
+        --package rs_bindings_from_cc_cc_ir_sys
 
   test_cmake:
 

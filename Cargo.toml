@@ -10,6 +10,7 @@ members = [
   # "cargo/rs_bindings_from_cc/rs_bindings_from_cc",
   "cargo/rs_bindings_from_cc/bazel_types_sys",
   "cargo/rs_bindings_from_cc/cmdline_flags_sys",
+  "cargo/rs_bindings_from_cc/cc_ir_sys",
   "support/ffi_11",
   "support/crubit_bridge_rust",
   "support/crubit_annotate"
