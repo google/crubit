@@ -163,7 +163,7 @@ using ir_proto::PointerTypeKind;
 using ir_proto::SafetyAnnotation;
 
 struct CcType {
-  rs_bindings_from_cc::ir_proto::flat::CcType ToFlatProto() const;
+  void WriteToProto(ir_proto::CcType& proto) const;
 
   struct FuncPointer {
     // When true, this is a C++ function reference that maps to a Rust function
@@ -224,7 +224,9 @@ struct CcType {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const CcType& type) {
-  return o << type.ToFlatProto().ShortDebugString();
+  ir_proto::CcType proto;
+  type.WriteToProto(proto);
+  return o << proto.ShortDebugString();
 }
 
 // An identifier involved in bindings.
@@ -392,7 +394,7 @@ inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
 }
 
 struct TemplateArg {
-  rs_bindings_from_cc::ir_proto::flat::TemplateArg ToFlatProto() const;
+  void WriteToProto(ir_proto::TemplateArg& proto) const;
 
   using Variant = std::variant<CcType, bool, int64_t>;
 
@@ -401,7 +403,7 @@ struct TemplateArg {
 
 // Present on records that are bridge types.
 struct BridgeType {
-  rs_bindings_from_cc::ir_proto::flat::BridgeType ToFlatProto() const;
+  void WriteToProto(ir_proto::BridgeType& proto) const;
 
   // From CRUBIT_BRIDGE.
   struct Bridge {
@@ -450,8 +452,7 @@ struct BridgeType {
 // including the template name (like `ns::vector` for `ns::vector<int>`) and the
 // template arguments (like [`int`, `float`] for `ns::map<int, float>`).
 struct TemplateSpecialization {
-  rs_bindings_from_cc::ir_proto::flat::TemplateSpecialization ToFlatProto()
-      const;
+  void WriteToProto(ir_proto::TemplateSpecialization& proto) const;
 
   struct StdStringView {};
   struct StdWStringView {};
@@ -491,7 +492,7 @@ using ir_proto::TraitImplPolarity;
 
 // The set of traits to derive on the Rust type.
 struct TraitDerives {
-  rs_bindings_from_cc::ir_proto::flat::TraitDerives ToFlatProto() const;
+  void WriteToProto(ir_proto::TraitDerives& proto) const;
 
   TraitImplPolarity* absl_nullable Polarity(absl::string_view trait);
 
@@ -506,7 +507,7 @@ struct TraitDerives {
 };
 
 struct OwnedPtrConfig {
-  rs_bindings_from_cc::ir_proto::flat::OwnedPtrConfig ToFlatProto() const;
+  void WriteToProto(ir_proto::OwnedPtrConfig& proto) const;
 
   std::string owned_ptr_type;
   std::string drop_impl;

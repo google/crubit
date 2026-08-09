@@ -1356,8 +1356,8 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   record->set_id(id.value());
   record->set_owning_target(owning_target.value());
   if (template_specialization.has_value()) {
-    *record->mutable_template_specialization() =
-        template_specialization->ToFlatProto();
+    template_specialization->WriteToProto(
+        *record->mutable_template_specialization());
   }
   if (unknown_attr->has_value()) {
     record->set_unknown_attr(std::move(**unknown_attr));
@@ -1366,10 +1366,10 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
     record->set_doc_comment(std::move(*doc_comment));
   }
   if (bridge_type.has_value()) {
-    *record->mutable_bridge_type() = bridge_type->ToFlatProto();
+    bridge_type->WriteToProto(*record->mutable_bridge_type());
   }
   if (owned_ptr_config.has_value()) {
-    *record->mutable_owned_ptr_config() = owned_ptr_config->ToFlatProto();
+    owned_ptr_config->WriteToProto(*record->mutable_owned_ptr_config());
   }
   record->set_source_loc(ictx_.ConvertSourceLocation(source_loc, nullptr));
   for (auto& base : GetUnambiguousPublicBases(*record_decl)) {
@@ -1381,7 +1381,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   record->mutable_size_align()->set_size(layout.getSize().getQuantity());
   record->mutable_size_align()->set_alignment(
       layout.getAlignment().getQuantity());
-  *record->mutable_trait_derives() = trait_derives->ToFlatProto();
+  trait_derives->WriteToProto(*record->mutable_trait_derives());
   record->set_is_derived_class(is_derived_class);
   record->set_override_alignment(override_alignment);
   record->set_safety_annotation(*safety_annotation);
@@ -1538,7 +1538,7 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
     if (auto comment = ictx_.GetComment(field_decl); comment.has_value()) {
       proto_field.set_doc_comment(*comment);
     }
-    *proto_field.mutable_type() = type.ToFlatProto();
+    type.WriteToProto(*proto_field.mutable_type());
     proto_field.set_access(TranslateAccessSpecifier(access));
     proto_field.set_offset(layout.getFieldOffset(field_decl->getFieldIndex()));
     proto_field.set_size(size);

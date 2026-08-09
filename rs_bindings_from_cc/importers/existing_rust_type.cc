@@ -290,7 +290,7 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
   existing->set_cc_name(std::move(cc_name));
   existing->set_unique_name(ictx_.GetUniqueName(*type_decl));
   for (const auto& arg : format_args) {
-    *existing->add_template_args() = arg.ToFlatProto();
+    arg.WriteToProto(*existing->add_template_args());
   }
   existing->set_owning_target(ictx_.GetOwningTarget(type_decl).value());
   if (!cpp_type->isIncompleteType()) {
