@@ -21,6 +21,14 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      ABSEIL_VERSION: "20260526.0"
+      ABSEIL_INSTALL_DIR: ${{ github.workspace }}/external/abseil-install
+      LLVM_VERSION: "22.1.0"
+      LLVM_INSTALL_DIR: ${{ github.workspace }}/external/llvm-install
+      PROTOBUF_VERSION: "35.1"
+      PROTOBUF_INSTALL_DIR: ${{ github.workspace }}/external/protobuf-install
+
     steps:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
@@ -41,10 +49,75 @@ jobs:
         --exclude=rs_bindings_from_cc_ir_testing
         --exclude=rs_bindings_from_cc_multiplatform_ir_testing
         --exclude=rs_bindings_from_cc_test_generators
+    - name: Cache Abseil
+      id: cache-abseil
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ env.ABSEIL_INSTALL_DIR }}
+        key: abseil-${{ env.ABSEIL_VERSION }}-${{ runner.os }}
+    - name: Build Abseil
+      if: steps.cache-abseil.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p external
+        git clone --branch "$ABSEIL_VERSION" https://github.com/abseil/abseil-cpp.git external/abseil-cpp
+        cmake -S external/abseil-cpp -B external/abseil-cpp/build \
+          -DCMAKE_INSTALL_PREFIX="$ABSEIL_INSTALL_DIR" \
+          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+          -DCMAKE_CXX_STANDARD=20 \
+          -DCMAKE_CXX_STANDARD_REQUIRED=ON
+        cmake --build external/abseil-cpp/build --target install --parallel
+    - name: Cache Protobuf
+      id: cache-protobuf
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ env.PROTOBUF_INSTALL_DIR }}
+        key: protobuf-install-${{ runner.os }}-${{ env.PROTOBUF_VERSION }}
+    - name: Build Protobuf
+      if: steps.cache-protobuf.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p external
+        git clone --depth 1 --branch "v$PROTOBUF_VERSION" https://github.com/protocolbuffers/protobuf.git external/protobuf
+        cd external/protobuf
+        git submodule update --init --recursive
+        cmake -S . -B build \
+          -DCMAKE_INSTALL_PREFIX="$PROTOBUF_INSTALL_DIR" \
+          -Dprotobuf_BUILD_TESTS=OFF \
+          -Dprotobuf_ABSL_PROVIDER=package \
+          -DCMAKE_PREFIX_PATH="$ABSEIL_INSTALL_DIR" \
+          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+          -DCMAKE_CXX_STANDARD=20
+        cmake --build build --target install --parallel
+    - name: Cache LLVM
+      id: cache-llvm
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ env.LLVM_INSTALL_DIR }}
+        key: llvm-install-${{ runner.os }}-${{ env.LLVM_VERSION }}
+    - name: Download LLVM
+      if: steps.cache-llvm.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p "$LLVM_INSTALL_DIR"
+        curl -sSL "https://github.com/llvm/llvm-project/releases/download/llvmorg-$LLVM_VERSION/LLVM-$LLVM_VERSION-Linux-X64.tar.xz" | tar -xJ -C "$LLVM_INSTALL_DIR" --strip-components=1
+    - name: Build sys Cargo targets
+      env:
+        ABSL_INCLUDE_PATH: ${{ env.ABSEIL_INSTALL_DIR }}/include
+        ABSL_LIB_STATIC_PATH: ${{ env.ABSEIL_INSTALL_DIR }}/lib
+        CLANG_INCLUDE_PATH: ${{ env.LLVM_INSTALL_DIR }}/include
+        CLANG_LIB_STATIC_PATH: ${{ env.LLVM_INSTALL_DIR }}/lib
+        PROTOC: ${{ env.PROTOBUF_INSTALL_DIR }}/bin/protoc
+        PROTOBUF_INCLUDE_PATH: ${{ env.PROTOBUF_INSTALL_DIR }}/include
+        PROTOBUF_LIB_STATIC_PATH: ${{ env.PROTOBUF_INSTALL_DIR }}/lib
+      run: >
+        cargo build --verbose --locked
+        --package rs_bindings_from_cc_bazel_types_sys
+        --package rs_bindings_from_cc_cmdline_flags_sys
+        --package rs_bindings_from_cc_cc_ir_sys
 
   test_cmake:
 
     runs-on: ubuntu-latest
+    env:
+      HAS_GCP_SA_KEY: ${{ secrets.GCP_SA_KEY && 'true' || 'false' }}
     strategy:
       matrix:
         project: [cmake, cmake_demo]
@@ -54,11 +127,14 @@ jobs:
       with:
         persist-credentials: false
     - name: Authenticate to Google Cloud
+      if: env.HAS_GCP_SA_KEY == 'true'
       id: auth
       uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
       with:
         credentials_json: '${{ secrets.GCP_SA_KEY }}'
     - name: Install sccache
+      id: install_sccache
+      if: env.HAS_GCP_SA_KEY == 'true'
       uses: mozilla-actions/sccache-action@65101d47ea8028ed0c98a1cdea8dd9182e9b5133 # v0.0.8
     - name: Test CMake project
       env:
@@ -68,12 +144,17 @@ jobs:
         SCCACHE_GCS_KEY_PREFIX: sccache/${{ matrix.project }}
       run: |
         cd examples/build_systems/${{ matrix.project }}
-        cmake -B build -S . -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+        if [[ "$HAS_GCP_SA_KEY" == "true" ]]; then
+          LAUNCHER_FLAGS="-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+        else
+          LAUNCHER_FLAGS=""
+        fi
+        cmake -B build -S . $LAUNCHER_FLAGS
         cmake --build build --parallel
         cd build
         ctest --output-on-failure --parallel 2
     - name: Show sccache stats
-      if: always()
+      if: steps.install_sccache.outcome == 'success' && always()
       run: sccache --show-stats
 
   test_bazel:

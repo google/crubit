@@ -248,7 +248,20 @@ fn is_valid_replacement_for_generic_type_param<'tcx>(
         ocx.register_obligation(Obligation::new(tcx, cause, param_env, predicate));
     }
     let errors = ocx.evaluate_obligations_error_on_ambiguity();
+    is_empty_errors(&errors)
+}
+
+#[rustversion::before(2026-08-07)]
+fn is_empty_errors<E>(errors: &[E]) -> bool {
     errors.is_empty()
+}
+
+#[rustversion::since(2026-08-07)]
+fn is_empty_errors<E>(errors: &rustc_infer::traits::TraitErrors<E>) -> bool {
+    match errors {
+        rustc_infer::traits::TraitErrors::NoErrors => true,
+        rustc_infer::traits::TraitErrors::HasErrors(_) => false,
+    }
 }
 
 /// Given a `generic_type_param` (e.g. `T` in `fn foo<T>(...)`) tries to find

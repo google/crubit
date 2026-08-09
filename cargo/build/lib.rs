@@ -6,6 +6,7 @@ mod absl;
 mod clang;
 mod flags;
 mod paths;
+mod protobuf;
 
 use std::path::Path;
 
@@ -15,11 +16,12 @@ use std::path::Path;
 /// `path_to_src_root` gives the root of the repo, where paths are specified
 /// relative to.
 ///
-/// All C++ libraries can make use of ABSL, LLVM, and Clang, as they are
+/// All C++ libraries can make use of ABSL, LLVM, Protobuf, and Clang, as they are
 /// included in the include path, and are added to the link step.
-pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>>(
+pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
     path_to_src_root: P1,
     sources: &[P2],
+    proto_sources: &[P3],
 ) -> Result<(), std::io::Error> {
     let name = std::env::var("CARGO_PKG_NAME").unwrap();
     let out_dir = std::env::var("OUT_DIR").unwrap();
@@ -54,31 +56,45 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>>(
     paths::print_link_searchs(&clang_lib_dirs)?;
     paths::print_link_libs(&clang_libs)?;
 
+    // ===== Protobuf =====
+
+    let gen_proto_sources = protobuf::compile_protos(&path_to_src_root, proto_sources, &obj_dir)?;
+    let proto_include_dirs = protobuf::collect_protobuf_includes();
+    let proto_lib_dirs = protobuf::collect_protobuf_lib_dirs();
+    paths::print_link_searchs(&proto_lib_dirs)?;
+    paths::print_link_libs(&["protobuf"])?;
+
     // ===== The cc lib ======
 
-    let mut cc_lib = cc::Build::new();
-    cc_lib.out_dir(&obj_dir);
-    for f in flags::CC_FLAGS {
-        cc_lib.flag(f);
-    }
-    cc_lib.include(path_to_src_root.as_ref());
-    for p in sources.into_iter().map(|p| path_to_src_root.as_ref().join(p.as_ref())) {
-        if p.exists() {
-            paths::add_source_file(&mut cc_lib, &p)?;
-        } else {
-            // Trigger a rebuild if a copybara-stripped file is added later
-            println!("cargo::rerun-if-changed={}", p.display());
-            println!("cargo::warning=Skipping internal-only source file: {}", p.display());
+    if !sources.is_empty() || !gen_proto_sources.is_empty() {
+        let mut cc_lib = cc::Build::new();
+        cc_lib.out_dir(&obj_dir);
+        for f in flags::CC_FLAGS {
+            cc_lib.flag(f);
         }
-    }
-    for p in absl_include_dirs.into_iter().chain(clang_include_dirs) {
-        paths::add_include_path(&mut cc_lib, p, false);
-    }
-    cc_lib.cpp(true);
-    cc_lib.compile(&name);
+        cc_lib.include(path_to_src_root.as_ref());
+        cc_lib.include(&obj_dir);
+        for p in sources.into_iter().map(|p| path_to_src_root.as_ref().join(p.as_ref())) {
+            if p.exists() {
+                paths::add_source_file(&mut cc_lib, &p)?;
+            } else {
+                // Trigger a rebuild if a copybara-stripped file is added later
+                println!("cargo::rerun-if-changed={}", p.display());
+                println!("cargo::warning=Skipping internal-only source file: {}", p.display());
+            }
+        }
+        for p in &gen_proto_sources {
+            paths::add_source_file(&mut cc_lib, p)?;
+        }
+        for p in absl_include_dirs.into_iter().chain(clang_include_dirs).chain(proto_include_dirs) {
+            paths::add_include_path(&mut cc_lib, p, false);
+        }
+        cc_lib.cpp(true);
+        cc_lib.compile(&name);
 
-    paths::print_link_search(&obj_dir)?;
-    paths::print_link_libs(&[name])?;
+        paths::print_link_search(&obj_dir)?;
+        paths::print_link_libs(&[name])?;
+    }
 
     Ok(())
 }

@@ -141,6 +141,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "cc"
+version = "1.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d262e149917187838d5b42777c8253bcb64500067342904e7d429499a6f277e"
+dependencies = [
+ "find-msvc-tools",
+ "jobserver",
+ "libc",
+ "shlex",
+]
+
+[[package]]
 name = "cc_bindings_from_rs"
 version = "0.0.0"
 dependencies = [
@@ -423,6 +435,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "crubit_build"
+version = "0.0.0"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "crubit_feature"
 version = "0.0.0"
 dependencies = [
@@ -492,6 +511,12 @@ version = "0.0.0"
 dependencies = [
  "googletest",
 ]
+
+[[package]]
+name = "find-msvc-tools"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26b73573e6edcd2af0cdf47bd6cb58f0b3839491263c314eaad1ccf24430e1de"
 
 [[package]]
 name = "flagset"
@@ -565,6 +590,16 @@ name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+
+[[package]]
+name = "jobserver"
+version = "0.1.35"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c00acbd29eabad4a2392fa0e921c874934dbbf4194312ad20f04a0ed67a3cb3"
+dependencies = [
+ "getrandom",
+ "libc",
+]
 
 [[package]]
 name = "kythe_metadata"
@@ -735,6 +770,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
+name = "rs_bindings_from_cc_bazel_types_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
+]
+
+[[package]]
+name = "rs_bindings_from_cc_cc_ir_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
+]
+
+[[package]]
+name = "rs_bindings_from_cc_cmdline_flags_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
+]
+
+[[package]]
 name = "rustix"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -805,6 +861,12 @@ dependencies = [
  "serde_core",
  "zmij",
 ]
+
+[[package]]
+name = "shlex"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 
 [[package]]
 name = "siphasher"
