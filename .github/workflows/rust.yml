@@ -21,6 +21,10 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      ABSEIL_VERSION: "20260526.0"
+      ABSEIL_INSTALL_DIR: ${{ github.workspace }}/external/abseil-install
+
     steps:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
@@ -41,6 +45,35 @@ jobs:
         --exclude=rs_bindings_from_cc_ir_testing
         --exclude=rs_bindings_from_cc_multiplatform_ir_testing
         --exclude=rs_bindings_from_cc_test_generators
+    - name: Cache Abseil
+      id: cache-abseil
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ env.ABSEIL_INSTALL_DIR }}
+        key: abseil-${{ env.ABSEIL_VERSION }}-${{ runner.os }}
+    - name: Build Abseil
+      if: steps.cache-abseil.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p external
+        git clone --branch "$ABSEIL_VERSION" https://github.com/abseil/abseil-cpp.git external/abseil-cpp
+        cmake -S external/abseil-cpp -B external/abseil-cpp/build \
+          -DCMAKE_INSTALL_PREFIX="$ABSEIL_INSTALL_DIR" \
+          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+          -DCMAKE_CXX_STANDARD=20 \
+          -DCMAKE_CXX_STANDARD_REQUIRED=ON
+        cmake --build external/abseil-cpp/build --target install --parallel
+    - name: Create fake Clang dir
+      run: mkdir -p /tmp/empty_clang
+    - name: Build Abseil-dependent Cargo targets
+      env:
+        ABSL_INCLUDE_PATH: ${{ env.ABSEIL_INSTALL_DIR }}/include
+        ABSL_LIB_STATIC_PATH: ${{ env.ABSEIL_INSTALL_DIR }}/lib
+        CLANG_INCLUDE_PATH: /tmp/empty_clang
+        CLANG_LIB_STATIC_PATH: /tmp/empty_clang
+      run: >
+        cargo build --verbose --locked
+        --package rs_bindings_from_cc_bazel_types_sys
+        --package rs_bindings_from_cc_cmdline_flags_sys
 
   test_cmake:
 
