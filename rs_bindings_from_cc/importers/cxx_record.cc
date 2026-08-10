@@ -1471,28 +1471,19 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
 
     const clang::tidy::lifetimes::ValueLifetimes* no_lifetimes = nullptr;
     CcType type = [&]() {
-      switch (access) {
-        case clang::AS_public:
-          // TODO(mboehme): Once lifetime_annotations supports retrieving
-          // lifetimes in field types, pass these to ConvertQualType().
-          // TODO(b/454627672): is record_decl the right decl to check for
-          // assumed_lifetimes?
-          return ictx_.ConvertQualType(
-              field_decl->getType(), no_lifetimes,
-              /*nullable=*/true,
-              ictx_.AreAssumedLifetimesEnabledForTarget(
-                  ictx_.GetOwningTarget(record_decl)));
-        case clang::AS_protected:
-        case clang::AS_private:
-        case clang::AS_none:
-          // As a performance optimization (i.e. to keep the generated code
-          // small) we can emit private fields as opaque blobs of bytes.  This
-          // may avoid the need to include supporting types in the generated
-          // code (e.g. avoiding extra template instantiations).  See also
-          // b/226580208 and <internal link>.
-          return CcType(FormattedError::Static(
-              "Types of non-public C++ fields can be elided away"));
+      if (access != clang::AS_public && !ictx_.invocation_.is_carcinize()) {
+        // As a performance optimization (i.e. to keep the generated code
+        // small) we can emit private fields as opaque blobs of bytes.  This
+        // may avoid the need to include supporting types in the generated
+        // code (e.g. avoiding extra template instantiations).  See also
+        // b/226580208 and <internal link>.
+        return CcType(FormattedError::Static(
+            "Types of non-public C++ fields can be elided away"));
       }
+      return ictx_.ConvertQualType(field_decl->getType(), no_lifetimes,
+                                   /*nullable=*/true,
+                                   ictx_.AreAssumedLifetimesEnabledForTarget(
+                                       ictx_.GetOwningTarget(record_decl)));
     }();
 
     bool is_inheritable = false;
