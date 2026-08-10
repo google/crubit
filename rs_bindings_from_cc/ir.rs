@@ -1101,30 +1101,112 @@ pub enum SafetyAnnotation {
     Unannotated,
 }
 
+impl ProtoToIr for ::ir_rust_proto::SafetyAnnotation {
+    type IrType = SafetyAnnotation;
+
+    fn validate(self) -> Result<()> {
+        match self {
+            ::ir_rust_proto::SafetyAnnotation::DisableUnsafe
+            | ::ir_rust_proto::SafetyAnnotation::Unsafe
+            | ::ir_rust_proto::SafetyAnnotation::Unannotated => Ok(()),
+            _ => bail!("Unspecified SafetyAnnotation"),
+        }
+    }
+
+    fn to_ir(self) -> Self::IrType {
+        match self {
+            ::ir_rust_proto::SafetyAnnotation::DisableUnsafe => SafetyAnnotation::DisableUnsafe,
+            ::ir_rust_proto::SafetyAnnotation::Unsafe => SafetyAnnotation::Unsafe,
+            ::ir_rust_proto::SafetyAnnotation::Unannotated => SafetyAnnotation::Unannotated,
+            _ => unreachable!(
+                "`SafetyAnnotation` should have been validated by `ProtoToIr::validate`"
+            ),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Func<'pb> {
     pub(crate) proto: FuncView<'pb>,
     pub(crate) cc_name: UnqualifiedIdentifier<'pb>,
     pub(crate) rs_name: UnqualifiedIdentifier<'pb>,
-    pub(crate) unique_name: &'pb str,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) mangled_name: &'pb str,
-    pub(crate) doc_comment: Option<&'pb str>,
     pub(crate) return_type: CcType,
     pub(crate) params: Vec<FuncParam<'pb>>,
     pub(crate) lifetime_params: Vec<LifetimeName>,
-    pub(crate) instance_method_metadata: Option<InstanceMethodMetadata<'pb>>,
-    pub(crate) nodiscard: Option<&'pb str>,
-    pub(crate) deprecated: Option<&'pb str>,
-    pub(crate) unknown_attr: Option<&'pb str>,
-    pub(crate) safety_annotation: SafetyAnnotation,
-    pub(crate) source_loc: &'pb str,
-
     pub(crate) inline_cpp_source_text: Option<Rc<str>>,
-
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
-
     pub(crate) semantic: Option<MemberFuncSemantic>,
+}
+
+impl<'pb> ProtoToIr for FuncView<'pb> {
+    type IrType = Func<'pb>;
+
+    fn validate(self) -> Result<()> {
+        let _ = UnqualifiedIdentifier::try_from(self.cc_name())?;
+        let _ = UnqualifiedIdentifier::try_from(self.rs_name())?;
+        self.unique_name().validate()?;
+        self.owning_target().validate()?;
+        self.mangled_name().validate()?;
+        self.doc_comment_opt().validate()?;
+        let _ = CcType::try_from(self.return_type())?;
+        for param in self.params().iter() {
+            param.validate()?;
+        }
+        for lifetime in self.lifetime_params().iter() {
+            let _ = LifetimeName::try_from(lifetime)?;
+        }
+        self.instance_method_metadata_opt().validate()?;
+        self.nodiscard_opt().validate()?;
+        self.deprecated_opt().validate()?;
+        self.unknown_attr_opt().validate()?;
+        self.safety_annotation().validate()?;
+        self.source_loc().validate()?;
+        for s in self.lifetime_inputs().iter() {
+            s.validate()?;
+        }
+        if let Some(sem) = self.semantic_opt() {
+            let _ = MemberFuncSemantic::try_from(sem)?;
+        }
+        self.inline_cpp_source_text_opt().validate()
+    }
+
+    fn to_ir(self) -> Func<'pb> {
+        let cc_name = UnqualifiedIdentifier::try_from(self.cc_name())
+            .expect("`cc_name` should have been validated by `FuncView::validate`");
+        let rs_name = UnqualifiedIdentifier::try_from(self.rs_name())
+            .expect("`rs_name` should have been validated by `FuncView::validate`");
+        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let return_type = CcType::try_from(self.return_type())
+            .expect("`return_type` should have been validated by `FuncView::validate`");
+        let params = self.params().iter().map(|p| p.to_ir()).collect();
+        let lifetime_params = self
+            .lifetime_params()
+            .iter()
+            .map(|l| {
+                LifetimeName::try_from(l)
+                    .expect("`lifetime_params` should have been validated by `FuncView::validate`")
+            })
+            .collect();
+        let lifetime_inputs = self.lifetime_inputs().iter().map(|s| Rc::from(s.to_ir())).collect();
+        let semantic = self.semantic_opt().map(|s| {
+            MemberFuncSemantic::try_from(s)
+                .expect("`semantic` should have been validated by `FuncView::validate`")
+        });
+        let inline_cpp_source_text = self.inline_cpp_source_text_opt().to_ir().map(Rc::from);
+        Func {
+            proto: self,
+            cc_name,
+            rs_name,
+            owning_target,
+            return_type,
+            params,
+            lifetime_params,
+            inline_cpp_source_text,
+            lifetime_inputs,
+            semantic,
+        }
+    }
 }
 
 derive_debug_partialeq_eq_hash! {
@@ -1138,7 +1220,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.unique_name
+            self.proto.unique_name().to_ir()
         }
 
         pub fn owning_target(&self) -> &BazelLabel {
@@ -1146,11 +1228,11 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn mangled_name(&self) -> &'pb str {
-            self.mangled_name
+            self.proto.mangled_name().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.doc_comment
+            self.proto.doc_comment_opt().to_ir()
         }
 
         pub fn return_type(&self) -> &CcType {
@@ -1174,8 +1256,8 @@ derive_debug_partialeq_eq_hash! {
             self.proto.is_inline()
         }
 
-        pub fn instance_method_metadata(&self) -> Option<&InstanceMethodMetadata<'pb>> {
-            self.instance_method_metadata.as_ref()
+        pub fn instance_method_metadata(&self) -> Option<InstanceMethodMetadata<'pb>> {
+            self.proto.instance_method_metadata_opt().to_ir()
         }
 
         pub fn is_extern_c(&self) -> bool {
@@ -1197,13 +1279,13 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
         /// string is used.
         pub fn nodiscard(&self) -> Option<&'pb str> {
-            self.nodiscard
+            self.proto.nodiscard_opt().to_ir()
         }
 
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.deprecated
+            self.proto.deprecated_opt().to_ir()
         }
 
         /// A human-readable list of attributes that Crubit doesn't understand.
@@ -1212,7 +1294,7 @@ derive_debug_partialeq_eq_hash! {
         /// fairly significant ways, and in ways that may affect interop, we
         /// default-closed and do not expose functions with unknown attributes.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.unknown_attr
+            self.proto.unknown_attr_opt().to_ir()
         }
 
         pub fn has_c_calling_convention(&self) -> bool {
@@ -1224,11 +1306,11 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn safety_annotation(&self) -> SafetyAnnotation {
-            self.safety_annotation
+            self.proto.safety_annotation().to_ir()
         }
 
         pub fn source_loc(&self) -> &'pb str {
-            self.source_loc
+            self.proto.source_loc().to_ir()
         }
 
         pub fn id(&self) -> ItemId {
@@ -1306,7 +1388,7 @@ impl<'pb> GenericItem<'pb> for Func<'pb> {
 
 impl<'pb> Func<'pb> {
     pub fn is_instance_method(&self) -> bool {
-        self.instance_method_metadata.is_some()
+        self.instance_method_metadata().is_some()
     }
 
     pub fn source_text_as_token_stream(&self) -> Option<proc_macro2::TokenStream> {
