@@ -1103,8 +1103,6 @@ fn generate_trait_operator_impls<'tcx>(
             "sub_assign",
             "operator-=",
         ),
-        // TODO(b/483382648): Add support for other traits / operators - e.g. `PartialOrd`,
-        // (`operator<`, `operator<=`, etc., `operator<=>` seems hard)
     ]
     .into_iter()
     .flatten()
