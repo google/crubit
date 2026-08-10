@@ -24,6 +24,14 @@ struct Args {
     /// The output C++ header file (.h)
     #[arg(long, value_name = "FILE", required = true)]
     out: PathBuf,
+
+    /// Optional custom macro name to extract (defaults to global_cpp, DO_NOT_SUBMIT_CPP_DECL, cpp_decl) // NOLINT
+    #[arg(long, default_value = "")]
+    macro_name: String,
+
+    /// Fail if bindable C++ declarations are found inside fallback blocks
+    #[arg(long, default_value_t = false)]
+    fail_on_bindable: bool,
 }
 
 struct TokenParser<'a> {
@@ -215,10 +223,17 @@ struct ExtractedMacro<'a> {
 
 fn extract_macro_body<'a>(
     parser: &mut TokenParser<'a>,
-    macro_name: &str,
+    macro_names: &[&str],
     file_name: &str,
 ) -> Result<Option<ExtractedMacro<'a>>, String> {
-    let Some(path_token_count) = parser.match_macro_invocation_path(macro_name) else {
+    let mut matched_len = None;
+    for macro_name in macro_names {
+        if let Some(path_token_count) = parser.match_macro_invocation_path(macro_name) {
+            matched_len = Some(path_token_count);
+            break;
+        }
+    }
+    let Some(path_token_count) = matched_len else {
         parser.advance();
         return Ok(None);
     };
@@ -241,16 +256,43 @@ fn extract_macro_body<'a>(
     Ok(Some(ExtractedMacro { macro_line, macro_col, body }))
 }
 
+pub fn lint_bindable_cpp(body_text: &str, file_name: &str, line: usize) -> Vec<String> {
+    let mut warnings = Vec::new();
+    let trimmed = body_text.trim();
+    if !trimmed.contains("template")
+        && !trimmed.contains("#include")
+        && (trimmed.contains("struct ")
+            || trimmed.contains("class ")
+            || (trimmed.contains('(') && trimmed.contains(')') && trimmed.contains(';')))
+    {
+        warnings.push(format!(
+            "Lint warning at {}:{}: Item inside fallback C++ block is natively bindable by Crubit. Consider upgrading it to a standard Rust binding.",
+            file_name, line
+        ));
+    }
+    warnings
+}
+
 pub fn extract_global_cpp(
     rust_source: &str,
     tokens: &[ra_ap_rustc_lexer::Token],
     file_name: &str,
-) -> Result<String, String> {
+    custom_macro_name: Option<&str>,
+) -> Result<(String, Vec<String>), String> {
     let mut extracted = String::new();
+    let mut lint_warnings = Vec::new();
     let mut parser = TokenParser::new(rust_source, tokens);
 
+    let mut macro_names = vec!["global_cpp", "DO_NOT_SUBMIT_CPP_DECL", "cpp_decl"]; // NOLINT
+    if let Some(c) = custom_macro_name
+        && !c.is_empty()
+        && !macro_names.contains(&c)
+    {
+        macro_names.push(c);
+    }
+
     while parser.peek().is_some() {
-        let Some(block) = extract_macro_body(&mut parser, "global_cpp", file_name)? else {
+        let Some(block) = extract_macro_body(&mut parser, &macro_names, file_name)? else {
             continue;
         };
         let padding = " ".repeat(block.body.column - 1);
@@ -259,9 +301,11 @@ pub fn extract_global_cpp(
             "#line {} \"{}\"\n{}{}\n",
             block.body.line, file_name, padding, block.body.text
         );
+        let warnings = lint_bindable_cpp(block.body.text, file_name, block.body.line);
+        lint_warnings.extend(warnings);
     }
 
-    Ok(extracted)
+    Ok((extracted, lint_warnings))
 }
 
 struct LexToken<'a> {
@@ -353,7 +397,7 @@ pub fn extract_inline_cpp(
     let mut parser = TokenParser::new(rust_source, tokens);
 
     while parser.peek().is_some() {
-        let Some(block) = extract_macro_body(&mut parser, "inline_cpp", file_name)? else {
+        let Some(block) = extract_macro_body(&mut parser, &["inline_cpp"], file_name)? else {
             continue;
         };
         let thunk_name = inline_cpp_utils::compute_thunk_name(
@@ -381,6 +425,9 @@ fn main() {
     let args = Args::parse();
 
     let mut all_cpp_snippets = String::new();
+    let custom_macro =
+        if args.macro_name.is_empty() { None } else { Some(args.macro_name.as_str()) };
+    let mut total_warnings = Vec::new();
 
     for src in &args.srcs {
         let content = fs::read_to_string(src).unwrap_or_else(|e| {
@@ -392,11 +439,14 @@ fn main() {
             ra_ap_rustc_lexer::tokenize(&content, ra_ap_rustc_lexer::FrontmatterAllowed::No);
         let token_list = tokens.collect::<Vec<_>>();
 
-        let scraped_global =
-            extract_global_cpp(&content, &token_list, &file_name).unwrap_or_else(|e| {
-                eprintln!("Extraction error: {}", e);
-                process::exit(1);
-            });
+        let (scraped_global, warnings) =
+            extract_global_cpp(&content, &token_list, &file_name, custom_macro).unwrap_or_else(
+                |e| {
+                    eprintln!("Extraction error: {}", e);
+                    process::exit(1);
+                },
+            );
+        total_warnings.extend(warnings);
         let scraped_inline = extract_inline_cpp(&content, &token_list, &file_name, &args.target)
             .unwrap_or_else(|e| {
                 eprintln!("Extraction error: {}", e);
@@ -404,6 +454,16 @@ fn main() {
             });
         all_cpp_snippets.push_str(&scraped_global);
         all_cpp_snippets.push_str(&scraped_inline);
+    }
+
+    if !total_warnings.is_empty() {
+        for w in &total_warnings {
+            eprintln!("{}", w);
+        }
+        if args.fail_on_bindable {
+            eprintln!("Error: Bindable C++ declarations found in fallback blocks with --fail_on_bindable enabled.");
+            process::exit(1);
+        }
     }
 
     let guard_name = "CRUBIT_EXTRACTED_GLOBAL_CPP_H_";
@@ -433,21 +493,42 @@ mod tests {
     fn test_basic_extract() {
         let input = "global_cpp! { int x; }";
         let expected = "#line 1 \"test.rs\"\n              int x; \n";
-        expect_eq!(extract_global_cpp(input, &tokenize(input), "test.rs").unwrap(), expected);
+        let (extracted, _) = extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap();
+        expect_eq!(extracted, expected);
+    }
+
+    #[gtest]
+    fn test_do_not_submit_cpp_decl_extract() {
+        let input = "DO_NOT_SUBMIT_CPP_DECL! { template <typename T> void Foo(T t); }"; // NOLINT
+        let expected = "#line 1 \"test.rs\"\n                          template <typename T> void Foo(T t); \n";
+        let (extracted, warnings) =
+            extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap();
+        expect_eq!(extracted, expected);
+        expect_that!(warnings, is_empty());
+    }
+
+    #[gtest]
+    fn test_lint_bindable_cpp_warning() {
+        let input = "DO_NOT_SUBMIT_CPP_DECL! { int Add(int a, int b); }"; // NOLINT
+        let (_, warnings) = extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap();
+        expect_that!(warnings.len(), eq(1));
+        expect_true!(warnings[0].contains("natively bindable"));
     }
 
     #[gtest]
     fn test_nested_braces() {
         let input = "global_cpp! { namespace foo { int x; } }";
         let expected = "#line 1 \"test.rs\"\n              namespace foo { int x; } \n";
-        expect_eq!(extract_global_cpp(input, &tokenize(input), "test.rs").unwrap(), expected);
+        let (extracted, _) = extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap();
+        expect_eq!(extracted, expected);
     }
 
     #[gtest]
     fn test_multiple_blocks() {
         let input = "global_cpp! { int x; } some rust code global_cpp! { int y; }";
         let expected = "#line 1 \"test.rs\"\n              int x; \n#line 1 \"test.rs\"\n                                                    int y; \n";
-        expect_eq!(extract_global_cpp(input, &tokenize(input), "test.rs").unwrap(), expected);
+        let (extracted, _) = extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap();
+        expect_eq!(extracted, expected);
     }
 
     #[gtest]
@@ -474,7 +555,10 @@ mod tests {
             "        template class MyTemplate<int>;\n",
             "    }\n\n"
         );
-        expect_eq!(extract_global_cpp(input, &tokenize(input), "test.rs").unwrap(), expected);
+        expect_eq!(
+            extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap().0,
+            expected
+        );
     }
 
     #[gtest]
@@ -482,20 +566,26 @@ mod tests {
         let input = "global_cpp! { namespace outer::inner { int x = 10; } }";
         let expected =
             "#line 1 \"test.rs\"\n              namespace outer::inner { int x = 10; } \n";
-        expect_eq!(extract_global_cpp(input, &tokenize(input), "test.rs").unwrap(), expected);
+        expect_eq!(
+            extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap().0,
+            expected
+        );
     }
 
     #[gtest]
     fn test_extract_global_cpp_multiline_line_number_mapping() {
         let input = "line 1\nline 2\nglobal_cpp! {\n    int x = 42;\n}\n";
         let expected = "#line 3 \"test.rs\"\n             \n    int x = 42;\n\n";
-        expect_eq!(extract_global_cpp(input, &tokenize(input), "test.rs").unwrap(), expected);
+        expect_eq!(
+            extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap().0,
+            expected
+        );
     }
 
     #[gtest]
     fn test_unclosed_block() {
         let input = "global_cpp! { int x;";
-        let err = extract_global_cpp(input, &tokenize(input), "test.rs").unwrap_err();
+        let err = extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap_err();
         let expected_err = "Unmatched delimiter starting at test.rs:1: Context around open brace:\nglobal_cpp! { int x;";
         expect_eq!(err, expected_err);
     }
@@ -503,7 +593,7 @@ mod tests {
     #[gtest]
     fn test_unclosed_block_with_context() {
         let input = "line 1\nline 2\nline 3\nglobal_cpp! { int x;\nline 5\nline 6\nline 7";
-        let err = extract_global_cpp(input, &tokenize(input), "test.rs").unwrap_err();
+        let err = extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap_err();
         let expected_err = "Unmatched delimiter starting at test.rs:4: Context around open brace:\nline 2\nline 3\nglobal_cpp! { int x;\nline 5\nline 6";
         expect_eq!(err, expected_err);
     }
