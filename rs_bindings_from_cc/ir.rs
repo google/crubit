@@ -79,6 +79,20 @@ impl<T: ProtoToIr> ProtoToIr for Option<T> {
     }
 }
 
+/// Trait to convert optional protobuf getters, which are`protobuf::Optional<T>` under Cargo
+/// and `std::option::Option<T>` under Bazel into standard `Option<T>`.
+pub(crate) trait IntoOption {
+    type Target;
+    fn into_option(self) -> Option<Self::Target>;
+}
+
+impl<T> IntoOption for Option<T> {
+    type Target = T;
+    fn into_option(self) -> Option<T> {
+        self
+    }
+}
+
 /// Common data about all items.
 pub trait GenericItem<'pb> {
     fn id(&self) -> ItemId;
@@ -1032,7 +1046,7 @@ impl<'pb> ProtoToIr for FuncParamView<'pb> {
     fn validate(self) -> Result<()> {
         let _ = CcType::try_from(self.r#type())?;
         self.identifier().validate()?;
-        self.unknown_attr_opt().validate()
+        self.unknown_attr_opt().into_option().validate()
     }
 
     fn to_ir(self) -> FuncParam<'pb> {
@@ -1074,7 +1088,7 @@ derive_debug_partialeq_eq_hash! {
         /// One notable example is `lifetimebound`, which we might expect to map
         /// to Rust lifetimes.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().to_ir()
+            self.proto.unknown_attr_opt().into_option().to_ir()
         }
     }
 }
@@ -1143,7 +1157,7 @@ impl<'pb> ProtoToIr for FuncView<'pb> {
         self.unique_name().validate()?;
         self.owning_target().validate()?;
         self.mangled_name().validate()?;
-        self.doc_comment_opt().validate()?;
+        self.doc_comment_opt().into_option().validate()?;
         let _ = CcType::try_from(self.return_type())?;
         for param in self.params().iter() {
             param.validate()?;
@@ -1151,19 +1165,19 @@ impl<'pb> ProtoToIr for FuncView<'pb> {
         for lifetime in self.lifetime_params().iter() {
             let _ = LifetimeName::try_from(lifetime)?;
         }
-        self.instance_method_metadata_opt().validate()?;
-        self.nodiscard_opt().validate()?;
-        self.deprecated_opt().validate()?;
-        self.unknown_attr_opt().validate()?;
+        self.instance_method_metadata_opt().into_option().validate()?;
+        self.nodiscard_opt().into_option().validate()?;
+        self.deprecated_opt().into_option().validate()?;
+        self.unknown_attr_opt().into_option().validate()?;
         self.safety_annotation().validate()?;
         self.source_loc().validate()?;
         for s in self.lifetime_inputs().iter() {
             s.validate()?;
         }
-        if let Some(sem) = self.semantic_opt() {
+        if let Some(sem) = self.semantic_opt().into_option() {
             let _ = MemberFuncSemantic::try_from(sem)?;
         }
-        self.inline_cpp_source_text_opt().validate()
+        self.inline_cpp_source_text_opt().into_option().validate()
     }
 
     fn to_ir(self) -> Func<'pb> {
@@ -1184,11 +1198,12 @@ impl<'pb> ProtoToIr for FuncView<'pb> {
             })
             .collect();
         let lifetime_inputs = self.lifetime_inputs().iter().map(|s| Rc::from(s.to_ir())).collect();
-        let semantic = self.semantic_opt().map(|s| {
+        let semantic = self.semantic_opt().into_option().map(|s| {
             MemberFuncSemantic::try_from(s)
                 .expect("`semantic` should have been validated by `FuncView::validate`")
         });
-        let inline_cpp_source_text = self.inline_cpp_source_text_opt().to_ir().map(Rc::from);
+        let inline_cpp_source_text =
+            self.inline_cpp_source_text_opt().into_option().to_ir().map(Rc::from);
         Func {
             proto: self,
             cc_name,
@@ -1227,7 +1242,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().to_ir()
+            self.proto.doc_comment_opt().into_option().to_ir()
         }
 
         pub fn return_type(&self) -> &CcType {
@@ -1252,7 +1267,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn instance_method_metadata(&self) -> Option<InstanceMethodMetadata> {
-            self.proto.instance_method_metadata_opt().to_ir()
+            self.proto.instance_method_metadata_opt().into_option().to_ir()
         }
 
         pub fn is_extern_c(&self) -> bool {
@@ -1274,13 +1289,13 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
         /// string is used.
         pub fn nodiscard(&self) -> Option<&'pb str> {
-            self.proto.nodiscard_opt().to_ir()
+            self.proto.nodiscard_opt().into_option().to_ir()
         }
 
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().to_ir()
+            self.proto.deprecated_opt().into_option().to_ir()
         }
 
         /// A human-readable list of attributes that Crubit doesn't understand.
@@ -1289,7 +1304,7 @@ derive_debug_partialeq_eq_hash! {
         /// fairly significant ways, and in ways that may affect interop, we
         /// default-closed and do not expose functions with unknown attributes.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().to_ir()
+            self.proto.unknown_attr_opt().into_option().to_ir()
         }
 
         pub fn has_c_calling_convention(&self) -> bool {
@@ -1318,7 +1333,7 @@ derive_debug_partialeq_eq_hash! {
         /// a member function, it will be a record type in C++, but might be an
         /// `ExistingRustType` if it was renamed.
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         /// If this function was declared as a `friend` inside of a record
@@ -1328,7 +1343,7 @@ derive_debug_partialeq_eq_hash! {
         /// The record pointed to by `ItemId` must then be ADL-visible in order to
         /// invoke this function.
         pub fn adl_enclosing_record(&self) -> Option<ItemId> {
-            self.proto.adl_enclosing_record_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.adl_enclosing_record_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -1478,13 +1493,13 @@ impl<'pb> ProtoToIr for FieldView<'pb> {
     type IrType = Field<'pb>;
 
     fn validate(self) -> Result<()> {
-        self.rust_identifier_opt().validate()?;
-        self.cpp_identifier_opt().validate()?;
-        self.doc_comment_opt().validate()?;
+        self.rust_identifier_opt().into_option().validate()?;
+        self.cpp_identifier_opt().into_option().validate()?;
+        self.doc_comment_opt().into_option().validate()?;
         let _ = CcType::try_from(self.r#type())?;
         self.access().validate()?;
         self.unknown_attr().validate()?;
-        self.deprecated_opt().validate()
+        self.deprecated_opt().into_option().validate()
     }
 
     fn to_ir(self) -> Field<'pb> {
@@ -1498,15 +1513,15 @@ impl<'pb> ProtoToIr for FieldView<'pb> {
 derive_debug_partialeq_eq_hash! {
     impl<'pb> Field<'pb> {
         pub fn rust_identifier(&self) -> Option<Identifier<'pb>> {
-            self.proto.rust_identifier_opt().to_ir()
+            self.proto.rust_identifier_opt().into_option().to_ir()
         }
 
         pub fn cpp_identifier(&self) -> Option<Identifier<'pb>> {
-            self.proto.cpp_identifier_opt().to_ir()
+            self.proto.cpp_identifier_opt().into_option().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().to_ir()
+            self.proto.doc_comment_opt().into_option().to_ir()
         }
 
         pub fn type_(&self) -> &CcType {
@@ -1549,7 +1564,7 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().to_ir()
+            self.proto.deprecated_opt().into_option().to_ir()
         }
     }
 }
@@ -1588,7 +1603,7 @@ impl<'pb> ProtoToIr for BaseClassView<'pb> {
     fn to_ir(self) -> BaseClass {
         BaseClass {
             base_record_id: ItemId(self.base_record_id() as usize),
-            offset: self.offset_opt(),
+            offset: self.offset_opt().into_option(),
         }
     }
 }
@@ -1619,7 +1634,7 @@ impl<'pb> ProtoToIr for IncompleteRecordView<'pb> {
         self.unique_name().validate()?;
         self.owning_target().validate()?;
         let _ = RecordType::try_from(self.record_type())?;
-        self.unknown_attr_opt().validate()
+        self.unknown_attr_opt().into_option().validate()
     }
 
     fn to_ir(self) -> IncompleteRecord<'pb> {
@@ -1658,7 +1673,7 @@ derive_debug_partialeq_eq_hash! {
         /// fairly significant ways, and in ways that may affect interop, we
         /// default-closed and do not expose functions with unknown attributes.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().to_ir()
+            self.proto.unknown_attr_opt().into_option().to_ir()
         }
 
         pub fn record_type(&self) -> RecordType {
@@ -1666,7 +1681,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -2050,7 +2065,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -2312,10 +2327,10 @@ impl<'pb> ProtoToIr for ConstantView<'pb> {
         self.owning_target().validate()?;
         self.source_loc().validate()?;
         self.value().validate()?;
-        self.unknown_attr_opt().validate()?;
+        self.unknown_attr_opt().into_option().validate()?;
         let _ = CcType::try_from(self.r#type())?;
-        self.deprecated_opt().validate()?;
-        self.doc_comment_opt().validate()
+        self.deprecated_opt().into_option().validate()?;
+        self.doc_comment_opt().into_option().validate()
     }
 
     fn to_ir(self) -> Constant<'pb> {
@@ -2357,11 +2372,11 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().to_ir()
+            self.proto.unknown_attr_opt().into_option().to_ir()
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn type_(&self) -> &CcType {
@@ -2375,11 +2390,11 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().to_ir()
+            self.proto.deprecated_opt().into_option().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().to_ir()
+            self.proto.doc_comment_opt().into_option().to_ir()
         }
     }
 }
@@ -2427,11 +2442,11 @@ impl<'pb> ProtoToIr for GlobalVarView<'pb> {
         self.unique_name().validate()?;
         self.owning_target().validate()?;
         self.source_loc().validate()?;
-        self.unknown_attr_opt().validate()?;
-        self.mangled_name_opt().validate()?;
+        self.unknown_attr_opt().into_option().validate()?;
+        self.mangled_name_opt().into_option().validate()?;
         let _ = CcType::try_from(self.r#type())?;
-        self.deprecated_opt().validate()?;
-        self.doc_comment_opt().validate()
+        self.deprecated_opt().into_option().validate()?;
+        self.doc_comment_opt().into_option().validate()
     }
 
     fn to_ir(self) -> GlobalVar<'pb> {
@@ -2470,15 +2485,15 @@ derive_debug_partialeq_eq_hash! {
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().to_ir()
+            self.proto.unknown_attr_opt().into_option().to_ir()
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn mangled_name(&self) -> Option<&'pb str> {
-            self.proto.mangled_name_opt().to_ir()
+            self.proto.mangled_name_opt().into_option().to_ir()
         }
 
         pub fn type_(&self) -> &CcType {
@@ -2492,11 +2507,11 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().to_ir()
+            self.proto.deprecated_opt().into_option().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().to_ir()
+            self.proto.doc_comment_opt().into_option().to_ir()
         }
     }
 }
@@ -2552,10 +2567,10 @@ impl<'pb> ProtoToIr for EnumView<'pb> {
                 enumerator.validate()?;
             }
         }
-        self.unknown_attr_opt().validate()?;
-        self.nodiscard_opt().validate()?;
-        self.deprecated_opt().validate()?;
-        self.doc_comment_opt().validate()
+        self.unknown_attr_opt().into_option().validate()?;
+        self.nodiscard_opt().into_option().validate()?;
+        self.deprecated_opt().into_option().validate()?;
+        self.doc_comment_opt().into_option().validate()
     }
 
     fn to_ir(self) -> Enum<'pb> {
@@ -2613,11 +2628,11 @@ derive_debug_partialeq_eq_hash! {
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().to_ir()
+            self.proto.unknown_attr_opt().into_option().to_ir()
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -2631,17 +2646,17 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
         /// string is used.
         pub fn nodiscard(&self) -> Option<&'pb str> {
-            self.proto.nodiscard_opt().to_ir()
+            self.proto.nodiscard_opt().into_option().to_ir()
         }
 
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().to_ir()
+            self.proto.deprecated_opt().into_option().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().to_ir()
+            self.proto.doc_comment_opt().into_option().to_ir()
         }
     }
 }
@@ -2684,9 +2699,9 @@ impl<'pb> ProtoToIr for EnumeratorView<'pb> {
     fn validate(self) -> Result<()> {
         self.identifier().validate()?;
         self.value().validate()?;
-        self.unknown_attr_opt().validate()?;
-        self.deprecated_opt().validate()?;
-        self.doc_comment_opt().validate()
+        self.unknown_attr_opt().into_option().validate()?;
+        self.deprecated_opt().into_option().validate()?;
+        self.doc_comment_opt().into_option().validate()
     }
 
     fn to_ir(self) -> Enumerator<'pb> {
@@ -2706,17 +2721,17 @@ derive_debug_partialeq_eq_hash! {
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().to_ir()
+            self.proto.unknown_attr_opt().into_option().to_ir()
         }
 
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().to_ir()
+            self.proto.deprecated_opt().into_option().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().to_ir()
+            self.proto.doc_comment_opt().into_option().to_ir()
         }
     }
 }
@@ -2738,11 +2753,11 @@ impl<'pb> ProtoToIr for TypeAliasView<'pb> {
         self.rs_name().validate()?;
         self.unique_name().validate()?;
         self.owning_target().validate()?;
-        self.doc_comment_opt().validate()?;
-        self.unknown_attr_opt().validate()?;
+        self.doc_comment_opt().into_option().validate()?;
+        self.unknown_attr_opt().into_option().validate()?;
         let _ = CcType::try_from(self.underlying_type())?;
         self.source_loc().validate()?;
-        self.deprecated_opt().validate()?;
+        self.deprecated_opt().into_option().validate()?;
         for lifetime in self.lifetime_inputs().iter() {
             lifetime.validate()?;
         }
@@ -2781,12 +2796,12 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().to_ir()
+            self.proto.doc_comment_opt().into_option().to_ir()
         }
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().to_ir()
+            self.proto.unknown_attr_opt().into_option().to_ir()
         }
 
         pub fn underlying_type(&self) -> &CcType {
@@ -2798,7 +2813,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn must_bind(&self) -> bool {
@@ -2808,7 +2823,7 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().to_ir()
+            self.proto.deprecated_opt().into_option().to_ir()
         }
 
         pub fn lifetime_inputs(&self) -> &[Rc<str>] {
@@ -3117,10 +3132,10 @@ impl<'pb> ProtoToIr for NamespaceView<'pb> {
         self.cc_name().validate()?;
         self.rs_name().validate()?;
         self.unique_name().validate()?;
-        self.unknown_attr_opt().validate()?;
+        self.unknown_attr_opt().into_option().validate()?;
         self.owning_target().validate()?;
-        self.deprecated_opt().validate()?;
-        self.doc_comment_opt().validate()?;
+        self.deprecated_opt().into_option().validate()?;
+        self.doc_comment_opt().into_option().validate()?;
         for child in self.children().iter() {
             let _ = Item::try_from(child)?;
         }
@@ -3165,7 +3180,7 @@ derive_debug_partialeq_eq_hash! {
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.proto.unknown_attr_opt().to_ir()
+            self.proto.unknown_attr_opt().into_option().to_ir()
         }
 
         pub fn owning_target(&self) -> &BazelLabel {
@@ -3173,7 +3188,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
-            self.proto.enclosing_item_id_opt().map(|id| ItemId(id as usize))
+            Into::<Option<i64>>::into(self.proto.enclosing_item_id_opt()).map(|id| ItemId(id as usize))
         }
 
         pub fn is_inline(&self) -> bool {
@@ -3185,11 +3200,11 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.proto.deprecated_opt().to_ir()
+            self.proto.deprecated_opt().into_option().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.proto.doc_comment_opt().to_ir()
+            self.proto.doc_comment_opt().into_option().to_ir()
         }
 
         pub fn children(&self) -> &[Item<'pb>] {
@@ -3319,7 +3334,7 @@ impl<'pb> ProtoToIr for ExistingRustTypeView<'pb> {
             let _ = TemplateArg::try_from(template_arg)?;
         }
         self.owning_target().validate()?;
-        self.size_align_opt().validate()
+        self.size_align_opt().into_option().validate()
     }
 
     fn to_ir(self) -> ExistingRustType<'pb> {
@@ -3365,7 +3380,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn size_align(&self) -> Option<SizeAlign> {
-            self.proto.size_align_opt().to_ir()
+            self.proto.size_align_opt().into_option().to_ir()
         }
 
         pub fn is_same_abi(&self) -> bool {
