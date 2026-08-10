@@ -327,9 +327,9 @@ macro_rules! derive_debug_partialeq_eq_hash {
     };
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct HeaderName<'pb> {
-    proto: HeaderNameView<'pb>,
+    pub(crate) name: &'pb str,
 }
 
 impl<'pb> ProtoToIr for HeaderNameView<'pb> {
@@ -340,15 +340,13 @@ impl<'pb> ProtoToIr for HeaderNameView<'pb> {
     }
 
     fn to_ir(self) -> HeaderName<'pb> {
-        HeaderName { proto: self }
+        HeaderName { name: self.name().to_ir() }
     }
 }
 
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> HeaderName<'pb> {
-        pub fn name(&self) -> &'pb str {
-            self.proto.name().to_ir()
-        }
+impl<'pb> HeaderName<'pb> {
+    pub fn name(&self) -> &'pb str {
+        self.name
     }
 }
 
@@ -722,9 +720,9 @@ impl TypeWithDeclId for CcType {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Identifier<'pb> {
-    proto: IdentifierView<'pb>,
+    pub(crate) identifier: &'pb str,
 }
 
 impl<'pb> ProtoToIr for IdentifierView<'pb> {
@@ -735,13 +733,13 @@ impl<'pb> ProtoToIr for IdentifierView<'pb> {
     }
 
     fn to_ir(self) -> Identifier<'pb> {
-        Identifier { proto: self }
+        Identifier { identifier: self.identifier().to_ir() }
     }
 }
 
 impl<'pb> Identifier<'pb> {
     pub fn as_str(&self) -> &'pb str {
-        self.proto.identifier().to_ir()
+        self.identifier
     }
 }
 
@@ -757,20 +755,6 @@ impl Debug for Identifier<'_> {
     }
 }
 
-impl PartialEq for Identifier<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.as_str() == other.as_str()
-    }
-}
-
-impl Eq for Identifier<'_> {}
-
-impl Hash for Identifier<'_> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.as_str().hash(state);
-    }
-}
-
 impl PartialEq<str> for Identifier<'_> {
     fn eq(&self, other: &str) -> bool {
         self.as_str() == other
@@ -783,32 +767,34 @@ impl PartialEq<&str> for Identifier<'_> {
     }
 }
 
-#[derive(Copy, Clone)]
-pub struct IntegerConstant<'pb> {
-    proto: IntegerConstantView<'pb>,
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
+pub struct IntegerConstant {
+    pub(crate) is_negative: bool,
+    pub(crate) wrapped_value: u64,
 }
 
 impl<'pb> ProtoToIr for IntegerConstantView<'pb> {
-    type IrType = IntegerConstant<'pb>;
+    type IrType = IntegerConstant;
 
     fn validate(self) -> Result<()> {
         Ok(())
     }
 
-    fn to_ir(self) -> IntegerConstant<'pb> {
-        IntegerConstant { proto: self }
+    fn to_ir(self) -> IntegerConstant {
+        IntegerConstant {
+            is_negative: self.is_negative(),
+            wrapped_value: self.wrapped_value() as u64,
+        }
     }
 }
 
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> IntegerConstant<'pb> {
-        pub fn is_negative(&self) -> bool {
-            self.proto.is_negative()
-        }
+impl IntegerConstant {
+    pub fn is_negative(&self) -> bool {
+        self.is_negative
+    }
 
-        pub fn wrapped_value(&self) -> u64 {
-            self.proto.wrapped_value() as u64
-        }
+    pub fn wrapped_value(&self) -> u64 {
+        self.wrapped_value
     }
 }
 
@@ -974,36 +960,44 @@ impl ProtoToIr for ::ir_rust_proto::instance_method_metadata::ReferenceQualifica
     }
 }
 
-#[derive(Clone, Copy)]
-pub struct InstanceMethodMetadata<'pb> {
-    proto: InstanceMethodMetadataView<'pb>,
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
+pub struct InstanceMethodMetadata {
+    pub(crate) reference: ReferenceQualification,
+    pub(crate) is_const: bool,
+    pub(crate) is_virtual: bool,
 }
 
 impl<'pb> ProtoToIr for InstanceMethodMetadataView<'pb> {
-    type IrType = InstanceMethodMetadata<'pb>;
+    type IrType = InstanceMethodMetadata;
 
     fn validate(self) -> Result<()> {
         self.reference().validate()
     }
 
-    fn to_ir(self) -> InstanceMethodMetadata<'pb> {
-        InstanceMethodMetadata { proto: self }
+    fn to_ir(self) -> InstanceMethodMetadata {
+        InstanceMethodMetadata {
+            reference: self.reference().to_ir(),
+            is_const: self.is_const(),
+            is_virtual: self.is_virtual(),
+        }
     }
 }
 
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> InstanceMethodMetadata<'pb> {
-        pub fn reference(&self) -> ReferenceQualification {
-            self.proto.reference().to_ir()
-        }
+impl InstanceMethodMetadata {
+    pub fn new(reference: ReferenceQualification, is_const: bool, is_virtual: bool) -> Self {
+        Self { reference, is_const, is_virtual }
+    }
 
-        pub fn is_const(&self) -> bool {
-            self.proto.is_const()
-        }
+    pub fn reference(&self) -> ReferenceQualification {
+        self.reference
+    }
 
-        pub fn is_virtual(&self) -> bool {
-            self.proto.is_virtual()
-        }
+    pub fn is_const(&self) -> bool {
+        self.is_const
+    }
+
+    pub fn is_virtual(&self) -> bool {
+        self.is_virtual
     }
 }
 
@@ -1257,7 +1251,7 @@ derive_debug_partialeq_eq_hash! {
             self.proto.is_inline()
         }
 
-        pub fn instance_method_metadata(&self) -> Option<InstanceMethodMetadata<'pb>> {
+        pub fn instance_method_metadata(&self) -> Option<InstanceMethodMetadata> {
             self.proto.instance_method_metadata_opt().to_ir()
         }
 
@@ -1578,32 +1572,34 @@ pub enum SpecialMemberFunc {
     Unavailable,
 }
 
-#[derive(Clone, Copy)]
-pub struct BaseClass<'pb> {
-    proto: BaseClassView<'pb>,
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
+pub struct BaseClass {
+    pub(crate) base_record_id: ItemId,
+    pub(crate) offset: Option<i64>,
 }
 
 impl<'pb> ProtoToIr for BaseClassView<'pb> {
-    type IrType = BaseClass<'pb>;
+    type IrType = BaseClass;
 
     fn validate(self) -> Result<()> {
         Ok(())
     }
 
-    fn to_ir(self) -> BaseClass<'pb> {
-        BaseClass { proto: self }
+    fn to_ir(self) -> BaseClass {
+        BaseClass {
+            base_record_id: ItemId(self.base_record_id() as usize),
+            offset: self.offset_opt(),
+        }
     }
 }
 
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> BaseClass<'pb> {
-        pub fn base_record_id(&self) -> ItemId {
-            ItemId(self.proto.base_record_id() as usize)
-        }
+impl BaseClass {
+    pub fn base_record_id(&self) -> ItemId {
+        self.base_record_id
+    }
 
-        pub fn offset(&self) -> Option<i64> {
-            self.proto.offset_opt()
-        }
+    pub fn offset(&self) -> Option<i64> {
+        self.offset
     }
 }
 
@@ -1734,32 +1730,31 @@ impl ToTokens for RecordType {
     }
 }
 
-#[derive(Copy, Clone)]
-pub struct SizeAlign<'pb> {
-    proto: SizeAlignView<'pb>,
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
+pub struct SizeAlign {
+    pub(crate) size: usize,
+    pub(crate) alignment: usize,
 }
 
 impl<'pb> ProtoToIr for SizeAlignView<'pb> {
-    type IrType = SizeAlign<'pb>;
+    type IrType = SizeAlign;
 
     fn validate(self) -> Result<()> {
         Ok(())
     }
 
-    fn to_ir(self) -> SizeAlign<'pb> {
-        SizeAlign { proto: self }
+    fn to_ir(self) -> SizeAlign {
+        SizeAlign { size: self.size() as usize, alignment: self.alignment() as usize }
     }
 }
 
-derive_debug_partialeq_eq_hash! {
-    impl<'pb> SizeAlign<'pb> {
-        pub fn size(&self) -> usize {
-            self.proto.size() as usize
-        }
+impl SizeAlign {
+    pub fn size(&self) -> usize {
+        self.size
+    }
 
-        pub fn alignment(&self) -> usize {
-            self.proto.alignment() as usize
-        }
+    pub fn alignment(&self) -> usize {
+        self.alignment
     }
 }
 
@@ -1903,7 +1898,7 @@ pub struct Record<'pb> {
     pub(crate) bridge_type: Option<BridgeType<'pb>>,
     pub(crate) owned_ptr_config: Option<OwnedPtrConfig<'pb>>,
     pub(crate) source_loc: &'pb str,
-    pub(crate) unambiguous_public_bases: Vec<BaseClass<'pb>>,
+    pub(crate) unambiguous_public_bases: Vec<BaseClass>,
     pub(crate) fields: Vec<Field<'pb>>,
     pub(crate) lifetime_params: Vec<LifetimeName>,
     pub(crate) trait_derives: TraitDerives<'pb>,
@@ -1980,7 +1975,7 @@ derive_debug_partialeq_eq_hash! {
             self.source_loc
         }
 
-        pub fn unambiguous_public_bases(&self) -> &[BaseClass<'pb>] {
+        pub fn unambiguous_public_bases(&self) -> &[BaseClass] {
             &self.unambiguous_public_bases
         }
 
@@ -1992,7 +1987,7 @@ derive_debug_partialeq_eq_hash! {
             &self.lifetime_params
         }
 
-        pub fn size_align(&self) -> SizeAlign<'pb> {
+        pub fn size_align(&self) -> SizeAlign {
             self.proto.size_align().to_ir()
         }
 
@@ -2333,7 +2328,7 @@ impl<'pb> ProtoToIr for ConstantView<'pb> {
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> Constant<'pb> {
-        pub fn value(&self) -> IntegerConstant<'pb> {
+        pub fn value(&self) -> IntegerConstant {
             self.proto.value().to_ir()
         }
 
@@ -2705,7 +2700,7 @@ derive_debug_partialeq_eq_hash! {
             self.proto.identifier().to_ir()
         }
 
-        pub fn value(&self) -> IntegerConstant<'pb> {
+        pub fn value(&self) -> IntegerConstant {
             self.proto.value().to_ir()
         }
 
@@ -3369,7 +3364,7 @@ derive_debug_partialeq_eq_hash! {
             &self.owning_target
         }
 
-        pub fn size_align(&self) -> Option<SizeAlign<'pb>> {
+        pub fn size_align(&self) -> Option<SizeAlign> {
             self.proto.size_align_opt().to_ir()
         }
 
@@ -4054,11 +4049,8 @@ mod tests {
             current_target: "//foo:bar",
         });
         let ir = proto_to_ir(proto.as_view()).unwrap();
-        assert_eq!(ir.public_headers().count(), 1);
-        let header_name = proto.public_headers().get(0).unwrap().to_ir();
-        assert_eq!(header_name.name(), "foo/bar.h");
         let expected = TreeIR {
-            public_headers: vec![header_name],
+            public_headers: vec![HeaderName { name: "foo/bar.h" }],
             current_target: "//foo:bar".into(),
             crate_root_path: None,
             crubit_features: Default::default(),

@@ -3117,26 +3117,19 @@ fn assert_member_function_with_predicate_has_instance_method_metadata<F: FnMut(&
     ir: &IR,
     record_name: &str,
     mut func_predicate: F,
-    expected_reference: ir::ReferenceQualification,
-    expected_is_const: bool,
-    expected_is_virtual: bool,
+    expected_metadata: ir::InstanceMethodMetadata,
 ) {
     let record =
         ir.records().find(|r| r.rs_name().as_str() == record_name).expect("Struct not found");
     let function = ir.functions().find(|f| func_predicate(f)).expect("Function not found");
     assert_eq!(function.enclosing_item_id(), Some(record.id()));
-    let metadata = function.instance_method_metadata().expect("Instance method metadata not found");
-    assert_eq!(metadata.reference(), expected_reference);
-    assert_eq!(metadata.is_const(), expected_is_const);
-    assert_eq!(metadata.is_virtual(), expected_is_virtual);
+    assert_eq!(function.instance_method_metadata(), Some(expected_metadata));
 }
 
 fn assert_member_function_has_instance_method_metadata(
     name: &str,
     definition: &str,
-    expected_reference: ir::ReferenceQualification,
-    expected_is_const: bool,
-    expected_is_virtual: bool,
+    expected_metadata: ir::InstanceMethodMetadata,
 ) {
     let mut file = String::new();
     file += "struct Struct {\n  ";
@@ -3150,9 +3143,7 @@ fn assert_member_function_has_instance_method_metadata(
         &ir,
         "Struct",
         |f| *f.rs_name() == name,
-        expected_reference,
-        expected_is_const,
-        expected_is_virtual,
+        expected_metadata,
     );
 }
 
@@ -3169,9 +3160,7 @@ fn test_member_function() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function();",
-        ir::ReferenceQualification::Unqualified,
-        false,
-        false,
+        ir::InstanceMethodMetadata::new(ir::ReferenceQualification::Unqualified, false, false),
     );
 }
 
@@ -3180,9 +3169,7 @@ fn test_member_function_const() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function() const;",
-        ir::ReferenceQualification::Unqualified,
-        true,
-        false,
+        ir::InstanceMethodMetadata::new(ir::ReferenceQualification::Unqualified, true, false),
     );
 }
 
@@ -3191,9 +3178,7 @@ fn test_member_function_virtual() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "virtual void Function();",
-        ir::ReferenceQualification::Unqualified,
-        false,
-        true,
+        ir::InstanceMethodMetadata::new(ir::ReferenceQualification::Unqualified, false, true),
     );
 }
 
@@ -3202,9 +3187,7 @@ fn test_member_function_lvalue() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function() &;",
-        ir::ReferenceQualification::LValue,
-        false,
-        false,
+        ir::InstanceMethodMetadata::new(ir::ReferenceQualification::LValue, false, false),
     );
 }
 
@@ -3213,9 +3196,7 @@ fn test_member_function_rvalue() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function() &&;",
-        ir::ReferenceQualification::RValue,
-        false,
-        false,
+        ir::InstanceMethodMetadata::new(ir::ReferenceQualification::RValue, false, false),
     );
 }
 
@@ -3264,9 +3245,7 @@ fn test_member_function_explicit_constructor() {
         &ir,
         "SomeStruct",
         |f| *f.rs_name() == UnqualifiedIdentifier::Constructor,
-        ir::ReferenceQualification::Unqualified,
-        false,
-        false,
+        ir::InstanceMethodMetadata::new(ir::ReferenceQualification::Unqualified, false, false),
     );
 }
 
@@ -3286,9 +3265,7 @@ fn test_member_function_constructor() {
             &ir,
             "SomeStruct",
             |f| *f.rs_name() == UnqualifiedIdentifier::Constructor,
-            ir::ReferenceQualification::Unqualified,
-            false,
-            false,
+            ir::InstanceMethodMetadata::new(ir::ReferenceQualification::Unqualified, false, false),
         );
     }
 }
