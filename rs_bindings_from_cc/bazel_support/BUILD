@@ -2,6 +2,7 @@ load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "@bazel_skylib//rules:common_settings.bzl",
     "bool_flag",
+    "string_list_flag",
 )
 load(
     "//rs_bindings_from_cc/bazel_support:deps_for_bindings.bzl",
@@ -192,4 +193,15 @@ bool_flag(
 toolchain_type(
     name = "toolchain_type",
     visibility = ["//:__subpackages__"],
+)
+
+# Targets on this allowlist will use legacy (non-mangled) crate names even if
+# use_label_encoded_names_for_deps is enabled. This is used as a transition
+# helper for targets that have cyclic dependencies when using renamed crates.
+# Note: Shorthand labels (e.g. "//package") are not supported in the allowlist;
+# they must be fully qualified (e.g. "//package:package").
+string_list_flag(
+    name = "legacy_mangling_allowlist",
+    build_setting_default = [],
+    visibility = ["//visibility:public"],
 )

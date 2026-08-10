@@ -299,6 +299,11 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         return []
 
     use_label_encoded_names_for_deps = ctx.attr._use_label_encoded_names_for_deps[BuildSettingInfo].value
+    if use_label_encoded_names_for_deps:
+        legacy_mangling_allowlist = ctx.attr._legacy_mangling_allowlist[BuildSettingInfo].value
+        target_label_str = str(target.label)
+        if target_label_str in legacy_mangling_allowlist:
+            use_label_encoded_names_for_deps = False
 
     # If this is a header target for a cc_public_library, we can't assign ownership of the headers
     # to this target. The header-only target actually cannot usefully get bindings (e.g.

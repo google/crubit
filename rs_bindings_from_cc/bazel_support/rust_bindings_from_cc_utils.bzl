@@ -304,6 +304,9 @@ bindings_attrs = {
     "_use_label_encoded_names_for_deps": attr.label(
         default = "//common/bazel_support:use_label_encoded_names_for_deps",
     ),
+    "_legacy_mangling_allowlist": attr.label(
+        default = "@rules_crubit//rs_bindings_from_cc/bazel_support:legacy_mangling_allowlist",
+    ),
 }
 
 def make_aliasable_dep_info(name, dep):
