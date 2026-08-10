@@ -15,6 +15,7 @@ use ir_rust_proto::{
 };
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
+use protobuf::ProtoStr;
 use quote::{quote, ToTokens};
 use std::collections::hash_map::{Entry, HashMap};
 use std::collections::{BTreeMap, HashSet};
@@ -27,20 +28,53 @@ pub use proto_to_ir::proto_to_ir;
 
 pub use ir_rust_proto::bridge_type::callable::{BackingType, FnTrait};
 
-/// Trait for validating a proto before converting it to an IR item.
+/// Trait for converting from proto-native types to IR-native types.
 ///
-/// Separates eager validation from lazy, infallible construction later.
-trait ProtoWrapper<'pb>: Sized {
-    type ProtoView;
+/// This trait intentionally separates validation from construction to allow for eager validation
+/// and lazy construction. In particular, the entire proto can be recursively validated once when
+/// received, and then immutable views can be extracted lazily and infallibly later.
+trait ProtoToIr: Sized {
+    /// The IR type that this proto converts to.
+    type IrType;
 
-    /// Validates the proto, returning an error if it is invalid.
-    fn validate(proto: Self::ProtoView) -> Result<()>;
+    /// Validates that the proto upholds the invariants that the IR expects.
+    fn validate(self) -> Result<()>;
 
-    /// Converts the proto to the IR item.
+    /// Converts the proto to its associated IR type.
     ///
-    /// This function should only be called after `validate` has returned `Ok`. If the proto isn't
-    /// validated, methods on the resulting IR item may panic.
-    fn from_proto(proto: Self::ProtoView) -> Self;
+    /// # Panics
+    ///
+    /// If `self` wasn't previously validated, this method may panic, or methods on the returned
+    /// value may panic.
+    fn to_ir(self) -> Self::IrType;
+}
+
+impl<'pb> ProtoToIr for &'pb ProtoStr {
+    type IrType = &'pb str;
+
+    fn validate(self) -> Result<()> {
+        let _ = self.to_str()?;
+        Ok(())
+    }
+
+    fn to_ir(self) -> Self::IrType {
+        self.to_str().expect("`&ProtoStr` should have been validated by `ProtoToIr::validate`")
+    }
+}
+
+impl<T: ProtoToIr> ProtoToIr for Option<T> {
+    type IrType = Option<T::IrType>;
+
+    fn validate(self) -> Result<()> {
+        if let Some(value) = self {
+            value.validate()?;
+        }
+        Ok(())
+    }
+
+    fn to_ir(self) -> Self::IrType {
+        self.map(ProtoToIr::to_ir)
+    }
 }
 
 /// Common data about all items.
@@ -677,25 +711,21 @@ pub struct Identifier<'pb> {
     proto: IdentifierView<'pb>,
 }
 
-impl<'pb> ProtoWrapper<'pb> for Identifier<'pb> {
-    type ProtoView = IdentifierView<'pb>;
+impl<'pb> ProtoToIr for IdentifierView<'pb> {
+    type IrType = Identifier<'pb>;
 
-    fn validate(proto: IdentifierView<'pb>) -> Result<()> {
-        let _ = proto.identifier().to_str()?;
-        Ok(())
+    fn validate(self) -> Result<()> {
+        self.identifier().validate()
     }
 
-    fn from_proto(proto: IdentifierView<'pb>) -> Self {
-        Identifier { proto }
+    fn to_ir(self) -> Identifier<'pb> {
+        Identifier { proto: self }
     }
 }
 
 impl<'pb> Identifier<'pb> {
     pub fn as_str(&self) -> &'pb str {
-        self.proto
-            .identifier()
-            .to_str()
-            .expect("`identifier` should have been validated by `Identifier::validate`")
+        self.proto.identifier().to_ir()
     }
 }
 
