@@ -177,6 +177,273 @@ fn test_member_function_with_inline_cpp() -> Result<()> {
 }
 
 #[gtest]
+fn test_mut_member_function_with_inline_cpp() -> Result<()> {
+    let proto =
+        ir_proto_from_cc_with_inline_cpp("struct SomeStruct { inline void mutate(int arg) { } };")?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (struct SomeStruct* __this, int arg) -> void {
+                    }
+                })((__this as *const _), arg)
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZN10SomeStruct6mutateEi});
+    Ok(())
+}
+
+#[gtest]
+fn test_member_function_rewrites_implicit_member_variables() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        r#"
+        struct Rectangle {
+            int width_;
+            int height_;
+            inline int Area() const { return width_ * height_; }
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (struct Rectangle const* __this) -> int {
+                        return __this->width_ * __this->height_;
+                    }
+                })((__this as *const _))
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZNK9Rectangle4AreaEv});
+    Ok(())
+}
+
+#[gtest]
+fn test_member_function_rewrites_explicit_this() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        r#"
+        struct Rectangle {
+            int width_;
+            inline int GetWidth() const { return this->width_; }
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (struct Rectangle const* __this) -> int {
+                        return __this->width_;
+                    }
+                })((__this as *const _))
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZNK9Rectangle8GetWidthEv});
+    Ok(())
+}
+
+#[gtest]
+fn test_member_function_rewrites_implicit_member_calls() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        r#"
+        struct Rectangle {
+            int width_;
+            int height_;
+            inline int Area() const { return width_ * height_; }
+            inline int DoubleArea() const { return Area() * 2; }
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (struct Rectangle const* __this) -> int {
+                        return __this->Area() * 2;
+                    }
+                })((__this as *const _))
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZNK9Rectangle10DoubleAreaEv});
+    Ok(())
+}
+
+#[gtest]
+fn test_member_function_rewrites_private_fields_with_loophole() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        r#"
+        class Account {
+         private:
+            int balance_;
+         public:
+            inline int GetBalance() const { return balance_; }
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            namespace crubit {
+            namespace private_access {
+            template <typename Tag>
+            struct TagAccessor {
+              friend typename Tag::type get_member_ptr(Tag);
+            };
+            template <typename Tag, typename Tag::type MemberPtr>
+            struct MemberStealer {
+              friend typename Tag::type get_member_ptr(Tag) {
+                return MemberPtr;
+              }
+            };
+            }
+            }
+            namespace crubit_private_tags {
+            struct Tag_Account_balance_ {
+              using type = int Account::*;
+              friend type get_member_ptr(Tag_Account_balance_);
+            };
+            }
+            namespace crubit {
+            namespace private_access {
+            template struct ::crubit::private_access::MemberStealer<::crubit_private_tags::Tag_Account_balance_, &Account::balance_>;
+            }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (class Account const* __this) -> int {
+                        return (*__this.*get_member_ptr(::crubit_private_tags::Tag_Account_balance_{}));
+                    }
+                })((__this as *const _))
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZNK7Account10GetBalanceEv});
+    Ok(())
+}
+
+#[gtest]
+fn test_member_function_rewrites_private_fields_explicit_this_with_loophole() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        r#"
+        class Account {
+         private:
+            int balance_;
+         public:
+            inline int GetBalance() const { return this->balance_; }
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (class Account const* __this) -> int {
+                        return (*__this.*get_member_ptr(::crubit_private_tags::Tag_Account_balance_{}));
+                    }
+                })((__this as *const _))
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZNK7Account10GetBalanceEv});
+    Ok(())
+}
+
+#[gtest]
+fn test_member_function_rewrites_private_fields_mutable_with_loophole() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        r#"
+        class Account {
+         private:
+            int balance_;
+         public:
+            inline void Deposit(int amount) { balance_ += amount; }
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                (::crubit_support::inline_cpp! {
+                    (class Account* __this, int amount) -> void {
+                        (*__this.*get_member_ptr(::crubit_private_tags::Tag_Account_balance_{})) += amount;
+                    }
+                })((__this as *const _), amount)
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZN7Account7DepositEi});
+    Ok(())
+}
+
+#[gtest]
+fn test_constructor_with_inline_cpp() -> Result<()> {
+    let proto = ir_proto_from_cc_with_inline_cpp(
+        r#"
+        struct Point {
+            int x_;
+            int y_;
+            inline Point(int x, int y) : x_(x), y_(y) {}
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for Point {
+                #[inline(always)]
+                fn from(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self {
+                    let mut ret_val = ::core::mem::MaybeUninit::<Self>::uninit();
+                    unsafe {
+                        let (mut x, mut y) = args;
+                        unsafe {
+                            (::crubit_support::inline_cpp! {
+                                (struct Point* __this, int x, int y) -> void {
+                                    ::new (static_cast<void*>(__this)) struct Point(x, y);
+                                }
+                            })((ret_val.as_mut_ptr() as *const _), x, y)
+                        };
+                        ret_val.assume_init()
+                    }
+                }
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZN5PointC1Eii});
+    Ok(())
+}
+
+#[gtest]
 fn test_non_pod_param_with_inline_cpp() -> Result<()> {
     let proto = ir_proto_from_cc_with_inline_cpp(
         "struct NonPod { ~NonPod(); NonPod(NonPod&&) = default; }; \

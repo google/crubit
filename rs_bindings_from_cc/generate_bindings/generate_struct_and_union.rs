@@ -797,6 +797,97 @@ pub fn generate_record<'a>(
     let member_methods = api_snippets.member_functions.remove(&record.id()).unwrap_or_default();
     let free_functions = api_snippets.free_functions.remove(&record.id()).unwrap_or_default();
 
+    let private_fields: Vec<_> = record
+        .fields()
+        .iter()
+        .filter(|f| f.access() != ir::AccessSpecifier::Public && !f.is_bitfield())
+        .collect();
+
+    let loophole_global_cpp = if !private_fields.is_empty() {
+        let mut tag_tokens = Vec::new();
+        let mut stealer_instantiations = Vec::new();
+        for field in &private_fields {
+            let field_cpp_name = field.cpp_identifier().map(|i| i.as_str()).unwrap_or("");
+            if field_cpp_name.is_empty() {
+                continue;
+            }
+            let record_cpp_name = record.cc_name().as_str();
+            let mut mangled_record = String::new();
+            for c in record_cpp_name.chars() {
+                if c.is_ascii_alphanumeric() || c == '_' {
+                    mangled_record.push(c);
+                } else {
+                    mangled_record.push('_');
+                }
+            }
+            let mut sanitized_field = String::new();
+            for c in field_cpp_name.chars() {
+                if c.is_ascii_alphanumeric() || c == '_' {
+                    sanitized_field.push(c);
+                } else {
+                    sanitized_field.push('_');
+                }
+            }
+            let tag_ident = quote::format_ident!("Tag_{}_{}", mangled_record, sanitized_field);
+            let Ok(field_rs_type) = db.rs_type_kind(field.type_().clone()) else {
+                continue;
+            };
+            let Ok(field_cpp_type_tokens) = cpp_type_name::format_cpp_type(&field_rs_type, db)
+            else {
+                continue;
+            };
+            let Ok(record_cpp_type_tokens) = cpp_tagless_type_name_for_record(record.as_ref(), db)
+            else {
+                continue;
+            };
+            let field_ident = quote::format_ident!("{}", sanitized_field);
+            tag_tokens.push(quote! {
+                struct #tag_ident {
+                    using type = #field_cpp_type_tokens #record_cpp_type_tokens::*;
+                    friend type get_member_ptr(#tag_ident);
+                };
+            });
+            stealer_instantiations.push(quote! {
+                template struct ::crubit::private_access::MemberStealer<::crubit_private_tags::#tag_ident, &#record_cpp_type_tokens::#field_ident>;
+            });
+        }
+
+        if !tag_tokens.is_empty() {
+            let hash = proc_macro2::Punct::new('#', proc_macro2::Spacing::Alone);
+            Some(quote! {
+                ::crubit_support::global_cpp! {
+                    #hash include <new>
+                    namespace crubit {
+                    namespace private_access {
+                    template <typename Tag>
+                    struct TagAccessor {
+                        friend typename Tag::type get_member_ptr(Tag);
+                    };
+                    template <typename Tag, typename Tag::type MemberPtr>
+                    struct MemberStealer {
+                        friend typename Tag::type get_member_ptr(Tag) {
+                            return MemberPtr;
+                        }
+                    };
+                    }
+                    }
+                    namespace crubit_private_tags {
+                        #( #tag_tokens )*
+                    }
+                    namespace crubit {
+                    namespace private_access {
+                        #( #stealer_instantiations )*
+                    }
+                    }
+                }
+            })
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     let record_tokens = database::code_snippet::Record {
         doc_comment_attr: generate_doc_comment(
             record.doc_comment(),
@@ -861,6 +952,7 @@ pub fn generate_record<'a>(
         owned_ptr_config,
         member_methods,
         free_functions,
+        loophole_global_cpp,
         delete: operator_delete_impl,
         lifetime_params,
         is_thread_safe: record.is_thread_safe(),
