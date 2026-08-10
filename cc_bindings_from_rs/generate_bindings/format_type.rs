@@ -752,6 +752,9 @@ pub fn format_ty_for_cc<'tcx>(
 
             CcSnippet { tokens, prereqs }
         }
+        ty::TyKind::Param(_) => bail!(
+            "crubit.rs/errors/unsupported_type: Generic type parameter `{ty}` is not supported without monomorphization"
+        ),
         _ => bail!("The following Rust type is not supported yet: {ty}"),
     })
 }
@@ -1136,6 +1139,9 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
             })?;
             quote! { [#ty] }
         }
+        ty::TyKind::Param(_) => bail!(
+            "crubit.rs/errors/unsupported_type: Generic type parameter `{ty}` is not supported without monomorphization"
+        ),
         _ => bail!("The following Rust type is not supported yet: {ty}"),
     })
 }
@@ -1617,8 +1623,7 @@ pub fn is_bridged_type<'tcx>(
                     }
                 }
                 bail!(
-                    "Can't format reference type `{ty}` because the referent is a bridged type. \
-                        Passing bridged types by reference is not supported."
+                    "crubit.rs/errors/unsupported_type: Bridged type `{referent}` cannot be passed by reference; pass it by value instead."
                 )
             }
             Ok(None)
@@ -1628,8 +1633,7 @@ pub fn is_bridged_type<'tcx>(
                 && !bridged.is_layout_compatible()
             {
                 bail!(
-                    "Can't format pointer type `{ty}` because the pointee is a bridged type. \
-                        Passing bridged types by pointer is not supported."
+                    "crubit.rs/errors/unsupported_type: Bridged type `{pointee}` cannot be passed by pointer; pass it by value instead."
                 )
             }
             Ok(None)
@@ -1676,7 +1680,7 @@ pub fn is_bridged_type<'tcx>(
                     && !bridged.is_layout_compatible()
                 {
                     bail!(
-                        "Can't format ADT as it has a generic type `{ty}` that is a bridged type"
+                        "crubit.rs/errors/unsupported_type: Types containing generic parameter `{ty}` (which is a bridged type) are not supported."
                     );
                 }
             }

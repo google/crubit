@@ -552,7 +552,7 @@ mod tests {
     "name": "test_crate::Unsupported",
     "errors": [
       {
-        "fmt": "Generic types are not supported yet (b/259749095)"
+        "fmt": "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"
       }
     ]
   }

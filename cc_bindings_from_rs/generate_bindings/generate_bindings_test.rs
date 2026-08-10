@@ -1704,7 +1704,10 @@ fn test_format_item_unsupported_generic_type_alias() {
         "#;
     test_format_item(test_src, "TypeAlias", |result| {
         let err = result.unwrap_err();
-        assert_eq!(err, "The following Rust type is not supported yet: T");
+        assert_eq!(
+            err,
+            "crubit.rs/errors/unsupported_type: Generic type parameter `T` is not supported without monomorphization"
+        );
     });
 }
 

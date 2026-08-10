@@ -510,7 +510,7 @@ fn test_format_ty_for_cc_failures() {
         ),
         (
             "impl Eq", // TyKind::Alias
-            "The following Rust type is not supported yet: impl Eq",
+            "crubit.rs/errors/unsupported_type: Generic type parameter `impl Eq` is not supported without monomorphization",
         ),
         (
             "fn(i32) -> i32", // TyKind::FnPtr (default ABI = "Rust")
@@ -674,7 +674,7 @@ fn test_format_ty_for_rs_failures() {
         // ( <Rust type>, <expected error message> )
         (
             "impl Eq", // TyKind::Alias
-            "The following Rust type is not supported yet: impl Eq",
+            "crubit.rs/errors/unsupported_type: Generic type parameter `impl Eq` is not supported without monomorphization",
         ),
     ];
     let preamble = quote! {};

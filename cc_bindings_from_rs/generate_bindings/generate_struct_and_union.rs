@@ -1706,7 +1706,9 @@ pub fn adt_needs_bindings<'tcx>(
         && BridgedBuiltin::new(db, tcx.adt_def(def_id)).is_none()
         && query_compiler::has_non_lifetime_generics(tcx, def_id)
     {
-        bail!("Generic types are not supported yet (b/259749095)");
+        bail!(
+            "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"
+        );
     }
 
     db.generate_adt_core(def_id)

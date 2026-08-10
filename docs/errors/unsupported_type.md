@@ -120,6 +120,37 @@ pub fn DoSomethingCpp(in_val: UnsupportedWrapper,
 
 {{#endtabs}}
 
+#### Bridged types passed by reference or pointer
+
+Bridged types (such as `absl::Status` / `absl::StatusOr<T>`) cannot be passed by
+reference (`&T`) or pointer (`*const T`). Because Crubit performs value
+conversions across the FFI boundary, bridged types must be passed by value.
+
+Otherwise, if the function semantics strictly requires passing by reference, you
+can wrap the data in a layout-compatible `struct` or write an FFI wrapper
+function.
+
+#### Generic types and parameters
+
+Uninstantiated generic types (such as `struct UnsupportedContainer<T>`) and
+generic type parameters (`T`) cannot receive bindings directly. Define a
+monomorphized type alias or non-generic wrapper function to expose concrete
+types:
+
+```rust
+// Uninstantiated generic type, which does not receive bindings.
+pub struct UnsupportedContainer<T> {
+    pub value: T,
+}
+
+// These two workarounds receive callable bindings.
+pub type IntContainer = UnsupportedContainer<i32>;
+
+pub fn DoSomethingI32(val: i32) {
+    DoSomethingGeneric(val);
+}
+```
+
 ### (C++) Replace it with a forward declaration in wrapper functions {#fix-forward_declare}
 
 TODO(b/482061078): Support this workaround in Rust, as well.
