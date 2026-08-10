@@ -28,6 +28,10 @@ use quote::{format_ident, quote};
 use rustc_abi::LayoutData;
 use rustc_abi::{Layout, VariantIdx};
 use rustc_hir::def::DefKind;
+#[rustversion::before(2026-08-01)]
+use rustc_hir::lang_items::LangItem;
+#[rustversion::since(2026-08-01)]
+use rustc_hir::LangItem;
 use rustc_middle::ty::fast_reject::SimplifiedType;
 use rustc_middle::ty::layout::PrimitiveExt;
 #[rustversion::since(2026-04-22)]
@@ -404,7 +408,6 @@ struct OptionVariantIndices {
 fn get_option_variant_indices<'tcx>(tcx: TyCtxt<'tcx>, adt: AdtDef<'tcx>) -> OptionVariantIndices {
     let (mut some_idx, mut none_idx) = (None, None);
     for (idx, variant) in adt.variants().iter_enumerated() {
-        use rustc_hir::LangItem;
         match tcx.lang_items().from_def_id(variant.def_id) {
             Some(LangItem::OptionSome) => some_idx = Some(idx),
             Some(LangItem::OptionNone) => none_idx = Some(idx),
@@ -438,7 +441,6 @@ struct ResultVariantIndices {
 fn get_result_variant_indices<'tcx>(tcx: TyCtxt<'tcx>, adt: AdtDef<'tcx>) -> ResultVariantIndices {
     let (mut ok_idx, mut err_idx) = (None, None);
     for (idx, variant) in adt.variants().iter_enumerated() {
-        use rustc_hir::LangItem;
         match tcx.lang_items().from_def_id(variant.def_id) {
             Some(LangItem::ResultOk) => ok_idx = Some(idx),
             Some(LangItem::ResultErr) => err_idx = Some(idx),

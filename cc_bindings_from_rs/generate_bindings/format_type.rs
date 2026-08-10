@@ -33,7 +33,10 @@ use proc_macro2::{Ident, Literal, Span, TokenStream};
 use query_compiler::is_c_abi_compatible_by_value;
 use quote::{quote, ToTokens};
 use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
+#[rustversion::before(2026-08-01)]
 use rustc_hir::lang_items::LangItem;
+#[rustversion::since(2026-08-01)]
+use rustc_hir::LangItem;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId};
