@@ -791,8 +791,8 @@ pub fn generate_record<'a>(
 
     let owned_ptr_config =
         record.owned_ptr_config().as_ref().map(|cfg| database::code_snippet::OwnedPtrConfig {
-            owned_type_name: make_rs_ident(cfg.owned_ptr_type.as_ref()),
-            drop_impl: make_rs_ident(cfg.drop_impl.as_ref()),
+            owned_type_name: make_rs_ident(cfg.owned_ptr_type()),
+            drop_impl: make_rs_ident(cfg.drop_impl()),
         });
     let member_methods = api_snippets.member_functions.remove(&record.id()).unwrap_or_default();
     let free_functions = api_snippets.free_functions.remove(&record.id()).unwrap_or_default();

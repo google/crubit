@@ -9,9 +9,10 @@ use arc_anyhow::{bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
 use ir_rust_proto::{
-    CommentView, ConstantView, EnumView, EnumeratorView, ExistingRustTypeView, FuncView,
-    GlobalVarView, IdentifierView, IncompleteRecordView, IntegerConstantView, NamespaceView,
-    RecordView, SizeAlignView, TypeAliasView, UseModView,
+    BaseClassView, CommentView, ConstantView, EnumView, EnumeratorView, ExistingRustTypeView,
+    FuncParamView, FuncView, GlobalVarView, HeaderNameView, IdentifierView, IncompleteRecordView,
+    InstanceMethodMetadataView, IntegerConstantView, NamespaceView, OwnedPtrConfigView, RecordView,
+    SizeAlignView, TypeAliasView, UseModView,
 };
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -325,14 +326,28 @@ macro_rules! derive_debug_partialeq_eq_hash {
     };
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct HeaderName<'pb> {
-    pub(crate) name: &'pb str,
+    proto: HeaderNameView<'pb>,
 }
 
-impl<'pb> HeaderName<'pb> {
-    pub fn name(&self) -> &'pb str {
-        self.name
+impl<'pb> ProtoToIr for HeaderNameView<'pb> {
+    type IrType = HeaderName<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.name().validate()
+    }
+
+    fn to_ir(self) -> HeaderName<'pb> {
+        HeaderName { proto: self }
+    }
+}
+
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> HeaderName<'pb> {
+        pub fn name(&self) -> &'pb str {
+            self.proto.name().to_ir()
+        }
     }
 }
 
@@ -768,16 +783,30 @@ impl PartialEq<&str> for Identifier<'_> {
 }
 
 #[derive(Copy, Clone)]
-pub struct IntegerConstant<'pb>(pub(crate) IntegerConstantView<'pb>);
+pub struct IntegerConstant<'pb> {
+    proto: IntegerConstantView<'pb>,
+}
+
+impl<'pb> ProtoToIr for IntegerConstantView<'pb> {
+    type IrType = IntegerConstant<'pb>;
+
+    fn validate(self) -> Result<()> {
+        Ok(())
+    }
+
+    fn to_ir(self) -> IntegerConstant<'pb> {
+        IntegerConstant { proto: self }
+    }
+}
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> IntegerConstant<'pb> {
         pub fn is_negative(&self) -> bool {
-            self.0.is_negative()
+            self.proto.is_negative()
         }
 
         pub fn wrapped_value(&self) -> u64 {
-            self.0.wrapped_value() as u64
+            self.proto.wrapped_value() as u64
         }
     }
 }
@@ -912,28 +941,68 @@ pub enum ReferenceQualification {
     Unqualified,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct InstanceMethodMetadata {
-    pub(crate) reference: ReferenceQualification,
-    pub(crate) is_const: bool,
-    pub(crate) is_virtual: bool,
+impl ProtoToIr for ::ir_rust_proto::instance_method_metadata::ReferenceQualification {
+    type IrType = ReferenceQualification;
+
+    fn validate(self) -> Result<()> {
+        match self {
+            ::ir_rust_proto::instance_method_metadata::ReferenceQualification::LValue
+            | ::ir_rust_proto::instance_method_metadata::ReferenceQualification::RValue
+            | ::ir_rust_proto::instance_method_metadata::ReferenceQualification::Unqualified => {
+                Ok(())
+            }
+            _ => bail!("Unspecified ReferenceQualification"),
+        }
+    }
+
+    fn to_ir(self) -> Self::IrType {
+        match self {
+            ::ir_rust_proto::instance_method_metadata::ReferenceQualification::LValue => {
+                ReferenceQualification::LValue
+            }
+            ::ir_rust_proto::instance_method_metadata::ReferenceQualification::RValue => {
+                ReferenceQualification::RValue
+            }
+            ::ir_rust_proto::instance_method_metadata::ReferenceQualification::Unqualified => {
+                ReferenceQualification::Unqualified
+            }
+            _ => unreachable!(
+                "`ReferenceQualification` should have been validated by `ProtoToIr::validate`"
+            ),
+        }
+    }
 }
 
-impl InstanceMethodMetadata {
-    pub fn new(reference: ReferenceQualification, is_const: bool, is_virtual: bool) -> Self {
-        Self { reference, is_const, is_virtual }
+#[derive(Clone, Copy)]
+pub struct InstanceMethodMetadata<'pb> {
+    proto: InstanceMethodMetadataView<'pb>,
+}
+
+impl<'pb> ProtoToIr for InstanceMethodMetadataView<'pb> {
+    type IrType = InstanceMethodMetadata<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.reference().validate()
     }
 
-    pub fn reference(&self) -> ReferenceQualification {
-        self.reference
+    fn to_ir(self) -> InstanceMethodMetadata<'pb> {
+        InstanceMethodMetadata { proto: self }
     }
+}
 
-    pub fn is_const(&self) -> bool {
-        self.is_const
-    }
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> InstanceMethodMetadata<'pb> {
+        pub fn reference(&self) -> ReferenceQualification {
+            self.proto.reference().to_ir()
+        }
 
-    pub fn is_virtual(&self) -> bool {
-        self.is_virtual
+        pub fn is_const(&self) -> bool {
+            self.proto.is_const()
+        }
+
+        pub fn is_virtual(&self) -> bool {
+            self.proto.is_virtual()
+        }
     }
 }
 
@@ -955,64 +1024,73 @@ pub enum MemberFuncSemantic {
     Getter(Getter),
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct FuncParam<'pb> {
+    proto: FuncParamView<'pb>,
     pub(crate) type_: CcType,
-    pub(crate) identifier: Identifier<'pb>,
     pub(crate) clang_lifetime_capture_by: Vec<i32>,
-    pub(crate) clang_lifetimebound: bool,
-    pub(crate) unknown_attr: Option<&'pb str>,
+}
+
+impl<'pb> ProtoToIr for FuncParamView<'pb> {
+    type IrType = FuncParam<'pb>;
+
+    fn validate(self) -> Result<()> {
+        let _ = CcType::try_from(self.r#type())?;
+        self.identifier().validate()?;
+        self.unknown_attr_opt().validate()
+    }
+
+    fn to_ir(self) -> FuncParam<'pb> {
+        let type_ = CcType::try_from(self.r#type())
+            .expect("`type` should have been validated by `FuncParamView::validate`");
+        let clang_lifetime_capture_by = self.clang_lifetime_capture_by().iter().collect();
+        FuncParam { proto: self, type_, clang_lifetime_capture_by }
+    }
+}
+
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> FuncParam<'pb> {
+        pub fn type_(&self) -> &CcType {
+            &self.type_
+        }
+
+        pub fn identifier(&self) -> Identifier<'pb> {
+            self.proto.identifier().to_ir()
+        }
+
+        /// A list of parameter indices attached to this parameter by Clang's lifetime_capture_by.
+        /// In `f(x, y)`, `x` is parameter 0 and y is parameter 1. In the member function
+        /// `S::f(x, y)`, `this` is parameter 0, `x` is 1, and `y` is 2.
+        pub fn clang_lifetime_capture_by(&self) -> &[i32] {
+            &self.clang_lifetime_capture_by
+        }
+
+        /// True if this parameter was annotated with Clang's lifetimebound.
+        pub fn clang_lifetimebound(&self) -> bool {
+            self.proto.clang_lifetimebound()
+        }
+
+        /// A human-readable list of attributes that Crubit doesn't understand.
+        ///
+        /// Because attributes can change the behavior or semantics of function
+        /// parameters in ways that may affect interop, we default-closed and
+        /// do not expose functions with unknown attributes.
+        ///
+        /// One notable example is `lifetimebound`, which we might expect to map
+        /// to Rust lifetimes.
+        pub fn unknown_attr(&self) -> Option<&'pb str> {
+            self.proto.unknown_attr_opt().to_ir()
+        }
+    }
 }
 
 impl<'pb> FuncParam<'pb> {
-    pub fn new(
-        type_: CcType,
-        identifier: Identifier<'pb>,
-        clang_lifetime_capture_by: Vec<i32>,
-        clang_lifetimebound: bool,
-        unknown_attr: Option<&'pb str>,
-    ) -> Self {
-        Self { type_, identifier, clang_lifetime_capture_by, clang_lifetimebound, unknown_attr }
-    }
-
-    pub fn type_(&self) -> &CcType {
-        &self.type_
-    }
-
     pub fn type_mut(&mut self) -> &mut CcType {
         &mut self.type_
     }
 
     pub fn set_type(&mut self, type_: CcType) {
         self.type_ = type_;
-    }
-
-    pub fn identifier(&self) -> &Identifier<'pb> {
-        &self.identifier
-    }
-
-    /// A list of parameter indices attached to this parameter by Clang's lifetime_capture_by.
-    /// In `f(x, y)`, `x` is parameter 0 and y is parameter 1. In the member function
-    /// `S::f(x, y)`, `this` is parameter 0, `x` is 1, and `y` is 2.
-    pub fn clang_lifetime_capture_by(&self) -> &[i32] {
-        &self.clang_lifetime_capture_by
-    }
-
-    /// True if this parameter was annotated with Clang's lifetimebound.
-    pub fn clang_lifetimebound(&self) -> bool {
-        self.clang_lifetimebound
-    }
-
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    ///
-    /// Because attributes can change the behavior or semantics of function
-    /// parameters in ways that may affect interop, we default-closed and
-    /// do not expose functions with unknown attributes.
-    ///
-    /// One notable example is `lifetimebound`, which we might expect to map
-    /// to Rust lifetimes.
-    pub fn unknown_attr(&self) -> Option<&'pb str> {
-        self.unknown_attr
     }
 }
 
@@ -1035,7 +1113,7 @@ pub struct Func<'pb> {
     pub(crate) return_type: CcType,
     pub(crate) params: Vec<FuncParam<'pb>>,
     pub(crate) lifetime_params: Vec<LifetimeName>,
-    pub(crate) instance_method_metadata: Option<InstanceMethodMetadata>,
+    pub(crate) instance_method_metadata: Option<InstanceMethodMetadata<'pb>>,
     pub(crate) nodiscard: Option<&'pb str>,
     pub(crate) deprecated: Option<&'pb str>,
     pub(crate) unknown_attr: Option<&'pb str>,
@@ -1096,7 +1174,7 @@ derive_debug_partialeq_eq_hash! {
             self.proto.is_inline()
         }
 
-        pub fn instance_method_metadata(&self) -> Option<&InstanceMethodMetadata> {
+        pub fn instance_method_metadata(&self) -> Option<&InstanceMethodMetadata<'pb>> {
             self.instance_method_metadata.as_ref()
         }
 
@@ -1263,6 +1341,30 @@ pub enum AccessSpecifier {
     Private,
 }
 
+impl ProtoToIr for ::ir_rust_proto::AccessSpecifier {
+    type IrType = AccessSpecifier;
+
+    fn validate(self) -> Result<()> {
+        match self {
+            ::ir_rust_proto::AccessSpecifier::Public
+            | ::ir_rust_proto::AccessSpecifier::Protected
+            | ::ir_rust_proto::AccessSpecifier::Private => Ok(()),
+            _ => bail!("Unspecified AccessSpecifier"),
+        }
+    }
+
+    fn to_ir(self) -> Self::IrType {
+        match self {
+            ::ir_rust_proto::AccessSpecifier::Public => AccessSpecifier::Public,
+            ::ir_rust_proto::AccessSpecifier::Protected => AccessSpecifier::Protected,
+            ::ir_rust_proto::AccessSpecifier::Private => AccessSpecifier::Private,
+            _ => unreachable!(
+                "`AccessSpecifier` should have been validated by `ProtoToIr::validate`"
+            ),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Field<'pb> {
     pub(crate) rust_identifier: Option<Identifier<'pb>>,
@@ -1359,45 +1461,74 @@ pub enum SpecialMemberFunc {
     Unavailable,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct BaseClass {
-    pub(crate) base_record_id: ItemId,
-    pub(crate) offset: Option<i64>,
+#[derive(Clone, Copy)]
+pub struct BaseClass<'pb> {
+    proto: BaseClassView<'pb>,
 }
 
-impl BaseClass {
-    pub fn base_record_id(&self) -> ItemId {
-        self.base_record_id
+impl<'pb> ProtoToIr for BaseClassView<'pb> {
+    type IrType = BaseClass<'pb>;
+
+    fn validate(self) -> Result<()> {
+        Ok(())
     }
 
-    pub fn offset(&self) -> Option<i64> {
-        self.offset
+    fn to_ir(self) -> BaseClass<'pb> {
+        BaseClass { proto: self }
+    }
+}
+
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> BaseClass<'pb> {
+        pub fn base_record_id(&self) -> ItemId {
+            ItemId(self.proto.base_record_id() as usize)
+        }
+
+        pub fn offset(&self) -> Option<i64> {
+            self.proto.offset_opt()
+        }
     }
 }
 
 #[derive(Clone)]
 pub struct IncompleteRecord<'pb> {
-    pub(crate) proto: IncompleteRecordView<'pb>,
-    pub(crate) cc_name: Identifier<'pb>,
-    pub(crate) rs_name: Identifier<'pb>,
-    pub(crate) unique_name: &'pb str,
+    proto: IncompleteRecordView<'pb>,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) record_type: RecordType,
+}
+
+impl<'pb> ProtoToIr for IncompleteRecordView<'pb> {
+    type IrType = IncompleteRecord<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.cc_name().validate()?;
+        self.rs_name().validate()?;
+        self.unique_name().validate()?;
+        self.owning_target().validate()?;
+        let _ = RecordType::try_from(self.record_type())?;
+        self.unknown_attr_opt().validate()
+    }
+
+    fn to_ir(self) -> IncompleteRecord<'pb> {
+        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let record_type = RecordType::try_from(self.record_type())
+            .expect("`record_type` should have been validated by `IncompleteRecordView::validate`");
+        IncompleteRecord { proto: self, owning_target, record_type }
+    }
 }
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> IncompleteRecord<'pb> {
-        pub fn cc_name(&self) -> &Identifier<'pb> {
-            &self.cc_name
+        pub fn cc_name(&self) -> Identifier<'pb> {
+            self.proto.cc_name().to_ir()
         }
 
-        pub fn rs_name(&self) -> &Identifier<'pb> {
-            &self.rs_name
+        pub fn rs_name(&self) -> Identifier<'pb> {
+            self.proto.rs_name().to_ir()
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.unique_name
+            self.proto.unique_name().to_ir()
         }
 
         pub fn id(&self) -> ItemId {
@@ -1414,7 +1545,7 @@ derive_debug_partialeq_eq_hash! {
         /// fairly significant ways, and in ways that may affect interop, we
         /// default-closed and do not expose functions with unknown attributes.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.unknown_attr
+            self.proto.unknown_attr_opt().to_ir()
         }
 
         pub fn record_type(&self) -> RecordType {
@@ -1454,7 +1585,7 @@ impl<'pb> GenericItem<'pb> for IncompleteRecord<'pb> {
         IncompleteRecord::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
-        Some(self.cc_name.as_str())
+        Some(self.cc_name().as_str())
     }
 }
 
@@ -1487,16 +1618,30 @@ impl ToTokens for RecordType {
 }
 
 #[derive(Copy, Clone)]
-pub struct SizeAlign<'pb>(pub(crate) SizeAlignView<'pb>);
+pub struct SizeAlign<'pb> {
+    proto: SizeAlignView<'pb>,
+}
+
+impl<'pb> ProtoToIr for SizeAlignView<'pb> {
+    type IrType = SizeAlign<'pb>;
+
+    fn validate(self) -> Result<()> {
+        Ok(())
+    }
+
+    fn to_ir(self) -> SizeAlign<'pb> {
+        SizeAlign { proto: self }
+    }
+}
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> SizeAlign<'pb> {
         pub fn size(&self) -> usize {
-            self.0.size() as usize
+            self.proto.size() as usize
         }
 
         pub fn alignment(&self) -> usize {
-            self.0.alignment() as usize
+            self.proto.alignment() as usize
         }
     }
 }
@@ -1597,10 +1742,34 @@ pub struct TraitDerives<'pb> {
     pub custom: Vec<&'pb str>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy)]
 pub struct OwnedPtrConfig<'pb> {
-    pub owned_ptr_type: &'pb str,
-    pub drop_impl: &'pb str,
+    proto: OwnedPtrConfigView<'pb>,
+}
+
+impl<'pb> ProtoToIr for OwnedPtrConfigView<'pb> {
+    type IrType = OwnedPtrConfig<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.owned_ptr_type().validate()?;
+        self.drop_impl().validate()
+    }
+
+    fn to_ir(self) -> OwnedPtrConfig<'pb> {
+        OwnedPtrConfig { proto: self }
+    }
+}
+
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> OwnedPtrConfig<'pb> {
+        pub fn owned_ptr_type(&self) -> &'pb str {
+            self.proto.owned_ptr_type().to_ir()
+        }
+
+        pub fn drop_impl(&self) -> &'pb str {
+            self.proto.drop_impl().to_ir()
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -1617,7 +1786,7 @@ pub struct Record<'pb> {
     pub(crate) bridge_type: Option<BridgeType<'pb>>,
     pub(crate) owned_ptr_config: Option<OwnedPtrConfig<'pb>>,
     pub(crate) source_loc: &'pb str,
-    pub(crate) unambiguous_public_bases: Vec<BaseClass>,
+    pub(crate) unambiguous_public_bases: Vec<BaseClass<'pb>>,
     pub(crate) fields: Vec<Field<'pb>>,
     pub(crate) lifetime_params: Vec<LifetimeName>,
     pub(crate) trait_derives: TraitDerives<'pb>,
@@ -1694,7 +1863,7 @@ derive_debug_partialeq_eq_hash! {
             self.source_loc
         }
 
-        pub fn unambiguous_public_bases(&self) -> &[BaseClass] {
+        pub fn unambiguous_public_bases(&self) -> &[BaseClass<'pb>] {
             &self.unambiguous_public_bases
         }
 
@@ -1707,7 +1876,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn size_align(&self) -> SizeAlign<'pb> {
-            SizeAlign(self.proto.size_align())
+            self.proto.size_align().to_ir()
         }
 
         pub fn trait_derives(&self) -> &TraitDerives<'pb> {
@@ -2016,34 +2185,51 @@ impl<'pb> Record<'pb> {
 
 #[derive(Clone)]
 pub struct Constant<'pb> {
-    pub(crate) proto: ConstantView<'pb>,
-    pub(crate) cc_name: Identifier<'pb>,
-    pub(crate) rs_name: Identifier<'pb>,
-    pub(crate) unique_name: &'pb str,
+    proto: ConstantView<'pb>,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) source_loc: &'pb str,
-    pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) type_: CcType,
-    pub(crate) deprecated: Option<&'pb str>,
-    pub(crate) doc_comment: Option<&'pb str>,
+}
+
+impl<'pb> ProtoToIr for ConstantView<'pb> {
+    type IrType = Constant<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.cc_name().validate()?;
+        self.rs_name().validate()?;
+        self.unique_name().validate()?;
+        self.owning_target().validate()?;
+        self.source_loc().validate()?;
+        self.value().validate()?;
+        self.unknown_attr_opt().validate()?;
+        let _ = CcType::try_from(self.r#type())?;
+        self.deprecated_opt().validate()?;
+        self.doc_comment_opt().validate()
+    }
+
+    fn to_ir(self) -> Constant<'pb> {
+        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let type_ = CcType::try_from(self.r#type())
+            .expect("`type` should have been validated by `ConstantView::validate`");
+        Constant { proto: self, owning_target, type_ }
+    }
 }
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> Constant<'pb> {
         pub fn value(&self) -> IntegerConstant<'pb> {
-            IntegerConstant(self.proto.value())
+            self.proto.value().to_ir()
         }
 
-        pub fn cc_name(&self) -> &Identifier<'pb> {
-            &self.cc_name
+        pub fn cc_name(&self) -> Identifier<'pb> {
+            self.proto.cc_name().to_ir()
         }
 
-        pub fn rs_name(&self) -> &Identifier<'pb> {
-            &self.rs_name
+        pub fn rs_name(&self) -> Identifier<'pb> {
+            self.proto.rs_name().to_ir()
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.unique_name
+            self.proto.unique_name().to_ir()
         }
 
         pub fn id(&self) -> ItemId {
@@ -2055,11 +2241,11 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn source_loc(&self) -> &'pb str {
-            self.source_loc
+            self.proto.source_loc().to_ir()
         }
 
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.unknown_attr
+            self.proto.unknown_attr_opt().to_ir()
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
@@ -2077,11 +2263,11 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.deprecated
+            self.proto.deprecated_opt().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.doc_comment
+            self.proto.doc_comment_opt().to_ir()
         }
     }
 }
@@ -2109,37 +2295,53 @@ impl<'pb> GenericItem<'pb> for Constant<'pb> {
         Constant::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
-        Some(self.cc_name.as_str())
+        Some(self.cc_name().as_str())
     }
 }
 
 #[derive(Clone)]
 pub struct GlobalVar<'pb> {
-    pub(crate) proto: GlobalVarView<'pb>,
-    pub(crate) cc_name: Identifier<'pb>,
-    pub(crate) rs_name: Identifier<'pb>,
-    pub(crate) unique_name: &'pb str,
+    proto: GlobalVarView<'pb>,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) source_loc: &'pb str,
-    pub(crate) unknown_attr: Option<&'pb str>,
-    pub(crate) mangled_name: Option<&'pb str>,
     pub(crate) type_: CcType,
-    pub(crate) deprecated: Option<&'pb str>,
-    pub(crate) doc_comment: Option<&'pb str>,
+}
+
+impl<'pb> ProtoToIr for GlobalVarView<'pb> {
+    type IrType = GlobalVar<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.cc_name().validate()?;
+        self.rs_name().validate()?;
+        self.unique_name().validate()?;
+        self.owning_target().validate()?;
+        self.source_loc().validate()?;
+        self.unknown_attr_opt().validate()?;
+        self.mangled_name_opt().validate()?;
+        let _ = CcType::try_from(self.r#type())?;
+        self.deprecated_opt().validate()?;
+        self.doc_comment_opt().validate()
+    }
+
+    fn to_ir(self) -> GlobalVar<'pb> {
+        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let type_ = CcType::try_from(self.r#type())
+            .expect("`type` should have been validated by `GlobalVarView::validate`");
+        GlobalVar { proto: self, owning_target, type_ }
+    }
 }
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> GlobalVar<'pb> {
-        pub fn cc_name(&self) -> &Identifier<'pb> {
-            &self.cc_name
+        pub fn cc_name(&self) -> Identifier<'pb> {
+            self.proto.cc_name().to_ir()
         }
 
-        pub fn rs_name(&self) -> &Identifier<'pb> {
-            &self.rs_name
+        pub fn rs_name(&self) -> Identifier<'pb> {
+            self.proto.rs_name().to_ir()
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.unique_name
+            self.proto.unique_name().to_ir()
         }
 
         pub fn id(&self) -> ItemId {
@@ -2151,12 +2353,12 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn source_loc(&self) -> &'pb str {
-            self.source_loc
+            self.proto.source_loc().to_ir()
         }
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.unknown_attr
+            self.proto.unknown_attr_opt().to_ir()
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
@@ -2164,7 +2366,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn mangled_name(&self) -> Option<&'pb str> {
-            self.mangled_name
+            self.proto.mangled_name_opt().to_ir()
         }
 
         pub fn type_(&self) -> &CcType {
@@ -2178,11 +2380,11 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.deprecated
+            self.proto.deprecated_opt().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.doc_comment
+            self.proto.doc_comment_opt().to_ir()
         }
     }
 }
@@ -2210,43 +2412,66 @@ impl<'pb> GenericItem<'pb> for GlobalVar<'pb> {
         GlobalVar::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
-        Some(self.cc_name.as_str())
+        Some(self.cc_name().as_str())
     }
 }
 
 #[derive(Clone)]
 pub struct Enum<'pb> {
-    pub(crate) proto: EnumView<'pb>,
-    pub(crate) cc_name: Identifier<'pb>,
-    pub(crate) rs_name: Identifier<'pb>,
-    pub(crate) unique_name: &'pb str,
-    pub(crate) mangled_cc_name: &'pb str,
+    proto: EnumView<'pb>,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) source_loc: &'pb str,
     pub(crate) underlying_type: CcType,
     pub(crate) enumerators: Option<Vec<Enumerator<'pb>>>,
-    pub(crate) unknown_attr: Option<&'pb str>,
-    pub(crate) nodiscard: Option<&'pb str>,
-    pub(crate) deprecated: Option<&'pb str>,
-    pub(crate) doc_comment: Option<&'pb str>,
+}
+
+impl<'pb> ProtoToIr for EnumView<'pb> {
+    type IrType = Enum<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.cc_name().validate()?;
+        self.rs_name().validate()?;
+        self.unique_name().validate()?;
+        self.mangled_cc_name().validate()?;
+        self.owning_target().validate()?;
+        self.source_loc().validate()?;
+        let _ = CcType::try_from(self.underlying_type())?;
+        if !self.is_incomplete() {
+            for enumerator in self.enumerators().iter() {
+                enumerator.validate()?;
+            }
+        }
+        self.unknown_attr_opt().validate()?;
+        self.nodiscard_opt().validate()?;
+        self.deprecated_opt().validate()?;
+        self.doc_comment_opt().validate()
+    }
+
+    fn to_ir(self) -> Enum<'pb> {
+        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let underlying_type = CcType::try_from(self.underlying_type())
+            .expect("`underlying_type` should have been validated by `EnumView::validate`");
+        let enumerators =
+            (!self.is_incomplete()).then(|| self.enumerators().iter().map(|e| e.to_ir()).collect());
+        Enum { proto: self, owning_target, underlying_type, enumerators }
+    }
 }
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> Enum<'pb> {
-        pub fn cc_name(&self) -> &Identifier<'pb> {
-            &self.cc_name
+        pub fn cc_name(&self) -> Identifier<'pb> {
+            self.proto.cc_name().to_ir()
         }
 
-        pub fn rs_name(&self) -> &Identifier<'pb> {
-            &self.rs_name
+        pub fn rs_name(&self) -> Identifier<'pb> {
+            self.proto.rs_name().to_ir()
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.unique_name
+            self.proto.unique_name().to_ir()
         }
 
         pub fn mangled_cc_name(&self) -> &'pb str {
-            self.mangled_cc_name
+            self.proto.mangled_cc_name().to_ir()
         }
 
         pub fn id(&self) -> ItemId {
@@ -2258,7 +2483,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn source_loc(&self) -> &'pb str {
-            self.source_loc
+            self.proto.source_loc().to_ir()
         }
 
         pub fn underlying_type(&self) -> &CcType {
@@ -2276,7 +2501,7 @@ derive_debug_partialeq_eq_hash! {
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.unknown_attr
+            self.proto.unknown_attr_opt().to_ir()
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
@@ -2294,17 +2519,17 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
         /// string is used.
         pub fn nodiscard(&self) -> Option<&'pb str> {
-            self.nodiscard
+            self.proto.nodiscard_opt().to_ir()
         }
 
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.deprecated
+            self.proto.deprecated_opt().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.doc_comment
+            self.proto.doc_comment_opt().to_ir()
         }
     }
 }
@@ -2332,74 +2557,107 @@ impl<'pb> GenericItem<'pb> for Enum<'pb> {
         Enum::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
-        Some(self.cc_name.as_str())
+        Some(self.cc_name().as_str())
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Enumerator<'pb> {
-    pub(crate) proto: EnumeratorView<'pb>,
-    pub(crate) identifier: Identifier<'pb>,
-    pub(crate) unknown_attr: Option<&'pb str>,
-    pub(crate) deprecated: Option<&'pb str>,
-    pub(crate) doc_comment: Option<&'pb str>,
+    proto: EnumeratorView<'pb>,
+}
+
+impl<'pb> ProtoToIr for EnumeratorView<'pb> {
+    type IrType = Enumerator<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.identifier().validate()?;
+        self.value().validate()?;
+        self.unknown_attr_opt().validate()?;
+        self.deprecated_opt().validate()?;
+        self.doc_comment_opt().validate()
+    }
+
+    fn to_ir(self) -> Enumerator<'pb> {
+        Enumerator { proto: self }
+    }
 }
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> Enumerator<'pb> {
-        pub fn identifier(&self) -> &Identifier<'pb> {
-            &self.identifier
+        pub fn identifier(&self) -> Identifier<'pb> {
+            self.proto.identifier().to_ir()
         }
 
         pub fn value(&self) -> IntegerConstant<'pb> {
-            IntegerConstant(self.proto.value())
+            self.proto.value().to_ir()
         }
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.unknown_attr
+            self.proto.unknown_attr_opt().to_ir()
         }
 
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.deprecated
+            self.proto.deprecated_opt().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.doc_comment
+            self.proto.doc_comment_opt().to_ir()
         }
     }
 }
 
 #[derive(Clone)]
 pub struct TypeAlias<'pb> {
-    pub(crate) proto: TypeAliasView<'pb>,
-    pub(crate) cc_name: Identifier<'pb>,
-    pub(crate) rs_name: Identifier<'pb>,
-    pub(crate) unique_name: &'pb str,
+    proto: TypeAliasView<'pb>,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) doc_comment: Option<&'pb str>,
-    pub(crate) unknown_attr: Option<&'pb str>,
     pub(crate) underlying_type: CcType,
-    pub(crate) source_loc: &'pb str,
-    pub(crate) deprecated: Option<&'pb str>,
     // Lifetime variable names bound by this type alias.
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
 }
 
+impl<'pb> ProtoToIr for TypeAliasView<'pb> {
+    type IrType = TypeAlias<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.cc_name().validate()?;
+        self.rs_name().validate()?;
+        self.unique_name().validate()?;
+        self.owning_target().validate()?;
+        self.doc_comment_opt().validate()?;
+        self.unknown_attr_opt().validate()?;
+        let _ = CcType::try_from(self.underlying_type())?;
+        self.source_loc().validate()?;
+        self.deprecated_opt().validate()?;
+        for lifetime in self.lifetime_inputs().iter() {
+            lifetime.validate()?;
+        }
+        Ok(())
+    }
+
+    fn to_ir(self) -> TypeAlias<'pb> {
+        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let underlying_type = CcType::try_from(self.underlying_type())
+            .expect("`underlying_type` should have been validated by `TypeAliasView::validate`");
+        let lifetime_inputs = self.lifetime_inputs().iter().map(|p| Rc::from(p.to_ir())).collect();
+        TypeAlias { proto: self, owning_target, underlying_type, lifetime_inputs }
+    }
+}
+
 derive_debug_partialeq_eq_hash! {
     impl<'pb> TypeAlias<'pb> {
-        pub fn cc_name(&self) -> &Identifier<'pb> {
-            &self.cc_name
+        pub fn cc_name(&self) -> Identifier<'pb> {
+            self.proto.cc_name().to_ir()
         }
 
-        pub fn rs_name(&self) -> &Identifier<'pb> {
-            &self.rs_name
+        pub fn rs_name(&self) -> Identifier<'pb> {
+            self.proto.rs_name().to_ir()
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.unique_name
+            self.proto.unique_name().to_ir()
         }
 
         pub fn id(&self) -> ItemId {
@@ -2411,12 +2669,12 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.doc_comment
+            self.proto.doc_comment_opt().to_ir()
         }
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.unknown_attr
+            self.proto.unknown_attr_opt().to_ir()
         }
 
         pub fn underlying_type(&self) -> &CcType {
@@ -2424,7 +2682,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn source_loc(&self) -> &'pb str {
-            self.source_loc
+            self.proto.source_loc().to_ir()
         }
 
         pub fn enclosing_item_id(&self) -> Option<ItemId> {
@@ -2438,7 +2696,7 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.deprecated
+            self.proto.deprecated_opt().to_ir()
         }
 
         pub fn lifetime_inputs(&self) -> &[Rc<str>] {
@@ -2480,13 +2738,13 @@ impl<'pb> GenericItem<'pb> for TypeAlias<'pb> {
         TypeAlias::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
-        Some(self.cc_name.as_str())
+        Some(self.cc_name().as_str())
     }
 }
 
 impl Display for TypeAlias<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} ({}, {})", self.rs_name, self.owning_target, self.source_loc)
+        write!(f, "{} ({}, {})", self.rs_name(), self.owning_target(), self.source_loc())
     }
 }
 
@@ -2676,16 +2934,27 @@ impl<'pb> UnsupportedItem<'pb> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Comment<'pb> {
-    pub(crate) proto: CommentView<'pb>,
-    pub(crate) text: &'pb str,
+    proto: CommentView<'pb>,
+}
+
+impl<'pb> ProtoToIr for CommentView<'pb> {
+    type IrType = Comment<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.text().validate()
+    }
+
+    fn to_ir(self) -> Comment<'pb> {
+        Comment { proto: self }
+    }
 }
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> Comment<'pb> {
         pub fn text(&self) -> &'pb str {
-            self.text
+            self.proto.text().to_ir()
         }
 
         pub fn id(&self) -> ItemId {
@@ -2724,29 +2993,54 @@ impl<'pb> GenericItem<'pb> for Comment<'pb> {
 
 #[derive(Clone)]
 pub struct Namespace<'pb> {
-    pub(crate) proto: NamespaceView<'pb>,
-    pub(crate) cc_name: Identifier<'pb>,
-    pub(crate) rs_name: Identifier<'pb>,
-    pub(crate) unique_name: &'pb str,
-    pub(crate) unknown_attr: Option<&'pb str>,
+    proto: NamespaceView<'pb>,
     pub(crate) owning_target: BazelLabel,
-    pub(crate) deprecated: Option<&'pb str>,
-    pub(crate) doc_comment: Option<&'pb str>,
     pub(crate) children: Vec<Item<'pb>>,
+}
+
+impl<'pb> ProtoToIr for NamespaceView<'pb> {
+    type IrType = Namespace<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.cc_name().validate()?;
+        self.rs_name().validate()?;
+        self.unique_name().validate()?;
+        self.unknown_attr_opt().validate()?;
+        self.owning_target().validate()?;
+        self.deprecated_opt().validate()?;
+        self.doc_comment_opt().validate()?;
+        for child in self.children().iter() {
+            let _ = Item::try_from(child)?;
+        }
+        Ok(())
+    }
+
+    fn to_ir(self) -> Namespace<'pb> {
+        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let children = self
+            .children()
+            .iter()
+            .map(|c| {
+                Item::try_from(c)
+                    .expect("`children` should have been validated by `NamespaceView::validate`")
+            })
+            .collect();
+        Namespace { proto: self, owning_target, children }
+    }
 }
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> Namespace<'pb> {
-        pub fn cc_name(&self) -> &Identifier<'pb> {
-            &self.cc_name
+        pub fn cc_name(&self) -> Identifier<'pb> {
+            self.proto.cc_name().to_ir()
         }
 
-        pub fn rs_name(&self) -> &Identifier<'pb> {
-            &self.rs_name
+        pub fn rs_name(&self) -> Identifier<'pb> {
+            self.proto.rs_name().to_ir()
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.unique_name
+            self.proto.unique_name().to_ir()
         }
 
         pub fn id(&self) -> ItemId {
@@ -2759,7 +3053,7 @@ derive_debug_partialeq_eq_hash! {
 
         /// A human-readable list of attributes that Crubit doesn't understand.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.unknown_attr
+            self.proto.unknown_attr_opt().to_ir()
         }
 
         pub fn owning_target(&self) -> &BazelLabel {
@@ -2779,11 +3073,11 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.deprecated
+            self.proto.deprecated_opt().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.doc_comment
+            self.proto.doc_comment_opt().to_ir()
         }
 
         pub fn children(&self) -> &[Item<'pb>] {
@@ -2825,25 +3119,36 @@ impl<'pb> GenericItem<'pb> for Namespace<'pb> {
         Namespace::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
-        Some(self.cc_name.as_str())
+        Some(self.cc_name().as_str())
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct UseMod<'pb> {
-    pub(crate) proto: UseModView<'pb>,
-    pub(crate) path: Rc<str>,
-    pub(crate) mod_name: Identifier<'pb>,
+    proto: UseModView<'pb>,
+}
+
+impl<'pb> ProtoToIr for UseModView<'pb> {
+    type IrType = UseMod<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.path().validate()?;
+        self.mod_name().validate()
+    }
+
+    fn to_ir(self) -> UseMod<'pb> {
+        UseMod { proto: self }
+    }
 }
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> UseMod<'pb> {
-        pub fn path(&self) -> &str {
-            &self.path
+        pub fn path(&self) -> &'pb str {
+            self.proto.path().to_ir()
         }
 
-        pub fn mod_name(&self) -> &Identifier<'pb> {
-            &self.mod_name
+        pub fn mod_name(&self) -> Identifier<'pb> {
+            self.proto.mod_name().to_ir()
         }
 
         pub fn id(&self) -> ItemId {
@@ -2886,12 +3191,38 @@ impl<'pb> GenericItem<'pb> for UseMod<'pb> {
 /// declarations.
 #[derive(Clone)]
 pub struct ExistingRustType<'pb> {
-    pub(crate) proto: ExistingRustTypeView<'pb>,
-    pub(crate) rs_name: &'pb str,
-    pub(crate) cc_name: &'pb str,
-    pub(crate) unique_name: &'pb str,
+    proto: ExistingRustTypeView<'pb>,
     pub(crate) template_args: Vec<TemplateArg>,
     pub(crate) owning_target: BazelLabel,
+}
+
+impl<'pb> ProtoToIr for ExistingRustTypeView<'pb> {
+    type IrType = ExistingRustType<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.rs_name().validate()?;
+        self.cc_name().validate()?;
+        self.unique_name().validate()?;
+        for template_arg in self.template_args().iter() {
+            let _ = TemplateArg::try_from(template_arg)?;
+        }
+        self.owning_target().validate()?;
+        self.size_align_opt().validate()
+    }
+
+    fn to_ir(self) -> ExistingRustType<'pb> {
+        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let template_args = self
+            .template_args()
+            .iter()
+            .map(|a| {
+                TemplateArg::try_from(a).expect(
+                    "`template_args` should have been validated by `ExistingRustTypeView::validate`",
+                )
+            })
+            .collect();
+        ExistingRustType { proto: self, template_args, owning_target }
+    }
 }
 
 derive_debug_partialeq_eq_hash! {
@@ -2900,15 +3231,15 @@ derive_debug_partialeq_eq_hash! {
         /// Note that it may contain interpolated type parameters, like `RustType<{T}>`.
         /// This means that it's incorrect to directly parse as an Ident.
         pub fn rs_name(&self) -> &'pb str {
-            self.rs_name
+            self.proto.rs_name().to_ir()
         }
 
         pub fn cc_name(&self) -> &'pb str {
-            self.cc_name
+            self.proto.cc_name().to_ir()
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.unique_name
+            self.proto.unique_name().to_ir()
         }
 
         /// The template arguments on this instance of the type instantiation (empty is no template
@@ -2922,7 +3253,7 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn size_align(&self) -> Option<SizeAlign<'pb>> {
-            self.proto.has_size_align().then(|| SizeAlign(self.proto.size_align()))
+            self.proto.size_align_opt().to_ir()
         }
 
         pub fn is_same_abi(&self) -> bool {
@@ -3129,13 +3460,13 @@ impl<'pb> Item<'pb> {
                 UnqualifiedIdentifier::Identifier(identifier) => Some(identifier.as_str()),
                 _ => None,
             },
-            Item::IncompleteRecord(incomplete_record) => Some(incomplete_record.cc_name.as_str()),
+            Item::IncompleteRecord(incomplete_record) => Some(incomplete_record.cc_name().as_str()),
             Item::Record(record) => Some(record.cc_name.as_str()),
-            Item::Enum(enum_) => Some(enum_.cc_name.as_str()),
-            Item::Constant(constant) => Some(constant.cc_name.as_str()),
-            Item::GlobalVar(global_var) => Some(global_var.cc_name.as_str()),
-            Item::TypeAlias(type_alias) => Some(type_alias.cc_name.as_str()),
-            Item::Namespace(namespace) => Some(namespace.cc_name.as_str()),
+            Item::Enum(enum_) => Some(enum_.cc_name().as_str()),
+            Item::Constant(constant) => Some(constant.cc_name().as_str()),
+            Item::GlobalVar(global_var) => Some(global_var.cc_name().as_str()),
+            Item::TypeAlias(type_alias) => Some(type_alias.cc_name().as_str()),
+            Item::Namespace(namespace) => Some(namespace.cc_name().as_str()),
             Item::UnsupportedItem(_) => None,
             Item::Comment(_) => None,
             Item::UseMod(_) => None,
@@ -3148,16 +3479,16 @@ impl<'pb> Item<'pb> {
     pub fn rs_name_as_str(&self) -> Option<&str> {
         match self {
             Item::Func(func) => func.rs_name.identifier_as_str(),
-            Item::IncompleteRecord(incomplete_record) => Some(incomplete_record.rs_name.as_str()),
+            Item::IncompleteRecord(incomplete_record) => Some(incomplete_record.rs_name().as_str()),
             Item::Record(record) => Some(record.rs_name.as_str()),
-            Item::Enum(enum_) => Some(enum_.rs_name.as_str()),
-            Item::Constant(constant) => Some(constant.rs_name.as_str()),
-            Item::GlobalVar(global_var) => Some(global_var.rs_name.as_str()),
-            Item::TypeAlias(type_alias) => Some(type_alias.rs_name.as_str()),
+            Item::Enum(enum_) => Some(enum_.rs_name().as_str()),
+            Item::Constant(constant) => Some(constant.rs_name().as_str()),
+            Item::GlobalVar(global_var) => Some(global_var.rs_name().as_str()),
+            Item::TypeAlias(type_alias) => Some(type_alias.rs_name().as_str()),
             Item::UnsupportedItem(_) => None,
             Item::Comment(_) => None,
-            Item::Namespace(namespace) => Some(namespace.rs_name.as_str()),
-            Item::UseMod(use_mod) => Some(use_mod.mod_name.as_str()),
+            Item::Namespace(namespace) => Some(namespace.rs_name().as_str()),
+            Item::UseMod(use_mod) => Some(use_mod.mod_name().as_str()),
             Item::ExistingRustType(existing_rust_type) => Some(existing_rust_type.rs_name()),
         }
     }
@@ -3606,8 +3937,11 @@ mod tests {
             current_target: "//foo:bar",
         });
         let ir = proto_to_ir(proto.as_view()).unwrap();
+        assert_eq!(ir.public_headers().count(), 1);
+        let header_name = proto.public_headers().get(0).unwrap().to_ir();
+        assert_eq!(header_name.name(), "foo/bar.h");
         let expected = TreeIR {
-            public_headers: vec![HeaderName { name: "foo/bar.h".into() }],
+            public_headers: vec![header_name],
             current_target: "//foo:bar".into(),
             crate_root_path: None,
             crubit_features: Default::default(),

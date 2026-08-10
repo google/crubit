@@ -731,7 +731,7 @@ fn test_struct_with_owned_ptr_type_annotation() -> googletest::Result<()> {
     let record =
         ir.records().find(|record| *record.rs_name() == "RecordWithOwnedPtrType").or_fail()?;
     let owned_ptr_config = record.owned_ptr_config().or_fail()?;
-    expect_that!(&*owned_ptr_config.owned_ptr_type, eq("SomeOwnedPtrType"));
+    expect_that!(owned_ptr_config.owned_ptr_type(), eq("SomeOwnedPtrType"));
     Ok(())
 }
 
@@ -3117,19 +3117,26 @@ fn assert_member_function_with_predicate_has_instance_method_metadata<F: FnMut(&
     ir: &IR,
     record_name: &str,
     mut func_predicate: F,
-    expected_metadata: &Option<ir::InstanceMethodMetadata>,
+    expected_reference: ir::ReferenceQualification,
+    expected_is_const: bool,
+    expected_is_virtual: bool,
 ) {
     let record =
         ir.records().find(|r| r.rs_name().as_str() == record_name).expect("Struct not found");
     let function = ir.functions().find(|f| func_predicate(f)).expect("Function not found");
     assert_eq!(function.enclosing_item_id(), Some(record.id()));
-    assert_eq!(function.instance_method_metadata(), expected_metadata.as_ref());
+    let metadata = function.instance_method_metadata().expect("Instance method metadata not found");
+    assert_eq!(metadata.reference(), expected_reference);
+    assert_eq!(metadata.is_const(), expected_is_const);
+    assert_eq!(metadata.is_virtual(), expected_is_virtual);
 }
 
 fn assert_member_function_has_instance_method_metadata(
     name: &str,
     definition: &str,
-    expected_metadata: &Option<ir::InstanceMethodMetadata>,
+    expected_reference: ir::ReferenceQualification,
+    expected_is_const: bool,
+    expected_is_virtual: bool,
 ) {
     let mut file = String::new();
     file += "struct Struct {\n  ";
@@ -3143,17 +3150,18 @@ fn assert_member_function_has_instance_method_metadata(
         &ir,
         "Struct",
         |f| *f.rs_name() == name,
-        expected_metadata,
+        expected_reference,
+        expected_is_const,
+        expected_is_virtual,
     );
 }
 
 #[gtest]
 fn test_member_function_static() {
-    assert_member_function_has_instance_method_metadata(
-        "Function",
-        "static void Function();",
-        &None,
-    );
+    let proto = ir_proto_from_cc("struct Struct {\n  static void Function();\n};").unwrap();
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let function = ir.functions().find(|f| *f.rs_name() == "Function").expect("Function not found");
+    assert_eq!(function.instance_method_metadata(), None);
 }
 
 #[gtest]
@@ -3161,11 +3169,9 @@ fn test_member_function() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function();",
-        &Some(ir::InstanceMethodMetadata::new(
-            ir::ReferenceQualification::Unqualified,
-            false,
-            false,
-        )),
+        ir::ReferenceQualification::Unqualified,
+        false,
+        false,
     );
 }
 
@@ -3174,11 +3180,9 @@ fn test_member_function_const() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function() const;",
-        &Some(ir::InstanceMethodMetadata::new(
-            ir::ReferenceQualification::Unqualified,
-            true,
-            false,
-        )),
+        ir::ReferenceQualification::Unqualified,
+        true,
+        false,
     );
 }
 
@@ -3187,11 +3191,9 @@ fn test_member_function_virtual() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "virtual void Function();",
-        &Some(ir::InstanceMethodMetadata::new(
-            ir::ReferenceQualification::Unqualified,
-            false,
-            true,
-        )),
+        ir::ReferenceQualification::Unqualified,
+        false,
+        true,
     );
 }
 
@@ -3200,7 +3202,9 @@ fn test_member_function_lvalue() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function() &;",
-        &Some(ir::InstanceMethodMetadata::new(ir::ReferenceQualification::LValue, false, false)),
+        ir::ReferenceQualification::LValue,
+        false,
+        false,
     );
 }
 
@@ -3209,7 +3213,9 @@ fn test_member_function_rvalue() {
     assert_member_function_has_instance_method_metadata(
         "Function",
         "void Function() &&;",
-        &Some(ir::InstanceMethodMetadata::new(ir::ReferenceQualification::RValue, false, false)),
+        ir::ReferenceQualification::RValue,
+        false,
+        false,
     );
 }
 
@@ -3258,11 +3264,9 @@ fn test_member_function_explicit_constructor() {
         &ir,
         "SomeStruct",
         |f| *f.rs_name() == UnqualifiedIdentifier::Constructor,
-        &Some(ir::InstanceMethodMetadata::new(
-            ir::ReferenceQualification::Unqualified,
-            false,
-            false,
-        )),
+        ir::ReferenceQualification::Unqualified,
+        false,
+        false,
     );
 }
 
@@ -3282,11 +3286,9 @@ fn test_member_function_constructor() {
             &ir,
             "SomeStruct",
             |f| *f.rs_name() == UnqualifiedIdentifier::Constructor,
-            &Some(ir::InstanceMethodMetadata::new(
-                ir::ReferenceQualification::Unqualified,
-                false,
-                false,
-            )),
+            ir::ReferenceQualification::Unqualified,
+            false,
+            false,
         );
     }
 }
@@ -3411,12 +3413,12 @@ fn test_elided_lifetimes() {
     let b_id = lifetime_params[1].id();
     assert_eq!(func.return_type().variant().as_pointer().unwrap().lifetime().unwrap(), a_id);
 
-    assert_eq!(*func.params()[0].identifier(), "__this");
+    assert_eq!(func.params()[0].identifier(), "__this");
     let ptr = &func.params()[0].type_().variant().as_pointer().unwrap();
     assert!(!ptr.pointee_type().is_const());
     assert_eq!(ptr.lifetime().unwrap(), a_id);
 
-    assert_eq!(*func.params()[1].identifier(), "i");
+    assert_eq!(func.params()[1].identifier(), "i");
     let ptr = &func.params()[1].type_().variant().as_pointer().unwrap();
     assert!(!ptr.pointee_type().is_const());
     assert_eq!(ptr.lifetime().unwrap(), b_id);
@@ -3436,7 +3438,7 @@ fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     assert_eq!(f.lifetime_params().len(), 1);
 
     let p = f.params().first().expect("IR should contain `__this` parameter");
-    assert_eq!(*p.identifier(), "__this");
+    assert_eq!(p.identifier(), "__this");
 
     let p_ptr = p.type_().variant().as_pointer().unwrap();
     assert_eq!(p_ptr.lifetime().unwrap(), f.lifetime_params()[0].id());
@@ -3852,7 +3854,7 @@ fn test_namespaces() {
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
 
-    let namespace = ir.namespaces().find(|n| *n.rs_name() == "test_namespace_bindings").unwrap();
+    let namespace = ir.namespaces().find(|n| n.rs_name() == "test_namespace_bindings").unwrap();
     let namespace_items = namespace.children().iter().collect_vec();
 
     assert_ir_matches!(
@@ -3910,7 +3912,7 @@ fn test_nested_namespace_definition() {
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
 
-    let namespace = ir.namespaces().find(|n| *n.rs_name() == "test_namespace_bindings").unwrap();
+    let namespace = ir.namespaces().find(|n| n.rs_name() == "test_namespace_bindings").unwrap();
     let namespace_items = namespace.children().iter().collect_vec();
 
     assert_items_match!(
@@ -3920,7 +3922,7 @@ fn test_nested_namespace_definition() {
         },]
     );
 
-    let inner_namespace = ir.namespaces().find(|n| *n.rs_name() == "inner").unwrap();
+    let inner_namespace = ir.namespaces().find(|n| n.rs_name() == "inner").unwrap();
     let inner_namespace_items = inner_namespace.children().iter().collect_vec();
 
     assert_items_match!(
@@ -3957,13 +3959,13 @@ fn test_enclosing_item_ids() {
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
 
-    let namespace = ir.namespaces().find(|n| *n.rs_name() == "test_namespace_bindings").unwrap();
+    let namespace = ir.namespaces().find(|n| n.rs_name() == "test_namespace_bindings").unwrap();
     let namespace_items: Vec<&Item> = namespace.children().iter().collect_vec();
 
     assert_eq!(namespace.enclosing_item_id(), None);
     assert!(namespace_items.iter().all(|item| item.enclosing_item_id() == Some(namespace.id())));
 
-    let inner_namespace = ir.namespaces().find(|n| *n.rs_name() == "inner").unwrap();
+    let inner_namespace = ir.namespaces().find(|n| n.rs_name() == "inner").unwrap();
     let inner_namespace_items: Vec<&Item> = inner_namespace.children().iter().collect_vec();
 
     assert!(inner_namespace_items
@@ -4084,7 +4086,7 @@ fn test_namespace_stored_data_in_ir() {
     let ir = ir_testing::make_test_ir(&proto).unwrap();
 
     let outer_namespaces =
-        ir.namespaces().filter(|ns| *ns.rs_name() == "test_namespace_bindings").collect_vec();
+        ir.namespaces().filter(|ns| ns.rs_name() == "test_namespace_bindings").collect_vec();
     assert_eq!(outer_namespaces.len(), 2);
 
     assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[0].id()).unwrap(), 0);
@@ -4103,7 +4105,7 @@ fn test_namespace_stored_data_in_ir() {
         )
         .unwrap());
 
-    let inner_namespaces = ir.namespaces().filter(|ns| *ns.rs_name() == "inner").collect_vec();
+    let inner_namespaces = ir.namespaces().filter(|ns| ns.rs_name() == "inner").collect_vec();
     assert_eq!(inner_namespaces.len(), 3);
 
     assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[0].id()).unwrap(), 0);
