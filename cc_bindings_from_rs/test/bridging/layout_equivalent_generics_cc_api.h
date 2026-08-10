@@ -15,6 +15,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/rs_std/unit.h"
 
 #include <cstdint>
 
@@ -51,10 +52,8 @@ using MyStatusAlias CRUBIT_INTERNAL_RUST_TYPE(
 // Type bindings for layout_equivalent_generics_golden::MyStatusOr suppressed
 // due to being mapped to an existing C++ type (crubit::test::MyStatusOr<{T}>)
 
-// Error generating bindings for type alias
-// `layout_equivalent_generics_golden::UnitAlias` defined at
-// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=107:
-// Tuple type `()` is not supported in this context
+using UnitAlias CRUBIT_INTERNAL_RUST_TYPE(
+    ":: layout_equivalent_generics_golden :: UnitAlias") = rs_std::unit_t;
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t accept_optional_by_reference(

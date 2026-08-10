@@ -324,8 +324,17 @@ pub fn format_ty_for_cc<'tcx>(
             }
         },
         ty::TyKind::Tuple(types) => {
-            if types.is_empty() && matches!(location, TypeLocation::FnReturn { .. }) {
-                keyword(quote! { void })
+            if types.is_empty() {
+                match location {
+                    TypeLocation::FnReturn { .. } => keyword(quote! { void }),
+                    TypeLocation::Field => {
+                        bail!("Tuple type `()` is not supported in struct fields");
+                    }
+                    _ => CcSnippet::with_include(
+                        quote! { rs_std::unit_t },
+                        db.support_header("rs_std/unit.h"),
+                    ),
+                }
             } else if !location.is_bridgeable()
                 || (db
                     .crate_features(db.source_crate_num())

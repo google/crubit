@@ -244,6 +244,10 @@ fn parse_tuple_template_specialization<'tcx>(
     }))
 }
 
+pub(crate) fn is_unit_ty<'tcx>(ty: Ty<'tcx>) -> bool {
+    matches!(ty.kind(), ty::TyKind::Tuple(types) if types.is_empty())
+}
+
 struct OptionApiGenerator<'tcx> {
     arg_ty: TokenStream,
     needs_drop: bool,
@@ -655,7 +659,8 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
         };
 
         let all_elements_cpp_movable = self.element_tys.iter().all(|element| {
-            self.db.has_move_ctor_and_assignment_operator(None, element.ty).is_some()
+            !is_unit_ty(element.ty)
+                && self.db.has_move_ctor_and_assignment_operator(None, element.ty).is_some()
         });
 
         let (std_tuple_main_api_ctor, std_tuple_main_api_conv, std_tuple_cc_details) =
@@ -695,6 +700,17 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
             }),
             ..Default::default()
         }
+    }
+}
+
+fn format_template_arg_ty_for_cc<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: &FormattedTy<'tcx>,
+) -> CcSnippet<'tcx> {
+    if is_unit_ty(ty.ty) {
+        CcSnippet::with_include(quote! { rs_std::unit_t }, db.support_header("rs_std/unit.h"))
+    } else {
+        ty.for_cc.clone()
     }
 }
 
@@ -1080,8 +1096,8 @@ fn specialize_result<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
-    let ok_ty_tokens = ok_ty.for_cc.clone().into_tokens(&mut prereqs);
-    let err_ty_tokens = err_ty.for_cc.clone().into_tokens(&mut prereqs);
+    let ok_ty_tokens = format_template_arg_ty_for_cc(db, &ok_ty).into_tokens(&mut prereqs);
+    let err_ty_tokens = format_template_arg_ty_for_cc(db, &err_ty).into_tokens(&mut prereqs);
     let layout = rs_std.layout;
     let (tag_encoding, tag_field) = match layout.variants() {
         rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
@@ -1330,7 +1346,7 @@ fn specialize_option<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
-    let ty_tokens = arg_ty.for_cc.clone().into_tokens(&mut prereqs);
+    let ty_tokens = format_template_arg_ty_for_cc(db, &arg_ty).into_tokens(&mut prereqs);
     let layout = rs_std.layout;
 
     let (tag_encoding, tag_field) = match layout.variants() {
