@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use clap::Parser;
-use ra_ap_rustc_lexer::TokenKind;
 use std::fmt::Write;
 use std::fs;
 use std::path::PathBuf;
@@ -34,228 +33,6 @@ struct Args {
     fail_on_bindable: bool,
 }
 
-struct TokenParser<'a> {
-    tokens: &'a [ra_ap_rustc_lexer::Token],
-    rust_source: &'a str,
-    token_index: usize,
-    byte_offset: usize,
-    line: usize,
-    column: usize,
-}
-
-/// Coordinates (line/column) where the inner C++ code content begins.
-struct ExtractedBracedBody<'a> {
-    line: usize,
-    column: usize,
-    text: &'a str,
-}
-
-impl<'a> TokenParser<'a> {
-    /// Creates a new TokenParser for the given source and tokens.
-    fn new(rust_source: &'a str, tokens: &'a [ra_ap_rustc_lexer::Token]) -> Self {
-        TokenParser { tokens, rust_source, token_index: 0, byte_offset: 0, line: 1, column: 1 }
-    }
-
-    /// Returns the next token to parse.
-    fn peek(&self) -> Option<&'a ra_ap_rustc_lexer::Token> {
-        self.tokens.get(self.token_index)
-    }
-
-    fn peek_text(&self) -> &'a str {
-        if let Some(token) = self.peek() {
-            &self.rust_source[self.byte_offset..self.byte_offset + token.len as usize]
-        } else {
-            ""
-        }
-    }
-
-    fn advance(&mut self) {
-        let Some(token) = self.peek() else {
-            return;
-        };
-        let text = self.peek_text();
-        for c in text.chars() {
-            if c == '\n' {
-                self.line += 1;
-                self.column = 1;
-            } else {
-                self.column += 1;
-            }
-        }
-        self.byte_offset += token.len as usize;
-        self.token_index += 1;
-    }
-
-    fn eat_whitespace(&mut self) {
-        while let Some(t) = self.peek() {
-            if t.kind == TokenKind::Whitespace {
-                self.advance();
-            } else {
-                break;
-            }
-        }
-    }
-
-    fn eat_bang(&mut self) -> bool {
-        if matches!(self.peek(), Some(t) if t.kind == TokenKind::Bang) {
-            self.advance();
-            return true;
-        }
-        false
-    }
-
-    fn token_text_at(&self, idx: usize) -> &'a str {
-        if idx >= self.tokens.len() {
-            return "";
-        }
-        let mut offset = self.byte_offset;
-        for i in self.token_index..idx {
-            offset += self.tokens[i].len as usize;
-        }
-        let len = self.tokens[idx].len as usize;
-        &self.rust_source[offset..offset + len]
-    }
-
-    fn is_colon_colon_at(&self, idx: usize) -> bool {
-        idx + 1 < self.tokens.len()
-            && self.tokens[idx].kind == TokenKind::Colon
-            && self.tokens[idx + 1].kind == TokenKind::Colon
-    }
-
-    /// Returns the number of tokens in the macro path if the tokens starting at `self.token_index`
-    /// form a macro invocation path ending in `macro_name!`, such as `inline_cpp!` or
-    /// `::crubit_support::inline_cpp!` or `crubit_support::inline_cpp!`.
-    fn match_macro_invocation_path(&self, macro_name: &str) -> Option<usize> {
-        let mut idx = self.token_index;
-        if idx >= self.tokens.len() {
-            return None;
-        }
-
-        // Optional leading `::`
-        if self.is_colon_colon_at(idx) {
-            idx += 2;
-        }
-
-        while idx < self.tokens.len() {
-            if self.tokens[idx].kind != TokenKind::Ident {
-                return None;
-            }
-            let is_target_macro = self.token_text_at(idx) == macro_name;
-            // Check what follows this Ident
-            let mut next_idx = idx + 1;
-            while next_idx < self.tokens.len()
-                && self.tokens[next_idx].kind == TokenKind::Whitespace
-            {
-                next_idx += 1;
-            }
-            if is_target_macro
-                && next_idx < self.tokens.len()
-                && self.tokens[next_idx].kind == TokenKind::Bang
-            {
-                // Found path ending in `macro_name!`
-                return Some(idx + 1 - self.token_index);
-            }
-            // Otherwise, it must be followed by `::` to continue the path
-            if self.is_colon_colon_at(idx + 1) {
-                idx += 3;
-            } else {
-                return None;
-            }
-        }
-        None
-    }
-
-    fn eat_braced_body(&mut self, file_name: &str) -> Result<ExtractedBracedBody<'a>, String> {
-        let start_line = self.line;
-        if let Some(t) = self.peek() {
-            if t.kind != TokenKind::OpenBrace {
-                return Err(format!("Expected '{{' after '!' at {}:{}", file_name, start_line));
-            }
-        } else {
-            return Err(format!("Expected '{{' after '!' at {}:{}", file_name, start_line));
-        }
-
-        self.advance();
-
-        let body_start_line = self.line;
-        let body_start_col = self.column;
-        let body_start_pos = self.byte_offset;
-        let mut depth = 1;
-
-        while let Some(t) = self.peek() {
-            let body_end_pos = self.byte_offset;
-            self.advance();
-
-            if t.kind == TokenKind::OpenBrace {
-                depth += 1;
-            } else if t.kind == TokenKind::CloseBrace {
-                depth -= 1;
-                if depth == 0 {
-                    return Ok(ExtractedBracedBody {
-                        line: body_start_line,
-                        column: body_start_col,
-                        text: &self.rust_source[body_start_pos..body_end_pos],
-                    });
-                }
-            }
-        }
-
-        Err(format!(
-            "Unmatched delimiter starting at {}:{}: Context around open brace:\n{}",
-            file_name,
-            start_line,
-            self.rust_source
-                .lines()
-                .skip(start_line.saturating_sub(3))
-                .take(5)
-                .collect::<Vec<_>>()
-                .join("\n")
-        ))
-    }
-}
-
-/// Coordinates (line/column) where the outer macro token begins (e.g. `inline_cpp`).
-struct ExtractedMacro<'a> {
-    macro_line: usize,
-    macro_col: usize,
-    body: ExtractedBracedBody<'a>,
-}
-
-fn extract_macro_body<'a>(
-    parser: &mut TokenParser<'a>,
-    macro_names: &[&str],
-    file_name: &str,
-) -> Result<Option<ExtractedMacro<'a>>, String> {
-    let mut matched_len = None;
-    for macro_name in macro_names {
-        if let Some(path_token_count) = parser.match_macro_invocation_path(macro_name) {
-            matched_len = Some(path_token_count);
-            break;
-        }
-    }
-    let Some(path_token_count) = matched_len else {
-        parser.advance();
-        return Ok(None);
-    };
-
-    let macro_line = parser.line;
-    let macro_col = parser.column;
-
-    for _ in 0..path_token_count {
-        parser.advance();
-    }
-    parser.eat_whitespace();
-
-    if !parser.eat_bang() {
-        return Ok(None);
-    }
-
-    parser.eat_whitespace();
-
-    let body = parser.eat_braced_body(file_name)?;
-    Ok(Some(ExtractedMacro { macro_line, macro_col, body }))
-}
-
 pub fn lint_bindable_cpp(body_text: &str, file_name: &str, line: usize) -> Vec<String> {
     let mut warnings = Vec::new();
     let trimmed = body_text.trim();
@@ -275,33 +52,27 @@ pub fn lint_bindable_cpp(body_text: &str, file_name: &str, line: usize) -> Vec<S
 
 pub fn extract_global_cpp(
     rust_source: &str,
-    tokens: &[ra_ap_rustc_lexer::Token],
+    _tokens: &[ra_ap_rustc_lexer::Token],
     file_name: &str,
-    custom_macro_name: Option<&str>,
+    _custom_macro_name: Option<&str>,
 ) -> Result<(String, Vec<String>), String> {
     let mut extracted = String::new();
     let mut lint_warnings = Vec::new();
-    let mut parser = TokenParser::new(rust_source, tokens);
+    let macros = parse_inline_cpp_macros::parse_inline_cpp_macros(rust_source, file_name)?;
 
-    let mut macro_names = vec!["global_cpp", "DO_NOT_SUBMIT_CPP_DECL", "cpp_decl"]; // NOLINT
-    if let Some(c) = custom_macro_name
-        && !c.is_empty()
-        && !macro_names.contains(&c)
-    {
-        macro_names.push(c);
-    }
-
-    while parser.peek().is_some() {
-        let Some(block) = extract_macro_body(&mut parser, &macro_names, file_name)? else {
+    for m in macros {
+        if m.kind != parse_inline_cpp_macros::MacroKind::GlobalCpp
+            && m.kind != parse_inline_cpp_macros::MacroKind::DoNotSubmitCppDecl
+        {
             continue;
-        };
-        let padding = " ".repeat(block.body.column - 1);
+        }
+        let padding = " ".repeat(m.body_col.saturating_sub(1));
         let _ = write!(
             extracted,
             "#line {} \"{}\"\n{}{}\n",
-            block.body.line, file_name, padding, block.body.text
+            m.body_line, file_name, padding, m.body_text
         );
-        let warnings = lint_bindable_cpp(block.body.text, file_name, block.body.line);
+        let warnings = lint_bindable_cpp(m.body_text, file_name, m.body_line);
         lint_warnings.extend(warnings);
     }
 
@@ -389,32 +160,27 @@ fn validate_inline_cpp_syntax(body_text: &str) -> Result<(), String> {
 
 pub fn extract_inline_cpp(
     rust_source: &str,
-    tokens: &[ra_ap_rustc_lexer::Token],
+    _tokens: &[ra_ap_rustc_lexer::Token],
     file_name: &str,
     target: &str,
 ) -> Result<String, String> {
     let mut extracted = String::new();
-    let mut parser = TokenParser::new(rust_source, tokens);
+    let macros = parse_inline_cpp_macros::parse_inline_cpp_macros(rust_source, file_name)?;
 
-    while parser.peek().is_some() {
-        let Some(block) = extract_macro_body(&mut parser, &["inline_cpp"], file_name)? else {
+    for m in macros {
+        if m.kind != parse_inline_cpp_macros::MacroKind::InlineCpp {
             continue;
-        };
-        let thunk_name = inline_cpp_utils::compute_thunk_name(
-            target,
-            file_name,
-            block.macro_line,
-            block.macro_col,
-        );
-        validate_inline_cpp_syntax(block.body.text)
-            .map_err(|e| format!("{} at {}:{}", e, file_name, block.macro_line))?;
-        // Prefix thunk signature with spaces to map original column offsets in Clang.
-        let padding = " ".repeat(block.body.column - 1);
+        }
+        let thunk_name =
+            inline_cpp_utils::compute_thunk_name(target, file_name, m.macro_line, m.macro_col);
+        validate_inline_cpp_syntax(m.body_text)
+            .map_err(|e| format!("{} at {}:{}", e, file_name, m.macro_line))?;
+        let padding = " ".repeat(m.body_col.saturating_sub(1));
 
         let _ = write!(
             extracted,
             "inline auto {}\n#line {} \"{}\"\n{}{}\n\n",
-            thunk_name, block.body.line, file_name, padding, block.body.text
+            thunk_name, m.body_line, file_name, padding, m.body_text
         );
     }
 
