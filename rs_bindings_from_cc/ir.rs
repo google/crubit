@@ -10,9 +10,10 @@ use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
 use ir_rust_proto::{
     BaseClassView, CommentView, ConstantView, EnumView, EnumeratorView, ExistingRustTypeView,
-    FuncParamView, FuncView, GlobalVarView, HeaderNameView, IdentifierView, IncompleteRecordView,
-    InstanceMethodMetadataView, IntegerConstantView, NamespaceView, OwnedPtrConfigView, RecordView,
-    SizeAlignView, TypeAliasView, UseModView,
+    FieldView, FuncParamView, FuncView, GlobalVarView, HeaderNameView, IdentifierView,
+    IncompleteRecordView, InstanceMethodMetadataView, IntegerConstantView, NamespaceView,
+    OwnedPtrConfigView, RecordView, SizeAlignView, StatusOrOptionalStringView, TypeAliasView,
+    UseModView,
 };
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -1447,91 +1448,125 @@ impl ProtoToIr for ::ir_rust_proto::AccessSpecifier {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Clone)]
 pub struct Field<'pb> {
-    pub(crate) rust_identifier: Option<Identifier<'pb>>,
-    pub(crate) cpp_identifier: Option<Identifier<'pb>>,
-    pub(crate) doc_comment: Option<&'pb str>,
+    proto: FieldView<'pb>,
     pub(crate) type_: CcType,
-    pub(crate) access: AccessSpecifier,
-    pub(crate) offset: usize,
-    pub(crate) size: usize,
-
     pub(crate) unknown_attr: Result<Option<&'pb str>, String>,
+}
 
-    pub(crate) is_no_unique_address: bool,
-    pub(crate) is_bitfield: bool,
+impl<'pb> ProtoToIr for StatusOrOptionalStringView<'pb> {
+    type IrType = Result<Option<&'pb str>, String>;
 
-    // TODO(kinuko): Consider removing this, it is a duplicate of the same information
-    // in `Record`.
-    pub(crate) is_inheritable: bool,
-    pub(crate) is_mutable: bool,
+    fn validate(self) -> Result<()> {
+        match self.result() {
+            ::ir_rust_proto::status_or_optional_string::ResultOneof::OkValue(val) => val.validate(),
+            ::ir_rust_proto::status_or_optional_string::ResultOneof::Err(err) => err.validate(),
+            _ => Ok(()),
+        }
+    }
 
-    pub(crate) deprecated: Option<&'pb str>,
+    fn to_ir(self) -> Result<Option<&'pb str>, String> {
+        match self.result() {
+            ::ir_rust_proto::status_or_optional_string::ResultOneof::OkValue(val) => {
+                let s = val.to_ir();
+                Ok((!s.is_empty()).then_some(s))
+            }
+            ::ir_rust_proto::status_or_optional_string::ResultOneof::Err(err) => {
+                Err(err.to_ir().to_string())
+            }
+            _ => Ok(None),
+        }
+    }
+}
+
+impl<'pb> ProtoToIr for FieldView<'pb> {
+    type IrType = Field<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.rust_identifier_opt().validate()?;
+        self.cpp_identifier_opt().validate()?;
+        self.doc_comment_opt().validate()?;
+        let _ = CcType::try_from(self.r#type())?;
+        self.access().validate()?;
+        self.unknown_attr().validate()?;
+        self.deprecated_opt().validate()
+    }
+
+    fn to_ir(self) -> Field<'pb> {
+        let type_ = CcType::try_from(self.r#type())
+            .expect("`type` should have been validated by `FieldView::validate`");
+        let unknown_attr = self.unknown_attr().to_ir();
+        Field { proto: self, type_, unknown_attr }
+    }
+}
+
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> Field<'pb> {
+        pub fn rust_identifier(&self) -> Option<Identifier<'pb>> {
+            self.proto.rust_identifier_opt().to_ir()
+        }
+
+        pub fn cpp_identifier(&self) -> Option<Identifier<'pb>> {
+            self.proto.cpp_identifier_opt().to_ir()
+        }
+
+        pub fn doc_comment(&self) -> Option<&'pb str> {
+            self.proto.doc_comment_opt().to_ir()
+        }
+
+        pub fn type_(&self) -> &CcType {
+            &self.type_
+        }
+
+        pub fn access(&self) -> AccessSpecifier {
+            self.proto.access().to_ir()
+        }
+
+        pub fn offset(&self) -> usize {
+            self.proto.offset() as usize
+        }
+
+        pub fn size(&self) -> usize {
+            self.proto.size() as usize
+        }
+
+        /// A human-readable list of attributes that Crubit doesn't understand.
+        pub fn unknown_attr(&self) -> &Result<Option<&'pb str>, String> {
+            &self.unknown_attr
+        }
+
+        pub fn is_no_unique_address(&self) -> bool {
+            self.proto.is_no_unique_address()
+        }
+
+        pub fn is_bitfield(&self) -> bool {
+            self.proto.is_bitfield()
+        }
+
+        pub fn is_inheritable(&self) -> bool {
+            self.proto.is_inheritable()
+        }
+
+        pub fn is_mutable(&self) -> bool {
+            self.proto.is_mutable()
+        }
+
+        /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
+        /// string is used.
+        pub fn deprecated(&self) -> Option<&'pb str> {
+            self.proto.deprecated_opt().to_ir()
+        }
+    }
 }
 
 impl<'pb> Field<'pb> {
-    pub fn rust_identifier(&self) -> Option<&Identifier<'pb>> {
-        self.rust_identifier.as_ref()
-    }
-
-    pub fn cpp_identifier(&self) -> Option<&Identifier<'pb>> {
-        self.cpp_identifier.as_ref()
-    }
-
-    pub fn doc_comment(&self) -> Option<&'pb str> {
-        self.doc_comment
-    }
-
-    pub fn type_(&self) -> &CcType {
-        &self.type_
-    }
-
     pub fn type_mut(&mut self) -> &mut CcType {
         &mut self.type_
     }
 
     pub fn set_type(&mut self, type_: CcType) {
         self.type_ = type_;
-    }
-
-    pub fn access(&self) -> AccessSpecifier {
-        self.access
-    }
-
-    pub fn offset(&self) -> usize {
-        self.offset
-    }
-
-    pub fn size(&self) -> usize {
-        self.size
-    }
-
-    /// A human-readable list of attributes that Crubit doesn't understand.
-    pub fn unknown_attr(&self) -> &Result<Option<&'pb str>, String> {
-        &self.unknown_attr
-    }
-
-    pub fn is_no_unique_address(&self) -> bool {
-        self.is_no_unique_address
-    }
-
-    pub fn is_bitfield(&self) -> bool {
-        self.is_bitfield
-    }
-
-    pub fn is_inheritable(&self) -> bool {
-        self.is_inheritable
-    }
-
-    pub fn is_mutable(&self) -> bool {
-        self.is_mutable
-    }
-
-    /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
-    /// string is used.
-    pub fn deprecated(&self) -> Option<&'pb str> {
-        self.deprecated
     }
 }
 
@@ -2234,7 +2269,7 @@ impl<'pb> Record<'pb> {
                     && self.trait_derives.clone != TraitImplPolarity::Negative
                     // Mutable fields become `Cell<T>` in Rust, which prevents
                     // the struct from deriving `Copy`.
-                    && self.fields.iter().all(|f| !f.is_mutable)
+                    && self.fields.iter().all(|f| !f.is_mutable())
             }
         }
     }
