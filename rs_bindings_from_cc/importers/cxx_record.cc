@@ -866,7 +866,7 @@ absl::StatusOr<SafetyAnnotation> CXXRecordDeclImporter::GetSafetyAnnotation(
     }
   }
 
-  if (decl.hasAttr<clang::PointerAttr>() &&
+  if (crubit::HasAttr<clang::PointerAttr>(&decl) &&
       ictx_.IsUnsafeViewEnabledForTarget(ictx_.GetOwningTarget(&decl))) {
     return SafetyAnnotation::SAFETY_ANNOTATION_UNSAFE;
   }
@@ -1219,10 +1219,10 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
         FormattedError::Static("Dependent records are not supported"));
   }
 
-  if (record_decl->hasAttr<clang::PackedAttr>() ||
+  if (crubit::HasAttr<clang::PackedAttr>(record_decl) ||
       std::any_of(record_decl->field_begin(), record_decl->field_end(),
                   [](const clang::FieldDecl* field_decl) {
-                    return field_decl->hasAttr<clang::PackedAttr>();
+                    return crubit::HasAttr<clang::PackedAttr>(field_decl);
                   })) {
     return unsupported(
         FormattedError::Static("Records with packed layout are not supported"));

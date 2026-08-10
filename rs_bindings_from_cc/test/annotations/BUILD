@@ -58,6 +58,14 @@ crubit_rust_test(
     ],
 )
 
+golden_test(
+    name = "ignore_attr_golden_test",
+    basename = "ignore_attr",
+    cc_library = "ignore_attr",
+    golden_cc = "ignore_attr_api_impl.cc",
+    golden_rs = "ignore_attr_rs_api.rs",
+)
+
 crubit_test_cc_library(
     name = "must_bind",
     hdrs = ["must_bind.h"],
