@@ -26,6 +26,7 @@ rust_library(
     srcs = ["async_fn.rs"],
     aspect_hints = [
         ":async_fn_bridged_type_hint",
+        "//features:async_fn_send_modulo_regions",
         "//features:supported",
     ],
     proc_macro_deps = [

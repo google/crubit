@@ -71,6 +71,9 @@ flagset::flags! {
 
         /// Enable object-oriented casting between base and derived classes.
         OoCasting,
+
+        /// Check if async fn return type implements Send modulo regions.
+        AsyncFnSendModuloRegions,
     }
 }
 
@@ -102,6 +105,7 @@ impl CrubitFeature {
             Self::ReserveStandardMacros => "reserve_standard_macros",
             Self::ThunklessAccessors => "thunkless_accessors",
             Self::OoCasting => "oo_casting",
+            Self::AsyncFnSendModuloRegions => "async_fn_send_modulo_regions",
         }
     }
 
@@ -134,6 +138,9 @@ impl CrubitFeature {
             Self::ReserveStandardMacros => "//features:reserve_standard_macros",
             Self::ThunklessAccessors => "//features:thunkless_accessors",
             Self::OoCasting => "//features:oo_casting",
+            Self::AsyncFnSendModuloRegions => {
+                "//features:async_fn_send_modulo_regions"
+            }
         }
     }
 }
@@ -169,6 +176,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"reserve_standard_macros" => CrubitFeature::ReserveStandardMacros.into(),
         b"thunkless_accessors" => CrubitFeature::ThunklessAccessors.into(),
         b"oo_casting" => CrubitFeature::OoCasting.into(),
+        b"async_fn_send_modulo_regions" => CrubitFeature::AsyncFnSendModuloRegions.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
@@ -297,6 +305,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::OoCasting
+                | CrubitFeature::AsyncFnSendModuloRegions
         );
     }
 
@@ -336,6 +345,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::OoCasting
+                | CrubitFeature::AsyncFnSendModuloRegions
         );
     }
 
@@ -360,6 +370,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::OoCasting
+                | CrubitFeature::AsyncFnSendModuloRegions
         );
     }
 
@@ -385,6 +396,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::OoCasting
+                | CrubitFeature::AsyncFnSendModuloRegions
         );
     }
 }

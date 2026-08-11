@@ -1113,6 +1113,55 @@ fn test_format_item_unsupported_fn_async_not_send() {
 }
 
 #[test]
+fn test_format_item_fn_async_with_regions_feature_enabled() {
+    let test_src = r#"
+            pub async fn sum_slice(slice: &[i32]) -> i32 {
+                slice.iter().sum()
+            }
+        "#;
+    test_format_item_with_features(
+        test_src,
+        "sum_slice",
+        crubit_feature::CrubitFeature::Supported
+            | crubit_feature::CrubitFeature::AsyncFnSendModuloRegions,
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ::crubit::DynErasedFuture<::std::int32_t> sum_slice(
+                        rs_std::SliceRef<const ::std::int32_t> slice CRUBIT_LIFETIME_BOUND);
+                }
+            );
+        },
+    );
+}
+
+#[test]
+fn test_format_item_fn_async_with_regions_feature_disabled() {
+    let test_src = r#"
+            pub async fn sum_slice(slice: &[i32]) -> i32 {
+                slice.iter().sum()
+            }
+        "#;
+    test_format_item_with_features(
+        test_src,
+        "sum_slice",
+        crubit_feature::CrubitFeature::Supported,
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let err = result.unwrap_err();
+            assert_eq!(
+                err,
+                "Crubit currently only supports async functions that return a Send future."
+            );
+        },
+    );
+}
+
+#[test]
 fn test_format_item_fn_rust_abi() {
     let test_src = r#"
             pub fn add(x: f64, y: f64) -> f64 { x * y }

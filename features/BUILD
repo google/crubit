@@ -199,6 +199,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling less restrictive Send trait solving (modulo regions) for async functions.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "async_fn_send_modulo_regions",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["async_fn_send_modulo_regions"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(
