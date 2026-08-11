@@ -194,6 +194,11 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
                 clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
           deprecated.emplace(deprecated_attr->getMessage());
           return true;
+        } else if (clang::isa<clang::VisibilityAttr>(attr)) {
+          // Visibility attributes on typedef/using declarations, from
+          // export macros for example, do not affect Rust type aliases,
+          // but Clang still creates the AST attribute node.
+          return true;
         }
         return false;
       });

@@ -138,6 +138,9 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
                        clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
           deprecated.emplace(deprecated_attr->getMessage());
           return true;
+        } else if (clang::isa<clang::VisibilityAttr>(attr)) {
+          // Visibility attributes on enums do not affect Rust enum bindings.
+          return true;
         }
         return false;
       });

@@ -13,7 +13,7 @@ using UnknownAttrAlias [[gnu::unused]] = int;
 
 // This struct would receive bindings, if it weren't for the unrecognized
 // attribute on the struct.
-struct [[gnu::visibility("default")]] UnknownAttrStruct final {
+struct [[gnu::may_alias]] UnknownAttrStruct final {
   int* x;
   float y;
   UnknownAttrStruct* z;
@@ -21,7 +21,7 @@ struct [[gnu::visibility("default")]] UnknownAttrStruct final {
 
 // This enum would receive bindings, if it weren't for the unrecognized
 // attribute on the enum.
-enum [[gnu::visibility("default")]] UnknownAttrEnum {
+enum [[clang::flag_enum]] UnknownAttrEnum {
   kConstant = 0,
 };
 
@@ -37,8 +37,7 @@ struct TemplatedStruct {
   }
 }
 
-[[gnu::visibility("default")]] inline void crubit_unknown_function_attribute() {
-}
+[[gnu::flatten]] inline void crubit_unknown_function_attribute() {}
 
 [[deprecated]] inline void crubit_enable_if()
     __attribute__((enable_if(2 + 2 == 4, ""))) {}

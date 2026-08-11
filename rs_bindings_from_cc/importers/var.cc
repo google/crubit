@@ -93,6 +93,10 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
                 clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
           deprecated.emplace(deprecated_attr->getMessage());
           return true;
+        } else if (clang::isa<clang::VisibilityAttr>(attr)) {
+          // Visibility attributes on global/static variables do not affect Rust
+          // FFI bindings.
+          return true;
         }
         return false;
       });
