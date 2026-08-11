@@ -34,6 +34,40 @@ unsafe extern "C" fn __crubit_thunk_accept_uoptional_uby_uvalue(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_accept_uoptional_uisize(
+    opt: *const core::ffi::c_void,
+) -> isize {
+    unsafe {
+        let opt = {
+            let mut __crubit_temp = ::core::mem::MaybeUninit::<
+                ::layout_equivalent_generics_golden::MyOptional<isize>,
+            >::uninit();
+            __crubit_temp.write(
+                (opt as *const ::layout_equivalent_generics_golden::MyOptional<isize>).read(),
+            );
+            __crubit_temp.assume_init()
+        };
+        ::layout_equivalent_generics_golden::accept_optional_isize(opt)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_accept_uoptional_uusize(
+    opt: *const core::ffi::c_void,
+) -> usize {
+    unsafe {
+        let opt = {
+            let mut __crubit_temp = ::core::mem::MaybeUninit::<
+                ::layout_equivalent_generics_golden::MyOptional<usize>,
+            >::uninit();
+            __crubit_temp.write(
+                (opt as *const ::layout_equivalent_generics_golden::MyOptional<usize>).read(),
+            );
+            __crubit_temp.assume_init()
+        };
+        ::layout_equivalent_generics_golden::accept_optional_usize(opt)
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_accept_ustatus(status: *const core::ffi::c_void) -> bool {
     unsafe {
         let status = {
@@ -134,6 +168,26 @@ unsafe extern "C" fn __crubit_thunk_return_uoptional_uby_uvalue(
 ) -> () {
     unsafe {
         let __rs_return_value = ::layout_equivalent_generics_golden::return_optional_by_value(x);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_uoptional_uisize(
+    x: isize,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::layout_equivalent_generics_golden::return_optional_isize(x);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_uoptional_uusize(
+    x: usize,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::layout_equivalent_generics_golden::return_optional_usize(x);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }

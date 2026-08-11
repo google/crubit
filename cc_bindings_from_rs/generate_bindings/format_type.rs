@@ -341,7 +341,10 @@ pub fn format_ty_for_cc<'tcx>(
                 prereqs.includes.insert(rs_std.support_header(db));
                 if matches!(
                     location,
-                    TypeLocation::Field | TypeLocation::Const | TypeLocation::NestedBridgeable
+                    TypeLocation::Field
+                        | TypeLocation::Const
+                        | TypeLocation::NestedBridgeable
+                        | TypeLocation::TemplateArg
                 ) {
                     prereqs.template_specializations.insert(TemplateSpecialization::RsStd(rs_std));
                 } else {
@@ -441,8 +444,26 @@ pub fn format_ty_for_cc<'tcx>(
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
         // documents that "The isize and usize types are [...] layout compatible with C's uintptr_t
         // and intptr_t types.".
-        ty::TyKind::Int(ty::IntTy::Isize) => cstdint(quote! { ::std::intptr_t }),
-        ty::TyKind::Uint(ty::UintTy::Usize) => cstdint(quote! { ::std::uintptr_t }),
+        ty::TyKind::Int(ty::IntTy::Isize) => {
+            if matches!(location, TypeLocation::TemplateArg) {
+                CcSnippet::with_include(
+                    quote! { ::rs_std::isize },
+                    db.support_header("rs_std/int.h"),
+                )
+            } else {
+                cstdint(quote! { ::std::intptr_t })
+            }
+        }
+        ty::TyKind::Uint(ty::UintTy::Usize) => {
+            if matches!(location, TypeLocation::TemplateArg) {
+                CcSnippet::with_include(
+                    quote! { ::rs_std::usize },
+                    db.support_header("rs_std/int.h"),
+                )
+            } else {
+                cstdint(quote! { ::std::uintptr_t })
+            }
+        }
 
         ty::TyKind::Int(ty::IntTy::I128) | ty::TyKind::Uint(ty::UintTy::U128) => {
             // Note that "the alignment of Rust's {i,u}128 is unspecified and allowed to
@@ -513,7 +534,10 @@ pub fn format_ty_for_cc<'tcx>(
                 prereqs.includes.insert(rs_std.support_header(db));
                 if matches!(
                     location,
-                    TypeLocation::Field | TypeLocation::Const | TypeLocation::NestedBridgeable
+                    TypeLocation::Field
+                        | TypeLocation::Const
+                        | TypeLocation::NestedBridgeable
+                        | TypeLocation::TemplateArg
                 ) {
                     prereqs.template_specializations.insert(TemplateSpecialization::RsStd(rs_std));
                 } else {
@@ -734,7 +758,10 @@ pub fn format_ty_for_cc<'tcx>(
                 | TypeLocation::Const => {
                     quote! { & }
                 }
-                TypeLocation::NestedBridgeable | TypeLocation::Other | TypeLocation::Field => {
+                TypeLocation::NestedBridgeable
+                | TypeLocation::Other
+                | TypeLocation::Field
+                | TypeLocation::TemplateArg => {
                     quote! { * }
                 }
             };
@@ -831,9 +858,10 @@ fn treat_ref_as_ptr<'tcx>(
         // References in other locations are always converted to pointers, as references are often
         // not allowed in these locations (e.g. the target of another reference, the element type
         // of an array, etc.).
-        TypeLocation::NestedBridgeable | TypeLocation::Other | TypeLocation::Field => {
-            RefConvert::ToPtr { is_lifetime_bound: false }
-        }
+        TypeLocation::NestedBridgeable
+        | TypeLocation::Other
+        | TypeLocation::Field
+        | TypeLocation::TemplateArg => RefConvert::ToPtr { is_lifetime_bound: false },
     }
 }
 

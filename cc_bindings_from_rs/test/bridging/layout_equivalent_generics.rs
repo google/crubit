@@ -43,6 +43,34 @@ pub fn accept_optional_by_reference(opt: &MyOptional<i32>) -> i32 {
     }
 }
 
+#[must_bind]
+pub fn return_optional_isize(x: isize) -> MyOptional<isize> {
+    MyOptional { has_value: true, value: x }
+}
+
+#[must_bind]
+pub fn accept_optional_isize(opt: MyOptional<isize>) -> isize {
+    if opt.has_value {
+        opt.value
+    } else {
+        -1
+    }
+}
+
+#[must_bind]
+pub fn return_optional_usize(x: usize) -> MyOptional<usize> {
+    MyOptional { has_value: true, value: x }
+}
+
+#[must_bind]
+pub fn accept_optional_usize(opt: MyOptional<usize>) -> usize {
+    if opt.has_value {
+        opt.value
+    } else {
+        0
+    }
+}
+
 #[cpp_layout_equivalent(
     cpp_type = "crubit::test::MyStatusOr<{T}>",
     include_path = "cc_bindings_from_rs/test/bridging/cc_generics.h"

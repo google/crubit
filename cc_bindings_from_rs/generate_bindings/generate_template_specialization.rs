@@ -87,14 +87,11 @@ fn parse_adt_template_specialization<'tcx>(
     use database::code_snippet::EnumSpecializationKind;
     let tcx = db.tcx();
     BridgedBuiltin::new(db, adt).map(|bridged_builtin| {
-        if self_ty.walk().any(|arg| arg.as_type().is_some_and(|ty| ty.is_ptr_sized_integral())) {
-            bail!("b/491106325 - isize and usize types are not yet supported as generic type arguments.")
-        }
         match bridged_builtin {
             BridgedBuiltin::Option => {
                 let some_ty = FormattedTy::try_from_ty(
                     substs.type_at(0),
-                    TypeLocation::Other,
+                    TypeLocation::TemplateArg,
                     db,
                 )?;
                 let layout = get_layout(tcx, self_ty)?;
@@ -135,12 +132,12 @@ fn parse_adt_template_specialization<'tcx>(
             BridgedBuiltin::Result => {
                 let ok_ty = FormattedTy::try_from_ty(
                     substs.type_at(0),
-                    TypeLocation::Other,
+                    TypeLocation::TemplateArg,
                     db,
                 )?;
                 let err_ty = FormattedTy::try_from_ty(
                     substs.type_at(1),
-                    TypeLocation::Other,
+                    TypeLocation::TemplateArg,
                     db,
                 )?;
 
@@ -194,7 +191,7 @@ fn parse_adt_template_specialization<'tcx>(
             BridgedBuiltin::Vec => {
                 let inner_ty = FormattedTy::try_from_ty(
                     substs.type_at(0),
-                    TypeLocation::Other,
+                    TypeLocation::TemplateArg,
                     db,
                 )?;
                 let layout = get_layout(tcx, self_ty)?;
@@ -223,7 +220,7 @@ fn parse_tuple_template_specialization<'tcx>(
     let tcx = db.tcx();
     let element_tys = types
         .iter()
-        .map(|ty| FormattedTy::try_from_ty(ty, TypeLocation::Field, db))
+        .map(|ty| FormattedTy::try_from_ty(ty, TypeLocation::TemplateArg, db))
         .collect::<Result<Vec<_>>>()
         .ok()?;
 
@@ -901,8 +898,7 @@ fn specialize_vec<'tcx>(
     let tcx = db.tcx();
     let layout = rs_std.layout;
     let mut prereqs = CcPrerequisites::default();
-    let inner_ty_cc =
-        db.format_ty_for_cc(inner_ty.ty, TypeLocation::Field).unwrap().into_tokens(&mut prereqs);
+    let inner_ty_cc = inner_ty.for_cc.clone().into_tokens(&mut prereqs);
     let inner_ty_rs = &inner_ty.for_rs;
 
     let rs_fully_qualified_name = quote! { ::alloc::vec::Vec<#inner_ty_rs> };
@@ -1084,10 +1080,8 @@ fn specialize_result<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
-    let ok_ty_tokens =
-        db.format_ty_for_cc(ok_ty.ty, TypeLocation::Field).unwrap().into_tokens(&mut prereqs);
-    let err_ty_tokens =
-        db.format_ty_for_cc(err_ty.ty, TypeLocation::Field).unwrap().into_tokens(&mut prereqs);
+    let ok_ty_tokens = ok_ty.for_cc.clone().into_tokens(&mut prereqs);
+    let err_ty_tokens = err_ty.for_cc.clone().into_tokens(&mut prereqs);
     let layout = rs_std.layout;
     let (tag_encoding, tag_field) = match layout.variants() {
         rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
@@ -1336,8 +1330,7 @@ fn specialize_option<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
-    let ty_tokens =
-        db.format_ty_for_cc(arg_ty.ty, TypeLocation::Field).unwrap().into_tokens(&mut prereqs);
+    let ty_tokens = arg_ty.for_cc.clone().into_tokens(&mut prereqs);
     let layout = rs_std.layout;
 
     let (tag_encoding, tag_field) = match layout.variants() {
@@ -1767,12 +1760,7 @@ fn generate_trait_impl_specialization<'tcx>(
             if arg.flags().intersects(has_type_or_const_vars()) {
                 bail!("Implementation of traits must specify all types to receive bindings.");
             }
-            if arg.walk().any(|arg| arg.as_type().is_some_and(|ty| ty.is_ptr_sized_integral())) {
-                bail!(
-                    "b/491106325 - isize and usize types are not yet supported as trait type arguments."
-                );
-            }
-            db.format_ty_for_cc(arg, TypeLocation::Other)
+            db.format_ty_for_cc(arg, TypeLocation::TemplateArg)
                 .map(|snippet| snippet.into_tokens(&mut prereqs))
         })
         .collect::<Result<Vec<_>>>()?;

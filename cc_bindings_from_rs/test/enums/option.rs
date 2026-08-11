@@ -262,3 +262,21 @@ pub type FreeFunc = unsafe extern "C" fn(Voidpf, Voidpf);
 pub struct ZStream {
     pub zfree: Option<FreeFunc>,
 }
+
+pub struct OverlappingOptions {
+    pub size: Option<isize>,
+    pub sixty_four: Option<i64>,
+    pub thirty_two: Option<i32>,
+}
+
+impl From<Option<isize>> for OverlappingOptions {
+    fn from(x: Option<isize>) -> Self {
+        OverlappingOptions { size: x, sixty_four: None, thirty_two: None }
+    }
+}
+
+impl From<Option<i64>> for OverlappingOptions {
+    fn from(x: Option<i64>) -> Self {
+        OverlappingOptions { size: None, sixty_four: x, thirty_two: None }
+    }
+}

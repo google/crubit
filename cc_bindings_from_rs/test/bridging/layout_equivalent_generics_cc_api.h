@@ -24,7 +24,7 @@ namespace layout_equivalent_generics {
 
 // Error generating bindings for struct
 // `layout_equivalent_generics_golden::ByValueBridged` defined at
-// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=169:
+// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=197:
 // Type bindings for layout_equivalent_generics_golden::ByValueBridged
 // suppressed due to being mapped to an existing C++ type
 // (crubit::test::SomeCppType)
@@ -37,7 +37,7 @@ namespace layout_equivalent_generics {
 
 // Error generating bindings for struct
 // `layout_equivalent_generics_golden::MyPair` defined at
-// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=105:
+// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=133:
 // Type bindings for layout_equivalent_generics_golden::MyPair suppressed due to
 // being mapped to an existing C++ type (crubit::test::MyPair<{T1}, {T2}>)
 
@@ -47,13 +47,13 @@ using MyStatusAlias CRUBIT_INTERNAL_RUST_TYPE(
 
 // Error generating bindings for struct
 // `layout_equivalent_generics_golden::MyStatusOr` defined at
-// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=51:
+// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=79:
 // Type bindings for layout_equivalent_generics_golden::MyStatusOr suppressed
 // due to being mapped to an existing C++ type (crubit::test::MyStatusOr<{T}>)
 
 // Error generating bindings for type alias
 // `layout_equivalent_generics_golden::UnitAlias` defined at
-// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=79:
+// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=107:
 // Tuple type `()` is not supported in this context
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -67,13 +67,21 @@ using MyStatusAlias CRUBIT_INTERNAL_RUST_TYPE(
 // Error generating bindings for function
 // `layout_equivalent_generics_golden::accept_optional_by_value_bridged` defined
 // at
-// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=179:
+// cc_bindings_from_rs/test/bridging/layout_equivalent_generics.rs;l=207:
 // Error handling parameter #0 of type
 // `layout_equivalent_generics_golden::MyOptional<layout_equivalent_generics_golden::ByValueBridged>`:
 // `layout_equivalent_generics_golden::ByValueBridged` has no layout-compatible
 // C++ type, but is used as a generic parameter
 //   crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types
 //   containing bridge types cannot receive bindings
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::intptr_t accept_optional_isize(
+    crubit::test::MyOptional<::std::intptr_t> opt);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::uintptr_t accept_optional_usize(
+    crubit::test::MyOptional<::std::uintptr_t> opt);
 
 // CRUBIT_ANNOTATE: must_bind=
 bool accept_status(crubit::test::MyStatus status);
@@ -104,6 +112,14 @@ extern "C" void no_op_void_converter(const void* __param_0, void* __param_1);
 // CRUBIT_ANNOTATE: must_bind=
 crubit::test::MyOptional<::std::int32_t> return_optional_by_value(
     ::std::int32_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+crubit::test::MyOptional<::std::intptr_t> return_optional_isize(
+    ::std::intptr_t x);
+
+// CRUBIT_ANNOTATE: must_bind=
+crubit::test::MyOptional<::std::uintptr_t> return_optional_usize(
+    ::std::uintptr_t x);
 
 // CRUBIT_ANNOTATE: must_bind=
 crubit::test::MyStatus return_status();
@@ -137,6 +153,24 @@ extern "C" ::std::int32_t __crubit_thunk_accept_uoptional_uby_uvalue(
 inline ::std::int32_t accept_optional_by_value(
     crubit::test::MyOptional<::std::int32_t> opt) {
   return __crubit_internal::__crubit_thunk_accept_uoptional_uby_uvalue(&opt);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::intptr_t __crubit_thunk_accept_uoptional_uisize(
+    crubit::test::MyOptional<::std::intptr_t>*);
+}
+inline ::std::intptr_t accept_optional_isize(
+    crubit::test::MyOptional<::std::intptr_t> opt) {
+  return __crubit_internal::__crubit_thunk_accept_uoptional_uisize(&opt);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t __crubit_thunk_accept_uoptional_uusize(
+    crubit::test::MyOptional<::std::uintptr_t>*);
+}
+inline ::std::uintptr_t accept_optional_usize(
+    crubit::test::MyOptional<::std::uintptr_t> opt) {
+  return __crubit_internal::__crubit_thunk_accept_uoptional_uusize(&opt);
 }
 
 namespace __crubit_internal {
@@ -254,6 +288,40 @@ inline crubit::test::MyOptional<::std::int32_t> return_optional_by_value(
   } __return_value_ret_val_holder;
   auto* __return_value_storage = &__return_value_ret_val_holder.val;
   __crubit_internal::__crubit_thunk_return_uoptional_uby_uvalue(
+      x, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder.val);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_uoptional_uisize(
+    ::std::intptr_t, crubit::test::MyOptional<::std::intptr_t>* __ret_ptr);
+}
+inline crubit::test::MyOptional<::std::intptr_t> return_optional_isize(
+    ::std::intptr_t x) {
+  union __return_value_crubit_return_union {
+    constexpr __return_value_crubit_return_union() {}
+    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
+    crubit::test::MyOptional<::std::intptr_t> val;
+  } __return_value_ret_val_holder;
+  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  __crubit_internal::__crubit_thunk_return_uoptional_uisize(
+      x, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder.val);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_uoptional_uusize(
+    ::std::uintptr_t, crubit::test::MyOptional<::std::uintptr_t>* __ret_ptr);
+}
+inline crubit::test::MyOptional<::std::uintptr_t> return_optional_usize(
+    ::std::uintptr_t x) {
+  union __return_value_crubit_return_union {
+    constexpr __return_value_crubit_return_union() {}
+    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
+    crubit::test::MyOptional<::std::uintptr_t> val;
+  } __return_value_ret_val_holder;
+  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  __crubit_internal::__crubit_thunk_return_uoptional_uusize(
       x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder.val);
 }

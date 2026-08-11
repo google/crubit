@@ -19,10 +19,10 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs_std/int.h"
 #include "support/rs_std/result.h"
 #include "support/rs_std/str_ref.h"
 
-#include <array>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -146,41 +146,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: result_golden :: ResultWithSizeTypes") alignas(8) [[clang::trivial_abi]]
-ResultWithSizeTypes final {
- public:
-  // `result_golden::ResultWithSizeTypes` doesn't implement the `Default` trait
-  ResultWithSizeTypes() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~ResultWithSizeTypes() = default;
-  ResultWithSizeTypes(ResultWithSizeTypes&&) = default;
-  ResultWithSizeTypes& operator=(ResultWithSizeTypes&&) = default;
-
-  // `result_golden::ResultWithSizeTypes` doesn't implement the `Clone` trait
-  ResultWithSizeTypes(const ResultWithSizeTypes&) = delete;
-  ResultWithSizeTypes& operator=(const ResultWithSizeTypes&) = delete;
-  ResultWithSizeTypes(::crubit::UnsafeRelocateTag, ResultWithSizeTypes&& value);
-
- private:
-  // Field type has been replaced with a blob of bytes: b/491106325 - isize and
-  // usize types are not yet supported as generic type arguments.
-  ::std::array<unsigned char, 16> uval_in_ok;
-  // Field type has been replaced with a blob of bytes: b/491106325 - isize and
-  // usize types are not yet supported as generic type arguments.
-  ::std::array<unsigned char, 16> uval_in_err;
-  // Field type has been replaced with a blob of bytes: b/491106325 - isize and
-  // usize types are not yet supported as generic type arguments.
-  ::std::array<unsigned char, 16> ival_in_ok;
-  // Field type has been replaced with a blob of bytes: b/491106325 - isize and
-  // usize types are not yet supported as generic type arguments.
-  ::std::array<unsigned char, 16> ival_in_err;
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
 using Voidpf CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: Voidpf") = void*;
 
 rs_std::Result<::std::uint8_t, ::std::uint8_t> return_result_by_value();
@@ -199,6 +164,136 @@ rs_std::StrRef take_result_has_default(
         crubit_nonnull r CRUBIT_LIFETIME_BOUND);
 
 }  // namespace result
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
+template <>
+struct alignas(8)
+    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < i8 , isize >")
+        rs_std::Result<::std::int8_t, ::rs_std::isize>
+    : public rs_std::ResultBase<rs_std::Result<::std::int8_t, ::rs_std::isize>,
+                                ::std::int8_t, ::rs_std::isize> {
+ public:
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Result(const Result&) = default;
+  Result& operator=(const Result&) = default;
+  Result(Result&&) = default;
+  Result& operator=(Result&&) = default;
+
+  Result(::crubit::UnsafeRelocateTag, Result&& value);
+
+ public:
+  using base_type =
+      rs_std::ResultBase<rs_std::Result<::std::int8_t, ::rs_std::isize>,
+                         ::std::int8_t, ::rs_std::isize>;
+  template <typename U>
+    requires(rs_std::ResultForwardConstructible<Result, ::std::int8_t, U>)
+  explicit constexpr Result(U&& ok) noexcept;
+  template <typename U>
+    requires(rs_std::ResultForwardConstructible<Result, ::std::int8_t, U>)
+  constexpr Result& operator=(U&& ok) noexcept;
+  template <typename F>
+    requires(rs_std::ResultUnexpectedConstructible<::rs_std::isize, F>)
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
+  template <typename F>
+    requires(rs_std::ResultUnexpectedConstructible<::rs_std::isize, F>)
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
+  template <typename... Args>
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
+  template <typename... Args>
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
+  ~Result() noexcept = default;
+
+ private:
+  friend base_type;
+  bool has_value_impl() const noexcept { return tag() == 0; }
+  ::std::int8_t* ok_ptr() noexcept {
+    return reinterpret_cast<::std::int8_t*>(__storage + 1);
+  }
+  ::std::int8_t const* ok_const_ptr() const noexcept {
+    return reinterpret_cast<::std::int8_t const*>(__storage + 1);
+  }
+  ::rs_std::isize* err_ptr() noexcept {
+    return reinterpret_cast<::rs_std::isize*>(__storage + 8);
+  }
+  ::rs_std::isize const* err_const_ptr() const noexcept {
+    return reinterpret_cast<::rs_std::isize const*>(__storage + 8);
+  }
+  void set_ok_tag() noexcept { set_tag(0); }
+  void set_err_tag() noexcept { set_tag(1); }
+  constexpr ::std::uint8_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
+
+ private:
+  unsigned char __storage[16];
+};
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
+template <>
+struct alignas(8)
+    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < isize , i8 >")
+        rs_std::Result<::rs_std::isize, ::std::int8_t>
+    : public rs_std::ResultBase<rs_std::Result<::rs_std::isize, ::std::int8_t>,
+                                ::rs_std::isize, ::std::int8_t> {
+ public:
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Result(const Result&) = default;
+  Result& operator=(const Result&) = default;
+  Result(Result&&) = default;
+  Result& operator=(Result&&) = default;
+
+  Result(::crubit::UnsafeRelocateTag, Result&& value);
+
+ public:
+  using base_type =
+      rs_std::ResultBase<rs_std::Result<::rs_std::isize, ::std::int8_t>,
+                         ::rs_std::isize, ::std::int8_t>;
+  template <typename U>
+    requires(rs_std::ResultForwardConstructible<Result, ::rs_std::isize, U>)
+  explicit constexpr Result(U&& ok) noexcept;
+  template <typename U>
+    requires(rs_std::ResultForwardConstructible<Result, ::rs_std::isize, U>)
+  constexpr Result& operator=(U&& ok) noexcept;
+  template <typename F>
+    requires(rs_std::ResultUnexpectedConstructible<::std::int8_t, F>)
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
+  template <typename F>
+    requires(rs_std::ResultUnexpectedConstructible<::std::int8_t, F>)
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
+  template <typename... Args>
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
+  template <typename... Args>
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
+  ~Result() noexcept = default;
+
+ private:
+  friend base_type;
+  bool has_value_impl() const noexcept { return tag() == 0; }
+  ::rs_std::isize* ok_ptr() noexcept {
+    return reinterpret_cast<::rs_std::isize*>(__storage + 8);
+  }
+  ::rs_std::isize const* ok_const_ptr() const noexcept {
+    return reinterpret_cast<::rs_std::isize const*>(__storage + 8);
+  }
+  ::std::int8_t* err_ptr() noexcept {
+    return reinterpret_cast<::std::int8_t*>(__storage + 1);
+  }
+  ::std::int8_t const* err_const_ptr() const noexcept {
+    return reinterpret_cast<::std::int8_t const*>(__storage + 1);
+  }
+  void set_ok_tag() noexcept { set_tag(0); }
+  void set_err_tag() noexcept { set_tag(1); }
+  constexpr ::std::uint8_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
+
+ private:
+  unsigned char __storage[16];
+};
+#endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -1247,6 +1342,71 @@ struct alignas(1)
 };
 #endif
 
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
+template <>
+struct alignas(8)
+    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < u8 , usize >")
+        rs_std::Result<::std::uint8_t, ::rs_std::usize>
+    : public rs_std::ResultBase<rs_std::Result<::std::uint8_t, ::rs_std::usize>,
+                                ::std::uint8_t, ::rs_std::usize> {
+ public:
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Result(const Result&) = default;
+  Result& operator=(const Result&) = default;
+  Result(Result&&) = default;
+  Result& operator=(Result&&) = default;
+
+  Result(::crubit::UnsafeRelocateTag, Result&& value);
+
+ public:
+  using base_type =
+      rs_std::ResultBase<rs_std::Result<::std::uint8_t, ::rs_std::usize>,
+                         ::std::uint8_t, ::rs_std::usize>;
+  template <typename U>
+    requires(rs_std::ResultForwardConstructible<Result, ::std::uint8_t, U>)
+  explicit constexpr Result(U&& ok) noexcept;
+  template <typename U>
+    requires(rs_std::ResultForwardConstructible<Result, ::std::uint8_t, U>)
+  constexpr Result& operator=(U&& ok) noexcept;
+  template <typename F>
+    requires(rs_std::ResultUnexpectedConstructible<::rs_std::usize, F>)
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
+  template <typename F>
+    requires(rs_std::ResultUnexpectedConstructible<::rs_std::usize, F>)
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
+  template <typename... Args>
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
+  template <typename... Args>
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
+  ~Result() noexcept = default;
+
+ private:
+  friend base_type;
+  bool has_value_impl() const noexcept { return tag() == 0; }
+  ::std::uint8_t* ok_ptr() noexcept {
+    return reinterpret_cast<::std::uint8_t*>(__storage + 1);
+  }
+  ::std::uint8_t const* ok_const_ptr() const noexcept {
+    return reinterpret_cast<::std::uint8_t const*>(__storage + 1);
+  }
+  ::rs_std::usize* err_ptr() noexcept {
+    return reinterpret_cast<::rs_std::usize*>(__storage + 8);
+  }
+  ::rs_std::usize const* err_const_ptr() const noexcept {
+    return reinterpret_cast<::rs_std::usize const*>(__storage + 8);
+  }
+  void set_ok_tag() noexcept { set_tag(0); }
+  void set_err_tag() noexcept { set_tag(1); }
+  constexpr ::std::uint8_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
+
+ private:
+  unsigned char __storage[16];
+};
+#endif
+
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
 template <>
@@ -1352,6 +1512,109 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: ZStream") alignas(8)
     rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
                    crubit::type_identity_t<void(void*, void*)>*>
         zfree;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace result
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
+template <>
+struct alignas(8)
+    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < usize , u8 >")
+        rs_std::Result<::rs_std::usize, ::std::uint8_t>
+    : public rs_std::ResultBase<rs_std::Result<::rs_std::usize, ::std::uint8_t>,
+                                ::rs_std::usize, ::std::uint8_t> {
+ public:
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Result(const Result&) = default;
+  Result& operator=(const Result&) = default;
+  Result(Result&&) = default;
+  Result& operator=(Result&&) = default;
+
+  Result(::crubit::UnsafeRelocateTag, Result&& value);
+
+ public:
+  using base_type =
+      rs_std::ResultBase<rs_std::Result<::rs_std::usize, ::std::uint8_t>,
+                         ::rs_std::usize, ::std::uint8_t>;
+  template <typename U>
+    requires(rs_std::ResultForwardConstructible<Result, ::rs_std::usize, U>)
+  explicit constexpr Result(U&& ok) noexcept;
+  template <typename U>
+    requires(rs_std::ResultForwardConstructible<Result, ::rs_std::usize, U>)
+  constexpr Result& operator=(U&& ok) noexcept;
+  template <typename F>
+    requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
+  template <typename F>
+    requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
+  template <typename... Args>
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
+  template <typename... Args>
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
+  ~Result() noexcept = default;
+
+ private:
+  friend base_type;
+  bool has_value_impl() const noexcept { return tag() == 0; }
+  ::rs_std::usize* ok_ptr() noexcept {
+    return reinterpret_cast<::rs_std::usize*>(__storage + 8);
+  }
+  ::rs_std::usize const* ok_const_ptr() const noexcept {
+    return reinterpret_cast<::rs_std::usize const*>(__storage + 8);
+  }
+  ::std::uint8_t* err_ptr() noexcept {
+    return reinterpret_cast<::std::uint8_t*>(__storage + 1);
+  }
+  ::std::uint8_t const* err_const_ptr() const noexcept {
+    return reinterpret_cast<::std::uint8_t const*>(__storage + 1);
+  }
+  void set_ok_tag() noexcept { set_tag(0); }
+  void set_err_tag() noexcept { set_tag(1); }
+  constexpr ::std::uint8_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
+
+ private:
+  unsigned char __storage[16];
+};
+#endif
+
+namespace result {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: result_golden :: ResultWithSizeTypes") alignas(8) [[clang::trivial_abi]]
+ResultWithSizeTypes final {
+ public:
+  // `result_golden::ResultWithSizeTypes` doesn't implement the `Default` trait
+  ResultWithSizeTypes() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~ResultWithSizeTypes() = default;
+  ResultWithSizeTypes(ResultWithSizeTypes&&) = default;
+  ResultWithSizeTypes& operator=(ResultWithSizeTypes&&) = default;
+
+  // `result_golden::ResultWithSizeTypes` doesn't implement the `Clone` trait
+  ResultWithSizeTypes(const ResultWithSizeTypes&) = delete;
+  ResultWithSizeTypes& operator=(const ResultWithSizeTypes&) = delete;
+  ResultWithSizeTypes(::crubit::UnsafeRelocateTag, ResultWithSizeTypes&& value);
+
+  union {
+    rs_std::Result<::rs_std::usize, ::std::uint8_t> uval_in_ok;
+  };
+  union {
+    rs_std::Result<::std::uint8_t, ::rs_std::usize> uval_in_err;
+  };
+  union {
+    rs_std::Result<::rs_std::isize, ::std::int8_t> ival_in_ok;
+  };
+  union {
+    rs_std::Result<::std::int8_t, ::rs_std::isize> ival_in_err;
   };
 
  private:
@@ -1791,6 +2054,148 @@ inline rs_std::StrRef take_result_has_default(
 }
 
 }  // namespace result
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
+static_assert(::std::is_trivially_copy_constructible_v<
+              rs_std::Result<::std::int8_t, ::rs_std::isize>>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              rs_std::Result<::std::int8_t, ::rs_std::isize>>);
+static_assert(::std::is_trivially_move_constructible_v<
+              rs_std::Result<::std::int8_t, ::rs_std::isize>>);
+static_assert(::std::is_trivially_move_assignable_v<
+              rs_std::Result<::std::int8_t, ::rs_std::isize>>);
+inline rs_std::Result<::std::int8_t, ::rs_std::isize>::Result(
+    ::crubit::UnsafeRelocateTag, Result&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+static_assert(::std::is_trivially_destructible_v<
+              rs_std::Result<::std::int8_t, ::rs_std::isize>>);
+inline constexpr ::std::uint8_t
+rs_std::Result<::std::int8_t, ::rs_std::isize>::tag() const& noexcept {
+  std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    __bytes[i] = __storage[0 + i];
+  }
+  return std::bit_cast<::std::uint8_t>(__bytes);
+}
+inline constexpr void rs_std::Result<::std::int8_t, ::rs_std::isize>::set_tag(
+    ::std::uint8_t tag) noexcept {
+  auto __bytes =
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    __storage[0 + i] = __bytes[i];
+  }
+}
+
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::std::int8_t, ::rs_std::isize>, ::std::int8_t, U>)
+inline constexpr rs_std::Result<::std::int8_t, ::rs_std::isize>::Result(
+    U&& ok) noexcept
+    : base_type(::std::forward<U>(ok)) {}
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::std::int8_t, ::rs_std::isize>, ::std::int8_t, U>)
+inline constexpr rs_std::Result<::std::int8_t, ::rs_std::isize>&
+rs_std::Result<::std::int8_t, ::rs_std::isize>::operator=(U&& ok) noexcept {
+  base_type::operator=(::std::forward<U>(ok));
+  return *this;
+}
+template <typename F>
+  requires(rs_std::ResultUnexpectedConstructible<::rs_std::isize, F>)
+inline constexpr rs_std::Result<::std::int8_t, ::rs_std::isize>::Result(
+    rs_std::unexpected<F>&& err) noexcept
+    : base_type(::std::move(err)) {}
+template <typename F>
+  requires(rs_std::ResultUnexpectedConstructible<::rs_std::isize, F>)
+inline constexpr rs_std::Result<::std::int8_t, ::rs_std::isize>&
+rs_std::Result<::std::int8_t, ::rs_std::isize>::operator=(
+    rs_std::unexpected<F>&& err) noexcept {
+  base_type::operator=(::std::move(err));
+  return *this;
+}
+template <typename... Args>
+inline constexpr rs_std::Result<::std::int8_t, ::rs_std::isize>::Result(
+    ::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+template <typename... Args>
+inline constexpr rs_std::Result<::std::int8_t, ::rs_std::isize>::Result(
+    rs_std::unexpect_t u, Args&&... args) noexcept
+    : base_type(u, ::std::forward<Args>(args)...) {}
+
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
+static_assert(::std::is_trivially_copy_constructible_v<
+              rs_std::Result<::rs_std::isize, ::std::int8_t>>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              rs_std::Result<::rs_std::isize, ::std::int8_t>>);
+static_assert(::std::is_trivially_move_constructible_v<
+              rs_std::Result<::rs_std::isize, ::std::int8_t>>);
+static_assert(::std::is_trivially_move_assignable_v<
+              rs_std::Result<::rs_std::isize, ::std::int8_t>>);
+inline rs_std::Result<::rs_std::isize, ::std::int8_t>::Result(
+    ::crubit::UnsafeRelocateTag, Result&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+static_assert(::std::is_trivially_destructible_v<
+              rs_std::Result<::rs_std::isize, ::std::int8_t>>);
+inline constexpr ::std::uint8_t
+rs_std::Result<::rs_std::isize, ::std::int8_t>::tag() const& noexcept {
+  std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    __bytes[i] = __storage[0 + i];
+  }
+  return std::bit_cast<::std::uint8_t>(__bytes);
+}
+inline constexpr void rs_std::Result<::rs_std::isize, ::std::int8_t>::set_tag(
+    ::std::uint8_t tag) noexcept {
+  auto __bytes =
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    __storage[0 + i] = __bytes[i];
+  }
+}
+
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::rs_std::isize, ::std::int8_t>, ::rs_std::isize, U>)
+inline constexpr rs_std::Result<::rs_std::isize, ::std::int8_t>::Result(
+    U&& ok) noexcept
+    : base_type(::std::forward<U>(ok)) {}
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::rs_std::isize, ::std::int8_t>, ::rs_std::isize, U>)
+inline constexpr rs_std::Result<::rs_std::isize, ::std::int8_t>&
+rs_std::Result<::rs_std::isize, ::std::int8_t>::operator=(U&& ok) noexcept {
+  base_type::operator=(::std::forward<U>(ok));
+  return *this;
+}
+template <typename F>
+  requires(rs_std::ResultUnexpectedConstructible<::std::int8_t, F>)
+inline constexpr rs_std::Result<::rs_std::isize, ::std::int8_t>::Result(
+    rs_std::unexpected<F>&& err) noexcept
+    : base_type(::std::move(err)) {}
+template <typename F>
+  requires(rs_std::ResultUnexpectedConstructible<::std::int8_t, F>)
+inline constexpr rs_std::Result<::rs_std::isize, ::std::int8_t>&
+rs_std::Result<::rs_std::isize, ::std::int8_t>::operator=(
+    rs_std::unexpected<F>&& err) noexcept {
+  base_type::operator=(::std::move(err));
+  return *this;
+}
+template <typename... Args>
+inline constexpr rs_std::Result<::rs_std::isize, ::std::int8_t>::Result(
+    ::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+template <typename... Args>
+inline constexpr rs_std::Result<::rs_std::isize, ::std::int8_t>::Result(
+    rs_std::unexpect_t u, Args&&... args) noexcept
+    : base_type(u, ::std::forward<Args>(args)...) {}
+
+#endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -2751,6 +3156,77 @@ inline constexpr rs_std::Result<::std::uint8_t, ::std::uint8_t>::Result(
 
 #endif
 
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
+static_assert(::std::is_trivially_copy_constructible_v<
+              rs_std::Result<::std::uint8_t, ::rs_std::usize>>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              rs_std::Result<::std::uint8_t, ::rs_std::usize>>);
+static_assert(::std::is_trivially_move_constructible_v<
+              rs_std::Result<::std::uint8_t, ::rs_std::usize>>);
+static_assert(::std::is_trivially_move_assignable_v<
+              rs_std::Result<::std::uint8_t, ::rs_std::usize>>);
+inline rs_std::Result<::std::uint8_t, ::rs_std::usize>::Result(
+    ::crubit::UnsafeRelocateTag, Result&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+static_assert(::std::is_trivially_destructible_v<
+              rs_std::Result<::std::uint8_t, ::rs_std::usize>>);
+inline constexpr ::std::uint8_t
+rs_std::Result<::std::uint8_t, ::rs_std::usize>::tag() const& noexcept {
+  std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    __bytes[i] = __storage[0 + i];
+  }
+  return std::bit_cast<::std::uint8_t>(__bytes);
+}
+inline constexpr void rs_std::Result<::std::uint8_t, ::rs_std::usize>::set_tag(
+    ::std::uint8_t tag) noexcept {
+  auto __bytes =
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    __storage[0 + i] = __bytes[i];
+  }
+}
+
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::std::uint8_t, ::rs_std::usize>, ::std::uint8_t, U>)
+inline constexpr rs_std::Result<::std::uint8_t, ::rs_std::usize>::Result(
+    U&& ok) noexcept
+    : base_type(::std::forward<U>(ok)) {}
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::std::uint8_t, ::rs_std::usize>, ::std::uint8_t, U>)
+inline constexpr rs_std::Result<::std::uint8_t, ::rs_std::usize>&
+rs_std::Result<::std::uint8_t, ::rs_std::usize>::operator=(U&& ok) noexcept {
+  base_type::operator=(::std::forward<U>(ok));
+  return *this;
+}
+template <typename F>
+  requires(rs_std::ResultUnexpectedConstructible<::rs_std::usize, F>)
+inline constexpr rs_std::Result<::std::uint8_t, ::rs_std::usize>::Result(
+    rs_std::unexpected<F>&& err) noexcept
+    : base_type(::std::move(err)) {}
+template <typename F>
+  requires(rs_std::ResultUnexpectedConstructible<::rs_std::usize, F>)
+inline constexpr rs_std::Result<::std::uint8_t, ::rs_std::usize>&
+rs_std::Result<::std::uint8_t, ::rs_std::usize>::operator=(
+    rs_std::unexpected<F>&& err) noexcept {
+  base_type::operator=(::std::move(err));
+  return *this;
+}
+template <typename... Args>
+inline constexpr rs_std::Result<::std::uint8_t, ::rs_std::usize>::Result(
+    ::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+template <typename... Args>
+inline constexpr rs_std::Result<::std::uint8_t, ::rs_std::usize>::Result(
+    rs_std::unexpect_t u, Args&&... args) noexcept
+    : base_type(u, ::std::forward<Args>(args)...) {}
+
+#endif
+
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
 static_assert(::std::is_trivially_copy_constructible_v<
@@ -2842,6 +3318,77 @@ template <typename... Args>
 inline constexpr rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
                                 crubit::type_identity_t<void(void*, void*)>*>::
     Result(rs_std::unexpect_t u, Args&&... args) noexcept
+    : base_type(u, ::std::forward<Args>(args)...) {}
+
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
+static_assert(::std::is_trivially_copy_constructible_v<
+              rs_std::Result<::rs_std::usize, ::std::uint8_t>>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              rs_std::Result<::rs_std::usize, ::std::uint8_t>>);
+static_assert(::std::is_trivially_move_constructible_v<
+              rs_std::Result<::rs_std::usize, ::std::uint8_t>>);
+static_assert(::std::is_trivially_move_assignable_v<
+              rs_std::Result<::rs_std::usize, ::std::uint8_t>>);
+inline rs_std::Result<::rs_std::usize, ::std::uint8_t>::Result(
+    ::crubit::UnsafeRelocateTag, Result&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+static_assert(::std::is_trivially_destructible_v<
+              rs_std::Result<::rs_std::usize, ::std::uint8_t>>);
+inline constexpr ::std::uint8_t
+rs_std::Result<::rs_std::usize, ::std::uint8_t>::tag() const& noexcept {
+  std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    __bytes[i] = __storage[0 + i];
+  }
+  return std::bit_cast<::std::uint8_t>(__bytes);
+}
+inline constexpr void rs_std::Result<::rs_std::usize, ::std::uint8_t>::set_tag(
+    ::std::uint8_t tag) noexcept {
+  auto __bytes =
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    __storage[0 + i] = __bytes[i];
+  }
+}
+
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::rs_std::usize, ::std::uint8_t>, ::rs_std::usize, U>)
+inline constexpr rs_std::Result<::rs_std::usize, ::std::uint8_t>::Result(
+    U&& ok) noexcept
+    : base_type(::std::forward<U>(ok)) {}
+template <typename U>
+  requires(rs_std::ResultForwardConstructible<
+           rs_std::Result<::rs_std::usize, ::std::uint8_t>, ::rs_std::usize, U>)
+inline constexpr rs_std::Result<::rs_std::usize, ::std::uint8_t>&
+rs_std::Result<::rs_std::usize, ::std::uint8_t>::operator=(U&& ok) noexcept {
+  base_type::operator=(::std::forward<U>(ok));
+  return *this;
+}
+template <typename F>
+  requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
+inline constexpr rs_std::Result<::rs_std::usize, ::std::uint8_t>::Result(
+    rs_std::unexpected<F>&& err) noexcept
+    : base_type(::std::move(err)) {}
+template <typename F>
+  requires(rs_std::ResultUnexpectedConstructible<::std::uint8_t, F>)
+inline constexpr rs_std::Result<::rs_std::usize, ::std::uint8_t>&
+rs_std::Result<::rs_std::usize, ::std::uint8_t>::operator=(
+    rs_std::unexpected<F>&& err) noexcept {
+  base_type::operator=(::std::move(err));
+  return *this;
+}
+template <typename... Args>
+inline constexpr rs_std::Result<::rs_std::usize, ::std::uint8_t>::Result(
+    ::std::in_place_t ip, Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+template <typename... Args>
+inline constexpr rs_std::Result<::rs_std::usize, ::std::uint8_t>::Result(
+    rs_std::unexpect_t u, Args&&... args) noexcept
     : base_type(u, ::std::forward<Args>(args)...) {}
 
 #endif

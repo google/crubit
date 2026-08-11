@@ -45,6 +45,9 @@ pub enum TypeLocation {
     /// itself is in a function parameter or return value.
     NestedBridgeable,
 
+    /// The type of a template argument when specializing a generic class template or trait (e.g., inside `rs_std::Option<T>`).
+    TemplateArg,
+
     /// Other location (e.g. pointee type, etc.).
     Other,
 
@@ -61,12 +64,14 @@ impl TypeLocation {
             TypeLocation::FnParam { .. } => Ok(()),
             TypeLocation::Const => Ok(()),
             TypeLocation::NestedBridgeable => Ok(()),
+            TypeLocation::TemplateArg => bail!("Template arguments do not support bridgeable types"),
             // TODO(jeanpierreda): Why?
             TypeLocation::FnReturn { is_constructor: true } => bail!("Constructor functions cannot return bridge types"),
             TypeLocation::Other => bail!("crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"),
             TypeLocation::Field => bail!("crubit.rs/errors/bridge_field: Fields containing bridge types cannot receive bindings"),
         }
     }
+
     pub fn is_bridgeable(self) -> bool {
         self.check_bridgeable().is_ok()
     }

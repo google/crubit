@@ -208,4 +208,10 @@ TEST(OptionTest, ReturnNestedOptionResult) {
   EXPECT_FALSE(opt_result.has_value());
 }
 
+TEST(OptionTest, OverlappingOptions) {
+  rs_std::Option<rs_std::isize> size(10);
+  option::OverlappingOptions opt(size);
+  EXPECT_TRUE(opt.size.has_value());
+}
+
 }  // namespace
