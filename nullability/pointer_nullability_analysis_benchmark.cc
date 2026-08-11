@@ -30,8 +30,10 @@ void benchmarkAnalysisOnCode(benchmark::State &State, llvm::StringRef Code) {
   auto *Target = cast<FunctionDecl>(
       lookup("Target", *AST.context().getTranslationUnitDecl()));
   NullabilityPragmas NoPragmas;
+  LambdaCaptureNullabilityMap CaptureMap;
 
-  for (auto _ : State) (void)diagnosePointerNullability(Target, NoPragmas);
+  for (auto _ : State)
+    (void)diagnosePointerNullability(Target, NoPragmas, CaptureMap);
 }
 
 void BM_PointerAnalysisCopyPointer(benchmark::State &State) {

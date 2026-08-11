@@ -106,6 +106,16 @@ void initPointerFromTypeNullability(
                          NullabilityKind::Nullable);
     return;
   }
+  // If `E` reads a by-value lambda capture whose flow-sensitive nullability was
+  // recorded at the capture site, model it with that nullability instead of its
+  // declared type. As with the destructor case above, this affects only the
+  // first derivation.
+  if (std::optional<NullabilityKind> Kind =
+          getCapturedVarNullability(*E, State.Lattice)) {
+    initPointerNullState(PointerVal, State.Env.getDataflowAnalysisContext(),
+                         *Kind);
+    return;
+  }
   initPointerNullState(PointerVal, State.Env.getDataflowAnalysisContext(),
                        getPointerTypeNullability(E, State.Lattice));
 }

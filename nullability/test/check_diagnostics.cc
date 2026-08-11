@@ -18,6 +18,8 @@
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Analysis/CFG.h"
 #include "clang/Basic/LLVM.h"
@@ -27,6 +29,7 @@
 #include "clang/Tooling/Tooling.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/raw_ostream.h"
@@ -66,11 +69,40 @@ bool checkDiagnostics(ASTContext &AST, llvm::Annotations AnnotatedCode,
             AST.getSourceManager(), AST.getLangOpts(), Target->getSourceRange(),
             AnnotatedCode);
 
+    // Analyze the target (the producer for any lambdas it constructs), sharing
+    // a capture side table with the analysis of nested lambda call operators
+    // below (the consumers).
+    LambdaCaptureNullabilityMap CaptureMap;
     SmallVector<PointerNullabilityDiagnostic> Diagnostics;
     if (llvm::Error Err =
-            diagnosePointerNullability(Target, Pragmas).moveInto(Diagnostics)) {
+            diagnosePointerNullability(Target, Pragmas, CaptureMap,
+                                       makeDefaultSolverForDiagnosis)
+                .moveInto(Diagnostics)) {
       ADD_FAILURE() << Err;
       return false;
+    }
+    // Also analyze lambda call operators lexically nested in `Target`, so that
+    // dereferences inside lambda bodies are checked. `forEachDescendant` visits
+    // lambdas in preorder (enclosing before nested), matching the
+    // producer-before-consumer ordering the capture side table requires.
+    for (const ast_matchers::BoundNodes& LambdaBN :
+         match(ast_matchers::decl(ast_matchers::forEachDescendant(
+                   ast_matchers::lambdaExpr().bind("lambda"))),
+               *Target, AST)) {
+      const auto* LE = LambdaBN.getNodeAs<LambdaExpr>("lambda");
+      const CXXMethodDecl* CallOp = LE->getCallOperator();
+      if (CallOp == nullptr || CallOp->isTemplated() ||
+          !CallOp->doesThisDeclarationHaveABody())
+        continue;
+      SmallVector<PointerNullabilityDiagnostic> LambdaDiags;
+      if (llvm::Error Err =
+              diagnosePointerNullability(CallOp, Pragmas, CaptureMap,
+                                         makeDefaultSolverForDiagnosis)
+                  .moveInto(LambdaDiags)) {
+        ADD_FAILURE() << Err;
+        return false;
+      }
+      llvm::move(LambdaDiags, std::back_inserter(Diagnostics));
     }
 
     // Note: use sorted sets for expected and actual lines to improve

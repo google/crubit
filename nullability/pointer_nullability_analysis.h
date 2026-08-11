@@ -65,6 +65,15 @@ class PointerNullabilityAnalysis
     NFS.FieldsToTreatAsNullableAtDestructorEntry = std::move(Fields);
   }
 
+  // Installs the flow-sensitive nullability of by-value captured pointer
+  // variables to model at lambda call-operator entry, as computed at the
+  // capture site in the enclosing function. Should be called before running the
+  // analysis on a lambda call operator.
+  void setCapturedVarNullability(
+      llvm::DenseMap<const clang::ValueDecl*, clang::NullabilityKind> Vars) {
+    NFS.CapturedVarNullability = std::move(Vars);
+  }
+
   // Instead of fixing D's nullability invariants from its annotations,
   // bind them to symbolic variables, and return those variables.
   // This is useful to infer the annotations that should be present on D.

@@ -349,13 +349,16 @@ TEST(PointerNullabilityTest, AnalyzeFunctionWithForwardDeclarationOnlyOnce) {
   SmallVector<FunctionDecl *> Redecls(Target->redecls());
   ASSERT_EQ(Redecls.size(), 2);
 
+  LambdaCaptureNullabilityMap CaptureMap;
   EXPECT_TRUE(Redecls[0]->doesThisDeclarationHaveABody());
-  EXPECT_THAT_EXPECTED(diagnosePointerNullability(Redecls[0], NoPragmas),
-                       llvm::HasValue(SizeIs(1)));
+  EXPECT_THAT_EXPECTED(
+      diagnosePointerNullability(Redecls[0], NoPragmas, CaptureMap),
+      llvm::HasValue(SizeIs(1)));
 
   EXPECT_FALSE(Redecls[1]->doesThisDeclarationHaveABody());
-  EXPECT_THAT_EXPECTED(diagnosePointerNullability(Redecls[1], NoPragmas),
-                       llvm::HasValue(IsEmpty()));
+  EXPECT_THAT_EXPECTED(
+      diagnosePointerNullability(Redecls[1], NoPragmas, CaptureMap),
+      llvm::HasValue(IsEmpty()));
 }
 
 TEST(PointerNullabilityTest, CheckMacro) {
