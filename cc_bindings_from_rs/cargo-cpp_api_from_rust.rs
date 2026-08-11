@@ -81,6 +81,8 @@ fn main() -> Result<()> {
     }
     if let Some(manifest_path) = &cli.manifest.manifest_path {
         build_args.push(format!("--manifest-path={}", manifest_path.display()));
+    } else {
+        build_args.push(format!("--manifest-path={}", root.manifest_path));
     }
     if cli.features.all_features {
         build_args.push("--all-features".to_string());
@@ -94,6 +96,7 @@ fn main() -> Result<()> {
     build_args.extend(cli.build_args.clone());
 
     let build_artifacts = build_crate_and_stream_artifacts(&build_args)?;
+    let target_libdir = get_target_libdir(&build_args)?;
 
     let ctx = BindingGenerationContext::new(
         build_artifacts,
@@ -101,6 +104,7 @@ fn main() -> Result<()> {
         &metadata,
         target_dir,
         cli.out_dir.as_deref(),
+        target_libdir,
     )?;
     let lib_rs_content = ctx.generate_bindings()?;
 
@@ -159,7 +163,7 @@ fn build_crate_and_stream_artifacts(build_args: &[String]) -> Result<BuildArtifa
     // unrelated outputs from different build configurations (the same way cargo does). To do
     // this, our build must emit metadata. The filepath emitted for `.rlib` is the final filepath
     // with no metadata hash included.
-    if build_args.contains(&"--".to_string()) {
+    if build_args.iter().any(|s| s == "--") {
         args.push("--emit=metadata,link".to_string());
     } else {
         args.extend(["--".to_string(), "--emit=metadata,link".to_string()]);
@@ -258,6 +262,7 @@ struct BindingGenerationContext {
     ordered: Vec<PackageId>,
     dirs: Directories,
     resolve: Resolve,
+    target_libdir: Utf8PathBuf,
 }
 
 fn determine_profile_dir(
@@ -303,6 +308,7 @@ impl BindingGenerationContext {
         metadata: &Metadata,
         target_dir: &Utf8PathBuf,
         out_dir: Option<&Utf8Path>,
+        target_libdir: Utf8PathBuf,
     ) -> Result<Self> {
         // It's important we check the path of root (and not one of our dependencies) or else we'll get
         // the wrong path.
@@ -336,63 +342,16 @@ impl BindingGenerationContext {
             ordered,
             dirs,
             resolve: resolve.clone(),
+            target_libdir,
         })
     }
 
-    fn get_sysroot(&self) -> Result<Utf8PathBuf> {
-        let output = std::process::Command::new(cargo_bin())
-            .arg("rustc")
-            .arg("--manifest-path")
-            .arg(&self.root.manifest_path)
-            .arg("--")
-            .arg("--print")
-            .arg("sysroot")
-            .output()?;
-        if !output.status.success() {
-            bail!("Failed to get sysroot from cargo rustc");
-        }
-        let path = std::str::from_utf8(&output.stdout)?.trim();
-        Ok(Utf8PathBuf::from(path))
-    }
-
-    fn find_stdlib_rmetas(sysroot: &Utf8PathBuf) -> Result<Vec<(String, Utf8PathBuf)>> {
-        // Walk the lib directory to find the matching rmeta files.
-        // Usually <sysroot>/lib/rustlib/<target>/lib/
-        let rustlib = sysroot.join("lib").join("rustlib");
-        let mut target_lib_dir = None;
-        if !rustlib.exists() {
-            bail!("Could not find target lib dir in sysroot");
-        }
-        for entry in std::fs::read_dir(rustlib)? {
-            let entry = entry?;
-            let path = entry.path();
-            if !path.is_dir() {
-                continue;
-            }
-            let lib_sub = path.join("lib");
-            if !lib_sub.exists() {
-                continue;
-            }
-            // Make sure it's the target directory by checking if any rlib/rmeta is there.
-            for sub_entry in std::fs::read_dir(&lib_sub)? {
-                let sub_entry = sub_entry?;
-                if sub_entry.path().extension().is_some_and(|ext| ext == "rmeta" || ext == "rlib") {
-                    target_lib_dir = Some(Utf8PathBuf::from_path_buf(lib_sub).unwrap());
-                    break;
-                }
-            }
-            if target_lib_dir.is_some() {
-                break;
-            }
-        }
-        let lib_dir =
-            target_lib_dir.ok_or_else(|| anyhow!("Could not find target lib dir in sysroot"))?;
-
+    fn find_stdlib_rmetas(lib_dir: &Utf8Path) -> Result<Vec<(String, Utf8PathBuf)>> {
         let libs = ["core", "alloc", "std", "proc_macro"];
         let mut rmetas = vec![(String::default(), Utf8PathBuf::default()); 4];
         // This order is important because we rely on it to determine what standard library
         // crates depend on each other. std depends on core and alloc, alloc depends on core, etc.
-        for entry in std::fs::read_dir(&lib_dir)? {
+        for entry in std::fs::read_dir(lib_dir)? {
             let entry = entry?;
             let path = entry.path();
             let Some(ext) = path.extension() else {
@@ -533,8 +492,7 @@ extern crate proc_macro;
         fs::create_dir_all(&self.dirs.host_deps_dir)?;
 
         // 1. Locate standard library crates and generate bindings for them first.
-        let sysroot = self.get_sysroot()?;
-        let stdlib_crates = Self::find_stdlib_rmetas(&sysroot)?;
+        let stdlib_crates = Self::find_stdlib_rmetas(&self.target_libdir)?;
         let mut stdlib_externs = Vec::new();
         for (crate_name, rmeta_path) in &stdlib_crates {
             let rs_crate_name = format!("{}_cc_api", crate_name.replace('-', "_"));
@@ -706,4 +664,29 @@ bridge_rust = {{ package = "crubit_bridge_rust", version = "0.0.1" }}
 fn cargo_bin() -> &'static ffi::OsStr {
     static CARGO_BIN: std::sync::OnceLock<ffi::OsString> = std::sync::OnceLock::new();
     CARGO_BIN.get_or_init(|| env::var_os("CARGO").unwrap_or_else(|| "cargo".into()))
+}
+
+fn get_target_libdir(build_args: &[String]) -> Result<Utf8PathBuf> {
+    let mut cmd = Command::new(cargo_bin());
+    cmd.arg("rustc");
+    cmd.args(build_args);
+
+    if build_args.contains(&"--".to_string()) {
+        cmd.arg("--print");
+        cmd.arg("target-libdir");
+    } else {
+        cmd.arg("--");
+        cmd.arg("--print");
+        cmd.arg("target-libdir");
+    }
+
+    let output = cmd.output().map_err(|err| anyhow!("Failed to run cargo rustc: {}", err))?;
+    if !output.status.success() {
+        bail!(
+            "Failed to get target-libdir from cargo rustc: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    let path = std::str::from_utf8(&output.stdout)?.trim();
+    Ok(Utf8PathBuf::from(path))
 }
