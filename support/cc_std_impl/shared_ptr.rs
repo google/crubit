@@ -6,6 +6,32 @@ use crate::crubit_cc_std_internal::std_allocator::{self, shared_weak_count};
 
 /// A smart pointer that shares ownership of another object of type `T` via a pointer,
 /// ABI-compatible with `std::shared_ptr<T>`.
+///
+/// # Thread Safety
+///
+/// Like `Arc<T>`, `shared_ptr<T>` implements [`Send`] and [`Sync`] only if `T` implements both
+/// [`Send`] and [`Sync`], and only offers access to the underlying `T` via shared references.
+///
+/// # Mutation
+///
+/// `shared_ptr<T>` only hands out shared references (`&T`), which are only valid to mutate when the
+/// mutated data is wrapped in [`UnsafeCell`](std::cell::UnsafeCell). This has two consequences for
+/// users of `shared_ptr<T>` in Rust:
+///
+/// 1. Thread-safe C++ types `T` that manage their own internal synchronization should be marked
+///    with `CRUBIT_THREAD_SAFE` so their methods can be called from Rust within `shared_ptr<T>`.
+///    Internally, this annotation wraps all fields in `UnsafeCell`, making them not only safe to
+///    mutate, but also safe to hold a shared reference to (`&T`) while being mutated by someone
+///    else.
+///
+/// 2. Non-thread-safe C++ types `T` can still be mutated safely from C++ as long as synchronization
+///    is handled externally, but due to Rust's aliasing rules, it is undefined behavior for a Rust
+///    user to hold a `&T` during the mutation (modulo anything within `UnsafeCell`, of course).
+///    If the Rust user expects externally synchronized mutation from C++, they must also
+///    participate in the synchronization to ensure that they never hold an active `&T` during the
+///    C++ mutation window, otherwise they are subject to undefined behavior.
+///
+/// See crubit.rs/cpp/cookbook#thread_safety for more details.
 #[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "::std::shared_ptr<{T}>",
     include_path = "<memory>"

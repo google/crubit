@@ -40,6 +40,7 @@ String slices                                 | `rs_std::StrRef`             | `
 Slices                                        | `rs_std::SliceRef<T>`        | `&[T]`, `&mut [T]`           | Layout compatible |
 **Smart Pointers**                            |                              |                              |                   |
 [Unique pointer](/cpp/std#unique_ptr)         | `std::unique_ptr<T>`         | `cc_std::std::unique_ptr<T>` | Layout compatible |
+[Shared pointer](/cpp/std#shared_ptr)         | `std::shared_ptr<T>`         | `cc_std::std::shared_ptr<T>` | Layout compatible | Not directly constructible from Rust yet.
 **Containers**                                |                              |                              |                   |
 [Vector (C++)](/cpp/std#vector)               | `std::vector<T>`             | `cc_std::std::vector<T>`     | Layout compatible | C++ `std::vector` in Rust
 Vec (Rust)                                    | `rs_std::Vec<T>`             | `Vec<T>`                     | Layout compatible | Rust `Vec` in C++
