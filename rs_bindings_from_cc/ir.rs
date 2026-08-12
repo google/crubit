@@ -1953,6 +1953,8 @@ pub enum TemplateSpecializationKind {
     StdUniquePtr { raw_element_type: CcType },
     /// c9::Co<T>
     C9Co { raw_element_type: CcType },
+    /// std::atomic<T>
+    StdAtomic { raw_element_type: CcType },
     /// absl::Span<T>
     AbslSpan { raw_element_type: CcType },
     /// absl::flat_hash_map<K, V, ...>

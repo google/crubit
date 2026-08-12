@@ -322,6 +322,39 @@ macro_rules! new_integer {
     };
 }
 
+macro_rules! new_atomic {
+    ($AtomicType:ident, $IntegerType:ident, $UnderlyingAtomic:path) => {
+        #[repr(transparent)]
+        pub struct $AtomicType($UnderlyingAtomic);
+
+        impl $AtomicType {
+            pub const fn new(value: $IntegerType) -> Self {
+                Self(<$UnderlyingAtomic>::new(value.0))
+            }
+        }
+
+        impl core::ops::Deref for $AtomicType {
+            type Target = $UnderlyingAtomic;
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+
+        impl core::fmt::Debug for $AtomicType {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+                self.0.fmt(f)
+            }
+        }
+
+        impl Default for $AtomicType {
+            fn default() -> Self {
+                Self(<$UnderlyingAtomic>::default())
+            }
+        }
+    };
+}
+
+pub(crate) use new_atomic;
 pub(crate) use new_integer;
 pub(crate) use primitive_to_wrapped;
 pub(crate) use wrapped_to_primitive;

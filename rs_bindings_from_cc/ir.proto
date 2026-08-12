@@ -427,6 +427,9 @@ message TemplateSpecialization {
   message C9Co {
     CcType element_type = 1;
   }
+  message StdAtomic {
+    CcType element_type = 1;
+  }
   message AbslFlatHashMap {
     CcType key_type = 1;
     CcType value_type = 2;
@@ -447,6 +450,7 @@ message TemplateSpecialization {
     AbslFlatHashMap absl_flat_hash_map = 9;
     AbslFlatHashSet absl_flat_hash_set = 10;
     C9Co c9_co = 7;
+    StdAtomic std_atomic = 12;
     NonSpecial non_special = 8;
   }
 }

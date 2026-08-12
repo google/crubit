@@ -668,6 +668,48 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
                                ictx.AreAssumedLifetimesEnabledForTarget(
                                    ictx.GetOwningTarget(specialization_decl))));
     }
+    if (templated_decl->getName() == "atomic") {
+      if (specialization_decl->getTemplateArgs().size() != 1) {
+        return absl::InvalidArgumentError(
+            "std::atomic should have 1 template arg");
+      }
+      clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
+
+      bool supported = false;
+      if (auto* builtin = t->getAsAdjusted<clang::BuiltinType>()) {
+        switch (builtin->getKind()) {
+          case clang::BuiltinType::Bool:
+          case clang::BuiltinType::Char_S:
+          case clang::BuiltinType::Char_U:
+          case clang::BuiltinType::SChar:
+          case clang::BuiltinType::UChar:
+          case clang::BuiltinType::Short:
+          case clang::BuiltinType::UShort:
+          case clang::BuiltinType::Int:
+          case clang::BuiltinType::UInt:
+          case clang::BuiltinType::LongLong:
+          case clang::BuiltinType::ULongLong:
+          case clang::BuiltinType::Char16:
+          case clang::BuiltinType::Char32:
+            supported = true;
+            break;
+          default:
+            break;
+        }
+      } else if (t->isPointerType() &&
+                 !t->getPointeeType().isConstQualified()) {
+        supported = true;
+      }
+
+      if (!supported) {
+        return TemplateSpecialization::NonSpecial();
+      }
+
+      return TemplateSpecialization::StdAtomic{
+          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
+                               ictx.AreAssumedLifetimesEnabledForTarget(
+                                   ictx.GetOwningTarget(specialization_decl)))};
+    }
   } else if (top_level_namespace == "absl") {
     if (templated_decl->getName() == "Span") {
       LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() != 1)
@@ -1268,6 +1310,15 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   if (!is_thread_safe.ok()) {
     return unsupported(
         FormattedError::FromStatus(std::move(is_thread_safe).status()));
+  }
+
+  // Automatically treat std::atomic<T> as CRUBIT_THREAD_SAFE so that its
+  // generated methods take &self (interior mutability) and it derives
+  // Send+Sync.
+  if (template_specialization.has_value() &&
+      std::holds_alternative<TemplateSpecialization::StdAtomic>(
+          template_specialization->kind)) {
+    *is_thread_safe = true;
   }
 
   absl::StatusOr<TraitDerives> trait_derives = GetTraitDerives(*record_decl);

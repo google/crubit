@@ -287,6 +287,10 @@ void TemplateSpecialization::WriteToProto(
             c9_co.element_type.WriteToProto(
                 *proto.mutable_c9_co()->mutable_element_type());
           },
+          [&](const StdAtomic& std_atomic) {
+            std_atomic.element_type.WriteToProto(
+                *proto.mutable_std_atomic()->mutable_element_type());
+          },
           [&](const NonSpecial&) { proto.mutable_non_special(); },
       },
       kind);

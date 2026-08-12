@@ -387,6 +387,11 @@ impl TryFrom<::ir_rust_proto::TemplateSpecializationView<'_>> for TemplateSpecia
                     raw_element_type: CcType::try_from(c.element_type())?,
                 }
             }
+            ::ir_rust_proto::template_specialization::KindOneof::StdAtomic(a) => {
+                TemplateSpecializationKind::StdAtomic {
+                    raw_element_type: CcType::try_from(a.element_type())?,
+                }
+            }
             ::ir_rust_proto::template_specialization::KindOneof::NonSpecial(_) => {
                 TemplateSpecializationKind::NonSpecial
             }
