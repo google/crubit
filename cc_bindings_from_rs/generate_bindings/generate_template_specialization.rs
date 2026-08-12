@@ -1760,6 +1760,11 @@ fn generate_trait_impl_specialization<'tcx>(
             if arg.flags().intersects(has_type_or_const_vars()) {
                 bail!("Implementation of traits must specify all types to receive bindings.");
             }
+            if arg.walk().any(|arg| arg.as_type().is_some_and(|ty| ty.is_ptr_sized_integral())) {
+                bail!(
+                    "b/491106325 - isize and usize types are not yet supported as trait type arguments."
+                );
+            }
             db.format_ty_for_cc(arg, TypeLocation::TemplateArg)
                 .map(|snippet| snippet.into_tokens(&mut prereqs))
         })
