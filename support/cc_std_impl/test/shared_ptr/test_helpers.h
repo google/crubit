@@ -5,17 +5,11 @@
 #define THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_IMPL_TEST_SHARED_PTR_TEST_HELPERS_H_
 
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 
 #include "support/annotations.h"
 
 namespace shared_ptr_test {
-
-struct TwoWords {
-  void* ptr1;
-  void* ptr2;
-};
 
 // Returns the size of the layout of a shared_ptr<int>.
 CRUBIT_MUST_BIND inline size_t get_shared_ptr_size() {
@@ -44,25 +38,9 @@ CRUBIT_MUST_BIND inline void destroy_shared_ptr(std::shared_ptr<int>) {}
 CRUBIT_MUST_BIND inline void destroy_shared_ptr_const(
     std::shared_ptr<const int>) {}
 
-// Returns a new shared_ptr<char>.
-CRUBIT_MUST_BIND inline std::shared_ptr<char> create_shared_ptr_char() {
-  return std::make_shared<char>('a');
-}
-
-// Returns a new shared_ptr<int16_t>.
-CRUBIT_MUST_BIND inline std::shared_ptr<int16_t> create_shared_ptr_short() {
-  return std::make_shared<int16_t>(static_cast<int16_t>(1));
-}
-
 // Returns an empty shared_ptr<void>.
 CRUBIT_MUST_BIND inline std::shared_ptr<void> create_shared_ptr_void_ptr() {
   return std::shared_ptr<void>(nullptr);
-}
-
-// Returns a shared_ptr<TwoWords>.
-CRUBIT_MUST_BIND inline std::shared_ptr<TwoWords>
-create_shared_ptr_two_words() {
-  return std::make_shared<TwoWords>();
 }
 
 // Since shared_ptr uses a control block for type erasure, we can get a pointer
@@ -84,25 +62,6 @@ CRUBIT_MUST_BIND inline std::shared_ptr<Base> create_virtual_base() {
 
 CRUBIT_MUST_BIND inline int get_derived_destructor_count() {
   return Base::derived_destructor_count;
-}
-
-// Using a custom deleter via shared_ptr constructors.
-struct CustomDelete {
-  static inline int custom_delete_count = 0;
-};
-struct CustomDeleter {
-  void operator()(const CustomDelete* p) const {
-    CustomDelete::custom_delete_count++;
-    delete p;
-  }
-};
-
-CRUBIT_MUST_BIND inline std::shared_ptr<CustomDelete> create_custom_delete() {
-  return std::shared_ptr<CustomDelete>(new CustomDelete(), CustomDeleter());
-}
-
-CRUBIT_MUST_BIND inline int get_custom_delete_count() {
-  return CustomDelete::custom_delete_count;
 }
 
 }  // namespace shared_ptr_test
