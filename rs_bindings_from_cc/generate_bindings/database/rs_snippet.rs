@@ -95,8 +95,8 @@ impl Deref for UnsafeReason {
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Lifetime(pub Rc<str>);
 
-impl From<&ir::LifetimeName> for Lifetime {
-    fn from(lifetime_name: &ir::LifetimeName) -> Self {
+impl From<&ir::LifetimeName<'_>> for Lifetime {
+    fn from(lifetime_name: &ir::LifetimeName<'_>) -> Self {
         let name = lifetime_name.name();
         Lifetime(Rc::from(name))
     }

@@ -312,7 +312,7 @@ fn test_unescapable_rust_keywords_in_field_name() {
     let proto = ir_proto_from_cc("struct SomeStruct { int self; };").unwrap();
 
     let ir = make_test_ir(&proto).unwrap();
-    let record = ir.records().find(|record| *record.rs_name() == "SomeStruct").unwrap();
+    let record = ir.records().find(|record| record.rs_name() == "SomeStruct").unwrap();
     assert_eq!(record.fields().len(), 1);
     let field = &record.fields()[0];
     assert_eq!(field.rust_identifier().as_ref().map(|x| x.as_str()), Some("__field_0"));
@@ -729,7 +729,7 @@ fn test_struct_with_owned_ptr_type_annotation() -> googletest::Result<()> {
     let ir = ir_testing::make_test_ir(&proto).expect("Failed to generate IR from CC");
 
     let record =
-        ir.records().find(|record| *record.rs_name() == "RecordWithOwnedPtrType").or_fail()?;
+        ir.records().find(|record| record.rs_name() == "RecordWithOwnedPtrType").or_fail()?;
     let owned_ptr_config = record.owned_ptr_config().or_fail()?;
     expect_that!(owned_ptr_config.owned_ptr_type(), eq("SomeOwnedPtrType"));
     Ok(())
@@ -1323,7 +1323,7 @@ fn test_must_bind_annotation_on_record() -> googletest::Result<()> {
         ir_proto_from_cc(r#"struct [[clang::annotate("crubit_must_bind")]] S {};"#).or_fail()?;
 
     let ir = ir_testing::make_test_ir(&proto).or_fail()?;
-    let record = ir.records().find(|record| *record.rs_name() == "S").or_fail()?;
+    let record = ir.records().find(|record| record.rs_name() == "S").or_fail()?;
     expect_eq!(record.must_bind(), true);
     Ok(())
 }
@@ -3759,7 +3759,7 @@ fn test_record_items() {
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
 
-    let record = ir.records().find(|i| *i.rs_name() == "TopLevelStruct").unwrap();
+    let record = ir.records().find(|i| i.rs_name() == "TopLevelStruct").unwrap();
     let record_items = record.children().iter().collect_vec();
 
     assert_items_match!(

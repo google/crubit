@@ -172,7 +172,7 @@ pub fn make_test_ir_dependency<'pb>(
     Ok(ir)
 }
 
-pub fn retrieve_lifetime_param_id(names: &[LifetimeName], name: &str) -> LifetimeId {
+pub fn retrieve_lifetime_param_id(names: &[LifetimeName<'_>], name: &str) -> LifetimeId {
     for param in names {
         if param.name() == name {
             return param.id();
@@ -196,7 +196,7 @@ pub fn retrieve_func<'pb>(ir: &'pb IR<'pb>, name: &str) -> &'pb Func<'pb> {
 /// Panics if no such record could be found.
 pub fn retrieve_record<'pb>(ir: &'pb IR<'pb>, cc_name: &str) -> &'pb Record<'pb> {
     for record in ir.records() {
-        if *record.cc_name() == cc_name {
+        if record.cc_name() == cc_name {
             return record;
         }
     }

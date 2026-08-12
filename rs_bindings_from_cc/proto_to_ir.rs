@@ -40,10 +40,11 @@ impl<'pb> TryFrom<::ir_rust_proto::SizeAlignView<'pb>> for SizeAlign {
     }
 }
 
-impl TryFrom<::ir_rust_proto::LifetimeNameView<'_>> for LifetimeName {
+impl<'pb> TryFrom<::ir_rust_proto::LifetimeNameView<'pb>> for LifetimeName<'pb> {
     type Error = Error;
-    fn try_from(proto: ::ir_rust_proto::LifetimeNameView<'_>) -> Result<Self> {
-        Ok(LifetimeName { name: Rc::from(proto.name().to_str()?), id: LifetimeId(proto.id()) })
+    fn try_from(proto: ::ir_rust_proto::LifetimeNameView<'pb>) -> Result<Self> {
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 
@@ -264,14 +265,8 @@ impl TryFrom<::ir_rust_proto::TraitImplPolarity> for TraitImplPolarity {
 impl<'pb> TryFrom<::ir_rust_proto::TraitDerivesView<'pb>> for TraitDerives<'pb> {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::TraitDerivesView<'pb>) -> Result<Self> {
-        Ok(TraitDerives {
-            clone: TraitImplPolarity::try_from(proto.clone())?,
-            copy: TraitImplPolarity::try_from(proto.copy())?,
-            debug: TraitImplPolarity::try_from(proto.debug())?,
-            send: proto.send(),
-            sync: proto.sync(),
-            custom: proto.custom().iter().map(|s| s.to_str()).try_collect()?,
-        })
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 
@@ -407,62 +402,8 @@ impl TryFrom<::ir_rust_proto::TemplateSpecializationView<'_>> for TemplateSpecia
 impl<'pb> TryFrom<::ir_rust_proto::RecordView<'pb>> for Record<'pb> {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::RecordView<'pb>) -> Result<Self> {
-        let template_specialization = Into::<
-            Option<::ir_rust_proto::TemplateSpecializationView<'pb>>,
-        >::into(proto.template_specialization_opt())
-        .map(TemplateSpecialization::try_from)
-        .transpose()?;
-
-        let bridge_type =
-            Into::<Option<::ir_rust_proto::BridgeTypeView<'pb>>>::into(proto.bridge_type_opt())
-                .map(BridgeType::try_from)
-                .transpose()?;
-
-        let owned_ptr_config = Into::<Option<::ir_rust_proto::OwnedPtrConfigView<'pb>>>::into(
-            proto.owned_ptr_config_opt(),
-        )
-        .map(OwnedPtrConfig::try_from)
-        .transpose()?;
-
-        Ok(Record {
-            proto,
-            rs_name: Identifier::try_from(proto.rs_name())?,
-            cc_name: Identifier::try_from(proto.cc_name())?,
-            unique_name: proto.unique_name().to_str()?,
-            mangled_cc_name: proto.mangled_cc_name().to_str()?,
-            owning_target: BazelLabel::from(proto.owning_target().to_str()?),
-            template_specialization,
-            unknown_attr: opt_str_to_str(proto.unknown_attr_opt())?,
-            doc_comment: opt_str_to_str(proto.doc_comment_opt())?,
-            bridge_type,
-            owned_ptr_config,
-            source_loc: proto.source_loc().to_str()?,
-            unambiguous_public_bases: proto
-                .unambiguous_public_bases()
-                .iter()
-                .map(BaseClass::try_from)
-                .try_collect()?,
-            fields: proto.fields().iter().map(Field::try_from).try_collect()?,
-            lifetime_params: proto
-                .lifetime_params()
-                .iter()
-                .map(LifetimeName::try_from)
-                .try_collect()?,
-            trait_derives: TraitDerives::try_from(proto.trait_derives())?,
-            safety_annotation: SafetyAnnotation::try_from(proto.safety_annotation())?,
-            copy_constructor: SpecialMemberFunc::try_from(proto.copy_constructor())?,
-            move_constructor: SpecialMemberFunc::try_from(proto.move_constructor())?,
-            destructor: SpecialMemberFunc::try_from(proto.destructor())?,
-            nodiscard: opt_str_to_str(proto.nodiscard_opt())?,
-            record_type: RecordType::try_from(proto.record_type())?,
-            lifetime_inputs: proto
-                .lifetime_inputs()
-                .iter()
-                .map(|s| s.to_str().map(Rc::from))
-                .try_collect()?,
-            deprecated: opt_str_to_str(proto.deprecated_opt())?,
-            children: proto.children().iter().map(Item::try_from).try_collect()?,
-        })
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 

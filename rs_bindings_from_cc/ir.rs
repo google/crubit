@@ -22,7 +22,7 @@ use quote::{quote, ToTokens};
 use std::collections::hash_map::{Entry, HashMap};
 use std::collections::{BTreeMap, HashSet};
 use std::fmt::{self, Debug, Display};
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::rc::Rc;
 
 mod proto_to_ir;
@@ -239,7 +239,7 @@ pub fn make_ir<'pb>(tree_ir: TreeIR<'pb>) -> IR<'pb> {
     let ordered_items =
         ItemsIterator::new(tree_ir.top_level_items.values().flat_map(|v| v.iter()).collect());
 
-    let mut lifetimes: HashMap<LifetimeId, LifetimeName> = HashMap::new();
+    let mut lifetimes: HashMap<LifetimeId, LifetimeName<'pb>> = HashMap::new();
     let mut namespace_id_to_number_of_reopened_namespaces = HashMap::new();
     let mut reopened_namespace_id_to_idx = HashMap::new();
     let mut function_name_to_functions: HashMap<UnqualifiedIdentifier<'pb>, Vec<Rc<Func<'pb>>>> =
@@ -367,19 +367,31 @@ impl<'pb> HeaderName<'pb> {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct LifetimeId(pub i32);
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub struct LifetimeName {
-    pub(crate) name: Rc<str>,
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub struct LifetimeName<'pb> {
+    pub(crate) name: &'pb str,
     pub(crate) id: LifetimeId,
 }
 
-impl LifetimeName {
-    pub fn name(&self) -> &str {
-        &self.name
+impl<'pb> LifetimeName<'pb> {
+    pub fn name(&self) -> &'pb str {
+        self.name
     }
 
     pub fn id(&self) -> LifetimeId {
         self.id
+    }
+}
+
+impl<'pb> ProtoToIr for ::ir_rust_proto::LifetimeNameView<'pb> {
+    type IrType = LifetimeName<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.name().validate()
+    }
+
+    fn to_ir(self) -> LifetimeName<'pb> {
+        LifetimeName { name: self.name().to_ir(), id: LifetimeId(self.id()) }
     }
 }
 
@@ -1198,7 +1210,7 @@ pub struct Func<'pb> {
     pub(crate) owning_target: BazelLabel,
     pub(crate) return_type: CcType,
     pub(crate) params: Vec<FuncParam<'pb>>,
-    pub(crate) lifetime_params: Vec<LifetimeName>,
+    pub(crate) lifetime_params: Vec<LifetimeName<'pb>>,
     pub(crate) inline_cpp_source_text: Option<Rc<str>>,
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
     pub(crate) semantic: Option<MemberFuncSemantic>,
@@ -1219,7 +1231,7 @@ impl<'pb> ProtoToIr for FuncView<'pb> {
             param.validate()?;
         }
         for lifetime in self.lifetime_params().iter() {
-            let _ = LifetimeName::try_from(lifetime)?;
+            lifetime.validate()?;
         }
         self.instance_method_metadata_opt().into_option().validate()?;
         self.nodiscard_opt().into_option().validate()?;
@@ -1245,14 +1257,7 @@ impl<'pb> ProtoToIr for FuncView<'pb> {
         let return_type = CcType::try_from(self.return_type())
             .expect("`return_type` should have been validated by `FuncView::validate`");
         let params = self.params().iter().map(|p| p.to_ir()).collect();
-        let lifetime_params = self
-            .lifetime_params()
-            .iter()
-            .map(|l| {
-                LifetimeName::try_from(l)
-                    .expect("`lifetime_params` should have been validated by `FuncView::validate`")
-            })
-            .collect();
+        let lifetime_params = self.lifetime_params().iter().map(|l| l.to_ir()).collect();
         let lifetime_inputs = self.lifetime_inputs().iter().map(|s| Rc::from(s.to_ir())).collect();
         let semantic = self.semantic_opt().into_option().map(|s| {
             MemberFuncSemantic::try_from(s)
@@ -1314,7 +1319,7 @@ derive_debug_partialeq_eq_hash! {
         /// Prefer to reconstruct the lifetime params from the parameter types, as
         /// needed. This allows new parameters and lifetimes to be added that were
         /// not originally part of the IR.
-        pub fn lifetime_params(&self) -> &[LifetimeName] {
+        pub fn lifetime_params(&self) -> &[LifetimeName<'pb>] {
             &self.lifetime_params
         }
 
@@ -2001,6 +2006,31 @@ pub struct TraitDerives<'pb> {
     pub custom: Vec<&'pb str>,
 }
 
+impl<'pb> ProtoToIr for ::ir_rust_proto::TraitDerivesView<'pb> {
+    type IrType = TraitDerives<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.clone().validate()?;
+        self.copy().validate()?;
+        self.debug().validate()?;
+        for c in self.custom().iter() {
+            c.validate()?;
+        }
+        Ok(())
+    }
+
+    fn to_ir(self) -> TraitDerives<'pb> {
+        TraitDerives {
+            clone: self.clone().to_ir(),
+            copy: self.copy().to_ir(),
+            debug: self.debug().to_ir(),
+            send: self.send(),
+            sync: self.sync(),
+            custom: self.custom().iter().map(|s| s.to_ir()).collect(),
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct OwnedPtrConfig<'pb> {
     proto: OwnedPtrConfigView<'pb>,
@@ -2035,29 +2065,103 @@ derive_debug_partialeq_eq_hash! {
 pub struct Record<'pb> {
     pub(crate) proto: RecordView<'pb>,
     pub(crate) rs_name: Identifier<'pb>,
-    pub(crate) cc_name: Identifier<'pb>,
-    pub(crate) unique_name: &'pb str,
-    pub(crate) mangled_cc_name: &'pb str,
     pub(crate) owning_target: BazelLabel,
     pub(crate) template_specialization: Option<TemplateSpecialization>,
-    pub(crate) unknown_attr: Option<&'pb str>,
-    pub(crate) doc_comment: Option<&'pb str>,
     pub(crate) bridge_type: Option<BridgeType<'pb>>,
-    pub(crate) owned_ptr_config: Option<OwnedPtrConfig<'pb>>,
-    pub(crate) source_loc: &'pb str,
     pub(crate) unambiguous_public_bases: Vec<BaseClass>,
     pub(crate) fields: Vec<Field<'pb>>,
-    pub(crate) lifetime_params: Vec<LifetimeName>,
+    pub(crate) lifetime_params: Vec<LifetimeName<'pb>>,
     pub(crate) trait_derives: TraitDerives<'pb>,
-    pub(crate) safety_annotation: SafetyAnnotation,
-    pub(crate) copy_constructor: SpecialMemberFunc,
-    pub(crate) move_constructor: SpecialMemberFunc,
-    pub(crate) destructor: SpecialMemberFunc,
-    pub(crate) nodiscard: Option<&'pb str>,
-    pub(crate) record_type: RecordType,
     pub(crate) lifetime_inputs: Vec<Rc<str>>,
-    pub(crate) deprecated: Option<&'pb str>,
     pub(crate) children: Vec<Item<'pb>>,
+}
+
+impl<'pb> ProtoToIr for RecordView<'pb> {
+    type IrType = Record<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.rs_name().validate()?;
+        self.cc_name().validate()?;
+        self.unique_name().validate()?;
+        self.mangled_cc_name().validate()?;
+        self.owning_target().validate()?;
+        if let Some(ts) = self.template_specialization_opt().into_option() {
+            let _ = TemplateSpecialization::try_from(ts)?;
+        }
+        self.unknown_attr_opt().into_option().validate()?;
+        self.doc_comment_opt().into_option().validate()?;
+        if let Some(bt) = self.bridge_type_opt().into_option() {
+            let _ = BridgeType::try_from(bt)?;
+        }
+        self.owned_ptr_config_opt().into_option().validate()?;
+        self.source_loc().validate()?;
+        for base in self.unambiguous_public_bases().iter() {
+            base.validate()?;
+        }
+        for field in self.fields().iter() {
+            field.validate()?;
+        }
+        for lp in self.lifetime_params().iter() {
+            lp.validate()?;
+        }
+        self.trait_derives().validate()?;
+        self.safety_annotation().validate()?;
+        self.copy_constructor().validate()?;
+        self.move_constructor().validate()?;
+        self.destructor().validate()?;
+        self.nodiscard_opt().into_option().validate()?;
+        self.record_type().validate()?;
+        for li in self.lifetime_inputs().iter() {
+            li.validate()?;
+        }
+        self.deprecated_opt().into_option().validate()?;
+        for child in self.children().iter() {
+            let _ = Item::try_from(child)?;
+        }
+        Ok(())
+    }
+
+    fn to_ir(self) -> Record<'pb> {
+        let rs_name = self.rs_name().to_ir();
+        let owning_target = BazelLabel::from(self.owning_target().to_ir());
+        let template_specialization = self.template_specialization_opt().into_option().map(|ts| {
+            TemplateSpecialization::try_from(ts).expect(
+                "`template_specialization` should have been validated by `RecordView::validate`",
+            )
+        });
+        let bridge_type = self.bridge_type_opt().into_option().map(|bt| {
+            BridgeType::try_from(bt)
+                .expect("`bridge_type` should have been validated by `RecordView::validate`")
+        });
+        let unambiguous_public_bases =
+            self.unambiguous_public_bases().iter().map(|b| b.to_ir()).collect();
+        let fields = self.fields().iter().map(|f| f.to_ir()).collect();
+        let lifetime_params = self.lifetime_params().iter().map(|lp| lp.to_ir()).collect();
+        let trait_derives = self.trait_derives().to_ir();
+        let lifetime_inputs = self.lifetime_inputs().iter().map(|s| Rc::from(s.to_ir())).collect();
+        let children = self
+            .children()
+            .iter()
+            .map(|c| {
+                Item::try_from(c)
+                    .expect("`children` should have been validated by `RecordView::validate`")
+            })
+            .collect();
+
+        Record {
+            proto: self,
+            rs_name,
+            owning_target,
+            template_specialization,
+            bridge_type,
+            unambiguous_public_bases,
+            fields,
+            lifetime_params,
+            trait_derives,
+            lifetime_inputs,
+            children,
+        }
+    }
 }
 
 derive_debug_partialeq_eq_hash! {
@@ -2070,19 +2174,19 @@ derive_debug_partialeq_eq_hash! {
         /// name is used. Otherwise, the only the name of the record is used.
         /// Today, cc_name is only used for debugging, checking for names starting in __, and generating
         /// parent modules for nested items which are disallowed for template specializations in Crubit.
-        pub fn cc_name(&self) -> &Identifier<'pb> {
-            &self.cc_name
+        pub fn cc_name(&self) -> Identifier<'pb> {
+            self.proto.cc_name().to_ir()
         }
 
         pub fn unique_name(&self) -> &'pb str {
-            self.unique_name
+            self.proto.unique_name().to_ir()
         }
 
         /// Mangled record names are used to 1) provide valid Rust identifiers for
         /// C++ template specializations, and 2) help build unique names for virtual
         /// upcast thunks.
         pub fn mangled_cc_name(&self) -> &'pb str {
-            self.mangled_cc_name
+            self.proto.mangled_cc_name().to_ir()
         }
 
         pub fn id(&self) -> ItemId {
@@ -2103,23 +2207,23 @@ derive_debug_partialeq_eq_hash! {
         /// fairly significant ways, and in ways that may affect interop, we
         /// default-closed and do not expose functions with unknown attributes.
         pub fn unknown_attr(&self) -> Option<&'pb str> {
-            self.unknown_attr
+            self.proto.unknown_attr_opt().into_option().to_ir()
         }
 
         pub fn doc_comment(&self) -> Option<&'pb str> {
-            self.doc_comment
+            self.proto.doc_comment_opt().into_option().to_ir()
         }
 
         pub fn bridge_type(&self) -> Option<&BridgeType<'pb>> {
             self.bridge_type.as_ref()
         }
 
-        pub fn owned_ptr_config(&self) -> Option<&OwnedPtrConfig<'pb>> {
-            self.owned_ptr_config.as_ref()
+        pub fn owned_ptr_config(&self) -> Option<OwnedPtrConfig<'pb>> {
+            self.proto.owned_ptr_config_opt().into_option().to_ir()
         }
 
         pub fn source_loc(&self) -> &'pb str {
-            self.source_loc
+            self.proto.source_loc().to_ir()
         }
 
         pub fn unambiguous_public_bases(&self) -> &[BaseClass] {
@@ -2130,7 +2234,7 @@ derive_debug_partialeq_eq_hash! {
             &self.fields
         }
 
-        pub fn lifetime_params(&self) -> &[LifetimeName] {
+        pub fn lifetime_params(&self) -> &[LifetimeName<'pb>] {
             &self.lifetime_params
         }
 
@@ -2151,19 +2255,19 @@ derive_debug_partialeq_eq_hash! {
         }
 
         pub fn safety_annotation(&self) -> SafetyAnnotation {
-            self.safety_annotation
+            self.proto.safety_annotation().to_ir()
         }
 
         pub fn copy_constructor(&self) -> SpecialMemberFunc {
-            self.copy_constructor
+            self.proto.copy_constructor().to_ir()
         }
 
         pub fn move_constructor(&self) -> SpecialMemberFunc {
-            self.move_constructor
+            self.proto.move_constructor().to_ir()
         }
 
         pub fn destructor(&self) -> SpecialMemberFunc {
-            self.destructor
+            self.proto.destructor().to_ir()
         }
 
         pub fn is_trivial_abi(&self) -> bool {
@@ -2181,11 +2285,11 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[nodiscard("...")]]` string. If `[[nodiscard]]`, then the empty
         /// string is used.
         pub fn nodiscard(&self) -> Option<&'pb str> {
-            self.nodiscard
+            self.proto.nodiscard_opt().into_option().to_ir()
         }
 
         pub fn record_type(&self) -> RecordType {
-            self.record_type
+            self.proto.record_type().to_ir()
         }
 
         pub fn is_aggregate(&self) -> bool {
@@ -2233,7 +2337,7 @@ derive_debug_partialeq_eq_hash! {
         /// The `[[deprecated("...")]]` string. If `[[deprecated]]`, then the empty
         /// string is used.
         pub fn deprecated(&self) -> Option<&'pb str> {
-            self.deprecated
+            self.proto.deprecated_opt().into_option().to_ir()
         }
 
         /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
@@ -2262,7 +2366,7 @@ impl<'pb> GenericItem<'pb> for Record<'pb> {
         Some(self.owning_target.clone())
     }
     fn unsupported_kind(&self) -> UnsupportedItemKind {
-        self.record_type.unsupported_item_kind()
+        self.record_type().unsupported_item_kind()
     }
     fn source_loc(&self) -> Option<&'pb str> {
         Some(self.source_loc())
@@ -2274,17 +2378,13 @@ impl<'pb> GenericItem<'pb> for Record<'pb> {
         Record::must_bind(self)
     }
     fn cc_name_as_str(&self) -> Option<&'pb str> {
-        Some(self.cc_name.as_str())
+        Some(self.cc_name().as_str())
     }
 }
 
 impl<'pb> Record<'pb> {
     pub fn set_rs_name(&mut self, rs_name: Identifier<'pb>) {
         self.rs_name = rs_name;
-    }
-
-    pub fn set_cc_name(&mut self, cc_name: Identifier<'pb>) {
-        self.cc_name = cc_name;
     }
 
     pub fn fields_mut(&mut self) -> &mut Vec<Field<'pb>> {
@@ -2334,7 +2434,7 @@ impl<'pb> Record<'pb> {
                     if is_string_view {
                         return true;
                     };
-                    self.cc_name.as_str().starts_with("std::basic_string_view<")
+                    self.cc_name().as_str().starts_with("std::basic_string_view<")
                 } else {
                     false
                 }
@@ -2349,11 +2449,11 @@ impl<'pb> Record<'pb> {
         matches!(
             self.template_specialization,
             Some(TemplateSpecialization { kind: TemplateSpecializationKind::StdStringView, .. })
-        ) && self.rs_name.as_str() == "raw_string_view"
+        ) && self.rs_name().as_str() == "raw_string_view"
     }
 
     pub fn is_union(&self) -> bool {
-        match self.record_type {
+        match self.record_type() {
             RecordType::Union => true,
             RecordType::Struct | RecordType::Class => false,
         }
@@ -2368,12 +2468,12 @@ impl<'pb> Record<'pb> {
         if self.is_canonical_alias() {
             quote! {}
         } else {
-            self.record_type.into_token_stream()
+            self.record_type().into_token_stream()
         }
     }
 
     pub fn should_implement_drop(&self) -> bool {
-        match self.destructor {
+        match self.destructor() {
             SpecialMemberFunc::Trivial => false,
 
             // TODO(jeanpierreda): b/212690698 - Avoid calling into the C++ destructor
@@ -2405,8 +2505,8 @@ impl<'pb> Record<'pb> {
             TraitImplPolarity::Negative => false,
             TraitImplPolarity::None => {
                 self.is_unpin()
-                    && self.copy_constructor == SpecialMemberFunc::Trivial
-                    && self.destructor == SpecialMemberFunc::Trivial
+                    && self.copy_constructor() == SpecialMemberFunc::Trivial
+                    && self.destructor() == SpecialMemberFunc::Trivial
                     && self.check_by_value().is_ok()
                     && self.trait_derives.clone != TraitImplPolarity::Negative
                     // Mutable fields become `Cell<T>` in Rust, which prevents
@@ -2421,14 +2521,14 @@ impl<'pb> Record<'pb> {
     /// This does not necessarily imply that the type is Rust-movable, e.g. trivially relocatable.
     pub fn check_by_value(&self) -> Result<()> {
         ensure!(
-            self.destructor != SpecialMemberFunc::Unavailable,
+            self.destructor() != SpecialMemberFunc::Unavailable,
             "`{}` can't be used by-value because it has a non-public or deleted destructor",
-            self.cc_name
+            self.cc_name()
         );
         ensure!(
             !self.is_abstract(),
             "`{}` can be used by-value because it has pure virtual functions that are not overridden",
-            self.cc_name
+            self.cc_name()
         );
         Ok(())
     }
@@ -3760,7 +3860,7 @@ impl<'pb> Item<'pb> {
                 _ => None,
             },
             Item::IncompleteRecord(incomplete_record) => Some(incomplete_record.cc_name().as_str()),
-            Item::Record(record) => Some(record.cc_name.as_str()),
+            Item::Record(record) => Some(record.cc_name().as_str()),
             Item::Enum(enum_) => Some(enum_.cc_name().as_str()),
             Item::Constant(constant) => Some(constant.cc_name().as_str()),
             Item::GlobalVar(global_var) => Some(global_var.cc_name().as_str()),
@@ -3779,7 +3879,7 @@ impl<'pb> Item<'pb> {
         match self {
             Item::Func(func) => func.rs_name.identifier_as_str(),
             Item::IncompleteRecord(incomplete_record) => Some(incomplete_record.rs_name().as_str()),
-            Item::Record(record) => Some(record.rs_name.as_str()),
+            Item::Record(record) => Some(record.rs_name().as_str()),
             Item::Enum(enum_) => Some(enum_.rs_name().as_str()),
             Item::Constant(constant) => Some(constant.rs_name().as_str()),
             Item::GlobalVar(global_var) => Some(global_var.rs_name().as_str()),
@@ -3976,7 +4076,7 @@ impl<'pb> Debug for TreeIR<'pb> {
 pub struct IR<'pb> {
     tree_ir: TreeIR<'pb>,
     item_id_to_item: HashMap<ItemId, Item<'pb>>,
-    lifetimes: HashMap<LifetimeId, LifetimeName>,
+    lifetimes: HashMap<LifetimeId, LifetimeName<'pb>>,
     namespace_id_to_number_of_reopened_namespaces: HashMap<ItemId, usize>,
     reopened_namespace_id_to_idx: HashMap<ItemId, usize>,
     function_name_to_functions: HashMap<UnqualifiedIdentifier<'pb>, Vec<Rc<Func<'pb>>>>,
@@ -4014,7 +4114,7 @@ impl<'pb> IR<'pb> {
         ItemsIterator::new(roots.collect())
     }
 
-    pub fn lifetimes(&self) -> impl Iterator<Item = (&LifetimeId, &LifetimeName)> {
+    pub fn lifetimes(&self) -> impl Iterator<Item = (&LifetimeId, &LifetimeName<'pb>)> {
         self.lifetimes.iter()
     }
 
@@ -4147,7 +4247,7 @@ impl<'pb> IR<'pb> {
         format!("{:?}", self.tree_ir)
     }
 
-    pub fn get_lifetime(&self, lifetime_id: LifetimeId) -> Option<&LifetimeName> {
+    pub fn get_lifetime(&self, lifetime_id: LifetimeId) -> Option<&LifetimeName<'pb>> {
         self.lifetimes.get(&lifetime_id)
     }
 

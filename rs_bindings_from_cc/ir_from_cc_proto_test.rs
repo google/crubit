@@ -36,7 +36,7 @@ fn test_record_proto() -> Result<()> {
     let ir = make_test_ir(&proto)?;
     let record = ir
         .records()
-        .find(|r| *r.cc_name() == "MyStruct")
+        .find(|r| r.cc_name() == "MyStruct")
         .expect("should find struct MyStruct from the source code");
     assert_eq!(record.cc_name().as_str(), "MyStruct");
     assert_eq!(record.fields().len(), 1);
@@ -161,7 +161,7 @@ fn test_record_member_variable_access_specifiers_proto() -> Result<()> {
     let ir = make_test_ir(&proto)?;
     let some_struct = ir
         .records()
-        .find(|r| *r.cc_name() == "SomeStruct")
+        .find(|r| r.cc_name() == "SomeStruct")
         .expect("should find struct SomeStruct from the source code");
 
     assert_eq!(some_struct.fields().len(), 4);
@@ -184,7 +184,7 @@ fn test_record_member_variable_access_specifiers_proto() -> Result<()> {
 
     let some_class = ir
         .records()
-        .find(|r| *r.cc_name() == "SomeClass")
+        .find(|r| r.cc_name() == "SomeClass")
         .expect("should find class SomeClass from the source code");
     assert_eq!(some_class.fields().len(), 1);
     let cf0 = some_class.fields().first().expect("should have field 'default_access_int'");
