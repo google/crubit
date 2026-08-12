@@ -50,29 +50,16 @@ impl TryFrom<::ir_rust_proto::LifetimeNameView<'_>> for LifetimeName {
 impl TryFrom<::ir_rust_proto::CallingConv> for CcCallingConv {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::CallingConv) -> Result<Self> {
-        match proto {
-            ::ir_rust_proto::CallingConv::CDecl => Ok(CcCallingConv::C),
-            ::ir_rust_proto::CallingConv::FastCall => Ok(CcCallingConv::X86FastCall),
-            ::ir_rust_proto::CallingConv::VectorCall => Ok(CcCallingConv::X86VectorCall),
-            ::ir_rust_proto::CallingConv::ThisCall => Ok(CcCallingConv::X86ThisCall),
-            ::ir_rust_proto::CallingConv::StdCall => Ok(CcCallingConv::X86StdCall),
-            ::ir_rust_proto::CallingConv::MsAbi => Ok(CcCallingConv::Win64),
-            _ => bail!("Unspecified calling convention"),
-        }
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 
 impl TryFrom<::ir_rust_proto::PointerTypeKind> for PointerTypeKind {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::PointerTypeKind) -> Result<Self> {
-        match proto {
-            ::ir_rust_proto::PointerTypeKind::LValueRef => Ok(PointerTypeKind::LValueRef),
-            ::ir_rust_proto::PointerTypeKind::RValueRef => Ok(PointerTypeKind::RValueRef),
-            ::ir_rust_proto::PointerTypeKind::Nullable => Ok(PointerTypeKind::Nullable),
-            ::ir_rust_proto::PointerTypeKind::NonNull => Ok(PointerTypeKind::NonNull),
-            ::ir_rust_proto::PointerTypeKind::Owned => Ok(PointerTypeKind::Owned),
-            _ => bail!("Unspecified pointer type kind"),
-        }
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 
@@ -269,12 +256,8 @@ impl<'pb> TryFrom<::ir_rust_proto::FieldView<'pb>> for Field<'pb> {
 impl TryFrom<::ir_rust_proto::TraitImplPolarity> for TraitImplPolarity {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::TraitImplPolarity) -> Result<Self> {
-        match proto {
-            ::ir_rust_proto::TraitImplPolarity::Negative => Ok(TraitImplPolarity::Negative),
-            ::ir_rust_proto::TraitImplPolarity::None => Ok(TraitImplPolarity::None),
-            ::ir_rust_proto::TraitImplPolarity::Positive => Ok(TraitImplPolarity::Positive),
-            _ => bail!("Unspecified TraitImplPolarity"),
-        }
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 
@@ -295,29 +278,16 @@ impl<'pb> TryFrom<::ir_rust_proto::TraitDerivesView<'pb>> for TraitDerives<'pb> 
 impl TryFrom<::ir_rust_proto::SpecialMemberFunc> for SpecialMemberFunc {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::SpecialMemberFunc) -> Result<Self> {
-        match proto {
-            ::ir_rust_proto::SpecialMemberFunc::Trivial => Ok(SpecialMemberFunc::Trivial),
-            ::ir_rust_proto::SpecialMemberFunc::NontrivialMembers => {
-                Ok(SpecialMemberFunc::NontrivialMembers)
-            }
-            ::ir_rust_proto::SpecialMemberFunc::NontrivialUserDefined => {
-                Ok(SpecialMemberFunc::NontrivialUserDefined)
-            }
-            ::ir_rust_proto::SpecialMemberFunc::Unavailable => Ok(SpecialMemberFunc::Unavailable),
-            _ => bail!("Unspecified SpecialMemberFunc"),
-        }
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 
 impl TryFrom<::ir_rust_proto::RecordType> for RecordType {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::RecordType) -> Result<Self> {
-        match proto {
-            ::ir_rust_proto::RecordType::Struct => Ok(RecordType::Struct),
-            ::ir_rust_proto::RecordType::Union => Ok(RecordType::Union),
-            ::ir_rust_proto::RecordType::Class => Ok(RecordType::Class),
-            _ => bail!("Unspecified RecordType"),
-        }
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 
@@ -547,27 +517,8 @@ impl<'pb> TryFrom<::ir_rust_proto::TypeAliasView<'pb>> for TypeAlias<'pb> {
 impl TryFrom<::ir_rust_proto::unsupported_item::Kind> for UnsupportedItemKind {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::unsupported_item::Kind) -> Result<Self> {
-        match proto {
-            ::ir_rust_proto::unsupported_item::Kind::Func => Ok(UnsupportedItemKind::Func),
-            ::ir_rust_proto::unsupported_item::Kind::GlobalVar => {
-                Ok(UnsupportedItemKind::GlobalVar)
-            }
-            ::ir_rust_proto::unsupported_item::Kind::Struct => Ok(UnsupportedItemKind::Struct),
-            ::ir_rust_proto::unsupported_item::Kind::Union => Ok(UnsupportedItemKind::Union),
-            ::ir_rust_proto::unsupported_item::Kind::Class => Ok(UnsupportedItemKind::Class),
-            ::ir_rust_proto::unsupported_item::Kind::Enum => Ok(UnsupportedItemKind::Enum),
-            ::ir_rust_proto::unsupported_item::Kind::TypeAlias => {
-                Ok(UnsupportedItemKind::TypeAlias)
-            }
-            ::ir_rust_proto::unsupported_item::Kind::Namespace => {
-                Ok(UnsupportedItemKind::Namespace)
-            }
-            ::ir_rust_proto::unsupported_item::Kind::Constructor => {
-                Ok(UnsupportedItemKind::Constructor)
-            }
-            ::ir_rust_proto::unsupported_item::Kind::Other => Ok(UnsupportedItemKind::Other),
-            _ => bail!("Unspecified UnsupportedItemKind"),
-        }
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 

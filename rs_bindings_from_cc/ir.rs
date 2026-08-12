@@ -478,6 +478,34 @@ pub enum PointerTypeKind {
     Owned,
 }
 
+impl ProtoToIr for ::ir_rust_proto::PointerTypeKind {
+    type IrType = PointerTypeKind;
+
+    fn validate(self) -> Result<()> {
+        match self {
+            ::ir_rust_proto::PointerTypeKind::LValueRef
+            | ::ir_rust_proto::PointerTypeKind::RValueRef
+            | ::ir_rust_proto::PointerTypeKind::Nullable
+            | ::ir_rust_proto::PointerTypeKind::NonNull
+            | ::ir_rust_proto::PointerTypeKind::Owned => Ok(()),
+            _ => bail!("Unspecified PointerTypeKind"),
+        }
+    }
+
+    fn to_ir(self) -> Self::IrType {
+        match self {
+            ::ir_rust_proto::PointerTypeKind::LValueRef => PointerTypeKind::LValueRef,
+            ::ir_rust_proto::PointerTypeKind::RValueRef => PointerTypeKind::RValueRef,
+            ::ir_rust_proto::PointerTypeKind::Nullable => PointerTypeKind::Nullable,
+            ::ir_rust_proto::PointerTypeKind::NonNull => PointerTypeKind::NonNull,
+            ::ir_rust_proto::PointerTypeKind::Owned => PointerTypeKind::Owned,
+            _ => unreachable!(
+                "`PointerTypeKind` should have been validated by `ProtoToIr::validate`"
+            ),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct PointerType {
     pub(crate) kind: PointerTypeKind,
@@ -614,6 +642,34 @@ define_typed_tokens_enum! {
         X86ThisCall = {thiscall},
         X86StdCall = {stdcall},
         Win64 = {ms_abi},
+    }
+}
+
+impl ProtoToIr for ::ir_rust_proto::CallingConv {
+    type IrType = CcCallingConv;
+
+    fn validate(self) -> Result<()> {
+        match self {
+            ::ir_rust_proto::CallingConv::CDecl
+            | ::ir_rust_proto::CallingConv::FastCall
+            | ::ir_rust_proto::CallingConv::VectorCall
+            | ::ir_rust_proto::CallingConv::ThisCall
+            | ::ir_rust_proto::CallingConv::StdCall
+            | ::ir_rust_proto::CallingConv::MsAbi => Ok(()),
+            _ => bail!("Unspecified CallingConv"),
+        }
+    }
+
+    fn to_ir(self) -> Self::IrType {
+        match self {
+            ::ir_rust_proto::CallingConv::CDecl => CcCallingConv::C,
+            ::ir_rust_proto::CallingConv::FastCall => CcCallingConv::X86FastCall,
+            ::ir_rust_proto::CallingConv::VectorCall => CcCallingConv::X86VectorCall,
+            ::ir_rust_proto::CallingConv::ThisCall => CcCallingConv::X86ThisCall,
+            ::ir_rust_proto::CallingConv::StdCall => CcCallingConv::X86StdCall,
+            ::ir_rust_proto::CallingConv::MsAbi => CcCallingConv::Win64,
+            _ => unreachable!("`CallingConv` should have been validated by `ProtoToIr::validate`"),
+        }
     }
 }
 
@@ -1587,6 +1643,36 @@ pub enum SpecialMemberFunc {
     Unavailable,
 }
 
+impl ProtoToIr for ::ir_rust_proto::SpecialMemberFunc {
+    type IrType = SpecialMemberFunc;
+
+    fn validate(self) -> Result<()> {
+        match self {
+            ::ir_rust_proto::SpecialMemberFunc::Trivial
+            | ::ir_rust_proto::SpecialMemberFunc::NontrivialMembers
+            | ::ir_rust_proto::SpecialMemberFunc::NontrivialUserDefined
+            | ::ir_rust_proto::SpecialMemberFunc::Unavailable => Ok(()),
+            _ => bail!("Unspecified SpecialMemberFunc"),
+        }
+    }
+
+    fn to_ir(self) -> Self::IrType {
+        match self {
+            ::ir_rust_proto::SpecialMemberFunc::Trivial => SpecialMemberFunc::Trivial,
+            ::ir_rust_proto::SpecialMemberFunc::NontrivialMembers => {
+                SpecialMemberFunc::NontrivialMembers
+            }
+            ::ir_rust_proto::SpecialMemberFunc::NontrivialUserDefined => {
+                SpecialMemberFunc::NontrivialUserDefined
+            }
+            ::ir_rust_proto::SpecialMemberFunc::Unavailable => SpecialMemberFunc::Unavailable,
+            _ => unreachable!(
+                "`SpecialMemberFunc` should have been validated by `ProtoToIr::validate`"
+            ),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub struct BaseClass {
     pub(crate) base_record_id: ItemId,
@@ -1724,6 +1810,28 @@ pub enum RecordType {
     Class,
 }
 
+impl ProtoToIr for ::ir_rust_proto::RecordType {
+    type IrType = RecordType;
+
+    fn validate(self) -> Result<()> {
+        match self {
+            ::ir_rust_proto::RecordType::Struct
+            | ::ir_rust_proto::RecordType::Union
+            | ::ir_rust_proto::RecordType::Class => Ok(()),
+            _ => bail!("Unspecified RecordType"),
+        }
+    }
+
+    fn to_ir(self) -> Self::IrType {
+        match self {
+            ::ir_rust_proto::RecordType::Struct => RecordType::Struct,
+            ::ir_rust_proto::RecordType::Union => RecordType::Union,
+            ::ir_rust_proto::RecordType::Class => RecordType::Class,
+            _ => unreachable!("`RecordType` should have been validated by `ProtoToIr::validate`"),
+        }
+    }
+}
+
 impl RecordType {
     fn unsupported_item_kind(&self) -> UnsupportedItemKind {
         match self {
@@ -1850,11 +1958,35 @@ pub enum TemplateSpecializationKind {
     NonSpecial,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum TraitImplPolarity {
     Negative,
     None,
     Positive,
+}
+
+impl ProtoToIr for ::ir_rust_proto::TraitImplPolarity {
+    type IrType = TraitImplPolarity;
+
+    fn validate(self) -> Result<()> {
+        match self {
+            ::ir_rust_proto::TraitImplPolarity::Negative
+            | ::ir_rust_proto::TraitImplPolarity::None
+            | ::ir_rust_proto::TraitImplPolarity::Positive => Ok(()),
+            _ => bail!("Unspecified TraitImplPolarity"),
+        }
+    }
+
+    fn to_ir(self) -> Self::IrType {
+        match self {
+            ::ir_rust_proto::TraitImplPolarity::Negative => TraitImplPolarity::Negative,
+            ::ir_rust_proto::TraitImplPolarity::None => TraitImplPolarity::None,
+            ::ir_rust_proto::TraitImplPolarity::Positive => TraitImplPolarity::Positive,
+            _ => unreachable!(
+                "`TraitImplPolarity` should have been validated by `ProtoToIr::validate`"
+            ),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
@@ -2897,6 +3029,46 @@ pub enum UnsupportedItemKind {
     // Represents: Comment, Type Map (crubit_internal_rust_type),
     // Use Mod, Hard Error in c++.
     Other,
+}
+
+impl ProtoToIr for ::ir_rust_proto::unsupported_item::Kind {
+    type IrType = UnsupportedItemKind;
+
+    fn validate(self) -> Result<()> {
+        match self {
+            ::ir_rust_proto::unsupported_item::Kind::Func
+            | ::ir_rust_proto::unsupported_item::Kind::GlobalVar
+            | ::ir_rust_proto::unsupported_item::Kind::Struct
+            | ::ir_rust_proto::unsupported_item::Kind::Union
+            | ::ir_rust_proto::unsupported_item::Kind::Class
+            | ::ir_rust_proto::unsupported_item::Kind::Enum
+            | ::ir_rust_proto::unsupported_item::Kind::TypeAlias
+            | ::ir_rust_proto::unsupported_item::Kind::Namespace
+            | ::ir_rust_proto::unsupported_item::Kind::Constructor
+            | ::ir_rust_proto::unsupported_item::Kind::Other => Ok(()),
+            _ => bail!("Unspecified UnsupportedItemKind"),
+        }
+    }
+
+    fn to_ir(self) -> Self::IrType {
+        match self {
+            ::ir_rust_proto::unsupported_item::Kind::Func => UnsupportedItemKind::Func,
+            ::ir_rust_proto::unsupported_item::Kind::GlobalVar => UnsupportedItemKind::GlobalVar,
+            ::ir_rust_proto::unsupported_item::Kind::Struct => UnsupportedItemKind::Struct,
+            ::ir_rust_proto::unsupported_item::Kind::Union => UnsupportedItemKind::Union,
+            ::ir_rust_proto::unsupported_item::Kind::Class => UnsupportedItemKind::Class,
+            ::ir_rust_proto::unsupported_item::Kind::Enum => UnsupportedItemKind::Enum,
+            ::ir_rust_proto::unsupported_item::Kind::TypeAlias => UnsupportedItemKind::TypeAlias,
+            ::ir_rust_proto::unsupported_item::Kind::Namespace => UnsupportedItemKind::Namespace,
+            ::ir_rust_proto::unsupported_item::Kind::Constructor => {
+                UnsupportedItemKind::Constructor
+            }
+            ::ir_rust_proto::unsupported_item::Kind::Other => UnsupportedItemKind::Other,
+            _ => unreachable!(
+                "`UnsupportedItemKind` should have been validated by `ProtoToIr::validate`"
+            ),
+        }
+    }
 }
 
 impl UnsupportedItemKind {
