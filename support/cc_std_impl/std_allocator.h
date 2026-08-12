@@ -57,6 +57,13 @@ inline void shared_ptr_unref(shared_weak_count* cntrl) {
   }
 }
 
+inline size_t shared_ptr_use_count(const shared_weak_count* cntrl) {
+  if (cntrl == nullptr) {
+    return 0;
+  }
+  return static_cast<size_t>(cntrl->use_count());
+}
+
 }  // namespace crubit_cc_std_internal::std_allocator
 
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_STD_ALLOCATOR_H_

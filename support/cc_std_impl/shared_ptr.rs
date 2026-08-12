@@ -98,6 +98,13 @@ impl<T: Sized> shared_ptr<T> {
         // has ownership.
         unsafe { this.ptr.as_ref() }
     }
+
+    /// Returns the number of `shared_ptr` instances managing the current object.
+    #[must_use]
+    pub fn use_count(this: &Self) -> usize {
+        // SAFETY: `this.cntrl` is a nullable pointer to a valid `std::__shared_weak_count`
+        unsafe { std_allocator::shared_ptr_use_count(this.cntrl) }
+    }
 }
 
 impl<T: Sized> Clone for shared_ptr<T> {

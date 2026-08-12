@@ -7,7 +7,7 @@ use googletest::prelude::*;
 
 #[gtest]
 fn test_layout() {
-    // Testing that the layout matches C++ shared_ptr<const int32_t>
+    // Testing that the layout matches C++ shared_ptr<int32_t>
     expect_eq!(
         core::mem::size_of::<shared_ptr<i32>>(),
         test_helpers::shared_ptr_test::get_shared_ptr_size() as usize
@@ -26,7 +26,7 @@ fn test_polymorphic_destructor() {
         let _shared_base = test_helpers::shared_ptr_test::create_virtual_base();
         expect_eq!(core::mem::size_of_val(&_shared_base), 16);
     }
-    // After dropping shared_ptr<const Base> which points to Derived, count should be 1.
+    // After dropping shared_ptr<Base> which points to Derived, count should be 1.
     expect_eq!(test_helpers::shared_ptr_test::get_derived_destructor_count(), 1);
 }
 
@@ -88,4 +88,21 @@ fn test_non_const_shared_ptr_passed_to_const_param() {
 fn test_const_shared_ptr_passed_to_const_param() {
     let shared = test_helpers::shared_ptr_test::create_shared_ptr_const();
     test_helpers::shared_ptr_test::destroy_shared_ptr_const(shared);
+}
+
+#[gtest]
+fn test_use_count_null() {
+    let null_shared = test_helpers::shared_ptr_test::create_shared_ptr_void_ptr();
+    expect_eq!(shared_ptr::use_count(&null_shared), 0);
+}
+
+#[gtest]
+fn test_use_count() {
+    let sp = test_helpers::shared_ptr_test::create_shared_ptr();
+    expect_eq!(shared_ptr::use_count(&sp), 1);
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp), 2);
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+    drop(sp_clone);
+    expect_eq!(shared_ptr::use_count(&sp), 1);
 }
