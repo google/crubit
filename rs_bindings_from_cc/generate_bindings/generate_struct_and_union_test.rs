@@ -1868,8 +1868,8 @@ fn test_supported_suppressed_field_types() -> Result<()> {
     Ok(())
 }
 
-/// By value nontrivial fields are replaced with opaque blobs, even if
-/// they're supported! For pointers, they are not replaced.
+/// By value nontrivial fields are NOT replaced with opaque blobs if they are
+/// layout-compatible and we can bypass Drop.
 #[gtest]
 fn test_supported_nontrivial_field() -> Result<()> {
     let proto = ir_proto_from_cc(
@@ -1882,16 +1882,13 @@ fn test_supported_nontrivial_field() -> Result<()> {
     let mut ir = make_test_ir(&proto)?;
     enable_supported(&mut ir);
     let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
-    // Note: inner is a supported type, so it isn't being replaced by a blob because
-    // it's unsupporter or anything.
     assert_rs_matches!(rs_api, quote! {pub struct Inner});
-    // But it _is_ being replaced by a blob!
+    // Outer has only one nontrivial field, so it bypasses Drop and Inner is not erased.
     assert_rs_matches!(
         rs_api,
         quote! {
         pub struct Outer {
-            ...
-            pub(crate) inner_field: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+            pub inner_field: crate::Inner,
             pub inner_ptr_field: *mut crate::Inner,
         }}
     );

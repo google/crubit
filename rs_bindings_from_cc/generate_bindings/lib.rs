@@ -1018,7 +1018,7 @@ fn generate_rs_api_impl_includes(
             continue;
         };
 
-        if rs_type_kind.is_bridge_type() {
+        if rs_type_kind.pass_by_value_bridges() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
                 intern!(db.interner(), "bridge.h"),
@@ -1212,7 +1212,13 @@ fn crubit_abi_type<'a>(
                 let second_abi = db.crubit_abi_type(second.as_ref().clone())?;
                 Ok(CrubitAbiType::Pair(Rc::from(first_abi), Rc::from(second_abi)))
             }
-            BridgeRsTypeKind::StdString { in_cc_std } => Ok(CrubitAbiType::StdString { in_cc_std }),
+            BridgeRsTypeKind::StdString { in_cc_std, layout_compatible } => {
+                ensure!(
+                    !layout_compatible,
+                    "layout-compatible std::string cannot be bridged by value"
+                );
+                Ok(CrubitAbiType::StdString { in_cc_std })
+            }
             BridgeRsTypeKind::Callable(callable) => {
                 generate_dyn_callable::callable_crubit_abi_type(db, &callable)
             }

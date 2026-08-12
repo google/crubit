@@ -1688,14 +1688,50 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
   }
 
   if (name == "basic_string") {
-    CcType char_type = cc_type_of_arg(0);
-    if (const auto* primitive =
-            std::get_if<CcType::Primitive>(&char_type.variant);
-        primitive != nullptr && primitive->spelling == "char") {
-      return BridgeType{BridgeType::StdString{}};
+    const clang::TemplateArgumentList& args = decl->getTemplateArgs();
+    if (args.size() >= 3) {
+      clang::QualType char_type = args[0].getAsType();
+      clang::QualType traits_type = args[1].getAsType();
+      clang::QualType allocator_type = args[2].getAsType();
+
+      auto is_char = [](clang::QualType t) {
+        if (const auto* builtin = t->getAs<clang::BuiltinType>()) {
+          return builtin->getKind() == clang::BuiltinType::Char_S ||
+                 builtin->getKind() == clang::BuiltinType::Char_U;
+        }
+        return false;
+      };
+
+      auto is_std_specialization = [](clang::QualType t, llvm::StringRef name,
+                                      auto check_arg) {
+        const auto* spec =
+            clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
+                t->getAsCXXRecordDecl());
+        if (spec == nullptr) return false;
+        const clang::CXXRecordDecl* templated =
+            spec->getSpecializedTemplate()->getTemplatedDecl();
+        if (templated == nullptr || templated->getName() != name ||
+            !templated->getDeclContext()->isStdNamespace()) {
+          return false;
+        }
+        if (spec->getTemplateArgs().size() != 1) return false;
+        return check_arg(spec->getTemplateArgs()[0]);
+      };
+
+      auto is_char_arg = [&](const clang::TemplateArgument& arg) {
+        if (arg.getKind() != clang::TemplateArgument::Type) return false;
+        return is_char(arg.getAsType());
+      };
+
+      if (is_char(char_type) &&
+          is_std_specialization(traits_type, "char_traits", is_char_arg) &&
+          is_std_specialization(allocator_type, "allocator", is_char_arg)) {
+        return BridgeType{BridgeType::StdString{}};
+      }
     }
     // HACK: restoring old behavior that hid a bug in our logic for std::wstring
     // TODO(b/468093766): Fail in the ordinary Record handling logic, not here.
+    CcType char_type = cc_type_of_arg(0);
     if (auto* error = std::get_if<FormattedError>(&char_type.variant)) {
       return absl::InternalError(error->message());
     }

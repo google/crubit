@@ -263,6 +263,32 @@ impl<'a, Crate> forward_declare::CppCoerce<*mut forward_declare::Incomplete<Stri
     }
 }
 
+impl<'a> forward_declare::CppCoerce<*const new_string> for &'a string_wrapper {
+    fn cpp_coerce(self) -> *const new_string {
+        self.owned_cpp_string.as_ptr() as *const new_string
+    }
+}
+
+impl<'a> forward_declare::CppCoerce<*mut new_string> for &'a mut string_wrapper {
+    fn cpp_coerce(self) -> *mut new_string {
+        self.owned_cpp_string.as_ptr() as *mut new_string
+    }
+}
+
+impl<'a> forward_declare::CppCoerce<&'a new_string> for &'a string_wrapper {
+    fn cpp_coerce(self) -> &'a new_string {
+        unsafe { &*(self.owned_cpp_string.as_ptr() as *const new_string) }
+    }
+}
+
+impl<'a> forward_declare::CppCoerce<core::pin::Pin<&'a mut new_string>> for &'a mut string_wrapper {
+    fn cpp_coerce(self) -> core::pin::Pin<&'a mut new_string> {
+        unsafe {
+            core::pin::Pin::new_unchecked(&mut *(self.owned_cpp_string.as_ptr() as *mut new_string))
+        }
+    }
+}
+
 /// The Crubit ABI for C++ `std::string`. It is specified as one pointer.
 ///
 /// This pointer should point to a heap allocated `std::string` object, where the pointer is the
@@ -371,6 +397,7 @@ pub unsafe extern "C" fn cpp_string_to_rust_string(input: *mut c_void, output: *
 #[crubit_annotate::cpp_layout_equivalent(cpp_type = "::std::string", include_path = "<string>")]
 #[repr(C, align(8))]
 #[allow(non_camel_case_types)]
+#[ctor::recursively_pinned(PinnedDrop)]
 pub struct new_string {
     _opaque: core::cfg_select! {
         any(target_arch = "x86_64", target_arch = "aarch64") => [u8; 24],

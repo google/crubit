@@ -99,11 +99,6 @@ extern "C" void __rust_thunk___ZN18FieldInTailPaddingC1EOS_(
   crubit::construct_at(__this, std::move(*__param_0));
 }
 
-extern "C" void __rust_thunk___ZN18FieldInTailPaddingD1Ev(
-    struct FieldInTailPadding* __this) {
-  std::destroy_at(__this);
-}
-
 extern "C" struct FieldInTailPadding*
 __rust_thunk___ZN18FieldInTailPaddingaSERKS_(
     struct FieldInTailPadding* __this,

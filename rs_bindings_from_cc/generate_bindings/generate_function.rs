@@ -451,7 +451,10 @@ fn generate_cc_operator_index_nonmut_impls<'a>(
     };
 
     let output_type: Rc<RsTypeKind> = match db.rs_type_kind(output_pointee_cc_type) {
-        Ok(rs_kind) => Rc::new(rs_kind),
+        Ok(mut rs_kind) => {
+            rs_kind.force_layout_compatible();
+            Rc::new(rs_kind)
+        }
         Err(err) => {
             bail_to_errors!(
                 errors,
@@ -508,7 +511,10 @@ fn generate_cc_operator_index_mut_impls<'a>(
     };
 
     let output_type: Rc<RsTypeKind> = match db.rs_type_kind(output_pointee_cc_type) {
-        Ok(rs_kind) => Rc::new(rs_kind),
+        Ok(mut rs_kind) => {
+            rs_kind.force_layout_compatible();
+            Rc::new(rs_kind)
+        }
         Err(err) => {
             bail_to_errors!(
                 errors,
@@ -897,7 +903,7 @@ fn api_func_shape_for_destructor<'a>(
     };
     // Note: to avoid double-destruction of the fields, they are all wrapped in
     // ManuallyDrop in this case. See `generate_record`.
-    if !record.should_implement_drop() {
+    if !db.record_should_implement_drop(record) {
         return None;
     }
     if record.is_unpin() {
@@ -1938,6 +1944,7 @@ pub fn generate_function<'a>(
     db.errors().add_category(error_report::Category::Function);
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();
+
     let (mut param_types, mut return_type) = rs_type_kinds_for_func(db, &func)?;
 
     let errors = Errors::new();
