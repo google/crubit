@@ -65,3 +65,27 @@ fn test_into_raw_parts() {
     // Re-wrap and drop to clean up reference count.
     let _rewrapped = unsafe { shared_ptr::from_raw_parts(ptr, cntrl) };
 }
+
+#[gtest]
+fn test_const_shared_ptr_created_in_cpp() {
+    let shared = test_helpers::shared_ptr_test::create_shared_ptr_const();
+    expect_eq!(*shared_ptr::try_as_ref(&shared).unwrap(), 1);
+    // Rust ignores const on T, so a shared_ptr<const int> from C++ can be passed
+    // to a C++ function taking shared_ptr<int>.
+    test_helpers::shared_ptr_test::destroy_shared_ptr(shared);
+}
+
+#[gtest]
+fn test_non_const_shared_ptr_passed_to_const_param() {
+    let shared = test_helpers::shared_ptr_test::create_shared_ptr();
+    expect_eq!(*shared_ptr::try_as_ref(&shared).unwrap(), 1);
+    // Rust ignores const on T, so a shared_ptr<int> from C++ can be passed
+    // to a C++ function taking shared_ptr<const int>.
+    test_helpers::shared_ptr_test::destroy_shared_ptr_const(shared);
+}
+
+#[gtest]
+fn test_const_shared_ptr_passed_to_const_param() {
+    let shared = test_helpers::shared_ptr_test::create_shared_ptr_const();
+    test_helpers::shared_ptr_test::destroy_shared_ptr_const(shared);
+}

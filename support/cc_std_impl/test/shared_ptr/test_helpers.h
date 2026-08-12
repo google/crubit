@@ -17,30 +17,50 @@ struct TwoWords {
   void* ptr2;
 };
 
+// Returns the size of the layout of a shared_ptr<int>.
 CRUBIT_MUST_BIND inline size_t get_shared_ptr_size() {
-  return sizeof(std::shared_ptr<const int>);
+  return sizeof(std::shared_ptr<int>);
 }
 
+// Returns the alignment of the layout of a shared_ptr<int>.
 CRUBIT_MUST_BIND inline size_t get_shared_ptr_alignment() {
-  return alignof(std::shared_ptr<const int>);
+  return alignof(std::shared_ptr<int>);
 }
 
-CRUBIT_MUST_BIND inline std::shared_ptr<const int> create_shared_ptr() {
+// Returns a new shared_ptr<int>.
+CRUBIT_MUST_BIND inline std::shared_ptr<int> create_shared_ptr() {
   return std::make_shared<int>(1);
 }
-CRUBIT_MUST_BIND inline void destroy_shared_ptr(std::shared_ptr<const int>) {}
-CRUBIT_MUST_BIND inline std::shared_ptr<const char> create_shared_ptr_char() {
+
+// Returns a new shared_ptr<const int>.
+CRUBIT_MUST_BIND inline std::shared_ptr<const int> create_shared_ptr_const() {
+  return std::make_shared<const int>(1);
+}
+
+// Consumes a shared_ptr<int>.
+CRUBIT_MUST_BIND inline void destroy_shared_ptr(std::shared_ptr<int>) {}
+
+// Consumes a shared_ptr<const int>.
+CRUBIT_MUST_BIND inline void destroy_shared_ptr_const(
+    std::shared_ptr<const int>) {}
+
+// Returns a new shared_ptr<char>.
+CRUBIT_MUST_BIND inline std::shared_ptr<char> create_shared_ptr_char() {
   return std::make_shared<char>('a');
 }
-CRUBIT_MUST_BIND inline std::shared_ptr<const int16_t>
-create_shared_ptr_short() {
+
+// Returns a new shared_ptr<int16_t>.
+CRUBIT_MUST_BIND inline std::shared_ptr<int16_t> create_shared_ptr_short() {
   return std::make_shared<int16_t>(static_cast<int16_t>(1));
 }
-CRUBIT_MUST_BIND inline std::shared_ptr<const void>
-create_shared_ptr_void_ptr() {
-  return std::shared_ptr<const void>(nullptr);
+
+// Returns an empty shared_ptr<void>.
+CRUBIT_MUST_BIND inline std::shared_ptr<void> create_shared_ptr_void_ptr() {
+  return std::shared_ptr<void>(nullptr);
 }
-CRUBIT_MUST_BIND inline std::shared_ptr<const TwoWords>
+
+// Returns a shared_ptr<TwoWords>.
+CRUBIT_MUST_BIND inline std::shared_ptr<TwoWords>
 create_shared_ptr_two_words() {
   return std::make_shared<TwoWords>();
 }
@@ -58,7 +78,7 @@ struct Derived : public Base {
   bool is_derived() const override { return true; }
 };
 
-CRUBIT_MUST_BIND inline std::shared_ptr<const Base> create_virtual_base() {
+CRUBIT_MUST_BIND inline std::shared_ptr<Base> create_virtual_base() {
   return std::make_shared<Derived>();
 }
 
@@ -77,10 +97,8 @@ struct CustomDeleter {
   }
 };
 
-CRUBIT_MUST_BIND inline std::shared_ptr<const CustomDelete>
-create_custom_delete() {
-  return std::shared_ptr<const CustomDelete>(new CustomDelete(),
-                                             CustomDeleter());
+CRUBIT_MUST_BIND inline std::shared_ptr<CustomDelete> create_custom_delete() {
+  return std::shared_ptr<CustomDelete>(new CustomDelete(), CustomDeleter());
 }
 
 CRUBIT_MUST_BIND inline int get_custom_delete_count() {

@@ -302,7 +302,7 @@ pub enum UniformReprTemplateType<'a> {
         // No lifetime here: owned by the unique_ptr
         element_type: RsTypeKind<'a>,
     },
-    /// std::shared_ptr<const T>
+    /// std::shared_ptr<T>
     StdSharedPtr {
         // No lifetime here: owned by the shared_ptr
         element_type: RsTypeKind<'a>,
@@ -384,7 +384,6 @@ impl<'a> UniformReprTemplateType<'a> {
         match template_specialization_kind {
             Some(TemplateSpecializationKind::StdSharedPtr { raw_element_type }) => {
                 let element_type_kind = type_arg(raw_element_type)?;
-                ensure!(raw_element_type.is_const(), "b/485328340: Crubit does not yet support std::shared_ptr<non-const T>, got: {}", element_type_kind.display(db));
                 ensure!(
                     element_type_kind.is_complete(),
                     "Crubit does not support std::shared_ptr<incomplete T>, got: `{}`",
