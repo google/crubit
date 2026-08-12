@@ -43,7 +43,14 @@ inline void cpp_delete(void* ptr, size_t n, size_t align) {
 
 // Newtype wrapper around `std::__shared_weak_count` because Crubit doesn't
 // bind to standard library internals nor aliases to them.
-struct shared_weak_count : std::__shared_weak_count {};
+//
+// This wrapper is a `private` subclass of `std::__shared_weak_count` to ensure
+// that Crubit doesn't generate bindings to any of its methods.
+class shared_weak_count : private std::__shared_weak_count {
+  friend void shared_ptr_ref(shared_weak_count* cntrl);
+  friend void shared_ptr_unref(shared_weak_count* cntrl);
+  friend size_t shared_ptr_use_count(const shared_weak_count* cntrl);
+};
 
 inline void shared_ptr_ref(shared_weak_count* cntrl) {
   if (cntrl != nullptr) {
