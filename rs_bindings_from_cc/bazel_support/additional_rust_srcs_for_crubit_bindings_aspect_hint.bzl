@@ -79,7 +79,8 @@ def make_additional_rust_srcs_provider(
         generated_cpp_support_deps = [],
         cc_support_deps = [],
         unstable_rust_features = [],
-        root_namespaces = []):
+        root_namespaces = [],
+        aliases = {}):
     return AdditionalRustSrcsProviderInfo(
         srcs = srcs,
         namespace_path = namespace_path,
@@ -92,9 +93,22 @@ def make_additional_rust_srcs_provider(
         cpp_srcs = cpp_srcs,
         unstable_rust_features = unstable_rust_features,
         root_namespaces = root_namespaces,
+        aliases = aliases,
     )
 
 def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
+    aliases = {}
+    for target, alias_name in ctx.attr.aliases.items():
+        # Handle two cases for aliases keys:
+        # 1. rust_library or rust_api_from_cpp target: provides CrateInfo, we resolve it to the
+        #    owner of the CrateInfo (which is the C++ target being bound).
+        # 2. cc_library target: does not always provide CrateInfo, we use its label directly.
+        if CrateInfo in target:
+            label = target[CrateInfo].owner
+        else:
+            label = target.label
+        aliases[label] = alias_name
+
     providers = [make_additional_rust_srcs_provider(
         ctx.attr.srcs,
         ctx.attr.namespace_path,
@@ -105,6 +119,7 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         ctx.attr.cc_support_deps,
         ctx.attr.unstable_rust_features,
         ctx.attr.root_namespaces,
+        aliases = aliases,
     )]
     if ctx.attr.crubit_features:
         providers.append(CrubitFeaturesInfo(crubit_features = ctx.attr.crubit_features))
@@ -154,6 +169,11 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
             mandatory = False,
             default = [],
         ),
+        "aliases": attr.label_keyed_string_dict(
+            doc = "A dictionary mapping targets (C++ or Rust) to their crate names for renaming.",
+            mandatory = False,
+            default = {},
+        ),
     },
     implementation = _additional_rust_srcs_for_crubit_bindings_impl,
     provides = [AdditionalRustSrcsProviderInfo],
@@ -171,6 +191,7 @@ def additional_rust_srcs_for_crubit_bindings(
         unstable_rust_features = [],
         crubit_features = SUPPORTED_FEATURES,
         root_namespaces = [],
+        aliases = {},
         **kwargs):
     """
     Defines an aspect hint that is used to pass extra Rust source files to `rs_bindings_from_cc` tool's `extra_rs_srcs` CLI argument.
@@ -199,6 +220,9 @@ def additional_rust_srcs_for_crubit_bindings(
         root_namespaces: List of C++ namespaces to re-export at the root of the generated Rust bindings.
         unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
         crubit_features: List of Crubit features to enable.
+        aliases: A dictionary mapping targets (C++ or Rust) to their crate names for renaming.
+            The keys can be Rust libraries, or either C++ libraries (e.g. `cc_library`) or their corresponding
+            generated Rust bindings (e.g. `rust_api_from_cpp`).
         **kwargs: Args passed through to the underlying rule (visibility, etc.).
     """
 
@@ -214,6 +238,7 @@ def additional_rust_srcs_for_crubit_bindings(
         unstable_rust_features = unstable_rust_features,
         crubit_features = crubit_features,
         root_namespaces = root_namespaces,
+        aliases = aliases,
         **kwargs
     )
 

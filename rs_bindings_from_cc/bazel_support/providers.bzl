@@ -21,6 +21,7 @@ generated Rust bindings of this C++ target.
         "unstable_rust_features": "List of unstable rustc features to enable via `#![feature(...)]`.",
         "cpp_srcs": "List of C++ source files to be concatenated to the Crubit-generated C++ source.",
         "root_namespaces": "List of C++ namespaces to re-export at the root of the generated Rust bindings.",
+        "aliases": "A label-to-string dictionary mapping targets to their crate names for renaming.",
     },
 )
 

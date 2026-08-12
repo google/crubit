@@ -160,6 +160,16 @@ def _get_additional_rust_deps(aspect_ctx):
             )
     return collections.uniq(additional_rust_deps)
 
+def _get_additional_aliases(aspect_ctx):
+    aliases = {}
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            provider = hint[AdditionalRustSrcsProviderInfo]
+            if hasattr(provider, "aliases") and provider.aliases:
+                for label, alias_name in provider.aliases.items():
+                    aliases[struct(label = label)] = alias_name
+    return aliases
+
 def _get_generated_cpp_support_deps(aspect_ctx):
     generated_cpp_support_deps = []
     for hint in aspect_ctx.rule.attr.aspect_hints:
@@ -339,7 +349,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
 
     extra_rs_srcs = []
     extra_deps = []
-    aliases = {}
+    aliases = _get_additional_aliases(ctx)
 
     generated_cpp_support_deps = _get_generated_cpp_support_deps(ctx)
 
@@ -426,7 +436,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         # crate_info.name unless overridden by `aliases`.
         for dep in all_deps:
             if RustBindingsFromCcInfo in dep:
-                aliases[dep] = crubit_encode_raw_string_as_crate_name(str(dep.label))
+                if struct(label = dep.label) not in aliases:
+                    aliases[dep] = crubit_encode_raw_string_as_crate_name(str(dep.label))
 
         # Collect dependencies of manual bindings attached to this target.
         # The Rust sources of manual bindings expect their dependencies to be
@@ -454,7 +465,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
                 name = dep.crate_info.name
                 if name_counts[name] == 1:
                     label = dep.crate_info.owner
-                    aliases[struct(label = label)] = name
+                    if struct(label = label) not in aliases:
+                        aliases[struct(label = label)] = name
 
     compilation_context = target[CcInfo].compilation_context
     if generated_cpp_support_deps:
