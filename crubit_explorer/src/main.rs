@@ -440,6 +440,7 @@ mod tests {
         cmd.arg(format!("--h-out={}", h_out.display()))
             .arg(format!("--rs-out={}", rs_out.display()))
             .arg("--crubit-support-path-format=<crubit/support/{header}>")
+            .arg("--enable-rmeta-interface=false")
             .arg("--")
             .arg(&rs_input)
             .arg("--crate-type=lib");

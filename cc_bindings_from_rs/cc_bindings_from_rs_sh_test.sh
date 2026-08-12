@@ -55,6 +55,7 @@ function test::happy_path() {
         \"--crubit-support-path-format=<crubit/support/{header}>\" \
         \"--clang-format-exe-path=${CRUBIT_CLANG_FORMAT_EXE_PATH}\" \
         \"--rustfmt-exe-path=${CRUBIT_RUSTFMT_EXE_PATH}\" \
+        --enable-rmeta-interface=false \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
@@ -140,6 +141,7 @@ function test::invalid_h_out() {
         \"--crubit-support-path-format=<crubit/support/{header}>\" \
         \"--clang-format-exe-path=${CRUBIT_CLANG_FORMAT_EXE_PATH}\" \
         \"--rustfmt-exe-path=$CRUBIT_RUSTFMT_EXE_PATH\" \
+        --enable-rmeta-interface=false \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
@@ -185,6 +187,7 @@ function test::rustc_warnings_are_silenced() {
         \"--crubit-support-path-format=<crubit/support/{header}>\" \
         \"--clang-format-exe-path=${CRUBIT_CLANG_FORMAT_EXE_PATH}\" \
         \"--rustfmt-exe-path=$CRUBIT_RUSTFMT_EXE_PATH\" \
+        --enable-rmeta-interface=false \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \

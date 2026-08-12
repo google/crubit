@@ -195,7 +195,7 @@ pub struct Cmdline {
         action = clap::ArgAction::Set,
         value_parser,
         value_name = "BOOL",
-        default_value_t = false,
+        default_value_t = true,
         default_missing_value = "true",
         num_args = 0..=1,
         require_equals = false,
@@ -620,7 +620,7 @@ mod tests {
             "--crubit-support-path-format=<crubit/support/{header}>",
         ])
         .unwrap();
-        assert_eq!(false, cmdline.enable_rmeta_interface);
+        assert_eq!(true, cmdline.enable_rmeta_interface);
     }
 
     #[test]

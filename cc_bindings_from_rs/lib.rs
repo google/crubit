@@ -444,6 +444,7 @@ mod tests {
                 "--crubit-support-path-format=<crubit/support/{header}>".to_string(),
                 format!("--clang-format-exe-path={CLANG_FORMAT_EXE_PATH}"),
                 format!("--rustfmt-exe-path={RUSTFMT_EXE_PATH}"),
+                "--enable-rmeta-interface=false".to_string(),
             ];
 
             let mut error_report_out_path = None;

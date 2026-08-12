@@ -170,6 +170,7 @@ fn run_compiler_command(
     cmd.arg(format!("--h-out={}", env.h_out_path.display()))
         .arg(format!("--rs-out={}", env.rs_out_path.display()))
         .arg("--crubit-support-path-format=<crubit/support/{header}>")
+        .arg("--enable-rmeta-interface=false")
         .arg("--crate-header=core=support/rs_std/rs_core.h")
         .arg("--crate-header=alloc=support/rs_std/rs_alloc.h")
         .arg("--crate-header=std=support/rs_std/rs_std.h")
