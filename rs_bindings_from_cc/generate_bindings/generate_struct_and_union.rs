@@ -152,9 +152,11 @@ fn get_field_rs_type_kind_for_layout<'a>(
         return Err(error.clone());
     }
 
-    if type_kind.is_bridge_type() {
-        bail!("crubit.rs/errors/bridge_field: '{}' is a bridge type, but fields must be layout compatible between Rust and C++.",
-            type_kind.display(db))
+    if !type_kind.is_layout_compatible() {
+        bail!(
+            "crubit.rs/errors/bridge_field: '{}' is not layout-compatible between Rust and C++.",
+            type_kind.display(db)
+        )
     }
 
     for target in
@@ -170,7 +172,10 @@ fn get_field_rs_type_kind_for_layout<'a>(
     // one users get.
     //
     // Users can still work around this with accessor functions.
-    if record.should_implement_drop() && !record.is_union() && needs_manually_drop(&type_kind) {
+    if db.record_should_implement_drop(record)
+        && !record.is_union()
+        && needs_manually_drop(&type_kind)
+    {
         for target in
             db.defining_target(record.id()).as_ref().into_iter().chain([record.owning_target()])
         {
@@ -365,7 +370,7 @@ fn field_definition<'a>(
         Ok(type_kind) => {
             let ty = type_kind.to_token_stream(db);
             let mut wrap_in_manually_drop = false;
-            if record.should_implement_drop() || record.is_union() {
+            if db.record_should_implement_drop(record) || record.is_union() {
                 if needs_manually_drop(&type_kind) {
                     // TODO(jeanpierreda): b/212690698 - Avoid (somewhat unergonomic)
                     // ManuallyDrop if we can ask Rust to preserve field destruction order
@@ -565,7 +570,7 @@ pub fn generate_record<'a>(
         // coherence rules: PhantomPinned isn't enough to prove to Rust that a
         // blanket impl that requires Unpin doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
         api_snippets.features |= Feature::negative_impls;
-        Some(RecursivelyPinnedAttr { pinned_drop: record.should_implement_drop() })
+        Some(RecursivelyPinnedAttr { pinned_drop: db.record_should_implement_drop(&record) })
     };
 
     // Adjust the struct to also include base class subobjects, vtables, etc.
@@ -882,7 +887,7 @@ pub fn generate_record<'a>(
         } else {
             assert_not_impls |= AssertableTrait::Copy;
         }
-        if record.should_implement_drop() {
+        if db.record_should_implement_drop(&record) {
             assert_impls |= AssertableTrait::Drop;
         } else {
             assert_not_impls |= AssertableTrait::Drop;

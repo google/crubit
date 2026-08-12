@@ -492,14 +492,12 @@ pub mod nontrivial_inline {
 /// This changes how the destructor / drop impl work -- instead of calling
 /// the destructor for NontrivialMembers, it just calls the destructors for
 /// each field.
-#[::ctor::recursively_pinned(PinnedDrop)]
+#[::ctor::recursively_pinned]
 #[cfi_encoding = "17NontrivialMembers"]
-#[repr(C, align(4))]
+#[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialMembers
 pub struct NontrivialMembers {
-    /// Reason for representing this field as a blob of bytes:
-    /// nontrivial fields would be destroyed in the wrong order
-    pub(crate) nontrivial_member: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+    pub nontrivial_member: crate::Nontrivial,
 }
 impl !Send for NontrivialMembers {}
 impl !Sync for NontrivialMembers {}
@@ -577,13 +575,6 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
     fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
         let (arg,) = args;
         <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
-    }
-}
-
-impl ::ctor::PinnedDrop for NontrivialMembers {
-    #[inline(always)]
-    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
     }
 }
 
@@ -1163,9 +1154,6 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'__unelided, crate::NontrivialMembers>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN17NontrivialMembersD1Ev<'__this>(
-            __this: ::core::pin::Pin<&'__this mut crate::NontrivialMembers>,
-        );
         pub(crate) unsafe fn __rust_thunk___ZN17NontrivialMembersaSERKS_<'__param_0, '__this>(
             __this: ::core::pin::Pin<&'__this mut crate::NontrivialMembers>,
             __param_0: &'__param_0 crate::NontrivialMembers,
@@ -1311,8 +1299,7 @@ const _: () = {
     static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
     assert!(::core::mem::size_of::<crate::NontrivialMembers>() == 4);
     assert!(::core::mem::align_of::<crate::NontrivialMembers>() == 4);
-    static_assertions::assert_impl_all!(crate::NontrivialMembers: Drop);
-    static_assertions::assert_not_impl_any!(crate::NontrivialMembers: Copy);
+    static_assertions::assert_not_impl_any!(crate::NontrivialMembers: Copy,Drop);
     assert!(::core::mem::offset_of!(crate::NontrivialMembers, nontrivial_member) == 0);
     assert!(::core::mem::size_of::<crate::NontrivialUnpin>() == 4);
     assert!(::core::mem::align_of::<crate::NontrivialUnpin>() == 4);

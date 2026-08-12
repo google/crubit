@@ -371,6 +371,7 @@ pub unsafe extern "C" fn cpp_string_to_rust_string(input: *mut c_void, output: *
 #[crubit_annotate::cpp_layout_equivalent(cpp_type = "::std::string", include_path = "<string>")]
 #[repr(C, align(8))]
 #[allow(non_camel_case_types)]
+#[ctor::recursively_pinned(PinnedDrop)]
 pub struct new_string {
     _opaque: core::cfg_select! {
         any(target_arch = "x86_64", target_arch = "aarch64") => [u8; 24],
