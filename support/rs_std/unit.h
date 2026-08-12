@@ -7,6 +7,8 @@
 #ifndef THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_UNIT_H_
 #define THIRD_PARTY_CRUBIT_SUPPORT_RS_STD_UNIT_H_
 
+#include <type_traits>
+
 namespace rs_std {
 
 // A type representing Rust's unit type `()`.
@@ -22,6 +24,10 @@ struct unit_t final {
 };
 
 inline constexpr unit_t unit{};
+
+template <typename T>
+inline constexpr bool is_unit_t_v =
+    std::is_same_v<std::remove_cvref_t<T>, unit_t>;
 
 }  // namespace rs_std
 

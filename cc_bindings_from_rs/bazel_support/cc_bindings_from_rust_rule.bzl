@@ -566,6 +566,7 @@ private_common_attrs = {
             "//support/rs_std:option",
             "//support/rs_std:result",
             "//support/rs_std:tuple",
+            "//support/rs_std:unit",
             "//support/rs_std:vec",
             "//support/rs_std:iterator_adapter",
             "//support/rs_std:dyn_erased_future_cc",
