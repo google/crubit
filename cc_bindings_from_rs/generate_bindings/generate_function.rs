@@ -803,7 +803,9 @@ fn format_trait_ref_for_cc<'tcx>(
     } else {
         let arg_tokens = trait_args
             .map(|ty_arg| {
-                Ok(db.format_ty_for_cc(ty_arg, TypeLocation::Other)?.into_tokens(&mut prereqs))
+                Ok(db
+                    .format_ty_for_cc(ty_arg, TypeLocation::TemplateArg)?
+                    .into_tokens(&mut prereqs))
             })
             .collect::<Result<Vec<_>>>()?;
         quote! { #trait_name<#(#arg_tokens),*> }
