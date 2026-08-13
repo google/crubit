@@ -117,9 +117,11 @@ static const Formula* absl_nullable mergeFormulas(
     return Bool1;
   }
 
-  if (Bool1 == nullptr || Bool2 == nullptr) return nullptr;
+  if (Bool1 == nullptr && Bool2 == nullptr) return nullptr;
 
   Arena& A = MergedEnv.arena();
+  if (Bool1 == nullptr) Bool1 = &A.makeAtomRef(A.makeAtom());
+  if (Bool2 == nullptr) Bool2 = &A.makeAtomRef(A.makeAtom());
 
   // If `Bool1` and `Bool2` is constrained to the same true / false value, that
   // can serve as the return value - this simplifies the flow condition tracked
