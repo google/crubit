@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use clap::Parser;
-use ra_ap_rustc_lexer::TokenKind;
+use parse_inline_cpp_macros::ParsedMacro;
 use std::fmt::Write;
 use std::fs;
 use std::path::PathBuf;
@@ -34,228 +34,6 @@ struct Args {
     fail_on_bindable: bool,
 }
 
-struct TokenParser<'a> {
-    tokens: &'a [ra_ap_rustc_lexer::Token],
-    rust_source: &'a str,
-    token_index: usize,
-    byte_offset: usize,
-    line: usize,
-    column: usize,
-}
-
-/// Coordinates (line/column) where the inner C++ code content begins.
-struct ExtractedBracedBody<'a> {
-    line: usize,
-    column: usize,
-    text: &'a str,
-}
-
-impl<'a> TokenParser<'a> {
-    /// Creates a new TokenParser for the given source and tokens.
-    fn new(rust_source: &'a str, tokens: &'a [ra_ap_rustc_lexer::Token]) -> Self {
-        TokenParser { tokens, rust_source, token_index: 0, byte_offset: 0, line: 1, column: 1 }
-    }
-
-    /// Returns the next token to parse.
-    fn peek(&self) -> Option<&'a ra_ap_rustc_lexer::Token> {
-        self.tokens.get(self.token_index)
-    }
-
-    fn peek_text(&self) -> &'a str {
-        if let Some(token) = self.peek() {
-            &self.rust_source[self.byte_offset..self.byte_offset + token.len as usize]
-        } else {
-            ""
-        }
-    }
-
-    fn advance(&mut self) {
-        let Some(token) = self.peek() else {
-            return;
-        };
-        let text = self.peek_text();
-        for c in text.chars() {
-            if c == '\n' {
-                self.line += 1;
-                self.column = 1;
-            } else {
-                self.column += 1;
-            }
-        }
-        self.byte_offset += token.len as usize;
-        self.token_index += 1;
-    }
-
-    fn eat_whitespace(&mut self) {
-        while let Some(t) = self.peek() {
-            if t.kind == TokenKind::Whitespace {
-                self.advance();
-            } else {
-                break;
-            }
-        }
-    }
-
-    fn eat_bang(&mut self) -> bool {
-        if matches!(self.peek(), Some(t) if t.kind == TokenKind::Bang) {
-            self.advance();
-            return true;
-        }
-        false
-    }
-
-    fn token_text_at(&self, idx: usize) -> &'a str {
-        if idx >= self.tokens.len() {
-            return "";
-        }
-        let mut offset = self.byte_offset;
-        for i in self.token_index..idx {
-            offset += self.tokens[i].len as usize;
-        }
-        let len = self.tokens[idx].len as usize;
-        &self.rust_source[offset..offset + len]
-    }
-
-    fn is_colon_colon_at(&self, idx: usize) -> bool {
-        idx + 1 < self.tokens.len()
-            && self.tokens[idx].kind == TokenKind::Colon
-            && self.tokens[idx + 1].kind == TokenKind::Colon
-    }
-
-    /// Returns the number of tokens in the macro path if the tokens starting at `self.token_index`
-    /// form a macro invocation path ending in `macro_name!`, such as `inline_cpp!` or
-    /// `::crubit_support::inline_cpp!` or `crubit_support::inline_cpp!`.
-    fn match_macro_invocation_path(&self, macro_name: &str) -> Option<usize> {
-        let mut idx = self.token_index;
-        if idx >= self.tokens.len() {
-            return None;
-        }
-
-        // Optional leading `::`
-        if self.is_colon_colon_at(idx) {
-            idx += 2;
-        }
-
-        while idx < self.tokens.len() {
-            if self.tokens[idx].kind != TokenKind::Ident {
-                return None;
-            }
-            let is_target_macro = self.token_text_at(idx) == macro_name;
-            // Check what follows this Ident
-            let mut next_idx = idx + 1;
-            while next_idx < self.tokens.len()
-                && self.tokens[next_idx].kind == TokenKind::Whitespace
-            {
-                next_idx += 1;
-            }
-            if is_target_macro
-                && next_idx < self.tokens.len()
-                && self.tokens[next_idx].kind == TokenKind::Bang
-            {
-                // Found path ending in `macro_name!`
-                return Some(idx + 1 - self.token_index);
-            }
-            // Otherwise, it must be followed by `::` to continue the path
-            if self.is_colon_colon_at(idx + 1) {
-                idx += 3;
-            } else {
-                return None;
-            }
-        }
-        None
-    }
-
-    fn eat_braced_body(&mut self, file_name: &str) -> Result<ExtractedBracedBody<'a>, String> {
-        let start_line = self.line;
-        if let Some(t) = self.peek() {
-            if t.kind != TokenKind::OpenBrace {
-                return Err(format!("Expected '{{' after '!' at {}:{}", file_name, start_line));
-            }
-        } else {
-            return Err(format!("Expected '{{' after '!' at {}:{}", file_name, start_line));
-        }
-
-        self.advance();
-
-        let body_start_line = self.line;
-        let body_start_col = self.column;
-        let body_start_pos = self.byte_offset;
-        let mut depth = 1;
-
-        while let Some(t) = self.peek() {
-            let body_end_pos = self.byte_offset;
-            self.advance();
-
-            if t.kind == TokenKind::OpenBrace {
-                depth += 1;
-            } else if t.kind == TokenKind::CloseBrace {
-                depth -= 1;
-                if depth == 0 {
-                    return Ok(ExtractedBracedBody {
-                        line: body_start_line,
-                        column: body_start_col,
-                        text: &self.rust_source[body_start_pos..body_end_pos],
-                    });
-                }
-            }
-        }
-
-        Err(format!(
-            "Unmatched delimiter starting at {}:{}: Context around open brace:\n{}",
-            file_name,
-            start_line,
-            self.rust_source
-                .lines()
-                .skip(start_line.saturating_sub(3))
-                .take(5)
-                .collect::<Vec<_>>()
-                .join("\n")
-        ))
-    }
-}
-
-/// Coordinates (line/column) where the outer macro token begins (e.g. `inline_cpp`).
-struct ExtractedMacro<'a> {
-    macro_line: usize,
-    macro_col: usize,
-    body: ExtractedBracedBody<'a>,
-}
-
-fn extract_macro_body<'a>(
-    parser: &mut TokenParser<'a>,
-    macro_names: &[&str],
-    file_name: &str,
-) -> Result<Option<ExtractedMacro<'a>>, String> {
-    let mut matched_len = None;
-    for macro_name in macro_names {
-        if let Some(path_token_count) = parser.match_macro_invocation_path(macro_name) {
-            matched_len = Some(path_token_count);
-            break;
-        }
-    }
-    let Some(path_token_count) = matched_len else {
-        parser.advance();
-        return Ok(None);
-    };
-
-    let macro_line = parser.line;
-    let macro_col = parser.column;
-
-    for _ in 0..path_token_count {
-        parser.advance();
-    }
-    parser.eat_whitespace();
-
-    if !parser.eat_bang() {
-        return Ok(None);
-    }
-
-    parser.eat_whitespace();
-
-    let body = parser.eat_braced_body(file_name)?;
-    Ok(Some(ExtractedMacro { macro_line, macro_col, body }))
-}
-
 pub fn lint_bindable_cpp(body_text: &str, file_name: &str, line: usize) -> Vec<String> {
     let mut warnings = Vec::new();
     let trimmed = body_text.trim();
@@ -273,39 +51,27 @@ pub fn lint_bindable_cpp(body_text: &str, file_name: &str, line: usize) -> Vec<S
     warnings
 }
 
-pub fn extract_global_cpp(
-    rust_source: &str,
-    tokens: &[ra_ap_rustc_lexer::Token],
-    file_name: &str,
-    custom_macro_name: Option<&str>,
-) -> Result<(String, Vec<String>), String> {
+pub fn extract_global_cpp(macros: &[ParsedMacro<'_>], file_name: &str) -> (String, Vec<String>) {
     let mut extracted = String::new();
     let mut lint_warnings = Vec::new();
-    let mut parser = TokenParser::new(rust_source, tokens);
 
-    let mut macro_names = vec!["global_cpp", "DO_NOT_SUBMIT_CPP_DECL", "cpp_decl"]; // NOLINT
-    if let Some(c) = custom_macro_name
-        && !c.is_empty()
-        && !macro_names.contains(&c)
-    {
-        macro_names.push(c);
-    }
-
-    while parser.peek().is_some() {
-        let Some(block) = extract_macro_body(&mut parser, &macro_names, file_name)? else {
+    for m in macros {
+        if m.kind != parse_inline_cpp_macros::MacroKind::GlobalCpp
+            && m.kind != parse_inline_cpp_macros::MacroKind::DoNotSubmitCppDecl
+        {
             continue;
-        };
-        let padding = " ".repeat(block.body.column - 1);
+        }
+        let padding = " ".repeat(m.body_col.saturating_sub(1));
         let _ = write!(
             extracted,
             "#line {} \"{}\"\n{}{}\n",
-            block.body.line, file_name, padding, block.body.text
+            m.body_line, file_name, padding, m.body_text
         );
-        let warnings = lint_bindable_cpp(block.body.text, file_name, block.body.line);
+        let warnings = lint_bindable_cpp(m.body_text, file_name, m.body_line);
         lint_warnings.extend(warnings);
     }
 
-    Ok((extracted, lint_warnings))
+    (extracted, lint_warnings)
 }
 
 struct LexToken<'a> {
@@ -388,33 +154,26 @@ fn validate_inline_cpp_syntax(body_text: &str) -> Result<(), String> {
 }
 
 pub fn extract_inline_cpp(
-    rust_source: &str,
-    tokens: &[ra_ap_rustc_lexer::Token],
+    macros: &[ParsedMacro<'_>],
     file_name: &str,
     target: &str,
 ) -> Result<String, String> {
     let mut extracted = String::new();
-    let mut parser = TokenParser::new(rust_source, tokens);
 
-    while parser.peek().is_some() {
-        let Some(block) = extract_macro_body(&mut parser, &["inline_cpp"], file_name)? else {
+    for m in macros {
+        if m.kind != parse_inline_cpp_macros::MacroKind::InlineCpp {
             continue;
-        };
-        let thunk_name = inline_cpp_utils::compute_thunk_name(
-            target,
-            file_name,
-            block.macro_line,
-            block.macro_col,
-        );
-        validate_inline_cpp_syntax(block.body.text)
-            .map_err(|e| format!("{} at {}:{}", e, file_name, block.macro_line))?;
-        // Prefix thunk signature with spaces to map original column offsets in Clang.
-        let padding = " ".repeat(block.body.column - 1);
+        }
+        let thunk_name =
+            inline_cpp_utils::compute_thunk_name(target, file_name, m.macro_line, m.macro_col);
+        validate_inline_cpp_syntax(m.body_text)
+            .map_err(|e| format!("{} at {}:{}", e, file_name, m.macro_line))?;
+        let padding = " ".repeat(m.body_col.saturating_sub(1));
 
         let _ = write!(
             extracted,
             "inline auto {}\n#line {} \"{}\"\n{}{}\n\n",
-            thunk_name, block.body.line, file_name, padding, block.body.text
+            thunk_name, m.body_line, file_name, padding, m.body_text
         );
     }
 
@@ -425,8 +184,6 @@ fn main() {
     let args = Args::parse();
 
     let mut all_cpp_snippets = String::new();
-    let custom_macro =
-        if args.macro_name.is_empty() { None } else { Some(args.macro_name.as_str()) };
     let mut total_warnings = Vec::new();
 
     for src in &args.srcs {
@@ -435,20 +192,16 @@ fn main() {
             process::exit(1);
         });
         let file_name = src.display().to_string();
-        let tokens =
-            ra_ap_rustc_lexer::tokenize(&content, ra_ap_rustc_lexer::FrontmatterAllowed::No);
-        let token_list = tokens.collect::<Vec<_>>();
-
-        let (scraped_global, warnings) =
-            extract_global_cpp(&content, &token_list, &file_name, custom_macro).unwrap_or_else(
-                |e| {
-                    eprintln!("Extraction error: {}", e);
-                    process::exit(1);
-                },
-            );
-        total_warnings.extend(warnings);
-        let scraped_inline = extract_inline_cpp(&content, &token_list, &file_name, &args.target)
+        let macros = parse_inline_cpp_macros::parse_inline_cpp_macros(&content, &file_name)
             .unwrap_or_else(|e| {
+                eprintln!("Extraction error: {}", e);
+                process::exit(1);
+            });
+
+        let (scraped_global, warnings) = extract_global_cpp(&macros, &file_name);
+        total_warnings.extend(warnings);
+        let scraped_inline =
+            extract_inline_cpp(&macros, &file_name, &args.target).unwrap_or_else(|e| {
                 eprintln!("Extraction error: {}", e);
                 process::exit(1);
             });
@@ -484,16 +237,15 @@ mod tests {
         use super::*;
     use googletest::prelude::*;
 
-    fn tokenize(rust_source: &str) -> Vec<ra_ap_rustc_lexer::Token> {
-        ra_ap_rustc_lexer::tokenize(rust_source, ra_ap_rustc_lexer::FrontmatterAllowed::No)
-            .collect()
+    fn parse<'a>(rust_source: &'a str, file_name: &str) -> Vec<ParsedMacro<'a>> {
+        parse_inline_cpp_macros::parse_inline_cpp_macros(rust_source, file_name).unwrap()
     }
 
     #[gtest]
     fn test_basic_extract() {
         let input = "global_cpp! { int x; }";
         let expected = "#line 1 \"test.rs\"\n              int x; \n";
-        let (extracted, _) = extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap();
+        let (extracted, _) = extract_global_cpp(&parse(input, "test.rs"), "test.rs");
         expect_eq!(extracted, expected);
     }
 
@@ -501,8 +253,7 @@ mod tests {
     fn test_do_not_submit_cpp_decl_extract() {
         let input = "DO_NOT_SUBMIT_CPP_DECL! { template <typename T> void Foo(T t); }"; // NOLINT
         let expected = "#line 1 \"test.rs\"\n                          template <typename T> void Foo(T t); \n";
-        let (extracted, warnings) =
-            extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap();
+        let (extracted, warnings) = extract_global_cpp(&parse(input, "test.rs"), "test.rs");
         expect_eq!(extracted, expected);
         expect_that!(warnings, is_empty());
     }
@@ -510,7 +261,7 @@ mod tests {
     #[gtest]
     fn test_lint_bindable_cpp_warning() {
         let input = "DO_NOT_SUBMIT_CPP_DECL! { int Add(int a, int b); }"; // NOLINT
-        let (_, warnings) = extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap();
+        let (_, warnings) = extract_global_cpp(&parse(input, "test.rs"), "test.rs");
         expect_that!(warnings.len(), eq(1));
         expect_true!(warnings[0].contains("natively bindable"));
     }
@@ -519,7 +270,7 @@ mod tests {
     fn test_nested_braces() {
         let input = "global_cpp! { namespace foo { int x; } }";
         let expected = "#line 1 \"test.rs\"\n              namespace foo { int x; } \n";
-        let (extracted, _) = extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap();
+        let (extracted, _) = extract_global_cpp(&parse(input, "test.rs"), "test.rs");
         expect_eq!(extracted, expected);
     }
 
@@ -527,7 +278,7 @@ mod tests {
     fn test_multiple_blocks() {
         let input = "global_cpp! { int x; } some rust code global_cpp! { int y; }";
         let expected = "#line 1 \"test.rs\"\n              int x; \n#line 1 \"test.rs\"\n                                                    int y; \n";
-        let (extracted, _) = extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap();
+        let (extracted, _) = extract_global_cpp(&parse(input, "test.rs"), "test.rs");
         expect_eq!(extracted, expected);
     }
 
@@ -555,10 +306,7 @@ mod tests {
             "        template class MyTemplate<int>;\n",
             "    }\n\n"
         );
-        expect_eq!(
-            extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap().0,
-            expected
-        );
+        expect_eq!(extract_global_cpp(&parse(input, "test.rs"), "test.rs").0, expected);
     }
 
     #[gtest]
@@ -566,36 +314,14 @@ mod tests {
         let input = "global_cpp! { namespace outer::inner { int x = 10; } }";
         let expected =
             "#line 1 \"test.rs\"\n              namespace outer::inner { int x = 10; } \n";
-        expect_eq!(
-            extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap().0,
-            expected
-        );
+        expect_eq!(extract_global_cpp(&parse(input, "test.rs"), "test.rs").0, expected);
     }
 
     #[gtest]
     fn test_extract_global_cpp_multiline_line_number_mapping() {
         let input = "line 1\nline 2\nglobal_cpp! {\n    int x = 42;\n}\n";
         let expected = "#line 3 \"test.rs\"\n             \n    int x = 42;\n\n";
-        expect_eq!(
-            extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap().0,
-            expected
-        );
-    }
-
-    #[gtest]
-    fn test_unclosed_block() {
-        let input = "global_cpp! { int x;";
-        let err = extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap_err();
-        let expected_err = "Unmatched delimiter starting at test.rs:1: Context around open brace:\nglobal_cpp! { int x;";
-        expect_eq!(err, expected_err);
-    }
-
-    #[gtest]
-    fn test_unclosed_block_with_context() {
-        let input = "line 1\nline 2\nline 3\nglobal_cpp! { int x;\nline 5\nline 6\nline 7";
-        let err = extract_global_cpp(input, &tokenize(input), "test.rs", None).unwrap_err();
-        let expected_err = "Unmatched delimiter starting at test.rs:4: Context around open brace:\nline 2\nline 3\nglobal_cpp! { int x;\nline 5\nline 6";
-        expect_eq!(err, expected_err);
+        expect_eq!(extract_global_cpp(&parse(input, "test.rs"), "test.rs").0, expected);
     }
 
     #[gtest]
@@ -609,7 +335,7 @@ mod tests {
             thunk_name
         );
         expect_eq!(
-            extract_inline_cpp(input, &tokenize(input), file_name, target).unwrap(),
+            extract_inline_cpp(&parse(input, file_name), file_name, target).unwrap(),
             expected_thunk
         );
     }
@@ -629,7 +355,7 @@ mod tests {
             thunk_name1, thunk_name2
         );
         expect_eq!(
-            extract_inline_cpp(input, &tokenize(input), file_name, target).unwrap(),
+            extract_inline_cpp(&parse(input, file_name), file_name, target).unwrap(),
             expected
         );
     }
@@ -645,7 +371,7 @@ mod tests {
             thunk_name
         );
         expect_eq!(
-            extract_inline_cpp(input, &tokenize(input), file_name, target).unwrap(),
+            extract_inline_cpp(&parse(input, file_name), file_name, target).unwrap(),
             expected
         );
     }
@@ -661,7 +387,7 @@ mod tests {
             thunk_name
         );
         expect_eq!(
-            extract_inline_cpp(input, &tokenize(input), file_name, target).unwrap(),
+            extract_inline_cpp(&parse(input, file_name), file_name, target).unwrap(),
             expected
         );
     }
@@ -677,7 +403,7 @@ mod tests {
             thunk_name
         );
         expect_eq!(
-            extract_inline_cpp(input, &tokenize(input), file_name, target).unwrap(),
+            extract_inline_cpp(&parse(input, file_name), file_name, target).unwrap(),
             expected
         );
     }
@@ -693,7 +419,7 @@ mod tests {
             thunk_name
         );
         expect_eq!(
-            extract_inline_cpp(input, &tokenize(input), file_name, target).unwrap(),
+            extract_inline_cpp(&parse(input, file_name), file_name, target).unwrap(),
             expected
         );
     }
@@ -710,7 +436,7 @@ mod tests {
             thunk_name
         );
         expect_eq!(
-            extract_inline_cpp(input, &tokenize(input), file_name, target).unwrap(),
+            extract_inline_cpp(&parse(input, file_name), file_name, target).unwrap(),
             expected
         );
     }
