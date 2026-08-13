@@ -71,6 +71,7 @@ golden_test(
     name = "cpp_enums_golden_test",
     basename = "cpp_enums",
     golden_h = "cpp_enums_cc_api.h",
+    platforms = ["android"],
     rust_library = "cpp_enums",
 )
 

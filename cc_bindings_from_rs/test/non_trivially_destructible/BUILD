@@ -37,6 +37,7 @@ golden_test(
     basename = "non_trivially_destructible",
     golden_h = "non_trivially_destructible_cc_api.h",
     golden_rs = "non_trivially_destructible_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "non_trivially_destructible",
 )
 

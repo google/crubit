@@ -37,6 +37,7 @@ golden_test(
     basename = "struct_with_conflicting_fields_and_member_functions",
     golden_h = "struct_with_conflicting_fields_and_member_functions_cc_api.h",
     golden_rs = "struct_with_conflicting_fields_and_member_functions_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "struct_with_conflicting_fields_and_member_functions",
 )
 

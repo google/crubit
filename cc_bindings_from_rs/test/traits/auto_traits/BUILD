@@ -24,5 +24,6 @@ golden_test(
     basename = "send_sync_types",
     golden_h = "send_sync_types_cc_api.h",
     golden_rs = "send_sync_types_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "send_sync_types",
 )

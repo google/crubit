@@ -44,6 +44,7 @@ golden_test(
     basename = "trait_definition",
     golden_h = "trait_definition_cc_api.h",
     golden_rs = "trait_definition_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "trait_definition",
 )
 
