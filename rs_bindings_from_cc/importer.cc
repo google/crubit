@@ -2549,7 +2549,7 @@ clang::TypedefNameDecl* Importer::GetTemplateSpecializationAlias(
         // un-allowlist this once we figure out why.
         // TODO(b/485041750): This doesn't work for std::string because the
         // wrapper type expects to use the original C++ type name, not the
-        // version produced here.
+        // version produced here
         std::string qualified_name =
             typedef_decl->getDecl()->getQualifiedNameAsString();
         if (qualified_name != "std::string_view" &&
