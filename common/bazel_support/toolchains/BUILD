@@ -81,7 +81,6 @@ _NON_PROD_PLATFORMS = {
 
 # rs_bindings_from_cc
 # ====================
-# This direction is currently only available for prod platforms.
 
 [[
     toolchain(
@@ -94,6 +93,18 @@ _NON_PROD_PLATFORMS = {
         toolchain_type = "//rs_bindings_from_cc/bazel_support:toolchain_type",
     ),
 ] for platform in _PROD_PLATFORMS]
+
+[[
+    toolchain(
+        name = "rs_bindings_from_cc_on_demand_%s" % platform,
+        target_compatible_with = _NON_PROD_PLATFORMS[platform],
+        target_settings = [
+            "//common/bazel_support:use_actual_rs_bindings_from_cc_setting",
+        ],
+        toolchain = "//common/bazel_support:rs_bindings_from_cc_on_demand_impl",
+        toolchain_type = "//rs_bindings_from_cc/bazel_support:toolchain_type",
+    ),
+] for platform in _NON_PROD_PLATFORMS]
 
 toolchain(
     name = "rs_bindings_from_cc_fake",
