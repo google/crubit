@@ -903,6 +903,18 @@ impl<'pb> Operator<'pb> {
     }
 }
 
+impl<'pb> ProtoToIr for ::ir_rust_proto::OperatorView<'pb> {
+    type IrType = Operator<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.name().validate()
+    }
+
+    fn to_ir(self) -> Operator<'pb> {
+        Operator { name: self.name().to_ir() }
+    }
+}
+
 impl Debug for Operator<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "\"{}\"", self.cc_name())
@@ -942,13 +954,57 @@ impl ToTokens for LifetimeId {
 }
 pub use bazel_label::BazelLabel;
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub enum UnqualifiedIdentifier<'pb> {
     Identifier(Identifier<'pb>),
     Operator(Operator<'pb>),
     Constructor,
     Destructor,
     ConversionOperator,
+}
+
+impl<'pb> ProtoToIr for ::ir_rust_proto::UnqualifiedIdentifierView<'pb> {
+    type IrType = UnqualifiedIdentifier<'pb>;
+
+    fn validate(self) -> Result<()> {
+        match self.identifier() {
+            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Ident(id) => id.validate(),
+            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Oper(op) => op.validate(),
+            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::SpecialName(sn) => match sn {
+                ::ir_rust_proto::SpecialName::Constructor
+                | ::ir_rust_proto::SpecialName::Destructor => Ok(()),
+                _ => bail!("Unspecified SpecialName"),
+            },
+            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::ConversionOperator(_) => {
+                Ok(())
+            }
+            _ => bail!("unmapped IdentifierOneof: {:?}", self.identifier()),
+        }
+    }
+
+    fn to_ir(self) -> UnqualifiedIdentifier<'pb> {
+        match self.identifier() {
+            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Ident(id) => {
+                UnqualifiedIdentifier::Identifier(id.to_ir())
+            }
+            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Oper(op) => {
+                UnqualifiedIdentifier::Operator(op.to_ir())
+            }
+            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::SpecialName(sn) => match sn {
+                ::ir_rust_proto::SpecialName::Constructor => UnqualifiedIdentifier::Constructor,
+                ::ir_rust_proto::SpecialName::Destructor => UnqualifiedIdentifier::Destructor,
+                _ => unreachable!(
+                    "`SpecialName` should have been validated by `UnqualifiedIdentifierView::validate`"
+                ),
+            },
+            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::ConversionOperator(_) => {
+                UnqualifiedIdentifier::ConversionOperator
+            }
+            _ => unreachable!(
+                "`IdentifierOneof` should have been validated by `UnqualifiedIdentifierView::validate`"
+            ),
+        }
+    }
 }
 
 impl<'pb> UnqualifiedIdentifier<'pb> {
@@ -1220,8 +1276,8 @@ impl<'pb> ProtoToIr for FuncView<'pb> {
     type IrType = Func<'pb>;
 
     fn validate(self) -> Result<()> {
-        let _ = UnqualifiedIdentifier::try_from(self.cc_name())?;
-        let _ = UnqualifiedIdentifier::try_from(self.rs_name())?;
+        self.cc_name().validate()?;
+        self.rs_name().validate()?;
         self.unique_name().validate()?;
         self.owning_target().validate()?;
         self.mangled_name().validate()?;
@@ -1249,10 +1305,8 @@ impl<'pb> ProtoToIr for FuncView<'pb> {
     }
 
     fn to_ir(self) -> Func<'pb> {
-        let cc_name = UnqualifiedIdentifier::try_from(self.cc_name())
-            .expect("`cc_name` should have been validated by `FuncView::validate`");
-        let rs_name = UnqualifiedIdentifier::try_from(self.rs_name())
-            .expect("`rs_name` should have been validated by `FuncView::validate`");
+        let cc_name = self.cc_name().to_ir();
+        let rs_name = self.rs_name().to_ir();
         let owning_target = BazelLabel::from(self.owning_target().to_ir());
         let return_type = CcType::try_from(self.return_type())
             .expect("`return_type` should have been validated by `FuncView::validate`");
@@ -3115,6 +3169,22 @@ pub struct FormattedError {
     pub message: Rc<str>,
 }
 
+impl<'pb> ProtoToIr for ::ir_rust_proto::FormattedErrorView<'pb> {
+    type IrType = FormattedError;
+
+    fn validate(self) -> Result<()> {
+        self.fmt().validate()?;
+        self.message().validate()
+    }
+
+    fn to_ir(self) -> FormattedError {
+        FormattedError {
+            fmt: Rc::from(self.fmt().to_ir()),
+            message: Rc::from(self.message().to_ir()),
+        }
+    }
+}
+
 /// Kind is used to indicate which item would cannot be wrapped.
 /// Need to be synced with UnsupportedItem::Kind in ir.h.
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
@@ -3212,6 +3282,24 @@ impl<'pb> UnsupportedItemPath<'pb> {
     }
 }
 
+impl<'pb> ProtoToIr for ::ir_rust_proto::unsupported_item::PathView<'pb> {
+    type IrType = UnsupportedItemPath<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.ident().validate()
+    }
+
+    fn to_ir(self) -> UnsupportedItemPath<'pb> {
+        UnsupportedItemPath {
+            ident: self.ident().to_ir(),
+            enclosing_item_id: self
+                .enclosing_item_id_opt()
+                .into_option()
+                .map(|id| ItemId(id as usize)),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct UnsupportedItem<'pb> {
     pub(crate) name: Rc<str>,
@@ -3224,6 +3312,53 @@ pub struct UnsupportedItem<'pb> {
     pub(crate) must_bind: bool,
     pub(crate) defining_target: Option<BazelLabel>,
     pub(crate) inline_cpp_source_text: Option<Rc<str>>,
+}
+
+impl<'pb> ProtoToIr for ::ir_rust_proto::UnsupportedItemView<'pb> {
+    type IrType = UnsupportedItem<'pb>;
+
+    fn validate(self) -> Result<()> {
+        self.name().validate()?;
+        self.unique_name_opt().into_option().validate()?;
+        self.kind().validate()?;
+        if let Some(path) = self.path_opt().into_option() {
+            path.validate()?;
+        }
+        for e in self.errors().iter() {
+            e.validate()?;
+        }
+        self.source_loc_opt().into_option().validate()?;
+        self.defining_target_opt().into_option().validate()?;
+        self.inline_cpp_source_text_opt().into_option().validate()
+    }
+
+    fn to_ir(self) -> UnsupportedItem<'pb> {
+        let name = Rc::from(self.name().to_ir());
+        let unique_name = self.unique_name_opt().into_option().to_ir();
+        let kind = self.kind().to_ir();
+        let path = self.path_opt().into_option().map(|p| p.to_ir());
+        let errors = self.errors().iter().map(|e| Rc::new(e.to_ir())).collect();
+        let source_loc = self.source_loc_opt().into_option().to_ir();
+        let id = ItemId(self.id() as usize);
+        let must_bind = self.must_bind();
+        let defining_target =
+            self.defining_target_opt().into_option().to_ir().map(BazelLabel::from);
+        let inline_cpp_source_text =
+            self.inline_cpp_source_text_opt().into_option().to_ir().map(Rc::from);
+
+        UnsupportedItem {
+            name,
+            unique_name,
+            kind,
+            path,
+            errors,
+            source_loc,
+            id,
+            must_bind,
+            defining_target,
+            inline_cpp_source_text,
+        }
+    }
 }
 
 derive_debug_partialeq_eq_hash! {

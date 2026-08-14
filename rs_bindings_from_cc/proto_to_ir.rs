@@ -125,43 +125,27 @@ impl TryFrom<::ir_rust_proto::CcTypeView<'_>> for CcType {
     }
 }
 
-impl TryFrom<::ir_rust_proto::FormattedErrorView<'_>> for FormattedError {
+impl<'pb> TryFrom<::ir_rust_proto::FormattedErrorView<'pb>> for FormattedError {
     type Error = Error;
-    fn try_from(proto: ::ir_rust_proto::FormattedErrorView<'_>) -> Result<Self> {
-        Ok(FormattedError {
-            fmt: Rc::from(proto.fmt().to_str()?),
-            message: Rc::from(proto.message().to_str()?),
-        })
+    fn try_from(proto: ::ir_rust_proto::FormattedErrorView<'pb>) -> Result<Self> {
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 
 impl<'pb> TryFrom<::ir_rust_proto::UnqualifiedIdentifierView<'pb>> for UnqualifiedIdentifier<'pb> {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::UnqualifiedIdentifierView<'pb>) -> Result<Self> {
-        match proto.identifier() {
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Ident(id) => {
-                Ok(UnqualifiedIdentifier::Identifier(Identifier::try_from(id)?))
-            }
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::Oper(op) => {
-                Ok(UnqualifiedIdentifier::Operator(Operator::try_from(op)?))
-            }
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::SpecialName(sn) => match sn {
-                ::ir_rust_proto::SpecialName::Constructor => Ok(UnqualifiedIdentifier::Constructor),
-                ::ir_rust_proto::SpecialName::Destructor => Ok(UnqualifiedIdentifier::Destructor),
-                _ => bail!("Unspecified SpecialName"),
-            },
-            ::ir_rust_proto::unqualified_identifier::IdentifierOneof::ConversionOperator(_) => {
-                Ok(UnqualifiedIdentifier::ConversionOperator)
-            }
-            _ => bail!("unmapped IdentifierOneof: {:?}", proto.identifier()),
-        }
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 
 impl<'pb> TryFrom<::ir_rust_proto::OperatorView<'pb>> for Operator<'pb> {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::OperatorView<'pb>) -> Result<Self> {
-        Ok(Operator { name: proto.name().to_str()? })
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 
@@ -471,36 +455,16 @@ impl TryFrom<::ir_rust_proto::unsupported_item::Kind> for UnsupportedItemKind {
 impl<'pb> TryFrom<::ir_rust_proto::unsupported_item::PathView<'pb>> for UnsupportedItemPath<'pb> {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::unsupported_item::PathView<'pb>) -> Result<Self> {
-        Ok(UnsupportedItemPath {
-            ident: UnqualifiedIdentifier::try_from(proto.ident())?,
-            enclosing_item_id: Into::<Option<i64>>::into(proto.enclosing_item_id_opt())
-                .map(|id| ItemId(id as usize)),
-        })
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 
 impl<'pb> TryFrom<::ir_rust_proto::UnsupportedItemView<'pb>> for UnsupportedItem<'pb> {
     type Error = Error;
     fn try_from(proto: ::ir_rust_proto::UnsupportedItemView<'pb>) -> Result<Self> {
-        let path =
-            proto.has_path().then(|| UnsupportedItemPath::try_from(proto.path())).transpose()?;
-
-        Ok(UnsupportedItem {
-            name: Rc::from(proto.name().to_str()?),
-            unique_name: opt_str_to_str(proto.unique_name_opt())?,
-            kind: UnsupportedItemKind::try_from(proto.kind())?,
-            path,
-            errors: proto
-                .errors()
-                .iter()
-                .map(|e| FormattedError::try_from(e).map(Rc::new))
-                .try_collect()?,
-            source_loc: opt_str_to_str(proto.source_loc_opt())?,
-            id: ItemId(proto.id() as usize),
-            must_bind: proto.must_bind(),
-            defining_target: opt_str_to_str(proto.defining_target_opt())?.map(BazelLabel::from),
-            inline_cpp_source_text: opt_str_to_rc(proto.inline_cpp_source_text_opt())?,
-        })
+        proto.validate()?;
+        Ok(proto.to_ir())
     }
 }
 
