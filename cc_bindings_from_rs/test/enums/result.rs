@@ -133,11 +133,21 @@ pub fn return_result_by_value() -> Result<u8, u8> {
 }
 
 pub struct ResultWithSizeTypes {
-    // b/491106325 - We expect these not to get bindings.
     pub uval_in_ok: Result<usize, u8>,
     pub uval_in_err: Result<u8, usize>,
     pub ival_in_ok: Result<isize, i8>,
     pub ival_in_err: Result<i8, isize>,
+}
+
+impl ResultWithSizeTypes {
+    pub fn new() -> Self {
+        ResultWithSizeTypes {
+            uval_in_ok: Ok(42),
+            uval_in_err: Err(99),
+            ival_in_ok: Ok(-42),
+            ival_in_err: Err(-99),
+        }
+    }
 }
 
 // Replicate failure around pointer types from zlib_rs.

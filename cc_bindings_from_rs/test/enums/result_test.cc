@@ -108,4 +108,16 @@ TEST(ResultTest, ReturnResultByValue) {
   EXPECT_EQ(res.value(), 1);
 }
 
+TEST(ResultTest, ResultWithSizeTypes) {
+  auto s = result::ResultWithSizeTypes::new_();
+  EXPECT_TRUE(s.uval_in_ok.has_value());
+  EXPECT_EQ(s.uval_in_ok.value(), rs_std::usize(42));
+  EXPECT_FALSE(s.uval_in_err.has_value());
+  EXPECT_EQ(s.uval_in_err.error(), rs_std::usize(99));
+  EXPECT_TRUE(s.ival_in_ok.has_value());
+  EXPECT_EQ(s.ival_in_ok.value(), rs_std::isize(-42));
+  EXPECT_FALSE(s.ival_in_err.has_value());
+  EXPECT_EQ(s.ival_in_err.error(), rs_std::isize(-99));
+}
+
 }  // namespace
