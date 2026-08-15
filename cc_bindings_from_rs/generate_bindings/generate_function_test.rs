@@ -7,7 +7,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use std::str::FromStr;
 use test_helpers::{test_format_item, test_format_item_with_features, test_generated_bindings};
-use token_stream_matchers::{assert_cc_matches, assert_rs_matches};
+use token_stream_matchers::{assert_cc_matches, assert_cc_not_matches, assert_rs_matches};
 
 #[track_caller]
 fn assert_cc_item(src: &str, item_name: &str, expected_cc: TokenStream) {
@@ -366,6 +366,20 @@ fn test_format_item_fn_mut_reference_ensures_no_alias() {
         let result = result.unwrap().unwrap();
         let cc_details = &result.cc_details.tokens;
         assert_cc_matches!(cc_details, quote! { CheckNoMutableAliasing });
+    });
+}
+
+#[test]
+fn test_format_item_fn_skip_mutable_aliasing_check() {
+    let test_src = r#"
+            #[doc = "CRUBIT_ANNOTATE: skip_mutable_aliasing_check="]
+            #[unsafe(no_mangle)]
+            pub fn foo(_x: &mut i32, _y: &i32) {}
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        let cc_details = &result.cc_details.tokens;
+        assert_cc_not_matches!(cc_details, quote! { CheckNoMutableAliasing });
     });
 }
 

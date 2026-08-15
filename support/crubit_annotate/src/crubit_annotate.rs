@@ -434,3 +434,27 @@ pub fn do_not_bind(attribute: TokenStream, input: TokenStream) -> TokenStream {
         key_value_to_doc_comment("do_not_bind", "")
     })
 }
+
+/// The `#[crubit_annotate::skip_mutable_aliasing_check]` attribute indicates that Crubit should
+/// not generate runtime mutable aliasing checks for the annotated Rust function.
+///
+/// # Safety
+///
+/// Disabling this check can lead to Undefined Behavior if C++ callers pass overlapping references
+/// where at least one is mutable. Callers must ensure that no mutable references alias with
+/// other references.
+#[proc_macro_attribute]
+pub fn skip_mutable_aliasing_check(attribute: TokenStream, input: TokenStream) -> TokenStream {
+    make_prefix_for(input, || {
+        if !attribute.is_empty() {
+            return TokenStream::from(
+                syn::Error::new(
+                    attribute.into_iter().next().unwrap().span().into(),
+                    "The `skip_mutable_aliasing_check` annotation does not accept any arguments.",
+                )
+                .into_compile_error(),
+            );
+        }
+        key_value_to_doc_comment("skip_mutable_aliasing_check", "")
+    })
+}
