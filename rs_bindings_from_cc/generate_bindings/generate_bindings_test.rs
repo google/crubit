@@ -433,23 +433,15 @@ fn test_impl_drop_nontrivial_member_destructor() -> Result<()> {
     )?;
     let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
-    assert_rs_matches!(
+    assert_rs_not_matches!(
         rs_api,
         quote! {
-            impl ::ctor::PinnedDrop for NontrivialMembers {
-                #[inline(always)]
-                unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-                    unsafe { crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
-                }
-            }
+            impl ::ctor::PinnedDrop for NontrivialMembers
         }
     );
     assert_rs_matches!(rs_api, quote! {pub x: ::ffi_11::c_int,});
     assert_rs_matches!(rs_api, quote! {pub ts: crate::TrivialStruct,});
-    assert_rs_matches!(
-        rs_api,
-        quote! {pub udd: ::core::mem::ManuallyDrop<crate::UserDefinedDestructor>,}
-    );
+    assert_rs_matches!(rs_api, quote! {pub udd: crate::UserDefinedDestructor,});
     Ok(())
 }
 

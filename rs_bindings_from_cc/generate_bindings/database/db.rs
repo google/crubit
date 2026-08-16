@@ -284,6 +284,46 @@ impl<'db> BindingsGenerator<'db> {
         self.rs_type_kind_with_lifetime_elision(cc_type, LifetimeOptions::default())
     }
 
+    /// Returns true if we should implement `Drop` (or `PinnedDrop`) for the record.
+    ///
+    /// This may differ from `record.should_implement_drop()` if the record only has
+    /// layout-compatible fields, in which case we can let Rust drive the destruction
+    /// instead of calling the C++ destructor, avoiding `ManuallyDrop` wrappers.
+    pub fn record_should_implement_drop(&self, record: &Record<'db>) -> bool {
+        match record.destructor() {
+            ir::SpecialMemberFunc::Trivial => false,
+            ir::SpecialMemberFunc::NontrivialUserDefined => true,
+            ir::SpecialMemberFunc::NontrivialMembers => {
+                let mut nontrivial_fields_count = 0;
+                for base in record.unambiguous_public_bases() {
+                    let Ok(base_record) = self.find_decl::<Rc<Record<'db>>>(base.base_record_id())
+                    else {
+                        return true;
+                    };
+                    if !matches!(
+                        base_record.destructor(),
+                        ir::SpecialMemberFunc::Trivial | ir::SpecialMemberFunc::Unavailable
+                    ) {
+                        return true;
+                    }
+                }
+                for field in record.fields() {
+                    let Ok(type_kind) = self.rs_type_kind(field.type_().clone()) else {
+                        return true;
+                    };
+                    if !type_kind.is_layout_compatible() {
+                        return true;
+                    }
+                    if type_kind.needs_destruction() {
+                        nontrivial_fields_count += 1;
+                    }
+                }
+                nontrivial_fields_count > 1
+            }
+            ir::SpecialMemberFunc::Unavailable => false,
+        }
+    }
+
     /// Returns true if an ItemId refers to a function that cannot receive bindings, because
     /// it is overloaded and ambiguous.
     ///

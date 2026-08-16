@@ -24,15 +24,13 @@ fn test_nontrivial_type_wrapped_by_unique_ptr_as_function_arg_and_return_value()
     assert_eq!(r, 1);
 }
 
-/// unique_ptr<std::string> is not supported - because std::string is a bridged type,
-/// the corresponding Rust type is different, and a vector cannot be "reinterpreted" in place.
+/// unique_ptr<std::string> is supported because std::string is layout-compatible with new_string.
 #[gtest]
 fn test_unique_ptr_string() {
-    // MakeUniquePtrString still gets bindings in :experimental, using ctor and templates
-    // -- but it won't be the Rust unique_ptr reimplementation.
-    // However, because of the bridging operation, we don't necessarily know how to spell
-    // the underlying type, and can't safely generate bindings here.
-    assert!(!item_exists::value_exists!(unique_ptr_lib::MakeUniquePtrString))
+    let mut p: cc_std::std::unique_ptr<cc_std::std::new_string> =
+        unique_ptr_lib::MakeUniquePtrString();
+    let s: &cc_std::std::new_string = p.as_ref().unwrap();
+    assert_eq!(&*s, &b"hello, world"[..]);
 }
 
 #[gtest]

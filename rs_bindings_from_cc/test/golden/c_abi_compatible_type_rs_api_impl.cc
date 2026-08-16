@@ -27,7 +27,7 @@ extern "C" void __rust_thunk___ZN1XC1Ev(struct X* __this) {
 }
 
 extern "C" MyI8 __rust_thunk___Z3ffi4MyI81X(MyI8 a, struct X* b) {
-  return ffi(std::move(a), std::move(*b));
+  return ffi(a, std::move(*b));
 }
 
 static_assert((MyI8 (*)(MyI8, struct X)) & ::ffi);

@@ -15,15 +15,13 @@ fn test_vector_wrapped_by_value_as_function_arg_and_return_value() {
     assert_eq!(r, 1);
 }
 
-/// std::vector<std::string> is not supported - because std::vector is a bridged type,
-/// the corresponding Rust type is different, and a vector cannot be "reinterpreted" in place.
+/// std::vector<std::string> is supported because std::string is layout-compatible with new_string.
 #[gtest]
 fn test_vector_string() {
-    // MakeVectorString could still get bindings in :wrapper, using ctor and templates
-    // -- but it won't be the Rust vector reimplementation.
-    // However, because of the bridging operation, we don't necessarily know how to spell
-    // the underlying type, and can't safely generate bindings here.
-    assert!(!item_exists::value_exists!(vector_lib::MakeVectorString))
+    let v: cc_std::std::vector<cc_std::std::new_string> = vector_lib::MakeVectorString();
+    let slice: &[cc_std::std::new_string] = &*v;
+    assert_eq!(slice.len(), 1);
+    assert_eq!(&*slice[0], &b"hello, world"[..]);
 }
 
 #[gtest]

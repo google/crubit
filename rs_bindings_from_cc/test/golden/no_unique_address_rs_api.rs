@@ -224,7 +224,7 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 /// done through compile-time assertions of field offsets in the generated Rust
 /// code.  The initial alignment-based fix idea for b/232418721 would incorrectly
 /// put `char_in_tail_padding_of_prev_field` at offset 8.
-#[::ctor::recursively_pinned(PinnedDrop)]
+#[::ctor::recursively_pinned]
 #[cfi_encoding = "18FieldInTailPadding"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldInTailPadding
@@ -296,13 +296,6 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
     fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
         let (arg,) = args;
         <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
-    }
-}
-
-impl ::ctor::PinnedDrop for FieldInTailPadding {
-    #[inline(always)]
-    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN18FieldInTailPaddingD1Ev(self) }
     }
 }
 
@@ -389,9 +382,6 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'__unelided, crate::FieldInTailPadding>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingD1Ev<'__this>(
-            __this: ::core::pin::Pin<&'__this mut crate::FieldInTailPadding>,
-        );
         pub(crate) unsafe fn __rust_thunk___ZN18FieldInTailPaddingaSERKS_<'__param_0, '__this>(
             __this: ::core::pin::Pin<&'__this mut crate::FieldInTailPadding>,
             __param_0: &'__param_0 crate::FieldInTailPadding,
@@ -432,11 +422,9 @@ const _: () = {
     static_assertions::assert_impl_all!(::ffi_11::c_char: Copy);
     assert!(::core::mem::size_of::<crate::FieldInTailPadding>() == 8);
     assert!(::core::mem::align_of::<crate::FieldInTailPadding>() == 4);
-    static_assertions::assert_impl_all!(crate::FieldInTailPadding: Drop);
-    static_assertions::assert_not_impl_any!(crate::FieldInTailPadding: Copy);
+    static_assertions::assert_not_impl_any!(crate::FieldInTailPadding: Copy,Drop);
     assert!(::core::mem::offset_of!(crate::FieldInTailPadding, inner_struct) == 0);
     assert!(
         ::core::mem::offset_of!(crate::FieldInTailPadding, char_in_tail_padding_of_prev_field) == 5
     );
-    static_assertions::assert_impl_all!(::ffi_11::c_char: Copy);
 };
