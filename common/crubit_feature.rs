@@ -74,6 +74,9 @@ flagset::flags! {
 
         /// Check if async fn return type implements Send modulo regions.
         AsyncFnSendModuloRegions,
+
+        /// Make rs_bindings_from_cc use new_string layout-compatible bindings for std::string.
+        LayoutCompatibleString,
     }
 }
 
@@ -106,6 +109,7 @@ impl CrubitFeature {
             Self::ThunklessAccessors => "thunkless_accessors",
             Self::OoCasting => "oo_casting",
             Self::AsyncFnSendModuloRegions => "async_fn_send_modulo_regions",
+            Self::LayoutCompatibleString => "layout_compatible_string",
         }
     }
 
@@ -141,6 +145,9 @@ impl CrubitFeature {
             Self::AsyncFnSendModuloRegions => {
                 "//features:async_fn_send_modulo_regions"
             }
+            Self::LayoutCompatibleString => {
+                "//features:layout_compatible_string"
+            }
         }
     }
 }
@@ -154,6 +161,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::NoAssumeLifetimes
                 - CrubitFeature::LayoutCompatTuple
                 - CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
+                - CrubitFeature::LayoutCompatibleString
         }
         // `supported` automatically implies `types`.
         b"supported" => CrubitFeature::Supported | CrubitFeature::Types,
@@ -177,6 +185,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"thunkless_accessors" => CrubitFeature::ThunklessAccessors.into(),
         b"oo_casting" => CrubitFeature::OoCasting.into(),
         b"async_fn_send_modulo_regions" => CrubitFeature::AsyncFnSendModuloRegions.into(),
+        b"layout_compatible_string" => CrubitFeature::LayoutCompatibleString.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)

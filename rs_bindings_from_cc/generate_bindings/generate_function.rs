@@ -897,7 +897,7 @@ fn api_func_shape_for_destructor<'a>(
     };
     // Note: to avoid double-destruction of the fields, they are all wrapped in
     // ManuallyDrop in this case. See `generate_record`.
-    if !record.should_implement_drop() {
+    if !db.record_should_implement_drop(record) {
         return None;
     }
     if record.is_unpin() {
@@ -1938,6 +1938,7 @@ pub fn generate_function<'a>(
     db.errors().add_category(error_report::Category::Function);
     let ir = db.ir();
     let crate_root_path = ir.crate_root_path_tokens();
+
     let (mut param_types, mut return_type) = rs_type_kinds_for_func(db, &func)?;
 
     let errors = Errors::new();

@@ -427,6 +427,7 @@ fn test_impl_drop_nontrivial_member_destructor() -> Result<()> {
         struct TrivialStruct final { int i; };
         struct NontrivialMembers final {
             UserDefinedDestructor udd;
+            UserDefinedDestructor udd2;
             TrivialStruct ts;
             int x;
         };"#,

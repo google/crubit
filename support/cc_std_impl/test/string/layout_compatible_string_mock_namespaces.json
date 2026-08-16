@@ -1,0 +1,22 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+{
+  "label": "//support/cc_std_impl/test/string:layout_compatible_string_mock_cc",
+  "namespaces": [
+    {
+      "children": [
+        {
+          "children": [],
+          "name": "__u"
+        }
+      ],
+      "name": "std"
+    },
+    {
+      "children": [],
+      "name": "test"
+    }
+  ]
+}

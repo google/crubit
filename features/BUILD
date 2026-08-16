@@ -209,6 +209,14 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling layout-compatible bindings for std::string.
+crubit_feature_hint(
+    name = "layout_compatible_string",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["layout_compatible_string"],
+    visibility = _EXPERIMENTAL_CLIENTS,
+)
+
 # Implementation details follow.
 
 bzl_library(
