@@ -18,7 +18,9 @@
 #include "absl/strings/string_view.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
+#include "common/string_view_conversion.h"
 #include "rs_bindings_from_cc/decl_importer.h"
+#include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
@@ -33,6 +35,7 @@
 #include "clang/AST/Type.h"
 #include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/Specifiers.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/Support/Casting.h"
@@ -169,6 +172,53 @@ std::optional<std::string> CollectUnknownTypeAttrs(
     type = attributed_type->getEquivalentType().getTypePtr();
   }
   return unknown_attr;
+}
+
+absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
+    clang::CallingConv cc_call_conv) {
+  switch (cc_call_conv) {
+    case clang::CC_C:  // __attribute__((cdecl))
+      return CallingConv::C_DECL;
+    case clang::CC_X86FastCall:  // __attribute__((fastcall))
+      return CallingConv::FAST_CALL;
+    case clang::CC_X86VectorCall:  // __attribute__((vectorcall))
+      return CallingConv::VECTOR_CALL;
+    case clang::CC_X86ThisCall:  // __attribute__((thiscall))
+      return CallingConv::THIS_CALL;
+    case clang::CC_X86StdCall:  // __attribute__((stdcall))
+      return CallingConv::STD_CALL;
+    case clang::CC_Win64:  // __attribute__((ms_abi))
+      return CallingConv::MS_ABI;
+    case clang::CC_AAPCS:      // __attribute__((pcs("aapcs")))
+    case clang::CC_AAPCS_VFP:  // __attribute__((pcs("aapcs-vfp")))
+      // TODO(lukasza): Should both map to "aapcs"?
+      break;
+    case clang::CC_X86_64SysV:  // __attribute__((sysv_abi))
+      // TODO(lukasza): Maybe this is "sysv64"?
+      break;
+    case clang::CC_X86Pascal:     // __attribute__((pascal))
+    case clang::CC_X86RegCall:    // __attribute__((regcall))
+    case clang::CC_IntelOclBicc:  // __attribute__((intel_ocl_bicc))
+    case clang::CC_SpirFunction:  // default for OpenCL functions on SPIR target
+    case clang::CC_DeviceKernel:  // __attribute__((device_kernel))
+    case clang::CC_Swift:         // __attribute__((swiftcall))
+    case clang::CC_SwiftAsync:    // __attribute__((swiftasynccall))
+    case clang::CC_PreserveMost:  // __attribute__((preserve_most))
+    case clang::CC_PreserveAll:   // __attribute__((preserve_all))
+    case clang::CC_AArch64VectorCall:  // __attribute__((aarch64_vector_pcs))
+      // TODO(hlopko): Uncomment once we integrate the upstream change that
+      // introduced it:
+      // case clang::CC_AArch64SVEPCS: __attribute__((aarch64_sve_pcs))
+
+      // These don't seem to have any Rust equivalents.
+      break;
+    default:
+      break;
+  }
+  return absl::UnimplementedError(
+      absl::StrCat("Unsupported calling convention: ",
+                   StringViewFromStringRef(
+                       clang::FunctionType::getNameForCallConv(cc_call_conv))));
 }
 
 // Attempts to evaluate and return the value of `expr` as a string literal under

@@ -248,6 +248,7 @@ message Func {
   repeated string lifetime_inputs = 27;
   string inline_cpp_source_text = 28;
   MemberFuncSemantic semantic = 30;
+  CallingConv call_conv = 31;
 }
 
 // Access specifier for a member or base class.

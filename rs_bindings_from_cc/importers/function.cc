@@ -940,10 +940,14 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
         std::vector(errors.error_set.begin(), errors.error_set.end()),
         must_bind_);
   }
+  clang::CallingConv call_conv =
+      function_decl->getType()->getAs<clang::FunctionType>()->getCallConv();
 
-  bool has_c_calling_convention =
-      function_decl->getType()->getAs<clang::FunctionType>()->getCallConv() ==
-      clang::CC_C;
+  bool has_c_calling_convention = call_conv == clang::CC_C;
+
+  absl::StatusOr<CallingConv> cc_call_conv =
+      ConvertCcCallConvToSupportedCallingConv(call_conv);
+
   bool is_member_or_descendant_of_class_template =
       IsFullClassTemplateSpecializationOrChild(function_decl);
 
@@ -1062,6 +1066,9 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   }
   if (unknown_attr->has_value()) {
     func->set_unknown_attr(std::move(**unknown_attr));
+  }
+  if (cc_call_conv.ok()) {
+    func->set_call_conv(*cc_call_conv);
   }
   func->set_has_c_calling_convention(has_c_calling_convention);
   func->set_is_member_or_descendant_of_class_template(

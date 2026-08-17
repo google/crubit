@@ -18,6 +18,7 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/AttrKinds.h"
+#include "clang/Basic/Specifiers.h"
 
 namespace crubit {
 
@@ -97,6 +98,11 @@ CollectClangLifetimeAnnotationsForMemberFunctionType(
 // `ast_context`.
 absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
     const clang::ASTContext& ast_context, const clang::Type& t);
+
+// Reduces a clang::CallingConv into a crubit::CallingConv, which is a subset.
+// If the variant isn't in the subset, returns an error.
+absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
+    clang::CallingConv cc_call_conv);
 
 // Returns true if `decl` is non-null and refers to a (code-generated) proto2
 // message.

@@ -1422,6 +1422,10 @@ derive_debug_partialeq_eq_hash! {
             self.proto.unknown_attr_opt().into_option().to_ir()
         }
 
+        pub fn call_conv(&self) -> Option<CcCallingConv> {
+            self.proto.call_conv_opt().into_option().to_ir()
+        }
+
         pub fn has_c_calling_convention(&self) -> bool {
             self.proto.has_c_calling_convention()
         }

@@ -368,9 +368,16 @@ fn generate_function_assertion_for_identifier<'a>(
         return_type_name = quote! { #return_type_name const };
     }
 
+    let cc_calling_conv = {
+        match func.call_conv() {
+            Some(CcCallingConv::C) | None => quote! {},
+            Some(call_conv) => quote! { __attribute__((#call_conv)) },
+        }
+    };
+
     let cc_function_type = quote! {
         #return_type_name
-        ( #member_function_prefix* )
+        ( #cc_calling_conv #member_function_prefix* )
         ( #( #cc_param_types ),* )
         #method_qualification
     };
@@ -387,8 +394,7 @@ pub fn generate_function_assertion<'a>(
         return Ok(None);
     }
 
-    // TODO: b/393169953 - support functions with non-standard calling conventions
-    if !func.has_c_calling_convention() {
+    if !func.has_c_calling_convention() && func.call_conv().is_none() {
         return Ok(None);
     }
 

@@ -101,6 +101,9 @@ ASPECT_HINTS = {
     "types_in_extra_cpp_srcs": [
         ":types_in_extra_cpp_srcs_aspect_hint",
     ],
+    "nonstandard_calling_convention": [
+        "//features:experimental",
+    ],
 }
 
 additional_rust_srcs_for_crubit_bindings(

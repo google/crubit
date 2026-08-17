@@ -142,6 +142,7 @@ fn test_function() {
                 nodiscard: None,
                 deprecated: None,
                 unknown_attr: None,
+                call_conv: Some(C),
                 has_c_calling_convention: true,
                 is_member_or_descendant_of_class_template: false,
                 safety_annotation: Unannotated,
