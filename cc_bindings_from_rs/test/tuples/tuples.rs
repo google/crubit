@@ -286,8 +286,8 @@ pub fn take_tuple_has_default(r: &(HasDefault, u8)) -> &str {
     r.0.val()
 }
 
-// b/540987246 - We expect these not to get bindings: tuples containing
-// composably bridged types are not supported.
+// We expect these not to get bindings: tuples containing composably bridged types are not
+// supported.
 pub fn return_option_in_tuple() -> (Option<i32>,) {
     (Some(42),)
 }
