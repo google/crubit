@@ -359,6 +359,15 @@ pub fn format_ty_for_cc<'tcx>(
 
                 let mut cc_types = Vec::with_capacity(types.len());
                 for element_type in types {
+                    if is_bridged_type(db, element_type)?
+                        .is_some_and(|b| matches!(b, BridgedType::Composable(_)))
+                    {
+                        bail!(
+                            "crubit.rs/errors/bridge_compound_type: Tuples containing bridged type \
+                             `{element_type}` are not supported. Pass `{element_type}` directly as \
+                             a parameter or return value instead of inside a tuple."
+                        );
+                    }
                     cc_types.push(
                         db.format_ty_for_cc(element_type, TypeLocation::NestedBridgeable)?
                             .into_tokens(&mut prereqs),

@@ -1732,3 +1732,31 @@ fn test_unmovable_type_error_message() {
         );
     });
 }
+
+#[test]
+fn test_param_composable_bridged_type_in_tuple() {
+    let test_src = r#"
+            pub fn foo(_opt: (Option<i32>,)) {}
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let err = result.unwrap_err();
+        assert_eq!(
+            err,
+            "Error handling parameter #0 of type `(std::option::Option<i32>,)`: crubit.rs/errors/bridge_compound_type: Tuples containing bridged type `std::option::Option<i32>` are not supported. Pass `std::option::Option<i32>` directly as a parameter or return value instead of inside a tuple."
+        );
+    });
+}
+
+#[test]
+fn test_return_composable_bridged_type_in_tuple() {
+    let test_src = r#"
+            pub fn foo() -> (Option<i32>,) { (None,) }
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let err = result.unwrap_err();
+        assert_eq!(
+            err,
+            "Error formatting function return type `(std::option::Option<i32>,)`: crubit.rs/errors/bridge_compound_type: Tuples containing bridged type `std::option::Option<i32>` are not supported. Pass `std::option::Option<i32>` directly as a parameter or return value instead of inside a tuple."
+        );
+    });
+}

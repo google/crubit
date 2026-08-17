@@ -275,8 +275,13 @@ void param_nested_tuples(
 void param_nontrivial_drop_in_tuple(
     ::std::tuple<::tuples::NontrivialDrop> nontrivial_drop);
 
-// CRUBIT_ANNOTATE: must_bind=
-void param_option_in_tuple(::std::tuple<::std::optional<::std::int32_t>> opt);
+// Error generating bindings for function `tuples_golden::param_option_in_tuple`
+// defined at
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=295:
+// Error handling parameter #0 of type `(std::option::Option<i32>,)`:
+// crubit.rs/errors/bridge_compound_type: Tuples containing bridged type
+// `std::option::Option<i32>` are not supported. Pass `std::option::Option<i32>`
+// directly as a parameter or return value instead of inside a tuple.
 
 // CRUBIT_ANNOTATE: must_bind=
 void param_triply_nested_tuple(
@@ -304,8 +309,13 @@ return_nested_tuples();
 // CRUBIT_ANNOTATE: must_bind=
 ::std::tuple<::tuples::NontrivialDrop> return_new_nontrivial_drop_in_tuple();
 
-// CRUBIT_ANNOTATE: must_bind=
-::std::tuple<::std::optional<::std::int32_t>> return_option_in_tuple();
+// Error generating bindings for function
+// `tuples_golden::return_option_in_tuple` defined at
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=291:
+// Error formatting function return type `(std::option::Option<i32>,)`:
+// crubit.rs/errors/bridge_compound_type: Tuples containing bridged type
+// `std::option::Option<i32>` are not supported. Pass `std::option::Option<i32>`
+// directly as a parameter or return value instead of inside a tuple.
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::optional<::std::int32_t> return_option_in_tuple_ref(
@@ -2146,24 +2156,6 @@ inline void param_nontrivial_drop_in_tuple(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_param_uoption_uin_utuple(void**);
-}
-inline void param_option_in_tuple(
-    ::std::tuple<::std::optional<::std::int32_t>> opt) {
-  auto&& opt_0 = ::std::get<0>(opt);
-  unsigned char opt_0_buffer
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
-  ::crubit::internal::Encode<
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
-      ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
-          ::crubit::TransmuteAbi<::std::int32_t>()),
-      opt_0_buffer, ::std::move(opt_0));
-  auto&& opt_cabi_0 = opt_0_buffer;
-  void* opt_cabi[] = {&opt_cabi_0};
-  return __crubit_internal::__crubit_thunk_param_uoption_uin_utuple(opt_cabi);
-}
-
-namespace __crubit_internal {
 extern "C" void __crubit_thunk_param_utriply_unested_utuple(void**);
 }
 inline void param_triply_nested_tuple(
@@ -2256,23 +2248,6 @@ return_new_nontrivial_drop_in_tuple() {
       __return_value_storage);
   return ::std::make_tuple(
       ::std::move(__return_value_0_ret_val_holder).AssumeInitAndTakeValue());
-}
-
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_return_uoption_uin_utuple(void** __ret_ptr);
-}
-inline ::std::tuple<::std::optional<::std::int32_t>> return_option_in_tuple() {
-  unsigned char __return_value_0_storage
-      [::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>::kSize];
-  void* __return_value_storage[] = {__return_value_0_storage};
-  __crubit_internal::__crubit_thunk_return_uoption_uin_utuple(
-      __return_value_storage);
-  return ::std::make_tuple(
-      ::crubit::internal::Decode<
-          ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>>(
-          ::crubit::OptionAbi<::crubit::TransmuteAbi<::std::int32_t>>(
-              ::crubit::TransmuteAbi<::std::int32_t>()),
-          __return_value_0_storage));
 }
 
 namespace __crubit_internal {

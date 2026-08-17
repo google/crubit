@@ -286,12 +286,12 @@ pub fn take_tuple_has_default(r: &(HasDefault, u8)) -> &str {
     r.0.val()
 }
 
-#[must_bind]
+// b/540987246 - We expect these not to get bindings: tuples containing
+// composably bridged types are not supported.
 pub fn return_option_in_tuple() -> (Option<i32>,) {
     (Some(42),)
 }
 
-#[must_bind]
 pub fn param_option_in_tuple(opt: (Option<i32>,)) {
     assert_eq!(opt.0, Some(42));
 }
