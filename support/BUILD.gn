@@ -67,6 +67,23 @@ source_set("lifetime_annotations") {
   ]
 }
 
+source_set("movable") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "movable.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support/internal:bindings_support",
+  ]
+}
+
 rust_static_library("bridge_rust") {
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
@@ -248,6 +265,7 @@ group("support_cpp") {
     ":annotations_internal",
     ":bridge_cpp",
     ":lifetime_annotations",
+    ":movable",
   ]
 }
 

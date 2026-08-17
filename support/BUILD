@@ -292,6 +292,28 @@ cc_test(
     ],
 )
 
+cc_library(
+    name = "movable",
+    hdrs = ["movable.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "//support/internal:bindings_support",
+    ],
+)
+
+cc_test(
+    name = "movable_test",
+    srcs = ["movable_test.cc"],
+    deps = [
+        ":movable",
+        "//support/internal:bindings_support",
+        "//testing/base/public:gunit_main",
+    ],
+)
+
 # Used to fix SWIG syntax errors when you see Crubit annotations.
 filegroup(
     name = "annotations_swig",
