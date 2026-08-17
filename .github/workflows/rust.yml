@@ -127,16 +127,16 @@ jobs:
         bazelisk-cache: true
         repository-cache: true
         external-cache: true
-        disk-cache: ${{ env.GCP_SA_KEY == '' && 'crubit-local-disk-cache' || 'false' }}
+        disk-cache: false
     - name: Setup Bazel Remote Cache Flags
       id: bazel_cache_flags
       run: |
         if [[ -n "$GCP_SA_KEY" ]]; then
           echo "RCACHE_FLAGS=--remote_cache=https://storage.googleapis.com/crubit-ci-bazel --google_default_credentials" >> $GITHUB_ENV
-          echo "Using GCS Remote Cache"
+          echo "Using GCS Remote Cache (Read-Write)"
         else
-          echo "RCACHE_FLAGS=" >> $GITHUB_ENV
-          echo "Skipping GCS Remote Cache"
+          echo "RCACHE_FLAGS=--remote_cache=https://storage.googleapis.com/crubit-ci-bazel --remote_upload_local_results=false" >> $GITHUB_ENV
+          echo "Using GCS Remote Cache (Read-Only)"
         fi
     - name: Build Bazel test project (example)
       run: |
