@@ -1,0 +1,117 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// move_golden
+
+#![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
+#![allow(improper_ctypes_definitions)]
+#![deny(warnings)]
+
+extern crate alloc;
+extern crate core;
+const _: () = assert!(::std::mem::size_of::<::move_golden::Copyable>() == 1);
+const _: () = assert!(::std::mem::align_of::<::move_golden::Copyable>() == 1);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x0000003aCopyable(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = <::move_golden::Copyable as ::core::default::Default>::default();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_from_ubyte(byte: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::move_golden::Copyable::from_byte(byte);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_consume_uself(__self: *mut ::move_golden::Copyable) -> u8 {
+    unsafe {
+        let __self = __self.read();
+        ::move_golden::Copyable::consume_self(__self)
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::move_golden::Copyable, field) == 0);
+const _: () = assert!(::std::mem::size_of::<::move_golden::Foo>() == 4);
+const _: () = assert!(::std::mem::align_of::<::move_golden::Foo>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x0000003aFoo(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = <::move_golden::Foo as ::core::default::Default>::default();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aFoo(
+    __self: *mut ::move_golden::Foo,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_from_ubyte(byte: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::move_golden::Foo::from_byte(byte);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_read_ubyte(__self: &'static ::move_golden::Foo) -> u8 {
+    unsafe { ::move_golden::Foo::read_byte(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_into_ubyte(__self: *mut ::move_golden::Foo) -> u8 {
+    unsafe {
+        let __self = __self.read();
+        ::move_golden::Foo::into_byte(__self)
+    }
+}
+const _: () = assert!(::std::mem::size_of::<::move_golden::UnmovableFoo>() == 4);
+const _: () = assert!(::std::mem::align_of::<::move_golden::UnmovableFoo>() == 4);
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aUnmovableFoo(
+    __self: *mut ::move_golden::UnmovableFoo,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_from_ubyte(byte: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::move_golden::UnmovableFoo::from_byte(byte);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_read_ubyte(__self: &'static ::move_golden::UnmovableFoo) -> u8 {
+    unsafe { ::move_golden::UnmovableFoo::read_byte(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_consume_ufoo(_foo: *mut ::move_golden::Foo) -> () {
+    unsafe {
+        let _foo = _foo.read();
+        ::move_golden::consume_foo(_foo)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_initialize_uunmovable_ufoo(
+    out: *mut ::move_golden::UnmovableFoo,
+    byte: u8,
+) -> () {
+    unsafe { ::move_golden::initialize_unmovable_foo(out, byte) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new_uunmovable_ufoo(
+    byte: u8,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::move_golden::new_unmovable_foo(byte);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}

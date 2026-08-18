@@ -1,0 +1,56 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// function_pointers_golden
+
+#![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
+#![allow(improper_ctypes_definitions)]
+#![deny(warnings)]
+
+extern crate alloc;
+extern crate core;
+const _: () = assert!(::std::mem::size_of::<::function_pointers_golden::CStruct>() == 4);
+const _: () = assert!(::std::mem::align_of::<::function_pointers_golden::CStruct>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ufunction_upointers_ugolden_x0000003a_x0000003aCStruct(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::function_pointers_golden::CStruct as ::core::default::Default>::default();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::function_pointers_golden::CStruct, field) == 0);
+const _: () = assert!(::std::mem::size_of::<::function_pointers_golden::HasFnPtrField>() == 4);
+const _: () = assert!(::std::mem::align_of::<::function_pointers_golden::HasFnPtrField>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_with_uadd_uten(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::function_pointers_golden::HasFnPtrField::with_add_ten();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::function_pointers_golden::HasFnPtrField, ptr) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_call_ufn_uptr_uno_uargs_uor_ureturn(
+    fn_ptr: extern "C" fn(),
+) -> () {
+    unsafe { ::function_pointers_golden::call_fn_ptr_no_args_or_return(fn_ptr) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_call_ufn_uptr_uwith_ufive(
+    fn_ptr: extern "C" fn(i32) -> i32,
+) -> i32 {
+    unsafe { ::function_pointers_golden::call_fn_ptr_with_five(fn_ptr) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_call_ufn_uptr_uwith_urepr_uc_ustruct_uptr_ucontaining_useven(
+    fn_ptr: unsafe extern "C" fn(*const ::function_pointers_golden::CStruct) -> i32,
+) -> i32 {
+    unsafe {
+        ::function_pointers_golden::call_fn_ptr_with_repr_c_struct_ptr_containing_seven(fn_ptr)
+    }
+}

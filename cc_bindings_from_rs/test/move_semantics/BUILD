@@ -26,6 +26,7 @@ golden_test(
     basename = "move",
     golden_h = "move_cc_api.h",
     golden_rs = "move_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "move",
 )
 

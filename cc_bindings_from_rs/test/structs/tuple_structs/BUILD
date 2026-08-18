@@ -31,6 +31,7 @@ golden_test(
     basename = "tuple_structs",
     golden_h = "tuple_structs_cc_api.h",
     golden_rs = "tuple_structs_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "tuple_structs",
 )
 

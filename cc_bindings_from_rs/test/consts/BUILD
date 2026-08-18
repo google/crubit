@@ -37,6 +37,7 @@ golden_test(
     basename = "consts",
     golden_h = "consts_cc_api.h",
     golden_rs = "consts_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "consts",
 )
 

@@ -34,7 +34,13 @@ golden_test(
     basename = "enums",
     golden_h = "enums_cc_api.h",
     golden_rs = "enums_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "enums",
+    # TODO(b/537283300): Re-enable x86 Android platforms once x86 ABI assertion failures are resolved.
+    tags = [
+        "no_test_android_arm",
+        "no_test_android_x86",
+    ],
 )
 
 cc_bindings_from_rust(
@@ -106,6 +112,7 @@ golden_test(
     basename = "option",
     golden_h = "option_cc_api.h",
     golden_rs = "option_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "option",
 )
 
@@ -140,6 +147,7 @@ golden_test(
     basename = "result",
     golden_h = "result_cc_api.h",
     golden_rs = "result_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "result",
 )
 

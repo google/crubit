@@ -38,6 +38,7 @@ golden_test(
     basename = "primitive_types",
     golden_h = "primitive_types_cc_api.h",
     golden_rs = "primitive_types_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "primitive_types",
 )
 
