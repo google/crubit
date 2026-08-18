@@ -160,3 +160,142 @@ fn test_new_sole_owner_destroyed_in_cpp() {
     let sp = shared_ptr::new(42);
     test_helpers::shared_ptr_test::destroy_shared_ptr(sp);
 }
+
+#[gtest]
+fn test_from_box() {
+    let b = Box::new(42);
+    let sp = shared_ptr::from_box(b);
+    expect_eq!(*shared_ptr::try_as_ref(&sp).unwrap(), 42);
+    expect_eq!(shared_ptr::use_count(&sp), 1);
+
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp), 2);
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+
+    drop(sp);
+    expect_eq!(shared_ptr::use_count(&sp_clone), 1);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+}
+
+#[gtest]
+fn test_from_box_destroyed_in_cpp() {
+    let b = Box::new(42);
+    let sp = shared_ptr::from_box(b);
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+
+    test_helpers::shared_ptr_test::destroy_shared_ptr(sp);
+
+    expect_eq!(shared_ptr::use_count(&sp_clone), 1);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+}
+
+#[gtest]
+fn test_from_box_custom_drop() {
+    let counter = Arc::new(AtomicUsize::new(0));
+    {
+        let b = Box::new(DropDetector(Arc::clone(&counter)));
+        let _sp = shared_ptr::from_box(b);
+        expect_eq!(counter.load(Ordering::SeqCst), 0);
+    }
+    expect_eq!(counter.load(Ordering::SeqCst), 1);
+}
+
+#[gtest]
+fn test_from_box_sole_owner_destroyed_in_cpp() {
+    let b = Box::new(42);
+    let sp = shared_ptr::from_box(b);
+    test_helpers::shared_ptr_test::destroy_shared_ptr(sp);
+}
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+#[gtest]
+fn test_project() {
+    let sp = shared_ptr::new(Point { x: 10, y: 20 });
+    let sp_x: shared_ptr<i32> = shared_ptr::project(sp, |p| &p.x);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_x).unwrap(), 10);
+    expect_eq!(shared_ptr::use_count(&sp_x), 1);
+}
+
+#[gtest]
+fn test_from_arc() {
+    let a = Arc::new(42);
+    let sp = shared_ptr::from_arc(a);
+    expect_eq!(*shared_ptr::try_as_ref(&sp).unwrap(), 42);
+    expect_eq!(shared_ptr::use_count(&sp), 1);
+
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp), 2);
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+
+    drop(sp);
+    expect_eq!(shared_ptr::use_count(&sp_clone), 1);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+}
+
+#[gtest]
+fn test_from_pinned_box() {
+    let b = Box::pin(42);
+    let sp = shared_ptr::from_pinned_box(b);
+    expect_eq!(*shared_ptr::try_as_ref(&sp).unwrap(), 42);
+    expect_eq!(shared_ptr::use_count(&sp), 1);
+
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp), 2);
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+
+    drop(sp);
+    expect_eq!(shared_ptr::use_count(&sp_clone), 1);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+}
+
+#[gtest]
+fn test_from_pinned_box_destroyed_in_cpp() {
+    let b = Box::pin(42);
+    let sp = shared_ptr::from_pinned_box(b);
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+
+    test_helpers::shared_ptr_test::destroy_shared_ptr(sp);
+
+    expect_eq!(shared_ptr::use_count(&sp_clone), 1);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+}
+
+#[gtest]
+fn test_from_pinned_box_custom_drop() {
+    let counter = Arc::new(AtomicUsize::new(0));
+    {
+        let b = Box::pin(DropDetector(Arc::clone(&counter)));
+        let _sp = shared_ptr::from_pinned_box(b);
+        expect_eq!(counter.load(Ordering::SeqCst), 0);
+    }
+    expect_eq!(counter.load(Ordering::SeqCst), 1);
+}
+
+#[gtest]
+fn test_from_pinned_box_sole_owner_destroyed_in_cpp() {
+    let b = Box::pin(42);
+    let sp = shared_ptr::from_pinned_box(b);
+    test_helpers::shared_ptr_test::destroy_shared_ptr(sp);
+}
+
+struct NonUnpinType {
+    val: i32,
+    _pin: core::marker::PhantomPinned,
+}
+
+#[gtest]
+fn test_from_pinned_box_non_unpin() {
+    let b = Box::pin(NonUnpinType { val: 123, _pin: core::marker::PhantomPinned });
+    let sp = shared_ptr::from_pinned_box(b);
+    expect_eq!(shared_ptr::try_as_ref(&sp).unwrap().val, 123);
+    expect_eq!(shared_ptr::use_count(&sp), 1);
+}

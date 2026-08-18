@@ -8,8 +8,10 @@ use crate::crubit_cc_std_internal::std_allocator::{
     self, shared_weak_count, DynControlBlock, FunctionToCall,
 };
 use alloc::boxed::Box;
+use alloc::sync::Arc;
 use core::ffi::c_void;
 use core::mem::{ManuallyDrop, MaybeUninit};
+use core::pin::Pin;
 
 /// A smart pointer that shares ownership of another object of type `T` via a pointer,
 /// ABI-compatible with `std::shared_ptr<T>`.
@@ -76,6 +78,109 @@ impl<T: Sized> shared_ptr<T> {
         };
 
         shared_ptr { ptr: &*inner.value, cntrl }
+    }
+
+    /// Constructs a `shared_ptr<U>` by projecting the underlying `T` via `f`.
+    ///
+    /// This is functionally equivalent to C++'s `std::shared_ptr` aliasing constructor: the
+    /// returned `shared_ptr<U>` points to the target `&U` returned by `f`, while sharing ownership
+    /// of the original control block. This ensures that `T` (and any allocations it owns) remains
+    /// alive in memory for as long as any reference to the projected `shared_ptr<U>` exists.
+    ///
+    /// Because the `T` bound is lost in the return type, this function requires `T: 'static` to
+    /// ensure that holding onto the returned `shared_ptr<U>` does not extend the lifetime of the
+    /// underlying `T` longer than it is valid to do so.
+    pub fn project<U>(this: Self, f: impl for<'a> FnOnce(&'a T) -> &'a U) -> shared_ptr<U>
+    where
+        T: 'static,
+    {
+        // SAFETY: `T: 'static` guarantees that `T` has no lifetimes for `f` to project away.
+        unsafe { shared_ptr::project_unchecked(this, f) }
+    }
+
+    /// Constructs a `shared_ptr<U>` by projecting the underlying `T` via `f`.
+    ///
+    /// This function is identical to `shared_ptr::project`, except it is unsafe because it does not
+    /// require `T: 'static`.
+    ///
+    /// # Safety
+    ///
+    /// The returned `shared_ptr<U>` must ensure that the underlying `T` is still valid by the time
+    /// the `shared_ptr<U>` is dropped. Specifically, this function is safe to call if `U` contains
+    /// all the lifetimes that appear in `T`, or if `T` is `'static` (has no lifetimes).
+    ///
+    /// Here's an example of how improper usage can lead to undefined behavior:
+    ///
+    /// ```rust
+    /// struct MutateOnDrop<'a>(&'a mut i32);
+    /// impl<'a> Drop for MutateOnDrop<'a> {
+    ///     fn drop(&mut self) {
+    ///         *self.0 += 1;
+    ///     }
+    /// }
+    /// fn create_bad_ptr() -> shared_ptr<i32> {
+    ///     let mut stack_var = 0;
+    ///     let sp: shared_ptr<MutateOnDrop<'_>> = shared_ptr::new(MutateOnDrop(&mut stack_var));
+    ///     // 💥 Erases the lifetime of `'_` by projecting to `i32`!
+    ///     let projected: shared_ptr<i32> = unsafe { shared_ptr::project_unchecked(sp, |x| &*x.0) }
+    ///     // `stack_var` is destroyed when this stack frame pops.
+    ///     projected
+    /// }
+    /// fn main() {
+    ///     let sp = create_bad_ptr();
+    ///     // When `sp` is dropped, `MutateOnDrop::drop` runs and writes to `stack_var`
+    ///     // on a popped stack frame -> 💥 STACK USE-AFTER-RETURN / MEMORY CORRUPTION!
+    ///     drop(sp);
+    /// }
+    /// ```
+    pub unsafe fn project_unchecked<U>(
+        this: Self,
+        f: impl for<'a> FnOnce(&'a T) -> &'a U,
+    ) -> shared_ptr<U> {
+        let (ptr, cntrl) = shared_ptr::into_raw_parts(this);
+
+        // SAFETY: `ptr` is either null or points to a live `T` owned by `cntrl`.
+        // If non-null, `f` is called with `&T`, returning a reference `&U` that borrows
+        // from `T`. Because `T: 'static`, `U` will remain at this memory address for as
+        // long as `cntrl` keeps `T` alive.
+        let ptr = unsafe { ptr.as_ref() }.map_or(core::ptr::null(), |r| f(r) as *const U);
+        shared_ptr { ptr, cntrl }
+    }
+
+    /// Creates a new `shared_ptr` taking ownership of an existing `Box<T>`.
+    ///
+    /// Note that this still requires an additional allocation for the control block, but reuses
+    /// the existing `Box` allocation so the value does not have to be moved.
+    pub fn from_box(b: Box<T>) -> Self {
+        // SAFETY: The projection `&Box<T>` -> `&T` doesn't erase any lifetimes, meaning that
+        // whenever the returned `shared_ptr<T>` is dropped, the underlying `Box<T>` that it points
+        // into will still be valid as well.
+        unsafe { shared_ptr::project_unchecked(shared_ptr::new(b), |b| &**b) }
+    }
+
+    /// Creates a new `shared_ptr` taking ownership of an existing `Pin<Box<T>>`.
+    ///
+    /// Note that this still requires an additional allocation for the control block, but reuses
+    /// the existing `Box` allocation so the value does not have to be moved.
+    pub fn from_pinned_box(b: Pin<Box<T>>) -> Self {
+        // SAFETY: The projection `&Pin<Box<T>>` -> `&T` doesn't erase any lifetimes, meaning that
+        // whenever the returned `shared_ptr<T>` is dropped, the underlying `Pin<Box<T>>` that it
+        // points into will still be valid as well.
+        unsafe { shared_ptr::project_unchecked(shared_ptr::new(b), |b| &**b) }
+    }
+
+    /// Creates a new `shared_ptr` taking ownership of an existing `Arc<T>`.
+    ///
+    /// Note that this still requires an additional allocation for the control block, but reuses
+    /// the existing `Arc` allocation so the value does not have to be moved.
+    ///
+    /// Also note that the returned `shared_ptr<T>` and all clones of it will only count towards
+    /// one `Arc::strong_count`.
+    pub fn from_arc(arc: Arc<T>) -> Self {
+        // SAFETY: The projection `&Arc<T>` -> `&T` doesn't erase any lifetimes, meaning that
+        // whenever the returned `shared_ptr<T>` is dropped, the underlying `Arc<T>` that it points
+        // into will still be valid as well.
+        unsafe { shared_ptr::project_unchecked(shared_ptr::new(arc), |a| &**a) }
     }
 
     /// Creates a `shared_ptr` from a raw pointer and a control block pointer.
