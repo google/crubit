@@ -24,6 +24,7 @@ load(
 )
 load(
     "//google_internal/build_flavors:crubit_build_flavors_android.bzl",
+    "CRUBIT_ANDROID_ABI_TIERS",
     "CRUBIT_ANDROID_PLATFORMS",
     "CRUBIT_TAGS_MAPPING",
 )
@@ -34,7 +35,7 @@ load(
 
 def _generate_bindings_impl(ctx):
     rust_library = ctx.attr.rust_library[0]
-    if not GeneratedBindingsInfo in rust_library:
+    if GeneratedBindingsInfo not in rust_library:
         fail("Bindings were not generated for the given rust_library.")
     bindings = rust_library[GeneratedBindingsInfo]
     return OutputGroupInfo(
@@ -71,7 +72,8 @@ def _generate_golden_subtest(
         golden_h,
         golden_rs,
         target_platform = None,
-        golden_dir = None):
+        golden_dir = None,
+        abi_tier = None):
     """Instantiates binding generation, output filegroups, and sh_test for a platform configuration."""
 
     bindings_name = basename + ".generated_bindings"
@@ -84,7 +86,9 @@ def _generate_golden_subtest(
 
     sh_args = []
     if golden_dir:
-        sh_args += ["--platform", golden_dir]
+        sh_args.extend(["--platform", golden_dir])
+    if abi_tier:
+        sh_args.extend(["--tier", abi_tier])
 
     data = ["//common:LICENSE_HEADER"]
     owned_files = []
@@ -100,17 +104,23 @@ def _generate_golden_subtest(
             testonly = True,
         )
 
-        # Prefer platform-specific golden if present; otherwise fall back to host golden.
+        # Hierarchical golden resolution order:
+        # 1. Architecture-specific override (e.g. goldens/android_x86/foo.h)
+        # 2. ABI-tier shared golden (e.g. goldens/android_32/foo.h)
+        # 3. Default host golden (foo.h)
         read_target = golden_file
+        candidates = []
         if golden_dir:
-            best_file = "goldens/%s/%s" % (golden_dir, golden_file)
-            if native.glob([best_file]):
-                read_target = best_file
+            candidates.append("goldens/%s/%s" % (golden_dir, golden_file))
+        if abi_tier and abi_tier != golden_dir:
+            candidates.append("goldens/%s/%s" % (abi_tier, golden_file))
+
+        for cand in candidates:
+            if native.glob([cand]):
+                read_target = cand
+                break
 
         sh_args.extend(["$(location %s)" % read_target, "$(location %s)" % new_file])
-        if golden_dir:
-            # Pass base filename so golden_test.sh can bootstrap platform goldens under WRITE_GOLDENS=1.
-            sh_args.append(golden_file)
 
         data.extend([read_target, new_file])
         owned_files.append(read_target)
@@ -140,7 +150,7 @@ def golden_test(
         basename = None,
         golden_h = None,
         golden_rs = None,
-        platforms = [],
+        platforms = None,
         kythe_annotations = False):
     """Generates a golden test for `rust_library`.
 
@@ -151,14 +161,16 @@ def golden_test(
         basename: The name to use for generated files.
         golden_h: The generated C++ source code for the bindings.
         golden_rs: The generated Rust source code for the bindings.
-        platforms: List of additional target platforms to generate tests for (e.g. ["android"]). Defaults to [].
+        platforms: List of additional target platforms to generate tests for (e.g. ["android"]). Defaults to None.
         kythe_annotations: Whether to generate Kythe annotations.
     """
     if not basename:
         basename = name
-    if not tags:
-        tags = []
+
+    tags = list(tags) if tags else []
     tags.append("crubit_golden_test")
+
+    platforms = platforms or []
 
     # Turn on annotations if necessary.
     # TODO(jeanpierreda): Move this out to a separate
@@ -219,6 +231,7 @@ def golden_test(
                 if target_cpu in excluded_cpus:
                     continue
                 arch_dir = "android_" + Label(target_cpu).name
+                abi_tier = CRUBIT_ANDROID_ABI_TIERS.get(target_cpu)
                 subtest_name = "%s_%s" % (name, arch_dir)
                 _generate_golden_subtest(
                     name = subtest_name,
@@ -229,6 +242,7 @@ def golden_test(
                     golden_rs = golden_rs,
                     target_platform = platform_label,
                     golden_dir = arch_dir,
+                    abi_tier = abi_tier,
                 )
                 android_tests.append(":" + subtest_name)
 
