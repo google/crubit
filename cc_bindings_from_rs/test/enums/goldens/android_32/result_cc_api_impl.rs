@@ -191,6 +191,26 @@ unsafe extern "C" fn __crubit_thunk_return_uresult_uby_uvalue(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_uresult_uunit_uerr(
+    has_err: bool,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::result_golden::return_result_unit_err(has_err);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_uresult_uunit_uok(
+    has_val: bool,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::result_golden::return_result_unit_ok(has_val);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_take_uresult_uby_uvalue(
     r: *mut ::core::result::Result<u8, u8>,
 ) -> u8 {
@@ -216,6 +236,24 @@ unsafe extern "C" fn __crubit_thunk_take_uresult_uhas_udefault(
     r: &'static ::core::result::Result<::result_golden::HasDefault, u8>,
 ) -> &'static str {
     unsafe { ::result_golden::take_result_has_default(r) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_take_uresult_uunit_uerr(
+    val: *mut ::core::result::Result<u8, ()>,
+) -> bool {
+    unsafe {
+        let val = val.read();
+        ::result_golden::take_result_unit_err(val)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_take_uresult_uunit_uok(
+    val: *mut ::core::result::Result<(), u8>,
+) -> bool {
+    unsafe {
+        let val = val.read();
+        ::result_golden::take_result_unit_ok(val)
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cresult_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x0000003e(

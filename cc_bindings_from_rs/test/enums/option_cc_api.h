@@ -19,7 +19,6 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
-#include "support/rs_std/int.h"
 #include "support/rs_std/option.h"
 #include "support/rs_std/result.h"
 #include "support/rs_std/str_ref.h"
@@ -39,7 +38,7 @@ namespace option {
 struct HasOptions;
 
 // Error generating bindings for struct `option_golden::BridgedType` defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=228:
+// cc_bindings_from_rs/test/enums/option.rs;l=234:
 // Type bindings for option_golden::BridgedType suppressed due to being mapped
 // to an existing C++ type (int)
 
@@ -317,7 +316,7 @@ rs_std::Option<::std::uint32_t> stringify_len(
 
 // Error generating bindings for function `option_golden::take_option_bridged`
 // defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=230:
+// cc_bindings_from_rs/test/enums/option.rs;l=236:
 // Error handling parameter #0 of type
 // `std::option::Option<option_golden::BridgedType>`: Generic types are not
 // supported yet (b/259749095)
@@ -452,7 +451,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int64_ut_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < i64 >") rs_std::Option<::std::int64_t>
+    "std :: option :: Option < isize >") rs_std::Option<::std::int64_t>
     : public rs_std::OptionBase<rs_std::Option<::std::int64_t>,
                                 ::std::int64_t> {
  public:
@@ -505,103 +504,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   unsigned char storage_[16];
 };
 #endif
-
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
-template <>
-struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < isize >") rs_std::Option<::rs_std::isize>
-    : public rs_std::OptionBase<rs_std::Option<::rs_std::isize>,
-                                ::rs_std::isize> {
- public:
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  Option(const Option&) = default;
-  Option& operator=(const Option&) = default;
-  Option(Option&&) = default;
-  Option& operator=(Option&&) = default;
-
-  Option(::crubit::UnsafeRelocateTag, Option&& value);
-  using base_type =
-      rs_std::OptionBase<rs_std::Option<::rs_std::isize>, ::rs_std::isize>;
-  constexpr Option() = default;
-  constexpr Option(::std::nullopt_t) noexcept;
-  constexpr Option& operator=(::std::nullopt_t) noexcept;
-  template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::rs_std::isize, U>)
-  Option(U&& value) noexcept;
-  template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::rs_std::isize, U>)
-  Option& operator=(U&& value) noexcept;
-  template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::rs_std::isize, Opt>)
-  Option(Opt&& value) noexcept;
-  template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::rs_std::isize, Opt>)
-  Option& operator=(Opt&& value) noexcept;
-  template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
-  ~Option() noexcept = default;
-
- private:
-  friend base_type;
-  using tag_type = ::std::uint64_t;
-  static constexpr tag_type kNoneVal = 0;
-  ::rs_std::isize* some_ptr() noexcept {
-    return reinterpret_cast<::rs_std::isize*>(storage_ + 8);
-  }
-  ::rs_std::isize const* some_const_ptr() const noexcept {
-    return reinterpret_cast<::rs_std::isize const*>(storage_ + 8);
-  }
-  void set_some_tag() noexcept { set_tag(1); }
-  constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
-  constexpr bool is_none() const noexcept { return tag() == kNoneVal; }
-  constexpr ::std::uint64_t tag() const& noexcept;
-  constexpr void set_tag(::std::uint64_t tag) noexcept;
-
- private:
-  unsigned char storage_[16];
-};
-#endif
-
-namespace option {
-
-struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: option_golden :: OverlappingOptions") alignas(8) [[clang::trivial_abi]]
-OverlappingOptions final {
- public:
-  // `option_golden::OverlappingOptions` doesn't implement the `Default` trait
-  OverlappingOptions() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~OverlappingOptions() = default;
-  OverlappingOptions(OverlappingOptions&&) = default;
-  OverlappingOptions& operator=(OverlappingOptions&&) = default;
-
-  // `option_golden::OverlappingOptions` doesn't implement the `Clone` trait
-  OverlappingOptions(const OverlappingOptions&) = delete;
-  OverlappingOptions& operator=(const OverlappingOptions&) = delete;
-  OverlappingOptions(::crubit::UnsafeRelocateTag, OverlappingOptions&& value);
-
-  explicit OverlappingOptions(rs_std::Option<::rs_std::isize> value);
-
-  explicit OverlappingOptions(rs_std::Option<::std::int64_t> value);
-
-  union {
-    rs_std::Option<::rs_std::isize> size;
-  };
-  union {
-    rs_std::Option<::std::int64_t> sixty_four;
-  };
-  union {
-    rs_std::Option<::std::int32_t> thirty_two;
-  };
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
-}  // namespace option
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
@@ -1474,13 +1376,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: ZStream") alignas(8)
 
 }  // namespace option
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < usize >") rs_std::Option<::rs_std::usize>
-    : public rs_std::OptionBase<rs_std::Option<::rs_std::usize>,
-                                ::rs_std::usize> {
+    "std :: option :: Option < usize >") rs_std::Option<::std::uint64_t>
+    : public rs_std::OptionBase<rs_std::Option<::std::uint64_t>,
+                                ::std::uint64_t> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -1491,21 +1393,21 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
   Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type =
-      rs_std::OptionBase<rs_std::Option<::rs_std::usize>, ::rs_std::usize>;
+      rs_std::OptionBase<rs_std::Option<::std::uint64_t>, ::std::uint64_t>;
   constexpr Option() = default;
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::rs_std::usize, U>)
+    requires(rs_std::OptionForwardConstructible<Option, ::std::uint64_t, U>)
   Option(U&& value) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::rs_std::usize, U>)
+    requires(rs_std::OptionForwardConstructible<Option, ::std::uint64_t, U>)
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::rs_std::usize, Opt>)
+    requires(rs_std::OptionFromStdOptional<::std::uint64_t, Opt>)
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::rs_std::usize, Opt>)
+    requires(rs_std::OptionFromStdOptional<::std::uint64_t, Opt>)
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -1515,11 +1417,11 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   friend base_type;
   using tag_type = ::std::uint64_t;
   static constexpr tag_type kNoneVal = 0;
-  ::rs_std::usize* some_ptr() noexcept {
-    return reinterpret_cast<::rs_std::usize*>(storage_ + 8);
+  ::std::uint64_t* some_ptr() noexcept {
+    return reinterpret_cast<::std::uint64_t*>(storage_ + 8);
   }
-  ::rs_std::usize const* some_const_ptr() const noexcept {
-    return reinterpret_cast<::rs_std::usize const*>(storage_ + 8);
+  ::std::uint64_t const* some_const_ptr() const noexcept {
+    return reinterpret_cast<::std::uint64_t const*>(storage_ + 8);
   }
   void set_some_tag() noexcept { set_tag(1); }
   constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
@@ -1552,11 +1454,16 @@ OptionWithSizeTypes final {
   OptionWithSizeTypes& operator=(const OptionWithSizeTypes&) = delete;
   OptionWithSizeTypes(::crubit::UnsafeRelocateTag, OptionWithSizeTypes&& value);
 
+  // CRUBIT_ANNOTATE: must_bind=
+  static ::option::OptionWithSizeTypes new_(
+      rs_std::Option<::std::uint64_t> uval,
+      rs_std::Option<::std::int64_t> ival);
+
   union {
-    rs_std::Option<::rs_std::usize> uval;
+    rs_std::Option<::std::uint64_t> uval;
   };
   union {
-    rs_std::Option<::rs_std::isize> ival;
+    rs_std::Option<::std::int64_t> ival;
   };
 
  private:
@@ -2804,51 +2711,22 @@ inline ::option::OptionWithSizeTypes::OptionWithSizeTypes(
     ::crubit::UnsafeRelocateTag, OptionWithSizeTypes&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(rs_std::Option<::std::uint64_t>*,
+                                   rs_std::Option<::std::int64_t>*,
+                                   ::option::OptionWithSizeTypes* __ret_ptr);
+}
+inline ::option::OptionWithSizeTypes OptionWithSizeTypes::new_(
+    rs_std::Option<::std::uint64_t> uval, rs_std::Option<::std::int64_t> ival) {
+  crubit::Slot<::option::OptionWithSizeTypes> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(&uval, &ival, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
 inline void OptionWithSizeTypes::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OptionWithSizeTypes, uval));
   static_assert(16 == offsetof(OptionWithSizeTypes, ival));
-}
-static_assert(
-    sizeof(OverlappingOptions) == 40,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    alignof(OverlappingOptions) == 8,
-    "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<OverlappingOptions>);
-static_assert(
-    ::std::is_trivially_move_constructible_v<::option::OverlappingOptions>);
-static_assert(
-    ::std::is_trivially_move_assignable_v<::option::OverlappingOptions>);
-inline ::option::OverlappingOptions::OverlappingOptions(
-    ::crubit::UnsafeRelocateTag, OverlappingOptions&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_From_ufrom_uoption_ugolden_x0000003a_x0000003aOverlappingOptions_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cisize_x0000003e(
-    rs_std::Option<::rs_std::isize>*, ::option::OverlappingOptions* __ret_ptr);
-}
-inline OverlappingOptions::OverlappingOptions(
-    rs_std::Option<::rs_std::isize> value) {
-  __crubit_internal::
-      __crubit_thunk_From_ufrom_uoption_ugolden_x0000003a_x0000003aOverlappingOptions_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cisize_x0000003e(
-          &value, this);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_From_ufrom_uoption_ugolden_x0000003a_x0000003aOverlappingOptions_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci64_x0000003e(
-    rs_std::Option<::std::int64_t>*, ::option::OverlappingOptions* __ret_ptr);
-}
-inline OverlappingOptions::OverlappingOptions(
-    rs_std::Option<::std::int64_t> value) {
-  __crubit_internal::
-      __crubit_thunk_From_ufrom_uoption_ugolden_x0000003a_x0000003aOverlappingOptions_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci64_x0000003e(
-          &value, this);
-}
-inline void OverlappingOptions::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(OverlappingOptions, size));
-  static_assert(16 == offsetof(OverlappingOptions, sixty_four));
-  static_assert(32 == offsetof(OverlappingOptions, thirty_two));
 }
 static_assert(
     sizeof(ZStream) == 8,
@@ -3184,79 +3062,6 @@ rs_std::Option<::std::int64_t>::operator=(Opt&& value) noexcept {
 template <typename... Args>
 inline rs_std::Option<::std::int64_t>::Option(::std::in_place_t ip,
                                               Args&&... args) noexcept
-    : base_type(ip, ::std::forward<Args>(args)...) {}
-
-#endif
-
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
-static_assert(
-    ::std::is_trivially_copy_constructible_v<rs_std::Option<::rs_std::isize>>);
-static_assert(
-    ::std::is_trivially_copy_assignable_v<rs_std::Option<::rs_std::isize>>);
-static_assert(
-    ::std::is_trivially_move_constructible_v<rs_std::Option<::rs_std::isize>>);
-static_assert(
-    ::std::is_trivially_move_assignable_v<rs_std::Option<::rs_std::isize>>);
-inline rs_std::Option<::rs_std::isize>::Option(::crubit::UnsafeRelocateTag,
-                                               Option&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-static_assert(
-    ::std::is_trivially_destructible_v<rs_std::Option<::rs_std::isize>>);
-inline constexpr ::std::uint64_t rs_std::Option<::rs_std::isize>::tag()
-    const& noexcept {
-  ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
-  for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
-    __bytes[i] = storage_[0 + i];
-  }
-  return ::std::bit_cast<::std::uint64_t>(__bytes);
-}
-inline constexpr void rs_std::Option<::rs_std::isize>::set_tag(
-    ::std::uint64_t tag) noexcept {
-  auto __bytes =
-      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
-          tag);
-  for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
-    storage_[0 + i] = __bytes[i];
-  }
-}
-
-inline constexpr rs_std::Option<::rs_std::isize>::Option(
-    ::std::nullopt_t) noexcept
-    : base_type(::std::nullopt) {}
-inline constexpr rs_std::Option<::rs_std::isize>&
-rs_std::Option<::rs_std::isize>::operator=(::std::nullopt_t) noexcept {
-  base_type::operator=(::std::nullopt);
-  return *this;
-}
-template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::rs_std::isize>,
-                                              ::rs_std::isize, U>)
-inline rs_std::Option<::rs_std::isize>::Option(U&& value) noexcept
-    : base_type(::std::forward<U>(value)) {}
-template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::rs_std::isize>,
-                                              ::rs_std::isize, U>)
-inline rs_std::Option<::rs_std::isize>&
-rs_std::Option<::rs_std::isize>::operator=(U&& value) noexcept {
-  base_type::operator=(::std::forward<U>(value));
-  return *this;
-}
-template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::rs_std::isize, Opt>)
-inline rs_std::Option<::rs_std::isize>::Option(Opt&& value) noexcept
-    : base_type(::std::forward<Opt>(value)) {}
-template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::rs_std::isize, Opt>)
-inline rs_std::Option<::rs_std::isize>&
-rs_std::Option<::rs_std::isize>::operator=(Opt&& value) noexcept {
-  base_type::operator=(::std::forward<Opt>(value));
-  return *this;
-}
-template <typename... Args>
-inline rs_std::Option<::rs_std::isize>::Option(::std::in_place_t ip,
-                                               Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
@@ -4479,23 +4284,23 @@ inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
 
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
 static_assert(
-    ::std::is_trivially_copy_constructible_v<rs_std::Option<::rs_std::usize>>);
+    ::std::is_trivially_copy_constructible_v<rs_std::Option<::std::uint64_t>>);
 static_assert(
-    ::std::is_trivially_copy_assignable_v<rs_std::Option<::rs_std::usize>>);
+    ::std::is_trivially_copy_assignable_v<rs_std::Option<::std::uint64_t>>);
 static_assert(
-    ::std::is_trivially_move_constructible_v<rs_std::Option<::rs_std::usize>>);
+    ::std::is_trivially_move_constructible_v<rs_std::Option<::std::uint64_t>>);
 static_assert(
-    ::std::is_trivially_move_assignable_v<rs_std::Option<::rs_std::usize>>);
-inline rs_std::Option<::rs_std::usize>::Option(::crubit::UnsafeRelocateTag,
+    ::std::is_trivially_move_assignable_v<rs_std::Option<::std::uint64_t>>);
+inline rs_std::Option<::std::uint64_t>::Option(::crubit::UnsafeRelocateTag,
                                                Option&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
 static_assert(
-    ::std::is_trivially_destructible_v<rs_std::Option<::rs_std::usize>>);
-inline constexpr ::std::uint64_t rs_std::Option<::rs_std::usize>::tag()
+    ::std::is_trivially_destructible_v<rs_std::Option<::std::uint64_t>>);
+inline constexpr ::std::uint64_t rs_std::Option<::std::uint64_t>::tag()
     const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
@@ -4503,7 +4308,7 @@ inline constexpr ::std::uint64_t rs_std::Option<::rs_std::usize>::tag()
   }
   return ::std::bit_cast<::std::uint64_t>(__bytes);
 }
-inline constexpr void rs_std::Option<::rs_std::usize>::set_tag(
+inline constexpr void rs_std::Option<::std::uint64_t>::set_tag(
     ::std::uint64_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
@@ -4513,40 +4318,40 @@ inline constexpr void rs_std::Option<::rs_std::usize>::set_tag(
   }
 }
 
-inline constexpr rs_std::Option<::rs_std::usize>::Option(
+inline constexpr rs_std::Option<::std::uint64_t>::Option(
     ::std::nullopt_t) noexcept
     : base_type(::std::nullopt) {}
-inline constexpr rs_std::Option<::rs_std::usize>&
-rs_std::Option<::rs_std::usize>::operator=(::std::nullopt_t) noexcept {
+inline constexpr rs_std::Option<::std::uint64_t>&
+rs_std::Option<::std::uint64_t>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::rs_std::usize>,
-                                              ::rs_std::usize, U>)
-inline rs_std::Option<::rs_std::usize>::Option(U&& value) noexcept
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::uint64_t>,
+                                              ::std::uint64_t, U>)
+inline rs_std::Option<::std::uint64_t>::Option(U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::rs_std::usize>,
-                                              ::rs_std::usize, U>)
-inline rs_std::Option<::rs_std::usize>&
-rs_std::Option<::rs_std::usize>::operator=(U&& value) noexcept {
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::uint64_t>,
+                                              ::std::uint64_t, U>)
+inline rs_std::Option<::std::uint64_t>&
+rs_std::Option<::std::uint64_t>::operator=(U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::rs_std::usize, Opt>)
-inline rs_std::Option<::rs_std::usize>::Option(Opt&& value) noexcept
+  requires(rs_std::OptionFromStdOptional<::std::uint64_t, Opt>)
+inline rs_std::Option<::std::uint64_t>::Option(Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::rs_std::usize, Opt>)
-inline rs_std::Option<::rs_std::usize>&
-rs_std::Option<::rs_std::usize>::operator=(Opt&& value) noexcept {
+  requires(rs_std::OptionFromStdOptional<::std::uint64_t, Opt>)
+inline rs_std::Option<::std::uint64_t>&
+rs_std::Option<::std::uint64_t>::operator=(Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::rs_std::usize>::Option(::std::in_place_t ip,
+inline rs_std::Option<::std::uint64_t>::Option(::std::in_place_t ip,
                                                Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 

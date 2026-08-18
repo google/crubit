@@ -218,9 +218,15 @@ pub fn stringify_len(x: &Option<HasDefault>) -> Option<u32> {
 
 #[must_bind]
 pub struct OptionWithSizeTypes {
-    // b/491106325 - We expect these not to get bindings.
     pub uval: Option<usize>,
     pub ival: Option<isize>,
+}
+
+impl OptionWithSizeTypes {
+    #[must_bind]
+    pub fn new(uval: Option<usize>, ival: Option<isize>) -> Self {
+        OptionWithSizeTypes { uval, ival }
+    }
 }
 
 #[doc = "CRUBIT_ANNOTATE: cpp_type=int"]
@@ -261,22 +267,4 @@ pub type FreeFunc = unsafe extern "C" fn(Voidpf, Voidpf);
 // We just need to confirm the bindings received compile.
 pub struct ZStream {
     pub zfree: Option<FreeFunc>,
-}
-
-pub struct OverlappingOptions {
-    pub size: Option<isize>,
-    pub sixty_four: Option<i64>,
-    pub thirty_two: Option<i32>,
-}
-
-impl From<Option<isize>> for OverlappingOptions {
-    fn from(x: Option<isize>) -> Self {
-        OverlappingOptions { size: x, sixty_four: None, thirty_two: None }
-    }
-}
-
-impl From<Option<i64>> for OverlappingOptions {
-    fn from(x: Option<i64>) -> Self {
-        OverlappingOptions { size: None, sixty_four: x, thirty_two: None }
-    }
 }

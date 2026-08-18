@@ -38,6 +38,7 @@ use rustc_hir::attrs::lang_items::LangItem;
 #[rustversion::before(2026-08-09)]
 use rustc_hir::lang_items::LangItem;
 use rustc_middle::mir::Mutability;
+use rustc_middle::ty::layout::IntegerExt;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::symbol::Symbol;
@@ -274,6 +275,74 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
     }))
 }
 
+fn cstdint<'tcx>(tokens: TokenStream) -> CcSnippet<'tcx> {
+    CcSnippet::with_include(tokens, CcInclude::cstdint())
+}
+
+fn format_int_ty_for_cc<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    int_ty: ty::IntTy,
+    location: TypeLocation,
+) -> Result<CcSnippet<'tcx>> {
+    match int_ty {
+        ty::IntTy::I8 => Ok(cstdint(quote! { ::std::int8_t })),
+        ty::IntTy::I16 => Ok(cstdint(quote! { ::std::int16_t })),
+        ty::IntTy::I32 => Ok(cstdint(quote! { ::std::int32_t })),
+        ty::IntTy::I64 => Ok(cstdint(quote! { ::std::int64_t })),
+        ty::IntTy::Isize => {
+            if matches!(location, TypeLocation::TemplateArg) {
+                let fixed_ty =
+                    tcx.data_layout.ptr_sized_integer().to_ty(tcx, /*signed=*/ true);
+                let ty::TyKind::Int(fixed_int) = fixed_ty.kind() else { unreachable!() };
+                format_int_ty_for_cc(tcx, *fixed_int, location)
+            } else {
+                Ok(cstdint(quote! { ::std::intptr_t }))
+            }
+        }
+        ty::IntTy::I128 => {
+            // Note that "the alignment of Rust's {i,u}128 is unspecified and allowed to
+            // change" according to
+            // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#fixed-width-integer-types
+            //
+            // TODO(b/254094650): Consider mapping this to Clang's (and GCC's) `__int128`
+            // or to `absl::in128`.
+            bail!("C++ doesn't have a standard equivalent of `i128` (b/254094650)")
+        }
+    }
+}
+
+fn format_uint_ty_for_cc<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    uint_ty: ty::UintTy,
+    location: TypeLocation,
+) -> Result<CcSnippet<'tcx>> {
+    match uint_ty {
+        ty::UintTy::U8 => Ok(cstdint(quote! { ::std::uint8_t })),
+        ty::UintTy::U16 => Ok(cstdint(quote! { ::std::uint16_t })),
+        ty::UintTy::U32 => Ok(cstdint(quote! { ::std::uint32_t })),
+        ty::UintTy::U64 => Ok(cstdint(quote! { ::std::uint64_t })),
+        ty::UintTy::Usize => {
+            if matches!(location, TypeLocation::TemplateArg) {
+                let fixed_ty =
+                    tcx.data_layout.ptr_sized_integer().to_ty(tcx, /*signed=*/ false);
+                let ty::TyKind::Uint(fixed_uint) = fixed_ty.kind() else { unreachable!() };
+                format_uint_ty_for_cc(tcx, *fixed_uint, location)
+            } else {
+                Ok(cstdint(quote! { ::std::uintptr_t }))
+            }
+        }
+        ty::UintTy::U128 => {
+            // Note that "the alignment of Rust's {i,u}128 is unspecified and allowed to
+            // change" according to
+            // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#fixed-width-integer-types
+            //
+            // TODO(b/254094650): Consider mapping this to Clang's (and GCC's) `__int128`
+            // or to `absl::in128`.
+            bail!("C++ doesn't have a standard equivalent of `u128` (b/254094650)")
+        }
+    }
+}
+
 /// Implementation of `BindingsGenerator::format_ty_for_cc`.
 pub fn format_ty_for_cc<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -291,9 +360,6 @@ pub fn format_ty_for_cc<'tcx>(
         },
     )
     .map_err(|_| anyhow!("Failed to normalize type: {ty}"))?;
-    fn cstdint<'tcx>(tokens: TokenStream) -> CcSnippet<'tcx> {
-        CcSnippet::with_include(tokens, CcInclude::cstdint())
-    }
     fn keyword<'tcx>(tokens: TokenStream) -> CcSnippet<'tcx> {
         CcSnippet::new(tokens)
     }
@@ -441,48 +507,8 @@ pub fn format_ty_for_cc<'tcx>(
         // documents that "Rust does not support C platforms on which the C native integer type are
         // not compatible with any of Rust's fixed-width integer type (e.g. because of
         // padding-bits, lack of 2's complement, etc.)."
-        ty::TyKind::Int(ty::IntTy::I8) => cstdint(quote! { ::std::int8_t }),
-        ty::TyKind::Int(ty::IntTy::I16) => cstdint(quote! { ::std::int16_t }),
-        ty::TyKind::Int(ty::IntTy::I32) => cstdint(quote! { ::std::int32_t }),
-        ty::TyKind::Int(ty::IntTy::I64) => cstdint(quote! { ::std::int64_t }),
-        ty::TyKind::Uint(ty::UintTy::U8) => cstdint(quote! { ::std::uint8_t }),
-        ty::TyKind::Uint(ty::UintTy::U16) => cstdint(quote! { ::std::uint16_t }),
-        ty::TyKind::Uint(ty::UintTy::U32) => cstdint(quote! { ::std::uint32_t }),
-        ty::TyKind::Uint(ty::UintTy::U64) => cstdint(quote! { ::std::uint64_t }),
-
-        // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
-        // documents that "The isize and usize types are [...] layout compatible with C's uintptr_t
-        // and intptr_t types.".
-        ty::TyKind::Int(ty::IntTy::Isize) => {
-            if matches!(location, TypeLocation::TemplateArg) {
-                CcSnippet::with_include(
-                    quote! { ::rs_std::isize },
-                    db.support_header("rs_std/int.h"),
-                )
-            } else {
-                cstdint(quote! { ::std::intptr_t })
-            }
-        }
-        ty::TyKind::Uint(ty::UintTy::Usize) => {
-            if matches!(location, TypeLocation::TemplateArg) {
-                CcSnippet::with_include(
-                    quote! { ::rs_std::usize },
-                    db.support_header("rs_std/int.h"),
-                )
-            } else {
-                cstdint(quote! { ::std::uintptr_t })
-            }
-        }
-
-        ty::TyKind::Int(ty::IntTy::I128) | ty::TyKind::Uint(ty::UintTy::U128) => {
-            // Note that "the alignment of Rust's {i,u}128 is unspecified and allowed to
-            // change" according to
-            // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#fixed-width-integer-types
-            //
-            // TODO(b/254094650): Consider mapping this to Clang's (and GCC's) `__int128`
-            // or to `absl::in128`.
-            bail!("C++ doesn't have a standard equivalent of `{ty}` (b/254094650)");
-        }
+        ty::TyKind::Int(int_ty) => format_int_ty_for_cc(tcx, int_ty, location)?,
+        ty::TyKind::Uint(uint_ty) => format_uint_ty_for_cc(tcx, uint_ty, location)?,
 
         ty::TyKind::Adt(adt, substs)
             if is_rvalue_reference(db, adt.did()) || is_ctor_by_value(db, adt.did()) =>

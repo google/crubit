@@ -248,41 +248,21 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptZst, val) == 0);
 const _: () = assert!(::std::mem::size_of::<::option_golden::OptionWithSizeTypes>() == 16);
 const _: () = assert!(::std::mem::align_of::<::option_golden::OptionWithSizeTypes>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(
+    uval: *mut ::core::option::Option<usize>,
+    ival: *mut ::core::option::Option<isize>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let uval = uval.read();
+        let ival = ival.read();
+        let __rs_return_value = ::option_golden::OptionWithSizeTypes::new(uval, ival);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptionWithSizeTypes, uval) == 0);
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptionWithSizeTypes, ival) == 8);
-const _: () = assert!(::std::mem::size_of::<::option_golden::OverlappingOptions>() == 28);
-const _: () = assert!(::std::mem::align_of::<::option_golden::OverlappingOptions>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_From_ufrom_uoption_ugolden_x0000003a_x0000003aOverlappingOptions_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cisize_x0000003e(
-    value: *mut ::core::option::Option<isize>,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let value = value.read();
-        let __rs_return_value = <::option_golden::OverlappingOptions as ::core::convert::From<
-            ::core::option::Option<isize>,
-        >>::from(value);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_From_ufrom_uoption_ugolden_x0000003a_x0000003aOverlappingOptions_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci64_x0000003e(
-    value: *mut ::core::option::Option<i64>,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let value = value.read();
-        let __rs_return_value = <::option_golden::OverlappingOptions as ::core::convert::From<
-            ::core::option::Option<i64>,
-        >>::from(value);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
-const _: () = assert!(::core::mem::offset_of!(::option_golden::OverlappingOptions, size) == 0);
-const _: () =
-    assert!(::core::mem::offset_of!(::option_golden::OverlappingOptions, sixty_four) == 8);
-const _: () =
-    assert!(::core::mem::offset_of!(::option_golden::OverlappingOptions, thirty_two) == 20);
 const _: () = assert!(::std::mem::size_of::<::option_golden::ZStream>() == 4);
 const _: () = assert!(::std::mem::align_of::<::option_golden::ZStream>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::option_golden::ZStream, zfree) == 0);
