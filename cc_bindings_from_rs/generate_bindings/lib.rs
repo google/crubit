@@ -68,6 +68,7 @@ use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, GenericParamDefKind, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
+use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::{self, Display, Formatter};
@@ -1809,6 +1810,23 @@ fn generate_kythe_doc_comment(
     quote! { __CAPTURE_TAG__ #file_name #start #end __COMMENT__ #doc_comment}
 }
 
+/// Normalizes source paths for generated files located under `bazel-out/` by
+/// stripping dynamic configuration directories (such as transition hashes) and
+/// replacing them with stable `bazel-bin/` or `bazel-genfiles/` paths.
+fn normalize_source_path(file_name: &str) -> Cow<'_, str> {
+    if let Some((_config, subpath)) =
+        file_name.strip_prefix("bazel-out/").and_then(|rest| rest.split_once('/'))
+    {
+        if let Some(rel) = subpath.strip_prefix("bin/") {
+            return Cow::Owned(format!("bazel-bin/{rel}"));
+        }
+        if let Some(rel) = subpath.strip_prefix("genfiles/") {
+            return Cow::Owned(format!("bazel-genfiles/{rel}"));
+        }
+    }
+    Cow::Borrowed(file_name)
+}
+
 fn generate_source_location(db: &BindingsGenerator, def_id: DefId) -> String {
     let tcx = db.tcx();
     let def_span = tcx.def_span(def_id);
@@ -1820,13 +1838,12 @@ fn generate_source_location(db: &BindingsGenerator, def_id: DefId) -> String {
     let file_name = file.name.prefer_local_unconditionally().to_string();
     // Virtual paths will have a "./" prefix that we don't want to display.
     let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
+    let file_name = normalize_source_path(file_name);
 
     // Note: line_index starts at 0, while most everything else starts indexing at 1.
     let line_number = (lines[0].line_index + 1).to_string();
-    if let Some(path_format) = db.crubit_debug_path_format() {
-        if file.name.is_real() {
-            return path_format.format(&[file_name, line_number.as_str()]);
-        }
+    if let (Some(path_format), true) = (db.crubit_debug_path_format(), file.name.is_real()) {
+        return path_format.format(&[file_name.as_ref(), line_number.as_str()]);
     }
     format!("{file_name};l={line_number}")
 }
@@ -2632,5 +2649,39 @@ impl Display for PrivateOrUnstableField {
             PrivateOrUnstableField::Private => write!(f, "private"),
             PrivateOrUnstableField::Unstable => write!(f, "unstable"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_normalize_source_path_bin() {
+        assert_eq!(
+            normalize_source_path("bazel-out/k8-fastbuild-ST-7be089cf1221/bin/foo/bar.rs"),
+            "bazel-bin/foo/bar.rs"
+        );
+        assert_eq!(
+            normalize_source_path("bazel-out/x86_64-opt/bin/third_party/rust/lib.rs"),
+            "bazel-bin/third_party/rust/lib.rs"
+        );
+    }
+
+    #[test]
+    fn test_normalize_source_path_genfiles() {
+        assert_eq!(
+            normalize_source_path("bazel-out/k8-fastbuild/genfiles/foo/bar.rs"),
+            "bazel-genfiles/foo/bar.rs"
+        );
+    }
+
+    #[test]
+    fn test_normalize_source_path_unmodified() {
+        assert_eq!(
+            normalize_source_path("test.rs"),
+            "test.rs"
+        );
+        assert_eq!(normalize_source_path("<crubit_unittests.rs>"), "<crubit_unittests.rs>");
     }
 }
