@@ -9,3 +9,11 @@ pub fn foo(x: foo::Foo) -> Option<i32> {
 pub fn bar(x: bar::Bar) -> Option<i32> {
     x.bar
 }
+
+pub fn foo_opt() -> Option<foo::SomeStruct> {
+    foo::foo_opt()
+}
+
+pub fn bar_opt() -> Option<bar::BarStruct> {
+    bar::bar_opt()
+}

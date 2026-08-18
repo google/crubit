@@ -739,18 +739,3 @@ fn test_format_ty_for_cc_rvalue_reference_return() {
         },
     );
 }
-
-#[test]
-fn test_format_ty_for_cc_template_arg_integer_types() {
-    test_ty(
-        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-        &[("usize", "::std :: uint64_t"), ("isize", "::std::int64_t")],
-        quote! {},
-        |desc, tcx, ty, &expected_cc_ty| {
-            let db = bindings_db_for_tests(tcx);
-            let cc_snippet = db.format_ty_for_cc(ty, TypeLocation::TemplateArg).unwrap();
-            let parsed_expected = expected_cc_ty.parse::<TokenStream>().unwrap().to_string();
-            assert_eq!(cc_snippet.tokens.to_string(), parsed_expected, "{desc}");
-        },
-    );
-}

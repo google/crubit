@@ -2077,3 +2077,83 @@ fn test_trait_impl_for_mapped_cpp_type() {
         assert!(!bindings.cc_api.to_string().contains("struct SomeCppStruct;"));
     });
 }
+
+#[test]
+fn test_reexported_type_option_specialization_guard() {
+    let test_src = r#"
+            #![allow(unused)]
+            pub mod inner {
+                pub struct MyStruct {
+                    pub x: i32,
+                }
+            }
+            pub use inner::MyStruct as AliasedStruct;
+
+            pub struct Wrapper1 {
+                pub opt: Option<inner::MyStruct>,
+            }
+            pub struct Wrapper2 {
+                pub opt: Option<AliasedStruct>,
+            }
+        "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                __HASH_TOKEN__ ifndef _CRUBIT_BINDINGS_FOR_core_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003crust_uout_x0000003a_x0000003ainner_x0000003a_x0000003aMyStruct_x0000003e
+                __HASH_TOKEN__ define _CRUBIT_BINDINGS_FOR_core_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003crust_uout_x0000003a_x0000003ainner_x0000003a_x0000003aMyStruct_x0000003e
+                template <>
+                struct alignas(4)
+                CRUBIT_INTERNAL_RUST_TYPE("std :: option :: Option < :: rust_out :: AliasedStruct >")
+                rs_std::Option<::rust_out::AliasedStruct>
+                ...
+            }
+        );
+        // Ensure there is no duplicate specialization using the alias name in the guard
+        assert_cc_not_matches!(
+            bindings.cc_api,
+            quote! {
+                _CRUBIT_BINDINGS_FOR_core_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003crust_uout_x0000003a_x0000003aAliasedStruct_x0000003e
+            }
+        );
+    });
+}
+
+#[test]
+fn test_usize_and_u64_specialization_guard_canonicalization() {
+    let test_src = r#"
+        pub struct StructWithUsize {
+            pub res: Result<usize, i32>,
+        }
+        pub struct StructWithU64 {
+            pub res: Result<u64, i32>,
+        }
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        // Result<usize, i32> canonicalizes to Result<u64, i32> on 64-bit target,
+        // producing a single specialization and guard macro for Result<u64, i32>.
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                __HASH_TOKEN__ ifndef _CRUBIT_BINDINGS_FOR_core_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cu64_x0000002c_x00000020i32_x0000003e
+                __HASH_TOKEN__ define _CRUBIT_BINDINGS_FOR_core_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cu64_x0000002c_x00000020i32_x0000003e
+                template <>
+                struct alignas(8)
+                CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < u64 , i32 >")
+                rs_std::Result<::std::uint64_t, ::std::int32_t>
+                ...
+            }
+        );
+        // Ensure that usize was not emitted as a separate guard
+        assert_cc_not_matches!(
+            bindings.cc_api,
+            quote! {
+                _CRUBIT_BINDINGS_FOR_core_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cusize_x0000002ci32_x0000003e
+            }
+        );
+    });
+}

@@ -71,11 +71,11 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020bool_x00000029(
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x00000020bool_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = <(usize, bool) as ::core::default::Default>::default();
+        let __rs_return_value = <(u32, bool) as ::core::default::Default>::default();
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }

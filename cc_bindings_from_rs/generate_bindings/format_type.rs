@@ -38,7 +38,6 @@ use rustc_hir::attrs::lang_items::LangItem;
 #[rustversion::before(2026-08-09)]
 use rustc_hir::lang_items::LangItem;
 use rustc_middle::mir::Mutability;
-use rustc_middle::ty::layout::IntegerExt;
 use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::symbol::Symbol;
@@ -279,26 +278,13 @@ fn cstdint<'tcx>(tokens: TokenStream) -> CcSnippet<'tcx> {
     CcSnippet::with_include(tokens, CcInclude::cstdint())
 }
 
-fn format_int_ty_for_cc<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    int_ty: ty::IntTy,
-    location: TypeLocation,
-) -> Result<CcSnippet<'tcx>> {
+fn format_int_ty_for_cc<'tcx>(int_ty: ty::IntTy) -> Result<CcSnippet<'tcx>> {
     match int_ty {
         ty::IntTy::I8 => Ok(cstdint(quote! { ::std::int8_t })),
         ty::IntTy::I16 => Ok(cstdint(quote! { ::std::int16_t })),
         ty::IntTy::I32 => Ok(cstdint(quote! { ::std::int32_t })),
         ty::IntTy::I64 => Ok(cstdint(quote! { ::std::int64_t })),
-        ty::IntTy::Isize => {
-            if matches!(location, TypeLocation::TemplateArg) {
-                let fixed_ty =
-                    tcx.data_layout.ptr_sized_integer().to_ty(tcx, /*signed=*/ true);
-                let ty::TyKind::Int(fixed_int) = fixed_ty.kind() else { unreachable!() };
-                format_int_ty_for_cc(tcx, *fixed_int, location)
-            } else {
-                Ok(cstdint(quote! { ::std::intptr_t }))
-            }
-        }
+        ty::IntTy::Isize => Ok(cstdint(quote! { ::std::intptr_t })),
         ty::IntTy::I128 => {
             // Note that "the alignment of Rust's {i,u}128 is unspecified and allowed to
             // change" according to
@@ -311,26 +297,13 @@ fn format_int_ty_for_cc<'tcx>(
     }
 }
 
-fn format_uint_ty_for_cc<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    uint_ty: ty::UintTy,
-    location: TypeLocation,
-) -> Result<CcSnippet<'tcx>> {
+fn format_uint_ty_for_cc<'tcx>(uint_ty: ty::UintTy) -> Result<CcSnippet<'tcx>> {
     match uint_ty {
         ty::UintTy::U8 => Ok(cstdint(quote! { ::std::uint8_t })),
         ty::UintTy::U16 => Ok(cstdint(quote! { ::std::uint16_t })),
         ty::UintTy::U32 => Ok(cstdint(quote! { ::std::uint32_t })),
         ty::UintTy::U64 => Ok(cstdint(quote! { ::std::uint64_t })),
-        ty::UintTy::Usize => {
-            if matches!(location, TypeLocation::TemplateArg) {
-                let fixed_ty =
-                    tcx.data_layout.ptr_sized_integer().to_ty(tcx, /*signed=*/ false);
-                let ty::TyKind::Uint(fixed_uint) = fixed_ty.kind() else { unreachable!() };
-                format_uint_ty_for_cc(tcx, *fixed_uint, location)
-            } else {
-                Ok(cstdint(quote! { ::std::uintptr_t }))
-            }
-        }
+        ty::UintTy::Usize => Ok(cstdint(quote! { ::std::uintptr_t })),
         ty::UintTy::U128 => {
             // Note that "the alignment of Rust's {i,u}128 is unspecified and allowed to
             // change" according to
@@ -507,8 +480,8 @@ pub fn format_ty_for_cc<'tcx>(
         // documents that "Rust does not support C platforms on which the C native integer type are
         // not compatible with any of Rust's fixed-width integer type (e.g. because of
         // padding-bits, lack of 2's complement, etc.)."
-        ty::TyKind::Int(int_ty) => format_int_ty_for_cc(tcx, int_ty, location)?,
-        ty::TyKind::Uint(uint_ty) => format_uint_ty_for_cc(tcx, uint_ty, location)?,
+        ty::TyKind::Int(int_ty) => format_int_ty_for_cc(int_ty)?,
+        ty::TyKind::Uint(uint_ty) => format_uint_ty_for_cc(uint_ty)?,
 
         ty::TyKind::Adt(adt, substs)
             if is_rvalue_reference(db, adt.did()) || is_ctor_by_value(db, adt.did()) =>

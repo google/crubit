@@ -9,7 +9,7 @@ use crate::generate_struct_and_union::{
 };
 use crate::generate_unsupported_def;
 use arc_anyhow::{bail, Result};
-use code_gen_utils::{escape_non_identifier_chars, CcInclude};
+use code_gen_utils::CcInclude;
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, EnumSpecializationKind, FormattedTy,
     NegativeAutoTraitImplTemplateSpecialization, RsStdEnumSpecialization, RsStdSpecializationArgs,
@@ -33,15 +33,73 @@ use rustc_hir::def::DefKind;
 #[rustversion::before(2026-08-09)]
 use rustc_hir::LangItem;
 use rustc_middle::ty::fast_reject::SimplifiedType;
-use rustc_middle::ty::layout::PrimitiveExt;
+use rustc_middle::ty::layout::{IntegerExt, PrimitiveExt};
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Unnormalized;
-use rustc_middle::ty::{self, AdtDef, Ty, TyCtxt, TypingEnv};
+use rustc_middle::ty::{
+    self, AdtDef, Ty, TyCtxt, TypeFoldable, TypeFolder, TypeSuperFoldable, TypingEnv,
+};
 use rustc_span::def_id::DefId;
 use std::collections::HashSet;
 use std::rc::Rc;
+
+/// Derives an escaped, canonical identifier for `#ifndef` include guard macros of a template specialization.
+///
+/// This string is used to derive `#ifndef _CRUBIT_BINDINGS_FOR_{name}` and
+/// `_CRUBIT_BINDINGS_FOR_IMPL_{name}` include guard macros for template specializations
+/// (such as `Option<T>`, `Result<T, E>`, `Vec<T>`, and tuples).
+///
+/// Because types may be re-exported by different crates or aliases under different public paths,
+/// deriving guard macro names from crate-local or re-exported names would generate conflicting guard
+/// macros across different header files. By rendering the fully qualified declaration site of every
+/// constituent type via rustc's `Display` flags (`with_no_visible_paths`, `with_no_trimmed_paths`,
+/// `with_resolve_crate_name`) and escaping non-identifier characters, the resulting identifier is
+/// globally invariant across compiler invocations and independent of `pub use` aliases or include
+/// visibility.
+fn specialization_guard_name(ty: Ty<'_>) -> String {
+    use rustc_middle::ty::print::{
+        with_no_trimmed_paths, with_no_visible_paths, with_resolve_crate_name,
+    };
+    let canonical_name =
+        with_resolve_crate_name!(with_no_trimmed_paths!(with_no_visible_paths!(ty.to_string())));
+    code_gen_utils::escape_non_identifier_chars(&canonical_name)
+}
+
+/// Canonicalizes a specialization type for C++ bindings and `#ifndef` include guards by
+/// replacing pointer-sized integer types (`usize`, `isize`) with their target platform's
+/// fixed-width integer counterparts (`u64`/`u32`, `i64`/`i32`).
+///
+/// In C++, `usize` and `isize` are represented by fixed-width integer types (`uint64_t`/`uint32_t`,
+/// `int64_t`/`int32_t`). By rewriting the Rust `Ty` before formatting it for C++, template
+/// specializations (e.g. `rs_std::Option<std::uint64_t>`) and their `#ifndef` include guards
+/// are identical regardless of whether `Option<usize>` or `Option<u64>` was specialized.
+fn canonicalize_specialization_ty<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
+    struct PointerIntsToFixedInts<'tcx> {
+        tcx: TyCtxt<'tcx>,
+    }
+
+    impl<'tcx> TypeFolder<TyCtxt<'tcx>> for PointerIntsToFixedInts<'tcx> {
+        fn cx(&self) -> TyCtxt<'tcx> {
+            self.tcx
+        }
+
+        fn fold_ty(&mut self, ty: Ty<'tcx>) -> Ty<'tcx> {
+            match ty.kind() {
+                ty::TyKind::Uint(ty::UintTy::Usize) => {
+                    self.tcx.data_layout.ptr_sized_integer().to_ty(self.tcx, /*signed=*/ false)
+                }
+                ty::TyKind::Int(ty::IntTy::Isize) => {
+                    self.tcx.data_layout.ptr_sized_integer().to_ty(self.tcx, /*signed=*/ true)
+                }
+                _ => ty.super_fold_with(self),
+            }
+        }
+    }
+
+    ty.fold_with(&mut PointerIntsToFixedInts { tcx })
+}
 
 pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -66,12 +124,14 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
         return None;
     }
 
-    match self_ty.kind() {
+    let canonical_self_ty = canonicalize_specialization_ty(tcx, self_ty);
+
+    match canonical_self_ty.kind() {
         ty::TyKind::Adt(adt, substs) => {
-            parse_adt_template_specialization(db, self_ty, *adt, substs)
+            parse_adt_template_specialization(db, self_ty, canonical_self_ty, *adt, substs)
         }
         ty::TyKind::Tuple(types) if !types.is_empty() => {
-            parse_tuple_template_specialization(db, self_ty, types)
+            parse_tuple_template_specialization(db, self_ty, canonical_self_ty, types)
         }
         _ => None,
     }
@@ -97,6 +157,7 @@ fn parse_unit_in_specialization<'tcx>(
 fn parse_adt_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
+    canonical_self_ty: Ty<'tcx>,
     adt: ty::AdtDef<'tcx>,
     substs: ty::GenericArgsRef<'tcx>,
 ) -> Option<Result<RsStdTemplateSpecialization<'tcx>>> {
@@ -111,7 +172,7 @@ fn parse_adt_template_specialization<'tcx>(
                     TypeLocation::TemplateArg,
                     db,
                 )?;
-                let layout = get_layout(tcx, self_ty)?;
+                let layout = get_layout(tcx, canonical_self_ty)?;
 
                 let tag = match layout.variants() {
                     rustc_abi::Variants::Empty => {
@@ -139,6 +200,7 @@ fn parse_adt_template_specialization<'tcx>(
                     layout,
                     self_ty_rs: self_ty,
                     self_ty_cc,
+                    canonical_self_ty,
                     args: RsStdSpecializationArgs::Enum(RsStdEnumSpecialization {
                         tag_type_rs,
                         tag_type_cc: tag_type_cc.clone(),
@@ -160,7 +222,7 @@ fn parse_adt_template_specialization<'tcx>(
                         db,
                     ))?;
 
-                let layout = get_layout(tcx, self_ty)?;
+                let layout = get_layout(tcx, canonical_self_ty)?;
                 let tag = match layout.variants() {
                     rustc_abi::Variants::Empty => {
                         unreachable!(
@@ -200,6 +262,7 @@ fn parse_adt_template_specialization<'tcx>(
                     layout,
                     self_ty_rs: self_ty,
                     self_ty_cc,
+                    canonical_self_ty,
                     args: RsStdSpecializationArgs::Enum(RsStdEnumSpecialization {
                         tag_type_rs,
                         tag_type_cc: tag_type_cc.clone(),
@@ -213,7 +276,7 @@ fn parse_adt_template_specialization<'tcx>(
                     TypeLocation::TemplateArg,
                     db,
                 )?;
-                let layout = get_layout(tcx, self_ty)?;
+                let layout = get_layout(tcx, canonical_self_ty)?;
                 let self_ty_cc = {
                     let mut prereqs = CcPrerequisites::default();
                     let inner_ty_cc = inner_ty.for_cc.clone().into_tokens(&mut prereqs);
@@ -224,6 +287,7 @@ fn parse_adt_template_specialization<'tcx>(
                     layout,
                     self_ty_rs: self_ty,
                     self_ty_cc,
+                    canonical_self_ty,
                     args: RsStdSpecializationArgs::Vec(inner_ty),
                 })
             }
@@ -234,6 +298,7 @@ fn parse_adt_template_specialization<'tcx>(
 fn parse_tuple_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
+    canonical_self_ty: Ty<'tcx>,
     types: &'tcx ty::List<Ty<'tcx>>,
 ) -> Option<Result<RsStdTemplateSpecialization<'tcx>>> {
     let tcx = db.tcx();
@@ -243,7 +308,7 @@ fn parse_tuple_template_specialization<'tcx>(
         .collect::<Result<Vec<_>>>()
         .ok()?;
 
-    let layout = get_layout(tcx, self_ty).ok()?;
+    let layout = get_layout(tcx, canonical_self_ty).ok()?;
     let self_ty_cc = {
         let mut prereqs = CcPrerequisites::default();
         let element_tys_cc = element_tys
@@ -259,6 +324,7 @@ fn parse_tuple_template_specialization<'tcx>(
         layout,
         self_ty_rs: self_ty,
         self_ty_cc,
+        canonical_self_ty,
         args: RsStdSpecializationArgs::Tuple(element_tys),
     }))
 }
@@ -776,9 +842,8 @@ fn specialize_tuple<'tcx>(
     .collect();
 
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
-    let qualified_name = cc_fully_qualified_name.to_string();
-    let name = escape_non_identifier_chars(&qualified_name);
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
+    let name = specialization_guard_name(rs_std.canonical_self_ty);
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{name}");
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
     let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
@@ -798,7 +863,7 @@ fn specialize_tuple<'tcx>(
         __HASH_TOKEN__ endif __NEWLINE__
     };
 
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{}", name);
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{name}");
     let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
     let cc_details_tokens = quote! {
         __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
@@ -949,9 +1014,6 @@ fn specialize_vec<'tcx>(
         &core.common.cc_short_name,
         &core.common.cc_fully_qualified_name,
     );
-
-    let qualified_name = cc_fully_qualified_name.to_string();
-    let name = escape_non_identifier_chars(&qualified_name);
     let drop_trait = tcx.lang_items().drop_trait().expect("Could not find Drop trait");
     let drop_assoc_fn = tcx
         .associated_items(drop_trait)
@@ -1045,7 +1107,8 @@ fn specialize_vec<'tcx>(
     rs_details.tokens.extend(rs_drop);
 
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
+    let name = specialization_guard_name(rs_std.canonical_self_ty);
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{name}");
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
     let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
@@ -1071,7 +1134,7 @@ fn specialize_vec<'tcx>(
         __NEWLINE__
     };
 
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{}", name);
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{name}");
     let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
     let cc_details_tokens = quote! {
         __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
@@ -1297,10 +1360,8 @@ fn specialize_result<'tcx>(
     .into_iter()
     .collect();
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
-
-    let qualified_name = cc_fully_qualified_name.to_string();
-    let name = escape_non_identifier_chars(&qualified_name);
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
+    let name = specialization_guard_name(rs_std.canonical_self_ty);
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{name}");
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
     let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
@@ -1324,7 +1385,7 @@ fn specialize_result<'tcx>(
         __NEWLINE__
     };
 
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{}", name);
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{name}");
     let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
     let cc_details_tokens = quote! {
         __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
@@ -1515,10 +1576,8 @@ fn specialize_option<'tcx>(
     .into_iter()
     .collect();
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
-
-    let qualified_name = cc_fully_qualified_name.to_string();
-    let name = escape_non_identifier_chars(&qualified_name);
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
+    let name = specialization_guard_name(rs_std.canonical_self_ty);
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{name}");
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
     let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
@@ -1544,7 +1603,7 @@ fn specialize_option<'tcx>(
         __NEWLINE__
     };
 
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{}", name);
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{name}");
     let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
     let cc_details_tokens = quote! {
         __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
