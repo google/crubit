@@ -29,13 +29,9 @@ pub mod foo {
         type Kind = ::cxx::kind::Trivial;
     }
     impl Bar {
-        /// # Safety
-        ///
-        /// The caller must ensure that the following unsafe arguments are not misused by the function:
-        /// * `__this`: raw pointer
         #[inline(always)]
-        pub unsafe fn MyMethod(__this: *mut Self) {
-            unsafe { self::bar::MyMethod(__this) }
+        pub fn MyMethod<'__this>(&'__this mut self) {
+            unsafe { self::bar::MyMethod(self) }
         }
     }
 
@@ -51,12 +47,8 @@ pub mod foo {
     }
 
     pub mod bar {
-        /// # Safety
-        ///
-        /// The caller must ensure that the following unsafe arguments are not misused by the function:
-        /// * `__this`: raw pointer
         #[inline(always)]
-        pub(crate) unsafe fn MyMethod(__this: *mut crate::foo::Bar) {
+        pub(crate) fn MyMethod<'__this>(__this: &'__this mut crate::foo::Bar) {
             unsafe { crate::detail::__rust_thunk___ZN3foo3Bar8MyMethodEv(__this) }
         }
     }
@@ -69,7 +61,9 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN3foo3BarC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___ZN3foo3Bar8MyMethodEv(__this: *mut crate::foo::Bar);
+        pub(crate) unsafe fn __rust_thunk___ZN3foo3Bar8MyMethodEv<'__this>(
+            __this: &'__this mut crate::foo::Bar,
+        );
     }
 }
 

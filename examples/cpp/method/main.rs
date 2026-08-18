@@ -5,8 +5,6 @@
 use example_lib::foo::Bar;
 
 fn main() {
-    unsafe {
-        let mut x = Bar { x: 1 };
-        Bar::MyMethod(&mut x as *mut Bar);
-    }
+    let mut x = Bar { x: 1 };
+    x.MyMethod();
 }
