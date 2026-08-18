@@ -56,11 +56,17 @@ impl<T: Sized> shared_ptr<T> {
     ///
     /// # Safety
     ///
-    /// - `ptr` must be a valid pointer to a `T` or null.
-    /// - `ptr` and `cntrl` must have come from `into_raw_parts` or `release` of a
-    ///   `shared_ptr`, i.e. they constitute a valid `std::shared_ptr<T>`.
-    /// - The reference count must already account for the returned `shared_ptr`; this
-    ///   function does not increment it.
+    /// ## Preconditions
+    /// - `ptr` must be a valid, aligned pointer to an initialized `T`, or null.
+    /// - `cntrl` must be a valid, nullable pointer to a `std::__shared_weak_count` control block
+    ///   managing `ptr` (or null if `ptr` is null).
+    /// - `(ptr, cntrl)` must constitute a valid `std::shared_ptr<T>` state.
+    /// - The strong reference count of `cntrl` must already account for the returned `shared_ptr`;
+    ///   this function transfers ownership of an existing strong reference without incrementing it.
+    ///
+    /// ## Postconditions
+    /// - Returns a `shared_ptr<T>` owning the transferred strong reference, which will decrement
+    ///   the reference count when dropped.
     pub unsafe fn from_raw_parts(ptr: *const T, cntrl: *mut shared_weak_count) -> Self {
         shared_ptr { ptr, cntrl }
     }
@@ -93,23 +99,31 @@ impl<T: Sized> shared_ptr<T> {
     }
 
     /// Returns a reference to the underlying object, if it exists.
+    ///
+    /// # Safety
+    ///
+    /// If the inner object not thread safe and is mutated by C++ in a nonlocally-synchronized way,
+    /// it's unsafe to hold references to `&T` across the mutations (unless the mutated data is
+    /// wrapped in `UnsafeCell`).
     pub fn try_as_ref(this: &Self) -> Option<&T> {
-        // SAFETY: `this.ptr` is either null (no object) or a valid pointer to a `T` because `this`
-        // has ownership.
+        // SAFETY: By `shared_ptr` invariants, `this.ptr` is either null or points to an
+        // initialized `T` whose lifetime is managed by `this`.
         unsafe { this.ptr.as_ref() }
     }
 
     /// Returns the number of `shared_ptr` instances managing the current object.
     #[must_use]
     pub fn use_count(this: &Self) -> usize {
-        // SAFETY: `this.cntrl` is a nullable pointer to a valid `std::__shared_weak_count`
+        // SAFETY: `this.cntrl` is a nullable pointer to a valid `std::__shared_weak_count`.
         unsafe { std_allocator::shared_ptr_use_count(this.cntrl) }
     }
 }
 
 impl<T: Sized> Clone for shared_ptr<T> {
     fn clone(&self) -> Self {
-        // SAFETY: `self.cntrl` is a nullable pointer to a valid  `std::__shared_weak_count`
+        // SAFETY: `self.cntrl` is a nullable pointer to a valid `std::__shared_weak_count`.
+        // Incrementing the strong reference count via `shared_ptr_ref` keeps the object alive
+        // for the new clone.
         unsafe {
             std_allocator::shared_ptr_ref(self.cntrl);
         }
@@ -119,7 +133,9 @@ impl<T: Sized> Clone for shared_ptr<T> {
 
 impl<T: Sized> Drop for shared_ptr<T> {
     fn drop(&mut self) {
-        // SAFETY: `self.cntrl` is a nullable pointer to a valid  `std::__shared_weak_count`
+        // SAFETY: `self.cntrl` is a nullable pointer to a valid `std::__shared_weak_count`.
+        // Decrementing the strong reference count via `shared_ptr_unref` releases this instance's
+        // ownership and triggers destruction if the strong count reaches zero.
         unsafe {
             std_allocator::shared_ptr_unref(self.cntrl);
         }
