@@ -31,8 +31,10 @@
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#include "clang/AST/ExprConcepts.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
 #include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
@@ -562,6 +564,40 @@ std::string GetInvalidCallTarget(ImportContext& ictx,
       }
       return true;
     }
+
+    // Unevaluated operands in C++ (e.g. noexcept, sizeof, decltype, requires)
+    // are never evaluated at runtime and do not require function definitions.
+    // Skip traversing their expression subtrees so that unevaluated-only
+    // functions (like std::declval, SFINAE probes, or declaration-only helpers)
+    // are not force-instantiated.
+
+    // `noexcept(...)` exception specification operator.
+    bool TraverseCXXNoexceptExpr(clang::CXXNoexceptExpr* expr) { return true; }
+
+    // `sizeof(...)`, `alignof(...)`, and other unary type/expr traits.
+    bool TraverseUnaryExprOrTypeTraitExpr(
+        clang::UnaryExprOrTypeTraitExpr* expr) {
+      return true;
+    }
+
+    // `decltype(...)` type specifier.
+    bool TraverseDecltypeType(clang::DecltypeType* type,
+                              bool TraverseQualifier = false) {
+      return true;
+    }
+
+    // `decltype(...)` type specifier with source-location info.
+    bool TraverseDecltypeTypeLoc(clang::DecltypeTypeLoc type_loc,
+                                 bool TraverseQualifier = false) {
+      return true;
+    }
+
+    // C++20 `requires(...) { ... }` expressions and concept constraints.
+    bool TraverseRequiresExpr(clang::RequiresExpr* expr) { return true; }
+
+    // `typeid(...)` RTTI operator.
+    bool TraverseCXXTypeidExpr(clang::CXXTypeidExpr* expr) { return true; }
+
     bool VisitDeclRefExpr(clang::DeclRefExpr* expr) {
       if (auto* fn = clang::dyn_cast<clang::FunctionDecl>(expr->getDecl())) {
         return CheckAndRecurse(fn);
