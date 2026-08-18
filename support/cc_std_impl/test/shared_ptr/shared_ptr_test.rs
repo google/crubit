@@ -4,6 +4,8 @@
 
 use cc_std::std::shared_ptr;
 use googletest::prelude::*;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 
 #[gtest]
 fn test_layout() {
@@ -105,4 +107,56 @@ fn test_use_count() {
     expect_eq!(shared_ptr::use_count(&sp_clone), 2);
     drop(sp_clone);
     expect_eq!(shared_ptr::use_count(&sp), 1);
+}
+
+#[gtest]
+fn test_new() {
+    let sp = shared_ptr::new(42);
+    expect_eq!(*shared_ptr::try_as_ref(&sp).unwrap(), 42);
+    expect_eq!(shared_ptr::use_count(&sp), 1);
+
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp), 2);
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+
+    drop(sp);
+    expect_eq!(shared_ptr::use_count(&sp_clone), 1);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+}
+
+#[gtest]
+fn test_new_destroyed_in_cpp() {
+    let sp = shared_ptr::new(42);
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+
+    test_helpers::shared_ptr_test::destroy_shared_ptr(sp);
+
+    expect_eq!(shared_ptr::use_count(&sp_clone), 1);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+}
+
+struct DropDetector(Arc<AtomicUsize>);
+
+impl Drop for DropDetector {
+    fn drop(&mut self) {
+        self.0.fetch_add(1, Ordering::SeqCst);
+    }
+}
+
+#[gtest]
+fn test_new_custom_drop() {
+    let counter = Arc::new(AtomicUsize::new(0));
+    {
+        let _sp = shared_ptr::new(DropDetector(Arc::clone(&counter)));
+        expect_eq!(counter.load(Ordering::SeqCst), 0);
+    }
+    expect_eq!(counter.load(Ordering::SeqCst), 1);
+}
+
+#[gtest]
+fn test_new_sole_owner_destroyed_in_cpp() {
+    let sp = shared_ptr::new(42);
+    test_helpers::shared_ptr_test::destroy_shared_ptr(sp);
 }

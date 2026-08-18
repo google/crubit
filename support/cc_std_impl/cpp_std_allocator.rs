@@ -3,13 +3,16 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // #![feature(allocator_api)]
 
-use crate::crubit_cc_std_internal::std_allocator::{cpp_delete, cpp_new};
+use crate::crubit_cc_std_internal::std_allocator::{
+    cpp_delete, cpp_new, DynControlBlock, FunctionToCall,
+};
 use core::alloc::AllocError;
 use core::alloc::Allocator;
 use core::alloc::GlobalAlloc;
 use core::alloc::Layout;
 use core::ffi::c_void;
-use core::ptr::NonNull;
+use core::mem::MaybeUninit;
+use core::ptr::{self, NonNull};
 
 pub struct StdAllocator {}
 
@@ -51,4 +54,48 @@ impl Clone for StdAllocator {
     fn clone(&self) -> Self {
         Self {}
     }
+}
+
+/// Invokes a type-erased deleter function pointer on the Rust side of the FFI boundary.
+///
+/// TODO(b/526962187): Remove this thunk once CFI works properly. This serves as a direct-call thunk
+/// so C++ `std::shared_ptr` control block hooks (`__on_zero_shared` and `__on_zero_shared_weak`)
+/// can invoke the Rust deleter without performing an indirect cross-language call that would
+/// trigger Clang Control Flow Integrity (`-fsanitize=cfi-icall`) violations.
+///
+/// # Safety
+///
+/// ## Preconditions
+/// - `cntrl` must be a non-dangling pointer to a live `DynControlBlock`.
+/// - `cntrl.deleter` must be initialized with a valid `DeleterFn` callback whose preconditions are
+///   met.
+/// - Must only be called at the valid lifecycle transition points of `std::shared_ptr`:
+///   - `FunctionToCall::kDestroyValue` must be called when the strong reference count drops to 0
+///     (to destroy the managed payload).
+///   - `FunctionToCall::kDeleteControlBlock` must be called when the weak reference count drops to 0
+///     (to deallocate the control block and its allocation).
+///   Calling them out of order, multiple times, or at inappropriate lifecycle states violates the
+///   `deleter`'s preconditions and causes undefined behavior.
+///
+/// ## Postconditions
+/// - Forwards the lifecycle event to `cntrl.deleter`, executing the appropriate destruction or
+///   deallocation.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn __crubit_invoke_dyn_control_block_deleter(
+    function_to_call: FunctionToCall,
+    cntrl: NonNull<DynControlBlock>,
+) {
+    let p = cntrl.as_ptr();
+
+    // SAFETY: Caller guarantees that `cntrl` points to a live, valid `DynControlBlock`.
+    // Reading `deleter` is properly aligned and dereferences valid initialized memory.
+    let deleter = unsafe { ptr::read(&raw const (*p).deleter) };
+
+    // SAFETY: Caller guarantees that `cntrl` was initialized with a non-null `deleter` function
+    // pointer.
+    let deleter = unsafe { deleter.unwrap_unchecked() };
+
+    // SAFETY: Caller guarantees that `p` points to a live `DynControlBlock` and `function_to_call`
+    // corresponds to the valid lifecycle event, satisfying all preconditions of `deleter`.
+    unsafe { deleter(function_to_call, p) };
 }

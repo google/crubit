@@ -2,7 +2,14 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::crubit_cc_std_internal::std_allocator::{self, shared_weak_count};
+extern crate alloc;
+
+use crate::crubit_cc_std_internal::std_allocator::{
+    self, shared_weak_count, DynControlBlock, FunctionToCall,
+};
+use alloc::boxed::Box;
+use core::ffi::c_void;
+use core::mem::{ManuallyDrop, MaybeUninit};
 
 /// A smart pointer that shares ownership of another object of type `T` via a pointer,
 /// ABI-compatible with `std::shared_ptr<T>`.
@@ -52,6 +59,25 @@ unsafe impl<T: Sized + Send + Sync> Send for shared_ptr<T> {}
 unsafe impl<T: Sized + Send + Sync> Sync for shared_ptr<T> {}
 
 impl<T: Sized> shared_ptr<T> {
+    /// Creates a new `shared_ptr` managing `value`.
+    ///
+    /// This function performs a single heap allocation (similar to `std::make_shared`),
+    /// co-allocating the control block and the `value`.
+    pub fn new(value: T) -> Self {
+        let mut inner = Box::leak(Box::new(SharedInner {
+            cntrl: MaybeUninit::uninit(),
+            value: ManuallyDrop::new(value),
+        }));
+
+        // SAFETY: `this.cntrl.as_mut_ptr()` is a valid location to write a `DynControlBlock` to,
+        // and `SharedInner::<T>::deleter` satisfies the C++ deleter callback preconditions.
+        let cntrl = unsafe {
+            DynControlBlock::Emplace(inner.cntrl.as_mut_ptr(), Some(SharedInner::<T>::deleter))
+        };
+
+        shared_ptr { ptr: &*inner.value, cntrl }
+    }
+
     /// Creates a `shared_ptr` from a raw pointer and a control block pointer.
     ///
     /// # Safety
@@ -138,6 +164,79 @@ impl<T: Sized> Drop for shared_ptr<T> {
         // ownership and triggers destruction if the strong count reaches zero.
         unsafe {
             std_allocator::shared_ptr_unref(self.cntrl);
+        }
+    }
+}
+
+/// A control block for `shared_ptr` that embeds a `DynControlBlock` and a `T` value.
+///
+/// # Layout
+///
+/// `SharedInner<T>` is `#[repr(C)]` with `MaybeUninit<DynControlBlock>` as its
+/// first field. This means that pointers to this type can be freely upcasted to
+/// `*mut DynControlBlock`, and (when safe to do so) downcasted back to
+/// `*mut SharedInner<T>`.
+#[repr(C)]
+struct SharedInner<T> {
+    /// The C++ control block.
+    ///
+    /// It is safety critical that this remains the first field, and that this type is repr(C).
+    cntrl: MaybeUninit<DynControlBlock>,
+
+    /// The value.
+    ///
+    /// The value is dropped in place when the strong refcount hits 0, which may happen before this
+    /// object is deallocated (due to lingering weak pointers).
+    value: ManuallyDrop<T>,
+}
+
+impl<T> SharedInner<T> {
+    /// Deletes the `value` or destructs and deallocates the entire `SharedInner<T>`.
+    ///
+    /// This function is only intended to be used by `DynControlBlock`s embedded in
+    /// `SharedInner<T>`.
+    ///
+    /// # Safety
+    ///
+    /// ## Preconditions
+    /// - `cntrl` must point to a live `DynControlBlock` embedded as the first field of an
+    ///   active `SharedInner<T>` allocated via `SharedInner::new`.
+    /// - `function_to_call` must correspond to the exact lifecycle transition:
+    ///   - `FunctionToCall::kDestroyValue`: called exactly once when the strong reference count
+    ///     reaches 0, while `value` is still initialized and live.
+    ///   - `FunctionToCall::kDeleteControlBlock`: called exactly once when all strong and weak
+    ///     reference counts reach 0, after `kDestroyValue` has already run.
+    ///
+    /// ## Postconditions
+    /// - If `kDestroyValue`: `value` is dropped in place; the control block and
+    ///   containing allocation remain live.
+    /// - If `kDeleteControlBlock`: `cntrl` is dropped in place and the entire
+    ///   `SharedInner<T>` allocation is freed via `Box::from_raw`.
+    unsafe extern "C" fn deleter(function_to_call: FunctionToCall, cntrl: *mut DynControlBlock) {
+        // `SharedInner<T>` is `#[repr(C)]` with `MaybeUninit<DynControlBlock>` as
+        // its first field at byte offset 0. Since `cntrl` was allocated as part of a
+        // `SharedInner<T>`, upcasting `cntrl as *mut Self` safely recovers the
+        // pointer to the containing `SharedInner<T>`.
+        let this = cntrl as *mut Self;
+
+        match function_to_call {
+            FunctionToCall::kDestroyValue => {
+                // SAFETY: Preconditions guarantee this is called exactly once when the strong
+                // reference count is zero, and that `value` contains a live, undropped `T`.
+                unsafe { core::ptr::drop_in_place(&raw mut (*this).value as *mut T) };
+            }
+            FunctionToCall::kDeleteControlBlock => {
+                // SAFETY: Preconditions guarantee this is called exactly once when the weak
+                // reference count hits zero, and that `this` points to a valid
+                // `SharedInner<T>` that was previously leaked from a `Box`.
+                let mut this = unsafe { Box::from_raw(this) };
+
+                // SAFETY: Preconditions guarantee `cntrl` was initialized with placement-new in
+                // `DynControlBlock::Emplace` and is valid to drop in place.
+                unsafe { this.cntrl.assume_init_drop() };
+
+                // `this` is dropped here, deallocating the `SharedInner<T>`.
+            }
         }
     }
 }
