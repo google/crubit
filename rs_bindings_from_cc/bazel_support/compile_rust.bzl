@@ -119,6 +119,12 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
     for symlink, source in remap_path_prefix.items():
         remapped_flags.append("--remap-path-prefix={}={}".format(symlink, source))
 
+    remap_paths_file = ctx.actions.declare_file(crate_name + "_rust_api.remap_paths")
+    ctx.actions.write(
+        output = remap_paths_file,
+        content = "\n".join(["{}={}".format(k, v) for k, v in remap_path_prefix.items()]),
+    )
+
     providers = rustc_compile_action(
         ctx = ctx,
         attr = struct(**attr_args),
@@ -136,7 +142,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             edition = "2024",
             is_test = False,
             rustc_env = {},
-            compile_data = depset([]),
+            compile_data = depset([remap_paths_file]),
             compile_data_targets = depset([]),
             owner = ctx.label,
         ),
