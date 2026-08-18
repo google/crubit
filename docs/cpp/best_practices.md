@@ -36,6 +36,29 @@ The `rust_api_from_cpp` target should be defined in the same `BUILD` file as the
 original `cc_library` target. This helps ensure that there is a single
 easily-discoverable Rust API for a given C++ library.
 
+### Adding custom Rust source files (`srcs`)
+
+Handwritten Rust code can be added to the generated bindings by specifying the
+`srcs` attribute on `rust_api_from_cpp`:
+
+```python
+rust_api_from_cpp(
+    name = "my_lib_rust",
+    srcs = ["my_lib_custom.rs"],
+    cpp_target = ":my_lib",
+)
+```
+
+To allow Crubit bindings to be `#![no_std]` by default, the generated crate does
+not include the regular `std` Rust prelude. Consequently, standard library types
+like `Box` have to be imported manually:
+
+```rust
+extern crate std;
+
+use std::boxed::Box;
+```
+
 <section class="zippy" markdown="1">
 
 Read on only if you're curious about *why* Rust bindings targets are structured this way.

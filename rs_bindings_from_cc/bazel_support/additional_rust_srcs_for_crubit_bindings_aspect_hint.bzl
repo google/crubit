@@ -5,6 +5,9 @@
 """The `additional_rust_srcs_for_crubit_bindings` aspect hint, when attached to a `cc_library`,
 specifies additional Rust source files to be included in the generated Rust crate by Crubit.
 
+DEPRECATED: `additional_rust_srcs_for_crubit_bindings` is deprecated. Prefer `rust_api_from_cpp`,
+which allows additional Rust source files to be specified directly in its `srcs` attribute.
+
 WARNING: This presents novel compatibility problems, tread with caution. See below.
 
 Typical uses:
@@ -26,6 +29,18 @@ bindings from Rust source code).
 Rust and C++ form one ecosystem: anything a Rust caller may want to do, a C++ caller may want to
 do as well. Typically, abstractions should be defined in the C++ file, and exposed to Rust callers
 through Crubit.
+
+## Prelude and Standard Library
+
+To allow Crubit bindings to be `#![no_std]` by default, the generated crate does
+not include the regular `std` Rust prelude. Consequently, standard library types like `Box` have
+to be imported manually:
+
+```rust
+extern crate std;
+
+use std::boxed::Box;
+```
 
 ## Compatibility
 
@@ -196,14 +211,25 @@ def additional_rust_srcs_for_crubit_bindings(
     """
     Defines an aspect hint that is used to pass extra Rust source files to `rs_bindings_from_cc` tool's `extra_rs_srcs` CLI argument.
 
-    Note: to use `std` in the extra Rust source files, you must use:
+    DEPRECATED: `additional_rust_srcs_for_crubit_bindings` is deprecated. Prefer `rust_api_from_cpp`,
+    which allows additional Rust source files to be specified directly in its `srcs` attribute.
+
+    Note: to allow Crubit bindings to be `#![no_std]` by default, the generated
+    crate does not include the regular `std` Rust prelude. Standard library types
+    like `Box` have to be imported manually:
+
     ```rust
     extern crate std;
+
+    use std::boxed::Box;
     ```
 
     Args:
         name: Aspect hint name.
         srcs: The Rust source files to be included in addition to generated Rust bindings.
+            Note: to allow Crubit bindings to be `#![no_std]` by default, these files do not
+            include the regular `std` Rust prelude, meaning that types like `Box` have to be
+            imported manually even after declaring `extern crate std;`.
         cpp_srcs: The C++ source files whose contents are parsed by Clang to generate Rust bindings, and prepended to the generated C++ implementation (`rs_api_impl.cc`).
         namespace_path: This allows Rust source files define new entries inside of a specific
             existing C++ namespace instead of the top level namespace. For modules which are not
