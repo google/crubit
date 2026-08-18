@@ -183,6 +183,48 @@ impl<T: Sized> shared_ptr<T> {
         unsafe { shared_ptr::project_unchecked(shared_ptr::new(arc), |a| &**a) }
     }
 
+    /// Creates a new `shared_ptr` from a raw pointer and a custom deleter.
+    ///
+    /// When the number of strong owners reaches zero, the deleter will be called with the raw
+    /// pointer.
+    ///
+    /// # Safety
+    ///
+    /// ## Preconditions
+    /// - `ptr` must be a valid, aligned pointer to an initialized `T`, or null.
+    /// - It must be safe to call `deleter` on `ptr` when the last strong owner is dropped.
+    ///
+    /// ## Postconditions
+    /// - The caller can be assured that the deleter will be called exactly once when the last
+    ///   strong owner is dropped.
+    pub unsafe fn from_ptr_and_deleter(
+        ptr: *mut T,
+        deleter: impl FnOnce(*mut T) + Send + 'static,
+    ) -> Self {
+        struct DeleteOnDrop<T, F: FnOnce(*mut T) + Send + 'static> {
+            ptr: *mut T,
+            // Safety: `deleter` is always initialized, and is only wrapped in `MaybeUninit` so
+            // it can be taken and consumed during `Drop::drop`.
+            deleter: MaybeUninit<F>,
+        }
+
+        impl<T, F: FnOnce(*mut T) + Send + 'static> Drop for DeleteOnDrop<T, F> {
+            fn drop(&mut self) {
+                // SAFETY: `deleter` is always initialized, and is only wrapped in `MaybeUninit` so
+                // it can be taken and consumed during `Drop::drop` (right now). Invoking it also
+                // runs its drop implementation, so nothing is leaked.
+                let deleter = unsafe { self.deleter.assume_init_read() };
+                deleter(self.ptr);
+            }
+        }
+
+        let delete_on_drop =
+            shared_ptr::new(DeleteOnDrop { ptr, deleter: MaybeUninit::new(deleter) });
+
+        // SAFETY: We only project away the deleter FnOnce object, which we guaranteed was 'static.
+        unsafe { shared_ptr::project_unchecked(delete_on_drop, |d| &*d.ptr) }
+    }
+
     /// Creates a `shared_ptr` from a raw pointer and a control block pointer.
     ///
     /// # Safety
