@@ -25,9 +25,6 @@ rust_library(
         "static_method_mode.rs",
         "type_location.rs",
     ],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//cc_bindings_from_rs:crubit_attr",
         "//common:arc_anyhow",
@@ -47,7 +44,6 @@ rust_library(
 crubit_rust_test(
     name = "fully_qualified_name_test",
     srcs = ["fully_qualified_name_test.rs"],
-    rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         ":database",
     ],

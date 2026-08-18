@@ -11,9 +11,6 @@ rust_library(
     compatible_with = ["//buildenv/target:non_prod"],
     crate_features = [],
     proc_macro_deps = ["//support:forward_declare_proc_macros"],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=extern_types,negative_impls"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
 )
 
 rust_test(

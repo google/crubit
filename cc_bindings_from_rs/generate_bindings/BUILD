@@ -26,9 +26,6 @@ rust_library(
         "get_generic_args.rs",
         "lib.rs",
     ],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene,cfg_accessible"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":query_compiler",
         "//cc_bindings_from_rs:crubit_attr",
@@ -53,7 +50,6 @@ rust_library(
 crubit_rust_test(
     name = "format_type_test",
     srcs = ["format_type_test.rs"],
-    rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         ":generate_bindings",
         ":query_compiler",
@@ -70,7 +66,6 @@ crubit_rust_test(
 crubit_rust_test(
     name = "avoid_colliding_types_test",
     srcs = ["avoid_colliding_types_test.rs"],
-    rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         ":generate_bindings",
         "//cc_bindings_from_rs:run_compiler_test_support",
@@ -80,7 +75,6 @@ crubit_rust_test(
 crubit_rust_test(
     name = "generate_bindings_test",
     srcs = ["generate_bindings_test.rs"],
-    rustc_flags = ["-Zallow-features=rustc_private"],
     deps = [
         ":generate_bindings",
         ":test_helpers",
@@ -126,9 +120,6 @@ rust_library(
     srcs = [
         "test_helpers.rs",
     ],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,rustc_attr,cfg_accessible,stmt_expr_attributes,proc_macro_hygiene"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":generate_bindings",
         "//cc_bindings_from_rs:run_compiler_test_support",
@@ -147,9 +138,6 @@ rust_library(
     srcs = [
         "query_compiler.rs",
     ],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=cfg_accessible,rustc_private,rustc_attr,stmt_expr_attributes,proc_macro_hygiene"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//cc_bindings_from_rs:crubit_attr",
         "//cc_bindings_from_rs:rustversion",

@@ -99,7 +99,6 @@ rust_library(
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
-    rustc_flags = ["-Zallow-features=rustc_attrs"],
 )
 
 golden_test(

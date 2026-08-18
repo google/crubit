@@ -37,9 +37,6 @@ rust_library(
     srcs = ["ctor.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     proc_macro_deps = [":ctor_proc_macros"],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=allow_internal_unstable,auto_traits,negative_impls,super_let"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
         "//visibility:public",
     ],
@@ -127,9 +124,6 @@ crubit_rust_test(
     aliases = {
         "ctor": "renamed_ctor",
     },
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=negative_impls"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":ctor",
         "@crate_index//:googletest",
@@ -149,9 +143,6 @@ rust_test(
 rust_test(
     name = "ctor_proc_macros_e2e_test",
     srcs = ["ctor_proc_macros_e2e_test.rs"],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=negative_impls"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":ctor",
         "@crate_index//:googletest",
@@ -183,9 +174,6 @@ rust_library(
     compatible_with = ["//buildenv/target:non_prod"],
     crate_features = ["unstable"],
     proc_macro_deps = [":forward_declare_proc_macros"],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=extern_types,negative_impls,unsized_const_params,adt_const_params"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
         "//visibility:public",
     ],
@@ -229,9 +217,6 @@ rust_library(
     name = "oops",
     srcs = ["oops.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=negative_impls"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     visibility = [
         "//visibility:public",
     ],
@@ -240,9 +225,6 @@ rust_library(
 rust_test(
     name = "oops_test",
     srcs = ["oops.rs"],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=negative_impls"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "@crate_index//:googletest",
     ],

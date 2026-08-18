@@ -53,7 +53,6 @@ crubit_cc_test(
 rust_library(
     name = "no_core",
     srcs = ["no_core.rs"],
-    rustc_flags = ["-Zallow-features=no_core,profiler_runtime,staged_api"],
 )
 
 golden_test(

@@ -21,9 +21,6 @@ package(
 rust_library(
     name = "cpp_api_from_rust_lib",
     srcs = ["lib.rs"],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=never_type,rustc_private,proc_macro_hygiene"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":cmdline",
         ":run_compiler",
@@ -47,9 +44,6 @@ crubit_rust_binary(
     srcs = ["cargo-cpp_api_from_rust.rs"],
     # Do not add a fake dependency on Crubit, because it will introduce a dependency cycle.
     crubit_dep = False,
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=never_type,rustc_private"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":cmdline",
         ":cpp_api_from_rust_lib",
@@ -66,9 +60,6 @@ crubit_rust_binary(
     srcs = ["cc_bindings_from_rs.rs"],
     # Do not add a fake dependency on Crubit, because it will introduce a dependency cycle.
     crubit_dep = False,
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=never_type,rustc_private"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     # This is built by cargo on presubmit, so should not go stale.
     # It doesn't work in Bazel because a cargo-clap feature we need is not enabled.
     tags = [
@@ -92,9 +83,6 @@ crubit_rust_binary(
 crubit_rust_test(
     name = "cargo_cpp_api_from_rust_test",
     crate = ":cargo-cpp_api_from_rust",
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=never_type,rustc_private"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     tags = [
         "manual",
         "norapid",
@@ -109,9 +97,6 @@ crubit_rust_test(
 crubit_rust_test(
     name = "cc_bindings_from_rs_test",
     crate = ":cpp_api_from_rust_lib",
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=never_type,rustc_private,proc_macro_hygiene"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     # We don't yet support running cc_bindings_from_rs itself on macOS (we only target macOS).
     tags = ["not_run:mac"],
     deps = [
@@ -141,9 +126,6 @@ rust_library(
     srcs = [
         "cmdline.rs",
     ],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         "//common:crubit_feature",
         "//common:dyn_format",
@@ -156,9 +138,6 @@ rust_library(
 crubit_rust_test(
     name = "cmdline_test",
     crate = ":cmdline",
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     # We don't yet support running rustc itself on macOS (we only target macOS).
     tags = ["not_run:mac"],
     deps = [
@@ -171,9 +150,6 @@ crubit_rust_test(
 rust_library(
     name = "crubit_attr",
     srcs = ["crubit_attr.rs"],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":rustversion",
         "@crate_index//:anyhow",  # v1
@@ -183,9 +159,6 @@ rust_library(
 crubit_rust_test(
     name = "crubit_attr_test",
     srcs = ["crubit_attr_test.rs"],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     # We don't yet support running rustc itself on macOS (we only target macOS).
     tags = ["not_run:mac"],
     deps = [
@@ -200,9 +173,6 @@ rust_library(
     srcs = [
         "run_compiler.rs",
     ],
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,cfg_accessible"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     deps = [
         ":rustversion",
         "//common:arc_anyhow",
@@ -213,9 +183,6 @@ rust_library(
 crubit_rust_test(
     name = "run_compiler_test",
     crate = ":run_compiler",
-    # LINT.IfChange
-    rustc_flags = ["-Zallow-features=rustc_private,cfg_accessible"],
-    # LINT.ThenChange(//docs/overview/unstable_features.md)
     # We don't yet support running rustc itself on macOS (we only target macOS).
     tags = ["not_run:mac"],
     deps = [
