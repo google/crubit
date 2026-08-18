@@ -7,18 +7,105 @@ use std::rc::Rc;
 
 #[test]
 fn test_rename_clang_builtin_macros() {
-    assert_eq!(rename_clang_builtin_macros(Rc::from("unix")).as_ref(), "rs_unix");
-    assert_eq!(rename_clang_builtin_macros(Rc::from("linux")).as_ref(), "rs_linux");
+    for macro_name in ["unix", "linux", "WIN32", "WINNT", "WIN64", "spirv", "sun"] {
+        assert_eq!(
+            rename_clang_builtin_macros(Rc::from(macro_name)).as_ref(),
+            format!("rs_{macro_name}")
+        );
+    }
     assert_eq!(rename_clang_builtin_macros(Rc::from("remove")).as_ref(), "remove");
+    assert_eq!(rename_clang_builtin_macros(Rc::from("memchr")).as_ref(), "memchr");
     assert_eq!(rename_clang_builtin_macros(Rc::from("my_module")).as_ref(), "my_module");
 }
 
 #[test]
 fn test_rename_c_stdlib_functions() {
-    assert_eq!(rename_c_stdlib_functions(Rc::from("remove")).as_ref(), "rs_remove");
-    assert_eq!(rename_c_stdlib_functions(Rc::from("rename")).as_ref(), "rs_rename");
-    assert_eq!(rename_c_stdlib_functions(Rc::from("free")).as_ref(), "rs_free");
-    assert_eq!(rename_c_stdlib_functions(Rc::from("exit")).as_ref(), "rs_exit");
+    for func in [
+        "remove",
+        "rename",
+        "free",
+        "exit",
+        "abort",
+        "signal",
+        "system",
+        "malloc",
+        "calloc",
+        "realloc",
+        "memcpy",
+        "memmove",
+        "memset",
+        "strcpy",
+        "strncpy",
+        "strcat",
+        "strncat",
+        "strcmp",
+        "strncmp",
+        "strlen",
+        "strchr",
+        "strrchr",
+        "strstr",
+        "strtok",
+        "strerror",
+        "memchr",
+        "abs",
+        "labs",
+        "llabs",
+        "div",
+        "ldiv",
+        "lldiv",
+        "rand",
+        "srand",
+        "bsearch",
+        "qsort",
+        "getenv",
+        "sin",
+        "cos",
+        "tan",
+        "asin",
+        "acos",
+        "atan",
+        "atan2",
+        "sinh",
+        "cosh",
+        "tanh",
+        "exp",
+        "log",
+        "log10",
+        "pow",
+        "sqrt",
+        "ceil",
+        "floor",
+        "fabs",
+        "frexp",
+        "ldexp",
+        "modf",
+        "clock",
+        "difftime",
+        "mktime",
+        "time",
+        "asctime",
+        "ctime",
+        "gmtime",
+        "localtime",
+        "strftime",
+        "printf",
+        "scanf",
+        "puts",
+        "fopen",
+        "fclose",
+        "fread",
+        "fwrite",
+        "fseek",
+        "ftell",
+        "rewind",
+        "perror",
+        "tmpfile",
+        "tmpnam",
+    ] {
+        assert_eq!(rename_c_stdlib_functions(Rc::from(func)).as_ref(), format!("rs_{func}"));
+    }
     assert_eq!(rename_c_stdlib_functions(Rc::from("unix")).as_ref(), "unix");
+    assert_eq!(rename_c_stdlib_functions(Rc::from("linux")).as_ref(), "linux");
+    assert_eq!(rename_c_stdlib_functions(Rc::from("WIN32")).as_ref(), "WIN32");
     assert_eq!(rename_c_stdlib_functions(Rc::from("my_module")).as_ref(), "my_module");
 }

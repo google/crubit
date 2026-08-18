@@ -190,6 +190,7 @@ pub fn rename_c_stdlib_functions(ns: Rc<str>) -> Rc<str> {
         "malloc" | "calloc" | "realloc" | "memcpy" | "memmove" | "memset" |
         "strcpy" | "strncpy" | "strcat" | "strncat" | "strcmp" | "strncmp" |
         "strlen" | "strchr" | "strrchr" | "strstr" | "strtok" | "strerror" |
+        "memchr" |
         // Math & Utility
         "abs" | "labs" | "llabs" | "div" | "ldiv" | "lldiv" | "rand" | "srand" |
         "bsearch" | "qsort" | "getenv" | "sin" | "cos" | "tan" | "asin" | "acos" |
