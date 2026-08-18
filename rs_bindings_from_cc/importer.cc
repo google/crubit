@@ -40,6 +40,7 @@
 #include "rs_bindings_from_cc/annotations_consumer.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/importers/class_template.h"
 #include "rs_bindings_from_cc/importers/cxx_record.h"
@@ -1714,7 +1715,7 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
   std::string source_loc =
       ConvertSourceLocation(original_decl.getBeginLoc(), nullptr);
   std::optional<std::string> inline_cpp_source_text;
-  if (invocation_.is_carcinize()) {
+  if (invocation_.allow_incomplete_migration()) {
     clang::SourceManager& sm = ctx_.getSourceManager();
     bool invalid = false;
     llvm::StringRef text = clang::Lexer::getSourceText(
@@ -1740,7 +1741,8 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
   unsupported->set_source_loc(std::move(source_loc));
   unsupported->set_id(GenerateItemId(&original_decl).value());
   unsupported->set_defining_target(GetOwningTarget(&original_decl).value());
-  unsupported->set_must_bind(is_hard_error);
+  unsupported->set_must_bind(is_hard_error || invocation_.carcinize_mode() ==
+                                                  CarcinizeMode::kStrict);
   if (inline_cpp_source_text.has_value()) {
     unsupported->set_inline_cpp_source_text(*inline_cpp_source_text);
   }
