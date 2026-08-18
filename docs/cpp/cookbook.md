@@ -299,8 +299,8 @@ class FakeClock {
   // Mutable for Rust.
   mutable int mytime_;
 };
+```
 
-````
 You can also use the `CRUBIT_THREAD_SAFE` annotation, but this is more dangerous, as
 there is no enforcement that every method only modifies `mutable` fields, and
 requires more extensive review:
@@ -314,7 +314,7 @@ class CRUBIT_THREAD_SAFE FakeClock {
 Using `const` methods, while less idiomatic in C++, structurally forces
 soundness, so that there is no UB.
 
-````
+</section>
 
 ## Working around blocking bugs in Crubit {#blockers}
 
