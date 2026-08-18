@@ -192,4 +192,22 @@ extern "C" void __rust_thunk___ZN27StructWithUnsafeConstructorC1EPi(
   crubit::construct_at(__this, p);
 }
 
+static_assert(
+    CRUBIT_SIZEOF(struct ::CopyCtorHasUnevaluatableExprInUnevaluatedContext) ==
+    8);
+static_assert(
+    alignof(struct ::CopyCtorHasUnevaluatableExprInUnevaluatedContext) == 8);
+
+extern "C" void
+__rust_thunk___ZN48CopyCtorHasUnevaluatableExprInUnevaluatedContextD1Ev(
+    struct ::CopyCtorHasUnevaluatableExprInUnevaluatedContext* __this) {
+  std::destroy_at(__this);
+}
+
+extern "C" void
+__rust_thunk___ZN48CopyCtorHasUnevaluatableExprInUnevaluatedContextC1Ev(
+    struct ::CopyCtorHasUnevaluatableExprInUnevaluatedContext* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop

@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_
 
+#include <memory>
+
 // `[[clang::trivial_abi]]` is used so that `is_trivial_abi` doesn't prevent
 // generating bindings for constructors, even though the presence of a
 // user-defined copy constructor technically means that the struct below
@@ -109,6 +111,36 @@ struct NonTrivialStructWithConstructors final {
 struct StructWithUnsafeConstructor final {
   explicit StructWithUnsafeConstructor(int* p) : ptr_field(p) {}
   int* ptr_field;
+};
+
+struct [[clang::trivial_abi]]
+CopyCtorHasUnevaluatableExprInUnevaluatedContext final {
+ public:
+  CopyCtorHasUnevaluatableExprInUnevaluatedContext()
+      : int_ptr(std::make_unique<int>(123)) {}
+
+  // In libc++, `std::unique_ptr::operator*()` declares a conditional `noexcept`
+  // specification using `std::declval`:
+  //
+  // ```cpp
+  // operator*() const noexcept(noexcept(*std::declval<pointer>()))
+  // ```
+  //
+  // Because `std::declval` cannot be evaluated, attempting to instantiate its
+  // definition triggers a static assertion error. But since it appears in a
+  // position that should never be evaluated (the body of a noexcept specifier),
+  // Crubit shouldn't complain about it.
+  //
+  // This struct tests that Crubit skips unevaluated operands (such as
+  // `noexcept`, `decltype`, or `sizeof`) during AST validation, ensuring that
+  // calling `*other.int_ptr_` in a copy constructor correctly generates
+  // `impl Clone`.
+  CopyCtorHasUnevaluatableExprInUnevaluatedContext(
+      const CopyCtorHasUnevaluatableExprInUnevaluatedContext& other)
+      : int_ptr(std::make_unique<int>(*other.int_ptr)) {}
+
+ private:
+  std::unique_ptr<int> int_ptr;
 };
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_

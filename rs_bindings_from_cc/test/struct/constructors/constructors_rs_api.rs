@@ -750,6 +750,76 @@ impl ::ctor::UnsafeCtorNew<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor
     }
 }
 
+#[cfi_encoding = "48CopyCtorHasUnevaluatableExprInUnevaluatedContext"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=:: CopyCtorHasUnevaluatableExprInUnevaluatedContext
+pub struct CopyCtorHasUnevaluatableExprInUnevaluatedContext {
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) int_ptr: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+}
+impl !Send for CopyCtorHasUnevaluatableExprInUnevaluatedContext {}
+impl !Sync for CopyCtorHasUnevaluatableExprInUnevaluatedContext {}
+unsafe impl ::cxx::ExternType for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
+    type Id = ::cxx::type_id!(":: CopyCtorHasUnevaluatableExprInUnevaluatedContext");
+    type Kind = ::cxx::kind::Trivial;
+}
+impl ::core::fmt::Debug for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("CopyCtorHasUnevaluatableExprInUnevaluatedContext")
+            .finish_non_exhaustive()
+    }
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!(":: CopyCtorHasUnevaluatableExprInUnevaluatedContext"),
+    crate::CopyCtorHasUnevaluatableExprInUnevaluatedContext
+);
+
+impl Drop for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
+    #[inline(always)]
+    fn drop<'__this>(&'__this mut self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN48CopyCtorHasUnevaluatableExprInUnevaluatedContextD1Ev(
+                self,
+            )
+        }
+    }
+}
+
+impl Default for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN48CopyCtorHasUnevaluatableExprInUnevaluatedContextC1Ev(
+                &raw mut tmp as *mut _,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+
+// error: constructor `CopyCtorHasUnevaluatableExprInUnevaluatedContext::CopyCtorHasUnevaluatableExprInUnevaluatedContext` could not be bound
+//   Defaulted function relies on an invalid decl: std::declval
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_3pmr21polymorphic_allocatorIDiEEEE = forward_declare::symbol!(":: std :: basic_string < char32_t , std :: char_traits < char32_t >, std :: pmr :: polymorphic_allocator < char32_t >>"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_9allocatorIDiEEEE = forward_declare::symbol!(":: std :: basic_string < char32_t , std :: char_traits < char32_t >, std :: allocator < char32_t >>"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_3pmr21polymorphic_allocatorIDsEEEE = forward_declare::symbol!(":: std :: basic_string < char16_t , std :: char_traits < char16_t >, std :: pmr :: polymorphic_allocator < char16_t >>"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_9allocatorIDsEEEE = forward_declare::symbol!(":: std :: basic_string < char16_t , std :: char_traits < char16_t >, std :: allocator < char16_t >>"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIcNS_11char_traitsIcEENS_3pmr21polymorphic_allocatorIcEEEE = forward_declare::symbol!(":: std :: basic_string < char , std :: char_traits < char >, std :: pmr :: polymorphic_allocator < char >>"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEE = forward_declare::symbol!(":: std :: basic_string < char , std :: char_traits < char >, std :: allocator < char >>"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_ostreamIcNS_11char_traitsIcEEEE = forward_declare::symbol!(":: std :: basic_ostream < char , std :: char_traits < char >>"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_ostreamIwNS_11char_traitsIwEEEE = forward_declare::symbol!(":: std :: basic_ostream < wchar_t , std :: char_traits < wchar_t >>"));
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -869,6 +939,14 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
             p: *mut ::ffi_11::c_int,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN48CopyCtorHasUnevaluatableExprInUnevaluatedContextD1Ev<
+            '__this,
+        >(
+            __this: &'__this mut crate::CopyCtorHasUnevaluatableExprInUnevaluatedContext,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN48CopyCtorHasUnevaluatableExprInUnevaluatedContextC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
     }
 }
 
@@ -947,4 +1025,14 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::StructWithUnsafeConstructor: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::StructWithUnsafeConstructor: Drop);
     assert!(::core::mem::offset_of!(crate::StructWithUnsafeConstructor, ptr_field) == 0);
+    assert!(::core::mem::size_of::<crate::CopyCtorHasUnevaluatableExprInUnevaluatedContext>() == 8);
+    assert!(
+        ::core::mem::align_of::<crate::CopyCtorHasUnevaluatableExprInUnevaluatedContext>() == 8
+    );
+    static_assertions::assert_impl_all!(crate::CopyCtorHasUnevaluatableExprInUnevaluatedContext: Drop);
+    static_assertions::assert_not_impl_any!(crate::CopyCtorHasUnevaluatableExprInUnevaluatedContext: Copy);
+    assert!(
+        ::core::mem::offset_of!(crate::CopyCtorHasUnevaluatableExprInUnevaluatedContext, int_ptr)
+            == 0
+    );
 };
