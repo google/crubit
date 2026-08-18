@@ -281,7 +281,6 @@ rust_library(
 rust_test(
     name = "generate_comment_test",
     srcs = ["generate_comment_test.rs"],
-    harness = "libtest",
     tags = [
         "not_run:arm",
         "not_run:mac",
