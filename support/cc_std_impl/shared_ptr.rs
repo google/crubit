@@ -248,6 +248,16 @@ impl<T: Sized> shared_ptr<T> {
         // SAFETY: `this.cntrl` is a nullable pointer to a valid `std::__shared_weak_count`.
         unsafe { std_allocator::shared_ptr_use_count(this.cntrl) }
     }
+
+    /// Returns `true` if the two `shared_ptr`s manage the same control block.
+    ///
+    /// Note that because of projection, it's possible for two `shared_ptr`s to point to different
+    /// parts of the same underlying object, thus having different `T` types, but still share the
+    /// same control block.
+    #[must_use]
+    pub fn owner_equal<U: Sized>(this: &Self, other: &shared_ptr<U>) -> bool {
+        core::ptr::addr_eq(this.cntrl, other.cntrl)
+    }
 }
 
 impl<T: Sized> Clone for shared_ptr<T> {

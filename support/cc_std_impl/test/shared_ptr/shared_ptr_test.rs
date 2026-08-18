@@ -299,3 +299,21 @@ fn test_from_pinned_box_non_unpin() {
     expect_eq!(shared_ptr::try_as_ref(&sp).unwrap().val, 123);
     expect_eq!(shared_ptr::use_count(&sp), 1);
 }
+
+#[gtest]
+fn test_ptr_eq() {
+    let sp1 = shared_ptr::new(Point { x: 10, y: 20 });
+    let sp1_clone = sp1.clone();
+    let sp2 = shared_ptr::new(Point { x: 10, y: 20 });
+    let sp1_x: shared_ptr<i32> = shared_ptr::project(sp1.clone(), |p| &p.x);
+
+    // Same control block
+    expect_true!(shared_ptr::owner_equal(&sp1, &sp1_clone));
+    // Different types sharing the same control block via projection
+    expect_true!(shared_ptr::owner_equal(&sp1, &sp1_x));
+    expect_true!(shared_ptr::owner_equal(&sp1_clone, &sp1_x));
+
+    // Different allocations
+    expect_false!(shared_ptr::owner_equal(&sp1, &sp2));
+    expect_false!(shared_ptr::owner_equal(&sp1_x, &sp2));
+}
