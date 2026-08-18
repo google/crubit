@@ -943,8 +943,6 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   clang::CallingConv call_conv =
       function_decl->getType()->getAs<clang::FunctionType>()->getCallConv();
 
-  bool has_c_calling_convention = call_conv == clang::CC_C;
-
   absl::StatusOr<CallingConv> cc_call_conv =
       ConvertCcCallConvToSupportedCallingConv(call_conv);
 
@@ -1070,7 +1068,6 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   if (cc_call_conv.ok()) {
     func->set_call_conv(*cc_call_conv);
   }
-  func->set_has_c_calling_convention(has_c_calling_convention);
   func->set_is_member_or_descendant_of_class_template(
       is_member_or_descendant_of_class_template);
   func->set_safety_annotation(safety_annotation);

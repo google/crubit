@@ -1426,9 +1426,6 @@ derive_debug_partialeq_eq_hash! {
             self.proto.call_conv_opt().into_option().to_ir()
         }
 
-        pub fn has_c_calling_convention(&self) -> bool {
-            self.proto.has_c_calling_convention()
-        }
 
         pub fn is_member_or_descendant_of_class_template(&self) -> bool {
             self.proto.is_member_or_descendant_of_class_template()
@@ -1481,6 +1478,11 @@ derive_debug_partialeq_eq_hash! {
         pub fn semantic(&self) -> Option<&MemberFuncSemantic> {
             self.semantic.as_ref()
         }
+    }
+}
+impl<'pb> Func<'pb> {
+    pub fn has_c_calling_convention(&self) -> bool {
+        self.call_conv() == Some(CcCallingConv::C)
     }
 }
 

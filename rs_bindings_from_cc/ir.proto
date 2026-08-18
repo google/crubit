@@ -218,6 +218,7 @@ message MemberFuncSemantic {
 }
 
 message Func {
+  reserved 19;
   UnqualifiedIdentifier cc_name = 1;
   UnqualifiedIdentifier rs_name = 2;
   string unique_name = 3;
@@ -236,7 +237,6 @@ message Func {
   string nodiscard = 16;
   string deprecated = 17;
   string unknown_attr = 18;
-  bool has_c_calling_convention = 19;
   bool is_member_or_descendant_of_class_template = 20;
   SafetyAnnotation safety_annotation = 21;
   string source_loc = 22;
