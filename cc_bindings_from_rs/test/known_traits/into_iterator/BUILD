@@ -35,6 +35,7 @@ golden_test(
     basename = "into_iterator",
     golden_h = "into_iterator_cc_api.h",
     golden_rs = "into_iterator_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "into_iterator_rust",
 )
 

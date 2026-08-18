@@ -55,6 +55,7 @@ golden_test(
     basename = "rust_lib",
     golden_h = "rust_lib_cc_api.h",
     golden_rs = "rust_lib_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "rust_lib",
 )
 

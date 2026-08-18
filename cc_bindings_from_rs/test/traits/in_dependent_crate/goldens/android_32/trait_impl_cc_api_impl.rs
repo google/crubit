@@ -1,0 +1,38 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// trait_impl_golden
+
+#![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
+#![allow(improper_ctypes_definitions)]
+#![deny(warnings)]
+
+extern crate alloc;
+extern crate core;
+const _: () = assert!(::std::mem::size_of::<::trait_impl_golden::MyStruct>() == 4);
+const _: () = assert!(::std::mem::align_of::<::trait_impl_golden::MyStruct>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::trait_impl_golden::MyStruct::new(x);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::trait_impl_golden::MyStruct, x) == 0);
+const _: () = assert!(::std::mem::size_of::<::trait_impl_golden::NotImplemented>() == 12);
+const _: () = assert!(::std::mem::align_of::<::trait_impl_golden::NotImplemented>() == 4);
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_utrait_uimpl_ugolden_x0000003a_x0000003aNotImplemented(
+    __self: *mut ::trait_impl_golden::NotImplemented,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+const _: () = assert!(::core::mem::offset_of!(::trait_impl_golden::NotImplemented, foo) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething_utrait_uimpl_ugolden_x0000003a_x0000003aMyStruct(
+    __self: &'static ::trait_impl_golden::MyStruct,
+) -> i32 {
+    unsafe { <::trait_impl_golden::MyStruct as ::trait_definition::MyTrait>::do_something(__self) }
+}

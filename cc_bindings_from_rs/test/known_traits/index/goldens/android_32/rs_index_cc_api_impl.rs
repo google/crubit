@@ -1,0 +1,169 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// rs_index_golden
+
+#![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
+#![allow(improper_ctypes_definitions)]
+#![deny(warnings)]
+
+extern crate alloc;
+extern crate core;
+const _: () = assert!(::std::mem::size_of::<::rs_index_golden::CustomIndex>() == 4);
+const _: () = assert!(::std::mem::align_of::<::rs_index_golden::CustomIndex>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(index: usize, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::rs_index_golden::CustomIndex::new(index);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::CustomIndex, 0) == 0);
+const _: () = assert!(::std::mem::size_of::<::rs_index_golden::Id>() == 4);
+const _: () = assert!(::std::mem::align_of::<::rs_index_golden::Id>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(id: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::rs_index_golden::Id::new(id);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::Id, 0) == 0);
+const _: () = assert!(::std::mem::size_of::<::rs_index_golden::IntPair>() == 8);
+const _: () = assert!(::std::mem::align_of::<::rs_index_golden::IntPair>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(x: i32, y: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::rs_index_golden::IntPair::new(x, y);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uusize(
+    __self: &'static ::rs_index_golden::IntPair,
+    index: usize,
+) -> &'static i32 {
+    unsafe { <::rs_index_golden::IntPair as ::core::ops::Index<usize>>::index(__self, index) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
+    __self: &'static ::rs_index_golden::IntPair,
+    index: *mut ::rs_index_golden::CustomIndex,
+) -> &'static i32 {
+    unsafe {
+        let index = index.read();
+        <::rs_index_golden::IntPair as ::core::ops::Index<::rs_index_golden::CustomIndex>>::index(
+            __self, index,
+        )
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uusize(
+    __self: &'static mut ::rs_index_golden::IntPair,
+    index: usize,
+) -> &'static mut i32 {
+    unsafe {
+        <::rs_index_golden::IntPair as ::core::ops::IndexMut<usize>>::index_mut(__self, index)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
+    __self: &'static mut ::rs_index_golden::IntPair,
+    index: *mut ::rs_index_golden::CustomIndex,
+) -> &'static mut i32 {
+    unsafe {
+        let index = index.read();
+        <::rs_index_golden::IntPair as::core::ops::IndexMut<::rs_index_golden::CustomIndex>>::index_mut(__self,index)
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::IntPair, x) == 0);
+const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::IntPair, y) == 4);
+const _: () = assert!(::std::mem::size_of::<::rs_index_golden::Map>() == 16);
+const _: () = assert!(::std::mem::align_of::<::rs_index_golden::Map>() == 4);
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_urs_uindex_ugolden_x0000003a_x0000003aMap(
+    __self: *mut ::rs_index_golden::Map,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(
+    row_size: usize,
+    col_size: usize,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::rs_index_golden::Map::new(row_size, col_size);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000028usize_x0000002c_x00000020usize_x00000029(
+    __self: &'static ::rs_index_golden::Map,
+    index: *const [*const core::ffi::c_void; 2usize],
+) -> &'static str {
+    unsafe {
+        let index = (
+            {
+                let index_0: usize = ((*index)[0usize] as *const usize).read();
+                index_0
+            },
+            {
+                let index_1: usize = ((*index)[1usize] as *const usize).read();
+                index_1
+            },
+        );
+        <::rs_index_golden::Map as ::core::ops::Index<(usize, usize)>>::index(__self, index)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
+    __self: &'static ::rs_index_golden::Map,
+    _index: &'static ::rs_index_golden::Id,
+) -> &'static str {
+    unsafe {
+        <::rs_index_golden::Map as ::core::ops::Index<&'static ::rs_index_golden::Id>>::index(
+            __self, _index,
+        )
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::alloc::vec::Vec<::alloc::string::String> as ::core::default::Default>::default();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
+    __self: &'static ::alloc::vec::Vec<::alloc::string::String>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::alloc::vec::Vec<::alloc::string::String> as ::core::clone::Clone>::clone(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
+    __self: &'static mut ::alloc::vec::Vec<::alloc::string::String>,
+    source: &'static ::alloc::vec::Vec<::alloc::string::String>,
+) -> () {
+    unsafe {
+        <::alloc::vec::Vec<::alloc::string::String> as ::core::clone::Clone>::clone_from(
+            __self, source,
+        )
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
+    vec: *mut ::alloc::vec::Vec<::alloc::string::String>,
+) {
+    unsafe { ::core::ptr::drop_in_place(vec) };
+}

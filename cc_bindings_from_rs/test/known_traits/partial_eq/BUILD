@@ -37,6 +37,7 @@ golden_test(
     basename = "partial_eq",
     golden_h = "partial_eq_cc_api.h",
     golden_rs = "partial_eq_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "partial_eq",
 )
 

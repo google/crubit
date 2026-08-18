@@ -33,6 +33,7 @@ golden_test(
     basename = "traits",
     golden_h = "traits_cc_api.h",
     golden_rs = "traits_cc_api_impl.rs",
+    platforms = ["android"],
     rust_library = "traits",
 )
 
