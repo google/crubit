@@ -305,7 +305,10 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = ["//support/internal:bindings_support"],
+    deps = [
+        ":unit",
+        "//support/internal:bindings_support",
+    ],
 )
 
 cc_library(

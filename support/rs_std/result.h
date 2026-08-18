@@ -14,6 +14,7 @@
 
 #include "support/internal/check.h"
 #include "support/internal/move_assign.h"
+#include "support/rs_std/unit.h"
 
 namespace rs_std {
 
@@ -161,58 +162,107 @@ class ResultBase {
     CRUBIT_CHECK(!has_value()) << "Bad error access on rs_std::Result";
   }
 
-  constexpr T& value() & {
+  constexpr T& value() &
+    requires(!is_unit_t_v<T>)
+  {
     CheckHasOk();
     return *derived().ok_ptr();
   }
-  constexpr const T& value() const& {
+  constexpr const T& value() const&
+    requires(!is_unit_t_v<T>)
+  {
     CheckHasOk();
     return *derived().ok_const_ptr();
   }
-  constexpr T&& value() && {
+  constexpr T&& value() &&
+    requires(!is_unit_t_v<T>)
+  {
     CheckHasOk();
     return std::move(*derived().ok_ptr());
   }
-  constexpr const T&& value() const&& {
+  constexpr const T&& value() const&&
+    requires(!is_unit_t_v<T>)
+  {
     CheckHasOk();
     return std::move(*derived().ok_const_ptr());
   }
 
-  constexpr E& error() & {
+  constexpr E& error() &
+    requires(!is_unit_t_v<E>)
+  {
     CheckHasErr();
     return *derived().err_ptr();
   }
-  constexpr const E& error() const& {
+  constexpr const E& error() const&
+    requires(!is_unit_t_v<E>)
+  {
     CheckHasErr();
     return *derived().err_const_ptr();
   }
-  constexpr E&& error() && {
+  constexpr E&& error() &&
+    requires(!is_unit_t_v<E>)
+  {
     CheckHasErr();
     return std::move(*derived().err_ptr());
   }
-  constexpr const E&& error() const&& {
+  constexpr const E&& error() const&&
+    requires(!is_unit_t_v<E>)
+  {
     CheckHasErr();
     return std::move(*derived().err_const_ptr());
   }
 
-  constexpr E& err() & { return error(); }
-  constexpr const E& err() const& { return error(); }
-  constexpr E&& err() && { return std::move(error()); }
-  constexpr const E&& err() const&& { return std::move(error()); }
-
-  constexpr T& operator*() & { return value(); }
-  constexpr const T& operator*() const& {
-    CheckHasOk();
-    return *derived().ok_const_ptr();
+  constexpr E& err() &
+    requires(!is_unit_t_v<E>)
+  {
+    return error();
   }
-  constexpr T&& operator*() && { return std::move(value()); }
-  constexpr const T&& operator*() const&& { return std::move(value()); }
+  constexpr const E& err() const&
+    requires(!is_unit_t_v<E>)
+  {
+    return error();
+  }
+  constexpr E&& err() &&
+    requires(!is_unit_t_v<E>)
+  {
+    return std::move(error());
+  }
+  constexpr const E&& err() const&&
+    requires(!is_unit_t_v<E>)
+  {
+    return std::move(error());
+  }
 
-  constexpr T* operator->() {
+  constexpr T& operator*() &
+    requires(!is_unit_t_v<T>)
+  {
+    return value();
+  }
+  constexpr const T& operator*() const&
+    requires(!is_unit_t_v<T>)
+  {
+    return value();
+  }
+  constexpr T&& operator*() &&
+    requires(!is_unit_t_v<T>)
+  {
+    return std::move(value());
+  }
+  constexpr const T&& operator*() const&&
+    requires(!is_unit_t_v<T>)
+  {
+    return std::move(value());
+  }
+
+  constexpr T* operator->()
+    requires(!is_unit_t_v<T>)
+  {
     CheckHasOk();
     return derived().ok_ptr();
   }
-  constexpr const T* operator->() const {
+  constexpr const T* operator->() const
+    requires(!is_unit_t_v<T>)
+  {
     CheckHasOk();
     return derived().ok_const_ptr();
   }

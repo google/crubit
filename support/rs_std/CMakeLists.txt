@@ -107,6 +107,7 @@ target_include_directories(crubit_support_rs_std_result INTERFACE
 )
 
 target_link_libraries(crubit_support_rs_std_result INTERFACE
+crubit_support_rs_std_unit
 crubit_support_internal_bindings_support
 )
 
@@ -155,6 +156,15 @@ add_library(crubit_support_rs_std_tuple INTERFACE
 set_target_properties(crubit_support_rs_std_tuple PROPERTIES LINKER_LANGUAGE CXX)
 
 target_include_directories(crubit_support_rs_std_tuple INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+
+add_library(crubit_support_rs_std_unit INTERFACE
+"unit.h"
+)
+set_target_properties(crubit_support_rs_std_unit PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_rs_std_unit INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 

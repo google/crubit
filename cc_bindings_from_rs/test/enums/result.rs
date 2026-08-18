@@ -148,3 +148,28 @@ pub type FreeFunc = unsafe extern "C" fn(Voidpf, Voidpf);
 pub struct ZStream {
     pub zfree: Result<FreeFunc, FreeFunc>,
 }
+
+pub fn return_result_unit_ok(has_val: bool) -> Result<(), u8> {
+    if has_val {
+        Ok(())
+    } else {
+        Err(42)
+    }
+}
+
+pub fn take_result_unit_ok(val: Result<(), u8>) -> bool {
+    val.is_ok()
+}
+
+#[allow(clippy::result_unit_err)]
+pub fn return_result_unit_err(has_err: bool) -> Result<u8, ()> {
+    if has_err {
+        Err(())
+    } else {
+        Ok(100)
+    }
+}
+
+pub fn take_result_unit_err(val: Result<u8, ()>) -> bool {
+    val.is_err()
+}

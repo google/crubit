@@ -67,8 +67,8 @@ unsafe extern "C" fn __crubit_thunk_new(val: u32, __ret_ptr: *mut core::ffi::c_v
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::GetsResult, value) == 0);
-const _: () = assert!(::std::mem::size_of::<::result_golden::HasDefault>() == 24);
-const _: () = assert!(::std::mem::align_of::<::result_golden::HasDefault>() == 8);
+const _: () = assert!(::std::mem::size_of::<::result_golden::HasDefault>() == 12);
+const _: () = assert!(::std::mem::align_of::<::result_golden::HasDefault>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_uresult_ugolden_x0000003a_x0000003aHasDefault(
     __ret_ptr: *mut core::ffi::c_void,
@@ -102,8 +102,8 @@ unsafe extern "C" fn __crubit_thunk_val(
     unsafe { ::result_golden::HasDefault::val(__self) }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::HasDefault, val) == 0);
-const _: () = assert!(::std::mem::size_of::<::result_golden::HasDefaultResult>() == 48);
-const _: () = assert!(::std::mem::align_of::<::result_golden::HasDefaultResult>() == 8);
+const _: () = assert!(::std::mem::size_of::<::result_golden::HasDefaultResult>() == 24);
+const _: () = assert!(::std::mem::align_of::<::result_golden::HasDefaultResult>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasDefaultResult(
     __self: *mut ::result_golden::HasDefaultResult,
@@ -121,9 +121,9 @@ unsafe extern "C" fn __crubit_thunk_new(
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::HasDefaultResult, in_ok) == 0);
-const _: () = assert!(::core::mem::offset_of!(::result_golden::HasDefaultResult, in_err) == 24);
-const _: () = assert!(::std::mem::size_of::<::result_golden::HasNoDefault>() == 24);
-const _: () = assert!(::std::mem::align_of::<::result_golden::HasNoDefault>() == 8);
+const _: () = assert!(::core::mem::offset_of!(::result_golden::HasDefaultResult, in_err) == 12);
+const _: () = assert!(::std::mem::size_of::<::result_golden::HasNoDefault>() == 12);
+const _: () = assert!(::std::mem::align_of::<::result_golden::HasNoDefault>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasNoDefault(
     __self: *mut ::result_golden::HasNoDefault,
@@ -137,8 +137,8 @@ unsafe extern "C" fn __crubit_thunk_val(
     unsafe { ::result_golden::HasNoDefault::val(__self) }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::HasNoDefault, val) == 0);
-const _: () = assert!(::std::mem::size_of::<::result_golden::HasNoDefaultResult>() == 48);
-const _: () = assert!(::std::mem::align_of::<::result_golden::HasNoDefaultResult>() == 8);
+const _: () = assert!(::std::mem::size_of::<::result_golden::HasNoDefaultResult>() == 24);
+const _: () = assert!(::std::mem::align_of::<::result_golden::HasNoDefaultResult>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasNoDefaultResult(
     __self: *mut ::result_golden::HasNoDefaultResult,
@@ -156,7 +156,7 @@ unsafe extern "C" fn __crubit_thunk_new(
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::HasNoDefaultResult, in_ok) == 0);
-const _: () = assert!(::core::mem::offset_of!(::result_golden::HasNoDefaultResult, in_err) == 24);
+const _: () = assert!(::core::mem::offset_of!(::result_golden::HasNoDefaultResult, in_err) == 12);
 const _: () = assert!(::std::mem::size_of::<::result_golden::NestedResult>() == 16);
 const _: () = assert!(::std::mem::align_of::<::result_golden::NestedResult>() == 4);
 #[unsafe(no_mangle)]
@@ -168,18 +168,18 @@ unsafe extern "C" fn __crubit_thunk_new(val: u32, __ret_ptr: *mut core::ffi::c_v
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::NestedResult, in_ok) == 0);
 const _: () = assert!(::core::mem::offset_of!(::result_golden::NestedResult, in_err) == 8);
-const _: () = assert!(::std::mem::size_of::<::result_golden::ResultWithSizeTypes>() == 64);
-const _: () = assert!(::std::mem::align_of::<::result_golden::ResultWithSizeTypes>() == 8);
+const _: () = assert!(::std::mem::size_of::<::result_golden::ResultWithSizeTypes>() == 32);
+const _: () = assert!(::std::mem::align_of::<::result_golden::ResultWithSizeTypes>() == 4);
 const _: () =
     assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, uval_in_ok) == 0);
 const _: () =
-    assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, uval_in_err) == 16);
+    assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, uval_in_err) == 8);
 const _: () =
-    assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, ival_in_ok) == 32);
+    assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, ival_in_ok) == 16);
 const _: () =
-    assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, ival_in_err) == 48);
-const _: () = assert!(::std::mem::size_of::<::result_golden::ZStream>() == 16);
-const _: () = assert!(::std::mem::align_of::<::result_golden::ZStream>() == 8);
+    assert!(::core::mem::offset_of!(::result_golden::ResultWithSizeTypes, ival_in_err) == 24);
+const _: () = assert!(::std::mem::size_of::<::result_golden::ZStream>() == 8);
+const _: () = assert!(::std::mem::align_of::<::result_golden::ZStream>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::result_golden::ZStream, zfree) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uresult_uby_uvalue(

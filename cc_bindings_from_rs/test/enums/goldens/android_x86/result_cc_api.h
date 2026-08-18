@@ -89,7 +89,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault") alignas(1)
 
 using FreeFunc CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: FreeFunc") =
     crubit::type_identity_t<void(void*, void*)>*;
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(4)
     [[clang::trivial_abi]] HasDefault final {
  public:
   // Default::default
@@ -118,7 +118,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
   static void __crubit_field_offset_assertions();
 };
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(8)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(4)
     [[clang::trivial_abi]] HasNoDefault final {
  public:
   // `result_golden::HasNoDefault` doesn't implement the `Default` trait
@@ -244,7 +244,7 @@ struct alignas(1)
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
 template <>
-struct alignas(8)
+struct alignas(4)
     CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < i8 , isize >")
         rs_std::Result<::std::int8_t, ::rs_std::isize>
     : public rs_std::ResultBase<rs_std::Result<::std::int8_t, ::rs_std::isize>,
@@ -291,10 +291,10 @@ struct alignas(8)
     return reinterpret_cast<::std::int8_t const*>(__storage + 1);
   }
   ::rs_std::isize* err_ptr() noexcept {
-    return reinterpret_cast<::rs_std::isize*>(__storage + 8);
+    return reinterpret_cast<::rs_std::isize*>(__storage + 4);
   }
   ::rs_std::isize const* err_const_ptr() const noexcept {
-    return reinterpret_cast<::rs_std::isize const*>(__storage + 8);
+    return reinterpret_cast<::rs_std::isize const*>(__storage + 4);
   }
   void set_ok_tag() noexcept { set_tag(0); }
   void set_err_tag() noexcept { set_tag(1); }
@@ -302,14 +302,14 @@ struct alignas(8)
   constexpr void set_tag(::std::uint8_t tag) noexcept;
 
  private:
-  unsigned char __storage[16];
+  unsigned char __storage[8];
 };
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
 template <>
-struct alignas(8)
+struct alignas(4)
     CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < isize , i8 >")
         rs_std::Result<::rs_std::isize, ::std::int8_t>
     : public rs_std::ResultBase<rs_std::Result<::rs_std::isize, ::std::int8_t>,
@@ -350,10 +350,10 @@ struct alignas(8)
   friend base_type;
   bool has_value_impl() const noexcept { return tag() == 0; }
   ::rs_std::isize* ok_ptr() noexcept {
-    return reinterpret_cast<::rs_std::isize*>(__storage + 8);
+    return reinterpret_cast<::rs_std::isize*>(__storage + 4);
   }
   ::rs_std::isize const* ok_const_ptr() const noexcept {
-    return reinterpret_cast<::rs_std::isize const*>(__storage + 8);
+    return reinterpret_cast<::rs_std::isize const*>(__storage + 4);
   }
   ::std::int8_t* err_ptr() noexcept {
     return reinterpret_cast<::std::int8_t*>(__storage + 1);
@@ -367,7 +367,7 @@ struct alignas(8)
   constexpr void set_tag(::std::uint8_t tag) noexcept;
 
  private:
-  unsigned char __storage[16];
+  unsigned char __storage[8];
 };
 #endif
 
@@ -513,7 +513,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
-struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
     "std :: result :: Result < :: result_golden :: HasDefault , u8 >")
     rs_std::Result<::result::HasDefault, ::std::uint8_t>
     : public rs_std::ResultBase<
@@ -557,9 +557,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   friend base_type;
-  bool has_value_impl() const noexcept {
-    return tag() != UINT64_C(18446744073709551615);
-  }
+  bool has_value_impl() const noexcept { return tag() != UINT32_C(4294967295); }
   ::result::HasDefault* ok_ptr() noexcept {
     return reinterpret_cast<::result::HasDefault*>(__storage);
   }
@@ -567,25 +565,25 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     return reinterpret_cast<::result::HasDefault const*>(__storage);
   }
   ::std::uint8_t* err_ptr() noexcept {
-    return reinterpret_cast<::std::uint8_t*>(__storage + 8);
+    return reinterpret_cast<::std::uint8_t*>(__storage + 4);
   }
   ::std::uint8_t const* err_const_ptr() const noexcept {
-    return reinterpret_cast<::std::uint8_t const*>(__storage + 8);
+    return reinterpret_cast<::std::uint8_t const*>(__storage + 4);
   }
   void set_ok_tag() noexcept {}
-  void set_err_tag() noexcept { set_tag(UINT64_C(18446744073709551615)); }
-  constexpr ::std::uint64_t tag() const& noexcept;
-  constexpr void set_tag(::std::uint64_t tag) noexcept;
+  void set_err_tag() noexcept { set_tag(UINT32_C(4294967295)); }
+  constexpr ::std::uint32_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
 
  private:
-  unsigned char __storage[24];
+  unsigned char __storage[12];
 };
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
-struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
     "std :: result :: Result < :: result_golden :: HasNoDefault , u8 >")
     rs_std::Result<::result::HasNoDefault, ::std::uint8_t>
     : public rs_std::ResultBase<
@@ -629,9 +627,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   friend base_type;
-  bool has_value_impl() const noexcept {
-    return tag() != UINT64_C(18446744073709551615);
-  }
+  bool has_value_impl() const noexcept { return tag() != UINT32_C(4294967295); }
   ::result::HasNoDefault* ok_ptr() noexcept {
     return reinterpret_cast<::result::HasNoDefault*>(__storage);
   }
@@ -639,18 +635,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     return reinterpret_cast<::result::HasNoDefault const*>(__storage);
   }
   ::std::uint8_t* err_ptr() noexcept {
-    return reinterpret_cast<::std::uint8_t*>(__storage + 8);
+    return reinterpret_cast<::std::uint8_t*>(__storage + 4);
   }
   ::std::uint8_t const* err_const_ptr() const noexcept {
-    return reinterpret_cast<::std::uint8_t const*>(__storage + 8);
+    return reinterpret_cast<::std::uint8_t const*>(__storage + 4);
   }
   void set_ok_tag() noexcept {}
-  void set_err_tag() noexcept { set_tag(UINT64_C(18446744073709551615)); }
-  constexpr ::std::uint64_t tag() const& noexcept;
-  constexpr void set_tag(::std::uint64_t tag) noexcept;
+  void set_err_tag() noexcept { set_tag(UINT32_C(4294967295)); }
+  constexpr ::std::uint32_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
 
  private:
-  unsigned char __storage[24];
+  unsigned char __storage[12];
 };
 #endif
 
@@ -1207,7 +1203,7 @@ CopyNoDefaultResult final {
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000003e
 template <>
-struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
     "std :: result :: Result < u8 , :: result_golden :: HasDefault >")
     rs_std::Result<::std::uint8_t, ::result::HasDefault>
     : public rs_std::ResultBase<
@@ -1249,14 +1245,12 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   friend base_type;
-  bool has_value_impl() const noexcept {
-    return tag() == UINT64_C(18446744073709551615);
-  }
+  bool has_value_impl() const noexcept { return tag() == UINT32_C(4294967295); }
   ::std::uint8_t* ok_ptr() noexcept {
-    return reinterpret_cast<::std::uint8_t*>(__storage + 8);
+    return reinterpret_cast<::std::uint8_t*>(__storage + 4);
   }
   ::std::uint8_t const* ok_const_ptr() const noexcept {
-    return reinterpret_cast<::std::uint8_t const*>(__storage + 8);
+    return reinterpret_cast<::std::uint8_t const*>(__storage + 4);
   }
   ::result::HasDefault* err_ptr() noexcept {
     return reinterpret_cast<::result::HasDefault*>(__storage);
@@ -1264,20 +1258,20 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::result::HasDefault const* err_const_ptr() const noexcept {
     return reinterpret_cast<::result::HasDefault const*>(__storage);
   }
-  void set_ok_tag() noexcept { set_tag(UINT64_C(18446744073709551615)); }
+  void set_ok_tag() noexcept { set_tag(UINT32_C(4294967295)); }
   void set_err_tag() noexcept {}
-  constexpr ::std::uint64_t tag() const& noexcept;
-  constexpr void set_tag(::std::uint64_t tag) noexcept;
+  constexpr ::std::uint32_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
 
  private:
-  unsigned char __storage[24];
+  unsigned char __storage[12];
 };
 #endif
 
 namespace result {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: result_golden :: HasDefaultResult") alignas(8) [[clang::trivial_abi]]
+    ":: result_golden :: HasDefaultResult") alignas(4) [[clang::trivial_abi]]
 HasDefaultResult final {
  public:
   // `result_golden::HasDefaultResult` doesn't implement the `Default` trait
@@ -1314,7 +1308,7 @@ HasDefaultResult final {
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000003e
 template <>
-struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
     "std :: result :: Result < u8 , :: result_golden :: HasNoDefault >")
     rs_std::Result<::std::uint8_t, ::result::HasNoDefault>
     : public rs_std::ResultBase<
@@ -1356,14 +1350,12 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   friend base_type;
-  bool has_value_impl() const noexcept {
-    return tag() == UINT64_C(18446744073709551615);
-  }
+  bool has_value_impl() const noexcept { return tag() == UINT32_C(4294967295); }
   ::std::uint8_t* ok_ptr() noexcept {
-    return reinterpret_cast<::std::uint8_t*>(__storage + 8);
+    return reinterpret_cast<::std::uint8_t*>(__storage + 4);
   }
   ::std::uint8_t const* ok_const_ptr() const noexcept {
-    return reinterpret_cast<::std::uint8_t const*>(__storage + 8);
+    return reinterpret_cast<::std::uint8_t const*>(__storage + 4);
   }
   ::result::HasNoDefault* err_ptr() noexcept {
     return reinterpret_cast<::result::HasNoDefault*>(__storage);
@@ -1371,20 +1363,20 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::result::HasNoDefault const* err_const_ptr() const noexcept {
     return reinterpret_cast<::result::HasNoDefault const*>(__storage);
   }
-  void set_ok_tag() noexcept { set_tag(UINT64_C(18446744073709551615)); }
+  void set_ok_tag() noexcept { set_tag(UINT32_C(4294967295)); }
   void set_err_tag() noexcept {}
-  constexpr ::std::uint64_t tag() const& noexcept;
-  constexpr void set_tag(::std::uint64_t tag) noexcept;
+  constexpr ::std::uint32_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
 
  private:
-  unsigned char __storage[24];
+  unsigned char __storage[12];
 };
 #endif
 
 namespace result {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: result_golden :: HasNoDefaultResult") alignas(8) [[clang::trivial_abi]]
+    ":: result_golden :: HasNoDefaultResult") alignas(4) [[clang::trivial_abi]]
 HasNoDefaultResult final {
  public:
   // `result_golden::HasNoDefaultResult` doesn't implement the `Default` trait
@@ -1486,7 +1478,7 @@ struct alignas(1)
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
 template <>
-struct alignas(8)
+struct alignas(4)
     CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < u8 , usize >")
         rs_std::Result<::std::uint8_t, ::rs_std::usize>
     : public rs_std::ResultBase<rs_std::Result<::std::uint8_t, ::rs_std::usize>,
@@ -1533,10 +1525,10 @@ struct alignas(8)
     return reinterpret_cast<::std::uint8_t const*>(__storage + 1);
   }
   ::rs_std::usize* err_ptr() noexcept {
-    return reinterpret_cast<::rs_std::usize*>(__storage + 8);
+    return reinterpret_cast<::rs_std::usize*>(__storage + 4);
   }
   ::rs_std::usize const* err_const_ptr() const noexcept {
-    return reinterpret_cast<::rs_std::usize const*>(__storage + 8);
+    return reinterpret_cast<::rs_std::usize const*>(__storage + 4);
   }
   void set_ok_tag() noexcept { set_tag(0); }
   void set_err_tag() noexcept { set_tag(1); }
@@ -1544,14 +1536,14 @@ struct alignas(8)
   constexpr void set_tag(::std::uint8_t tag) noexcept;
 
  private:
-  unsigned char __storage[16];
+  unsigned char __storage[8];
 };
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
 template <>
-struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
     "std :: result :: Result < unsafe extern \"C\" fn (* mut :: core :: ffi :: "
     "c_void , * mut :: core :: ffi :: c_void) , unsafe extern \"C\" fn (* mut "
     ":: core :: ffi :: c_void , * mut :: core :: ffi :: c_void) >")
@@ -1605,35 +1597,35 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   bool has_value_impl() const noexcept { return tag() == 0; }
   crubit::type_identity_t<void(void*, void*)>** ok_ptr() noexcept {
     return reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
-        __storage + 8);
+        __storage + 4);
   }
   crubit::type_identity_t<void(void*, void*)>* const* ok_const_ptr()
       const noexcept {
     return reinterpret_cast<
-        crubit::type_identity_t<void(void*, void*)>* const*>(__storage + 8);
+        crubit::type_identity_t<void(void*, void*)>* const*>(__storage + 4);
   }
   crubit::type_identity_t<void(void*, void*)>** err_ptr() noexcept {
     return reinterpret_cast<crubit::type_identity_t<void(void*, void*)>**>(
-        __storage + 8);
+        __storage + 4);
   }
   crubit::type_identity_t<void(void*, void*)>* const* err_const_ptr()
       const noexcept {
     return reinterpret_cast<
-        crubit::type_identity_t<void(void*, void*)>* const*>(__storage + 8);
+        crubit::type_identity_t<void(void*, void*)>* const*>(__storage + 4);
   }
   void set_ok_tag() noexcept { set_tag(0); }
   void set_err_tag() noexcept { set_tag(1); }
-  constexpr ::std::uint64_t tag() const& noexcept;
-  constexpr void set_tag(::std::uint64_t tag) noexcept;
+  constexpr ::std::uint32_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
 
  private:
-  unsigned char __storage[16];
+  unsigned char __storage[8];
 };
 #endif
 
 namespace result {
 
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: ZStream") alignas(8)
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: ZStream") alignas(4)
     [[clang::trivial_abi]] ZStream final {
  public:
   // `result_golden::ZStream` doesn't implement the `Default` trait
@@ -1664,7 +1656,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: ZStream") alignas(8)
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
-struct alignas(8)
+struct alignas(4)
     CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < usize , u8 >")
         rs_std::Result<::rs_std::usize, ::std::uint8_t>
     : public rs_std::ResultBase<rs_std::Result<::rs_std::usize, ::std::uint8_t>,
@@ -1705,10 +1697,10 @@ struct alignas(8)
   friend base_type;
   bool has_value_impl() const noexcept { return tag() == 0; }
   ::rs_std::usize* ok_ptr() noexcept {
-    return reinterpret_cast<::rs_std::usize*>(__storage + 8);
+    return reinterpret_cast<::rs_std::usize*>(__storage + 4);
   }
   ::rs_std::usize const* ok_const_ptr() const noexcept {
-    return reinterpret_cast<::rs_std::usize const*>(__storage + 8);
+    return reinterpret_cast<::rs_std::usize const*>(__storage + 4);
   }
   ::std::uint8_t* err_ptr() noexcept {
     return reinterpret_cast<::std::uint8_t*>(__storage + 1);
@@ -1722,14 +1714,14 @@ struct alignas(8)
   constexpr void set_tag(::std::uint8_t tag) noexcept;
 
  private:
-  unsigned char __storage[16];
+  unsigned char __storage[8];
 };
 #endif
 
 namespace result {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: result_golden :: ResultWithSizeTypes") alignas(8) [[clang::trivial_abi]]
+    ":: result_golden :: ResultWithSizeTypes") alignas(4) [[clang::trivial_abi]]
 ResultWithSizeTypes final {
  public:
   // `result_golden::ResultWithSizeTypes` doesn't implement the `Default` trait
@@ -1913,10 +1905,10 @@ inline void GetsResult::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(GetsResult, value));
 }
 static_assert(
-    sizeof(HasDefault) == 24,
+    sizeof(HasDefault) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasDefault) == 8,
+    alignof(HasDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -1974,10 +1966,10 @@ inline void HasDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasDefault, val_));
 }
 static_assert(
-    sizeof(HasDefaultResult) == 48,
+    sizeof(HasDefaultResult) == 24,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasDefaultResult) == 8,
+    alignof(HasDefaultResult) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -2006,13 +1998,13 @@ inline ::result::HasDefaultResult HasDefaultResult::new_(rs_std::StrRef val) {
 }
 inline void HasDefaultResult::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasDefaultResult, in_ok));
-  static_assert(24 == offsetof(HasDefaultResult, in_err));
+  static_assert(12 == offsetof(HasDefaultResult, in_err));
 }
 static_assert(
-    sizeof(HasNoDefault) == 24,
+    sizeof(HasNoDefault) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasNoDefault) == 8,
+    alignof(HasNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -2041,10 +2033,10 @@ inline void HasNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasNoDefault, val_));
 }
 static_assert(
-    sizeof(HasNoDefaultResult) == 48,
+    sizeof(HasNoDefaultResult) == 24,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasNoDefaultResult) == 8,
+    alignof(HasNoDefaultResult) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -2074,7 +2066,7 @@ inline ::result::HasNoDefaultResult HasNoDefaultResult::new_(
 }
 inline void HasNoDefaultResult::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasNoDefaultResult, in_ok));
-  static_assert(24 == offsetof(HasNoDefaultResult, in_err));
+  static_assert(12 == offsetof(HasNoDefaultResult, in_err));
 }
 static_assert(
     sizeof(NestedResult) == 16,
@@ -2105,10 +2097,10 @@ inline void NestedResult::__crubit_field_offset_assertions() {
   static_assert(8 == offsetof(NestedResult, in_err));
 }
 static_assert(
-    sizeof(ResultWithSizeTypes) == 64,
+    sizeof(ResultWithSizeTypes) == 32,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(ResultWithSizeTypes) == 8,
+    alignof(ResultWithSizeTypes) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<ResultWithSizeTypes>);
 static_assert(
@@ -2121,15 +2113,15 @@ inline ::result::ResultWithSizeTypes::ResultWithSizeTypes(
 }
 inline void ResultWithSizeTypes::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ResultWithSizeTypes, uval_in_ok));
-  static_assert(16 == offsetof(ResultWithSizeTypes, uval_in_err));
-  static_assert(32 == offsetof(ResultWithSizeTypes, ival_in_ok));
-  static_assert(48 == offsetof(ResultWithSizeTypes, ival_in_err));
+  static_assert(8 == offsetof(ResultWithSizeTypes, uval_in_err));
+  static_assert(16 == offsetof(ResultWithSizeTypes, ival_in_ok));
+  static_assert(24 == offsetof(ResultWithSizeTypes, ival_in_err));
 }
 static_assert(
-    sizeof(ZStream) == 16,
+    sizeof(ZStream) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(ZStream) == 8,
+    alignof(ZStream) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<ZStream>);
 static_assert(::std::is_trivially_move_constructible_v<::result::ZStream>);
@@ -2642,20 +2634,20 @@ inline rs_std::Result<::result::HasDefault,
                       ::std::uint8_t>::~Result() noexcept {
   this->Reset();
 }
-inline constexpr ::std::uint64_t
+inline constexpr ::std::uint32_t
 rs_std::Result<::result::HasDefault, ::std::uint8_t>::tag() const& noexcept {
-  std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+  std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     __bytes[i] = __storage[0 + i];
   }
-  return std::bit_cast<::std::uint64_t>(__bytes);
+  return std::bit_cast<::std::uint32_t>(__bytes);
 }
 inline constexpr void
 rs_std::Result<::result::HasDefault, ::std::uint8_t>::set_tag(
-    ::std::uint64_t tag) noexcept {
+    ::std::uint32_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint32_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     __storage[0 + i] = __bytes[i];
   }
 }
@@ -2711,20 +2703,20 @@ inline rs_std::Result<::result::HasNoDefault,
                       ::std::uint8_t>::~Result() noexcept {
   this->Reset();
 }
-inline constexpr ::std::uint64_t
+inline constexpr ::std::uint32_t
 rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::tag() const& noexcept {
-  std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+  std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     __bytes[i] = __storage[0 + i];
   }
-  return std::bit_cast<::std::uint64_t>(__bytes);
+  return std::bit_cast<::std::uint32_t>(__bytes);
 }
 inline constexpr void
 rs_std::Result<::result::HasNoDefault, ::std::uint8_t>::set_tag(
-    ::std::uint64_t tag) noexcept {
+    ::std::uint32_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint32_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     __storage[0 + i] = __bytes[i];
   }
 }
@@ -3286,20 +3278,20 @@ inline rs_std::Result<::std::uint8_t,
                       ::result::HasDefault>::~Result() noexcept {
   this->Reset();
 }
-inline constexpr ::std::uint64_t
+inline constexpr ::std::uint32_t
 rs_std::Result<::std::uint8_t, ::result::HasDefault>::tag() const& noexcept {
-  std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+  std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     __bytes[i] = __storage[0 + i];
   }
-  return std::bit_cast<::std::uint64_t>(__bytes);
+  return std::bit_cast<::std::uint32_t>(__bytes);
 }
 inline constexpr void
 rs_std::Result<::std::uint8_t, ::result::HasDefault>::set_tag(
-    ::std::uint64_t tag) noexcept {
+    ::std::uint32_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint32_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     __storage[0 + i] = __bytes[i];
   }
 }
@@ -3355,20 +3347,20 @@ inline rs_std::Result<::std::uint8_t,
                       ::result::HasNoDefault>::~Result() noexcept {
   this->Reset();
 }
-inline constexpr ::std::uint64_t
+inline constexpr ::std::uint32_t
 rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::tag() const& noexcept {
-  std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+  std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     __bytes[i] = __storage[0 + i];
   }
-  return std::bit_cast<::std::uint64_t>(__bytes);
+  return std::bit_cast<::std::uint32_t>(__bytes);
 }
 inline constexpr void
 rs_std::Result<::std::uint8_t, ::result::HasNoDefault>::set_tag(
-    ::std::uint64_t tag) noexcept {
+    ::std::uint32_t tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint32_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     __storage[0 + i] = __bytes[i];
   }
 }
@@ -3578,22 +3570,22 @@ inline rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
 static_assert(::std::is_trivially_destructible_v<
               rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
                              crubit::type_identity_t<void(void*, void*)>*>>);
-inline constexpr ::std::uint64_t rs_std::Result<
+inline constexpr ::std::uint32_t rs_std::Result<
     crubit::type_identity_t<void(void*, void*)>*,
     crubit::type_identity_t<void(void*, void*)>*>::tag() const& noexcept {
-  std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
-  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+  std::array<unsigned char, sizeof(::std::uint32_t)> __bytes = {};
+  for (std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     __bytes[i] = __storage[0 + i];
   }
-  return std::bit_cast<::std::uint64_t>(__bytes);
+  return std::bit_cast<::std::uint32_t>(__bytes);
 }
 inline constexpr void rs_std::Result<
     crubit::type_identity_t<void(void*, void*)>*,
-    crubit::type_identity_t<void(void*, void*)>*>::set_tag(::std::uint64_t
+    crubit::type_identity_t<void(void*, void*)>*>::set_tag(::std::uint32_t
                                                                tag) noexcept {
   auto __bytes =
-      std::bit_cast<std::array<unsigned char, sizeof(::std::uint64_t)>>(tag);
-  for (std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
+      std::bit_cast<std::array<unsigned char, sizeof(::std::uint32_t)>>(tag);
+  for (std::size_t i = 0; i < sizeof(::std::uint32_t); ++i) {
     __storage[0 + i] = __bytes[i];
   }
 }

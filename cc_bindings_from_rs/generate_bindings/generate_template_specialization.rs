@@ -77,6 +77,23 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     }
 }
 
+fn parse_unit_in_specialization<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+) -> Option<Result<FormattedTy<'tcx>>> {
+    matches!(ty.kind(), ty::TyKind::Tuple(types) if types.is_empty()).then(|| {
+        let for_rs = db.format_ty_for_rs(ty)?;
+        Ok(FormattedTy {
+            for_cc: CcSnippet::with_include(
+                quote! { rs_std::unit_t },
+                db.support_header("rs_std/unit.h"),
+            ),
+            for_rs,
+            ty,
+        })
+    })
+}
+
 fn parse_adt_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
@@ -130,16 +147,18 @@ fn parse_adt_template_specialization<'tcx>(
                 })
             }
             BridgedBuiltin::Result => {
-                let ok_ty = FormattedTy::try_from_ty(
-                    substs.type_at(0),
-                    TypeLocation::TemplateArg,
-                    db,
-                )?;
-                let err_ty = FormattedTy::try_from_ty(
-                    substs.type_at(1),
-                    TypeLocation::TemplateArg,
-                    db,
-                )?;
+                let ok_ty = parse_unit_in_specialization(db, substs.type_at(0))
+                    .unwrap_or_else(|| FormattedTy::try_from_ty(
+                        substs.type_at(0),
+                        TypeLocation::TemplateArg,
+                        db,
+                    ))?;
+                let err_ty = parse_unit_in_specialization(db, substs.type_at(1))
+                    .unwrap_or_else(|| FormattedTy::try_from_ty(
+                        substs.type_at(1),
+                        TypeLocation::TemplateArg,
+                        db,
+                    ))?;
 
                 let layout = get_layout(tcx, self_ty)?;
                 let tag = match layout.variants() {
