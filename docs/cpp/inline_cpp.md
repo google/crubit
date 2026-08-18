@@ -1,0 +1,241 @@
+# Inline C++
+
+Crubit allows Rust code to call C++ libraries directly through generated
+bindings. However, some C++ interfaces cannot yet be automatically bound by
+Crubit, such as function templates and preprocessor macros.
+
+Crubit provides two macros, `inline_cpp!` and `global_cpp!`, that allow you to
+embed C++ declarations and expressions directly inside your Rust source files.
+This lets you call unsupported C++ code without having to write separate C++
+wrapper libraries.
+
+## How to use Embedded C++ {#introduction}
+
+Embedded C++ uses two macros depending on scope:
+
+*   **`global_cpp!`**: Used at module scope (outside functions) to declare C++
+    `#include` headers, structs, namespaces, and helper functions.
+*   **`inline_cpp!`**: Used inside Rust functions to define and call an inline
+    C++ expression.
+
+You can use embedded C++ in two ways:
+
+1.  **In a `rust_api_from_cpp` target (Recommended)**: When extending the
+    generated Rust bindings of an existing C++ library using custom Rust source
+    files (`additional_rust_srcs_for_crubit_bindings`).
+2.  **In a `rust_library_with_embedded_cpp` target**: When authoring a
+    standalone Rust library with embedded C++ without an underlying
+    `cc_library`.
+
+### 1. Using embedded C++ in a `rust_api_from_cpp` target {#rust_api_from_cpp}
+
+If you maintain a `cc_library` and want to provide hand-written Rust helper
+methods or trait implementations alongside your generated Crubit API, you can
+pass custom Rust source files directly to `rust_api_from_cpp` via `srcs`.
+
+Given a C++ header containing a template method that cannot be natively bound by
+Crubit:
+
+```cpp
+// widget.h
+namespace widget {
+class Widget {
+ public:
+  template <typename T = void>
+  static std::unique_ptr<Widget> Create(absl::string_view name);
+ private:
+  Widget(absl::string_view name);
+};
+}  // namespace widget
+```
+
+You can define the `BUILD` targets as follows:
+
+```python
+load(
+    "//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl",
+    "rust_api_from_cpp",
+)
+
+cc_library(
+    name = "widget",
+    hdrs = ["widget.h"],
+    srcs = ["widget.cc"],
+    aspect_hints = [":widget_rust.hint"],
+    deps = [
+        "@abseil-cpp//absl/strings",
+    ],
+)
+
+rust_api_from_cpp(
+    name = "widget_rust",
+    cpp_target = ":widget",
+    root_namespaces = ["widget"],
+    srcs = ["widget_custom.rs"],
+)
+```
+
+Inside `widget_custom.rs`, you can use `inline_cpp!` to bridge the C++ template
+factory method directly into the crate's public API:
+
+```rust
+// widget_custom.rs (compiled directly into the widget_rust crate)
+use crubit_support::inline_cpp;
+
+impl Widget {
+    /// Ergonomic Rust wrapper over a C++ factory function template.
+    pub fn new_with_name(name: &str) -> cc_std::std::unique_ptr<Widget> {
+        let make_widget = inline_cpp! {
+            (rs_std::StrRef name) -> std::unique_ptr<widget::Widget> {
+                return widget::Widget::Create(name.to_string_view());
+            }
+        };
+        make_widget(name)
+    }
+}
+```
+
+### 2. Using embedded C++ in a standalone `rust_library` target {#build}
+
+To write a standalone Rust library that uses embedded C++ without an underlying
+`cc_library`, define your target with `rust_library_with_embedded_cpp`:
+
+```
+{{ #include ../../examples/cpp/inline_cpp/BUILD }}
+```
+<!--  symbol:example_lib -->
+
+
+The `deps_of_cc_library` attribute lists the C++ libraries that provide the
+headers and symbols used in your embedded C++ snippets. For a complete runnable
+example, see
+[examples/cpp/inline_cpp/](https://github.com/google/crubit/tree/main/examples/cpp/inline_cpp/).
+
+## Writing Embedded C++ {#writing_code}
+
+### Declaring Headers with `global_cpp!` {#global_cpp}
+
+Use `global_cpp!` at module scope (outside functions, including within nested
+submodules) to specify `#include` headers and define supporting C++ types:
+
+```
+{{ #include ../../examples/cpp/inline_cpp/example.rs }}
+```
+<!--  content:^\s*global_cpp!\s*\{[\s\S]*?^\} -->
+
+
+> **NOTE:** All `global_cpp!` declarations across a crate (including those
+> inside nested submodules) are combined into a single C++ companion header. Any
+> `inline_cpp!` block in the crate can access types declared in `global_cpp!`,
+> regardless of which Rust module defined them. Standard Rust visibility (`pub`,
+> `pub(crate)`) governs access to the wrapping Rust functions.
+
+### Calling C++ with `inline_cpp!` {#inline_cpp}
+
+Inside a Rust function, `inline_cpp!` defines an inline C++ expression. The
+syntax requires a C++ parameter list, a return type arrow `->`, and the C++
+function body.
+
+For example, calling a C++ standard library math function:
+
+```
+{{ #include ../../examples/cpp/inline_cpp/example.rs }}
+```
+<!--  function:compute_hypotenuse -->
+
+
+Or calling an Abseil string utility:
+
+```
+{{ #include ../../examples/cpp/inline_cpp/example.rs }}
+```
+<!--  function:format_greeting -->
+
+
+`inline_cpp!` produces a callable Rust closure. The parameter and return types
+of the generated closure match the corresponding Rust types generated by Crubit
+(for example, `i32` for `int`, and `&Point` for `const Point&`).
+
+## Passing types between Rust and C++ {#types}
+
+### Primitive types {#primitives}
+
+[Primitive numeric types and booleans](/docs/types/primitive.md)
+pass directly by value between Rust and C++ (for example, `int` in C++
+corresponds to `i32` in Rust, and `double` corresponds to `f64`).
+
+### References and pointers {#references}
+
+You can pass Rust references to C++ as `const T&` or raw pointers:
+
+```
+{{ #include ../../examples/cpp/inline_cpp/example.rs }}
+```
+<!--  function:get_distance -->
+
+
+> **WARNING:** Standard Rust lifetime rules apply. C++ code must not store or
+> keep references or pointers after the `inline_cpp!` call returns.
+
+## Common Use Cases {#use_cases}
+
+### Calling and Defining C++ Templates {#templates}
+
+Crubit does not automatically generate Rust bindings for uninstantiated C++
+templates. With embedded C++, you can:
+
+1.  **Instantiate library templates**: Call templated functions or classes from
+    included C++ headers inside `inline_cpp!`:
+
+    ```live-snippet
+    cs/file:examples/cpp/inline_cpp/example.rs function:clamp_value
+    ```
+
+2.  **Define helper templates in `global_cpp!`**: Define C++ template helpers at
+    module scope, then instantiate them with concrete types in `inline_cpp!`:
+
+    ```live-snippet
+    cs/file:examples/cpp/inline_cpp/example.rs function:multiply_ints
+    ```
+
+## Common Errors {#errors}
+
+`inline_cpp!` uses Crubit under the hood, so it can produce any error Crubit
+could produce when bridging types.
+
+### Missing parameter list or return type
+
+`inline_cpp!` requires an explicit parameter list and return type arrow. If your
+C++ snippet takes no arguments or returns nothing, specify `() -> void`:
+
+```rust
+let no_args_fn = inline_cpp! {
+    () -> void {
+        DoWork();
+    }
+};
+no_args_fn();
+```
+
+Omitting the parameter list or return type results in an extraction syntax
+error:
+
+```
+error: inline_cpp! block must start with a parameter list `(args)`
+   --> src/lib.rs:10:5
+    |
+ 10 |     inline_cpp! { DoWork(); }
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+```
+
+### Unsupported features and syntax limitations {#unsupported}
+
+*   **Unmatched braces**: All `{}` braces inside embedded C++ blocks must be
+    properly balanced. If a brace is unmatched (such as in complex preprocessor
+    macros or unclosed string literals), the extraction preprocessor reports an
+    unmatched delimiter error:
+
+    ```
+    error: Unmatched delimiter starting at src/lib.rs:10: Context around open brace:
+    inline_cpp! { (int x) -> int { if (x > 0) { return x; }
+    ```

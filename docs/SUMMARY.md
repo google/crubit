@@ -47,6 +47,7 @@
 -   [Functions](./cpp/functions.md)
 -   [Classes and Structs](./cpp/classes_and_structs.md)
 -   [Enums](./cpp/enums.md)
+-   [Inline C++](./cpp/inline_cpp.md)
 
 # Integration notes
 

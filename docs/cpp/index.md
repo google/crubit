@@ -168,6 +168,9 @@ the problematic interface behind an interface Crubit can handle:
     `std::set<T>` is not supported, but a struct which wraps a `set::set<T>` is.
     crubit.rs/errors/unsupported_type describes the process in more detail.
 *   Wrap unsupported functions, in general, behind wrappers.
+*   **Embed C++ directly in Rust**: Use [**`inline_cpp!`**](inline_cpp.md) to
+    allow embedding arbitrary C++ code within a Rust target using the
+    `rust_library_with_embedded_cpp` Bazel rule.
 
 [^aspects]: Crubit is an aspect: an automatically generated entity that exists
     on every build target. It is disabled by default, so that Rust
