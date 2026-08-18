@@ -20,3 +20,69 @@ bazel test \
   --cache_test_results=no \
   -k \
   $TESTS_TO_RUN
+
+# Helper function to remove files in src_dir that are byte-for-byte identical to files in base_dir.
+prune_matching_files() {
+  local src_dir="$1"
+  local base_dir="$2"
+  [ -d "$src_dir" ] && [ -d "$base_dir" ] || return 0
+
+  for f in "$src_dir"/*; do
+    [ -f "$f" ] || continue
+    local fname
+    fname="$(basename "$f")"
+    if [ -f "$base_dir/$fname" ] && cmp -s "$f" "$base_dir/$fname"; then
+      rm -f "$f"
+    fi
+  done
+  rmdir "$src_dir" 2>/dev/null || true
+}
+
+# Automatically consolidate multiplatform golden files into tiered shared directories
+# (e.g. goldens/android_32/) and prune redundant architecture-specific overrides.
+consolidate_goldens() {
+  local script_dir
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  local crubit_dir
+  crubit_dir="$(cd "${script_dir}/.." && pwd)"
+
+  find "$crubit_dir" -type d -name "goldens" | while read -r goldens_dir; do
+    [ -d "$goldens_dir" ] || continue
+    local pkg_dir
+    pkg_dir="$(dirname "$goldens_dir")"
+
+    local x86_dir="$goldens_dir/android_x86"
+    local tier32_dir="$goldens_dir/android_32"
+    local tier64_dir="$goldens_dir/android_64"
+
+    # Step 1: Promote android_x86 -> android_32 (32-bit baseline)
+    if [ -d "$x86_dir" ]; then
+      mkdir -p "$tier32_dir"
+      for f in "$x86_dir"/*; do
+        [ -f "$f" ] || continue
+        mv -f "$f" "$tier32_dir/"
+      done
+      rmdir "$x86_dir" 2>/dev/null || rm -rf "$x86_dir"
+    fi
+
+    # Step 2: Prune redundant files in android_armeabi-v7a (against android_32)
+    prune_matching_files "$goldens_dir/android_armeabi-v7a" "$tier32_dir"
+
+    # Step 3: Prune redundant files in 64-bit Android overrides (against android_64 and host)
+    for arch in android_arm64-v8a android_x86_64; do
+      prune_matching_files "$goldens_dir/$arch" "$tier64_dir"
+      prune_matching_files "$goldens_dir/$arch" "$pkg_dir"
+    done
+
+    # Step 4: Prune redundant files in android_64 (against host)
+    prune_matching_files "$tier64_dir" "$pkg_dir"
+
+    # Step 5: Prune redundant files in android_32 (against host)
+    prune_matching_files "$tier32_dir" "$pkg_dir"
+
+    # Step 6: Remove empty goldens directory if everything fell back to host
+    rmdir "$goldens_dir" 2>/dev/null || true
+  done
+}
+
+consolidate_goldens
