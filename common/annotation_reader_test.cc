@@ -4,12 +4,17 @@
 
 #include "common/annotation_reader.h"
 
+#include <optional>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "common/status_test_matchers.h"
 #include "common/string_view_conversion.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/Testing/TestAST.h"
 
 namespace crubit {

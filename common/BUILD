@@ -58,7 +58,9 @@ crubit_cc_test(
         ":string_view_conversion",
         "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/log:check",
+        "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings:string_view",
+        "@llvm-project//clang:ast",
         "@llvm-project//clang:testing",
     ],
 )
