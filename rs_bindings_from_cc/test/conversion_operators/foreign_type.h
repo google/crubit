@@ -5,6 +5,11 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CONVERSION_OPERATORS_FOREIGN_TYPE_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_CONVERSION_OPERATORS_FOREIGN_TYPE_H_
 
+struct ForeignMovable {
+  int val;
+  explicit ForeignMovable(int v) : val(v) {}
+};
+
 struct ForeignImmovable {
   int val;
   explicit ForeignImmovable(int v) : val(v) {}

@@ -153,7 +153,7 @@ pub enum ImplKind<'a> {
         /// For example, `quote!{ From<i32> }`.
         trait_name: TraitName<'a>,
         /// Reference style for the `impl` block and self parameters.
-        impl_for: ImplFor,
+        impl_for: ImplFor<'a>,
 
         /// Whether to format the first parameter as "self" (e.g. `__this:
         /// &mut T` -> `&mut self`)
@@ -231,8 +231,8 @@ impl<'a> ImplKind<'a> {
 /// Whether the impl block is for T, and the receivers take self by reference,
 /// or the impl block is for a reference to T, and the method receivers take
 /// self by value.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum ImplFor {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ImplFor<'a> {
     /// Implement the trait for `T` directly.
     ///
     /// ```
@@ -258,4 +258,6 @@ pub enum ImplFor {
     /// }
     /// ```
     RefT,
+    /// Implement the trait for an explicit type.
+    Type(Rc<RsTypeKind<'a>>),
 }
