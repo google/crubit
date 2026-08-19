@@ -651,30 +651,50 @@ pub fn generate_cc_thunk_parts<'a>(
     };
 
     let return_stmt = match kind {
-        ThunkCallKind::InlineCpp(ref body_tokens) => match return_type_kind.passing_convention() {
-            PassingConvention::ComposablyBridged => {
-                let out_param = &param_idents[0];
-                let crubit_abi_type = db.crubit_abi_type(return_type_kind)?;
-                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
-                let return_expr = quote! { ([&]() #body_tokens)() };
-                quote! {
-                    ::crubit::Encoder __return_encoder(#crubit_abi_type_tokens::kSize, #out_param);
-                    #crubit_abi_type_expr_tokens.Encode(
-                        #return_expr,
-                        __return_encoder
-                    )
+        ThunkCallKind::InlineCpp(ref body_tokens) => {
+            if func.cc_name().is_constructor() {
+                let this_param = &param_idents[0];
+                let ctor_args = &arg_expressions[1..];
+                let struct_cpp_type = cpp_type_name::format_cpp_type(
+                    &db.rs_type_kind(func.params()[0].type_().clone())?.referent().unwrap(),
+                    db,
+                )?;
+                quote! { ::new (static_cast<void*>(#this_param)) #struct_cpp_type( #( #ctor_args ),* ); }
+            } else if func.cc_name().is_destructor() {
+                let this_param = &param_idents[0];
+                let struct_cpp_type = cpp_type_name::format_cpp_type(
+                    &db.rs_type_kind(func.params()[0].type_().clone())?.referent().unwrap(),
+                    db,
+                )?;
+                quote! { #this_param->~#struct_cpp_type(); }
+            } else {
+                match return_type_kind.passing_convention() {
+                    PassingConvention::ComposablyBridged => {
+                        let out_param = &param_idents[0];
+                        let crubit_abi_type = db.crubit_abi_type(return_type_kind)?;
+                        let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                        let crubit_abi_type_expr_tokens =
+                            CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                        let return_expr = quote! { ([&]() #body_tokens)() };
+                        quote! {
+                            ::crubit::Encoder __return_encoder(#crubit_abi_type_tokens::kSize, #out_param);
+                            #crubit_abi_type_expr_tokens.Encode(
+                                #return_expr,
+                                __return_encoder
+                            )
+                        }
+                    }
+                    PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+                        let out_param = &param_idents[0];
+                        let return_expr = quote! { ([&]() #body_tokens)() };
+                        quote! { new(#out_param) #return_type_cpp_spelling(#return_expr) }
+                    }
+                    PassingConvention::Void
+                    | PassingConvention::AbiCompatible
+                    | PassingConvention::OwnedPtr => quote! { #body_tokens },
                 }
             }
-            PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
-                let out_param = &param_idents[0];
-                let return_expr = quote! { ([&]() #body_tokens)() };
-                quote! { new(#out_param) #return_type_cpp_spelling(#return_expr) }
-            }
-            PassingConvention::Void
-            | PassingConvention::AbiCompatible
-            | PassingConvention::OwnedPtr => quote! { #body_tokens },
-        },
+        }
         ThunkCallKind::Normal(implementation_function) => {
             let (implementation_function, arg_expressions) = {
                 let mut this_ref_qualification = match func.rs_name() {
@@ -760,19 +780,12 @@ pub fn generate_cc_thunk_parts<'a>(
 
 /// Generates an `inline_cpp!` macro invocation expression in Rust for `func`,
 /// reusing standard C-ABI parameter and return type lowering logic.
-///
-/// Returns `Ok(None)` if the function cannot be emitted as an `inline_cpp!` expression,
-/// such as constructors and destructors which cannot be called directly as free expressions.
 pub fn generate_inline_cpp_call<'a>(
     db: &BindingsGenerator<'a>,
     func: &Func<'a>,
     thunk_args: &[TokenStream],
     body_tokens: TokenStream,
 ) -> Result<Option<TokenStream>> {
-    if func.cc_name().is_constructor() || func.cc_name().is_destructor() {
-        return Ok(None);
-    }
-
     let CcThunkParts { return_type_name, param_types, param_idents, conversion_stmts, return_stmt } =
         generate_cc_thunk_parts(db, func, ThunkCallKind::InlineCpp(body_tokens))?;
 
@@ -791,7 +804,18 @@ pub fn generate_inline_cpp_call<'a>(
         .collect::<Result<Vec<_>>>()?;
 
     let return_type_kind = db.rs_type_kind(func.return_type().clone())?;
-    let body_block = if conversion_stmts.is_empty() {
+    let body_block = if func.cc_name().is_constructor() || func.cc_name().is_destructor() {
+        if conversion_stmts.is_empty() {
+            quote! { { #return_stmt } }
+        } else {
+            quote! {
+                {
+                    #conversion_stmts
+                    #return_stmt
+                }
+            }
+        }
+    } else if conversion_stmts.is_empty() {
         match return_type_kind.passing_convention() {
             PassingConvention::ComposablyBridged
             | PassingConvention::LayoutCompatible
