@@ -97,5 +97,17 @@ TEST(HasMutableAliasing, MutableReferenceOverlapsWithOneConstReference) {
           const_1, const_2, mut_2, const_3)));
 }
 
+TEST(HasMutableAliasing, MutableReferenceOverlapsWithFourMutableReferences) {
+  int mut_1 = 0, mut_2 = 0, mut_3 = 0, mut_4 = 0;
+  EXPECT_FALSE(HasMutableAliasing(
+      AsMutPtrDatas<int&, int&, int&, int&>(mut_1, mut_2, mut_3, mut_4), {}));
+  EXPECT_TRUE(HasMutableAliasing(
+      AsMutPtrDatas<int&, int&, int&, int&>(mut_1, mut_2, mut_3, mut_4),
+      AsMutPtrDatas<int&>(mut_2)));
+  EXPECT_TRUE(HasMutableAliasing(
+      AsMutPtrDatas<int&, int&, int&, int&>(mut_1, mut_2, mut_3, mut_4),
+      AsMutPtrDatas<int&, int&, int&, int&>(mut_1, mut_2, mut_3, mut_4)));
+}
+
 }  // namespace
 }  // namespace crubit::internal
