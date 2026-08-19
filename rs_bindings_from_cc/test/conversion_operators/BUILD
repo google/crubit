@@ -24,7 +24,10 @@ crubit_test_cc_library(
 crubit_rust_test(
     name = "test",
     srcs = ["test.rs"],
-    cc_deps = [":conversion_operators"],
+    cc_deps = [
+        ":conversion_operators",
+        ":foreign_type",
+    ],
     deps = [
         "//support:cref",
         "//support:ctor",

@@ -97,66 +97,51 @@ impl<'__this> ::core::convert::Into<::cref::CMut<'__this, ::ffi_11::c_int>>
     }
 }
 
-impl<'__this> From<&'__this crate::Src> for crate::DstLocalMovable {
+impl From<crate::Src> for crate::DstLocalMovable {
     #[inline(always)]
-    fn from(args: &'__this crate::Src) -> Self {
+    fn from(args: crate::Src) -> Self {
         let mut __this = args;
-        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
+            let mut __crubit_return = ::core::mem::MaybeUninit::<crate::DstLocalMovable>::uninit();
             crate::detail::__rust_thunk___ZNK3Srccv15DstLocalMovableEv(
-                &raw mut tmp as *mut _,
-                __this,
+                &raw mut __crubit_return as *mut ::core::ffi::c_void,
+                &mut __this,
             );
-            tmp.assume_init()
+            __crubit_return.assume_init()
         }
     }
 }
-impl<'__this> ::ctor::CtorNew<&'__this crate::Src> for crate::DstLocalMovable {
-    type CtorType = Self;
-    type Error = ::ctor::Infallible;
-    #[inline(always)]
-    fn ctor_new(args: &'__this crate::Src) -> Self::CtorType {
-        <Self as From<&'__this crate::Src>>::from(args)
-    }
-}
 
-impl<'__this> ::ctor::CtorNew<&'__this crate::Src> for crate::DstLocalNonMovable {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__this>;
+impl ::ctor::CtorNew<crate::Src> for crate::DstLocalNonMovable {
+    type CtorType = ::ctor::Ctor![Self];
     type Error = ::ctor::Infallible;
     #[inline(always)]
-    fn ctor_new(args: &'__this crate::Src) -> Self::CtorType {
+    fn ctor_new(args: crate::Src) -> Self::CtorType {
         let mut __this = args;
         unsafe {
-            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::DstLocalNonMovable| {
                 crate::detail::__rust_thunk___ZNK3Srccv18DstLocalNonMovableEv(
                     __crubit_dest as *mut ::core::ffi::c_void,
-                    __this,
+                    &mut __this,
                 );
             })
         }
     }
 }
-impl<'__this> ::ctor::CtorNew<(&'__this crate::Src,)> for crate::DstLocalNonMovable {
-    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__this>;
-    type Error = ::ctor::Infallible;
+
+impl From<crate::Src> for ::ffi_11::c_int {
     #[inline(always)]
-    fn ctor_new(args: (&'__this crate::Src,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'__this crate::Src>>::ctor_new(arg)
+    fn from(args: crate::Src) -> Self {
+        let mut __this = args;
+        unsafe { crate::detail::__rust_thunk___ZNK3SrccviEv(&mut __this) }
     }
 }
 
-impl<'__this> ::core::convert::Into<::ffi_11::c_int> for &'__this crate::Src {
+impl From<crate::Src> for f64 {
     #[inline(always)]
-    fn into(self) -> ::ffi_11::c_int {
-        unsafe { crate::detail::__rust_thunk___ZNK3SrccviEv(self) }
-    }
-}
-
-impl<'__this> ::core::convert::Into<f64> for &'__this mut crate::Src {
-    #[inline(always)]
-    fn into(self) -> f64 {
-        unsafe { crate::detail::__rust_thunk___ZN3SrccvdEv(self) }
+    fn from(args: crate::Src) -> Self {
+        let mut __this = args;
+        unsafe { crate::detail::__rust_thunk___ZN3SrccvdEv(&mut __this) }
     }
 }
 
@@ -178,20 +163,18 @@ mod detail {
         ) -> ::cref::CMut<'__this, ::ffi_11::c_int>;
         pub(crate) unsafe fn __rust_thunk___ZNK3Srccv15DstLocalMovableEv<'__this>(
             __return: *mut ::core::ffi::c_void,
-            __this: &'__this crate::Src,
+            __this: &mut crate::Src,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK3Srccv18DstLocalNonMovableEv<'__this>(
             __return: *mut ::core::ffi::c_void,
-            __this: &'__this crate::Src,
+            __this: &mut crate::Src,
         );
         #[link_name = "_ZNK3SrccviEv"]
         pub(crate) unsafe fn __rust_thunk___ZNK3SrccviEv<'__this>(
-            __this: &'__this crate::Src,
+            __this: &mut crate::Src,
         ) -> ::ffi_11::c_int;
         #[link_name = "_ZN3SrccvdEv"]
-        pub(crate) unsafe fn __rust_thunk___ZN3SrccvdEv<'__this>(
-            __this: &'__this mut crate::Src,
-        ) -> f64;
+        pub(crate) unsafe fn __rust_thunk___ZN3SrccvdEv<'__this>(__this: &mut crate::Src) -> f64;
     }
 }
 

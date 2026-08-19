@@ -652,7 +652,7 @@ fn extract_first_operator_parameter<'a>(
     db: &BindingsGenerator<'a>,
     param_types: &RsTypeKind<'a>,
     errors: &Errors,
-) -> ErrorsOr<(Rc<Record<'a>>, ImplFor)> {
+) -> ErrorsOr<(Rc<Record<'a>>, ImplFor<'a>)> {
     match param_types {
         RsTypeKind::Record { record, .. } => Ok((record.clone(), ImplFor::T)),
         RsTypeKind::IncompleteRecord { incomplete_record, .. } => {
@@ -1117,11 +1117,11 @@ fn api_func_shape_for_constructor<'a>(
 }
 
 fn api_func_shape_for_conversion_operator<'a>(
-    db: &BindingsGenerator<'a>,
+    _db: &BindingsGenerator<'a>,
     maybe_record: Option<&Rc<Record<'a>>>,
     param_types: &mut [RsTypeKind<'a>],
     return_type: &RsTypeKind<'a>,
-    errors: &Errors,
+    _errors: &Errors,
 ) -> Option<(Ident, ImplKind<'a>)> {
     // We do not support generating conversion traits for:
     // - Ref-qualified operators (e.g., `operator Dst() &&`) due to the impedance mismatch between
@@ -1142,102 +1142,75 @@ fn api_func_shape_for_conversion_operator<'a>(
         return None;
     }
 
-    let (trait_name, func_name) = match return_type.unalias() {
-        RsTypeKind::Record { record: dst_record, .. } => {
-            let is_dst_local = db.ir().is_current_target(dst_record.as_ref().owning_target());
-            if !referent_type_kind.is_unpin() {
-                return None;
-            }
+    // If the return type contains non-static lifetimes or is a reference type, the returned value
+    // borrows from `*this`. Taking `self` by value would move and drop the source object, leaving a
+    // dangling reference. Therefore, we generate `Into<ReturnType> for &'__this Src` (or
+    // `&'__this mut Src`), taking `self` by reference instead of by value.
+    let returns_reference_into_self = return_type.lifetimes().any(|l| l.0.as_ref() != "static")
+        || matches!(
+            return_type.unalias(),
+            RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. }
+        );
 
-            if dst_record.is_unpin() {
-                if is_dst_local {
-                    let trait_name = TraitName::From(Rc::new([src_type_kind.clone()]));
-                    let func_name = make_rs_ident("from");
+    if returns_reference_into_self {
+        let trait_name = TraitName::Other {
+            name: Rc::from("::core::convert::Into"),
+            params: Rc::new([return_type.clone()]),
+            is_unsafe_fn: false,
+        };
+        let impl_kind = ImplKind::Trait {
+            record: src_record.clone(),
+            trait_name,
+            impl_for: ImplFor::RefT,
+            format_first_param_as_self: true,
+            drop_return: false,
+            associated_return_type: None,
+            force_const_reference_params: false,
+            always_public: true,
+        };
+        return Some((make_rs_ident("into"), impl_kind));
+    }
 
-                    // Movable local types, e.g. operator Dst() -> impl From<&mut Src> for Dst
-                    let impl_kind = ImplKind::new_trait(
-                        trait_name,
-                        dst_record.clone(),
-                        /* format_first_param_as_self= */ false,
-                        /* force_const_reference_params= */ false,
-                    );
-                    return Some((func_name, impl_kind));
-                }
-                // Movable foreign types, e.g. operator FrDst() const -> impl Into<FrDst> for &Src
-                let trait_name = TraitName::Other {
-                    name: intern!(db.interner(), "::core::convert::Into"),
-                    params: Rc::new([return_type.clone()]),
-                    is_unsafe_fn: false,
-                };
-                let func_name = make_rs_ident("into");
+    let is_src_unpin = referent_type_kind.is_unpin();
+    let is_dst_unpin = return_type.is_unpin();
 
-                (trait_name, func_name)
-            } else {
-                if !is_dst_local {
-                    errors.add(anyhow!(
-                        "Conversion to non-local, non-Unpin type `{}` is not supported",
-                        return_type.display(db)
-                    ));
-                    return None;
-                }
-                // Immovable local types
-                // e.g. operator ImmovDst() const -> impl CtorNew<&Src> for ImmovDst
-                let trait_name = TraitName::CtorNew(Rc::new([src_type_kind.clone()]));
-                let func_name = make_rs_ident("ctor_new");
-
-                let impl_kind = ImplKind::Trait {
-                    record: dst_record.clone(),
-                    trait_name,
-                    impl_for: ImplFor::T,
-                    format_first_param_as_self: false,
-                    drop_return: false,
-                    associated_return_type: Some(make_rs_ident("CtorType")),
-                    force_const_reference_params: false,
-                    always_public: true,
-                };
-                return Some((func_name, impl_kind));
-            }
-        }
-        _ => {
-            // Primitives e.g. operator int() const -> impl Into<i32> for &Src
-            // and references e.g. operator int&() -> impl Into<CMut<'_, i32>> for &mut Src
-            if !referent_type_kind.is_unpin() {
-                errors.add(anyhow!(
-                    "Conversion from non-Unpin type `{}` is not supported",
-                    referent_type_kind.display(db)
-                ));
-                return None;
-            }
-            let trait_name = TraitName::Other {
-                name: intern!(db.interner(), "::core::convert::Into"),
-                params: Rc::new([return_type.clone()]),
-                is_unsafe_fn: false,
-            };
-            let func_name = make_rs_ident("into");
-            (trait_name, func_name)
-        }
+    let (trait_name, func_name, src_param_type) = if is_src_unpin && is_dst_unpin {
+        (
+            TraitName::From(Rc::new([referent_type_kind.clone()])),
+            make_rs_ident("from"),
+            referent_type_kind.clone(),
+        )
+    } else if is_src_unpin && !is_dst_unpin {
+        (
+            TraitName::CtorNew(Rc::new([referent_type_kind.clone()])),
+            make_rs_ident("ctor_new"),
+            referent_type_kind.clone(),
+        )
+    } else {
+        (
+            TraitName::CtorNew(Rc::new([src_type_kind.clone()])),
+            make_rs_ident("ctor_new"),
+            src_type_kind.clone(),
+        )
     };
 
-    // Because into takes `self` by value, we explicitly implement Into for &Src to avoid consuming
-    // the source object, which is in-line with C++ conversion semantics.
-    let impl_for = match &trait_name {
-        TraitName::Other { name, .. } if name.as_ref() == "::core::convert::Into" => {
-            match src_type_kind.unalias() {
-                RsTypeKind::Reference { .. } => ImplFor::RefT,
-                _ => ImplFor::T,
-            }
-        }
-        _ => ImplFor::T,
+    param_types[0] = src_param_type;
+
+    let (associated_return_type, drop_return) = if matches!(trait_name, TraitName::CtorNew(_)) {
+        (Some(make_rs_ident("CtorType")), false)
+    } else {
+        (None, false)
     };
+
     let impl_kind = ImplKind::Trait {
         record: src_record.clone(),
         trait_name,
-        impl_for,
-        format_first_param_as_self: true,
-        drop_return: false,
-        associated_return_type: None,
+        impl_for: ImplFor::Type(Rc::new(return_type.clone())),
+        format_first_param_as_self: false,
+        drop_return,
+        associated_return_type,
         force_const_reference_params: false,
-        always_public: false,
+        always_public: true,
     };
     Some((func_name, impl_kind))
 }
@@ -1542,6 +1515,7 @@ fn generate_func_body<'a>(
         ImplKind::Trait {
             trait_name:
                 TraitName::Clone | TraitName::Default | TraitName::From(_) | TraitName::UnsafeFrom(_),
+            impl_for: ImplFor::T,
             ..
         }
         | ImplKind::Struct { is_renamed_unpin_constructor: true, .. } => {
@@ -2363,7 +2337,7 @@ pub fn generate_function<'a>(
             record: ref trait_record,
             ref trait_name,
             always_public,
-            impl_for,
+            ref impl_for,
             ref associated_return_type,
             ..
         } => {
@@ -2373,13 +2347,20 @@ pub fn generate_function<'a>(
             // When the impl block is for some kind of reference to T, consider the lifetime
             // parameters on the self parameter to be trait lifetimes so they can be
             // introduced before they are used.
-            let first_param_lifetimes = match (impl_for, param_types.first()) {
+            let first_param_lifetimes = match (&impl_for, param_types.first()) {
                 (ImplFor::RefT, Some(first_param)) => Some(first_param.lifetimes()),
                 _ => None,
             };
+            let target_type_lifetimes = match &impl_for {
+                ImplFor::Type(target_type) => Some(target_type.lifetimes()),
+                _ => None,
+            };
 
-            let trait_lifetimes: HashSet<Lifetime> =
-                trait_name.lifetimes().chain(first_param_lifetimes.into_iter().flatten()).collect();
+            let trait_lifetimes: HashSet<Lifetime> = trait_name
+                .lifetimes()
+                .chain(first_param_lifetimes.into_iter().flatten())
+                .chain(target_type_lifetimes.into_iter().flatten())
+                .collect();
             let fn_generic_params = format_generic_params(
                 lifetimes.iter().filter(|lifetime| !trait_lifetimes.contains(lifetime)),
                 std::iter::empty::<syn::Ident>(),
@@ -2409,7 +2390,7 @@ pub fn generate_function<'a>(
             };
 
             let mut trait_lifetime_params: Vec<Lifetime> = vec![];
-            if assume_lifetimes {
+            if assume_lifetimes && !matches!(impl_for, ImplFor::Type(_)) {
                 trait_lifetime_params =
                     trait_record.lifetime_inputs().iter().map(|id| Lifetime::new(id)).collect();
             }
@@ -2479,9 +2460,9 @@ pub fn generate_function<'a>(
                 if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
                     *lifetimes = trait_lifetime_params.clone();
                 }
-                let quoted_param_or_self = match impl_for {
+                let quoted_param_or_self = match &impl_for {
                     ImplFor::T => param.to_token_stream_replacing_by_self(db, Some(&self_type)),
-                    ImplFor::RefT => param.to_token_stream(db),
+                    ImplFor::RefT | ImplFor::Type(_) => param.to_token_stream(db),
                 };
                 quote! {
                     #[inline(always)]
@@ -2509,7 +2490,7 @@ pub fn generate_function<'a>(
 
             let mut assumed_lifetime_params = vec![];
             let mut trait_lifetime_params: Vec<Lifetime> = vec![];
-            if assume_lifetimes {
+            if assume_lifetimes && !matches!(impl_for, ImplFor::Type(_)) {
                 assumed_lifetime_params = trait_record
                     .lifetime_inputs()
                     .iter()
@@ -2532,7 +2513,25 @@ pub fn generate_function<'a>(
                 *lifetimes = trait_lifetime_params.clone();
             }
 
+            let (trait_name_without_trait_record, formatted_impl_for) = match &impl_for {
+                ImplFor::T => (
+                    trait_name_to_token_stream_removing_trait_record(
+                        db,
+                        trait_name,
+                        Some(&self_type_for_extra),
+                    ),
+                    quote! { #qualified_record_name #trait_record_param_tokens },
+                ),
+                ImplFor::RefT => {
+                    (trait_name_to_token_stream(db, trait_name), param_types[0].to_token_stream(db))
+                }
+                ImplFor::Type(target_type) => {
+                    (trait_name_to_token_stream(db, trait_name), target_type.to_token_stream(db))
+                }
+            };
+
             let extra_items = match &trait_name {
+                _ if matches!(impl_for, ImplFor::Type(_)) => quote! {},
                 TraitName::CtorNew(params) if params.len() == 1 => {
                     let single_param_ = format_tuple_except_singleton_replacing_by_self(
                         db,
@@ -2540,7 +2539,7 @@ pub fn generate_function<'a>(
                         Some(&self_type_for_extra),
                     );
                     quote! {
-                        impl #formatted_trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #qualified_record_name #trait_record_param_tokens #unsatisfied_where_clause {
+                        impl #formatted_trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #formatted_impl_for #unsatisfied_where_clause {
                             #extra_body
 
                             #[inline (always)]
@@ -2558,7 +2557,7 @@ pub fn generate_function<'a>(
                         Some(&self_type_for_extra),
                     );
                     quote! {
-                        impl #formatted_trait_generic_params ::ctor::UnsafeCtorNew<(#single_param_,)> for #qualified_record_name #trait_record_param_tokens #unsatisfied_where_clause {
+                        impl #formatted_trait_generic_params ::ctor::UnsafeCtorNew<(#single_param_,)> for #formatted_impl_for #unsatisfied_where_clause {
                             #extra_body
 
                             #[inline (always)]
@@ -2576,7 +2575,7 @@ pub fn generate_function<'a>(
                         Some(&self_type_for_extra),
                     );
                     quote! {
-                        impl #formatted_trait_generic_params ::ctor::CtorNew<#single_param_> for #qualified_record_name #trait_record_param_tokens #unsatisfied_where_clause {
+                        impl #formatted_trait_generic_params ::ctor::CtorNew<#single_param_> for #formatted_impl_for #unsatisfied_where_clause {
                             type CtorType = Self;
                             type Error = ::ctor::Infallible;
 
@@ -2594,7 +2593,7 @@ pub fn generate_function<'a>(
                         Some(&self_type_for_extra),
                     );
                     quote! {
-                        impl #formatted_trait_generic_params ::ctor::UnsafeCtorNew<#single_param_> for #qualified_record_name #trait_record_param_tokens #unsatisfied_where_clause {
+                        impl #formatted_trait_generic_params ::ctor::UnsafeCtorNew<#single_param_> for #formatted_impl_for #unsatisfied_where_clause {
                             type CtorType = Self;
                             type Error = ::ctor::Infallible;
 
@@ -2640,24 +2639,11 @@ pub fn generate_function<'a>(
                 *lifetimes = trait_lifetime_params.clone();
             }
 
-            let (trait_name_without_trait_record, impl_for) = match impl_for {
-                ImplFor::T => (
-                    trait_name_to_token_stream_removing_trait_record(
-                        db,
-                        trait_name,
-                        Some(&self_type),
-                    ),
-                    qualified_record_name,
-                ),
-                ImplFor::RefT => {
-                    (trait_name_to_token_stream(db, trait_name), param_types[0].to_token_stream(db))
-                }
-            };
             let func_body = create_func_body()?;
             api_func = quote! {
                 #unimplemented_trait_def
                 #doc_comment
-                impl #formatted_trait_generic_params #trait_name_without_trait_record for #impl_for #trait_record_param_tokens #unsatisfied_where_clause {
+                impl #formatted_trait_generic_params #trait_name_without_trait_record for #formatted_impl_for #unsatisfied_where_clause {
                     #extra_body
                     #[inline(always)]
                     #unsafety
@@ -2670,9 +2656,18 @@ pub fn generate_function<'a>(
                 }
                 #extra_items
             };
-            let record_qualifier = db.namespace_qualifier(trait_record).format_for_rs();
+            let self_type = match &impl_for {
+                ImplFor::Type(target_type) => {
+                    let target_tokens = target_type.to_token_stream_without_lifetimes(db);
+                    syn::parse2(target_tokens).ok()
+                }
+                _ => {
+                    let record_qualifier = db.namespace_qualifier(trait_record).format_for_rs();
+                    Some(syn::parse2(quote! { #record_qualifier #record_name }).unwrap())
+                }
+            };
             function_id = FunctionId {
-                self_type: Some(syn::parse2(quote! { #record_qualifier #record_name }).unwrap()),
+                self_type,
                 function_path: {
                     let trait_name_tokens = trait_name_to_token_stream(db, trait_name);
                     syn::parse2(quote! { #trait_name_tokens :: #func_name }).unwrap()
@@ -2940,7 +2935,7 @@ fn function_signature<'a>(
     for lifetime in parent_lifetimes {
         lifetime_inputs_and_parents.push(intern!(db.interner(), "{lifetime}"));
     }
-    let all_lifetimes: Vec<Lifetime> =
+    let mut all_lifetimes: Vec<Lifetime> =
         unique_lifetimes(&*param_types, &lifetime_inputs_and_parents)
             .into_iter()
             .filter(|lifetime| !lifetime.is_elided())
@@ -2956,6 +2951,14 @@ fn function_signature<'a>(
         // We manually set the container lifetime for indexing trait methods,
         // so remove the `'__this` lifetime in this case.
         lifetimes.retain(|l| &*l.0 != "__this");
+        lifetimes_including_impl.retain(|l| &*l.0 != "__this");
+        all_lifetimes.retain(|l| &*l.0 != "__this");
+    } else if matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator) {
+        let used_lifetimes: HashSet<Lifetime> =
+            param_types.iter().flat_map(|p| p.lifetimes()).chain(return_type.lifetimes()).collect();
+        lifetimes.retain(|l| used_lifetimes.contains(l));
+        lifetimes_including_impl.retain(|l| used_lifetimes.contains(l));
+        all_lifetimes.retain(|l| used_lifetimes.contains(l));
     }
 
     let mut quoted_return_type = None;
@@ -3157,6 +3160,7 @@ fn function_signature<'a>(
                     thunk_args[0] = quote! { self };
                 }
             }
+            ImplKind::Trait { impl_for: ImplFor::Type(_), .. } => unreachable!(),
         }
     } else if derived_record.is_some()
         && !thunk_args.is_empty()
@@ -3164,6 +3168,11 @@ fn function_signature<'a>(
     {
         let arg_this = thunk_args[0].clone();
         thunk_args[0] = quote! { oops::UnsafeUpcast::<_>::unsafe_upcast(#arg_this) };
+    } else if matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator)
+        && !thunk_args.is_empty()
+        && matches!(param_types.first(), Some(RsTypeKind::Record { .. }))
+    {
+        thunk_args[0] = quote! { &mut __this };
     }
 
     // Unknown attributes could affect ABI and should suppress bindings by default. Note that these
