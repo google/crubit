@@ -15,6 +15,8 @@ use ir::{BazelLabel, CcType, CcTypeVariant, Func, GenericItem, Item, ItemId, Rec
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use generate_function_thunk::can_skip_cc_thunk;
+
 /// Recursively checks whether all C++ declarations (`Decl`) directly or transitively
 /// referenced by `cc_type` have bindings.
 fn cc_type_has_bindings<'a>(
@@ -259,6 +261,23 @@ fn func_has_bindings<'a>(
         return Err(NoBindingsReason::Unsupported(anyhow!(
             "consteval functions are not supported"
         )));
+    }
+
+    if func.is_variadic() && !can_skip_cc_thunk(db, &func) {
+        return Err(NoBindingsReason::Unsupported(anyhow!(
+            "Variadic functions requiring a C++ thunk are not supported"
+        )));
+    }
+
+    if let Some(unknown_attr) = func.unknown_attr() {
+        for attr in unknown_attr.split(',') {
+            let attr = attr.trim();
+            if attr == "enable_if" || attr == "diagnose_if" {
+                return Err(NoBindingsReason::Unsupported(anyhow!(
+                    "Functions with enable_if or diagnose_if attributes are not supported"
+                )));
+            }
+        }
     }
 
     let ir = db.ir();
