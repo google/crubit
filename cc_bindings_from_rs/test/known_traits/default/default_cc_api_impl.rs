@@ -33,7 +33,7 @@ unsafe extern "C" fn __crubit_thunk_extract_uint(
     }
 }
 const _: () =
-    assert!(::core::mem::offset_of!(::rs_default_golden::derived_impl::SomeStruct, 0) == 0);
+    assert!(::core::mem::offset_of!(::rs_default_golden::derived_impl::SomeStruct, field) == 0);
 const _: () = assert!(::std::mem::size_of::<::rs_default_golden::explicit_impl::SomeStruct>() == 4);
 const _: () =
     assert!(::std::mem::align_of::<::rs_default_golden::explicit_impl::SomeStruct>() == 4);
@@ -57,7 +57,7 @@ unsafe extern "C" fn __crubit_thunk_extract_uint(
     }
 }
 const _: () =
-    assert!(::core::mem::offset_of!(::rs_default_golden::explicit_impl::SomeStruct, 0) == 0);
+    assert!(::core::mem::offset_of!(::rs_default_golden::explicit_impl::SomeStruct, field) == 0);
 const _: () = assert!(
     ::std::mem::size_of::<::rs_default_golden::field_with_no_default::StructWithFieldWithNoDefault>(
     ) == 4
@@ -98,18 +98,12 @@ const _: () = assert!(
 );
 const _: () = assert!(::std::mem::size_of::<::rs_default_golden::no_impl::SomeStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::rs_default_golden::no_impl::SomeStruct>() == 4);
-const _: () = assert!(::core::mem::offset_of!(::rs_default_golden::no_impl::SomeStruct, 0) == 0);
+const _: () =
+    assert!(::core::mem::offset_of!(::rs_default_golden::no_impl::SomeStruct, field) == 0);
 const _: () =
     assert!(::std::mem::size_of::<::rs_default_golden::transparent_struct::SomeStruct>() == 4);
 const _: () =
     assert!(::std::mem::align_of::<::rs_default_golden::transparent_struct::SomeStruct>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003atransparent_ustruct_x0000003a_x0000003aSomeStruct(
-) -> ::rs_default_golden::transparent_struct::SomeStruct {
-    unsafe {
-        <::rs_default_golden::transparent_struct::SomeStruct as ::core::default::Default>::default()
-    }
-}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_extract_uint(
     __self: &'static ::rs_default_golden::transparent_struct::SomeStruct,

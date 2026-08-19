@@ -31,6 +31,8 @@ struct
         "NonTriviallyDestructable") alignas(4) [[clang::trivial_abi]]
     NonTriviallyDestructable final {
  public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
   // Default::default
   NonTriviallyDestructable();
 

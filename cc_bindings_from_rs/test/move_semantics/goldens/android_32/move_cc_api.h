@@ -30,20 +30,6 @@ namespace move {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
     [[clang::trivial_abi]] Copyable final {
  public:
-  // Default::default
-  Copyable();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Copyable() = default;
-  Copyable(Copyable&&) = default;
-  Copyable& operator=(Copyable&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  Copyable(const Copyable&) = default;
-  Copyable& operator=(const Copyable&) = default;
-  Copyable(::crubit::UnsafeRelocateTag, Copyable&& value);
-
   static ::move::Copyable from_byte(::std::uint8_t byte);
 
   //  Typically, `self`-by-value methods turn into `&&`-qualified methods in
@@ -51,9 +37,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   //  as it will be copied regardless.
   ::std::uint8_t consume_self() const;
 
-  union {
-    ::std::uint8_t field;
-  };
+  ::std::uint8_t field = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -143,26 +127,11 @@ static_assert(
 static_assert(
     alignof(Copyable) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x0000003aCopyable(
-    ::move::Copyable* __ret_ptr);
-}
-inline ::move::Copyable::Copyable() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x0000003aCopyable(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<Copyable>);
 static_assert(::std::is_trivially_move_constructible_v<::move::Copyable>);
 static_assert(::std::is_trivially_move_assignable_v<::move::Copyable>);
 static_assert(::std::is_trivially_copy_constructible_v<::move::Copyable>);
 static_assert(::std::is_trivially_copy_assignable_v<::move::Copyable>);
-inline ::move::Copyable::Copyable(::crubit::UnsafeRelocateTag,
-                                  Copyable&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
                                           ::move::Copyable* __ret_ptr);

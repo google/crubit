@@ -60,9 +60,74 @@ Specifically, the following subobjects are hidden and replaced with opaque
 blobs:
 
 *   Non-public fields (`private` or `pub(...)` fields).
-*   Fields that implement `Drop`.
 *   Fields whose type does not have bindings.
 *   Fields that have an unrecognized or unsupported attribute.
+
+## Aggregate initialization {#aggregates}
+
+Qualifying Rust structs are generated as C++ **aggregates** (satisfying
+[`std::is_aggregate_v<T>`](https://en.cppreference.com/w/cpp/types/is_aggregate)),
+which enables C++ aggregate initialization such as designated initializers
+(`MyStruct{.a = 1, .b = 2}`) and braced initialization (`MyStruct{1, 2}`).
+
+A Rust struct is generated as a C++ aggregate if:
+
+1.  All of its fields are public (`pub`) and supported by Crubit.
+2.  It is not marked `#[non_exhaustive]`.
+3.  It does not implement `Drop`.
+4.  At most one field requires drop glue, **or** the struct is annotated with
+    `#[crubit_annotate::field_drop_order_does_not_matter]`.
+5.  Any field requiring drop glue is movable in C++.
+6.  `Default` is not implemented manually (i.e. `Default` is either derived via
+    `#[derive(Default)]` or not implemented at all).
+
+### Field Drop Order and `#[crubit_annotate::field_drop_order_does_not_matter]`
+
+In Rust, struct fields are dropped in definition order (first to last). In C++,
+aggregate members are destroyed in reverse definition order (last to first).
+
+When at most one field requires drop glue, destruction order is trivial and
+matches between Rust and C++. However, when multiple fields require drop glue,
+the drop order in C++ will be the reverse of Rust's drop order. To prevent
+unintended semantic differences, Crubit generates such structs as non-aggregates
+(with custom C++ destructors calling into Rust) by default.
+
+If the drop order of the fields does not matter, you can annotate the struct
+with `#[crubit_annotate::field_drop_order_does_not_matter]` from
+`//support:crubit_annotate` to opt into C++ aggregate
+generation:
+
+```rust
+use crubit_annotate::field_drop_order_does_not_matter;
+
+#[field_drop_order_does_not_matter]
+pub struct Config {
+    pub name: MyDropType1,
+    pub buffer: MyDropType2,
+}
+```
+
+### Manual `Default` Implementation
+
+If a struct implements `Default` manually (`impl Default for MyStruct { ... }`),
+it is generated as a non-aggregate. This allows Crubit to generate an explicit
+C++ default constructor (`MyStruct()`) that calls Rust's `Default::default()`,
+preserving any custom initial values defined in Rust.
+
+Structs using `#[derive(Default)]` remain C++ aggregates, as derived `Default`
+initializes primitive fields to zero/false, matching C++ value initialization.
+
+### Differences between Aggregate and Non-Aggregate Structs
+
+*   **Direct Member Variables**: C++ aggregates expose fields as direct member
+    variables (`Type field_name;`) without anonymous union wrappers or padding
+    fields.
+*   **No User-Declared Constructors**: C++ aggregates do not have user-declared
+    constructors (such as converting constructors or tuple constructors).
+*   **Value Initialization vs `Default::default()`**: In C++, value-initializing
+    an aggregate (`MyStruct s{};`) zero-initializes primitive fields according to
+    C++ rules. If a struct derives `Default` or does not implement `Default`,
+    zero-initialization in C++ matches Rust derived default semantics.
 
 ## C++ movable {#cpp_movable}
 

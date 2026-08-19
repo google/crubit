@@ -100,16 +100,6 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x
 }
 const _: () = assert!(::std::mem::size_of::<::traits_golden::StructWithAssociatedConst>() == 4);
 const _: () = assert!(::std::mem::align_of::<::traits_golden::StructWithAssociatedConst>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aStructWithAssociatedConst(
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::traits_golden::StructWithAssociatedConst as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
 const _: () = assert!(::core::mem::offset_of!(::traits_golden::StructWithAssociatedConst, x) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(

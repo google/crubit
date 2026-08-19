@@ -28,6 +28,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: struct_with_conflicting_fields_and_member_functions_golden :: "
     "X") alignas(4) [[clang::trivial_abi]] X final {
  public:
+  // Type is not a C++ aggregate: Field `b` is not public
+
   // `struct_with_conflicting_fields_and_member_functions_golden::X` doesn't
   // implement the `Default` trait
   X() = delete;

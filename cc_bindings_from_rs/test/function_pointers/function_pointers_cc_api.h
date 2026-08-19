@@ -20,7 +20,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -42,23 +41,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: function_pointers_golden :: CStruct") alignas(4) [[clang::trivial_abi]]
 CStruct final {
  public:
-  // Default::default
-  CStruct();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CStruct() = default;
-  CStruct(CStruct&&) = default;
-  CStruct& operator=(CStruct&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  CStruct(const CStruct&) = default;
-  CStruct& operator=(const CStruct&) = default;
-  CStruct(::crubit::UnsafeRelocateTag, CStruct&& value);
-
-  union {
-    ::std::int32_t field;
-  };
+  ::std::int32_t field = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -69,26 +52,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: function_pointers_golden :: HasFnPtrField") alignas(8)
     [[clang::trivial_abi]] HasFnPtrField final {
  public:
-  // `function_pointers_golden::HasFnPtrField` doesn't implement the `Default`
-  // trait
-  HasFnPtrField() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~HasFnPtrField() = default;
-  HasFnPtrField(HasFnPtrField&&) = default;
-  HasFnPtrField& operator=(HasFnPtrField&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  HasFnPtrField(const HasFnPtrField&) = default;
-  HasFnPtrField& operator=(const HasFnPtrField&) = default;
-  HasFnPtrField(::crubit::UnsafeRelocateTag, HasFnPtrField&& value);
-
   static ::function_pointers::HasFnPtrField with_add_ten();
 
-  union {
-    crubit::type_identity_t<::std::int32_t(::std::int32_t)>* ptr;
-  };
+  crubit::type_identity_t<::std::int32_t(::std::int32_t)>* ptr = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -144,16 +110,6 @@ static_assert(
 static_assert(
     alignof(CStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_ufunction_upointers_ugolden_x0000003a_x0000003aCStruct(
-    ::function_pointers::CStruct* __ret_ptr);
-}
-inline ::function_pointers::CStruct::CStruct() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_ufunction_upointers_ugolden_x0000003a_x0000003aCStruct(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<CStruct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::function_pointers::CStruct>);
@@ -163,10 +119,6 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::function_pointers::CStruct>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::function_pointers::CStruct>);
-inline ::function_pointers::CStruct::CStruct(::crubit::UnsafeRelocateTag,
-                                             CStruct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void CStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CStruct, field));
 }
@@ -185,11 +137,6 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::function_pointers::HasFnPtrField>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::function_pointers::HasFnPtrField>);
-inline ::function_pointers::HasFnPtrField::HasFnPtrField(
-    ::crubit::UnsafeRelocateTag, HasFnPtrField&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_with_uadd_uten(
     ::function_pointers::HasFnPtrField* __ret_ptr);

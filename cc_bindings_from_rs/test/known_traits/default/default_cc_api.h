@@ -28,12 +28,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rs_default_golden :: derived_impl :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
  public:
+  // Type is not a C++ aggregate: Field `_private` is not public
+
   // Default::default
   SomeStruct();
-
-  // Synthesized tuple constructor
-  explicit SomeStruct(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
@@ -49,9 +47,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static ::std::int32_t extract_int(::rs_default::derived_impl::SomeStruct s);
 
   union {
-    ::std::int32_t __field0;
+    ::std::int32_t field;
   };
-
+  // Field `_private` omitted: C++ does not support zero-sized types.
  private:
   static void __crubit_field_offset_assertions();
 };
@@ -64,12 +62,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rs_default_golden :: explicit_impl :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
  public:
+  // Type is not a C++ aggregate: Type has a manual `Default` implementation
+
   // Default::default
   SomeStruct();
-
-  // Synthesized tuple constructor
-  explicit SomeStruct(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
@@ -85,9 +81,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static ::std::int32_t extract_int(::rs_default::explicit_impl::SomeStruct s);
 
   union {
-    ::std::int32_t __field0;
+    ::std::int32_t field;
   };
-
+  // Field `_private` omitted: C++ does not support zero-sized types.
  private:
   static void __crubit_field_offset_assertions();
 };
@@ -134,6 +130,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     "StructWithFieldWithNoDefault") alignas(4) [[clang::trivial_abi]]
 StructWithFieldWithNoDefault final {
  public:
+  // Type is not a C++ aggregate: Type has a manual `Default` implementation
+
   // Default::default
   StructWithFieldWithNoDefault();
 
@@ -157,7 +155,7 @@ StructWithFieldWithNoDefault final {
   union {
     ::rs_default::field_with_no_default::StructWithoutDefault field;
   };
-
+  // Field `_private` omitted: C++ does not support zero-sized types.
  private:
   static void __crubit_field_offset_assertions();
 };
@@ -170,13 +168,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rs_default_golden :: no_impl :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
  public:
+  // Type is not a C++ aggregate: Field `_private` is not public
+
   // `rs_default_golden::no_impl::SomeStruct` doesn't implement the `Default`
   // trait
   SomeStruct() = delete;
-
-  // Synthesized tuple constructor
-  explicit SomeStruct(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
 
   // No custom `Drop` impl and no custom "drop glue" required
   ~SomeStruct() = default;
@@ -190,9 +186,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
 
   union {
-    ::std::int32_t __field0;
+    ::std::int32_t field;
   };
-
+  // Field `_private` omitted: C++ does not support zero-sized types.
  private:
   static void __crubit_field_offset_assertions();
 };
@@ -205,29 +201,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rs_default_golden :: transparent_struct :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
  public:
-  // Default::default
-  SomeStruct();
-
-  // Synthesized tuple constructor
-  explicit SomeStruct(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~SomeStruct() = default;
-  SomeStruct(SomeStruct&&) = default;
-  SomeStruct& operator=(SomeStruct&&) = default;
-
-  // `rs_default_golden::transparent_struct::SomeStruct` doesn't implement the
-  // `Clone` trait
-  SomeStruct(const SomeStruct&) = delete;
-  SomeStruct& operator=(const SomeStruct&) = delete;
-  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
-
   ::std::int32_t extract_int() const;
 
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -272,7 +248,7 @@ inline ::std::int32_t SomeStruct::extract_int(
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
 }
 inline void SomeStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(SomeStruct, __field0));
+  static_assert(0 == offsetof(SomeStruct, field));
 }
 }  // namespace rs_default::derived_impl
 
@@ -313,7 +289,7 @@ inline ::std::int32_t SomeStruct::extract_int(
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
 }
 inline void SomeStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(SomeStruct, __field0));
+  static_assert(0 == offsetof(SomeStruct, field));
 }
 }  // namespace rs_default::explicit_impl
 
@@ -400,7 +376,7 @@ inline ::rs_default::no_impl::SomeStruct::SomeStruct(
   ::std::memcpy(this, &value, sizeof(value));
 }
 inline void SomeStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(SomeStruct, __field0));
+  static_assert(0 == offsetof(SomeStruct, field));
 }
 }  // namespace rs_default::no_impl
 
@@ -412,24 +388,11 @@ static_assert(
 static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" ::rs_default::transparent_struct::SomeStruct
-__crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003atransparent_ustruct_x0000003a_x0000003aSomeStruct();
-}
-inline ::rs_default::transparent_struct::SomeStruct::SomeStruct() {
-  *this = __crubit_internal::
-      __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003atransparent_ustruct_x0000003a_x0000003aSomeStruct();
-}
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::transparent_struct::SomeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::rs_default::transparent_struct::SomeStruct>);
-inline ::rs_default::transparent_struct::SomeStruct::SomeStruct(
-    ::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::transparent_struct::SomeStruct const&);

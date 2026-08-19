@@ -173,25 +173,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: traits_golden :: StructWithAssociatedConst") alignas(4)
     [[clang::trivial_abi]] StructWithAssociatedConst final {
  public:
-  // Default::default
-  StructWithAssociatedConst();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~StructWithAssociatedConst() = default;
-  StructWithAssociatedConst(StructWithAssociatedConst&&) = default;
-  StructWithAssociatedConst& operator=(StructWithAssociatedConst&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  StructWithAssociatedConst(const StructWithAssociatedConst&) = default;
-  StructWithAssociatedConst& operator=(const StructWithAssociatedConst&) =
-      default;
-  StructWithAssociatedConst(::crubit::UnsafeRelocateTag,
-                            StructWithAssociatedConst&& value);
-
-  union {
-    ::std::int32_t x;
-  };
+  ::std::int32_t x = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -557,16 +539,6 @@ static_assert(
 static_assert(
     alignof(StructWithAssociatedConst) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aStructWithAssociatedConst(
-    ::traits::StructWithAssociatedConst* __ret_ptr);
-}
-inline ::traits::StructWithAssociatedConst::StructWithAssociatedConst() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aStructWithAssociatedConst(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<StructWithAssociatedConst>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::traits::StructWithAssociatedConst>);
@@ -576,10 +548,6 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::traits::StructWithAssociatedConst>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::traits::StructWithAssociatedConst>);
-inline ::traits::StructWithAssociatedConst::StructWithAssociatedConst(
-    ::crubit::UnsafeRelocateTag, StructWithAssociatedConst&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void StructWithAssociatedConst::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithAssociatedConst, x));
 }

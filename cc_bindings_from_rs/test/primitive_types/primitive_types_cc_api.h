@@ -21,7 +21,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -41,111 +40,35 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: primitive_types_golden :: field_types :: Types") alignas(8)
     [[clang::trivial_abi]] Types final {
  public:
-  // `primitive_types_golden::field_types::Types` doesn't implement the
-  // `Default` trait
-  Types() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Types() = default;
-  Types(Types&&) = default;
-  Types& operator=(Types&&) = default;
-
-  // `primitive_types_golden::field_types::Types` doesn't implement the `Clone`
-  // trait
-  Types(const Types&) = delete;
-  Types& operator=(const Types&) = delete;
-  Types(::crubit::UnsafeRelocateTag, Types&& value);
-
-  union {
-    crubit::type_identity_t<void(::std::int8_t)>* i8_func;
-  };
-  union {
-    crubit::type_identity_t<void(decltype(char(0)))>* c_char_func;
-  };
-  union {
-    void* c_void_mut_ptr;
-  };
-  union {
-    const void* c_void_const_ptr;
-  };
-  union {
-    ::std::int64_t c_long;
-  };
-  union {
-    ::std::uint64_t c_ulong;
-  };
-  union {
-    long long c_longlong;
-  };
-  union {
-    unsigned long long c_ulonglong;
-  };
-  union {
-    double c_double;
-  };
-  union {
-    ::std::int64_t i64;
-  };
-  union {
-    ::std::uint64_t u64;
-  };
-  union {
-    ::std::intptr_t isize;
-  };
-  union {
-    ::std::uintptr_t usize;
-  };
-  union {
-    double f64;
-  };
-  union {
-    ::std::int32_t c_int;
-  };
-  union {
-    ::std::uint32_t c_uint;
-  };
-  union {
-    float c_float;
-  };
-  union {
-    ::std::int32_t i32;
-  };
-  union {
-    ::std::uint32_t u32;
-  };
-  union {
-    float f32;
-  };
-  union {
-    ::std::int16_t c_short;
-  };
-  union {
-    ::std::uint16_t c_ushort;
-  };
-  union {
-    ::std::int16_t i16;
-  };
-  union {
-    ::std::uint16_t u16;
-  };
-  union {
-    decltype(char(0)) c_char;
-  };
-  union {
-    ::std::int8_t c_schar;
-  };
-  union {
-    ::std::uint8_t c_uchar;
-  };
-  union {
-    ::std::int8_t i8;
-  };
-  union {
-    ::std::uint8_t u8;
-  };
-
- private:
-  unsigned char __padding16[3];
+  crubit::type_identity_t<void(::std::int8_t)>* i8_func = {};
+  crubit::type_identity_t<void(decltype(char(0)))>* c_char_func = {};
+  void* c_void_mut_ptr = {};
+  const void* c_void_const_ptr = {};
+  ::std::int64_t c_long = {};
+  ::std::uint64_t c_ulong = {};
+  long long c_longlong = {};
+  unsigned long long c_ulonglong = {};
+  double c_double = {};
+  ::std::int64_t i64 = {};
+  ::std::uint64_t u64 = {};
+  ::std::intptr_t isize = {};
+  ::std::uintptr_t usize = {};
+  double f64 = {};
+  ::std::int32_t c_int = {};
+  ::std::uint32_t c_uint = {};
+  float c_float = {};
+  ::std::int32_t i32 = {};
+  ::std::uint32_t u32 = {};
+  float f32 = {};
+  ::std::int16_t c_short = {};
+  ::std::uint16_t c_ushort = {};
+  ::std::int16_t i16 = {};
+  ::std::uint16_t u16 = {};
+  decltype(char(0)) c_char = {};
+  ::std::int8_t c_schar = {};
+  ::std::uint8_t c_uchar = {};
+  ::std::int8_t i8 = {};
+  ::std::uint8_t u8 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -228,30 +151,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     "StructWithCVoidPointerMember") alignas(8) [[clang::trivial_abi]]
 StructWithCVoidPointerMember final {
  public:
-  // `primitive_types_golden::test_c_void_ptr::StructWithCVoidPointerMember`
-  // doesn't implement the `Default` trait
-  StructWithCVoidPointerMember() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~StructWithCVoidPointerMember() = default;
-  StructWithCVoidPointerMember(StructWithCVoidPointerMember&&) = default;
-  StructWithCVoidPointerMember& operator=(StructWithCVoidPointerMember&&) =
-      default;
-
-  // `primitive_types_golden::test_c_void_ptr::StructWithCVoidPointerMember`
-  // doesn't implement the `Clone` trait
-  StructWithCVoidPointerMember(const StructWithCVoidPointerMember&) = delete;
-  StructWithCVoidPointerMember& operator=(const StructWithCVoidPointerMember&) =
-      delete;
-  StructWithCVoidPointerMember(::crubit::UnsafeRelocateTag,
-                               StructWithCVoidPointerMember&& value);
-
-  union {
-    const void* ptr_const;
-  };
-  union {
-    void* ptr_mut;
-  };
+  const void* ptr_const = {};
+  void* ptr_mut = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -311,10 +212,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::primitive_types::field_types::Types>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::primitive_types::field_types::Types>);
-inline ::primitive_types::field_types::Types::Types(::crubit::UnsafeRelocateTag,
-                                                    Types&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void Types::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Types, i8_func));
   static_assert(8 == offsetof(Types, c_char_func));
@@ -569,11 +466,6 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<
         ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember>);
-inline ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember::
-    StructWithCVoidPointerMember(::crubit::UnsafeRelocateTag,
-                                 StructWithCVoidPointerMember&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void StructWithCVoidPointerMember::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithCVoidPointerMember, ptr_const));
   static_assert(8 == offsetof(StructWithCVoidPointerMember, ptr_mut));

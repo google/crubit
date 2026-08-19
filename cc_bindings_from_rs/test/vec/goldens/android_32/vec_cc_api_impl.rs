@@ -14,12 +14,6 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::vec_golden::StructWithVec>() == 12);
 const _: () = assert!(::std::mem::align_of::<::vec_golden::StructWithVec>() == 4);
 #[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aStructWithVec(
-    __self: *mut ::vec_golden::StructWithVec,
-) {
-    unsafe { ::core::ptr::drop_in_place(__self) };
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::vec_golden::StructWithVec::new(val);

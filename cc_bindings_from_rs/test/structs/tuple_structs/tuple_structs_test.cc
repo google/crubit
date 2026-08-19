@@ -111,23 +111,22 @@ TEST(TupleStructsTest, TupleStructWithNoDefaultIsConstructible) {
 }
 
 TEST(TupleStructsTest, TupleStructWithDefaultNoCopyNoCloneIsConstructible) {
-  DefaultNoCopyNoClone default_no_copy_no_clone;
-  TupleStructWithDefaultNoCopyNoClone arg(DefaultNoCopyNoClone{});
+  DefaultNoCopyNoClone default_no_copy_no_clone{};
+  TupleStructWithDefaultNoCopyNoClone arg(default_no_copy_no_clone);
   EXPECT_EQ(arg.__field0.value, 0);
 }
 
-TEST(TupleStructsTest, TupleStructWithCloneNoDefaultIsNotConstructible) {
+TEST(TupleStructsTest, TupleStructWithCloneNoDefaultIsConstructible) {
   static_assert(
-      !std::is_constructible_v<TupleStructWithCloneNoDefault, CloneNoDefault>);
+      std::is_constructible_v<TupleStructWithCloneNoDefault, CloneNoDefault>);
   TupleStructWithCloneNoDefault arg =
       TupleStructWithCloneNoDefault::create(891);
   EXPECT_EQ(arg.get_value(), 891);
 }
 
-TEST(TupleStructsTest,
-     TupleStructWithDefaultAndCloneNoUnpinIsNotConstructible) {
-  static_assert(!std::is_constructible_v<TupleStructWithDefaultAndCloneNoUnpin,
-                                         DefaultAndCloneNoUnpin>);
+TEST(TupleStructsTest, TupleStructWithDefaultAndCloneNoUnpinIsConstructible) {
+  static_assert(std::is_constructible_v<TupleStructWithDefaultAndCloneNoUnpin,
+                                        DefaultAndCloneNoUnpin>);
   TupleStructWithDefaultAndCloneNoUnpin arg =
       TupleStructWithDefaultAndCloneNoUnpin::create();
   EXPECT_EQ(arg.__field0.value, 0);

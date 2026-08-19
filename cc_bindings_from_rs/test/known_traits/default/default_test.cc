@@ -42,7 +42,7 @@ TEST(DefaultTest, NoImpl) {
 }
 
 TEST(DefaultTest, TransparentStruct) {
-  rs_default::transparent_struct::SomeStruct s;
+  rs_default::transparent_struct::SomeStruct s{};
   EXPECT_EQ(s.extract_int(), 0);
 }
 

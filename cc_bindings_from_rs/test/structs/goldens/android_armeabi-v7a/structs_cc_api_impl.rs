@@ -110,6 +110,144 @@ unsafe extern "C" fn __crubit_thunk_inspect(
         ::structs_golden::abi_classification::StructMemory::inspect(s)
     }
 }
+const _: () = assert!(
+    ::std::mem::size_of::<::structs_golden::aggregate_initialization::AnnotatedTwoDrops>() == 24
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::structs_golden::aggregate_initialization::AnnotatedTwoDrops>() == 4
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::AnnotatedTwoDrops, 0) == 0
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::AnnotatedTwoDrops, 1) == 12
+);
+const _: () = assert!(
+    ::std::mem::size_of::<::structs_golden::aggregate_initialization::BasicAggregate>() == 8
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::structs_golden::aggregate_initialization::BasicAggregate>() == 4
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::BasicAggregate, x) == 0
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::BasicAggregate, y) == 4
+);
+const _: () = assert!(
+    ::std::mem::size_of::<::structs_golden::aggregate_initialization::CustomDropStruct>() == 4
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::structs_golden::aggregate_initialization::CustomDropStruct>() == 4
+);
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003aaggregate_uinitialization_x0000003a_x0000003aCustomDropStruct(
+    __self: *mut ::structs_golden::aggregate_initialization::CustomDropStruct,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_create(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::structs_golden::aggregate_initialization::CustomDropStruct::create(x);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::CustomDropStruct, x) == 0
+);
+const _: () = assert!(
+    ::std::mem::size_of::<::structs_golden::aggregate_initialization::NonExhaustiveStruct>() == 8
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::structs_golden::aggregate_initialization::NonExhaustiveStruct>() == 4
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_create(
+    x: i32,
+    y: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::structs_golden::aggregate_initialization::NonExhaustiveStruct::create(x, y);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::NonExhaustiveStruct, x)
+        == 0
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::NonExhaustiveStruct, y)
+        == 4
+);
+const _: () = assert!(
+    ::std::mem::size_of::<::structs_golden::aggregate_initialization::SingleDropField>() == 12
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::structs_golden::aggregate_initialization::SingleDropField>() == 4
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::SingleDropField, 0) == 0
+);
+const _: () = assert!(
+    ::std::mem::size_of::<::structs_golden::aggregate_initialization::StructWithPrivateField>()
+        == 8
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::structs_golden::aggregate_initialization::StructWithPrivateField>()
+        == 4
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_create(
+    x: i32,
+    y: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::structs_golden::aggregate_initialization::StructWithPrivateField::create(x, y);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::StructWithPrivateField, x)
+        == 0
+);
+const _: () = assert!(
+    ::std::mem::size_of::<::structs_golden::aggregate_initialization::TupleAggregate>() == 16
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::structs_golden::aggregate_initialization::TupleAggregate>() == 8
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::TupleAggregate, 1) == 0
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::TupleAggregate, 0) == 8
+);
+const _: () = assert!(
+    ::std::mem::size_of::<::structs_golden::aggregate_initialization::UnannotatedTwoDrops>() == 24
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::structs_golden::aggregate_initialization::UnannotatedTwoDrops>() == 4
+);
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003aaggregate_uinitialization_x0000003a_x0000003aUnannotatedTwoDrops(
+    __self: *mut ::structs_golden::aggregate_initialization::UnannotatedTwoDrops,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::UnannotatedTwoDrops, 0)
+        == 0
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(::structs_golden::aggregate_initialization::UnannotatedTwoDrops, 1)
+        == 12
+);
 const _: () = assert!(::std::mem::size_of::<::structs_golden::default_repr::Point>() == 8);
 const _: () = assert!(::std::mem::align_of::<::structs_golden::default_repr::Point>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::structs_golden::default_repr::Point, x) == 0);
@@ -372,17 +510,6 @@ const _: () =
     assert!(::std::mem::size_of::<::structs_golden::unsupported_types::SomeStruct>() == 4);
 const _: () =
     assert!(::std::mem::align_of::<::structs_golden::unsupported_types::SomeStruct>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003aunsupported_utypes_x0000003a_x0000003aSomeStruct(
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::structs_golden::unsupported_types::SomeStruct as ::core::default::Default>::default(
-            );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(x: char, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {

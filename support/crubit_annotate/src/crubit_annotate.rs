@@ -434,3 +434,27 @@ pub fn do_not_bind(attribute: TokenStream, input: TokenStream) -> TokenStream {
         key_value_to_doc_comment("do_not_bind", "")
     })
 }
+
+/// Marks a Rust struct as having fields whose drop order does not matter, allowing it to be
+/// generated as a C++ aggregate.
+///
+/// In Rust, fields are dropped in definition order. In C++, aggregate members are destroyed in
+/// reverse order. When multiple fields have drop glue, Crubit will not generate an aggregate
+/// struct unless this annotation is present.
+///
+/// See <http://crubit.rs/rust/structs#aggregates> for more details.
+#[proc_macro_attribute]
+pub fn field_drop_order_does_not_matter(attribute: TokenStream, input: TokenStream) -> TokenStream {
+    make_prefix_for(input, || {
+        if let Some(token) = attribute.into_iter().next() {
+            return TokenStream::from(
+                syn::Error::new(
+                    token.span().into(),
+                    "The `field_drop_order_does_not_matter` annotation does not accept any arguments.",
+                )
+                .into_compile_error(),
+            );
+        }
+        key_value_to_doc_comment("field_drop_order_does_not_matter", "")
+    })
+}

@@ -21,7 +21,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -36,29 +35,13 @@ static constexpr rs_std::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
 struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(4)
     [[clang::trivial_abi]] TypeWithStr final {
  public:
-  // Default::default
-  TypeWithStr();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~TypeWithStr() = default;
-  TypeWithStr(TypeWithStr&&) = default;
-  TypeWithStr& operator=(TypeWithStr&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  TypeWithStr(const TypeWithStr&) = default;
-  TypeWithStr& operator=(const TypeWithStr&) = default;
-  TypeWithStr(::crubit::UnsafeRelocateTag, TypeWithStr&& value);
-
   static ::str::TypeWithStr create(rs_std::StrRef s);
 
   ::std::uintptr_t get_str_len() const;
 
   ::std::uint8_t const* get_str_data() const;
 
-  union {
-    rs_std::StrRef str_field;
-  };
+  rs_std::StrRef str_field = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -79,26 +62,11 @@ static_assert(
 static_assert(
     alignof(TypeWithStr) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_ustr_ugolden_x0000003a_x0000003aTypeWithStr(
-    ::str::TypeWithStr* __ret_ptr);
-}
-inline ::str::TypeWithStr::TypeWithStr() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_ustr_ugolden_x0000003a_x0000003aTypeWithStr(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<TypeWithStr>);
 static_assert(::std::is_trivially_move_constructible_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_move_assignable_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_constructible_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_assignable_v<::str::TypeWithStr>);
-inline ::str::TypeWithStr::TypeWithStr(::crubit::UnsafeRelocateTag,
-                                       TypeWithStr&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef,
                                       ::str::TypeWithStr* __ret_ptr);

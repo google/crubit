@@ -46,6 +46,8 @@ namespace async_fn {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: async_fn_golden :: NotCppMovable") alignas(
     4) [[clang::trivial_abi]] NotCppMovable final {
  public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
   // `async_fn_golden::NotCppMovable` doesn't implement the `Default` trait
   NotCppMovable() = delete;
 
@@ -78,6 +80,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: async_fn_golden :: StructWithDrop") alignas(4) [[clang::trivial_abi]]
 StructWithDrop final {
  public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
   // Default::default
   StructWithDrop();
 

@@ -39,20 +39,6 @@ struct OpaqueRef;
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocSource") alignas(
     8) [[clang::trivial_abi]] CloneAllocSource final {
  public:
-  // `from_golden::CloneAllocSource` doesn't implement the `Default` trait
-  CloneAllocSource() = delete;
-
-  // Drop::drop
-  ~CloneAllocSource();
-
-  // Clone::clone
-  CloneAllocSource(const CloneAllocSource&);
-
-  // Clone::clone_from
-  ::from::CloneAllocSource& operator=(const CloneAllocSource&);
-
-  CloneAllocSource(::crubit::UnsafeRelocateTag, CloneAllocSource&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::from::CloneAllocSource create(rs_std::StrRef s);
 
@@ -61,9 +47,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocSource") alignas(
 
   explicit operator ::from::CloneAllocType();
 
-  union {
-    ::rs::alloc::string::String value;
-  };
+  ::rs::alloc::string::String value = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -73,28 +57,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocSource") alignas(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocType") alignas(8)
     [[clang::trivial_abi]] CloneAllocType final {
  public:
-  // `from_golden::CloneAllocType` doesn't implement the `Default` trait
-  CloneAllocType() = delete;
-
-  // Drop::drop
-  ~CloneAllocType();
-
-  // Clone::clone
-  CloneAllocType(const CloneAllocType&);
-
-  // Clone::clone_from
-  ::from::CloneAllocType& operator=(const CloneAllocType&);
-
-  CloneAllocType(::crubit::UnsafeRelocateTag, CloneAllocType&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   rs_std::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  explicit CloneAllocType(::from::CloneAllocSource value);
-
-  union {
-    ::rs::alloc::string::String value;
-  };
+  ::rs::alloc::string::String value = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -104,29 +70,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocType") alignas(8)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopySource") alignas(4)
     [[clang::trivial_abi]] CloneCopySource final {
  public:
-  // `from_golden::CloneCopySource` doesn't implement the `Default` trait
-  CloneCopySource() = delete;
-
-  // Synthesized tuple constructor
-  explicit CloneCopySource(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CloneCopySource() = default;
-  CloneCopySource(CloneCopySource&&) = default;
-  CloneCopySource& operator=(CloneCopySource&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  CloneCopySource(const CloneCopySource&) = default;
-  CloneCopySource& operator=(const CloneCopySource&) = default;
-  CloneCopySource(::crubit::UnsafeRelocateTag, CloneCopySource&& value);
-
   explicit operator ::from::CloneCopyType();
 
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -136,29 +82,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopySource") alignas(4)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopyType") alignas(4)
     [[clang::trivial_abi]] CloneCopyType final {
  public:
-  // Default::default
-  CloneCopyType();
-
-  // Synthesized tuple constructor
-  explicit CloneCopyType(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CloneCopyType() = default;
-  CloneCopyType(CloneCopyType&&) = default;
-  CloneCopyType& operator=(CloneCopyType&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  CloneCopyType(const CloneCopyType&) = default;
-  CloneCopyType& operator=(const CloneCopyType&) = default;
-  CloneCopyType(::crubit::UnsafeRelocateTag, CloneCopyType&& value);
-
-  explicit CloneCopyType(::from::CloneCopySource value);
-
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -204,29 +128,9 @@ CollidingConstructor final {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopA") alignas(4)
     [[clang::trivial_abi]] LoopA final {
  public:
-  // `from_golden::LoopA` doesn't implement the `Default` trait
-  LoopA() = delete;
-
-  // Synthesized tuple constructor
-  explicit LoopA(::std::int32_t __field0) : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~LoopA() = default;
-  LoopA(LoopA&&) = default;
-  LoopA& operator=(LoopA&&) = default;
-
-  // `from_golden::LoopA` doesn't implement the `Clone` trait
-  LoopA(const LoopA&) = delete;
-  LoopA& operator=(const LoopA&) = delete;
-  LoopA(::crubit::UnsafeRelocateTag, LoopA&& value);
-
   explicit operator ::from::LoopB();
 
-  explicit LoopA(::from::LoopB value);
-
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -236,29 +140,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopA") alignas(4)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopB") alignas(4)
     [[clang::trivial_abi]] LoopB final {
  public:
-  // `from_golden::LoopB` doesn't implement the `Default` trait
-  LoopB() = delete;
-
-  // Synthesized tuple constructor
-  explicit LoopB(::std::int32_t __field0) : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~LoopB() = default;
-  LoopB(LoopB&&) = default;
-  LoopB& operator=(LoopB&&) = default;
-
-  // `from_golden::LoopB` doesn't implement the `Clone` trait
-  LoopB(const LoopB&) = delete;
-  LoopB& operator=(const LoopB&) = delete;
-  LoopB(::crubit::UnsafeRelocateTag, LoopB&& value);
-
   explicit operator ::from::LoopA();
 
-  explicit LoopB(::from::LoopA value);
-
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -269,29 +153,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: from_golden :: NoCloneCopyDropSource") alignas(4) [[clang::trivial_abi]]
 NoCloneCopyDropSource final {
  public:
-  // `from_golden::NoCloneCopyDropSource` doesn't implement the `Default` trait
-  NoCloneCopyDropSource() = delete;
-
-  // Synthesized tuple constructor
-  explicit NoCloneCopyDropSource(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~NoCloneCopyDropSource() = default;
-  NoCloneCopyDropSource(NoCloneCopyDropSource&&) = default;
-  NoCloneCopyDropSource& operator=(NoCloneCopyDropSource&&) = default;
-
-  // `from_golden::NoCloneCopyDropSource` doesn't implement the `Clone` trait
-  NoCloneCopyDropSource(const NoCloneCopyDropSource&) = delete;
-  NoCloneCopyDropSource& operator=(const NoCloneCopyDropSource&) = delete;
-  NoCloneCopyDropSource(::crubit::UnsafeRelocateTag,
-                        NoCloneCopyDropSource&& value);
-
   explicit operator ::from::NoCloneCopyDropType();
 
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -302,28 +166,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: from_golden :: NoCloneCopyDropType") alignas(4) [[clang::trivial_abi]]
 NoCloneCopyDropType final {
  public:
-  // `from_golden::NoCloneCopyDropType` doesn't implement the `Default` trait
-  NoCloneCopyDropType() = delete;
-
-  // Synthesized tuple constructor
-  explicit NoCloneCopyDropType(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~NoCloneCopyDropType() = default;
-  NoCloneCopyDropType(NoCloneCopyDropType&&) = default;
-  NoCloneCopyDropType& operator=(NoCloneCopyDropType&&) = default;
-
-  // `from_golden::NoCloneCopyDropType` doesn't implement the `Clone` trait
-  NoCloneCopyDropType(const NoCloneCopyDropType&) = delete;
-  NoCloneCopyDropType& operator=(const NoCloneCopyDropType&) = delete;
-  NoCloneCopyDropType(::crubit::UnsafeRelocateTag, NoCloneCopyDropType&& value);
-
-  explicit NoCloneCopyDropType(::from::NoCloneCopyDropSource value);
-
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -334,29 +177,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: from_golden :: NoCloneDefaultSource") alignas(4) [[clang::trivial_abi]]
 NoCloneDefaultSource final {
  public:
-  // Default::default
-  NoCloneDefaultSource();
-
-  // Synthesized tuple constructor
-  explicit NoCloneDefaultSource(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~NoCloneDefaultSource() = default;
-  NoCloneDefaultSource(NoCloneDefaultSource&&) = default;
-  NoCloneDefaultSource& operator=(NoCloneDefaultSource&&) = default;
-
-  // `from_golden::NoCloneDefaultSource` doesn't implement the `Clone` trait
-  NoCloneDefaultSource(const NoCloneDefaultSource&) = delete;
-  NoCloneDefaultSource& operator=(const NoCloneDefaultSource&) = delete;
-  NoCloneDefaultSource(::crubit::UnsafeRelocateTag,
-                       NoCloneDefaultSource&& value);
-
   explicit operator ::from::NoCloneDefaultType();
 
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -367,28 +190,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: from_golden :: NoCloneDefaultType") alignas(4) [[clang::trivial_abi]]
 NoCloneDefaultType final {
  public:
-  // Default::default
-  NoCloneDefaultType();
-
-  // Synthesized tuple constructor
-  explicit NoCloneDefaultType(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~NoCloneDefaultType() = default;
-  NoCloneDefaultType(NoCloneDefaultType&&) = default;
-  NoCloneDefaultType& operator=(NoCloneDefaultType&&) = default;
-
-  // `from_golden::NoCloneDefaultType` doesn't implement the `Clone` trait
-  NoCloneDefaultType(const NoCloneDefaultType&) = delete;
-  NoCloneDefaultType& operator=(const NoCloneDefaultType&) = delete;
-  NoCloneDefaultType(::crubit::UnsafeRelocateTag, NoCloneDefaultType&& value);
-
-  explicit NoCloneDefaultType(::from::NoCloneDefaultSource value);
-
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -430,22 +232,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
     [[clang::trivial_abi]] Opaque final {
  public:
-  // `from_golden::Opaque` doesn't implement the `Default` trait
-  Opaque() = delete;
-
-  // Synthesized tuple constructor
-  explicit Opaque(::std::int32_t __field0) : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Opaque() = default;
-  Opaque(Opaque&&) = default;
-  Opaque& operator=(Opaque&&) = default;
-
-  // `from_golden::Opaque` doesn't implement the `Clone` trait
-  Opaque(const Opaque&) = delete;
-  Opaque& operator=(const Opaque&) = delete;
-  Opaque(::crubit::UnsafeRelocateTag, Opaque&& value);
-
   explicit operator ::std::int32_t();
 
   explicit operator ::std::int64_t();
@@ -456,9 +242,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
 
   explicit operator ::from::OpaqueRef();
 
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -506,45 +290,6 @@ static_assert(
 static_assert(
     alignof(CloneAllocSource) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
-    ::from::CloneAllocSource&);
-}
-inline CloneAllocSource::~CloneAllocSource() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
-          *this);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
-    ::from::CloneAllocSource const&, ::from::CloneAllocSource* __ret_ptr);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
-    ::from::CloneAllocSource&, ::from::CloneAllocSource const&);
-}
-inline ::from::CloneAllocSource::CloneAllocSource(
-    const CloneAllocSource& other) {
-  __crubit_internal::
-      __crubit_thunk_Clone_uclone_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
-          other, this);
-}
-inline ::from::CloneAllocSource& ::from::CloneAllocSource::operator=(
-    const CloneAllocSource& other) {
-  if (this != &other) {
-    __crubit_internal::
-        __crubit_thunk_Clone_uclone_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
-            *this, other);
-  }
-  return *this;
-}
-inline ::from::CloneAllocSource::CloneAllocSource(::crubit::UnsafeRelocateTag,
-                                                  CloneAllocSource&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef,
@@ -590,44 +335,6 @@ static_assert(
 static_assert(
     alignof(CloneAllocType) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
-    ::from::CloneAllocType&);
-}
-inline CloneAllocType::~CloneAllocType() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
-          *this);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
-    ::from::CloneAllocType const&, ::from::CloneAllocType* __ret_ptr);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
-    ::from::CloneAllocType&, ::from::CloneAllocType const&);
-}
-inline ::from::CloneAllocType::CloneAllocType(const CloneAllocType& other) {
-  __crubit_internal::
-      __crubit_thunk_Clone_uclone_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
-          other, this);
-}
-inline ::from::CloneAllocType& ::from::CloneAllocType::operator=(
-    const CloneAllocType& other) {
-  if (this != &other) {
-    __crubit_internal::
-        __crubit_thunk_Clone_uclone_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
-            *this, other);
-  }
-  return *this;
-}
-inline ::from::CloneAllocType::CloneAllocType(::crubit::UnsafeRelocateTag,
-                                              CloneAllocType&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" rs_std::StrRef __crubit_thunk_get_uvalue(
@@ -637,17 +344,6 @@ inline rs_std::StrRef CloneAllocType::get_value() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_uvalue(self);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocType_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
-    ::from::CloneAllocSource*, ::from::CloneAllocType* __ret_ptr);
-}
-inline CloneAllocType::CloneAllocType(::from::CloneAllocSource value) {
-  crubit::Slot value_slot((::std::move(value)));
-  __crubit_internal::
-      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneAllocType_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource(
-          value_slot.Get(), this);
 }
 inline void CloneAllocType::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CloneAllocType, value));
@@ -665,10 +361,6 @@ static_assert(::std::is_trivially_move_assignable_v<::from::CloneCopySource>);
 static_assert(
     ::std::is_trivially_copy_constructible_v<::from::CloneCopySource>);
 static_assert(::std::is_trivially_copy_assignable_v<::from::CloneCopySource>);
-inline ::from::CloneCopySource::CloneCopySource(::crubit::UnsafeRelocateTag,
-                                                CloneCopySource&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aCloneCopySource_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
@@ -692,35 +384,11 @@ static_assert(
 static_assert(
     alignof(CloneCopyType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
-    ::from::CloneCopyType* __ret_ptr);
-}
-inline ::from::CloneCopyType::CloneCopyType() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<CloneCopyType>);
 static_assert(::std::is_trivially_move_constructible_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_move_assignable_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_copy_constructible_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_copy_assignable_v<::from::CloneCopyType>);
-inline ::from::CloneCopyType::CloneCopyType(::crubit::UnsafeRelocateTag,
-                                            CloneCopyType&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneCopyType_ufrom_ugolden_x0000003a_x0000003aCloneCopySource(
-    ::from::CloneCopySource*, ::from::CloneCopyType* __ret_ptr);
-}
-inline CloneCopyType::CloneCopyType(::from::CloneCopySource value) {
-  __crubit_internal::
-      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCloneCopyType_ufrom_ugolden_x0000003a_x0000003aCloneCopySource(
-          &value, this);
-}
 inline void CloneCopyType::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CloneCopyType, __field0));
 }
@@ -761,9 +429,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<LoopA>);
 static_assert(::std::is_trivially_move_constructible_v<::from::LoopA>);
 static_assert(::std::is_trivially_move_assignable_v<::from::LoopA>);
-inline ::from::LoopA::LoopA(::crubit::UnsafeRelocateTag, LoopA&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopA_ufrom_ugolden_x0000003a_x0000003aLoopB(
@@ -778,16 +443,6 @@ inline LoopA::operator ::from::LoopB() {
           &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aLoopA_ufrom_ugolden_x0000003a_x0000003aLoopB(
-    ::from::LoopB*, ::from::LoopA* __ret_ptr);
-}
-inline LoopA::LoopA(::from::LoopB value) {
-  __crubit_internal::
-      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aLoopA_ufrom_ugolden_x0000003a_x0000003aLoopB(
-          &value, this);
-}
 inline void LoopA::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LoopA, __field0));
 }
@@ -800,9 +455,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<LoopB>);
 static_assert(::std::is_trivially_move_constructible_v<::from::LoopB>);
 static_assert(::std::is_trivially_move_assignable_v<::from::LoopB>);
-inline ::from::LoopB::LoopB(::crubit::UnsafeRelocateTag, LoopB&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopB_ufrom_ugolden_x0000003a_x0000003aLoopA(
@@ -816,16 +468,6 @@ inline LoopB::operator ::from::LoopA() {
       __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopB_ufrom_ugolden_x0000003a_x0000003aLoopA(
           &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aLoopB_ufrom_ugolden_x0000003a_x0000003aLoopA(
-    ::from::LoopA*, ::from::LoopB* __ret_ptr);
-}
-inline LoopB::LoopB(::from::LoopA value) {
-  __crubit_internal::
-      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aLoopB_ufrom_ugolden_x0000003a_x0000003aLoopA(
-          &value, this);
 }
 inline void LoopB::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(LoopB, __field0));
@@ -841,10 +483,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneCopyDropSource>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneCopyDropSource>);
-inline ::from::NoCloneCopyDropSource::NoCloneCopyDropSource(
-    ::crubit::UnsafeRelocateTag, NoCloneCopyDropSource&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType(
@@ -873,21 +511,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneCopyDropType>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneCopyDropType>);
-inline ::from::NoCloneCopyDropType::NoCloneCopyDropType(
-    ::crubit::UnsafeRelocateTag, NoCloneCopyDropType&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource(
-    ::from::NoCloneCopyDropSource*, ::from::NoCloneCopyDropType* __ret_ptr);
-}
-inline NoCloneCopyDropType::NoCloneCopyDropType(
-    ::from::NoCloneCopyDropSource value) {
-  __crubit_internal::
-      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource(
-          &value, this);
-}
 inline void NoCloneCopyDropType::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NoCloneCopyDropType, __field0));
 }
@@ -897,25 +520,11 @@ static_assert(
 static_assert(
     alignof(NoCloneDefaultSource) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
-    ::from::NoCloneDefaultSource* __ret_ptr);
-}
-inline ::from::NoCloneDefaultSource::NoCloneDefaultSource() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<NoCloneDefaultSource>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneDefaultSource>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneDefaultSource>);
-inline ::from::NoCloneDefaultSource::NoCloneDefaultSource(
-    ::crubit::UnsafeRelocateTag, NoCloneDefaultSource&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
@@ -939,36 +548,11 @@ static_assert(
 static_assert(
     alignof(NoCloneDefaultType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
-    ::from::NoCloneDefaultType* __ret_ptr);
-}
-inline ::from::NoCloneDefaultType::NoCloneDefaultType() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<NoCloneDefaultType>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneDefaultType>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneDefaultType>);
-inline ::from::NoCloneDefaultType::NoCloneDefaultType(
-    ::crubit::UnsafeRelocateTag, NoCloneDefaultType&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
-    ::from::NoCloneDefaultSource*, ::from::NoCloneDefaultType* __ret_ptr);
-}
-inline NoCloneDefaultType::NoCloneDefaultType(
-    ::from::NoCloneDefaultSource value) {
-  __crubit_internal::
-      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource(
-          &value, this);
-}
 inline void NoCloneDefaultType::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NoCloneDefaultType, __field0));
 }
@@ -1018,9 +602,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<Opaque>);
 static_assert(::std::is_trivially_move_constructible_v<::from::Opaque>);
 static_assert(::std::is_trivially_move_assignable_v<::from::Opaque>);
-inline ::from::Opaque::Opaque(::crubit::UnsafeRelocateTag, Opaque&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 namespace __crubit_internal {
 extern "C" ::std::int32_t
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui32(

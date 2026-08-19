@@ -29,6 +29,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: example_crate_golden :: NonTrivialStruct") alignas(4)
     [[clang::trivial_abi]] NonTrivialStruct final {
  public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
   // Default::default
   NonTrivialStruct();
 
