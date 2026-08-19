@@ -130,6 +130,7 @@ source_set("option") {
     "option.h",
   ]
   deps = [
+    "$crubit_src_dir/support/rs_std:unit",
     "$crubit_src_dir/support/internal:bindings_support",
   ]
 }

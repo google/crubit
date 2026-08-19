@@ -93,6 +93,7 @@ target_include_directories(crubit_support_rs_std_option INTERFACE
 )
 
 target_link_libraries(crubit_support_rs_std_option INTERFACE
+crubit_support_rs_std_unit
 crubit_support_internal_bindings_support
 )
 

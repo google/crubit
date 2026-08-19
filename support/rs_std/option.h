@@ -14,6 +14,7 @@
 #include "support/internal/check.h"
 #include "support/internal/move_assign.h"
 #include "support/internal/slot.h"
+#include "support/rs_std/unit.h"
 
 namespace rs_std {
 
@@ -134,7 +135,9 @@ class OptionBase {
 
   // Intentionally implicit to support conversion to std::optional<T>.
   // NOLINTNEXTLINE(google-explicit-constructor)
-  operator ::std::optional<T>() && noexcept {
+  operator ::std::optional<T>() && noexcept
+    requires(!is_unit_t_v<T>)
+  {
     if (!has_value()) {
       return std::nullopt;
     }
@@ -162,24 +165,34 @@ class OptionBase {
     CRUBIT_CHECK(has_value()) << "Bad value access on rs_std::Option";
   }
 
-  T& operator*() & {
+  T& operator*() &
+    requires(!is_unit_t_v<T>)
+  {
     check_has_value();
     return *derived().some_ptr();
   }
-  const T& operator*() const& {
+  const T& operator*() const&
+    requires(!is_unit_t_v<T>)
+  {
     check_has_value();
     return *derived().some_const_ptr();
   }
-  T&& operator*() && {
+  T&& operator*() &&
+    requires(!is_unit_t_v<T>)
+  {
     check_has_value();
     return std::move(*derived().some_ptr());
   }
 
-  T* operator->() {
+  T* operator->()
+    requires(!is_unit_t_v<T>)
+  {
     check_has_value();
     return derived().some_ptr();
   }
-  const T* operator->() const {
+  const T* operator->() const
+    requires(!is_unit_t_v<T>)
+  {
     check_has_value();
     return derived().some_const_ptr();
   }
