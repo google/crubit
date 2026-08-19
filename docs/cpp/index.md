@@ -164,8 +164,8 @@ subset of features currently supported.
 The way to work around this kind of problem, in all cases, is to wrap or hide
 the problematic interface behind an interface Crubit can handle:
 
-*   Hide unsupported types behind a wrapper. For example, a
-    `std::set<T>` is not supported, but a struct which wraps a `set::set<T>` is.
+*   Hide unsupported types behind a wrapper. For example, a `std::set<T>` is not
+    supported, but a struct which wraps a `std::set<T>` is.
     crubit.rs/errors/unsupported_type describes the process in more detail.
 *   Wrap unsupported functions, in general, behind wrappers.
 *   **Embed C++ directly in Rust**: Use [**`inline_cpp!`**](inline_cpp.md) to

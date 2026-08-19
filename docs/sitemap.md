@@ -33,6 +33,7 @@
     *   [Classes and Structs](/docs/cpp/classes_and_structs.md)
     *   [Enums](/docs/cpp/enums.md)
     *   [Inline C++](/docs/cpp/inline_cpp.md)
+    *   [Carcinize](/docs/cpp/carcinize.md)
     *   <hr>
     *   [The C++ Standard Library](/docs/cpp/std.md)
 
