@@ -103,7 +103,7 @@ To write a standalone Rust library that uses embedded C++ without an underlying
 ```
 {{ #include ../../examples/cpp/inline_cpp/BUILD }}
 ```
-<!--  symbol:example_lib -->
+<!--  symbol:greeting_lib -->
 
 
 The `deps_of_cc_library` attribute lists the C++ libraries that provide the
@@ -119,7 +119,7 @@ Use `global_cpp!` at module scope (outside functions, including within nested
 submodules) to specify `#include` headers and define supporting C++ types:
 
 ```
-{{ #include ../../examples/cpp/inline_cpp/example.rs }}
+{{ #include ../../examples/cpp/inline_cpp/headers.rs }}
 ```
 <!--  content:^\s*global_cpp!\s*\{[\s\S]*?^\} -->
 
@@ -139,7 +139,7 @@ function body.
 For example, calling a C++ standard library math function:
 
 ```
-{{ #include ../../examples/cpp/inline_cpp/example.rs }}
+{{ #include ../../examples/cpp/inline_cpp/math.rs }}
 ```
 <!--  function:compute_hypotenuse -->
 
@@ -147,7 +147,7 @@ For example, calling a C++ standard library math function:
 Or calling an Abseil string utility:
 
 ```
-{{ #include ../../examples/cpp/inline_cpp/example.rs }}
+{{ #include ../../examples/cpp/inline_cpp/greeting.rs }}
 ```
 <!--  function:format_greeting -->
 
@@ -169,7 +169,7 @@ corresponds to `i32` in Rust, and `double` corresponds to `f64`).
 You can pass Rust references to C++ as `const T&` or raw pointers:
 
 ```
-{{ #include ../../examples/cpp/inline_cpp/example.rs }}
+{{ #include ../../examples/cpp/inline_cpp/point.rs }}
 ```
 <!--  function:get_distance -->
 
@@ -188,14 +188,14 @@ templates. With embedded C++, you can:
     included C++ headers inside `inline_cpp!`:
 
     ```live-snippet
-    cs/file:examples/cpp/inline_cpp/example.rs function:clamp_value
+    cs/file:examples/cpp/inline_cpp/clamp.rs function:clamp_value
     ```
 
 2.  **Define helper templates in `global_cpp!`**: Define C++ template helpers at
     module scope, then instantiate them with concrete types in `inline_cpp!`:
 
     ```live-snippet
-    cs/file:examples/cpp/inline_cpp/example.rs function:multiply_ints
+    cs/file:examples/cpp/inline_cpp/math_helper.rs function:multiply_ints
     ```
 
 ## Common Errors {#errors}
