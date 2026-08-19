@@ -551,6 +551,7 @@ pub fn generated_items_to_tokens<'db>(
                     owned_ptr_config,
                     member_methods,
                     free_functions,
+                    loophole_global_cpp,
                     lifetime_params,
                     is_thread_safe,
                     size,
@@ -695,6 +696,8 @@ pub fn generated_items_to_tokens<'db>(
                     #no_unique_address_accessors_impl
 
                     #member_methods_impl
+
+                    #loophole_global_cpp
 
                     #owned_type_def
 
@@ -1052,6 +1055,7 @@ pub struct Record {
     pub owned_ptr_config: Option<OwnedPtrConfig>,
     pub member_methods: Vec<TokenStream>,
     pub free_functions: Vec<TokenStream>,
+    pub loophole_global_cpp: Option<TokenStream>,
     pub lifetime_params: Vec<syn::Lifetime>,
     /// Whether this type is annotated as thread-safe (CRUBIT_THREAD_SAFE).
     pub is_thread_safe: bool,
