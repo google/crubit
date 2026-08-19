@@ -565,9 +565,14 @@ struct RefsToCheckForAliasing<'a, 'tcx> {
 /// this requirement is not violated.
 fn refs_to_check_for_aliasing<'tcx, 'a>(
     db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
     params: &'a [Param<'tcx>],
-) -> Option<RefsToCheckForAliasing<'a, 'tcx>> {
+) -> Result<Option<RefsToCheckForAliasing<'a, 'tcx>>> {
     let tcx = db.tcx();
+    let attrs = crubit_attr::get_attrs(tcx, def_id)?;
+    if attrs.skip_mutable_aliasing_check {
+        return Ok(None);
+    }
     let mut refs = RefsToCheckForAliasing::default();
     // TODO: b/351876244 - Apply this check to public reference fields of ADTs, not just top-level
     // reference function parameters.
@@ -584,9 +589,9 @@ fn refs_to_check_for_aliasing<'tcx, 'a>(
         }
     }
     if refs.mutable.is_empty() || (refs.shared.len() + refs.mutable.len() < 2) {
-        return None;
+        return Ok(None);
     }
-    Some(refs)
+    Ok(Some(refs))
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -671,7 +676,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
         })
         .collect::<Result<Vec<TokenStream>>>()?;
 
-    if let Some(refs_to_check) = refs_to_check_for_aliasing(db, params) {
+    if let Some(refs_to_check) = refs_to_check_for_aliasing(db, def_id, params)? {
         let mut_cpp_tys = refs_to_check
             .mutable
             .iter()

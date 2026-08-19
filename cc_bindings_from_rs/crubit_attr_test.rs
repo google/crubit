@@ -162,3 +162,32 @@ fn test_do_not_bind_invalid_on_struct() {
         );
     });
 }
+
+#[test]
+fn test_skip_mutable_aliasing_check() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: skip_mutable_aliasing_check="]
+            pub fn foo() {}
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let attrs = attrs_for_named_def(tcx, "foo").unwrap();
+        let mut expected_attrs = CrubitAttrs::default();
+        expected_attrs.skip_mutable_aliasing_check = true;
+        assert_eq!(attrs, expected_attrs);
+    });
+}
+
+#[test]
+fn test_skip_mutable_aliasing_check_invalid_on_struct() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: skip_mutable_aliasing_check="]
+            pub struct SomeStruct;
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let err = attrs_for_named_def(tcx, "SomeStruct").unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "`skip_mutable_aliasing_check` is explicitly only permitted on functions and methods"
+        );
+    });
+}

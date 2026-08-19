@@ -40,3 +40,6 @@ struct EnumClass(i32);
 
 #[crubit_annotate::cpp_thread_safe]
 struct ThreadSafe {}
+
+#[crubit_annotate::skip_mutable_aliasing_check]
+fn fn_with_skipped_aliasing_check(_x: &mut i32, _y: &i32) {}
