@@ -31,21 +31,13 @@ unsafe impl ::cxx::ExternType for RustDerived {
     type Kind = ::cxx::kind::Opaque;
 }
 impl RustDerived {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn Method1(__this: *const Self) -> ::ffi_11::c_int {
-        unsafe { self::rust_derived::Method1(__this) }
+    pub fn Method1<'__this>(&'__this self) -> ::ffi_11::c_int {
+        unsafe { self::rust_derived::Method1(self) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub unsafe fn Upcast(__this: *mut Self) -> *mut ::base::ExampleBase {
-        unsafe { self::rust_derived::Upcast(__this) }
+    pub fn Upcast<'__this>(self: ::core::pin::Pin<&'__this mut Self>) -> *mut ::base::ExampleBase {
+        unsafe { self::rust_derived::Upcast(self) }
     }
 }
 
@@ -77,14 +69,17 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
 
 impl ::ctor::PinnedDrop for RustDerived {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN11RustDerivedD1Ev(self) }
     }
 }
 
 impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for RustDerived {
     #[inline(always)]
-    fn assign(self: ::core::pin::Pin<&mut Self>, __param_0: ::ctor::RvalueReference<'_, Self>) {
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
+        __param_0: ::ctor::RvalueReference<'_, Self>,
+    ) {
         unsafe {
             crate::detail::__rust_thunk___ZN11RustDerivedaSEOS_(self, __param_0);
         }
@@ -127,20 +122,14 @@ unsafe impl ::operator::Delete for crate::RustDerived {
 }
 
 pub mod rust_derived {
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn Method1(__this: *const crate::RustDerived) -> ::ffi_11::c_int {
+    pub(crate) fn Method1<'__this>(__this: &'__this crate::RustDerived) -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZNK11RustDerived7Method1Ev(__this) }
     }
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `__this`: raw pointer
     #[inline(always)]
-    pub(crate) unsafe fn Upcast(__this: *mut crate::RustDerived) -> *mut ::base::ExampleBase {
+    pub(crate) fn Upcast<'__this>(
+        __this: ::core::pin::Pin<&'__this mut crate::RustDerived>,
+    ) -> *mut ::base::ExampleBase {
         unsafe { crate::detail::__rust_thunk___ZN11RustDerived6UpcastEv(__this) }
     }
 }
@@ -177,22 +166,22 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
             __param_0: ::ctor::RvalueReference<'__unelided, crate::RustDerived>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN11RustDerivedD1Ev<'a>(
-            __this: ::core::pin::Pin<&'a mut crate::RustDerived>,
+        pub(crate) unsafe fn __rust_thunk___ZN11RustDerivedD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::RustDerived>,
         );
-        pub(crate) unsafe fn __rust_thunk___ZN11RustDerivedaSEOS_<'__return_lifetime>(
-            __this: ::core::pin::Pin<&mut crate::RustDerived>,
+        pub(crate) unsafe fn __rust_thunk___ZN11RustDerivedaSEOS_<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::RustDerived>,
             __param_0: ::ctor::RvalueReference<'_, crate::RustDerived>,
-        ) -> ::core::pin::Pin<&'__return_lifetime mut crate::RustDerived>;
+        ) -> ::core::pin::Pin<&'__this mut crate::RustDerived>;
         pub(crate) unsafe fn __rust_thunk___ZN11RustDerivedC1EN10definition11RustDerivedE(
             __this: *mut ::core::ffi::c_void,
             rust: &mut ::definition::RustDerived,
         );
-        pub(crate) unsafe fn __rust_thunk___ZNK11RustDerived7Method1Ev(
-            __this: *const crate::RustDerived,
+        pub(crate) unsafe fn __rust_thunk___ZNK11RustDerived7Method1Ev<'__this>(
+            __this: &'__this crate::RustDerived,
         ) -> ::ffi_11::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN11RustDerived6UpcastEv(
-            __this: *mut crate::RustDerived,
+        pub(crate) unsafe fn __rust_thunk___ZN11RustDerived6UpcastEv<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::RustDerived>,
         ) -> *mut ::base::ExampleBase;
         pub(crate) unsafe fn __crubit_operator_delete__11RustDerived___2f_2fthird_5fparty_2fcrubit_2fexamples_2fcpp_2fvirtual_3aexample_5flib(
             ptr: *mut crate::RustDerived,

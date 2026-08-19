@@ -9,10 +9,6 @@ fn main() {
     let derived = ctor::emplace!(example_lib::RustDerived::ctor_new(definition::RustDerived::new(
         definition::SomeRustSubclass
     )));
-    let result = unsafe {
-        base::GetMethod1(example_lib::RustDerived::Upcast(
-            Pin::into_inner_unchecked(derived) as *mut _
-        ))
-    };
+    let result = unsafe { base::GetMethod1(example_lib::RustDerived::Upcast(derived)) };
     assert_eq!(result, 42);
 }
