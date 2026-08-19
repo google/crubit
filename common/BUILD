@@ -77,7 +77,7 @@ rust_library(
     deps = [
         ":arc_anyhow",
         ":crubit_feature",
-        "//common:dyn_format",
+        ":dyn_format",
         "@crate_index//:flagset",  # v0_4
         "@crate_index//:heck",  # v0_5
         "@crate_index//:phf",  # v0_11
@@ -211,6 +211,7 @@ bzl_library(
     visibility = [
         "//:__subpackages__",
     ],
+    deps = ["@rules_rust//rust:bzl_lib"],
 )
 
 rust_library(

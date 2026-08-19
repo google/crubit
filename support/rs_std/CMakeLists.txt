@@ -30,7 +30,6 @@ target_include_directories(crubit_support_rs_std_dyn_callable INTERFACE
 )
 
 target_link_libraries(crubit_support_rs_std_dyn_callable INTERFACE
-absl::core_headers
 absl::nullability
 absl::any_invocable
 crubit_support_bridge_cpp
