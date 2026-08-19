@@ -449,6 +449,7 @@ rust_library(
         "//rs_bindings_from_cc:__subpackages__",
     ],
     deps = [
+        ":generate_function_thunk",
         "//common:arc_anyhow",
         "//common:crubit_feature",
         "//common:error_report",
