@@ -42,7 +42,7 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
 
   // Primary constructor that initializes dangling_ptr_ for empty slices to
   // satisfy Rust's non-null slice invariant, or a ptr_ otherwise.
-  constexpr SliceRef(T* ptr, size_t size) noexcept
+  constexpr SliceRef(T* crubit_nullable ptr, size_t size) noexcept
       : dangling_ptr_(alignof(T)), size_(ptr == nullptr ? 0 : size) {
     if (size_ > 0) {
       ptr_ = ptr;
@@ -148,7 +148,9 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   constexpr SliceRef& operator=(SliceRef&&) noexcept = default;
   ~SliceRef() = default;
 
-  constexpr T* data() const noexcept { return size_ > 0 ? ptr_ : nullptr; }
+  constexpr T* crubit_nullable data() const noexcept {
+    return size_ > 0 ? ptr_ : nullptr;
+  }
   constexpr size_t size() const noexcept { return size_; }
 
   CRUBIT_DO_NOT_BIND constexpr std::span<T> to_span() const noexcept {
