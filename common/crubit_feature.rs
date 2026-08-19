@@ -154,6 +154,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::NoAssumeLifetimes
                 - CrubitFeature::LayoutCompatTuple
                 - CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
+                - CrubitFeature::OoCasting
         }
         // `supported` automatically implies `types`.
         b"supported" => CrubitFeature::Supported | CrubitFeature::Types,
@@ -304,7 +305,6 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
-                | CrubitFeature::OoCasting
                 | CrubitFeature::AsyncFnSendModuloRegions
         );
     }
@@ -344,7 +344,6 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
-                | CrubitFeature::OoCasting
                 | CrubitFeature::AsyncFnSendModuloRegions
         );
     }
@@ -369,7 +368,6 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
-                | CrubitFeature::OoCasting
                 | CrubitFeature::AsyncFnSendModuloRegions
         );
     }
@@ -395,7 +393,6 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
-                | CrubitFeature::OoCasting
                 | CrubitFeature::AsyncFnSendModuloRegions
         );
     }

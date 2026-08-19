@@ -57,6 +57,7 @@ cc_library(
     hdrs = ["derived_debuggables.h"],
     aspect_hints = [
         "//features:experimental",
+        "//features:oo_casting",
     ],
     deps = [
         "//support:annotations",

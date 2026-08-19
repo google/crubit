@@ -13,7 +13,7 @@ cc_library(
     name = "semantic_import_upcast",
     hdrs = ["semantic_import.h"],
     aspect_hints = [
-        "//features:experimental",  # for oops::Upcast
+        "//features:oo_casting",  # for oops::Upcast
         "//features:thunkless_accessors",
     ],
 )

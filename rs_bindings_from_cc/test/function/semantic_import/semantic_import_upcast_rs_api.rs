@@ -17,7 +17,7 @@
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "1S"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=:: S
+///CRUBIT_ANNOTATE: cpp_type=S
 pub struct S {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -27,15 +27,9 @@ pub struct S {
 impl !Send for S {}
 impl !Sync for S {}
 unsafe impl ::cxx::ExternType for S {
-    type Id = ::cxx::type_id!(":: S");
+    type Id = ::cxx::type_id!("S");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for S {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter.debug_struct("S").finish_non_exhaustive()
-    }
-}
-forward_declare::unsafe_define!(forward_declare::symbol!(":: S"), crate::S);
 impl S {
     #[inline(always)]
     pub fn x<'__this>(&'__this self) -> ::ffi_11::c_int {
@@ -97,7 +91,7 @@ pub mod s {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "1T"]
 #[repr(C, align(4))]
-///CRUBIT_ANNOTATE: cpp_type=:: T
+///CRUBIT_ANNOTATE: cpp_type=T
 pub struct T {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
     /// Reason for representing this field as a blob of bytes:
@@ -107,18 +101,9 @@ pub struct T {
 impl !Send for T {}
 impl !Sync for T {}
 unsafe impl ::cxx::ExternType for T {
-    type Id = ::cxx::type_id!(":: T");
+    type Id = ::cxx::type_id!("T");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for T {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter
-            .debug_struct("T")
-            .field("", ::oops::Upcast::<&crate::S>::upcast(self))
-            .finish_non_exhaustive()
-    }
-}
-forward_declare::unsafe_define!(forward_declare::symbol!(":: T"), crate::T);
 impl T {
     #[inline(always)]
     pub fn y<'__this>(&'__this self) -> f32 {
@@ -194,7 +179,7 @@ pub mod t {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Chars"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: Chars
+///CRUBIT_ANNOTATE: cpp_type=Chars
 pub struct Chars {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -210,15 +195,9 @@ pub struct Chars {
 impl !Send for Chars {}
 impl !Sync for Chars {}
 unsafe impl ::cxx::ExternType for Chars {
-    type Id = ::cxx::type_id!(":: Chars");
+    type Id = ::cxx::type_id!("Chars");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for Chars {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter.debug_struct("Chars").finish_non_exhaustive()
-    }
-}
-forward_declare::unsafe_define!(forward_declare::symbol!(":: Chars"), crate::Chars);
 impl Chars {
     #[inline(always)]
     pub fn c<'__this>(&'__this mut self) -> ::ffi_11::c_char {
@@ -305,7 +284,7 @@ pub mod chars {
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "5Bools"]
 #[repr(C)]
-///CRUBIT_ANNOTATE: cpp_type=:: Bools
+///CRUBIT_ANNOTATE: cpp_type=Bools
 pub struct Bools {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -315,15 +294,9 @@ pub struct Bools {
 impl !Send for Bools {}
 impl !Sync for Bools {}
 unsafe impl ::cxx::ExternType for Bools {
-    type Id = ::cxx::type_id!(":: Bools");
+    type Id = ::cxx::type_id!("Bools");
     type Kind = ::cxx::kind::Trivial;
 }
-impl ::core::fmt::Debug for Bools {
-    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        formatter.debug_struct("Bools").finish_non_exhaustive()
-    }
-}
-forward_declare::unsafe_define!(forward_declare::symbol!(":: Bools"), crate::Bools);
 impl Bools {
     #[inline(always)]
     pub fn b<'__this>(&'__this mut self) -> bool {
