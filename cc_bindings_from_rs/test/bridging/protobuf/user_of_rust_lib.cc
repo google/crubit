@@ -5,7 +5,7 @@
 #include "cc_bindings_from_rs/test/bridging/protobuf/rust_lib.h"
 
 #include "gtest/gtest.h"
-#include "cc_bindings_from_rs/test/bridging/protobuf/foo.proto.h"
+#include "cc_bindings_from_rs/test/bridging/protobuf/foo.pb.h"
 
 namespace crubit {
 namespace {

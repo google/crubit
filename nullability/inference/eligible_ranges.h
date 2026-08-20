@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "absl/base/nullability.h"
-#include "nullability/inference/inference.proto.h"
+#include "nullability/inference/inference.pb.h"
 #include "nullability/inference/usr_cache.h"
 #include "nullability/type_nullability.h"
 #include "clang/AST/DeclBase.h"

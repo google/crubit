@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "absl/base/nullability.h"
-#include "nullability/inference/inference.proto.h"
+#include "nullability/inference/inference.pb.h"
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/inference/usr_cache.h"
 #include "nullability/pointer_nullability_analysis.h"

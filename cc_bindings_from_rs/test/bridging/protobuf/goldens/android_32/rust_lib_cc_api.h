@@ -24,7 +24,7 @@
 #include <cstring>
 #include <utility>
 
-#include "cc_bindings_from_rs/test/bridging/protobuf/foo.proto.h"
+#include "cc_bindings_from_rs/test/bridging/protobuf/foo.pb.h"
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo_cpp_rust_proto.h"
 
 namespace rust_lib {

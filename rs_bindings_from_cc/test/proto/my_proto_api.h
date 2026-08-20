@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-#include "rs_bindings_from_cc/test/proto/my.proto.h"
+#include "rs_bindings_from_cc/test/proto/my.pb.h"
 
 namespace test {
 

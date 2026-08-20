@@ -13,7 +13,7 @@
 
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/collect_evidence_test_utilities.h"
-#include "nullability/inference/inference.proto.h"
+#include "nullability/inference/inference.pb.h"
 #include "nullability/inference/proto_matchers.h"
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/inference/usr_cache.h"

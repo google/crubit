@@ -11,7 +11,7 @@
 
 #include "nullability/inference/augmented_test_inputs.h"
 #include "nullability/inference/collect_evidence.h"
-#include "nullability/inference/inference.proto.h"
+#include "nullability/inference/inference.pb.h"
 #include "nullability/inference/usr_cache.h"
 #include "nullability/pointer_nullability_analysis.h"
 #include "nullability/pragma.h"

@@ -9,7 +9,7 @@
 #include <string>
 
 #include "absl/log/check.h"
-#include "nullability/inference/inference.proto.h"
+#include "nullability/inference/inference.pb.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"

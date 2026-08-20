@@ -15,7 +15,7 @@
 
 #include <optional>
 
-#include "nullability/inference/inference.proto.h"
+#include "nullability/inference/inference.pb.h"
 #include "llvm/ADT/ArrayRef.h"
 
 namespace clang::tidy::nullability {

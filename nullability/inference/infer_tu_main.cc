@@ -20,7 +20,7 @@
 #include "absl/strings/str_cat.h"
 #include "nullability/inference/ctn_replacement_macros.h"
 #include "nullability/inference/infer_tu.h"
-#include "nullability/inference/inference.proto.h"
+#include "nullability/inference/inference.pb.h"
 #include "nullability/inference/replace_macros.h"
 #include "nullability/pragma.h"
 #include "clang/AST/ASTConsumer.h"

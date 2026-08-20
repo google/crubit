@@ -21,7 +21,7 @@
 #include "nullability/ast_helpers.h"
 #include "nullability/forwarding_functions.h"
 #include "nullability/inference/inferable.h"
-#include "nullability/inference/inference.proto.h"
+#include "nullability/inference/inference.pb.h"
 #include "nullability/inference/slot_fingerprint.h"
 #include "nullability/inference/usr_cache.h"
 #include "nullability/loc_filter.h"
