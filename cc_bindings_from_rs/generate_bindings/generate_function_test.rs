@@ -1689,6 +1689,28 @@ fn test_format_item_fn_repr_transparent_generic_struct_param() {
 }
 
 #[test]
+fn test_format_item_fn_repr_transparent_coroutine() {
+    let test_src = r#"
+            #![allow(dead_code)]
+
+            #[repr(transparent)]
+            pub struct Wrapper<F>(F);
+
+            pub fn foo() -> Wrapper<impl core::future::Future<Output = ()>> {
+                Wrapper(async {})
+            }
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let err = result.unwrap_err();
+        assert!(
+            err.contains("Generic types are not supported yet"),
+            "Expected error about generic types, but got: {}",
+            err
+        );
+    });
+}
+
+#[test]
 fn test_imported_cpp_type_pass_by_value() {
     let test_src = r#"
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeCppType"]

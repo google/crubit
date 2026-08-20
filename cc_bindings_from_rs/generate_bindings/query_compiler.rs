@@ -107,12 +107,9 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
             }
             is_c_abi_compatible_by_value(db, ty)
         }
-        ty::TyKind::Pat(_, _) => false,
-
+        ty::TyKind::Pat { .. } | ty::TyKind::Coroutine { .. } |
         // Arrays are explicitly not ABI-compatible (though they are layout-compatible).
-        ty::TyKind::Array { .. } => false,
-        ty::TyKind::Alias { .. } => false,
-
+        ty::TyKind::Array { .. } | ty::TyKind::Alias { .. } |
         // In case we were visited via a repr(transparent) wrapper, instead of `Ref` etc.
         ty::TyKind::Slice { .. } | ty::TyKind::Str => false,
 
