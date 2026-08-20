@@ -23,6 +23,7 @@ rust_library(
     name = "bar",
     testonly = 1,
     srcs = ["bar.rs"],
+    deps = [":foo"],
 )
 
 rust_library(
@@ -39,6 +40,18 @@ rust_library(
 )
 
 cc_bindings_from_rust(
+    name = "foo_cc_api",
+    testonly = 1,
+    crate = ":foo",
+)
+
+cc_bindings_from_rust(
+    name = "bar_cc_api",
+    testonly = 1,
+    crate = ":bar",
+)
+
+cc_bindings_from_rust(
     name = "foobar_cc_api",
     testonly = 1,
     crate = ":foobar",
@@ -49,7 +62,10 @@ crubit_cc_test(
     srcs = ["foobar_test.cc"],
     platforms = ["android"],
     deps = [
+        ":bar_cc_api",
+        ":foo_cc_api",
         ":foobar_cc_api",
+        "//support/rs_std:option",
         "//testing/base/public:gunit_main",
     ],
 )

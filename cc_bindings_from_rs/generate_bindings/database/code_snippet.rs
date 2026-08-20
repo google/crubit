@@ -130,6 +130,10 @@ pub struct RsStdTemplateSpecialization<'tcx> {
     pub layout: rustc_abi::Layout<'tcx>,
     pub self_ty_rs: Ty<'tcx>,
     pub self_ty_cc: CcSnippet<'tcx>,
+    /// The canonicalized Rust type where all lifetimes have been replaced with
+    /// `'static` and usize/isize have been desugared to their fixed-width equivalents
+    /// (`u64`/`u32`, `i64`/`i32`). Used for C++ code formatting and include guard names.
+    pub canonical_self_ty: Ty<'tcx>,
     pub args: RsStdSpecializationArgs<'tcx>,
 }
 
@@ -170,7 +174,7 @@ impl<'tcx> RsStdTemplateSpecialization<'tcx> {
 
 impl PartialEq for RsStdTemplateSpecialization<'_> {
     fn eq(&self, other: &Self) -> bool {
-        self.self_ty_rs == other.self_ty_rs
+        self.canonical_self_ty == other.canonical_self_ty
     }
 }
 
@@ -178,7 +182,7 @@ impl Eq for RsStdTemplateSpecialization<'_> {}
 
 impl Hash for RsStdTemplateSpecialization<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.self_ty_rs.hash(state);
+        self.canonical_self_ty.hash(state);
     }
 }
 

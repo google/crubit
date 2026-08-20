@@ -15,3 +15,11 @@ impl Foo {
         self.foo = *x;
     }
 }
+
+pub struct SomeStruct {
+    pub val: i32,
+}
+
+pub fn foo_opt() -> Option<SomeStruct> {
+    Some(SomeStruct { val: 42 })
+}
