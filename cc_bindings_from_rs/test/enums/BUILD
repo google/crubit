@@ -101,7 +101,6 @@ rust_library(
     name = "option",
     testonly = 1,
     srcs = ["option.rs"],
-    aspect_hints = ["//features:always_specialize_generics_in_cpp_api_from_rust"],
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
