@@ -9,10 +9,15 @@
 namespace {
 
 TEST(UserOfRustApiTest, ReturnsStatus) {
-  // Cannot call returns_status() directly for now,
-  // and need to call .status() on a `StatusWrapper` return
-  // value instead.
-  EXPECT_OK(rust_api::ReturnsStatus(true).status());
+  EXPECT_OK(rust_api::returns_status(true));
+  EXPECT_FALSE(rust_api::returns_status(false).ok());
+}
+
+TEST(UserOfRustApiTest, ReturnsStatusOrInt) {
+  auto status_or_int = rust_api::returns_status_or_int(true);
+  ASSERT_OK(status_or_int);
+  EXPECT_EQ(*status_or_int, 42);
+  EXPECT_FALSE(rust_api::returns_status_or_int(false).ok());
 }
 
 }  // namespace

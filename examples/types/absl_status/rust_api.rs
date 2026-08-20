@@ -2,17 +2,20 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// This function is only callable from Rust (for now).
-pub fn returns_status(ok: bool) -> status::Status {
-    if ok {
-        status::OkStatus()
+use status::{err, ok, NewStatus as Status, NewStatusOr as StatusOr};
+
+pub fn returns_status(is_ok: bool) -> Status {
+    if is_ok {
+        ok(())
     } else {
-        Err(status::internal("Something went wrong, oh no!"))
+        err(status::internal("Something went wrong, oh no!"))
     }
 }
 
-/// This function is callable from C++.
-#[allow(non_snake_case)]
-pub fn ReturnsStatus(ok: bool) -> status_wrapper::StatusWrapper {
-    returns_status(ok).into()
+pub fn returns_status_or_int(is_ok: bool) -> StatusOr<i32> {
+    if is_ok {
+        ok(42)
+    } else {
+        err(status::internal("Something went wrong, oh no!"))
+    }
 }

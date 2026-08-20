@@ -122,9 +122,9 @@ pub fn DoSomethingCpp(in_val: UnsupportedWrapper,
 
 #### Bridged types passed by reference or pointer
 
-Bridged types (such as `absl::Status` / `absl::StatusOr<T>`) cannot be passed by
-reference (`&T`) or pointer (`*const T`). Because Crubit performs value
-conversions across the FFI boundary, bridged types must be passed by value.
+Bridged types (such as Protocol Buffers) cannot be passed by reference (`&T`) or
+pointer (`*const T`). Because Crubit performs value conversions across the FFI
+boundary, bridged types must be passed by value.
 
 Otherwise, if the function semantics strictly requires passing by reference, you
 can wrap the data in a layout-compatible `struct` or write an FFI wrapper

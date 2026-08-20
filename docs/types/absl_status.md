@@ -2,28 +2,46 @@
 
 # `absl::Status` in Rust
 
-NOTE: The APIs here have planned future backwards-incompatible changes, and you
-may see LSCs as we migrate to the end state API.
-
 In Google C++, the standard types for communicating an error are `absl::Status`
-and `absl::StatusOr<T>`. These have support in Rust when they are directly
-passed by value, or returned by value, and are mapped to a Rust `Result`. For
-example:
+and `absl::StatusOr<T>`. In Rust, these are represented using `NewStatus` and
+`NewStatusOr<T>` from `@abseil-cpp//absl/status` (layout-compatible with the
+corresponding C++ types). For example:
 
 ```c++
 absl::Status Foo();
+absl::StatusOr<int> Bar();
 ```
 
 This becomes:
 
 ```rust
-pub fn Foo() -> Result<(), StatusError> {...}
+use status::{NewStatus as Status, NewStatusOr as StatusOr};
+
+pub fn Foo() -> Status { ... }
+pub fn Bar() -> StatusOr<i32> { ... }
 ```
 
-(Specifically, it will return `Status`, which is an alias for `Result<(),
-StatusError>`.)
-
 ## Calling C++ APIs using `Status` {#cpp}
+
+To enable `absl::Status` and `absl::StatusOr` bindings for C++ libraries, enable
+`defines = ["CRUBIT_NEW_STATUS"]` on the `cc_library` (TODO(b/490215742): clean
+this up when the old API is removed):
+
+```python
+cc_library(
+    name = "cpp_api",
+    srcs = ["cpp_api.cc"],
+    hdrs = ["cpp_api.h"],
+    aspect_hints = [
+        "//features:supported",
+    ],
+    defines = ["CRUBIT_NEW_STATUS"],
+    deps = [
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+```
 
 C++ functions returning `Status`/`StatusOr` can be defined as normal:
 
@@ -33,7 +51,7 @@ C++ functions returning `Status`/`StatusOr` can be defined as normal:
 <!--  content:ReturnsStatus -->
 
 
-...and will return a `Result`:
+...and will return `NewStatus` / `NewStatusOr<T>` in Rust:
 
 ```
 {{ #include ../../examples/types/absl_status/user_of_cpp_api.rs }}
@@ -43,9 +61,8 @@ C++ functions returning `Status`/`StatusOr` can be defined as normal:
 
 ## Calling Rust APIs using `Status` {#rust}
 
-Unlike when calling C++ APIs, currently you cannot directly call a Rust API
-returning a `Status` or `StatusOr`. Instead, it must use a workaround type,
-`StatusWrapper`. This is tracked by b/441266536.
+Rust APIs can directly return `NewStatus` or `NewStatusOr<T>` in public
+functions:
 
 ```
 {{ #include ../../examples/types/absl_status/rust_api.rs }}
@@ -53,21 +70,57 @@ returning a `Status` or `StatusOr`. Instead, it must use a workaround type,
 <!--  -->
 
 
-The `StatusWrapper` type automatically becomes an `absl::Status` in C++:
+`cc_bindings_from_rust` will automatically generate C++ bindings returning
+`absl::Status` and `absl::StatusOr<T>`:
 
 ```
 {{ #include ../../examples/types/absl_status/user_of_rust_api.cc }}
 ```
-<!--  content:rust_api::ReturnsStatus -->
+<!--  content:rust_api::returns_status -->
 
 
-## Future Evolution
+Do **not** use `StatusWrapper` or old `Result`-based `Status` / `StatusOr`
+aliases.
 
-We expect to stop using `Result`, and instead use the plain actual bindings for
-`absl::Status` itself, using the `Try` trait to enable conversion into `Result`
-and error handling via `?`.
+## Working with `Status` in Rust
 
-This would allow `Status` to be used not only as function parameter and return
-values, but also in struct fields, arrays, or behind pointers and references.
+### Construction and Conversion
 
-However, this is blocked on stabilization of the `Try` trait.
+To construct status instances in Rust, use `status::ok` and `status::err`:
+
+```rust
+use status::{err, ok, NewStatus as Status, NewStatusOr as StatusOr};
+
+let success: Status = ok(());
+let value: StatusOr<i32> = ok(42);
+let failure: Status = err(status::internal("error message"));
+```
+
+Existing Rust `Result` types can be converted using
+`status::into_new_status(...)`.
+
+### Testing with Googletest
+
+When using `googletest` alongside `status::{ok, err}`, import matchers with
+aliases to avoid name collisions:
+
+```rust
+use googletest::matchers::{err as is_err, ok as is_ok, status_is};
+```
+
+You can then assert on `Status` or `StatusOr` values:
+
+```rust
+expect_that!(result, is_ok(eq(&42)));
+expect_that!(result, is_err(status_is(StatusCode::Internal)));
+```
+
+## Migration and Future Evolution
+
+`NewStatus` and `NewStatusOr<T>` are layout-compatible with `absl::Status` and
+`absl::StatusOr<T>`, enabling zero-cost passing across the FFI boundary as well
+as use in struct fields, arrays, or behind pointers and references.
+
+Error handling with `?` is supported via the `Try` trait. Once the codebase-wide
+migration is complete, `NewStatus` and `NewStatusOr` will become the default
+`Status` and `StatusOr` types.
