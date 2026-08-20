@@ -5,7 +5,7 @@
 use crate::paths;
 
 use std::ffi::OsString;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[cfg(unix)]
 const LIB_EXTENSION: &str = "a";
@@ -43,11 +43,7 @@ fn include_lib(libname: &str) -> bool {
 
 /// Returns a list of include paths for clang and llvm headers.
 pub fn collect_clang_includes() -> Vec<PathBuf> {
-    paths::print_env_to_string("CLANG_INCLUDE_PATH")
-        .expect("CLANG_INCLUDE_PATH must be specified in the environment")
-        .split(',')
-        .map(|s| Path::new(s).to_owned())
-        .collect()
+    paths::get_env_paths("CLANG_INCLUDE_PATH")
 }
 
 /// Returns a list of all clang and llvm libraries to be linked, and the paths
@@ -55,49 +51,8 @@ pub fn collect_clang_includes() -> Vec<PathBuf> {
 pub fn collect_clang_libs() -> (Vec<PathBuf>, Vec<OsString>) {
     assert!(cfg!(unix) || cfg!(windows));
 
-    let mut libs = Vec::new();
-
-    let clang_lib_dirs: Vec<PathBuf> = std::env::var("CLANG_LIB_STATIC_PATH")
-        .expect("CLANG_LIB_STATIC_PATH must be specified in the environment")
-        .split(',')
-        .map(|s| Path::new(&s).to_owned())
-        .collect();
-
-    for dir in &clang_lib_dirs {
-        for f in std::fs::read_dir(dir)
-            .expect(&format!("unable to read CLANG_LIB_STATIC_PATH: {}", dir.display()))
-        {
-            let Ok(entry) = f else { continue };
-            let Ok(meta) = entry.metadata() else { continue };
-            if !meta.is_file() {
-                continue;
-            };
-            let path = entry.path();
-            let Some(ext) = path.extension() else {
-                continue;
-            };
-            if ext != LIB_EXTENSION {
-                continue;
-            }
-            let libname = if cfg!(windows) {
-                // On windows, the filename without an extension: `name`.
-                let Some(stem) = path.file_stem() else {
-                    continue;
-                };
-                stem.to_str().expect("clang lib has non-utf8 name")
-            } else {
-                // On unix, drop the lib prefix and the extension: `libname.a` => `name`.
-                let Some(stem) = path.file_stem() else {
-                    continue;
-                };
-                let s = stem.to_str().expect("clang lib has non-utf8 name");
-                s.strip_prefix("lib").unwrap_or(s)
-            };
-            if include_lib(libname) {
-                libs.push(OsString::from(libname))
-            }
-        }
-    }
+    let (clang_lib_dirs, mut libs) =
+        paths::collect_static_libs("CLANG_LIB_STATIC_PATH", LIB_EXTENSION, include_lib);
 
     // libclang uses functions from Version.lib on Windows.
     #[cfg(windows)]

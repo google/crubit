@@ -143,10 +143,17 @@ jobs:
         cd examples/build_systems/bazel
         bazelisk build ${RCACHE_FLAGS} //:main
 
-    - name: "Build Crubit using Bazel"
+    - name: "Build rs_bindings_from_cc"
       run: >
         bazelisk build
         --lockfile_mode=error
         ${RCACHE_FLAGS}
         rs_bindings_from_cc:rs_bindings_from_cc_main
+        @protobuf//:protoc
+
+    - name: "Set up Bazel environment for Cargo"
+      run: python3 cargo/build/setup_bazel_env.py
+
+    - name: "Build rs_bindings_from_cc using Cargo"
+      run: cargo build --verbose --locked -p rs_bindings_from_cc
 # LINT.ThenChange(//depot/copy.bara.sky)

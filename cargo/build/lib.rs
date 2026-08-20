@@ -58,9 +58,10 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
 
     // ===== Protobuf =====
 
-    let gen_proto_sources = protobuf::compile_protos(&path_to_src_root, proto_sources, &obj_dir)?;
     let proto_include_dirs = protobuf::collect_protobuf_includes();
     let proto_lib_dirs = protobuf::collect_protobuf_lib_dirs();
+    let gen_proto_sources =
+        protobuf::collect_generated_proto_sources(proto_sources, &proto_include_dirs);
     paths::print_link_searchs(&proto_lib_dirs)?;
     paths::print_link_libs(&["protobuf"])?;
 
@@ -73,19 +74,40 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
     }
     cc_lib.include(path_to_src_root.as_ref());
     cc_lib.include(&obj_dir);
-    for p in sources.into_iter().map(|p| path_to_src_root.as_ref().join(p.as_ref())) {
+    let mut num_sources = 0;
+    for p in sources
+        .iter()
+        .map(|p| path_to_src_root.as_ref().join(p.as_ref()))
+    {
         if p.exists() {
             paths::add_source_file(&mut cc_lib, &p)?;
+            num_sources += 1;
         } else {
             // Trigger a rebuild if a copybara-stripped file is added later
             println!("cargo::rerun-if-changed={}", p.display());
-            println!("cargo::warning=Skipping internal-only source file: {}", p.display());
+            println!(
+                "cargo::warning=Skipping internal-only source file: {}",
+                p.display()
+            );
         }
     }
     for p in &gen_proto_sources {
-        paths::add_source_file(&mut cc_lib, p)?;
+        cc_lib.file(p);
+        num_sources += 1;
     }
-    for p in absl_include_dirs.into_iter().chain(clang_include_dirs).chain(proto_include_dirs) {
+    if num_sources == 0 {
+        let placeholder = obj_dir.join("empty.cc");
+        std::fs::write(
+            &placeholder,
+            "// Empty placeholder for header-only library\n",
+        )?;
+        cc_lib.file(&placeholder);
+    }
+    for p in absl_include_dirs
+        .into_iter()
+        .chain(clang_include_dirs)
+        .chain(proto_include_dirs)
+    {
         paths::add_include_path(&mut cc_lib, p, false);
     }
     cc_lib.cpp(true);
