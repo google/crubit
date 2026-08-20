@@ -35,7 +35,7 @@ cc_library(
         "@llvm-project//clang:basic",
         "@llvm-project//clang:unified_symbol_resolution",
         "@llvm-project//llvm:Support",
-        "@protobuf:protobuf_lite",
+        "@protobuf//:protobuf_lite",
     ],
 )
 
@@ -85,11 +85,11 @@ cc_library(
     hdrs = ["proto_matchers.h"],
     visibility = [":__subpackages__"],
     deps = [
-        "//third_party/protobuf",
         "@abseil-cpp//absl/base:nullability",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
+        "@protobuf",
     ],
 )
 
@@ -100,12 +100,12 @@ cc_test(
         ":inference_cc_proto",
         ":merge",
         ":proto_matchers",
-        "//third_party/protobuf",
         "@abseil-cpp//absl/log:check",
         "@llvm-project//llvm:Support",
         "@llvm-project//third-party/unittest:gmock",
         "@llvm-project//third-party/unittest:gtest",
         "@llvm-project//third-party/unittest:gtest_main",
+        "@protobuf",
     ],
 )
 
