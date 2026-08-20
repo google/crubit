@@ -7,6 +7,7 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/base/attributes.h"
@@ -281,29 +282,6 @@ absl::StatusOr<bool> HasAnnotationWithoutArgs(const clang::Decl& decl,
   return true;
 }
 
-absl::StatusOr<std::optional<std::string>> GetAnnotationWithStringArg(
-    const clang::Decl& decl, absl::string_view annotation_name) {
-  CRUBIT_ASSIGN_OR_RETURN(std::optional<AnnotateArgs> maybe_args,
-                          GetAnnotateAttrArgs(decl, annotation_name));
-  if (!maybe_args.has_value()) {
-    return std::nullopt;
-  }
-  const AnnotateArgs& args = *maybe_args;
-  if (args.size() != 1) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Annotation ", annotation_name,
-                     " must have a single string argument."));
-  }
-  absl::StatusOr<absl::string_view> arg =
-      GetExprAsStringLiteral(*args[0], decl.getASTContext());
-  if (!arg.ok()) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Annotation ", annotation_name,
-                     " must have a single string argument."));
-  }
-  return std::string(*arg);
-}
-
 absl::StatusOr<std::optional<std::vector<std::string>>>
 GetAnnotationWithStringArgs(const clang::Decl& decl,
                             absl::string_view annotation_name) {
@@ -326,6 +304,21 @@ GetAnnotationWithStringArgs(const clang::Decl& decl,
     result.push_back(std::string(*arg));
   }
   return result;
+}
+
+absl::StatusOr<std::optional<std::string>> GetAnnotationWithStringArg(
+    const clang::Decl& decl, absl::string_view annotation_name) {
+  CRUBIT_ASSIGN_OR_RETURN(std::optional<std::vector<std::string>> maybe_args,
+                          GetAnnotationWithStringArgs(decl, annotation_name));
+  if (!maybe_args.has_value()) {
+    return std::nullopt;
+  }
+  if (maybe_args->size() != 1) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Annotation ", annotation_name,
+                     " must have a single string argument."));
+  }
+  return std::move(maybe_args->front());
 }
 
 absl::StatusOr<const clang::AnnotateTypeAttr* absl_nullable>

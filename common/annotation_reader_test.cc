@@ -5,6 +5,7 @@
 #include "common/annotation_reader.h"
 
 #include <optional>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -15,15 +16,17 @@
 #include "common/string_view_conversion.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/TypeBase.h"
 #include "clang/Testing/TestAST.h"
 
 namespace crubit {
 namespace {
 
-using testing::ElementsAre;
-using testing::Eq;
-using testing::HasSubstr;
-using testing::Ne;
+using ::testing::ElementsAre;
+using ::testing::Eq;
+using ::testing::HasSubstr;
+using ::testing::Ne;
+using ::testing::Optional;
 
 template <class T>
 T& LookupDecl(clang::ASTContext& context, absl::string_view name) {
@@ -189,6 +192,60 @@ TEST(AnnotationReaderTest, GetAnnotationWithStringArgsFailureNonString) {
 
   EXPECT_THAT(
       GetAnnotationWithStringArgs(var, "foo"),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Annotation foo arguments must be string literals.")));
+}
+
+TEST(AnnotationReaderTest, GetAnnotationWithStringArgSuccess) {
+  clang::TestAST ast(R"cc(
+    [[clang::annotate("foo", "bar")]] int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  EXPECT_THAT(GetAnnotationWithStringArg(var, "foo"),
+              IsOkAndHolds(Optional(Eq("bar"))));
+  EXPECT_THAT(GetAnnotationWithStringArg(var, "missing"),
+              IsOkAndHolds(std::nullopt));
+}
+
+TEST(AnnotationReaderTest, GetAnnotationWithStringArgFailureNoArgs) {
+  clang::TestAST ast(R"cc(
+    [[clang::annotate("foo")]] int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  EXPECT_THAT(
+      GetAnnotationWithStringArg(var, "foo"),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("Annotation foo must have a single string argument.")));
+}
+
+TEST(AnnotationReaderTest, GetAnnotationWithStringArgFailureMultipleArgs) {
+  clang::TestAST ast(R"cc(
+    [[clang::annotate("foo", "a", "b")]] int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  EXPECT_THAT(
+      GetAnnotationWithStringArg(var, "foo"),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("Annotation foo must have a single string argument.")));
+}
+
+TEST(AnnotationReaderTest, GetAnnotationWithStringArgFailureNonStringArg) {
+  clang::TestAST ast(R"cc(
+    [[clang::annotate("foo", 123)]] int i;
+  )cc");
+
+  auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
+
+  EXPECT_THAT(
+      GetAnnotationWithStringArg(var, "foo"),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("Annotation foo arguments must be string literals.")));
 }
