@@ -77,16 +77,16 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
   if (auto* alias_decl = clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
     if (ictx_.IsFromProtoTarget(*alias_decl) &&
         alias_decl->getUnderlyingType()->isEnumeralType()) {
-      ictx_.MarkAsSuccessfullyImported(decl);
+      ictx_.MarkAsSuccessfullyImported(*decl);
       auto item = std::make_unique<ir_proto::Item>();
       auto* existing = item->mutable_existing_rust_type();
       existing->set_rs_name(ProtoEnumToRustName(*decl));
       existing->set_cc_name(decl->getQualifiedNameAsString());
       existing->set_unique_name(ictx_.GetUniqueName(*decl));
-      existing->set_owning_target(ictx_.GetOwningTarget(decl).value());
+      existing->set_owning_target(ictx_.GetOwningTarget(*decl).value());
       // To be paranoid, assume Rust proto enums are not ABI compatible.
       existing->set_is_same_abi(false);
-      existing->set_id(ictx_.GenerateItemId(decl).value());
+      existing->set_id(ictx_.GenerateItemId(*decl).value());
       return item;
     }
   }
@@ -128,7 +128,7 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
   }
 
   absl::StatusOr<TranslatedIdentifier> identifier =
-      ictx_.GetTranslatedIdentifier(decl);
+      ictx_.GetTranslatedIdentifier(*decl);
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
         *decl, std::nullopt,
@@ -148,7 +148,7 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
   // type aliases, pass these to ConvertQualType().
   absl::StatusOr<CcType> underlying_type = ictx_.ConvertQualType(
       underlying_qualtype, no_lifetimes, /*nullable=*/true,
-      ictx_.AreAssumedLifetimesEnabledForTarget(ictx_.GetOwningTarget(decl)));
+      ictx_.AreAssumedLifetimesEnabledForTarget(ictx_.GetOwningTarget(*decl)));
 
   if (!underlying_type.ok()) {
     return ictx_.ImportUnsupportedItem(
@@ -169,14 +169,14 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
   // about completeness in different targets, or we could also decide that this
   // is not a valid way to use the tool and require that users include the
   // necessary headers to get proper output.
-  if (!ictx_.IsFromCurrentTarget(decl) && !is_cc_template_instantiation) {
+  if (!ictx_.IsFromCurrentTarget(*decl) && !is_cc_template_instantiation) {
     const clang::CXXRecordDecl* record_decl =
         underlying_qualtype->getAsCXXRecordDecl();
     if (auto* tst =
             underlying_qualtype->getAs<clang::TemplateSpecializationType>()) {
       if (record_decl == nullptr) record_decl = tst->getAsCXXRecordDecl();
     }
-    if (record_decl != nullptr && ictx_.RefersToOwnedDefinition(record_decl)) {
+    if (record_decl != nullptr && ictx_.RefersToOwnedDefinition(*record_decl)) {
       return ictx_.ImportUnsupportedItem(
           *decl, (*identifier).cc_identifier, *enclosing_item_id,
           {FormattedError::Static(
@@ -185,7 +185,7 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
               "target")});
     }
   }
-  ictx_.MarkAsSuccessfullyImported(decl);
+  ictx_.MarkAsSuccessfullyImported(*decl);
 
   std::optional<std::string> deprecated;
   absl::StatusOr<std::optional<std::string>> unknown_attr =
@@ -219,9 +219,9 @@ std::unique_ptr<ir_proto::Item> crubit::TypeAliasImporter::Import(
       identifier->cc_identifier.Ident());
   type_alias->mutable_rs_name()->set_identifier(rs_name);
   type_alias->set_unique_name(ictx_.GetUniqueName(*decl));
-  type_alias->set_id(ictx_.GenerateItemId(decl).value());
-  type_alias->set_owning_target(ictx_.GetOwningTarget(decl).value());
-  if (auto doc = ictx_.GetComment(decl); doc.has_value()) {
+  type_alias->set_id(ictx_.GenerateItemId(*decl).value());
+  type_alias->set_owning_target(ictx_.GetOwningTarget(*decl).value());
+  if (auto doc = ictx_.GetComment(*decl); doc.has_value()) {
     type_alias->set_doc_comment(std::move(*doc));
   }
   if (unknown_attr->has_value()) {

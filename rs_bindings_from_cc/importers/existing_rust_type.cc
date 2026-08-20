@@ -234,7 +234,7 @@ GetCrubitInternalRustTypeAttr(ImportContext& ictx, const clang::Decl& decl) {
       format_args.push_back(TemplateArg(
           ictx.ConvertQualType(type, /*lifetimes=*/nullptr, /*nullable=*/true,
                                ictx.AreAssumedLifetimesEnabledForTarget(
-                                   ictx.GetOwningTarget(spec)))));
+                                   ictx.GetOwningTarget(*spec)))));
     }
   }
 
@@ -282,7 +282,7 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
   policy.SuppressTagKeyword = true;
   std::string cc_name = cc_qualtype.getAsString(policy);
 
-  ictx_.MarkAsSuccessfullyImported(type_decl);
+  ictx_.MarkAsSuccessfullyImported(*type_decl);
 
   auto item = std::make_unique<ir_proto::Item>();
   auto* existing = item->mutable_existing_rust_type();
@@ -292,7 +292,7 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
   for (const auto& arg : format_args) {
     arg.WriteToProto(*existing->add_template_args());
   }
-  existing->set_owning_target(ictx_.GetOwningTarget(type_decl).value());
+  existing->set_owning_target(ictx_.GetOwningTarget(*type_decl).value());
   if (!cpp_type->isIncompleteType()) {
     auto* size_align = existing->mutable_size_align();
     size_align->set_size(context.getTypeSizeInChars(cpp_type).getQuantity());
@@ -300,9 +300,9 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
         context.getTypeAlignInChars(cpp_type).getQuantity());
   }
   existing->set_is_same_abi(*is_same_abi);
-  existing->set_id(ictx_.GenerateItemId(type_decl).value());
+  existing->set_id(ictx_.GenerateItemId(*type_decl).value());
   existing->set_impl_debug(ictx_.IsRecordImplDebugEnabledForTarget(
-                               ictx_.GetOwningTarget(type_decl)) &&
+                               ictx_.GetOwningTarget(*type_decl)) &&
                            ictx_.ImplementsCoreFmtDebug(*type_decl));
   return item;
 }

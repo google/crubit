@@ -19,7 +19,7 @@ namespace crubit {
 
 std::unique_ptr<ir_proto::Item> FriendDeclImporter::Import(
     clang::FriendDecl* friend_decl) {
-  if (!ictx_.IsFromCurrentTarget(friend_decl)) return nullptr;
+  if (!ictx_.IsFromCurrentTarget(*friend_decl)) return nullptr;
 
   // Check if this is a `friend` declaration for a function (and not for a
   // type).
@@ -65,9 +65,9 @@ std::unique_ptr<ir_proto::Item> FriendDeclImporter::Import(
   // allows us to prevent generation of bindings in the case that the enclosing
   // record is not visible, as ADL is necessary for the friend function to be
   // found.
-  item->mutable_func()->set_id(ictx_.GenerateItemId(friend_decl).value());
+  item->mutable_func()->set_id(ictx_.GenerateItemId(*friend_decl).value());
   item->mutable_func()->set_adl_enclosing_record(
-      ictx_.GenerateItemId(enclosing_record_decl).value());
+      ictx_.GenerateItemId(*enclosing_record_decl).value());
   return item;
 }
 

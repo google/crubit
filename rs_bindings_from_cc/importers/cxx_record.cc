@@ -332,7 +332,7 @@ std::optional<BridgeType> GetBridgeTypeAnnotation(
               ictx.ConvertQualType(template_arg.getAsType(),
                                    /*lifetimes=*/nullptr, /*nullable=*/true,
                                    ictx.AreAssumedLifetimesEnabledForTarget(
-                                       ictx.GetOwningTarget(&record_decl))));
+                                       ictx.GetOwningTarget(record_decl))));
         }
       }
     }
@@ -642,9 +642,10 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
       return TemplateSpecialization::StdUniquePtr(
           // TODO(b/454627672): is specialization_decl the right decl to check
           // for assumed_lifetimes?
-          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
-                               ictx.AreAssumedLifetimesEnabledForTarget(
-                                   ictx.GetOwningTarget(specialization_decl))));
+          ictx.ConvertQualType(
+              t, /*lifetimes=*/nullptr, /*nullable=*/true,
+              ictx.AreAssumedLifetimesEnabledForTarget(
+                  ictx.GetOwningTarget(*specialization_decl))));
     } else if (templated_decl->getName() == "shared_ptr") {
       if (specialization_decl->getTemplateArgs().size() != 1) {
         return absl::InvalidArgumentError(
@@ -654,19 +655,20 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
       return TemplateSpecialization::StdSharedPtr(
           // TODO(b/454627672): is specialization_decl the right decl to check
           // for assumed_lifetimes?
-          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
-                               ictx.AreAssumedLifetimesEnabledForTarget(
-                                   ictx.GetOwningTarget(specialization_decl))));
+          ictx.ConvertQualType(
+              t, /*lifetimes=*/nullptr, /*nullable=*/true,
+              ictx.AreAssumedLifetimesEnabledForTarget(
+                  ictx.GetOwningTarget(*specialization_decl))));
     } else if (templated_decl->getName() == "vector") {
       CRUBIT_ASSIGN_OR_RETURN(
           clang::QualType t,
           ParameterizedByTAndStdTraitT(ictx, specialization_decl, "allocator"));
       // TODO(b/454627672): is specialization_decl the right decl to check for
       // assumed_lifetimes?
-      return TemplateSpecialization::StdVector(
-          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
-                               ictx.AreAssumedLifetimesEnabledForTarget(
-                                   ictx.GetOwningTarget(specialization_decl))));
+      return TemplateSpecialization::StdVector(ictx.ConvertQualType(
+          t, /*lifetimes=*/nullptr, /*nullable=*/true,
+          ictx.AreAssumedLifetimesEnabledForTarget(
+              ictx.GetOwningTarget(*specialization_decl))));
     }
     if (templated_decl->getName() == "atomic") {
       if (specialization_decl->getTemplateArgs().size() != 1) {
@@ -705,10 +707,10 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
         return TemplateSpecialization::NonSpecial();
       }
 
-      return TemplateSpecialization::StdAtomic{
-          ictx.ConvertQualType(t, /*lifetimes=*/nullptr, /*nullable=*/true,
-                               ictx.AreAssumedLifetimesEnabledForTarget(
-                                   ictx.GetOwningTarget(specialization_decl)))};
+      return TemplateSpecialization::StdAtomic{ictx.ConvertQualType(
+          t, /*lifetimes=*/nullptr, /*nullable=*/true,
+          ictx.AreAssumedLifetimesEnabledForTarget(
+              ictx.GetOwningTarget(*specialization_decl)))};
     }
   } else if (top_level_namespace == "absl") {
     if (templated_decl->getName() == "Span") {
@@ -717,11 +719,11 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
       clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
       // TODO(b/454627672): is specialization_decl the right decl to check for
       // assumed_lifetimes?
-      return TemplateSpecialization::AbslSpan(
-          ictx.ConvertQualType(t,
-                               /*lifetimes=*/nullptr, /*nullable=*/true,
-                               ictx.AreAssumedLifetimesEnabledForTarget(
-                                   ictx.GetOwningTarget(specialization_decl))));
+      return TemplateSpecialization::AbslSpan(ictx.ConvertQualType(
+          t,
+          /*lifetimes=*/nullptr, /*nullable=*/true,
+          ictx.AreAssumedLifetimesEnabledForTarget(
+              ictx.GetOwningTarget(*specialization_decl))));
     } else if (templated_decl->getName() == "flat_hash_map") {
       LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() < 2)
           << "absl::flat_hash_map should have at least two template args";
@@ -734,12 +736,12 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
               k,
               /*lifetimes=*/nullptr, /*nullable=*/true,
               ictx.AreAssumedLifetimesEnabledForTarget(
-                  ictx.GetOwningTarget(specialization_decl))),
+                  ictx.GetOwningTarget(*specialization_decl))),
           .value_type = ictx.ConvertQualType(
               v,
               /*lifetimes=*/nullptr, /*nullable=*/true,
               ictx.AreAssumedLifetimesEnabledForTarget(
-                  ictx.GetOwningTarget(specialization_decl)))};
+                  ictx.GetOwningTarget(*specialization_decl)))};
     } else if (templated_decl->getName() == "flat_hash_set") {
       LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() < 1)
           << "absl::flat_hash_set should have at least one template arg";
@@ -751,7 +753,7 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
               t,
               /*lifetimes=*/nullptr, /*nullable=*/true,
               ictx.AreAssumedLifetimesEnabledForTarget(
-                  ictx.GetOwningTarget(specialization_decl)))};
+                  ictx.GetOwningTarget(*specialization_decl)))};
     }
   } else if (top_level_namespace == "c9") {
     if (templated_decl->getName() == "Co") {
@@ -768,11 +770,11 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
         return absl::InvalidArgumentError(absl::StrCat(
             "c9::Co return type is incomplete: ", t.getAsString()));
       }
-      return TemplateSpecialization::C9Co(
-          ictx.ConvertQualType(t,
-                               /*lifetimes=*/nullptr, /*nullable=*/true,
-                               ictx.AreAssumedLifetimesEnabledForTarget(
-                                   ictx.GetOwningTarget(specialization_decl))));
+      return TemplateSpecialization::C9Co(ictx.ConvertQualType(
+          t,
+          /*lifetimes=*/nullptr, /*nullable=*/true,
+          ictx.AreAssumedLifetimesEnabledForTarget(
+              ictx.GetOwningTarget(*specialization_decl))));
     }
   }
 
@@ -850,7 +852,7 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
                            /*lifetimes=*/nullptr,
                            /*nullable=*/true,
                            ictx.AreAssumedLifetimesEnabledForTarget(
-                               ictx.GetOwningTarget(templated_decl)));
+                               ictx.GetOwningTarget(*templated_decl)));
 
   std::vector<CcType> param_types;
   // Convert the parameter types, ensuring that they are complete first.
@@ -871,7 +873,7 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
         ictx.ConvertQualType(param_type, /*lifetimes=*/nullptr,
                              /*nullable=*/true,
                              ictx.AreAssumedLifetimesEnabledForTarget(
-                                 ictx.GetOwningTarget(&specialization_decl)));
+                                 ictx.GetOwningTarget(specialization_decl)));
     param_types.push_back(std::move(param_cc_type));
   }
 
@@ -909,7 +911,7 @@ absl::StatusOr<SafetyAnnotation> CXXRecordDeclImporter::GetSafetyAnnotation(
   }
 
   if (crubit::HasAttr<clang::PointerAttr>(&decl) &&
-      ictx_.IsUnsafeViewEnabledForTarget(ictx_.GetOwningTarget(&decl))) {
+      ictx_.IsUnsafeViewEnabledForTarget(ictx_.GetOwningTarget(decl))) {
     return SafetyAnnotation::SAFETY_ANNOTATION_UNSAFE;
   }
 
@@ -930,7 +932,7 @@ std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
   }
 
   absl::StatusOr<TranslatedIdentifier> name =
-      ictx_.GetTranslatedIdentifier(field_decl);
+      ictx_.GetTranslatedIdentifier(*field_decl);
   if (!name.ok()) {
     unsigned field_pos = field_decl->getFieldIndex();
     return {Identifier(absl::StrCat("__field_", field_pos))};
@@ -968,7 +970,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   if (decl_context->isFunctionOrMethod()) {
     return nullptr;
   }
-  if (ictx_.HasBeenAlreadySuccessfullyImported(record_decl)) {
+  if (ictx_.HasBeenAlreadySuccessfullyImported(*record_decl)) {
     LOG(FATAL)
         << ("THIS IS A BUG: the type was marked as imported, so we "
             "short-circuited evaluation here. However, instead of the fully "
@@ -1071,7 +1073,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
     };
   }
 
-  BazelLabel owning_target = ictx_.GetOwningTarget(record_decl);
+  BazelLabel owning_target = ictx_.GetOwningTarget(*record_decl);
   std::optional<ItemId> enclosing_item_id = std::nullopt;
 
   // Reports an unsupported type with the given error.
@@ -1098,7 +1100,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
     is_explicit_class_template_instantiation_definition =
         specialization_decl->getSpecializationKind() ==
         clang::TSK_ExplicitInstantiationDefinition;
-    rs_name = ictx_.GetMangledName(specialization_decl);
+    rs_name = ictx_.GetMangledName(*specialization_decl);
     absl::StatusOr<std::string> status_or_cc_name =
         CcName(ictx_.ctx_, specialization_decl);
     if (!status_or_cc_name.ok()) {
@@ -1119,10 +1121,10 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
     }
     ts.kind = *std::move(status_or_ts_kind);
 
-    doc_comment = ictx_.GetComment(specialization_decl);
+    doc_comment = ictx_.GetComment(*specialization_decl);
     if (!doc_comment.has_value()) {
       doc_comment =
-          ictx_.GetComment(specialization_decl->getSpecializedTemplate());
+          ictx_.GetComment(*specialization_decl->getSpecializedTemplate());
     }
     source_loc = specialization_decl->getBeginLoc();
     // Specify defining_target if it's a template instantiation.
@@ -1157,18 +1159,18 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
               "Class template instantiation forbidden by blocklist",
               record_decl->getQualifiedNameAsString())});
     }
-    ts.defining_target = ictx_.GetOwningTarget(decl);
+    ts.defining_target = ictx_.GetOwningTarget(*decl);
     if (clang::TypedefNameDecl* alias_decl =
             ictx_.GetTemplateSpecializationAlias(specialization_decl)) {
       absl::StatusOr<TranslatedIdentifier> alias_name =
-          ictx_.GetTranslatedIdentifier(alias_decl);
+          ictx_.GetTranslatedIdentifier(*alias_decl);
       if (!alias_name.ok()) {
         return ictx_.ImportUnsupportedItem(
             *record_decl, std::nullopt,
             {FormattedError::PrefixedStrCat("preferred_name is not supported",
                                             alias_name.status().message())});
       }
-      owning_target = ictx_.GetOwningTarget(alias_decl);
+      owning_target = ictx_.GetOwningTarget(*alias_decl);
       rs_name = alias_name->rs_identifier().Ident();
       cc_name = alias_name->cc_identifier.Ident();
       is_canonical_template_alias = true;
@@ -1218,7 +1220,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
     CHECK(!named_decl->getName().empty());
 
     absl::StatusOr<TranslatedIdentifier> record_name =
-        ictx_.GetTranslatedIdentifier(named_decl);
+        ictx_.GetTranslatedIdentifier(*named_decl);
     if (!record_name.ok()) {
       return ictx_.ImportUnsupportedItem(
           *record_decl, std::nullopt,
@@ -1227,7 +1229,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
     }
     rs_name = record_name->rs_identifier().Ident();
     cc_name = record_name->cc_identifier.Ident();
-    doc_comment = ictx_.GetComment(record_decl);
+    doc_comment = ictx_.GetComment(*record_decl);
     source_loc = record_decl->getBeginLoc();
   }
 
@@ -1270,14 +1272,14 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
         FormattedError::Static("Records with packed layout are not supported"));
   }
 
-  ictx_.MarkAsSuccessfullyImported(record_decl);
+  ictx_.MarkAsSuccessfullyImported(*record_decl);
   if (!record_decl->isCompleteDefinition()) {
     auto item = std::make_unique<ir_proto::Item>();
     auto* incomplete = item->mutable_incomplete_record();
     incomplete->mutable_cc_name()->set_identifier(cc_name);
     incomplete->mutable_rs_name()->set_identifier(rs_name);
     incomplete->set_unique_name(ictx_.GetUniqueName(*record_decl));
-    incomplete->set_id(ictx_.GenerateItemId(record_decl).value());
+    incomplete->set_id(ictx_.GenerateItemId(*record_decl).value());
     incomplete->set_owning_target(owning_target.value());
     if (unknown_attr->has_value()) {
       incomplete->set_unknown_attr(std::move(**unknown_attr));
@@ -1341,7 +1343,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
 
   std::vector<std::string> lifetime_inputs;
   if (ictx_.AreAssumedLifetimesEnabledForTarget(
-          ictx_.GetOwningTarget(record_decl))) {
+          ictx_.GetOwningTarget(*record_decl))) {
     auto lifetime_inputs_or_err =
         CollectLifetimeInputs(ictx_.sema_.getASTContext(), record_decl);
     if (!lifetime_inputs_or_err.ok()) {
@@ -1363,11 +1365,11 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
         FormattedError::FromStatus(std::move(detected_formatter).status()));
   }
 
-  ItemId id = ictx_.GenerateItemId(record_decl);
+  ItemId id = ictx_.GenerateItemId(*record_decl);
   ictx_.invocation_.child_item_ids_[id] = std::move(item_ids);
 
   bool record_impl_debug_enabled = ictx_.IsRecordImplDebugEnabledForTarget(
-      ictx_.GetOwningTarget(record_decl));
+      ictx_.GetOwningTarget(*record_decl));
 
   bool impl_debug = false;
   if (record_impl_debug_enabled) {
@@ -1403,7 +1405,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   record->mutable_rs_name()->set_identifier(rs_name);
   record->mutable_cc_name()->set_identifier(cc_name);
   record->set_unique_name(ictx_.GetUniqueName(*record_decl));
-  record->set_mangled_cc_name(ictx_.GetMangledName(record_decl));
+  record->set_mangled_cc_name(ictx_.GetMangledName(*record_decl));
   record->set_id(id.value());
   record->set_owning_target(owning_target.value());
   if (template_specialization.has_value()) {
@@ -1532,7 +1534,7 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
               field_decl->getType(), no_lifetimes,
               /*nullable=*/true,
               ictx_.AreAssumedLifetimesEnabledForTarget(
-                  ictx_.GetOwningTarget(record_decl)));
+                  ictx_.GetOwningTarget(*record_decl)));
         case clang::AS_protected:
         case clang::AS_private:
         case clang::AS_none:
@@ -1551,7 +1553,7 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
     if (field_record) {
       // If it is a record as a direct member, its item must be already
       // imported.
-      const auto* item = ictx_.GetImportedItem(field_record);
+      const auto* item = ictx_.GetImportedItem(*field_record);
       if (item && item->has_record()) {
         is_inheritable = item->record().is_inheritable();
       }
@@ -1586,7 +1588,7 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
         cpp_id.has_value()) {
       proto_field.mutable_cpp_identifier()->set_identifier(cpp_id->Ident());
     }
-    if (auto comment = ictx_.GetComment(field_decl); comment.has_value()) {
+    if (auto comment = ictx_.GetComment(*field_decl); comment.has_value()) {
       proto_field.set_doc_comment(*comment);
     }
     type.WriteToProto(*proto_field.mutable_type());
@@ -1661,7 +1663,7 @@ CXXRecordDeclImporter::GetUnambiguousPublicBases(
 
       clang::CXXRecordDecl* base_record_decl =
           ABSL_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
-      if (!ictx_.HasBeenAlreadySuccessfullyImported(base_record_decl)) {
+      if (!ictx_.HasBeenAlreadySuccessfullyImported(*base_record_decl)) {
         continue;
       }
 
@@ -1681,7 +1683,7 @@ CXXRecordDeclImporter::GetUnambiguousPublicBases(
             "Concrete base classes should have non-negative offsets.");
       ir_proto::BaseClass base_class;
       base_class.set_base_record_id(
-          ictx_.GenerateItemId(base_record_decl).value());
+          ictx_.GenerateItemId(*base_record_decl).value());
       if (offset.has_value()) {
         base_class.set_offset(*offset);
       }
@@ -1719,7 +1721,7 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
         /*qual_type=*/decl->getTemplateArgs()[index].getAsType(),
         /*lifetimes=*/nullptr, /*nullable=*/true,
         ictx_.AreAssumedLifetimesEnabledForTarget(
-            ictx_.GetOwningTarget(cxx_record_decl)));
+            ictx_.GetOwningTarget(*cxx_record_decl)));
   };
 
   if (name == "optional") {

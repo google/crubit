@@ -53,12 +53,12 @@ class Importer final : public ImportContext {
                     clang::Sema& sema);
 
   // Import all visible declarations from a translation unit.
-  void Import(clang::TranslationUnitDecl* decl);
+  void Import(clang::TranslationUnitDecl* absl_nonnull decl);
 
  protected:
   // Implementation of `ImportContext`
   void ImportDeclsFromDeclContext(
-      const clang::DeclContext* decl_context) override;
+      const clang::DeclContext& decl_context) override;
   std::unique_ptr<ir_proto::Item> HardError(const clang::Decl& decl,
                                             FormattedError error) override;
   std::unique_ptr<ir_proto::Item> ImportUnsupportedItem(
@@ -67,13 +67,14 @@ class Importer final : public ImportContext {
       std::vector<FormattedError> errors, bool is_hard_error) override;
   absl_nullable std::unique_ptr<ir_proto::Item> ImportDecl(
       clang::Decl* absl_nonnull decl) override;
-  const ir_proto::Item* GetImportedItem(const clang::Decl* decl) const override;
+  const ir_proto::Item* absl_nullable GetImportedItem(
+      const clang::Decl& decl) const override;
 
-  ItemId GenerateItemId(const clang::Decl* decl) const override;
-  ItemId GenerateItemId(const clang::RawComment* comment) const override;
+  ItemId GenerateItemId(const clang::Decl& decl) const override;
+  ItemId GenerateItemId(const clang::RawComment& comment) const override;
   bool IsUnsupportedAndAlien(ItemId item_id) const override;
   absl::StatusOr<std::optional<ItemId>> GetEnclosingItemId(
-      clang::Decl* decl) override;
+      clang::Decl* absl_nonnull decl) override;
 
   // The canonical children and comments that are within a decl.
   // This is the return type of `GetDeclItems`, and is intended to only be used
@@ -86,21 +87,22 @@ class Importer final : public ImportContext {
 
   // This is intended to only be used to abstract shared behavior between
   // GetTopLevelItemIdsInSourceOrder and GetItemIdsInSourceOrder.
-  DeclItems GetDeclItems(const clang::Decl* decl);
+  DeclItems GetDeclItems(const clang::Decl& decl);
 
   absl::flat_hash_map<BazelLabel, std::vector<ItemId>>
   GetTopLevelItemIdsInSourceOrder(
-      const clang::TranslationUnitDecl* decl) override;
-  std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) override;
-  std::string GetMangledName(const clang::NamedDecl* named_decl) const override;
+      const clang::TranslationUnitDecl& decl) override;
+  std::vector<ItemId> GetItemIdsInSourceOrder(
+      clang::Decl* absl_nonnull decl) override;
+  std::string GetMangledName(const clang::NamedDecl& named_decl) const override;
   std::optional<ir_proto::UnsupportedItem::Path>
   GetUnsupportedItemPathForTemplateDecl(
-      clang::RedeclarableTemplateDecl* template_decl) override;
-  BazelLabel GetOwningTarget(const clang::Decl* decl) const override;
-  bool IsFromCurrentTarget(const clang::Decl* decl) const override;
-  bool RefersToOwnedDefinition(const clang::CXXRecordDecl* decl) const override;
+      clang::RedeclarableTemplateDecl* absl_nonnull template_decl) override;
+  BazelLabel GetOwningTarget(const clang::Decl& decl) const override;
+  bool IsFromCurrentTarget(const clang::Decl& decl) const override;
+  bool RefersToOwnedDefinition(const clang::CXXRecordDecl& decl) const override;
   bool IsFromCurrentTargetAndNotUnderSpecialization(
-      const clang::Decl* decl) const;
+      const clang::Decl& decl) const;
   bool IsFromProtoTarget(const clang::Decl& decl) const override;
   bool IsCrubitEnabledForTarget(const BazelLabel& label) const override;
   bool AreAssumedLifetimesEnabledForTarget(
@@ -114,32 +116,33 @@ class Importer final : public ImportContext {
   absl::StatusOr<std::optional<bool>> GetCrubitOverrideDebugAnnotation(
       const clang::TypeDecl& type) const override;
   absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
-      const clang::NamedDecl* named_decl) const override;
+      const clang::NamedDecl& named_decl) const override;
   absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
-      const clang::NamedDecl* named_decl) const override;
-  std::optional<std::string> GetComment(const clang::Decl* decl) const override;
+      const clang::NamedDecl& named_decl) const override;
+  std::optional<std::string> GetComment(const clang::Decl& decl) const override;
   std::string ConvertSourceLocation(
       clang::SourceLocation loc,
-      clang::DeclarationNameInfo* name_info) const override;
+      clang::DeclarationNameInfo* absl_nullable name_info) const override;
   CcType ConvertQualType(
       clang::QualType qual_type,
-      const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
-      bool assume_lifetimes) override;
+      const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
+      bool nullable, bool assume_lifetimes) override;
 
   std::string GetUniqueName(const clang::Decl& decl) const override;
 
-  void MarkAsSuccessfullyImported(const clang::NamedDecl* decl) override;
+  void MarkAsSuccessfullyImported(const clang::NamedDecl& decl) override;
   bool HasBeenAlreadySuccessfullyImported(
-      const clang::NamedDecl* decl) const override;
-  bool EnsureSuccessfullyImported(clang::NamedDecl* decl) override {
+      const clang::NamedDecl& decl) const override;
+  bool EnsureSuccessfullyImported(
+      clang::NamedDecl* absl_nonnull decl) override {
     // First, return early so that we avoid re-entrant imports.
-    if (HasBeenAlreadySuccessfullyImported(decl)) return true;
+    if (HasBeenAlreadySuccessfullyImported(*decl)) return true;
     (void)GetDeclItem(CanonicalizeDecl(decl));
-    return HasBeenAlreadySuccessfullyImported(decl);
+    return HasBeenAlreadySuccessfullyImported(*decl);
   }
 
-  clang::TypedefNameDecl* GetTemplateSpecializationAlias(
-      clang::Decl* decl) const override;
+  clang::TypedefNameDecl* absl_nullable GetTemplateSpecializationAlias(
+      clang::Decl* absl_nonnull decl) const override;
 
  private:
   class SourceOrderKey;
@@ -147,60 +150,63 @@ class Importer final : public ImportContext {
 
   // Returns a SourceOrderKey for the given `decl` that should be used for
   // ordering Items.
-  SourceOrderKey GetSourceOrderKey(const clang::Decl* decl) const;
+  SourceOrderKey GetSourceOrderKey(const clang::Decl& decl) const;
   // Returns a SourceOrderKey for the given `comment` that should be used for
   // ordering Items.
-  SourceOrderKey GetSourceOrderKey(const clang::RawComment* comment) const;
+  SourceOrderKey GetSourceOrderKey(const clang::RawComment& comment) const;
 
   // Returns a name for `decl` that should be used for ordering declarations.
-  std::string GetNameForSourceOrder(const clang::Decl* decl) const;
+  std::string GetNameForSourceOrder(const clang::Decl& decl) const;
 
   // Returns the item ids of template instantiations that have been triggered
   // from the current target.  The returned items are in an arbitrary,
   // deterministic/reproducible order.
   std::vector<ItemId> GetOrderedItemIdsOfTemplateInstantiations() const;
 
-  void FindAlwaysInstantiateSpecs(const clang::DeclContext* decl_context);
+  void FindAlwaysInstantiateSpecs(const clang::DeclContext& decl_context);
   bool IsAlwaysInstantiate(
-      const clang::ClassTemplateSpecializationDecl* spec_decl) const;
+      const clang::ClassTemplateSpecializationDecl& spec_decl) const;
 
   absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
       always_instantiate_specs_;
 
-  const ir_proto::Item* absl_nullable GetDeclItem(clang::Decl* decl) override;
+  const ir_proto::Item* absl_nullable GetDeclItem(
+      clang::Decl* absl_nonnull decl) override;
   // Stores the comments of this target in source order.
   void ImportFreeComments();
 
-  clang::Decl* CanonicalizeDecl(clang::Decl* decl) const;
-  const clang::Decl* CanonicalizeDecl(const clang::Decl* decl) const;
+  clang::Decl* absl_nullable CanonicalizeDecl(
+      clang::Decl* absl_nonnull decl) const;
+  const clang::Decl* absl_nullable CanonicalizeDecl(
+      const clang::Decl& decl) const;
 
   std::vector<clang::Decl*> GetCanonicalChildren(
-      const clang::DeclContext* decl_context) const;
+      const clang::DeclContext& decl_context) const;
   // Converts a type to a CcType.
   // TODO(b/251045039): Return a `CcType`.
   absl::StatusOr<CcType> ConvertType(
-      const clang::Type* type,
-      const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
-      bool assume_lifetimes);
+      const clang::Type& type,
+      const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
+      bool nullable, bool assume_lifetimes);
   // Converts a type, without processing attributes.
   // TODO(b/251045039): Return a `CcType`.
   absl::StatusOr<CcType> ConvertUnattributedType(
-      const clang::Type* type,
-      const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
-      bool assume_lifetimes);
-  CcType ConvertTypeDecl(clang::NamedDecl* decl);
+      const clang::Type& type,
+      const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
+      bool nullable, bool assume_lifetimes);
+  CcType ConvertTypeDecl(clang::NamedDecl* absl_nonnull decl);
 
   // Converts `type` into a CcType, after first importing the Record behind
   // the template instantiation.
   CcType ConvertTemplateSpecializationType(
-      const clang::TemplateSpecializationType* type);
+      const clang::TemplateSpecializationType& type);
 
   bool RefersToOwnedDefinitionImpl(
-      const clang::CXXRecordDecl* decl,
+      const clang::CXXRecordDecl& decl,
       absl::flat_hash_set<const clang::CXXRecordDecl*>& visited) const;
 
   bool IsFeatureEnabledForTarget(const BazelLabel& label,
-                                 absl::string_view feature) const;
+                                 absl::string_view feature) const override;
 
   absl::StatusOr<std::optional<bool>> GetCrubitOverrideDisplayAnnotation(
       const clang::TypeDecl& decl) const;

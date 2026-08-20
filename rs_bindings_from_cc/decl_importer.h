@@ -173,7 +173,7 @@ class ImportContext {
 
   // Imports all decls contained in a `DeclContext`.
   virtual void ImportDeclsFromDeclContext(
-      const clang::DeclContext* decl_context) = 0;
+      const clang::DeclContext& decl_context) = 0;
 
   // Returns an unsupported item that will result in a hard error at binding
   // generation time.
@@ -224,18 +224,18 @@ class ImportContext {
   // importers to recursively delegate to other importers.
   // Does not use or update the cache.
   virtual absl_nullable std::unique_ptr<ir_proto::Item> ImportDecl(
-      clang::Decl* absl_nullable decl) = 0;
+      clang::Decl* absl_nonnull decl) = 0;
 
   // Returns the Item of a Decl, importing it first if necessary.
   // Updates the cache.
   virtual const ir_proto::Item* absl_nullable GetDeclItem(
-      clang::Decl* decl) = 0;
+      clang::Decl* absl_nonnull decl) = 0;
 
-  virtual const ir_proto::Item* GetImportedItem(
-      const clang::Decl* decl) const = 0;
+  virtual const ir_proto::Item* absl_nullable GetImportedItem(
+      const clang::Decl& decl) const = 0;
 
-  virtual ItemId GenerateItemId(const clang::Decl* decl) const = 0;
-  virtual ItemId GenerateItemId(const clang::RawComment* comment) const = 0;
+  virtual ItemId GenerateItemId(const clang::Decl& decl) const = 0;
+  virtual ItemId GenerateItemId(const clang::RawComment& comment) const = 0;
   // Checks if the given item is unsupported and not from the current target.
   virtual bool IsUnsupportedAndAlien(ItemId item_id) const = 0;
   // Returns the ID of the parent record or namespace, if it exists, and
@@ -245,40 +245,41 @@ class ImportContext {
   // Imports the parent decl if it is not already imported, and returns a bad
   // status if the parent cannot be imported.
   virtual absl::StatusOr<std::optional<ItemId>> GetEnclosingItemId(
-      clang::Decl* decl) = 0;
+      clang::Decl* absl_nonnull decl) = 0;
 
   // Returns a map of top level item ids in source order for each target.
   virtual absl::flat_hash_map<BazelLabel, std::vector<ItemId>>
-  GetTopLevelItemIdsInSourceOrder(const clang::TranslationUnitDecl* decl) = 0;
+  GetTopLevelItemIdsInSourceOrder(const clang::TranslationUnitDecl& decl) = 0;
 
   // Imports children of `decl`.
   //
   // Returns item ids of the children. This includes ids of comments within
   // `decl`.  The returned ids are ordered by their source order.
-  virtual std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) = 0;
+  virtual std::vector<ItemId> GetItemIdsInSourceOrder(
+      clang::Decl* absl_nonnull decl) = 0;
 
   // Mangles the name of a named decl.
   virtual std::string GetMangledName(
-      const clang::NamedDecl* named_decl) const = 0;
+      const clang::NamedDecl& named_decl) const = 0;
 
   // Gets the path of an unsupported item by mangling its name and importing
   // its enclosing item. Returns `std::nullopt` if the enclosing item cannot be
   // imported.
   virtual std::optional<ir_proto::UnsupportedItem::Path>
   GetUnsupportedItemPathForTemplateDecl(
-      clang::RedeclarableTemplateDecl* template_decl) = 0;
+      clang::RedeclarableTemplateDecl* absl_nonnull template_decl) = 0;
 
   // Returns the label of the target that contains a decl.
-  virtual BazelLabel GetOwningTarget(const clang::Decl* decl) const = 0;
+  virtual BazelLabel GetOwningTarget(const clang::Decl& decl) const = 0;
 
   // Checks if the given decl belongs to the current target. Does not look into
   // other redeclarations of the decl.
-  virtual bool IsFromCurrentTarget(const clang::Decl* decl) const = 0;
+  virtual bool IsFromCurrentTarget(const clang::Decl& decl) const = 0;
 
   // Checks if the alien `decl` (!IsFromCurrentTarget(decl)) depends on any
   // CXXRecordDecl definition owned by the current target.
   virtual bool RefersToOwnedDefinition(
-      const clang::CXXRecordDecl* decl) const = 0;
+      const clang::CXXRecordDecl& decl) const = 0;
 
   // Returns true iff the `decl` is from a proto target. Does not look into
   // other redeclarations of the decl.
@@ -344,21 +345,21 @@ class ImportContext {
   //
   // If the name can't be translated (or is empty), this returns an error.
   virtual absl::StatusOr<TranslatedUnqualifiedIdentifier> GetTranslatedName(
-      const clang::NamedDecl* named_decl) const = 0;
+      const clang::NamedDecl& named_decl) const = 0;
 
   // GetTranslatedName, but only for identifier names. This is the common case.
   // If the name can't be translated (or is empty), this returns an error.
   virtual absl::StatusOr<TranslatedIdentifier> GetTranslatedIdentifier(
-      const clang::NamedDecl* named_decl) const = 0;
+      const clang::NamedDecl& named_decl) const = 0;
 
   // Gets the doc comment of the declaration.
   virtual std::optional<std::string> GetComment(
-      const clang::Decl* decl) const = 0;
+      const clang::Decl& decl) const = 0;
 
   // Converts a Clang source location to IR. `name_info` may be null.
   virtual std::string ConvertSourceLocation(
       clang::SourceLocation loc,
-      clang::DeclarationNameInfo* name_info) const = 0;
+      clang::DeclarationNameInfo* absl_nullable name_info) const = 0;
 
   // Converts the Clang type `qual_type` into an equivalent `CcType`.
   // Lifetimes for the type can optionally be specified using `lifetimes` (pass
@@ -377,8 +378,8 @@ class ImportContext {
   // (as arguments or parameters) will be recorded.
   virtual CcType ConvertQualType(
       clang::QualType qual_type,
-      const clang::tidy::lifetimes::ValueLifetimes* lifetimes, bool nullable,
-      bool assume_lifetimes) = 0;
+      const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
+      bool nullable, bool assume_lifetimes) = 0;
 
   // Returns a unique name for the given decl. (Probably the USR.)
   //
@@ -388,24 +389,25 @@ class ImportContext {
   // Marks `decl` as successfully imported.  Other pieces of code can check
   // HasBeenAlreadySuccessfullyImported to avoid introducing dangling ItemIds
   // that refer to an unimportable `decl`.
-  virtual void MarkAsSuccessfullyImported(const clang::NamedDecl* decl) = 0;
+  virtual void MarkAsSuccessfullyImported(const clang::NamedDecl& decl) = 0;
 
   // Returns whether the `decl` has been already successfully imported (maybe
   // partially - e.g. CXXRecordDeclImporter::Import marks the import as success
   // before importing the fields, because the latter cannot fail).  See also
   // MarkAsSuccessfullyImported.
   virtual bool HasBeenAlreadySuccessfullyImported(
-      const clang::NamedDecl* decl) const = 0;
+      const clang::NamedDecl& decl) const = 0;
 
   // Returns whether the `decl` will be successfully imported. If it hasn't been
   // imported yet, attempts to import it now, calling
   // MarkAsSuccessfullyImported.
-  virtual bool EnsureSuccessfullyImported(clang::NamedDecl* decl) = 0;
+  virtual bool EnsureSuccessfullyImported(
+      clang::NamedDecl* absl_nonnull decl) = 0;
 
   // Returns the canonical typedef for this template specialziation, or nullptr
   // if there is not one (or if this is not a template specialization).
-  virtual clang::TypedefNameDecl* GetTemplateSpecializationAlias(
-      clang::Decl* decl) const = 0;
+  virtual clang::TypedefNameDecl* absl_nullable GetTemplateSpecializationAlias(
+      clang::Decl* absl_nonnull decl) const = 0;
 
   Invocation& invocation_;
   clang::ASTContext& ctx_;

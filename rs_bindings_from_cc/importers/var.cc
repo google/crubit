@@ -71,7 +71,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
   }
 
   absl::StatusOr<TranslatedIdentifier> var_name =
-      ictx_.GetTranslatedIdentifier(var_decl);
+      ictx_.GetTranslatedIdentifier(*var_decl);
   if (!var_name.ok()) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
@@ -105,7 +105,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
   CcType type =
       ictx_.ConvertQualType(var_decl->getType(), nullptr, /*nullable=*/true,
                             ictx_.AreAssumedLifetimesEnabledForTarget(
-                                ictx_.GetOwningTarget(var_decl)));
+                                ictx_.GetOwningTarget(*var_decl)));
 
   if (has_const_init) {
     const clang::Type& var_type = *var_decl->getType().getTypePtr();
@@ -129,7 +129,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
           *var_decl, std::nullopt,
           {FormattedError::FromStatus(std::move(integer_constant.status()))});
     }
-    ictx_.MarkAsSuccessfullyImported(var_decl);
+    ictx_.MarkAsSuccessfullyImported(*var_decl);
     auto item = std::make_unique<ir_proto::Item>();
     auto* constant = item->mutable_constant();
     integer_constant->WriteToProto(*constant->mutable_value());
@@ -138,8 +138,8 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
     constant->mutable_rs_name()->set_identifier(
         var_name->rs_identifier().Ident());
     constant->set_unique_name(ictx_.GetUniqueName(*var_decl));
-    constant->set_id(ictx_.GenerateItemId(var_decl).value());
-    constant->set_owning_target(ictx_.GetOwningTarget(var_decl).value());
+    constant->set_id(ictx_.GenerateItemId(*var_decl).value());
+    constant->set_owning_target(ictx_.GetOwningTarget(*var_decl).value());
     constant->set_source_loc(
         ictx_.ConvertSourceLocation(var_decl->getBeginLoc(), nullptr));
     type.WriteToProto(*constant->mutable_type());
@@ -152,7 +152,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
     if (deprecated.has_value()) {
       constant->set_deprecated(std::move(*deprecated));
     }
-    if (auto comment = ictx_.GetComment(var_decl); comment.has_value()) {
+    if (auto comment = ictx_.GetComment(*var_decl); comment.has_value()) {
       constant->set_doc_comment(std::move(*comment));
     }
     return item;
@@ -164,13 +164,13 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
   // correct name.
   std::optional<std::string> mangled_name = std::nullopt;
   if (!var_decl->isExternC()) {
-    mangled_name = ictx_.GetMangledName(var_decl);
+    mangled_name = ictx_.GetMangledName(*var_decl);
   }
   if (mangled_name == var_name->rs_identifier().Ident()) {
     mangled_name = std::nullopt;
   }
 
-  ictx_.MarkAsSuccessfullyImported(var_decl);
+  ictx_.MarkAsSuccessfullyImported(*var_decl);
   auto item = std::make_unique<ir_proto::Item>();
   auto* global_var = item->mutable_global_var();
   global_var->mutable_cc_name()->set_identifier(
@@ -178,8 +178,8 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
   global_var->mutable_rs_name()->set_identifier(
       var_name->rs_identifier().Ident());
   global_var->set_unique_name(ictx_.GetUniqueName(*var_decl));
-  global_var->set_id(ictx_.GenerateItemId(var_decl).value());
-  global_var->set_owning_target(ictx_.GetOwningTarget(var_decl).value());
+  global_var->set_id(ictx_.GenerateItemId(*var_decl).value());
+  global_var->set_owning_target(ictx_.GetOwningTarget(*var_decl).value());
   global_var->set_source_loc(
       ictx_.ConvertSourceLocation(var_decl->getBeginLoc(), nullptr));
   if (mangled_name.has_value()) {
@@ -195,7 +195,7 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
   if (deprecated.has_value()) {
     global_var->set_deprecated(std::move(*deprecated));
   }
-  if (auto comment = ictx_.GetComment(var_decl); comment.has_value()) {
+  if (auto comment = ictx_.GetComment(*var_decl); comment.has_value()) {
     global_var->set_doc_comment(std::move(*comment));
   }
   return item;

@@ -31,7 +31,7 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
     return nullptr;
   }
   absl::StatusOr<TranslatedIdentifier> enum_name =
-      ictx_.GetTranslatedIdentifier(enum_decl);
+      ictx_.GetTranslatedIdentifier(*enum_decl);
   if (!enum_name.ok()) {
     return ictx_.ImportUnsupportedItem(
         *enum_decl, std::nullopt,
@@ -73,7 +73,7 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
   absl::StatusOr<CcType> type =
       ictx_.ConvertQualType(cpp_type, no_lifetimes, /*nullable=*/true,
                             ictx_.AreAssumedLifetimesEnabledForTarget(
-                                ictx_.GetOwningTarget(enum_decl)));
+                                ictx_.GetOwningTarget(*enum_decl)));
   if (!type.ok()) {
     return unsupported(FormattedError::FromStatus(std::move(type.status())));
   }
@@ -82,7 +82,7 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
   enumerators.reserve(absl::c_distance(enum_decl->enumerators()));
   for (clang::EnumConstantDecl* enumerator : enum_decl->enumerators()) {
     absl::StatusOr<TranslatedIdentifier> enumerator_name =
-        ictx_.GetTranslatedIdentifier(enumerator);
+        ictx_.GetTranslatedIdentifier(*enumerator);
     if (!enumerator_name.ok()) {
       // It's not clear that this case is possible
       return unsupported(
@@ -120,7 +120,7 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
     if (deprecated.has_value()) {
       proto_enum_val.set_deprecated(std::move(*deprecated));
     }
-    if (auto doc = ictx_.GetComment(enumerator); doc.has_value()) {
+    if (auto doc = ictx_.GetComment(*enumerator); doc.has_value()) {
       proto_enum_val.set_doc_comment(std::move(*doc));
     }
     enumerators.push_back(std::move(proto_enum_val));
@@ -169,28 +169,28 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
           "b/406221412: Proto enums with underscores are not supported "
           "except via Message::Enum syntax."));
     }
-    ictx_.MarkAsSuccessfullyImported(enum_decl);
+    ictx_.MarkAsSuccessfullyImported(*enum_decl);
     auto item = std::make_unique<ir_proto::Item>();
     auto* existing = item->mutable_existing_rust_type();
     existing->set_rs_name(std::string(enum_decl->getName()));
     existing->set_cc_name(enum_decl->getQualifiedNameAsString());
     existing->set_unique_name(ictx_.GetUniqueName(*enum_decl));
-    existing->set_owning_target(ictx_.GetOwningTarget(enum_decl).value());
+    existing->set_owning_target(ictx_.GetOwningTarget(*enum_decl).value());
     existing->set_is_same_abi(false);
-    existing->set_id(ictx_.GenerateItemId(enum_decl).value());
+    existing->set_id(ictx_.GenerateItemId(*enum_decl).value());
     return item;
   }
 
-  BazelLabel owning_target = ictx_.GetOwningTarget(enum_decl);
+  BazelLabel owning_target = ictx_.GetOwningTarget(*enum_decl);
   absl::StatusOr<bool> detected_formatter = ictx_.DetectFormatter(*enum_decl);
   if (!detected_formatter.ok()) {
     return unsupported(
         FormattedError::FromStatus(std::move(detected_formatter).status()));
   }
 
-  std::optional<std::string> doc_comment = ictx_.GetComment(enum_decl);
+  std::optional<std::string> doc_comment = ictx_.GetComment(*enum_decl);
 
-  ictx_.MarkAsSuccessfullyImported(enum_decl);
+  ictx_.MarkAsSuccessfullyImported(*enum_decl);
   clang::DeclarationNameInfo name_info(enum_decl->getDeclName(),
                                        enum_decl->getLocation());
 
@@ -201,8 +201,8 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
   proto_enum->mutable_rs_name()->set_identifier(
       (*enum_name).rs_identifier().Ident());
   proto_enum->set_unique_name(ictx_.GetUniqueName(*enum_decl));
-  proto_enum->set_mangled_cc_name(ictx_.GetMangledName(enum_decl));
-  proto_enum->set_id(ictx_.GenerateItemId(enum_decl).value());
+  proto_enum->set_mangled_cc_name(ictx_.GetMangledName(*enum_decl));
+  proto_enum->set_id(ictx_.GenerateItemId(*enum_decl).value());
   proto_enum->set_owning_target(std::move(owning_target).value());
   proto_enum->set_source_loc(
       ictx_.ConvertSourceLocation(enum_decl->getBeginLoc(), &name_info));

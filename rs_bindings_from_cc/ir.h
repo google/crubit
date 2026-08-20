@@ -85,13 +85,12 @@ inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
 // We use ItemIds for this.
 CRUBIT_DEFINE_STRONG_INT_TYPE(ItemId, uintptr_t);
 
-inline std::string DebugStringFromDecl(const clang::Decl* decl) {
-  auto canonical_decl_id =
-      reinterpret_cast<uintptr_t>(decl->getCanonicalDecl());
-  auto decl_id = reinterpret_cast<uintptr_t>(decl);
+inline std::string DebugStringFromDecl(const clang::Decl& decl) {
+  auto canonical_decl_id = reinterpret_cast<uintptr_t>(decl.getCanonicalDecl());
+  auto decl_id = reinterpret_cast<uintptr_t>(&decl);
   std::string decl_name;
   auto ostream = llvm::raw_string_ostream(decl_name);
-  decl->print(ostream);
+  decl.print(ostream);
   ostream.flush();
   return absl::StrFormat("Canonical DeclID: %d; DeclID: %d; decl: %s",
                          canonical_decl_id, decl_id, decl_name);

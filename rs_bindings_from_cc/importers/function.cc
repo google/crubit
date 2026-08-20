@@ -175,7 +175,7 @@ Identifier FunctionDeclImporter::GetTranslatedParamName(
     const clang::ParmVarDecl* param_decl) {
   int param_pos = param_decl->getFunctionScopeIndex();
   absl::StatusOr<TranslatedIdentifier> name =
-      ictx_.GetTranslatedIdentifier(param_decl);
+      ictx_.GetTranslatedIdentifier(*param_decl);
   if (!name.ok()) {
     return {Identifier(absl::StrCat("__param_", param_pos))};
   }
@@ -298,7 +298,7 @@ std::optional<PropertyFieldInfo> GetPropertyFieldInfo(ImportContext& ictx,
   CcType type = ictx.ConvertQualType(field_decl->getType(),
                                      /*lifetimes=*/nullptr, /*nullable=*/true,
                                      ictx.AreAssumedLifetimesEnabledForTarget(
-                                         ictx.GetOwningTarget(record_decl)));
+                                         ictx.GetOwningTarget(*record_decl)));
 
   const clang::ASTRecordLayout& layout =
       record_decl->getASTContext().getASTRecordLayout(record_decl);
@@ -473,7 +473,7 @@ std::optional<std::string> GetFunctionSourceText(
 
 std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     clang::FunctionDecl* function_decl) {
-  if (!ictx_.IsFromCurrentTarget(function_decl)) return nullptr;
+  if (!ictx_.IsFromCurrentTarget(*function_decl)) return nullptr;
   if (function_decl->isDeleted()) return nullptr;
   const bool only_import_types =
       ictx_.IsFeatureEnabledForCurrentTarget("types") &&
@@ -505,7 +505,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   }
 
   absl::StatusOr<TranslatedUnqualifiedIdentifier> translated_name =
-      ictx_.GetTranslatedName(function_decl);
+      ictx_.GetTranslatedName(*function_decl);
   if (!translated_name.ok()) {
     return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
@@ -651,7 +651,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   }
 
   bool assumed_lifetimes_enabled = ictx_.AreAssumedLifetimesEnabledForTarget(
-      ictx_.GetOwningTarget(function_decl));
+      ictx_.GetOwningTarget(*function_decl));
   clang::tidy::lifetimes::LifetimeSymbolTable lifetime_symbol_table;
   std::optional<clang::tidy::lifetimes::FunctionLifetimes> lifetimes;
   std::vector<std::string> lifetime_inputs;
@@ -709,7 +709,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   std::vector<ir_proto::FuncParam> params;
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
-    if (!ictx_.HasBeenAlreadySuccessfullyImported(method_decl->getParent())) {
+    if (!ictx_.HasBeenAlreadySuccessfullyImported(*method_decl->getParent())) {
       return unsupported(FormattedError::Static("Couldn't import the parent"));
     }
 
@@ -952,7 +952,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   SafetyAnnotation safety_annotation =
       GetSafetyAnnotation(*function_decl, errors);
 
-  std::optional<std::string> doc_comment = ictx_.GetComment(function_decl);
+  std::optional<std::string> doc_comment = ictx_.GetComment(*function_decl);
   if (!doc_comment.has_value() && is_member_or_descendant_of_class_template) {
     // Despite `is_member_or_descendant_of_class_template` check above, we are
     // not guaranteed that a `func_pattern` exists below.  For example, it may
@@ -960,7 +960,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     // a class template -- such decls are generated, not instantiated.
     if (clang::FunctionDecl* func_pattern =
             function_decl->getTemplateInstantiationPattern()) {
-      doc_comment = ictx_.GetComment(func_pattern);
+      doc_comment = ictx_.GetComment(*func_pattern);
     }
   }
 
@@ -1022,7 +1022,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   if (function_decl->getFriendObjectKind() != clang::Decl::FOK_None) {
     if (auto* enclosing_record = clang::dyn_cast_or_null<clang::CXXRecordDecl>(
             function_decl->getLexicalDeclContext())) {
-      adl_enclosing_record = ictx_.GenerateItemId(enclosing_record);
+      adl_enclosing_record = ictx_.GenerateItemId(*enclosing_record);
     }
   }
 
@@ -1036,11 +1036,11 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   WriteToProto(translated_name->cc_identifier, *func->mutable_cc_name());
   WriteToProto(translated_name->rs_identifier(), *func->mutable_rs_name());
   func->set_unique_name(ictx_.GetUniqueName(*function_decl));
-  func->set_owning_target(ictx_.GetOwningTarget(function_decl).value());
+  func->set_owning_target(ictx_.GetOwningTarget(*function_decl).value());
   if (doc_comment.has_value()) {
     func->set_doc_comment(*doc_comment);
   }
-  func->set_mangled_name(ictx_.GetMangledName(function_decl));
+  func->set_mangled_name(ictx_.GetMangledName(*function_decl));
   return_type->WriteToProto(*func->mutable_return_type());
   for (auto& param : params) {
     *func->add_params() = std::move(param);
@@ -1073,7 +1073,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   func->set_safety_annotation(safety_annotation);
   func->set_source_loc(
       ictx_.ConvertSourceLocation(function_decl->getBeginLoc(), &name_info));
-  func->set_id(ictx_.GenerateItemId(function_decl).value());
+  func->set_id(ictx_.GenerateItemId(*function_decl).value());
   if (enclosing_item_id->has_value()) {
     func->set_enclosing_item_id((*enclosing_item_id)->value());
   }

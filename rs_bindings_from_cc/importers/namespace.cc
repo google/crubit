@@ -27,7 +27,7 @@ std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
   }
 
   absl::StatusOr<TranslatedIdentifier> identifier =
-      ictx_.GetTranslatedIdentifier(namespace_decl);
+      ictx_.GetTranslatedIdentifier(*namespace_decl);
   if (!identifier.ok()) {
     return ictx_.ImportUnsupportedItem(
         *namespace_decl, std::nullopt,
@@ -35,7 +35,7 @@ std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
                                         identifier.status().message())});
   }
 
-  ictx_.ImportDeclsFromDeclContext(namespace_decl);
+  ictx_.ImportDeclsFromDeclContext(*namespace_decl);
   auto item_ids = ictx_.GetItemIdsInSourceOrder(namespace_decl);
   auto enclosing_item_id = ictx_.GetEnclosingItemId(namespace_decl);
   if (!enclosing_item_id.ok()) {
@@ -67,7 +67,7 @@ std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
         {FormattedError::FromStatus(std::move(unknown_attr.status()))});
   }
 
-  ItemId id = ictx_.GenerateItemId(namespace_decl);
+  ItemId id = ictx_.GenerateItemId(*namespace_decl);
   ictx_.invocation_.child_item_ids_[id] = std::move(item_ids);
 
   auto item = std::make_unique<ir_proto::Item>();
@@ -77,11 +77,11 @@ std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
   ns->set_unique_name(ictx_.GetUniqueName(*namespace_decl));
   ns->set_id(id.value());
   ns->set_canonical_namespace_id(
-      ictx_.GenerateItemId(namespace_decl->getCanonicalDecl()).value());
+      ictx_.GenerateItemId(*namespace_decl->getCanonicalDecl()).value());
   if (unknown_attr->has_value()) {
     ns->set_unknown_attr(std::move(**unknown_attr));
   }
-  ns->set_owning_target(ictx_.GetOwningTarget(namespace_decl).value());
+  ns->set_owning_target(ictx_.GetOwningTarget(*namespace_decl).value());
   if (enclosing_item_id->has_value()) {
     ns->set_enclosing_item_id((*enclosing_item_id)->value());
   }
@@ -89,7 +89,7 @@ std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
   if (deprecated.has_value()) {
     ns->set_deprecated(std::move(*deprecated));
   }
-  if (auto comment = ictx_.GetComment(namespace_decl); comment.has_value()) {
+  if (auto comment = ictx_.GetComment(*namespace_decl); comment.has_value()) {
     ns->set_doc_comment(std::move(*comment));
   }
   return item;
