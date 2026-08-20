@@ -13,16 +13,6 @@ extern crate alloc;
 extern crate core;
 const _: () = assert!(::std::mem::size_of::<::function_pointers_golden::CStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<::function_pointers_golden::CStruct>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_ufunction_upointers_ugolden_x0000003a_x0000003aCStruct(
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::function_pointers_golden::CStruct as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
 const _: () = assert!(::core::mem::offset_of!(::function_pointers_golden::CStruct, field) == 0);
 const _: () = assert!(::std::mem::size_of::<::function_pointers_golden::HasFnPtrField>() == 4);
 const _: () = assert!(::std::mem::align_of::<::function_pointers_golden::HasFnPtrField>() == 4);

@@ -19,7 +19,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -45,33 +44,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: modules_golden :: impl_in_separate_private_module :: Foo") alignas(4)
     [[clang::trivial_abi]] Foo final {
  public:
-  // `modules_golden::impl_in_separate_private_module::Foo` doesn't implement
-  // the `Default` trait
-  Foo() = delete;
-
-  // Synthesized tuple constructor
-  explicit Foo(::std::int32_t __field0) : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Foo() = default;
-  Foo(Foo&&) = default;
-  Foo& operator=(Foo&&) = default;
-
-  // `modules_golden::impl_in_separate_private_module::Foo` doesn't implement
-  // the `Clone` trait
-  Foo(const Foo&) = delete;
-  Foo& operator=(const Foo&) = delete;
-  Foo(::crubit::UnsafeRelocateTag, Foo&& value);
-
   static ::modules::impl_in_separate_private_module::Foo create(
       ::std::int32_t i);
 
   static ::std::int32_t into_i32(
       ::modules::impl_in_separate_private_module::Foo s);
 
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -146,11 +125,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::modules::impl_in_separate_private_module::Foo>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::modules::impl_in_separate_private_module::Foo>);
-inline ::modules::impl_in_separate_private_module::Foo::Foo(
-    ::crubit::UnsafeRelocateTag, Foo&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::modules::impl_in_separate_private_module::Foo* __ret_ptr);

@@ -15,11 +15,9 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
-#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <type_traits>
 
 namespace example_crate {
@@ -27,25 +25,7 @@ namespace example_crate {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Struct") alignas(4)
     [[clang::trivial_abi]] Struct final {
  public:
-  // Default::default
-  Struct();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Struct() = default;
-  Struct(Struct&&) = default;
-  Struct& operator=(Struct&&) = default;
-
-  // Clone::clone
-  Struct(const Struct&);
-
-  // Clone::clone_from
-  ::example_crate::Struct& operator=(const Struct&);
-
-  Struct(::crubit::UnsafeRelocateTag, Struct&& value);
-
-  union {
-    ::std::int32_t a;
-  };
+  ::std::int32_t a = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -57,48 +37,10 @@ static_assert(
 static_assert(
     alignof(Struct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_uexample_ucrate_ugolden_x0000003a_x0000003aStruct(
-    ::example_crate::Struct* __ret_ptr);
-}
-inline ::example_crate::Struct::Struct() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_uexample_ucrate_ugolden_x0000003a_x0000003aStruct(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<Struct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::example_crate::Struct>);
 static_assert(::std::is_trivially_move_assignable_v<::example_crate::Struct>);
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_uexample_ucrate_ugolden_x0000003a_x0000003aStruct(
-    ::example_crate::Struct const&, ::example_crate::Struct* __ret_ptr);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ufrom_uexample_ucrate_ugolden_x0000003a_x0000003aStruct(
-    ::example_crate::Struct&, ::example_crate::Struct const&);
-}
-inline ::example_crate::Struct::Struct(const Struct& other) {
-  __crubit_internal::
-      __crubit_thunk_Clone_uclone_uexample_ucrate_ugolden_x0000003a_x0000003aStruct(
-          other, this);
-}
-inline ::example_crate::Struct& ::example_crate::Struct::operator=(
-    const Struct& other) {
-  if (this != &other) {
-    __crubit_internal::
-        __crubit_thunk_Clone_uclone_ufrom_uexample_ucrate_ugolden_x0000003a_x0000003aStruct(
-            *this, other);
-  }
-  return *this;
-}
-inline ::example_crate::Struct::Struct(::crubit::UnsafeRelocateTag,
-                                       Struct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void Struct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Struct, a));
 }

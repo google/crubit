@@ -38,6 +38,8 @@ namespace stdlib {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
     [[clang::trivial_abi]] MyStruct final {
  public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
   // Default::default
   MyStruct();
 
@@ -81,29 +83,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: stdlib_golden :: NonCloneableIterator") alignas(4)
     [[clang::trivial_abi]] NonCloneableIterator final {
  public:
-  // `stdlib_golden::NonCloneableIterator` doesn't implement the `Default` trait
-  NonCloneableIterator() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~NonCloneableIterator() = default;
-  NonCloneableIterator(NonCloneableIterator&&) = default;
-  NonCloneableIterator& operator=(NonCloneableIterator&&) = default;
-
-  // `stdlib_golden::NonCloneableIterator` doesn't implement the `Clone` trait
-  NonCloneableIterator(const NonCloneableIterator&) = delete;
-  NonCloneableIterator& operator=(const NonCloneableIterator&) = delete;
-  NonCloneableIterator(::crubit::UnsafeRelocateTag,
-                       NonCloneableIterator&& value);
-
   static ::stdlib::NonCloneableIterator new_(::std::int32_t x);
   template <typename TAdaptedSelf_ = NonCloneableIterator>
   inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
   }
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
-  union {
-    ::std::int32_t x;
-  };
+  ::std::int32_t x = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -113,22 +99,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: stdlib_golden :: NonCloneableValue") alignas(4) [[clang::trivial_abi]]
 NonCloneableValue final {
  public:
-  // `stdlib_golden::NonCloneableValue` doesn't implement the `Default` trait
-  NonCloneableValue() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~NonCloneableValue() = default;
-  NonCloneableValue(NonCloneableValue&&) = default;
-  NonCloneableValue& operator=(NonCloneableValue&&) = default;
-
-  // `stdlib_golden::NonCloneableValue` doesn't implement the `Clone` trait
-  NonCloneableValue(const NonCloneableValue&) = delete;
-  NonCloneableValue& operator=(const NonCloneableValue&) = delete;
-  NonCloneableValue(::crubit::UnsafeRelocateTag, NonCloneableValue&& value);
-
-  union {
-    ::std::int32_t x;
-  };
+  ::std::int32_t x = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -137,19 +108,6 @@ NonCloneableValue final {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(4)
     [[clang::trivial_abi]] RefIterator final {
  public:
-  // `stdlib_golden::RefIterator` doesn't implement the `Default` trait
-  RefIterator() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~RefIterator() = default;
-  RefIterator(RefIterator&&) = default;
-  RefIterator& operator=(RefIterator&&) = default;
-
-  // `stdlib_golden::RefIterator` doesn't implement the `Clone` trait
-  RefIterator(const RefIterator&) = delete;
-  RefIterator& operator=(const RefIterator&) = delete;
-  RefIterator(::crubit::UnsafeRelocateTag, RefIterator&& value);
-
   static ::stdlib::RefIterator new_(
       rs_std::SliceRef<const ::std::int32_t> slice);
   template <typename TAdaptedSelf_ = RefIterator>
@@ -157,12 +115,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(4)
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
   }
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
-  union {
-    rs_std::SliceRef<const ::std::int32_t> slice;
-  };
-  union {
-    ::std::uintptr_t index;
-  };
+  rs_std::SliceRef<const ::std::int32_t> slice = {};
+  ::std::uintptr_t index = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -322,11 +276,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::stdlib::NonCloneableIterator>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::stdlib::NonCloneableIterator>);
-inline ::stdlib::NonCloneableIterator::NonCloneableIterator(
-    ::crubit::UnsafeRelocateTag, NonCloneableIterator&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::stdlib::NonCloneableIterator* __ret_ptr);
@@ -352,10 +301,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::stdlib::NonCloneableValue>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::stdlib::NonCloneableValue>);
-inline ::stdlib::NonCloneableValue::NonCloneableValue(
-    ::crubit::UnsafeRelocateTag, NonCloneableValue&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void NonCloneableValue::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NonCloneableValue, x));
 }
@@ -368,11 +313,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<RefIterator>);
 static_assert(::std::is_trivially_move_constructible_v<::stdlib::RefIterator>);
 static_assert(::std::is_trivially_move_assignable_v<::stdlib::RefIterator>);
-inline ::stdlib::RefIterator::RefIterator(::crubit::UnsafeRelocateTag,
-                                          RefIterator&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::SliceRef<const ::std::int32_t>,
                                    ::stdlib::RefIterator* __ret_ptr);

@@ -1,6 +1,7 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#![allow(clippy::manual_non_exhaustive)]
 
 //! This crate is used as a test input for `cc_bindings_from_rs` and the
 //! generated C++ bindings are then tested via `drop_test.cc`.
@@ -206,11 +207,12 @@ pub mod drop_impl_with_nothing_else {
     /// side.
     pub struct WrappedDropImplWithNothingElse {
         pub field: DropImplWithNothingElse,
+        _private: (),
     }
 
     impl Default for WrappedDropImplWithNothingElse {
         fn default() -> Self {
-            Self { field: DropImplWithNothingElse { field: 123 } }
+            Self { field: DropImplWithNothingElse { field: 123 }, _private: () }
         }
     }
 }

@@ -125,6 +125,9 @@ pub struct CrubitAttrs {
 
     /// Whether the annotated item should be skipped during C++ bindings generation.
     pub do_not_bind: bool,
+
+    /// Whether the annotated struct's fields can be dropped in reverse order (e.g. from C++).
+    pub field_drop_order_does_not_matter: bool,
 }
 
 impl CrubitAttrs {
@@ -141,6 +144,7 @@ impl CrubitAttrs {
     pub const SAME_ABI: &'static str = "same_abi";
     pub const CPP_ORIGINATED_THREAD_SAFE: &'static str = "cpp_thread_safe";
     pub const DO_NOT_BIND: &'static str = "do_not_bind";
+    pub const FIELD_DROP_ORDER_DOES_NOT_MATTER: &'static str = "field_drop_order_does_not_matter";
 
     fn add_attr(&mut self, name: &str, symbol: Symbol) -> Result<()> {
         let set_opt_once = |slot: &mut Option<Symbol>, symbol: Symbol| -> Result<()> {
@@ -173,6 +177,9 @@ impl CrubitAttrs {
             CrubitAttrs::SAME_ABI => set_bool_once(&mut self.same_abi)?,
             CrubitAttrs::CPP_ORIGINATED_THREAD_SAFE => set_bool_once(&mut self.cpp_thread_safe)?,
             CrubitAttrs::DO_NOT_BIND => set_bool_once(&mut self.do_not_bind)?,
+            CrubitAttrs::FIELD_DROP_ORDER_DOES_NOT_MATTER => {
+                set_bool_once(&mut self.field_drop_order_does_not_matter)?
+            }
             _ => bail!("Invalid CRUBIT_ANNOTATE key: \"{name}\""),
         }
         Ok(())
@@ -415,6 +422,12 @@ pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
         ensure!(
             matches!(tcx.def_kind(did), DefKind::Fn | DefKind::AssocFn),
             "`do_not_bind` is explicitly only permitted on functions and methods"
+        )
+    }
+    if crubit_attrs.field_drop_order_does_not_matter {
+        ensure!(
+            matches!(tcx.def_kind(did), DefKind::Struct),
+            "`field_drop_order_does_not_matter` is only permitted on structs"
         )
     }
     Ok(crubit_attrs)

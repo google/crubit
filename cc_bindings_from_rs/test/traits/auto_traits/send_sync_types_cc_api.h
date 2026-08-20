@@ -29,6 +29,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: send_sync_types_golden :: NeitherSendNorSync") alignas(4)
     [[clang::trivial_abi]] NeitherSendNorSync final {
  public:
+  // Type is not a C++ aggregate: Field `1` has a type unsupported in C++
+
   // `send_sync_types_golden::NeitherSendNorSync` doesn't implement the
   // `Default` trait
   NeitherSendNorSync() = delete;
@@ -57,26 +59,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: send_sync_types_golden :: SendAndSync") alignas(4)
     [[clang::trivial_abi]] SendAndSync final {
  public:
-  // `send_sync_types_golden::SendAndSync` doesn't implement the `Default` trait
-  SendAndSync() = delete;
-
-  // Synthesized tuple constructor
-  explicit SendAndSync(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~SendAndSync() = default;
-  SendAndSync(SendAndSync&&) = default;
-  SendAndSync& operator=(SendAndSync&&) = default;
-
-  // `send_sync_types_golden::SendAndSync` doesn't implement the `Clone` trait
-  SendAndSync(const SendAndSync&) = delete;
-  SendAndSync& operator=(const SendAndSync&) = delete;
-  SendAndSync(::crubit::UnsafeRelocateTag, SendAndSync&& value);
-
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -87,6 +70,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: send_sync_types_golden :: SendButNotSync") alignas(4)
     [[clang::trivial_abi]] SendButNotSync final {
  public:
+  // Type is not a C++ aggregate: Field `1` has a type unsupported in C++
+
   // `send_sync_types_golden::SendButNotSync` doesn't implement the `Default`
   // trait
   SendButNotSync() = delete;
@@ -115,6 +100,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: send_sync_types_golden :: SyncButNotSend") alignas(4)
     [[clang::trivial_abi]] SyncButNotSend final {
  public:
+  // Type is not a C++ aggregate: Field `1` has a type unsupported in C++
+
   // `send_sync_types_golden::SyncButNotSend` doesn't implement the `Default`
   // trait
   SyncButNotSend() = delete;
@@ -167,10 +154,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::send_sync_types::SendAndSync>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::send_sync_types::SendAndSync>);
-inline ::send_sync_types::SendAndSync::SendAndSync(::crubit::UnsafeRelocateTag,
-                                                   SendAndSync&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void SendAndSync::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SendAndSync, __field0));
 }

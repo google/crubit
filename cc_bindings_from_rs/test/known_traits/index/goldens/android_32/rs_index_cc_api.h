@@ -37,29 +37,9 @@ namespace rs_index {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(4)
     [[clang::trivial_abi]] CustomIndex final {
  public:
-  // `rs_index_golden::CustomIndex` doesn't implement the `Default` trait
-  CustomIndex() = delete;
-
-  // Synthesized tuple constructor
-  explicit CustomIndex(::std::uintptr_t __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CustomIndex() = default;
-  CustomIndex(CustomIndex&&) = default;
-  CustomIndex& operator=(CustomIndex&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  CustomIndex(const CustomIndex&) = default;
-  CustomIndex& operator=(const CustomIndex&) = default;
-  CustomIndex(::crubit::UnsafeRelocateTag, CustomIndex&& value);
-
   static ::rs_index::CustomIndex new_(::std::uintptr_t index);
 
-  union {
-    ::std::uintptr_t __field0;
-  };
+  ::std::uintptr_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -68,27 +48,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(4)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Id") alignas(4)
     [[clang::trivial_abi]] Id final {
  public:
-  // `rs_index_golden::Id` doesn't implement the `Default` trait
-  Id() = delete;
-
-  // Synthesized tuple constructor
-  explicit Id(::std::int32_t __field0) : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Id() = default;
-  Id(Id&&) = default;
-  Id& operator=(Id&&) = default;
-
-  // `rs_index_golden::Id` doesn't implement the `Clone` trait
-  Id(const Id&) = delete;
-  Id& operator=(const Id&) = delete;
-  Id(::crubit::UnsafeRelocateTag, Id&& value);
-
   static ::rs_index::Id new_(::std::int32_t id);
 
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -97,19 +59,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Id") alignas(4)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
     [[clang::trivial_abi]] IntPair final {
  public:
-  // `rs_index_golden::IntPair` doesn't implement the `Default` trait
-  IntPair() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~IntPair() = default;
-  IntPair(IntPair&&) = default;
-  IntPair& operator=(IntPair&&) = default;
-
-  // `rs_index_golden::IntPair` doesn't implement the `Clone` trait
-  IntPair(const IntPair&) = delete;
-  IntPair& operator=(const IntPair&) = delete;
-  IntPair(::crubit::UnsafeRelocateTag, IntPair&& value);
-
   static ::rs_index::IntPair new_(::std::int32_t x, ::std::int32_t y);
 
   ::std::int32_t const& $(__anon1) operator[](::std::uintptr_t index) const& $(
@@ -136,12 +85,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   ::std::int32_t& $(__anon1) operator[](::rs_index::CustomIndex index) &
       $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  union {
-    ::std::int32_t x;
-  };
-  union {
-    ::std::int32_t y;
-  };
+  ::std::int32_t x = {};
+  ::std::int32_t y = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -248,11 +193,6 @@ static_assert(::std::is_trivially_move_assignable_v<::rs_index::CustomIndex>);
 static_assert(
     ::std::is_trivially_copy_constructible_v<::rs_index::CustomIndex>);
 static_assert(::std::is_trivially_copy_assignable_v<::rs_index::CustomIndex>);
-inline ::rs_index::CustomIndex::CustomIndex(::crubit::UnsafeRelocateTag,
-                                            CustomIndex&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uintptr_t,
                                    ::rs_index::CustomIndex* __ret_ptr);
@@ -275,10 +215,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<Id>);
 static_assert(::std::is_trivially_move_constructible_v<::rs_index::Id>);
 static_assert(::std::is_trivially_move_assignable_v<::rs_index::Id>);
-inline ::rs_index::Id::Id(::crubit::UnsafeRelocateTag, Id&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, ::rs_index::Id* __ret_ptr);
 }
@@ -300,11 +236,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<IntPair>);
 static_assert(::std::is_trivially_move_constructible_v<::rs_index::IntPair>);
 static_assert(::std::is_trivially_move_assignable_v<::rs_index::IntPair>);
-inline ::rs_index::IntPair::IntPair(::crubit::UnsafeRelocateTag,
-                                    IntPair&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, ::std::int32_t,
                                    ::rs_index::IntPair* __ret_ptr);

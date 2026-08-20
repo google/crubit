@@ -36,6 +36,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: CloneNoDefault") alignas(4)
     [[clang::trivial_abi]] CloneNoDefault final {
  public:
+  // Type is not a C++ aggregate: Field `value` has a type unsupported in C++
+
   // `tuple_structs_golden::CloneNoDefault` doesn't implement the `Default`
   // trait
   CloneNoDefault() = delete;
@@ -65,26 +67,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: CopyNoDefault") alignas(4)
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
-  // `tuple_structs_golden::CopyNoDefault` doesn't implement the `Default` trait
-  CopyNoDefault() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CopyNoDefault() = default;
-  CopyNoDefault(CopyNoDefault&&) = default;
-  CopyNoDefault& operator=(CopyNoDefault&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  CopyNoDefault(const CopyNoDefault&) = default;
-  CopyNoDefault& operator=(const CopyNoDefault&) = default;
-  CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::CopyNoDefault create(::std::int32_t value);
 
-  union {
-    ::std::int32_t value;
-  };
+  ::std::int32_t value = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -95,6 +81,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: DefaultAndCloneNoUnpin") alignas(4)
     [[clang::trivial_abi]] DefaultAndCloneNoUnpin final {
  public:
+  // Type is not a C++ aggregate: Field `_marker` has a type unsupported in C++
+
   // Default::default
   DefaultAndCloneNoUnpin();
 
@@ -125,24 +113,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: DefaultNoCopyNoClone") alignas(4)
     [[clang::trivial_abi]] DefaultNoCopyNoClone final {
  public:
-  // Default::default
-  DefaultNoCopyNoClone();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~DefaultNoCopyNoClone() = default;
-  DefaultNoCopyNoClone(DefaultNoCopyNoClone&&) = default;
-  DefaultNoCopyNoClone& operator=(DefaultNoCopyNoClone&&) = default;
-
-  // `tuple_structs_golden::DefaultNoCopyNoClone` doesn't implement the `Clone`
-  // trait
-  DefaultNoCopyNoClone(const DefaultNoCopyNoClone&) = delete;
-  DefaultNoCopyNoClone& operator=(const DefaultNoCopyNoClone&) = delete;
-  DefaultNoCopyNoClone(::crubit::UnsafeRelocateTag,
-                       DefaultNoCopyNoClone&& value);
-
-  union {
-    ::std::int32_t value;
-  };
+  ::std::int32_t value = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -152,6 +123,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: DontMoveMe") alignas(4) [[clang::trivial_abi]]
 DontMoveMe final {
  public:
+  // Type is not a C++ aggregate: Field `value` has a type unsupported in C++
+
   // `tuple_structs_golden::DontMoveMe` doesn't implement the `Default` trait
   DontMoveMe() = delete;
 
@@ -219,35 +192,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructOnePublicArg") alignas(4)
     [[clang::trivial_abi]] TupleStructOnePublicArg final {
  public:
-  // `tuple_structs_golden::TupleStructOnePublicArg` doesn't implement the
-  // `Default` trait
-  TupleStructOnePublicArg() = delete;
-
-  // Synthesized tuple constructor
-  explicit TupleStructOnePublicArg(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~TupleStructOnePublicArg() = default;
-  TupleStructOnePublicArg(TupleStructOnePublicArg&&) = default;
-  TupleStructOnePublicArg& operator=(TupleStructOnePublicArg&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  TupleStructOnePublicArg(const TupleStructOnePublicArg&) = default;
-  TupleStructOnePublicArg& operator=(const TupleStructOnePublicArg&) = default;
-  TupleStructOnePublicArg(::crubit::UnsafeRelocateTag,
-                          TupleStructOnePublicArg&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructOnePublicArg create(::std::int32_t arg);
 
   // CRUBIT_ANNOTATE: must_bind=
   ::std::int32_t get_arg() const;
 
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -260,6 +211,8 @@ struct
         "TupleStructOnePublicArgOnePrivateArg") alignas(4)
         [[clang::trivial_abi]] TupleStructOnePublicArgOnePrivateArg final {
  public:
+  // Type is not a C++ aggregate: Field `1` is not public
+
   // `tuple_structs_golden::TupleStructOnePublicArgOnePrivateArg` doesn't
   // implement the `Default` trait
   TupleStructOnePublicArgOnePrivateArg() = delete;
@@ -350,27 +303,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructTwoPublicArgs") alignas(4)
     [[clang::trivial_abi]] TupleStructTwoPublicArgs final {
  public:
-  // `tuple_structs_golden::TupleStructTwoPublicArgs` doesn't implement the
-  // `Default` trait
-  TupleStructTwoPublicArgs() = delete;
-
-  // Synthesized tuple constructor
-  TupleStructTwoPublicArgs(::std::int32_t __field0, ::std::int32_t __field1)
-      : __field0(::std::move(__field0)), __field1(::std::move(__field1)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~TupleStructTwoPublicArgs() = default;
-  TupleStructTwoPublicArgs(TupleStructTwoPublicArgs&&) = default;
-  TupleStructTwoPublicArgs& operator=(TupleStructTwoPublicArgs&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  TupleStructTwoPublicArgs(const TupleStructTwoPublicArgs&) = default;
-  TupleStructTwoPublicArgs& operator=(const TupleStructTwoPublicArgs&) =
-      default;
-  TupleStructTwoPublicArgs(::crubit::UnsafeRelocateTag,
-                           TupleStructTwoPublicArgs&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructTwoPublicArgs create(
       ::std::int32_t first_arg, ::std::int32_t second_arg);
@@ -381,12 +313,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // CRUBIT_ANNOTATE: must_bind=
   ::std::int32_t get_second_arg() const;
 
-  union {
-    ::std::int32_t __field0;
-  };
-  union {
-    ::std::int32_t __field1;
-  };
+  ::std::int32_t __field0 = {};
+  ::std::int32_t __field1 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -397,27 +325,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithCloneNoDefault") alignas(4)
     [[clang::trivial_abi]] TupleStructWithCloneNoDefault final {
  public:
-  // `tuple_structs_golden::TupleStructWithCloneNoDefault` doesn't implement the
-  // `Default` trait
-  TupleStructWithCloneNoDefault() = delete;
-
-  // Drop::drop
-  ~TupleStructWithCloneNoDefault();
-
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  TupleStructWithCloneNoDefault(TupleStructWithCloneNoDefault&&) = delete;
-  ::tuple_structs::TupleStructWithCloneNoDefault& operator=(
-      TupleStructWithCloneNoDefault&&) = delete;
-  // `tuple_structs_golden::TupleStructWithCloneNoDefault` doesn't implement the
-  // `Clone` trait
-  TupleStructWithCloneNoDefault(const TupleStructWithCloneNoDefault&) = delete;
-  TupleStructWithCloneNoDefault& operator=(
-      const TupleStructWithCloneNoDefault&) = delete;
-  TupleStructWithCloneNoDefault(::crubit::UnsafeRelocateTag,
-                                TupleStructWithCloneNoDefault&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructWithCloneNoDefault create(
       ::std::int32_t value);
@@ -426,9 +333,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ::std::int32_t const& $(__anon1)
       get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  union {
-    ::tuple_structs::CloneNoDefault __field0;
-  };
+  ::tuple_structs::CloneNoDefault __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -439,6 +344,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithCppImmovableType") alignas(4)
     [[clang::trivial_abi]] TupleStructWithCppImmovableType final {
  public:
+  // Type is not a C++ aggregate: Field `1` requires drop glue but is not
+  // C++-movable
+
   // `tuple_structs_golden::TupleStructWithCppImmovableType` doesn't implement
   // the `Default` trait
   TupleStructWithCppImmovableType() = delete;
@@ -490,36 +398,13 @@ struct
         "TupleStructWithDefaultAndCloneNoUnpin") alignas(4)
         [[clang::trivial_abi]] TupleStructWithDefaultAndCloneNoUnpin final {
  public:
-  // `tuple_structs_golden::TupleStructWithDefaultAndCloneNoUnpin` doesn't
-  // implement the `Default` trait
-  TupleStructWithDefaultAndCloneNoUnpin() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~TupleStructWithDefaultAndCloneNoUnpin() = default;
-  TupleStructWithDefaultAndCloneNoUnpin(
-      TupleStructWithDefaultAndCloneNoUnpin&&) = default;
-  TupleStructWithDefaultAndCloneNoUnpin& operator=(
-      TupleStructWithDefaultAndCloneNoUnpin&&) = default;
-
-  // `tuple_structs_golden::TupleStructWithDefaultAndCloneNoUnpin` doesn't
-  // implement the `Clone` trait
-  TupleStructWithDefaultAndCloneNoUnpin(
-      const TupleStructWithDefaultAndCloneNoUnpin&) = delete;
-  TupleStructWithDefaultAndCloneNoUnpin& operator=(
-      const TupleStructWithDefaultAndCloneNoUnpin&) = delete;
-  TupleStructWithDefaultAndCloneNoUnpin(
-      ::crubit::UnsafeRelocateTag,
-      TupleStructWithDefaultAndCloneNoUnpin&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin create();
 
   // CRUBIT_ANNOTATE: must_bind=
   ::std::int32_t get_arg() const;
 
-  union {
-    ::tuple_structs::DefaultAndCloneNoUnpin __field0;
-  };
+  ::tuple_structs::DefaultAndCloneNoUnpin __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -530,34 +415,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithDefaultNoCopyNoClone") alignas(4)
     [[clang::trivial_abi]] TupleStructWithDefaultNoCopyNoClone final {
  public:
-  // `tuple_structs_golden::TupleStructWithDefaultNoCopyNoClone` doesn't
-  // implement the `Default` trait
-  TupleStructWithDefaultNoCopyNoClone() = delete;
-
-  // Synthesized tuple constructor
-  explicit TupleStructWithDefaultNoCopyNoClone(
-      ::tuple_structs::DefaultNoCopyNoClone __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~TupleStructWithDefaultNoCopyNoClone() = default;
-  TupleStructWithDefaultNoCopyNoClone(TupleStructWithDefaultNoCopyNoClone&&) =
-      default;
-  TupleStructWithDefaultNoCopyNoClone& operator=(
-      TupleStructWithDefaultNoCopyNoClone&&) = default;
-
-  // `tuple_structs_golden::TupleStructWithDefaultNoCopyNoClone` doesn't
-  // implement the `Clone` trait
-  TupleStructWithDefaultNoCopyNoClone(
-      const TupleStructWithDefaultNoCopyNoClone&) = delete;
-  TupleStructWithDefaultNoCopyNoClone& operator=(
-      const TupleStructWithDefaultNoCopyNoClone&) = delete;
-  TupleStructWithDefaultNoCopyNoClone(
-      ::crubit::UnsafeRelocateTag, TupleStructWithDefaultNoCopyNoClone&& value);
-
-  union {
-    ::tuple_structs::DefaultNoCopyNoClone __field0;
-  };
+  ::tuple_structs::DefaultNoCopyNoClone __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -568,29 +426,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithNoDefault") alignas(4)
     [[clang::trivial_abi]] TupleStructWithNoDefault final {
  public:
-  // `tuple_structs_golden::TupleStructWithNoDefault` doesn't implement the
-  // `Default` trait
-  TupleStructWithNoDefault() = delete;
-
-  // Synthesized tuple constructor
-  explicit TupleStructWithNoDefault(::tuple_structs::CopyNoDefault __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~TupleStructWithNoDefault() = default;
-  TupleStructWithNoDefault(TupleStructWithNoDefault&&) = default;
-  TupleStructWithNoDefault& operator=(TupleStructWithNoDefault&&) = default;
-
-  // `tuple_structs_golden::TupleStructWithNoDefault` doesn't implement the
-  // `Clone` trait
-  TupleStructWithNoDefault(const TupleStructWithNoDefault&) = delete;
-  TupleStructWithNoDefault& operator=(const TupleStructWithNoDefault&) = delete;
-  TupleStructWithNoDefault(::crubit::UnsafeRelocateTag,
-                           TupleStructWithNoDefault&& value);
-
-  union {
-    ::tuple_structs::CopyNoDefault __field0;
-  };
+  ::tuple_structs::CopyNoDefault __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -601,6 +437,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithNonExhaustiveCtor") alignas(4)
     [[clang::trivial_abi]] TupleStructWithNonExhaustiveCtor final {
  public:
+  // Type is not a C++ aggregate: Type is marked `#[non_exhaustive]`
+
   // Default::default
   TupleStructWithNonExhaustiveCtor();
 
@@ -670,28 +508,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithTupleFieldType") alignas(4)
     [[clang::trivial_abi]] TupleStructWithTupleFieldType final {
  public:
-  // Default::default
-  TupleStructWithTupleFieldType();
-
-  // Synthesized tuple constructor
-  explicit TupleStructWithTupleFieldType(
-      rs_std::Tuple<::std::int32_t, ::std::int32_t> __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~TupleStructWithTupleFieldType() = default;
-  TupleStructWithTupleFieldType(TupleStructWithTupleFieldType&&) = default;
-  TupleStructWithTupleFieldType& operator=(TupleStructWithTupleFieldType&&) =
-      default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  TupleStructWithTupleFieldType(const TupleStructWithTupleFieldType&) = default;
-  TupleStructWithTupleFieldType& operator=(
-      const TupleStructWithTupleFieldType&) = default;
-  TupleStructWithTupleFieldType(::crubit::UnsafeRelocateTag,
-                                TupleStructWithTupleFieldType&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::TupleStructWithTupleFieldType create(
       ::std::tuple<::std::int32_t, ::std::int32_t> __param_0);
@@ -699,9 +515,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // CRUBIT_ANNOTATE: must_bind=
   ::std::tuple<::std::int32_t, ::std::int32_t> get_arg() const;
 
-  union {
-    rs_std::Tuple<::std::int32_t, ::std::int32_t> __field0;
-  };
+  rs_std::Tuple<::std::int32_t, ::std::int32_t> __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -787,11 +601,6 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::tuple_structs::CopyNoDefault>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::tuple_structs::CopyNoDefault>);
-inline ::tuple_structs::CopyNoDefault::CopyNoDefault(
-    ::crubit::UnsafeRelocateTag, CopyNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::CopyNoDefault* __ret_ptr);
@@ -867,25 +676,11 @@ static_assert(
 static_assert(
     alignof(DefaultNoCopyNoClone) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultNoCopyNoClone(
-    ::tuple_structs::DefaultNoCopyNoClone* __ret_ptr);
-}
-inline ::tuple_structs::DefaultNoCopyNoClone::DefaultNoCopyNoClone() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultNoCopyNoClone(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<DefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::DefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::DefaultNoCopyNoClone>);
-inline ::tuple_structs::DefaultNoCopyNoClone::DefaultNoCopyNoClone(
-    ::crubit::UnsafeRelocateTag, DefaultNoCopyNoClone&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void DefaultNoCopyNoClone::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(DefaultNoCopyNoClone, value));
 }
@@ -971,11 +766,6 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::tuple_structs::TupleStructOnePublicArg>);
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructOnePublicArg>);
-inline ::tuple_structs::TupleStructOnePublicArg::TupleStructOnePublicArg(
-    ::crubit::UnsafeRelocateTag, TupleStructOnePublicArg&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::TupleStructOnePublicArg* __ret_ptr);
@@ -1125,11 +915,6 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::tuple_structs::TupleStructTwoPublicArgs>);
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructTwoPublicArgs>);
-inline ::tuple_structs::TupleStructTwoPublicArgs::TupleStructTwoPublicArgs(
-    ::crubit::UnsafeRelocateTag, TupleStructTwoPublicArgs&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
@@ -1173,21 +958,6 @@ static_assert(
 static_assert(
     alignof(TupleStructWithCloneNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCloneNoDefault(
-    ::tuple_structs::TupleStructWithCloneNoDefault&);
-}
-inline TupleStructWithCloneNoDefault::~TupleStructWithCloneNoDefault() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCloneNoDefault(
-          *this);
-}
-inline ::tuple_structs::TupleStructWithCloneNoDefault::
-    TupleStructWithCloneNoDefault(::crubit::UnsafeRelocateTag,
-                                  TupleStructWithCloneNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
@@ -1289,13 +1059,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin>);
-inline ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin::
-    TupleStructWithDefaultAndCloneNoUnpin(
-        ::crubit::UnsafeRelocateTag,
-        TupleStructWithDefaultAndCloneNoUnpin&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin* __ret_ptr);
@@ -1333,12 +1096,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithDefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::TupleStructWithDefaultNoCopyNoClone>);
-inline ::tuple_structs::TupleStructWithDefaultNoCopyNoClone::
-    TupleStructWithDefaultNoCopyNoClone(
-        ::crubit::UnsafeRelocateTag,
-        TupleStructWithDefaultNoCopyNoClone&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void
 TupleStructWithDefaultNoCopyNoClone::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TupleStructWithDefaultNoCopyNoClone, __field0));
@@ -1354,10 +1111,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::TupleStructWithNoDefault>);
-inline ::tuple_structs::TupleStructWithNoDefault::TupleStructWithNoDefault(
-    ::crubit::UnsafeRelocateTag, TupleStructWithNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void TupleStructWithNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TupleStructWithNoDefault, __field0));
 }
@@ -1420,17 +1173,6 @@ static_assert(
 static_assert(
     alignof(TupleStructWithTupleFieldType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithTupleFieldType(
-    ::tuple_structs::TupleStructWithTupleFieldType* __ret_ptr);
-}
-inline ::tuple_structs::TupleStructWithTupleFieldType::
-    TupleStructWithTupleFieldType() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithTupleFieldType(
-          this);
-}
 static_assert(
     ::std::is_trivially_destructible_v<TupleStructWithTupleFieldType>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -1441,12 +1183,6 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::tuple_structs::TupleStructWithTupleFieldType>);
 static_assert(::std::is_trivially_copy_assignable_v<
               ::tuple_structs::TupleStructWithTupleFieldType>);
-inline ::tuple_structs::TupleStructWithTupleFieldType::
-    TupleStructWithTupleFieldType(::crubit::UnsafeRelocateTag,
-                                  TupleStructWithTupleFieldType&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     void**, ::tuple_structs::TupleStructWithTupleFieldType* __ret_ptr);

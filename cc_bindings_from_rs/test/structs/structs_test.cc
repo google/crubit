@@ -131,7 +131,7 @@ TEST(StructsTest, DirectFfiThunklessStructFloat) {
 // qualifiers of nested pointers / pointees are correctly propagated.
 TEST(StructsTest, NestedPtrTypeMutabilityQualifiers) {
   namespace test = structs::nested_ptr_type_mutability_qualifiers;
-  test::SomeStruct s;
+  test::SomeStruct s{};
   ASSERT_EQ(nullptr, s.mut_const_ptr);
   ASSERT_EQ(nullptr, s.const_mut_ptr);
 
@@ -165,6 +165,51 @@ TEST(StructsTest, RustStringStringify) {
   std::stringstream ss;
   ss << s;
   EXPECT_EQ("Hello from Rust String", ss.str());
+}
+
+TEST(StructsTest, AggregateInitialization) {
+  namespace test = structs::aggregate_initialization;
+
+  // BasicAggregate is an aggregate
+  static_assert(std::is_aggregate_v<test::BasicAggregate>);
+  test::BasicAggregate ba{.x = 10, .y = 20};
+  EXPECT_EQ(ba.x, 10);
+  EXPECT_EQ(ba.y, 20);
+
+  test::BasicAggregate ba2{100, 200};
+  EXPECT_EQ(ba2.x, 100);
+  EXPECT_EQ(ba2.y, 200);
+
+  // TupleAggregate is an aggregate
+  static_assert(std::is_aggregate_v<test::TupleAggregate>);
+  test::TupleAggregate ta{.__field1 = 3.14, .__field0 = 42};
+  EXPECT_EQ(ta.__field0, 42);
+  EXPECT_DOUBLE_EQ(ta.__field1, 3.14);
+
+  // SingleDropField is an aggregate
+  static_assert(std::is_aggregate_v<test::SingleDropField>);
+  test::SingleDropField sdf{rs::alloc::string::String("hello")};
+  EXPECT_EQ(absl::StrCat(sdf.__field0), "hello");
+
+  // AnnotatedTwoDrops is an aggregate
+  static_assert(std::is_aggregate_v<test::AnnotatedTwoDrops>);
+  test::AnnotatedTwoDrops atd{rs::alloc::string::String("first"),
+                              rs::alloc::string::String("second")};
+  EXPECT_EQ(absl::StrCat(atd.__field0), "first");
+  EXPECT_EQ(absl::StrCat(atd.__field1), "second");
+
+  // Non-aggregates
+  static_assert(!std::is_aggregate_v<test::UnannotatedTwoDrops>);
+  static_assert(!std::is_aggregate_v<test::StructWithPrivateField>);
+  static_assert(!std::is_aggregate_v<test::NonExhaustiveStruct>);
+  static_assert(!std::is_aggregate_v<test::CustomDropStruct>);
+
+  // Point in repr_c and default_repr are also aggregates
+  static_assert(std::is_aggregate_v<structs::repr_c::Point>);
+  static_assert(std::is_aggregate_v<structs::default_repr::Point>);
+  structs::repr_c::Point rp{.x = 1, .y = 2};
+  EXPECT_EQ(rp.x, 1);
+  EXPECT_EQ(rp.y, 2);
 }
 
 }  // namespace

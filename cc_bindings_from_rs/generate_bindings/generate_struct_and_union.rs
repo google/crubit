@@ -1414,6 +1414,148 @@ fn generate_display_impl<'tcx>(
     ApiSnippets { main_api, cc_details, rs_details }
 }
 
+fn has_manual_default_impl<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId, self_ty: Ty<'tcx>) -> bool {
+    let Some(default_trait_id) = tcx.get_diagnostic_item(sym::Default) else {
+        return false;
+    };
+    if !does_type_implement_trait(tcx, self_ty, default_trait_id, []) {
+        return false;
+    }
+    let trait_impls = tcx.trait_impls_of(default_trait_id);
+    for (simplified_type, impl_def_ids) in trait_impls.non_blanket_impls() {
+        if simplified_type.def() == Some(def_id) {
+            for &impl_def_id in impl_def_ids {
+                if !tcx.is_automatically_derived(impl_def_id) {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub(crate) enum NotAggregateReason {
+    NotAStruct,
+    ImplementsDrop,
+    NonExhaustive,
+    ManualDefault,
+    CppEnum,
+    NonPublicField(Symbol),
+    FieldLayoutError(Symbol),
+    IncompatibleBridgedField(Symbol),
+    UnsupportedFieldType(Symbol),
+    FieldWithDropNotMovable(Symbol),
+    MultipleDropFields,
+}
+
+impl std::fmt::Display for NotAggregateReason {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NotAStruct => write!(f, "Type is not a struct"),
+            Self::ImplementsDrop => write!(f, "Type implements `Drop`"),
+            Self::NonExhaustive => write!(f, "Type is marked `#[non_exhaustive]`"),
+            Self::ManualDefault => write!(f, "Type has a manual `Default` implementation"),
+            Self::CppEnum => write!(f, "Type is annotated with `#[cpp_enum]`"),
+            Self::NonPublicField(field) => write!(f, "Field `{field}` is not public"),
+            Self::FieldLayoutError(field) => write!(f, "Field `{field}` has unknown layout"),
+            Self::IncompatibleBridgedField(field) => {
+                write!(f, "Field `{field}` is an incompatible bridged type")
+            }
+            Self::UnsupportedFieldType(field) => {
+                write!(f, "Field `{field}` has a type unsupported in C++")
+            }
+            Self::FieldWithDropNotMovable(field) => {
+                write!(f, "Field `{field}` requires drop glue but is not C++-movable")
+            }
+            Self::MultipleDropFields => write!(
+                f,
+                "Multiple fields require drop glue (annotate with `#[crubit_annotate::field_drop_order_does_not_matter]` if field drop order does not matter)"
+            ),
+        }
+    }
+}
+
+/// Returns whether the given ADT should be generated as a C++ aggregate, or the reason why not.
+pub(crate) fn is_struct_aggregate<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: Option<DefId>,
+    self_ty: Ty<'tcx>,
+) -> Result<(), NotAggregateReason> {
+    let Some(def_id) = def_id else {
+        return Err(NotAggregateReason::NotAStruct);
+    };
+    let tcx = db.tcx();
+    let TyKind::Adt(adt_def, adt_generic_args) = self_ty.kind() else {
+        return Err(NotAggregateReason::NotAStruct);
+    };
+    if !adt_def.is_struct() {
+        return Err(NotAggregateReason::NotAStruct);
+    }
+    if adt_def.destructor(tcx).is_some() {
+        return Err(NotAggregateReason::ImplementsDrop);
+    }
+    let variant = adt_def.non_enum_variant();
+    if variant.is_field_list_non_exhaustive() {
+        return Err(NotAggregateReason::NonExhaustive);
+    }
+    if has_manual_default_impl(tcx, def_id, self_ty) {
+        return Err(NotAggregateReason::ManualDefault);
+    }
+    let crubit_attrs = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
+    if crubit_attrs.cpp_enum.is_some() {
+        return Err(NotAggregateReason::CppEnum);
+    }
+    let typing_env = post_analysis_typing_env(tcx, def_id);
+    let mut drop_glue_count = 0;
+    for field_def in &variant.fields {
+        if crate::field_def_is_pub_and_stable(tcx, field_def).is_err() {
+            return Err(NotAggregateReason::NonPublicField(field_def.name));
+        }
+        let ty = field_def.ty(tcx, adt_generic_args);
+        #[rustversion::since(2026-05-13)]
+        let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
+        if get_layout(tcx, ty).is_err() {
+            return Err(NotAggregateReason::FieldLayoutError(field_def.name));
+        }
+        let is_incompatible_bridged: bool = is_bridged_type(db, ty)
+            .is_ok_and(|opt| opt.is_some_and(|bridged| !bridged.is_layout_compatible()));
+        let is_option: bool = ty
+            .ty_adt_def()
+            .and_then(|adt_def| BridgedBuiltin::new(db, adt_def))
+            .is_some_and(|builtin| matches!(builtin, BridgedBuiltin::Option));
+
+        if is_incompatible_bridged && !is_option {
+            return Err(NotAggregateReason::IncompatibleBridgedField(field_def.name));
+        }
+        if db.format_ty_for_cc(ty, TypeLocation::Field).is_err() {
+            return Err(NotAggregateReason::UnsupportedFieldType(field_def.name));
+        }
+        let field_def_id = ty.ty_adt_def().map(|adt| adt.did());
+        if ty.needs_drop(tcx, typing_env) {
+            // In C++, an aggregate's move constructor is implicitly deleted if any
+            // member's move constructor is deleted. If a field requires drop glue
+            // but is not C++-movable (e.g. it doesn't implement `Default` or `Clone`),
+            // the aggregate would not be movable in C++ and could not be passed or
+            // returned by value over FFI. Disqualifying such structs from aggregate
+            // generation lets Crubit emit an `UnsafeRelocateTag` constructor instead.
+            if db.has_move_ctor_and_assignment_operator(field_def_id, ty).is_none()
+                && !is_bridged_type(db, ty).is_ok_and(|b| b.is_some())
+            {
+                return Err(NotAggregateReason::FieldWithDropNotMovable(field_def.name));
+            }
+            if !crubit_attrs.field_drop_order_does_not_matter {
+                drop_glue_count += 1;
+                if drop_glue_count > 1 {
+                    return Err(NotAggregateReason::MultipleDropFields);
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
 /// represented by `core`.  This function is infallible - after
 /// `generate_adt_core` returns success we have committed to emitting C++
@@ -1432,9 +1574,26 @@ pub fn generate_adt<'tcx>(
         return generate_cpp_enum(db, core);
     }
 
-    let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
+    let aggregate_result = is_struct_aggregate(db, core.def_id, core.common.self_ty);
+    let is_aggregate = aggregate_result.is_ok();
 
-    let destructor_snippets = if adt_core_bindings_needs_drop(&core, tcx) {
+    let default_ctor_snippets = if is_aggregate {
+        ApiSnippets::default()
+    } else {
+        db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err)
+    };
+
+    let destructor_snippets = if is_aggregate {
+        if !adt_core_bindings_needs_drop(&core, tcx) {
+            let cc_details = CcSnippet::with_include(
+                quote! { static_assert(::std::is_trivially_destructible_v<#adt_cc_name>); },
+                CcInclude::type_traits(),
+            );
+            ApiSnippets { cc_details, ..Default::default() }
+        } else {
+            ApiSnippets::default()
+        }
+    } else if adt_core_bindings_needs_drop(&core, tcx) {
         let drop_trait_id =
             tcx.lang_items().drop_trait().expect("`Drop` trait should be present if `needs_drop");
         let TraitThunks {
@@ -1488,18 +1647,56 @@ pub fn generate_adt<'tcx>(
         ApiSnippets { main_api, cc_details, ..Default::default() }
     };
 
-    let copy_ctor_and_assignment_snippets =
-        db.generate_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
+    let copy_ctor_and_assignment_snippets = if is_aggregate {
+        if is_copy(tcx, core.def_id, core.common.self_ty) {
+            let qualified_adt_name = &core.common.cc_fully_qualified_name;
+            let cc_details = CcSnippet::with_include(
+                quote! {
+                    static_assert(::std::is_trivially_copy_constructible_v<#qualified_adt_name>);
+                    static_assert(::std::is_trivially_copy_assignable_v<#qualified_adt_name>);
+                },
+                CcInclude::type_traits(),
+            );
+            ApiSnippets { cc_details, ..Default::default() }
+        } else {
+            ApiSnippets::default()
+        }
+    } else {
+        db.generate_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err)
+    };
 
-    let move_ctor_and_assignment_snippets = db
-        .generate_move_ctor_and_assignment_operator(core.clone())
-        .unwrap_or_else(|err| err.explicitly_deleted);
+    let move_ctor_and_assignment_snippets = if is_aggregate {
+        let typing_env = core
+            .def_id
+            .map(|id| post_analysis_typing_env(tcx, id))
+            .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
+        if !core.common.self_ty.needs_drop(tcx, typing_env) {
+            let qualified_adt_name = &core.common.cc_fully_qualified_name;
+            let cc_details = CcSnippet::with_include(
+                quote! {
+                    static_assert(::std::is_trivially_move_constructible_v<#qualified_adt_name>);
+                    static_assert(::std::is_trivially_move_assignable_v<#qualified_adt_name>);
+                },
+                CcInclude::type_traits(),
+            );
+            ApiSnippets { cc_details, ..Default::default() }
+        } else {
+            ApiSnippets::default()
+        }
+    } else {
+        db.generate_move_ctor_and_assignment_operator(core.clone())
+            .unwrap_or_else(|err| err.explicitly_deleted)
+    };
 
-    let relocating_ctor_snippets = generate_relocating_ctor(
-        db,
-        &core.common.cc_short_name,
-        &core.common.cc_fully_qualified_name,
-    );
+    let relocating_ctor_snippets = if is_aggregate {
+        ApiSnippets::default()
+    } else {
+        generate_relocating_ctor(
+            db,
+            &core.common.cc_short_name,
+            &core.common.cc_fully_qualified_name,
+        )
+    };
 
     let mut member_function_names = HashSet::<String>::new();
     let impl_items_snippets = core
@@ -1521,10 +1718,18 @@ pub fn generate_adt<'tcx>(
         })
         .collect();
 
-    let adt_based_ctors = generate_adt_based_ctors(db, core.clone(), &mut member_function_names);
+    let adt_based_ctors = if is_aggregate {
+        ApiSnippets::default()
+    } else {
+        generate_adt_based_ctors(db, core.clone(), &mut member_function_names)
+    };
     let into_operator_snippets = generate_into_impls(db, core.as_ref());
     let trait_operator_snippets = generate_trait_operator_impls(db, core.as_ref());
-    let constructor_operator_snippets = generate_constructor_impls(db, core.as_ref());
+    let constructor_operator_snippets = if is_aggregate {
+        ApiSnippets::default()
+    } else {
+        generate_constructor_impls(db, core.as_ref())
+    };
     let compare_snippets = generate_ord_and_partialord_impls(db, core.as_ref());
     let display_snippets = generate_display_impl(db, core.as_ref());
     let into_iterator_snippets = generate_into_iterator_impls(
@@ -1571,6 +1776,7 @@ pub fn generate_adt<'tcx>(
         core.common.size_in_bytes,
         core.common.alignment_in_bytes,
         &member_function_names,
+        is_aggregate,
     );
 
     fields_main_api.prereqs.forward_declare_type(core.common.self_ty);
@@ -1604,6 +1810,26 @@ pub fn generate_adt<'tcx>(
             }
         }
 
+        let not_aggregate_comment = match aggregate_result {
+            Ok(()) => quote! {},
+            Err(ref reason) => {
+                let has_any_public_field = match core.common.self_ty.kind() {
+                    TyKind::Adt(adt_def, _) if adt_def.is_struct() => adt_def
+                        .non_enum_variant()
+                        .fields
+                        .iter()
+                        .any(|f| crate::field_def_is_pub_and_stable(tcx, f).is_ok()),
+                    _ => false,
+                };
+                if has_any_public_field {
+                    let msg = format!("Type is not a C++ aggregate: {reason}");
+                    quote! { __NEWLINE__ __COMMENT__ #msg }
+                } else {
+                    quote! {}
+                }
+            }
+        };
+
         let doc_comment = core.def_id.map(|id| generate_doc_comment(db, id)).unwrap_or_default();
         let keyword = &core.common.keyword;
 
@@ -1627,6 +1853,7 @@ pub fn generate_adt<'tcx>(
                 __NEWLINE__ #doc_comment
                 #keyword #(#attributes)* #bracketed_adt_cc_name final {
                     public: __NEWLINE__
+                        #not_aggregate_comment
                         #public_functions_main_api
                     #fields_main_api
                 };
@@ -2481,6 +2708,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
         field: Field<'tcx>,
         current_visibility: &mut CcFieldVisState,
         always_omit_padding: bool,
+        is_aggregate: bool,
     ) -> CcSnippet<'tcx> {
         let cc_name = &field.cc_name;
         let bracketed_cc_name = if self.db.kythe_annotations() {
@@ -2503,30 +2731,40 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
         let doc_comment = field.doc_comment;
         let attributes = field.attributes;
 
-        let padding = if always_omit_padding || padding == 0 {
-            quote! {}
+        if is_aggregate {
+            let tokens = quote! {
+                #visibility __NEWLINE__
+                #doc_comment
+                #(#attributes)*
+                #cpp_type #bracketed_cc_name = {};
+            };
+            CcSnippet { tokens, prereqs }
         } else {
-            let padding = Literal::u64_unsuffixed(padding);
-            let ident = format_ident!("__padding{}", field.index);
-            let padding_visibility = current_visibility.set_is_public(false);
-            quote! { #padding_visibility unsigned char #ident[#padding]; }
-        };
-        let tokens = quote! {
-            #visibility __NEWLINE__
-                // The anonymous union gives more control over when exactly
-                // the field constructors and destructors run. For example,
-                // this lets us initialize the fields for the first time via
-                // memcpy, in the move or UnsafeRelocateTag constructor, and lets
-                // us destroy them only by calling into Rust.
-                // See also b/288138612.
-                union { __NEWLINE__
-                    #doc_comment
-                    #(#attributes)*
-                    #cpp_type #bracketed_cc_name;
-                };
-            #padding
-        };
-        CcSnippet { tokens, prereqs }
+            let padding = if always_omit_padding || padding == 0 {
+                quote! {}
+            } else {
+                let padding = Literal::u64_unsuffixed(padding);
+                let ident = format_ident!("__padding{}", field.index);
+                let padding_visibility = current_visibility.set_is_public(false);
+                quote! { #padding_visibility unsigned char #ident[#padding]; }
+            };
+            let tokens = quote! {
+                #visibility __NEWLINE__
+                    // The anonymous union gives more control over when exactly
+                    // the field constructors and destructors run. For example,
+                    // this lets us initialize the fields for the first time via
+                    // memcpy, in the move or UnsafeRelocateTag constructor, and lets
+                    // us destroy them only by calling into Rust.
+                    // See also b/288138612.
+                    union { __NEWLINE__
+                        #doc_comment
+                        #(#attributes)*
+                        #cpp_type #bracketed_cc_name;
+                    };
+                #padding
+            };
+            CcSnippet { tokens, prereqs }
+        }
     }
 
     fn emit_union_field(
@@ -2603,6 +2841,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
         &self,
         fields: Vec<Field<'tcx>>,
         always_omit_padding: bool,
+        is_aggregate: bool,
     ) -> ApiSnippets<'tcx> {
         let assertions = self.generate_common_assertions(&fields);
 
@@ -2611,8 +2850,13 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
         let fields_tokens: TokenStream = fields
             .into_iter()
             .map(|field| {
-                self.emit_struct_field(field, &mut current_visibility, always_omit_padding)
-                    .into_tokens(&mut prereqs)
+                self.emit_struct_field(
+                    field,
+                    &mut current_visibility,
+                    always_omit_padding,
+                    is_aggregate,
+                )
+                .into_tokens(&mut prereqs)
             })
             .collect();
 
@@ -2937,6 +3181,7 @@ fn generate_fields<'tcx>(
     size_in_bytes: u64,
     alignment_in_bytes: u64,
     member_function_names: &HashSet<String>,
+    is_aggregate: bool,
 ) -> ApiSnippets<'tcx> {
     let TyKind::Adt(adt_def, adt_generic_args) = self_ty.kind() else {
         panic!("Attempted to generate fields for a non-ADT type: {:?}", self_ty)
@@ -2965,7 +3210,7 @@ fn generate_fields<'tcx>(
 
     match layout_data {
         AdtLayout::Struct { fields, always_omit_padding } => {
-            generator.generate_struct(fields, always_omit_padding)
+            generator.generate_struct(fields, always_omit_padding || is_aggregate, is_aggregate)
         }
         AdtLayout::Union { fields } => generator.generate_union(fields),
         AdtLayout::Enum { enum_kind, tag_size_with_padding, variants } => {

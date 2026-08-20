@@ -19,7 +19,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -29,25 +28,10 @@ namespace must_bind {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Original final {
  public:
-  // `must_bind_golden::Original` doesn't implement the `Default` trait
-  Original() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Original() = default;
-  Original(Original&&) = default;
-  Original& operator=(Original&&) = default;
-
-  // `must_bind_golden::Original` doesn't implement the `Clone` trait
-  Original(const Original&) = delete;
-  Original& operator=(const Original&) = delete;
-  Original(::crubit::UnsafeRelocateTag, Original&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::must_bind::Original new_();
 
-  union {
-    ::std::int32_t x;
-  };
+  ::std::int32_t x = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -65,11 +49,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<Original>);
 static_assert(::std::is_trivially_move_constructible_v<::must_bind::Original>);
 static_assert(::std::is_trivially_move_assignable_v<::must_bind::Original>);
-inline ::must_bind::Original::Original(::crubit::UnsafeRelocateTag,
-                                       Original&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::must_bind::Original* __ret_ptr);
 }

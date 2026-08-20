@@ -20,7 +20,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -30,23 +29,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generic_traits_golden :: AnotherStruct") alignas(4)
     [[clang::trivial_abi]] AnotherStruct final {
  public:
-  // `generic_traits_golden::AnotherStruct` doesn't implement the `Default`
-  // trait
-  AnotherStruct() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~AnotherStruct() = default;
-  AnotherStruct(AnotherStruct&&) = default;
-  AnotherStruct& operator=(AnotherStruct&&) = default;
-
-  // `generic_traits_golden::AnotherStruct` doesn't implement the `Clone` trait
-  AnotherStruct(const AnotherStruct&) = delete;
-  AnotherStruct& operator=(const AnotherStruct&) = delete;
-  AnotherStruct(::crubit::UnsafeRelocateTag, AnotherStruct&& value);
-
-  union {
-    ::std::int32_t y;
-  };
+  ::std::int32_t y = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -56,25 +39,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generic_traits_golden :: StructGeneric") alignas(4)
     [[clang::trivial_abi]] StructGeneric final {
  public:
-  // `generic_traits_golden::StructGeneric` doesn't implement the `Default`
-  // trait
-  StructGeneric() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~StructGeneric() = default;
-  StructGeneric(StructGeneric&&) = default;
-  StructGeneric& operator=(StructGeneric&&) = default;
-
-  // `generic_traits_golden::StructGeneric` doesn't implement the `Clone` trait
-  StructGeneric(const StructGeneric&) = delete;
-  StructGeneric& operator=(const StructGeneric&) = delete;
-  StructGeneric(::crubit::UnsafeRelocateTag, StructGeneric&& value);
-
   static ::generic_traits::StructGeneric new_(::std::int32_t x);
 
-  union {
-    ::std::int32_t x;
-  };
+  ::std::int32_t x = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -144,10 +111,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::generic_traits::AnotherStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::generic_traits::AnotherStruct>);
-inline ::generic_traits::AnotherStruct::AnotherStruct(
-    ::crubit::UnsafeRelocateTag, AnotherStruct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void AnotherStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(AnotherStruct, y));
 }
@@ -162,11 +125,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::generic_traits::StructGeneric>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::generic_traits::StructGeneric>);
-inline ::generic_traits::StructGeneric::StructGeneric(
-    ::crubit::UnsafeRelocateTag, StructGeneric&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::generic_traits::StructGeneric* __ret_ptr);

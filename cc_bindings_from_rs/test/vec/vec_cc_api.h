@@ -76,27 +76,9 @@ namespace vec {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: StructWithVec") alignas(8)
     [[clang::trivial_abi]] StructWithVec final {
  public:
-  // `vec_golden::StructWithVec` doesn't implement the `Default` trait
-  StructWithVec() = delete;
-
-  // Drop::drop
-  ~StructWithVec();
-
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  StructWithVec(StructWithVec&&) = delete;
-  ::vec::StructWithVec& operator=(StructWithVec&&) = delete;
-  // `vec_golden::StructWithVec` doesn't implement the `Clone` trait
-  StructWithVec(const StructWithVec&) = delete;
-  StructWithVec& operator=(const StructWithVec&) = delete;
-  StructWithVec(::crubit::UnsafeRelocateTag, StructWithVec&& value);
-
   static ::vec::StructWithVec new_(::std::int32_t val);
 
-  union {
-    rs_std::Vec<::std::int32_t> v;
-  };
+  rs_std::Vec<::std::int32_t> v = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -147,20 +129,6 @@ static_assert(
 static_assert(
     alignof(StructWithVec) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aStructWithVec(
-    ::vec::StructWithVec&);
-}
-inline StructWithVec::~StructWithVec() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aStructWithVec(
-          *this);
-}
-inline ::vec::StructWithVec::StructWithVec(::crubit::UnsafeRelocateTag,
-                                           StructWithVec&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,

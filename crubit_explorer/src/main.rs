@@ -488,7 +488,7 @@ impl From<u32> for Member {
 }
 "#;
         let h_content = compile_rs_to_h(input_code).await;
-        expect_that!(h_content, contains_substring("explicit Member(::std::uint32_t value);"));
+        expect_that!(h_content, contains_substring("::std::uint32_t age = {};"));
     }
 
     #[gtest]

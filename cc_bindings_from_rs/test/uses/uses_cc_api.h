@@ -19,7 +19,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -32,25 +31,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") alignas(4) [[clang::trivial_abi]]
 AliasOfExportedStruct final {
  public:
-  // `uses_golden::AliasOfExportedStruct` doesn't implement the `Default` trait
-  AliasOfExportedStruct() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~AliasOfExportedStruct() = default;
-  AliasOfExportedStruct(AliasOfExportedStruct&&) = default;
-  AliasOfExportedStruct& operator=(AliasOfExportedStruct&&) = default;
-
-  // `uses_golden::AliasOfExportedStruct` doesn't implement the `Clone` trait
-  AliasOfExportedStruct(const AliasOfExportedStruct&) = delete;
-  AliasOfExportedStruct& operator=(const AliasOfExportedStruct&) = delete;
-  AliasOfExportedStruct(::crubit::UnsafeRelocateTag,
-                        AliasOfExportedStruct&& value);
-
   static ::uses::AliasOfExportedStruct create(::std::int32_t field);
 
-  union {
-    ::std::int32_t field;
-  };
+  ::std::int32_t field = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -64,22 +47,7 @@ namespace uses {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Original final {
  public:
-  // `uses_golden::Original` doesn't implement the `Default` trait
-  Original() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Original() = default;
-  Original(Original&&) = default;
-  Original& operator=(Original&&) = default;
-
-  // `uses_golden::Original` doesn't implement the `Clone` trait
-  Original(const Original&) = delete;
-  Original& operator=(const Original&) = delete;
-  Original(::crubit::UnsafeRelocateTag, Original&& value);
-
-  union {
-    ::std::int32_t field;
-  };
+  ::std::int32_t field = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -92,26 +60,7 @@ namespace uses {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
     [[clang::trivial_abi]] OtherPublicName final {
  public:
-  // `uses_golden::OtherPublicName` doesn't implement the `Default` trait
-  OtherPublicName() = delete;
-
-  // Synthesized tuple constructor
-  explicit OtherPublicName(::std::int32_t __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~OtherPublicName() = default;
-  OtherPublicName(OtherPublicName&&) = default;
-  OtherPublicName& operator=(OtherPublicName&&) = default;
-
-  // `uses_golden::OtherPublicName` doesn't implement the `Clone` trait
-  OtherPublicName(const OtherPublicName&) = delete;
-  OtherPublicName& operator=(const OtherPublicName&) = delete;
-  OtherPublicName(::crubit::UnsafeRelocateTag, OtherPublicName&& value);
-
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -178,11 +127,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::uses::AliasOfExportedStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::uses::AliasOfExportedStruct>);
-inline ::uses::AliasOfExportedStruct::AliasOfExportedStruct(
-    ::crubit::UnsafeRelocateTag, AliasOfExportedStruct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::std::int32_t,
                                       ::uses::AliasOfExportedStruct* __ret_ptr);
@@ -216,10 +160,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<Original>);
 static_assert(::std::is_trivially_move_constructible_v<::uses::Original>);
 static_assert(::std::is_trivially_move_assignable_v<::uses::Original>);
-inline ::uses::Original::Original(::crubit::UnsafeRelocateTag,
-                                  Original&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void Original::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Original, field));
 }
@@ -239,10 +179,6 @@ static_assert(::std::is_trivially_destructible_v<OtherPublicName>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::uses::OtherPublicName>);
 static_assert(::std::is_trivially_move_assignable_v<::uses::OtherPublicName>);
-inline ::uses::OtherPublicName::OtherPublicName(::crubit::UnsafeRelocateTag,
-                                                OtherPublicName&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void OtherPublicName::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(OtherPublicName, __field0));
 }

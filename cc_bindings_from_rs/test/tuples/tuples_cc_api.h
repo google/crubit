@@ -72,28 +72,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefault") alignas(
     1) [[clang::trivial_abi]] CloneNoDefault final {
  public:
-  // `tuples_golden::CloneNoDefault` doesn't implement the `Default` trait
-  CloneNoDefault() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CloneNoDefault() = default;
-  CloneNoDefault(CloneNoDefault&&) = default;
-  CloneNoDefault& operator=(CloneNoDefault&&) = default;
-
-  // Clone::clone
-  CloneNoDefault(const CloneNoDefault&);
-
-  // Clone::clone_from
-  ::tuples::CloneNoDefault& operator=(const CloneNoDefault&);
-
-  CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::CloneNoDefault new_(::std::uint8_t val);
 
-  union {
-    ::std::uint8_t val;
-  };
+  ::std::uint8_t val = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -103,26 +85,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefault") alignas(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefault") alignas(1)
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
-  // `tuples_golden::CopyNoDefault` doesn't implement the `Default` trait
-  CopyNoDefault() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CopyNoDefault() = default;
-  CopyNoDefault(CopyNoDefault&&) = default;
-  CopyNoDefault& operator=(CopyNoDefault&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  CopyNoDefault(const CopyNoDefault&) = default;
-  CopyNoDefault& operator=(const CopyNoDefault&) = default;
-  CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::CopyNoDefault new_(::std::uint8_t val);
 
-  union {
-    ::std::uint8_t val;
-  };
+  ::std::uint8_t val = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -132,29 +98,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefault") alignas(1)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefault") alignas(8)
     [[clang::trivial_abi]] HasDefault final {
  public:
-  // Default::default
-  HasDefault();
-
-  // Drop::drop
-  ~HasDefault();
-
-  HasDefault(HasDefault&&);
-  ::tuples::HasDefault& operator=(HasDefault&&);
-
-  // `tuples_golden::HasDefault` doesn't implement the `Clone` trait
-  HasDefault(const HasDefault&) = delete;
-  HasDefault& operator=(const HasDefault&) = delete;
-  HasDefault(::crubit::UnsafeRelocateTag, HasDefault&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::HasDefault new_(rs_std::StrRef val);
 
   // CRUBIT_ANNOTATE: must_bind=
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  union {
-    ::rs::alloc::string::String val_;
-  };
+  ::rs::alloc::string::String val_ = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -164,28 +114,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefault") alignas(8)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefault") alignas(8)
     [[clang::trivial_abi]] HasNoDefault final {
  public:
-  // `tuples_golden::HasNoDefault` doesn't implement the `Default` trait
-  HasNoDefault() = delete;
-
-  // Drop::drop
-  ~HasNoDefault();
-
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  HasNoDefault(HasNoDefault&&) = delete;
-  ::tuples::HasNoDefault& operator=(HasNoDefault&&) = delete;
-  // `tuples_golden::HasNoDefault` doesn't implement the `Clone` trait
-  HasNoDefault(const HasNoDefault&) = delete;
-  HasNoDefault& operator=(const HasNoDefault&) = delete;
-  HasNoDefault(::crubit::UnsafeRelocateTag, HasNoDefault&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  union {
-    ::rs::alloc::string::String val_;
-  };
+  ::rs::alloc::string::String val_ = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -197,6 +129,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefault") alignas(8)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NonCppMovable") alignas(1)
     [[clang::trivial_abi]] NonCppMovable final {
  public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
   // `tuples_golden::NonCppMovable` doesn't implement the `Default` trait
   NonCppMovable() = delete;
 
@@ -374,6 +308,9 @@ namespace tuples {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
     [[clang::trivial_abi]] TupleStruct final {
  public:
+  // Type is not a C++ aggregate: Field `empty_tuple_field` has a type
+  // unsupported in C++
+
   // `tuples_golden::TupleStruct` doesn't implement the `Default` trait
   TupleStruct() = delete;
 
@@ -593,25 +530,10 @@ namespace tuples {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: GetsTuple") alignas(4)
     [[clang::trivial_abi]] GetsTuple final {
  public:
-  // `tuples_golden::GetsTuple` doesn't implement the `Default` trait
-  GetsTuple() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~GetsTuple() = default;
-  GetsTuple(GetsTuple&&) = default;
-  GetsTuple& operator=(GetsTuple&&) = default;
-
-  // `tuples_golden::GetsTuple` doesn't implement the `Clone` trait
-  GetsTuple(const GetsTuple&) = delete;
-  GetsTuple& operator=(const GetsTuple&) = delete;
-  GetsTuple(::crubit::UnsafeRelocateTag, GetsTuple&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::GetsTuple new_(::std::uint32_t val);
 
-  union {
-    rs_std::Tuple<::std::uint32_t, ::std::uint32_t> value;
-  };
+  rs_std::Tuple<::std::uint32_t, ::std::uint32_t> value = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -718,32 +640,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: NestedTupleIntermediate1") alignas(4)
     [[clang::trivial_abi]] NestedTupleIntermediate1 final {
  public:
-  // `tuples_golden::NestedTupleIntermediate1` doesn't implement the `Default`
-  // trait
-  NestedTupleIntermediate1() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~NestedTupleIntermediate1() = default;
-  NestedTupleIntermediate1(NestedTupleIntermediate1&&) = default;
-  NestedTupleIntermediate1& operator=(NestedTupleIntermediate1&&) = default;
-
-  // `tuples_golden::NestedTupleIntermediate1` doesn't implement the `Clone`
-  // trait
-  NestedTupleIntermediate1(const NestedTupleIntermediate1&) = delete;
-  NestedTupleIntermediate1& operator=(const NestedTupleIntermediate1&) = delete;
-  NestedTupleIntermediate1(::crubit::UnsafeRelocateTag,
-                           NestedTupleIntermediate1&& value);
-
-  union {
-    rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
-                  ::std::uint32_t>
-        v1;
-  };
-  union {
-    rs_std::Tuple<::std::uint32_t,
-                  rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>
-        v2;
-  };
+  rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
+                ::std::uint32_t>
+      v1 = {};
+  rs_std::Tuple<::std::uint32_t,
+                rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>
+      v2 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -795,35 +697,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: NestedTupleIntermediate2") alignas(4)
     [[clang::trivial_abi]] NestedTupleIntermediate2 final {
  public:
-  // `tuples_golden::NestedTupleIntermediate2` doesn't implement the `Default`
-  // trait
-  NestedTupleIntermediate2() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~NestedTupleIntermediate2() = default;
-  NestedTupleIntermediate2(NestedTupleIntermediate2&&) = default;
-  NestedTupleIntermediate2& operator=(NestedTupleIntermediate2&&) = default;
-
-  // `tuples_golden::NestedTupleIntermediate2` doesn't implement the `Clone`
-  // trait
-  NestedTupleIntermediate2(const NestedTupleIntermediate2&) = delete;
-  NestedTupleIntermediate2& operator=(const NestedTupleIntermediate2&) = delete;
-  NestedTupleIntermediate2(::crubit::UnsafeRelocateTag,
-                           NestedTupleIntermediate2&& value);
-
-  union {
-    rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
-                                ::std::uint32_t>,
-                  ::std::uint32_t>
-        v1;
-  };
-  union {
-    rs_std::Tuple<
-        ::std::uint32_t,
-        rs_std::Tuple<::std::uint32_t,
-                      rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>
-        v2;
-  };
+  rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
+                              ::std::uint32_t>,
+                ::std::uint32_t>
+      v1 = {};
+  rs_std::Tuple<::std::uint32_t,
+                rs_std::Tuple<::std::uint32_t,
+                              rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>
+      v2 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -834,35 +715,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: NestedTupleStruct") alignas(4) [[clang::trivial_abi]]
 NestedTupleStruct final {
  public:
-  // `tuples_golden::NestedTupleStruct` doesn't implement the `Default` trait
-  NestedTupleStruct() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~NestedTupleStruct() = default;
-  NestedTupleStruct(NestedTupleStruct&&) = default;
-  NestedTupleStruct& operator=(NestedTupleStruct&&) = default;
-
-  // `tuples_golden::NestedTupleStruct` doesn't implement the `Clone` trait
-  NestedTupleStruct(const NestedTupleStruct&) = delete;
-  NestedTupleStruct& operator=(const NestedTupleStruct&) = delete;
-  NestedTupleStruct(::crubit::UnsafeRelocateTag, NestedTupleStruct&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::NestedTupleStruct new_(::std::uint32_t val);
 
-  union {
-    rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
-                                ::std::uint32_t>,
-                  ::std::uint32_t>
-        in_tuple1;
-  };
-  union {
-    rs_std::Tuple<
-        ::std::uint32_t,
-        rs_std::Tuple<::std::uint32_t,
-                      rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>
-        in_tuple2;
-  };
+  rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
+                              ::std::uint32_t>,
+                ::std::uint32_t>
+      in_tuple1 = {};
+  rs_std::Tuple<::std::uint32_t,
+                rs_std::Tuple<::std::uint32_t,
+                              rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>
+      in_tuple2 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -901,22 +764,7 @@ namespace tuples {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TuplesWithU64") alignas(8)
     [[clang::trivial_abi]] TuplesWithU64 final {
  public:
-  // `tuples_golden::TuplesWithU64` doesn't implement the `Default` trait
-  TuplesWithU64() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~TuplesWithU64() = default;
-  TuplesWithU64(TuplesWithU64&&) = default;
-  TuplesWithU64& operator=(TuplesWithU64&&) = default;
-
-  // `tuples_golden::TuplesWithU64` doesn't implement the `Clone` trait
-  TuplesWithU64(const TuplesWithU64&) = delete;
-  TuplesWithU64& operator=(const TuplesWithU64&) = delete;
-  TuplesWithU64(::crubit::UnsafeRelocateTag, TuplesWithU64&& value);
-
-  union {
-    rs_std::Tuple<::std::uint64_t, ::std::uint64_t> u64_in_tuple1;
-  };
+  rs_std::Tuple<::std::uint64_t, ::std::uint64_t> u64_in_tuple1 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -961,28 +809,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: CloneNoDefaultTuple") alignas(1) [[clang::trivial_abi]]
 CloneNoDefaultTuple final {
  public:
-  // `tuples_golden::CloneNoDefaultTuple` doesn't implement the `Default` trait
-  CloneNoDefaultTuple() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CloneNoDefaultTuple() = default;
-  CloneNoDefaultTuple(CloneNoDefaultTuple&&) = default;
-  CloneNoDefaultTuple& operator=(CloneNoDefaultTuple&&) = default;
-
-  // `tuples_golden::CloneNoDefaultTuple` doesn't implement the `Clone` trait
-  CloneNoDefaultTuple(const CloneNoDefaultTuple&) = delete;
-  CloneNoDefaultTuple& operator=(const CloneNoDefaultTuple&) = delete;
-  CloneNoDefaultTuple(::crubit::UnsafeRelocateTag, CloneNoDefaultTuple&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::CloneNoDefaultTuple new_(::std::uint8_t val);
 
-  union {
-    rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t> in_tuple1;
-  };
-  union {
-    rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault> in_tuple2;
-  };
+  rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t> in_tuple1 = {};
+  rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault> in_tuple2 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1024,28 +855,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: CopyNoDefaultTuple") alignas(1) [[clang::trivial_abi]]
 CopyNoDefaultTuple final {
  public:
-  // `tuples_golden::CopyNoDefaultTuple` doesn't implement the `Default` trait
-  CopyNoDefaultTuple() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CopyNoDefaultTuple() = default;
-  CopyNoDefaultTuple(CopyNoDefaultTuple&&) = default;
-  CopyNoDefaultTuple& operator=(CopyNoDefaultTuple&&) = default;
-
-  // `tuples_golden::CopyNoDefaultTuple` doesn't implement the `Clone` trait
-  CopyNoDefaultTuple(const CopyNoDefaultTuple&) = delete;
-  CopyNoDefaultTuple& operator=(const CopyNoDefaultTuple&) = delete;
-  CopyNoDefaultTuple(::crubit::UnsafeRelocateTag, CopyNoDefaultTuple&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::CopyNoDefaultTuple new_(::std::uint8_t val);
 
-  union {
-    rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t> in_tuple1;
-  };
-  union {
-    rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault> in_tuple2;
-  };
+  rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t> in_tuple1 = {};
+  rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault> in_tuple2 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1084,6 +898,10 @@ namespace tuples {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefaultTuple") alignas(
     8) [[clang::trivial_abi]] HasDefaultTuple final {
  public:
+  // Type is not a C++ aggregate: Multiple fields require drop glue (annotate
+  // with `#[crubit_annotate::field_drop_order_does_not_matter]` if field drop
+  // order does not matter)
+
   // `tuples_golden::HasDefaultTuple` doesn't implement the `Default` trait
   HasDefaultTuple() = delete;
 
@@ -1152,6 +970,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: HasNoDefaultTuple") alignas(8) [[clang::trivial_abi]]
 HasNoDefaultTuple final {
  public:
+  // Type is not a C++ aggregate: Field `in_tuple1` requires drop glue but is
+  // not C++-movable
+
   // `tuples_golden::HasNoDefaultTuple` doesn't implement the `Default` trait
   HasNoDefaultTuple() = delete;
 
@@ -1241,31 +1062,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: TupleWithSizeTypes") alignas(8) [[clang::trivial_abi]]
 TupleWithSizeTypes final {
  public:
-  // `tuples_golden::TupleWithSizeTypes` doesn't implement the `Default` trait
-  TupleWithSizeTypes() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~TupleWithSizeTypes() = default;
-  TupleWithSizeTypes(TupleWithSizeTypes&&) = default;
-  TupleWithSizeTypes& operator=(TupleWithSizeTypes&&) = default;
-
-  // `tuples_golden::TupleWithSizeTypes` doesn't implement the `Clone` trait
-  TupleWithSizeTypes(const TupleWithSizeTypes&) = delete;
-  TupleWithSizeTypes& operator=(const TupleWithSizeTypes&) = delete;
-  TupleWithSizeTypes(::crubit::UnsafeRelocateTag, TupleWithSizeTypes&& value);
-
-  union {
-    rs_std::Tuple<::std::uint64_t, ::std::uint8_t> uval_in_tuple1;
-  };
-  union {
-    rs_std::Tuple<::std::uint8_t, ::std::uint64_t> uval_in_tuple2;
-  };
-  union {
-    rs_std::Tuple<::std::int64_t, ::std::int8_t> ival_in_tuple1;
-  };
-  union {
-    rs_std::Tuple<::std::int8_t, ::std::int64_t> ival_in_tuple2;
-  };
+  rs_std::Tuple<::std::uint64_t, ::std::uint8_t> uval_in_tuple1 = {};
+  rs_std::Tuple<::std::uint8_t, ::std::uint64_t> uval_in_tuple2 = {};
+  rs_std::Tuple<::std::int64_t, ::std::int8_t> ival_in_tuple1 = {};
+  rs_std::Tuple<::std::int8_t, ::std::int64_t> ival_in_tuple2 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1471,32 +1271,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: StructWithOptionTuple") alignas(8)
     [[clang::trivial_abi]] StructWithOptionTuple final {
  public:
-  // `tuples_golden::StructWithOptionTuple` doesn't implement the `Default`
-  // trait
-  StructWithOptionTuple() = delete;
-
-  // Drop::drop
-  ~StructWithOptionTuple();
-
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  StructWithOptionTuple(StructWithOptionTuple&&) = delete;
-  ::tuples::StructWithOptionTuple& operator=(StructWithOptionTuple&&) = delete;
-  // `tuples_golden::StructWithOptionTuple` doesn't implement the `Clone` trait
-  StructWithOptionTuple(const StructWithOptionTuple&) = delete;
-  StructWithOptionTuple& operator=(const StructWithOptionTuple&) = delete;
-  StructWithOptionTuple(::crubit::UnsafeRelocateTag,
-                        StructWithOptionTuple&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::StructWithOptionTuple new_(::std::int32_t val);
 
-  union {
-    rs_std::Tuple<rs_std::Option<::std::int32_t>,
-                  rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>
-        opt_tuple;
-  };
+  rs_std::Tuple<rs_std::Option<::std::int32_t>,
+                rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>
+      opt_tuple = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1532,35 +1312,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::CloneNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<::tuples::CloneNoDefault>);
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_utuples_ugolden_x0000003a_x0000003aCloneNoDefault(
-    ::tuples::CloneNoDefault const&, ::tuples::CloneNoDefault* __ret_ptr);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ufrom_utuples_ugolden_x0000003a_x0000003aCloneNoDefault(
-    ::tuples::CloneNoDefault&, ::tuples::CloneNoDefault const&);
-}
-inline ::tuples::CloneNoDefault::CloneNoDefault(const CloneNoDefault& other) {
-  __crubit_internal::
-      __crubit_thunk_Clone_uclone_utuples_ugolden_x0000003a_x0000003aCloneNoDefault(
-          other, this);
-}
-inline ::tuples::CloneNoDefault& ::tuples::CloneNoDefault::operator=(
-    const CloneNoDefault& other) {
-  if (this != &other) {
-    __crubit_internal::
-        __crubit_thunk_Clone_uclone_ufrom_utuples_ugolden_x0000003a_x0000003aCloneNoDefault(
-            *this, other);
-  }
-  return *this;
-}
-inline ::tuples::CloneNoDefault::CloneNoDefault(::crubit::UnsafeRelocateTag,
-                                                CloneNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
-namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::tuples::CloneNoDefault* __ret_ptr);
 }
@@ -1584,11 +1335,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::CloneNoDefaultTuple>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::tuples::CloneNoDefaultTuple>);
-inline ::tuples::CloneNoDefaultTuple::CloneNoDefaultTuple(
-    ::crubit::UnsafeRelocateTag, CloneNoDefaultTuple&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::tuples::CloneNoDefaultTuple* __ret_ptr);
@@ -1617,11 +1363,6 @@ static_assert(::std::is_trivially_move_assignable_v<::tuples::CopyNoDefault>);
 static_assert(
     ::std::is_trivially_copy_constructible_v<::tuples::CopyNoDefault>);
 static_assert(::std::is_trivially_copy_assignable_v<::tuples::CopyNoDefault>);
-inline ::tuples::CopyNoDefault::CopyNoDefault(::crubit::UnsafeRelocateTag,
-                                              CopyNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::tuples::CopyNoDefault* __ret_ptr);
@@ -1646,11 +1387,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::CopyNoDefaultTuple>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::tuples::CopyNoDefaultTuple>);
-inline ::tuples::CopyNoDefaultTuple::CopyNoDefaultTuple(
-    ::crubit::UnsafeRelocateTag, CopyNoDefaultTuple&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::tuples::CopyNoDefaultTuple* __ret_ptr);
@@ -1675,11 +1411,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<GetsTuple>);
 static_assert(::std::is_trivially_move_constructible_v<::tuples::GetsTuple>);
 static_assert(::std::is_trivially_move_assignable_v<::tuples::GetsTuple>);
-inline ::tuples::GetsTuple::GetsTuple(::crubit::UnsafeRelocateTag,
-                                      GetsTuple&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint32_t,
                                    ::tuples::GetsTuple* __ret_ptr);
@@ -1699,38 +1430,6 @@ static_assert(
 static_assert(
     alignof(HasDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_utuples_ugolden_x0000003a_x0000003aHasDefault(
-    ::tuples::HasDefault* __ret_ptr);
-}
-inline ::tuples::HasDefault::HasDefault() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_utuples_ugolden_x0000003a_x0000003aHasDefault(
-          this);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasDefault(
-    ::tuples::HasDefault&);
-}
-inline HasDefault::~HasDefault() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasDefault(
-          *this);
-}
-inline ::tuples::HasDefault::HasDefault(HasDefault&& other) : HasDefault() {
-  *this = ::std::move(other);
-}
-inline ::tuples::HasDefault& ::tuples::HasDefault::operator=(
-    HasDefault&& other) {
-  crubit::MemSwap(*this, other);
-  return *this;
-}
-inline ::tuples::HasDefault::HasDefault(::crubit::UnsafeRelocateTag,
-                                        HasDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
@@ -1795,20 +1494,6 @@ static_assert(
 static_assert(
     alignof(HasNoDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasNoDefault(
-    ::tuples::HasNoDefault&);
-}
-inline HasNoDefault::~HasNoDefault() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasNoDefault(
-          *this);
-}
-inline ::tuples::HasNoDefault::HasNoDefault(::crubit::UnsafeRelocateTag,
-                                            HasNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" rs_std::StrRef __crubit_thunk_val(::tuples::HasNoDefault const&);
@@ -1867,10 +1552,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::tuples::NestedTupleIntermediate1>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::tuples::NestedTupleIntermediate1>);
-inline ::tuples::NestedTupleIntermediate1::NestedTupleIntermediate1(
-    ::crubit::UnsafeRelocateTag, NestedTupleIntermediate1&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void NestedTupleIntermediate1::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NestedTupleIntermediate1, v1));
   static_assert(12 == offsetof(NestedTupleIntermediate1, v2));
@@ -1886,10 +1567,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::tuples::NestedTupleIntermediate2>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::tuples::NestedTupleIntermediate2>);
-inline ::tuples::NestedTupleIntermediate2::NestedTupleIntermediate2(
-    ::crubit::UnsafeRelocateTag, NestedTupleIntermediate2&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void NestedTupleIntermediate2::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NestedTupleIntermediate2, v1));
   static_assert(16 == offsetof(NestedTupleIntermediate2, v2));
@@ -1905,11 +1582,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::NestedTupleStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::tuples::NestedTupleStruct>);
-inline ::tuples::NestedTupleStruct::NestedTupleStruct(
-    ::crubit::UnsafeRelocateTag, NestedTupleStruct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint32_t,
                                    ::tuples::NestedTupleStruct* __ret_ptr);
@@ -1996,20 +1668,6 @@ static_assert(
 static_assert(
     alignof(StructWithOptionTuple) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aStructWithOptionTuple(
-    ::tuples::StructWithOptionTuple&);
-}
-inline StructWithOptionTuple::~StructWithOptionTuple() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aStructWithOptionTuple(
-          *this);
-}
-inline ::tuples::StructWithOptionTuple::StructWithOptionTuple(
-    ::crubit::UnsafeRelocateTag, StructWithOptionTuple&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
@@ -2052,10 +1710,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::TupleWithSizeTypes>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::tuples::TupleWithSizeTypes>);
-inline ::tuples::TupleWithSizeTypes::TupleWithSizeTypes(
-    ::crubit::UnsafeRelocateTag, TupleWithSizeTypes&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void TupleWithSizeTypes::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TupleWithSizeTypes, uval_in_tuple1));
   static_assert(16 == offsetof(TupleWithSizeTypes, uval_in_tuple2));
@@ -2072,10 +1726,6 @@ static_assert(::std::is_trivially_destructible_v<TuplesWithU64>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::TuplesWithU64>);
 static_assert(::std::is_trivially_move_assignable_v<::tuples::TuplesWithU64>);
-inline ::tuples::TuplesWithU64::TuplesWithU64(::crubit::UnsafeRelocateTag,
-                                              TuplesWithU64&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void TuplesWithU64::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TuplesWithU64, u64_in_tuple1));
 }
