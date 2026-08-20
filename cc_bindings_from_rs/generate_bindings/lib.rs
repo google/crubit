@@ -635,6 +635,44 @@ fn public_paths_by_def_id(
     visible_parent_map
 }
 
+/// The ownership priority of a crate that exposes a public path for a `DefId`.
+///
+/// When an item is re-exported across multiple crates, Crubit uses this rank to choose which
+/// crate provides the canonical C++ definition (versus emitting a `using` alias).
+///
+/// Variants are listed in ascending priority of ownership.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+enum CrateOwnershipRank {
+    /// A crate re-exporting an item it did not define (e.g. `pub use std::io::Error;`).
+    TransitiveReexport = 0,
+
+    /// A standard library crate (`std` or `alloc`) stably re-exporting an item that was
+    /// defined internally/unstably in `core` or `alloc` (e.g. `std::io::Error` is a stable
+    /// re-export for the unstable `core::io::error::Error`). We attribute ownership to the
+    /// standard library re-export in this case, since it is the canonical owner.
+    StdlibStableReexport = 1,
+
+    /// The crate that actually defined the item (`def_id.krate`, e.g. `core` for
+    /// `core::option::Option`).
+    DefiningCrate = 2,
+}
+
+impl CrateOwnershipRank {
+    fn new(tcx: TyCtxt<'_>, def_id: DefId, krate: CrateNum) -> Self {
+        if krate == def_id.krate {
+            return Self::DefiningCrate;
+        }
+
+        if matches!(tcx.crate_name(def_id.krate).as_str(), "core" | "alloc")
+            && matches!(tcx.crate_name(krate).as_str(), "std" | "alloc")
+        {
+            return Self::StdlibStableReexport;
+        }
+
+        Self::TransitiveReexport
+    }
+}
+
 fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> HashMap<DefId, PublicPaths> {
     let tcx = db.tcx();
     let mut out = HashMap::new();
@@ -657,14 +695,26 @@ fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> HashMap<DefId, Publ
                 }
                 Entry::Occupied(mut occupied) => {
                     let existing_paths = occupied.get_mut();
-                    if def_id.krate == existing_paths.canonical().krate {
-                        existing_paths.insert_aliases(paths);
-                    } else if def_id.krate == paths.canonical().krate {
-                        std::mem::swap(existing_paths, &mut paths);
-                        existing_paths.insert_aliases(paths);
-                    } else {
-                        // Merge paths together picking canonical by ordering.
-                        existing_paths.merge(paths);
+                    let existing_rank =
+                        CrateOwnershipRank::new(tcx, def_id, existing_paths.canonical().krate);
+                    let new_rank = CrateOwnershipRank::new(tcx, def_id, paths.canonical().krate);
+                    match new_rank.cmp(&existing_rank) {
+                        Ordering::Greater => {
+                            // The new crate has higher ownership priority, so make it canonical
+                            // and retain the old paths as aliases.
+                            std::mem::swap(existing_paths, &mut paths);
+                            existing_paths.insert_aliases(paths);
+                        }
+                        Ordering::Less => {
+                            // The existing crate has higher ownership priority, so keep it
+                            // canonical and add the new paths as aliases.
+                            existing_paths.insert_aliases(paths);
+                        }
+                        Ordering::Equal => {
+                            // Both crates have equal ownership priority, so merge paths together
+                            // picking canonical by ordering.
+                            existing_paths.merge(paths);
+                        }
                     }
                 }
             }
