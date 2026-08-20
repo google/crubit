@@ -21,6 +21,12 @@
 // requires some contortions: https://stackoverflow.com/a/5958315
 #define $(l) [[clang::annotate_type("lifetime", #l)]]
 
+// Shorthand for lifetime parameter annotations on types and functions.
+// This can be used like `$lifetime_param("a")` or `$lifetime_param("a", "b")`.
+#define $lifetime_param(...) [[clang::annotate("lifetime_params", __VA_ARGS__)]]
+#define $lifetime_params(...) \
+  [[clang::annotate("lifetime_params", __VA_ARGS__)]]
+
 // Shorthand for a static lifetime annotation.
 #define $static $(static)
 
