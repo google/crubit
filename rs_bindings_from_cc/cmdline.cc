@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/debugging/leak_check.h"
 #include "absl/flags/flag.h"
 #include "absl/log/log.h"
@@ -21,12 +22,10 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
-#include "common/status_macros.h"
 #include "common/string_view_conversion.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/JSON.h"
 
@@ -195,9 +194,8 @@ std::vector<HeaderName> PublicHeaders() {
   std::vector<HeaderName> public_headers;
   const std::vector<std::string>& public_headers_string =
       absl::GetFlag(FLAGS_public_headers);
-  std::transform(public_headers_string.begin(), public_headers_string.end(),
-                 std::back_inserter(public_headers),
-                 [](const std::string& s) { return HeaderName(s); });
+  absl::c_transform(public_headers_string, std::back_inserter(public_headers),
+                    [](const std::string& s) { return HeaderName(s); });
   return public_headers;
 }
 }  // namespace
