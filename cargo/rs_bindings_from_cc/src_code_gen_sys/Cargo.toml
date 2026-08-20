@@ -20,6 +20,7 @@ path = "lib.rs"
 cc_ir_sys = { path = "../../../cargo/rs_bindings_from_cc/cc_ir_sys", package = "rs_bindings_from_cc_cc_ir_sys"}
 src_code_gen_ffi_sys = { path = "../../../cargo/rs_bindings_from_cc/src_code_gen_ffi_sys", package = "rs_bindings_from_cc_src_code_gen_ffi_sys"}
 cc_api_ffi = { path = "../../../cargo/rs_bindings_from_cc/generate_bindings/cc_api_ffi", package = "rs_bindings_from_cc_cc_api_ffi"}
+generate_bindings_cc_proto_sys = { path = "../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings_cc_proto_sys", package = "rs_bindings_from_cc_generate_bindings_cc_proto_sys"}
 
 
 [build-dependencies]

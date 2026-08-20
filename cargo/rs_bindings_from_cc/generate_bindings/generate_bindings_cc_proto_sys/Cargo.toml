@@ -1,0 +1,24 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Automatically @generated Cargo.toml for the cc_library rs_bindings_from_cc_generate_bindings_cc_proto_sys.
+
+[package]
+name = "rs_bindings_from_cc_generate_bindings_cc_proto_sys"
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+build = "build.rs"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+generate_bindings_rust_proto = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings_rust_proto", package = "rs_bindings_from_cc_generate_bindings_rust_proto"}
+
+
+[build-dependencies]
+crubit_build = { path =  "../../../../cargo/build"}

@@ -7,6 +7,7 @@
 extern crate annotation_reader_sys;
 extern crate ast_util_sys;
 extern crate cc_ir_sys;
+extern crate ir_cc_proto_sys;
 extern crate lifetime_annotations_sys;
 extern crate lifetime_symbol_table_sys;
 extern crate lifetime_sys;

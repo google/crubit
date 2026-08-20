@@ -967,6 +967,7 @@ name = "rs_bindings_from_cc_cc_ir_sys"
 version = "0.0.0"
 dependencies = [
  "crubit_build",
+ "rs_bindings_from_cc_ir_cc_proto_sys",
 ]
 
 [[package]]
@@ -1110,6 +1111,7 @@ dependencies = [
  "lifetime_sys",
  "rs_bindings_from_cc_ast_util_sys",
  "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_ir_cc_proto_sys",
  "rs_bindings_from_cc_recording_diagnostic_consumer_sys",
  "type_lifetimes_sys",
 ]
@@ -1174,6 +1176,14 @@ dependencies = [
  "rs_bindings_from_cc_collect_namespaces_sys",
  "rs_bindings_from_cc_ir_from_cc_sys",
  "rs_bindings_from_cc_src_code_gen_sys",
+]
+
+[[package]]
+name = "rs_bindings_from_cc_generate_bindings_cc_proto_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
+ "rs_bindings_from_cc_generate_bindings_rust_proto",
 ]
 
 [[package]]
@@ -1359,6 +1369,7 @@ dependencies = [
  "rs_bindings_from_cc_friend_sys",
  "rs_bindings_from_cc_function_sys",
  "rs_bindings_from_cc_function_template_sys",
+ "rs_bindings_from_cc_ir_cc_proto_sys",
  "rs_bindings_from_cc_namespace_sys",
  "rs_bindings_from_cc_recording_diagnostic_consumer_sys",
  "rs_bindings_from_cc_type_alias_sys",
@@ -1384,6 +1395,14 @@ dependencies = [
  "rs_bindings_from_cc_bazel_label",
  "rs_bindings_from_cc_ir_rust_proto",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "rs_bindings_from_cc_ir_cc_proto_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
+ "rs_bindings_from_cc_ir_rust_proto",
 ]
 
 [[package]]
@@ -1535,6 +1554,7 @@ version = "0.0.0"
 dependencies = [
  "cc_ffi_types_sys",
  "crubit_build",
+ "rs_bindings_from_cc_generate_bindings_cc_proto_sys",
 ]
 
 [[package]]
@@ -1544,6 +1564,7 @@ dependencies = [
  "crubit_build",
  "rs_bindings_from_cc_cc_api_ffi",
  "rs_bindings_from_cc_cc_ir_sys",
+ "rs_bindings_from_cc_generate_bindings_cc_proto_sys",
  "rs_bindings_from_cc_src_code_gen_ffi_sys",
 ]
 

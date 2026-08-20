@@ -2,10 +2,10 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Automatically @generated Cargo.toml for the cc_library rs_bindings_from_cc_cc_ir_sys.
+# Automatically @generated Cargo.toml for the cc_library rs_bindings_from_cc_ir_cc_proto_sys.
 
 [package]
-name = "rs_bindings_from_cc_cc_ir_sys"
+name = "rs_bindings_from_cc_ir_cc_proto_sys"
 edition.workspace = true
 license-file.workspace = true
 repository.workspace = true
@@ -17,7 +17,7 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
-ir_cc_proto_sys = { path = "../../../cargo/rs_bindings_from_cc/ir_cc_proto_sys", package = "rs_bindings_from_cc_ir_cc_proto_sys"}
+ir_rust_proto = { path = "../../../cargo/rs_bindings_from_cc/ir_rust_proto", package = "rs_bindings_from_cc_ir_rust_proto"}
 
 
 [build-dependencies]

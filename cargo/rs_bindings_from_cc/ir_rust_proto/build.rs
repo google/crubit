@@ -17,10 +17,7 @@ fn main() {
         .include("../../../../..");
     codegen.dependency(vec![protobuf_codegen::Dependency {
         crate_name: "rs_bindings_from_cc_ir_rust_proto".to_string(),
-        proto_files: vec![
-            "rs_bindings_from_cc/ir.proto".into(),
-            "rs_bindings_from_cc/ir.proto".into(),
-        ],
+        proto_files: vec!["rs_bindings_from_cc/ir.proto".into()],
         proto_import_paths: vec!["../../..".into(), "../../../../..".into()],
     }]);
     codegen.generate_and_compile().unwrap();

@@ -6,4 +6,5 @@
 
 extern crate cc_api_ffi;
 extern crate cc_ir_sys;
+extern crate generate_bindings_cc_proto_sys;
 extern crate src_code_gen_ffi_sys;
