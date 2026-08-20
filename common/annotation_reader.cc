@@ -108,7 +108,7 @@ static absl::Status InconsistentAnnotationsError(
 static absl::Status CheckExpressionsAreSameConstant(
     const clang::Expr& expr1, const clang::Expr& expr2,
     absl::string_view annotation_name, const clang::ASTContext& ast_context) {
-  if (expr1.getType() != expr2.getType()) {
+  if (!ast_context.hasSameType(expr1.getType(), expr2.getType())) {
     return InconsistentAnnotationsError(annotation_name);
   }
 
@@ -201,6 +201,10 @@ static const clang::Decl& DeclForAnnotations(const clang::Decl& decl) {
 
 absl::StatusOr<bool> GetExprAsBool(const clang::Expr& expr,
                                    const clang::ASTContext& ast_context) {
+  if (!expr.getType()->isBooleanType()) {
+    return absl::InvalidArgumentError(
+        "annotation expression must evaluate to a bool");
+  }
   clang::Expr::EvalResult eval_result;
   if (!expr.EvaluateAsConstantExpr(eval_result, ast_context)) {
     return absl::InvalidArgumentError(
@@ -211,12 +215,7 @@ absl::StatusOr<bool> GetExprAsBool(const clang::Expr& expr,
         "annotation expression must evaluate to a bool");
   }
   const llvm::APSInt& int_value = eval_result.Val.getInt();
-  if (int_value.isZero()) {
-    return false;
-  } else {
-    // Non-zero values are treated as true.
-    return true;
-  }
+  return !int_value.isZero();
 }
 
 absl::StatusOr<absl::string_view> GetExprAsStringLiteral(

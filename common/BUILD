@@ -60,6 +60,7 @@ crubit_cc_test(
         "@abseil-cpp//absl/log:check",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:span",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:testing",
     ],
