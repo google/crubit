@@ -356,6 +356,7 @@ fn api_func_shape_for_operator_index<'a>(
     db: &BindingsGenerator<'a>,
     func: &Func<'a>,
     param_types: &mut [RsTypeKind<'a>],
+    return_type: &RsTypeKind<'a>,
     errors: &Errors,
 ) -> ErrorsOr<(Ident, ImplKind<'a>)> {
     let CcTypeVariant::Pointer(pointee) = func.return_type().variant() else {
@@ -402,9 +403,23 @@ fn api_func_shape_for_operator_index<'a>(
 
     let index_type_rc = Rc::new(index_type.clone());
     if return_val_is_const && method_is_const {
-        generate_cc_operator_index_nonmut_impls(db, func, container_record, index_type_rc, errors)
+        generate_cc_operator_index_nonmut_impls(
+            db,
+            func,
+            container_record,
+            index_type_rc,
+            return_type,
+            errors,
+        )
     } else if !return_val_is_const && !method_is_const {
-        generate_cc_operator_index_mut_impls(db, func, container_record, index_type_rc, errors)
+        generate_cc_operator_index_mut_impls(
+            db,
+            func,
+            container_record,
+            index_type_rc,
+            return_type,
+            errors,
+        )
     } else {
         bail_to_errors!(
             errors,
@@ -423,6 +438,7 @@ fn generate_cc_operator_index_nonmut_impls<'a>(
     func: &Func<'a>,
     container_record: Rc<Record<'a>>,
     index_type: Rc<RsTypeKind<'a>>,
+    return_type: &RsTypeKind<'a>,
     errors: &Errors,
 ) -> ErrorsOr<(Ident, ImplKind<'a>)> {
     let func_name = make_rs_ident("cc_index");
@@ -450,13 +466,15 @@ fn generate_cc_operator_index_nonmut_impls<'a>(
         }
     };
 
-    let output_type: Rc<RsTypeKind> = match db.rs_type_kind(output_pointee_cc_type) {
-        Ok(rs_kind) => Rc::new(rs_kind),
-        Err(err) => {
+    let output_type: Rc<RsTypeKind> = match return_type {
+        RsTypeKind::Reference { referent, .. } | RsTypeKind::RvalueReference { referent, .. } => {
+            referent.clone()
+        }
+        _ => {
             bail_to_errors!(
                 errors,
-                "In the return value of operator[], could not convert C++ pointee to a Rust equivalent: {}",
-                err
+                "In the return value of operator[], expected reference return type, found {}",
+                db.cc_type_debug_name(func.return_type())
             )
         }
     };
@@ -479,6 +497,7 @@ fn generate_cc_operator_index_mut_impls<'a>(
     func: &Func<'a>,
     container_record: Rc<Record<'a>>,
     index_type: Rc<RsTypeKind<'a>>,
+    return_type: &RsTypeKind<'a>,
     errors: &Errors,
 ) -> ErrorsOr<(Ident, ImplKind<'a>)> {
     let func_name = make_rs_ident("cc_index_mut");
@@ -507,13 +526,15 @@ fn generate_cc_operator_index_mut_impls<'a>(
         }
     };
 
-    let output_type: Rc<RsTypeKind> = match db.rs_type_kind(output_pointee_cc_type) {
-        Ok(rs_kind) => Rc::new(rs_kind),
-        Err(err) => {
+    let output_type: Rc<RsTypeKind> = match return_type {
+        RsTypeKind::Reference { referent, .. } | RsTypeKind::RvalueReference { referent, .. } => {
+            referent.clone()
+        }
+        _ => {
             bail_to_errors!(
                 errors,
-                "In the return value of operator[], could not convert C++ pointee to a Rust equivalent: {}",
-                err
+                "In the return value of operator[], expected reference return type, found {}",
+                db.cc_type_debug_name(func.return_type())
             )
         }
     };
@@ -762,6 +783,7 @@ fn api_func_shape_for_operator<'a>(
     func: &Func<'a>,
     maybe_record: Option<&Rc<Record<'a>>>,
     param_types: &mut [RsTypeKind<'a>],
+    return_type: &RsTypeKind<'a>,
     op: &Operator<'a>,
     errors: &Errors,
 ) -> Option<(Ident, ImplKind<'a>)> {
@@ -780,7 +802,7 @@ fn api_func_shape_for_operator<'a>(
         "+" if param_types.len() == 1 => {
             api_func_shape_for_operator_unary_plus(db, &param_types[0], errors).ok()
         }
-        "[]" => api_func_shape_for_operator_index(db, func, param_types, errors).ok(),
+        "[]" => api_func_shape_for_operator_index(db, func, param_types, return_type, errors).ok(),
         _ => {
             let Some(op_metadata) =
                 OPERATOR_METADATA.by_cc_name_and_params.get(&(op.name(), param_types.len()))
@@ -1276,9 +1298,15 @@ fn api_func_shape<'a>(
     }
 
     match func.rs_name() {
-        UnqualifiedIdentifier::Operator(op) => {
-            api_func_shape_for_operator(db, func, maybe_record, param_types, op, errors)
-        }
+        UnqualifiedIdentifier::Operator(op) => api_func_shape_for_operator(
+            db,
+            func,
+            maybe_record,
+            param_types,
+            return_type,
+            op,
+            errors,
+        ),
         UnqualifiedIdentifier::Identifier(id) => {
             Some(api_func_shape_for_identifier(db, func, maybe_record, param_types, id))
         }
