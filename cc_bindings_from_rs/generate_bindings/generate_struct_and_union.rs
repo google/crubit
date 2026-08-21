@@ -604,15 +604,14 @@ fn generate_into_impls<'tcx>(
                     "ADT's self type should be C++-convertible after generate_adt_core succeeds",
                 );
             let self_cpp_ty = self_cpp_ty.into_tokens(&mut prereqs);
+            let is_copy = is_copy(tcx, def_id, core.common.self_ty);
             let impl_body = generate_thunk_call(
                 db,
                 def_id,
                 thunk_name.clone(),
                 middle_ty,
                 ThunkSelfParameter::new(
-                    /*has_self=*/ true,
-                    is_copy(tcx, def_id, core.common.self_ty),
-                    /*is_trait_method =*/ false,
+                    /*has_self=*/ true, is_copy, /*is_trait_method =*/ false,
                 ),
                 &[Param {
                     cc_name: format_ident!("self"),
@@ -628,12 +627,17 @@ fn generate_into_impls<'tcx>(
 
             let impl_body_tokens = impl_body.into_tokens(&mut prereqs);
             prereqs.move_defs_to_fwd_decls();
+            let method_qualifiers = if is_copy {
+                quote! { const }
+            } else {
+                quote! {}
+            };
 
             Some(ApiSnippets {
                 main_api: CcSnippet {
                     tokens: quote! {
                     __NEWLINE__ #doc_comment
-                    explicit operator #cc_ty ( ) ; __NEWLINE__
+                    explicit operator #cc_ty ( ) #method_qualifiers ; __NEWLINE__
                     __NEWLINE__
                     },
                     prereqs,
@@ -641,7 +645,7 @@ fn generate_into_impls<'tcx>(
                 cc_details: CcSnippet::new(quote! {
                     #cc_thunk_decls
 
-                    inline #cc_struct_name :: operator  #cc_ty ( ) {
+                    inline #cc_struct_name :: operator  #cc_ty ( ) #method_qualifiers {
                         #impl_body_tokens
                     }
                 }),

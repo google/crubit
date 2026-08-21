@@ -66,6 +66,22 @@ TEST(IntoTest, NoCloneCopyDropConversionAndConstructor) {
   EXPECT_EQ(target2.__field0, 600);
 }
 
+TEST(IntoTest, ConstConversionOperatorExplicit) {
+  const into::CloneCopyType src(123);
+  // Should compile because operator is const
+  auto target = static_cast<into::CloneCopyTarget>(src);
+  EXPECT_EQ(target.__field0, 123);
+  EXPECT_EQ(src.__field0, 123);
+}
+
+TEST(IntoTest, RvalueRefConversionOperatorExplicit) {
+  const into::CloneAllocType src =
+      into::CloneAllocType::create(rs_std::StrRef("hello"));
+  auto target = static_cast<into::CloneAllocTarget>(src);
+  EXPECT_EQ(target.get_value().to_string_view(), "hello");
+  EXPECT_EQ(src.get_value().to_string_view(), "hello");
+}
+
 TEST(IntoTest, IntoLoop) {
   into::LoopA a(1);
   into::LoopB b(std::move(a));

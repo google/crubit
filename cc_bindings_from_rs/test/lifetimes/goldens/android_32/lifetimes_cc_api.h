@@ -69,9 +69,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   ::std::int32_t const& $static borrow_from_static_self() const& $static;
 
-  explicit operator ::std::int32_t const& $a();
+  explicit operator ::std::int32_t const& $a() const;
 
-  explicit operator ::std::int32_t();
+  explicit operator ::std::int32_t() const;
 
   explicit StructWithLifetime(::std::int32_t const* $a crubit_nonnull value);
 
@@ -257,7 +257,7 @@ extern "C" ::std::int32_t const& $a
 __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
     ::lifetimes::StructWithLifetime*);
 }
-inline StructWithLifetime::operator ::std::int32_t const& $a() {
+inline StructWithLifetime::operator ::std::int32_t const& $a() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::
       __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
@@ -268,7 +268,7 @@ extern "C" ::std::int32_t
 __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_ui32(
     ::lifetimes::StructWithLifetime*);
 }
-inline StructWithLifetime::operator ::std::int32_t() {
+inline StructWithLifetime::operator ::std::int32_t() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::
       __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_ui32(

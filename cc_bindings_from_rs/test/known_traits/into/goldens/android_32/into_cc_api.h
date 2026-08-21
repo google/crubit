@@ -154,7 +154,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneCopyType") alignas(4)
   CloneCopyType& operator=(const CloneCopyType&) = default;
   CloneCopyType(::crubit::UnsafeRelocateTag, CloneCopyType&& value);
 
-  explicit operator ::into::CloneCopyTarget();
+  explicit operator ::into::CloneCopyTarget() const;
 
   union {
     ::std::int32_t __field0;
@@ -742,7 +742,7 @@ extern "C" void
 __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aCloneCopyType_uinto_ugolden_x0000003a_x0000003aCloneCopyTarget(
     ::into::CloneCopyType*, ::into::CloneCopyTarget* __ret_ptr);
 }
-inline CloneCopyType::operator ::into::CloneCopyTarget() {
+inline CloneCopyType::operator ::into::CloneCopyTarget() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::into::CloneCopyTarget> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
