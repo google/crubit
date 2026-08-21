@@ -7,7 +7,9 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
+#include "support/internal/sizeof.h"
 
+#include <cstddef>
 #include <memory>
 
 // Public headers of the C++ library being wrapped.
@@ -16,8 +18,13 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert((int& (*)(int&)) & ::increment_int_ref);
+static_assert(sizeof(class C) == 1);
+static_assert(alignof(class C) == 1);
 
-static_assert((void (*)(int&)) & ::bad_lifetime_name);
+extern "C" void __rust_thunk___ZN1CC1Ev(class C* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert((int& (::C::*)()) & ::C::f);
 
 #pragma clang diagnostic pop
