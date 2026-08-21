@@ -2195,7 +2195,7 @@ pub fn generate_function<'a>(
             // checked parameters.
             let free_errors = Errors::new();
             let BindingsSignature {
-                lifetimes: _free_lifetimes,
+                lifetimes: free_lifetimes,
                 lifetimes_including_impl,
                 params: free_api_params,
                 return_type_fragment: free_return_type_fragment,
@@ -2244,7 +2244,7 @@ pub fn generate_function<'a>(
             };
 
             let free_fn_generic_params =
-                format_generic_params(&lifetimes_including_impl, std::iter::empty::<syn::Ident>());
+                format_generic_params(&free_lifetimes, std::iter::empty::<syn::Ident>());
 
             // Add the free method to the mapping, which we will extract and put into
             // snippets inside db later.
@@ -2929,20 +2929,23 @@ fn function_signature<'a>(
     // make sure that we don't rebind an existing lifetime.
     let parent_lifetimes = collect_parent_lifetime_bindings(db, func, impl_kind)?;
 
-    let mut lifetimes: Vec<Lifetime> = unique_lifetimes(&*param_types, func.lifetime_inputs())
+    let mut all_types = param_types.clone();
+    all_types.push(return_type.clone());
+
+    let mut lifetimes: Vec<Lifetime> = unique_lifetimes(&all_types, func.lifetime_inputs())
         .into_iter()
         .filter(|lifetime| !parent_lifetimes.contains(lifetime.0.as_ref()))
         .collect();
 
     let mut lifetimes_including_impl: Vec<Lifetime> =
-        unique_lifetimes(&*param_types, func.lifetime_inputs());
+        unique_lifetimes(&all_types, func.lifetime_inputs());
 
     let mut lifetime_inputs_and_parents = func.lifetime_inputs().to_vec();
     for lifetime in parent_lifetimes {
         lifetime_inputs_and_parents.push(intern!(db.interner(), "{lifetime}"));
     }
     let mut all_lifetimes: Vec<Lifetime> =
-        unique_lifetimes(&*param_types, &lifetime_inputs_and_parents)
+        unique_lifetimes(&all_types, &lifetime_inputs_and_parents)
             .into_iter()
             .filter(|lifetime| !lifetime.is_elided())
             .collect();

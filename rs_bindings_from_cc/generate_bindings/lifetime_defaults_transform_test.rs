@@ -1019,7 +1019,7 @@ fn test_struct_binds_lifetime_param() -> Result<()> {
                 return_type: CcType { ... explicit_lifetimes: ["a"] ... }, ...
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["__this", "__this_0"],
+                lifetime_inputs: ["__this"],
                 ...
             }
         }
@@ -1060,7 +1060,7 @@ fn test_struct_shadows_unknown_lifetime_param() -> Result<()> {
                 return_type: CcType { ... explicit_lifetimes: ["unknown_0"] ... }, ...
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["__this", "__this_0"],
+                lifetime_inputs: ["__this"],
                 ...
             }
         }
@@ -1101,7 +1101,7 @@ fn test_struct_does_not_shadow_unrelated_lifetime_param() -> Result<()> {
                 return_type: CcType { ... explicit_lifetimes: ["a"] ... }, ...
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["__this", "__this_0", "a"],
+                lifetime_inputs: ["__this", "a"],
                 ...
             }
         }
@@ -1142,7 +1142,7 @@ fn test_struct_renames_shadowed_lifetime_param_in_function() -> Result<()> {
                 return_type: CcType { ... explicit_lifetimes: ["a_0"] ... }, ...
                 lifetime_params: [],
                 ...
-                lifetime_inputs: ["a_0", "__this", "__this_0"],
+                lifetime_inputs: ["a_0", "__this"],
                 ...
             }
         }
@@ -1620,3 +1620,82 @@ fn test_static_lifetime_is_not_abstracted() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_propagate_explicit_lifetime_to_this_member() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      struct LIFETIME_PARAMS("a") S { void f(); };
+      "#),
+    )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                params: [
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                ...
+                                pointee_type: CcType {
+                                    ...
+                                    explicit_lifetimes: ["a"], ...
+                                }, ...
+                            }), ...
+                        },
+                        identifier: "__this", ...
+                    }
+                ],
+                ...
+                lifetime_inputs: ["__this"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_unknown_lifetime_generates_non_null_pointer_input() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      void f(int& $unknown i1);
+      "#),
+    )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                params: [
+                    FuncParam {
+                        type_: CcType {
+                            variant: Pointer(PointerType {
+                                kind: NonNull, ...
+                            }),
+                            ...,
+                            explicit_lifetimes: [], ...
+                        },
+                        identifier: "i1", ...
+                    }
+                ],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
