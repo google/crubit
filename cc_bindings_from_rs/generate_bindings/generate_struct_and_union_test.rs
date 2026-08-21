@@ -4,7 +4,9 @@
 
 use quote::quote;
 use test_helpers::{test_format_item, test_format_item_with_features, test_generated_bindings};
-use token_stream_matchers::{assert_cc_matches, assert_rs_matches};
+use token_stream_matchers::{
+    assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
+};
 
 /// The `test_generated_bindings_struct` test covers only a single example
 /// of an ADT (struct/enum/union) that should get a C++ binding.
@@ -1113,4 +1115,91 @@ fn test_deprecated_attr_for_impl_block() {
             }
         )
     })
+}
+
+#[test]
+fn test_hash_trait_support() {
+    let test_src = r#"
+    #[derive(Hash)]
+    pub struct Point {
+        pub x: i32,
+        pub y: i32,
+    }
+    "#;
+
+    test_format_item(test_src, "Point", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... Point final {
+                    ...
+                    template <typename H>
+                    friend H AbslHashValue(H h, const Point& self) {
+                        return H::combine(::std::move(h), __crubit_internal::__crubit_thunk_Hash_uhash_uPoint(self));
+                    }
+                    ...
+                };
+            }
+        );
+        let rs_details = &result.rs_details;
+        assert_rs_matches!(
+            rs_details.tokens,
+            quote! {
+                #[unsafe(no_mangle)]
+                extern "C" fn __crubit_thunk_Hash_uhash_uPoint (self_: &::rust_out::Point) -> u64 {
+                    ::bridge_rust::internal::hash_u64(self_)
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_no_hash_trait_no_bindings() {
+    let test_src = r#"
+    pub struct Point {
+        pub x: i32,
+        pub y: i32,
+    }
+    "#;
+
+    test_format_item(test_src, "Point", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_not_matches!(main_api.tokens, quote! { AbslHashValue });
+        let rs_details = &result.rs_details;
+        assert_rs_not_matches!(rs_details.tokens, quote! { Hash });
+    });
+}
+
+#[test]
+fn test_hash_trait_support_for_enum() {
+    let test_src = r#"
+    #[derive(Hash)]
+    pub enum Color {
+        Red,
+        Green,
+        Blue,
+    }
+    "#;
+
+    test_format_item(test_src, "Color", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... Color final {
+                    ...
+                    template <typename H>
+                    friend H AbslHashValue(H h, const Color& self) {
+                        return H::combine(::std::move(h), __crubit_internal::__crubit_thunk_Hash_uhash_uColor(self));
+                    }
+                    ...
+                };
+            }
+        );
+    });
 }

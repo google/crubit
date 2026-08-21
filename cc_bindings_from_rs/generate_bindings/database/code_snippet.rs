@@ -12,7 +12,7 @@ use code_gen_utils::CcInclude;
 use crubit_abi_type::CrubitAbiType;
 use error_report::bail;
 use itertools::Itertools;
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use rustc_middle::ty::Ty;
 use rustc_span::def_id::DefId;
 use rustc_span::Symbol;
@@ -87,6 +87,25 @@ pub enum TemplateSpecialization<'tcx> {
     RsStd(RsStdTemplateSpecialization<'tcx>),
     TraitImpl(TraitImplTemplateSpecialization),
     NegativeAutoTraitImpl(NegativeAutoTraitImplTemplateSpecialization),
+    StdHash(StdHashTemplateSpecialization<'tcx>),
+}
+
+#[derive(Clone, Debug)]
+pub struct StdHashTemplateSpecialization<'tcx> {
+    pub self_ty: Ty<'tcx>,
+    pub self_ty_cc_name: TokenStream,
+    pub thunk_name: Ident,
+}
+impl PartialEq for StdHashTemplateSpecialization<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.self_ty == other.self_ty
+    }
+}
+impl Eq for StdHashTemplateSpecialization<'_> {}
+impl Hash for StdHashTemplateSpecialization<'_> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.self_ty.hash(state);
+    }
 }
 
 #[derive(Clone, Debug)]
