@@ -5,12 +5,12 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_RECORDING_DIAGNOSTIC_CONSUMER_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_RECORDING_DIAGNOSTIC_CONSUMER_H_
 
-#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
+#include "absl/functional/function_ref.h"
 #include "absl/strings/string_view.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/LLVM.h"
@@ -60,7 +60,7 @@ class RecordingDiagnosticConsumer final : public clang::DiagnosticConsumer {
 /// this 'trap' becomes useful.
 RecordingDiagnosticConsumer RecordDiagnostics(
     clang::DiagnosticsEngine& diagnostic_engine,
-    std::function<void(void)> callback);
+    absl::FunctionRef<void()> callback);
 }  // namespace crubit
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_RECORDING_DIAGNOSTIC_CONSUMER_H_

@@ -4,7 +4,6 @@
 
 #include "common/annotation_reader.h"
 
-#include <functional>
 #include <optional>
 #include <string>
 #include <utility>
@@ -12,6 +11,7 @@
 
 #include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
+#include "absl/functional/function_ref.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -21,7 +21,6 @@
 #include "clang/AST/APValue.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
-#include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
@@ -48,7 +47,7 @@ namespace {
 static absl::StatusOr<absl::string_view> GetExprAsStringLiteral(
     const clang::Expr& expr,
     const clang::ASTContext& ast_context ABSL_ATTRIBUTE_LIFETIME_BOUND,
-    std::function<absl::Status()> error) {
+    absl::FunctionRef<absl::Status()> error) {
   clang::Expr::EvalResult eval_result;
   if (!expr.EvaluateAsConstantExpr(eval_result, ast_context) ||
       !eval_result.Val.isLValue()) {

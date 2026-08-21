@@ -5,7 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_DECL_IMPORTER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_DECL_IMPORTER_H_
 
-#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -13,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -76,7 +76,7 @@ class Invocation {
       auto& set = (*ir_.mutable_crubit_features())[target.value()];
       std::vector<std::string> sorted_features(features.begin(),
                                                features.end());
-      std::sort(sorted_features.begin(), sorted_features.end());
+      absl::c_sort(sorted_features);
       set.mutable_features()->Add(sorted_features.begin(),
                                   sorted_features.end());
     }
