@@ -28,7 +28,7 @@ use crate::{
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, CcInclude};
 use database::code_snippet::{
-    ApiSnippets, CcPrerequisites, CcSnippet, TemplateSpecialization,
+    ApiSnippets, CcPrerequisites, CcSnippet, StdHashTemplateSpecialization, TemplateSpecialization,
     TraitImplTemplateSpecialization,
 };
 use database::{
@@ -1418,6 +1418,103 @@ fn generate_display_impl<'tcx>(
     ApiSnippets { main_api, cc_details, rs_details }
 }
 
+/// Generates C++ hashing support (`AbslHashValue` and a `std::hash` template
+/// specialization) for ADTs that implement `core::hash::Hash`.
+///
+/// Hashing is bridged across FFI via a single `extern "C"` Rust thunk that computes
+/// a 64-bit hash using `bridge_rust::internal::hash_u64` (Rapidhash).
+/// - `AbslHashValue`: calls `H::combine(std::move(h), thunk(self))`, integrating
+///   with Abseil's per-process randomized seed for hash flooding protection.
+/// - `std::hash<T>`: returns `static_cast<std::size_t>(thunk(self))`.
+fn generate_hash_impl<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+) -> ApiSnippets<'tcx> {
+    let tcx = db.tcx();
+    let Some(def_id) = core.def_id else {
+        return ApiSnippets::default();
+    };
+    let err_snippets = |err| generate_unsupported_def(db, def_id, err).into_main_api();
+    let Some(hash_trait_id) = tcx.get_diagnostic_item(sym::Hash) else {
+        return err_snippets(anyhow!("Internal Crubit Error: `core::hash::Hash` trait not found."));
+    };
+
+    if !does_type_implement_trait(tcx, core.common.self_ty, hash_trait_id, []) {
+        // This isn't an error, our type doesn't implement `Hash` and so we don't generate
+        // any bindings.
+        return ApiSnippets::default();
+    }
+
+    let static_self_ty = replace_all_regions_with_static(tcx, core.common.self_ty);
+    let self_rs_ty = match db.format_ty_for_rs(static_self_ty) {
+        Ok(ty) => ty,
+        Err(err) => return err_snippets(err),
+    };
+
+    let thunk_name_str =
+        match trait_method_thunk_name(db, hash_trait_id, "hash", core.common.self_ty, &[]) {
+            Ok(name) => name,
+            Err(err) => return err_snippets(err),
+        };
+    let thunk_name = format_ident!("{}", thunk_name_str);
+
+    let adt_cc_short_name = &core.common.cc_short_name;
+    let adt_cc_fully_qualified_name = &core.common.cc_fully_qualified_name;
+
+    let mut main_api_prereqs = CcPrerequisites::default();
+    main_api_prereqs.includes.insert(CcInclude::utility());
+    main_api_prereqs.template_specializations.insert(TemplateSpecialization::StdHash(
+        StdHashTemplateSpecialization {
+            self_ty: core.common.self_ty,
+            self_ty_cc_name: adt_cc_fully_qualified_name.clone(),
+            thunk_name: thunk_name.clone(),
+        },
+    ));
+
+    let main_api = CcSnippet {
+        tokens: quote! {
+            __NEWLINE__ __COMMENT__ "AbslHashValue and std::hash support via core::hash::Hash"
+            template <typename H>
+            friend H AbslHashValue(H h, const #adt_cc_short_name& self) {
+                return H::combine(::std::move(h), __crubit_internal::#thunk_name(self));
+            }
+            __NEWLINE__
+        },
+        prereqs: main_api_prereqs,
+    };
+
+    let mut cc_details_prereqs = CcPrerequisites::default();
+    cc_details_prereqs.includes.insert(CcInclude::cstdint());
+
+    let ref_self_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, core.common.self_ty);
+    let ref_self_cc_ty = match db.format_ty_for_cc(
+        ref_self_ty,
+        TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
+    ) {
+        Ok(ty) => ty,
+        Err(err) => return err_snippets(err),
+    };
+    let ref_self_cc_tokens = ref_self_cc_ty.into_tokens(&mut cc_details_prereqs);
+
+    let cc_details = CcSnippet {
+        tokens: quote! {
+            namespace __crubit_internal {
+                extern "C" ::std::uint64_t #thunk_name(#ref_self_cc_tokens);
+            }
+        },
+        prereqs: cc_details_prereqs,
+    };
+
+    let rs_details = RsSnippet::new(quote! {
+        #[unsafe(no_mangle)]
+        extern "C" fn #thunk_name(self_: &#self_rs_ty) -> u64 {
+            ::bridge_rust::internal::hash_u64(self_)
+        }
+    });
+
+    ApiSnippets { main_api, cc_details, rs_details }
+}
+
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
 /// represented by `core`.  This function is infallible - after
 /// `generate_adt_core` returns success we have committed to emitting C++
@@ -1531,6 +1628,7 @@ pub fn generate_adt<'tcx>(
     let constructor_operator_snippets = generate_constructor_impls(db, core.as_ref());
     let compare_snippets = generate_ord_and_partialord_impls(db, core.as_ref());
     let display_snippets = generate_display_impl(db, core.as_ref());
+    let hash_snippets = generate_hash_impl(db, core.as_ref());
     let into_iterator_snippets = generate_into_iterator_impls(
         db,
         core.as_ref(),
@@ -1557,6 +1655,7 @@ pub fn generate_adt<'tcx>(
         trait_operator_snippets,
         constructor_operator_snippets,
         display_snippets,
+        hash_snippets,
         into_iterator_snippets,
         compare_snippets,
     ]

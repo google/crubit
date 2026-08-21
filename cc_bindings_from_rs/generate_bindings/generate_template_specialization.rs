@@ -13,7 +13,8 @@ use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, EnumSpecializationKind, FormattedTy,
     NegativeAutoTraitImplTemplateSpecialization, RsStdEnumSpecialization, RsStdSpecializationArgs,
-    RsStdTemplateSpecialization, TemplateSpecialization, TraitImplTemplateSpecialization,
+    RsStdTemplateSpecialization, StdHashTemplateSpecialization, TemplateSpecialization,
+    TraitImplTemplateSpecialization,
 };
 use database::{
     AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, StaticMethodMode, TypeLocation,
@@ -1880,6 +1881,39 @@ fn generate_negative_auto_trait_impl_specialization<'tcx>(
     })
 }
 
+/// Generates a `std::hash<T>` template specialization for a type `T` implementing `Hash`.
+fn generate_std_hash_specialization<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    spec: &StdHashTemplateSpecialization<'tcx>,
+) -> Result<ApiSnippets<'tcx>> {
+    let mut prereqs = CcPrerequisites::default();
+    prereqs.includes.insert(CcInclude::cstddef());
+    prereqs.includes.insert(CcInclude::cstdint());
+    prereqs.includes.insert(CcInclude::SystemHeader("functional".into()));
+    if let Some(adt) = spec.self_ty.ty_adt_def() {
+        add_specialization_prereqs(db, &mut prereqs, adt.did())?;
+    }
+    let self_ty_cc_name = &spec.self_ty_cc_name;
+    let thunk_name = &spec.thunk_name;
+    let main_api = CcSnippet {
+        tokens: quote! {
+            namespace __crubit_internal {
+                extern "C" ::std::uint64_t #thunk_name(const #self_ty_cc_name&);
+            }
+            namespace std {
+            template <>
+            struct hash<#self_ty_cc_name> {
+                ::std::size_t operator()(const #self_ty_cc_name& self) const {
+                    return static_cast<::std::size_t>(__crubit_internal::#thunk_name(self));
+                }
+            };
+            }
+        },
+        prereqs,
+    };
+    Ok(ApiSnippets { main_api, ..Default::default() })
+}
+
 /// Generate a template specialization.
 pub fn generate_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -1899,6 +1933,14 @@ pub fn generate_template_specialization<'tcx>(
                         .into_main_api()
                 })
         }
+        TemplateSpecialization::StdHash(std_hash) => generate_std_hash_specialization(db, std_hash)
+            .unwrap_or_else(|err| {
+                if let Some(adt) = std_hash.self_ty.ty_adt_def() {
+                    generate_unsupported_def(db, adt.did(), err).into_main_api()
+                } else {
+                    ApiSnippets::default()
+                }
+            }),
     };
     // Because we reuse logic from generate_struct_and_union here, we will add our `self_ty` as a template specialization of its own specialization creating a dependency cycle.
     // We break that loop manually here to avoid that.
