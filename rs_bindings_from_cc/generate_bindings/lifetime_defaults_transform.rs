@@ -356,24 +356,43 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         name_hint: Option<&Rc<str>>,
         new_bindings: &mut Vec<Rc<str>>,
         ty: &CcType,
+        this_lifetimebound_names: Option<&[Rc<str>]>,
     ) -> Result<LifetimeResult> {
         match ty.variant() {
             CcTypeVariant::Decl { id, .. } if self.decl_binds_lifetimes(id)? => {
                 let mut new_ty = ty.clone();
                 if let Some(type_arg) = self.type_arg_from_decl_id(*id) {
                     let LifetimeResult { ty: type_arg, .. } =
-                        self.add_lifetime_to_input_type(false, name_hint, new_bindings, &type_arg)?;
+                        self.add_lifetime_to_input_type(false, name_hint, new_bindings, &type_arg, None)?;
                     *new_ty.variant_mut() =
                         CcTypeVariant::Decl { id: *id, template_args: Some(Rc::new([type_arg])) };
                 };
                 let mut state =
                     self.get_state_for_annotated_lifetime(ty.explicit_lifetimes(), new_bindings);
                 if state == LifetimeState::Unseen {
-                    let lifetime = self.bindings.push_fresh_binding(name_hint);
-                    new_bindings.push(lifetime.clone());
-                    state = LifetimeState::Single(lifetime);
+                    if let Some(this_bound) = this_lifetimebound_names {
+                        if !this_bound.is_empty() {
+                            *new_ty.explicit_lifetimes_mut() = this_bound.to_vec();
+                            if this_bound.len() == 1 {
+                                state = LifetimeState::Single(this_bound[0].clone());
+                            } else {
+                                state = LifetimeState::Unknown;
+                            }
+                        } else {
+                            let lifetime = self.bindings.push_fresh_binding(name_hint);
+                            new_bindings.push(lifetime.clone());
+                            state = LifetimeState::Single(lifetime);
+                            *new_ty.explicit_lifetimes_mut() = self.get_lifetime_for_state(&state);
+                        }
+                    } else {
+                        let lifetime = self.bindings.push_fresh_binding(name_hint);
+                        new_bindings.push(lifetime.clone());
+                        state = LifetimeState::Single(lifetime);
+                        *new_ty.explicit_lifetimes_mut() = self.get_lifetime_for_state(&state);
+                    }
+                } else {
+                    *new_ty.explicit_lifetimes_mut() = self.get_lifetime_for_state(&state);
                 }
-                *new_ty.explicit_lifetimes_mut() = self.get_lifetime_for_state(&state);
                 Ok(LifetimeResult { ty: new_ty, state, this_state: LifetimeState::Unseen })
             }
             CcTypeVariant::Pointer(pty) if is_this || pty.kind() == PointerTypeKind::LValueRef => {
@@ -382,6 +401,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     name_hint,
                     new_bindings,
                     pty.pointee_type(),
+                    this_lifetimebound_names,
                 )?;
                 let mut state =
                     self.get_state_for_annotated_lifetime(ty.explicit_lifetimes(), new_bindings);
@@ -700,6 +720,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                     Some(&name_hint),
                     &mut lifetime_inputs,
                     param.type_(),
+                    if is_this { Some(&this_lifetimebound_names) } else { None },
                 )?;
             state.update(&new_state);
             this_state.update(&new_this_state);
