@@ -7,7 +7,17 @@ use arc_anyhow::{anyhow, bail, ensure, Result};
 use database::BindingsGenerator;
 use rustc_infer::infer::{InferCtxt, RegionVariableOrigin};
 use rustc_infer::traits::{Obligation, ObligationCause};
+#[cfg_accessible(rustc_middle::ty::TraitClause)]
+use rustc_middle::ty::TraitClause;
+#[cfg_accessible(rustc_middle::ty::TraitPredicate)]
+use rustc_middle::ty::TraitPredicate as TraitClause;
 use rustc_middle::ty::{self, Ty, TyCtxt};
+
+#[cfg_accessible(rustc_middle::ty::ClausePolarity)]
+use rustc_middle::ty::ClausePolarity;
+#[cfg_accessible(rustc_middle::ty::PredicatePolarity)]
+use rustc_middle::ty::PredicatePolarity as ClausePolarity;
+
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_trait_selection::infer::canonical::ir::TypingMode;
@@ -122,13 +132,13 @@ pub fn get_generic_args<'tcx>(
 /// using the given `def_id` as its scope.
 fn get_replacement_for_trait_predicate<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    trait_predicate: ty::TraitPredicate<'tcx>,
+    trait_predicate: TraitClause<'tcx>,
     predicates: GenericClauses<'tcx>,
     new_anon_lifetime: impl Fn() -> ty::Region<'tcx>,
     is_used_in_return_type: bool,
 ) -> Option<Ty<'tcx>> {
     let tcx = db.tcx();
-    if trait_predicate.polarity != ty::PredicatePolarity::Positive {
+    if trait_predicate.polarity != ClausePolarity::Positive {
         return None;
     }
     let trait_ref = trait_predicate.trait_ref;
