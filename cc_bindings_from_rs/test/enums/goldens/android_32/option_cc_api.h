@@ -22,6 +22,7 @@
 #include "support/rs_std/option.h"
 #include "support/rs_std/result.h"
 #include "support/rs_std/str_ref.h"
+#include "support/rs_std/unit.h"
 
 #include <array>
 #include <bit>
@@ -322,6 +323,96 @@ void take_option_result_unmovable(
     rs_std::Option<
         rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>
         _x);
+
+}  // namespace option
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020unit_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020unit_ut_x00000020_x0000003e
+template <>
+struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: option :: Option < () >") rs_std::Option<rs_std::unit_t>
+    : public rs_std::OptionBase<rs_std::Option<rs_std::unit_t>,
+                                rs_std::unit_t> {
+ public:
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Option(const Option&) = default;
+  Option& operator=(const Option&) = default;
+  Option(Option&&) = default;
+  Option& operator=(Option&&) = default;
+
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
+  using base_type =
+      rs_std::OptionBase<rs_std::Option<rs_std::unit_t>, rs_std::unit_t>;
+  constexpr Option() = default;
+  constexpr Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
+  template <typename U>
+    requires(rs_std::OptionForwardConstructible<Option, rs_std::unit_t, U>)
+  Option(U&& value) noexcept;
+  template <typename U>
+    requires(rs_std::OptionForwardConstructible<Option, rs_std::unit_t, U>)
+  Option& operator=(U&& value) noexcept;
+  template <typename Opt>
+    requires(rs_std::OptionFromStdOptional<rs_std::unit_t, Opt>)
+  Option(Opt&& value) noexcept;
+  template <typename Opt>
+    requires(rs_std::OptionFromStdOptional<rs_std::unit_t, Opt>)
+  Option& operator=(Opt&& value) noexcept;
+  template <typename... Args>
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
+  ~Option() noexcept = default;
+
+ private:
+  friend base_type;
+  using tag_type = ::std::uint8_t;
+  static constexpr tag_type kNoneVal = 0;
+  rs_std::unit_t* some_ptr() noexcept {
+    return reinterpret_cast<rs_std::unit_t*>(storage_ + 1);
+  }
+  rs_std::unit_t const* some_const_ptr() const noexcept {
+    return reinterpret_cast<rs_std::unit_t const*>(storage_ + 1);
+  }
+  void set_some_tag() noexcept { set_tag(1); }
+  constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
+  constexpr bool is_none() const noexcept { return tag() == kNoneVal; }
+  constexpr ::std::uint8_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
+
+ private:
+  unsigned char storage_[1];
+};
+#endif
+
+namespace option {
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: UnitOptionField") alignas(
+    1) [[clang::trivial_abi]] UnitOptionField final {
+ public:
+  // Default::default
+  UnitOptionField();
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~UnitOptionField() = default;
+  UnitOptionField(UnitOptionField&&) = default;
+  UnitOptionField& operator=(UnitOptionField&&) = default;
+
+  // `option_golden::UnitOptionField` doesn't implement the `Clone` trait
+  UnitOptionField(const UnitOptionField&) = delete;
+  UnitOptionField& operator=(const UnitOptionField&) = delete;
+  UnitOptionField(::crubit::UnsafeRelocateTag, UnitOptionField&& value);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  static ::option::UnitOptionField new_with_some();
+
+  union {
+    rs_std::Option<rs_std::unit_t> unit;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
 
 }  // namespace option
 
@@ -2720,6 +2811,44 @@ inline void OptionWithSizeTypes::__crubit_field_offset_assertions() {
   static_assert(8 == offsetof(OptionWithSizeTypes, ival));
 }
 static_assert(
+    sizeof(UnitOptionField) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(UnitOptionField) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x0000003aUnitOptionField(
+    ::option::UnitOptionField* __ret_ptr);
+}
+inline ::option::UnitOptionField::UnitOptionField() {
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x0000003aUnitOptionField(
+          this);
+}
+static_assert(::std::is_trivially_destructible_v<UnitOptionField>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::option::UnitOptionField>);
+static_assert(::std::is_trivially_move_assignable_v<::option::UnitOptionField>);
+inline ::option::UnitOptionField::UnitOptionField(::crubit::UnsafeRelocateTag,
+                                                  UnitOptionField&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new_uwith_usome(
+    ::option::UnitOptionField* __ret_ptr);
+}
+inline ::option::UnitOptionField UnitOptionField::new_with_some() {
+  crubit::Slot<::option::UnitOptionField> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new_uwith_usome(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void UnitOptionField::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(UnitOptionField, unit));
+}
+static_assert(
     sizeof(ZStream) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
@@ -2837,6 +2966,78 @@ inline void take_option_result_unmovable(
 }
 
 }  // namespace option
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020unit_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020unit_ut_x00000020_x0000003e
+static_assert(
+    ::std::is_trivially_copy_constructible_v<rs_std::Option<rs_std::unit_t>>);
+static_assert(
+    ::std::is_trivially_copy_assignable_v<rs_std::Option<rs_std::unit_t>>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<rs_std::Option<rs_std::unit_t>>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<rs_std::Option<rs_std::unit_t>>);
+inline rs_std::Option<rs_std::unit_t>::Option(::crubit::UnsafeRelocateTag,
+                                              Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+static_assert(
+    ::std::is_trivially_destructible_v<rs_std::Option<rs_std::unit_t>>);
+inline constexpr ::std::uint8_t rs_std::Option<rs_std::unit_t>::tag()
+    const& noexcept {
+  ::std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    __bytes[i] = storage_[0 + i];
+  }
+  return ::std::bit_cast<::std::uint8_t>(__bytes);
+}
+inline constexpr void rs_std::Option<rs_std::unit_t>::set_tag(
+    ::std::uint8_t tag) noexcept {
+  auto __bytes =
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    storage_[0 + i] = __bytes[i];
+  }
+}
+
+inline constexpr rs_std::Option<rs_std::unit_t>::Option(
+    ::std::nullopt_t) noexcept
+    : base_type(::std::nullopt) {}
+inline constexpr rs_std::Option<rs_std::unit_t>&
+rs_std::Option<rs_std::unit_t>::operator=(::std::nullopt_t) noexcept {
+  base_type::operator=(::std::nullopt);
+  return *this;
+}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<rs_std::unit_t>,
+                                              rs_std::unit_t, U>)
+inline rs_std::Option<rs_std::unit_t>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<rs_std::unit_t>,
+                                              rs_std::unit_t, U>)
+inline rs_std::Option<rs_std::unit_t>&
+rs_std::Option<rs_std::unit_t>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<rs_std::unit_t, Opt>)
+inline rs_std::Option<rs_std::unit_t>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<rs_std::unit_t, Opt>)
+inline rs_std::Option<rs_std::unit_t>&
+rs_std::Option<rs_std::unit_t>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<rs_std::unit_t>::Option(::std::in_place_t ip,
+                                              Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+
+#endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020_x0000003e

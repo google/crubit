@@ -268,3 +268,15 @@ pub type FreeFunc = unsafe extern "C" fn(Voidpf, Voidpf);
 pub struct ZStream {
     pub zfree: Option<FreeFunc>,
 }
+
+#[must_bind]
+#[derive(Default)]
+pub struct UnitOptionField {
+    pub unit: Option<()>,
+}
+impl UnitOptionField {
+    #[must_bind]
+    pub fn new_with_some() -> Self {
+        UnitOptionField { unit: Some(()) }
+    }
+}

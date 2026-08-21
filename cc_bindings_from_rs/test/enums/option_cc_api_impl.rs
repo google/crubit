@@ -263,6 +263,26 @@ unsafe extern "C" fn __crubit_thunk_new(
 }
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptionWithSizeTypes, uval) == 0);
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptionWithSizeTypes, ival) == 16);
+const _: () = assert!(::std::mem::size_of::<::option_golden::UnitOptionField>() == 1);
+const _: () = assert!(::std::mem::align_of::<::option_golden::UnitOptionField>() == 1);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x0000003aUnitOptionField(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::option_golden::UnitOptionField as ::core::default::Default>::default();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new_uwith_usome(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::option_golden::UnitOptionField::new_with_some();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::option_golden::UnitOptionField, unit) == 0);
 const _: () = assert!(::std::mem::size_of::<::option_golden::ZStream>() == 8);
 const _: () = assert!(::std::mem::align_of::<::option_golden::ZStream>() == 8);
 const _: () = assert!(::core::mem::offset_of!(::option_golden::ZStream, zfree) == 0);

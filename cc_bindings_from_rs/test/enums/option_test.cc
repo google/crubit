@@ -218,4 +218,24 @@ TEST(OptionTest, OptionWithSizeTypes) {
   EXPECT_EQ(*s.ival, -10);
 }
 
+TEST(OptionTest, OptionUnitNone) {
+  option::UnitOptionField unit_option_field;
+  rs_std::Option<rs_std::unit_t> none_unit = unit_option_field.unit;
+  EXPECT_FALSE(none_unit.has_value());
+}
+
+template <typename T>
+concept HasValue = requires(T& t) { t.value(); };
+template <typename T>
+concept HasDeref = requires(T& t) { *t; };
+
+TEST(OptionTest, OptionUnitSome) {
+  option::UnitOptionField unit_option_field =
+      option::UnitOptionField::new_with_some();
+  rs_std::Option<rs_std::unit_t> some_unit = unit_option_field.unit;
+  EXPECT_TRUE(some_unit.has_value());
+  static_assert(!HasDeref<rs_std::Option<rs_std::unit_t>>);
+  static_assert(!HasValue<rs_std::Option<rs_std::unit_t>>);
+}
+
 }  // namespace

@@ -106,11 +106,14 @@ fn parse_adt_template_specialization<'tcx>(
     BridgedBuiltin::new(db, adt).map(|bridged_builtin| {
         match bridged_builtin {
             BridgedBuiltin::Option => {
-                let some_ty = FormattedTy::try_from_ty(
-                    substs.type_at(0),
-                    TypeLocation::TemplateArg,
-                    db,
-                )?;
+                let some_ty = parse_unit_in_specialization(db, substs.type_at(0))
+                        .unwrap_or_else(|| {
+                            FormattedTy::try_from_ty(
+                                substs.type_at(0),
+                                TypeLocation::TemplateArg,
+                                db,
+                            )
+                        })?;
                 let layout = get_layout(tcx, self_ty)?;
 
                 let tag = match layout.variants() {
