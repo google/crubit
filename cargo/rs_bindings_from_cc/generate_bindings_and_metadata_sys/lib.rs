@@ -9,4 +9,5 @@ extern crate cc_ir_sys;
 extern crate cmdline_sys;
 extern crate collect_namespaces_sys;
 extern crate ir_from_cc_sys;
+extern crate profiling_sys;
 extern crate src_code_gen_sys;

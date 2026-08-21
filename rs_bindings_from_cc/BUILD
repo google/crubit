@@ -215,10 +215,6 @@ cc_library(
     deps = [
         "@abseil-cpp//absl/strings:string_view",
     ] + select({
-        ":enable_heap_profiling": [
-            "//file/localfile",
-            "//perftools/profiles/collector/heap:alloc_recorder",
-        ],
         "//conditions:default": [],
     }),
 )

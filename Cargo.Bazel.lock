@@ -1,14 +1,14 @@
 {
-  "checksum": "1cfe19372cb7bb7386440c54db8324495b89d281cd6fd82c665bfd720072c827",
+  "checksum": "2cdf627cce4123704383995986ca94978fc45992fa5d3ab4dc0347a508e2ac49",
   "crates": {
-    "aho-corasick 1.1.4": {
+    "aho-corasick 1.1.5": {
       "name": "aho-corasick",
-      "version": "1.1.4",
+      "version": "1.1.5",
       "package_url": "https://github.com/BurntSushi/aho-corasick",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/aho-corasick/1.1.4/download",
-          "sha256": "ddd31a130427c27518df266943a5308ed92d4b226cc639f5a8f1002816174301"
+          "url": "https://static.crates.io/crates/aho-corasick/1.1.5/download",
+          "sha256": "c982642fa9e8606056828ee9a8505737230110bb1099153c79efe865c59d12ba"
         }
       },
       "targets": [
@@ -47,7 +47,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.1.4"
+        "version": "1.1.5"
       },
       "license": "Unlicense OR MIT",
       "license_ids": [
@@ -670,14 +670,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "camino 1.2.4": {
+    "camino 1.2.5": {
       "name": "camino",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "package_url": "https://github.com/camino-rs/camino",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/camino/1.2.4/download",
-          "sha256": "5f2d30e4173c4026932d51d31d6b0613b1fd3014bf3f9f8943d4ba139c437ba0"
+          "url": "https://static.crates.io/crates/camino/1.2.5/download",
+          "sha256": "bb1307f12aa967b5a58416e87b3653360e0fd614a016b6e970db08fecbb1b80d"
         }
       },
       "targets": [
@@ -720,7 +720,7 @@
         "deps": {
           "common": [
             {
-              "id": "camino 1.2.4",
+              "id": "camino 1.2.5",
               "target": "build_script_build"
             },
             {
@@ -731,7 +731,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.2.4"
+        "version": "1.2.5"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -769,7 +769,7 @@
               "target": "cargo_metadata"
             },
             {
-              "id": "clap 4.6.4",
+              "id": "clap 4.6.6",
               "target": "clap"
             },
             {
@@ -888,7 +888,7 @@
         "deps": {
           "common": [
             {
-              "id": "camino 1.2.4",
+              "id": "camino 1.2.5",
               "target": "camino"
             },
             {
@@ -908,7 +908,7 @@
               "target": "serde_json"
             },
             {
-              "id": "thiserror 2.0.19",
+              "id": "thiserror 2.0.20",
               "target": "thiserror"
             }
           ],
@@ -923,14 +923,14 @@
       ],
       "license_file": "LICENSE-MIT"
     },
-    "cc 1.4.1": {
+    "cc 1.4.4": {
       "name": "cc",
-      "version": "1.4.1",
+      "version": "1.4.4",
       "package_url": "https://github.com/rust-lang/cc-rs",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/cc/1.4.1/download",
-          "sha256": "9066c49992464636f92905fa096ec58baaa4d57ec19a5c096c68d3e25ef3d136"
+          "url": "https://static.crates.io/crates/cc/1.4.4/download",
+          "sha256": "0ad534f4357a5264cce5019c989cf66a4f0dc4e0d1b1d15f8aacec0ff7360273"
         }
       },
       "targets": [
@@ -961,7 +961,7 @@
         "deps": {
           "common": [
             {
-              "id": "find-msvc-tools 0.1.10",
+              "id": "find-msvc-tools 0.1.11",
               "target": "find_msvc_tools"
             },
             {
@@ -1001,7 +1001,7 @@
           }
         },
         "edition": "2021",
-        "version": "1.4.1"
+        "version": "1.4.4"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -1024,7 +1024,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.6.4",
+              "id": "clap 4.6.6",
               "target": "clap"
             },
             {
@@ -1072,7 +1072,7 @@
               "target": "anyhow"
             },
             {
-              "id": "clap 4.6.4",
+              "id": "clap 4.6.6",
               "target": "clap"
             },
             {
@@ -1129,7 +1129,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap 4.6.4",
+              "id": "clap 4.6.6",
               "target": "clap"
             },
             {
@@ -1373,7 +1373,7 @@
         "deps": {
           "common": [
             {
-              "id": "either 1.16.0",
+              "id": "either 1.18.0",
               "target": "either"
             }
           ],
@@ -1700,14 +1700,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "clap 4.6.4": {
+    "clap 4.6.6": {
       "name": "clap",
-      "version": "4.6.4",
+      "version": "4.6.6",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap/4.6.4/download",
-          "sha256": "d91e0c145792ef73a6ad36d27c75ac09f1832222a3c209689d90f534685ee5b7"
+          "url": "https://static.crates.io/crates/clap/4.6.6/download",
+          "sha256": "473c7e07f409a8d772161724aa8db6a765a2532a70f9667eeb7b49d3d02fbdca"
         }
       },
       "targets": [
@@ -1745,7 +1745,7 @@
         "deps": {
           "common": [
             {
-              "id": "clap_builder 4.6.2",
+              "id": "clap_builder 4.6.6",
               "target": "clap_builder"
             }
           ],
@@ -1761,7 +1761,7 @@
           ],
           "selects": {}
         },
-        "version": "4.6.4"
+        "version": "4.6.6"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -1818,7 +1818,7 @@
               "target": "cargo_metadata"
             },
             {
-              "id": "clap 4.6.4",
+              "id": "clap 4.6.6",
               "target": "clap"
             }
           ],
@@ -1834,14 +1834,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "clap_builder 4.6.2": {
+    "clap_builder 4.6.6": {
       "name": "clap_builder",
-      "version": "4.6.2",
+      "version": "4.6.6",
       "package_url": "https://github.com/clap-rs/clap",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_builder/4.6.2/download",
-          "sha256": "f09628afdcc538b57f3c6341e9c8e9970f18e4a481690a64974d7023bd33548b"
+          "url": "https://static.crates.io/crates/clap_builder/4.6.6/download",
+          "sha256": "7b48fea5a88e9ae728a2dcbedbfc0e730f7d60da42e1cb049a83c9fb8b789889"
         }
       },
       "targets": [
@@ -1896,7 +1896,7 @@
           "selects": {}
         },
         "edition": "2024",
-        "version": "4.6.2"
+        "version": "4.6.6"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -2294,7 +2294,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.4.1",
+              "id": "cc 1.4.4",
               "target": "cc"
             }
           ],
@@ -2413,14 +2413,14 @@
       "license_ids": [],
       "license_file": "../../../LICENSE"
     },
-    "either 1.16.0": {
+    "either 1.18.0": {
       "name": "either",
-      "version": "1.16.0",
+      "version": "1.18.0",
       "package_url": "https://github.com/rayon-rs/either",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/either/1.16.0/download",
-          "sha256": "91622ff5e7162018101f2fea40d6ebf4a78bbe5a49736a2020649edf9693679e"
+          "url": "https://static.crates.io/crates/either/1.18.0/download",
+          "sha256": "252afb9ae5eaa683babdc6a068b3f5726eb19e05070c731f9b2a23a7c3e8ed34"
         }
       },
       "targets": [
@@ -2451,7 +2451,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.16.0"
+        "version": "1.18.0"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -2869,14 +2869,14 @@
       "license_ids": [],
       "license_file": "../../../LICENSE"
     },
-    "find-msvc-tools 0.1.10": {
+    "find-msvc-tools 0.1.11": {
       "name": "find-msvc-tools",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "package_url": "https://github.com/rust-lang/cc-rs",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/find-msvc-tools/0.1.10/download",
-          "sha256": "26b73573e6edcd2af0cdf47bd6cb58f0b3839491263c314eaad1ccf24430e1de"
+          "url": "https://static.crates.io/crates/find-msvc-tools/0.1.11/download",
+          "sha256": "d45db016d36b838f563236e9193d0ee6ce38f3f68b6c94e914b4929c96bbb890"
         }
       },
       "targets": [
@@ -2899,7 +2899,7 @@
           "**"
         ],
         "edition": "2021",
-        "version": "0.1.10"
+        "version": "0.1.11"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -3372,7 +3372,7 @@
         "deps": {
           "common": [
             {
-              "id": "either 1.16.0",
+              "id": "either 1.18.0",
               "target": "either"
             }
           ],
@@ -4928,7 +4928,7 @@
         "deps": {
           "common": [
             {
-              "id": "cc 1.4.1",
+              "id": "cc 1.4.4",
               "target": "cc"
             }
           ],
@@ -5300,7 +5300,7 @@
         "deps": {
           "common": [
             {
-              "id": "aho-corasick 1.1.4",
+              "id": "aho-corasick 1.1.5",
               "target": "aho_corasick"
             },
             {
@@ -5308,7 +5308,7 @@
               "target": "memchr"
             },
             {
-              "id": "regex-automata 0.4.16",
+              "id": "regex-automata 0.4.18",
               "target": "regex_automata"
             },
             {
@@ -5328,14 +5328,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "regex-automata 0.4.16": {
+    "regex-automata 0.4.18": {
       "name": "regex-automata",
-      "version": "0.4.16",
+      "version": "0.4.18",
       "package_url": "https://github.com/rust-lang/regex",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/regex-automata/0.4.16/download",
-          "sha256": "8fcfdb36bda0c880c5931cdc7a2bcdc8ba4556847b9d912bca70bc94708711ad"
+          "url": "https://static.crates.io/crates/regex-automata/0.4.18/download",
+          "sha256": "ad8553b9b26413251cbf30e620595c7a41b3887f03da04579c0e6b0d6a06b4b2"
         }
       },
       "targets": [
@@ -5387,7 +5387,7 @@
         "deps": {
           "common": [
             {
-              "id": "aho-corasick 1.1.4",
+              "id": "aho-corasick 1.1.5",
               "target": "aho_corasick"
             },
             {
@@ -5402,7 +5402,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.4.16"
+        "version": "0.4.18"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -8232,6 +8232,69 @@
       "license_ids": [],
       "license_file": "../../../../LICENSE"
     },
+    "rs_bindings_from_cc_profiling_sys 0.0.0": {
+      "name": "rs_bindings_from_cc_profiling_sys",
+      "version": "0.0.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rs_bindings_from_cc_profiling_sys",
+            "crate_root": "lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "rs_bindings_from_cc_profiling_sys",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "rs_bindings_from_cc_profiling_sys 0.0.0",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.0.0"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "compile_data_glob_excludes": [
+          "**/*.rs"
+        ],
+        "data_glob": [
+          "**"
+        ]
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../../LICENSE"
+    },
     "rs_bindings_from_cc_proto_from_cc_sys 0.0.0": {
       "name": "rs_bindings_from_cc_proto_from_cc_sys",
       "version": "0.0.0",
@@ -9821,14 +9884,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "thiserror 2.0.19": {
+    "thiserror 2.0.20": {
       "name": "thiserror",
-      "version": "2.0.19",
+      "version": "2.0.20",
       "package_url": "https://github.com/dtolnay/thiserror",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/thiserror/2.0.19/download",
-          "sha256": "09a43598840e33d5b0331f38c5e30d13bb11c11210a4b58f0d9b18a5a5eefcd9"
+          "url": "https://static.crates.io/crates/thiserror/2.0.20/download",
+          "sha256": "ec86235f5fcc2a73650310756d2ac5b138a5780bbbdfae3eeccec992c435ba4f"
         }
       },
       "targets": [
@@ -9872,7 +9935,7 @@
         "deps": {
           "common": [
             {
-              "id": "thiserror 2.0.19",
+              "id": "thiserror 2.0.20",
               "target": "build_script_build"
             }
           ],
@@ -9882,13 +9945,13 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "thiserror-impl 2.0.19",
+              "id": "thiserror-impl 2.0.20",
               "target": "thiserror_impl"
             }
           ],
           "selects": {}
         },
-        "version": "2.0.19"
+        "version": "2.0.20"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -9908,14 +9971,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "thiserror-impl 2.0.19": {
+    "thiserror-impl 2.0.20": {
       "name": "thiserror-impl",
-      "version": "2.0.19",
+      "version": "2.0.20",
       "package_url": "https://github.com/dtolnay/thiserror",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/thiserror-impl/2.0.19/download",
-          "sha256": "43cbfe0cf76104d42a574802844187e84a305e531ed54455f11fbde0f10541cd"
+          "url": "https://static.crates.io/crates/thiserror-impl/2.0.20/download",
+          "sha256": "bc04cd3e1236dd4a98afca4569f2deb3f120e5422a4023be2cb683f8486292af"
         }
       },
       "targets": [
@@ -9955,7 +10018,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.0.19"
+        "version": "2.0.20"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -10534,6 +10597,7 @@
     "rs_bindings_from_cc_lifetime_defaults_transform 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/lifetime_defaults_transform",
     "rs_bindings_from_cc_multiplatform_ir_testing 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/multiplatform_ir_testing",
     "rs_bindings_from_cc_namespace_sys 0.0.0": "cargo/rs_bindings_from_cc/importers/namespace_sys",
+    "rs_bindings_from_cc_profiling_sys 0.0.0": "cargo/rs_bindings_from_cc/profiling_sys",
     "rs_bindings_from_cc_proto_from_cc_sys 0.0.0": "cargo/rs_bindings_from_cc/proto_from_cc_sys",
     "rs_bindings_from_cc_recording_diagnostic_consumer_sys 0.0.0": "cargo/rs_bindings_from_cc/recording_diagnostic_consumer_sys",
     "rs_bindings_from_cc_rs_type_kind 0.0.0": "cargo/rs_bindings_from_cc/generate_bindings/rs_type_kind",
@@ -10623,10 +10687,10 @@
     "anyhow 1.0.104",
     "base64 0.22.1",
     "cargo_metadata 0.23.1",
-    "cc 1.4.1",
-    "clap 4.6.4",
+    "cc 1.4.4",
+    "clap 4.6.6",
     "clap-cargo 0.18.3",
-    "either 1.16.0",
+    "either 1.18.0",
     "flagset 0.4.7",
     "heck 0.5.0",
     "indenter 0.3.4",

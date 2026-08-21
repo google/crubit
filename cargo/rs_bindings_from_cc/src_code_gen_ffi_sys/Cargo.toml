@@ -17,6 +17,7 @@ build = "build.rs"
 path = "lib.rs"
 
 [dependencies]
+profiling_sys = { path = "../../../cargo/rs_bindings_from_cc/profiling_sys", package = "rs_bindings_from_cc_profiling_sys"}
 cc_ffi_types_sys = { path = "../../../cargo/common/cc_ffi_types_sys"}
 generate_bindings_cc_proto_sys = { path = "../../../cargo/rs_bindings_from_cc/generate_bindings/generate_bindings_cc_proto_sys", package = "rs_bindings_from_cc_generate_bindings_cc_proto_sys"}
 

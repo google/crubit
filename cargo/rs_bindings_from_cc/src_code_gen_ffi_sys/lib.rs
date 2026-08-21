@@ -6,3 +6,4 @@
 
 extern crate cc_ffi_types_sys;
 extern crate generate_bindings_cc_proto_sys;
+extern crate profiling_sys;
