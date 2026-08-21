@@ -30,13 +30,13 @@ jobs:
       uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
       with:
         path: ${{ runner.temp }}/proto
-        key: ${{ runner.os }}-protoc-33.0
+        key: ${{ runner.os }}-protoc-35.0
     - name: Install protoc
       env:
         CACHE_HIT: ${{ steps.cache-protoc.outputs.cache-hit }}
       run: |
         if [ "$CACHE_HIT" != "true" ]; then
-          PROTOC_VER=33.0
+          PROTOC_VER=35.0
           curl -sSLO "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-x86_64.zip"
           unzip -o "protoc-${PROTOC_VER}-linux-x86_64.zip" -d "${{ runner.temp }}/proto"
           rm "protoc-${PROTOC_VER}-linux-x86_64.zip"

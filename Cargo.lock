@@ -688,6 +688,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "linkme"
+version = "0.3.37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3045e122bd98aef8ec3ad58ce84f0791f64e70163d1a02710af4aa11a4d54cc5"
+dependencies = [
+ "linkme-impl",
+]
+
+[[package]]
+name = "linkme-impl"
+version = "0.3.37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77060ebe535362c3da75682cd17b0431017b6e7c5661e714fc69a7ad017d1301"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.3",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -732,10 +752,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
-name = "paste"
+name = "paste-complete"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
+checksum = "3a4cf96a295ab7f0ec2334fa557745c0e9526595f6ebabbb129563a98dfc1b2a"
 
 [[package]]
 name = "phf"
@@ -797,26 +817,27 @@ dependencies = [
 
 [[package]]
 name = "protobuf"
-version = "4.33.0-release"
+version = "4.35.0-release"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "154558e7a9b38d16673de13cd7d0bc60b99f8606aa6cf0478752bbd238e64e52"
+checksum = "d05968b8b2df70d7d65ec6bbdb9c9403441d3155c22af783d9eb3c20142313fd"
 dependencies = [
  "cc",
- "paste",
+ "linkme",
+ "paste-complete",
  "protobuf-macros",
 ]
 
 [[package]]
 name = "protobuf-codegen"
-version = "4.33.0-release"
+version = "4.35.0-release"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef21a382e6dc9ecf5c83267fa761c4e82d316c64dca404b15c2425c82cada0e4"
+checksum = "5ccd419b3785dd1692b50c9a9b81b1dbff75ec75a9f5b103224f669d7cc164af"
 
 [[package]]
 name = "protobuf-macros"
-version = "4.33.0-release"
+version = "4.35.0-release"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad392d7fabd6e55ed463ea16460ee5cbfca1f968235fcc698862fa774cd50e13"
+checksum = "1cfbd93f1e3dd18db139a79c002c9e33eff8749e5ebf4e24250957fd98689be1"
 dependencies = [
  "quote",
  "syn 2.0.119",
