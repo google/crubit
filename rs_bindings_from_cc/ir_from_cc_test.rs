@@ -4436,6 +4436,40 @@ fn test_private_method() {
 }
 
 #[gtest]
+fn test_visibility_attribute_on_user_declarations() {
+    let assert_matches = |cc_snippet: &str, expected: proc_macro2::TokenStream| {
+        let proto = ir_proto_from_cc(cc_snippet).unwrap();
+
+        let ir = ir_testing::make_test_ir(&proto).unwrap();
+        assert_ir_matches!(ir, expected);
+    };
+
+    assert_matches(
+        r#"struct __attribute__((visibility("default"))) StructWithDefaultVisibility {
+            int field;
+            void method();
+        };"#,
+        quote! { Record { ... rs_name: "StructWithDefaultVisibility", ... } },
+    );
+    assert_matches(
+        r#"struct __attribute__((visibility("hidden"))) StructWithHiddenVisibility {
+            int field;
+        };"#,
+        quote! { Record { ... rs_name: "StructWithHiddenVisibility", ... } },
+    );
+    assert_matches(
+        r#"__attribute__((visibility("default"))) void free_function_with_default_visibility();"#,
+        quote! { Func { ... rs_name: "free_function_with_default_visibility", ... } },
+    );
+    assert_matches(
+        r#"enum __attribute__((visibility("default"))) EnumWithDefaultVisibility {
+            kValue = 1,
+        };"#,
+        quote! { Enum { ... rs_name: "EnumWithDefaultVisibility", ... } },
+    );
+}
+
+#[gtest]
 fn test_source_location_with_macro() {
     let assert_matches = |cc_snippet: &str, expected: proc_macro2::TokenStream| {
         let proto = ir_proto_from_cc(cc_snippet).unwrap();

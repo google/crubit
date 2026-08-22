@@ -999,6 +999,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
                    clang::isa<clang::NoThreadSafetyAnalysisAttr>(attr) ||
                    clang::isa<clang::LockReturnedAttr>(attr) ||
                    clang::isa<clang::AbiTagAttr>(attr) ||
+                   clang::isa<clang::VisibilityAttr>(attr) ||
                    clang::isa<clang::LocksExcludedAttr>(attr)) {
           // These attributes don't affect Rust.
           return true;
