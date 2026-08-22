@@ -38,6 +38,15 @@ unsafe impl ::cxx::ExternType for HasPointerToIncompleteTypedefs {
     type Id = ::cxx::type_id!("HasPointerToIncompleteTypedefs");
     type Kind = ::cxx::kind::Trivial;
 }
+impl ::core::fmt::Debug for HasPointerToIncompleteTypedefs {
+    fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        formatter
+            .debug_struct("HasPointerToIncompleteTypedefs")
+            .field("incomplete_extern_c", &self.incomplete_extern_c)
+            .field("incomplete", &self.incomplete)
+            .finish()
+    }
+}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasPointerToIncompleteTypedefs"),
     crate::HasPointerToIncompleteTypedefs

@@ -9,6 +9,7 @@ visibility(["//..."])
 SUPPORTED_FEATURES = [
     "supported",
     "assume_lifetimes",
+    "record_impl_debug",
 ]
 
 # A list of targets that should not be granted the `assume_lifetimes` feature by default.
