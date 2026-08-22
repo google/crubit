@@ -645,6 +645,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
     let mut thunk_args = params
         .iter()
         .enumerate()
+        .filter(|(_, param)| !crate::generate_template_specialization::is_unit_ty(param.ty))
         .map(|(i, Param { cc_name, ty, .. })| {
             if i == 0 && self_param.is_inherent_self_method() {
                 if self_param.takes_self_by_copy() {

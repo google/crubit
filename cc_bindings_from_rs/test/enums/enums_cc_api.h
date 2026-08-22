@@ -18,6 +18,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/traits.h"
+#include "support/rs_std/unit.h"
 
 #include <array>
 #include <cstddef>
@@ -243,10 +244,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
 
   static MyEnum MakeF();
 
-  // Error generating bindings for variant `enums_golden::repr_c::MyEnum::Z`
-  // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=15:
-  // Tuple type `()` is not supported in this context
+  static ::enums::repr_c::MyEnum MakeZ(rs_std::unit_t __param_0);
 
   static MyEnum MakeG();
 
@@ -1425,6 +1423,16 @@ inline ::enums::repr_c::MyEnum MyEnum::MakeA(::std::int32_t __param_0,
 // `static` constructor
 inline MyEnum MyEnum::MakeF() {
   return MyEnum(PrivateTagCtorTag{}, Tag{INT64_C(2)});
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_Z(::enums::repr_c::MyEnum* __ret_ptr);
+}
+inline ::enums::repr_c::MyEnum MyEnum::MakeZ(rs_std::unit_t __param_0) {
+  crubit::Slot<::enums::repr_c::MyEnum> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_Z(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 // `static` constructor

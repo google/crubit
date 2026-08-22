@@ -137,6 +137,7 @@ pub fn generate_thunk_decl<'tcx>(
             .inputs()
             .iter()
             .zip(cpp_types)
+            .filter(|(ty, _)| !crate::generate_template_specialization::is_unit_ty(**ty))
             .map(|(&ty, cpp_type)| -> Result<TokenStream> {
                 let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
                 let bridged_type_opt = is_bridged_type(db, ty)?;
@@ -587,6 +588,7 @@ pub fn generate_thunk_impl<'tcx>(
 
     let mut thunk_params = param_names_and_types
         .iter()
+        .filter(|(_, ty)| !crate::generate_template_specialization::is_unit_ty(*ty))
         .map(|(param_name, ty)| {
             let c_abi_type = c_abi_for_param_type(db, *ty)
                 .with_context(|| format!("Error handling parameter `{param_name}`"))?;
@@ -600,7 +602,11 @@ pub fn generate_thunk_impl<'tcx>(
     let fn_args_conversions = param_names_and_types
         .iter()
         .map(|(param_name, ty)| {
-            convert_value_from_c_abi_to_rust(db, *ty, param_name, &mut extern_c_decls)
+            if crate::generate_template_specialization::is_unit_ty(*ty) {
+                Ok(quote! { let #param_name = (); })
+            } else {
+                convert_value_from_c_abi_to_rust(db, *ty, param_name, &mut extern_c_decls)
+            }
         })
         .collect::<Result<Vec<TokenStream>>>()?;
 
