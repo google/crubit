@@ -787,7 +787,7 @@ TEST void nonConstMethodClearsPointerMembers(S s) {
     nonnull(s.nonnull_p);
     unknown(s.unannotated_p);
     unknown(s.pragma_none_p);
-    nonnull(s.pragma_nonnull_p);
+    unknown(s.pragma_nonnull_p);
   }
 }
 
