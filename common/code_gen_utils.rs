@@ -1033,6 +1033,13 @@ impl CcInclude {
         Self::SystemHeader("bit".into())
     }
 
+    /// Creates a `CcInclude` that represents `#include <new>` and provides
+    /// placement new.
+    /// See https://en.cppreference.com/w/cpp/header/new
+    pub fn new_header() -> Self {
+        Self::SystemHeader("new".into())
+    }
+
     /// Creates a `CcInclude` that represents `#include <type_traits>` and
     /// provides C++ APIs like `std::is_trivially_copy_constructible_v`.
     /// See https://en.cppreference.com/w/cpp/header/type_traits
@@ -1086,7 +1093,7 @@ impl ToTokens for CcInclude {
             }
             Self::SupportLibHeader(format, path) => {
                 let full_path: TokenStream = format
-                    .format(&[&*path])
+                    .format(&[path.as_ref()])
                     .parse()
                     .expect("Failed to parse support lib `#include` path");
                 quote! { __HASH_TOKEN__ include #full_path __NEWLINE__ }.to_tokens(tokens)

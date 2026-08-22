@@ -81,5 +81,60 @@ TEST(VecTest, CStringCallability) {
   EXPECT_EQ(c_str2.as_bytes().data()[0], 'H');
 }
 
+TEST(VecTest, CreateInCppPassToRustByValue) {
+  rs_std::Vec<int32_t> v;
+  v.push_back(1);
+  v.push_back(2);
+  v.push_back(3);
+  int32_t sum = vec::take_vec(std::move(v));
+  EXPECT_EQ(sum, 6);
+}
+
+TEST(VecTest, CreateInRustPassToCppByValue) {
+  rs_std::Vec<int32_t> v = vec::return_vec();
+  EXPECT_EQ(v.size(), 3);
+}
+
+TEST(VecTest, CppGrowsPassToRust) {
+  rs_std::Vec<int32_t> v;
+  for (int i = 0; i < 100; ++i) {
+    v.push_back(i);
+  }
+  EXPECT_EQ(v.size(), 100);
+  EXPECT_GE(v.capacity(), 100);
+  vec::drop_vec(std::move(v));
+}
+
+TEST(VecTest, RustGrowsPassToCpp) {
+  rs_std::Vec<int32_t> v = vec::return_grown_vec();
+  EXPECT_EQ(v.size(), 3);
+  EXPECT_GE(v.capacity(), 10);
+}
+
+TEST(VecTest, CppAddsToMutRefToRustVec) {
+  vec::RustVecOwner owner = vec::RustVecOwner::new_();
+  {
+    rs_std::Vec<int32_t>& v_ref = owner.get_mut_vec();
+    EXPECT_EQ(v_ref.size(), 0);
+    v_ref.push_back(10);
+    v_ref.push_back(20);
+    v_ref.emplace_back(30);
+  }
+  EXPECT_EQ(owner.get_len(), 3);
+  EXPECT_EQ(owner.get_element(0), 10);
+  EXPECT_EQ(owner.get_element(1), 20);
+  EXPECT_EQ(owner.get_element(2), 30);
+}
+
+TEST(VecTest, RustAddsToMutRefToCppVec) {
+  rs_std::Vec<int32_t> v;
+  v.push_back(1);
+  vec::rust_add_elements(v);
+  EXPECT_EQ(v.size(), 3);
+  EXPECT_EQ(v[0], 1);
+  EXPECT_EQ(v[1], 100);
+  EXPECT_EQ(v[2], 200);
+}
+
 }  // namespace
 }  // namespace crubit

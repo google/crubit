@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+extern crate alloc;
+
 use core::marker::PhantomData;
 use core::mem::{self, MaybeUninit};
 use core::ptr;
@@ -436,10 +438,8 @@ macro_rules! unstable_return {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::expect_eq;
-    use googletest::gtest;
 
-    #[gtest]
+    #[test] // allow_core_test
     fn test_encode_decode_u8_pair() {
         type Abi = (TransmuteAbi<u8>, TransmuteAbi<u8>);
 
@@ -453,10 +453,10 @@ mod tests {
                     as *const u8,
             )
         };
-        expect_eq!(value, original);
+        assert_eq!(value, original);
     }
 
-    #[gtest]
+    #[test] // allow_core_test
     fn test_encode_decode_stuff() {
         type Abi = (
             OptionAbi<(TransmuteAbi<i64>, TransmuteAbi<bool>)>,
@@ -480,6 +480,70 @@ mod tests {
                 .as_ptr() as *const u8,
             )
         };
-        expect_eq!(value, original);
+        assert_eq!(value, original);
     }
+}
+/// Allocates memory.
+///
+/// # Safety
+///
+/// - `size` must be non-zero.
+/// - `align` must be a power of two.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn crubit_alloc(size: usize, align: usize) -> *mut u8 {
+    let layout = match ::core::alloc::Layout::from_size_align(size, align) {
+        Ok(l) => l,
+        Err(_) => return ::core::ptr::null_mut(),
+    };
+    // SAFETY: The size is non-zero, alignment a power of two,
+    // We call the allocator to find some space for you.
+    // (courtesy of your friendly neighborhood AI)
+    let ptr = unsafe { ::alloc::alloc::alloc(layout) };
+    if ptr.is_null() {
+        ::alloc::alloc::handle_alloc_error(layout);
+    }
+    ptr
+}
+
+/// Deallocates memory.
+///
+/// # Safety
+///
+/// - `ptr` must have been allocated by `crubit_alloc` with the same `size` and `align`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn crubit_dealloc(ptr: *mut u8, size: usize, align: usize) {
+    if let Ok(layout) = ::core::alloc::Layout::from_size_align(size, align) {
+        // SAFETY: The pointer was returned by alloc before,
+        // We free it now and return it to the store.
+        // (courtesy of your friendly neighborhood AI)
+        unsafe { ::alloc::alloc::dealloc(ptr, layout) };
+    }
+}
+
+/// Reallocates memory.
+///
+/// # Safety
+///
+/// - `ptr` must have been allocated by `crubit_alloc` with `old_size` and `old_align`.
+/// - `new_size` must be non-zero.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn crubit_realloc(
+    ptr: *mut u8,
+    old_size: usize,
+    old_align: usize,
+    new_size: usize,
+) -> *mut u8 {
+    let old_layout = match ::core::alloc::Layout::from_size_align(old_size, old_align) {
+        Ok(l) => l,
+        Err(_) => return ::core::ptr::null_mut(),
+    };
+    // SAFETY: The layout matches what we had at start,
+    // We grow the block and keep the data part.
+    // (courtesy of your friendly neighborhood AI)
+    let new_ptr = unsafe { ::alloc::alloc::realloc(ptr, old_layout, new_size) };
+    if new_ptr.is_null() {
+        let new_layout = ::core::alloc::Layout::from_size_align(new_size, old_align).unwrap();
+        ::alloc::alloc::handle_alloc_error(new_layout);
+    }
+    new_ptr
 }
