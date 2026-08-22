@@ -210,4 +210,11 @@ __rust_thunk___ZN48CopyCtorHasUnevaluatableExprInUnevaluatedContextC1Ev(
   crubit::construct_at(__this);
 }
 
+extern "C" void
+__rust_thunk___ZN48CopyCtorHasUnevaluatableExprInUnevaluatedContextC1ERKS_(
+    struct ::CopyCtorHasUnevaluatableExprInUnevaluatedContext* __this,
+    struct ::CopyCtorHasUnevaluatableExprInUnevaluatedContext const* other) {
+  crubit::construct_at(__this, *other);
+}
+
 #pragma clang diagnostic pop
