@@ -65,7 +65,7 @@ pub fn generate_bindings(
             &error_report::IgnoreErrors
         };
         let fatal_errors = FatalErrors::new();
-        let Bindings { rs_api, rs_api_impl } = inner_generate_bindings(
+        match inner_generate_bindings(
             &ir,
             crubit_support_path_format,
             crubit_support_versioned_path_format,
@@ -77,15 +77,24 @@ pub fn generate_bindings(
             is_golden_test,
             kythe_annotations,
             kythe_default_corpus,
-        )
-        .unwrap();
-
-        response.set_rs_api(rs_api);
-        response.set_rs_api_impl(rs_api_impl);
-        if let Some(report) = error_report {
-            response.set_error_report(report.to_json_string());
+        ) {
+            Ok(Bindings { rs_api, rs_api_impl }) => {
+                response.set_rs_api(rs_api);
+                response.set_rs_api_impl(rs_api_impl);
+                if let Some(report) = error_report {
+                    response.set_error_report(report.to_json_string());
+                }
+                response.set_fatal_errors(fatal_errors.take_string());
+            }
+            Err(e) => {
+                let mut err_str = fatal_errors.take_string();
+                if !err_str.is_empty() {
+                    err_str.push_str("\n");
+                }
+                err_str.push_str(&format!("{:#}", e));
+                response.set_fatal_errors(err_str);
+            }
         }
-        response.set_fatal_errors(fatal_errors.take_string());
     }))
     .unwrap_or_else(|_| process::abort())
 }
