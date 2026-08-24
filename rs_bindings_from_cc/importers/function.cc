@@ -639,7 +639,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   // See DefineDefaultedFunction in SemaDeclCXX.cpp.
   // TODO(zarko): This is intentionally very narrow in scope (just for
   // copy assignments) right now. See b/436870965.
-  if (auto defaulted_kind = ictx_.sema_.getDefaultedFunctionKind(function_decl);
+  if (auto defaulted_kind = function_decl->getDefaultedFunctionKind();
       defaulted_kind.isSpecialMember()) {
     // TODO(zarko): Possibly eliminate a redundant check here (have we done this
     // already if function_decl is a function template that is also defaulted?)
