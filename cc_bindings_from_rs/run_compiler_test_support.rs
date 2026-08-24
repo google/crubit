@@ -16,12 +16,18 @@ extern crate rustc_lint_defs;
 extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
+#[rustversion::since(2026-08-22)]
+extern crate rustc_structures;
 extern crate rustc_target;
 use itertools::Itertools;
 
 use rustc_middle::ty::TyCtxt;
-use rustc_session::config::{CrateType, Input, Options, OutputType, OutputTypes, Sysroot};
+#[rustversion::before(2026-08-22)]
+use rustc_session::config::CrateType;
+use rustc_session::config::{Input, Options, OutputType, OutputTypes, Sysroot};
 use rustc_span::def_id::LocalDefId;
+#[rustversion::since(2026-08-22)]
+use rustc_structures::CrateType;
 use rustc_target::spec::TargetTuple;
 
 use std::path::Path;
