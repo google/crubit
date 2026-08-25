@@ -8,7 +8,7 @@
 //!    formats them via `clang-format`, and splices them back with matched indentation.
 
 use anyhow::{bail, Context, Result};
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use parse_inline_cpp_macros::{parse_inline_cpp_macros, MacroKind};
 use std::ffi::OsStr;
 use std::fs;
@@ -21,6 +21,16 @@ const CPP_INDENT_SPACES: usize = 4;
 
 /// Default column limit for Google C++ Style before subtracting indentation.
 const GOOGLE_COLUMN_LIMIT: usize = 80;
+
+/// Output destination mode.
+#[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
+#[value(rename_all = "snake_case")]
+pub enum EmitMode {
+    /// Overwrite files in place.
+    Files,
+    /// Emit formatted source to stdout.
+    Stdout,
+}
 
 #[derive(Parser, Debug)]
 #[command(
@@ -35,6 +45,10 @@ pub struct Args {
     /// Overwrite formatted files in place.
     #[arg(short = 'i', long = "inplace", alias = "overwrite")]
     inplace: bool,
+
+    /// What data to emit and how.
+    #[arg(long, value_enum)]
+    emit: Option<EmitMode>,
 
     /// Path to rustfmt executable.
     #[arg(long)]
@@ -253,6 +267,11 @@ fn format_file_or_stdin(args: &Args) -> Result<()> {
     let rustfmt_config_path = args.rustfmt_config_path.as_deref();
 
     if args.files.is_empty() || (args.files.len() == 1 && args.files[0] == Path::new("-")) {
+        if let Some(emit) = args.emit
+            && emit != EmitMode::Stdout
+        {
+            bail!("Emit mode {emit:?} not supported with standard input.");
+        }
         let mut input = String::new();
         io::stdin().read_to_string(&mut input).context("Failed to read from stdin")?;
         let formatted = format_rust_source(
@@ -267,6 +286,8 @@ fn format_file_or_stdin(args: &Args) -> Result<()> {
         return Ok(());
     }
 
+    let inplace = args.inplace || args.emit == Some(EmitMode::Files);
+
     // TODO(b/544997630): Format multiple files in parallel when given a large list of files.
     for file in &args.files {
         let content = fs::read_to_string(file)
@@ -280,7 +301,7 @@ fn format_file_or_stdin(args: &Args) -> Result<()> {
             &args.clang_format_args,
         )?;
 
-        if args.inplace {
+        if inplace {
             if content == formatted {
                 continue;
             }
@@ -302,7 +323,48 @@ fn main() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use googletest::prelude::*;
+    use googletest::assert_that;
+    use googletest::expect_that;
+    use googletest::gtest;
+    use googletest::matchers::{anything, contains_substring, eq, err, ok};
+
+    #[gtest]
+    fn test_args_parse_emit_stdout() {
+        let args = Args::try_parse_from([
+            "rust_with_cpp_fmt",
+            "--emit",
+            "stdout",
+            "--config-path",
+            "foo.toml",
+        ]);
+        assert_that!(args, ok(anything()));
+        let args = args.unwrap();
+        assert_that!(args.emit, eq(Some(EmitMode::Stdout)));
+        assert_that!(args.rustfmt_config_path.as_deref(), eq(Some(Path::new("foo.toml"))));
+    }
+
+    #[gtest]
+    fn test_args_parse_emit_files() {
+        let args = Args::try_parse_from(["rust_with_cpp_fmt", "--emit=files", "a.rs", "b.rs"]);
+        assert_that!(args, ok(anything()));
+        let args = args.unwrap();
+        assert_that!(args.emit, eq(Some(EmitMode::Files)));
+        assert_that!(&args.files[..], eq(&[PathBuf::from("a.rs"), PathBuf::from("b.rs")]));
+    }
+
+    #[gtest]
+    fn test_args_parse_invalid_emit() {
+        let args = Args::try_parse_from(["rust_with_cpp_fmt", "--emit", "invalid_mode"]);
+        assert_that!(args, err(anything()));
+    }
+
+    #[gtest]
+    fn test_format_file_or_stdin_stdin_files_emit() {
+        let args = Args::try_parse_from(["rust_with_cpp_fmt", "--emit", "files"]);
+        assert_that!(args, ok(anything()));
+        let result = format_file_or_stdin(&args.unwrap());
+        assert_that!(result, err(anything()));
+    }
 
     #[gtest]
     fn test_format_inline_cpp_single_line() -> anyhow::Result<()> {
