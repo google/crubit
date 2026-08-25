@@ -136,6 +136,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# Explicitly disables template_instantiation for a target.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "no_template_instantiation",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["no_template_instantiation"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set enabling generating `rs_std::Tuple` everywhere.
 #
 # See crubit.rs-features#other

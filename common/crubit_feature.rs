@@ -50,6 +50,9 @@ flagset::flags! {
         /// Generate bindings for (non-Crubit special-cased) template instances.
         TemplateInstantiation,
 
+        /// Disable TemplateInstantiation.
+        NoTemplateInstantiation,
+
         /// Emit `rs_std::Tuple` everywhere instead of C++ `std::tuple`.
         LayoutCompatTuple,
 
@@ -92,6 +95,7 @@ impl CrubitFeature {
             Self::AssumeLifetimes => "assume_lifetimes",
             Self::AssumeThisLifetimes => "assume_this_lifetimes",
             Self::NoAssumeLifetimes => "no_assume_lifetimes",
+            Self::NoTemplateInstantiation => "no_template_instantiation",
             Self::UnsafeView => "unsafe_view",
             Self::CheckDefaultInitialized => "check_default_initialized",
             Self::LeadingColonsForCppType => "leading_colons_for_cpp_type",
@@ -121,6 +125,9 @@ impl CrubitFeature {
             Self::AssumeLifetimes => "//features:assume_lifetimes",
             Self::AssumeThisLifetimes => "//features:assume_this_lifetimes",
             Self::NoAssumeLifetimes => "//features:no_assume_lifetimes",
+            Self::NoTemplateInstantiation => {
+                "//features:no_template_instantiation"
+            }
             Self::UnsafeView => "//features:unsafe_view",
             Self::CheckDefaultInitialized => {
                 "//features:check_default_initialized"
@@ -152,6 +159,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"all" => {
             flagset::FlagSet::<CrubitFeature>::full()
                 - CrubitFeature::NoAssumeLifetimes
+                - CrubitFeature::NoTemplateInstantiation
                 - CrubitFeature::LayoutCompatTuple
                 - CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
                 - CrubitFeature::OoCasting
@@ -164,6 +172,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
         b"assume_this_lifetimes" => CrubitFeature::AssumeThisLifetimes.into(),
         b"no_assume_lifetimes" => CrubitFeature::NoAssumeLifetimes.into(),
+        b"no_template_instantiation" => CrubitFeature::NoTemplateInstantiation.into(),
         b"unsafe_view" => CrubitFeature::UnsafeView.into(),
         b"check_default_initialized" => CrubitFeature::CheckDefaultInitialized.into(),
         b"leading_colons_for_cpp_type" => CrubitFeature::LeadingColonsForCppType.into(),
@@ -239,6 +248,10 @@ impl SerializedCrubitFeatures {
             features -= CrubitFeature::AssumeLifetimes;
         }
         features -= CrubitFeature::NoAssumeLifetimes;
+        if features.contains(CrubitFeature::NoTemplateInstantiation) {
+            features -= CrubitFeature::TemplateInstantiation;
+        }
+        features -= CrubitFeature::NoTemplateInstantiation;
         Self(features)
     }
 }
@@ -389,6 +402,31 @@ mod tests {
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::TemplateInstantiation
+                | CrubitFeature::RecordImplDebug
+                | CrubitFeature::CtorPlainValues
+                | CrubitFeature::ReserveStandardMacros
+                | CrubitFeature::ThunklessAccessors
+                | CrubitFeature::AsyncFnSendModuloRegions
+        );
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_features_all_overlapping_no_template_instantiation() {
+        let SerializedCrubitFeatures(features) = serde_json::from_str(
+            "[\"all\", \"supported\", \"experimental\", \"no_template_instantiation\"]",
+        )
+        .unwrap();
+        assert_eq!(
+            features,
+            CrubitFeature::Supported
+                | CrubitFeature::Wrapper
+                | CrubitFeature::Types
+                | CrubitFeature::Experimental
+                | CrubitFeature::AssumeLifetimes
+                | CrubitFeature::AssumeThisLifetimes
+                | CrubitFeature::UnsafeView
+                | CrubitFeature::CheckDefaultInitialized
+                | CrubitFeature::LeadingColonsForCppType
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
