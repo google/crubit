@@ -442,32 +442,12 @@ fn generate_cc_operator_index_nonmut_impls<'a>(
     errors: &Errors,
 ) -> ErrorsOr<(Ident, ImplKind<'a>)> {
     let func_name = make_rs_ident("cc_index");
-    let output_pointee_cc_type = match func.return_type().variant() {
-        CcTypeVariant::Pointer(pointer_data) => {
-            if !matches!(pointer_data.kind(), PointerTypeKind::LValueRef) {
-                errors.add(anyhow!(
-                    "operator[] must return an lvalue reference (e.g. const T&), but found {:?}",
-                    pointer_data.kind()
-                ));
-            }
-            if !pointer_data.pointee_type().is_const() {
-                errors.add(anyhow!("operator[] must return a const value"));
-            }
-
-            pointer_data.pointee_type().clone()
-        }
-
-        _ => {
-            bail_to_errors!(
-                errors,
-                "operator[] should return a reference (values are not yet supported), found {}",
-                db.cc_type_debug_name(func.return_type())
-            )
-        }
-    };
 
     let output_type: Rc<RsTypeKind> = match return_type {
-        RsTypeKind::Reference { referent, .. } | RsTypeKind::RvalueReference { referent, .. } => {
+        RsTypeKind::Reference { referent, mutability, .. } => {
+            if !mutability.is_const() {
+                errors.add(anyhow!("operator[] must return a const value"));
+            }
             referent.clone()
         }
         _ => {
@@ -502,32 +482,11 @@ fn generate_cc_operator_index_mut_impls<'a>(
 ) -> ErrorsOr<(Ident, ImplKind<'a>)> {
     let func_name = make_rs_ident("cc_index_mut");
 
-    let output_pointee_cc_type = match func.return_type().variant() {
-        CcTypeVariant::Pointer(pointer_data) => {
-            if !matches!(pointer_data.kind(), PointerTypeKind::LValueRef) {
-                errors.add(anyhow!(
-                    "operator[] must return an lvalue reference (e.g. const T&), but found {:?}",
-                    pointer_data.kind()
-                ));
-            }
-            if pointer_data.pointee_type().is_const() {
+    let output_type: Rc<RsTypeKind> = match return_type {
+        RsTypeKind::Reference { referent, mutability, .. } => {
+            if mutability.is_const() {
                 errors.add(anyhow!("(mutable) operator[] must return a non-const value"));
             }
-
-            pointer_data.pointee_type().clone()
-        }
-
-        _ => {
-            bail_to_errors!(
-                errors,
-                "(mutable) operator[] should return a reference (values are not yet supported), found {}",
-                db.cc_type_debug_name(func.return_type())
-            )
-        }
-    };
-
-    let output_type: Rc<RsTypeKind> = match return_type {
-        RsTypeKind::Reference { referent, .. } | RsTypeKind::RvalueReference { referent, .. } => {
             referent.clone()
         }
         _ => {
