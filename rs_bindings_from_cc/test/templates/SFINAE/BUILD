@@ -19,3 +19,20 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+crubit_test_cc_library(
+    name = "atomic_regression_cc",
+    hdrs = ["atomic_regression.h"],
+    aspect_hints = ["//features:template_instantiation"],
+)
+
+crubit_rust_test(
+    name = "atomic_regression_test",
+    srcs = ["atomic_regression.rs"],
+    cc_deps = [
+        ":atomic_regression_cc",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)

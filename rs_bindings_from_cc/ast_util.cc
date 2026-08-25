@@ -501,7 +501,16 @@ std::string GetInvalidCallTarget(ImportContext& ictx,
             return false;
           }
         }
-        if (fn->isInvalidDecl() || fn->isDeleted()) {
+        bool is_satisfied = true;
+        if (fn->getTrailingRequiresClause()) {
+          clang::ConstraintSatisfaction satisfaction;
+          if (ictx.sema_.CheckFunctionConstraints(fn, satisfaction)) {
+            is_satisfied = false;
+          } else {
+            is_satisfied = satisfaction.IsSatisfied;
+          }
+        }
+        if (fn->isInvalidDecl() || fn->isDeleted() || !is_satisfied) {
           invalid_decl_name = fn->getQualifiedNameAsString();
           return false;
         }
