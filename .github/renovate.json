@@ -1,3 +1,16 @@
 {
-  "extends": ["config:recommended"]
+  "extends": ["config:recommended", "schedule:weekly"],
+  "enabledManagers": ["custom.regex"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^MODULE\\.bazel$"],
+      "matchStrings": [
+        "llvm_ext\\.configure\\(commit\\s*=\\s*\"(?<currentDigest>[0-9a-f]+)\"\\)"
+      ],
+      "currentValueTemplate": "main",
+      "packageNameTemplate": "https://github.com/llvm/llvm-project",
+      "datasourceTemplate": "git-refs"
+    }
+  ]
 }

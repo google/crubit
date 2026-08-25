@@ -150,4 +150,5 @@ jobs:
         ${RCACHE_FLAGS}
         rs_bindings_from_cc:bazel_types
         rs_bindings_from_cc:cmdline_flags
+        rs_bindings_from_cc:cc_ir
 # LINT.ThenChange(//depot/copy.bara.sky)
