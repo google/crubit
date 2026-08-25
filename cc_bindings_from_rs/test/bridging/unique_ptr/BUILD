@@ -28,7 +28,7 @@ rust_library(
     ],
     cc_deps = [
         ":test_helpers",
-        "//support/public:cc_std",
+        "//support/cc_std",
     ],
     proc_macro_deps = ["//support:crubit_annotate"],
 )

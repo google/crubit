@@ -15,6 +15,27 @@ exports_files(
 )
 
 rust_library(
+    name = "cpp_std",
+    srcs = ["cpp_std.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "//support/cc_std",
+    ],
+)
+
+rust_test(
+    name = "cpp_std_test",
+    srcs = ["cpp_std_test.rs"],
+    deps = [
+        ":cpp_std",
+        "@crate_index//:googletest",
+    ],
+)
+
+rust_library(
     name = "cref",
     srcs = ["cref.rs"],
     compatible_with = ["//buildenv/target:non_prod"],

@@ -7,7 +7,7 @@ note that `virtual_unique_ptr<T>` is only available when `T` is a C++ type with
 a virtual destructor or which overrides operator delete.
 
 When `T` does not have a virtual destructor and does not override operator
-delete, use `cc_std::std::unique_ptr<T>` instead.
+delete, use `cpp_std::unique_ptr<T>` instead.
 
 ## Why
 

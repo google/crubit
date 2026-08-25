@@ -37,7 +37,7 @@ crubit_rust_test(
     srcs = ["test.rs"],
     cc_deps = [
         ":string_view_cc_apis",
-        "//support/public:cc_std",
+        "//support/cc_std",
     ],
     deps = [
         "@crate_index//:googletest",

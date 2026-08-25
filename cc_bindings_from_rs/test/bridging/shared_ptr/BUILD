@@ -25,7 +25,7 @@ rust_library(
         "shared_ptr.rs",
     ],
     cc_deps = [
-        "//support/public:cc_std",
+        "//support/cc_std",
     ],
     proc_macro_deps = ["//support:crubit_annotate"],
 )

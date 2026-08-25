@@ -450,16 +450,16 @@ std::unique_ptr<After> ReturnAfter();
 ```
 
 ```rust {.no-copy}
-pub fn ReturnBefore() -> cc_std::std::unique_ptr<Before> {...}
-pub fn ReturnAfter() -> cc_std::std::virtual_unique_ptr<After> {...}
+pub fn ReturnBefore() -> cpp_std::unique_ptr<Before> {...}
+pub fn ReturnAfter() -> cpp_std::virtual_unique_ptr<After> {...}
 
-let _: cc_std::std::unique_ptr<_> = ReturnAfter();  // error[E0308]: mismatched types
+let _: cpp_std::unique_ptr<_> = ReturnAfter();  // error[E0308]: mismatched types
 ```
 
 **Fix:** Migrate callers that use heap allocated types such as `unique_ptr`.
 
 ```rust {.good .no-copy}
-let _: cc_std::std::virtual_unique_ptr<_> = ReturnAfter();
+let _: cpp_std::virtual_unique_ptr<_> = ReturnAfter();
 ```
 
 ### Adding an overload {#compatibility-overload}

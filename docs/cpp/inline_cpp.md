@@ -84,7 +84,7 @@ use crubit_support::inline_cpp;
 
 impl Widget {
     /// Ergonomic Rust wrapper over a C++ factory function template.
-    pub fn new_with_name(name: &str) -> cc_std::std::unique_ptr<Widget> {
+    pub fn new_with_name(name: &str) -> cpp_std::unique_ptr<Widget> {
         let make_widget = inline_cpp! {
             (rs_std::StrRef name) -> std::unique_ptr<widget::Widget> {
                 return widget::Widget::Create(name.to_string_view());

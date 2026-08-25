@@ -76,7 +76,7 @@ std::unique_ptr<User> CreateUser(std::string_view name, int id);
 You can call these C++ functions from Rust:
 
 ```rs
-use cc_std::std::unique_ptr;
+use cpp_std::unique_ptr;
 use ffi_11::{c_double, c_int};
 use user_api::{CreateUser, FindUser, User};
 

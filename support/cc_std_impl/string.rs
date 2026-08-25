@@ -356,7 +356,7 @@ pub unsafe extern "C" fn cpp_string_to_rust_string(input: *mut c_void, output: *
 /// # Examples
 ///
 /// ```
-/// use cc_std::std::new_string;
+/// use cpp_std::new_string;
 /// use ctor::{emplace, CtorNew};
 ///
 /// // Create a new_string using emplace! and CtorNew:

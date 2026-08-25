@@ -35,7 +35,7 @@ crubit_rust_test(
     cc_deps = [
         ":cc_helper_functions",
         ":cc_movable_types",
-        "//support/public:cc_std",
+        "//support/cc_std",
     ],
     deps = [
         "//support/ffi_11",
