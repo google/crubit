@@ -18,6 +18,7 @@ path = "../../../../rs_bindings_from_cc/generate_bindings/has_bindings.rs"
 doctest = false
 
 [dependencies]
+generate_function_thunk = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/generate_function_thunk", package = "rs_bindings_from_cc_generate_function_thunk"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
 error_report = { path = "../../../../cargo/common/error_report"}
