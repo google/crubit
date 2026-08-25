@@ -91,16 +91,6 @@ const _: () =
     assert!(::core::mem::offset_of!(::tuple_structs_golden::DefaultAndCloneNoUnpin, _marker) == 4);
 const _: () = assert!(::std::mem::size_of::<::tuple_structs_golden::DefaultNoCopyNoClone>() == 4);
 const _: () = assert!(::std::mem::align_of::<::tuple_structs_golden::DefaultNoCopyNoClone>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultNoCopyNoClone(
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::tuple_structs_golden::DefaultNoCopyNoClone as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
 const _: () =
     assert!(::core::mem::offset_of!(::tuple_structs_golden::DefaultNoCopyNoClone, value) == 0);
 const _: () = assert!(::std::mem::size_of::<::tuple_structs_golden::DontMoveMe>() == 8);
@@ -398,15 +388,6 @@ const _: () =
     assert!(::std::mem::size_of::<::tuple_structs_golden::TupleStructWithTupleFieldType>() == 8);
 const _: () =
     assert!(::std::mem::align_of::<::tuple_structs_golden::TupleStructWithTupleFieldType>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithTupleFieldType(
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value=<::tuple_structs_golden::TupleStructWithTupleFieldType as::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(
     __param_0: *const [*const core::ffi::c_void; 2usize],

@@ -168,25 +168,101 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 }  // namespace structs::abi_classification
 
-namespace structs::default_repr {
+namespace structs::aggregate_initialization {
+
+// CRUBIT_ANNOTATE: field_drop_order_does_not_matter=
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: structs_golden :: aggregate_initialization :: "
+    "AnnotatedTwoDrops") alignas(8) [[clang::trivial_abi]]
+AnnotatedTwoDrops final {
+ public:
+  ::rs::alloc::string::String __field0 = {};
+  ::rs::alloc::string::String __field1 = {};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+struct
+    CRUBIT_INTERNAL_RUST_TYPE(
+        ":: structs_golden :: aggregate_initialization :: "
+        "BasicAggregate") alignas(4) [[clang::trivial_abi]]
+    BasicAggregate final {
+ public:
+  ::std::int32_t x = {};
+  ::std::int32_t y = {};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: structs_golden :: default_repr :: Point") alignas(4)
-    [[clang::trivial_abi]] Point final {
+    ":: structs_golden :: aggregate_initialization :: "
+    "CustomDropStruct") alignas(4) [[clang::trivial_abi]]
+CustomDropStruct final {
  public:
-  // `structs_golden::default_repr::Point` doesn't implement the `Default` trait
-  Point() = delete;
+  // Type is not a C++ aggregate: Type implements `Drop`
+
+  // `structs_golden::aggregate_initialization::CustomDropStruct` doesn't
+  // implement the `Default` trait
+  CustomDropStruct() = delete;
+
+  // Drop::drop
+  ~CustomDropStruct();
+
+  // C++ move operations are unavailable for this type. See
+  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
+  // are C++ movable.
+  CustomDropStruct(CustomDropStruct&&) = delete;
+  ::structs::aggregate_initialization::CustomDropStruct& operator=(
+      CustomDropStruct&&) = delete;
+  // `structs_golden::aggregate_initialization::CustomDropStruct` doesn't
+  // implement the `Clone` trait
+  CustomDropStruct(const CustomDropStruct&) = delete;
+  CustomDropStruct& operator=(const CustomDropStruct&) = delete;
+  CustomDropStruct(::crubit::UnsafeRelocateTag, CustomDropStruct&& value);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  static ::structs::aggregate_initialization::CustomDropStruct create(
+      ::std::int32_t x);
+
+  union {
+    ::std::int32_t x;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: structs_golden :: aggregate_initialization :: "
+    "NonExhaustiveStruct") alignas(4) [[clang::trivial_abi]]
+NonExhaustiveStruct final {
+ public:
+  // Type is not a C++ aggregate: Type is marked `#[non_exhaustive]`
+
+  // `structs_golden::aggregate_initialization::NonExhaustiveStruct` doesn't
+  // implement the `Default` trait
+  NonExhaustiveStruct() = delete;
 
   // No custom `Drop` impl and no custom "drop glue" required
-  ~Point() = default;
-  Point(Point&&) = default;
-  Point& operator=(Point&&) = default;
+  ~NonExhaustiveStruct() = default;
+  NonExhaustiveStruct(NonExhaustiveStruct&&) = default;
+  NonExhaustiveStruct& operator=(NonExhaustiveStruct&&) = default;
 
-  // `structs_golden::default_repr::Point` doesn't implement the `Clone` trait
-  Point(const Point&) = delete;
-  Point& operator=(const Point&) = delete;
-  Point(::crubit::UnsafeRelocateTag, Point&& value);
+  // `structs_golden::aggregate_initialization::NonExhaustiveStruct` doesn't
+  // implement the `Clone` trait
+  NonExhaustiveStruct(const NonExhaustiveStruct&) = delete;
+  NonExhaustiveStruct& operator=(const NonExhaustiveStruct&) = delete;
+  NonExhaustiveStruct(::crubit::UnsafeRelocateTag, NonExhaustiveStruct&& value);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  static ::structs::aggregate_initialization::NonExhaustiveStruct create(
+      ::std::int32_t x, ::std::int32_t y);
 
   union {
     ::std::int32_t x;
@@ -194,6 +270,135 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   union {
     ::std::int32_t y;
   };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+struct
+    CRUBIT_INTERNAL_RUST_TYPE(
+        ":: structs_golden :: aggregate_initialization :: "
+        "SingleDropField") alignas(8) [[clang::trivial_abi]]
+    SingleDropField final {
+ public:
+  ::rs::alloc::string::String __field0 = {};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: structs_golden :: aggregate_initialization :: "
+    "StructWithPrivateField") alignas(4) [[clang::trivial_abi]]
+StructWithPrivateField final {
+ public:
+  // Type is not a C++ aggregate: Field `y` is not public
+
+  // `structs_golden::aggregate_initialization::StructWithPrivateField` doesn't
+  // implement the `Default` trait
+  StructWithPrivateField() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~StructWithPrivateField() = default;
+  StructWithPrivateField(StructWithPrivateField&&) = default;
+  StructWithPrivateField& operator=(StructWithPrivateField&&) = default;
+
+  // `structs_golden::aggregate_initialization::StructWithPrivateField` doesn't
+  // implement the `Clone` trait
+  StructWithPrivateField(const StructWithPrivateField&) = delete;
+  StructWithPrivateField& operator=(const StructWithPrivateField&) = delete;
+  StructWithPrivateField(::crubit::UnsafeRelocateTag,
+                         StructWithPrivateField&& value);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  static ::structs::aggregate_initialization::StructWithPrivateField create(
+      ::std::int32_t x, ::std::int32_t y);
+
+  union {
+    ::std::int32_t x;
+  };
+
+ private:
+  union {
+    ::std::int32_t y;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+struct
+    CRUBIT_INTERNAL_RUST_TYPE(
+        ":: structs_golden :: aggregate_initialization :: "
+        "TupleAggregate") alignas(8) [[clang::trivial_abi]]
+    TupleAggregate final {
+ public:
+  double __field1 = {};
+  ::std::int32_t __field0 = {};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: structs_golden :: aggregate_initialization :: "
+    "UnannotatedTwoDrops") alignas(8) [[clang::trivial_abi]]
+UnannotatedTwoDrops final {
+ public:
+  // Type is not a C++ aggregate: Multiple fields require drop glue (annotate
+  // with `#[crubit_annotate::field_drop_order_does_not_matter]` if field drop
+  // order does not matter)
+
+  // `structs_golden::aggregate_initialization::UnannotatedTwoDrops` doesn't
+  // implement the `Default` trait
+  UnannotatedTwoDrops() = delete;
+
+  // Synthesized tuple constructor
+  UnannotatedTwoDrops(::rs::alloc::string::String __field0,
+                      ::rs::alloc::string::String __field1)
+      : __field0(::std::move(__field0)), __field1(::std::move(__field1)) {}
+
+  // Drop::drop
+  ~UnannotatedTwoDrops();
+
+  // C++ move operations are unavailable for this type. See
+  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
+  // are C++ movable.
+  UnannotatedTwoDrops(UnannotatedTwoDrops&&) = delete;
+  ::structs::aggregate_initialization::UnannotatedTwoDrops& operator=(
+      UnannotatedTwoDrops&&) = delete;
+  // `structs_golden::aggregate_initialization::UnannotatedTwoDrops` doesn't
+  // implement the `Clone` trait
+  UnannotatedTwoDrops(const UnannotatedTwoDrops&) = delete;
+  UnannotatedTwoDrops& operator=(const UnannotatedTwoDrops&) = delete;
+  UnannotatedTwoDrops(::crubit::UnsafeRelocateTag, UnannotatedTwoDrops&& value);
+
+  union {
+    ::rs::alloc::string::String __field0;
+  };
+  union {
+    ::rs::alloc::string::String __field1;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace structs::aggregate_initialization
+
+namespace structs::default_repr {
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: structs_golden :: default_repr :: Point") alignas(4)
+    [[clang::trivial_abi]] Point final {
+ public:
+  ::std::int32_t x = {};
+  ::std::int32_t y = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -214,21 +419,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: display :: DisplayStruct") alignas(4)
     [[clang::trivial_abi]] DisplayStruct final {
  public:
-  // `structs_golden::display::DisplayStruct` doesn't implement the `Default`
-  // trait
-  DisplayStruct() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~DisplayStruct() = default;
-  DisplayStruct(DisplayStruct&&) = default;
-  DisplayStruct& operator=(DisplayStruct&&) = default;
-
-  // `structs_golden::display::DisplayStruct` doesn't implement the `Clone`
-  // trait
-  DisplayStruct(const DisplayStruct&) = delete;
-  DisplayStruct& operator=(const DisplayStruct&) = delete;
-  DisplayStruct(::crubit::UnsafeRelocateTag, DisplayStruct&& value);
-
   // AbslStringify and std::ostream support via std::fmt::Display
   template <typename Sink, typename Str = rs::alloc::string::String>
   friend void AbslStringify(Sink& sink, const DisplayStruct& self) {
@@ -247,9 +437,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                ::std::move(s).AssumeInitAndTakeValue().as_str());
   }
 
-  union {
-    ::std::int32_t value;
-  };
+  ::std::int32_t value = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -276,6 +464,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: interior_mutability :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
  public:
+  // Type is not a C++ aggregate: Field `field` has a type unsupported in C++
+
   // Default::default
   SomeStruct();
 
@@ -345,6 +535,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: nested_ptr_type_mutability_qualifiers :: "
     "SomeStruct") alignas(8) [[clang::trivial_abi]] SomeStruct final {
  public:
+  // Type is not a C++ aggregate: Type has a manual `Default` implementation
+
   // Default::default
   SomeStruct();
 
@@ -379,6 +571,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: non_cpp_movable :: Point") alignas(4)
     [[clang::trivial_abi]] Point final {
  public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
   // `structs_golden::non_cpp_movable::Point` doesn't implement the `Default`
   // trait
   Point() = delete;
@@ -423,25 +617,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: repr_c :: Point") alignas(4) [[clang::trivial_abi]]
 Point final {
  public:
-  // `structs_golden::repr_c::Point` doesn't implement the `Default` trait
-  Point() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Point() = default;
-  Point(Point&&) = default;
-  Point& operator=(Point&&) = default;
-
-  // `structs_golden::repr_c::Point` doesn't implement the `Clone` trait
-  Point(const Point&) = delete;
-  Point& operator=(const Point&) = delete;
-  Point(::crubit::UnsafeRelocateTag, Point&& value);
-
-  union {
-    ::std::int32_t x;
-  };
-  union {
-    ::std::int32_t y;
-  };
+  ::std::int32_t x = {};
+  ::std::int32_t y = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -565,26 +742,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: unsupported_types :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
  public:
-  // Default::default
-  SomeStruct();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~SomeStruct() = default;
-  SomeStruct(SomeStruct&&) = default;
-  SomeStruct& operator=(SomeStruct&&) = default;
-
-  // `structs_golden::unsupported_types::SomeStruct` doesn't implement the
-  // `Clone` trait
-  SomeStruct(const SomeStruct&) = delete;
-  SomeStruct& operator=(const SomeStruct&) = delete;
-  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::structs::unsupported_types::SomeStruct create(rs_std::char_ x);
 
-  union {
-    rs_std::char_ unsupported_field;
-  };
+  rs_std::char_ unsupported_field = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -614,6 +775,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: zst_fields :: ZstFields") alignas(4)
     [[clang::trivial_abi]] ZstFields final {
  public:
+  // Type is not a C++ aggregate: Field `zst1` has a type unsupported in C++
+
   // `structs_golden::zst_fields::ZstFields` doesn't implement the `Default`
   // trait
   ZstFields() = delete;
@@ -847,6 +1010,189 @@ inline void StructMemory::__crubit_field_offset_assertions() {
 }
 }  // namespace structs::abi_classification
 
+namespace structs::aggregate_initialization {
+
+static_assert(
+    sizeof(AnnotatedTwoDrops) == 48,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(AnnotatedTwoDrops) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+inline void AnnotatedTwoDrops::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(AnnotatedTwoDrops, __field0));
+  static_assert(24 == offsetof(AnnotatedTwoDrops, __field1));
+}
+static_assert(
+    sizeof(BasicAggregate) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(BasicAggregate) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<BasicAggregate>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::structs::aggregate_initialization::BasicAggregate>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::structs::aggregate_initialization::BasicAggregate>);
+inline void BasicAggregate::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(BasicAggregate, x));
+  static_assert(4 == offsetof(BasicAggregate, y));
+}
+static_assert(
+    sizeof(CustomDropStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(CustomDropStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003aaggregate_uinitialization_x0000003a_x0000003aCustomDropStruct(
+    ::structs::aggregate_initialization::CustomDropStruct&);
+}
+inline CustomDropStruct::~CustomDropStruct() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003aaggregate_uinitialization_x0000003a_x0000003aCustomDropStruct(
+          *this);
+}
+inline ::structs::aggregate_initialization::CustomDropStruct::CustomDropStruct(
+    ::crubit::UnsafeRelocateTag, CustomDropStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_create(
+    ::std::int32_t,
+    ::structs::aggregate_initialization::CustomDropStruct* __ret_ptr);
+}
+inline ::structs::aggregate_initialization::CustomDropStruct
+CustomDropStruct::create(::std::int32_t x) {
+  crubit::Slot<::structs::aggregate_initialization::CustomDropStruct>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create(x, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void CustomDropStruct::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(CustomDropStruct, x));
+}
+static_assert(
+    sizeof(NonExhaustiveStruct) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(NonExhaustiveStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<NonExhaustiveStruct>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::structs::aggregate_initialization::NonExhaustiveStruct>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::structs::aggregate_initialization::NonExhaustiveStruct>);
+inline ::structs::aggregate_initialization::NonExhaustiveStruct::
+    NonExhaustiveStruct(::crubit::UnsafeRelocateTag,
+                        NonExhaustiveStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_create(
+    ::std::int32_t, ::std::int32_t,
+    ::structs::aggregate_initialization::NonExhaustiveStruct* __ret_ptr);
+}
+inline ::structs::aggregate_initialization::NonExhaustiveStruct
+NonExhaustiveStruct::create(::std::int32_t x, ::std::int32_t y) {
+  crubit::Slot<::structs::aggregate_initialization::NonExhaustiveStruct>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create(x, y, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void NonExhaustiveStruct::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(NonExhaustiveStruct, x));
+  static_assert(4 == offsetof(NonExhaustiveStruct, y));
+}
+static_assert(
+    sizeof(SingleDropField) == 24,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(SingleDropField) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+inline void SingleDropField::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(SingleDropField, __field0));
+}
+static_assert(
+    sizeof(StructWithPrivateField) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(StructWithPrivateField) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<StructWithPrivateField>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::structs::aggregate_initialization::StructWithPrivateField>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::structs::aggregate_initialization::StructWithPrivateField>);
+inline ::structs::aggregate_initialization::StructWithPrivateField::
+    StructWithPrivateField(::crubit::UnsafeRelocateTag,
+                           StructWithPrivateField&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_create(
+    ::std::int32_t, ::std::int32_t,
+    ::structs::aggregate_initialization::StructWithPrivateField* __ret_ptr);
+}
+inline ::structs::aggregate_initialization::StructWithPrivateField
+StructWithPrivateField::create(::std::int32_t x, ::std::int32_t y) {
+  crubit::Slot<::structs::aggregate_initialization::StructWithPrivateField>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create(x, y, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void StructWithPrivateField::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(StructWithPrivateField, x));
+  static_assert(4 == offsetof(StructWithPrivateField, y));
+}
+static_assert(
+    sizeof(TupleAggregate) == 16,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(TupleAggregate) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<TupleAggregate>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::structs::aggregate_initialization::TupleAggregate>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::structs::aggregate_initialization::TupleAggregate>);
+inline void TupleAggregate::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(TupleAggregate, __field1));
+  static_assert(8 == offsetof(TupleAggregate, __field0));
+}
+static_assert(
+    sizeof(UnannotatedTwoDrops) == 48,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(UnannotatedTwoDrops) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003aaggregate_uinitialization_x0000003a_x0000003aUnannotatedTwoDrops(
+    ::structs::aggregate_initialization::UnannotatedTwoDrops&);
+}
+inline UnannotatedTwoDrops::~UnannotatedTwoDrops() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003aaggregate_uinitialization_x0000003a_x0000003aUnannotatedTwoDrops(
+          *this);
+}
+inline ::structs::aggregate_initialization::UnannotatedTwoDrops::
+    UnannotatedTwoDrops(::crubit::UnsafeRelocateTag,
+                        UnannotatedTwoDrops&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+inline void UnannotatedTwoDrops::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(UnannotatedTwoDrops, __field0));
+  static_assert(24 == offsetof(UnannotatedTwoDrops, __field1));
+}
+}  // namespace structs::aggregate_initialization
+
 namespace structs::default_repr {
 
 static_assert(
@@ -860,10 +1206,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::structs::default_repr::Point>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::structs::default_repr::Point>);
-inline ::structs::default_repr::Point::Point(::crubit::UnsafeRelocateTag,
-                                             Point&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void Point::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Point, x));
   static_assert(4 == offsetof(Point, y));
@@ -903,10 +1245,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::structs::display::DisplayStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::structs::display::DisplayStruct>);
-inline ::structs::display::DisplayStruct::DisplayStruct(
-    ::crubit::UnsafeRelocateTag, DisplayStruct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 extern "C" void
 __crubit_thunk_ToString_uto_ustring_ustructs_ugolden_x0000003a_x0000003adisplay_x0000003a_x0000003aDisplayStruct(
     ::structs::display::DisplayStruct const&,
@@ -1085,10 +1423,6 @@ static_assert(::std::is_trivially_destructible_v<Point>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::structs::repr_c::Point>);
 static_assert(::std::is_trivially_move_assignable_v<::structs::repr_c::Point>);
-inline ::structs::repr_c::Point::Point(::crubit::UnsafeRelocateTag,
-                                       Point&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void Point::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Point, x));
   static_assert(4 == offsetof(Point, y));
@@ -1292,26 +1626,11 @@ static_assert(
 static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003aunsupported_utypes_x0000003a_x0000003aSomeStruct(
-    ::structs::unsupported_types::SomeStruct* __ret_ptr);
-}
-inline ::structs::unsupported_types::SomeStruct::SomeStruct() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003aunsupported_utypes_x0000003a_x0000003aSomeStruct(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::structs::unsupported_types::SomeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::structs::unsupported_types::SomeStruct>);
-inline ::structs::unsupported_types::SomeStruct::SomeStruct(
-    ::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     rs_std::char_, ::structs::unsupported_types::SomeStruct* __ret_ptr);

@@ -16,24 +16,6 @@ const _: () = assert!(::std::mem::align_of::<::tuples_golden::AdtHoldingFiveAndS
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::CloneNoDefault>() == 1);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::CloneNoDefault>() == 1);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Clone_uclone_utuples_ugolden_x0000003a_x0000003aCloneNoDefault(
-    __self: &'static ::tuples_golden::CloneNoDefault,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::tuples_golden::CloneNoDefault as ::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_utuples_ugolden_x0000003a_x0000003aCloneNoDefault(
-    __self: &'static mut ::tuples_golden::CloneNoDefault,
-    source: &'static ::tuples_golden::CloneNoDefault,
-) -> () {
-    unsafe { <::tuples_golden::CloneNoDefault as ::core::clone::Clone>::clone_from(__self, source) }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let __rs_return_value = ::tuples_golden::CloneNoDefault::new(val);
@@ -88,22 +70,6 @@ const _: () = assert!(::core::mem::offset_of!(::tuples_golden::GetsTuple, value)
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasDefault>() == 12);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasDefault>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_utuples_ugolden_x0000003a_x0000003aHasDefault(
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::tuples_golden::HasDefault as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasDefault(
-    __self: *mut ::tuples_golden::HasDefault,
-) {
-    unsafe { ::core::ptr::drop_in_place(__self) };
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
     val: &'static str,
     __ret_ptr: *mut core::ffi::c_void,
@@ -142,12 +108,6 @@ const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasDefaultTuple, 
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasDefaultTuple, in_tuple2) == 16);
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasNoDefault>() == 12);
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasNoDefault>() == 4);
-#[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasNoDefault(
-    __self: *mut ::tuples_golden::HasNoDefault,
-) {
-    unsafe { ::core::ptr::drop_in_place(__self) };
-}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_val(
     __self: &'static ::tuples_golden::HasNoDefault,

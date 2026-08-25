@@ -187,27 +187,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: functions_golden :: generic_fn_tests :: ctor_trait_tests :: "
     "CppMovable") alignas(4) [[clang::trivial_abi]] CppMovable final {
  public:
-  // `functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable` doesn't
-  // implement the `Default` trait
-  CppMovable() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CppMovable() = default;
-  CppMovable(CppMovable&&) = default;
-  CppMovable& operator=(CppMovable&&) = default;
-
-  // `functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable` doesn't
-  // implement the `Clone` trait
-  CppMovable(const CppMovable&) = delete;
-  CppMovable& operator=(const CppMovable&) = delete;
-  CppMovable(::crubit::UnsafeRelocateTag, CppMovable&& value);
-
   static ::functions::generic_fn_tests::ctor_trait_tests::CppMovable new_(
       ::std::int32_t value);
 
-  union {
-    ::std::int32_t value;
-  };
+  ::std::int32_t value = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -306,24 +289,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: functions_golden :: thread_safety_tests :: ThreadSafeStruct") alignas(4)
     [[clang::trivial_abi]] ThreadSafeStruct final {
  public:
-  // `functions_golden::thread_safety_tests::ThreadSafeStruct` doesn't implement
-  // the `Default` trait
-  ThreadSafeStruct() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~ThreadSafeStruct() = default;
-  ThreadSafeStruct(ThreadSafeStruct&&) = default;
-  ThreadSafeStruct& operator=(ThreadSafeStruct&&) = default;
-
-  // `functions_golden::thread_safety_tests::ThreadSafeStruct` doesn't implement
-  // the `Clone` trait
-  ThreadSafeStruct(const ThreadSafeStruct&) = delete;
-  ThreadSafeStruct& operator=(const ThreadSafeStruct&) = delete;
-  ThreadSafeStruct(::crubit::UnsafeRelocateTag, ThreadSafeStruct&& value);
-
-  union {
-    ::std::int32_t value;
-  };
+  ::std::int32_t value = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -663,11 +629,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::functions::generic_fn_tests::ctor_trait_tests::CppMovable>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::functions::generic_fn_tests::ctor_trait_tests::CppMovable>);
-inline ::functions::generic_fn_tests::ctor_trait_tests::CppMovable::CppMovable(
-    ::crubit::UnsafeRelocateTag, CppMovable&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
     ::std::int32_t,
@@ -895,10 +856,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::functions::thread_safety_tests::ThreadSafeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::functions::thread_safety_tests::ThreadSafeStruct>);
-inline ::functions::thread_safety_tests::ThreadSafeStruct::ThreadSafeStruct(
-    ::crubit::UnsafeRelocateTag, ThreadSafeStruct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void ThreadSafeStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ThreadSafeStruct, value));
 }

@@ -23,12 +23,6 @@ unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_voi
 const _: () = assert!(::core::mem::offset_of!(::trait_impl_golden::MyStruct, x) == 0);
 const _: () = assert!(::std::mem::size_of::<::trait_impl_golden::NotImplemented>() == 12);
 const _: () = assert!(::std::mem::align_of::<::trait_impl_golden::NotImplemented>() == 4);
-#[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_Drop_udrop_utrait_uimpl_ugolden_x0000003a_x0000003aNotImplemented(
-    __self: *mut ::trait_impl_golden::NotImplemented,
-) {
-    unsafe { ::core::ptr::drop_in_place(__self) };
-}
 const _: () = assert!(::core::mem::offset_of!(::trait_impl_golden::NotImplemented, foo) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething_utrait_uimpl_ugolden_x0000003a_x0000003aMyStruct(

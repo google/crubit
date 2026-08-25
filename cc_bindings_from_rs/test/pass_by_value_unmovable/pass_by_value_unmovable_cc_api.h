@@ -29,6 +29,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: pass_by_value_unmovable_golden :: CppMovable") alignas(4)
     [[clang::trivial_abi]] CppMovable final {
  public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
   // Default::default
   CppMovable();
 
@@ -60,6 +62,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: pass_by_value_unmovable_golden :: NotCppMovable") alignas(4)
     [[clang::trivial_abi]] NotCppMovable final {
  public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
   // `pass_by_value_unmovable_golden::NotCppMovable` doesn't implement the
   // `Default` trait
   NotCppMovable() = delete;

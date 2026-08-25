@@ -417,3 +417,70 @@ pub mod display {
         DisplayStruct { value }
     }
 }
+
+pub mod aggregate_initialization {
+    use crubit_annotate::must_bind;
+
+    #[must_bind]
+    pub struct BasicAggregate {
+        pub x: i32,
+        pub y: i32,
+    }
+
+    #[must_bind]
+    pub struct TupleAggregate(pub i32, pub f64);
+
+    #[must_bind]
+    pub struct SingleDropField(pub String);
+
+    #[must_bind]
+    #[crubit_annotate::field_drop_order_does_not_matter]
+    pub struct AnnotatedTwoDrops(pub String, pub String);
+
+    #[must_bind]
+    pub struct UnannotatedTwoDrops(pub String, pub String);
+
+    #[must_bind]
+    pub struct StructWithPrivateField {
+        pub x: i32,
+        #[expect(dead_code)]
+        y: i32,
+    }
+
+    impl StructWithPrivateField {
+        #[must_bind]
+        pub fn create(x: i32, y: i32) -> Self {
+            Self { x, y }
+        }
+    }
+
+    #[non_exhaustive]
+    #[must_bind]
+    pub struct NonExhaustiveStruct {
+        pub x: i32,
+        pub y: i32,
+    }
+
+    impl NonExhaustiveStruct {
+        #[must_bind]
+        pub fn create(x: i32, y: i32) -> Self {
+            Self { x, y }
+        }
+    }
+
+    #[must_bind]
+    pub struct CustomDropStruct {
+        pub x: i32,
+    }
+
+    impl Drop for CustomDropStruct {
+        fn drop(&mut self) {}
+    }
+
+    impl CustomDropStruct {
+        #[must_bind]
+        pub fn create(x: i32) -> Self {
+            Self { x }
+        }
+    }
+}

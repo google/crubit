@@ -47,25 +47,7 @@ struct HasOptions;
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
     1) [[clang::trivial_abi]] CloneNoDefault final {
  public:
-  // `option_golden::CloneNoDefault` doesn't implement the `Default` trait
-  CloneNoDefault() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CloneNoDefault() = default;
-  CloneNoDefault(CloneNoDefault&&) = default;
-  CloneNoDefault& operator=(CloneNoDefault&&) = default;
-
-  // Clone::clone
-  CloneNoDefault(const CloneNoDefault&);
-
-  // Clone::clone_from
-  ::option::CloneNoDefault& operator=(const CloneNoDefault&);
-
-  CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value);
-
-  union {
-    ::std::uint8_t val;
-  };
+  ::std::uint8_t val = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -75,23 +57,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
-  // `option_golden::CopyNoDefault` doesn't implement the `Default` trait
-  CopyNoDefault() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CopyNoDefault() = default;
-  CopyNoDefault(CopyNoDefault&&) = default;
-  CopyNoDefault& operator=(CopyNoDefault&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  CopyNoDefault(const CopyNoDefault&) = default;
-  CopyNoDefault& operator=(const CopyNoDefault&) = default;
-  CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value);
-
-  union {
-    ::std::uint8_t val;
-  };
+  ::std::uint8_t val = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -103,20 +69,6 @@ using FreeFunc CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: FreeFunc") =
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
     [[clang::trivial_abi]] HasDefault final {
  public:
-  // Default::default
-  HasDefault();
-
-  // Drop::drop
-  ~HasDefault();
-
-  HasDefault(HasDefault&&);
-  ::option::HasDefault& operator=(HasDefault&&);
-
-  // `option_golden::HasDefault` doesn't implement the `Clone` trait
-  HasDefault(const HasDefault&) = delete;
-  HasDefault& operator=(const HasDefault&) = delete;
-  HasDefault(::crubit::UnsafeRelocateTag, HasDefault&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::HasDefault new_(rs_std::StrRef s);
 
@@ -124,9 +76,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
-  union {
-    ::rs::alloc::string::String foo;
-  };
+  ::rs::alloc::string::String foo = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -136,22 +86,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
     [[clang::trivial_abi]] HasNoDefault final {
  public:
-  // `option_golden::HasNoDefault` doesn't implement the `Default` trait
-  HasNoDefault() = delete;
-
-  // Drop::drop
-  ~HasNoDefault();
-
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  HasNoDefault(HasNoDefault&&) = delete;
-  ::option::HasNoDefault& operator=(HasNoDefault&&) = delete;
-  // `option_golden::HasNoDefault` doesn't implement the `Clone` trait
-  HasNoDefault(const HasNoDefault&) = delete;
-  HasNoDefault& operator=(const HasNoDefault&) = delete;
-  HasNoDefault(::crubit::UnsafeRelocateTag, HasNoDefault&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::HasNoDefault new_(rs_std::StrRef s);
 
@@ -159,15 +93,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
-  union {
-    ::rs::alloc::string::String foo;
-  };
-  union {
-    ::std::uint32_t a;
-  };
-
- private:
-  unsigned char __padding1[4];
+  ::rs::alloc::string::String foo = {};
+  ::std::uint32_t a = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -259,6 +186,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
     [[clang::trivial_abi]] OptZst final {
  public:
+  // Type is not a C++ aggregate: Field `val` has a type unsupported in C++
+
   // Default::default
   OptZst();
 
@@ -393,25 +322,10 @@ namespace option {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: UnitOptionField") alignas(
     1) [[clang::trivial_abi]] UnitOptionField final {
  public:
-  // Default::default
-  UnitOptionField();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~UnitOptionField() = default;
-  UnitOptionField(UnitOptionField&&) = default;
-  UnitOptionField& operator=(UnitOptionField&&) = default;
-
-  // `option_golden::UnitOptionField` doesn't implement the `Clone` trait
-  UnitOptionField(const UnitOptionField&) = delete;
-  UnitOptionField& operator=(const UnitOptionField&) = delete;
-  UnitOptionField(::crubit::UnsafeRelocateTag, UnitOptionField&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::UnitOptionField new_with_some();
 
-  union {
-    rs_std::Option<rs_std::unit_t> unit;
-  };
+  rs_std::Option<rs_std::unit_t> unit = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -666,28 +580,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptCloneNoDefault") alignas(1) [[clang::trivial_abi]]
 OptCloneNoDefault final {
  public:
-  // `option_golden::OptCloneNoDefault` doesn't implement the `Default` trait
-  OptCloneNoDefault() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~OptCloneNoDefault() = default;
-  OptCloneNoDefault(OptCloneNoDefault&&) = default;
-  OptCloneNoDefault& operator=(OptCloneNoDefault&&) = default;
-
-  // Clone::clone
-  OptCloneNoDefault(const OptCloneNoDefault&);
-
-  // Clone::clone_from
-  ::option::OptCloneNoDefault& operator=(const OptCloneNoDefault&);
-
-  OptCloneNoDefault(::crubit::UnsafeRelocateTag, OptCloneNoDefault&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptCloneNoDefault new_(::std::uint8_t x);
 
-  union {
-    rs_std::Option<::option::CloneNoDefault> val;
-  };
+  rs_std::Option<::option::CloneNoDefault> val = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -763,26 +659,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptCopyNoDefault") alignas(1) [[clang::trivial_abi]]
 OptCopyNoDefault final {
  public:
-  // `option_golden::OptCopyNoDefault` doesn't implement the `Default` trait
-  OptCopyNoDefault() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~OptCopyNoDefault() = default;
-  OptCopyNoDefault(OptCopyNoDefault&&) = default;
-  OptCopyNoDefault& operator=(OptCopyNoDefault&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  OptCopyNoDefault(const OptCopyNoDefault&) = default;
-  OptCopyNoDefault& operator=(const OptCopyNoDefault&) = default;
-  OptCopyNoDefault(::crubit::UnsafeRelocateTag, OptCopyNoDefault&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptCopyNoDefault new_(::std::uint8_t x);
 
-  union {
-    rs_std::Option<::option::CopyNoDefault> val;
-  };
+  rs_std::Option<::option::CopyNoDefault> val = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -856,28 +736,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptDefaultWithDrop") alignas(8) [[clang::trivial_abi]]
 OptDefaultWithDrop final {
  public:
-  // `option_golden::OptDefaultWithDrop` doesn't implement the `Default` trait
-  OptDefaultWithDrop() = delete;
-
-  // Drop::drop
-  ~OptDefaultWithDrop();
-
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  OptDefaultWithDrop(OptDefaultWithDrop&&) = delete;
-  ::option::OptDefaultWithDrop& operator=(OptDefaultWithDrop&&) = delete;
-  // `option_golden::OptDefaultWithDrop` doesn't implement the `Clone` trait
-  OptDefaultWithDrop(const OptDefaultWithDrop&) = delete;
-  OptDefaultWithDrop& operator=(const OptDefaultWithDrop&) = delete;
-  OptDefaultWithDrop(::crubit::UnsafeRelocateTag, OptDefaultWithDrop&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptDefaultWithDrop new_(rs_std::StrRef s);
 
-  union {
-    rs_std::Option<::option::HasDefault> opt;
-  };
+  rs_std::Option<::option::HasDefault> opt = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -951,23 +813,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptNoDefaultWithDrop") alignas(8)
     [[clang::trivial_abi]] OptNoDefaultWithDrop final {
  public:
-  // `option_golden::OptNoDefaultWithDrop` doesn't implement the `Default` trait
-  OptNoDefaultWithDrop() = delete;
-
-  // Drop::drop
-  ~OptNoDefaultWithDrop();
-
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  OptNoDefaultWithDrop(OptNoDefaultWithDrop&&) = delete;
-  ::option::OptNoDefaultWithDrop& operator=(OptNoDefaultWithDrop&&) = delete;
-  // `option_golden::OptNoDefaultWithDrop` doesn't implement the `Clone` trait
-  OptNoDefaultWithDrop(const OptNoDefaultWithDrop&) = delete;
-  OptNoDefaultWithDrop& operator=(const OptNoDefaultWithDrop&) = delete;
-  OptNoDefaultWithDrop(::crubit::UnsafeRelocateTag,
-                       OptNoDefaultWithDrop&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptNoDefaultWithDrop new_(rs_std::StrRef s);
 
@@ -975,9 +820,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
-  union {
-    rs_std::Option<::option::HasNoDefault> val;
-  };
+  rs_std::Option<::option::HasNoDefault> val = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1051,25 +894,10 @@ namespace option {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
     [[clang::trivial_abi]] HasHasOptions final {
  public:
-  // `option_golden::HasHasOptions` doesn't implement the `Default` trait
-  HasHasOptions() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~HasHasOptions() = default;
-  HasHasOptions(HasHasOptions&&) = default;
-  HasHasOptions& operator=(HasHasOptions&&) = default;
-
-  // `option_golden::HasHasOptions` doesn't implement the `Clone` trait
-  HasHasOptions(const HasHasOptions&) = delete;
-  HasHasOptions& operator=(const HasHasOptions&) = delete;
-  HasHasOptions(::crubit::UnsafeRelocateTag, HasHasOptions&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::HasHasOptions new_(::std::uint8_t value);
 
-  union {
-    rs_std::Option<::option::HasOptions> me;
-  };
+  rs_std::Option<::option::HasOptions> me = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1328,19 +1156,6 @@ namespace option {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
     [[clang::trivial_abi]] HasOptions final {
  public:
-  // `option_golden::HasOptions` doesn't implement the `Default` trait
-  HasOptions() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~HasOptions() = default;
-  HasOptions(HasOptions&&) = default;
-  HasOptions& operator=(HasOptions&&) = default;
-
-  // `option_golden::HasOptions` doesn't implement the `Clone` trait
-  HasOptions(const HasOptions&) = delete;
-  HasOptions& operator=(const HasOptions&) = delete;
-  HasOptions(::crubit::UnsafeRelocateTag, HasOptions&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::HasOptions new_(::std::uint8_t value);
 
@@ -1354,15 +1169,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::HasOptions with_none();
 
-  union {
-    rs_std::Option<::std::uint8_t> direct;
-  };
-  union {
-    rs_std::Option<::option::LessThan20U8> niche;
-  };
-  union {
-    rs_std::Option<rs_std::Option<::option::LessThan20U8>> nested;
-  };
+  rs_std::Option<::std::uint8_t> direct = {};
+  rs_std::Option<::option::LessThan20U8> niche = {};
+  rs_std::Option<rs_std::Option<::option::LessThan20U8>> nested = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1444,22 +1253,7 @@ namespace option {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: ZStream") alignas(8)
     [[clang::trivial_abi]] ZStream final {
  public:
-  // `option_golden::ZStream` doesn't implement the `Default` trait
-  ZStream() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~ZStream() = default;
-  ZStream(ZStream&&) = default;
-  ZStream& operator=(ZStream&&) = default;
-
-  // `option_golden::ZStream` doesn't implement the `Clone` trait
-  ZStream(const ZStream&) = delete;
-  ZStream& operator=(const ZStream&) = delete;
-  ZStream(::crubit::UnsafeRelocateTag, ZStream&& value);
-
-  union {
-    rs_std::Option<crubit::type_identity_t<void(void*, void*)>*> zfree;
-  };
+  rs_std::Option<crubit::type_identity_t<void(void*, void*)>*> zfree = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1532,30 +1326,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptionWithSizeTypes") alignas(8) [[clang::trivial_abi]]
 OptionWithSizeTypes final {
  public:
-  // `option_golden::OptionWithSizeTypes` doesn't implement the `Default` trait
-  OptionWithSizeTypes() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~OptionWithSizeTypes() = default;
-  OptionWithSizeTypes(OptionWithSizeTypes&&) = default;
-  OptionWithSizeTypes& operator=(OptionWithSizeTypes&&) = default;
-
-  // `option_golden::OptionWithSizeTypes` doesn't implement the `Clone` trait
-  OptionWithSizeTypes(const OptionWithSizeTypes&) = delete;
-  OptionWithSizeTypes& operator=(const OptionWithSizeTypes&) = delete;
-  OptionWithSizeTypes(::crubit::UnsafeRelocateTag, OptionWithSizeTypes&& value);
-
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptionWithSizeTypes new_(
       rs_std::Option<::std::uint64_t> uval,
       rs_std::Option<::std::int64_t> ival);
 
-  union {
-    rs_std::Option<::std::uint64_t> uval;
-  };
-  union {
-    rs_std::Option<::std::int64_t> ival;
-  };
+  rs_std::Option<::std::uint64_t> uval = {};
+  rs_std::Option<::std::int64_t> ival = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -2207,34 +1984,6 @@ static_assert(::std::is_trivially_destructible_v<CloneNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::option::CloneNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<::option::CloneNoDefault>);
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_uoption_ugolden_x0000003a_x0000003aCloneNoDefault(
-    ::option::CloneNoDefault const&, ::option::CloneNoDefault* __ret_ptr);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ufrom_uoption_ugolden_x0000003a_x0000003aCloneNoDefault(
-    ::option::CloneNoDefault&, ::option::CloneNoDefault const&);
-}
-inline ::option::CloneNoDefault::CloneNoDefault(const CloneNoDefault& other) {
-  __crubit_internal::
-      __crubit_thunk_Clone_uclone_uoption_ugolden_x0000003a_x0000003aCloneNoDefault(
-          other, this);
-}
-inline ::option::CloneNoDefault& ::option::CloneNoDefault::operator=(
-    const CloneNoDefault& other) {
-  if (this != &other) {
-    __crubit_internal::
-        __crubit_thunk_Clone_uclone_ufrom_uoption_ugolden_x0000003a_x0000003aCloneNoDefault(
-            *this, other);
-  }
-  return *this;
-}
-inline ::option::CloneNoDefault::CloneNoDefault(::crubit::UnsafeRelocateTag,
-                                                CloneNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void CloneNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CloneNoDefault, val));
 }
@@ -2251,10 +2000,6 @@ static_assert(::std::is_trivially_move_assignable_v<::option::CopyNoDefault>);
 static_assert(
     ::std::is_trivially_copy_constructible_v<::option::CopyNoDefault>);
 static_assert(::std::is_trivially_copy_assignable_v<::option::CopyNoDefault>);
-inline ::option::CopyNoDefault::CopyNoDefault(::crubit::UnsafeRelocateTag,
-                                              CopyNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void CopyNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CopyNoDefault, val));
 }
@@ -2264,38 +2009,6 @@ static_assert(
 static_assert(
     alignof(HasDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x0000003aHasDefault(
-    ::option::HasDefault* __ret_ptr);
-}
-inline ::option::HasDefault::HasDefault() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x0000003aHasDefault(
-          this);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aHasDefault(
-    ::option::HasDefault&);
-}
-inline HasDefault::~HasDefault() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aHasDefault(
-          *this);
-}
-inline ::option::HasDefault::HasDefault(HasDefault&& other) : HasDefault() {
-  *this = ::std::move(other);
-}
-inline ::option::HasDefault& ::option::HasDefault::operator=(
-    HasDefault&& other) {
-  crubit::MemSwap(*this, other);
-  return *this;
-}
-inline ::option::HasDefault::HasDefault(::crubit::UnsafeRelocateTag,
-                                        HasDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
@@ -2330,11 +2043,6 @@ static_assert(::std::is_trivially_destructible_v<HasHasOptions>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::option::HasHasOptions>);
 static_assert(::std::is_trivially_move_assignable_v<::option::HasHasOptions>);
-inline ::option::HasHasOptions::HasHasOptions(::crubit::UnsafeRelocateTag,
-                                              HasHasOptions&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::HasHasOptions* __ret_ptr);
@@ -2354,20 +2062,6 @@ static_assert(
 static_assert(
     alignof(HasNoDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aHasNoDefault(
-    ::option::HasNoDefault&);
-}
-inline HasNoDefault::~HasNoDefault() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aHasNoDefault(
-          *this);
-}
-inline ::option::HasNoDefault::HasNoDefault(::crubit::UnsafeRelocateTag,
-                                            HasNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
@@ -2402,11 +2096,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<HasOptions>);
 static_assert(::std::is_trivially_move_constructible_v<::option::HasOptions>);
 static_assert(::std::is_trivially_move_assignable_v<::option::HasOptions>);
-inline ::option::HasOptions::HasOptions(::crubit::UnsafeRelocateTag,
-                                        HasOptions&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::HasOptions* __ret_ptr);
@@ -2608,36 +2297,6 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::option::OptCloneNoDefault>);
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_uoption_ugolden_x0000003a_x0000003aOptCloneNoDefault(
-    ::option::OptCloneNoDefault const&, ::option::OptCloneNoDefault* __ret_ptr);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ufrom_uoption_ugolden_x0000003a_x0000003aOptCloneNoDefault(
-    ::option::OptCloneNoDefault&, ::option::OptCloneNoDefault const&);
-}
-inline ::option::OptCloneNoDefault::OptCloneNoDefault(
-    const OptCloneNoDefault& other) {
-  __crubit_internal::
-      __crubit_thunk_Clone_uclone_uoption_ugolden_x0000003a_x0000003aOptCloneNoDefault(
-          other, this);
-}
-inline ::option::OptCloneNoDefault& ::option::OptCloneNoDefault::operator=(
-    const OptCloneNoDefault& other) {
-  if (this != &other) {
-    __crubit_internal::
-        __crubit_thunk_Clone_uclone_ufrom_uoption_ugolden_x0000003a_x0000003aOptCloneNoDefault(
-            *this, other);
-  }
-  return *this;
-}
-inline ::option::OptCloneNoDefault::OptCloneNoDefault(
-    ::crubit::UnsafeRelocateTag, OptCloneNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
-namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::OptCloneNoDefault* __ret_ptr);
 }
@@ -2665,11 +2324,6 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::option::OptCopyNoDefault>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::option::OptCopyNoDefault>);
-inline ::option::OptCopyNoDefault::OptCopyNoDefault(::crubit::UnsafeRelocateTag,
-                                                    OptCopyNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::OptCopyNoDefault* __ret_ptr);
@@ -2689,20 +2343,6 @@ static_assert(
 static_assert(
     alignof(OptDefaultWithDrop) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aOptDefaultWithDrop(
-    ::option::OptDefaultWithDrop&);
-}
-inline OptDefaultWithDrop::~OptDefaultWithDrop() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aOptDefaultWithDrop(
-          *this);
-}
-inline ::option::OptDefaultWithDrop::OptDefaultWithDrop(
-    ::crubit::UnsafeRelocateTag, OptDefaultWithDrop&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
@@ -2723,20 +2363,6 @@ static_assert(
 static_assert(
     alignof(OptNoDefaultWithDrop) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aOptNoDefaultWithDrop(
-    ::option::OptNoDefaultWithDrop&);
-}
-inline OptNoDefaultWithDrop::~OptNoDefaultWithDrop() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_uoption_ugolden_x0000003a_x0000003aOptNoDefaultWithDrop(
-          *this);
-}
-inline ::option::OptNoDefaultWithDrop::OptNoDefaultWithDrop(
-    ::crubit::UnsafeRelocateTag, OptNoDefaultWithDrop&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
@@ -2798,11 +2424,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::option::OptionWithSizeTypes>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::option::OptionWithSizeTypes>);
-inline ::option::OptionWithSizeTypes::OptionWithSizeTypes(
-    ::crubit::UnsafeRelocateTag, OptionWithSizeTypes&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::Option<::std::uint64_t>*,
                                    rs_std::Option<::std::int64_t>*,
@@ -2825,25 +2446,10 @@ static_assert(
 static_assert(
     alignof(UnitOptionField) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x0000003aUnitOptionField(
-    ::option::UnitOptionField* __ret_ptr);
-}
-inline ::option::UnitOptionField::UnitOptionField() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x0000003aUnitOptionField(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<UnitOptionField>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::option::UnitOptionField>);
 static_assert(::std::is_trivially_move_assignable_v<::option::UnitOptionField>);
-inline ::option::UnitOptionField::UnitOptionField(::crubit::UnsafeRelocateTag,
-                                                  UnitOptionField&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new_uwith_usome(
     ::option::UnitOptionField* __ret_ptr);
@@ -2866,10 +2472,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<ZStream>);
 static_assert(::std::is_trivially_move_constructible_v<::option::ZStream>);
 static_assert(::std::is_trivially_move_assignable_v<::option::ZStream>);
-inline ::option::ZStream::ZStream(::crubit::UnsafeRelocateTag,
-                                  ZStream&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void ZStream::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ZStream, zfree));
 }

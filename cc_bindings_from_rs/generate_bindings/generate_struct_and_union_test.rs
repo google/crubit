@@ -154,11 +154,9 @@ fn test_format_struct_cpp_name_with_kythe_annotations() {
                     struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: Foo") alignas(4)
                     [[clang::trivial_abi]] __CAPTURE_BEGIN__ Bar __CAPTURE_END__ final {
                       ...
-                      union {
-                        __CAPTURE_TAG__ "<crubit_unittests.rs>" "101" "102"
-                        __COMMENT__ #field_comment
-                        ::std :: int32_t __CAPTURE_BEGIN__ x __CAPTURE_END__;
-                      };
+                      __CAPTURE_TAG__ "<crubit_unittests.rs>" "101" "102"
+                      __COMMENT__ #field_comment
+                      ::std :: int32_t __CAPTURE_BEGIN__ x __CAPTURE_END__ = {};
                       ...
                     };
                 }
@@ -1060,16 +1058,11 @@ fn test_deprecated_attr_for_struct_fields() {
             main_api.tokens,
             quote! {
                 struct ... SomeStruct final {
+                    public:
                     ...
-                    union {
-                        ...
-                        [[deprecated("Use `y` instead")]] ::std::uint32_t x;
-                    }
+                    [[deprecated("Use `y` instead")]] ::std::uint32_t x = {};
                     ...
-                    union {
-                        ...
-                        ::std::uint32_t y;
-                    }
+                    ::std::uint32_t y = {};
                     ...
                 };
             }
@@ -1113,4 +1106,343 @@ fn test_deprecated_attr_for_impl_block() {
             }
         )
     })
+}
+
+#[test]
+fn test_format_item_struct_aggregate_basic() {
+    let test_src = r#"
+        pub struct Point {
+            pub x: i32,
+            pub y: i32,
+        }
+    "#;
+    test_format_item(test_src, "Point", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... Point final {
+                    public:
+                    ::std::int32_t x = {};
+                    ::std::int32_t y = {};
+                    private:
+                    static void __crubit_field_offset_assertions();
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_aggregate_with_one_drop_field() {
+    let test_src = r#"
+        pub struct StructWithDrop(pub String);
+    "#;
+    test_format_item(test_src, "StructWithDrop", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... StructWithDrop final {
+                    public:
+                    ::rs::alloc::string::String __field0 = {};
+                    private:
+                    static void __crubit_field_offset_assertions();
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_not_aggregate_with_two_drop_fields() {
+    let test_src = r#"
+        pub struct TwoDrops(pub String, pub String);
+    "#;
+    test_format_item(test_src, "TwoDrops", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        // Two drop fields without annotation -> not an aggregate -> has comment, unions and destructor
+        let comment = "Type is not a C++ aggregate: Multiple fields require drop glue (annotate with `#[crubit_annotate::field_drop_order_does_not_matter]` if field drop order does not matter)";
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... TwoDrops final {
+                    public:
+                    __COMMENT__ #comment
+                    ...
+                    ~TwoDrops();
+                    ...
+                    union {
+                        ::rs::alloc::string::String __field0;
+                    };
+                    union {
+                        ::rs::alloc::string::String __field1;
+                    };
+                    ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_aggregate_with_two_drop_fields_annotated() {
+    let test_src = r#"
+        #[doc = "CRUBIT_ANNOTATE: field_drop_order_does_not_matter="]
+        pub struct TwoDrops(pub String, pub String);
+    "#;
+    test_format_item(test_src, "TwoDrops", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        // Two drop fields with annotation -> IS an aggregate -> direct fields, no custom destructor
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... TwoDrops final {
+                    public:
+                    ::rs::alloc::string::String __field0 = {};
+                    ::rs::alloc::string::String __field1 = {};
+                    private:
+                    static void __crubit_field_offset_assertions();
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_not_aggregate_with_private_field() {
+    let test_src = r#"
+        pub struct SecretField {
+            pub x: i32,
+            #[expect(dead_code)]
+            y: i32,
+        }
+    "#;
+    test_format_item(test_src, "SecretField", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        // Private field -> not an aggregate -> has comment, union and private padding / field
+        let comment = "Type is not a C++ aggregate: Field `y` is not public";
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... SecretField final {
+                    public:
+                    __COMMENT__ #comment
+                    ...
+                    union {
+                        ::std::int32_t x;
+                    };
+                    private:
+                    ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_not_aggregate_non_exhaustive() {
+    let test_src = r#"
+        #[non_exhaustive]
+        pub struct NonExhaustiveStruct {
+            pub x: i32,
+            pub y: i32,
+        }
+    "#;
+    test_format_item(test_src, "NonExhaustiveStruct", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        // Non-exhaustive -> not an aggregate -> has comment, unions
+        let comment = "Type is not a C++ aggregate: Type is marked `#[non_exhaustive]`";
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... NonExhaustiveStruct final {
+                    public:
+                    __COMMENT__ #comment
+                    ...
+                    union {
+                        ::std::int32_t x;
+                    };
+                    union {
+                        ::std::int32_t y;
+                    };
+                    ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_not_aggregate_custom_drop() {
+    let test_src = r#"
+        pub struct CustomDrop {
+            pub x: i32,
+        }
+        impl Drop for CustomDrop {
+            fn drop(&mut self) {}
+        }
+    "#;
+    test_format_item(test_src, "CustomDrop", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        // Custom drop -> not an aggregate -> has comment, ~CustomDrop()
+        let comment = "Type is not a C++ aggregate: Type implements `Drop`";
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... CustomDrop final {
+                    public:
+                    __COMMENT__ #comment
+                    ...
+                    ~CustomDrop();
+                    ...
+                    union {
+                        ::std::int32_t x;
+                    };
+                    ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_aggregate_with_derived_default() {
+    let test_src = r#"
+        #[derive(Default)]
+        pub struct DerivedDefault {
+            pub x: i32,
+            pub y: i32,
+        }
+    "#;
+    test_format_item(test_src, "DerivedDefault", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        // Derived default -> IS an aggregate -> direct members, no user-declared default constructor
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... DerivedDefault final {
+                    public:
+                    ::std::int32_t x = {};
+                    ::std::int32_t y = {};
+                    private:
+                    static void __crubit_field_offset_assertions();
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_not_aggregate_with_manual_default() {
+    let test_src = r#"
+        pub struct ManualDefault {
+            pub x: i32,
+            pub y: i32,
+        }
+        impl Default for ManualDefault {
+            fn default() -> Self {
+                Self { x: 1, y: 2 }
+            }
+        }
+    "#;
+    test_format_item(test_src, "ManualDefault", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        // Manual default -> NOT an aggregate -> has comment, default constructor ManualDefault() calling Rust default
+        let comment = "Type is not a C++ aggregate: Type has a manual `Default` implementation";
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                __COMMENT__ #comment
+            }
+        );
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ManualDefault();
+            }
+        );
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                union {
+                    ::std::int32_t x;
+                };
+                union {
+                    ::std::int32_t y;
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_not_aggregate_with_non_default_field() {
+    let test_src = r#"
+        pub struct NonDefault {
+            pub x: i32,
+            #[expect(dead_code)]
+            private_field: (),
+        }
+        pub struct Outer {
+            pub f: NonDefault,
+        }
+    "#;
+    test_format_item(test_src, "Outer", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        let comment = "Type is not a C++ aggregate: Field `f` is not default-constructible in C++";
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... Outer final {
+                    public:
+                    __COMMENT__ #comment
+                    ...
+                    union {
+                        ::rust_out::NonDefault f;
+                    };
+                    ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_not_aggregate_with_result_field() {
+    let test_src = r#"
+        pub struct WithResult {
+            pub res: Result<u32, u32>,
+        }
+    "#;
+    test_format_item(test_src, "WithResult", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        let comment =
+            "Type is not a C++ aggregate: Field `res` is not default-constructible in C++";
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... WithResult final {
+                    public:
+                    __COMMENT__ #comment
+                    ...
+                    union {
+                        rs_std::Result<::std::uint32_t, ::std::uint32_t> res;
+                    };
+                    ...
+                };
+            }
+        );
+    });
 }

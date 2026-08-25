@@ -13,24 +13,6 @@ extern crate alloc;
 extern crate core;
 const _: () = assert!(::std::mem::size_of::<::result_golden::CloneNoDefault>() == 1);
 const _: () = assert!(::std::mem::align_of::<::result_golden::CloneNoDefault>() == 1);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Clone_uclone_uresult_ugolden_x0000003a_x0000003aCloneNoDefault(
-    __self: &'static ::result_golden::CloneNoDefault,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::result_golden::CloneNoDefault as ::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_uresult_ugolden_x0000003a_x0000003aCloneNoDefault(
-    __self: &'static mut ::result_golden::CloneNoDefault,
-    source: &'static ::result_golden::CloneNoDefault,
-) -> () {
-    unsafe { <::result_golden::CloneNoDefault as ::core::clone::Clone>::clone_from(__self, source) }
-}
 const _: () = assert!(::core::mem::offset_of!(::result_golden::CloneNoDefault, val) == 0);
 const _: () = assert!(::std::mem::size_of::<::result_golden::CloneNoDefaultResult>() == 4);
 const _: () = assert!(::std::mem::align_of::<::result_golden::CloneNoDefaultResult>() == 1);
@@ -70,22 +52,6 @@ const _: () = assert!(::core::mem::offset_of!(::result_golden::GetsResult, value
 const _: () = assert!(::std::mem::size_of::<::result_golden::HasDefault>() == 24);
 const _: () = assert!(::std::mem::align_of::<::result_golden::HasDefault>() == 8);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_uresult_ugolden_x0000003a_x0000003aHasDefault(
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::result_golden::HasDefault as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasDefault(
-    __self: *mut ::result_golden::HasDefault,
-) {
-    unsafe { ::core::ptr::drop_in_place(__self) };
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
     val: &'static str,
     __ret_ptr: *mut core::ffi::c_void,
@@ -124,12 +90,6 @@ const _: () = assert!(::core::mem::offset_of!(::result_golden::HasDefaultResult,
 const _: () = assert!(::core::mem::offset_of!(::result_golden::HasDefaultResult, in_err) == 24);
 const _: () = assert!(::std::mem::size_of::<::result_golden::HasNoDefault>() == 24);
 const _: () = assert!(::std::mem::align_of::<::result_golden::HasNoDefault>() == 8);
-#[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasNoDefault(
-    __self: *mut ::result_golden::HasNoDefault,
-) {
-    unsafe { ::core::ptr::drop_in_place(__self) };
-}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_val(
     __self: &'static ::result_golden::HasNoDefault,

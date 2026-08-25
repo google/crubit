@@ -13,16 +13,6 @@ extern crate alloc;
 extern crate core;
 const _: () = assert!(::std::mem::size_of::<::arrays_golden::ArrayStruct>() == 8);
 const _: () = assert!(::std::mem::align_of::<::arrays_golden::ArrayStruct>() == 4);
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_uarrays_ugolden_x0000003a_x0000003aArrayStruct(
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::arrays_golden::ArrayStruct as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
 const _: () = assert!(::core::mem::offset_of!(::arrays_golden::ArrayStruct, array) == 0);
 const _: () = assert!(::std::mem::size_of::<::arrays_golden::HasDrop>() == 4);
 const _: () = assert!(::std::mem::align_of::<::arrays_golden::HasDrop>() == 4);

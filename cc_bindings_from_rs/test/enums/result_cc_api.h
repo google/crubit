@@ -16,7 +16,6 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/cxx20_backports.h"
-#include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/result.h"
@@ -37,25 +36,7 @@ namespace result {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault") alignas(
     1) [[clang::trivial_abi]] CloneNoDefault final {
  public:
-  // `result_golden::CloneNoDefault` doesn't implement the `Default` trait
-  CloneNoDefault() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CloneNoDefault() = default;
-  CloneNoDefault(CloneNoDefault&&) = default;
-  CloneNoDefault& operator=(CloneNoDefault&&) = default;
-
-  // Clone::clone
-  CloneNoDefault(const CloneNoDefault&);
-
-  // Clone::clone_from
-  ::result::CloneNoDefault& operator=(const CloneNoDefault&);
-
-  CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value);
-
-  union {
-    ::std::uint8_t val;
-  };
+  ::std::uint8_t val = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -64,23 +45,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault") alignas(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault") alignas(1)
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
-  // `result_golden::CopyNoDefault` doesn't implement the `Default` trait
-  CopyNoDefault() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~CopyNoDefault() = default;
-  CopyNoDefault(CopyNoDefault&&) = default;
-  CopyNoDefault& operator=(CopyNoDefault&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  CopyNoDefault(const CopyNoDefault&) = default;
-  CopyNoDefault& operator=(const CopyNoDefault&) = default;
-  CopyNoDefault(::crubit::UnsafeRelocateTag, CopyNoDefault&& value);
-
-  union {
-    ::std::uint8_t val;
-  };
+  ::std::uint8_t val = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -91,27 +56,11 @@ using FreeFunc CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: FreeFunc") =
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
     [[clang::trivial_abi]] HasDefault final {
  public:
-  // Default::default
-  HasDefault();
-
-  // Drop::drop
-  ~HasDefault();
-
-  HasDefault(HasDefault&&);
-  ::result::HasDefault& operator=(HasDefault&&);
-
-  // `result_golden::HasDefault` doesn't implement the `Clone` trait
-  HasDefault(const HasDefault&) = delete;
-  HasDefault& operator=(const HasDefault&) = delete;
-  HasDefault(::crubit::UnsafeRelocateTag, HasDefault&& value);
-
   static ::result::HasDefault new_(rs_std::StrRef val);
 
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  union {
-    ::rs::alloc::string::String val_;
-  };
+  ::rs::alloc::string::String val_ = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -120,27 +69,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(8)
     [[clang::trivial_abi]] HasNoDefault final {
  public:
-  // `result_golden::HasNoDefault` doesn't implement the `Default` trait
-  HasNoDefault() = delete;
-
-  // Drop::drop
-  ~HasNoDefault();
-
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  HasNoDefault(HasNoDefault&&) = delete;
-  ::result::HasNoDefault& operator=(HasNoDefault&&) = delete;
-  // `result_golden::HasNoDefault` doesn't implement the `Clone` trait
-  HasNoDefault(const HasNoDefault&) = delete;
-  HasNoDefault& operator=(const HasNoDefault&) = delete;
-  HasNoDefault(::crubit::UnsafeRelocateTag, HasNoDefault&& value);
-
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  union {
-    ::rs::alloc::string::String val_;
-  };
+  ::rs::alloc::string::String val_ = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -724,6 +655,9 @@ namespace result {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: GetsResult") alignas(4)
     [[clang::trivial_abi]] GetsResult final {
  public:
+  // Type is not a C++ aggregate: Field `value` is not default-constructible in
+  // C++
+
   // `result_golden::GetsResult` doesn't implement the `Default` trait
   GetsResult() = delete;
 
@@ -902,6 +836,9 @@ namespace result {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: NestedResult") alignas(4)
     [[clang::trivial_abi]] NestedResult final {
  public:
+  // Type is not a C++ aggregate: Field `in_ok` is not default-constructible in
+  // C++
+
   // `result_golden::NestedResult` doesn't implement the `Default` trait
   NestedResult() = delete;
 
@@ -1074,6 +1011,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: result_golden :: CloneNoDefaultResult") alignas(1)
     [[clang::trivial_abi]] CloneNoDefaultResult final {
  public:
+  // Type is not a C++ aggregate: Field `in_ok` is not default-constructible in
+  // C++
+
   // `result_golden::CloneNoDefaultResult` doesn't implement the `Default` trait
   CloneNoDefaultResult() = delete;
 
@@ -1175,6 +1115,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: result_golden :: CopyNoDefaultResult") alignas(1) [[clang::trivial_abi]]
 CopyNoDefaultResult final {
  public:
+  // Type is not a C++ aggregate: Field `in_ok` is not default-constructible in
+  // C++
+
   // `result_golden::CopyNoDefaultResult` doesn't implement the `Default` trait
   CopyNoDefaultResult() = delete;
 
@@ -1279,6 +1222,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: result_golden :: HasDefaultResult") alignas(8) [[clang::trivial_abi]]
 HasDefaultResult final {
  public:
+  // Type is not a C++ aggregate: Field `in_ok` is not default-constructible in
+  // C++
+
   // `result_golden::HasDefaultResult` doesn't implement the `Default` trait
   HasDefaultResult() = delete;
 
@@ -1386,6 +1332,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: result_golden :: HasNoDefaultResult") alignas(8) [[clang::trivial_abi]]
 HasNoDefaultResult final {
  public:
+  // Type is not a C++ aggregate: Field `in_ok` is not default-constructible in
+  // C++
+
   // `result_golden::HasNoDefaultResult` doesn't implement the `Default` trait
   HasNoDefaultResult() = delete;
 
@@ -1635,6 +1584,9 @@ namespace result {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: ZStream") alignas(8)
     [[clang::trivial_abi]] ZStream final {
  public:
+  // Type is not a C++ aggregate: Field `zfree` is not default-constructible in
+  // C++
+
   // `result_golden::ZStream` doesn't implement the `Default` trait
   ZStream() = delete;
 
@@ -1731,6 +1683,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: result_golden :: ResultWithSizeTypes") alignas(8) [[clang::trivial_abi]]
 ResultWithSizeTypes final {
  public:
+  // Type is not a C++ aggregate: Field `uval_in_ok` is not
+  // default-constructible in C++
+
   // `result_golden::ResultWithSizeTypes` doesn't implement the `Default` trait
   ResultWithSizeTypes() = delete;
 
@@ -1771,34 +1726,6 @@ static_assert(::std::is_trivially_destructible_v<CloneNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::result::CloneNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<::result::CloneNoDefault>);
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_uresult_ugolden_x0000003a_x0000003aCloneNoDefault(
-    ::result::CloneNoDefault const&, ::result::CloneNoDefault* __ret_ptr);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ufrom_uresult_ugolden_x0000003a_x0000003aCloneNoDefault(
-    ::result::CloneNoDefault&, ::result::CloneNoDefault const&);
-}
-inline ::result::CloneNoDefault::CloneNoDefault(const CloneNoDefault& other) {
-  __crubit_internal::
-      __crubit_thunk_Clone_uclone_uresult_ugolden_x0000003a_x0000003aCloneNoDefault(
-          other, this);
-}
-inline ::result::CloneNoDefault& ::result::CloneNoDefault::operator=(
-    const CloneNoDefault& other) {
-  if (this != &other) {
-    __crubit_internal::
-        __crubit_thunk_Clone_uclone_ufrom_uresult_ugolden_x0000003a_x0000003aCloneNoDefault(
-            *this, other);
-  }
-  return *this;
-}
-inline ::result::CloneNoDefault::CloneNoDefault(::crubit::UnsafeRelocateTag,
-                                                CloneNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void CloneNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CloneNoDefault, val));
 }
@@ -1846,10 +1773,6 @@ static_assert(::std::is_trivially_move_assignable_v<::result::CopyNoDefault>);
 static_assert(
     ::std::is_trivially_copy_constructible_v<::result::CopyNoDefault>);
 static_assert(::std::is_trivially_copy_assignable_v<::result::CopyNoDefault>);
-inline ::result::CopyNoDefault::CopyNoDefault(::crubit::UnsafeRelocateTag,
-                                              CopyNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void CopyNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(CopyNoDefault, val));
 }
@@ -1917,38 +1840,6 @@ static_assert(
 static_assert(
     alignof(HasDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_uresult_ugolden_x0000003a_x0000003aHasDefault(
-    ::result::HasDefault* __ret_ptr);
-}
-inline ::result::HasDefault::HasDefault() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_uresult_ugolden_x0000003a_x0000003aHasDefault(
-          this);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasDefault(
-    ::result::HasDefault&);
-}
-inline HasDefault::~HasDefault() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasDefault(
-          *this);
-}
-inline ::result::HasDefault::HasDefault(HasDefault&& other) : HasDefault() {
-  *this = ::std::move(other);
-}
-inline ::result::HasDefault& ::result::HasDefault::operator=(
-    HasDefault&& other) {
-  crubit::MemSwap(*this, other);
-  return *this;
-}
-inline ::result::HasDefault::HasDefault(::crubit::UnsafeRelocateTag,
-                                        HasDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef,
@@ -2013,20 +1904,6 @@ static_assert(
 static_assert(
     alignof(HasNoDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasNoDefault(
-    ::result::HasNoDefault&);
-}
-inline HasNoDefault::~HasNoDefault() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aHasNoDefault(
-          *this);
-}
-inline ::result::HasNoDefault::HasNoDefault(::crubit::UnsafeRelocateTag,
-                                            HasNoDefault&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" rs_std::StrRef __crubit_thunk_val(::result::HasNoDefault const&);

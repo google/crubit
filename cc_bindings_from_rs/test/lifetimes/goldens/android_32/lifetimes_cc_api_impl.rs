@@ -104,18 +104,6 @@ unsafe extern "C" fn __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x000
         <::lifetimes_golden::StructWithLifetime as ::core::convert::Into<i32>>::into(__self)
     }
 }
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_From_ufrom_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
-    value: &'static i32,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value = <::lifetimes_golden::StructWithLifetime as ::core::convert::From<
-            &'static i32,
-        >>::from(value);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
 const _: () = assert!(
     ::core::mem::offset_of!(::lifetimes_golden::StructWithLifetime, field_with_lifetime) == 0
 );
@@ -123,12 +111,6 @@ const _: () =
     assert!(::std::mem::size_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 16);
 const _: () =
     assert!(::std::mem::align_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 4);
-#[unsafe(no_mangle)]
-extern "C" fn __crubit_thunk_Drop_udrop_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetimeAndDropGlue_x0000003c_x00000027_u_x0000003e(
-    __self: *mut ::lifetimes_golden::StructWithLifetimeAndDropGlue,
-) {
-    unsafe { ::core::ptr::drop_in_place(__self) };
-}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_make_ustatic_u42(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {

@@ -75,11 +75,10 @@ TEST(IntoTest, ConstConversionOperatorExplicit) {
 }
 
 TEST(IntoTest, RvalueRefConversionOperatorExplicit) {
-  const into::CloneAllocType src =
+  into::CloneAllocType src =
       into::CloneAllocType::create(rs_std::StrRef("hello"));
-  auto target = static_cast<into::CloneAllocTarget>(src);
+  auto target = static_cast<into::CloneAllocTarget>(std::move(src));
   EXPECT_EQ(target.get_value().to_string_view(), "hello");
-  EXPECT_EQ(src.get_value().to_string_view(), "hello");
 }
 
 TEST(IntoTest, IntoLoop) {

@@ -20,7 +20,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -32,24 +31,9 @@ namespace trait_impl {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
     [[clang::trivial_abi]] MyStruct final {
  public:
-  // `trait_impl_golden::MyStruct` doesn't implement the `Default` trait
-  MyStruct() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~MyStruct() = default;
-  MyStruct(MyStruct&&) = default;
-  MyStruct& operator=(MyStruct&&) = default;
-
-  // `trait_impl_golden::MyStruct` doesn't implement the `Clone` trait
-  MyStruct(const MyStruct&) = delete;
-  MyStruct& operator=(const MyStruct&) = delete;
-  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
-
   static ::trait_impl::MyStruct new_(::std::int32_t x);
 
-  union {
-    ::std::int32_t x;
-  };
+  ::std::int32_t x = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -59,25 +43,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: trait_impl_golden :: NotImplemented") alignas(4) [[clang::trivial_abi]]
 NotImplemented final {
  public:
-  // `trait_impl_golden::NotImplemented` doesn't implement the `Default` trait
-  NotImplemented() = delete;
-
-  // Drop::drop
-  ~NotImplemented();
-
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  NotImplemented(NotImplemented&&) = delete;
-  ::trait_impl::NotImplemented& operator=(NotImplemented&&) = delete;
-  // `trait_impl_golden::NotImplemented` doesn't implement the `Clone` trait
-  NotImplemented(const NotImplemented&) = delete;
-  NotImplemented& operator=(const NotImplemented&) = delete;
-  NotImplemented(::crubit::UnsafeRelocateTag, NotImplemented&& value);
-
-  union {
-    ::rs::alloc::string::String foo;
-  };
+  ::rs::alloc::string::String foo = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -103,11 +69,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<MyStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::trait_impl::MyStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::trait_impl::MyStruct>);
-inline ::trait_impl::MyStruct::MyStruct(::crubit::UnsafeRelocateTag,
-                                        MyStruct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::trait_impl::MyStruct* __ret_ptr);
@@ -127,20 +88,6 @@ static_assert(
 static_assert(
     alignof(NotImplemented) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_utrait_uimpl_ugolden_x0000003a_x0000003aNotImplemented(
-    ::trait_impl::NotImplemented&);
-}
-inline NotImplemented::~NotImplemented() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_utrait_uimpl_ugolden_x0000003a_x0000003aNotImplemented(
-          *this);
-}
-inline ::trait_impl::NotImplemented::NotImplemented(::crubit::UnsafeRelocateTag,
-                                                    NotImplemented&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void NotImplemented::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NotImplemented, foo));
 }

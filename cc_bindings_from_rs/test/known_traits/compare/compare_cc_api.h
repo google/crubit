@@ -35,29 +35,11 @@ namespace compare {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyOrd") alignas(4)
     [[clang::trivial_abi]] MyOrd final {
  public:
-  // `compare_golden::MyOrd` doesn't implement the `Default` trait
-  MyOrd() = delete;
-
-  // Synthesized tuple constructor
-  explicit MyOrd(::std::int32_t __field0) : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~MyOrd() = default;
-  MyOrd(MyOrd&&) = default;
-  MyOrd& operator=(MyOrd&&) = default;
-
-  // `compare_golden::MyOrd` doesn't implement the `Clone` trait
-  MyOrd(const MyOrd&) = delete;
-  MyOrd& operator=(const MyOrd&) = delete;
-  MyOrd(::crubit::UnsafeRelocateTag, MyOrd&& value);
-
   bool operator==(::compare::MyOrd const& other) const;
 
   ::std::strong_ordering operator<=>(const MyOrd& other) const;
 
-  union {
-    ::std::int32_t __field0;
-  };
+  ::std::int32_t __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -66,30 +48,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyOrd") alignas(4)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyUnordered") alignas(4)
     [[clang::trivial_abi]] MyUnordered final {
  public:
-  // `compare_golden::MyUnordered` doesn't implement the `Default` trait
-  MyUnordered() = delete;
-
-  // Synthesized tuple constructor
-  explicit MyUnordered(float __field0) : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~MyUnordered() = default;
-  MyUnordered(MyUnordered&&) = default;
-  MyUnordered& operator=(MyUnordered&&) = default;
-
-  // `compare_golden::MyUnordered` doesn't implement the `Clone` trait
-  MyUnordered(const MyUnordered&) = delete;
-  MyUnordered& operator=(const MyUnordered&) = delete;
-  MyUnordered(::crubit::UnsafeRelocateTag, MyUnordered&& value);
-
   bool operator==(::compare::MyUnordered const& other) const;
 
   ::std::partial_ordering operator<=>(
       ::compare::MyUnordered const& other) const;
 
-  union {
-    float __field0;
-  };
+  float __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -172,31 +136,12 @@ namespace compare {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyPartialOrd") alignas(4)
     [[clang::trivial_abi]] MyPartialOrd final {
  public:
-  // `compare_golden::MyPartialOrd` doesn't implement the `Default` trait
-  MyPartialOrd() = delete;
-
-  // Synthesized tuple constructor
-  explicit MyPartialOrd(rs_std::Option<::std::int32_t> __field0)
-      : __field0(::std::move(__field0)) {}
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~MyPartialOrd() = default;
-  MyPartialOrd(MyPartialOrd&&) = default;
-  MyPartialOrd& operator=(MyPartialOrd&&) = default;
-
-  // `compare_golden::MyPartialOrd` doesn't implement the `Clone` trait
-  MyPartialOrd(const MyPartialOrd&) = delete;
-  MyPartialOrd& operator=(const MyPartialOrd&) = delete;
-  MyPartialOrd(::crubit::UnsafeRelocateTag, MyPartialOrd&& value);
-
   bool operator==(::compare::MyPartialOrd const& other) const;
 
   ::std::partial_ordering operator<=>(
       ::compare::MyPartialOrd const& other) const;
 
-  union {
-    rs_std::Option<::std::int32_t> __field0;
-  };
+  rs_std::Option<::std::int32_t> __field0 = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -211,10 +156,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<MyOrd>);
 static_assert(::std::is_trivially_move_constructible_v<::compare::MyOrd>);
 static_assert(::std::is_trivially_move_assignable_v<::compare::MyOrd>);
-inline ::compare::MyOrd::MyOrd(::crubit::UnsafeRelocateTag, MyOrd&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyOrd_ucompare_ugolden_x0000003a_x0000003aMyOrd(
@@ -259,11 +200,6 @@ static_assert(::std::is_trivially_destructible_v<MyPartialOrd>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::compare::MyPartialOrd>);
 static_assert(::std::is_trivially_move_assignable_v<::compare::MyPartialOrd>);
-inline ::compare::MyPartialOrd::MyPartialOrd(::crubit::UnsafeRelocateTag,
-                                             MyPartialOrd&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyPartialOrd_ucompare_ugolden_x0000003a_x0000003aMyPartialOrd(
@@ -311,11 +247,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<MyUnordered>);
 static_assert(::std::is_trivially_move_constructible_v<::compare::MyUnordered>);
 static_assert(::std::is_trivially_move_assignable_v<::compare::MyUnordered>);
-inline ::compare::MyUnordered::MyUnordered(::crubit::UnsafeRelocateTag,
-                                           MyUnordered&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyUnordered_ucompare_ugolden_x0000003a_x0000003aMyUnordered(

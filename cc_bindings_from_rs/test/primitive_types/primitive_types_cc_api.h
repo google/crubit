@@ -41,6 +41,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: primitive_types_golden :: field_types :: Types") alignas(8)
     [[clang::trivial_abi]] Types final {
  public:
+  // Type is not a C++ aggregate: Field `i8_func` is not default-constructible
+  // in C++
+
   // `primitive_types_golden::field_types::Types` doesn't implement the
   // `Default` trait
   Types() = delete;
@@ -228,30 +231,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     "StructWithCVoidPointerMember") alignas(8) [[clang::trivial_abi]]
 StructWithCVoidPointerMember final {
  public:
-  // `primitive_types_golden::test_c_void_ptr::StructWithCVoidPointerMember`
-  // doesn't implement the `Default` trait
-  StructWithCVoidPointerMember() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~StructWithCVoidPointerMember() = default;
-  StructWithCVoidPointerMember(StructWithCVoidPointerMember&&) = default;
-  StructWithCVoidPointerMember& operator=(StructWithCVoidPointerMember&&) =
-      default;
-
-  // `primitive_types_golden::test_c_void_ptr::StructWithCVoidPointerMember`
-  // doesn't implement the `Clone` trait
-  StructWithCVoidPointerMember(const StructWithCVoidPointerMember&) = delete;
-  StructWithCVoidPointerMember& operator=(const StructWithCVoidPointerMember&) =
-      delete;
-  StructWithCVoidPointerMember(::crubit::UnsafeRelocateTag,
-                               StructWithCVoidPointerMember&& value);
-
-  union {
-    const void* ptr_const;
-  };
-  union {
-    void* ptr_mut;
-  };
+  const void* ptr_const = {};
+  void* ptr_mut = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -569,11 +550,6 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<
         ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember>);
-inline ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember::
-    StructWithCVoidPointerMember(::crubit::UnsafeRelocateTag,
-                                 StructWithCVoidPointerMember&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void StructWithCVoidPointerMember::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithCVoidPointerMember, ptr_const));
   static_assert(8 == offsetof(StructWithCVoidPointerMember, ptr_mut));

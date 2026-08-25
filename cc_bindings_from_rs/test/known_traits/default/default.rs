@@ -1,23 +1,27 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#![allow(clippy::manual_non_exhaustive)]
 
 //! This crate is used as a test input for `cc_bindings_from_rs` and the
 //! generated C++ bindings are then tested via `default_test.cc`.
 
 /// Test of an explicit impl of a trait: `impl Default for SomeStruct`.
 pub mod explicit_impl {
-    pub struct SomeStruct(pub i32);
+    pub struct SomeStruct {
+        pub field: i32,
+        _private: (),
+    }
 
     impl Default for SomeStruct {
         fn default() -> Self {
-            Self(42)
+            Self { field: 42, _private: () }
         }
     }
 
     impl SomeStruct {
         pub fn extract_int(s: Self) -> i32 {
-            s.0
+            s.field
         }
     }
 }
@@ -25,11 +29,14 @@ pub mod explicit_impl {
 /// Test of a derived impl of a trait: `#[derive(Default)]`.
 pub mod derived_impl {
     #[derive(Default)]
-    pub struct SomeStruct(pub i32);
+    pub struct SomeStruct {
+        pub field: i32,
+        _private: (),
+    }
 
     impl SomeStruct {
         pub fn extract_int(s: Self) -> i32 {
-            s.0
+            s.field
         }
     }
 }
@@ -39,11 +46,12 @@ pub mod derived_impl {
 pub mod field_with_no_default {
     pub struct StructWithFieldWithNoDefault {
         pub field: StructWithoutDefault,
+        _private: (),
     }
 
     impl Default for StructWithFieldWithNoDefault {
         fn default() -> Self {
-            Self { field: StructWithoutDefault(123) }
+            Self { field: StructWithoutDefault(123), _private: () }
         }
     }
 
@@ -61,7 +69,10 @@ pub mod field_with_no_default {
 
 /// Test of a missing impl of a trait.
 pub mod no_impl {
-    pub struct SomeStruct(pub i32);
+    pub struct SomeStruct {
+        pub field: i32,
+        _private: (),
+    }
 }
 
 pub mod transparent_struct {

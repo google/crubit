@@ -32,23 +32,7 @@ namespace arrays {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
     [[clang::trivial_abi]] ArrayStruct final {
  public:
-  // Default::default
-  ArrayStruct();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~ArrayStruct() = default;
-  ArrayStruct(ArrayStruct&&) = default;
-  ArrayStruct& operator=(ArrayStruct&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  ArrayStruct(const ArrayStruct&) = default;
-  ArrayStruct& operator=(const ArrayStruct&) = default;
-  ArrayStruct(::crubit::UnsafeRelocateTag, ArrayStruct&& value);
-
-  union {
-    ::std::array<::std::int32_t, 2> array;
-  };
+  ::std::array<::std::int32_t, 2> array = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -57,6 +41,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: HasDrop") alignas(4)
     [[clang::trivial_abi]] HasDrop final {
  public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
   // `arrays_golden::HasDrop` doesn't implement the `Default` trait
   HasDrop() = delete;
 
@@ -87,6 +73,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: arrays_golden :: HasDropAndDefault") alignas(4) [[clang::trivial_abi]]
 HasDropAndDefault final {
  public:
+  // Type is not a C++ aggregate: Type implements `Drop`
+
   // Default::default
   HasDropAndDefault();
 
@@ -209,25 +197,11 @@ static_assert(
 static_assert(
     alignof(ArrayStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_uarrays_ugolden_x0000003a_x0000003aArrayStruct(
-    ::arrays::ArrayStruct* __ret_ptr);
-}
-inline ::arrays::ArrayStruct::ArrayStruct() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_uarrays_ugolden_x0000003a_x0000003aArrayStruct(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<ArrayStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_copy_constructible_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_copy_assignable_v<::arrays::ArrayStruct>);
-inline ::arrays::ArrayStruct::ArrayStruct(::crubit::UnsafeRelocateTag,
-                                          ArrayStruct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void ArrayStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ArrayStruct, array));
 }

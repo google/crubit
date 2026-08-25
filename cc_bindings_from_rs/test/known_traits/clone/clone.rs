@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#![feature(c_variadic)]
+#![allow(clippy::manual_non_exhaustive)]
 
 //! This crate is used as a test input for `cc_bindings_from_rs` and the
 //! generated C++ bindings are then tested via `clone_test.cc`.
@@ -10,22 +10,25 @@
 /// Test of an explicit impl of a trait: `impl Clone for SomeStruct`.
 /// Only `clone` is provided, `clone_from` uses the default implementation.
 pub mod explicit_impl_of_mandatory_method {
-    pub struct SomeStruct(pub i32);
+    pub struct SomeStruct {
+        pub field: i32,
+        _private: (),
+    }
 
     impl Clone for SomeStruct {
         fn clone(&self) -> Self {
             // Adding 10000 when cloning to aid with test verification.
-            Self(self.0 + 10000)
+            Self { field: self.field + 10000, _private: () }
         }
     }
 
     impl SomeStruct {
         pub fn create_struct(i: i32) -> Self {
-            Self(i)
+            Self { field: i, _private: () }
         }
 
         pub fn extract_int(s: Self) -> i32 {
-            s.0
+            s.field
         }
     }
 }
@@ -33,29 +36,32 @@ pub mod explicit_impl_of_mandatory_method {
 /// Test of an explicit impl of a trait: `impl Clone for SomeStruct`.
 /// Both `clone` and `clone_from` are implemented.
 pub mod explicit_impl_of_all_methods {
-    pub struct SomeStruct(pub i32);
+    pub struct SomeStruct {
+        pub field: i32,
+        _private: (),
+    }
 
     impl Clone for SomeStruct {
         fn clone(&self) -> Self {
             // Adding 10000 when cloning to aid with test verification.
             // Note that `clone_from` adds a different amount.
-            Self(self.0 + 10000)
+            Self { field: self.field + 10000, _private: () }
         }
 
         fn clone_from(&mut self, source: &Self) {
             // Adding 20000 when cloning to aid with test verification.
             // Note that `clone` adds a different amount.
-            self.0 = source.0 + 20000;
+            self.field = source.field + 20000;
         }
     }
 
     impl SomeStruct {
         pub fn create_struct(i: i32) -> Self {
-            Self(i)
+            Self { field: i, _private: () }
         }
 
         pub fn extract_int(s: Self) -> i32 {
-            s.0
+            s.field
         }
     }
 }
@@ -63,15 +69,18 @@ pub mod explicit_impl_of_all_methods {
 /// Test of a derived impl of a trait: `#[derive(Clone)]`.
 pub mod derived_impl {
     #[derive(Clone)]
-    pub struct SomeStruct(pub i32);
+    pub struct SomeStruct {
+        pub field: i32,
+        _private: (),
+    }
 
     impl SomeStruct {
         pub fn create_struct(i: i32) -> Self {
-            Self(i)
+            Self { field: i, _private: () }
         }
 
         pub fn extract_int(s: Self) -> i32 {
-            s.0
+            s.field
         }
     }
 }
@@ -80,29 +89,38 @@ pub mod derived_impl {
 /// implements `Clone` but doesn't implement `Default`.  This is a regression
 /// test for b/288138612.
 pub mod derived_impl_with_non_default_field {
-    /// It is important that `InnerStruct` is `pub` so that `SomeStruct.0` field
+    /// It is important that `InnerStruct` is `pub` so that `SomeStruct.field` field
     /// is typed correctly in the C++ bindings and not replaced with a blob
     /// of bytes.
     #[derive(Clone)]
-    pub struct InnerStruct(pub i32);
+    pub struct InnerStruct {
+        pub field: i32,
+        _private: (),
+    }
 
     #[derive(Clone)]
-    pub struct SomeStruct(pub InnerStruct);
+    pub struct SomeStruct {
+        pub field: InnerStruct,
+        _private: (),
+    }
 
     impl SomeStruct {
         pub fn create_struct(i: i32) -> Self {
-            Self(InnerStruct(i))
+            Self { field: InnerStruct { field: i, _private: () }, _private: () }
         }
 
         pub fn extract_int(s: Self) -> i32 {
-            s.0 .0
+            s.field.field
         }
     }
 }
 
 /// Test of a missing impl of a trait.
 pub mod no_impl {
-    pub struct SomeStruct(pub i32);
+    pub struct SomeStruct {
+        pub field: i32,
+        _private: (),
+    }
 }
 
 /// Test of `impl Clone for TransparentStruct` where `TransparentStruct` is
@@ -110,7 +128,7 @@ pub mod no_impl {
 /// Regression test for b/459482188.
 pub mod repr_transparent_impl {
     #[repr(transparent)]
-    pub struct TransparentStruct(pub i32);
+    pub struct TransparentStruct(i32);
 
     impl Clone for TransparentStruct {
         fn clone(&self) -> Self {

@@ -69,20 +69,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: aliasing_references_golden :: SomeStruct") alignas(4)
     [[clang::trivial_abi]] SomeStruct final {
  public:
-  // Default::default
-  SomeStruct();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~SomeStruct() = default;
-  SomeStruct(SomeStruct&&) = default;
-  SomeStruct& operator=(SomeStruct&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  SomeStruct(const SomeStruct&) = default;
-  SomeStruct& operator=(const SomeStruct&) = default;
-  SomeStruct(::crubit::UnsafeRelocateTag, SomeStruct&& value);
-
   void mut_self_and_mut_ref(::std::int32_t& __param_1);
 
   void mut_self_and_shared_ref(::std::int32_t const& __param_1);
@@ -92,9 +78,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   void shared_self_and_shared_ref_allows_alias(
       ::std::int32_t const& __param_1) const;
 
-  union {
-    ::std::int32_t field;
-  };
+  ::std::int32_t field = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -169,16 +153,6 @@ static_assert(
 static_assert(
     alignof(SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_ualiasing_ureferences_ugolden_x0000003a_x0000003aSomeStruct(
-    ::aliasing_references::SomeStruct* __ret_ptr);
-}
-inline ::aliasing_references::SomeStruct::SomeStruct() {
-  __crubit_internal::
-      __crubit_thunk_Default_udefault_ualiasing_ureferences_ugolden_x0000003a_x0000003aSomeStruct(
-          this);
-}
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::aliasing_references::SomeStruct>);
@@ -188,11 +162,6 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::aliasing_references::SomeStruct>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::aliasing_references::SomeStruct>);
-inline ::aliasing_references::SomeStruct::SomeStruct(
-    ::crubit::UnsafeRelocateTag, SomeStruct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_mut_uself_uand_umut_uref(
     ::aliasing_references::SomeStruct&, ::std::int32_t&);

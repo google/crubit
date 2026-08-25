@@ -21,7 +21,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <utility>
 
 #include "support/rs_std/rs_alloc.h"
@@ -31,29 +30,11 @@ namespace no_std {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct") alignas(8)
     [[clang::trivial_abi]] NoStdStruct final {
  public:
-  // `no_std_golden::NoStdStruct` doesn't implement the `Default` trait
-  NoStdStruct() = delete;
-
-  // Drop::drop
-  ~NoStdStruct();
-
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  NoStdStruct(NoStdStruct&&) = delete;
-  ::no_std::NoStdStruct& operator=(NoStdStruct&&) = delete;
-  // `no_std_golden::NoStdStruct` doesn't implement the `Clone` trait
-  NoStdStruct(const NoStdStruct&) = delete;
-  NoStdStruct& operator=(const NoStdStruct&) = delete;
-  NoStdStruct(::crubit::UnsafeRelocateTag, NoStdStruct&& value);
-
   static ::no_std::NoStdStruct new_(::std::int32_t x, float y);
 
   rs_std::StrRef display() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  union {
-    ::rs::alloc::string::String test;
-  };
+  ::rs::alloc::string::String test = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -65,20 +46,6 @@ static_assert(
 static_assert(
     alignof(NoStdStruct) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_uno_ustd_ugolden_x0000003a_x0000003aNoStdStruct(
-    ::no_std::NoStdStruct&);
-}
-inline NoStdStruct::~NoStdStruct() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_uno_ustd_ugolden_x0000003a_x0000003aNoStdStruct(
-          *this);
-}
-inline ::no_std::NoStdStruct::NoStdStruct(::crubit::UnsafeRelocateTag,
-                                          NoStdStruct&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, float,

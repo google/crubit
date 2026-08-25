@@ -53,6 +53,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Bar") alignas(4)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Foo") alignas(4)
     [[clang::trivial_abi]] Foo final {
  public:
+  // Type is not a C++ aggregate: Field `i` is not public
+
   // `uses_reexport_golden::Foo` doesn't implement the `Default` trait
   Foo() = delete;
 
@@ -91,22 +93,7 @@ namespace uses_reexport {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G") alignas(4)
     [[clang::trivial_abi]] G final {
  public:
-  // `uses_reexport_golden::G` doesn't implement the `Default` trait
-  G() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~G() = default;
-  G(G&&) = default;
-  G& operator=(G&&) = default;
-
-  // `uses_reexport_golden::G` doesn't implement the `Clone` trait
-  G(const G&) = delete;
-  G& operator=(const G&) = delete;
-  G(::crubit::UnsafeRelocateTag, G&& value);
-
-  union {
-    ::std::int32_t field;
-  };
+  ::std::int32_t field = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -119,22 +106,7 @@ namespace uses_reexport {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX") alignas(4)
     [[clang::trivial_abi]] InnerX final {
  public:
-  // `uses_reexport_golden::InnerX` doesn't implement the `Default` trait
-  InnerX() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~InnerX() = default;
-  InnerX(InnerX&&) = default;
-  InnerX& operator=(InnerX&&) = default;
-
-  // `uses_reexport_golden::InnerX` doesn't implement the `Clone` trait
-  InnerX(const InnerX&) = delete;
-  InnerX& operator=(const InnerX&) = delete;
-  InnerX(::crubit::UnsafeRelocateTag, InnerX&& value);
-
-  union {
-    ::std::int32_t field;
-  };
+  ::std::int32_t field = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -251,9 +223,6 @@ static_assert(
 static_assert(::std::is_trivially_destructible_v<G>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::G>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::G>);
-inline ::uses_reexport::G::G(::crubit::UnsafeRelocateTag, G&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void G::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(G, field));
 }
@@ -271,10 +240,6 @@ static_assert(::std::is_trivially_destructible_v<InnerX>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::uses_reexport::InnerX>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::InnerX>);
-inline ::uses_reexport::InnerX::InnerX(::crubit::UnsafeRelocateTag,
-                                       InnerX&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void InnerX::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(InnerX, field));
 }

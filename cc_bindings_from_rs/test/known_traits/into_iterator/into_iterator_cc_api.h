@@ -39,23 +39,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_iterator_rust_golden :: ContainerWithInherentBegin") alignas(4)
     [[clang::trivial_abi]] ContainerWithInherentBegin final {
  public:
-  // `into_iterator_rust_golden::ContainerWithInherentBegin` doesn't implement
-  // the `Default` trait
-  ContainerWithInherentBegin() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~ContainerWithInherentBegin() = default;
-  ContainerWithInherentBegin(ContainerWithInherentBegin&&) = default;
-  ContainerWithInherentBegin& operator=(ContainerWithInherentBegin&&) = default;
-
-  // `into_iterator_rust_golden::ContainerWithInherentBegin` doesn't implement
-  // the `Clone` trait
-  ContainerWithInherentBegin(const ContainerWithInherentBegin&) = delete;
-  ContainerWithInherentBegin& operator=(const ContainerWithInherentBegin&) =
-      delete;
-  ContainerWithInherentBegin(::crubit::UnsafeRelocateTag,
-                             ContainerWithInherentBegin&& value);
-
   ::std::int32_t begin() const;
 
   // Error generating bindings for struct
@@ -65,9 +48,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `begin`, `end`, or `into_iter`, which prevents binding methods for
   // IntoIterator.
 
-  union {
-    ::std::array<::std::int32_t, 3> data;
-  };
+  ::std::array<::std::int32_t, 3> data = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -77,31 +58,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_iterator_rust_golden :: ContainerWithRefIntoIter") alignas(8)
     [[clang::trivial_abi]] ContainerWithRefIntoIter final {
  public:
-  // `into_iterator_rust_golden::ContainerWithRefIntoIter` doesn't implement the
-  // `Default` trait
-  ContainerWithRefIntoIter() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~ContainerWithRefIntoIter() = default;
-  ContainerWithRefIntoIter(ContainerWithRefIntoIter&&) = default;
-  ContainerWithRefIntoIter& operator=(ContainerWithRefIntoIter&&) = default;
-
-  // `into_iterator_rust_golden::ContainerWithRefIntoIter` doesn't implement the
-  // `Clone` trait
-  ContainerWithRefIntoIter(const ContainerWithRefIntoIter&) = delete;
-  ContainerWithRefIntoIter& operator=(const ContainerWithRefIntoIter&) = delete;
-  ContainerWithRefIntoIter(::crubit::UnsafeRelocateTag,
-                           ContainerWithRefIntoIter&& value);
-
   // Error generating bindings for struct
   // `into_iterator_rust_golden::ContainerWithRefIntoIter` defined at
   // cc_bindings_from_rs/test/known_traits/into_iterator/into_iterator.rs;l=88:
   // IntoIterator/Iterator impls with generic type or const parameters are not
   // supported yet.
 
-  union {
-    ::into_iterator_rust::MyIterator* crubit_nonnull iter;
-  };
+  ::into_iterator_rust::MyIterator* crubit_nonnull iter = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -111,31 +74,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_iterator_rust_golden :: MoveOnlyIterator") alignas(4)
     [[clang::trivial_abi]] MoveOnlyIterator final {
  public:
-  // `into_iterator_rust_golden::MoveOnlyIterator` doesn't implement the
-  // `Default` trait
-  MoveOnlyIterator() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~MoveOnlyIterator() = default;
-  MoveOnlyIterator(MoveOnlyIterator&&) = default;
-  MoveOnlyIterator& operator=(MoveOnlyIterator&&) = default;
-
-  // `into_iterator_rust_golden::MoveOnlyIterator` doesn't implement the `Clone`
-  // trait
-  MoveOnlyIterator(const MoveOnlyIterator&) = delete;
-  MoveOnlyIterator& operator=(const MoveOnlyIterator&) = delete;
-  MoveOnlyIterator(::crubit::UnsafeRelocateTag, MoveOnlyIterator&& value);
   template <typename TAdaptedSelf_ = MoveOnlyIterator>
   inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
   }
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
-  union {
-    ::std::int32_t val;
-  };
-  union {
-    ::std::int32_t count;
-  };
+  ::std::int32_t val = {};
+  ::std::int32_t count = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -145,26 +90,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_iterator_rust_golden :: MoveOnlyPayload") alignas(4)
     [[clang::trivial_abi]] MoveOnlyPayload final {
  public:
-  // `into_iterator_rust_golden::MoveOnlyPayload` doesn't implement the
-  // `Default` trait
-  MoveOnlyPayload() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~MoveOnlyPayload() = default;
-  MoveOnlyPayload(MoveOnlyPayload&&) = default;
-  MoveOnlyPayload& operator=(MoveOnlyPayload&&) = default;
-
-  // `into_iterator_rust_golden::MoveOnlyPayload` doesn't implement the `Clone`
-  // trait
-  MoveOnlyPayload(const MoveOnlyPayload&) = delete;
-  MoveOnlyPayload& operator=(const MoveOnlyPayload&) = delete;
-  MoveOnlyPayload(::crubit::UnsafeRelocateTag, MoveOnlyPayload&& value);
-
   ::std::int32_t mutating_method();
 
-  union {
-    ::std::int32_t val;
-  };
+  ::std::int32_t val = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -277,27 +205,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_iterator_rust_golden :: MyIterator") alignas(4)
     [[clang::trivial_abi]] MyIterator final {
  public:
-  // `into_iterator_rust_golden::MyIterator` doesn't implement the `Default`
-  // trait
-  MyIterator() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~MyIterator() = default;
-  MyIterator(MyIterator&&) = default;
-  MyIterator& operator=(MyIterator&&) = default;
-
-  // `into_iterator_rust_golden::MyIterator` doesn't implement the `Clone` trait
-  MyIterator(const MyIterator&) = delete;
-  MyIterator& operator=(const MyIterator&) = delete;
-  MyIterator(::crubit::UnsafeRelocateTag, MyIterator&& value);
   template <typename TAdaptedSelf_ = MyIterator>
   inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
   }
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
-  union {
-    ::std::int32_t value;
-  };
+  ::std::int32_t value = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -307,28 +220,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_iterator_rust_golden :: SimpleIntoIter") alignas(4)
     [[clang::trivial_abi]] SimpleIntoIter final {
  public:
-  // `into_iterator_rust_golden::SimpleIntoIter` doesn't implement the `Default`
-  // trait
-  SimpleIntoIter() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~SimpleIntoIter() = default;
-  SimpleIntoIter(SimpleIntoIter&&) = default;
-  SimpleIntoIter& operator=(SimpleIntoIter&&) = default;
-
-  // `into_iterator_rust_golden::SimpleIntoIter` doesn't implement the `Clone`
-  // trait
-  SimpleIntoIter(const SimpleIntoIter&) = delete;
-  SimpleIntoIter& operator=(const SimpleIntoIter&) = delete;
-  SimpleIntoIter(::crubit::UnsafeRelocateTag, SimpleIntoIter&& value);
   template <typename TAdaptedSelf_ = SimpleIntoIter>
   inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
   }
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
-  union {
-    ::std::int32_t val;
-  };
+  ::std::int32_t val = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -450,20 +347,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_iterator_rust_golden :: MyContainer") alignas(4)
     [[clang::trivial_abi]] MyContainer final {
  public:
-  // `into_iterator_rust_golden::MyContainer` doesn't implement the `Default`
-  // trait
-  MyContainer() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~MyContainer() = default;
-  MyContainer(MyContainer&&) = default;
-  MyContainer& operator=(MyContainer&&) = default;
-
-  // `into_iterator_rust_golden::MyContainer` doesn't implement the `Clone`
-  // trait
-  MyContainer(const MyContainer&) = delete;
-  MyContainer& operator=(const MyContainer&) = delete;
-  MyContainer(::crubit::UnsafeRelocateTag, MyContainer&& value);
   template <typename TAdaptedSelf_ = MyContainer>
   inline ::into_iterator_rust::MyContainerIntoIter into_iter() &&;
   template <typename TAdaptedSelf_ = MyContainer>
@@ -474,9 +357,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   rs::IteratorAdapter<::into_iterator_rust::MyContainerIterMut> begin() &;
   template <typename TAdaptedSelf_ = MyContainer>
   rs::IteratorEnd end() &;
-  union {
-    ::std::array<::std::int32_t, 3> data;
-  };
+  ::std::array<::std::int32_t, 3> data = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -521,12 +402,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::ContainerWithInherentBegin>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::ContainerWithInherentBegin>);
-inline ::into_iterator_rust::ContainerWithInherentBegin::
-    ContainerWithInherentBegin(::crubit::UnsafeRelocateTag,
-                               ContainerWithInherentBegin&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_begin(
     ::into_iterator_rust::ContainerWithInherentBegin const&);
@@ -549,10 +424,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::ContainerWithRefIntoIter>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::ContainerWithRefIntoIter>);
-inline ::into_iterator_rust::ContainerWithRefIntoIter::ContainerWithRefIntoIter(
-    ::crubit::UnsafeRelocateTag, ContainerWithRefIntoIter&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void ContainerWithRefIntoIter::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(ContainerWithRefIntoIter, iter));
 }
@@ -567,10 +438,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MoveOnlyIterator>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::MoveOnlyIterator>);
-inline ::into_iterator_rust::MoveOnlyIterator::MoveOnlyIterator(
-    ::crubit::UnsafeRelocateTag, MoveOnlyIterator&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void MoveOnlyIterator::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MoveOnlyIterator, val));
   static_assert(4 == offsetof(MoveOnlyIterator, count));
@@ -586,11 +453,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MoveOnlyPayload>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::MoveOnlyPayload>);
-inline ::into_iterator_rust::MoveOnlyPayload::MoveOnlyPayload(
-    ::crubit::UnsafeRelocateTag, MoveOnlyPayload&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_mutating_umethod(
     ::into_iterator_rust::MoveOnlyPayload&);
@@ -613,10 +475,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MyContainer>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::into_iterator_rust::MyContainer>);
-inline ::into_iterator_rust::MyContainer::MyContainer(
-    ::crubit::UnsafeRelocateTag, MyContainer&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
@@ -758,10 +616,6 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::into_iterator_rust::MyIterator>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::into_iterator_rust::MyIterator>);
-inline ::into_iterator_rust::MyIterator::MyIterator(::crubit::UnsafeRelocateTag,
-                                                    MyIterator&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void MyIterator::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyIterator, value));
 }
@@ -776,10 +630,6 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::SimpleIntoIter>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::SimpleIntoIter>);
-inline ::into_iterator_rust::SimpleIntoIter::SimpleIntoIter(
-    ::crubit::UnsafeRelocateTag, SimpleIntoIter&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void SimpleIntoIter::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(SimpleIntoIter, val));
 }

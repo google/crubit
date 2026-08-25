@@ -40,3 +40,6 @@ struct EnumClass(i32);
 
 #[crubit_annotate::cpp_thread_safe]
 struct ThreadSafe {}
+
+#[crubit_annotate::field_drop_order_does_not_matter]
+struct FieldDropOrderDoesNotMatter {}

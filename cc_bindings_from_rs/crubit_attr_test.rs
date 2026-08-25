@@ -162,3 +162,32 @@ fn test_do_not_bind_invalid_on_struct() {
         );
     });
 }
+
+#[test]
+fn test_field_drop_order_does_not_matter() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: field_drop_order_does_not_matter="]
+            pub struct SomeStruct;
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let attrs = attrs_for_named_def(tcx, "SomeStruct").unwrap();
+        let mut expected_attrs = CrubitAttrs::default();
+        expected_attrs.field_drop_order_does_not_matter = true;
+        assert_eq!(attrs, expected_attrs);
+    });
+}
+
+#[test]
+fn test_field_drop_order_does_not_matter_invalid_on_fn() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: field_drop_order_does_not_matter="]
+            pub fn foo() {}
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let err = attrs_for_named_def(tcx, "foo").unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "`field_drop_order_does_not_matter` is only permitted on structs"
+        );
+    });
+}

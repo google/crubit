@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #[crubit_annotate::must_bind]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ExistingRustDebuggable {
     pub value: char,
 }
