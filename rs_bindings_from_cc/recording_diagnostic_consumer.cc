@@ -4,13 +4,13 @@
 
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
 
-#include <cassert>
-#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 
+#include "absl/cleanup/cleanup.h"
+#include "absl/functional/function_ref.h"
 #include "absl/log/log.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -100,7 +100,7 @@ std::string RecordingDiagnosticConsumer::ConcatenatedDiagnostics(
 
 RecordingDiagnosticConsumer RecordDiagnostics(
     clang::DiagnosticsEngine& diagnostic_engine,
-    std::function<void(void)> callback) {
+    absl::FunctionRef<void()> callback) {
   // Reset the diagnostic engine to a known state. In particular, if there were
   // too many diagnostics reported previously (even in sfinae contexts),
   // the diagnostic engine's fatal bit will get stuck on.
@@ -109,9 +109,11 @@ RecordingDiagnosticConsumer RecordDiagnostics(
   std::unique_ptr<clang::DiagnosticConsumer> original_consumer =
       diagnostic_engine.takeClient();
   diagnostic_engine.setClient(&diagnostic_recorder, /*ShouldOwnClient=*/false);
+  auto restore_consumer = absl::MakeCleanup([&] {
+    diagnostic_engine.setClient(original_consumer.release(),
+                                /*ShouldOwnClient=*/true);
+  });
   callback();
-  diagnostic_engine.setClient(original_consumer.release(),
-                              /*ShouldOwnClient=*/true);
   return diagnostic_recorder;
 }
 
