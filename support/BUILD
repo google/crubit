@@ -277,6 +277,24 @@ rust_test(
     ],
 )
 
+rust_library(
+    name = "hash_rust",
+    srcs = ["crubit_hash_rust/src/hash.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+rust_test(
+    name = "hash_rust_test",
+    srcs = ["crubit_hash_rust/src/hash.rs"],
+    harness = "libtest",
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
 cc_library(
     name = "bridge_cpp",
     hdrs = ["bridge.h"],

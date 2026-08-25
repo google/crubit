@@ -467,6 +467,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "crubit_hash_rust"
+version = "0.1.0"
+dependencies = [
+ "googletest",
+]
+
+[[package]]
 name = "dyn_format"
 version = "0.0.0"
 dependencies = [
