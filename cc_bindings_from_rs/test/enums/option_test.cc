@@ -209,8 +209,8 @@ TEST(OptionTest, ReturnNestedOptionResult) {
 }
 
 TEST(OptionTest, OptionWithSizeTypes) {
-  rs_std::Option<std::uintptr_t> uval(10);
-  rs_std::Option<std::intptr_t> ival(-10);
+  rs_std::Option<rs_std::usize> uval(10);
+  rs_std::Option<rs_std::isize> ival(-10);
   option::OptionWithSizeTypes s = option::OptionWithSizeTypes::new_(uval, ival);
   EXPECT_TRUE(s.uval.has_value());
   EXPECT_EQ(*s.uval, 10);

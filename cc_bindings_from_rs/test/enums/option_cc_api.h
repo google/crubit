@@ -19,6 +19,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs_std/int.h"
 #include "support/rs_std/option.h"
 #include "support/rs_std/result.h"
 #include "support/rs_std/str_ref.h"
@@ -452,13 +453,13 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int64_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int64_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < isize >") rs_std::Option<::std::int64_t>
-    : public rs_std::OptionBase<rs_std::Option<::std::int64_t>,
-                                ::std::int64_t> {
+    "std :: option :: Option < isize >") rs_std::Option<rs_std::isize>
+    : public rs_std::OptionBase<rs_std::Option<rs_std::isize>,
+                                ::std::intptr_t> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -469,21 +470,21 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
   Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type =
-      rs_std::OptionBase<rs_std::Option<::std::int64_t>, ::std::int64_t>;
+      rs_std::OptionBase<rs_std::Option<rs_std::isize>, ::std::intptr_t>;
   constexpr Option() = default;
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int64_t, U>)
+    requires(rs_std::OptionForwardConstructible<Option, ::std::intptr_t, U>)
   Option(U&& value) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::int64_t, U>)
+    requires(rs_std::OptionForwardConstructible<Option, ::std::intptr_t, U>)
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::int64_t, Opt>)
+    requires(rs_std::OptionFromStdOptional<::std::intptr_t, Opt>)
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::int64_t, Opt>)
+    requires(rs_std::OptionFromStdOptional<::std::intptr_t, Opt>)
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -493,11 +494,11 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   friend base_type;
   using tag_type = ::std::uint64_t;
   static constexpr tag_type kNoneVal = 0;
-  ::std::int64_t* some_ptr() noexcept {
-    return reinterpret_cast<::std::int64_t*>(storage_ + 8);
+  ::std::intptr_t* some_ptr() noexcept {
+    return reinterpret_cast<::std::intptr_t*>(storage_ + 8);
   }
-  ::std::int64_t const* some_const_ptr() const noexcept {
-    return reinterpret_cast<::std::int64_t const*>(storage_ + 8);
+  ::std::intptr_t const* some_const_ptr() const noexcept {
+    return reinterpret_cast<::std::intptr_t const*>(storage_ + 8);
   }
   void set_some_tag() noexcept { set_tag(1); }
   constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
@@ -1261,13 +1262,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: ZStream") alignas(8)
 
 }  // namespace option
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < usize >") rs_std::Option<::std::uint64_t>
-    : public rs_std::OptionBase<rs_std::Option<::std::uint64_t>,
-                                ::std::uint64_t> {
+    "std :: option :: Option < usize >") rs_std::Option<rs_std::usize>
+    : public rs_std::OptionBase<rs_std::Option<rs_std::usize>,
+                                ::std::uintptr_t> {
  public:
   // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
   // assignment operator.
@@ -1278,21 +1279,21 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
   Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type =
-      rs_std::OptionBase<rs_std::Option<::std::uint64_t>, ::std::uint64_t>;
+      rs_std::OptionBase<rs_std::Option<rs_std::usize>, ::std::uintptr_t>;
   constexpr Option() = default;
   constexpr Option(::std::nullopt_t) noexcept;
   constexpr Option& operator=(::std::nullopt_t) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::uint64_t, U>)
+    requires(rs_std::OptionForwardConstructible<Option, ::std::uintptr_t, U>)
   Option(U&& value) noexcept;
   template <typename U>
-    requires(rs_std::OptionForwardConstructible<Option, ::std::uint64_t, U>)
+    requires(rs_std::OptionForwardConstructible<Option, ::std::uintptr_t, U>)
   Option& operator=(U&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::uint64_t, Opt>)
+    requires(rs_std::OptionFromStdOptional<::std::uintptr_t, Opt>)
   Option(Opt&& value) noexcept;
   template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<::std::uint64_t, Opt>)
+    requires(rs_std::OptionFromStdOptional<::std::uintptr_t, Opt>)
   Option& operator=(Opt&& value) noexcept;
   template <typename... Args>
   explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
@@ -1302,11 +1303,11 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   friend base_type;
   using tag_type = ::std::uint64_t;
   static constexpr tag_type kNoneVal = 0;
-  ::std::uint64_t* some_ptr() noexcept {
-    return reinterpret_cast<::std::uint64_t*>(storage_ + 8);
+  ::std::uintptr_t* some_ptr() noexcept {
+    return reinterpret_cast<::std::uintptr_t*>(storage_ + 8);
   }
-  ::std::uint64_t const* some_const_ptr() const noexcept {
-    return reinterpret_cast<::std::uint64_t const*>(storage_ + 8);
+  ::std::uintptr_t const* some_const_ptr() const noexcept {
+    return reinterpret_cast<::std::uintptr_t const*>(storage_ + 8);
   }
   void set_some_tag() noexcept { set_tag(1); }
   constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
@@ -1327,12 +1328,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 OptionWithSizeTypes final {
  public:
   // CRUBIT_ANNOTATE: must_bind=
-  static ::option::OptionWithSizeTypes new_(
-      rs_std::Option<::std::uint64_t> uval,
-      rs_std::Option<::std::int64_t> ival);
+  static ::option::OptionWithSizeTypes new_(rs_std::Option<rs_std::usize> uval,
+                                            rs_std::Option<rs_std::isize> ival);
 
-  rs_std::Option<::std::uint64_t> uval = {};
-  rs_std::Option<::std::int64_t> ival = {};
+  rs_std::Option<rs_std::usize> uval = {};
+  rs_std::Option<rs_std::isize> ival = {};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -2425,12 +2425,12 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<::option::OptionWithSizeTypes>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::Option<::std::uint64_t>*,
-                                   rs_std::Option<::std::int64_t>*,
+extern "C" void __crubit_thunk_new(rs_std::Option<rs_std::usize>*,
+                                   rs_std::Option<rs_std::isize>*,
                                    ::option::OptionWithSizeTypes* __ret_ptr);
 }
 inline ::option::OptionWithSizeTypes OptionWithSizeTypes::new_(
-    rs_std::Option<::std::uint64_t> uval, rs_std::Option<::std::int64_t> ival) {
+    rs_std::Option<rs_std::usize> uval, rs_std::Option<rs_std::isize> ival) {
   crubit::Slot<::option::OptionWithSizeTypes> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&uval, &ival, __return_value_storage);
@@ -2796,23 +2796,23 @@ inline rs_std::Option<::std::int32_t>::Option(::std::in_place_t ip,
 
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int64_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int64_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020isize_x00000020_x0000003e
 static_assert(
-    ::std::is_trivially_copy_constructible_v<rs_std::Option<::std::int64_t>>);
+    ::std::is_trivially_copy_constructible_v<rs_std::Option<rs_std::isize>>);
 static_assert(
-    ::std::is_trivially_copy_assignable_v<rs_std::Option<::std::int64_t>>);
+    ::std::is_trivially_copy_assignable_v<rs_std::Option<rs_std::isize>>);
 static_assert(
-    ::std::is_trivially_move_constructible_v<rs_std::Option<::std::int64_t>>);
+    ::std::is_trivially_move_constructible_v<rs_std::Option<rs_std::isize>>);
 static_assert(
-    ::std::is_trivially_move_assignable_v<rs_std::Option<::std::int64_t>>);
-inline rs_std::Option<::std::int64_t>::Option(::crubit::UnsafeRelocateTag,
-                                              Option&& value) {
+    ::std::is_trivially_move_assignable_v<rs_std::Option<rs_std::isize>>);
+inline rs_std::Option<rs_std::isize>::Option(::crubit::UnsafeRelocateTag,
+                                             Option&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
 static_assert(
-    ::std::is_trivially_destructible_v<rs_std::Option<::std::int64_t>>);
-inline constexpr ::std::uint64_t rs_std::Option<::std::int64_t>::tag()
+    ::std::is_trivially_destructible_v<rs_std::Option<rs_std::isize>>);
+inline constexpr ::std::uint64_t rs_std::Option<rs_std::isize>::tag()
     const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
@@ -2820,7 +2820,7 @@ inline constexpr ::std::uint64_t rs_std::Option<::std::int64_t>::tag()
   }
   return ::std::bit_cast<::std::uint64_t>(__bytes);
 }
-inline constexpr void rs_std::Option<::std::int64_t>::set_tag(
+inline constexpr void rs_std::Option<rs_std::isize>::set_tag(
     ::std::uint64_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
@@ -2830,41 +2830,41 @@ inline constexpr void rs_std::Option<::std::int64_t>::set_tag(
   }
 }
 
-inline constexpr rs_std::Option<::std::int64_t>::Option(
+inline constexpr rs_std::Option<rs_std::isize>::Option(
     ::std::nullopt_t) noexcept
     : base_type(::std::nullopt) {}
-inline constexpr rs_std::Option<::std::int64_t>&
-rs_std::Option<::std::int64_t>::operator=(::std::nullopt_t) noexcept {
+inline constexpr rs_std::Option<rs_std::isize>&
+rs_std::Option<rs_std::isize>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int64_t>,
-                                              ::std::int64_t, U>)
-inline rs_std::Option<::std::int64_t>::Option(U&& value) noexcept
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<rs_std::isize>,
+                                              ::std::intptr_t, U>)
+inline rs_std::Option<rs_std::isize>::Option(U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::int64_t>,
-                                              ::std::int64_t, U>)
-inline rs_std::Option<::std::int64_t>&
-rs_std::Option<::std::int64_t>::operator=(U&& value) noexcept {
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<rs_std::isize>,
+                                              ::std::intptr_t, U>)
+inline rs_std::Option<rs_std::isize>& rs_std::Option<rs_std::isize>::operator=(
+    U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::std::int64_t, Opt>)
-inline rs_std::Option<::std::int64_t>::Option(Opt&& value) noexcept
+  requires(rs_std::OptionFromStdOptional<::std::intptr_t, Opt>)
+inline rs_std::Option<rs_std::isize>::Option(Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::std::int64_t, Opt>)
-inline rs_std::Option<::std::int64_t>&
-rs_std::Option<::std::int64_t>::operator=(Opt&& value) noexcept {
+  requires(rs_std::OptionFromStdOptional<::std::intptr_t, Opt>)
+inline rs_std::Option<rs_std::isize>& rs_std::Option<rs_std::isize>::operator=(
+    Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::std::int64_t>::Option(::std::in_place_t ip,
-                                              Args&&... args) noexcept
+inline rs_std::Option<rs_std::isize>::Option(::std::in_place_t ip,
+                                             Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif
@@ -4087,23 +4087,23 @@ inline rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>::Option(
 
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020usize_x00000020_x0000003e
 static_assert(
-    ::std::is_trivially_copy_constructible_v<rs_std::Option<::std::uint64_t>>);
+    ::std::is_trivially_copy_constructible_v<rs_std::Option<rs_std::usize>>);
 static_assert(
-    ::std::is_trivially_copy_assignable_v<rs_std::Option<::std::uint64_t>>);
+    ::std::is_trivially_copy_assignable_v<rs_std::Option<rs_std::usize>>);
 static_assert(
-    ::std::is_trivially_move_constructible_v<rs_std::Option<::std::uint64_t>>);
+    ::std::is_trivially_move_constructible_v<rs_std::Option<rs_std::usize>>);
 static_assert(
-    ::std::is_trivially_move_assignable_v<rs_std::Option<::std::uint64_t>>);
-inline rs_std::Option<::std::uint64_t>::Option(::crubit::UnsafeRelocateTag,
-                                               Option&& value) {
+    ::std::is_trivially_move_assignable_v<rs_std::Option<rs_std::usize>>);
+inline rs_std::Option<rs_std::usize>::Option(::crubit::UnsafeRelocateTag,
+                                             Option&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
 static_assert(
-    ::std::is_trivially_destructible_v<rs_std::Option<::std::uint64_t>>);
-inline constexpr ::std::uint64_t rs_std::Option<::std::uint64_t>::tag()
+    ::std::is_trivially_destructible_v<rs_std::Option<rs_std::usize>>);
+inline constexpr ::std::uint64_t rs_std::Option<rs_std::usize>::tag()
     const& noexcept {
   ::std::array<unsigned char, sizeof(::std::uint64_t)> __bytes = {};
   for (::std::size_t i = 0; i < sizeof(::std::uint64_t); ++i) {
@@ -4111,7 +4111,7 @@ inline constexpr ::std::uint64_t rs_std::Option<::std::uint64_t>::tag()
   }
   return ::std::bit_cast<::std::uint64_t>(__bytes);
 }
-inline constexpr void rs_std::Option<::std::uint64_t>::set_tag(
+inline constexpr void rs_std::Option<rs_std::usize>::set_tag(
     ::std::uint64_t tag) noexcept {
   auto __bytes =
       ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint64_t)>>(
@@ -4121,41 +4121,41 @@ inline constexpr void rs_std::Option<::std::uint64_t>::set_tag(
   }
 }
 
-inline constexpr rs_std::Option<::std::uint64_t>::Option(
+inline constexpr rs_std::Option<rs_std::usize>::Option(
     ::std::nullopt_t) noexcept
     : base_type(::std::nullopt) {}
-inline constexpr rs_std::Option<::std::uint64_t>&
-rs_std::Option<::std::uint64_t>::operator=(::std::nullopt_t) noexcept {
+inline constexpr rs_std::Option<rs_std::usize>&
+rs_std::Option<rs_std::usize>::operator=(::std::nullopt_t) noexcept {
   base_type::operator=(::std::nullopt);
   return *this;
 }
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::uint64_t>,
-                                              ::std::uint64_t, U>)
-inline rs_std::Option<::std::uint64_t>::Option(U&& value) noexcept
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<rs_std::usize>,
+                                              ::std::uintptr_t, U>)
+inline rs_std::Option<rs_std::usize>::Option(U&& value) noexcept
     : base_type(::std::forward<U>(value)) {}
 template <typename U>
-  requires(rs_std::OptionForwardConstructible<rs_std::Option<::std::uint64_t>,
-                                              ::std::uint64_t, U>)
-inline rs_std::Option<::std::uint64_t>&
-rs_std::Option<::std::uint64_t>::operator=(U&& value) noexcept {
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<rs_std::usize>,
+                                              ::std::uintptr_t, U>)
+inline rs_std::Option<rs_std::usize>& rs_std::Option<rs_std::usize>::operator=(
+    U&& value) noexcept {
   base_type::operator=(::std::forward<U>(value));
   return *this;
 }
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::std::uint64_t, Opt>)
-inline rs_std::Option<::std::uint64_t>::Option(Opt&& value) noexcept
+  requires(rs_std::OptionFromStdOptional<::std::uintptr_t, Opt>)
+inline rs_std::Option<rs_std::usize>::Option(Opt&& value) noexcept
     : base_type(::std::forward<Opt>(value)) {}
 template <typename Opt>
-  requires(rs_std::OptionFromStdOptional<::std::uint64_t, Opt>)
-inline rs_std::Option<::std::uint64_t>&
-rs_std::Option<::std::uint64_t>::operator=(Opt&& value) noexcept {
+  requires(rs_std::OptionFromStdOptional<::std::uintptr_t, Opt>)
+inline rs_std::Option<rs_std::usize>& rs_std::Option<rs_std::usize>::operator=(
+    Opt&& value) noexcept {
   base_type::operator=(::std::forward<Opt>(value));
   return *this;
 }
 template <typename... Args>
-inline rs_std::Option<::std::uint64_t>::Option(::std::in_place_t ip,
-                                               Args&&... args) noexcept
+inline rs_std::Option<rs_std::usize>::Option(::std::in_place_t ip,
+                                             Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif

@@ -18,6 +18,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/rs_std/int.h"
 #include "support/rs_std/traits.h"
 #include "support/rs_std/tuple.h"
 

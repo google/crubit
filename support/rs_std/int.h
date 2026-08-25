@@ -15,12 +15,30 @@
 
 namespace rs_std {
 
+// `TemplateUnderlyingType<T>` is a type trait that yields
+// `T::TemplateUnderlyingType` if it exists, or `T` otherwise.
+template <typename T, typename = void>
+struct TemplateUnderlyingType {
+  using type = T;
+};
+
+template <typename T>
+struct TemplateUnderlyingType<T,
+                              std::void_t<typename T::TemplateUnderlyingType>> {
+  using type = typename T::TemplateUnderlyingType;
+};
+
+template <typename T>
+using TemplateUnderlyingType_t = typename TemplateUnderlyingType<T>::type;
+
 // `rs_std::usize` is a C++ representation of the `usize` type from Rust when
 // used as a template argument inside template specializations (such as
 // `rs_std::Option<T>`). This prevents C++ explicit template specialization
 // redefinition errors or overload collisions between `usize`, `u64`, and `u32`.
 class CRUBIT_INTERNAL_RUST_TYPE("usize") usize final {
  public:
+  using TemplateUnderlyingType = ::std::uintptr_t;
+
   constexpr usize() noexcept = default;
 
   // Implicit constructing conversion from standard integer types.
@@ -69,6 +87,8 @@ static_assert(::std::is_trivially_destructible_v<usize>);
 // redefinition errors or overload collisions between `isize`, `i64`, and `i32`.
 class CRUBIT_INTERNAL_RUST_TYPE("isize") isize final {
  public:
+  using TemplateUnderlyingType = ::std::intptr_t;
+
   constexpr isize() noexcept = default;
 
   // Implicit constructing conversion from standard integer types.
