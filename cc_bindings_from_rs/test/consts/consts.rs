@@ -50,4 +50,58 @@ pub struct TyWithAssocConsts(#[allow(dead_code)] u8);
 
 impl TyWithAssocConsts {
     pub const ASSOC_42: i32 = 42;
+    pub const ASSOC_POINT: Point = Point { x: 5, y: 6 };
 }
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[repr(C)]
+pub struct Point {
+    pub x: i32,
+    pub y: i32,
+}
+
+#[must_bind]
+pub const POINT_CONST: Point = Point { x: 10, y: -20 };
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct TupleStruct(pub i32, pub u32);
+
+#[must_bind]
+pub const TUPLE_STRUCT_CONST: TupleStruct = TupleStruct(123, 456);
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct NestedStruct {
+    pub point: Point,
+    pub tuple: TupleStruct,
+}
+
+#[must_bind]
+pub const NESTED_STRUCT_CONST: NestedStruct = NestedStruct {
+    point: Point { x: 1, y: 2 },
+    tuple: TupleStruct(3, 4),
+};
+
+#[must_bind]
+pub const ARRAY_CONST: [i32; 3] = [10, 20, 30];
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct StructWithArray {
+    pub values: [i32; 2],
+}
+
+#[must_bind]
+pub const STRUCT_WITH_ARRAY_CONST: StructWithArray = StructWithArray {
+    values: [100, 200],
+};
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct StructWithStr<'a> {
+    pub msg: &'a str,
+    pub count: i32,
+}
+
+#[must_bind]
+pub const STRUCT_WITH_STR_CONST: StructWithStr<'static> = StructWithStr {
+    msg: "hello world",
+    count: 42,
+};

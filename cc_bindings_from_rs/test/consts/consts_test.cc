@@ -34,6 +34,29 @@ TEST(ConstsTest, AllAreExpected) {
   static_assert(consts::RUST_F64_MAX == DBL_MAX);
 
   static_assert(consts::TyWithAssocConsts::ASSOC_42 == 42);
+  static_assert(consts::TyWithAssocConsts::ASSOC_POINT.x == 5);
+  static_assert(consts::TyWithAssocConsts::ASSOC_POINT.y == 6);
+
+  static_assert(consts::POINT_CONST.x == 10);
+  static_assert(consts::POINT_CONST.y == -20);
+
+  static_assert(consts::TUPLE_STRUCT_CONST.__field0 == 123);
+  static_assert(consts::TUPLE_STRUCT_CONST.__field1 == 456);
+
+  static_assert(consts::NESTED_STRUCT_CONST.point.x == 1);
+  static_assert(consts::NESTED_STRUCT_CONST.point.y == 2);
+  static_assert(consts::NESTED_STRUCT_CONST.tuple.__field0 == 3);
+  static_assert(consts::NESTED_STRUCT_CONST.tuple.__field1 == 4);
+
+  static_assert(consts::ARRAY_CONST[0] == 10);
+  static_assert(consts::ARRAY_CONST[1] == 20);
+  static_assert(consts::ARRAY_CONST[2] == 30);
+
+  static_assert(consts::STRUCT_WITH_ARRAY_CONST.values[0] == 100);
+  static_assert(consts::STRUCT_WITH_ARRAY_CONST.values[1] == 200);
+
+  static_assert(consts::STRUCT_WITH_STR_CONST.msg == "hello world");
+  static_assert(consts::STRUCT_WITH_STR_CONST.count == 42);
 }
 
 }  // namespace

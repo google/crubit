@@ -2077,7 +2077,6 @@ fn test_trait_impl_for_mapped_cpp_type() {
         assert!(!bindings.cc_api.to_string().contains("struct SomeCppStruct;"));
     });
 }
-
 #[test]
 fn test_generated_bindings_hash_trait() {
     let test_src = r#"
@@ -2125,6 +2124,116 @@ fn test_generated_bindings_hash_trait() {
                     ...
                 }
             }
+        );
+    });
+}
+
+#[test]
+fn test_const_simple_struct() {
+    let test_src = r#"
+        pub struct Point {
+            pub x: i32,
+            pub y: i32,
+        }
+        pub const ORIGIN: Point = Point { x: 1, y: 2 };
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let cc_api = &bindings.unwrap().cc_api;
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr ::rust_out::Point ORIGIN =
+                    ::rust_out::Point { .x = INT32_C(1), .y = INT32_C(2) };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_const_tuple_struct() {
+    let test_src = r#"
+        pub struct TupleStruct(pub i32, pub u32);
+        pub const MY_TUPLE: TupleStruct = TupleStruct(42, 70000);
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let cc_api = &bindings.unwrap().cc_api;
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr ::rust_out::TupleStruct MY_TUPLE =
+                    ::rust_out::TupleStruct { .__field0 = INT32_C(42), .__field1 = UINT32_C(70000) };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_const_nested_struct() {
+    let test_src = r#"
+        pub struct Inner {
+            pub a: i32,
+        }
+        pub struct Outer {
+            pub inner: Inner,
+            pub b: i32,
+        }
+        pub const NESTED: Outer = Outer {
+            inner: Inner { a: 10 },
+            b: 20,
+        };
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let cc_api = &bindings.unwrap().cc_api;
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr ::rust_out::Outer NESTED =
+                    ::rust_out::Outer {
+                        .inner = ::rust_out::Inner { .a = INT32_C(10) },
+                        .b = INT32_C(20)
+                    };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_const_array() {
+    let test_src = r#"
+        pub const ARR: [i32; 3] = [1, 2, 3];
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let cc_api = &bindings.unwrap().cc_api;
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr ::std::array<::std::int32_t, 3> ARR =
+                    ::std::array<::std::int32_t, 3> { INT32_C(1), INT32_C(2), INT32_C(3) };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_const_non_aggregate_struct_fails() {
+    let test_src = r#"
+        #[allow(dead_code)]
+        pub struct NonAggregate {
+            pub x: i32,
+            y: i32,
+        }
+        impl NonAggregate {
+            pub const fn new(x: i32, y: i32) -> Self {
+                Self { x, y }
+            }
+        }
+        pub const NON_AGG: NonAggregate = NonAggregate::new(1, 2);
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let cc_api = &bindings.unwrap().cc_api;
+        assert_cc_not_matches!(
+            cc_api,
+            quote! { static constexpr ::rust_out::NonAggregate NON_AGG }
         );
     });
 }

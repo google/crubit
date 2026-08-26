@@ -185,7 +185,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
 // Error generating bindings for constant `tuples_golden::TUPLE_CONSTANT`
 // defined at
 // cc_bindings_from_rs/test/tuples/tuples.rs;l=125:
-// Unsupported constant type: (i32,)
+// const of type `(i32,)` cannot be generated as only scalars, string
+// references, and simple aggregate types are supported.
 
 // CRUBIT_ANNOTATE: must_bind=
 void assert_nontrivial_drop_count(::std::uint8_t drop_count);

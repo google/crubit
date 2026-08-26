@@ -754,3 +754,28 @@ fn test_format_ty_for_cc_template_arg_integer_types() {
         },
     );
 }
+
+#[test]
+fn test_format_ty_for_cc_const_array() {
+    let test_src = quote! {
+        pub const ARR: [i32; 42] = [0; 42];
+    };
+    run_compiler_for_testing(test_src.to_string(), |tcx| {
+        let def_id = find_def_id_by_name(tcx, "ARR").to_def_id();
+        let ty = generate_bindings::normalize_ty(
+            tcx,
+            tcx.param_env(def_id),
+            tcx.type_of(def_id).instantiate_identity(),
+        );
+        let db = bindings_db_for_tests(tcx);
+        let cc_snippet = db.format_ty_for_cc(ty, TypeLocation::Const).unwrap();
+        assert_cc_matches!(cc_snippet.tokens, quote! { ::std::array<::std::int32_t, 42> });
+        assert_cc_matches!(
+            format_cc_includes(&cc_snippet.prereqs.includes),
+            quote! {
+                __HASH_TOKEN__ include <array>
+                __HASH_TOKEN__ include <cstdint>
+            }
+        );
+    });
+}

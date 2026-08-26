@@ -443,10 +443,6 @@ pub fn format_ty_for_cc<'tcx>(
             }
         }
         ty::TyKind::Array(element_type, length) => {
-            // TODO: b/260128806 - We should be able to support constant arrays.
-            if location == TypeLocation::Const {
-                bail!("{ty}: constant arrays are not currently supported.");
-            }
             let mut prereqs = CcPrerequisites::default();
             prereqs.includes.insert(CcInclude::array());
             // We need to be able to handle expressions at the type level that are not simple

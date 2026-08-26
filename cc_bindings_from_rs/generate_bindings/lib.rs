@@ -36,7 +36,8 @@ use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
-    generate_adt_core, into_trait_impls_by_destination, scalar_value_to_string,
+    generate_adt_core, into_trait_impls_by_destination, is_struct_aggregate,
+    scalar_value_to_string,
 };
 use crate::generate_template_specialization::append_trait_impls;
 use arc_anyhow::{Context, Error, Result};
@@ -1109,6 +1110,111 @@ fn generate_using<'tcx>(
     }
 }
 
+fn format_const_value<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    const_value: ConstValue,
+    ty: Ty<'tcx>,
+) -> Result<CcSnippet<'tcx>> {
+    let tcx = db.tcx();
+    if const_value == ConstValue::ZeroSized {
+        bail!("const of type `{ty}` cannot be generated as zero-sized consts are not supported in C++.");
+    }
+
+    match *ty.kind() {
+        ty::TyKind::Bool | ty::TyKind::Int(_) | ty::TyKind::Uint(_) | ty::TyKind::Float(_) => {
+            let ConstValue::Scalar(scalar) = const_value else {
+                bail!("Expected scalar value for const of type `{ty}`, but found: {const_value:?}");
+            };
+            let val_str = scalar_value_to_string(tcx, scalar, *ty.kind())?;
+            let tokens = val_str
+                .parse::<TokenStream>()
+                .map_err(|e| anyhow!("Failed to parse scalar tokens: {e}"))?;
+            Ok(CcSnippet::new(tokens))
+        }
+        ty::TyKind::Ref(_region, referent_ty, mutability)
+            if matches!(referent_ty.kind(), ty::TyKind::Str) =>
+        {
+            if mutability.is_mut() {
+                bail!("const of type `{ty}` cannot be generated as mutable references are not supported.");
+            }
+            let Some(slice) = const_value.try_get_slice_bytes_for_diagnostics(tcx) else {
+                bail!("Failed to read &str slice bytes for constant of type `{ty}`");
+            };
+            let str_data = std::str::from_utf8(slice)
+                .map_err(|e| anyhow!("Invalid UTF-8 in &str constant: {e}"))?;
+            let tokens = quote! { rs_std::StrRef(#str_data) };
+            Ok(CcSnippet::with_include(tokens, db.support_header("rs_std/str_ref.h")))
+        }
+        ty::TyKind::Adt(adt_def, _) if adt_def.is_struct() => {
+            if tcx.crate_name(adt_def.did().krate).as_str() == "ffi_11"
+                && let ConstValue::Scalar(scalar) = const_value
+            {
+                let val_str = scalar_value_to_string(tcx, scalar, *ty.kind())?;
+                let tokens = val_str
+                    .parse::<TokenStream>()
+                    .map_err(|e| anyhow!("Failed to parse scalar tokens: {e}"))?;
+                return Ok(CcSnippet::new(tokens));
+            }
+
+            if let Err(reason) = is_struct_aggregate(db, Some(adt_def.did()), ty) {
+                bail!("const of type `{ty}` cannot be generated as it is not a C++ aggregate: {reason}");
+            }
+
+            let destructured = tcx
+                .try_destructure_mir_constant_for_user_output(const_value, ty)
+                .ok_or_else(|| anyhow!("Failed to destructure constant of type `{ty}`"))?;
+
+            if destructured.fields.is_empty() {
+                bail!("const of type `{ty}` cannot be generated as zero-sized consts are not supported in C++.");
+            }
+
+            let mut prereqs = CcPrerequisites::default();
+            let mut field_tokens = Vec::with_capacity(destructured.fields.len());
+            let variant = adt_def.non_enum_variant();
+            let features = db.crate_features(db.source_crate_num());
+            for (index, (field_def, &(field_const_val, field_ty))) in
+                variant.fields.iter().zip(destructured.fields.iter()).enumerate()
+            {
+                let field_snippet = format_const_value(db, field_const_val, field_ty)?;
+                let field_value = field_snippet.into_tokens(&mut prereqs);
+                let name = field_def.ident(tcx).to_string();
+                let unkeyworded = code_gen_utils::unkeyword_cpp_ident(&name, features);
+                let field_ident = format_cc_ident(db, unkeyworded.as_ref())
+                    .unwrap_or_else(|_err| format_ident!("__field{index}"));
+                field_tokens.push(quote! { .#field_ident = #field_value });
+            }
+
+            let type_snippet = db.format_ty_for_cc(ty, TypeLocation::Const)?;
+            let cc_type = type_snippet.into_tokens(&mut prereqs);
+
+            let tokens = quote! { #cc_type { #(#field_tokens),* } };
+            Ok(CcSnippet { tokens, prereqs })
+        }
+        ty::TyKind::Array(_element_ty, _len) => {
+            let destructured = tcx
+                .try_destructure_mir_constant_for_user_output(const_value, ty)
+                .ok_or_else(|| anyhow!("Failed to destructure constant of type `{ty}`"))?;
+
+            let mut prereqs = CcPrerequisites::default();
+            let mut elem_tokens = Vec::with_capacity(destructured.fields.len());
+            for &(elem_const_val, elem_ty) in destructured.fields {
+                let elem_snippet = format_const_value(db, elem_const_val, elem_ty)?;
+                elem_tokens.push(elem_snippet.into_tokens(&mut prereqs));
+            }
+
+            let type_snippet = db.format_ty_for_cc(ty, TypeLocation::Const)?;
+            let cc_type = type_snippet.into_tokens(&mut prereqs);
+
+            let tokens = quote! { #cc_type { #(#elem_tokens),* } };
+            Ok(CcSnippet { tokens, prereqs })
+        }
+        _ => {
+            // TODO: b/552616991 - Support more constant types.
+            bail!("const of type `{ty}` cannot be generated as only scalars, string references, and simple aggregate types are supported.");
+        }
+    }
+}
+
 fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
     // TODO: b/457843120 - Remove this workaround once we can properly support float constants.
@@ -1128,46 +1234,19 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
     }
     let ty = normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity());
     let rust_type = ty;
-    let cc_type_snippet = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
-
-    let cc_type = cc_type_snippet.tokens;
+    let mut prereqs = CcPrerequisites::default();
+    let cc_type = db.format_ty_for_cc(rust_type, TypeLocation::Const)?.into_tokens(&mut prereqs);
     let cc_name = format_cc_ident(db, tcx.item_name(def_id).as_str())?;
 
-    // Note that `&str` constants may appear as either `ConstValue::Slice` or
-    // `ConstValue::Indirect`.
     let const_value: ConstValue = tcx.const_eval_poly(def_id).unwrap();
-    let cc_value = match const_value {
-        ConstValue::Scalar(scalar) => scalar_value_to_string(tcx, scalar, *ty.kind()),
-        ConstValue::ZeroSized => bail!("const of type `{rust_type}` cannot be generated as zero-sized consts are not supported in C++."),
-        ConstValue::Slice { .. } | ConstValue::Indirect { .. } => {
-            let string_literal = match ty.kind() {
-                ty::TyKind::Ref(_region, referent_ty, mutability)
-                    if matches!(referent_ty.kind(), ty::TyKind::Str) =>
-                {
-                    if mutability.is_mut() {
-                        panic!("Unexpected mutable reference in a constant of type `{rust_type}`")
-                    }
-                    if let Some(slice) = const_value.try_get_slice_bytes_for_diagnostics(tcx) {
-                        let str_data = std::str::from_utf8(slice).unwrap();
-                        Some(quote! { rs_std::StrRef(#str_data) }.to_string())
-                    } else { None }
-                }
-                _ => None
-            };
-            string_literal.ok_or_else(|| {
-                anyhow!("const of type `{rust_type}` cannot be generated as only scalar consts are supported.")
-            })
-        }
-    }?
-    .parse::<TokenStream>()
-    .unwrap();
+    let cc_value = format_const_value(db, const_value, ty)?.into_tokens(&mut prereqs);
 
     Ok(ApiSnippets {
         main_api: CcSnippet {
             tokens: quote! {
                 static constexpr #cc_type #cc_name = #cc_value;
             },
-            ..cc_type_snippet
+            prereqs,
         },
         cc_details: CcSnippet::default(),
         rs_details: RsSnippet::default(),

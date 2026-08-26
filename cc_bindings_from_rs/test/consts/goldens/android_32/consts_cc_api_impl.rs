@@ -55,8 +55,8 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x000
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::StructWithArray, values) == 0);
-const _: () = assert!(::std::mem::size_of::<::consts_golden::StructWithStr>() == 24);
-const _: () = assert!(::std::mem::align_of::<::consts_golden::StructWithStr>() == 8);
+const _: () = assert!(::std::mem::size_of::<::consts_golden::StructWithStr>() == 12);
+const _: () = assert!(::std::mem::align_of::<::consts_golden::StructWithStr>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e(
     __self: &'static ::consts_golden::StructWithStr<'static>,
@@ -69,7 +69,7 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x000
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::StructWithStr, msg) == 0);
-const _: () = assert!(::core::mem::offset_of!(::consts_golden::StructWithStr, count) == 16);
+const _: () = assert!(::core::mem::offset_of!(::consts_golden::StructWithStr, count) == 8);
 const _: () = assert!(::std::mem::size_of::<::consts_golden::TupleStruct>() == 8);
 const _: () = assert!(::std::mem::align_of::<::consts_golden::TupleStruct>() == 4);
 #[unsafe(no_mangle)]

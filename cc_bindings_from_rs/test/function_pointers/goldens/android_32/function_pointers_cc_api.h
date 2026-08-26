@@ -29,7 +29,8 @@ namespace function_pointers {
 // Error generating bindings for constant
 // `function_pointers_golden::CONST_C_FN_PTR_ADD_TEN` defined at
 // cc_bindings_from_rs/test/function_pointers/function_pointers.rs;l=27:
-// Pointer values cannot be used as scalar constants.
+// const of type `extern "C" fn(i32) -> i32` cannot be generated as only
+// scalars, string references, and simple aggregate types are supported.
 
 // Error generating bindings for constant
 // `function_pointers_golden::CONST_RUST_FN_PTR_ADD_TEN` defined at
