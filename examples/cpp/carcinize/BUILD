@@ -79,7 +79,6 @@ cc_bindings_from_rust(
 rust_test(
     name = "point_test",
     srcs = ["point_test.rs"],
-    harness = "libtest",
     deps = [
         ":point_refactored",
         ":point_rs",
@@ -90,7 +89,6 @@ rust_test(
 rust_test(
     name = "math_utils_test",
     srcs = ["math_utils_test.rs"],
-    harness = "libtest",
     deps = [
         ":math_utils_rs",
         "@crate_index//:googletest",

@@ -224,7 +224,6 @@ rust_api_from_cpp(
 rust_test(
     name = "cc_deps_test",
     srcs = ["cc_deps_test.rs"],
-    harness = "libtest",
     tags = _tags,
     target_compatible_with = _compatible_with_flag,
     deps = [

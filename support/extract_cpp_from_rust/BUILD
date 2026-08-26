@@ -20,7 +20,6 @@ rust_library(
 rust_test(
     name = "parse_inline_cpp_macros_test",
     crate = ":parse_inline_cpp_macros",
-    harness = "libtest",
     deps = [
         "@crate_index//:googletest",
     ],
@@ -43,7 +42,6 @@ rust_binary(
 rust_test(
     name = "extract_cpp_from_rust_test",
     crate = ":extract_cpp_from_rust",
-    harness = "libtest",
     deps = [
         "@crate_index//:googletest",
     ],
