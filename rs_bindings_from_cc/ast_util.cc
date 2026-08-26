@@ -199,7 +199,6 @@ absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
     case clang::CC_X86Pascal:     // __attribute__((pascal))
     case clang::CC_X86RegCall:    // __attribute__((regcall))
     case clang::CC_IntelOclBicc:  // __attribute__((intel_ocl_bicc))
-    case clang::CC_SpirFunction:  // default for OpenCL functions on SPIR target
     case clang::CC_DeviceKernel:  // __attribute__((device_kernel))
     case clang::CC_Swift:         // __attribute__((swiftcall))
     case clang::CC_SwiftAsync:    // __attribute__((swiftasynccall))
@@ -396,7 +395,7 @@ const clang::TagDecl* StripCStyleNameIntroducingTypedef(
 
 bool ForceDefineImplicitFunction(ImportContext& ictx,
                                  clang::FunctionDecl* function_decl) {
-  if (auto defaulted_kind = ictx.sema_.getDefaultedFunctionKind(function_decl);
+  if (auto defaulted_kind = function_decl->getDefaultedFunctionKind();
       defaulted_kind.isSpecialMember()) {
     auto special_member_kind = defaulted_kind.asSpecialMember();
     if (!function_decl->isDeleted() &&
