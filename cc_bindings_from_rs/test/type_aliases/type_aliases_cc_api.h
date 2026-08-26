@@ -33,6 +33,12 @@ using TypeAlias CRUBIT_INTERNAL_RUST_TYPE(
 
 namespace type_aliases::test_generics_matching {
 
+// Error generating bindings for type alias
+// `type_aliases_golden::test_generics_matching::FlippedAlias` defined at
+// cc_bindings_from_rs/test/type_aliases/type_aliases.rs;l=21:
+// crubit.rs/errors/unsupported_type: Generic type parameter `T` is not
+// supported without monomorphization
+
 using SpecializedAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: type_aliases_golden :: test_generics_matching :: SpecializedAlias") =
     rs_std::Result<::std::int32_t, ::std::int32_t>;
@@ -195,12 +201,7 @@ namespace type_aliases::test_generics_matching {
 // crubit.rs/errors/unsupported_type: Generic type parameter `T` is not
 // supported without monomorphization
 
-// Error generating bindings for enum `std::result::Result` defined at
-// third_party/rust_toolchain/library/core/src/result.rs;l=558:
-// crubit.rs/errors/unsupported_type: Generic type parameter `T` is not
-// supported without monomorphization
-
-}  // namespace type_aliases::test_generics_matching
+}
 
 namespace type_aliases::test_generics_matching {
 

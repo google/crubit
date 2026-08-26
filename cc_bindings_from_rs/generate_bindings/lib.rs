@@ -555,18 +555,23 @@ fn public_paths_by_def_id(
                 // Check if generics match.
                 let generics_match = args.len() == alias_generics.own_params.len()
                     && args.iter().zip(alias_generics.own_params.iter()).all(|(arg, param)| {
-                        matches!(
-                            (arg.kind(), &param.kind),
-                            (ty::GenericArgKind::Type(_), ty::GenericParamDefKind::Type { .. })
-                                | (
-                                    ty::GenericArgKind::Const(_),
-                                    ty::GenericParamDefKind::Const { .. }
-                                )
-                                | (
-                                    ty::GenericArgKind::Lifetime(_),
-                                    ty::GenericParamDefKind::Lifetime
-                                )
-                        )
+                        // We want to explicitly check not only that our kind matches up but also
+                        // that our underlying type is using the same parameter types in the same
+                        // order. This prevents things like `type AtomicPtr<T> = Atomic<*mut T>` 
+                        // from being considered a public path for Atomic despite being semantically
+                        // distinct.
+                        match (arg.kind(), &param.kind) {
+                            (ty::GenericArgKind::Type(ty), ty::GenericParamDefKind::Type { .. }) => {
+                                matches!(ty.kind(), ty::TyKind::Param(param_ty) if param_ty.index == param.index)
+                            }
+                            (ty::GenericArgKind::Const(ct), ty::GenericParamDefKind::Const { .. }) => {
+                                matches!(ct.kind(), ty::ConstKind::Param(param_ct) if param_ct.index == param.index)
+                            }
+                            (ty::GenericArgKind::Lifetime(r), ty::GenericParamDefKind::Lifetime) => {
+                                matches!(r.kind(), ty::RegionKind::ReEarlyParam(early_r) if early_r.index == param.index)
+                            }
+                            _ => false,
+                        }
                     });
                 // If our generics do not match for our type alias, do not consider them a public
                 // path for their underlying type.
