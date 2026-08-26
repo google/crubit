@@ -289,7 +289,6 @@ rust_library(
 rust_test(
     name = "hash_rust_test",
     srcs = ["crubit_hash_rust/src/hash.rs"],
-    harness = "libtest",
     deps = [
         "@crate_index//:googletest",
     ],
