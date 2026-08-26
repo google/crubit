@@ -18,6 +18,7 @@
 #[cfi_encoding = "1S"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=S
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct S {
     pub int_field: ::ffi_11::c_int,
 }

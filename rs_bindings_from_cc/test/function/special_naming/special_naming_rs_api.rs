@@ -57,6 +57,7 @@ pub fn asm_name_with_dollar_sign() -> ::ffi_11::c_int {
 #[cfi_encoding = "12SimpleStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SimpleStruct
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct SimpleStruct {
     pub x: ::ffi_11::c_int,
 }
@@ -82,6 +83,7 @@ impl Default for SimpleStruct {
 #[cfi_encoding = "11OtherStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=OtherStruct
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct OtherStruct {
     pub y: ::ffi_11::c_int,
 }

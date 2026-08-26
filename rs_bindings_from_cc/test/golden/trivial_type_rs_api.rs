@@ -21,6 +21,7 @@ pub mod ns {
     #[cfi_encoding = "N2ns7TrivialE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=ns :: Trivial
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct Trivial {
         pub trivial_field: ::ffi_11::c_int,
     }

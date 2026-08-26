@@ -20,6 +20,7 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test23ArgumentToBoundOverloadE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToBoundOverload
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct ArgumentToBoundOverload {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -47,6 +48,7 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test25ArgumentToUnboundOverloadE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ArgumentToUnboundOverload
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct ArgumentToUnboundOverload {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -84,6 +86,7 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test30StructWithDoNotBindConstructorE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindConstructor
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct StructWithDoNotBindConstructor {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -120,6 +123,7 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test25StructWithDoNotBindMethodE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructWithDoNotBindMethod
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct StructWithDoNotBindMethod {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }

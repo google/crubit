@@ -28,6 +28,7 @@ pub fn function_win64(a: ::ffi_11::c_int) -> ::ffi_11::c_int {
 #[cfi_encoding = "9SomeClass"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: SomeClass
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct SomeClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

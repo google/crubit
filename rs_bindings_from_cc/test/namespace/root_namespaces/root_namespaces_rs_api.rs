@@ -20,6 +20,7 @@ pub mod test_namespace {
     #[cfi_encoding = "N14test_namespace3FooE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace :: Foo
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct Foo {
         pub x: ::ffi_11::c_int,
     }

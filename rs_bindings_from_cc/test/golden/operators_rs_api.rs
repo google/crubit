@@ -18,6 +18,7 @@
 #[cfi_encoding = "18AddableConstMember"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableConstMember
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddableConstMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -65,6 +66,7 @@ impl<'__this, 'rhs> ::core::ops::Add<&'rhs crate::AddableConstMember>
 #[cfi_encoding = "21AddableNonConstMember"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableNonConstMember
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddableNonConstMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -112,6 +114,7 @@ impl<'__this, 'rhs> ::core::ops::Add<&'rhs crate::AddableNonConstMember>
 #[cfi_encoding = "13AddableFriend"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFriend
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddableFriend {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -156,6 +159,7 @@ impl<'lhs, 'rhs> ::core::ops::Add<&'rhs crate::AddableFriend> for &'lhs crate::A
 #[cfi_encoding = "21AddableFreeByConstRef"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByConstRef
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddableFreeByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -181,6 +185,7 @@ impl Default for AddableFreeByConstRef {
 #[cfi_encoding = "19AddableFreeByMutRef"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByMutRef
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddableFreeByMutRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -206,6 +211,7 @@ impl Default for AddableFreeByMutRef {
 #[cfi_encoding = "18AddableFreeByValue"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByValue
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddableFreeByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -231,6 +237,7 @@ impl Default for AddableFreeByValue {
 #[cfi_encoding = "22AddableFreeByRValueRef"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddableFreeByRValueRef
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddableFreeByRValueRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -313,6 +320,7 @@ impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
 #[cfi_encoding = "10Overloaded"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Overloaded
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Overloaded {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -354,6 +362,7 @@ impl<'lhs> ::core::ops::Add<::ffi_11::c_uint> for &'lhs crate::Overloaded {
 #[cfi_encoding = "15IncompatibleLHS"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=IncompatibleLHS
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct IncompatibleLHS {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -385,6 +394,7 @@ impl Default for IncompatibleLHS {
 #[cfi_encoding = "18AddableReturnsVoid"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AddableReturnsVoid
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddableReturnsVoid {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -517,6 +527,7 @@ impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
 #[cfi_encoding = "18AddAssignMemberInt"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignMemberInt
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddAssignMemberInt {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -551,6 +562,7 @@ impl ::core::ops::AddAssign<::ffi_11::c_int> for AddAssignMemberInt {
 #[cfi_encoding = "25AddAssignMemberByConstRef"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignMemberByConstRef
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddAssignMemberByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -585,6 +597,7 @@ impl<'rhs> ::core::ops::AddAssign<&'rhs Self> for AddAssignMemberByConstRef {
 #[cfi_encoding = "23AddAssignFreeByConstRef"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFreeByConstRef
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddAssignFreeByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -619,6 +632,7 @@ impl<'rhs> ::core::ops::AddAssign<&'rhs Self> for crate::AddAssignFreeByConstRef
 #[cfi_encoding = "20AddAssignFreeByValue"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFreeByValue
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddAssignFreeByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -653,6 +667,7 @@ impl ::core::ops::AddAssign<Self> for crate::AddAssignFreeByValue {
 #[cfi_encoding = "25AddAssignFriendByConstRef"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFriendByConstRef
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddAssignFriendByConstRef {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -687,6 +702,7 @@ impl<'rhs> ::core::ops::AddAssign<&'rhs Self> for crate::AddAssignFriendByConstR
 #[cfi_encoding = "22AddAssignFriendByValue"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignFriendByValue
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddAssignFriendByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -721,6 +737,7 @@ impl ::core::ops::AddAssign<Self> for crate::AddAssignFriendByValue {
 #[cfi_encoding = "30AddAssignProhibitedConstMember"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignProhibitedConstMember
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddAssignProhibitedConstMember {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -766,6 +783,7 @@ where
 #[cfi_encoding = "33AddAssignProhibitedFriendConstLhs"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AddAssignProhibitedFriendConstLhs
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AddAssignProhibitedFriendConstLhs {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -811,6 +829,7 @@ where
 #[cfi_encoding = "13ManyOperators"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ManyOperators
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct ManyOperators {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

@@ -18,6 +18,7 @@
 #[cfi_encoding = "34UnpinStructWithRefQualifiedMethods"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: UnpinStructWithRefQualifiedMethods
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct UnpinStructWithRefQualifiedMethods {
     pub i: ::ffi_11::c_int,
 }

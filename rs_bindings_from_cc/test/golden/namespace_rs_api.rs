@@ -19,6 +19,7 @@ pub mod test_namespace_bindings {
     #[cfi_encoding = "N23test_namespace_bindings1SE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: S
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct S {
         pub i: ::ffi_11::c_int,
     }
@@ -98,6 +99,7 @@ pub mod test_namespace_bindings_reopened {
         #[cfi_encoding = "N32test_namespace_bindings_reopened5inner1SE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_reopened :: inner :: S
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct S {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -142,6 +144,7 @@ pub mod test_namespace_bindings_inline {
         #[cfi_encoding = "N30test_namespace_bindings_inline5inner23StructInInlineNamespaceE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings_inline :: inner :: StructInInlineNamespace
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct StructInInlineNamespace {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }

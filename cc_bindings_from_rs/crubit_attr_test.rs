@@ -191,3 +191,21 @@ fn test_field_drop_order_does_not_matter_invalid_on_fn() {
         );
     });
 }
+
+#[test]
+fn test_cpp_smf_attributes() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: cpp_type=CppType"]
+            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            pub struct SomeStruct;
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let attrs = attrs_for_named_def(tcx, "SomeStruct").unwrap();
+        let expected_attrs = CrubitAttrs {
+            cpp_type: Some(Symbol::intern("CppType")),
+            cpp_move_constructible: true,
+            ..Default::default()
+        };
+        assert_eq!(attrs, expected_attrs);
+    });
+}

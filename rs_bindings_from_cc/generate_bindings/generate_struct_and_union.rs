@@ -832,6 +832,12 @@ pub fn generate_record<'a>(
                     "CRUBIT_ANNOTATE: cpp_thread_safe="
                 )));
             }
+            if record.move_constructor() != SpecialMemberFunc::Unavailable {
+                annotations.push(DocCommentAttr(intern!(
+                    db.interner(),
+                    "CRUBIT_ANNOTATE: cpp_move_constructible="
+                )));
+            }
             annotations
         },
         visibility: db

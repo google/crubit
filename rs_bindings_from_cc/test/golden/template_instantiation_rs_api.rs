@@ -31,6 +31,7 @@ pub fn RTS() -> crate::__CcTemplateInst2TSIiE {
 #[cfi_encoding = "11NormalClass"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NormalClass
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct NormalClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -59,6 +60,7 @@ impl Default for NormalClass {
 #[cfi_encoding = "__CcTemplateInst2TSIiE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TS < int >
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct __CcTemplateInst2TSIiE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

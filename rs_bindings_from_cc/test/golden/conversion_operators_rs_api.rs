@@ -18,6 +18,7 @@
 #[cfi_encoding = "15DstLocalMovable"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DstLocalMovable
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct DstLocalMovable {
     pub val: ::ffi_11::c_int,
 }
@@ -58,6 +59,7 @@ unsafe impl ::cxx::ExternType for DstLocalNonMovable {
 #[cfi_encoding = "3Src"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Src
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Src {
     pub value: ::ffi_11::c_int,
 }

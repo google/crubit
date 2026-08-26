@@ -91,6 +91,7 @@ pub mod foo {
 #[cfi_encoding = "18StructWithAnonEnum"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithAnonEnum
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithAnonEnum {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

@@ -22,6 +22,7 @@
 #[cfi_encoding = "21StructWithBridgeField"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithBridgeField
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithBridgeField {
     /// Reason for representing this field as a blob of bytes:
     /// crubit.rs/errors/bridge_field: 'crate::RustStruct' is a bridge type, but fields must be layout compatible between Rust and C++.
@@ -69,6 +70,7 @@ pub fn TakeCppStruct(__param_0: crate::RustStruct) {
 #[cfi_encoding = "4Vec3"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Vec3
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,

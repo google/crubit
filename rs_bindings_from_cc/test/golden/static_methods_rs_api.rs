@@ -18,6 +18,7 @@
 #[cfi_encoding = "9SomeClass"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=SomeClass
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct SomeClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:

@@ -19,6 +19,7 @@ pub mod test_namespace_bindings {
     #[cfi_encoding = "N23test_namespace_bindings9SomeClassE"]
     #[repr(C, align(4))]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: SomeClass
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct SomeClass {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
         pub public_member_variable_: ::ffi_11::c_int,

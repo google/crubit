@@ -25,6 +25,7 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test13StructOldNameE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: StructOldName
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct StructNewName {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -52,6 +53,7 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test10SomeStructE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: SomeStruct
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct SomeStruct {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
             pub field_new_name: ::ffi_11::c_int,

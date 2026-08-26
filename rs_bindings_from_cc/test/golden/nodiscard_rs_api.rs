@@ -19,6 +19,7 @@
 #[cfi_encoding = "9NoDiscard"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NoDiscard
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct NoDiscard {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -45,6 +46,7 @@ impl Default for NoDiscard {
 #[cfi_encoding = "20NoDiscardWithMessage"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NoDiscardWithMessage
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct NoDiscardWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -123,6 +125,7 @@ pub fn crubit_nodiscard_message() -> *mut ::ffi_11::c_void {
 #[cfi_encoding = "13NodiscardCtor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NodiscardCtor
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct NodiscardCtor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -157,6 +160,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
 #[cfi_encoding = "24NodiscardCtorWithMessage"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NodiscardCtorWithMessage
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct NodiscardCtorWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

@@ -23,6 +23,7 @@ pub fn free_function<'p1>(p1: &'p1 mut ::ffi_11::c_int) -> ::cref::CMut<'p1, ::f
 #[cfi_encoding = "1S"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=S
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct S {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -155,6 +156,7 @@ pub unsafe fn take_pointer(p: *mut ::ffi_11::c_int) {
 #[cfi_encoding = "12WrappedValue"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=WrappedValue
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct WrappedValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:

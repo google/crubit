@@ -24,6 +24,7 @@
 #[cfi_encoding = "10SomeStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeStruct
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct SomeStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -69,6 +70,7 @@ impl Default for SomeStruct {
 #[cfi_encoding = "19FieldTypeTestStruct"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldTypeTestStruct
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct FieldTypeTestStruct {
     pub bool_field: bool,
     pub char_field: ::ffi_11::c_char,

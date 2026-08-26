@@ -21,6 +21,7 @@
 #[cfi_encoding = "8TopLevel"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TopLevel
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct TopLevel {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -65,6 +66,7 @@ pub mod test_namespace_bindings {
     #[cfi_encoding = "N23test_namespace_bindings5InnerE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: Inner
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }

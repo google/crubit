@@ -28,6 +28,7 @@ forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Inc
 #[cfi_encoding = "30HasPointerToIncompleteTypedefs"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=HasPointerToIncompleteTypedefs
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct HasPointerToIncompleteTypedefs {
     pub incomplete_extern_c: *mut crate::IncompleteExternC,
     pub incomplete: *mut crate::Incomplete,
