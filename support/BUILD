@@ -271,10 +271,7 @@ rust_library(
 
 rust_test(
     name = "bridge_rust_test",
-    srcs = ["crubit_bridge_rust/src/bridge.rs"],
-    deps = [
-        "@crate_index//:googletest",
-    ],
+    crate = ":bridge_rust",
 )
 
 rust_library(

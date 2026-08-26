@@ -26,6 +26,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <memory>
+#include <new>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -99,7 +101,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     ":: alloc :: vec :: Vec < :: alloc :: string :: String >")
-    rs_std::Vec<::rs::alloc::string::String> {
+    rs_std::Vec<::rs::alloc::string::String>
+    : public rs_std::VecBase<rs_std::Vec<::rs::alloc::string::String>,
+                             ::rs::alloc::string::String> {
  public:
   // Default::default
   Vec();
@@ -118,13 +122,14 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   ::rs::alloc::string::String* data() noexcept;
   ::rs::alloc::string::String const* data() const noexcept;
   std::size_t size() const noexcept;
-  ::rs::alloc::string::String& operator[](std::size_t index) noexcept;
-  ::rs::alloc::string::String const& operator[](
-      std::size_t index) const noexcept;
-  ::rs::alloc::string::String* begin() noexcept;
-  ::rs::alloc::string::String const* begin() const noexcept;
-  ::rs::alloc::string::String* end() noexcept;
-  ::rs::alloc::string::String const* end() const noexcept;
+  std::size_t capacity() const noexcept;
+
+ private:
+  friend class rs_std::VecBase<rs_std::Vec<::rs::alloc::string::String>,
+                               ::rs::alloc::string::String>;
+  void set_ptr(::rs::alloc::string::String* ptr) noexcept;
+  void set_len(std::size_t len) noexcept;
+  void set_cap(std::size_t cap) noexcept;
 
  private:
   unsigned char storage_[24];
@@ -425,13 +430,7 @@ inline rs_std::Vec<::rs::alloc::string::String>::Vec(
   ::std::memcpy(this, &value, sizeof(value));
 }
 
-extern "C" void
-__crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-    void* vec) noexcept;
-inline rs_std::Vec<::rs::alloc::string::String>::~Vec() noexcept {
-  __crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-      this);
-}
+inline rs_std::Vec<::rs::alloc::string::String>::~Vec() noexcept { destroy(); }
 inline ::rs::alloc::string::String*
 rs_std::Vec<::rs::alloc::string::String>::data() noexcept {
   return std::bit_cast<::rs::alloc::string::String*>(
@@ -447,31 +446,23 @@ inline std::size_t rs_std::Vec<::rs::alloc::string::String>::size()
   return std::bit_cast<std::size_t>(
       *reinterpret_cast<const std::size_t*>(&storage_[16]));
 }
-inline ::rs::alloc::string::String& rs_std::Vec<
-    ::rs::alloc::string::String>::operator[](std::size_t index) noexcept {
-  CRUBIT_CHECK(index < size());
-  return data()[index];
+inline std::size_t rs_std::Vec<::rs::alloc::string::String>::capacity()
+    const noexcept {
+  return std::bit_cast<std::size_t>(
+      *reinterpret_cast<const std::size_t*>(&storage_[0]));
 }
-inline ::rs::alloc::string::String const& rs_std::Vec<
-    ::rs::alloc::string::String>::operator[](std::size_t index) const noexcept {
-  CRUBIT_CHECK(index < size());
-  return data()[index];
+inline void rs_std::Vec<::rs::alloc::string::String>::set_ptr(
+    ::rs::alloc::string::String* ptr) noexcept {
+  *reinterpret_cast<std::uintptr_t*>(&storage_[8]) =
+      std::bit_cast<std::uintptr_t>(ptr);
 }
-inline ::rs::alloc::string::String*
-rs_std::Vec<::rs::alloc::string::String>::begin() noexcept {
-  return data();
+inline void rs_std::Vec<::rs::alloc::string::String>::set_len(
+    std::size_t len) noexcept {
+  *reinterpret_cast<std::size_t*>(&storage_[16]) = len;
 }
-inline ::rs::alloc::string::String const*
-rs_std::Vec<::rs::alloc::string::String>::begin() const noexcept {
-  return data();
-}
-inline ::rs::alloc::string::String*
-rs_std::Vec<::rs::alloc::string::String>::end() noexcept {
-  return data() + size();
-}
-inline ::rs::alloc::string::String const*
-rs_std::Vec<::rs::alloc::string::String>::end() const noexcept {
-  return data() + size();
+inline void rs_std::Vec<::rs::alloc::string::String>::set_cap(
+    std::size_t cap) noexcept {
+  *reinterpret_cast<std::size_t*>(&storage_[0]) = cap;
 }
 #endif
 
