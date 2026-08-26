@@ -396,7 +396,7 @@ const clang::TagDecl* StripCStyleNameIntroducingTypedef(
 
 bool ForceDefineImplicitFunction(ImportContext& ictx,
                                  clang::FunctionDecl* function_decl) {
-  if (auto defaulted_kind = ictx.sema_.getDefaultedFunctionKind(function_decl);
+  if (auto defaulted_kind = function_decl->getDefaultedFunctionKind();
       defaulted_kind.isSpecialMember()) {
     auto special_member_kind = defaulted_kind.asSpecialMember();
     if (!function_decl->isDeleted() &&
