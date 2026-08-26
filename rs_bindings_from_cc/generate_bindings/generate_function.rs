@@ -2301,12 +2301,58 @@ pub fn generate_function<'a>(
             // When translating args, `__this` acts as the first arg.
             let mut method_delegation_args = param_idents.iter().enumerate().map(|(i, ident)| {
                 if i == 0 && impl_kind.format_first_param_as_self() {
-                    if derived_record.is_some() {
-                        quote! { oops::Upcast::<_>::upcast(self) }
+                    if let Some(derived_record) = &derived_record {
+                        let RsTypeKind::Reference { mutability, referent, .. } = &param_types[0] else {
+                            return quote! { oops::Upcast::<_>::upcast(self) }; // should never reach here because struct methods will expect 1st as self if not static.
+                        };
+                        let unambiguous_public_bases = derived_record.unambiguous_public_bases();
+                        let mut use_virtual_upcast = false;
+                        for x in unambiguous_public_bases {
+                            if x.base_record_id() == record.id() && x.offset().is_none() {
+                                use_virtual_upcast = true;
+                                break;
+                            }
+                        }
+                        let is_item_unpin = match referent.as_ref() {
+                            RsTypeKind::Record { record, .. } => record.is_unpin(),
+                            _ => true,
+                        };
+                        if mutability == &Mutability::Mut {
+                            if !is_item_unpin {
+                                if use_virtual_upcast {
+                                    quote! { ::std::pin::Pin::new_unchecked(&mut *oops::VirtualUpcast::<_>::virtual_upcast(self.get_unchecked_mut() as *mut _)) }
+                                } else {
+                                    quote! { ::std::pin::Pin::new_unchecked(&mut *oops::Upcast::<_>::upcast(self.get_unchecked_mut() as *mut _)) }
+                                }
+                            }
+                            else {
+                                if use_virtual_upcast {
+                                    quote! { &mut *oops::VirtualUpcast::<_>::virtual_upcast(self as *mut _) }
+                                } else {
+                                    quote! { &mut *oops::Upcast::<_>::upcast(self as *mut _) }
+                                }
+                            }
+                        } else {
+                            if use_virtual_upcast {
+                                quote! { & *oops::VirtualUpcast::<_>::virtual_upcast(self as *const _) }
+                            } else {
+                                quote! { & *oops::Upcast::<_>::upcast(self as *const _) }
+                            }
+                        }
                     } else {
                         quote! { self }
                     }
                 } else {
+                    // TODO(ivip) Crubit bindings fails to compile on hello_rs function present in B
+                    // impl.
+                    //
+                    // class A {
+                    //  public:
+                    //   static void hello_rs(A& a){}
+                    // };
+                    // class B: public A {
+                    //  public:
+                    // };
                     quote! { #ident }
                 }
             });
@@ -3150,7 +3196,7 @@ fn function_signature<'a>(
         && thunk_args[0].to_string() == "__this"
     {
         let arg_this = thunk_args[0].clone();
-        thunk_args[0] = quote! { oops::UnsafeUpcast::<_>::unsafe_upcast(#arg_this) };
+        thunk_args[0] = quote! { oops::Upcast::<_>::upcast(#arg_this) };
     }
 
     // Unknown attributes could affect ABI and should suppress bindings by default. Note that these

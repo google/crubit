@@ -8,46 +8,48 @@
 //!
 //! ## Upcasting
 //!
-//! To cast a reference to its base class type, use `my_reference.upcast()`.
+//! To cast a reference to its base class type, use `my_reference.upcast()` when base class is not
+//! virtual else use `my_reference.virtual_upcast()`.
+//!
 //! For example:
 //!
 //! ```ignore
-//! let x : &mut Derived = ...;
-//! let y : Pin<&mut Base> = x.upcast();
+//! let x : *mut Derived = ...;
+//! let y : *mut Base = x.upcast();
+//! let z : *mut VirtualBase = x.virtual_upcast();
 //! ```
 //!
-//! Because base classes are always `!Unpin`, mutable references to base must
-//! take the form of `Pin<&mut Base>`. See
-//! docs/design/unpin.md
-//!
-//! To implement upcasting, implement the `Inherits` trait.
+//! To implement upcasting, implement the `Inherits` trait for non-virtual bases and
+//! `InheritsVirtual` for virtual bases.
 //!
 //! ## Downcasting
 //!
 //! TODO(b/216195042): dynamic downcasting
 //! TODO(b/216195042): static downcasting
 
-use std::pin::Pin;
-
-/// Upcast a reference or smart pointer. This operation cannot fail at runtime.
-///
-/// If `Derived` has a (public, unambiguous) base class `Base`, then:
-///
-/// ```ignore
-/// &Derived : Upcast<&Base>
-/// Pin<&mut Derived> : Upcast<Pin<&mut Base>>
-/// ```
-///
-/// In addition, if `Derived : Unpin`, then `&mut Derived : Upcast<Pin<&mut
-/// Base>>`.
-///
-/// (And, while it is not possible in Crubit bindings, if `Base` is also
-/// `Unpin`, then  `&mut Derived : Upcast<&mut Base>`.)
-///
-/// For the purpose of `Upcast`, any type `T` is its own ("improper") base
-/// class.
+/// Trait for upcasting a Derived class to its non-virtual Base class.
 pub trait Upcast<Target> {
     fn upcast(self) -> Target;
+}
+
+/// Upcast `*const` -> `*const`.
+impl<Derived, Base> Upcast<*const Base> for *const Derived
+where
+    Derived: Inherits<Base>,
+{
+    fn upcast(self: *const Derived) -> *const Base {
+        Derived::upcast_ptr(self)
+    }
+}
+
+/// Upcast `*mut` -> `*mut`.
+impl<Derived, Base> Upcast<*mut Base> for *mut Derived
+where
+    Derived: Inherits<Base>,
+{
+    fn upcast(self: *mut Derived) -> *mut Base {
+        Derived::upcast_ptr_mut(self)
+    }
 }
 
 /// Upcast `&` -> `&`.
@@ -56,94 +58,70 @@ where
     Derived: Inherits<Base>,
 {
     fn upcast(self: &'a Derived) -> &'a Base {
+        // SAFETY: `self` is a valid reference for `'a`, so `self as *const Derived` is non-null and
+        // aligned. `upcast_ptr` returns a non-null, properly aligned pointer to the `Base`
+        // subobject within `self`.
         unsafe { &*Derived::upcast_ptr(self as *const Derived) }
     }
 }
 
-/// Upcast `Pin<&mut>` -> `Pin<&mut>.
-impl<'a, Derived, Base> Upcast<Pin<&'a mut Base>> for Pin<&'a mut Derived>
-where
-    Derived: Inherits<Base>,
-{
-    fn upcast(self: Pin<&'a mut Derived>) -> Pin<&'a mut Base> {
-        unsafe {
-            let inner = Pin::into_inner_unchecked(self) as *mut Derived;
-            Pin::new_unchecked(&mut *Derived::upcast_ptr_mut(inner))
-        }
+/// Upcast a raw pointer. `Derived : Inherits<Base>` means that `Derived` can
+/// be upcast to `Base`.
+pub trait Inherits<Base> {
+    /// Upcast a `const` pointer.
+    fn upcast_ptr(derived: *const Self) -> *const Base;
+
+    /// Upcast a `mut` pointer.
+    fn upcast_ptr_mut(derived: *mut Self) -> *mut Base {
+        Self::upcast_ptr(derived) as *mut _
     }
 }
 
-/// Upcast `&mut` -> `Pin<&mut>.
-///
-/// Since all C++ base classes are `!Unpin`, this is the normal shape of a
-/// mutable reference upcast for an `Unpin` derived class.
-impl<'a, Derived, Base> Upcast<Pin<&'a mut Base>> for &'a mut Derived
-where
-    Pin<&'a mut Derived>: Upcast<Pin<&'a mut Base>>,
-    Derived: Unpin,
-{
-    fn upcast(self: &'a mut Derived) -> Pin<&'a mut Base> {
-        Pin::new(self).upcast()
+/// All classes are their own improper base.
+impl<T> Inherits<T> for T {
+    fn upcast_ptr(derived: *const Self) -> *const Self {
+        derived
     }
 }
 
-/// Upcast `&mut` -> `&mut`.
-///
-/// This impl is never applicable to C++ types (a C++ base class is `!Unpin`),
-/// but could work for inheritance implemented in pure Rust.
-impl<'a, Derived, Base> Upcast<&'a mut Base> for &'a mut Derived
+/// Trait for upcasting a Derived class to its virtual Base class.
+pub trait VirtualUpcast<Target> {
+    fn virtual_upcast(self) -> Target;
+}
+
+/// Upcast `*const` -> `*const` for virtual base class.
+impl<Derived, Base> VirtualUpcast<*const Base> for *const Derived
 where
-    Pin<&'a mut Derived>: Upcast<Pin<&'a mut Base>>,
-    Derived: Unpin,
-    Base: Unpin,
+    Derived: InheritsVirtual<Base>,
 {
-    fn upcast(self: &'a mut Derived) -> &'a mut Base {
-        Pin::into_inner(Pin::new(self).upcast())
+    fn virtual_upcast(self: *const Derived) -> *const Base {
+        // SAFETY: `self` is a valid reference for `'a`, so `self as *const Derived` is non-null and
+        // aligned. `upcast_ptr_to_virtual_base` returns a non-null, properly aligned pointer to the
+        // `Base` subobject within `self`.
+        unsafe { Derived::upcast_ptr_to_virtual_base(self) }
     }
 }
 
-/// Upcast a raw pointer from derived class to base class.
-/// This operation can fail at runtime.
-///
-/// ## Safety
-///
-/// `self` must be `*const T` or `*mut T`
-pub unsafe trait UnsafeUpcast<Target> {
-    /// # Safety
-    ///
-    /// `self` must be a valid pointer, e.g. a pointer to a live derived object.
-    unsafe fn unsafe_upcast(self) -> Target;
-}
-
-/// Upcast `*const` -> `*const`.
-unsafe impl<Derived, Base> UnsafeUpcast<*const Base> for *const Derived
+/// Upcast `*mut` -> `*mut` for virtual base class.
+impl<Derived, Base> VirtualUpcast<*mut Base> for *mut Derived
 where
-    Derived: Inherits<Base>,
+    Derived: InheritsVirtual<Base>,
 {
-    unsafe fn unsafe_upcast(self: *const Derived) -> *const Base {
-        // SAFETY: self is a valid pointer to a derived object.
-        unsafe { Derived::upcast_ptr(self) }
+    fn virtual_upcast(self: *mut Derived) -> *mut Base {
+        // SAFETY: `self` is a valid reference for `'a`, so `self as *const Derived` is non-null and
+        // aligned. `upcast_ptr_mut_to_virtual_base` returns a non-null, properly aligned pointer to
+        // the `Base` subobject within `self`.
+        unsafe { Derived::upcast_ptr_mut_to_virtual_base(self) }
     }
 }
 
-/// Upcast `*mut` -> `*mut`.
-unsafe impl<Derived, Base> UnsafeUpcast<*mut Base> for *mut Derived
-where
-    Derived: Inherits<Base>,
-{
-    unsafe fn unsafe_upcast(self: *mut Derived) -> *mut Base {
-        // SAFETY: self is a valid pointer to a derived object.
-        unsafe { Derived::upcast_ptr_mut(self) }
-    }
-}
-
-/// Unsafely upcast a raw pointer. `Derived : Inherits<Base>` means that
-/// `Derived` can be upcast to `Base`.
+/// Unsafely upcast a raw pointer to its virtual base class. `Derived : Inherits<Base>`
+/// means that `Derived` can be upcast to `Base`.
 ///
-/// To upcast in safe code, use the `Upcast` trait. `Inherits` is used for
+/// To upcast in safe code, use the `Upcast` trait. `InheritsVirtual` is used for
 /// unsafe pointer upcasts, and to implement upcasting.
 ///
-/// (Note that unlike `Upcast`, `Inherits` is not implemented on the pointers
+/// (Note that unlike `Upcast`, `InheritsVirtual` is not implemented on the pointers
 /// themselves -- this is solely for trait coherence reasons, as owning `T` does
 /// not currently grant ownership over `*const T` or `*mut T`.)
 ///
@@ -151,13 +129,7 @@ where
 ///
 /// Implementations must uphold the safety contract of the unsafe functions in
 /// this trait.
-///
-/// TODO(jeanpierreda): Should this be split into two traits?
-/// We could have `Inherits` (with safe functions) and `InheritsVirtual` (with
-/// unsafe functions). For now, these are all merged into one trait, as it is
-/// not an immediately obvious benefit to make raw pointer upcasts a safe
-/// operation.
-pub unsafe trait Inherits<Base> {
+pub unsafe trait InheritsVirtual<Base> {
     /// Upcast a `const` pointer.
     ///
     /// ## Safety
@@ -174,7 +146,7 @@ pub unsafe trait Inherits<Base> {
     ///
     /// Otherwise, if `derived` is non-dereferencable and `Base` is a virtual
     /// base class, the behavior is undefined.
-    unsafe fn upcast_ptr(derived: *const Self) -> *const Base;
+    unsafe fn upcast_ptr_to_virtual_base(derived: *const Self) -> *const Base;
 
     /// Upcast a `mut` pointer.
     ///
@@ -192,15 +164,15 @@ pub unsafe trait Inherits<Base> {
     ///
     /// Otherwise, if `derived` is non-dereferencable and `Base` is a virtual
     /// base class, the behavior is undefined.
-    unsafe fn upcast_ptr_mut(derived: *mut Self) -> *mut Base {
+    unsafe fn upcast_ptr_mut_to_virtual_base(derived: *mut Self) -> *mut Base {
         // SAFETY: This function has the same safety contract as `Self::upcast_ptr`.
-        unsafe { Self::upcast_ptr(derived) as *mut _ }
+        unsafe { Self::upcast_ptr_to_virtual_base(derived) as *mut _ }
     }
 }
 
 /// All classes are their own improper base.
-unsafe impl<T> Inherits<T> for T {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const Self {
+unsafe impl<T> InheritsVirtual<T> for T {
+    unsafe fn upcast_ptr_to_virtual_base(derived: *const Self) -> *const Self {
         derived
     }
 }
@@ -225,8 +197,8 @@ mod test {
             base: Base,
         }
 
-        unsafe impl Inherits<Base> for Derived {
-            unsafe fn upcast_ptr(derived: *const Self) -> *const Base {
+        impl Inherits<Base> for Derived {
+            fn upcast_ptr(derived: *const Self) -> *const Base {
                 // SAFETY: `derived` is a valid pointer to a `Derived` value.
                 unsafe { &(*derived).base }
             }
@@ -234,18 +206,19 @@ mod test {
         let mut derived = Derived::default();
         assert_eq!(ptr_location(&derived.base), ptr_location::<&Base>((&derived).upcast()));
 
-        let _: *const Base = unsafe { Derived::upcast_ptr(&derived) };
-        let _: *mut Base = unsafe { Derived::upcast_ptr_mut(&mut derived) };
-        let _: *const Base = unsafe { (&derived as *const Derived).unsafe_upcast() };
-        let _: *mut Base = unsafe { (&mut derived as *mut Derived).unsafe_upcast() };
-        let _: &mut Base = (&mut derived).upcast();
-        let _: Pin<&mut Base> = (&mut derived).upcast();
-        let _: Pin<&mut Base> = Pin::new(&mut derived).upcast();
+        let _: *const Base = Derived::upcast_ptr(&derived);
+        let _: *mut Base = Derived::upcast_ptr_mut(&mut derived);
+        let _: *const Base = (&derived as *const Derived).upcast();
+        let _: *mut Base = (&mut derived as *mut Derived).upcast();
+        // let _: &mut Base = (&mut derived).upcast(); // does not compile
+        // let _: Pin<&mut Base> = (&mut derived).upcast(); // does not compile
+        // let _: Pin<&mut Base> = Pin::new(&mut derived).upcast(); // does not compile
 
         // This write must not be UB:
         {
-            let base: &mut Base = (&mut derived).upcast();
-            base.0 = 42;
+            let base: *mut Base = (&mut derived as *mut Derived).upcast();
+            // SAFETY: `base` is a valid pointer to a `Base` value.
+            unsafe { (*base).0 = 42 };
         }
         assert_eq!(derived.base.0, 42);
     }
@@ -263,8 +236,8 @@ mod test {
         }
         impl Unpin for Derived {}
 
-        unsafe impl Inherits<Base> for Derived {
-            unsafe fn upcast_ptr(derived: *const Self) -> *const Base {
+        impl Inherits<Base> for Derived {
+            fn upcast_ptr(derived: *const Self) -> *const Base {
                 // SAFETY: `derived` is a valid pointer to a `Derived` value.
                 unsafe { &(*derived).base }
             }
@@ -272,17 +245,17 @@ mod test {
         let mut derived = Derived::default();
         assert_eq!(ptr_location(&derived.base), ptr_location::<&Base>((&derived).upcast()));
 
-        let _: *const Base = unsafe { Derived::upcast_ptr(&derived) };
-        let _: *mut Base = unsafe { Derived::upcast_ptr_mut(&mut derived) };
+        let _: *const Base = Derived::upcast_ptr(&derived);
+        let _: *mut Base = Derived::upcast_ptr_mut(&mut derived);
         // let _: &mut Base = (&mut derived).upcast(); // does not compile
-        let _: Pin<&mut Base> = (&mut derived).upcast();
-        let _: Pin<&mut Base> = Pin::new(&mut derived).upcast();
+        // let _: Pin<&mut Base> = (&mut derived).upcast(); // does not compile
+        // let _: Pin<&mut Base> = Pin::new(&mut derived).upcast(); // does not compile
 
         // This write must not be UB:
-        unsafe {
+        {
             let base: *mut Base = Derived::upcast_ptr_mut(&mut derived);
-
-            (&mut *base).0 = 42;
+            // SAFETY: `base` is a valid pointer to a `Base` value.
+            unsafe { (*base).0 = 42 };
         }
         assert_eq!(derived.base.0, 42);
     }

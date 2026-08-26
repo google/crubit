@@ -121,14 +121,16 @@ unsafe impl ::cxx::ExternType for Derived {
 impl Derived {
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {
-        unsafe { self::derived::has_bindings(oops::Upcast::<_>::upcast(self)) }
+        unsafe { self::derived::has_bindings(&*oops::Upcast::<_>::upcast(self as *const _)) }
     }
     #[inline(always)]
     pub fn no_bindings<'__this>(&'__this self, __param_0: ::ctor::Ctor![crate::Nonmovable])
     where
         for<'error> &'error (): BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable,
     {
-        unsafe { self::derived::no_bindings(oops::Upcast::<_>::upcast(self), __param_0) }
+        unsafe {
+            self::derived::no_bindings(&*oops::Upcast::<_>::upcast(self as *const _), __param_0)
+        }
     }
 }
 
@@ -148,8 +150,8 @@ impl Default for Derived {
 )]
 pub trait BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable {}
 
-unsafe impl oops::Inherits<crate::Base> for crate::Derived {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base {
+impl oops::Inherits<crate::Base> for crate::Derived {
+    fn upcast_ptr(derived: *const Self) -> *const crate::Base {
         unsafe { (derived as *const _ as *const u8).offset(0) as *const crate::Base }
     }
 }
