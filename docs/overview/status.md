@@ -47,7 +47,7 @@ Vec (Rust)                               | `rs_std::Vec<T>`             | `Vec<T
 Fixed-size array                         | `std::array<T, N>`           | `[T; N]`                 | Layout compatible |
 **Strings**                              |                              |                          |                   |
 [String view](/cpp/std#string_view)      | `std::string_view`           | `cpp_std::string_view`   | Layout compatible |
-[Growable string (C++)](/cpp/std#string) | `std::string`                | `cpp_std::string`        | Bridged           |
+[Growable string (C++)](/cpp/std#string) | `std::string`                | `cpp_std::string_wrapper`| Bridged           |
 Growable string (Rust)                   | `rs::alloc::string::String`  | `String`                 | Layout compatible |
 **Option & Result**                      |                              |                          |                   |
 [Optional (C++)](/cpp/std#optional)      | `std::optional<T>`           | `cpp_std::optional<T>`   | Layout compatible |

@@ -42,9 +42,6 @@ pub struct string_wrapper {
     owned_cpp_string: NonNull<c_void>,
 }
 
-#[deprecated(note = "Use string_wrapper instead")]
-pub type string = string_wrapper;
-
 // SAFETY: the string is owned, and mutation is only allowed via `Pin<&mut Self>`.
 unsafe impl Send for string_wrapper {}
 
