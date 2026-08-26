@@ -146,15 +146,18 @@ fn get_field_rs_type_kind_for_layout<'a>(
             }
         }
     }
-    let type_kind = db.rs_type_kind(field.type_().clone())?;
+    let mut type_kind = db.rs_type_kind(field.type_().clone())?;
+    type_kind.force_layout_compatible();
 
     if let RsTypeKind::Error { error, .. } = type_kind {
         return Err(error.clone());
     }
 
-    if type_kind.is_bridge_type() {
-        bail!("crubit.rs/errors/bridge_field: '{}' is a bridge type, but fields must be layout compatible between Rust and C++.",
-            type_kind.display(db))
+    if !type_kind.is_layout_compatible() {
+        bail!(
+            "crubit.rs/errors/bridge_field: '{}' is not layout-compatible between Rust and C++.",
+            type_kind.display(db)
+        )
     }
 
     for target in
@@ -170,7 +173,10 @@ fn get_field_rs_type_kind_for_layout<'a>(
     // one users get.
     //
     // Users can still work around this with accessor functions.
-    if record.should_implement_drop() && !record.is_union() && needs_manually_drop(&type_kind) {
+    if db.record_should_implement_drop(record)
+        && !record.is_union()
+        && needs_manually_drop(&type_kind)
+    {
         for target in
             db.defining_target(record.id()).as_ref().into_iter().chain([record.owning_target()])
         {
@@ -238,21 +244,18 @@ fn filter_out_ambiguous_member_functions<'a>(
     let derived_member_functions = db
         .collect_unqualified_member_functions(derived_record.clone())
         .iter()
-        .map(|func| (func.rs_name().clone(), func.clone()))
+        .map(|func| (*func.rs_name(), func.clone()))
         .collect::<HashMap<_, _>>();
     let mut func_counter = HashMap::<_, (&Rc<Func>, u32)>::new();
     for func in inherited_functions.iter() {
         let Ok(Some(_)) = db.generate_function(func.clone(), None) else {
             continue;
         };
-        let unqualified_name = func.rs_name();
-        if derived_member_functions.contains_key(unqualified_name) {
+        let unqualified_name = *func.rs_name();
+        if derived_member_functions.contains_key(&unqualified_name) {
             continue;
         }
-        func_counter
-            .entry(unqualified_name.clone())
-            .and_modify(|pair| pair.1 += 1)
-            .or_insert((func, 1));
+        func_counter.entry(unqualified_name).and_modify(|pair| pair.1 += 1).or_insert((func, 1));
     }
     func_counter
         .values()
@@ -365,7 +368,7 @@ fn field_definition<'a>(
         Ok(type_kind) => {
             let ty = type_kind.to_token_stream(db);
             let mut wrap_in_manually_drop = false;
-            if record.should_implement_drop() || record.is_union() {
+            if db.record_should_implement_drop(record) || record.is_union() {
                 if needs_manually_drop(&type_kind) {
                     // TODO(jeanpierreda): b/212690698 - Avoid (somewhat unergonomic)
                     // ManuallyDrop if we can ask Rust to preserve field destruction order
@@ -498,7 +501,7 @@ pub fn generate_record<'a>(
     let mut override_alignment = record.override_alignment();
     let mut fields_that_must_be_copy = vec![];
 
-    // Pair up fields with the preceeding and following fields (if any):
+    // Pair up fields with the preceding and following fields (if any):
     // - the end offset of the previous field determines if we need to insert
     //   padding.
     // - the start offset of the next field may be need to grow the current field to
@@ -565,7 +568,7 @@ pub fn generate_record<'a>(
         // coherence rules: PhantomPinned isn't enough to prove to Rust that a
         // blanket impl that requires Unpin doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
         api_snippets.features |= Feature::negative_impls;
-        Some(RecursivelyPinnedAttr { pinned_drop: record.should_implement_drop() })
+        Some(RecursivelyPinnedAttr { pinned_drop: db.record_should_implement_drop(&record) })
     };
 
     // Adjust the struct to also include base class subobjects, vtables, etc.
@@ -888,7 +891,7 @@ pub fn generate_record<'a>(
         } else {
             assert_not_impls |= AssertableTrait::Copy;
         }
-        if record.should_implement_drop() {
+        if db.record_should_implement_drop(&record) {
             assert_impls |= AssertableTrait::Drop;
         } else {
             assert_not_impls |= AssertableTrait::Drop;
@@ -1140,7 +1143,7 @@ fn cc_struct_upcast_impl<'pb>(
             });
 
             UpcastImplBody::CastThunk {
-                crate_root_path: ir.crate_root_path().as_deref().map(make_rs_ident),
+                crate_root_path: ir.crate_root_path().map(make_rs_ident),
                 cast_fn_name,
             }
         };

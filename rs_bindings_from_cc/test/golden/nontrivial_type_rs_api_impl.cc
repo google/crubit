@@ -126,11 +126,6 @@ extern "C" void __rust_thunk___ZN17NontrivialMembersC1EOS_(
   crubit::construct_at(__this, std::move(*__param_0));
 }
 
-extern "C" void __rust_thunk___ZN17NontrivialMembersD1Ev(
-    struct NontrivialMembers* __this) {
-  std::destroy_at(__this);
-}
-
 extern "C" struct NontrivialMembers*
 __rust_thunk___ZN17NontrivialMembersaSERKS_(
     struct NontrivialMembers* __this,

@@ -370,13 +370,14 @@ impl<'a> UniformReprTemplateType<'a> {
     ) -> Result<Option<Rc<Self>>> {
         let type_arg = |template_arg: &CcType| -> Result<RsTypeKind> {
             // Importantly, `is_return_type` is not propagated through inner types.
-            let arg_type_kind = db.rs_type_kind_with_lifetime_elision(
+            let mut arg_type_kind = db.rs_type_kind_with_lifetime_elision(
                 template_arg.clone(),
                 LifetimeOptions { is_return_type: false, ..*options },
             )?;
+            arg_type_kind.force_layout_compatible();
             ensure!(
-                !arg_type_kind.is_bridge_type(),
-                "`{}` cannot be used as a template argument because it is a bridged type\nSee crubit.rs/types.",
+                !arg_type_kind.pass_by_value_bridges(),
+                "`{}` cannot be used as a template argument because it is a non-layout-compatible bridged type\nSee crubit.rs/types.",
                 arg_type_kind.display(db),
             );
             // We don't do this in required_crubit_features() because it doesn't know which
@@ -422,7 +423,7 @@ impl<'a> UniformReprTemplateType<'a> {
                 let element_type = choose_one_type(raw_element_type, template_args)?;
                 let element_type = type_arg(&element_type)?;
                 ensure!(element_type.is_destructible(),
-                    "`{}` can't be used in a Rust std::vector<T> becuase it has a deleted or non-public destructor",
+                    "`{}` can't be used in a Rust std::vector<T> because it has a deleted or non-public destructor",
                     element_type.display(db));
                 if element_type.overloads_operator_delete() {
                     return Ok(None);
@@ -718,8 +719,8 @@ impl<'a> CustomizeMethodsKind<'a> {
                 LifetimeOptions { is_return_type: false, ..*options },
             )?;
             ensure!(
-                !arg_type_kind.is_bridge_type(),
-                "`{}` cannot be used as a template argument because it is a bridged type\nSee crubit.rs/types.",
+                !arg_type_kind.pass_by_value_bridges(),
+                "`{}` cannot be used as a template argument because it is a non-layout-compatible bridged type\nSee crubit.rs/types.",
                 arg_type_kind.display(db),
             );
             // We don't do this in required_crubit_features() because it doesn't know which
@@ -876,6 +877,7 @@ pub enum BridgeRsTypeKind<'a> {
     StdPair(Rc<RsTypeKind<'a>>, Rc<RsTypeKind<'a>>),
     StdString {
         in_cc_std: bool,
+        layout_compatible: bool,
     },
     Callable(Rc<Callable<'a>>),
     /// c9::Co<T>
@@ -987,8 +989,8 @@ impl<'a> BridgeRsTypeKind<'a> {
             BridgeType::StdString => {
                 let in_cc_std = db.ir().is_current_target(record.owning_target())
                     && record.owning_target().target_name_escaped() == "cc_std";
-
-                BridgeRsTypeKind::StdString { in_cc_std }
+                let layout_compatible = false;
+                BridgeRsTypeKind::StdString { in_cc_std, layout_compatible }
             }
             BridgeType::Callable { backing_type, fn_trait, return_type, param_types } => {
                 let target_identifier = record.owning_target().convert_to_cc_identifier();
@@ -1285,8 +1287,8 @@ impl<'a> RsTypeKind<'a> {
                 TemplateArg::Type(type_param) => {
                     let rs_type_kind = db.rs_type_kind(type_param.clone())?;
                     ensure!(
-                        !rs_type_kind.is_bridge_type(),
-                        "Type parameter cannot be a bridge type: {}",
+                        !rs_type_kind.pass_by_value_bridges(),
+                        "Type parameter cannot be a non-layout-compatible bridge type: {}",
                         rs_type_kind.display(&db),
                     );
                     rs_type_kind.to_token_stream(db)
@@ -1319,7 +1321,10 @@ impl<'a> RsTypeKind<'a> {
             RsTypeKind::Record { record, uniform_repr_template_type, .. } => {
                 uniform_repr_template_type.is_some() || record.is_unpin()
             }
-            RsTypeKind::BridgeType { .. } => true,
+            RsTypeKind::BridgeType {
+                bridge_type: BridgeRsTypeKind::StdString { layout_compatible, .. },
+                ..
+            } => !*layout_compatible,
             _ => true,
         }
     }
@@ -1349,6 +1354,50 @@ impl<'a> RsTypeKind<'a> {
 
     pub fn is_bridge_type(&self) -> bool {
         matches!(self.unalias(), RsTypeKind::BridgeType { .. })
+    }
+
+    pub fn is_layout_compatible(&self) -> bool {
+        match self.unalias() {
+            RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
+                BridgeRsTypeKind::StdString { layout_compatible, .. } => *layout_compatible,
+                _ => false,
+            },
+            _ => true,
+        }
+    }
+
+    pub fn force_layout_compatible(&mut self) {
+        match self {
+            RsTypeKind::BridgeType {
+                bridge_type: BridgeRsTypeKind::StdString { layout_compatible, .. },
+                ..
+            } => {
+                *layout_compatible = true;
+            }
+            RsTypeKind::TypeAlias { underlying_type, .. } => {
+                Rc::make_mut(underlying_type).force_layout_compatible();
+            }
+            _ => {}
+        }
+    }
+
+    pub fn needs_destruction(&self) -> bool {
+        match self.unalias() {
+            RsTypeKind::Record { record, .. } => !matches!(
+                record.destructor(),
+                ir::SpecialMemberFunc::Trivial | ir::SpecialMemberFunc::Unavailable
+            ),
+            RsTypeKind::BridgeType { original_type, .. } => !matches!(
+                original_type.destructor(),
+                ir::SpecialMemberFunc::Trivial | ir::SpecialMemberFunc::Unavailable
+            ),
+            RsTypeKind::Error { .. } => true,
+            _ => false,
+        }
+    }
+
+    pub fn pass_by_value_bridges(&self) -> bool {
+        self.is_bridge_type() && !self.is_layout_compatible()
     }
 
     pub fn is_proto_message_bridge_type(&self) -> bool {
@@ -1967,7 +2016,7 @@ impl<'a> RsTypeKind<'a> {
         } else if self.is_void() {
             // void is a subset of is_c_abi_compatible_by_value, so must be checked before.
             PassingConvention::Void
-        } else if self.is_bridge_type() {
+        } else if self.pass_by_value_bridges() {
             PassingConvention::ComposablyBridged
         } else if !self.is_unpin() {
             PassingConvention::Ctor
@@ -2218,6 +2267,7 @@ pub fn interpolate_spelled_rust_type(
 ///
 /// Code that generates functions thunks and impls should match on this type instead of manually
 /// checking properties of the RsTypeKind, which are subject to change or evolve over time.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PassingConvention {
     /// ABI compatible types may be passed by value across the C boundary.
     AbiCompatible,
@@ -2442,6 +2492,9 @@ impl<'a> RsTypeKind<'a> {
                 quote! { #crate_path #ident }
             }
             RsTypeKind::TypeAlias { type_alias, crate_path, lifetimes, .. } => {
+                if let RsTypeKind::BridgeType { bridge_type: BridgeRsTypeKind::StdString { layout_compatible: true, .. }, .. } = self.unalias() {
+                    return self.unalias().to_token_stream(db);
+                }
                 let mut ident = make_rs_ident(type_alias.rs_name().as_str());
                 let mut crate_path = crate_path.clone();
                 // Check to see if the underlying type is a special template specialization kind
@@ -2512,11 +2565,19 @@ impl<'a> RsTypeKind<'a> {
                         let second = second.to_token_stream(db);
                         quote! { (#first, #second) }
                     }
-                    BridgeRsTypeKind::StdString { in_cc_std } => {
-                        if *in_cc_std {
-                            quote! { crate::std::string_wrapper }
+                    BridgeRsTypeKind::StdString { in_cc_std, layout_compatible } => {
+                        if *layout_compatible {
+                            if *in_cc_std {
+                                quote! { crate::std::string }
+                            } else {
+                                quote! { ::cc_std::std::string }
+                            }
                         } else {
-                            quote! { ::cc_std::std::string_wrapper }
+                            if *in_cc_std {
+                                quote! { crate::std::string_wrapper }
+                            } else {
+                                quote! { ::cc_std::std::string_wrapper }
+                            }
                         }
                     }
                     BridgeRsTypeKind::Callable(callable) => {

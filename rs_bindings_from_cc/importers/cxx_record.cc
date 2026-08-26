@@ -21,6 +21,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
 #include "absl/log/log.h"
@@ -258,7 +259,7 @@ std::optional<std::array<std::string, N>> GetKeyValues(
     const clang::RecordDecl& record_decl,
     std::array<absl::string_view, N> keys) {
   std::array<std::string, N> values;
-  for (int i = 0; i < N; ++i) {
+  for (size_t i = 0; i < N; ++i) {
     absl::StatusOr<std::optional<std::string>> value =
         GetAnnotationWithStringArg(record_decl, keys[i]);
     CHECK_OK(value);
@@ -280,9 +281,9 @@ std::string ToSnakeCase(absl::string_view input) {
       if (i > 0 && input[i - 1] != '_') {
         result += '_';
       }
-      result += std::tolower(input[i]);
+      result += static_cast<char>(std::tolower(input[i]));
     } else {
-      result += std::tolower(input[i]);
+      result += static_cast<char>(std::tolower(input[i]));
     }
   }
   return result;
@@ -1593,8 +1594,9 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
     }
     type.WriteToProto(*proto_field.mutable_type());
     proto_field.set_access(TranslateAccessSpecifier(access));
-    proto_field.set_offset(layout.getFieldOffset(field_decl->getFieldIndex()));
-    proto_field.set_size(size);
+    proto_field.set_offset(static_cast<int64_t>(
+        layout.getFieldOffset(field_decl->getFieldIndex())));
+    proto_field.set_size(static_cast<int64_t>(size));
     if (!unknown_attr.ok() || unknown_attr->has_value()) {
       *proto_field.mutable_unknown_attr() = ToFlatProto(unknown_attr);
     }
@@ -1716,7 +1718,7 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
   clang::StringRef name = cxx_record_decl->getName();
   // TODO(b/454627672): is cxx_record_decl the right decl to check for
   // assumed_lifetimes?
-  auto cc_type_of_arg = [&](int index) {
+  auto cc_type_of_arg = [&](unsigned int index) {
     return ictx_.ConvertQualType(
         /*qual_type=*/decl->getTemplateArgs()[index].getAsType(),
         /*lifetimes=*/nullptr, /*nullable=*/true,
@@ -1741,14 +1743,50 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
   }
 
   if (name == "basic_string") {
-    CcType char_type = cc_type_of_arg(0);
-    if (const auto* primitive =
-            std::get_if<CcType::Primitive>(&char_type.variant);
-        primitive != nullptr && primitive->spelling == "char") {
-      return BridgeType{BridgeType::StdString{}};
+    const clang::TemplateArgumentList& args = decl->getTemplateArgs();
+    if (args.size() >= 3) {
+      clang::QualType char_type = args[0].getAsType();
+      clang::QualType traits_type = args[1].getAsType();
+      clang::QualType allocator_type = args[2].getAsType();
+
+      auto is_char = [](clang::QualType t) {
+        if (const auto* builtin = t->getAs<clang::BuiltinType>()) {
+          return builtin->getKind() == clang::BuiltinType::Char_S ||
+                 builtin->getKind() == clang::BuiltinType::Char_U;
+        }
+        return false;
+      };
+
+      auto is_std_specialization = [](clang::QualType t, llvm::StringRef name,
+                                      auto check_arg) {
+        const auto* spec =
+            clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
+                t->getAsCXXRecordDecl());
+        if (spec == nullptr) return false;
+        const clang::CXXRecordDecl* templated =
+            spec->getSpecializedTemplate()->getTemplatedDecl();
+        if (templated == nullptr || templated->getName() != name ||
+            !templated->getDeclContext()->isStdNamespace()) {
+          return false;
+        }
+        if (spec->getTemplateArgs().size() != 1) return false;
+        return check_arg(spec->getTemplateArgs()[0]);
+      };
+
+      auto is_char_arg = [&](const clang::TemplateArgument& arg) {
+        if (arg.getKind() != clang::TemplateArgument::Type) return false;
+        return is_char(arg.getAsType());
+      };
+
+      if (is_char(char_type) &&
+          is_std_specialization(traits_type, "char_traits", is_char_arg) &&
+          is_std_specialization(allocator_type, "allocator", is_char_arg)) {
+        return BridgeType{BridgeType::StdString{}};
+      }
     }
     // HACK: restoring old behavior that hid a bug in our logic for std::wstring
     // TODO(b/468093766): Fail in the ordinary Record handling logic, not here.
+    CcType char_type = cc_type_of_arg(0);
     if (auto* error = std::get_if<FormattedError>(&char_type.variant)) {
       return absl::InternalError(error->message());
     }
@@ -1799,7 +1837,7 @@ std::string GetProto2MessageRustNameImpl(
   std::string rust_name = std::string(path.back());
   if (path.size() > 1) {
     rust_name = ToSnakeCase(rust_name);
-    for (int i = path.size() - 2; i > 0; --i) {
+    for (size_t i = path.size() - 2; i > 0; --i) {
       absl::StrAppend(&rust_name, "::", ToSnakeCase(path[i]));
     }
     absl::StrAppend(&rust_name, "::", path.front());

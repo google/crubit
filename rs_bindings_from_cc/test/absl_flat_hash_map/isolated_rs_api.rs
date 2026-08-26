@@ -27,11 +27,11 @@ pub mod crubit {
         pub type MapWithThreeParams = crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE;
 
         // error: type alias `crubit::test::MapWithBridgedKey` could not be bound
-        //   depends on `crubit::test::MapWithBridgedKey` which cannot be bound because `crate::Bridged` cannot be used as a template argument because it is a bridged type
+        //   depends on `crubit::test::MapWithBridgedKey` which cannot be bound because `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
         //   See crubit.rs/types.
 
         // error: type alias `crubit::test::MapWithBridgedValue` could not be bound
-        //   depends on `crubit::test::MapWithBridgedValue` which cannot be bound because `crate::Bridged` cannot be used as a template argument because it is a bridged type
+        //   depends on `crubit::test::MapWithBridgedValue` which cannot be bound because `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
         //   See crubit.rs/types.
 
         forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!(":: crubit :: test :: Incomplete"));
@@ -145,7 +145,7 @@ pub mod crubit {
 //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public destructor
 
 // error: class `absl::flat_hash_map<crubit::test::Bridged, int, 42>` could not be bound
-//   `crate::Bridged` cannot be used as a template argument because it is a bridged type
+//   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
 //   See crubit.rs/types.
 
 // error: class `absl::flat_hash_map<crubit::test::NoDelete, int, 42>` could not be bound
@@ -158,7 +158,7 @@ pub mod crubit {
 //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor
 
 // error: class `absl::flat_hash_map<int, crubit::test::Bridged, 42>` could not be bound
-//   `crate::Bridged` cannot be used as a template argument because it is a bridged type
+//   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
 //   See crubit.rs/types.
 
 // error: class `absl::flat_hash_map<int, crubit::test::NoDelete, 42>` could not be bound

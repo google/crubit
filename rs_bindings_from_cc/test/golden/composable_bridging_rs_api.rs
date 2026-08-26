@@ -25,7 +25,7 @@
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithBridgeField {
     /// Reason for representing this field as a blob of bytes:
-    /// crubit.rs/errors/bridge_field: 'crate::RustStruct' is a bridge type, but fields must be layout compatible between Rust and C++.
+    /// crubit.rs/errors/bridge_field: 'crate::RustStruct' is not layout-compatible between Rust and C++.
     pub(crate) bridge_field: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for StructWithBridgeField {}

@@ -73,7 +73,7 @@ pub fn generate_bindings(
         Format::parse_with_metavars(crubit_support_versioned_path_format, &["header"])?;
 
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(
-        &ir,
+        ir,
         crubit_support_path_format,
         crubit_support_versioned_path_format,
         errors,
@@ -82,7 +82,7 @@ pub fn generate_bindings(
         kythe_annotations,
     )?;
 
-    let top_level_comment = generate_top_level_comment(&ir, is_golden_test);
+    let top_level_comment = generate_top_level_comment(ir, is_golden_test);
 
     let rs_api: String = {
         let rustfmt_exe_path =
@@ -151,7 +151,7 @@ fn generate_type_alias<'a>(
     //
     // Since rs_type_kind() can succeed even if this alias is unsupported (it is "seen through"),
     // we only do so after rs_type_kind() fails.
-    let Ok(rs_type_kind) = db.rs_type_kind((&*type_alias).into()) else {
+    let Ok(rs_type_kind) = db.rs_type_kind(type_alias.into()) else {
         // Return the un-hidden raw error from has_bindings().
         let Err(e) = db.has_bindings(ir::Item::TypeAlias(raw_type_alias)) else {
             unreachable!(
@@ -646,7 +646,7 @@ pub fn generate_bindings_tokens(
     };
 
     let reexports = ir.reexported_namespaces().iter().map(|ns| {
-        let path = ns.split("::").map(|p| make_rs_ident(p));
+        let path = ns.split("::").map(make_rs_ident);
         // First `*` is the quote! repeating macro, second `*` is the Rust glob import.
         quote! { pub use crate::#( #path )::*::*; }
     });
@@ -972,7 +972,7 @@ fn generate_rs_api_impl_includes(
                             crubit_any_invocable_support_header,
                         )));
                     } else {
-                        // absl::AnyInvocable will not receieve bridge bindings.
+                        // absl::AnyInvocable will not receive bridge bindings.
                     }
                 }
                 _ => {
@@ -1018,7 +1018,7 @@ fn generate_rs_api_impl_includes(
             continue;
         };
 
-        if rs_type_kind.is_bridge_type() {
+        if rs_type_kind.pass_by_value_bridges() {
             internal_includes.insert(CcInclude::SupportLibHeader(
                 crubit_support_path_format.clone(),
                 intern!(db.interner(), "bridge.h"),
@@ -1212,7 +1212,9 @@ fn crubit_abi_type<'a>(
                 let second_abi = db.crubit_abi_type(second.as_ref().clone())?;
                 Ok(CrubitAbiType::Pair(Rc::from(first_abi), Rc::from(second_abi)))
             }
-            BridgeRsTypeKind::StdString { in_cc_std } => Ok(CrubitAbiType::StdString { in_cc_std }),
+            BridgeRsTypeKind::StdString { in_cc_std, .. } => {
+                Ok(CrubitAbiType::StdString { in_cc_std })
+            }
             BridgeRsTypeKind::Callable(callable) => {
                 generate_dyn_callable::callable_crubit_abi_type(db, &callable)
             }

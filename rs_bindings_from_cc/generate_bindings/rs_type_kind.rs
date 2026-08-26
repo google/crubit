@@ -5,7 +5,9 @@
 use arc_anyhow::{anyhow, ensure, Error, Result};
 use database::code_snippet::{NoBindingsReason, Visibility};
 use database::intern;
-use database::rs_snippet::{Lifetime, LifetimeOptions, Mutability, RsTypeKind, RustPtrKind};
+use database::rs_snippet::{
+    BridgeRsTypeKind, Lifetime, LifetimeOptions, Mutability, RsTypeKind, RustPtrKind,
+};
 use database::BindingsGenerator;
 use ir::GenericItem;
 use ir::{CcType, CcTypeVariant, PointerTypeKind};
@@ -45,6 +47,14 @@ pub fn rs_type_kind_with_lifetime_elision<'a>(
     ty: CcType,
     lifetime_options: LifetimeOptions,
 ) -> Result<RsTypeKind<'a>> {
+    rs_type_kind_with_lifetime_elision_impl(db, ty, lifetime_options)
+}
+
+fn rs_type_kind_with_lifetime_elision_impl<'a>(
+    db: &BindingsGenerator<'a>,
+    ty: CcType,
+    lifetime_options: LifetimeOptions,
+) -> Result<RsTypeKind<'a>> {
     ensure!(
         ty.unknown_attr().is_empty(),
         "crubit.rs/errors/unknown_attribute: unknown attribute(s): {}",
@@ -78,8 +88,15 @@ pub fn rs_type_kind_with_lifetime_elision<'a>(
                 },
             )?;
 
+            pointee.force_layout_compatible();
+
             // TODO(b/464492052): Support bridge types by pointer/reference.
-            if let RsTypeKind::BridgeType { original_type, .. } = pointee.unalias() {
+            if let RsTypeKind::BridgeType { bridge_type, original_type } = pointee.unalias()
+                && !matches!(
+                    bridge_type,
+                    BridgeRsTypeKind::StdString { layout_compatible: true, .. }
+                )
+            {
                 let visibility_override = if pointee.is_proto_message_bridge_type() {
                     Some(Visibility::Public)
                 } else {

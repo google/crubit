@@ -523,53 +523,77 @@ pub fn generate_cc_thunk_parts<'a>(
     let mut param_idents = Vec::new();
     let mut param_types = Vec::new();
     let mut conversion_stmts = quote! {};
-
     for p in func.params().iter() {
         let ident = format_nonportable_cc_ident(p.identifier().as_str())?;
         let arg_type = db.rs_type_kind(p.type_().clone())?;
         let cpp_type = cpp_type_name::format_cpp_type(&arg_type, db)?;
 
+        let passing_convention = arg_type.passing_convention();
+
         if matches!(kind, ThunkCallKind::InlineCpp(_)) {
-            if arg_type.is_bridge_type() {
-                let ffi_ident = format_ident!("__{ident}");
-                let crubit_abi_type = db.crubit_abi_type(arg_type)?;
-                let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-                let crubit_abi_type_expr_tokens = CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
-                let decoder = format_ident!("__{ident}_decoder");
-                conversion_stmts.extend(quote! {
-                    ::crubit::Decoder #decoder(#crubit_abi_type_tokens::kSize, #ffi_ident);
-                    auto #ident = #crubit_abi_type_expr_tokens.Decode(#decoder);
-                });
-                param_idents.push(ffi_ident);
-                param_types.push(quote! { const unsigned char* });
-            } else if !arg_type.is_c_abi_compatible_by_value() {
-                // non-Unpin / non-POD types are passed by pointer across FFI;
-                // unpack into local reference for the inline C++ body.
-                let ffi_ident = format_ident!("__{ident}");
-                conversion_stmts.extend(quote! {
-                    auto&& #ident = std::move(*#ffi_ident);
-                });
-                param_idents.push(ffi_ident);
-                param_types.push(quote! { #cpp_type * });
-            } else {
-                param_idents.push(ident);
-                param_types.push(cpp_type);
+            match passing_convention {
+                PassingConvention::ComposablyBridged => {
+                    let ffi_ident = format_ident!("__{ident}");
+                    let crubit_abi_type = db.crubit_abi_type(arg_type.clone())?;
+                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                    let crubit_abi_type_expr_tokens =
+                        CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
+                    let decoder = format_ident!("__{ident}_decoder");
+                    conversion_stmts.extend(quote! {
+                        ::crubit::Decoder #decoder(#crubit_abi_type_tokens::kSize, #ffi_ident);
+                        auto #ident = #crubit_abi_type_expr_tokens.Decode(#decoder);
+                    });
+                    param_idents.push(ffi_ident);
+                    param_types.push(quote! { const unsigned char* });
+                }
+                PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+                    if arg_type.is_c_abi_compatible_by_value() {
+                        param_idents.push(ident);
+                        param_types.push(cpp_type);
+                    } else {
+                        let ffi_ident = format_ident!("__{ident}");
+                        conversion_stmts.extend(quote! {
+                            auto&& #ident = std::move(*#ffi_ident);
+                        });
+                        param_idents.push(ffi_ident);
+                        param_types.push(quote! { #cpp_type * });
+                    }
+                }
+                PassingConvention::AbiCompatible
+                | PassingConvention::Void
+                | PassingConvention::OwnedPtr => {
+                    param_idents.push(ident);
+                    param_types.push(cpp_type);
+                }
             }
-        } else if arg_type.is_bridge_type() {
-            let crubit_abi_type = db.crubit_abi_type(arg_type)?;
-            let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
-            let decoder = format_ident!("__{ident}_decoder");
-            conversion_stmts.extend(quote! {
-                ::crubit::Decoder #decoder(#crubit_abi_type_tokens::kSize, #ident);
-            });
-            param_idents.push(ident);
-            param_types.push(quote! { const unsigned char* });
-        } else if !arg_type.is_c_abi_compatible_by_value() {
-            param_idents.push(ident);
-            param_types.push(quote! { #cpp_type * });
         } else {
-            param_idents.push(ident);
-            param_types.push(cpp_type);
+            match passing_convention {
+                PassingConvention::ComposablyBridged => {
+                    let crubit_abi_type = db.crubit_abi_type(arg_type.clone())?;
+                    let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
+                    let decoder = format_ident!("__{ident}_decoder");
+                    conversion_stmts.extend(quote! {
+                        ::crubit::Decoder #decoder(#crubit_abi_type_tokens::kSize, #ident);
+                    });
+                    param_idents.push(ident);
+                    param_types.push(quote! { const unsigned char* });
+                }
+                PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+                    if arg_type.is_c_abi_compatible_by_value() {
+                        param_idents.push(ident);
+                        param_types.push(cpp_type);
+                    } else {
+                        param_idents.push(ident);
+                        param_types.push(quote! { #cpp_type * });
+                    }
+                }
+                PassingConvention::AbiCompatible
+                | PassingConvention::Void
+                | PassingConvention::OwnedPtr => {
+                    param_idents.push(ident);
+                    param_types.push(cpp_type);
+                }
+            }
         }
     }
 
@@ -598,7 +622,7 @@ pub fn generate_cc_thunk_parts<'a>(
                     // non-Unpin types are wrapped by a pointer in the thunk.
                     match rs_type_kind.passing_convention() {
                         PassingConvention::ComposablyBridged => {
-                            let crubit_abi_type = db.crubit_abi_type(rs_type_kind)?;
+                            let crubit_abi_type = db.crubit_abi_type(rs_type_kind.clone())?;
                             let crubit_abi_type_expr_tokens =
                                 CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
                             let decoder = format_ident!("__{ident}_decoder");
@@ -614,10 +638,12 @@ pub fn generate_cc_thunk_parts<'a>(
                             }
                         }
                         PassingConvention::AbiCompatible | PassingConvention::OwnedPtr => {
-                            if rs_type_kind.is_primitive() || rs_type_kind.referent().is_some() {
-                                Ok(quote! { #ident })
-                            } else {
-                                Ok(quote! { std::move( #ident) })
+                            match rs_type_kind {
+                                RsTypeKind::RvalueReference { .. } => {
+                                    Ok(quote! { std::move(*#ident) })
+                                }
+                                RsTypeKind::Reference { .. } => Ok(quote! { *#ident }),
+                                _ => Ok(quote! { #ident }),
                             }
                         }
                         PassingConvention::Void => unreachable!("parameter types cannot be void"),
@@ -709,7 +735,7 @@ pub fn generate_cc_thunk_parts<'a>(
             match return_type_kind.passing_convention() {
                 PassingConvention::ComposablyBridged => {
                     let out_param = &param_idents[0];
-                    let crubit_abi_type = db.crubit_abi_type(return_type_kind)?;
+                    let crubit_abi_type = db.crubit_abi_type(return_type_kind.clone())?;
                     let crubit_abi_type_tokens = CrubitAbiTypeToCppTokens(&crubit_abi_type);
                     let crubit_abi_type_expr_tokens =
                         CrubitAbiTypeToCppExprTokens(&crubit_abi_type);
@@ -820,7 +846,9 @@ pub fn generate_inline_cpp_call<'a>(
     Ok(Some(quote! {
         unsafe {
             (::crubit_support::inline_cpp! {
-                ( #( #param_types #param_idents ),* ) -> #return_type_name #body_block
+                (
+                #(#param_types #param_idents), *)->#return_type_name
+                #body_block
             })( #( #adjusted_thunk_args ),* )
         }
     }))

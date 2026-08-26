@@ -7,6 +7,7 @@ crubit_test_cc_library(
     name = "test_helpers",
     testonly = 1,
     hdrs = ["test_helpers.h"],
+    deps = ["//support:annotations"],
 )
 
 crubit_rust_test(
@@ -21,5 +22,20 @@ crubit_rust_test(
         "@crate_index//:googletest",
         "@crate_index//:rstest",  # v0_16
         "@crate_index//:static_assertions",  # v1
+    ],
+)
+
+crubit_rust_test(
+    name = "test_layout_compatible",
+    srcs = ["test_layout_compatible.rs"],
+    cc_deps = [
+        ":test_helpers",
+        "//support/cc_std",
+    ],
+    deps = [
+        "//support:cref",
+        "//support:ctor",
+        "@crate_index//:googletest",
+        "@crate_index//:rstest",  # v0_16
     ],
 )
