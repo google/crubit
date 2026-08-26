@@ -43,6 +43,7 @@
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/OperationKinds.h"
 #include "clang/AST/RecordLayout.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Diagnostic.h"
@@ -52,6 +53,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Lex/Lexer.h"
+#include "clang/Rewrite/Core/Rewriter.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/DenseSet.h"
@@ -444,17 +446,55 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
   }
 }
 
+class MemberAccessRewriter
+    : public clang::RecursiveASTVisitor<MemberAccessRewriter> {
+ public:
+  explicit MemberAccessRewriter(clang::Rewriter& rewriter)
+      : rewriter_(rewriter) {}
+
+  bool VisitMemberExpr(clang::MemberExpr* member_expr) {
+    if (member_expr->isImplicitAccess()) {
+      rewriter_.InsertText(member_expr->getMemberLoc(), "__this->");
+    }
+    return true;
+  }
+
+  bool VisitCXXThisExpr(clang::CXXThisExpr* this_expr) {
+    if (!this_expr->isImplicit()) {
+      rewriter_.ReplaceText(this_expr->getSourceRange(), "__this");
+    }
+    return true;
+  }
+
+ private:
+  clang::Rewriter& rewriter_;
+};
+
 // Formats a C++ function declaration's signature and body for inline_cpp!
 // token generation.
-// Note: This does not return raw source text verbatim from the file, but
-// rather a formatted string combining printed parameter types, return type,
-// and body tokens so Rust macro codegen can parse it.
+// For non-static member functions, rewrites implicit member accesses and
+// explicit `this` expressions to access members through `__this->`.
 std::optional<std::string> GetFunctionSourceText(
     const clang::ASTContext& ast_ctx, const clang::SourceManager& sm,
     const clang::FunctionDecl* function_decl, bool carcinize) {
   const clang::Stmt* body = function_decl->getBody();
   if (!carcinize || body == nullptr || function_decl->isImplicit()) {
     return std::nullopt;
+  }
+
+  auto* method_decl = clang::dyn_cast<clang::CXXMethodDecl>(function_decl);
+  if (method_decl != nullptr && !method_decl->isStatic()) {
+    clang::Rewriter rewriter(const_cast<clang::SourceManager&>(sm),
+                             ast_ctx.getLangOpts());
+    MemberAccessRewriter visitor(rewriter);
+    visitor.TraverseStmt(const_cast<clang::Stmt*>(body));
+
+    clang::CharSourceRange range = clang::CharSourceRange::getTokenRange(
+        body->getBeginLoc(), body->getEndLoc());
+    std::string rewritten_body = rewriter.getRewrittenText(range);
+    if (!rewritten_body.empty()) {
+      return rewritten_body;
+    }
   }
 
   bool invalid = false;
