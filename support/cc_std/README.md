@@ -15,7 +15,7 @@ and use types via `cpp_std::{sometype}` (e.g. `cpp_std::unique_ptr<T>`).
 Alternatively, the legacy `cc_std` crate can be added via `cc_deps`:
 
 ```
-cc_deps = ["//support/public:cc_std"]
+deps = ["//support/public:cc_std"]
 ```
 
 This crate provides, for example:
