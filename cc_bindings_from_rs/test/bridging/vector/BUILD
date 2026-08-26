@@ -26,10 +26,8 @@ rust_library(
     srcs = [
         "vector.rs",
     ],
-    cc_deps = [
-        ":test_helpers",
-        "//support/cc_std",
-    ],
+    cc_deps = [":test_helpers"],
+    deps = ["//support/cc_std"],
 )
 
 cc_bindings_from_rust(
