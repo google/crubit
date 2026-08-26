@@ -309,126 +309,34 @@ pub enum BridgingAttrs {
 
 // Ideally we could call https://github.com/rust-lang/rust/blob/2aaa62b89d22b570e560731b03e3d2d6f5c3bbce/compiler/rustc_metadata/src/rmeta/encoder.rs#L937 directly, but that method is not publicly available.
 // It does not suffice to call `tcx.has_attrs` on our DefId because that will call `get_all_attrs` under the hood and panic if given an unsupported DefId.
-#[rustversion::before(2026-07-11)]
+//
+// Const and AssocConst switch between unit variant and struct variant in nightly 2026-03-01. We
+// use a struct variant to cover both cases and supress the warning on versions where it's a
+// unit variant.
+#[allow(clippy::unneeded_struct_pattern)]
 pub fn supports_attrs(def_kind: DefKind) -> bool {
-    // Const and AssocConst switch between unit variant and struct variant in nightly 2026-03-01. We
-    // use a struct variant to cover both cases and supress the warning on versions where it's a
-    // unit variant.
-    #[allow(clippy::unneeded_struct_pattern)]
-    match def_kind {
+    matches!(
+        def_kind,
         DefKind::Mod
-        | DefKind::Struct
-        | DefKind::Union
-        | DefKind::Enum
-        | DefKind::Variant
-        | DefKind::Trait
-        | DefKind::TyAlias
-        | DefKind::ForeignTy
-        | DefKind::TraitAlias
-        | DefKind::AssocTy
-        | DefKind::Fn
-        | DefKind::Const { .. }
-        | DefKind::Static { nested: false, .. }
-        | DefKind::AssocFn
-        | DefKind::AssocConst { .. }
-        | DefKind::Macro(_)
-        | DefKind::Field
-        | DefKind::Impl { .. }
-        | DefKind::Closure => true,
-        DefKind::SyntheticCoroutineBody
-        | DefKind::TyParam
-        | DefKind::ConstParam
-        | DefKind::Ctor(..)
-        | DefKind::ExternCrate
-        | DefKind::Use
-        | DefKind::ForeignMod
-        | DefKind::AnonConst
-        | DefKind::InlineConst
-        | DefKind::OpaqueTy
-        | DefKind::LifetimeParam
-        | DefKind::Static { nested: true, .. }
-        | DefKind::GlobalAsm => false,
-    }
-}
-
-// Ideally we could call https://github.com/rust-lang/rust/blob/2aaa62b89d22b570e560731b03e3d2d6f5c3bbce/compiler/rustc_metadata/src/rmeta/encoder.rs#L937 directly, but that method is not publicly available.
-// It does not suffice to call `tcx.has_attrs` on our DefId because that will call `get_all_attrs` under the hood and panic if given an unsupported DefId.
-#[rustversion::since(2026-07-11)]
-#[rustversion::before(2026-08-25)]
-pub fn supports_attrs(def_kind: DefKind) -> bool {
-    match def_kind {
-        DefKind::Mod
-        | DefKind::Struct
-        | DefKind::Union
-        | DefKind::Enum
-        | DefKind::Variant
-        | DefKind::Trait
-        | DefKind::TyAlias
-        | DefKind::ForeignTy
-        | DefKind::TraitAlias
-        | DefKind::AssocTy
-        | DefKind::Fn
-        | DefKind::Const { .. }
-        | DefKind::Static { nested: false, .. }
-        | DefKind::AssocFn
-        | DefKind::AssocConst { .. }
-        | DefKind::Macro(_)
-        | DefKind::Field
-        | DefKind::Impl { .. }
-        | DefKind::Closure => true,
-        DefKind::SyntheticCoroutineBody
-        | DefKind::TyParam
-        | DefKind::ConstParam
-        | DefKind::Ctor(..)
-        | DefKind::ExternCrate
-        | DefKind::Use
-        | DefKind::ForeignMod
-        | DefKind::AnonConst
-        | DefKind::OpaqueTy
-        | DefKind::LifetimeParam
-        | DefKind::Static { nested: true, .. }
-        | DefKind::GlobalAsm => false,
-    }
-}
-
-// Ideally we could call https://github.com/rust-lang/rust/blob/2aaa62b89d22b570e560731b03e3d2d6f5c3bbce/compiler/rustc_metadata/src/rmeta/encoder.rs#L937 directly, but that method is not publicly available.
-// It does not suffice to call `tcx.has_attrs` on our DefId because that will call `get_all_attrs` under the hood and panic if given an unsupported DefId.
-#[rustversion::since(2026-08-25)]
-pub fn supports_attrs(def_kind: DefKind) -> bool {
-    match def_kind {
-        DefKind::Mod
-        | DefKind::Struct
-        | DefKind::Union
-        | DefKind::Enum
-        | DefKind::Variant
-        | DefKind::Trait
-        | DefKind::TyAlias
-        | DefKind::ForeignTy
-        | DefKind::TraitAlias
-        | DefKind::AssocTy
-        | DefKind::Fn
-        | DefKind::Const { .. }
-        | DefKind::Static { nested: false, .. }
-        | DefKind::AssocFn
-        | DefKind::AssocConst { .. }
-        | DefKind::Macro(_)
-        | DefKind::Field
-        | DefKind::Impl { .. }
-        | DefKind::Closure => true,
-        DefKind::SyntheticCoroutineBody
-        | DefKind::TyParam
-        | DefKind::ConstParam
-        | DefKind::Ctor(..)
-        | DefKind::ExternCrate
-        | DefKind::Use
-        | DefKind::ForeignMod
-        | DefKind::AnonConst
-        | DefKind::OpaqueTy
-        | DefKind::LifetimeParam
-        | DefKind::Static { nested: true, .. }
-        | DefKind::GlobalAsm
-        | DefKind::TestBinderConstraints => false,
-    }
+            | DefKind::Struct
+            | DefKind::Union
+            | DefKind::Enum
+            | DefKind::Variant
+            | DefKind::Trait
+            | DefKind::TyAlias
+            | DefKind::ForeignTy
+            | DefKind::TraitAlias
+            | DefKind::AssocTy
+            | DefKind::Fn
+            | DefKind::Const { .. }
+            | DefKind::Static { nested: false, .. }
+            | DefKind::AssocFn
+            | DefKind::AssocConst { .. }
+            | DefKind::Macro(_)
+            | DefKind::Field
+            | DefKind::Impl { .. }
+            | DefKind::Closure
+    )
 }
 
 /// Returns a CrubitAttrs object containing all the `#[doc="CRUBIT_ANNOTATE: key=value"]`
