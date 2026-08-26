@@ -18,17 +18,17 @@ TEST(ResultTest, GetsResult) {
 
 TEST(ResultTest, NestedResult) {
   auto res = result::NestedResult::new_(42);
-  EXPECT_TRUE(res.in_ok.has_value());
+  ASSERT_TRUE(res.in_ok.has_value());
   EXPECT_FALSE(res.in_ok.value().has_value());
   EXPECT_EQ(res.in_ok.value().err(), 42);
   EXPECT_FALSE(res.in_err.has_value());
-  EXPECT_TRUE(res.in_err.err().has_value());
+  ASSERT_TRUE(res.in_err.err().has_value());
   EXPECT_EQ(res.in_err.err().value(), 42);
 }
 
 TEST(ResultTest, CopyNoDefaultResult) {
   auto res = result::CopyNoDefaultResult::new_(42);
-  EXPECT_TRUE(res.in_ok.has_value());
+  ASSERT_TRUE(res.in_ok.has_value());
   EXPECT_EQ(res.in_ok.value().val, 42);
   EXPECT_FALSE(res.in_err.has_value());
   EXPECT_EQ(res.in_err.err().val, 42);
@@ -36,7 +36,7 @@ TEST(ResultTest, CopyNoDefaultResult) {
 
 TEST(ResultTest, CloneNoDefaultResult) {
   auto res = result::CloneNoDefaultResult::new_(42);
-  EXPECT_TRUE(res.in_ok.has_value());
+  ASSERT_TRUE(res.in_ok.has_value());
   EXPECT_EQ(res.in_ok.value().val, 42);
   EXPECT_FALSE(res.in_err.has_value());
   EXPECT_EQ(res.in_err.err().val, 42);
@@ -44,7 +44,7 @@ TEST(ResultTest, CloneNoDefaultResult) {
 
 TEST(ResultTest, HasDefaultResult) {
   auto res = result::HasDefaultResult::new_("hello");
-  EXPECT_TRUE(res.in_ok.has_value());
+  ASSERT_TRUE(res.in_ok.has_value());
   EXPECT_EQ(res.in_ok.value().val().to_string_view(), "hello");
   EXPECT_FALSE(res.in_err.has_value());
   EXPECT_EQ(res.in_err.err().val().to_string_view(), "hello");
@@ -52,7 +52,7 @@ TEST(ResultTest, HasDefaultResult) {
 
 TEST(ResultTest, HasNoDefaultResult) {
   auto res = result::HasNoDefaultResult::new_("good bye");
-  EXPECT_TRUE(res.in_ok.has_value());
+  ASSERT_TRUE(res.in_ok.has_value());
   EXPECT_EQ(res.in_ok.value().val().to_string_view(), "good bye");
   EXPECT_FALSE(res.in_err.has_value());
   EXPECT_EQ(res.in_err.err().val().to_string_view(), "good bye");
@@ -105,7 +105,7 @@ TEST(ResultTest, ConstructAndPassResultByValue) {
 
 TEST(ResultTest, ReturnResultByValue) {
   rs_std::Result<uint8_t, uint8_t> res = result::return_result_by_value();
-  EXPECT_TRUE(res.has_value());
+  ASSERT_TRUE(res.has_value());
   EXPECT_EQ(res.value(), 1);
 }
 
@@ -124,7 +124,7 @@ concept HasErr = requires(R& r) { r.err(); };
 TEST(ResultTest, ResultUnitOk) {
   rs_std::Result<rs_std::unit_t, uint8_t> res_ok =
       result::return_result_unit_ok(true);
-  EXPECT_TRUE(res_ok.has_value());
+  ASSERT_TRUE(res_ok.has_value());
   EXPECT_TRUE(result::take_result_unit_ok(res_ok));
   static_assert(!HasValue<rs_std::Result<rs_std::unit_t, uint8_t>>,
                 "Result<unit_t, E>::value() must not be available");
@@ -145,7 +145,7 @@ TEST(ResultTest, ResultUnitOk) {
 TEST(ResultTest, ResultUnitErr) {
   rs_std::Result<uint8_t, rs_std::unit_t> res_ok =
       result::return_result_unit_err(false);
-  EXPECT_TRUE(res_ok.has_value());
+  ASSERT_TRUE(res_ok.has_value());
   EXPECT_EQ(res_ok.value(), 100);
   EXPECT_FALSE(result::take_result_unit_err(res_ok));
 

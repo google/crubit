@@ -146,26 +146,26 @@ TEST(CharTest, ComparisonWithAnotherRsChar) {
   const rs_std::char_ a('a');
   const rs_std::char_ b('b');
 
-  EXPECT_TRUE(a == a);
+  EXPECT_EQ(a, a);
   EXPECT_FALSE(a != a);
-  EXPECT_TRUE(a <= a);
+  EXPECT_LE(a, a);
   EXPECT_FALSE(a < a);
-  EXPECT_TRUE(a >= a);
+  EXPECT_GE(a, a);
   EXPECT_FALSE(a > a);
 
   EXPECT_FALSE(a == b);
-  EXPECT_TRUE(a != b);
-  EXPECT_TRUE(a <= b);
-  EXPECT_TRUE(a < b);
+  EXPECT_NE(a, b);
+  EXPECT_LE(a, b);
+  EXPECT_LT(a, b);
   EXPECT_FALSE(a >= b);
   EXPECT_FALSE(a > b);
 
   EXPECT_FALSE(b == a);
-  EXPECT_TRUE(b != a);
+  EXPECT_NE(b, a);
   EXPECT_FALSE(b <= a);
   EXPECT_FALSE(b < a);
-  EXPECT_TRUE(b >= a);
-  EXPECT_TRUE(b > a);
+  EXPECT_GE(b, a);
+  EXPECT_GT(b, a);
 }
 
 TEST(CharTest, DefaultConstructedValue) {

@@ -4,7 +4,6 @@
 
 #include "cc_bindings_from_rs/test/known_traits/compare/compare.h"
 
-#include <cmath>
 #include <compare>
 #include <limits>
 #include <optional>
@@ -25,13 +24,13 @@ TEST(CompareTest, TestMyPartialOrd) {
   EXPECT_EQ(a <=> c, std::partial_ordering::equivalent);
   EXPECT_EQ(a <=> missing, std::partial_ordering::unordered);
 
-  EXPECT_TRUE(a < b);
-  EXPECT_TRUE(b > a);
-  EXPECT_TRUE(a <= b);
-  EXPECT_TRUE(b >= a);
-  EXPECT_TRUE(a == c);
-  EXPECT_TRUE(a != b);
-  EXPECT_FALSE(a == missing);
+  EXPECT_LT(a, b);
+  EXPECT_GT(b, a);
+  EXPECT_LE(a, b);
+  EXPECT_GE(b, a);
+  EXPECT_EQ(a, c);
+  EXPECT_NE(a, b);
+  EXPECT_NE(a, missing);
 }
 
 TEST(CompareTest, TestMyOrd) {
@@ -43,12 +42,12 @@ TEST(CompareTest, TestMyOrd) {
   EXPECT_EQ(b <=> a, std::strong_ordering::greater);
   EXPECT_EQ(a <=> c, std::strong_ordering::equivalent);
 
-  EXPECT_TRUE(a < b);
-  EXPECT_TRUE(b > a);
-  EXPECT_TRUE(a <= b);
-  EXPECT_TRUE(b >= a);
-  EXPECT_TRUE(a == c);
-  EXPECT_TRUE(a != b);
+  EXPECT_LT(a, b);
+  EXPECT_GT(b, a);
+  EXPECT_LE(a, b);
+  EXPECT_GE(b, a);
+  EXPECT_EQ(a, c);
+  EXPECT_NE(a, b);
 }
 
 TEST(CompareTest, TestMyUnordered) {
@@ -63,7 +62,7 @@ TEST(CompareTest, TestMyUnordered) {
   EXPECT_FALSE(a <= b);
   EXPECT_FALSE(a >= b);
   EXPECT_FALSE(a == b);
-  EXPECT_TRUE(a != b);
+  EXPECT_NE(a, b);
 }
 
 }  // namespace
