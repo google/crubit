@@ -6,7 +6,9 @@ extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;
 
-use crate::adt_core_bindings::{AdtCoreBindings, CopyCtorStyle, MoveCtorStyle, NoMoveOrAssign};
+use crate::adt_core_bindings::{
+    AdtCoreBindings, CopyCodegenStyle, MoveCodegenStyle, NoMoveOrAssign,
+};
 use crate::code_snippet::{
     ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs, RsStdTemplateSpecialization,
 };
@@ -240,27 +242,29 @@ memoized::query_group! {
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:has_default_ctor
       fn has_default_ctor(&self, self_ty: Ty<'tcx>) -> bool;
 
-      /// Returns the style of copy constructor and assignment operator for the given type, if available.
+      /// If we were to generate a C++ copy constructor and assignment operator for a Rust-originating
+      /// type, how would we do it?
       ///
       /// `def_id` is used to determine the typing env of `self_ty`.
       ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:has_copy_ctor_and_assignment_operator
-      fn has_copy_ctor_and_assignment_operator(
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:copy_ctor_and_assignment_operator_codegen_style
+      fn copy_ctor_and_assignment_operator_codegen_style(
           &self,
           def_id: Option<DefId>,
           self_ty: Ty<'tcx>,
-      ) -> Option<CopyCtorStyle>;
+      ) -> Option<CopyCodegenStyle>;
 
-      /// Returns the style of move constructor and assignment operator for the given type, if available.
+      /// If we were to generate a C++ move constructor and assignment operator for a Rust-originating
+      /// type, how would we do it?
       ///
       /// `def_id` is used to determine the typing env of `self_ty`.
       ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:has_move_ctor_and_assignment_operator
-      fn has_move_ctor_and_assignment_operator(
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:move_ctor_and_assignment_operator_codegen_style
+      fn move_ctor_and_assignment_operator_codegen_style(
           &self,
           def_id: Option<DefId>,
           self_ty: Ty<'tcx>,
-      ) -> Option<MoveCtorStyle>;
+      ) -> Option<MoveCodegenStyle>;
 
       /// Generates a default constructor for an ADT if possible (i.e. if the `Default`
       /// trait is implemented for the ADT).  Returns an error otherwise (e.g. if

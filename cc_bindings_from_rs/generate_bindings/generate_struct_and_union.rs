@@ -1599,7 +1599,7 @@ pub(crate) fn is_struct_aggregate<'tcx>(
             // the aggregate would not be movable in C++ and could not be passed or
             // returned by value over FFI. Disqualifying such structs from aggregate
             // generation lets Crubit emit an `UnsafeRelocateTag` constructor instead.
-            if db.has_move_ctor_and_assignment_operator(field_def_id, ty).is_none()
+            if db.move_ctor_and_assignment_operator_codegen_style(field_def_id, ty).is_none()
                 && !is_bridged_type(db, ty).is_ok_and(|b| b.is_some())
             {
                 return Err(NotAggregateReason::FieldWithDropNotMovable(field_def.name));

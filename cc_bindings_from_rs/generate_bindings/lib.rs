@@ -51,7 +51,7 @@ use database::{
     TypeLocation, UnqualifiedName,
 };
 pub use database::{
-    BindingsGenerator, CopyCtorStyle, CppTypeSpecialization, IncludeGuard, MoveCtorStyle,
+    BindingsGenerator, CopyCodegenStyle, CppTypeSpecialization, IncludeGuard, MoveCodegenStyle,
 };
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
 use itertools::Itertools;
@@ -299,8 +299,8 @@ pub fn new_database<'db>(
         format_type::format_ty_for_cc,
         format_type::format_ty_for_rs,
         has_default_ctor,
-        has_copy_ctor_and_assignment_operator,
-        has_move_ctor_and_assignment_operator,
+        copy_ctor_and_assignment_operator_codegen_style,
+        move_ctor_and_assignment_operator_codegen_style,
         generate_default_ctor,
         generate_copy_ctor_and_assignment_operator,
         generate_move_ctor_and_assignment_operator,
@@ -1550,35 +1550,37 @@ fn generate_deleted_default_ctor<'tcx>(
     }
 }
 
-fn has_copy_ctor_and_assignment_operator<'tcx>(
+/// If we were to generate a C++ copy constructor and assignment operator for a Rust-originating
+/// type, how would we do it?
+fn copy_ctor_and_assignment_operator_codegen_style<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: Option<DefId>,
     self_ty: Ty<'tcx>,
-) -> Option<CopyCtorStyle> {
+) -> Option<CopyCodegenStyle> {
     let tcx = db.tcx();
     let clone_trait_id = tcx.lang_items().clone_trait().expect("Can't find the `Clone` trait");
-    CopyCtorStyle::from_available_traits(
+    CopyCodegenStyle::from_available_traits(
         is_copy(tcx, def_id, self_ty),
         does_type_implement_trait(tcx, self_ty, clone_trait_id, []),
     )
 }
 
 /// Implementation detail of `generate_copy_ctor_and_assignment_operator`.
-fn copy_ctor_style_to_snippets<'tcx>(
+fn copy_codegen_style_to_snippets<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
-    copy_ctor_style: Option<CopyCtorStyle>,
+    copy_codegen_style: Option<CopyCodegenStyle>,
 ) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>> {
-    fn fallible_format_copy_ctor_and_assignment_operator<'tcx>(
+    fn fallible_format_copy_codegen_style<'tcx>(
         db: &BindingsGenerator<'tcx>,
         core: Rc<AdtCoreBindings<'tcx>>,
-        copy_ctor_style: Option<CopyCtorStyle>,
+        copy_codegen_style: Option<CopyCodegenStyle>,
     ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
         let cc_struct_name = &core.common.cc_short_name;
         let qualified_adt_name = &core.common.cc_fully_qualified_name;
-        match copy_ctor_style {
-            Some(CopyCtorStyle::Copy) => {
+        match copy_codegen_style {
+            Some(CopyCodegenStyle::Copy) => {
                 let msg = "Rust types that are `Copy` get trivial, `default` C++ copy constructor \
                         and assignment operator.";
                 let main_api = CcSnippet::new(quote! {
@@ -1596,7 +1598,7 @@ fn copy_ctor_style_to_snippets<'tcx>(
 
                 Ok(ApiSnippets { main_api, cc_details, rs_details: RsSnippet::default() })
             }
-            Some(CopyCtorStyle::Clone) => {
+            Some(CopyCodegenStyle::Clone) => {
                 let trait_id = tcx
                     .lang_items()
                     .clone_trait()
@@ -1671,20 +1673,18 @@ fn copy_ctor_style_to_snippets<'tcx>(
             }
         }
     }
-    fallible_format_copy_ctor_and_assignment_operator(db, core.clone(), copy_ctor_style).map_err(
-        |err| {
-            let msg = format!("{err:#}");
-            let adt_cc_name = &core.common.cc_short_name;
-            ApiSnippets {
-                main_api: CcSnippet::new(quote! {
-                    __NEWLINE__ __COMMENT__ #msg
-                    #adt_cc_name(const #adt_cc_name&) = delete;  __NEWLINE__
-                    #adt_cc_name& operator=(const #adt_cc_name&) = delete;
-                }),
-                ..Default::default()
-            }
-        },
-    )
+    fallible_format_copy_codegen_style(db, core.clone(), copy_codegen_style).map_err(|err| {
+        let msg = format!("{err:#}");
+        let adt_cc_name = &core.common.cc_short_name;
+        ApiSnippets {
+            main_api: CcSnippet::new(quote! {
+                __NEWLINE__ __COMMENT__ #msg
+                #adt_cc_name(const #adt_cc_name&) = delete;  __NEWLINE__
+                #adt_cc_name& operator=(const #adt_cc_name&) = delete;
+            }),
+            ..Default::default()
+        }
+    })
 }
 
 /// Implementation of `BindingsGenerator::generate_copy_ctor_and_assignment_operator`.
@@ -1692,46 +1692,48 @@ fn generate_copy_ctor_and_assignment_operator<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>> {
-    let copy_ctor_style =
-        db.has_copy_ctor_and_assignment_operator(core.def_id, core.common.self_ty);
-    copy_ctor_style_to_snippets(db, core, copy_ctor_style)
+    let copy_codegen_style =
+        db.copy_ctor_and_assignment_operator_codegen_style(core.def_id, core.common.self_ty);
+    copy_codegen_style_to_snippets(db, core, copy_codegen_style)
 }
 
-fn has_move_ctor_and_assignment_operator<'tcx>(
+/// If we were to generate a C++ move constructor and assignment operator for a Rust-originating
+/// type, how would we do it?
+fn move_ctor_and_assignment_operator_codegen_style<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: Option<DefId>,
     self_ty: Ty<'tcx>,
-) -> Option<MoveCtorStyle> {
+) -> Option<MoveCodegenStyle> {
     let tcx = db.tcx();
     let typing_env = def_id
         .map(|id| post_analysis_typing_env(tcx, id))
         .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
-    MoveCtorStyle::from_available_traits(
+    MoveCodegenStyle::from_available_traits(
         !self_ty.needs_drop(tcx, typing_env),
         db.has_default_ctor(self_ty),
         self_ty.is_unpin(tcx, typing_env),
-        db.has_copy_ctor_and_assignment_operator(def_id, self_ty).is_some(),
+        db.copy_ctor_and_assignment_operator_codegen_style(def_id, self_ty).is_some(),
     )
 }
 
 /// Implementation of `BindingsGenerator::generate_move_ctor_and_assignment_operator`.
 #[allow(clippy::result_large_err)]
-fn move_ctor_style_to_snippets<'tcx>(
+fn move_codegen_style_to_snippets<'tcx>(
     db: &BindingsGenerator<'tcx>,
     common: &CoreBindingsCommon<'tcx>,
-    move_ctor_style: Option<MoveCtorStyle>,
+    move_codegen_style: Option<MoveCodegenStyle>,
 ) -> Result<ApiSnippets<'tcx>, NoMoveOrAssign<'tcx>> {
-    fn fallible_format_move_ctor_and_assignment_operator<'tcx>(
+    fn fallible_format_move_codegen_style<'tcx>(
         db: &BindingsGenerator<'tcx>,
         common: &CoreBindingsCommon<'tcx>,
-        move_ctor_style: Option<MoveCtorStyle>,
+        move_codegen_style: Option<MoveCodegenStyle>,
     ) -> Result<ApiSnippets<'tcx>> {
         let adt_cc_name = &common.cc_short_name;
         let qualified_adt_name = &common.cc_fully_qualified_name;
-        match move_ctor_style {
+        match move_codegen_style {
             // We rely on the copy constructor and assignment operator to handle the move
             // operations.
-            Some(MoveCtorStyle::Copy) => Ok(ApiSnippets::default()),
+            Some(MoveCodegenStyle::Copy) => Ok(ApiSnippets::default()),
             None => {
                 bail!(
                     "C++ move operations are unavailable for this type. See \
@@ -1739,7 +1741,7 @@ fn move_ctor_style_to_snippets<'tcx>(
                     movable."
                 );
             }
-            Some(MoveCtorStyle::MemSwap) => {
+            Some(MoveCodegenStyle::MemSwap) => {
                 let main_api = CcSnippet::new(quote! {
                     #adt_cc_name(#adt_cc_name&&); __NEWLINE__
                     #qualified_adt_name& operator=(#adt_cc_name&&); __NEWLINE__
@@ -1760,7 +1762,7 @@ fn move_ctor_style_to_snippets<'tcx>(
                 let cc_details = CcSnippet { tokens, prereqs };
                 Ok(ApiSnippets { main_api, cc_details, ..Default::default() })
             }
-            Some(MoveCtorStyle::Default) => {
+            Some(MoveCodegenStyle::Default) => {
                 let main_api = CcSnippet::new(quote! {
                     // The generated bindings have to follow Rust move semantics:
                     // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
@@ -1805,7 +1807,7 @@ fn move_ctor_style_to_snippets<'tcx>(
             }
         }
     }
-    fallible_format_move_ctor_and_assignment_operator(db, common, move_ctor_style).map_err(|err| {
+    fallible_format_move_codegen_style(db, common, move_codegen_style).map_err(|err| {
         let msg = format!("{err:#}");
         let adt_cc_name = &common.cc_short_name;
         let qualified_adt_name = &common.cc_fully_qualified_name;
@@ -1829,9 +1831,9 @@ fn generate_move_ctor_and_assignment_operator<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
 ) -> Result<ApiSnippets<'tcx>, NoMoveOrAssign<'tcx>> {
-    let move_ctor_style =
-        db.has_move_ctor_and_assignment_operator(core.def_id, core.common.self_ty);
-    move_ctor_style_to_snippets(db, &core.common, move_ctor_style)
+    let move_codegen_style =
+        db.move_ctor_and_assignment_operator_codegen_style(core.def_id, core.common.self_ty);
+    move_codegen_style_to_snippets(db, &core.common, move_codegen_style)
 }
 
 /// Formats the forward declaration of an algebraic data type (an ADT - a

@@ -104,58 +104,62 @@ pub struct NoMoveOrAssign<'tcx> {
     pub explicitly_deleted: ApiSnippets<'tcx>,
 }
 
-/// The style of copy constructor and assignment operator to generate for an ADT.
+/// If we were to generate a C++ copy constructor and assignment operator for a
+/// Rust-originating type, how would we do it?
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum CopyCtorStyle {
-    // The type is copy and can use the default C++ copy constructor and assignment operator.
+pub enum CopyCodegenStyle {
+    // The Rust type implements `Copy`. Crubit generates trivial `= default;`
     Copy,
-    // The type is clone and needs to call a clone thunk in the copy constructor and assignment
-    // operator.
+    // The Rust type implements `Clone`. Crubit generates a C++ copy constructor
+    // and assignment operator that invoke Rust `Clone::clone` and `Clone::clone_from` thunks.
     Clone,
 }
 
-impl CopyCtorStyle {
-    /// Returns a `CopyCtorStyle` based on what combination of Copy and Clone the type implements.
+impl CopyCodegenStyle {
+    /// Returns a `CopyCodegenStyle` based on what combination of `Copy` and `Clone` the type
+    /// implements.
     pub fn from_available_traits(implements_copy: bool, implements_clone: bool) -> Option<Self> {
         if implements_copy {
-            Some(CopyCtorStyle::Copy)
+            Some(CopyCodegenStyle::Copy)
         } else if implements_clone {
-            Some(CopyCtorStyle::Clone)
+            Some(CopyCodegenStyle::Clone)
         } else {
             None
         }
     }
 }
 
-// The style of move constructor and assignment operator to generate for an ADT.
+/// If we were to generate a C++ move constructor and assignment operator for a Rust-originating
+/// type, how would we do it?
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum MoveCtorStyle {
-    // The type does not require drop glue and can be moved by the default C++ move constructor and
-    // assignment operator.
+pub enum MoveCodegenStyle {
+    // The Rust type does not require drop glue (`!needs_drop`). Crubit generates trivial
+    // `= default;` C++ move constructor and move-assignment operator.
     Default,
-    // The type is Default (and Unpin) and can be moved using MemSwap and std::move.
+    // The Rust type implements `Default` and `Unpin`. Crubit generates a C++ move constructor and
+    // move-assignment operator that move the value out by swapping with `Default::default()`.
     MemSwap,
-    // The type cannot be moved but has a copy constructor and assignment operator that are used in
-    // lieu of the move constructor and assignment operator.
+    // The Rust type cannot be moved but has a copy constructor and assignment operator that are
+    // used in lieu of the move constructor and assignment operator.
     Copy,
 }
 
-impl MoveCtorStyle {
-    /// Returns a `MoveCtorStyle` based on what combination of Default, Unpin, Copy, and Clone the
-    /// type implements.
+impl MoveCodegenStyle {
+    /// Returns a `MoveCodegenStyle` based on what combination of Default, Unpin, Copy, and Clone
+    /// the type implements.
     pub fn from_available_traits(
         does_not_need_drop: bool,
         has_default_ctor: bool,
         is_unpin: bool,
-        has_copy_ctor_and_assignment_operator: bool,
+        has_copy_codegen_style: bool,
     ) -> Option<Self> {
         // If our type has no drop glue we can use the default move constructor and assignment operator.
         if does_not_need_drop {
-            Some(MoveCtorStyle::Default)
+            Some(MoveCodegenStyle::Default)
         } else if has_default_ctor && is_unpin {
-            Some(MoveCtorStyle::MemSwap)
-        } else if has_copy_ctor_and_assignment_operator {
-            Some(MoveCtorStyle::Copy)
+            Some(MoveCodegenStyle::MemSwap)
+        } else if has_copy_codegen_style {
+            Some(MoveCodegenStyle::Copy)
         } else {
             None
         }

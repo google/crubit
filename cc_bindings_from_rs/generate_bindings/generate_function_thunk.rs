@@ -171,7 +171,7 @@ pub fn generate_thunk_decl<'tcx>(
                     } else {
                         Some(adt_def.did())
                     };
-                    db.has_move_ctor_and_assignment_operator(def_id, ty).ok_or_else(|| {
+                    db.move_ctor_and_assignment_operator_codegen_style(def_id, ty).ok_or_else(|| {
                         anyhow!("Can't pass type `{ty}` by value without a move constructor. See crubit.rs/rust/movable_types for what types are C++ movable.")
                     })?;
                     Ok(quote! { #cpp_type* })

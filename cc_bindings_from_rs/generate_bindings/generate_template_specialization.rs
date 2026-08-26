@@ -678,7 +678,7 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
         };
 
         let all_elements_cpp_movable = self.element_tys.iter().all(|element| {
-            self.db.has_move_ctor_and_assignment_operator(None, element.ty).is_some()
+            self.db.move_ctor_and_assignment_operator_codegen_style(None, element.ty).is_some()
         });
 
         let (std_tuple_main_api_ctor, std_tuple_main_api_conv, std_tuple_cc_details) =

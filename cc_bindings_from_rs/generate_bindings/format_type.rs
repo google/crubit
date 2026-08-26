@@ -536,7 +536,7 @@ pub fn format_ty_for_cc<'tcx>(
 
             if location.is_bridgeable() && is_c_abi_compatible_by_value(db, ty) {
                 ensure!(
-                    db.has_move_ctor_and_assignment_operator(
+                    db.move_ctor_and_assignment_operator_codegen_style(
                         Some(adt.did()),
                         ty,
                     )
@@ -1397,7 +1397,10 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 if let Some(spec) = db.parse_rs_std_template_specialization(ty) {
                     // Specifically when embedding a template specialization within an Option, we
                     // need it to be movable.
-                    if !db.has_move_ctor_and_assignment_operator(Some(adt.did()), ty).is_some() {
+                    if !db
+                        .move_ctor_and_assignment_operator_codegen_style(Some(adt.did()), ty)
+                        .is_some()
+                    {
                         bail!(
                             "Failed to construct CrubitAbiType for {ty} because it is not movable."
                         );
@@ -1420,7 +1423,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
 
                 let tcx = db.tcx();
                 ensure!(
-                    db.has_move_ctor_and_assignment_operator(
+                    db.move_ctor_and_assignment_operator_codegen_style(
                         Some(adt.did()),
                         crate::normalize_ty(tcx, tcx.param_env(adt.did()), tcx.type_of(adt.did()).instantiate(tcx, substs))
                     ).is_some(),

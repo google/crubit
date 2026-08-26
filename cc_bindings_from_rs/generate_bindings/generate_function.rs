@@ -434,7 +434,7 @@ fn cc_return_value_from_c_abi<'tcx>(
             } else {
                 Some(adt_def.did())
             };
-            if db.has_move_ctor_and_assignment_operator(def_id, ty).is_none() {
+            if db.move_ctor_and_assignment_operator_codegen_style(def_id, ty).is_none() {
                 bail!("Can't return type `{ty}` by value inside a compound data type without a move constructor");
             }
         }
