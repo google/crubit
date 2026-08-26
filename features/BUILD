@@ -156,6 +156,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling generating the layout-compatible string type everywhere.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "layout_compat_string",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["layout_compat_string"],
+    visibility = ["//visibility:public"],
+)
+
 # A feature set enabling specialization of standard library generics (like Option/Result)
 # everywhere instead of composable bridging. This flag only impacts cpp_api_from_rust users,
 # and has no impact on rust_api_from_cpp users.

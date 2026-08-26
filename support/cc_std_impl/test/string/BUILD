@@ -39,3 +39,26 @@ crubit_rust_test(
         "@crate_index//:rstest",  # v0_16
     ],
 )
+
+crubit_test_cc_library(
+    name = "test_helpers_with_layout_compat_string",
+    testonly = 1,
+    hdrs = ["test_helpers.h"],
+    aspect_hints = ["//features:layout_compat_string"],
+    deps = ["//support:annotations"],
+)
+
+crubit_rust_test(
+    name = "test_layout_compat_feature",
+    srcs = ["test_layout_compat_feature.rs"],
+    cc_deps = [
+        ":test_helpers_with_layout_compat_string",
+    ],
+    deps = [
+        "//support:cpp_std",
+        "//support:cref",
+        "//support:ctor",
+        "@crate_index//:googletest",
+        "@crate_index//:rstest",  # v0_16
+    ],
+)

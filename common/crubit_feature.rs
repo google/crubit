@@ -56,6 +56,9 @@ flagset::flags! {
         /// Emit `rs_std::Tuple` everywhere instead of C++ `std::tuple`.
         LayoutCompatTuple,
 
+        /// Emit layout-compatible `std::string` everywhere instead of `string_wrapper`.
+        LayoutCompatString,
+
         /// Always specialize generics in cpp_api_from_rust, instead of doing composable bridging
         /// when possible.
         AlwaysSpecializeGenericsInCppApiFromRust,
@@ -101,6 +104,7 @@ impl CrubitFeature {
             Self::LeadingColonsForCppType => "leading_colons_for_cpp_type",
             Self::TemplateInstantiation => "template_instantiation",
             Self::LayoutCompatTuple => "layout_compat_tuple",
+            Self::LayoutCompatString => "layout_compat_string",
             Self::AlwaysSpecializeGenericsInCppApiFromRust => {
                 "always_specialize_generics_in_cpp_api_from_rust"
             }
@@ -137,6 +141,7 @@ impl CrubitFeature {
             }
             Self::TemplateInstantiation => "//features:template_instantiation",
             Self::LayoutCompatTuple => "//features:layout_compat_tuple",
+            Self::LayoutCompatString => "//features:layout_compat_string",
             Self::AlwaysSpecializeGenericsInCppApiFromRust => {
                 "//features:always_specialize_generics_in_cpp_api_from_rust"
             }
@@ -161,6 +166,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::NoAssumeLifetimes
                 - CrubitFeature::NoTemplateInstantiation
                 - CrubitFeature::LayoutCompatTuple
+                - CrubitFeature::LayoutCompatString
                 - CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
                 - CrubitFeature::OoCasting
         }
@@ -178,6 +184,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"leading_colons_for_cpp_type" => CrubitFeature::LeadingColonsForCppType.into(),
         b"template_instantiation" => CrubitFeature::TemplateInstantiation.into(),
         b"layout_compat_tuple" => CrubitFeature::LayoutCompatTuple.into(),
+        b"layout_compat_string" => CrubitFeature::LayoutCompatString.into(),
         b"always_specialize_generics_in_cpp_api_from_rust" => {
             CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust.into()
         }

@@ -989,7 +989,10 @@ impl<'a> BridgeRsTypeKind<'a> {
             BridgeType::StdString => {
                 let in_cc_std = db.ir().is_current_target(record.owning_target())
                     && record.owning_target().target_name_escaped() == "cc_std";
-                let layout_compatible = false;
+                let layout_compatible = db
+                    .ir()
+                    .target_crubit_features(db.ir().current_target())
+                    .contains(CrubitFeature::LayoutCompatString);
                 BridgeRsTypeKind::StdString { in_cc_std, layout_compatible }
             }
             BridgeType::Callable { backing_type, fn_trait, return_type, param_types } => {

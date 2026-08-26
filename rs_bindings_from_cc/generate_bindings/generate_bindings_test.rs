@@ -1619,3 +1619,69 @@ fn test_nested_ir_end_to_end() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_std_string_without_layout_compat_feature() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        "void takes_string_by_value(std::string s);",
+        r#"
+        namespace std {
+            template <typename T> struct char_traits {};
+            template <typename T> struct allocator {};
+            template <typename CharT, typename Traits = char_traits<CharT>, typename Alloc = allocator<CharT>>
+            class basic_string {};
+            using string = basic_string<char>;
+        }
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_string_by_value(
+                s: ::cc_std::std::string_wrapper
+            )
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_std_string_with_layout_compat_feature() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        "void takes_string_by_value(std::string s); void takes_string_ref(const std::string& s);",
+        r#"
+        namespace std {
+            template <typename T> struct char_traits {};
+            template <typename T> struct allocator {};
+            template <typename CharT, typename Traits = char_traits<CharT>, typename Alloc = allocator<CharT>>
+            class basic_string {};
+            using string = basic_string<char>;
+        }
+        "#,
+    )?;
+    let mut ir = make_test_ir_dependency(&proto, None)?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::LayoutCompatString;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_string_by_value(
+                s: ::ctor::Ctor![::cc_std::std::string]
+            )
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn takes_string_ref(
+                s: *const ::cc_std::std::string
+            )
+        }
+    );
+    Ok(())
+}
