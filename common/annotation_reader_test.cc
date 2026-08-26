@@ -45,6 +45,18 @@ T& LookupDecl(clang::ASTContext& context, absl::string_view name) {
   return *cast<T>(result.front());
 }
 
+// Returns a matcher that can be used with `EXPECT_THAT` to check the result of
+// `GetExprAsBool` for a given matcher.
+inline auto MakeExprAsBoolMatcher(const clang::ASTContext& ast_context) {
+  return [&ast_context](auto matcher) {
+    return ResultOf(
+        [&ast_context](const clang::Expr& expr) {
+          return GetExprAsBool(expr, ast_context);
+        },
+        matcher);
+  };
+}
+
 TEST(AnnotationReaderTest, GetAnnotateAttrArgsSuccess) {
   clang::TestAST ast(R"cc(
     [[clang::annotate("foo")]] int i;
@@ -284,14 +296,12 @@ TEST(AnnotationReaderTest, GetExprAsBoolSuccess) {
   )cc");
 
   auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
-  auto as_bool = [&](const clang::Expr* expr) {
-    return GetExprAsBool(*expr, ast.context());
-  };
+  auto expr_as_bool = MakeExprAsBoolMatcher(ast.context());
 
   EXPECT_THAT(GetAnnotateAttrArgs(var, "foo"),
               IsOkAndHolds(Optional(
-                  ElementsAre(ResultOf(as_bool, IsOkAndHolds(true)),
-                              ResultOf(as_bool, IsOkAndHolds(false))))));
+                  ElementsAre(Pointee(expr_as_bool(IsOkAndHolds(true))),
+                              Pointee(expr_as_bool(IsOkAndHolds(false)))))));
 }
 
 TEST(AnnotationReaderTest, GetExprAsBoolRejectsNonBooleanTypes) {
@@ -301,21 +311,17 @@ TEST(AnnotationReaderTest, GetExprAsBoolRejectsNonBooleanTypes) {
 
   auto& var = LookupDecl<clang::VarDecl>(ast.context(), "i");
   auto* attr = var.getAttr<clang::AnnotateAttr>();
-  ASSERT_NE(attr, nullptr);
+  ASSERT_THAT(attr, NotNull());
 
-  auto as_bool = [&](const clang::Expr* expr) {
-    return GetExprAsBool(*expr, ast.context());
-  };
+  auto expr_as_bool = MakeExprAsBoolMatcher(ast.context());
 
   EXPECT_THAT(
       absl::MakeSpan(attr->args_begin(), attr->args_end()),
-      AllOf(SizeIs(4),
-            Each(ResultOf(
-                as_bool,
-                StatusIs(
-                    absl::StatusCode::kInvalidArgument,
-                    HasSubstr(
-                        "annotation expression must evaluate to a bool"))))));
+      AllOf(
+          SizeIs(4),
+          Each(Pointee(expr_as_bool(StatusIs(
+              absl::StatusCode::kInvalidArgument,
+              HasSubstr("annotation expression must evaluate to a bool")))))));
 }
 
 TEST(AnnotationReaderTest, ConsistentAnnotationsWithTypedefType) {
