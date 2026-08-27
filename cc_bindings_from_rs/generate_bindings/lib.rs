@@ -72,7 +72,7 @@ use rustc_span::symbol::{sym, Symbol};
 use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::{self, Display, Formatter};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 /// Implementation of `BindingsGenerator::support_header`.
@@ -80,16 +80,82 @@ fn support_header<'tcx>(db: &BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcIn
     CcInclude::support_lib_header(db.crubit_support_path_format(), suffix.into())
 }
 
+pub(crate) fn is_in_ignore_symbols_from_files<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+) -> bool {
+    let def_span = db.tcx().def_span(def_id);
+    let filepath = db.tcx().sess.source_map().span_to_filename(def_span);
+    let file_name = filepath.prefer_local_unconditionally().to_string();
+    let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
+    db.ignore_symbols_from_files().contains(Path::new(file_name))
+}
+
 pub(crate) fn should_receive_bindings<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> bool {
     let attributes = crubit_attr::get_attrs(db.tcx(), def_id).unwrap_or_default();
     if attributes.do_not_bind {
         return false;
     }
-    let def_span = db.tcx().def_span(def_id);
-    let filepath = db.tcx().sess.source_map().span_to_filename(def_span);
-    let file_name = filepath.prefer_local_unconditionally().to_string();
-    let file_name = file_name.strip_prefix("./").unwrap_or(file_name.as_str());
-    !db.ignore_symbols_from_files().contains(&PathBuf::from(file_name))
+    !is_in_ignore_symbols_from_files(db, def_id)
+}
+
+fn check_unbindable_type(db: &BindingsGenerator, def_id: DefId) {
+    let tcx = db.tcx();
+    let def_kind = tcx.def_kind(def_id);
+    if !matches!(def_kind, DefKind::Struct | DefKind::Enum | DefKind::Union) {
+        return;
+    }
+    if is_in_ignore_symbols_from_files(db, def_id) {
+        let attrs = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
+        if !attrs.allow_unbindable_type {
+            let def_span = tcx.def_span(def_id);
+            let type_name = tcx.def_path_str(def_id);
+            let mut diag = tcx.dcx().struct_span_warn(
+                def_span,
+                format!("type `{type_name}` defined in the `srcs` of a `rust_api_from_cpp` target will not receive C++ bindings"),
+            );
+            diag.note(
+                "types defined in the `srcs` files of `rust_api_from_cpp` targets won't receive C++ bindings; \
+                consider defining types inside a separate target and adding it as a dep of the `rust_api_from_cpp` target",
+            );
+            diag.emit();
+        }
+    }
+}
+
+fn warn_unbindable_types(db: &BindingsGenerator) {
+    if db.ignore_symbols_from_files().is_empty() {
+        return;
+    }
+    let tcx = db.tcx();
+    let mut checked_def_ids = HashSet::new();
+
+    // Check all public definitions across all reachable crates.
+    for def_id in db.all_public_paths_by_def_id().into_keys() {
+        checked_def_ids.insert(def_id);
+        check_unbindable_type(db, def_id);
+    }
+
+    // Traverse all items in the source crate (including private ones) starting from the crate root.
+    let root_def_id = db.source_crate_num().as_def_id();
+    let mut modules_to_visit = vec![root_def_id];
+    let mut visited_modules = HashSet::new();
+    visited_modules.insert(root_def_id);
+
+    while let Some(mod_def_id) = modules_to_visit.pop() {
+        for child in module_children(tcx, mod_def_id) {
+            if let Some(child_def_id) =
+                child.res.opt_def_id().filter(|id| id.krate == db.source_crate_num())
+            {
+                if checked_def_ids.insert(child_def_id) {
+                    check_unbindable_type(db, child_def_id);
+                }
+                if child.res.mod_def_id().is_some() && visited_modules.insert(child_def_id) {
+                    modules_to_visit.push(child_def_id);
+                }
+            }
+        }
+    }
 }
 
 pub struct BindingsTokens {
@@ -318,6 +384,7 @@ pub fn new_database<'db>(
 }
 
 pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
+    warn_unbindable_types(db);
     let tcx = db.tcx();
 
     let top_comment = {
@@ -557,7 +624,7 @@ fn public_paths_by_def_id(
                     && args.iter().zip(alias_generics.own_params.iter()).all(|(arg, param)| {
                         // We want to explicitly check not only that our kind matches up but also
                         // that our underlying type is using the same parameter types in the same
-                        // order. This prevents things like `type AtomicPtr<T> = Atomic<*mut T>` 
+                        // order. This prevents things like `type AtomicPtr<T> = Atomic<*mut T>`
                         // from being considered a public path for Atomic despite being semantically
                         // distinct.
                         match (arg.kind(), &param.kind) {

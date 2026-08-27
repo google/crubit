@@ -458,3 +458,21 @@ pub fn field_drop_order_does_not_matter(attribute: TokenStream, input: TokenStre
         key_value_to_doc_comment("field_drop_order_does_not_matter", "")
     })
 }
+
+/// The `#[crubit_annotate::allow_unbindable_type]` attribute suppresses the warning
+/// on types defined in the `srcs` of a `rust_api_from_cpp` target that will not receive C++ bindings.
+#[proc_macro_attribute]
+pub fn allow_unbindable_type(attribute: TokenStream, input: TokenStream) -> TokenStream {
+    make_prefix_for(input, || {
+        if let Some(token) = attribute.into_iter().next() {
+            return TokenStream::from(
+                syn::Error::new(
+                    token.span().into(),
+                    "The `allow_unbindable_type` annotation does not accept any arguments.",
+                )
+                .into_compile_error(),
+            );
+        }
+        key_value_to_doc_comment("allow_unbindable_type", "")
+    })
+}

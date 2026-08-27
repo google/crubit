@@ -43,3 +43,6 @@ struct ThreadSafe {}
 
 #[crubit_annotate::field_drop_order_does_not_matter]
 struct FieldDropOrderDoesNotMatter {}
+
+#[crubit_annotate::allow_unbindable_type]
+struct AllowUnbindableType {}

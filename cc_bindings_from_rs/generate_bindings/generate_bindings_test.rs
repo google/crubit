@@ -11,9 +11,11 @@ use quote::quote;
 use run_compiler_test_support::run_compiler_for_testing;
 use rustc_span::symbol::Symbol;
 use test_helpers::{
-    bindings_db_for_tests, test_format_item, test_format_item_with_features,
-    test_generated_bindings, test_generated_bindings_with_namespace,
+    bindings_db_for_tests, bindings_db_for_tests_with_ignore_symbols_from_files, test_format_item,
+    test_format_item_with_features, test_generated_bindings,
+    test_generated_bindings_with_namespace,
 };
+
 use token_stream_matchers::{
     assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
 };
@@ -2235,5 +2237,114 @@ fn test_const_non_aggregate_struct_fails() {
             cc_api,
             quote! { static constexpr ::rust_out::NonAggregate NON_AGG }
         );
+    });
+}
+
+#[test]
+fn test_unbindable_types_warning() {
+    let test_src = r#"
+            pub struct SomeStruct {
+                pub x: i32,
+            }
+
+            pub enum SomeEnum {
+                A,
+            }
+
+            pub union SomeUnion {
+                pub a: i32,
+            }
+
+            pub type SomeType = i32;
+
+            pub fn some_fn() {}
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let mut ignore_files = std::collections::HashSet::new();
+        ignore_files.insert(std::path::PathBuf::from("<crubit_unittests.rs>"));
+        let db = bindings_db_for_tests_with_ignore_symbols_from_files(tcx, ignore_files);
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+
+        // Ignored types/symbols shouldn't receive C++ bindings.
+        assert!(!bindings.cc_api.to_string().contains("SomeStruct"));
+        assert!(!bindings.cc_api.to_string().contains("SomeEnum"));
+        assert!(!bindings.cc_api.to_string().contains("SomeUnion"));
+        assert!(!bindings.cc_api.to_string().contains("SomeType"));
+        assert!(!bindings.cc_api.to_string().contains("some_fn"));
+    });
+}
+
+#[test]
+fn test_allow_unbindable_type_suppresses_warning() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            pub struct SomeStruct {
+                pub x: i32,
+            }
+
+            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            pub enum SomeEnum {
+                A,
+            }
+
+            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            pub union SomeUnion {
+                pub a: i32,
+            }
+
+            pub type SomeType = i32;
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let mut ignore_files = std::collections::HashSet::new();
+        ignore_files.insert(std::path::PathBuf::from("<crubit_unittests.rs>"));
+        let db = bindings_db_for_tests_with_ignore_symbols_from_files(tcx, ignore_files);
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+
+        assert!(!bindings.cc_api.to_string().contains("SomeStruct"));
+        assert!(!bindings.cc_api.to_string().contains("SomeEnum"));
+        assert!(!bindings.cc_api.to_string().contains("SomeUnion"));
+        assert!(!bindings.cc_api.to_string().contains("SomeType"));
+    });
+}
+
+#[test]
+fn test_unbindable_types_warning_on_private_defs() {
+    let test_src = r#"
+            #![allow(dead_code)]
+
+            struct PrivateStruct {
+                x: i32,
+            }
+
+            enum PrivateEnum {
+                A,
+            }
+
+            union PrivateUnion {
+                a: i32,
+            }
+
+            mod inner {
+                struct NestedPrivateStruct {
+                    y: i32,
+                }
+
+                #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+                struct AnnotatedNestedPrivateStruct {
+                    z: i32,
+                }
+            }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let mut ignore_files = std::collections::HashSet::new();
+        ignore_files.insert(std::path::PathBuf::from("<crubit_unittests.rs>"));
+        let db = bindings_db_for_tests_with_ignore_symbols_from_files(tcx, ignore_files);
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+
+        assert!(!bindings.cc_api.to_string().contains("PrivateStruct"));
+        assert!(!bindings.cc_api.to_string().contains("PrivateEnum"));
+        assert!(!bindings.cc_api.to_string().contains("PrivateUnion"));
+        assert!(!bindings.cc_api.to_string().contains("NestedPrivateStruct"));
+        assert!(!bindings.cc_api.to_string().contains("AnnotatedNestedPrivateStruct"));
     });
 }

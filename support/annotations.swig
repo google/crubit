@@ -34,3 +34,5 @@
 %enddef
 %define CRUBIT_ALWAYS_INSTANTIATE
 %enddef
+%define CRUBIT_ALLOW_UNBINDABLE_TYPE
+%enddef

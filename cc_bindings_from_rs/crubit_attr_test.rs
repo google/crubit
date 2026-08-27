@@ -191,7 +191,6 @@ fn test_field_drop_order_does_not_matter_invalid_on_fn() {
         );
     });
 }
-
 #[test]
 fn test_cpp_smf_attributes() {
     let test_src = r#"
@@ -207,5 +206,59 @@ fn test_cpp_smf_attributes() {
             ..Default::default()
         };
         assert_eq!(attrs, expected_attrs);
+    });
+}
+
+#[test]
+fn test_allow_unbindable_type() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            pub struct SomeStruct;
+
+            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            pub enum SomeEnum {}
+
+            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            pub union SomeUnion {
+                pub a: i32,
+            }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        for name in ["SomeStruct", "SomeEnum", "SomeUnion"] {
+            let attrs = attrs_for_named_def(tcx, name).unwrap();
+            let mut expected_attrs = CrubitAttrs::default();
+            expected_attrs.allow_unbindable_type = true;
+            assert_eq!(attrs, expected_attrs, "Failed for {name}");
+        }
+    });
+}
+
+#[test]
+fn test_allow_unbindable_type_invalid_on_type_alias() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            pub type SomeType = i32;
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let err = attrs_for_named_def(tcx, "SomeType").unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "`allow_unbindable_type` is only permitted on structs, enums, and unions"
+        );
+    });
+}
+
+#[test]
+fn test_allow_unbindable_type_invalid_on_fn() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
+            pub fn foo() {}
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let err = attrs_for_named_def(tcx, "foo").unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "`allow_unbindable_type` is only permitted on structs, enums, and unions"
+        );
     });
 }

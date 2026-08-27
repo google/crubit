@@ -420,4 +420,9 @@
       crubit_bind_instantiation_, __COUNTER__) CRUBIT_ALWAYS_INSTANTIATE = tp; \
   }
 
+// Suppresses the warning on types defined in the `srcs` of a
+// `rust_api_from_cpp` target that will not receive C++ bindings.
+#define CRUBIT_ALLOW_UNBINDABLE_TYPE \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_allow_unbindable_type")
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_ANNOTATIONS_H_

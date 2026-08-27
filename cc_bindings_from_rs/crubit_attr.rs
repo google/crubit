@@ -131,6 +131,10 @@ pub struct CrubitAttrs {
 
     /// Whether the annotated struct's fields can be dropped in reverse order (e.g. from C++).
     pub field_drop_order_does_not_matter: bool,
+
+    /// Whether the annotated item opts out of the warning on types defined in an
+    /// `additional_rust_srcs` file that will not receive C++ bindings.
+    pub allow_unbindable_type: bool,
 }
 
 impl CrubitAttrs {
@@ -149,6 +153,7 @@ impl CrubitAttrs {
     pub const CPP_MOVE_CONSTRUCTIBLE: &'static str = "cpp_move_constructible";
     pub const DO_NOT_BIND: &'static str = "do_not_bind";
     pub const FIELD_DROP_ORDER_DOES_NOT_MATTER: &'static str = "field_drop_order_does_not_matter";
+    pub const ALLOW_UNBINDABLE_TYPE: &'static str = "allow_unbindable_type";
 
     fn add_attr(&mut self, name: &str, symbol: Symbol) -> Result<()> {
         let set_opt_once = |slot: &mut Option<Symbol>, symbol: Symbol| -> Result<()> {
@@ -185,6 +190,7 @@ impl CrubitAttrs {
             CrubitAttrs::FIELD_DROP_ORDER_DOES_NOT_MATTER => {
                 set_bool_once(&mut self.field_drop_order_does_not_matter)?
             }
+            CrubitAttrs::ALLOW_UNBINDABLE_TYPE => set_bool_once(&mut self.allow_unbindable_type)?,
             _ => bail!("Invalid CRUBIT_ANNOTATE key: \"{name}\""),
         }
         Ok(())
@@ -382,6 +388,12 @@ pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
         ensure!(
             matches!(tcx.def_kind(did), DefKind::Struct),
             "`field_drop_order_does_not_matter` is only permitted on structs"
+        )
+    }
+    if crubit_attrs.allow_unbindable_type {
+        ensure!(
+            matches!(tcx.def_kind(did), DefKind::Struct | DefKind::Enum | DefKind::Union),
+            "`allow_unbindable_type` is only permitted on structs, enums, and unions"
         )
     }
     Ok(crubit_attrs)
