@@ -82,7 +82,7 @@ fn parse_unit_in_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
 ) -> Option<Result<FormattedTy<'tcx>>> {
-    matches!(ty.kind(), ty::TyKind::Tuple(types) if types.is_empty()).then(|| {
+    ty.is_unit().then(|| {
         let for_rs = db.format_ty_for_rs(ty)?;
         Ok(FormattedTy {
             for_cc: CcSnippet::with_include(
@@ -779,16 +779,11 @@ fn specialize_tuple<'tcx>(
     .collect();
 
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
-    let qualified_name = cc_fully_qualified_name.to_string();
-    let name = escape_non_identifier_chars(&qualified_name);
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
     let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
 
     let main_api_tokens = quote! {
-        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
-        __HASH_TOKEN__ define #guard_name __NEWLINE__
         template<> __NEWLINE__
         struct alignas(#align_literal)
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
@@ -797,18 +792,17 @@ fn specialize_tuple<'tcx>(
             #main_api_tokens __NEWLINE__
         private:
             unsigned char storage_[#size_literal]; __NEWLINE__
-        }; __NEWLINE__
-        __HASH_TOKEN__ endif __NEWLINE__
+        };
     };
 
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{}", name);
     let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
-    let cc_details_tokens = quote! {
-        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
-        __HASH_TOKEN__ define #guard_name __NEWLINE__
-        #cc_details_tokens __NEWLINE__
-        __HASH_TOKEN__ endif __NEWLINE__
-    };
+    let (main_api_tokens, cc_details_tokens) = ifdef_guard_specialization(
+        db,
+        quote! { ::rs_std::Tuple },
+        element_tys.iter().map(|ty| ty.ty),
+        main_api_tokens,
+        cc_details_tokens,
+    );
 
     ApiSnippets {
         main_api: CcSnippet { tokens: main_api_tokens, prereqs },
@@ -953,8 +947,6 @@ fn specialize_vec<'tcx>(
         &core.common.cc_fully_qualified_name,
     );
 
-    let qualified_name = cc_fully_qualified_name.to_string();
-    let name = escape_non_identifier_chars(&qualified_name);
     let drop_trait = tcx.lang_items().drop_trait().expect("Could not find Drop trait");
     let drop_assoc_fn = tcx
         .associated_items(drop_trait)
@@ -1048,14 +1040,11 @@ fn specialize_vec<'tcx>(
     rs_details.tokens.extend(rs_drop);
 
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
     let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
 
     let main_api_tokens = quote! {
-        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
-        __HASH_TOKEN__ define #guard_name __NEWLINE__
         template<> __NEWLINE__
         struct alignas(#align_literal)
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
@@ -1064,27 +1053,25 @@ fn specialize_vec<'tcx>(
             #main_api_tokens __NEWLINE__
             #drop_decl __NEWLINE__
             #accessors_decl __NEWLINE__
-
         private:
             unsigned char storage_[#size_literal];
             __NEWLINE__
-        }; __NEWLINE__
-
-        __HASH_TOKEN__ endif __NEWLINE__
-        __NEWLINE__
+        };
     };
 
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{}", name);
     let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
-    let cc_details_tokens = quote! {
-        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
-        __HASH_TOKEN__ define #guard_name __NEWLINE__
+    let payload = quote! {
         #cc_details_tokens __NEWLINE__
         #drop_impl __NEWLINE__
-        #accessors_impl __NEWLINE__
-        __HASH_TOKEN__ endif __NEWLINE__
-        __NEWLINE__
+        #accessors_impl
     };
+    let (main_api_tokens, cc_details_tokens) = ifdef_guard_specialization(
+        db,
+        quote! { rs_std::Vec },
+        [inner_ty.ty],
+        main_api_tokens,
+        payload,
+    );
 
     ApiSnippets {
         main_api: CcSnippet { tokens: main_api_tokens, prereqs },
@@ -1301,15 +1288,10 @@ fn specialize_result<'tcx>(
     .collect();
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
 
-    let qualified_name = cc_fully_qualified_name.to_string();
-    let name = escape_non_identifier_chars(&qualified_name);
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
     let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
     let main_api_tokens = quote! {
-        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
-        __HASH_TOKEN__ define #guard_name __NEWLINE__
         template<> __NEWLINE__
         struct
         alignas(#align_literal) __NEWLINE__
@@ -1321,21 +1303,17 @@ fn specialize_result<'tcx>(
 
             private:
                unsigned char __storage[#size_literal]; __NEWLINE__
-        }; __NEWLINE__
-
-        __HASH_TOKEN__ endif __NEWLINE__
-        __NEWLINE__
+        };
     };
 
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{}", name);
     let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
-    let cc_details_tokens = quote! {
-        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
-        __HASH_TOKEN__ define #guard_name __NEWLINE__
-        #cc_details_tokens __NEWLINE__
-        __HASH_TOKEN__ endif __NEWLINE__
-        __NEWLINE__
-    };
+    let (main_api_tokens, cc_details_tokens) = ifdef_guard_specialization(
+        db,
+        quote! { rs_std::Result },
+        [ok_ty.ty, err_ty.ty],
+        main_api_tokens,
+        cc_details_tokens,
+    );
 
     ApiSnippets {
         main_api: CcSnippet { tokens: main_api_tokens, prereqs },
@@ -1519,17 +1497,12 @@ fn specialize_option<'tcx>(
     .collect();
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
 
-    let qualified_name = cc_fully_qualified_name.to_string();
-    let name = escape_non_identifier_chars(&qualified_name);
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
     let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
     let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
     // TODO(cramertj): Consider standardizing the `storage_` field with other representations in
     // `generate_adt`.
     let main_api_tokens = quote! {
-        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
-        __HASH_TOKEN__ define #guard_name __NEWLINE__
         template<> __NEWLINE__
         struct alignas(#align_literal)
         CRUBIT_INTERNAL_RUST_TYPE(#internal_rust_type_string)
@@ -1541,21 +1514,16 @@ fn specialize_option<'tcx>(
         private:
             unsigned char storage_[#size_literal];
             __NEWLINE__
-        }; __NEWLINE__
-
-        __HASH_TOKEN__ endif __NEWLINE__
-        __NEWLINE__
+        };
     };
-
-    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{}", name);
     let cc_details_tokens = cc_details.into_tokens(&mut prereqs);
-    let cc_details_tokens = quote! {
-        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
-        __HASH_TOKEN__ define #guard_name __NEWLINE__
-        #cc_details_tokens __NEWLINE__
-        __HASH_TOKEN__ endif __NEWLINE__
-        __NEWLINE__
-    };
+    let (main_api_tokens, cc_details_tokens) = ifdef_guard_specialization(
+        db,
+        quote! { rs_std::Option },
+        [arg_ty.ty],
+        main_api_tokens,
+        cc_details_tokens,
+    );
     ApiSnippets {
         main_api: CcSnippet { tokens: main_api_tokens, prereqs },
         cc_details: CcSnippet::new(cc_details_tokens),
@@ -1719,6 +1687,52 @@ fn append_negative_auto_trait_impls<'tcx>(
             NegativeAutoTraitImplTemplateSpecialization { self_ty_cc_name, self_def_id, trait_id },
         ));
     }
+}
+
+// Helper function to wrap a specialization in ifdef guards.
+fn wrap_in_ifdef_guard(guard_name: &proc_macro2::Ident, tokens: TokenStream) -> TokenStream {
+    quote! {
+        __HASH_TOKEN__ ifndef #guard_name __NEWLINE__
+        __HASH_TOKEN__ define #guard_name __NEWLINE__
+        #tokens __NEWLINE__
+        __HASH_TOKEN__ endif __NEWLINE__
+    }
+}
+
+fn ifdef_guard_specialization<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    template_name: TokenStream,
+    tys: impl IntoIterator<Item = Ty<'tcx>>,
+    main_api: TokenStream,
+    cc_details: TokenStream,
+) -> (TokenStream, TokenStream) {
+    let tcx = db.tcx();
+    // For guards specifically, we want our types to be normalized to remove aliases and standardize region naming so that we don't get duplicate bindings.
+    let formatted_tys = tys
+        .into_iter()
+        .map(|ty| {
+            let ty_norm = tcx.normalize_erasing_regions(
+                TypingEnv::fully_monomorphized(),
+                Unnormalized::new(ty),
+            );
+            if ty_norm.is_unit() {
+                quote! { rs_std::unit_t }
+            } else {
+                db.format_ty_for_cc(ty_norm, TypeLocation::TemplateArg)
+                    .expect("Type formatting should have been checked in parse_rs_std_template_specialization")
+                    .tokens
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let name = quote! { #template_name<#(#formatted_tys),*> }.to_string();
+    let name = escape_non_identifier_chars(&name);
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
+    let main_api_tokens = wrap_in_ifdef_guard(&guard_name, main_api);
+
+    let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_IMPL_{}", name);
+    let cc_details_tokens = wrap_in_ifdef_guard(&guard_name, cc_details);
+    (quote! { #main_api_tokens __NEWLINE__ }, quote! { #cc_details_tokens __NEWLINE__ })
 }
 
 // Helper function for generate_trait_impl_specialization and
