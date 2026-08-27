@@ -1177,6 +1177,23 @@ fn test_supported_unknown_attr_namespace_typedef() -> Result<()> {
     Ok(())
 }
 
+#[gtest]
+fn test_visibility_attribute_on_functions() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        __attribute__((visibility("default"))) void DefaultVisibilityFunc();
+        __attribute__((visibility("hidden"))) void HiddenVisibilityFunc();
+        "#,
+    )?;
+
+    let mut ir = make_test_ir(&proto)?;
+    enable_supported(&mut ir);
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(rs_api, quote! { pub fn DefaultVisibilityFunc() });
+    assert_rs_not_matches!(rs_api, quote! { HiddenVisibilityFunc });
+    Ok(())
+}
+
 /// The default crubit feature set currently doesn't include supported.
 #[gtest]
 fn test_default_crubit_features_disabled_supported() -> Result<()> {

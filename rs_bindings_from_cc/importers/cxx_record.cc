@@ -1003,10 +1003,14 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
         if (IsKnownAttr(attr)) {
           return true;
         } else if (auto* visibility =
-                       clang::dyn_cast<clang::VisibilityAttr>(&attr);
-                   visibility && record_decl->isInStdNamespace()) {
-          if (visibility->getVisibility() ==
-              clang::VisibilityAttr::VisibilityType::Hidden) {
+                       clang::dyn_cast<clang::VisibilityAttr>(&attr)) {
+          // Visibility attributes on user C++ records (e.g. from export macros
+          // like QUICHE_EXPORT) do not affect Rust memory layout or FFI
+          // calling conventions. Only standard library records with hidden
+          // visibility are unsupported.
+          if (record_decl->isInStdNamespace() &&
+              visibility->getVisibility() ==
+                  clang::VisibilityAttr::VisibilityType::Hidden) {
             attr_error_item = ictx_.ImportUnsupportedItem(
                 *record_decl, std::nullopt,
                 {FormattedError::Static(
