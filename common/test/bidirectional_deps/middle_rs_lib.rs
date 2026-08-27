@@ -20,3 +20,11 @@ pub fn unwrap_enum(x: LeafCcEnum) -> u8 {
 
 pub use leaf_cc_lib::crubit::LeafCcTypeAlias as LeafCcTypeAlias2;
 pub type LeafCcTypeAlias3 = LeafCcTypeAlias;
+
+pub fn unwrap_move_only(x: MoveOnlyCcType) -> i32 {
+    InspectMoveOnly(&x)
+}
+
+pub fn round_trip_move_only(x: MoveOnlyCcType) -> MoveOnlyCcType {
+    x
+}

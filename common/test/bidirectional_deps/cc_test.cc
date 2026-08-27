@@ -32,6 +32,16 @@ TEST(BidirectionalDepsTest, TypeAliasRoundTrip) {
   ASSERT_TRUE(res);
   res = std::is_same_v<LeafCcTypeAlias, middle_rs_lib::LeafCcTypeAlias3>;
   ASSERT_TRUE(res);
-};
+}
+
+// TODO(b/545883191): Re-enable this test
+// TEST(BidirectionalDepsTest, MoveOnlyRoundTrip) {
+//   MoveOnlyCcType value_from_cc = MakeMoveOnly(42);
+//   EXPECT_EQ(middle_rs_lib::unwrap_move_only(std::move(value_from_cc)), 42);
+//   MoveOnlyCcType value_for_roundtrip = MakeMoveOnly(200);
+//   MoveOnlyCcType result =
+//       middle_rs_lib::round_trip_move_only(std::move(value_for_roundtrip));
+//   EXPECT_EQ(result.val, 200);
+// }
 }  // namespace
 }  // namespace crubit
