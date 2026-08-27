@@ -31,6 +31,11 @@ __rust_thunk___ZN34StructWithUserProvidedConstructorsaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct ::StructWithUserProvidedConstructors &
+               (::StructWithUserProvidedConstructors::*)(
+                   struct ::StructWithUserProvidedConstructors const&)) &
+              ::StructWithUserProvidedConstructors::operator=);
+
 static_assert(CRUBIT_SIZEOF(struct ::StructWithExplicitConversionConstructor) ==
               4);
 static_assert(alignof(struct ::StructWithExplicitConversionConstructor) == 4);
@@ -110,6 +115,11 @@ __rust_thunk___ZN28StructWithInlineConstructorsaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct ::StructWithInlineConstructors &
+               (::StructWithInlineConstructors::*)(
+                   struct ::StructWithInlineConstructors const&)) &
+              ::StructWithInlineConstructors::operator=);
+
 extern "C" void __rust_thunk___ZN28StructWithInlineConstructorsC1Ev(
     struct ::StructWithInlineConstructors* __this) {
   crubit::construct_at(__this);
@@ -138,6 +148,11 @@ __rust_thunk___ZN29StructWithDeletedConstructorsaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct ::StructWithDeletedConstructors &
+               (::StructWithDeletedConstructors::*)(
+                   struct ::StructWithDeletedConstructors const&)) &
+              ::StructWithDeletedConstructors::operator=);
+
 static_assert(CRUBIT_SIZEOF(struct ::StructWithPrivateConstructors) == 4);
 static_assert(alignof(struct ::StructWithPrivateConstructors) == 4);
 
@@ -147,6 +162,11 @@ __rust_thunk___ZN29StructWithPrivateConstructorsaSERKS_(
     struct ::StructWithPrivateConstructors const* __param_0) {
   return std::addressof(__this->operator=(*__param_0));
 }
+
+static_assert((struct ::StructWithPrivateConstructors &
+               (::StructWithPrivateConstructors::*)(
+                   struct ::StructWithPrivateConstructors const&)) &
+              ::StructWithPrivateConstructors::operator=);
 
 static_assert(
     CRUBIT_SIZEOF(struct ::StructWithExplicitlyDefaultedConstructors) == 8);
@@ -181,6 +201,11 @@ __rust_thunk___ZN32NonTrivialStructWithConstructorsaSERKS_(
     struct ::NonTrivialStructWithConstructors const* __param_0) {
   return std::addressof(__this->operator=(*__param_0));
 }
+
+static_assert((struct ::NonTrivialStructWithConstructors &
+               (::NonTrivialStructWithConstructors::*)(
+                   struct ::NonTrivialStructWithConstructors const&)) &
+              ::NonTrivialStructWithConstructors::operator=);
 
 static_assert(CRUBIT_SIZEOF(struct ::StructWithUnsafeConstructor) == 8);
 static_assert(alignof(struct ::StructWithUnsafeConstructor) == 8);

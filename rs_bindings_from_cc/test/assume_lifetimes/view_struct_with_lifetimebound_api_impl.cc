@@ -79,6 +79,11 @@ __rust_thunk___ZN40DropClassWithLifetimeboundMemberFunctionaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((class DropClassWithLifetimeboundMemberFunction &
+               (::DropClassWithLifetimeboundMemberFunction::*)(
+                   class DropClassWithLifetimeboundMemberFunction const&)) &
+              ::DropClassWithLifetimeboundMemberFunction::operator=);
+
 extern "C" void
 __rust_thunk___ZNK40DropClassWithLifetimeboundMemberFunction1fEv(
     struct PlainStruct* __return,
@@ -113,6 +118,11 @@ __rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionaSERKS_(
     class DropClassWithLifetimeboundRefMemberFunction const* __param_0) {
   return std::addressof(__this->operator=(*__param_0));
 }
+
+static_assert((class DropClassWithLifetimeboundRefMemberFunction &
+               (::DropClassWithLifetimeboundRefMemberFunction::*)(
+                   class DropClassWithLifetimeboundRefMemberFunction const&)) &
+              ::DropClassWithLifetimeboundRefMemberFunction::operator=);
 
 static_assert((struct PlainStruct const& (
                   ::DropClassWithLifetimeboundRefMemberFunction::*)() const) &
@@ -152,6 +162,11 @@ __rust_thunk___ZN31DropStructWithLifetimeboundCtoraSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct DropStructWithLifetimeboundCtor &
+               (::DropStructWithLifetimeboundCtor::*)(
+                   struct DropStructWithLifetimeboundCtor const&)) &
+              ::DropStructWithLifetimeboundCtor::operator=);
+
 extern "C" void
 __rust_thunk___ZN31DropStructWithLifetimeboundCtorC1E11PlainStruct(
     struct DropStructWithLifetimeboundCtor* __this, struct PlainStruct* s) {
@@ -173,6 +188,11 @@ __rust_thunk___ZN34DropStructWithLifetimeboundRefCtoraSERKS_(
     struct DropStructWithLifetimeboundRefCtor const* __param_0) {
   return std::addressof(__this->operator=(*__param_0));
 }
+
+static_assert((struct DropStructWithLifetimeboundRefCtor &
+               (::DropStructWithLifetimeboundRefCtor::*)(
+                   struct DropStructWithLifetimeboundRefCtor const&)) &
+              ::DropStructWithLifetimeboundRefCtor::operator=);
 
 extern "C" void
 __rust_thunk___ZN34DropStructWithLifetimeboundRefCtorC1ERK11PlainStruct(
@@ -198,6 +218,11 @@ __rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionaSERKS_(
     struct DropStructWithRefCtorAndRefMemberFunction const* __param_0) {
   return std::addressof(__this->operator=(*__param_0));
 }
+
+static_assert((struct DropStructWithRefCtorAndRefMemberFunction &
+               (::DropStructWithRefCtorAndRefMemberFunction::*)(
+                   struct DropStructWithRefCtorAndRefMemberFunction const&)) &
+              ::DropStructWithRefCtorAndRefMemberFunction::operator=);
 
 extern "C" void
 __rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionC1ERK11PlainStruct(
@@ -225,6 +250,11 @@ __rust_thunk___ZN35DropStructWithCtorAndMemberFunctionaSERKS_(
     struct DropStructWithCtorAndMemberFunction const* __param_0) {
   return std::addressof(__this->operator=(*__param_0));
 }
+
+static_assert((struct DropStructWithCtorAndMemberFunction &
+               (::DropStructWithCtorAndMemberFunction::*)(
+                   struct DropStructWithCtorAndMemberFunction const&)) &
+              ::DropStructWithCtorAndMemberFunction::operator=);
 
 extern "C" void
 __rust_thunk___ZN35DropStructWithCtorAndMemberFunctionC1E11PlainStruct(
@@ -260,6 +290,11 @@ __rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct DropStructWithCtorAndRefMemberFunction &
+               (::DropStructWithCtorAndRefMemberFunction::*)(
+                   struct DropStructWithCtorAndRefMemberFunction const&)) &
+              ::DropStructWithCtorAndRefMemberFunction::operator=);
+
 extern "C" void
 __rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionC1E11PlainStruct(
     struct DropStructWithCtorAndRefMemberFunction* __this,
@@ -288,6 +323,11 @@ __rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionaSERKS_(
     struct DropStructWithRefCtorAndMemberFunction const* __param_0) {
   return std::addressof(__this->operator=(*__param_0));
 }
+
+static_assert((struct DropStructWithRefCtorAndMemberFunction &
+               (::DropStructWithRefCtorAndMemberFunction::*)(
+                   struct DropStructWithRefCtorAndMemberFunction const&)) &
+              ::DropStructWithRefCtorAndMemberFunction::operator=);
 
 extern "C" void
 __rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionC1ERK11PlainStruct(

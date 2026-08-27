@@ -39,6 +39,11 @@ __rust_thunk___ZN24DestructionOrderRecorderaSEOS_(
   return std::addressof(__this->operator=(std::move(*other)));
 }
 
+static_assert(
+    (class DestructionOrderRecorder &
+     (::DestructionOrderRecorder::*)(class DestructionOrderRecorder&&)) &
+    ::DestructionOrderRecorder::operator=);
+
 extern "C" void __rust_thunk___ZN24DestructionOrderRecorderD1Ev(
     class DestructionOrderRecorder* __this) {
   std::destroy_at(__this);
@@ -72,6 +77,11 @@ __rust_thunk___ZN27FieldDestructionOrderTesteraSEOS_(
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
 
+static_assert(
+    (class FieldDestructionOrderTester &
+     (::FieldDestructionOrderTester::*)(class FieldDestructionOrderTester&&)) &
+    ::FieldDestructionOrderTester::operator=);
+
 extern "C" void
 __rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0_(
     class FieldDestructionOrderTester* __this,
@@ -100,6 +110,11 @@ __rust_thunk___ZN21PrivateOperatorDeleteaSERKS_(
     class PrivateOperatorDelete const* __param_0) {
   return std::addressof(__this->operator=(*__param_0));
 }
+
+static_assert(
+    (class PrivateOperatorDelete &
+     (::PrivateOperatorDelete::*)(class PrivateOperatorDelete const&)) &
+    ::PrivateOperatorDelete::operator=);
 
 extern "C" void __rust_thunk___ZN21PrivateOperatorDeleteC1Ei(
     class PrivateOperatorDelete* __this, int int_field) {

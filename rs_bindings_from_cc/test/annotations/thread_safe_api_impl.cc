@@ -93,12 +93,22 @@ __rust_thunk___ZN6crubit4test15ThreadSafeUnpinaSERKS1_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct crubit::test::ThreadSafeUnpin &
+               (::crubit::test::ThreadSafeUnpin::*)(
+                   struct crubit::test::ThreadSafeUnpin const&)) &
+              ::crubit::test::ThreadSafeUnpin::operator=);
+
 extern "C" struct crubit::test::ThreadSafeUnpin*
 __rust_thunk___ZN6crubit4test15ThreadSafeUnpinaSEOS1_(
     struct crubit::test::ThreadSafeUnpin* __this,
     struct crubit::test::ThreadSafeUnpin* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
+
+static_assert((struct crubit::test::ThreadSafeUnpin &
+               (::crubit::test::ThreadSafeUnpin::*)(
+                   struct crubit::test::ThreadSafeUnpin&&)) &
+              ::crubit::test::ThreadSafeUnpin::operator=);
 
 static_assert(sizeof(struct crubit::test::ThreadSafePinned) == 1);
 static_assert(alignof(struct crubit::test::ThreadSafePinned) == 1);
@@ -127,12 +137,22 @@ __rust_thunk___ZN6crubit4test16ThreadSafePinnedaSERKS1_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct crubit::test::ThreadSafePinned &
+               (::crubit::test::ThreadSafePinned::*)(
+                   struct crubit::test::ThreadSafePinned const&)) &
+              ::crubit::test::ThreadSafePinned::operator=);
+
 extern "C" struct crubit::test::ThreadSafePinned*
 __rust_thunk___ZN6crubit4test16ThreadSafePinnedaSEOS1_(
     struct crubit::test::ThreadSafePinned* __this,
     struct crubit::test::ThreadSafePinned* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
+
+static_assert((struct crubit::test::ThreadSafePinned &
+               (::crubit::test::ThreadSafePinned::*)(
+                   struct crubit::test::ThreadSafePinned&&)) &
+              ::crubit::test::ThreadSafePinned::operator=);
 
 extern "C" void __rust_thunk___ZN6crubit4test16ThreadSafePinnedD1Ev(
     struct crubit::test::ThreadSafePinned* __this) {

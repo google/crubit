@@ -30,6 +30,11 @@ __rust_thunk___ZN6crubit4test12NoDestructoraSERKS1_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((class ::crubit::test::NoDestructor &
+               (::crubit::test::NoDestructor::*)(
+                   class ::crubit::test::NoDestructor const&)) &
+              ::crubit::test::NoDestructor::operator=);
+
 static_assert(sizeof(class ::crubit::test::NoDelete) == 1);
 static_assert(alignof(class ::crubit::test::NoDelete) == 1);
 

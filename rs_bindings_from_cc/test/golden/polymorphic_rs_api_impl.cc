@@ -36,6 +36,10 @@ extern "C" class PolymorphicBase* __rust_thunk___ZN15PolymorphicBaseaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((class PolymorphicBase &
+               (::PolymorphicBase::*)(class PolymorphicBase const&)) &
+              ::PolymorphicBase::operator=);
+
 extern "C" void __rust_thunk___ZN15PolymorphicBaseD1Ev(
     class PolymorphicBase* __this) {
   std::destroy_at(__this);
@@ -64,6 +68,10 @@ extern "C" class PolymorphicBase2* __rust_thunk___ZN16PolymorphicBase2aSERKS_(
     class PolymorphicBase2* __this, class PolymorphicBase2 const* __param_0) {
   return std::addressof(__this->operator=(*__param_0));
 }
+
+static_assert((class PolymorphicBase2 &
+               (::PolymorphicBase2::*)(class PolymorphicBase2 const&)) &
+              ::PolymorphicBase2::operator=);
 
 extern "C" void __rust_thunk___ZN16PolymorphicBase23FooEv(
     class PolymorphicBase2* __this) {
@@ -114,11 +122,19 @@ __rust_thunk___ZN18PolymorphicDerivedaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((class PolymorphicDerived &
+               (::PolymorphicDerived::*)(class PolymorphicDerived const&)) &
+              ::PolymorphicDerived::operator=);
+
 extern "C" class PolymorphicDerived*
 __rust_thunk___ZN18PolymorphicDerivedaSEOS_(
     class PolymorphicDerived* __this, class PolymorphicDerived* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
+
+static_assert((class PolymorphicDerived &
+               (::PolymorphicDerived::*)(class PolymorphicDerived&&)) &
+              ::PolymorphicDerived::operator=);
 
 extern "C" void
 __crubit_operator_delete__18PolymorphicDerived___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3apolymorphic_5fcc(

@@ -21,4 +21,8 @@
 static_assert(sizeof(class CompatibleType) == 1);
 static_assert(alignof(class CompatibleType) == 1);
 
+static_assert((class CompatibleType &
+               (::CompatibleType::*)(class CompatibleType const&)) &
+              ::CompatibleType::operator=);
+
 #pragma clang diagnostic pop

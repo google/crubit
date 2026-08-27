@@ -30,4 +30,6 @@ extern "C" bool __rust_thunk___ZeqN2ns1XES0_(struct ns::X* a, struct ns::X* b) {
   return operator==(std::move(*a), std::move(*b));
 }
 
+static_assert((bool (*)(struct ns::X, struct ns::X)) & ::operator==);
+
 #pragma clang diagnostic pop

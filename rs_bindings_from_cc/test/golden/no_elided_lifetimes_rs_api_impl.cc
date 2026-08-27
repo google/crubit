@@ -42,6 +42,12 @@ __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert(
+    (struct TriviallyCopyableButNontriviallyDestructible &
+     (::TriviallyCopyableButNontriviallyDestructible::*)(
+         struct TriviallyCopyableButNontriviallyDestructible const&)) &
+    ::TriviallyCopyableButNontriviallyDestructible::operator=);
+
 extern "C" void
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(
     struct TriviallyCopyableButNontriviallyDestructible* __this,
@@ -64,5 +70,9 @@ extern "C" void __rust_thunk___ZNK12WrappedValueplERKS_(
     class WrappedValue const* rhs) {
   new (__return) auto(__this->operator+(*rhs));
 }
+
+static_assert((class WrappedValue (::WrappedValue::*)(class WrappedValue const&)
+                   const) &
+              ::WrappedValue::operator+);
 
 #pragma clang diagnostic pop

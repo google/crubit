@@ -48,6 +48,12 @@ __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert(
+    (struct TriviallyCopyableButNontriviallyDestructible &
+     (::TriviallyCopyableButNontriviallyDestructible::*)(
+         struct TriviallyCopyableButNontriviallyDestructible const&)) &
+    ::TriviallyCopyableButNontriviallyDestructible::operator=);
+
 extern "C" void
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(
     struct TriviallyCopyableButNontriviallyDestructible* __this,
@@ -88,10 +94,18 @@ extern "C" union NonCopyUnion2* __rust_thunk___ZN13NonCopyUnion2aSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((union NonCopyUnion2 &
+               (::NonCopyUnion2::*)(union NonCopyUnion2 const&)) &
+              ::NonCopyUnion2::operator=);
+
 extern "C" union NonCopyUnion2* __rust_thunk___ZN13NonCopyUnion2aSEOS_(
     union NonCopyUnion2* __this, union NonCopyUnion2* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
+
+static_assert((union NonCopyUnion2 &
+               (::NonCopyUnion2::*)(union NonCopyUnion2&&)) &
+              ::NonCopyUnion2::operator=);
 
 static_assert(sizeof(union UnionWithOpaqueField) == 42);
 static_assert(alignof(union UnionWithOpaqueField) == 1);

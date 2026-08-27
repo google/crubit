@@ -302,18 +302,17 @@ pub fn thunk_ident<'a>(db: &BindingsGenerator<'a>, func: &Func<'a>) -> Ident {
     )
 }
 
-fn generate_function_assertion_for_identifier<'a>(
+fn generate_function_assertion_thunk_impl<'a>(
     db: &BindingsGenerator<'a>,
     func: &Func<'a>,
-    id: &Identifier<'a>,
+    unqualified_func_name: TokenStream,
 ) -> Result<ThunkImpl> {
     let features = db.ir().target_crubit_features(func.owning_target());
-    let fn_ident = format_nonportable_cc_ident(id.as_str())?;
     let mut namespace_qualifier = db.namespace_qualifier(func);
     // Keep goldens the same.
     namespace_qualifier.use_leading_colons = true;
     let path_to_func = namespace_qualifier.format_for_cc(features)?;
-    let implementation_function = quote! { #path_to_func #fn_ident };
+    let implementation_function = quote! { #path_to_func #unqualified_func_name };
     let method_qualification;
     let member_function_prefix;
     let func_params;
@@ -385,6 +384,25 @@ fn generate_function_assertion_for_identifier<'a>(
     Ok(ThunkImpl::FunctionTypeAssertion { cc_function_type, implementation_function })
 }
 
+fn generate_function_assertion_for_identifier<'a>(
+    db: &BindingsGenerator<'a>,
+    func: &Func<'a>,
+    id: &Identifier<'a>,
+) -> Result<ThunkImpl> {
+    let fn_ident = format_nonportable_cc_ident(id.as_str())?;
+    generate_function_assertion_thunk_impl(db, func, quote! { #fn_ident })
+}
+
+fn generate_function_assertion_for_operator<'a>(
+    db: &BindingsGenerator<'a>,
+    func: &Func<'a>,
+    op: &Operator<'a>,
+) -> Result<ThunkImpl> {
+    let op_cc_name = op.cc_name();
+    let op_tokens = syn::parse_str::<TokenStream>(&op_cc_name)?;
+    generate_function_assertion_thunk_impl(db, func, op_tokens)
+}
+
 pub fn generate_function_assertion<'a>(
     db: &BindingsGenerator<'a>,
     func: &Func<'a>,
@@ -402,8 +420,9 @@ pub fn generate_function_assertion<'a>(
         UnqualifiedIdentifier::Identifier(id) => {
             Ok(Some(generate_function_assertion_for_identifier(db, func, id)?))
         }
-        // TODO: b/393169953 - support operators
-        UnqualifiedIdentifier::Operator(_op) => Ok(None),
+        UnqualifiedIdentifier::Operator(op) => {
+            Ok(Some(generate_function_assertion_for_operator(db, func, op)?))
+        }
         UnqualifiedIdentifier::Constructor => Ok(None),
         UnqualifiedIdentifier::Destructor => Ok(None),
         UnqualifiedIdentifier::ConversionOperator => Ok(None),

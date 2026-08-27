@@ -22,11 +22,24 @@ static_assert(CRUBIT_SIZEOF(struct Nontrivial) == 4);
 static_assert(alignof(struct Nontrivial) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct Nontrivial) == 0);
 
+static_assert((struct Nontrivial &
+               (::Nontrivial::*)(struct Nontrivial const&)) &
+              ::Nontrivial::operator=);
+
+static_assert((struct Nontrivial & (::Nontrivial::*)(struct Nontrivial&&)) &
+              ::Nontrivial::operator=);
+
+static_assert((struct Nontrivial & (::Nontrivial::*)(int)) &
+              ::Nontrivial::operator=);
+
 extern "C" void __rust_thunk___ZN10NontrivialaSEf(struct Nontrivial* __return,
                                                   struct Nontrivial* __this,
                                                   float __param_0) {
   new (__return) auto(__this->operator=(__param_0));
 }
+
+static_assert((struct Nontrivial (::Nontrivial::*)(float)) &
+              ::Nontrivial::operator=);
 
 static_assert((void (::Nontrivial::*)()) & ::Nontrivial::Unqualified);
 
@@ -42,11 +55,21 @@ static_assert((void (::Nontrivial::*)() &&)&::Nontrivial::RvalueRefQualified);
 static_assert((void (::Nontrivial::*)()
                    const&&)&::Nontrivial::ConstRvalueRefQualified);
 
+static_assert((bool (::Nontrivial::*)(struct Nontrivial const&) const) &
+              ::Nontrivial::operator==);
+
+static_assert((bool (::Nontrivial::*)(struct Nontrivial const&) const) &
+              ::Nontrivial::operator<);
+
 extern "C" void __rust_thunk___ZNK10NontrivialplERKS_(
     struct Nontrivial* __return, struct Nontrivial const* __this,
     struct Nontrivial const* rhs) {
   new (__return) auto(__this->operator+(*rhs));
 }
+
+static_assert((struct Nontrivial (::Nontrivial::*)(struct Nontrivial const&)
+                   const) &
+              ::Nontrivial::operator+);
 
 static_assert(CRUBIT_SIZEOF(struct NontrivialInline) == 4);
 static_assert(alignof(struct NontrivialInline) == 4);
@@ -82,15 +105,26 @@ extern "C" struct NontrivialInline* __rust_thunk___ZN16NontrivialInlineaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct NontrivialInline &
+               (::NontrivialInline::*)(struct NontrivialInline const&)) &
+              ::NontrivialInline::operator=);
+
 extern "C" struct NontrivialInline* __rust_thunk___ZN16NontrivialInlineaSEOS_(
     struct NontrivialInline* __this, struct NontrivialInline* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
 
+static_assert((struct NontrivialInline &
+               (::NontrivialInline::*)(struct NontrivialInline&&)) &
+              ::NontrivialInline::operator=);
+
 extern "C" struct NontrivialInline* __rust_thunk___ZN16NontrivialInlineaSEi(
     struct NontrivialInline* __this, int __param_0) {
   return std::addressof(__this->operator=(__param_0));
 }
+
+static_assert((struct NontrivialInline & (::NontrivialInline::*)(int)) &
+              ::NontrivialInline::operator=);
 
 extern "C" void __rust_thunk___ZN16NontrivialInlineD1Ev(
     struct NontrivialInline* __this) {
@@ -133,14 +167,33 @@ __rust_thunk___ZN17NontrivialMembersaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct NontrivialMembers &
+               (::NontrivialMembers::*)(struct NontrivialMembers const&)) &
+              ::NontrivialMembers::operator=);
+
 extern "C" struct NontrivialMembers* __rust_thunk___ZN17NontrivialMembersaSEOS_(
     struct NontrivialMembers* __this, struct NontrivialMembers* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
 
+static_assert((struct NontrivialMembers &
+               (::NontrivialMembers::*)(struct NontrivialMembers&&)) &
+              ::NontrivialMembers::operator=);
+
 static_assert(CRUBIT_SIZEOF(struct NontrivialUnpin) == 4);
 static_assert(alignof(struct NontrivialUnpin) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct NontrivialUnpin) == 0);
+
+static_assert((struct NontrivialUnpin &
+               (::NontrivialUnpin::*)(struct NontrivialUnpin const&)) &
+              ::NontrivialUnpin::operator=);
+
+static_assert((struct NontrivialUnpin &
+               (::NontrivialUnpin::*)(struct NontrivialUnpin&&)) &
+              ::NontrivialUnpin::operator=);
+
+static_assert((struct NontrivialUnpin & (::NontrivialUnpin::*)(int)) &
+              ::NontrivialUnpin::operator=);
 
 static_assert((void (::NontrivialUnpin::*)()) &
               ::NontrivialUnpin::MemberFunction);
@@ -202,6 +255,10 @@ extern "C" void __rust_thunk___ZN17NontrivialByValueaSE10Nontrivial(
     struct Nontrivial* other) {
   new (__return) auto(__this->operator=(std::move(*other)));
 }
+
+static_assert(
+    (struct NontrivialByValue (::NontrivialByValue::*)(struct Nontrivial)) &
+    ::NontrivialByValue::operator=);
 
 static_assert(sizeof(struct Nonmovable) == 1);
 static_assert(alignof(struct Nonmovable) == 1);

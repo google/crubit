@@ -31,6 +31,10 @@ extern "C" struct TypeAliasCtor* __rust_thunk___ZN13TypeAliasCtoraSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct TypeAliasCtor &
+               (::TypeAliasCtor::*)(struct TypeAliasCtor const&)) &
+              ::TypeAliasCtor::operator=);
+
 extern "C" void
 __rust_thunk___ZN13TypeAliasCtorC1ENSt3__u17basic_string_viewIcNS0_11char_traitsIcEEEE(
     struct TypeAliasCtor* __this, ::std::__u::string_view* a) {

@@ -32,6 +32,10 @@ extern "C" void __rust_thunk___ZNK18AddableConstMemberplERKS_(
   new (__return) auto(__this->operator+(*rhs));
 }
 
+static_assert((class AddableConstMember (::AddableConstMember::*)(
+                  class AddableConstMember const&) const) &
+              ::AddableConstMember::operator+);
+
 static_assert(CRUBIT_SIZEOF(class AddableNonConstMember) == 4);
 static_assert(alignof(class AddableNonConstMember) == 4);
 
@@ -45,6 +49,10 @@ extern "C" void __rust_thunk___ZN21AddableNonConstMemberplERKS_(
     class AddableNonConstMember const* rhs) {
   new (__return) auto(__this->operator+(*rhs));
 }
+
+static_assert((class AddableNonConstMember (::AddableNonConstMember::*)(
+                  class AddableNonConstMember const&)) &
+              ::AddableNonConstMember::operator+);
 
 static_assert(CRUBIT_SIZEOF(class AddableFriend) == 4);
 static_assert(alignof(class AddableFriend) == 4);
@@ -99,11 +107,20 @@ extern "C" void __rust_thunk___ZplRK21AddableFreeByConstRefS1_(
   new (__return) auto(operator+(*lhs, *rhs));
 }
 
+static_assert(
+    (class AddableFreeByConstRef (*)(class AddableFreeByConstRef const&,
+                                     class AddableFreeByConstRef const&)) &
+    ::operator+);
+
 extern "C" void __rust_thunk___ZplR19AddableFreeByMutRefS0_(
     class AddableFreeByMutRef* __return, class AddableFreeByMutRef* lhs,
     class AddableFreeByMutRef* rhs) {
   new (__return) auto(operator+(*lhs, *rhs));
 }
+
+static_assert((class AddableFreeByMutRef (*)(class AddableFreeByMutRef&,
+                                             class AddableFreeByMutRef&)) &
+              ::operator+);
 
 extern "C" void __rust_thunk___Zpl18AddableFreeByValueS_(
     class AddableFreeByValue* __return, class AddableFreeByValue* lhs,
@@ -111,12 +128,20 @@ extern "C" void __rust_thunk___Zpl18AddableFreeByValueS_(
   new (__return) auto(operator+(std::move(*lhs), std::move(*rhs)));
 }
 
+static_assert((class AddableFreeByValue (*)(class AddableFreeByValue,
+                                            class AddableFreeByValue)) &
+              ::operator+);
+
 static_assert(sizeof(class Overloaded) == 1);
 static_assert(alignof(class Overloaded) == 1);
 
 extern "C" void __rust_thunk___ZN10OverloadedC1Ev(class Overloaded* __this) {
   crubit::construct_at(__this);
 }
+
+static_assert((int (*)(class Overloaded const&, int)) & ::operator+);
+
+static_assert((int (*)(class Overloaded const&, unsigned int)) & ::operator+);
 
 static_assert(sizeof(class IncompatibleLHS) == 1);
 static_assert(alignof(class IncompatibleLHS) == 1);
@@ -133,6 +158,10 @@ extern "C" void __rust_thunk___ZN18AddableReturnsVoidC1Ev(
     class AddableReturnsVoid* __this) {
   crubit::construct_at(__this);
 }
+
+static_assert((void (::AddableReturnsVoid::*)(class AddableReturnsVoid const&)
+                   const) &
+              ::AddableReturnsVoid::operator+);
 
 static_assert(CRUBIT_SIZEOF(class AddableConstMemberNonunpin) == 4);
 static_assert(alignof(class AddableConstMemberNonunpin) == 4);
@@ -155,12 +184,22 @@ __rust_thunk___ZN26AddableConstMemberNonunpinaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((class AddableConstMemberNonunpin &
+               (::AddableConstMemberNonunpin::*)(
+                   class AddableConstMemberNonunpin const&)) &
+              ::AddableConstMemberNonunpin::operator=);
+
 extern "C" void __rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_(
     class AddableConstMemberNonunpin* __return,
     class AddableConstMemberNonunpin const* __this,
     class AddableConstMemberNonunpin const* rhs) {
   new (__return) auto(__this->operator+(*rhs));
 }
+
+static_assert(
+    (class AddableConstMemberNonunpin (::AddableConstMemberNonunpin::*)(
+        class AddableConstMemberNonunpin const&) const) &
+    ::AddableConstMemberNonunpin::operator+);
 
 extern "C" void __rust_thunk___ZN26AddableConstMemberNonunpinD1Ev(
     class AddableConstMemberNonunpin* __this) {
@@ -175,6 +214,9 @@ extern "C" void __rust_thunk___ZN18AddAssignMemberIntC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert((int (::AddAssignMemberInt::*)(int)) &
+              ::AddAssignMemberInt::operator+=);
+
 static_assert(sizeof(struct AddAssignMemberByConstRef) == 1);
 static_assert(alignof(struct AddAssignMemberByConstRef) == 1);
 
@@ -183,6 +225,11 @@ extern "C" void __rust_thunk___ZN25AddAssignMemberByConstRefC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert((struct AddAssignMemberByConstRef &
+               (::AddAssignMemberByConstRef::*)(
+                   struct AddAssignMemberByConstRef const&)) &
+              ::AddAssignMemberByConstRef::operator+=);
+
 static_assert(sizeof(struct AddAssignFreeByConstRef) == 1);
 static_assert(alignof(struct AddAssignFreeByConstRef) == 1);
 
@@ -190,6 +237,11 @@ extern "C" void __rust_thunk___ZN23AddAssignFreeByConstRefC1Ev(
     struct AddAssignFreeByConstRef* __this) {
   crubit::construct_at(__this);
 }
+
+static_assert((struct AddAssignFreeByConstRef &
+               (*)(struct AddAssignFreeByConstRef&,
+                   struct AddAssignFreeByConstRef const&)) &
+              ::operator+=);
 
 static_assert(sizeof(struct AddAssignFreeByValue) == 1);
 static_assert(alignof(struct AddAssignFreeByValue) == 1);
@@ -204,6 +256,10 @@ __rust_thunk___ZpLR20AddAssignFreeByValueS_(struct AddAssignFreeByValue* lhs,
                                             struct AddAssignFreeByValue* rhs) {
   return std::addressof(operator+=(*lhs, std::move(*rhs)));
 }
+
+static_assert((struct AddAssignFreeByValue &
+               (*)(struct AddAssignFreeByValue&, struct AddAssignFreeByValue)) &
+              ::operator+=);
 
 static_assert(sizeof(struct AddAssignFriendByConstRef) == 1);
 static_assert(alignof(struct AddAssignFriendByConstRef) == 1);
@@ -256,15 +312,24 @@ extern "C" void __rust_thunk___ZNK13ManyOperatorspsEv(
   new (__return) auto(__this->operator+());
 }
 
+static_assert((struct ManyOperators (::ManyOperators::*)() const) &
+              ::ManyOperators::operator+);
+
 extern "C" void __rust_thunk___ZNK13ManyOperatorsngEv(
     struct ManyOperators* __return, struct ManyOperators const* __this) {
   new (__return) auto(__this->operator-());
 }
 
+static_assert((struct ManyOperators (::ManyOperators::*)() const) &
+              ::ManyOperators::operator-);
+
 extern "C" void __rust_thunk___ZNK13ManyOperatorsntEv(
     struct ManyOperators* __return, struct ManyOperators const* __this) {
   new (__return) auto(__this->operator!());
 }
+
+static_assert((struct ManyOperators (::ManyOperators::*)() const) &
+              ::ManyOperators::operator!);
 
 extern "C" void __rust_thunk___ZNK13ManyOperatorsplERKS_(
     struct ManyOperators* __return, struct ManyOperators const* __this,
@@ -272,11 +337,19 @@ extern "C" void __rust_thunk___ZNK13ManyOperatorsplERKS_(
   new (__return) auto(__this->operator+(*rhs));
 }
 
+static_assert((struct ManyOperators (::ManyOperators::*)(
+                  struct ManyOperators const&) const) &
+              ::ManyOperators::operator+);
+
 extern "C" void __rust_thunk___ZNK13ManyOperatorsmiERKS_(
     struct ManyOperators* __return, struct ManyOperators const* __this,
     struct ManyOperators const* rhs) {
   new (__return) auto(__this->operator-(*rhs));
 }
+
+static_assert((struct ManyOperators (::ManyOperators::*)(
+                  struct ManyOperators const&) const) &
+              ::ManyOperators::operator-);
 
 extern "C" void __rust_thunk___ZNK13ManyOperatorsmlERKS_(
     struct ManyOperators* __return, struct ManyOperators const* __this,
@@ -284,11 +357,19 @@ extern "C" void __rust_thunk___ZNK13ManyOperatorsmlERKS_(
   new (__return) auto(__this->operator*(*rhs));
 }
 
+static_assert((struct ManyOperators (::ManyOperators::*)(
+                  struct ManyOperators const&) const) &
+              ::ManyOperators::operator*);
+
 extern "C" void __rust_thunk___ZNK13ManyOperatorsdvERKS_(
     struct ManyOperators* __return, struct ManyOperators const* __this,
     struct ManyOperators const* rhs) {
   new (__return) auto(__this->operator/(*rhs));
 }
+
+static_assert((struct ManyOperators (::ManyOperators::*)(
+                  struct ManyOperators const&) const) &
+              ::ManyOperators::operator/);
 
 extern "C" void __rust_thunk___ZNK13ManyOperatorsrmERKS_(
     struct ManyOperators* __return, struct ManyOperators const* __this,
@@ -296,11 +377,19 @@ extern "C" void __rust_thunk___ZNK13ManyOperatorsrmERKS_(
   new (__return) auto(__this->operator%(*rhs));
 }
 
+static_assert((struct ManyOperators (::ManyOperators::*)(
+                  struct ManyOperators const&) const) &
+              ::ManyOperators::operator%);
+
 extern "C" void __rust_thunk___ZNK13ManyOperatorsanERKS_(
     struct ManyOperators* __return, struct ManyOperators const* __this,
     struct ManyOperators const* rhs) {
   new (__return) auto(__this->operator&(*rhs));
 }
+
+static_assert((struct ManyOperators (::ManyOperators::*)(
+                  struct ManyOperators const&) const) &
+              ::ManyOperators::operator&);
 
 extern "C" void __rust_thunk___ZNK13ManyOperatorsorERKS_(
     struct ManyOperators* __return, struct ManyOperators const* __this,
@@ -308,11 +397,19 @@ extern "C" void __rust_thunk___ZNK13ManyOperatorsorERKS_(
   new (__return) auto(__this->operator|(*rhs));
 }
 
+static_assert((struct ManyOperators (::ManyOperators::*)(
+                  struct ManyOperators const&) const) &
+              ::ManyOperators::operator|);
+
 extern "C" void __rust_thunk___ZNK13ManyOperatorseoERKS_(
     struct ManyOperators* __return, struct ManyOperators const* __this,
     struct ManyOperators const* rhs) {
   new (__return) auto(__this->operator^(*rhs));
 }
+
+static_assert((struct ManyOperators (::ManyOperators::*)(
+                  struct ManyOperators const&) const) &
+              ::ManyOperators::operator^);
 
 extern "C" void __rust_thunk___ZNK13ManyOperatorslsERKS_(
     struct ManyOperators* __return, struct ManyOperators const* __this,
@@ -320,10 +417,58 @@ extern "C" void __rust_thunk___ZNK13ManyOperatorslsERKS_(
   new (__return) auto(__this->operator<<(*rhs));
 }
 
+static_assert((struct ManyOperators (::ManyOperators::*)(
+                  struct ManyOperators const&) const) &
+              ::ManyOperators::operator<<);
+
 extern "C" void __rust_thunk___ZNK13ManyOperatorsrsERKS_(
     struct ManyOperators* __return, struct ManyOperators const* __this,
     struct ManyOperators const* rhs) {
   new (__return) auto(__this->operator>>(*rhs));
 }
+
+static_assert((struct ManyOperators (::ManyOperators::*)(
+                  struct ManyOperators const&) const) &
+              ::ManyOperators::operator>>);
+
+static_assert((struct ManyOperators &
+               (::ManyOperators::*)(struct ManyOperators const&)) &
+              ::ManyOperators::operator+=);
+
+static_assert((struct ManyOperators &
+               (::ManyOperators::*)(struct ManyOperators const&)) &
+              ::ManyOperators::operator-=);
+
+static_assert((struct ManyOperators &
+               (::ManyOperators::*)(struct ManyOperators const&)) &
+              ::ManyOperators::operator*=);
+
+static_assert((struct ManyOperators &
+               (::ManyOperators::*)(struct ManyOperators const&)) &
+              ::ManyOperators::operator/=);
+
+static_assert((struct ManyOperators &
+               (::ManyOperators::*)(struct ManyOperators const&)) &
+              ::ManyOperators::operator%=);
+
+static_assert((struct ManyOperators &
+               (::ManyOperators::*)(struct ManyOperators const&)) &
+              ::ManyOperators::operator&=);
+
+static_assert((struct ManyOperators &
+               (::ManyOperators::*)(struct ManyOperators const&)) &
+              ::ManyOperators::operator|=);
+
+static_assert((struct ManyOperators &
+               (::ManyOperators::*)(struct ManyOperators const&)) &
+              ::ManyOperators::operator^=);
+
+static_assert((struct ManyOperators &
+               (::ManyOperators::*)(struct ManyOperators const&)) &
+              ::ManyOperators::operator<<=);
+
+static_assert((struct ManyOperators &
+               (::ManyOperators::*)(struct ManyOperators const&)) &
+              ::ManyOperators::operator>>=);
 
 #pragma clang diagnostic pop

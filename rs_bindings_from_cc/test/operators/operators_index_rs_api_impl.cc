@@ -49,6 +49,11 @@ __rust_thunk___ZN6crubit4test12ItemNonUnpinaSERKS1_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct crubit::test::ItemNonUnpin &
+               (::crubit::test::ItemNonUnpin::*)(
+                   struct crubit::test::ItemNonUnpin const&)) &
+              ::crubit::test::ItemNonUnpin::operator=);
+
 extern "C" void __rust_thunk___ZN6crubit4test12ItemNonUnpinD1Ev(
     struct crubit::test::ItemNonUnpin* __this) {
   std::destroy_at(__this);
@@ -69,11 +74,20 @@ __rust_thunk___ZNK6crubit4test23ContainerUnpinItemUnpinixEj(
   return std::addressof(__this->operator[](index));
 }
 
+static_assert((struct crubit::test::ItemUnpin const& (
+                  ::crubit::test::ContainerUnpinItemUnpin::*)(unsigned int)
+                   const) &
+              ::crubit::test::ContainerUnpinItemUnpin::operator[]);
+
 extern "C" struct crubit::test::ItemUnpin*
 __rust_thunk___ZN6crubit4test23ContainerUnpinItemUnpinixEj(
     class crubit::test::ContainerUnpinItemUnpin* __this, unsigned int index) {
   return std::addressof(__this->operator[](index));
 }
+
+static_assert((struct crubit::test::ItemUnpin &
+               (::crubit::test::ContainerUnpinItemUnpin::*)(unsigned int)) &
+              ::crubit::test::ContainerUnpinItemUnpin::operator[]);
 
 static_assert(CRUBIT_SIZEOF(class crubit::test::ContainerUnpinItemNonUnpin) ==
               48);
@@ -111,12 +125,22 @@ __rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinaSERKS1_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((class crubit::test::ContainerUnpinItemNonUnpin &
+               (::crubit::test::ContainerUnpinItemNonUnpin::*)(
+                   class crubit::test::ContainerUnpinItemNonUnpin const&)) &
+              ::crubit::test::ContainerUnpinItemNonUnpin::operator=);
+
 extern "C" class crubit::test::ContainerUnpinItemNonUnpin*
 __rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinaSEOS1_(
     class crubit::test::ContainerUnpinItemNonUnpin* __this,
     class crubit::test::ContainerUnpinItemNonUnpin* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
+
+static_assert((class crubit::test::ContainerUnpinItemNonUnpin &
+               (::crubit::test::ContainerUnpinItemNonUnpin::*)(
+                   class crubit::test::ContainerUnpinItemNonUnpin&&)) &
+              ::crubit::test::ContainerUnpinItemNonUnpin::operator=);
 
 extern "C" void __rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinC1Ev(
     class crubit::test::ContainerUnpinItemNonUnpin* __this) {
@@ -137,12 +161,21 @@ __rust_thunk___ZNK6crubit4test26ContainerUnpinItemNonUnpinixEj(
   return std::addressof(__this->operator[](index));
 }
 
+static_assert((struct crubit::test::ItemNonUnpin const& (
+                  ::crubit::test::ContainerUnpinItemNonUnpin::*)(unsigned int)
+                   const) &
+              ::crubit::test::ContainerUnpinItemNonUnpin::operator[]);
+
 extern "C" struct crubit::test::ItemNonUnpin*
 __rust_thunk___ZN6crubit4test26ContainerUnpinItemNonUnpinixEj(
     class crubit::test::ContainerUnpinItemNonUnpin* __this,
     unsigned int index) {
   return std::addressof(__this->operator[](index));
 }
+
+static_assert((struct crubit::test::ItemNonUnpin &
+               (::crubit::test::ContainerUnpinItemNonUnpin::*)(unsigned int)) &
+              ::crubit::test::ContainerUnpinItemNonUnpin::operator[]);
 
 static_assert(CRUBIT_SIZEOF(class crubit::test::ContainerNonUnpinItemUnpin) ==
               40);
@@ -162,6 +195,11 @@ __rust_thunk___ZN6crubit4test26ContainerNonUnpinItemUnpinaSERKS1_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((class crubit::test::ContainerNonUnpinItemUnpin &
+               (::crubit::test::ContainerNonUnpinItemUnpin::*)(
+                   class crubit::test::ContainerNonUnpinItemUnpin const&)) &
+              ::crubit::test::ContainerNonUnpinItemUnpin::operator=);
+
 extern "C" void __rust_thunk___ZN6crubit4test26ContainerNonUnpinItemUnpinC1Ev(
     class crubit::test::ContainerNonUnpinItemUnpin* __this) {
   crubit::construct_at(__this);
@@ -179,12 +217,21 @@ __rust_thunk___ZNK6crubit4test26ContainerNonUnpinItemUnpinixEj(
   return std::addressof(__this->operator[](index));
 }
 
+static_assert((struct crubit::test::ItemUnpin const& (
+                  ::crubit::test::ContainerNonUnpinItemUnpin::*)(unsigned int)
+                   const) &
+              ::crubit::test::ContainerNonUnpinItemUnpin::operator[]);
+
 extern "C" struct crubit::test::ItemUnpin*
 __rust_thunk___ZN6crubit4test26ContainerNonUnpinItemUnpinixEj(
     class crubit::test::ContainerNonUnpinItemUnpin* __this,
     unsigned int index) {
   return std::addressof(__this->operator[](index));
 }
+
+static_assert((struct crubit::test::ItemUnpin &
+               (::crubit::test::ContainerNonUnpinItemUnpin::*)(unsigned int)) &
+              ::crubit::test::ContainerNonUnpinItemUnpin::operator[]);
 
 static_assert(
     CRUBIT_SIZEOF(class crubit::test::ContainerNonUnpinItemNonUnpin) == 40);
@@ -203,6 +250,11 @@ __rust_thunk___ZN6crubit4test29ContainerNonUnpinItemNonUnpinaSERKS1_(
     class crubit::test::ContainerNonUnpinItemNonUnpin const* __param_0) {
   return std::addressof(__this->operator=(*__param_0));
 }
+
+static_assert((class crubit::test::ContainerNonUnpinItemNonUnpin &
+               (::crubit::test::ContainerNonUnpinItemNonUnpin::*)(
+                   class crubit::test::ContainerNonUnpinItemNonUnpin const&)) &
+              ::crubit::test::ContainerNonUnpinItemNonUnpin::operator=);
 
 extern "C" void
 __rust_thunk___ZN6crubit4test29ContainerNonUnpinItemNonUnpinC1Ev(
@@ -223,12 +275,22 @@ __rust_thunk___ZNK6crubit4test29ContainerNonUnpinItemNonUnpinixEj(
   return std::addressof(__this->operator[](index));
 }
 
+static_assert(
+    (struct crubit::test::ItemNonUnpin const& (
+        ::crubit::test::ContainerNonUnpinItemNonUnpin::*)(unsigned int) const) &
+    ::crubit::test::ContainerNonUnpinItemNonUnpin::operator[]);
+
 extern "C" struct crubit::test::ItemNonUnpin*
 __rust_thunk___ZN6crubit4test29ContainerNonUnpinItemNonUnpinixEj(
     class crubit::test::ContainerNonUnpinItemNonUnpin* __this,
     unsigned int index) {
   return std::addressof(__this->operator[](index));
 }
+
+static_assert(
+    (struct crubit::test::ItemNonUnpin &
+     (::crubit::test::ContainerNonUnpinItemNonUnpin::*)(unsigned int)) &
+    ::crubit::test::ContainerNonUnpinItemNonUnpin::operator[]);
 
 static_assert(CRUBIT_SIZEOF(struct crubit::test::ContainerValue) == 4);
 static_assert(alignof(struct crubit::test::ContainerValue) == 4);

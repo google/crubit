@@ -41,10 +41,16 @@ extern "C" struct Derived2* __rust_thunk___ZN8Derived2aSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct Derived2 & (::Derived2::*)(struct Derived2 const&)) &
+              ::Derived2::operator=);
+
 extern "C" struct Derived2* __rust_thunk___ZN8Derived2aSEOS_(
     struct Derived2* __this, struct Derived2* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
+
+static_assert((struct Derived2 & (::Derived2::*)(struct Derived2&&)) &
+              ::Derived2::operator=);
 
 static_assert(CRUBIT_SIZEOF(class VirtualDerived2) == 32);
 static_assert(alignof(class VirtualDerived2) == 8);
@@ -69,9 +75,17 @@ extern "C" class VirtualDerived2* __rust_thunk___ZN15VirtualDerived2aSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((class VirtualDerived2 &
+               (::VirtualDerived2::*)(class VirtualDerived2 const&)) &
+              ::VirtualDerived2::operator=);
+
 extern "C" class VirtualDerived2* __rust_thunk___ZN15VirtualDerived2aSEOS_(
     class VirtualDerived2* __this, class VirtualDerived2* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
+
+static_assert((class VirtualDerived2 &
+               (::VirtualDerived2::*)(class VirtualDerived2&&)) &
+              ::VirtualDerived2::operator=);
 
 #pragma clang diagnostic pop

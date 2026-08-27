@@ -53,10 +53,16 @@ extern "C" class Cloneable* __rust_thunk___ZN9CloneableaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((class Cloneable & (::Cloneable::*)(class Cloneable const&)) &
+              ::Cloneable::operator=);
+
 extern "C" class Cloneable* __rust_thunk___ZN9CloneableaSEOS_(
     class Cloneable* __this, class Cloneable* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
+
+static_assert((class Cloneable & (::Cloneable::*)(class Cloneable&&)) &
+              ::Cloneable::operator=);
 
 extern "C" void __rust_thunk___ZN9CloneableD1Ev(class Cloneable* __this) {
   std::destroy_at(__this);
@@ -79,6 +85,9 @@ extern "C" class Movable* __rust_thunk___ZN7MovableaSEOS_(
     class Movable* __this, class Movable* other) {
   return std::addressof(__this->operator=(std::move(*other)));
 }
+
+static_assert((class Movable & (::Movable::*)(class Movable&&)) &
+              ::Movable::operator=);
 
 extern "C" void __rust_thunk___ZN7MovableD1Ev(class Movable* __this) {
   std::destroy_at(__this);

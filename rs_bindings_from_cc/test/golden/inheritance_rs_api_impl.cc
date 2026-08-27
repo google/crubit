@@ -70,10 +70,17 @@ extern "C" class VirtualBase1* __rust_thunk___ZN12VirtualBase1aSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((class VirtualBase1 &
+               (::VirtualBase1::*)(class VirtualBase1 const&)) &
+              ::VirtualBase1::operator=);
+
 extern "C" class VirtualBase1* __rust_thunk___ZN12VirtualBase1aSEOS_(
     class VirtualBase1* __this, class VirtualBase1* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
+
+static_assert((class VirtualBase1 & (::VirtualBase1::*)(class VirtualBase1&&)) &
+              ::VirtualBase1::operator=);
 
 static_assert(CRUBIT_SIZEOF(class VirtualBase2) == 24);
 static_assert(alignof(class VirtualBase2) == 8);
@@ -98,10 +105,17 @@ extern "C" class VirtualBase2* __rust_thunk___ZN12VirtualBase2aSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((class VirtualBase2 &
+               (::VirtualBase2::*)(class VirtualBase2 const&)) &
+              ::VirtualBase2::operator=);
+
 extern "C" class VirtualBase2* __rust_thunk___ZN12VirtualBase2aSEOS_(
     class VirtualBase2* __this, class VirtualBase2* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
+
+static_assert((class VirtualBase2 & (::VirtualBase2::*)(class VirtualBase2&&)) &
+              ::VirtualBase2::operator=);
 
 static_assert(CRUBIT_SIZEOF(class VirtualDerived) == 32);
 static_assert(alignof(class VirtualDerived) == 8);
@@ -126,10 +140,18 @@ extern "C" class VirtualDerived* __rust_thunk___ZN14VirtualDerivedaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((class VirtualDerived &
+               (::VirtualDerived::*)(class VirtualDerived const&)) &
+              ::VirtualDerived::operator=);
+
 extern "C" class VirtualDerived* __rust_thunk___ZN14VirtualDerivedaSEOS_(
     class VirtualDerived* __this, class VirtualDerived* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
+
+static_assert((class VirtualDerived &
+               (::VirtualDerived::*)(class VirtualDerived&&)) &
+              ::VirtualDerived::operator=);
 
 static_assert(CRUBIT_SIZEOF(class MyAbstractClass) == 8);
 static_assert(alignof(class MyAbstractClass) == 8);
@@ -138,6 +160,10 @@ extern "C" class MyAbstractClass* __rust_thunk___ZN15MyAbstractClassaSERKS_(
     class MyAbstractClass* __this, class MyAbstractClass const* __param_0) {
   return std::addressof(__this->operator=(*__param_0));
 }
+
+static_assert((class MyAbstractClass &
+               (::MyAbstractClass::*)(class MyAbstractClass const&)) &
+              ::MyAbstractClass::operator=);
 
 static_assert(sizeof(class MethodBase1) == 1);
 static_assert(alignof(class MethodBase1) == 1);

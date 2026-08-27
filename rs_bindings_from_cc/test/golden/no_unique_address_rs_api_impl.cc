@@ -77,6 +77,11 @@ __rust_thunk___ZN30FieldInTailPadding_InnerStructaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct FieldInTailPadding_InnerStruct &
+               (::FieldInTailPadding_InnerStruct::*)(
+                   struct FieldInTailPadding_InnerStruct const&)) &
+              ::FieldInTailPadding_InnerStruct::operator=);
+
 extern "C" void __rust_thunk___ZN30FieldInTailPadding_InnerStructD1Ev(
     struct FieldInTailPadding_InnerStruct* __this) {
   std::destroy_at(__this);
@@ -106,11 +111,19 @@ __rust_thunk___ZN18FieldInTailPaddingaSERKS_(
   return std::addressof(__this->operator=(*__param_0));
 }
 
+static_assert((struct FieldInTailPadding &
+               (::FieldInTailPadding::*)(struct FieldInTailPadding const&)) &
+              ::FieldInTailPadding::operator=);
+
 extern "C" struct FieldInTailPadding*
 __rust_thunk___ZN18FieldInTailPaddingaSEOS_(
     struct FieldInTailPadding* __this, struct FieldInTailPadding* __param_0) {
   return std::addressof(__this->operator=(std::move(*__param_0)));
 }
+
+static_assert((struct FieldInTailPadding &
+               (::FieldInTailPadding::*)(struct FieldInTailPadding&&)) &
+              ::FieldInTailPadding::operator=);
 
 extern "C" void __rust_thunk___ZN18FieldInTailPaddingC1Eicc(
     struct FieldInTailPadding* __this, int inner_int, char inner_char,
