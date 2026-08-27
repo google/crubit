@@ -15,10 +15,11 @@ const _: () = assert!(::std::mem::size_of::<::from_golden::CloneAllocSource>() =
 const _: () = assert!(::std::mem::align_of::<::from_golden::CloneAllocSource>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(
-    s: &'static str,
+    s: *mut &'static str,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
+        let s = s.read();
         let __rs_return_value = ::from_golden::CloneAllocSource::create(s);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
@@ -26,8 +27,12 @@ unsafe extern "C" fn __crubit_thunk_create(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_uvalue(
     __self: &'static ::from_golden::CloneAllocSource,
-) -> &'static str {
-    unsafe { ::from_golden::CloneAllocSource::get_value(__self) }
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::from_golden::CloneAllocSource::get_value(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
@@ -48,8 +53,12 @@ const _: () = assert!(::std::mem::align_of::<::from_golden::CloneAllocType>() ==
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_uvalue(
     __self: &'static ::from_golden::CloneAllocType,
-) -> &'static str {
-    unsafe { ::from_golden::CloneAllocType::get_value(__self) }
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::from_golden::CloneAllocType::get_value(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 const _: () = assert!(::core::mem::offset_of!(::from_golden::CloneAllocType, value) == 0);
 const _: () = assert!(::std::mem::size_of::<::from_golden::CloneCopySource>() == 4);
@@ -193,10 +202,13 @@ unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003a
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_u_x00000026_x00000027static_x00000020str(
     __self: *mut ::from_golden::Opaque,
-) -> &'static str {
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __self = __self.read();
-        <::from_golden::Opaque as ::core::convert::Into<&'static str>>::into(__self)
+        let __rs_return_value =
+            <::from_golden::Opaque as ::core::convert::Into<&'static str>>::into(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -226,10 +238,11 @@ const _: () = assert!(::std::mem::size_of::<::from_golden::OpaqueRef>() == 16);
 const _: () = assert!(::std::mem::align_of::<::from_golden::OpaqueRef>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(
-    s: &'static str,
+    s: *mut &'static str,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
+        let s = s.read();
         let __rs_return_value = ::from_golden::OpaqueRef::create(s);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
@@ -237,16 +250,23 @@ unsafe extern "C" fn __crubit_thunk_create(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_uarg(
     __self: &'static ::from_golden::OpaqueRef<'static>,
-) -> &'static str {
-    unsafe { ::from_golden::OpaqueRef::get_arg(__self) }
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::from_golden::OpaqueRef::get_arg(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020str(
     __self: *mut ::from_golden::OpaqueRef<'static>,
-) -> &'static str {
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let __self = __self.read();
-        <::from_golden::OpaqueRef as ::core::convert::Into<&'static str>>::into(__self)
+        let __rs_return_value =
+            <::from_golden::OpaqueRef as ::core::convert::Into<&'static str>>::into(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

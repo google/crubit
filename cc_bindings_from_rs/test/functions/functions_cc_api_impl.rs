@@ -59,8 +59,15 @@ unsafe extern "C" fn __crubit_thunk_apply_ubinary_ui32_uop(
     unsafe { ::functions_golden::fn_param_ty_tests::apply_binary_i32_op(x, y, f) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_char_uto_uascii_ulowercase(c: char) -> char {
-    unsafe { ::functions_golden::fn_param_ty_tests::char_to_ascii_lowercase(c) }
+unsafe extern "C" fn __crubit_thunk_char_uto_uascii_ulowercase(
+    c: *mut char,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let c = c.read();
+        let __rs_return_value = ::functions_golden::fn_param_ty_tests::char_to_ascii_lowercase(c);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_uidentical_uref_uwith_uinferred_ulifetime(
@@ -84,12 +91,18 @@ unsafe extern "C" fn __crubit_thunk_set_umut_uref_uto_usum_uof_uints(
     unsafe { ::functions_golden::fn_param_ty_tests::set_mut_ref_to_sum_of_ints(sum, x, y) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_sum_ubytes(bytes: &'static [u8]) -> u32 {
-    unsafe { ::functions_golden::fn_param_ty_tests::sum_bytes(bytes) }
+unsafe extern "C" fn __crubit_thunk_sum_ubytes(bytes: *mut &'static [u8]) -> u32 {
+    unsafe {
+        let bytes = bytes.read();
+        ::functions_golden::fn_param_ty_tests::sum_bytes(bytes)
+    }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_prefix_usums(arg: &'static mut [i32]) -> () {
-    unsafe { ::functions_golden::generic_fn_tests::as_mut_trait_tests::prefix_sums(arg) }
+unsafe extern "C" fn __crubit_thunk_prefix_usums(arg: *mut &'static mut [i32]) -> () {
+    unsafe {
+        let arg = arg.read();
+        ::functions_golden::generic_fn_tests::as_mut_trait_tests::prefix_sums(arg)
+    }
 }
 const _: () = assert!(
     ::std::mem::size_of::<::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct>()
@@ -100,31 +113,41 @@ const _: () = assert!(
         == 4
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(
-    x: i32,
-) -> ::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct {
-    unsafe { ::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct::new(x) }
+unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct::new(x);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_diverse_ulifetimes(
-    arg1: &'static [i32],
-    arg2: &'static [i32],
-    arg3: &'static [i32],
-    result: &'static mut [i32],
+    arg1: *mut &'static [i32],
+    arg2: *mut &'static [i32],
+    arg3: *mut &'static [i32],
+    result: *mut &'static mut [i32],
 ) -> () {
     unsafe {
+        let arg1 = arg1.read();
+        let arg2 = arg2.read();
+        let arg3 = arg3.read();
+        let result = result.read();
         ::functions_golden::generic_fn_tests::as_ref_trait_tests::diverse_lifetimes(
             arg1, arg2, arg3, result,
         )
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_slice_uref_usum(arg: &'static [i32]) -> i32 {
-    unsafe { ::functions_golden::generic_fn_tests::as_ref_trait_tests::slice_ref_sum(arg) }
+unsafe extern "C" fn __crubit_thunk_slice_uref_usum(arg: *mut &'static [i32]) -> i32 {
+    unsafe {
+        let arg = arg.read();
+        ::functions_golden::generic_fn_tests::as_ref_trait_tests::slice_ref_sum(arg)
+    }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_static_ulifetime_urequirement(arg: &'static [i32]) -> i32 {
+unsafe extern "C" fn __crubit_thunk_static_ulifetime_urequirement(arg: *mut &'static [i32]) -> i32 {
     unsafe {
+        let arg = arg.read();
         ::functions_golden::generic_fn_tests::as_ref_trait_tests::static_lifetime_requirement(arg)
     }
 }

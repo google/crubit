@@ -203,9 +203,6 @@ TEST(PrimitiveTypesTest, FieldTypes) {
 
   static_assert(std::is_same_v<decltype(Types::i8_func),
                                std::type_identity_t<void(int8_t)>*>);
-
-  static_assert(std::is_same_v<decltype(Types::c_char_func),
-                               std::type_identity_t<void(char)>*>);
 }
 }  // namespace
 }  // namespace crubit

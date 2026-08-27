@@ -1834,23 +1834,27 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
+extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::result::HasDefault* __ret_ptr);
 }
 inline ::result::HasDefault HasDefault::new_(rs_std::StrRef val) {
   crubit::Slot<::result::HasDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
+  __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_val(::result::HasDefault const&);
+extern "C" void __crubit_thunk_val(::result::HasDefault const&,
+                                   rs_std::StrRef* __ret_ptr);
 }
 inline rs_std::StrRef HasDefault::val() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_val(self);
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_val(self, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasDefault, val_));
@@ -1877,13 +1881,13 @@ inline ::result::HasDefaultResult::HasDefaultResult(::crubit::UnsafeRelocateTag,
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
+extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::result::HasDefaultResult* __ret_ptr);
 }
 inline ::result::HasDefaultResult HasDefaultResult::new_(rs_std::StrRef val) {
   crubit::Slot<::result::HasDefaultResult> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
+  __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasDefaultResult::__crubit_field_offset_assertions() {
@@ -1898,12 +1902,16 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_val(::result::HasNoDefault const&);
+extern "C" void __crubit_thunk_val(::result::HasNoDefault const&,
+                                   rs_std::StrRef* __ret_ptr);
 }
 inline rs_std::StrRef HasNoDefault::val() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_val(self);
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_val(self, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasNoDefault, val_));
@@ -1930,14 +1938,14 @@ inline ::result::HasNoDefaultResult::HasNoDefaultResult(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
+extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::result::HasNoDefaultResult* __ret_ptr);
 }
 inline ::result::HasNoDefaultResult HasNoDefaultResult::new_(
     rs_std::StrRef val) {
   crubit::Slot<::result::HasNoDefaultResult> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
+  __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasNoDefaultResult::__crubit_field_offset_assertions() {
@@ -2080,14 +2088,19 @@ inline ::std::uint8_t take_result_copy_no_default_ok(
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_take_uresult_uhas_udefault(
+extern "C" void __crubit_thunk_take_uresult_uhas_udefault(
     rs_std::Result<::result::HasDefault, ::std::uint8_t> const* $(__anon1)
-        crubit_nonnull);
+        crubit_nonnull,
+    rs_std::StrRef* __ret_ptr);
 }
 inline rs_std::StrRef take_result_has_default(
     rs_std::Result<::result::HasDefault, ::std::uint8_t> const* $(__anon1)
         crubit_nonnull r CRUBIT_LIFETIME_BOUND) {
-  return __crubit_internal::__crubit_thunk_take_uresult_uhas_udefault(r);
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_take_uresult_uhas_udefault(
+      r, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {

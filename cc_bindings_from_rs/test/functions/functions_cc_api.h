@@ -475,11 +475,15 @@ inline ::std::int32_t apply_binary_i32_op(
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::char_ __crubit_thunk_char_uto_uascii_ulowercase(
-    rs_std::char_);
+extern "C" void __crubit_thunk_char_uto_uascii_ulowercase(
+    rs_std::char_*, rs_std::char_* __ret_ptr);
 }
 inline rs_std::char_ char_to_ascii_lowercase(rs_std::char_ c) {
-  return __crubit_internal::__crubit_thunk_char_uto_uascii_ulowercase(c);
+  crubit::Slot<rs_std::char_> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_char_uto_uascii_ulowercase(
+      &c, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -518,10 +522,10 @@ inline void set_mut_ref_to_sum_of_ints(::std::int32_t& sum, ::std::int32_t x,
 
 namespace __crubit_internal {
 extern "C" ::std::uint32_t __crubit_thunk_sum_ubytes(
-    rs_std::SliceRef<const ::std::uint8_t>);
+    rs_std::SliceRef<const ::std::uint8_t>*);
 }
 inline ::std::uint32_t sum_bytes(rs_std::SliceRef<const ::std::uint8_t> bytes) {
-  return __crubit_internal::__crubit_thunk_sum_ubytes(bytes);
+  return __crubit_internal::__crubit_thunk_sum_ubytes(&bytes);
 }
 
 }  // namespace functions::fn_param_ty_tests
@@ -529,10 +533,10 @@ inline ::std::uint32_t sum_bytes(rs_std::SliceRef<const ::std::uint8_t> bytes) {
 namespace functions::generic_fn_tests::as_mut_trait_tests {
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_prefix_usums(rs_std::SliceRef<::std::int32_t>);
+extern "C" void __crubit_thunk_prefix_usums(rs_std::SliceRef<::std::int32_t>*);
 }
 inline void prefix_sums(rs_std::SliceRef<::std::int32_t> arg) {
-  return __crubit_internal::__crubit_thunk_prefix_usums(arg);
+  return __crubit_internal::__crubit_thunk_prefix_usums(&arg);
 }
 
 }  // namespace functions::generic_fn_tests::as_mut_trait_tests
@@ -556,21 +560,26 @@ inline ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct::MyStruct(
 }
 
 namespace __crubit_internal {
-extern "C" ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct
-__crubit_thunk_new(::std::int32_t);
+extern "C" void __crubit_thunk_new(
+    ::std::int32_t,
+    ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct* __ret_ptr);
 }
 inline ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct
 MyStruct::new_(::std::int32_t x) {
-  return __crubit_internal::__crubit_thunk_new(x);
+  crubit::Slot<::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(MyStruct, __field0));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_diverse_ulifetimes(
-    rs_std::SliceRef<const ::std::int32_t>,
-    rs_std::SliceRef<const ::std::int32_t>,
-    rs_std::SliceRef<const ::std::int32_t>, rs_std::SliceRef<::std::int32_t>);
+    rs_std::SliceRef<const ::std::int32_t>*,
+    rs_std::SliceRef<const ::std::int32_t>*,
+    rs_std::SliceRef<const ::std::int32_t>*, rs_std::SliceRef<::std::int32_t>*);
 }
 inline void diverse_lifetimes(rs_std::SliceRef<const ::std::int32_t> arg1,
                               rs_std::SliceRef<const ::std::int32_t> arg2,
@@ -582,26 +591,26 @@ inline void diverse_lifetimes(rs_std::SliceRef<const ::std::int32_t> arg1,
                                    rs_std::SliceRef<const ::std::int32_t>,
                                    rs_std::SliceRef<const ::std::int32_t>>(
           arg1, arg2, arg3));
-  return __crubit_internal::__crubit_thunk_diverse_ulifetimes(arg1, arg2, arg3,
-                                                              result);
+  return __crubit_internal::__crubit_thunk_diverse_ulifetimes(&arg1, &arg2,
+                                                              &arg3, &result);
 }
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_slice_uref_usum(
-    rs_std::SliceRef<const ::std::int32_t>);
+    rs_std::SliceRef<const ::std::int32_t>*);
 }
 inline ::std::int32_t slice_ref_sum(
     rs_std::SliceRef<const ::std::int32_t> arg) {
-  return __crubit_internal::__crubit_thunk_slice_uref_usum(arg);
+  return __crubit_internal::__crubit_thunk_slice_uref_usum(&arg);
 }
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_static_ulifetime_urequirement(
-    rs_std::SliceRef<const ::std::int32_t>);
+    rs_std::SliceRef<const ::std::int32_t>*);
 }
 inline ::std::int32_t static_lifetime_requirement(
     rs_std::SliceRef<const ::std::int32_t> arg) {
-  return __crubit_internal::__crubit_thunk_static_ulifetime_urequirement(arg);
+  return __crubit_internal::__crubit_thunk_static_ulifetime_urequirement(&arg);
 }
 
 namespace __crubit_internal {

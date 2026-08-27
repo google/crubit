@@ -266,6 +266,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
             crubit_args.add("--extern={}={}".format(self_crate_name, self_rmeta.path))
 
     crubit_args.add("--enable-rmeta-interface")
+    crubit_args.add("--portable-abi-compatible")
     is_golden_test = is_golden_test_override if is_golden_test_override != None else ctx.attr._is_golden_test[BuildSettingInfo].value
     if is_golden_test:
         crubit_args.add("--is-golden-test")
