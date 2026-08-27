@@ -50,7 +50,10 @@ golden_test(
 crubit_cc_test(
     name = "functions_test",
     srcs = ["functions_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     # TODO(b/537283300): Re-enable x86 Android platforms once x86 ABI assertion failures are resolved.
     tags = ["no_test_android_x86"],
     deps = [
