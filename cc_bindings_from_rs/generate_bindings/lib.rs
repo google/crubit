@@ -367,6 +367,7 @@ pub fn new_database<'db>(
         has_default_ctor,
         copy_ctor_and_assignment_operator_codegen_style,
         move_ctor_and_assignment_operator_codegen_style,
+        is_cpp_move_constructible,
         generate_default_ctor,
         generate_copy_ctor_and_assignment_operator,
         generate_move_ctor_and_assignment_operator,
@@ -1786,6 +1787,58 @@ fn move_ctor_and_assignment_operator_codegen_style<'tcx>(
         self_ty.is_unpin(tcx, typing_env),
         db.copy_ctor_and_assignment_operator_codegen_style(def_id, self_ty).is_some(),
     )
+}
+
+/// Returns true if the type is move-constructible in C++.
+///
+/// For imported C++ types (types annotated with `CRUBIT_ANNOTATE: cpp_type=...`),
+/// this inspects `CRUBIT_ANNOTATE: cpp_move_constructible=` emitted by `rs_bindings_from_cc`.
+///
+/// For Rust types, this checks if Crubit can generate move operations for it via
+/// `move_ctor_and_assignment_operator_codegen_style`.
+fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+    match *ty.kind() {
+        // Primitives, references, and raw pointers are trivially movable in C++.
+        ty::Bool
+        | ty::Char
+        | ty::Int(_)
+        | ty::Uint(_)
+        | ty::Float(_)
+        | ty::Never
+        | ty::RawPtr(..)
+        | ty::Ref(..)
+        | ty::FnPtr(..) => true,
+
+        // ADT: check CrubitAttrs if C++-originated, else check move_ctor_and_assignment_operator_codegen_style.
+        ty::Adt(adt_def, _) => {
+            if let Ok(attrs) = crubit_attr::get_attrs(db.tcx(), adt_def.did())
+                && attrs.cpp_move_constructible
+            {
+                return true;
+            }
+
+            let always_specialize_generics = db
+                .crate_features(db.source_crate_num())
+                .contains(crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
+            let def_id = if always_specialize_generics
+                && db.parse_rs_std_template_specialization(ty).is_some()
+            {
+                None
+            } else {
+                Some(adt_def.did())
+            };
+
+            db.move_ctor_and_assignment_operator_codegen_style(def_id, ty).is_some()
+        }
+
+        // Tuples: all elements must be move-constructible.
+        ty::Tuple(fields) => fields.iter().all(|f| db.is_cpp_move_constructible(f)),
+
+        // Arrays: element type must be move-constructible.
+        ty::Array(elem_ty, _) => db.is_cpp_move_constructible(elem_ty),
+
+        _ => false,
+    }
 }
 
 /// Implementation of `BindingsGenerator::generate_move_ctor_and_assignment_operator`.

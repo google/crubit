@@ -285,6 +285,17 @@ impl CrubitAttrs {
             }
         }
     }
+
+    /// Returns true if this type is a C++ type imported via `rs_bindings_from_cc`
+    /// (rather than a manually bridged Rust type).
+    pub fn is_imported_cpp_type(&self) -> bool {
+        self.cpp_type.is_some()
+            && self.include_paths.is_empty()
+            && self.rust_to_cpp_converter.is_none()
+            && self.cpp_to_rust_converter.is_none()
+            && self.bridge_abi_rust.is_none()
+            && self.bridge_abi_cpp.is_none()
+    }
 }
 
 /// An enum that separates out bridging attributes. Successful construction of

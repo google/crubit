@@ -266,6 +266,17 @@ memoized::query_group! {
           self_ty: Ty<'tcx>,
       ) -> Option<MoveCodegenStyle>;
 
+      /// Returns true if the type is move-constructible in C++.
+      ///
+      /// For imported C++ types (types annotated with `CRUBIT_ANNOTATE: cpp_type=...`),
+      /// this inspects `CRUBIT_ANNOTATE: cpp_move_constructible=` emitted by `rs_bindings_from_cc`.
+      ///
+      /// For Rust types, this checks if Crubit can generate move operations for it via
+      /// `move_ctor_and_assignment_operator_codegen_style`.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:is_cpp_move_constructible
+      fn is_cpp_move_constructible(&self, ty: Ty<'tcx>) -> bool;
+
       /// Generates a default constructor for an ADT if possible (i.e. if the `Default`
       /// trait is implemented for the ADT).  Returns an error otherwise (e.g. if
       /// there is no `Default` impl, then the default constructor will be

@@ -423,20 +423,8 @@ fn cc_return_value_from_c_abi<'tcx>(
             unpack_expr: quote! { ::std::make_tuple(#(#unpack_exprs),*) },
         })
     } else {
-        if recursive && let Some(adt_def) = ty.ty_adt_def() {
-            let always_specialize_generics = db
-                .crate_features(db.source_crate_num())
-                .contains(crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
-            let def_id = if always_specialize_generics
-                && db.parse_rs_std_template_specialization(ty).is_some()
-            {
-                None
-            } else {
-                Some(adt_def.did())
-            };
-            if db.move_ctor_and_assignment_operator_codegen_style(def_id, ty).is_none() {
-                bail!("Can't return type `{ty}` by value inside a compound data type without a move constructor");
-            }
+        if recursive && ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
+            bail!("Can't return type `{ty}` by value inside a compound data type without a move constructor");
         }
         let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
         let cc_type = format_ty_for_cc_amending_prereqs(db, ty, prereqs)?;

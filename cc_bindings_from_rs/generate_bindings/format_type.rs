@@ -536,11 +536,7 @@ pub fn format_ty_for_cc<'tcx>(
 
             if location.is_bridgeable() && is_c_abi_compatible_by_value(db, ty) {
                 ensure!(
-                    db.move_ctor_and_assignment_operator_codegen_style(
-                        Some(adt.did()),
-                        ty,
-                    )
-                    .is_some(),
+                    db.is_cpp_move_constructible(ty),
                     "Can't pass a type by value without a move constructor. See crubit.rs/rust/movable_types for what types are C++ movable."
                 );
             }
@@ -1397,10 +1393,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                 if let Some(spec) = db.parse_rs_std_template_specialization(ty) {
                     // Specifically when embedding a template specialization within an Option, we
                     // need it to be movable.
-                    if !db
-                        .move_ctor_and_assignment_operator_codegen_style(Some(adt.did()), ty)
-                        .is_some()
-                    {
+                    if !db.is_cpp_move_constructible(ty) {
                         bail!(
                             "Failed to construct CrubitAbiType for {ty} because it is not movable."
                         );
@@ -1423,10 +1416,9 @@ pub fn crubit_abi_type_from_ty<'tcx>(
 
                 let tcx = db.tcx();
                 ensure!(
-                    db.move_ctor_and_assignment_operator_codegen_style(
-                        Some(adt.did()),
+                    db.is_cpp_move_constructible(
                         crate::normalize_ty(tcx, tcx.param_env(adt.did()), tcx.type_of(adt.did()).instantiate(tcx, substs))
-                    ).is_some(),
+                    ),
                     "Failed to construct CrubitAbiType for {ty} because it does not have a move ctor or assignment operator."
                 );
 

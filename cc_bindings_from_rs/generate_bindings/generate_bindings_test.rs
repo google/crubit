@@ -8,7 +8,7 @@ use code_gen_utils::NamespaceQualifier;
 use generate_bindings::format_namespace_bound_cc_tokens;
 use proc_macro2::{Ident, TokenStream, TokenTree};
 use quote::quote;
-use run_compiler_test_support::run_compiler_for_testing;
+use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
 use rustc_span::symbol::Symbol;
 use test_helpers::{
     bindings_db_for_tests, bindings_db_for_tests_with_ignore_symbols_from_files, test_format_item,
@@ -2346,5 +2346,78 @@ fn test_unbindable_types_warning_on_private_defs() {
         assert!(!bindings.cc_api.to_string().contains("PrivateUnion"));
         assert!(!bindings.cc_api.to_string().contains("NestedPrivateStruct"));
         assert!(!bindings.cc_api.to_string().contains("AnnotatedNestedPrivateStruct"));
+    });
+}
+
+#[test]
+fn test_is_cpp_move_constructible() {
+    let test_src = r#"
+        #![allow(dead_code)]
+
+        pub struct PureRustMovable(pub i32);
+
+        pub struct PureRustNonMovable {
+            ptr: *mut i32,
+        }
+        impl Drop for PureRustNonMovable {
+            fn drop(&mut self) {}
+        }
+
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppMovable"]
+        #[doc = "CRUBIT_ANNOTATE: cpp_move_constructible="]
+        pub struct CppMovable {
+            ptr: *mut i32,
+        }
+        impl Drop for CppMovable {
+            fn drop(&mut self) {}
+        }
+
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppNonMovable"]
+        pub struct CppNonMovable {
+            ptr: *mut i32,
+        }
+        impl Drop for CppNonMovable {
+            fn drop(&mut self) {}
+        }
+
+        pub type MovableTuple = (i32, CppMovable);
+        pub type NonMovableTuple = (i32, CppNonMovable);
+        pub type MovableOption = Option<PureRustNonMovable>;
+        pub type NonMovableResult = Result<PureRustNonMovable, i32>;
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = bindings_db_for_tests(tcx);
+        let find_ty = |name: &str| {
+            let local_def_id = find_def_id_by_name(tcx, name);
+            tcx.type_of(local_def_id).instantiate_identity().skip_normalization()
+        };
+
+        // Primitives
+        assert!(db.is_cpp_move_constructible(tcx.types.i32));
+        assert!(db.is_cpp_move_constructible(tcx.types.bool));
+
+        // Pure Rust struct with trivial drop (no drop glue)
+        assert!(db.is_cpp_move_constructible(find_ty("PureRustMovable")));
+
+        // Pure Rust struct with custom Drop and no Default/Clone
+        assert!(!db.is_cpp_move_constructible(find_ty("PureRustNonMovable")));
+
+        // Imported C++ type with cpp_move_constructible attribute (even with custom Drop and no Default/Clone)
+        assert!(db.is_cpp_move_constructible(find_ty("CppMovable")));
+
+        // Imported C++ type without cpp_move_constructible attribute
+        assert!(!db.is_cpp_move_constructible(find_ty("CppNonMovable")));
+
+        // Tuple of movable types
+        assert!(db.is_cpp_move_constructible(find_ty("MovableTuple")));
+
+        // Tuple containing non-movable type
+        assert!(!db.is_cpp_move_constructible(find_ty("NonMovableTuple")));
+
+        // Option of a non-movable type is movable because Option implements Default (None) unconditionally
+        assert!(db.is_cpp_move_constructible(find_ty("MovableOption")));
+
+        // Result containing a non-movable type is not movable (Result doesn't implement Default)
+        assert!(!db.is_cpp_move_constructible(find_ty("NonMovableResult")));
     });
 }

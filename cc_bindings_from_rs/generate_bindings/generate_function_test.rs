@@ -1711,7 +1711,7 @@ fn test_format_item_fn_repr_transparent_coroutine() {
 }
 
 #[test]
-fn test_imported_cpp_type_pass_by_value() {
+fn test_imported_cpp_type_pass_by_value_unmovable() {
     let test_src = r#"
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeCppType"]
             pub struct ImportedCppType {
@@ -1729,6 +1729,60 @@ fn test_imported_cpp_type_pass_by_value() {
         assert_eq!(
             err,
             "Can't pass type `ImportedCppType` by value without a move constructor. See crubit.rs/rust/movable_types for what types are C++ movable."
+        );
+    });
+}
+
+#[test]
+fn test_imported_cpp_type_pass_by_value_movable() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: cpp_type=SomeCppType"]
+            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            pub struct ImportedCppType {
+                pub x: i32,
+            }
+
+            impl Drop for ImportedCppType {
+                fn drop(&mut self) {}
+            }
+
+            pub fn pass_by_value(_x: ImportedCppType) {}
+        "#;
+    test_format_item(test_src, "pass_by_value", |result| {
+        let snippet = result.unwrap().unwrap();
+        assert_cc_matches!(
+            snippet.main_api.tokens,
+            quote! {
+                void pass_by_value(::SomeCppType _x);
+            }
+        );
+    });
+}
+
+#[test]
+fn test_imported_cpp_type_return_by_value_movable() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: cpp_type=SomeCppType"]
+            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            pub struct ImportedCppType {
+                pub x: i32,
+            }
+
+            impl Drop for ImportedCppType {
+                fn drop(&mut self) {}
+            }
+
+            pub fn return_by_value() -> ImportedCppType {
+                ImportedCppType { x: 42 }
+            }
+        "#;
+    test_format_item(test_src, "return_by_value", |result| {
+        let snippet = result.unwrap().unwrap();
+        assert_cc_matches!(
+            snippet.main_api.tokens,
+            quote! {
+                ::SomeCppType return_by_value();
+            }
         );
     });
 }
