@@ -26,11 +26,9 @@ rust_library(
     srcs = [
         "unique_ptr.rs",
     ],
-    cc_deps = [
-        ":test_helpers",
-        "//support/cc_std",
-    ],
+    cc_deps = [":test_helpers"],
     proc_macro_deps = ["//support:crubit_annotate"],
+    deps = ["//support/cc_std"],
 )
 
 cc_bindings_from_rust(

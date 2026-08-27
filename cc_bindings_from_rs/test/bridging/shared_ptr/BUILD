@@ -24,10 +24,8 @@ rust_library(
     srcs = [
         "shared_ptr.rs",
     ],
-    cc_deps = [
-        "//support/cc_std",
-    ],
     proc_macro_deps = ["//support:crubit_annotate"],
+    deps = ["//support/cc_std"],
 )
 
 golden_test(
