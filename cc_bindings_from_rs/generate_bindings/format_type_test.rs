@@ -42,7 +42,7 @@ fn test_ty<TestFn, Expectation>(
 
     fn get_test_function_ty<'tcx>(tcx: TyCtxt<'tcx>, type_location: TypeLocation) -> Ty<'tcx> {
         let sig_mid = {
-            let def_id = find_def_id_by_name(tcx, "test_function").to_def_id();
+            let def_id = find_def_id_by_name(tcx, "test_function");
             liberate_and_deanonymize_late_bound_regions(
                 tcx,
                 tcx.fn_sig(def_id).instantiate_identity(),
@@ -449,7 +449,7 @@ fn test_format_ty_for_cc_successes() {
             }
 
             if let Some(expected_prereq_def) = expected_prereq_def {
-                let expected_def_id = find_def_id_by_name(tcx, expected_prereq_def).to_def_id();
+                let expected_def_id = find_def_id_by_name(tcx, expected_prereq_def);
                 assert_eq!(1, actual_prereq_defs.len());
                 assert_eq!(expected_def_id, actual_prereq_defs.into_iter().next().unwrap());
             } else {
@@ -460,8 +460,7 @@ fn test_format_ty_for_cc_successes() {
             }
 
             if let Some(expected_prereq_fwd_decl) = expected_prereq_fwd_decl {
-                let expected_def_id =
-                    find_def_id_by_name(tcx, expected_prereq_fwd_decl).to_def_id();
+                let expected_def_id = find_def_id_by_name(tcx, expected_prereq_fwd_decl);
                 assert_eq!(1, actual_prereq_fwd_decls.len());
                 assert_eq!(expected_def_id, actual_prereq_fwd_decls.into_iter().next().unwrap());
             } else {
@@ -759,7 +758,7 @@ fn test_format_ty_for_cc_const_array() {
         pub const ARR: [i32; 42] = [0; 42];
     };
     run_compiler_for_testing(test_src.to_string(), |tcx| {
-        let def_id = find_def_id_by_name(tcx, "ARR").to_def_id();
+        let def_id = find_def_id_by_name(tcx, "ARR");
         let ty = generate_bindings::normalize_ty(
             tcx,
             tcx.param_env(def_id),

@@ -218,6 +218,9 @@ fn generate_cpp_enum<'tcx>(
     let rs_type = core.rs_fully_qualified_name.to_string();
     let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
     let def_id = core.def_id.expect("cpp_enum requires a valid DefId");
+    let adt_def = tcx.adt_def(def_id);
+    assert!(!adt_def.is_enum(), "C++ enums cannot be Rust enums");
+    assert!(adt_def.repr().transparent(), "C++ enums must be #[repr(transparent)]");
     if let Some(tag) = generate_must_use_tag(tcx, def_id) {
         attributes.push(tag);
     }
