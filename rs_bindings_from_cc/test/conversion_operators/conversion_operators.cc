@@ -20,8 +20,16 @@ ConvertsIntoVariousTypes::operator int() const { return value; }
 
 ConvertsIntoVariousTypes::operator double() { return value; }
 
+ConvertsIntoVariousTypes::operator ForeignMovable() const {
+  return ForeignMovable(value);
+}
+
 ConvertsIntoVariousTypes::operator ForeignImmovable() const {
   return ForeignImmovable(value);
+}
+
+ConvertsRvalueOnly::operator DstLocalMovable() && {
+  return DstLocalMovable(value);
 }
 
 namespace namespace_a {

@@ -45,8 +45,13 @@ struct ConvertsIntoVariousTypes {
   // Value conversion to foreign/primitive, which should implement Into.
   explicit operator int() const;
 
-  // Value conversion to a foreign immovable type, which should be skipped.
+  explicit operator ForeignMovable() const;
   explicit operator ForeignImmovable() const;
+};
+
+struct ConvertsRvalueOnly {
+  int value;
+  explicit operator DstLocalMovable() &&;
 };
 
 namespace namespace_b {
