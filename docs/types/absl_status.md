@@ -48,7 +48,7 @@ C++ functions returning `Status`/`StatusOr` can be defined as normal:
 ```
 {{ #include ../../examples/types/absl_status/cpp_api.h }}
 ```
-<!--  content:ReturnsStatus -->
+<!--  content:absl::Status -->
 
 
 ...and will return `NewStatus` / `NewStatusOr<T>` in Rust:
@@ -141,7 +141,7 @@ output parameter:
 ```
 {{ #include ../../examples/types/absl_status/cpp_api.h }}
 ```
-<!--  content:ReturnsStatusWithProto -->
+<!--  function:ReturnsStatusWithProto -->
 
 
 In Rust, create an instance of the message and pass its mutable view
@@ -150,7 +150,7 @@ In Rust, create an instance of the message and pass its mutable view
 ```
 {{ #include ../../examples/types/absl_status/user_of_cpp_api.rs }}
 ```
-<!--  content:ReturnsStatusWithProto -->
+<!--  function:test_returns_status_with_proto -->
 
 
 ## Migration and Future Evolution
