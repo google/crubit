@@ -5,7 +5,7 @@
 extern crate rustc_span;
 
 use crate::db::BindingsGenerator;
-use arc_anyhow::Result;
+use arc_anyhow::{anyhow, Result};
 use code_gen_utils::{format_cc_type_name, make_rs_ident, NamespaceQualifier};
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
@@ -102,7 +102,10 @@ impl FullyQualifiedName {
                 | "decltype(char16_t(0))"
                 | "decltype(char32_t(0))"
                 | "decltype(wchar_t(0))"
-                | "wchar_t" => format_cc_type_name(path.as_str(), features),
+                | "wchar_t" => path
+                    .as_str()
+                    .parse()
+                    .map_err(|e| anyhow!("Failed to format cpp_type `{path}`: {e}")),
                 path => {
                     let (maybe_const_prefix, path) = if let Some(path) = path.strip_prefix("const ")
                     {

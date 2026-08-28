@@ -54,13 +54,7 @@ unsigned long long c_ulonglong();
 
 ::std::uint16_t c_ushort();
 
-// Error generating bindings for function `rust_api_golden::c_wchar_t` defined
-// at
-// support/ffi_11/tests/type_identity/rust_api.rs;l=52:
-// Error formatting function return type `ffi_11::wchar_type::c_wchar_t`: Failed
-// to format type for the definition of `ffi_11::wchar_type::c_wchar_t`: Error
-// formatting the fully-qualified C++ name of `c_wchar_t`: `wchar_t` is a C++
-// reserved word and can't be used as a C++ identifier
+wchar_t c_wchar_t();
 
 namespace __crubit_internal {
 extern "C" decltype(char(0)) __crubit_thunk_c_uchar();
@@ -177,6 +171,13 @@ extern "C" ::std::uint16_t __crubit_thunk_c_uushort();
 }
 inline ::std::uint16_t c_ushort() {
   return __crubit_internal::__crubit_thunk_c_uushort();
+}
+
+namespace __crubit_internal {
+extern "C" wchar_t __crubit_thunk_c_uwchar_ut();
+}
+inline wchar_t c_wchar_t() {
+  return __crubit_internal::__crubit_thunk_c_uwchar_ut();
 }
 
 }  // namespace rust_api

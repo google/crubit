@@ -90,7 +90,9 @@ struct rs_std::impl<::lifetimes::StructWithLifetime, ::rs::core::fmt::Debug> {
   // defined at
   // cc_bindings_from_rs/test/lifetimes/lifetimes.rs;l=8:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`:
+  //   Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  //   type `std::fmt::Error` is not supported (b/258259459)
 };
 
 namespace lifetimes {

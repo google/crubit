@@ -179,7 +179,9 @@ struct rs_std::impl<::consts::NestedStruct, ::rs::core::fmt::Debug> {
   // `<consts_golden::NestedStruct as std::fmt::Debug>::fmt` defined at
   // cc_bindings_from_rs/test/consts/consts.rs;l=72:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`:
+  //   Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  //   type `std::fmt::Error` is not supported (b/258259459)
 };
 
 template <>
@@ -195,7 +197,9 @@ struct rs_std::impl<::consts::Point, ::rs::core::fmt::Debug> {
   // std::fmt::Debug>::fmt` defined at
   // cc_bindings_from_rs/test/consts/consts.rs;l=56:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`:
+  //   Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  //   type `std::fmt::Error` is not supported (b/258259459)
 };
 
 template <>
@@ -211,7 +215,9 @@ struct rs_std::impl<::consts::StructWithArray, ::rs::core::fmt::Debug> {
   // `<consts_golden::StructWithArray as std::fmt::Debug>::fmt` defined at
   // cc_bindings_from_rs/test/consts/consts.rs;l=87:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`:
+  //   Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  //   type `std::fmt::Error` is not supported (b/258259459)
 };
 
 template <>
@@ -227,7 +233,9 @@ struct rs_std::impl<::consts::StructWithStr, ::rs::core::fmt::Debug> {
   // `<consts_golden::StructWithStr<'a> as std::fmt::Debug>::fmt` defined at
   // cc_bindings_from_rs/test/consts/consts.rs;l=97:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`:
+  //   Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  //   type `std::fmt::Error` is not supported (b/258259459)
 };
 
 template <>
@@ -243,7 +251,9 @@ struct rs_std::impl<::consts::TupleStruct, ::rs::core::fmt::Debug> {
   // `<consts_golden::TupleStruct as std::fmt::Debug>::fmt` defined at
   // cc_bindings_from_rs/test/consts/consts.rs;l=66:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`:
+  //   Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  //   type `std::fmt::Error` is not supported (b/258259459)
 };
 
 namespace consts {

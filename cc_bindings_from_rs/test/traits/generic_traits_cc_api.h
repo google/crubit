@@ -50,7 +50,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // Error generating bindings for struct `generic_traits_golden::StructWithAlias`
 // defined at
 // cc_bindings_from_rs/test/traits/generic_traits.rs;l=60:
-// Zero-sized types (ZSTs) are not supported (b/258259459)
+// Zero-sized type `generic_traits_golden::StructWithAlias` is not supported
+// (b/258259459)
 
 // Error generating bindings for trait `generic_traits_golden::TraitWithConst`
 // defined at

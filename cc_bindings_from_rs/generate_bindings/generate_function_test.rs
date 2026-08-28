@@ -1836,3 +1836,21 @@ fn test_return_composable_bridged_type_in_tuple() {
         );
     });
 }
+
+#[test]
+fn test_return_result_with_unsupported_error_type() {
+    let test_src = r#"
+            pub fn foo() -> Result<i32, core::alloc::LayoutError> {
+                Ok(0)
+            }
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let err = result.unwrap_err();
+        assert_eq!(
+            err,
+            "Error formatting function return type `std::result::Result<i32, std::alloc::LayoutError>`: \
+            \n  Failed to format type for the definition of `std::alloc::LayoutError`: \
+             Zero-sized type `std::alloc::LayoutError` is not supported (b/258259459)"
+        );
+    });
+}
