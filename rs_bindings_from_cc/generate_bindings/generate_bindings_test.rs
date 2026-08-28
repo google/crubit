@@ -789,7 +789,6 @@ fn test_leading_colons_for_cpp_type() -> Result<()> {
         rs_api,
         quote! {
             #[doc = "CRUBIT_ANNOTATE: cpp_type=:: S"]
-            #[doc = "CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct S
         }
     );

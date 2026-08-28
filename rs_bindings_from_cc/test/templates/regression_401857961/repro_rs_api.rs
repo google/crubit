@@ -27,7 +27,6 @@ pub mod repro {
     #[cfi_encoding = "N5repro8IntervalE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=repro :: Interval
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct Interval {
         /// Reason for representing this field as a blob of bytes:
         /// Unsupported type 'char[1]': Unsupported clang::Type class 'ConstantArray'

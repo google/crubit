@@ -23,7 +23,6 @@
 #[cfi_encoding = "10Nontrivial"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
@@ -311,7 +310,6 @@ pub mod nontrivial {
 #[cfi_encoding = "16NontrivialInline"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialInline
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct NontrivialInline {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
@@ -498,7 +496,6 @@ pub mod nontrivial_inline {
 #[cfi_encoding = "17NontrivialMembers"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialMembers
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct NontrivialMembers {
     pub nontrivial_member: crate::Nontrivial,
 }
@@ -606,7 +603,6 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for NontrivialMembers {
 #[cfi_encoding = "15NontrivialUnpin"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialUnpin
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct NontrivialUnpin {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
@@ -892,7 +888,6 @@ pub fn TakesUnpinByConstRvalueReference(
 #[cfi_encoding = "17NontrivialByValue"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NontrivialByValue
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct NontrivialByValue {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

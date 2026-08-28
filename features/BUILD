@@ -229,6 +229,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling emitting `cpp_move_constructible` annotations on records.
+#
+# See b/553644030
+crubit_feature_hint(
+    name = "cpp_move_constructible_annotation",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["cpp_move_constructible_annotation"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

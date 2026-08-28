@@ -18,7 +18,6 @@
 #[cfi_encoding = "11PlainStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=PlainStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct PlainStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -44,7 +43,6 @@ impl Default for PlainStruct {
 #[cfi_encoding = "37StructWithLifetimeboundMemberFunction"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundMemberFunction
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithLifetimeboundMemberFunction {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -94,7 +92,6 @@ pub mod struct_with_lifetimebound_member_function {
 #[cfi_encoding = "40StructWithLifetimeboundRefMemberFunction"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundRefMemberFunction
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithLifetimeboundRefMemberFunction {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -331,7 +328,6 @@ pub mod drop_class_with_lifetimebound_ref_member_function {
 #[cfi_encoding = "27StructWithLifetimeboundCtor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundCtor
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithLifetimeboundCtor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -369,7 +365,6 @@ impl ::ctor::CtorNew<crate::PlainStruct> for StructWithLifetimeboundCtor {
 #[cfi_encoding = "30StructWithLifetimeboundRefCtor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=StructWithLifetimeboundRefCtor
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithLifetimeboundRefCtor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

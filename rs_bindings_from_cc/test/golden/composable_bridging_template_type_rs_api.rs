@@ -32,7 +32,6 @@ pub fn ReturnsValue() -> crate::MyOption<crate::__CcTemplateInst5ValueIiE> {
 #[cfi_encoding = "__CcTemplateInst5ValueIiE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Value < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub(crate) struct __CcTemplateInst5ValueIiE {
     pub value: ::ffi_11::c_int,
 }

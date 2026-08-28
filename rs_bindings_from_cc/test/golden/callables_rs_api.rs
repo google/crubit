@@ -83,7 +83,6 @@ pub fn map_bridged(
 #[cfi_encoding = "13ABICompatible"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ABICompatible
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct ABICompatible {
     pub x: ::ffi_11::c_int,
 }
@@ -126,7 +125,6 @@ pub fn map_abi_compatible(
 #[cfi_encoding = "16LayoutCompatible"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=LayoutCompatible
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct LayoutCompatible {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:

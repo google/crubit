@@ -21,7 +21,6 @@
 #[cfi_encoding = "5Base0"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Base0
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Base0 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -47,7 +46,6 @@ impl Default for Base0 {
 #[cfi_encoding = "5Base1"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=Base1
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Base1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -79,7 +77,6 @@ impl Default for Base1 {
 #[cfi_encoding = "5Base2"]
 #[repr(C, align(2))]
 ///CRUBIT_ANNOTATE: cpp_type=Base2
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Base2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -108,7 +105,6 @@ impl Default for Base2 {
 #[cfi_encoding = "7Derived"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=Derived
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 12],
     pub derived_1: ::ffi_11::c_char,
@@ -135,7 +131,6 @@ impl Default for Derived {
 #[cfi_encoding = "12VirtualBase1"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualBase1
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct VirtualBase1 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
 }
@@ -239,7 +234,6 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualBase1 {
 #[cfi_encoding = "12VirtualBase2"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualBase2
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct VirtualBase2 {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 24],
 }
@@ -343,7 +337,6 @@ impl ::ctor::Assign<::ctor::RvalueReference<'_, Self>> for VirtualBase2 {
 #[cfi_encoding = "14VirtualDerived"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=VirtualDerived
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct VirtualDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 32],
 }
@@ -479,7 +472,6 @@ impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for MyAbstractClass {
 #[cfi_encoding = "11MethodBase1"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MethodBase1
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct MethodBase1 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -553,7 +545,6 @@ pub mod method_base1 {
 #[cfi_encoding = "11MethodBase2"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MethodBase2
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct MethodBase2 {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -600,7 +591,6 @@ pub mod method_base2 {
 #[cfi_encoding = "13MethodDerived"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MethodDerived
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct MethodDerived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

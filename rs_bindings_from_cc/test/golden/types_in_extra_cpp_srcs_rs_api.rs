@@ -30,7 +30,6 @@
 #[cfi_encoding = "8MyStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MyStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct MyStruct {
     pub a: ::ffi_11::c_int,
     pub b: ::ffi_11::c_int,

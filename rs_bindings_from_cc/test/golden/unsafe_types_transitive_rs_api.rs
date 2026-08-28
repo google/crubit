@@ -23,7 +23,6 @@
 #[cfi_encoding = "13PublicPointer"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=PublicPointer
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct PublicPointer {
     pub p: *mut ::ffi_11::c_int,
 }
@@ -49,7 +48,6 @@ impl Default for PublicPointer {
 #[cfi_encoding = "14PrivatePointer"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PrivatePointer
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct PrivatePointer {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -83,7 +81,6 @@ impl Default for PrivatePointer {
 #[cfi_encoding = "23TransitivePublicPointer"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TransitivePublicPointer
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct TransitivePublicPointer {
     pub r#pub: crate::PublicPointer,
     pub r#priv: crate::PrivatePointer,
@@ -114,7 +111,6 @@ impl Default for TransitivePublicPointer {
 #[cfi_encoding = "5Union"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Union
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub union Union {
     pub i: ::ffi_11::c_int,
     pub f: f32,

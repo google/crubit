@@ -69,7 +69,10 @@ crubit_rust_test(
 crubit_test_cc_library(
     name = "leaf_cc_lib",
     hdrs = ["leaf_cc_lib.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [
+        "//features:cpp_move_constructible_annotation",
+        "//features:supported",
+    ],
 )
 
 rust_library(

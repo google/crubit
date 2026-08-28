@@ -21,7 +21,6 @@
 #[cfi_encoding = "17DocCommentSlashes"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DocCommentSlashes
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct DocCommentSlashes {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// A field.
@@ -123,7 +122,6 @@ pub mod doc_comment_slashes {
 #[cfi_encoding = "14DocCommentBang"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DocCommentBang
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct DocCommentBang {
     /// A field
     pub i: ::ffi_11::c_int,
@@ -153,7 +151,6 @@ impl Default for DocCommentBang {
 #[cfi_encoding = "24MultilineCommentTwoStars"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MultilineCommentTwoStars
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct MultilineCommentTwoStars {
     /// A field
     pub i: ::ffi_11::c_int,
@@ -183,7 +180,6 @@ impl Default for MultilineCommentTwoStars {
 #[cfi_encoding = "11LineComment"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=LineComment
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct LineComment {
     /// A field
     pub i: ::ffi_11::c_int,
@@ -213,7 +209,6 @@ impl Default for LineComment {
 #[cfi_encoding = "16MultilineOneStar"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MultilineOneStar
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct MultilineOneStar {
     /// A field
     pub i: ::ffi_11::c_int,

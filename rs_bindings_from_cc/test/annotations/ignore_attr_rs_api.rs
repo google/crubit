@@ -23,7 +23,6 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test8MyStructB3fooE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: MyStruct
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct MyStruct {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -51,7 +50,6 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test12PackedStructE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: PackedStruct
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct PackedStruct {
             pub x: ::ffi_11::c_char,
             pub y: ::ffi_11::c_char,
@@ -80,7 +78,6 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test13PointerStructE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: PointerStruct
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct PointerStruct {
             pub x: ::ffi_11::c_int,
         }

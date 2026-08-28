@@ -328,7 +328,6 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
         quote! {
             #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=StructWithUnsupportedField"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct StructWithUnsupportedField {
                 #[doc = " Doc comment for `my_field`.\n \n Reason for representing this field as a blob of bytes:\n Unsupported `volatile` qualifier: volatile int"]
                 pub(crate) my_field: [::core::mem::MaybeUninit<u8>; 4],
@@ -370,7 +369,6 @@ fn test_struct_with_only_bitfields() -> Result<()> {
         quote! {
            #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
            pub struct SomeStruct { ...  }
         }
     );
@@ -408,7 +406,6 @@ fn test_struct_with_unnamed_bitfield_member() -> Result<()> {
         quote! {
             #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct SomeStruct {
                 pub first_field: ::ffi_11::c_int, ...
                 __bitfields1: [::core::mem::MaybeUninit<u8>; 4],
@@ -593,7 +590,6 @@ fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
         quote! {
             #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=StructWithUnnamedMembers"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct StructWithUnnamedMembers {
                pub first_field: ::ffi_11::c_int,
                #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'StructWithUnnamedMembers::(anonymous struct at ./ir_from_cc_virtual_header.h:7:11)': No generated bindings found for ''"]
@@ -710,7 +706,6 @@ fn test_base_class_subobject_layout() -> Result<()> {
         quote! {
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Derived {
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
                 pub z: ::ffi_11::c_short,
@@ -739,7 +734,6 @@ fn test_base_class_multiple_inheritance_subobject_layout() -> Result<()> {
         quote! {
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Derived {
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
                 pub z: ::ffi_11::c_short,
@@ -768,7 +762,6 @@ fn test_base_class_deep_inheritance_subobject_layout() -> Result<()> {
         quote! {
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Derived {
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
                 pub z: ::ffi_11::c_short,
@@ -796,7 +789,6 @@ fn test_base_class_subobject_fieldless_layout() -> Result<()> {
         quote! {
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Derived {
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 16],
             }
@@ -821,7 +813,6 @@ fn test_base_class_subobject_empty_fieldless() -> Result<()> {
         quote! {
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Derived {
                 ...
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
@@ -848,7 +839,6 @@ fn test_base_class_subobject_empty() -> Result<()> {
         rs_api,
         quote! {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Derived {
                 pub x: ::ffi_11::c_short,
             }
@@ -908,7 +898,6 @@ fn test_no_unique_address() -> Result<()> {
         quote! {
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Struct"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Struct {
                 ...
                 pub(crate) field1: [::core::mem::MaybeUninit<u8>; 8],
@@ -962,7 +951,6 @@ fn test_no_unique_address_last_field() -> Result<()> {
         quote! {
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Struct"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Struct {
                 ...
                 pub(crate) field1: [::core::mem::MaybeUninit<u8>; 8],
@@ -994,7 +982,6 @@ fn test_no_unique_address_empty() -> Result<()> {
         quote! {
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Struct"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Struct {
                 pub x: ::ffi_11::c_int,
             }
@@ -1033,7 +1020,6 @@ fn test_base_class_subobject_empty_last_field() -> Result<()> {
         quote! {
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Struct"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Struct {}
             ...
             impl Struct {
@@ -1073,7 +1059,6 @@ fn test_doc_comment_record() -> Result<()> {
             #[cfi_encoding = "10SomeStruct"]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct SomeStruct {
                 # [doc = " Field doc"]
                 pub field: ::ffi_11::c_int,
@@ -1104,7 +1089,6 @@ fn test_basic_union() -> Result<()> {
             #[cfi_encoding = "9SomeUnion"]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeUnion"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub union SomeUnion {
                 pub some_field: ::ffi_11::c_int,
                 pub some_bigger_field: ::ffi_11::c_longlong,
@@ -1149,7 +1133,6 @@ fn test_union_with_opaque_field() -> Result<()> {
         quote! {
             #[repr(C, align(4))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=MyUnion"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub union MyUnion { ...
                 first_field: [::core::mem::MaybeUninit<u8>; 56],
                 pub second_field: ::ffi_11::c_int,
@@ -1224,7 +1207,6 @@ fn test_union_with_private_fields() -> Result<()> {
             #[cfi_encoding = "26SomeUnionWithPrivateFields"]
             #[repr(C, align(8))]
             #[doc="CRUBIT_ANNOTATE: cpp_type=SomeUnionWithPrivateFields"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub union SomeUnionWithPrivateFields {
                 pub public_field: ::ffi_11::c_int,
                 #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
@@ -1300,7 +1282,6 @@ fn test_empty_struct() -> Result<()> {
             #[cfi_encoding = "11EmptyStruct"]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=EmptyStruct"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct EmptyStruct {
                 ...
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
@@ -1341,7 +1322,6 @@ fn test_empty_union() -> Result<()> {
             #[cfi_encoding = "10EmptyUnion"]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=EmptyUnion"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub union EmptyUnion {
                 ...
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
@@ -1384,7 +1364,6 @@ fn test_union_field_with_nontrivial_destructor() -> Result<()> {
         quote! {
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=UnionWithNontrivialField"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub union UnionWithNontrivialField {
                 pub trivial_field: ::ffi_11::c_int,
                 pub nontrivial_field: ::core::mem::ManuallyDrop<crate::NontrivialStruct>,
@@ -1426,7 +1405,6 @@ fn test_union_with_constructors() -> Result<()> {
             #[cfi_encoding = "28UnionWithDefaultConstructors"]
             #[repr(C)]
             #[doc="CRUBIT_ANNOTATE: cpp_type=UnionWithDefaultConstructors"]
-            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub union UnionWithDefaultConstructors {
                 pub a: ::ffi_11::c_int,
             }
@@ -1567,7 +1545,6 @@ fn test_no_aligned_attr() {
     assert_rs_matches! {rs_api, quote! {
         #[repr(C)]
         #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
-        #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
         pub struct SomeStruct { ... }
     }};
 }
@@ -1582,7 +1559,6 @@ fn test_aligned_attr() {
     assert_rs_matches! {rs_api, quote! {
        #[repr(C, align(64))]
         #[doc="CRUBIT_ANNOTATE: cpp_type=SomeStruct"]
-        #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
        pub struct SomeStruct { ... }
       }
     };
@@ -2093,7 +2069,6 @@ fn test_thread_safe_annotation_generates_send_sync() -> Result<()> {
         rs_api,
         quote! {
             #[doc = "CRUBIT_ANNOTATE: cpp_thread_safe="]
-            #[doc = "CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct ThreadSafeStruct
         }
     );
@@ -2185,6 +2160,78 @@ fn test_crubit_override_debug_false() -> Result<()> {
         rs_api,
         quote! {
             impl ::core::fmt::Debug for S { ... }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_cpp_move_constructible_annotation_enabled() -> Result<()> {
+    let proto = ir_proto_from_cc("struct Movable {};")?;
+    let mut ir = make_test_ir(&proto)?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::CppMoveConstructibleAnnotation;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[doc="CRUBIT_ANNOTATE: cpp_type=Movable"]
+            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+            pub struct Movable { ... }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_cpp_move_constructible_annotation_disabled_by_default() -> Result<()> {
+    let proto = ir_proto_from_cc("struct Movable {};")?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[doc="CRUBIT_ANNOTATE: cpp_type=Movable"]
+            pub struct Movable { ... }
+        }
+    );
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_cpp_move_constructible_annotation_non_movable() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct NonMovable {
+            NonMovable(NonMovable&&) = delete;
+        };
+        "#,
+    )?;
+    let mut ir = make_test_ir(&proto)?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::CppMoveConstructibleAnnotation;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[doc="CRUBIT_ANNOTATE: cpp_type=NonMovable"]
+            pub struct NonMovable { ... }
+        }
+    );
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
         }
     );
     Ok(())

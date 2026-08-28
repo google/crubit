@@ -80,6 +80,11 @@ flagset::flags! {
 
         /// Check if async fn return type implements Send modulo regions.
         AsyncFnSendModuloRegions,
+
+        /// Emit `CRUBIT_ANNOTATE: cpp_move_constructible=` annotations on records.
+        ///
+        /// See b/553644030.
+        CppMoveConstructibleAnnotation,
     }
 }
 
@@ -114,6 +119,7 @@ impl CrubitFeature {
             Self::ThunklessAccessors => "thunkless_accessors",
             Self::OoCasting => "oo_casting",
             Self::AsyncFnSendModuloRegions => "async_fn_send_modulo_regions",
+            Self::CppMoveConstructibleAnnotation => "cpp_move_constructible_annotation",
         }
     }
 
@@ -152,6 +158,9 @@ impl CrubitFeature {
             Self::OoCasting => "//features:oo_casting",
             Self::AsyncFnSendModuloRegions => {
                 "//features:async_fn_send_modulo_regions"
+            }
+            Self::CppMoveConstructibleAnnotation => {
+                "//features:cpp_move_constructible_annotation"
             }
         }
     }
@@ -194,6 +203,9 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"thunkless_accessors" => CrubitFeature::ThunklessAccessors.into(),
         b"oo_casting" => CrubitFeature::OoCasting.into(),
         b"async_fn_send_modulo_regions" => CrubitFeature::AsyncFnSendModuloRegions.into(),
+        b"cpp_move_constructible_annotation" => {
+            CrubitFeature::CppMoveConstructibleAnnotation.into()
+        }
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
@@ -326,6 +338,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::AsyncFnSendModuloRegions
+                | CrubitFeature::CppMoveConstructibleAnnotation
         );
     }
 
@@ -365,6 +378,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::AsyncFnSendModuloRegions
+                | CrubitFeature::CppMoveConstructibleAnnotation
         );
     }
 
@@ -389,6 +403,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::AsyncFnSendModuloRegions
+                | CrubitFeature::CppMoveConstructibleAnnotation
         );
     }
 
@@ -414,6 +429,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::AsyncFnSendModuloRegions
+                | CrubitFeature::CppMoveConstructibleAnnotation
         );
     }
 
@@ -439,6 +455,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::AsyncFnSendModuloRegions
+                | CrubitFeature::CppMoveConstructibleAnnotation
         );
     }
 }

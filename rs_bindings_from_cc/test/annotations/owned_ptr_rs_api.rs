@@ -23,7 +23,6 @@
 #[cfi_encoding = "5Thing"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Thing
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct RawThing {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub value: i32,
@@ -99,7 +98,6 @@ pub mod raw_thing {
 #[cfi_encoding = "11CustomThing"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=CustomThing
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct CustomRawThing {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub value: i32,

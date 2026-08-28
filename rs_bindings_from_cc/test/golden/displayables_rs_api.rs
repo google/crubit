@@ -18,7 +18,6 @@
 #[cfi_encoding = "17DisplayableStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DisplayableStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct DisplayableStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

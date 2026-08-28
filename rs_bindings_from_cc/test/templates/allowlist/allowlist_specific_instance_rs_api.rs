@@ -41,7 +41,6 @@ pub fn ShortDoubleCaller(mut i: crate::__CcTemplateInst2TsIsdE) {
 #[cfi_encoding = "__CcTemplateInst2TsIifE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Ts < int , float >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct __CcTemplateInst2TsIifE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -93,7 +92,6 @@ pub mod cc_template_inst2_ts_iif_e {
 #[cfi_encoding = "__CcTemplateInst2TsIsdE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Ts < short , double >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct __CcTemplateInst2TsIsdE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

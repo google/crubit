@@ -22,7 +22,6 @@
 #[cfi_encoding = "9SomeClass"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeClass
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct SomeClass {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

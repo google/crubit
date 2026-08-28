@@ -18,7 +18,6 @@
 #[cfi_encoding = "14DifferentScope"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DifferentScope
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct DifferentScope {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -54,7 +53,6 @@ pub mod test_namespace_bindings {
     #[cfi_encoding = "N23test_namespace_bindings13TemplateParamE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=test_namespace_bindings :: TemplateParam
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct TemplateParam {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -147,7 +145,6 @@ pub mod private_classes {
     #[cfi_encoding = "N15private_classes14HasPrivateTypeE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=private_classes :: HasPrivateType
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct HasPrivateType {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }

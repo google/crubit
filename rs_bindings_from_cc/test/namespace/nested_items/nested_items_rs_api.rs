@@ -27,7 +27,6 @@ pub mod same {
 #[cfi_encoding = "4Same"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Same
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Same {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -64,7 +63,6 @@ pub mod same_items {
     #[cfi_encoding = "N4Same10NestedItemE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=Same :: NestedItem
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct NestedItem {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -129,7 +127,6 @@ pub mod foo {
     #[cfi_encoding = "N3foo3FooE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=foo :: Foo
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct Foo {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }
@@ -156,7 +153,6 @@ pub mod foo {
         #[cfi_encoding = "N3foo3Foo3fooE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=foo :: Foo :: foo
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct foo {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -193,7 +189,6 @@ pub mod foo {
             #[cfi_encoding = "N3foo3Foo3foo4ItemE"]
             #[repr(C)]
             ///CRUBIT_ANNOTATE: cpp_type=foo :: Foo :: foo :: Item
-            ///CRUBIT_ANNOTATE: cpp_move_constructible=
             pub struct Item {
                 __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
             }
@@ -226,7 +221,6 @@ pub mod foo {
 #[cfi_encoding = "8OuterCpp"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=OuterCpp
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct OuterRustName {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -253,7 +247,6 @@ pub mod outer_rust_name {
     #[cfi_encoding = "N8OuterCpp5InnerE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=OuterCpp :: Inner
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct Inner {
         __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     }

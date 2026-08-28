@@ -24,7 +24,6 @@ pub mod ns {
     #[cfi_encoding = "N2ns3FooE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=ns :: Foo
-    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct Foo {
         /// A field
         pub i: ::ffi_11::c_int,
@@ -76,7 +75,6 @@ pub fn foo() {
 #[cfi_encoding = "3Bar"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Bar
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Bar {
     pub i: ::ffi_11::c_int,
 }
@@ -103,7 +101,6 @@ impl Default for Bar {
 #[cfi_encoding = "13HasNoComments"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=HasNoComments
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct HasNoComments {
     pub i: ::ffi_11::c_int,
 }

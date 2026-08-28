@@ -835,7 +835,10 @@ pub fn generate_record<'a>(
                     "CRUBIT_ANNOTATE: cpp_thread_safe="
                 )));
             }
-            if record.move_constructor() != SpecialMemberFunc::Unavailable {
+            if crubit_features
+                .contains(crubit_feature::CrubitFeature::CppMoveConstructibleAnnotation)
+                && record.move_constructor() != SpecialMemberFunc::Unavailable
+            {
                 annotations.push(DocCommentAttr(intern!(
                     db.interner(),
                     "CRUBIT_ANNOTATE: cpp_move_constructible="

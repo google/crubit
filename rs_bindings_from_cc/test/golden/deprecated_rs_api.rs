@@ -31,7 +31,6 @@ pub fn deprecated_function_with_message() {
 #[cfi_encoding = "16DeprecatedStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct DeprecatedStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -58,7 +57,6 @@ impl Default for DeprecatedStruct {
 #[cfi_encoding = "27DeprecatedStructWithMessage"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedStructWithMessage
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct DeprecatedStructWithMessage {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -172,7 +170,6 @@ pub type DeprecatedUsingWithMessage = ::ffi_11::c_int;
 #[cfi_encoding = "16DeprecatedFields"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=DeprecatedFields
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct DeprecatedFields {
     #[deprecated]
     pub no_message: ::ffi_11::c_int,

@@ -17,7 +17,6 @@
 #[cfi_encoding = "24DestructionOrderRecorder"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=DestructionOrderRecorder
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct DestructionOrderRecorder {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -133,7 +132,6 @@ pub mod destruction_order_recorder {
 #[cfi_encoding = "27FieldDestructionOrderTester"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldDestructionOrderTester
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct FieldDestructionOrderTester {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:

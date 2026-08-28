@@ -37,7 +37,6 @@ pub fn NotBoundCaller(mut i: crate::__CcTemplateInst10NotBoundTsIifE) {
 #[cfi_encoding = "__CcTemplateInst13AlwaysBoundTsIifE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=AlwaysBoundTs < int , float >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct __CcTemplateInst13AlwaysBoundTsIifE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -93,7 +92,6 @@ pub mod cc_template_inst13_always_bound_ts_iif_e {
 #[cfi_encoding = "__CcTemplateInst10NotBoundTsIifE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NotBoundTs < int , float >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct __CcTemplateInst10NotBoundTsIifE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

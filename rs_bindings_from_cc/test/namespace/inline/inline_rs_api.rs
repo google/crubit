@@ -25,7 +25,6 @@ pub mod foo {
         #[cfi_encoding = "N3foo7inline18MyStructE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=foo :: inline1 :: MyStruct
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct MyStruct {
             pub value: ::ffi_11::c_int,
         }

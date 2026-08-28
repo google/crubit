@@ -18,7 +18,6 @@
 #[cfi_encoding = "1S"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=S
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct S {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -93,7 +92,6 @@ pub mod s {
 #[cfi_encoding = "1T"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=T
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct T {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
     /// Reason for representing this field as a blob of bytes:
@@ -144,7 +142,6 @@ pub mod t {
 #[cfi_encoding = "5Chars"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Chars
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Chars {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -250,7 +247,6 @@ pub mod chars {
 #[cfi_encoding = "5Bools"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Bools
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Bools {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:

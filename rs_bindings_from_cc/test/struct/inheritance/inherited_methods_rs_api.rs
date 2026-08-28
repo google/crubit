@@ -48,7 +48,6 @@ impl ::ctor::CtorNew<()> for Nonmovable {
 #[cfi_encoding = "4Base"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Base
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Base {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -110,7 +109,6 @@ pub mod base {
 #[cfi_encoding = "7Derived"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Derived
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Derived {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

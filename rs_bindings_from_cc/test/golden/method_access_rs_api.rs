@@ -18,7 +18,6 @@
 #[cfi_encoding = "6Struct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Struct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Struct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -65,7 +64,6 @@ pub mod r#struct {
 #[cfi_encoding = "5Class"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Class
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Class {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

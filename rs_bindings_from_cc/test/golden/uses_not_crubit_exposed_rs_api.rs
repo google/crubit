@@ -23,7 +23,6 @@
 #[cfi_encoding = "20CannotUpcastInCrubit"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=CannotUpcastInCrubit
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct CannotUpcastInCrubit {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
 }

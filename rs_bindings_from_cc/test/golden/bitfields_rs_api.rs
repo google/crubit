@@ -18,7 +18,6 @@
 #[cfi_encoding = "13WithBitfields"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=WithBitfields
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct WithBitfields {
     // f1 : 2 bits
     __bitfields0: [::core::mem::MaybeUninit<u8>; 1],
@@ -66,7 +65,6 @@ impl Default for WithBitfields {
 #[cfi_encoding = "23AlignmentRegressionTest"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=AlignmentRegressionTest
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AlignmentRegressionTest {
     // code_point : 31 bits
     // status : 1 bits

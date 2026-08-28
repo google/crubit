@@ -31,7 +31,6 @@ pub(crate) fn GetMyTemplate() -> crate::__CcTemplateInst10MyTemplateIiE {
 #[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub(crate) struct __CcTemplateInst10MyTemplateIiE {
     pub field: ::ffi_11::c_int,
 }

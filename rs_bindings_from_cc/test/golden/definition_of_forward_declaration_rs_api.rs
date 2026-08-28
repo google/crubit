@@ -18,7 +18,6 @@
 #[cfi_encoding = "21ForwardDeclaredStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ForwardDeclaredStruct
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct ForwardDeclaredStruct {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

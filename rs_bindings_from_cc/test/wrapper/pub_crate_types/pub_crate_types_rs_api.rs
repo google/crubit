@@ -23,7 +23,6 @@ pub(crate) type TemplateIntAlias = crate::__CcTemplateInst8TemplateIiE;
 #[cfi_encoding = "16CompoundDataType"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=CompoundDataType
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct CompoundDataType {
     pub(crate) template_int: crate::__CcTemplateInst8TemplateIiE,
 }
@@ -111,7 +110,6 @@ pub(crate) fn GetOtherPubCrateTemplate2Int() -> crate::__CcTemplateInst9Template
 #[cfi_encoding = "__CcTemplateInst9Template2IiE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Template2 < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub(crate) struct __CcTemplateInst9Template2IiE {
     pub value: ::ffi_11::c_int,
 }
@@ -141,7 +139,6 @@ forward_declare::unsafe_define!(
 #[cfi_encoding = "__CcTemplateInst8TemplateIiE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Template < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub(crate) struct __CcTemplateInst8TemplateIiE {
     pub value: ::ffi_11::c_int,
 }

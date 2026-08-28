@@ -18,7 +18,6 @@
 #[cfi_encoding = "9Noninline"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Noninline
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Noninline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -89,7 +88,6 @@ pub mod noninline {
 #[cfi_encoding = "6Inline"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Inline
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Inline {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

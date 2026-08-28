@@ -23,7 +23,6 @@ pub fn MustBindFn() {
 #[cfi_encoding = "8Copyable"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Copyable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Copyable {
     pub field: ::ffi_11::c_int,
 }
@@ -49,7 +48,6 @@ impl Default for Copyable {
 #[cfi_encoding = "9Cloneable"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=Cloneable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Cloneable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
@@ -170,7 +168,6 @@ impl ::ctor::PinnedDrop for Cloneable {
 #[cfi_encoding = "7Movable"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=Movable
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Movable {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:
