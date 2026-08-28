@@ -37,7 +37,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "never_test",
     srcs = ["never_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":never_cc_api",
         "//testing/base/public:gunit_main",

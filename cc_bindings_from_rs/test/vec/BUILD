@@ -43,7 +43,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "vec_test",
     srcs = ["vec_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":vec_cc_api",
         "//support/rs_std:rs_alloc",

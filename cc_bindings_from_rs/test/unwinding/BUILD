@@ -25,7 +25,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "unwinding_test",
     srcs = ["unwinding_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":panic_function_cc_api",
         "//testing/base/public:gunit_main",

@@ -59,8 +59,8 @@ TEST(VecTest, Indexing) {
   EXPECT_EQ(const_v[1], 42);
 
   // Bounds check (death test)
-  EXPECT_DEATH(v[3], "");
-  EXPECT_DEATH(const_v[3], "");
+  EXPECT_DEATH_IF_SUPPORTED(v[3], "");
+  EXPECT_DEATH_IF_SUPPORTED(const_v[3], "");
 }
 
 TEST(VecTest, CStringCallability) {

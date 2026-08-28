@@ -6,13 +6,14 @@
 
 #include "gtest/gtest.h"
 
-// Wrapper around EXPECT_DEATH that accommodates Android emulators/devices.
-// Android assert and panic messages are routed to logcat (/dev/log) rather than
-// stderr, so death tests cannot inspect stderr/stdout for regex matching.
+// Wrapper around EXPECT_DEATH_IF_SUPPORTED accommodating Android (where panics
+// route to logcat) and iOS (where fork is prohibited in the sandbox).
 #ifdef __ANDROID__
-#define CRUBIT_EXPECT_DEATH(statement, regex) EXPECT_DEATH(statement, "")
+#define CRUBIT_EXPECT_DEATH(statement, regex) \
+  EXPECT_DEATH_IF_SUPPORTED(statement, "")
 #else
-#define CRUBIT_EXPECT_DEATH(statement, regex) EXPECT_DEATH(statement, regex)
+#define CRUBIT_EXPECT_DEATH(statement, regex) \
+  EXPECT_DEATH_IF_SUPPORTED(statement, regex)
 #endif
 
 namespace {
