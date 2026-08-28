@@ -63,6 +63,50 @@ fn is_ctor_by_value(db: &BindingsGenerator<'_>, did: DefId) -> bool {
         || matches_qualified_name(db, did, &["rust_out", "ctor", "ByValue"])
 }
 
+/// Returns true if `did` is the `unique_ptr` struct (e.g. `cc_std::std::unique_ptr`).
+fn is_unique_ptr(db: &BindingsGenerator<'_>, did: DefId) -> bool {
+    let tcx = db.tcx();
+    if tcx.item_name(did).as_str() != "unique_ptr" {
+        return false;
+    }
+    matches_qualified_name(db, did, &["cc_std", "std", "unique_ptr"])
+        || matches_qualified_name(db, did, &["cpp_std", "std", "unique_ptr"])
+        || matches_qualified_name(db, did, &["cc_std_impl", "unique_ptr", "unique_ptr"])
+        || matches_qualified_name(db, did, &["rust_out", "std", "unique_ptr"])
+        || matches_qualified_name(db, did, &["rust_out", "unique_ptr"])
+        || matches_qualified_name(db, did, &["unique_ptr", "unique_ptr"])
+        || {
+            let Ok(attrs) = crubit_attr::get_attrs(tcx, did) else { return false };
+            let Ok(Some(bridging_attrs)) = attrs.get_bridging_attrs() else { return false };
+            let cpp_type = match bridging_attrs {
+                BridgingAttrs::JustCppType { cpp_type, .. } => cpp_type,
+                BridgingAttrs::ExternCFuncConverters { cpp_type, .. } => cpp_type,
+                BridgingAttrs::Composable { cpp_type, .. } => cpp_type,
+            };
+            cpp_type.as_str().contains("unique_ptr")
+        }
+}
+
+/// Returns true if `ty` implements the `Delete` trait (e.g., C++ types with virtual destructors or
+/// overloaded operator delete).
+fn does_type_implement_delete<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+    let tcx = db.tcx();
+    let delete_trait_id = tcx.all_traits_including_private().find(|&trait_id| {
+        if tcx.item_name(trait_id).as_str() != "Delete" {
+            return false;
+        }
+        matches_qualified_name(db, trait_id, &["operator", "Delete"])
+            || matches_qualified_name(db, trait_id, &["rust_out", "operator", "Delete"])
+            || matches_qualified_name(db, trait_id, &["rust_out", "Delete"])
+            || matches_qualified_name(db, trait_id, &["cc_std", "operator", "Delete"])
+            || matches_qualified_name(db, trait_id, &["cc_std_impl", "operator", "Delete"])
+    });
+    let Some(delete_trait_id) = delete_trait_id else {
+        return false;
+    };
+    query_compiler::does_type_implement_trait(tcx, ty, delete_trait_id, [])
+}
+
 /// Returns true if `ty` is annotated with `cpp_thread_safe`.
 fn is_cpp_thread_safe<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<bool> {
     let ty::TyKind::Adt(adt, _) = ty.kind() else {
@@ -1585,6 +1629,16 @@ fn is_manually_annotated_bridged_adt<'tcx>(
     let Some(bridging_attrs) = attrs.get_bridging_attrs()? else {
         return Ok(None);
     };
+
+    if is_unique_ptr(db, adt.did())
+        && let Some(element_subst) = substs.first()
+        && let Some(element_ty) = element_subst.as_type()
+        && does_type_implement_delete(db, element_ty)
+    {
+        bail!(
+            "crubit.rs/errors/delete: `{element_ty}` implements the `Delete` trait and cannot be used in a `unique_ptr`. Use `virtual_unique_ptr` instead."
+        );
+    }
 
     match bridging_attrs {
         BridgingAttrs::JustCppType { include_paths, cpp_type } => {

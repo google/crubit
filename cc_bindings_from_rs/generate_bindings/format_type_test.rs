@@ -754,7 +754,6 @@ fn test_format_ty_for_cc_template_arg_integer_types() {
         },
     );
 }
-
 #[test]
 fn test_format_ty_for_cc_const_array() {
     let test_src = quote! {
@@ -778,4 +777,110 @@ fn test_format_ty_for_cc_const_array() {
             }
         );
     });
+}
+
+fn unique_ptr_preamble() -> TokenStream {
+    quote! {
+        pub mod operator {
+            pub unsafe trait Delete {
+                unsafe fn delete(p: *mut Self);
+            }
+        }
+
+        #[repr(C)]
+        pub struct StructWithDelete {
+            pub x: i32,
+        }
+        unsafe impl operator::Delete for StructWithDelete {
+            unsafe fn delete(_p: *mut Self) {}
+        }
+
+        #[repr(C)]
+        pub struct StructWithoutDelete {
+            pub x: i32,
+        }
+
+        pub mod cc_std {
+            pub mod std {
+                #[allow(non_camel_case_types)]
+                #[doc="CRUBIT_ANNOTATE: cpp_type = ::std::unique_ptr<{T}>"]
+                #[doc="CRUBIT_ANNOTATE: include_path = <memory>"]
+                pub struct unique_ptr<T>(pub *mut T);
+
+                #[allow(non_camel_case_types)]
+                #[doc="CRUBIT_ANNOTATE: cpp_type = ::std::unique_ptr<{T}>"]
+                #[doc="CRUBIT_ANNOTATE: include_path = <memory>"]
+                pub struct virtual_unique_ptr<T: crate::operator::Delete>(pub *mut T);
+            }
+        }
+    }
+}
+
+#[test]
+fn test_format_ty_for_cc_unique_ptr_without_delete_succeeds() {
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &[(
+            "cc_std::std::unique_ptr<StructWithoutDelete>",
+            "::std::unique_ptr<::rust_out::StructWithoutDelete>",
+        )],
+        unique_ptr_preamble(),
+        |desc, tcx, ty, expected| {
+            let db = bindings_db_for_tests(tcx);
+            let cc_snippet = db
+                .format_ty_for_cc(
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .unwrap();
+            let parsed_expected = expected.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(cc_snippet.tokens.to_string(), parsed_expected, "{desc}");
+        },
+    );
+}
+
+#[test]
+fn test_format_ty_for_cc_virtual_unique_ptr_with_delete_succeeds() {
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &[(
+            "cc_std::std::virtual_unique_ptr<StructWithDelete>",
+            "::std::unique_ptr<::rust_out::StructWithDelete>",
+        )],
+        unique_ptr_preamble(),
+        |desc, tcx, ty, expected| {
+            let db = bindings_db_for_tests(tcx);
+            let cc_snippet = db
+                .format_ty_for_cc(
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .unwrap();
+            let parsed_expected = expected.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(cc_snippet.tokens.to_string(), parsed_expected, "{desc}");
+        },
+    );
+}
+
+#[test]
+fn test_format_ty_for_cc_unique_ptr_with_delete_fails() {
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &[(
+            "cc_std::std::unique_ptr<StructWithDelete>",
+            "crubit.rs/errors/delete: `StructWithDelete` implements the `Delete` trait and cannot be used in a `unique_ptr`. Use `virtual_unique_ptr` instead.",
+        )],
+        unique_ptr_preamble(),
+        |desc, tcx, ty, expected_err| {
+            let db = bindings_db_for_tests(tcx);
+            let anyhow_err = db
+                .format_ty_for_cc(
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .expect_err(&format!("Expecting error for: {desc}"));
+            let actual_err = format!("{anyhow_err:#}");
+            assert_eq!(&actual_err, *expected_err, "{desc}");
+        },
+    );
 }
