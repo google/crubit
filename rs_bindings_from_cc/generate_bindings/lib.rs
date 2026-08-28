@@ -382,16 +382,20 @@ fn generate_item_impl<'a>(db: &BindingsGenerator<'a>, item: &Item<'a>) -> Result
                 cpp_type = db.debug_name(existing_rust_type.id()),
                 rs_type_kind = rs_type_kind.display(db),
             );
-            let assertions = existing_rust_type
-                .size_align()
-                .map(|size_align| {
-                    generate_struct_and_union::rs_size_align_assertions(
-                        rs_type_kind.to_token_stream(db),
-                        &size_align,
-                    )
-                })
-                .into_iter()
-                .collect_vec();
+            let assertions = if rs_type_kind.is_complete() {
+                existing_rust_type
+                    .size_align()
+                    .map(|size_align| {
+                        generate_struct_and_union::rs_size_align_assertions(
+                            rs_type_kind.to_token_stream(db),
+                            &size_align,
+                        )
+                    })
+                    .into_iter()
+                    .collect_vec()
+            } else {
+                vec![]
+            };
 
             ApiSnippets {
                 generated_items: HashMap::from([(

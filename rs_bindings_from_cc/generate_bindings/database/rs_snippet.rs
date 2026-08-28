@@ -692,6 +692,7 @@ pub enum RsTypeKind<'a> {
         /// How the Rust type should be spelled, after interpolating template arguments.
         /// This is the stringified TokenStream because TokenStream is not PartialEq + Eq + Hash.
         rust_type: Rc<str>,
+        is_complete: bool,
     },
 }
 
@@ -1285,21 +1286,28 @@ impl<'a> RsTypeKind<'a> {
             existing_rust_type.rs_name(),
         );
 
-        let mut iter = existing_rust_type.template_args().iter().map(|subst| {
-            Ok(match subst {
-                TemplateArg::Type(type_param) => {
-                    let rs_type_kind = db.rs_type_kind(type_param.clone())?;
-                    ensure!(
-                        !rs_type_kind.pass_by_value_bridges(),
-                        "Type parameter cannot be a non-layout-compatible bridge type: {}",
-                        rs_type_kind.display(&db),
-                    );
-                    rs_type_kind.to_token_stream(db)
-                }
-                TemplateArg::Int(i) => i.to_token_stream(),
-                TemplateArg::Bool(b) => b.to_token_stream(),
+        let args = existing_rust_type
+            .template_args()
+            .iter()
+            .map(|subst| {
+                Ok(match subst {
+                    TemplateArg::Type(type_param) => {
+                        let rs_type_kind = db.rs_type_kind(type_param.clone())?;
+                        ensure!(
+                            !rs_type_kind.pass_by_value_bridges(),
+                            "Type parameter cannot be a non-layout-compatible bridge type: {}",
+                            rs_type_kind.display(&db),
+                        );
+                        (rs_type_kind.to_token_stream(db), rs_type_kind.is_complete())
+                    }
+                    TemplateArg::Int(i) => (i.to_token_stream(), true),
+                    TemplateArg::Bool(b) => (b.to_token_stream(), true),
+                })
             })
-        });
+            .collect::<Result<Vec<_>>>()?;
+
+        let is_complete = args.iter().all(|(_, complete)| *complete);
+        let mut iter = args.into_iter().map(|(tokens, _)| Ok(tokens));
 
         let rust_type = interpolate_spelled_rust_type(uninterpolated_rust_type, &mut iter)
             .map_err(|e| {
@@ -1314,6 +1322,7 @@ impl<'a> RsTypeKind<'a> {
         Ok(RsTypeKind::ExistingRustType {
             existing_rust_type,
             rust_type: rust_type.to_string().into(),
+            is_complete,
         })
     }
 
@@ -1817,7 +1826,25 @@ impl<'a> RsTypeKind<'a> {
     }
 
     pub fn is_complete(&self) -> bool {
-        !matches!(self.unalias(), RsTypeKind::IncompleteRecord { .. })
+        match self.unalias() {
+            RsTypeKind::IncompleteRecord { .. } => false,
+            RsTypeKind::ExistingRustType { is_complete, .. } => *is_complete,
+            RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
+                BridgeRsTypeKind::StdOptional(t) => t.is_complete(),
+                BridgeRsTypeKind::StdPair(t1, t2) => t1.is_complete() && t2.is_complete(),
+                BridgeRsTypeKind::C9Co { result_type, .. } => result_type.is_complete(),
+                BridgeRsTypeKind::Bridge { generic_types, .. } => {
+                    generic_types.iter().all(|t| t.is_complete())
+                }
+                BridgeRsTypeKind::Callable(callable) => {
+                    callable.return_type.is_complete()
+                        && callable.param_types.iter().all(|t| t.is_complete())
+                }
+                BridgeRsTypeKind::ProtoMessageBridge { .. }
+                | BridgeRsTypeKind::StdString { .. } => true,
+            },
+            _ => true,
+        }
     }
 
     pub fn is_destructible(&self) -> bool {

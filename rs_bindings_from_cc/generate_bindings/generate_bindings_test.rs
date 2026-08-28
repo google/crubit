@@ -1471,6 +1471,45 @@ fn test_existing_rust_type_assert_incomplete() -> Result<()> {
     Ok(())
 }
 
+/// We cannot generate size/align assertions for types with incomplete template arguments.
+#[gtest]
+fn test_existing_rust_type_assert_incomplete_template_arg() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+            namespace crubit::rust_type {
+            template <typename...>
+            struct Args {};
+            }
+
+            template <typename T>
+            struct [[clang::annotate("crubit_internal_rust_type", "MyGeneric<{}>", crubit::rust_type::Args<T>())]] Generic {};
+
+            struct ForwardDeclared;
+
+            void Function(Generic<ForwardDeclared> x);
+        "#,
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            ::core::mem::size_of
+        }
+    );
+
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            ::core::mem::align_of
+        }
+    );
+    Ok(())
+}
+
 #[gtest]
 fn test_existing_rust_type_reordered_template_args() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc(
