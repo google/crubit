@@ -5,12 +5,14 @@
 use arc_anyhow::{anyhow, Result};
 use database::code_snippet::BindingsTokens;
 use database::rs_snippet::{interpolate_spelled_rust_type, Mutability, RsTypeKind};
-use googletest::{expect_eq, gtest};
+use googletest::matchers::contains_substring;
+use googletest::{expect_eq, expect_that, gtest};
 use ir::IR;
 use ir_matchers::assert_ir_matches;
 use ir_testing::{make_test_ir, make_test_ir_dependency, retrieve_func};
 use multiplatform_ir_testing::{
-    ir_proto_from_assumed_lifetimes_cc, ir_proto_from_cc, ir_proto_from_cc_dependency,
+    ir_proto_from_assumed_lifetimes_cc, ir_proto_from_assumed_lifetimes_cc_dependency,
+    ir_proto_from_cc, ir_proto_from_cc_dependency,
 };
 use quote::quote;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
@@ -1645,6 +1647,43 @@ fn test_interpolate_spelled_rust_type() {
 }
 
 #[gtest]
+fn test_existing_rust_type_with_bridge_type_template_arg_fails() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+            namespace crubit::rust_type {
+            template <typename...>
+            struct Args {};
+            }
+            template <typename T>
+            struct [[clang::annotate("crubit_internal_rust_type", "RustContainer<{}>", crubit::rust_type::Args<T>())]] Container {};
+
+            namespace proto2 {
+            struct MessageLite {};
+            struct Message : public MessageLite {};
+            }
+            class MyMessage : public google::protobuf::Message {};
+
+            void Accept(Container<MyMessage> a);
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let func = retrieve_func(db.ir(), "Accept");
+    let rs_type = db.rs_type_kind(func.params()[0].type_().clone())?;
+    match rs_type {
+        RsTypeKind::Error { error, .. } => {
+            expect_that!(
+                error.to_string(),
+                contains_substring("Type parameter `crate::MyMessage` is a bridged type (such as a Protobuf message or std::string) and is not layout-compatible between Rust and C++. See crubit.rs/types.")
+            );
+        }
+        other => panic!("Expected RsTypeKind::Error, got {other:?}"),
+    }
+    Ok(())
+}
+
+#[gtest]
 fn test_nested_ir_end_to_end() -> Result<()> {
     let header_source = "namespace outer { struct Inner { int x; }; }";
 
@@ -1736,6 +1775,55 @@ fn test_std_string_with_layout_compat_feature() -> Result<()> {
             pub unsafe fn takes_string_ref(
                 s: *const ::cc_std::std::string
             )
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_proto_message_references() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc_dependency(
+        r#"
+        void takes_const_ref(const MyMessage& msg);
+        void takes_mut_ref(MyMessage& msg);
+        const MyMessage& returns_const_ref(const MyMessage& msg);
+        "#,
+        r#"
+        namespace proto2 {
+        struct MessageLite {};
+        struct Message : public MessageLite {};
+        }
+        class MyMessage : public google::protobuf::Message {};
+        "#,
+    )?;
+    let mut ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::ProtoReferences;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_const_ref<'msg>(
+                msg: ::dependency::MyMessageView<'msg>
+            )
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_mut_ref<'msg>(
+                msg: ::dependency::MyMessageMut<'msg>
+            )
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn returns_const_ref<'msg>(
+                msg: ::dependency::MyMessageView<'msg>
+            ) -> ::dependency::MyMessageView<'msg>
         }
     );
     Ok(())

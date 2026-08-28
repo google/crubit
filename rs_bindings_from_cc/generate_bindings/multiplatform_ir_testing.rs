@@ -62,3 +62,19 @@ pub fn ir_proto_from_assumed_lifetimes_cc(program: &str) -> Result<IRProto> {
         /*carcinize=*/ false,
     )
 }
+
+pub fn ir_proto_from_assumed_lifetimes_cc_dependency(
+    header: &str,
+    dep_header: &str,
+) -> Result<IRProto> {
+    let mut full_program = with_full_lifetime_macros();
+    full_program.push_str(header);
+    ir_testing::ir_proto_from_cc_dependency(
+        test_platform(),
+        &full_program,
+        dep_header,
+        Some("assume_lifetimes"),
+        /*kythe_annotations=*/ false,
+        /*carcinize=*/ false,
+    )
+}

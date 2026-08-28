@@ -32,6 +32,8 @@ cc_library(
     name = "my_proto_api",
     hdrs = ["my_proto_api.h"],
     aspect_hints = [
+        "//features:assume_lifetimes",
+        "//features:proto_references",
         "//features:supported",
     ],
     deps = [

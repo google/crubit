@@ -328,7 +328,13 @@ absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
 
 bool IsProto2Message(const clang::Decl& decl) {
   const auto* cxx_record_decl = clang::dyn_cast<clang::CXXRecordDecl>(&decl);
-  if (cxx_record_decl == nullptr || !cxx_record_decl->isCompleteDefinition()) {
+  if (cxx_record_decl == nullptr) {
+    return false;
+  }
+  if (const auto* def = cxx_record_decl->getDefinition()) {
+    cxx_record_decl = def;
+  }
+  if (!cxx_record_decl->isCompleteDefinition()) {
     return false;
   }
   // A forward-compatible way to check this is to see whether the record derives

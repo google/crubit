@@ -1169,7 +1169,7 @@ fn crubit_abi_type<'a>(
             Primitive::StdUint64T => CrubitAbiType::transmute("u64", "std::uint64_t"),
         }),
         RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
-            BridgeRsTypeKind::ProtoMessageBridge { rust_name } => {
+            BridgeRsTypeKind::ProtoMessageBridge { rust_name, .. } => {
                 let ir = db.ir();
                 let target = db
                     .defining_target(original_type.id())

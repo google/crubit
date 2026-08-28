@@ -54,17 +54,8 @@ pub mod test {
         }
     }
 
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `msg`: raw pointer
     #[inline(always)]
-    pub unsafe fn ExtractFromConstRef(
-        msg: *const ::forward_declare::Incomplete<
-            ::forward_declare::symbol!("my_package :: MyMessage"),
-            (),
-        >,
-    ) -> i64 {
+    pub fn ExtractFromConstRef<'msg>(msg: ::my_proto::MyMessageView<'msg>) -> i64 {
         unsafe {
             crate::detail::__rust_thunk___ZN4test19ExtractFromConstRefERKN10my_package9MyMessageE(
                 msg,
@@ -90,17 +81,8 @@ pub mod test {
         }
     }
 
-    /// # Safety
-    ///
-    /// The caller must ensure that the following unsafe arguments are not misused by the function:
-    /// * `msg`: raw pointer
     #[inline(always)]
-    pub unsafe fn ExtractFromMutableRef(
-        msg: *mut ::forward_declare::Incomplete<
-            ::forward_declare::symbol!("my_package :: MyMessage"),
-            (),
-        >,
-    ) -> i64 {
+    pub fn ExtractFromMutableRef<'msg>(msg: ::my_proto::MyMessageMut<'msg>) -> i64 {
         unsafe {
             crate::detail::__rust_thunk___ZN4test21ExtractFromMutableRefERN10my_package9MyMessageE(
                 msg,
@@ -175,11 +157,10 @@ mod detail {
                 (),
             >,
         ) -> i64;
-        pub(crate) unsafe fn __rust_thunk___ZN4test19ExtractFromConstRefERKN10my_package9MyMessageE(
-            msg: *const ::forward_declare::Incomplete<
-                ::forward_declare::symbol!("my_package :: MyMessage"),
-                (),
-            >,
+        pub(crate) unsafe fn __rust_thunk___ZN4test19ExtractFromConstRefERKN10my_package9MyMessageE<
+            'msg,
+        >(
+            msg: ::my_proto::MyMessageView<'msg>,
         ) -> i64;
         pub(crate) unsafe fn __rust_thunk___ZN4test21ExtractFromMutablePtrEPN10my_package9MyMessageE(
             msg: *mut ::forward_declare::Incomplete<
@@ -187,11 +168,10 @@ mod detail {
                 (),
             >,
         ) -> i64;
-        pub(crate) unsafe fn __rust_thunk___ZN4test21ExtractFromMutableRefERN10my_package9MyMessageE(
-            msg: *mut ::forward_declare::Incomplete<
-                ::forward_declare::symbol!("my_package :: MyMessage"),
-                (),
-            >,
+        pub(crate) unsafe fn __rust_thunk___ZN4test21ExtractFromMutableRefERN10my_package9MyMessageE<
+            'msg,
+        >(
+            msg: ::my_proto::MyMessageMut<'msg>,
         ) -> i64;
         pub(crate) unsafe fn __rust_thunk___ZN4test12GetMutMsgPtrEv(
         ) -> *mut ::forward_declare::Incomplete<

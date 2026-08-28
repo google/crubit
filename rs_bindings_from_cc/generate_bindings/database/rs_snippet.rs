@@ -863,6 +863,13 @@ impl<'a> Callable<'a> {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum ProtoBridgeKind {
+    Owned,
+    View(Lifetime),
+    Mut(Lifetime),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum BridgeRsTypeKind<'a> {
     Bridge {
         rust_name: Rc<str>,
@@ -873,6 +880,7 @@ pub enum BridgeRsTypeKind<'a> {
     },
     ProtoMessageBridge {
         rust_name: Rc<str>,
+        kind: ProtoBridgeKind,
     },
     StdOptional(Rc<RsTypeKind<'a>>),
     StdPair(Rc<RsTypeKind<'a>>, Rc<RsTypeKind<'a>>),
@@ -931,9 +939,10 @@ impl<'a> BridgeRsTypeKind<'a> {
         };
 
         let bridge_rs_type_kind = match bridge_type.clone() {
-            BridgeType::ProtoMessageBridge { rust_name } => {
-                BridgeRsTypeKind::ProtoMessageBridge { rust_name: Rc::from(rust_name) }
-            }
+            BridgeType::ProtoMessageBridge { rust_name } => BridgeRsTypeKind::ProtoMessageBridge {
+                rust_name: Rc::from(rust_name),
+                kind: ProtoBridgeKind::Owned,
+            },
             BridgeType::Bridge {
                 rust_name,
                 abi_rust,
@@ -1295,7 +1304,7 @@ impl<'a> RsTypeKind<'a> {
                         let rs_type_kind = db.rs_type_kind(type_param.clone())?;
                         ensure!(
                             !rs_type_kind.pass_by_value_bridges(),
-                            "Type parameter cannot be a non-layout-compatible bridge type: {}",
+                            "Type parameter `{}` is a bridged type (such as a Protobuf message or std::string) and is not layout-compatible between Rust and C++. See crubit.rs/types.",
                             rs_type_kind.display(&db),
                         );
                         (rs_type_kind.to_token_stream(db), rs_type_kind.is_complete())
@@ -1337,6 +1346,10 @@ impl<'a> RsTypeKind<'a> {
                 bridge_type: BridgeRsTypeKind::StdString { layout_compatible, .. },
                 ..
             } => !*layout_compatible,
+            RsTypeKind::BridgeType {
+                bridge_type: BridgeRsTypeKind::ProtoMessageBridge { .. },
+                ..
+            } => true,
             _ => true,
         }
     }
@@ -1372,6 +1385,10 @@ impl<'a> RsTypeKind<'a> {
         match self.unalias() {
             RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
                 BridgeRsTypeKind::StdString { layout_compatible, .. } => *layout_compatible,
+                BridgeRsTypeKind::ProtoMessageBridge { kind, .. } => match kind {
+                    ProtoBridgeKind::Owned => false,
+                    ProtoBridgeKind::View(_) | ProtoBridgeKind::Mut(_) => true,
+                },
                 _ => false,
             },
             _ => true,
@@ -1569,7 +1586,13 @@ impl<'a> RsTypeKind<'a> {
             RsTypeKind::Enum { .. } => true,
             RsTypeKind::TypeAlias { .. } => unreachable!(),
             RsTypeKind::Primitive(_) => true,
-            RsTypeKind::BridgeType { .. } => false,
+            RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
+                BridgeRsTypeKind::ProtoMessageBridge { kind, .. } => match kind {
+                    ProtoBridgeKind::Owned => false,
+                    ProtoBridgeKind::View(_) | ProtoBridgeKind::Mut(_) => true,
+                },
+                _ => false,
+            },
             RsTypeKind::ExistingRustType { existing_rust_type, .. } => {
                 existing_rust_type.is_same_abi()
             }
@@ -1907,6 +1930,14 @@ impl<'a> RsTypeKind<'a> {
                     None
                 }
             }
+            Self::BridgeType {
+                bridge_type:
+                    BridgeRsTypeKind::ProtoMessageBridge {
+                        kind: ProtoBridgeKind::View(lifetime) | ProtoBridgeKind::Mut(lifetime),
+                        ..
+                    },
+                ..
+            } => Some(lifetime.clone()),
             _ => None,
         }
     }
@@ -2225,7 +2256,20 @@ fn all_static_lifetimes_internal<'a>(
                         .collect(),
                     label_hint: label_hint.clone(),
                 },
-                BridgeRsTypeKind::ProtoMessageBridge { .. } => bridge_type.clone(),
+                BridgeRsTypeKind::ProtoMessageBridge { rust_name, kind } => {
+                    BridgeRsTypeKind::ProtoMessageBridge {
+                        rust_name: rust_name.clone(),
+                        kind: match kind {
+                            ProtoBridgeKind::Owned => ProtoBridgeKind::Owned,
+                            ProtoBridgeKind::View(_) => {
+                                ProtoBridgeKind::View(Lifetime::new("static"))
+                            }
+                            ProtoBridgeKind::Mut(_) => {
+                                ProtoBridgeKind::Mut(Lifetime::new("static"))
+                            }
+                        },
+                    }
+                }
                 BridgeRsTypeKind::StdOptional(element_type) => BridgeRsTypeKind::StdOptional(
                     all_static_lifetimes_internal(element_type, strip_aliases),
                 ),
@@ -2583,9 +2627,31 @@ impl<'a> RsTypeKind<'a> {
                             generic_types.iter().map(|t| t.to_token_stream(db));
                         quote! { #path<#(#generic_types_tokens),*> }
                     }
-                    BridgeRsTypeKind::ProtoMessageBridge { rust_name } => {
-                        fully_qualify_type(db, ir::Item::Record(original_type.clone()), rust_name)
-                    }
+                    BridgeRsTypeKind::ProtoMessageBridge { rust_name, kind } => match kind {
+                        ProtoBridgeKind::Owned => {
+                            fully_qualify_type(db, ir::Item::Record(original_type.clone()), rust_name)
+                        }
+                        ProtoBridgeKind::View(lifetime) => {
+                            let view_name = format!("{rust_name}View");
+                            let type_tokens = fully_qualify_type(
+                                db,
+                                ir::Item::Record(original_type.clone()),
+                                &view_name,
+                            );
+                            let lt = lifetime.format_for_reference();
+                            quote! { #type_tokens < #lt > }
+                        }
+                        ProtoBridgeKind::Mut(lifetime) => {
+                            let mut_name = format!("{rust_name}Mut");
+                            let type_tokens = fully_qualify_type(
+                                db,
+                                ir::Item::Record(original_type.clone()),
+                                &mut_name,
+                            );
+                            let lt = lifetime.format_for_reference();
+                            quote! { #type_tokens < #lt > }
+                        }
+                    },
                     BridgeRsTypeKind::StdOptional(inner) => {
                         let inner = inner.to_token_stream(db);
                         quote! { ::core::option::Option< #inner > }
@@ -2668,6 +2734,22 @@ impl<'a> RsTypeKind<'a> {
                 };
                 quote! { #crate_path #ident }
             }
+            RsTypeKind::BridgeType {
+                bridge_type: BridgeRsTypeKind::ProtoMessageBridge { rust_name, kind },
+                original_type,
+            } => match kind {
+                ProtoBridgeKind::Owned => {
+                    fully_qualify_type(db, ir::Item::Record(original_type.clone()), rust_name)
+                }
+                ProtoBridgeKind::View(_) => {
+                    let view_name = format!("{rust_name}View");
+                    fully_qualify_type(db, ir::Item::Record(original_type.clone()), &view_name)
+                }
+                ProtoBridgeKind::Mut(_) => {
+                    let mut_name = format!("{rust_name}Mut");
+                    fully_qualify_type(db, ir::Item::Record(original_type.clone()), &mut_name)
+                }
+            },
             _ => self.to_token_stream(db),
         }
     }

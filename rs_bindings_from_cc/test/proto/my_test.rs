@@ -35,8 +35,8 @@ fn test_extract_from_const_ptr_or_ref() {
 
     unsafe {
         expect_that!(my_proto_api::test::ExtractFromConstPtr(msg.as_view().cpp_cast()), eq(432));
-        expect_that!(my_proto_api::test::ExtractFromConstRef(msg.as_view().cpp_cast()), eq(432));
     }
+    expect_that!(my_proto_api::test::ExtractFromConstRef(msg.as_view()), eq(432));
 }
 
 #[gtest]
@@ -46,8 +46,8 @@ fn test_extract_from_mutable_ptr_or_ref() {
 
     unsafe {
         expect_that!(my_proto_api::test::ExtractFromMutablePtr(msg.as_mut().cpp_cast()), eq(543));
-        expect_that!(my_proto_api::test::ExtractFromMutableRef(msg.as_mut().cpp_cast()), eq(543));
     }
+    expect_that!(my_proto_api::test::ExtractFromMutableRef(msg.as_mut()), eq(543));
 }
 
 #[gtest]

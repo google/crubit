@@ -85,6 +85,9 @@ flagset::flags! {
         ///
         /// See b/553644030.
         CppMoveConstructibleAnnotation,
+
+        /// Emit `*View` and `*Mut` directly for C++ proto references (`const Proto&` and `Proto&`).
+        ProtoReferences,
     }
 }
 
@@ -120,6 +123,7 @@ impl CrubitFeature {
             Self::OoCasting => "oo_casting",
             Self::AsyncFnSendModuloRegions => "async_fn_send_modulo_regions",
             Self::CppMoveConstructibleAnnotation => "cpp_move_constructible_annotation",
+            Self::ProtoReferences => "proto_references",
         }
     }
 
@@ -162,6 +166,7 @@ impl CrubitFeature {
             Self::CppMoveConstructibleAnnotation => {
                 "//features:cpp_move_constructible_annotation"
             }
+            Self::ProtoReferences => "//features:proto_references",
         }
     }
 }
@@ -178,6 +183,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::LayoutCompatString
                 - CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
                 - CrubitFeature::OoCasting
+                - CrubitFeature::ProtoReferences
         }
         // `supported` automatically implies `types`.
         b"supported" => CrubitFeature::Supported | CrubitFeature::Types,
@@ -206,6 +212,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"cpp_move_constructible_annotation" => {
             CrubitFeature::CppMoveConstructibleAnnotation.into()
         }
+        b"proto_references" => CrubitFeature::ProtoReferences.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)

@@ -239,6 +239,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling generating `*View` and `*Mut` directly for C++ proto references.
+#
+# See b/534900713
+crubit_feature_hint(
+    name = "proto_references",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["proto_references"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

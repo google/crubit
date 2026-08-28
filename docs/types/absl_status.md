@@ -115,6 +115,44 @@ expect_that!(result, is_ok(eq(&42)));
 expect_that!(result, is_err(status_is(StatusCode::Internal)));
 ```
 
+## Types inside `StatusOr` must be layout-compatible {#layout-compatibility}
+
+`NewStatusOr<T>` is layout-compatible with C++ `absl::StatusOr<T>`, enabling
+zero-cost passing across the FFI boundary. However, this layout compatibility
+requires that the inner payload type `T` is **also layout-compatible** between
+C++ and Rust.
+
+Types that are bridged across the FFI boundary via runtime conversions (such as
+[Protocol Buffers](/docs/types/protobuf.md), which are not
+layout-compatible between C++ and Rust; see b/534900713, or `std::string`) do
+not share the same in-memory representation between C++ and Rust. Because `T` is
+stored directly inside `StatusOr<T>`, `absl::StatusOr<T>` cannot be used with
+these types.
+
+As a result, functions that accept or return `absl::StatusOr<MyProto>` (or
+`c9::Co<absl::StatusOr<MyProto>>`) cannot be bound directly by Crubit.
+
+### Workaround: Out-Parameters with Proto Views
+
+Instead of returning `absl::StatusOr<MyProto>` directly by value across FFI, the
+C++ API can return `absl::Status` and accept a mutable reference (`MyProto&`)
+output parameter:
+
+```
+{{ #include ../../examples/types/absl_status/cpp_api.h }}
+```
+<!--  content:ReturnsStatusWithProto -->
+
+
+In Rust, create an instance of the message and pass its mutable view
+(`.as_mut()`):
+
+```
+{{ #include ../../examples/types/absl_status/user_of_cpp_api.rs }}
+```
+<!--  content:ReturnsStatusWithProto -->
+
+
 ## Migration and Future Evolution
 
 `NewStatus` and `NewStatusOr<T>` are layout-compatible with `absl::Status` and

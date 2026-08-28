@@ -4,7 +4,7 @@
 
 use arc_anyhow::Result;
 use code_gen_utils::format_nonportable_cc_type_name;
-use database::rs_snippet::{RsTypeKind, RustPtrKind};
+use database::rs_snippet::{BridgeRsTypeKind, ProtoBridgeKind, RsTypeKind, RustPtrKind};
 use database::BindingsGenerator;
 use error_report::{anyhow, bail};
 use ir::{CcCallingConv, GenericItem, Item, PointerTypeKind, Record};
@@ -134,7 +134,30 @@ pub fn format_cpp_type_inner(
             tagless_cpp_type_name_for_item(&Item::TypeAlias(Rc::clone(type_alias)), db)
         }
         RsTypeKind::Primitive(primitive) => Ok(quote! { #primitive }),
-        RsTypeKind::BridgeType { original_type, .. } => cpp_type_name_for_record(original_type, db),
+        RsTypeKind::BridgeType { bridge_type, original_type } => match bridge_type {
+            BridgeRsTypeKind::ProtoMessageBridge { kind, .. } => match kind {
+                ProtoBridgeKind::Owned => cpp_type_name_for_record(original_type, db),
+                ProtoBridgeKind::View(_) => {
+                    let nested_type = cpp_type_name_for_record(original_type, db)?;
+                    let pointer_kind = if !references_ok {
+                        quote! { * }
+                    } else {
+                        quote! { & }
+                    };
+                    Ok(quote! { const #nested_type #pointer_kind })
+                }
+                ProtoBridgeKind::Mut(_) => {
+                    let nested_type = cpp_type_name_for_record(original_type, db)?;
+                    let pointer_kind = if !references_ok {
+                        quote! { * }
+                    } else {
+                        quote! { & }
+                    };
+                    Ok(quote! { #nested_type #pointer_kind })
+                }
+            },
+            _ => cpp_type_name_for_record(original_type, db),
+        },
         RsTypeKind::ExistingRustType { existing_rust_type, .. } => tagless_cpp_type_name_for_item(
             &Item::ExistingRustType(Rc::clone(existing_rust_type)),
             db,

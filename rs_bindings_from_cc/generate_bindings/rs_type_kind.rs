@@ -6,7 +6,8 @@ use arc_anyhow::{anyhow, ensure, Error, Result};
 use database::code_snippet::{NoBindingsReason, Visibility};
 use database::intern;
 use database::rs_snippet::{
-    BridgeRsTypeKind, Lifetime, LifetimeOptions, Mutability, RsTypeKind, RustPtrKind,
+    BridgeRsTypeKind, Lifetime, LifetimeOptions, Mutability, ProtoBridgeKind, RsTypeKind,
+    RustPtrKind,
 };
 use database::BindingsGenerator;
 use ir::GenericItem;
@@ -90,8 +91,21 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
 
             pointee.force_layout_compatible();
 
+            let has_lifetime = lifetime_options.assume_lifetimes
+                || pointer.lifetime().is_some()
+                || lifetime_options.infer_lifetimes;
+
+            let is_proto_lvalue_ref = has_lifetime
+                && pointer.kind() == PointerTypeKind::LValueRef
+                && pointee.is_proto_message_bridge_type()
+                && db
+                    .ir()
+                    .target_crubit_features(db.ir().current_target())
+                    .contains(crubit_feature::CrubitFeature::ProtoReferences);
+
             // TODO(b/464492052): Support bridge types by pointer/reference.
-            if let RsTypeKind::BridgeType { bridge_type, original_type } = pointee.unalias()
+            if !is_proto_lvalue_ref
+                && let RsTypeKind::BridgeType { bridge_type, original_type } = pointee.unalias()
                 && !matches!(
                     bridge_type,
                     BridgeRsTypeKind::StdString { layout_compatible: true, .. }
@@ -127,7 +141,9 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                         .get_lifetime(lifetime_id)
                         .map(Lifetime::from)
                         .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))?,
-                    None if lifetime_options.infer_lifetimes => Lifetime::elided(),
+                    None if lifetime_options.infer_lifetimes || is_proto_lvalue_ref => {
+                        Lifetime::elided()
+                    }
                     None => {
                         return Ok(RsTypeKind::Pointer {
                             pointee,
@@ -137,6 +153,25 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                     }
                 }
             };
+
+            if is_proto_lvalue_ref
+                && let RsTypeKind::BridgeType {
+                    bridge_type: BridgeRsTypeKind::ProtoMessageBridge { rust_name, .. },
+                    original_type,
+                } = pointee.unalias()
+            {
+                let kind = match mutability {
+                    Mutability::Const => ProtoBridgeKind::View(lifetime),
+                    Mutability::Mut => ProtoBridgeKind::Mut(lifetime),
+                };
+                return Ok(RsTypeKind::BridgeType {
+                    bridge_type: BridgeRsTypeKind::ProtoMessageBridge {
+                        rust_name: rust_name.clone(),
+                        kind,
+                    },
+                    original_type: original_type.clone(),
+                });
+            }
             Ok(match pointer.kind() {
                 PointerTypeKind::LValueRef => {
                     let is_cref = lifetime_options.assume_lifetimes
