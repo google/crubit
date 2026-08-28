@@ -83,7 +83,7 @@ cc_library(
     testonly = 1,
     srcs = ["proto_matchers.cc"],
     hdrs = ["proto_matchers.h"],
-    visibility = [":__subpackages__"],
+    visibility = ["//visibility:private"],
     deps = [
         "@abseil-cpp//absl/base:nullability",
         "@llvm-project//llvm:Support",
