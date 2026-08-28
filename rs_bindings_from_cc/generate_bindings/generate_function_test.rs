@@ -2798,3 +2798,41 @@ fn test_thunkless_accessors_disabled() -> Result<()> {
     assert_cc_matches!(rs_api_impl, quote! { __rust_thunk___ZN1S5set_xEi });
     Ok(())
 }
+
+#[gtest]
+fn test_variadic_requiring_cc_thunk_skipped() -> Result<()> {
+    let proto = ir_proto_from_cc("inline void variadic_fn(const char* s, ...) {}")?;
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_not_matches!(rs_api, quote! { variadic_fn });
+    assert_cc_not_matches!(rs_api_impl, quote! { variadic_fn });
+    Ok(())
+}
+
+#[gtest]
+fn test_enable_if_skipped() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        void enable_if_func() __attribute__((enable_if(true, "")));
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_not_matches!(rs_api, quote! { enable_if_func });
+    assert_cc_not_matches!(rs_api_impl, quote! { enable_if_func });
+    Ok(())
+}
+
+#[gtest]
+fn test_diagnose_if_skipped() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        void diagnose_if_func() __attribute__((diagnose_if(true, "", "warning")));
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_not_matches!(rs_api, quote! { diagnose_if_func });
+    assert_cc_not_matches!(rs_api_impl, quote! { diagnose_if_func });
+    Ok(())
+}
