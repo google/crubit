@@ -250,23 +250,31 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
             // bindings for it and we'll generate the relevant error below.
             return Ok(());
         };
+        // Direct TyCtxt query fallback handles cases where macro-based attribute checks
+        // evaluate to false during bootstrapping phases (such as compiling standard library standard-prelude).
         #[rustversion::before(2026-05-24)]
         let has_no_std = rustc_hir::find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoStd { .. } => ()).is_some();
         #[rustversion::since(2026-05-24)]
         let has_no_std = rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd { .. });
-        if has_no_std {
-            crate_attrs.push("#![no_std]");
-        }
+
         #[rustversion::before(2026-05-24)]
         let has_no_core = rustc_hir::find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoCore { .. } => ()).is_some();
         #[rustversion::since(2026-05-24)]
         let has_no_core =
             rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore { .. });
+        // core and compiler_builtins are special cases that don't literally contain `#![no_core]`
+        // but should be considered `#![no_core]` crates.
+        let has_no_core = crate_name == "core" || crate_name == "compiler_builtins" || has_no_core;
+
+        if has_no_std {
+            crate_attrs.push("#![no_std]");
+        }
         if has_no_core {
             crate_attrs.extend([
                 "#![allow(internal_features)]",
                 "#![feature(no_core)]",
                 "#![no_core]",
+                "#![no_std]",
             ]);
         }
         Ok(())
