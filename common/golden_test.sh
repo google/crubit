@@ -46,17 +46,11 @@ while (( $# > 0 )); do
         TARGET_DIR="$(dirname "$TARGET_RESOLVED")"
         GOLDEN_FILENAME="$(basename "$TARGET_RESOLVED")"
 
-        if [[ "$TARGET_DIR" == */goldens/"$PLATFORM_DIR" ]]; then
-          # Tier 1: Platform-specific golden override exists; update in place.
-          REAL_WRITE_TARGET="${TARGET_DIR}/${GOLDEN_FILENAME}"
-        elif [[ -n "$ABI_TIER" && "$TARGET_DIR" == */goldens/"$ABI_TIER" ]]; then
-          # Tier 2: Mismatch against shared ABI tier; create architecture-specific override.
-          BASE_PKG_DIR="${TARGET_DIR%/goldens/$ABI_TIER}"
+        if [[ "$TARGET_DIR" == */goldens/* ]]; then
+          BASE_PKG_DIR="${TARGET_DIR%/goldens/*}"
           REAL_WRITE_TARGET="${BASE_PKG_DIR}/goldens/${PLATFORM_DIR}/${GOLDEN_FILENAME}"
         else
-          # Tier 3: Host golden fallback; bootstrap to preferred ABI tier.
-          PREFERRED_DIR="${ABI_TIER:-$PLATFORM_DIR}"
-          REAL_WRITE_TARGET="${TARGET_DIR}/goldens/${PREFERRED_DIR}/${GOLDEN_FILENAME}"
+          REAL_WRITE_TARGET="${TARGET_DIR}/goldens/${PLATFORM_DIR}/${GOLDEN_FILENAME}"
         fi
       fi
 

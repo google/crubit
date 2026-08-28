@@ -39,7 +39,7 @@ prune_matching_files() {
 }
 
 # Automatically consolidate multiplatform golden files into tiered shared directories
-# (e.g. goldens/android_32/) and prune redundant architecture-specific overrides.
+# (e.g. goldens/android_32/, goldens/android_64/) and prune redundant overrides.
 consolidate_goldens() {
   local script_dir
   script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -51,22 +51,36 @@ consolidate_goldens() {
     local pkg_dir
     pkg_dir="$(dirname "$goldens_dir")"
 
-    local x86_dir="$goldens_dir/android_x86"
+    local x86_32_dir="$goldens_dir/android_x86"
+    local arm_32_dir="$goldens_dir/android_armeabi-v7a"
     local tier32_dir="$goldens_dir/android_32"
+
+    local x86_64_dir="$goldens_dir/android_x86_64"
+    local arm_64_dir="$goldens_dir/android_arm64-v8a"
     local tier64_dir="$goldens_dir/android_64"
 
     local ios_sim_arm64_dir="$goldens_dir/ios_sim_arm64"
     local ios_arm64_dir="$goldens_dir/ios_arm64"
     local ios_tier_dir="$goldens_dir/ios"
 
-    # Step 1: Promote android_x86 -> android_32 (32-bit baseline)
-    if [ -d "$x86_dir" ]; then
+
+    # Step 1: Promote x86 baselines to shared ABI tiers
+    if [ -d "$x86_32_dir" ]; then
       mkdir -p "$tier32_dir"
-      for f in "$x86_dir"/*; do
+      for f in "$x86_32_dir"/*; do
         [ -f "$f" ] || continue
         mv -f "$f" "$tier32_dir/"
       done
-      rmdir "$x86_dir" 2>/dev/null || rm -rf "$x86_dir"
+      rmdir "$x86_32_dir" 2>/dev/null || rm -rf "$x86_32_dir"
+    fi
+
+    if [ -d "$x86_64_dir" ]; then
+      mkdir -p "$tier64_dir"
+      for f in "$x86_64_dir"/*; do
+        [ -f "$f" ] || continue
+        mv -f "$f" "$tier64_dir/"
+      done
+      rmdir "$x86_64_dir" 2>/dev/null || rm -rf "$x86_64_dir"
     fi
 
     # Step 1b: Promote ios_sim_arm64 / ios_arm64 -> ios (shared baseline)
@@ -81,14 +95,14 @@ consolidate_goldens() {
       fi
     done
 
-    # Step 2: Prune redundant files in android_armeabi-v7a (against android_32)
-    prune_matching_files "$goldens_dir/android_armeabi-v7a" "$tier32_dir"
 
-    # Step 3: Prune redundant files in 64-bit Android overrides (against android_64 and host)
-    for arch in android_arm64-v8a android_x86_64; do
-      prune_matching_files "$goldens_dir/$arch" "$tier64_dir"
-      prune_matching_files "$goldens_dir/$arch" "$pkg_dir"
-    done
+    # Step 2: Prune redundant files in 32-bit ARM overrides (against android_32 and host)
+    prune_matching_files "$arm_32_dir" "$tier32_dir"
+    prune_matching_files "$arm_32_dir" "$pkg_dir"
+
+    # Step 3: Prune redundant files in 64-bit ARM overrides (against android_64 and host)
+    prune_matching_files "$arm_64_dir" "$tier64_dir"
+    prune_matching_files "$arm_64_dir" "$pkg_dir"
 
     # Step 3b: Prune redundant files in iOS overrides (against ios tier and host)
     for arch in ios_sim_arm64 ios_arm64; do
@@ -96,16 +110,14 @@ consolidate_goldens() {
       prune_matching_files "$goldens_dir/$arch" "$pkg_dir"
     done
 
-    # Step 4: Prune redundant files in android_64 (against host)
+    # Step 4: Prune redundant files in shared ABI tiers against host
     prune_matching_files "$tier64_dir" "$pkg_dir"
 
     # Step 4b: Prune redundant files in ios tier (against host)
     prune_matching_files "$ios_tier_dir" "$pkg_dir"
-
-    # Step 5: Prune redundant files in android_32 (against host)
     prune_matching_files "$tier32_dir" "$pkg_dir"
 
-    # Step 6: Remove empty goldens directory if everything fell back to host
+    # Step 5: Remove empty goldens directory if everything fell back to host
     rmdir "$goldens_dir" 2>/dev/null || true
   done
 }
