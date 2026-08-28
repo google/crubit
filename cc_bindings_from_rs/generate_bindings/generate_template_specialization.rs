@@ -632,15 +632,23 @@ struct TupleApiGenerator<'a, 'tcx> {
 impl<'tcx> TupleApiGenerator<'_, 'tcx> {
     fn api_snippets(self) -> ApiSnippets<'tcx> {
         let mut prereqs = CcPrerequisites::default();
+        prereqs.includes.insert(CcInclude::cstddef());
         prereqs.includes.insert(CcInclude::tuple());
         prereqs.includes.insert(CcInclude::utility());
         prereqs.includes.insert(CcInclude::memory());
+        prereqs.includes.insert(self.db.support_header("annotations_internal.h"));
 
         let element_cc_tys: Vec<_> =
             self.element_tys.iter().map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs)).collect();
         let element_sizes: Vec<_> =
             self.element_tys.iter().map(|ty| get_layout(self.db.tcx(), ty.ty).map(|l| l.size().bytes()).expect("parse_rs_std_template_specialization should check we don't have a zero-sized type")).collect();
         let full_self_ty = quote! { rs_std::Tuple<#(#element_cc_tys),*> };
+
+        let num_elements = self.element_tys.len();
+        let num_elements_lit = Literal::usize_unsuffixed(num_elements);
+
+        let mut get_lvalue_branches = quote! {};
+        let mut get_rvalue_branches = quote! {};
 
         let mut construct_elements = quote! {};
         let mut convert_elements = Vec::new();
@@ -658,12 +666,63 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
                 convert_elements.push(quote! {
                     std::move(this->#field_ident)
                 });
+                get_lvalue_branches.extend(quote! {
+                    if constexpr (I == #i_idx) {
+                        return (this->#field_ident);
+                    } else
+                });
+                get_rvalue_branches.extend(quote! {
+                    if constexpr (I == #i_idx) {
+                        return std::move(this->#field_ident);
+                    } else
+                });
             } else {
                 convert_elements.push(quote! {
                     #element_cc_ty{}
                 });
+                get_lvalue_branches.extend(quote! {
+                    if constexpr (I == #i_idx) {
+                        return #element_cc_ty{};
+                    } else
+                });
+                get_rvalue_branches.extend(quote! {
+                    if constexpr (I == #i_idx) {
+                        return #element_cc_ty{};
+                    } else
+                });
             }
         }
+
+        let get_methods = quote! {
+            template <std::size_t I>
+            constexpr decltype(auto) get() & noexcept {
+                static_assert(I < #num_elements_lit, "Tuple index out of bounds");
+                #get_lvalue_branches {
+                    CRUBIT_UNREACHABLE();
+                }
+            } __NEWLINE__
+            template <std::size_t I>
+            constexpr decltype(auto) get() const& noexcept {
+                static_assert(I < #num_elements_lit, "Tuple index out of bounds");
+                #get_lvalue_branches {
+                    CRUBIT_UNREACHABLE();
+                }
+            } __NEWLINE__
+            template <std::size_t I>
+            constexpr decltype(auto) get() && noexcept {
+                static_assert(I < #num_elements_lit, "Tuple index out of bounds");
+                #get_rvalue_branches {
+                    CRUBIT_UNREACHABLE();
+                }
+            } __NEWLINE__
+            template <std::size_t I>
+            constexpr decltype(auto) get() const&& noexcept {
+                static_assert(I < #num_elements_lit, "Tuple index out of bounds");
+                #get_rvalue_branches {
+                    CRUBIT_UNREACHABLE();
+                }
+            }
+        };
 
         let needs_drop = self.self_ty.needs_drop(self.db.tcx(), TypingEnv::fully_monomorphized());
 
@@ -722,7 +781,8 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
                 tokens: quote! {
                     #std_tuple_main_api_ctor
                     #drop_decl
-                    #std_tuple_main_api_conv
+                    #std_tuple_main_api_conv __NEWLINE__
+                    #get_methods
                 },
                 prereqs,
             },

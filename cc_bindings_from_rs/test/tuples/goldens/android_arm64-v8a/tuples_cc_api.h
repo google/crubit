@@ -298,6 +298,42 @@ struct alignas(4)
   Tuple(std::tuple<::std::int32_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int32_t>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 1, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 1, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 1, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 1, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::int32_t __field0;
   };
@@ -366,6 +402,50 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::int8_t, ::std::int64_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int8_t, ::std::int64_t>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::int8_t __field0;
   };
@@ -403,6 +483,50 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::int64_t, ::std::int8_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int64_t, ::std::int8_t>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::intptr_t __field0;
   };
@@ -442,6 +566,50 @@ struct alignas(1)
   Tuple(std::tuple<::tuples::CloneNoDefault, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::tuples::CloneNoDefault, ::std::uint8_t>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::tuples::CloneNoDefault __field0;
   };
@@ -475,6 +643,50 @@ struct alignas(1)
   Tuple(std::tuple<::tuples::CopyNoDefault, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::tuples::CopyNoDefault, ::std::uint8_t>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::tuples::CopyNoDefault __field0;
   };
@@ -506,6 +718,50 @@ struct alignas(8)
   Tuple(std::tuple<::tuples::HasDefault, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple();
   operator std::tuple<::tuples::HasDefault, ::std::uint8_t>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::tuples::HasDefault __field0;
   };
@@ -544,6 +800,50 @@ struct alignas(8)
   Tuple(std::tuple<::tuples::HasNoDefault, ::std::uint8_t>&& tuple) = delete;
   ~Tuple();
   operator std::tuple<::tuples::HasNoDefault, ::std::uint8_t>() && = delete;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::tuples::HasNoDefault __field0;
   };
@@ -579,6 +879,50 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::uint32_t, ::std::uint32_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint32_t, ::std::uint32_t>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::uint32_t __field0;
   };
@@ -631,6 +975,50 @@ struct alignas(4)
   ~Tuple() = default;
   operator std::tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                       ::std::uint32_t>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     rs_std::Tuple<::std::uint32_t, ::std::uint32_t> __field0;
   };
@@ -671,6 +1059,50 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE("(((u32 , u32 ,) , u32 ,) , u32 ,)")
       rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                     ::std::uint32_t>,
       ::std::uint32_t>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                   ::std::uint32_t>
@@ -710,6 +1142,50 @@ struct alignas(4)
   operator std::tuple<
       ::std::uint32_t,
       rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::uint32_t __field0;
   };
@@ -773,6 +1249,50 @@ struct alignas(4)
       rs_std::Tuple<
           ::std::uint32_t,
           rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::uint32_t __field0;
   };
@@ -850,6 +1370,50 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::uint64_t, ::std::uint64_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint64_t, ::std::uint64_t>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::uint64_t __field0;
   };
@@ -899,6 +1463,50 @@ struct alignas(1)
   Tuple(std::tuple<::std::uint8_t, ::tuples::CloneNoDefault>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint8_t, ::tuples::CloneNoDefault>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::uint8_t __field0;
   };
@@ -971,6 +1579,50 @@ struct alignas(1)
   Tuple(std::tuple<::std::uint8_t, ::tuples::CopyNoDefault>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint8_t, ::tuples::CopyNoDefault>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::uint8_t __field0;
   };
@@ -1041,6 +1693,50 @@ struct alignas(8)
   Tuple(std::tuple<::std::uint8_t, ::tuples::HasDefault>&& tuple) noexcept;
   ~Tuple();
   operator std::tuple<::std::uint8_t, ::tuples::HasDefault>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::uint8_t __field0;
   };
@@ -1123,6 +1819,50 @@ struct alignas(8)
   Tuple(std::tuple<::std::uint8_t, ::tuples::HasNoDefault>&& tuple) = delete;
   ~Tuple();
   operator std::tuple<::std::uint8_t, ::tuples::HasNoDefault>() && = delete;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::uint8_t __field0;
   };
@@ -1202,6 +1942,50 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::uint8_t, ::std::uint64_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint8_t, ::std::uint64_t>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::uint8_t __field0;
   };
@@ -1239,6 +2023,50 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::uint64_t, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint64_t, ::std::uint8_t>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     ::std::uintptr_t __field0;
   };
@@ -1350,6 +2178,42 @@ struct alignas(4)
   Tuple(std::tuple<rs_std::Option<::std::int32_t>>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<rs_std::Option<::std::int32_t>>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 1, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 1, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 1, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 1, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     rs_std::Option<::std::int32_t> __field0;
   };
@@ -1460,6 +2324,50 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Option<::std::int32_t>,
       rs_std::Result<::std::int32_t,
                      ::rs::alloc::string::String>>() && noexcept;
+  template <std::size_t I>
+  constexpr decltype(auto) get() & noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return (this->__field0);
+    } else if constexpr (I == 1) {
+      return (this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() && noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
+  template <std::size_t I>
+  constexpr decltype(auto) get() const&& noexcept {
+    static_assert(I < 2, "Tuple index out of bounds");
+    if constexpr (I == 0) {
+      return std::move(this->__field0);
+    } else if constexpr (I == 1) {
+      return std::move(this->__field1);
+    } else {
+      CRUBIT_UNREACHABLE();
+    }
+  }
   union {
     rs_std::Option<::std::int32_t> __field0;
   };

@@ -106,6 +106,74 @@ TEST(TuplesTest, DirectFieldAccess) {
   EXPECT_EQ(t.__field1, 200u);
 }
 
+TEST(TuplesTest, TupleTypeTraits) {
+  using TupleType = rs_std::Tuple<uint32_t, uint32_t>;
+  static_assert(std::tuple_size_v<TupleType> == 2);
+  static_assert(std::is_same_v<std::tuple_element_t<0, TupleType>, uint32_t>);
+  static_assert(std::is_same_v<std::tuple_element_t<1, TupleType>, uint32_t>);
+}
+
+TEST(TuplesTest, MemberGet) {
+  rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  EXPECT_EQ(t.template get<0>(), 10u);
+  EXPECT_EQ(t.template get<1>(), 20u);
+
+  const auto& const_t = t;
+  EXPECT_EQ(const_t.template get<0>(), 10u);
+  EXPECT_EQ(const_t.template get<1>(), 20u);
+
+  t.template get<0>() = 100u;
+  EXPECT_EQ(t.template get<0>(), 100u);
+}
+
+TEST(TuplesTest, StdGet) {
+  rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  EXPECT_EQ(std::get<0>(t), 10u);
+  EXPECT_EQ(std::get<1>(t), 20u);
+
+  const auto& const_t = t;
+  EXPECT_EQ(std::get<0>(const_t), 10u);
+  EXPECT_EQ(std::get<1>(const_t), 20u);
+
+  std::get<0>(t) = 100u;
+  std::get<1>(t) = 200u;
+  EXPECT_EQ(std::get<0>(t), 100u);
+  EXPECT_EQ(std::get<1>(t), 200u);
+}
+
+TEST(TuplesTest, StructuredBindingByValue) {
+  rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  auto [v0, v1] = t;
+  EXPECT_EQ(v0, 10u);
+  EXPECT_EQ(v1, 20u);
+}
+
+TEST(TuplesTest, StructuredBindingByReference) {
+  rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  auto& [r0, r1] = t;
+  EXPECT_EQ(r0, 10u);
+  EXPECT_EQ(r1, 20u);
+
+  r0 = 300u;
+  r1 = 400u;
+  EXPECT_EQ(std::get<0>(t), 300u);
+  EXPECT_EQ(std::get<1>(t), 400u);
+}
+
+TEST(TuplesTest, StructuredBindingByConstReference) {
+  const rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  const auto& [cr0, cr1] = t;
+  EXPECT_EQ(cr0, 10u);
+  EXPECT_EQ(cr1, 20u);
+}
+
+TEST(TuplesTest, StructuredBindingByRvalue) {
+  rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  auto [m0, m1] = std::move(t);
+  EXPECT_EQ(m0, 10u);
+  EXPECT_EQ(m1, 20u);
+}
+
 TEST(TuplesTest, TupleStruct) {
   EXPECT_FALSE(HasBadTupleMethod<tuples::TupleStruct>)
       << "Tuples cannot be bridged to std::tuple except when used by value";
