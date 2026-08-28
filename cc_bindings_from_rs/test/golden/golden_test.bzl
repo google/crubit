@@ -32,6 +32,11 @@ load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_multiplatform_golden_transition",
 )
+load(
+    "//google_internal/build_flavors:crubit_build_flavors_ios.bzl",
+    "CRUBIT_IOS_SIM_PLATFORMS",
+    "CRUBIT_IOS_SIM_TAGS_MAPPING",
+)
 
 def _generate_bindings_impl(ctx):
     rust_library = ctx.attr.rust_library[0]
@@ -161,7 +166,7 @@ def golden_test(
         basename: The name to use for generated files.
         golden_h: The generated C++ source code for the bindings.
         golden_rs: The generated Rust source code for the bindings.
-        platforms: List of additional target platforms to generate tests for (e.g. ["android"]). Defaults to None.
+        platforms: List of additional target platforms to generate tests for (e.g. ["android", "ios"]). Defaults to None.
         kythe_annotations: Whether to generate Kythe annotations.
     """
     if not basename:
@@ -218,6 +223,9 @@ def golden_test(
     )
 
     # 2. Generate multi-platform sub-tests for requested platforms.
+    # Exclusion tags that should not be propagated to platform subtests or test_suites.
+    subtest_tags = [t for t in tags if t not in CRUBIT_TAGS_MAPPING and t not in CRUBIT_IOS_SIM_TAGS_MAPPING]
+
     for platform in platforms:
         if platform == "android":
             android_tests = []
@@ -225,8 +233,6 @@ def golden_test(
             # Skip architectures matching exclusion tags (e.g. no_test_android_x86).
             excluded_cpus = [CRUBIT_TAGS_MAPPING[t] for t in tags if t in CRUBIT_TAGS_MAPPING]
 
-            # Strip exclusion tags so non-excluded subtests aren't filtered out by tag filters.
-            subtest_tags = [t for t in tags if t not in CRUBIT_TAGS_MAPPING]
             for target_cpu, platform_label in CRUBIT_ANDROID_PLATFORMS.items():
                 if target_cpu in excluded_cpus:
                     continue
@@ -250,7 +256,38 @@ def golden_test(
                 native.test_suite(
                     name = name + "_on_android",
                     tests = android_tests,
-                    tags = tags,
+                    tags = subtest_tags,
+                    visibility = ["//visibility:private"],
+                )
+        elif platform == "ios":
+            ios_tests = []
+
+            # Skip architectures matching exclusion tags (e.g. no_test_ios_sim_arm64).
+            excluded_cpus = [CRUBIT_IOS_SIM_TAGS_MAPPING[t] for t in tags if t in CRUBIT_IOS_SIM_TAGS_MAPPING]
+
+            for arch_name, platform_label in CRUBIT_IOS_SIM_PLATFORMS.items():
+                if arch_name in excluded_cpus:
+                    continue
+                arch_dir = "ios_" + arch_name
+                subtest_name = "%s_%s" % (name, arch_dir)
+                _generate_golden_subtest(
+                    name = subtest_name,
+                    basename = "%s_%s" % (basename, arch_dir),
+                    rust_library = patched_name,
+                    tags = subtest_tags,
+                    golden_h = golden_h,
+                    golden_rs = golden_rs,
+                    target_platform = platform_label,
+                    golden_dir = arch_dir,
+                    abi_tier = "ios",
+                )
+                ios_tests.append(":" + subtest_name)
+
+            if ios_tests:
+                native.test_suite(
+                    name = name + "_on_ios",
+                    tests = ios_tests,
+                    tags = subtest_tags,
                     visibility = ["//visibility:private"],
                 )
         else:

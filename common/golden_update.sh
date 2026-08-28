@@ -55,6 +55,10 @@ consolidate_goldens() {
     local tier32_dir="$goldens_dir/android_32"
     local tier64_dir="$goldens_dir/android_64"
 
+    local ios_sim_arm64_dir="$goldens_dir/ios_sim_arm64"
+    local ios_arm64_dir="$goldens_dir/ios_arm64"
+    local ios_tier_dir="$goldens_dir/ios"
+
     # Step 1: Promote android_x86 -> android_32 (32-bit baseline)
     if [ -d "$x86_dir" ]; then
       mkdir -p "$tier32_dir"
@@ -65,6 +69,18 @@ consolidate_goldens() {
       rmdir "$x86_dir" 2>/dev/null || rm -rf "$x86_dir"
     fi
 
+    # Step 1b: Promote ios_sim_arm64 / ios_arm64 -> ios (shared baseline)
+    for arm64_dir in "$ios_sim_arm64_dir" "$ios_arm64_dir"; do
+      if [ -d "$arm64_dir" ]; then
+        mkdir -p "$ios_tier_dir"
+        for f in "$arm64_dir"/*; do
+          [ -f "$f" ] || continue
+          mv -f "$f" "$ios_tier_dir/"
+        done
+        rmdir "$arm64_dir" 2>/dev/null || rm -rf "$arm64_dir"
+      fi
+    done
+
     # Step 2: Prune redundant files in android_armeabi-v7a (against android_32)
     prune_matching_files "$goldens_dir/android_armeabi-v7a" "$tier32_dir"
 
@@ -74,8 +90,17 @@ consolidate_goldens() {
       prune_matching_files "$goldens_dir/$arch" "$pkg_dir"
     done
 
+    # Step 3b: Prune redundant files in iOS overrides (against ios tier and host)
+    for arch in ios_sim_arm64 ios_arm64; do
+      prune_matching_files "$goldens_dir/$arch" "$ios_tier_dir"
+      prune_matching_files "$goldens_dir/$arch" "$pkg_dir"
+    done
+
     # Step 4: Prune redundant files in android_64 (against host)
     prune_matching_files "$tier64_dir" "$pkg_dir"
+
+    # Step 4b: Prune redundant files in ios tier (against host)
+    prune_matching_files "$ios_tier_dir" "$pkg_dir"
 
     # Step 5: Prune redundant files in android_32 (against host)
     prune_matching_files "$tier32_dir" "$pkg_dir"
