@@ -4,8 +4,8 @@
 
 use crate::generate_function_thunk::{make_thunk_name, replace_all_regions_with_static, ThunkKind};
 use crate::generate_struct_and_union::{
-    generate_associated_item, generate_relocating_ctor, has_type_or_const_vars,
-    scalar_value_to_string,
+    anonymous_field_ident, generate_associated_item, generate_fields, generate_relocating_ctor,
+    has_type_or_const_vars, scalar_value_to_string,
 };
 use crate::generate_unsupported_def;
 use arc_anyhow::{bail, Result};
@@ -627,7 +627,6 @@ struct TupleApiGenerator<'a, 'tcx> {
     db: &'a BindingsGenerator<'tcx>,
     element_tys: Vec<FormattedTy<'tcx>>,
     self_ty: Ty<'tcx>,
-    layout: rustc_abi::Layout<'tcx>,
 }
 
 impl<'tcx> TupleApiGenerator<'_, 'tcx> {
@@ -635,35 +634,51 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
         let mut prereqs = CcPrerequisites::default();
         prereqs.includes.insert(CcInclude::tuple());
         prereqs.includes.insert(CcInclude::utility());
+        prereqs.includes.insert(CcInclude::memory());
 
         let element_cc_tys: Vec<_> =
             self.element_tys.iter().map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs)).collect();
+        let element_sizes: Vec<_> =
+            self.element_tys.iter().map(|ty| get_layout(self.db.tcx(), ty.ty).map(|l| l.size().bytes()).expect("parse_rs_std_template_specialization should check we don't have a zero-sized type")).collect();
         let full_self_ty = quote! { rs_std::Tuple<#(#element_cc_tys),*> };
 
         let mut construct_elements = quote! {};
         let mut convert_elements = Vec::new();
-        for (i, element_cc_ty) in element_cc_tys.iter().enumerate() {
-            let offset = Literal::u64_unsuffixed(self.layout.fields().offset(i).bytes());
-            let element_ptr = quote! { reinterpret_cast<#element_cc_ty*>(storage_ + #offset) };
+        for (i, (formatted_ty, element_cc_ty)) in
+            self.element_tys.iter().zip(&element_cc_tys).enumerate()
+        {
+            let field_ident = anonymous_field_ident(i);
             let i_idx = Literal::usize_unsuffixed(i);
+            let elem_size = element_sizes[i];
 
-            construct_elements.extend(quote! {
-                std::construct_at(#element_ptr, std::move(std::get<#i_idx>(tuple)));
-            });
-            convert_elements.push(quote! {
-                    std::move(*#element_ptr)
-            });
+            if elem_size > 0 {
+                construct_elements.extend(quote! {
+                    std::construct_at(&this->#field_ident, std::move(std::get<#i_idx>(tuple)));
+                });
+                convert_elements.push(quote! {
+                    std::move(this->#field_ident)
+                });
+            } else {
+                convert_elements.push(quote! {
+                    #element_cc_ty{}
+                });
+            }
         }
 
         let needs_drop = self.self_ty.needs_drop(self.db.tcx(), TypingEnv::fully_monomorphized());
 
         let (drop_decl, drop_impl) = if needs_drop {
             let mut drop_elements = quote! {};
-            for (i, element_cc_ty) in element_cc_tys.iter().enumerate() {
-                let offset = Literal::u64_unsuffixed(self.layout.fields().offset(i).bytes());
-                drop_elements.extend(quote! {
-                    std::destroy_at(reinterpret_cast<#element_cc_ty*>(storage_ + #offset));
-                });
+            for (i, formatted_ty) in self.element_tys.iter().enumerate() {
+                let elem_size = element_sizes[i];
+                if elem_size > 0
+                    && formatted_ty.ty.needs_drop(self.db.tcx(), TypingEnv::fully_monomorphized())
+                {
+                    let field_ident = anonymous_field_ident(i);
+                    drop_elements.extend(quote! {
+                        std::destroy_at(&this->#field_ident);
+                    });
+                }
             }
             (
                 quote! { ~Tuple(); },
@@ -730,12 +745,8 @@ fn specialize_tuple<'tcx>(
     let element_cc_tys =
         element_tys.iter().map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs)).collect_vec();
 
-    let tuple_api = TupleApiGenerator {
-        db,
-        element_tys: element_tys.clone(),
-        self_ty: rs_std.self_ty_rs,
-        layout,
-    };
+    let tuple_api =
+        TupleApiGenerator { db, element_tys: element_tys.clone(), self_ty: rs_std.self_ty_rs };
 
     let rs_fully_qualified_name = {
         let element_rs_tys = element_tys.iter().map(|ty| &ty.for_rs);
@@ -768,18 +779,28 @@ fn specialize_tuple<'tcx>(
     );
     let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
 
+    let fields_snippets = generate_fields(
+        db,
+        core.common.self_ty,
+        &core.common.cc_short_name,
+        &core.common.cc_fully_qualified_name,
+        &core.rs_fully_qualified_name,
+        &Default::default(),
+        /*is_aggregate=*/ false,
+    );
+
     let ApiSnippets { main_api, cc_details, rs_details } = [
         default_ctor_snippets,
         copy_ctor_and_assignment_snippets,
         move_ctor_and_assignment_snippets,
         relocating_ctor_snippets,
         tuple_api.api_snippets(),
+        fields_snippets,
     ]
     .into_iter()
     .collect();
 
     let main_api_tokens = main_api.into_tokens(&mut prereqs);
-    let size_literal = Literal::u64_unsuffixed(layout.size().bytes());
     let align_literal = Literal::u64_unsuffixed(layout.align().abi.bytes());
     let internal_rust_type_string = rs_fully_qualified_name.to_string();
 
@@ -790,8 +811,6 @@ fn specialize_tuple<'tcx>(
         rs_std::Tuple<#(#element_cc_tys),*> { __NEWLINE__
         public:
             #main_api_tokens __NEWLINE__
-        private:
-            unsigned char storage_[#size_literal]; __NEWLINE__
         };
     };
 

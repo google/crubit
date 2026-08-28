@@ -445,6 +445,8 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028_x00000028_x0000
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((((u32, u32,), u32,), u32,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((((u32, u32,), u32,), u32,), 1) == 12);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028_x00000028u32_x0000002c_x00000020u32_x00000029_x0000002c_x00000020u32_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -454,6 +456,8 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028_x00000028u32_x0
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!(((u32, u32,), u32,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!(((u32, u32,), u32,), 1) == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -463,6 +467,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x0
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((i32,), 0) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i8_x0000002c_x00000020isize_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -472,6 +477,8 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i8_x0000002c_x00
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((i8, isize,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((i8, isize,), 1) == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028isize_x0000002c_x00000020i8_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -481,6 +488,8 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028isize_x0000002c_
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((isize, i8,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((isize, i8,), 1) == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_u_x00000028std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x00000029(
     __self: &'static (
@@ -512,6 +521,18 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_u_x00000028std_x0000003a_
         <(::core::option::Option<i32>,::core::result::Result<i32,::alloc::string::String>,)as::core::clone::Clone>::clone_from(__self,source)
     }
 }
+const _: () = assert!(
+    ::core::mem::offset_of!(
+        (::core::option::Option<i32>, ::core::result::Result<i32, ::alloc::string::String>,),
+        0
+    ) == 0
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(
+        (::core::option::Option<i32>, ::core::result::Result<i32, ::alloc::string::String>,),
+        1
+    ) == 8
+);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -522,6 +543,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028std_x0000003a_x0
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((::core::option::Option<i32>,), 0) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_u_x00000028tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x00000029(
     __self: &'static (::tuples_golden::CloneNoDefault, u8),
@@ -542,6 +564,10 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_u_x00000028tuples_ugolden
         <(::tuples_golden::CloneNoDefault, u8) as ::core::clone::Clone>::clone_from(__self, source)
     }
 }
+const _: () = assert!(::core::mem::offset_of!((::tuples_golden::CloneNoDefault, u8,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((::tuples_golden::CloneNoDefault, u8,), 1) == 1);
+const _: () = assert!(::core::mem::offset_of!((::tuples_golden::CopyNoDefault, u8,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((::tuples_golden::CopyNoDefault, u8,), 1) == 1);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028tuples_ugolden_x0000003a_x0000003aHasDefault_x0000002c_x00000020u8_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -552,6 +578,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028tuples_ugolden_x
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((::tuples_golden::HasDefault, u8,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((::tuples_golden::HasDefault, u8,), 1) == 12);
+const _: () = assert!(::core::mem::offset_of!((::tuples_golden::HasNoDefault, u8,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((::tuples_golden::HasNoDefault, u8,), 1) == 12);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x00000020_x00000028u32_x0000002c_x00000020_x00000028u32_x0000002c_x00000020u32_x00000029_x00000029_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -561,6 +591,8 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x0
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((u32, (u32, (u32, u32,),),), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((u32, (u32, (u32, u32,),),), 1) == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x00000020_x00000028u32_x0000002c_x00000020u32_x00000029_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -570,6 +602,8 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x0
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((u32, (u32, u32,),), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((u32, (u32, u32,),), 1) == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x00000020u32_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -579,6 +613,8 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x0
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((u32, u32,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((u32, u32,), 1) == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u64_x0000002c_x00000020u64_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -588,6 +624,8 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u64_x0000002c_x0
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((u64, u64,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((u64, u64,), 1) == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_u_x00000028u8_x0000002c_x00000020tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x00000029(
     __self: &'static (u8, ::tuples_golden::CloneNoDefault),
@@ -608,6 +646,10 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_u_x00000028u8_x0000002c_x
         <(u8, ::tuples_golden::CloneNoDefault) as ::core::clone::Clone>::clone_from(__self, source)
     }
 }
+const _: () = assert!(::core::mem::offset_of!((u8, ::tuples_golden::CloneNoDefault,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((u8, ::tuples_golden::CloneNoDefault,), 1) == 1);
+const _: () = assert!(::core::mem::offset_of!((u8, ::tuples_golden::CopyNoDefault,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((u8, ::tuples_golden::CopyNoDefault,), 1) == 1);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u8_x0000002c_x00000020tuples_ugolden_x0000003a_x0000003aHasDefault_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -618,6 +660,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u8_x0000002c_x00
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((u8, ::tuples_golden::HasDefault,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((u8, ::tuples_golden::HasDefault,), 1) == 4);
+const _: () = assert!(::core::mem::offset_of!((u8, ::tuples_golden::HasNoDefault,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((u8, ::tuples_golden::HasNoDefault,), 1) == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u8_x0000002c_x00000020usize_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -627,6 +673,8 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u8_x0000002c_x00
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((u8, usize,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((u8, usize,), 1) == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020u8_x00000029(
     __ret_ptr: *mut core::ffi::c_void,
@@ -636,6 +684,8 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((usize, u8,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((usize, u8,), 1) == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
     __self: &'static ::core::result::Result<i32, ::alloc::string::String>,

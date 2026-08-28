@@ -194,3 +194,5 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x0
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((i32, i32,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((i32, i32,), 1) == 4);

@@ -95,16 +95,26 @@ TEST(TuplesTest, FfiAliasInTuple) {
 template <typename T>
 concept HasBadTupleMethod = requires(T t) { t.tuple_not_by_value(); };
 
-TEST(TuplesTest, TupleStruct) {
-  // Can't directly test the tuple fields, because binary blob fields are
-  // private, and ZST fields don't exist at all.
+TEST(TuplesTest, DirectFieldAccess) {
+  rs_std::Tuple<uint32_t, uint32_t> t(std::make_tuple(10u, 20u));
+  EXPECT_EQ(t.__field0, 10u);
+  EXPECT_EQ(t.__field1, 20u);
 
+  t.__field0 = 100u;
+  t.__field1 = 200u;
+  EXPECT_EQ(t.__field0, 100u);
+  EXPECT_EQ(t.__field1, 200u);
+}
+
+TEST(TuplesTest, TupleStruct) {
   EXPECT_FALSE(HasBadTupleMethod<tuples::TupleStruct>)
       << "Tuples cannot be bridged to std::tuple except when used by value";
 }
 
 TEST(TuplesTest, GetsTuple) {
   auto res = tuples::GetsTuple::new_(42);
+  EXPECT_EQ(res.value.__field0, 42);
+  EXPECT_EQ(res.value.__field1, 42);
   std::tuple<uint32_t, uint32_t> t = std::move(res.value);
   EXPECT_EQ(std::get<0>(t), 42);
   EXPECT_EQ(std::get<1>(t), 42);
@@ -112,6 +122,16 @@ TEST(TuplesTest, GetsTuple) {
 
 TEST(TuplesTest, NestedTupleStruct) {
   auto res = tuples::NestedTupleStruct::new_(42);
+  EXPECT_EQ(res.in_tuple1.__field0.__field0.__field0, 42);
+  EXPECT_EQ(res.in_tuple1.__field0.__field0.__field1, 42);
+  EXPECT_EQ(res.in_tuple1.__field0.__field1, 42);
+  EXPECT_EQ(res.in_tuple1.__field1, 42);
+
+  EXPECT_EQ(res.in_tuple2.__field0, 42);
+  EXPECT_EQ(res.in_tuple2.__field1.__field0, 42);
+  EXPECT_EQ(res.in_tuple2.__field1.__field1.__field0, 42);
+  EXPECT_EQ(res.in_tuple2.__field1.__field1.__field1, 42);
+
   std::tuple<rs_std::Tuple<rs_std::Tuple<uint32_t, uint32_t>, uint32_t>,
              uint32_t>
       t1 = std::move(res.in_tuple1);

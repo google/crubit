@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -183,9 +184,15 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int32_t, ::std::int32_t>() && noexcept;
+  union {
+    ::std::int32_t __field0;
+  };
+  union {
+    ::std::int32_t __field1;
+  };
 
  private:
-  unsigned char storage_[8];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -492,18 +499,20 @@ inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
 }
 inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
     std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 4),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::operator std::tuple<
     ::std::int32_t, ::std::int32_t>() && noexcept {
-  return std::tuple<::std::int32_t, ::std::int32_t>(
-      std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 4)));
+  return std::tuple<::std::int32_t, ::std::int32_t>(std::move(this->__field0),
+                                                    std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<
+    ::std::int32_t, ::std::int32_t>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(4 == offsetof(Tuple, __field1));
+}
 #endif
 
 #pragma clang diagnostic pop

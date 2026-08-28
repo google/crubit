@@ -79,3 +79,5 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
+const _: () = assert!(::core::mem::offset_of!((usize, bool,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((usize, bool,), 1) == 4);

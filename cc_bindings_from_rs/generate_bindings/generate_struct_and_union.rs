@@ -1591,7 +1591,6 @@ pub(crate) fn is_struct_aggregate<'tcx>(
         if !is_type_default_constructible_in_cpp(db, ty) {
             return Err(NotAggregateReason::FieldNotDefaultConstructible(field_def.name));
         }
-        let field_def_id = ty.ty_adt_def().map(|adt| adt.did());
         if ty.needs_drop(tcx, typing_env) {
             // In C++, an aggregate's move constructor is implicitly deleted if any
             // member's move constructor is deleted. If a field requires drop glue
@@ -1933,6 +1932,7 @@ pub fn generate_adt<'tcx>(
         db,
         core.common.self_ty,
         &core.common.cc_short_name,
+        &quote! { #adt_cc_name },
         &core.rs_fully_qualified_name,
         &member_function_names,
         is_aggregate,
@@ -2191,7 +2191,7 @@ pub fn generate_adt_core<'tcx>(
     }))
 }
 
-fn anonymous_field_ident(index: usize) -> Ident {
+pub(crate) fn anonymous_field_ident(index: usize) -> Ident {
     format_ident!("__field{index}")
 }
 
@@ -2517,30 +2517,32 @@ impl CcFieldVisState {
     }
 }
 
-struct AdtVariantLayout<'tcx> {
+struct CppVariantLayout<'tcx> {
     fields: Vec<Field<'tcx>>,
     size: u64,
 }
 
-enum AdtLayout<'tcx> {
+enum CppLayout<'tcx> {
     Struct { fields: Vec<Field<'tcx>>, always_omit_padding: bool },
     Union { fields: Vec<Field<'tcx>> },
-    Enum { enum_kind: EnumKind, tag_size_with_padding: u64, variants: Vec<AdtVariantLayout<'tcx>> },
+    Enum { enum_kind: EnumKind, tag_size_with_padding: u64, variants: Vec<CppVariantLayout<'tcx>> },
 }
 
-struct AdtFieldGenerator<'a, 'tcx> {
+struct CppFieldGenerator<'a, 'tcx> {
     db: &'a BindingsGenerator<'tcx>,
     layout: rustc_abi::Layout<'tcx>,
-    adt_def: ty::AdtDef<'tcx>,
-    adt_generic_args: ty::GenericArgsRef<'tcx>,
+    self_ty: Ty<'tcx>,
+    adt_def: Option<ty::AdtDef<'tcx>>,
+    adt_generic_args: Option<ty::GenericArgsRef<'tcx>>,
     cc_short_name: &'a Ident,
+    cc_qualifier: &'a TokenStream,
     rs_fully_qualified_name: &'a TokenStream,
     repr_attrs: &'a [rustc_hir::attrs::ReprAttr],
     member_function_names: &'a HashSet<String>,
 }
 
-impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
-    /// Returns the fields of each variant of an ADT. For structs, there will be only one variant.
+impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
+    /// Returns the fields of each variant of an ADT or tuple. For structs and tuples, there will be only one variant.
     ///
     /// If a valid C++ representation is not possible, returns a single error field for the ADT.
     fn variant_fields(
@@ -2548,110 +2550,138 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
         enum_kind: Option<EnumKind>,
         tag_size_with_padding: u64,
     ) -> Vec<Vec<Field<'tcx>>> {
-        if let ty::AdtKind::Enum = self.adt_def.adt_kind()
-            && enum_kind != Some(EnumKind::ReprC)
-        {
-            return vec![vec![Field {
-                type_info: Err(anyhow!(
-                    "No support for bindings of individual non-repr(C) `enum`s"
-                )),
-                cc_name: format_ident!("__opaque_blob_of_bytes"),
-                rs_name: quote! { __opaque_blob_of_bytes },
-                is_public: false,
-                index: 0,
-                offset: 0,
-                offset_of_next_field: self.layout.size.bytes(),
-                doc_comment: quote! {},
-                attributes: vec![],
-            }]];
-        };
+        if let Some(adt_def) = self.adt_def {
+            if let ty::AdtKind::Enum = adt_def.adt_kind()
+                && enum_kind != Some(EnumKind::ReprC)
+            {
+                return vec![vec![Field {
+                    type_info: Err(anyhow!(
+                        "No support for bindings of individual non-repr(C) `enum`s"
+                    )),
+                    cc_name: format_ident!("__opaque_blob_of_bytes"),
+                    rs_name: quote! { __opaque_blob_of_bytes },
+                    is_public: false,
+                    index: 0,
+                    offset: 0,
+                    offset_of_next_field: self.layout.size.bytes(),
+                    doc_comment: quote! {},
+                    attributes: vec![],
+                }]];
+            };
 
-        let layout = &self.layout;
-        let layout_variants = layout.variants();
+            let layout = &self.layout;
+            let layout_variants = layout.variants();
 
-        #[rustversion::before(2026-05-18)]
-        let get_fields =
-            |(_, variant): (VariantIdx, &LayoutData<FieldIdx, VariantIdx>)| variant.fields.clone();
-        #[rustversion::since(2026-05-18)]
-        let get_fields = |(i, _): (VariantIdx, &VariantLayout<FieldIdx>)| {
-            LayoutData::for_variant(layout, i).fields
-        };
-        let variant_layout_field_sizes = match layout_variants {
-            Variants::Single { .. } | Variants::Empty => {
-                vec![(layout.fields.clone(), layout.size.bytes())]
-            }
-            Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => variants
-                .iter_enumerated()
-                .map(|(variant_index, variant)| {
-                    (
-                        get_fields((variant_index, variant)),
-                        variant.size.bytes() - tag_size_with_padding,
-                    )
-                })
-                .collect_vec(),
-        };
-
-        self.adt_def
-            .variants()
-            .iter()
-            .zip(variant_layout_field_sizes)
-            .map(|(variant, (field_shape, size))| {
-                let enum_adjustment =
-                    if enum_kind == Some(EnumKind::ReprC) { tag_size_with_padding } else { 0 };
-
-                let offsets = match field_shape {
-                    FieldsShape::Arbitrary { ref offsets, .. } => {
-                        offsets.iter().map(|size| size.bytes() - enum_adjustment).collect_vec()
-                    }
-                    FieldsShape::Union { .. } => (0..variant.fields.len())
-                        .map(|i| layout.fields().offset(i).bytes())
-                        .collect_vec(),
-                    unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
-                };
-
-                let mut fields = variant
-                    .fields
-                    .iter()
-                    .zip(offsets)
-                    .enumerate()
-                    .map(|(index, (field_def, offset))| {
-                        self.analyze_field(index, field_def, offset)
+            #[rustversion::before(2026-05-18)]
+            let get_fields = |(_, variant): (VariantIdx, &LayoutData<FieldIdx, VariantIdx>)| {
+                variant.fields.clone()
+            };
+            #[rustversion::since(2026-05-18)]
+            let get_fields = |(i, _): (VariantIdx, &VariantLayout<FieldIdx>)| {
+                LayoutData::for_variant(layout, i).fields
+            };
+            let variant_layout_field_sizes = match layout_variants {
+                Variants::Single { .. } | Variants::Empty => {
+                    vec![(layout.fields.clone(), layout.size.bytes())]
+                }
+                Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => variants
+                    .iter_enumerated()
+                    .map(|(variant_index, variant)| {
+                        (
+                            get_fields((variant_index, variant)),
+                            variant.size.bytes() - tag_size_with_padding,
+                        )
                     })
-                    .collect_vec();
+                    .collect_vec(),
+            };
 
-                // We only need to worry about this for variant multiples.
-                // TODO: We sort after analyze field because we sort by `field_size` which is
-                // determined by `analyze_field`. We could instead determine field size prior and
-                // have analyze_field set `next_offset` instead of mutating after the fact.
-                if let FieldsShape::Arbitrary { .. } = field_shape {
-                    fields.sort_by_key(|field| {
-                        let field_size =
-                            field.type_info.as_ref().map(|info| info.size).unwrap_or(0);
-                        (field.offset, field_size, field.index)
-                    });
-                }
+            adt_def
+                .variants()
+                .iter()
+                .zip(variant_layout_field_sizes)
+                .map(|(variant, (field_shape, size))| {
+                    let enum_adjustment =
+                        if enum_kind == Some(EnumKind::ReprC) { tag_size_with_padding } else { 0 };
 
-                let next_offsets = fields
-                    .iter()
-                    .map(|Field { offset, .. }| offset)
-                    .skip(1)
-                    .copied()
-                    .chain(once(size))
-                    .collect_vec();
-                for (field, next_offset) in fields.iter_mut().zip(next_offsets) {
-                    field.offset_of_next_field = next_offset;
-                }
+                    let offsets = match field_shape {
+                        FieldsShape::Arbitrary { ref offsets, .. } => {
+                            offsets.iter().map(|size| size.bytes() - enum_adjustment).collect_vec()
+                        }
+                        FieldsShape::Union { .. } => (0..variant.fields.len())
+                            .map(|i| layout.fields().offset(i).bytes())
+                            .collect_vec(),
+                        unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
+                    };
 
-                fields
-            })
-            .collect_vec()
+                    let fields = variant
+                        .fields
+                        .iter()
+                        .zip(offsets)
+                        .enumerate()
+                        .map(|(index, (field_def, offset))| {
+                            self.analyze_field(index, field_def, offset)
+                        })
+                        .collect_vec();
+
+                    if let FieldsShape::Arbitrary { .. } = field_shape {
+                        self.sort_and_assign_next_offsets(fields, size)
+                    } else {
+                        self.assign_next_offsets(fields, size)
+                    }
+                })
+                .collect_vec()
+        } else if let ty::TyKind::Tuple(types) = self.self_ty.kind() {
+            let layout = &self.layout;
+            let offsets = (0..types.len()).map(|i| layout.fields().offset(i).bytes()).collect_vec();
+
+            let fields = types
+                .iter()
+                .zip(offsets)
+                .enumerate()
+                .map(|(index, (ty, offset))| self.analyze_tuple_field(index, ty, offset))
+                .collect_vec();
+
+            vec![self.sort_and_assign_next_offsets(fields, layout.size.bytes())]
+        } else {
+            panic!("Expected ADT or Tuple type: {:?}", self.self_ty);
+        }
     }
 
-    fn analyze_layout(&self) -> Result<AdtLayout<'tcx>> {
+    fn assign_next_offsets(
+        &self,
+        mut fields: Vec<Field<'tcx>>,
+        total_size: u64,
+    ) -> Vec<Field<'tcx>> {
+        let next_offsets = fields
+            .iter()
+            .map(|Field { offset, .. }| offset)
+            .skip(1)
+            .copied()
+            .chain(once(total_size))
+            .collect_vec();
+        for (field, next_offset) in fields.iter_mut().zip(next_offsets) {
+            field.offset_of_next_field = next_offset;
+        }
+        fields
+    }
+
+    fn sort_and_assign_next_offsets(
+        &self,
+        mut fields: Vec<Field<'tcx>>,
+        total_size: u64,
+    ) -> Vec<Field<'tcx>> {
+        fields.sort_by_key(|field| {
+            let field_size = field.type_info.as_ref().map(|info| info.size).unwrap_or(0);
+            (field.offset, field_size, field.index)
+        });
+        self.assign_next_offsets(fields, total_size)
+    }
+
+    fn analyze_layout(&self) -> Result<CppLayout<'tcx>> {
         let layout = &self.layout;
         let layout_variants = layout.variants();
 
-        let enum_kind = get_enum_kind(self.db, self.adt_def);
+        let enum_kind = self.adt_def.and_then(|adt_def| get_enum_kind(self.db, adt_def));
         let tag_size_with_padding = match enum_kind {
             Some(EnumKind::ReprC) => get_tag_size_with_padding(*layout),
             None | Some(EnumKind::OpaqueBlobOfBytes) => 0,
@@ -2659,16 +2689,17 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
 
         let variants_fields = self.variant_fields(enum_kind, tag_size_with_padding);
 
-        match self.adt_def.adt_kind() {
+        let adt_kind = self.adt_def.map(|d| d.adt_kind()).unwrap_or(ty::AdtKind::Struct);
+        match adt_kind {
             ty::AdtKind::Struct => {
                 let always_omit_padding = self.repr_attrs.contains(&rustc_hir::attrs::ReprC)
                     && variants_fields.iter().flatten().all(|field| field.type_info.is_ok());
                 let fields = variants_fields.into_iter().next().unwrap_or_default();
-                Ok(AdtLayout::Struct { fields, always_omit_padding })
+                Ok(CppLayout::Struct { fields, always_omit_padding })
             }
             ty::AdtKind::Union => {
                 let fields = variants_fields.into_iter().next().unwrap_or_default();
-                Ok(AdtLayout::Union { fields })
+                Ok(CppLayout::Union { fields })
             }
             ty::AdtKind::Enum => {
                 let variant_sizes = match layout_variants {
@@ -2683,20 +2714,16 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
                 let variants = variants_fields
                     .into_iter()
                     .zip(variant_sizes)
-                    .map(|(fields, size)| AdtVariantLayout { fields, size })
+                    .map(|(fields, size)| CppVariantLayout { fields, size })
                     .collect_vec();
                 let enum_kind = enum_kind.expect("Enum kind should be set for enums");
-                Ok(AdtLayout::Enum { enum_kind, tag_size_with_padding, variants })
+                Ok(CppLayout::Enum { enum_kind, tag_size_with_padding, variants })
             }
         }
     }
 
-    /// Ensures that a given field has a valid C++ type and returns its size and C++ type, if so.
-    fn prepare_field_type(&self, field_def: &ty::FieldDef) -> Result<FieldTypeInfo<'tcx>> {
+    fn prepare_field_type_for_ty(&self, ty: Ty<'tcx>) -> Result<FieldTypeInfo<'tcx>> {
         let tcx = self.db.tcx();
-        let ty = field_def.ty(tcx, self.adt_generic_args);
-        #[rustversion::since(2026-05-13)]
-        let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
         let size = get_layout(tcx, ty).map(|layout| layout.size().bytes())?;
 
         if is_bridged_type(self.db, ty).is_ok_and(|bridged_type| {
@@ -2718,6 +2745,41 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
             .resolve_feature_requirements(self.db.crate_features(self.db.source_crate_num()))?;
 
         Ok(FieldTypeInfo { size, cpp_type })
+    }
+
+    /// Ensures that a given field has a valid C++ type and returns its size and C++ type, if so.
+    fn prepare_field_type(&self, field_def: &ty::FieldDef) -> Result<FieldTypeInfo<'tcx>> {
+        let tcx = self.db.tcx();
+        let ty =
+            field_def.ty(tcx, self.adt_generic_args.expect("generic args present for ADT field"));
+        #[rustversion::since(2026-05-13)]
+        let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
+        self.prepare_field_type_for_ty(ty)
+    }
+
+    fn analyze_tuple_field(&self, index: usize, ty: Ty<'tcx>, offset: u64) -> Field<'tcx> {
+        let type_info = self.prepare_field_type_for_ty(ty);
+        let cc_name = anonymous_field_ident(index);
+        let cc_name = if self.member_function_names.contains(&cc_name.to_string()) {
+            format_ident!("{cc_name}_")
+        } else {
+            cc_name
+        };
+        let rs_index = Literal::usize_unsuffixed(index);
+        let rs_name = quote! { #rs_index };
+        let offset_of_next_field = 0;
+
+        Field {
+            type_info,
+            cc_name,
+            rs_name,
+            is_public: true,
+            index,
+            offset,
+            offset_of_next_field,
+            doc_comment: quote! {},
+            attributes: vec![],
+        }
     }
 
     fn analyze_field(&self, index: usize, field_def: &ty::FieldDef, offset: u64) -> Field<'tcx> {
@@ -2770,6 +2832,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
 
     fn generate_common_assertions(&self, fields: &[Field<'tcx>]) -> ApiSnippets<'tcx> {
         let adt_cc_name = self.cc_short_name;
+        let adt_cc_qualifier = self.cc_qualifier;
         let adt_rs_name = self.rs_fully_qualified_name;
 
         let cc_details = if fields.is_empty() {
@@ -2786,7 +2849,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
 
             CcSnippet::with_include(
                 quote! {
-                    inline void #adt_cc_name::__crubit_field_offset_assertions() {
+                    inline void #adt_cc_qualifier::__crubit_field_offset_assertions() {
                         #cc_assertions
                     }
                 },
@@ -3041,10 +3104,12 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
         &self,
         enum_kind: EnumKind,
         tag_size_with_padding: u64,
-        variants: Vec<AdtVariantLayout<'tcx>>,
+        variants: Vec<CppVariantLayout<'tcx>>,
     ) -> ApiSnippets<'tcx> {
+        let adt_def = self.adt_def.expect("Enum should have adt_def");
         let tcx = self.db.tcx();
         let adt_cc_name = self.cc_short_name;
+        let adt_cc_qualifier = self.cc_qualifier;
         let adt_rs_name = self.rs_fully_qualified_name;
         let layout_variants = &self.layout.variants;
 
@@ -3062,7 +3127,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
                     })
                     .collect(),
                 EnumKind::ReprC => {
-                    let variant_offset_assertions: TokenStream = self.adt_def.variants().iter().zip(variants.iter())
+                    let variant_offset_assertions: TokenStream = adt_def.variants().iter().zip(variants.iter())
                         .map(|(variant_def, variant)| {
                             if variant.size == 0 {
                                 quote! {}
@@ -3077,7 +3142,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
                         .iter()
                         .enumerate()
                         .flat_map(|(variant_index, variant_layout)| {
-                            let variant_def = self.adt_def.variant(VariantIdx::from_usize(variant_index));
+                            let variant_def = adt_def.variant(VariantIdx::from_usize(variant_index));
                             let cc_variant = variant_def.ident(tcx);
                             let qualified_struct_name =
                                 format_nonportable_cc_type_name(&format!("{}::__crubit_{}_struct", adt_cc_name, cc_variant)).expect("generated invalid C++ identifier");
@@ -3096,7 +3161,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
 
             CcSnippet::with_include(
                 quote! {
-                    inline void #adt_cc_name::__crubit_field_offset_assertions() {
+                    inline void #adt_cc_qualifier::__crubit_field_offset_assertions() {
                         #cc_assertions
                     }
                 },
@@ -3150,8 +3215,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
                         .expect("discriminant should be a integer type.")
                         .into_tokens(&mut prereqs);
 
-                    let variant_enum_fields: TokenStream = self
-                        .adt_def
+                    let variant_enum_fields: TokenStream = adt_def
                         .variants()
                         .iter_enumerated()
                         .map(|(variant_index, variant_def)| {
@@ -3160,7 +3224,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
                                     .unwrap_or_else(|_err| format_ident!("err_field"));
                             let (tag_size, _signed) = tag_ty.int_size_and_signed(tcx);
                             let (scalar_int, _) = ty::ScalarInt::truncate_from_uint(
-                                self.adt_def.discriminant_for_variant(tcx, variant_index).val,
+                                adt_def.discriminant_for_variant(tcx, variant_index).val,
                                 tag_size,
                             );
                             let tag_value = scalar_value_to_string(
@@ -3218,8 +3282,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
                 }
             };
 
-            let variant_structs: TokenStream = self
-                .adt_def
+            let variant_structs: TokenStream = adt_def
                 .variants()
                 .iter_enumerated()
                 .map(|(variant_index, variant_def)| {
@@ -3254,8 +3317,7 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
                 })
                 .collect();
 
-            let variants_union_fields: TokenStream = self
-                .adt_def
+            let variants_union_fields: TokenStream = adt_def
                 .variants()
                 .iter_enumerated()
                 .map(|(variant_index, variant_def)| {
@@ -3329,29 +3391,35 @@ impl<'a, 'tcx> AdtFieldGenerator<'a, 'tcx> {
     }
 }
 
-/// Returns the body of the C++ struct that represents the given ADT.
-fn generate_fields<'tcx>(
+/// Returns the body of the C++ struct that represents the given ADT or tuple.
+pub(crate) fn generate_fields<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     cc_short_name: &Ident,
+    cc_qualifier: &TokenStream,
     rs_fully_qualified_name: &TokenStream,
     member_function_names: &HashSet<String>,
     is_aggregate: bool,
 ) -> ApiSnippets<'tcx> {
-    let TyKind::Adt(adt_def, adt_generic_args) = self_ty.kind() else {
-        panic!("Attempted to generate fields for a non-ADT type: {:?}", self_ty)
+    let (adt_def, adt_generic_args, repr_attrs) = match self_ty.kind() {
+        TyKind::Adt(adt_def, adt_generic_args) => {
+            (Some(*adt_def), Some(*adt_generic_args), db.repr_attrs(adt_def.did()).to_vec())
+        }
+        TyKind::Tuple(_) => (None, None, vec![]),
+        _ => panic!("Attempted to generate fields for a non-composite type: {:?}", self_ty),
     };
 
-    let layout = get_layout(db.tcx(), self_ty)
-        .expect("Layout should be already verified by `generate_adt_core`");
-    let repr_attrs = db.repr_attrs(adt_def.did());
+    let layout =
+        get_layout(db.tcx(), self_ty).expect("Layout should be already verified by caller");
 
-    let generator = AdtFieldGenerator {
+    let generator = CppFieldGenerator {
         db,
         layout,
-        adt_def: *adt_def,
+        self_ty,
+        adt_def,
         adt_generic_args,
         cc_short_name,
+        cc_qualifier,
         rs_fully_qualified_name,
         repr_attrs: &repr_attrs,
         member_function_names,
@@ -3359,14 +3427,14 @@ fn generate_fields<'tcx>(
 
     let layout_data = generator
         .analyze_layout()
-        .expect("Layout analysis should succeed if `generate_adt_core` verified layout");
+        .expect("Layout analysis should succeed if caller verified layout");
 
     match layout_data {
-        AdtLayout::Struct { fields, always_omit_padding } => {
+        CppLayout::Struct { fields, always_omit_padding } => {
             generator.generate_struct(fields, always_omit_padding || is_aggregate, is_aggregate)
         }
-        AdtLayout::Union { fields } => generator.generate_union(fields),
-        AdtLayout::Enum { enum_kind, tag_size_with_padding, variants } => {
+        CppLayout::Union { fields } => generator.generate_union(fields),
+        CppLayout::Enum { enum_kind, tag_size_with_padding, variants } => {
             generator.generate_enum(enum_kind, tag_size_with_padding, variants)
         }
     }

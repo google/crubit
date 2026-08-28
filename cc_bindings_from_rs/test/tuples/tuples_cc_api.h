@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <optional>
 #include <tuple>
 #include <type_traits>
@@ -297,9 +298,12 @@ struct alignas(4)
   Tuple(std::tuple<::std::int32_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int32_t>() && noexcept;
+  union {
+    ::std::int32_t __field0;
+  };
 
  private:
-  unsigned char storage_[4];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -362,9 +366,20 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::int8_t, ::std::int64_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int8_t, ::std::int64_t>() && noexcept;
+  union {
+    ::std::int8_t __field0;
+  };
 
  private:
-  unsigned char storage_[16];
+  unsigned char __padding0[7];
+
+ public:
+  union {
+    ::std::intptr_t __field1;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -388,9 +403,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::int64_t, ::std::int8_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int64_t, ::std::int8_t>() && noexcept;
+  union {
+    ::std::intptr_t __field0;
+  };
+  union {
+    ::std::int8_t __field1;
+  };
 
  private:
-  unsigned char storage_[16];
+  unsigned char __padding1[7];
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -418,9 +442,15 @@ struct alignas(1)
   Tuple(std::tuple<::tuples::CloneNoDefault, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::tuples::CloneNoDefault, ::std::uint8_t>() && noexcept;
+  union {
+    ::tuples::CloneNoDefault __field0;
+  };
+  union {
+    ::std::uint8_t __field1;
+  };
 
  private:
-  unsigned char storage_[2];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -445,9 +475,15 @@ struct alignas(1)
   Tuple(std::tuple<::tuples::CopyNoDefault, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::tuples::CopyNoDefault, ::std::uint8_t>() && noexcept;
+  union {
+    ::tuples::CopyNoDefault __field0;
+  };
+  union {
+    ::std::uint8_t __field1;
+  };
 
  private:
-  unsigned char storage_[2];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -470,9 +506,18 @@ struct alignas(8)
   Tuple(std::tuple<::tuples::HasDefault, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple();
   operator std::tuple<::tuples::HasDefault, ::std::uint8_t>() && noexcept;
+  union {
+    ::tuples::HasDefault __field0;
+  };
+  union {
+    ::std::uint8_t __field1;
+  };
 
  private:
-  unsigned char storage_[32];
+  unsigned char __padding1[7];
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -499,9 +544,18 @@ struct alignas(8)
   Tuple(std::tuple<::tuples::HasNoDefault, ::std::uint8_t>&& tuple) = delete;
   ~Tuple();
   operator std::tuple<::tuples::HasNoDefault, ::std::uint8_t>() && = delete;
+  union {
+    ::tuples::HasNoDefault __field0;
+  };
+  union {
+    ::std::uint8_t __field1;
+  };
 
  private:
-  unsigned char storage_[32];
+  unsigned char __padding1[7];
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -525,9 +579,15 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::uint32_t, ::std::uint32_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint32_t, ::std::uint32_t>() && noexcept;
+  union {
+    ::std::uint32_t __field0;
+  };
+  union {
+    ::std::uint32_t __field1;
+  };
 
  private:
-  unsigned char storage_[8];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -571,9 +631,15 @@ struct alignas(4)
   ~Tuple() = default;
   operator std::tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                       ::std::uint32_t>() && noexcept;
+  union {
+    rs_std::Tuple<::std::uint32_t, ::std::uint32_t> __field0;
+  };
+  union {
+    ::std::uint32_t __field1;
+  };
 
  private:
-  unsigned char storage_[12];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -605,9 +671,17 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE("(((u32 , u32 ,) , u32 ,) , u32 ,)")
       rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                     ::std::uint32_t>,
       ::std::uint32_t>() && noexcept;
+  union {
+    rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
+                  ::std::uint32_t>
+        __field0;
+  };
+  union {
+    ::std::uint32_t __field1;
+  };
 
  private:
-  unsigned char storage_[16];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -636,9 +710,15 @@ struct alignas(4)
   operator std::tuple<
       ::std::uint32_t,
       rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>() && noexcept;
+  union {
+    ::std::uint32_t __field0;
+  };
+  union {
+    rs_std::Tuple<::std::uint32_t, ::std::uint32_t> __field1;
+  };
 
  private:
-  unsigned char storage_[12];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -693,9 +773,17 @@ struct alignas(4)
       rs_std::Tuple<
           ::std::uint32_t,
           rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>() && noexcept;
+  union {
+    ::std::uint32_t __field0;
+  };
+  union {
+    rs_std::Tuple<::std::uint32_t,
+                  rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>
+        __field1;
+  };
 
  private:
-  unsigned char storage_[16];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -762,9 +850,15 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::uint64_t, ::std::uint64_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint64_t, ::std::uint64_t>() && noexcept;
+  union {
+    ::std::uint64_t __field0;
+  };
+  union {
+    ::std::uint64_t __field1;
+  };
 
  private:
-  unsigned char storage_[16];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -805,9 +899,15 @@ struct alignas(1)
   Tuple(std::tuple<::std::uint8_t, ::tuples::CloneNoDefault>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint8_t, ::tuples::CloneNoDefault>() && noexcept;
+  union {
+    ::std::uint8_t __field0;
+  };
+  union {
+    ::tuples::CloneNoDefault __field1;
+  };
 
  private:
-  unsigned char storage_[2];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -871,9 +971,15 @@ struct alignas(1)
   Tuple(std::tuple<::std::uint8_t, ::tuples::CopyNoDefault>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint8_t, ::tuples::CopyNoDefault>() && noexcept;
+  union {
+    ::std::uint8_t __field0;
+  };
+  union {
+    ::tuples::CopyNoDefault __field1;
+  };
 
  private:
-  unsigned char storage_[2];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -935,9 +1041,20 @@ struct alignas(8)
   Tuple(std::tuple<::std::uint8_t, ::tuples::HasDefault>&& tuple) noexcept;
   ~Tuple();
   operator std::tuple<::std::uint8_t, ::tuples::HasDefault>() && noexcept;
+  union {
+    ::std::uint8_t __field0;
+  };
 
  private:
-  unsigned char storage_[32];
+  unsigned char __padding0[7];
+
+ public:
+  union {
+    ::tuples::HasDefault __field1;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -1006,9 +1123,20 @@ struct alignas(8)
   Tuple(std::tuple<::std::uint8_t, ::tuples::HasNoDefault>&& tuple) = delete;
   ~Tuple();
   operator std::tuple<::std::uint8_t, ::tuples::HasNoDefault>() && = delete;
+  union {
+    ::std::uint8_t __field0;
+  };
 
  private:
-  unsigned char storage_[32];
+  unsigned char __padding0[7];
+
+ public:
+  union {
+    ::tuples::HasNoDefault __field1;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -1074,9 +1202,20 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::uint8_t, ::std::uint64_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint8_t, ::std::uint64_t>() && noexcept;
+  union {
+    ::std::uint8_t __field0;
+  };
 
  private:
-  unsigned char storage_[16];
+  unsigned char __padding0[7];
+
+ public:
+  union {
+    ::std::uintptr_t __field1;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -1100,9 +1239,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::uint64_t, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint64_t, ::std::uint8_t>() && noexcept;
+  union {
+    ::std::uintptr_t __field0;
+  };
+  union {
+    ::std::uint8_t __field1;
+  };
 
  private:
-  unsigned char storage_[16];
+  unsigned char __padding1[7];
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -1202,9 +1350,12 @@ struct alignas(4)
   Tuple(std::tuple<rs_std::Option<::std::int32_t>>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<rs_std::Option<::std::int32_t>>() && noexcept;
+  union {
+    rs_std::Option<::std::int32_t> __field0;
+  };
 
  private:
-  unsigned char storage_[8];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -1309,9 +1460,15 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
       rs_std::Option<::std::int32_t>,
       rs_std::Result<::std::int32_t,
                      ::rs::alloc::string::String>>() && noexcept;
+  union {
+    rs_std::Option<::std::int32_t> __field0;
+  };
+  union {
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String> __field1;
+  };
 
  private:
-  unsigned char storage_[32];
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -2118,13 +2275,8 @@ inline rs_std::Tuple<
           rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                         ::std::uint32_t>,
           ::std::uint32_t>&& tuple) noexcept {
-  std::construct_at(
-      reinterpret_cast<rs_std::Tuple<
-          rs_std::Tuple<::std::uint32_t, ::std::uint32_t>, ::std::uint32_t>*>(
-          storage_ + 0),
-      std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::uint32_t*>(storage_ + 12),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<
     rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
@@ -2137,13 +2289,16 @@ operator std::tuple<
   return std::tuple<
       rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                     ::std::uint32_t>,
-      ::std::uint32_t>(
-      std::move(*reinterpret_cast<
-                rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
-                              ::std::uint32_t>*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::uint32_t*>(storage_ + 12)));
+      ::std::uint32_t>(std::move(this->__field0), std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<
+    rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
+                  ::std::uint32_t>,
+    ::std::uint32_t>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(12 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
@@ -2181,25 +2336,24 @@ inline rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                      ::std::uint32_t>::
     Tuple(std::tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                      ::std::uint32_t>&& tuple) noexcept {
-  std::construct_at(
-      reinterpret_cast<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>*>(
-          storage_ + 0),
-      std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::uint32_t*>(storage_ + 8),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                      ::std::uint32_t>::
 operator std::tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                     ::std::uint32_t>() && noexcept {
   return std::tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
-                    ::std::uint32_t>(
-      std::move(
-          *reinterpret_cast<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>*>(
-              storage_ + 0)),
-      std::move(*reinterpret_cast<::std::uint32_t*>(storage_ + 8)));
+                    ::std::uint32_t>(std::move(this->__field0),
+                                     std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<
+    rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
+    ::std::uint32_t>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(8 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
@@ -2227,15 +2381,17 @@ inline ::rs_std::Tuple<::std::int32_t>::Tuple(::crubit::UnsafeRelocateTag,
 }
 inline rs_std::Tuple<::std::int32_t>::Tuple(
     std::tuple<::std::int32_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::int32_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
 }
 inline rs_std::Tuple<::std::int32_t>::operator std::tuple<
     ::std::int32_t>() && noexcept {
-  return std::tuple<::std::int32_t>(
-      std::move(*reinterpret_cast<::std::int32_t*>(storage_ + 0)));
+  return std::tuple<::std::int32_t>(std::move(this->__field0));
 }
 
+inline void ::rs_std::Tuple<
+    ::std::int32_t>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int64_ut_x00000020_x0000003e
@@ -2264,18 +2420,20 @@ inline ::rs_std::Tuple<::std::int8_t, ::std::int64_t>::Tuple(
 }
 inline rs_std::Tuple<::std::int8_t, ::std::int64_t>::Tuple(
     std::tuple<::std::int8_t, ::std::int64_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::int8_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::int64_t*>(storage_ + 8),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::std::int8_t, ::std::int64_t>::operator std::tuple<
     ::std::int8_t, ::std::int64_t>() && noexcept {
-  return std::tuple<::std::int8_t, ::std::int64_t>(
-      std::move(*reinterpret_cast<::std::int8_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::int64_t*>(storage_ + 8)));
+  return std::tuple<::std::int8_t, ::std::int64_t>(std::move(this->__field0),
+                                                   std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<
+    ::std::int8_t, ::std::int64_t>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(8 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int64_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
@@ -2304,18 +2462,20 @@ inline ::rs_std::Tuple<::std::int64_t, ::std::int8_t>::Tuple(
 }
 inline rs_std::Tuple<::std::int64_t, ::std::int8_t>::Tuple(
     std::tuple<::std::int64_t, ::std::int8_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::int64_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::int8_t*>(storage_ + 8),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::std::int64_t, ::std::int8_t>::operator std::tuple<
     ::std::int64_t, ::std::int8_t>() && noexcept {
-  return std::tuple<::std::int64_t, ::std::int8_t>(
-      std::move(*reinterpret_cast<::std::int64_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::int8_t*>(storage_ + 8)));
+  return std::tuple<::std::int64_t, ::std::int8_t>(std::move(this->__field0),
+                                                   std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<::std::int64_t,
+                            ::std::int8_t>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(8 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
@@ -2373,14 +2533,8 @@ inline rs_std::Tuple<
           rs_std::Option<::std::int32_t>,
           rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&&
               tuple) noexcept {
-  std::construct_at(
-      reinterpret_cast<rs_std::Option<::std::int32_t>*>(storage_ + 0),
-      std::move(std::get<0>(tuple)));
-  std::construct_at(
-      reinterpret_cast<
-          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
-          storage_ + 8),
-      std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<
     rs_std::Option<::std::int32_t>,
@@ -2391,22 +2545,20 @@ operator std::tuple<
   return std::tuple<
       rs_std::Option<::std::int32_t>,
       rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>(
-      std::move(
-          *reinterpret_cast<rs_std::Option<::std::int32_t>*>(storage_ + 0)),
-      std::move(*reinterpret_cast<
-                rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
-          storage_ + 8)));
+      std::move(this->__field0), std::move(this->__field1));
 }
 inline rs_std::Tuple<
     rs_std::Option<::std::int32_t>,
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::~Tuple() {
-  std::destroy_at(
-      reinterpret_cast<rs_std::Option<::std::int32_t>*>(storage_ + 0));
-  std::destroy_at(reinterpret_cast<
-                  rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(
-      storage_ + 8));
+  std::destroy_at(&this->__field1);
 }
-
+inline void ::rs_std::Tuple<
+    rs_std::Option<::std::int32_t>,
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
+    __crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(8 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
@@ -2435,16 +2587,17 @@ inline ::rs_std::Tuple<rs_std::Option<::std::int32_t>>::Tuple(
 }
 inline rs_std::Tuple<rs_std::Option<::std::int32_t>>::Tuple(
     std::tuple<rs_std::Option<::std::int32_t>>&& tuple) noexcept {
-  std::construct_at(
-      reinterpret_cast<rs_std::Option<::std::int32_t>*>(storage_ + 0),
-      std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
 }
 inline rs_std::Tuple<rs_std::Option<::std::int32_t>>::operator std::tuple<
     rs_std::Option<::std::int32_t>>() && noexcept {
-  return std::tuple<rs_std::Option<::std::int32_t>>(std::move(
-      *reinterpret_cast<rs_std::Option<::std::int32_t>*>(storage_ + 0)));
+  return std::tuple<rs_std::Option<::std::int32_t>>(std::move(this->__field0));
 }
 
+inline void ::rs_std::Tuple<
+    rs_std::Option<::std::int32_t>>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -2487,18 +2640,20 @@ inline ::rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::Tuple(
 }
 inline rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::Tuple(
     std::tuple<::tuples::CloneNoDefault, ::std::uint8_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::tuples::CloneNoDefault*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::uint8_t*>(storage_ + 1),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::operator std::
     tuple<::tuples::CloneNoDefault, ::std::uint8_t>() && noexcept {
   return std::tuple<::tuples::CloneNoDefault, ::std::uint8_t>(
-      std::move(*reinterpret_cast<::tuples::CloneNoDefault*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::uint8_t*>(storage_ + 1)));
+      std::move(this->__field0), std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::
+    __crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(1 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020CopyNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -2517,18 +2672,20 @@ inline ::rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t>::Tuple(
 }
 inline rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t>::Tuple(
     std::tuple<::tuples::CopyNoDefault, ::std::uint8_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::tuples::CopyNoDefault*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::uint8_t*>(storage_ + 1),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t>::operator std::
     tuple<::tuples::CopyNoDefault, ::std::uint8_t>() && noexcept {
   return std::tuple<::tuples::CopyNoDefault, ::std::uint8_t>(
-      std::move(*reinterpret_cast<::tuples::CopyNoDefault*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::uint8_t*>(storage_ + 1)));
+      std::move(this->__field0), std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t>::
+    __crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(1 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -2559,22 +2716,22 @@ inline ::rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::Tuple(
 }
 inline rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::Tuple(
     std::tuple<::tuples::HasDefault, ::std::uint8_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::tuples::HasDefault*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::uint8_t*>(storage_ + 24),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::operator std::tuple<
     ::tuples::HasDefault, ::std::uint8_t>() && noexcept {
   return std::tuple<::tuples::HasDefault, ::std::uint8_t>(
-      std::move(*reinterpret_cast<::tuples::HasDefault*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::uint8_t*>(storage_ + 24)));
+      std::move(this->__field0), std::move(this->__field1));
 }
 inline rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::~Tuple() {
-  std::destroy_at(reinterpret_cast<::tuples::HasDefault*>(storage_ + 0));
-  std::destroy_at(reinterpret_cast<::std::uint8_t*>(storage_ + 24));
+  std::destroy_at(&this->__field0);
 }
-
+inline void ::rs_std::Tuple<
+    ::tuples::HasDefault, ::std::uint8_t>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(24 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -2585,10 +2742,13 @@ inline ::rs_std::Tuple<::tuples::HasNoDefault, ::std::uint8_t>::Tuple(
 }
 
 inline rs_std::Tuple<::tuples::HasNoDefault, ::std::uint8_t>::~Tuple() {
-  std::destroy_at(reinterpret_cast<::tuples::HasNoDefault*>(storage_ + 0));
-  std::destroy_at(reinterpret_cast<::std::uint8_t*>(storage_ + 24));
+  std::destroy_at(&this->__field0);
 }
-
+inline void ::rs_std::Tuple<::tuples::HasNoDefault, ::std::uint8_t>::
+    __crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(24 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
@@ -2646,13 +2806,8 @@ inline rs_std::Tuple<
           rs_std::Tuple<::std::uint32_t,
                         rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>&&
               tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::uint32_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(
-      reinterpret_cast<rs_std::Tuple<
-          ::std::uint32_t, rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>*>(
-          storage_ + 4),
-      std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<
     ::std::uint32_t,
@@ -2667,14 +2822,17 @@ operator std::tuple<
       ::std::uint32_t,
       rs_std::Tuple<::std::uint32_t,
                     rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>(
-      std::move(*reinterpret_cast<::std::uint32_t*>(storage_ + 0)),
-      std::move(
-          *reinterpret_cast<
-              rs_std::Tuple<::std::uint32_t,
-                            rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>*>(
-              storage_ + 4)));
+      std::move(this->__field0), std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<
+    ::std::uint32_t,
+    rs_std::Tuple<::std::uint32_t,
+                  rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>::
+    __crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(4 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000003e
@@ -2713,12 +2871,8 @@ inline rs_std::Tuple<::std::uint32_t,
     Tuple(std::tuple<::std::uint32_t,
                      rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>&&
               tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::uint32_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(
-      reinterpret_cast<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>*>(
-          storage_ + 4),
-      std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::std::uint32_t,
                      rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>::
@@ -2727,12 +2881,15 @@ operator std::tuple<
     rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>() && noexcept {
   return std::tuple<::std::uint32_t,
                     rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>(
-      std::move(*reinterpret_cast<::std::uint32_t*>(storage_ + 0)),
-      std::move(
-          *reinterpret_cast<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>*>(
-              storage_ + 4)));
+      std::move(this->__field0), std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<::std::uint32_t,
+                            rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>::
+    __crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(4 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
@@ -2761,18 +2918,20 @@ inline ::rs_std::Tuple<::std::uint32_t, ::std::uint32_t>::Tuple(
 }
 inline rs_std::Tuple<::std::uint32_t, ::std::uint32_t>::Tuple(
     std::tuple<::std::uint32_t, ::std::uint32_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::uint32_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::uint32_t*>(storage_ + 4),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::std::uint32_t, ::std::uint32_t>::operator std::tuple<
     ::std::uint32_t, ::std::uint32_t>() && noexcept {
   return std::tuple<::std::uint32_t, ::std::uint32_t>(
-      std::move(*reinterpret_cast<::std::uint32_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::uint32_t*>(storage_ + 4)));
+      std::move(this->__field0), std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<
+    ::std::uint32_t, ::std::uint32_t>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(4 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
@@ -2801,18 +2960,20 @@ inline ::rs_std::Tuple<::std::uint64_t, ::std::uint64_t>::Tuple(
 }
 inline rs_std::Tuple<::std::uint64_t, ::std::uint64_t>::Tuple(
     std::tuple<::std::uint64_t, ::std::uint64_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::uint64_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::uint64_t*>(storage_ + 8),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::std::uint64_t, ::std::uint64_t>::operator std::tuple<
     ::std::uint64_t, ::std::uint64_t>() && noexcept {
   return std::tuple<::std::uint64_t, ::std::uint64_t>(
-      std::move(*reinterpret_cast<::std::uint64_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::uint64_t*>(storage_ + 8)));
+      std::move(this->__field0), std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<
+    ::std::uint64_t, ::std::uint64_t>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(8 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
@@ -2855,18 +3016,20 @@ inline ::rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::Tuple(
 }
 inline rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::Tuple(
     std::tuple<::std::uint8_t, ::tuples::CloneNoDefault>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::uint8_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::tuples::CloneNoDefault*>(storage_ + 1),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::operator std::
     tuple<::std::uint8_t, ::tuples::CloneNoDefault>() && noexcept {
   return std::tuple<::std::uint8_t, ::tuples::CloneNoDefault>(
-      std::move(*reinterpret_cast<::std::uint8_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::tuples::CloneNoDefault*>(storage_ + 1)));
+      std::move(this->__field0), std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::
+    __crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(1 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020CopyNoDefault_x00000020_x0000003e
@@ -2885,18 +3048,20 @@ inline ::rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault>::Tuple(
 }
 inline rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault>::Tuple(
     std::tuple<::std::uint8_t, ::tuples::CopyNoDefault>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::uint8_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::tuples::CopyNoDefault*>(storage_ + 1),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault>::operator std::
     tuple<::std::uint8_t, ::tuples::CopyNoDefault>() && noexcept {
   return std::tuple<::std::uint8_t, ::tuples::CopyNoDefault>(
-      std::move(*reinterpret_cast<::std::uint8_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::tuples::CopyNoDefault*>(storage_ + 1)));
+      std::move(this->__field0), std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault>::
+    __crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(1 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000003e
@@ -2927,22 +3092,22 @@ inline ::rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>::Tuple(
 }
 inline rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>::Tuple(
     std::tuple<::std::uint8_t, ::tuples::HasDefault>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::uint8_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::tuples::HasDefault*>(storage_ + 8),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>::operator std::tuple<
     ::std::uint8_t, ::tuples::HasDefault>() && noexcept {
   return std::tuple<::std::uint8_t, ::tuples::HasDefault>(
-      std::move(*reinterpret_cast<::std::uint8_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::tuples::HasDefault*>(storage_ + 8)));
+      std::move(this->__field0), std::move(this->__field1));
 }
 inline rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>::~Tuple() {
-  std::destroy_at(reinterpret_cast<::std::uint8_t*>(storage_ + 0));
-  std::destroy_at(reinterpret_cast<::tuples::HasDefault*>(storage_ + 8));
+  std::destroy_at(&this->__field1);
 }
-
+inline void ::rs_std::Tuple<
+    ::std::uint8_t, ::tuples::HasDefault>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(8 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020tuples_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000003e
@@ -2953,10 +3118,13 @@ inline ::rs_std::Tuple<::std::uint8_t, ::tuples::HasNoDefault>::Tuple(
 }
 
 inline rs_std::Tuple<::std::uint8_t, ::tuples::HasNoDefault>::~Tuple() {
-  std::destroy_at(reinterpret_cast<::std::uint8_t*>(storage_ + 0));
-  std::destroy_at(reinterpret_cast<::tuples::HasNoDefault*>(storage_ + 8));
+  std::destroy_at(&this->__field1);
 }
-
+inline void ::rs_std::Tuple<::std::uint8_t, ::tuples::HasNoDefault>::
+    __crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(8 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
@@ -2985,18 +3153,20 @@ inline ::rs_std::Tuple<::std::uint8_t, ::std::uint64_t>::Tuple(
 }
 inline rs_std::Tuple<::std::uint8_t, ::std::uint64_t>::Tuple(
     std::tuple<::std::uint8_t, ::std::uint64_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::uint8_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::uint64_t*>(storage_ + 8),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::std::uint8_t, ::std::uint64_t>::operator std::tuple<
     ::std::uint8_t, ::std::uint64_t>() && noexcept {
-  return std::tuple<::std::uint8_t, ::std::uint64_t>(
-      std::move(*reinterpret_cast<::std::uint8_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::uint64_t*>(storage_ + 8)));
+  return std::tuple<::std::uint8_t, ::std::uint64_t>(std::move(this->__field0),
+                                                     std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<
+    ::std::uint8_t, ::std::uint64_t>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(8 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
@@ -3025,18 +3195,20 @@ inline ::rs_std::Tuple<::std::uint64_t, ::std::uint8_t>::Tuple(
 }
 inline rs_std::Tuple<::std::uint64_t, ::std::uint8_t>::Tuple(
     std::tuple<::std::uint64_t, ::std::uint8_t>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::uint64_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<::std::uint8_t*>(storage_ + 8),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::std::uint64_t, ::std::uint8_t>::operator std::tuple<
     ::std::uint64_t, ::std::uint8_t>() && noexcept {
-  return std::tuple<::std::uint64_t, ::std::uint8_t>(
-      std::move(*reinterpret_cast<::std::uint64_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<::std::uint8_t*>(storage_ + 8)));
+  return std::tuple<::std::uint64_t, ::std::uint8_t>(std::move(this->__field0),
+                                                     std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<
+    ::std::uint64_t, ::std::uint8_t>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(8 == offsetof(Tuple, __field1));
+}
 #endif
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e

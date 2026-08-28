@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -160,9 +161,18 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple(std::tuple<::std::uint64_t, bool>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint64_t, bool>() && noexcept;
+  union {
+    ::std::uintptr_t __field0;
+  };
+  union {
+    bool __field1;
+  };
 
  private:
-  unsigned char storage_[16];
+  unsigned char __padding1[7];
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 #endif
 
@@ -334,18 +344,20 @@ inline ::rs_std::Tuple<::std::uint64_t, bool>::Tuple(
 }
 inline rs_std::Tuple<::std::uint64_t, bool>::Tuple(
     std::tuple<::std::uint64_t, bool>&& tuple) noexcept {
-  std::construct_at(reinterpret_cast<::std::uint64_t*>(storage_ + 0),
-                    std::move(std::get<0>(tuple)));
-  std::construct_at(reinterpret_cast<bool*>(storage_ + 8),
-                    std::move(std::get<1>(tuple)));
+  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
+  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
 }
 inline rs_std::Tuple<::std::uint64_t, bool>::operator std::tuple<
     ::std::uint64_t, bool>() && noexcept {
-  return std::tuple<::std::uint64_t, bool>(
-      std::move(*reinterpret_cast<::std::uint64_t*>(storage_ + 0)),
-      std::move(*reinterpret_cast<bool*>(storage_ + 8)));
+  return std::tuple<::std::uint64_t, bool>(std::move(this->__field0),
+                                           std::move(this->__field1));
 }
 
+inline void ::rs_std::Tuple<::std::uint64_t,
+                            bool>::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(Tuple, __field0));
+  static_assert(8 == offsetof(Tuple, __field1));
+}
 #endif
 
 #pragma clang diagnostic pop
