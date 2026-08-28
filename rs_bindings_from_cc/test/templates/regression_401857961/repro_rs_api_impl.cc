@@ -27,4 +27,20 @@ extern "C" void __rust_thunk___ZN5repro8IntervalC1Ev(
   crubit::construct_at(__this);
 }
 
+extern "C" void __rust_thunk___ZN5repro5crashENS_8NullableINS_8IntervalEEE(
+    struct repro::Nullable<repro::Interval>* __param_0) {
+  repro::crash(std::move(*__param_0));
+}
+
+static_assert((void (*)(struct repro::Nullable<repro::Interval>)) &
+              ::repro::crash);
+
+static_assert(sizeof(struct repro::Nullable<repro::Interval>) == 1);
+static_assert(alignof(struct repro::Nullable<repro::Interval>) == 1);
+
+extern "C" void __rust_thunk__c2cb6ead__ZN5repro8NullableINS_8IntervalEEC1Ev(
+    struct repro::Nullable<repro::Interval>* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop

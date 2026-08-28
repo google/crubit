@@ -54,23 +54,55 @@ pub mod repro {
     // error: class `repro::Nullable` could not be bound
     //   Class templates are not yet supported
 
-    // error: function `repro::crash` could not be bound
-    //   Unsupported parameter type `repro::Nullable<repro::Interval> __param_0`:
-    //     template instantiation is not yet supported
+    #[inline(always)]
+    pub fn crash(mut __param_0: crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN5repro5crashENS_8NullableINS_8IntervalEEE(
+                &mut __param_0,
+            )
+        }
+    }
 }
 
 // namespace repro
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_REGRESSION_401857961_REPRO_H_
 
-// error: struct `repro::Nullable<repro::Interval>` could not be bound
-//   template instantiation is not yet supported
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInstN5repro8NullableINS_8IntervalEEE"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=repro :: Nullable < repro :: Interval >
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct __CcTemplateInstN5repro8NullableINS_8IntervalEEE {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for __CcTemplateInstN5repro8NullableINS_8IntervalEEE {}
+impl !Sync for __CcTemplateInstN5repro8NullableINS_8IntervalEEE {}
+
+impl Default for __CcTemplateInstN5repro8NullableINS_8IntervalEEE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__c2cb6ead__ZN5repro8NullableINS_8IntervalEEC1Ev(
+                &raw mut tmp as *mut _,
+            );
+            tmp.assume_init()
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN5repro8IntervalC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN5repro5crashENS_8NullableINS_8IntervalEEE(
+            __param_0: &mut crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE,
+        );
+        pub(crate) unsafe fn __rust_thunk__c2cb6ead__ZN5repro8NullableINS_8IntervalEEC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
     }
 }
 
@@ -80,4 +112,10 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::repro::Interval: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::repro::Interval: Drop);
     assert!(::core::mem::offset_of!(crate::repro::Interval, nanos) == 0);
+    assert!(::core::mem::size_of::<crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE>() == 1);
+    assert!(
+        ::core::mem::align_of::<crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE>() == 1
+    );
+    static_assertions::assert_impl_all!(crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE: Drop);
 };
