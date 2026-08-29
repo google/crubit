@@ -425,4 +425,29 @@ mod tests {
             .to_string()
         );
     }
+
+    #[gtest]
+    fn cpp_ref_ptr_type_and_expr_agree_test() {
+        // A `Ptr` with `is_cpp_ref` set represents a C++ lvalue reference that was
+        // imported as a Rust raw pointer (`RsTypeKind::Pointer { kind: CcPtr(LValueRef) }`).
+        // The C++ type spelling is `T&`, so the expression that constructs an ABI value
+        // has to spell the same type, otherwise thunks mix up `T&` and `T*`.
+        let abi = CrubitAbiType::Ptr {
+            is_const: true,
+            is_rust_slice: false,
+            is_cref: false,
+            is_cpp_ref: true,
+            rust_type: quote! { *const i32 },
+            cpp_type: quote! { int32_t },
+        };
+
+        let cpp_tokens = CrubitAbiTypeToCppTokens(&abi).to_token_stream().to_string();
+        expect_eq!(cpp_tokens, quote! { ::crubit::TransmuteAbi<const int32_t&> }.to_string());
+
+        let cpp_expr_tokens = CrubitAbiTypeToCppExprTokens(&abi).to_token_stream().to_string();
+        expect_eq!(
+            cpp_expr_tokens,
+            quote! { ::crubit::TransmuteAbi<const int32_t&>() }.to_string()
+        );
+    }
 }
