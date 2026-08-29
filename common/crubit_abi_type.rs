@@ -308,13 +308,15 @@ impl ToTokens for CrubitAbiTypeToCppTokens<'_> {
 impl ToTokens for CrubitAbiTypeToCppExprTokens<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self.0 {
-            CrubitAbiType::Ptr { is_const, is_rust_slice, cpp_type, .. } => {
+            CrubitAbiType::Ptr { is_const, is_rust_slice, cpp_type, is_cpp_ref, .. } => {
                 let mut ty = cpp_type.clone();
                 if *is_const {
                     ty = quote! { const #ty };
                 }
                 if *is_rust_slice {
                     ty = quote! { ::rs_std::SliceRef<#ty> };
+                } else if *is_cpp_ref {
+                    ty = quote! { #ty & };
                 } else {
                     ty = quote! { #ty * };
                 }
