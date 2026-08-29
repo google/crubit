@@ -269,6 +269,17 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
         // need to move it to a new NoDestructor location. We can directly copy the
         // bytes.
         quote! { & #cc_ident }
+    } else if ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
+        includes.insert(db.support_header("internal/slot.h"));
+        let slot_name = &expect_format_cc_ident(&format!("{cc_ident}_slot"));
+        let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =
+            db.format_ty_for_cc(ty, TypeLocation::Other)?;
+        includes.extend(ty_prereqs.includes);
+        statements.extend(quote! {
+            crubit::Slot<#cc_type> #slot_name;
+            ::std::move(#cc_ident).MoveToSlot(#slot_name);
+        });
+        quote! { #slot_name.Get() }
     } else {
         // The implementation will copy the bytes, we just need to leave the variable
         // behind in a valid moved-from state.
@@ -423,9 +434,6 @@ fn cc_return_value_from_c_abi<'tcx>(
             unpack_expr: quote! { ::std::make_tuple(#(#unpack_exprs),*) },
         })
     } else {
-        if recursive && ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
-            bail!("Can't return type `{ty}` by value inside a compound data type without a move constructor");
-        }
         let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
         let cc_type = format_ty_for_cc_amending_prereqs(db, ty, prereqs)?;
         storage_statements.extend(quote! {
@@ -434,12 +442,17 @@ fn cc_return_value_from_c_abi<'tcx>(
         });
         prereqs.includes.insert(CcInclude::utility()); // for `std::move`
         prereqs.includes.insert(db.support_header("internal/slot.h"));
-        Ok(ReturnConversion {
-            storage_name: storage_name.clone(),
-            unpack_expr: quote! {
+        let unpack_expr = if recursive && !db.is_cpp_move_constructible(ty) {
+            prereqs.includes.insert(db.support_header("movable.h"));
+            quote! {
+                ::rs::Movable<#cc_type>::TakeFromSlot(::std::move(#local_name))
+            }
+        } else {
+            quote! {
                 ::std::move(#local_name).AssumeInitAndTakeValue()
-            },
-        })
+            }
+        };
+        Ok(ReturnConversion { storage_name: storage_name.clone(), unpack_expr })
     }
 }
 
@@ -635,6 +648,9 @@ pub(crate) fn generate_thunk_call<'tcx>(
         .enumerate()
         .map(|(i, Param { cc_name, ty, .. })| {
             if i == 0 && self_param.is_inherent_self_method() {
+                if !self_param.takes_self_by_copy() && !db.is_cpp_move_constructible(*ty) {
+                    bail!("Can't pass `self` by value for an unmovable type without a move constructor.");
+                }
                 if self_param.takes_self_by_copy() {
                     // Self-by-copy methods are `const` qualified. The Rust thunk does not
                     // accept a const pointer, but we can just const_cast since underlying C++
@@ -937,10 +953,11 @@ pub fn generate_function<'tcx>(
         format_ret_ty_for_cc(db, &sig_mid)?.into_tokens(&mut main_api_prereqs)
     };
 
+    let has_self_param = function_kind.has_self_param();
+
     let params = {
         let names = fn_arg_idents(tcx, def_id);
-        let cpp_types =
-            format_param_types_for_cc_api(db, &sig_mid, function_kind.has_self_param())?;
+        let cpp_types = format_param_types_for_cc_api(db, &sig_mid, has_self_param)?;
         names
             .into_iter()
             .enumerate()
@@ -1126,7 +1143,7 @@ pub fn generate_function<'tcx>(
             db,
             &sig_mid,
             &thunk_name_cc,
-            function_kind.has_self_param(),
+            has_self_param,
             /*is_constructor=*/ false,
             /*within_template=*/ false,
             is_async,

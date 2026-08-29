@@ -64,6 +64,8 @@ pub fn assert_nontrivial_drop_count(drop_count: u8) {
     assert_eq!(DROP_COUNT.load(Ordering::Relaxed), drop_count);
 }
 
+static NON_CPP_MOVABLE_DROP_COUNT: AtomicU8 = AtomicU8::new(0);
+
 /// The same as NontrivialDrop, but without a C++ move operation. This can be returned by value,
 /// even inside a tuple!
 #[must_bind]
@@ -72,15 +74,88 @@ pub struct NonCppMovable {
 }
 
 impl Drop for NonCppMovable {
-    fn drop(&mut self) {}
+    fn drop(&mut self) {
+        if self.value != 0 {
+            NON_CPP_MOVABLE_DROP_COUNT.fetch_add(1, Ordering::Relaxed);
+        }
+        self.value = 0;
+    }
 }
 
+#[must_bind]
+pub fn reset_non_cpp_movable_drop_count() {
+    NON_CPP_MOVABLE_DROP_COUNT.store(0, Ordering::Relaxed);
+}
+
+#[must_bind]
+pub fn assert_non_cpp_movable_drop_count(drop_count: u8) {
+    assert_eq!(NON_CPP_MOVABLE_DROP_COUNT.load(Ordering::Relaxed), drop_count);
+}
+
+#[must_bind]
 pub fn return_new_non_cpp_movable_in_tuple() -> (NonCppMovable,) {
     (NonCppMovable { value: 42 },)
 }
-// pub fn return_new_non_cpp_movable_in_nested_tuple() -> ((NonCppMovable,),) {
-//     ((NonCppMovable {value: 42},),)
-// }
+#[must_bind]
+pub fn return_new_non_cpp_movable_in_nested_tuple() -> ((NonCppMovable,),) {
+    ((NonCppMovable { value: 42 },),)
+}
+
+#[must_bind]
+pub fn return_non_cpp_movable_at_1st() -> (NonCppMovable, i32, i32) {
+    (NonCppMovable { value: 10 }, 20, 30)
+}
+#[must_bind]
+pub fn return_non_cpp_movable_at_2nd() -> (i32, NonCppMovable, i32) {
+    (10, NonCppMovable { value: 20 }, 30)
+}
+#[must_bind]
+pub fn return_non_cpp_movable_at_3rd() -> (i32, i32, NonCppMovable) {
+    (10, 20, NonCppMovable { value: 30 })
+}
+#[must_bind]
+pub fn return_non_cpp_movable_multi() -> (NonCppMovable, i32, NonCppMovable) {
+    (NonCppMovable { value: 10 }, 20, NonCppMovable { value: 30 })
+}
+#[must_bind]
+pub fn return_nested_tuple_with_non_cpp_movable_at_2nd() -> (i32, (i32, NonCppMovable)) {
+    (10, (20, NonCppMovable { value: 30 }))
+}
+
+#[must_bind]
+pub fn param_non_cpp_movable_in_tuple(v: (NonCppMovable,)) {
+    assert_eq!(v.0.value, 42);
+}
+#[must_bind]
+pub fn param_non_cpp_movable_at_1st(v: (NonCppMovable, i32, i32)) {
+    assert_eq!(v.0.value, 10);
+    assert_eq!(v.1, 20);
+    assert_eq!(v.2, 30);
+}
+#[must_bind]
+pub fn param_non_cpp_movable_at_2nd(v: (i32, NonCppMovable, i32)) {
+    assert_eq!(v.0, 10);
+    assert_eq!(v.1.value, 20);
+    assert_eq!(v.2, 30);
+}
+#[must_bind]
+pub fn param_non_cpp_movable_at_3rd(v: (i32, i32, NonCppMovable)) {
+    assert_eq!(v.0, 10);
+    assert_eq!(v.1, 20);
+    assert_eq!(v.2.value, 30);
+}
+#[must_bind]
+pub fn param_non_cpp_movable_multi(v: (NonCppMovable, i32, NonCppMovable)) {
+    assert_eq!(v.0.value, 10);
+    assert_eq!(v.1, 20);
+    assert_eq!(v.2.value, 30);
+}
+#[must_bind]
+pub fn param_nested_tuple_with_non_cpp_movable_at_2nd(v: (i32, (i32, NonCppMovable))) {
+    assert_eq!(v.0, 10);
+    assert_eq!(v.1 .0, 20);
+    assert_eq!(v.1 .1.value, 30);
+}
 
 #[must_bind]
 pub fn param_nested_tuples(v: ((i32, i32), i32)) {

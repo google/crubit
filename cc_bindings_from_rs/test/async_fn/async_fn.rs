@@ -107,8 +107,8 @@ pub async fn return_cpp_layout_equivalent(x: i32) -> AsyncFnRustLayoutEquivalent
 
 // 5. return types which are not C++-movable
 // Implements Drop but not Default, so C++ move operations are unavailable.
-// Works for non-async fn (via crubit::Slot), but is correctly rejected for async fn since the
-// future outputs by value.
+// DynErasedFuture yields the output into a crubit::Slot pointer, which can
+// then be converted into an rs::Movable.
 #[repr(transparent)]
 pub struct NotCppMovable(pub i32);
 

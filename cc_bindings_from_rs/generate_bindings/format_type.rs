@@ -699,7 +699,18 @@ pub fn format_ty_for_cc<'tcx>(
                 .symbol_canonical_name(def_id)
                 .ok_or_else(|| anyhow!("Failed to generate canonical name for `{ty}`"))?;
 
-            CcSnippet { tokens: canonical_name.format_for_cc(db)?, prereqs }
+            let mut tokens = canonical_name.format_for_cc(db)?;
+            if !db.is_cpp_move_constructible(ty)
+                && matches!(
+                    location,
+                    TypeLocation::FnParam { .. } | TypeLocation::NestedBridgeable
+                )
+            {
+                prereqs.includes.insert(db.support_header("movable.h"));
+                tokens = quote! { ::rs::Movable< #tokens > };
+            }
+
+            CcSnippet { tokens, prereqs }
         }
 
         ty::TyKind::RawPtr(pointee_ty, mutbl) => {
@@ -904,7 +915,7 @@ fn treat_ref_as_ptr<'tcx>(
         //
         // References with a more complex lifetime are converted to pointers.
         // See crubit.rs-special-lifetimes for more details on the motivation.
-        TypeLocation::FnParam { is_self_param, elided_is_output } => {
+        TypeLocation::FnParam { is_self_param, elided_is_output, .. } => {
             // `self` parameters are always passed by-ref, never by pointer.
             if is_self_param {
                 return RefConvert::ToRef;

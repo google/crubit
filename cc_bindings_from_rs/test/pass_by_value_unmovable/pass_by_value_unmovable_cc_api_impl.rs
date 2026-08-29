@@ -44,3 +44,12 @@ unsafe extern "C" fn __crubit_thunk_takes_uval_umovable(
 ) -> () {
     unsafe { ::pass_by_value_unmovable_golden::takes_val_movable(_val) }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_takes_uval_uunmovable(
+    _val: *mut ::pass_by_value_unmovable_golden::NotCppMovable,
+) -> () {
+    unsafe {
+        let _val = _val.read();
+        ::pass_by_value_unmovable_golden::takes_val_unmovable(_val)
+    }
+}

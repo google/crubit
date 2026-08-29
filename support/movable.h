@@ -29,6 +29,10 @@ void Relocate(T* dest, T* src) {
 
 // A wrapper that makes Rust-movable (but potentially C++ non-movable) types
 // C++ movable by introducing a "moved-from" state.
+//
+// NOTE: `rs::Movable<T>` is NOT layout-compatible with `T` due to the extra
+// boolean tracking whether the value has been moved. Do not add
+// `CRUBIT_INTERNAL_RUST_TYPE` here.
 template <typename T>
 class Movable {
  public:
@@ -62,6 +66,14 @@ class Movable {
   // Take ownership of a value stored in a Slot<T>.
   static Movable TakeFromSlot(crubit::Slot<T>&& slot) {
     return Movable(std::move(slot));
+  }
+
+  // Moves the contained value into a Slot and leaves this object valueless.
+  void MoveToSlot(crubit::Slot<T>& slot) && {
+    if (!valueless_after_move_) {
+      internal::Relocate(slot.Get(), &value_);
+      valueless_after_move_ = true;
+    }
   }
 
   ~Movable() {

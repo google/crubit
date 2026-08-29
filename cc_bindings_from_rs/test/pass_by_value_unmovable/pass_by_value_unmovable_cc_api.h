@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/movable.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -96,13 +97,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 void takes_val_movable(::pass_by_value_unmovable::CppMovable _val);
 
-// Error generating bindings for function
-// `pass_by_value_unmovable_golden::takes_val_unmovable` defined at
-// cc_bindings_from_rs/test/pass_by_value_unmovable/pass_by_value_unmovable.rs;l=23:
-// Error handling parameter #0 of type
-// `pass_by_value_unmovable_golden::NotCppMovable`: Can't pass a type by value
-// without a move constructor. See crubit.rs/rust/movable_types for what types
-// are C++ movable.
+void takes_val_unmovable(
+    ::rs::Movable<::pass_by_value_unmovable::NotCppMovable> _val);
 
 static_assert(
     sizeof(CppMovable) == 4,
@@ -173,6 +169,18 @@ extern "C" void __crubit_thunk_takes_uval_umovable(
 }
 inline void takes_val_movable(::pass_by_value_unmovable::CppMovable _val) {
   return __crubit_internal::__crubit_thunk_takes_uval_umovable(_val);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_takes_uval_uunmovable(
+    ::pass_by_value_unmovable::NotCppMovable*);
+}
+inline void takes_val_unmovable(
+    ::rs::Movable<::pass_by_value_unmovable::NotCppMovable> _val) {
+  crubit::Slot<::pass_by_value_unmovable::NotCppMovable> _val_slot;
+  ::std::move(_val).MoveToSlot(_val_slot);
+  return __crubit_internal::__crubit_thunk_takes_uval_uunmovable(
+      _val_slot.Get());
 }
 
 }  // namespace pass_by_value_unmovable

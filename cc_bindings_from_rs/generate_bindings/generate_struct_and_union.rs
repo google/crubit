@@ -605,6 +605,9 @@ fn generate_into_impls<'tcx>(
                 );
             let self_cpp_ty = self_cpp_ty.into_tokens(&mut prereqs);
             let is_copy = is_copy(tcx, def_id, core.common.self_ty);
+            if !is_copy && !db.is_cpp_move_constructible(core.common.self_ty) {
+                return None;
+            }
             let impl_body = generate_thunk_call(
                 db,
                 def_id,

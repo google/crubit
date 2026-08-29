@@ -158,11 +158,10 @@ pub fn generate_thunk_decl<'tcx>(
                     Ok(tuple_abi)
                 } else if let ty::TyKind::Array(inner_ty, _) = ty.kind() {
                     array_c_abi_c_type(db.tcx(), *inner_ty)
-                } else if ty.ty_adt_def().is_some() {
-                    if !db.is_cpp_move_constructible(ty) {
-                        bail!("Can't pass type `{ty}` by value without a move constructor. See crubit.rs/rust/movable_types for what types are C++ movable.");
-                    }
-                    Ok(quote! { #cpp_type* })
+                } else if ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
+                    let underlying_ty =
+                        db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(&mut prereqs);
+                    Ok(quote! { #underlying_ty* })
                 } else {
                     Ok(quote! { #cpp_type* })
                 }

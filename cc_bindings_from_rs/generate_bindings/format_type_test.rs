@@ -639,7 +639,6 @@ fn test_format_ty_for_rs_successes() {
 
         pub struct SomeStruct {
             pub x: i32,
-            pub y: i32,
         }
         pub enum SomeEnum {
             Cartesian{x: f64, y: f64},

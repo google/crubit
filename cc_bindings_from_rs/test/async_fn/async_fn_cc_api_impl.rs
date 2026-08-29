@@ -103,6 +103,18 @@ unsafe extern "C" fn __crubit_thunk_return_ustruct_uwith_udrop(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_uunmovable(
+    x: i32,
+    __ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>,
+) -> () {
+    unsafe {
+        ::core::ptr::write(
+            __ret_ptr,
+            ::dyn_erased_future::DynErasedFuture::new(::async_fn_golden::return_unmovable(x)),
+        );
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_sum_uslice(
     slice: &'static [i32],
     __ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>,

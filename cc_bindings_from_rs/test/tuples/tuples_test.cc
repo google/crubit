@@ -51,17 +51,108 @@ TEST(TuplesTest, NontrivialDropInTuple) {
   tuples::assert_nontrivial_drop_count(2);
 }
 
-// TODO(jeanpierreda): enable non-movable types inside compound data types like
-// tuples?
-//
-// TEST(TuplesTest, NonCppMovableInTuple) {
-//   std::tuple<tuples::NonCppMovable> v =
-//       tuples::return_new_non_cpp_movable_in_tuple();
-//   EXPECT_EQ(std::get<0>(v).value, 42);
-//   std::tuple<std::tuple<tuples::NonCppMovable>> nested_v =
-//       tuples::return_new_non_cpp_movable_in_nested_tuple();
-//   EXPECT_EQ(std::get<0>(std::get<0>(nested_v)).value, 42);
-// }
+TEST(TuplesTest, NonCppMovableInTuple) {
+  tuples::reset_non_cpp_movable_drop_count();
+  {
+    std::tuple<::rs::Movable<tuples::NonCppMovable>> v =
+        tuples::return_new_non_cpp_movable_in_tuple();
+    EXPECT_EQ(std::get<0>(v)->value, 42);
+    tuples::assert_non_cpp_movable_drop_count(0);
+  }
+  tuples::assert_non_cpp_movable_drop_count(1);
+
+  {
+    std::tuple<std::tuple<::rs::Movable<tuples::NonCppMovable>>> nested_v =
+        tuples::return_new_non_cpp_movable_in_nested_tuple();
+    EXPECT_EQ(std::get<0>(std::get<0>(nested_v))->value, 42);
+  }
+  tuples::assert_non_cpp_movable_drop_count(2);
+}
+
+TEST(TuplesTest, NonCppMovableAtDifferentPositionsReturn) {
+  tuples::reset_non_cpp_movable_drop_count();
+  {
+    auto tup1 = tuples::return_non_cpp_movable_at_1st();
+    EXPECT_EQ(std::get<0>(tup1)->value, 10);
+    EXPECT_EQ(std::get<1>(tup1), 20);
+    EXPECT_EQ(std::get<2>(tup1), 30);
+  }
+  tuples::assert_non_cpp_movable_drop_count(1);
+
+  {
+    auto tup2 = tuples::return_non_cpp_movable_at_2nd();
+    EXPECT_EQ(std::get<0>(tup2), 10);
+    EXPECT_EQ(std::get<1>(tup2)->value, 20);
+    EXPECT_EQ(std::get<2>(tup2), 30);
+  }
+  tuples::assert_non_cpp_movable_drop_count(2);
+
+  {
+    auto tup3 = tuples::return_non_cpp_movable_at_3rd();
+    EXPECT_EQ(std::get<0>(tup3), 10);
+    EXPECT_EQ(std::get<1>(tup3), 20);
+    EXPECT_EQ(std::get<2>(tup3)->value, 30);
+  }
+  tuples::assert_non_cpp_movable_drop_count(3);
+
+  {
+    auto tup_multi = tuples::return_non_cpp_movable_multi();
+    EXPECT_EQ(std::get<0>(tup_multi)->value, 10);
+    EXPECT_EQ(std::get<1>(tup_multi), 20);
+    EXPECT_EQ(std::get<2>(tup_multi)->value, 30);
+  }
+  tuples::assert_non_cpp_movable_drop_count(5);
+
+  {
+    auto nested = tuples::return_nested_tuple_with_non_cpp_movable_at_2nd();
+    EXPECT_EQ(std::get<0>(nested), 10);
+    EXPECT_EQ(std::get<0>(std::get<1>(nested)), 20);
+    EXPECT_EQ(std::get<1>(std::get<1>(nested))->value, 30);
+  }
+  tuples::assert_non_cpp_movable_drop_count(6);
+}
+
+TEST(TuplesTest, NonCppMovableAtDifferentPositionsParam) {
+  tuples::reset_non_cpp_movable_drop_count();
+
+  // Test passing newly constructed values / round-trip moved values.
+  {
+    auto tup1 = tuples::return_non_cpp_movable_at_1st();
+    tuples::param_non_cpp_movable_at_1st(std::move(tup1));
+    // The value passed into Rust is dropped by Rust when the function finishes.
+    tuples::assert_non_cpp_movable_drop_count(1);
+  }
+  // The moved-from Movable on C++ side should not double-drop.
+  tuples::assert_non_cpp_movable_drop_count(1);
+
+  {
+    auto tup2 = tuples::return_non_cpp_movable_at_2nd();
+    tuples::param_non_cpp_movable_at_2nd(std::move(tup2));
+    tuples::assert_non_cpp_movable_drop_count(2);
+  }
+  tuples::assert_non_cpp_movable_drop_count(2);
+
+  {
+    auto tup3 = tuples::return_non_cpp_movable_at_3rd();
+    tuples::param_non_cpp_movable_at_3rd(std::move(tup3));
+    tuples::assert_non_cpp_movable_drop_count(3);
+  }
+  tuples::assert_non_cpp_movable_drop_count(3);
+
+  {
+    auto tup_multi = tuples::return_non_cpp_movable_multi();
+    tuples::param_non_cpp_movable_multi(std::move(tup_multi));
+    tuples::assert_non_cpp_movable_drop_count(5);
+  }
+  tuples::assert_non_cpp_movable_drop_count(5);
+
+  {
+    auto nested = tuples::return_nested_tuple_with_non_cpp_movable_at_2nd();
+    tuples::param_nested_tuple_with_non_cpp_movable_at_2nd(std::move(nested));
+    tuples::assert_non_cpp_movable_drop_count(6);
+  }
+  tuples::assert_non_cpp_movable_drop_count(6);
+}
 
 TEST(TuplesTest, NestedTupleParameters) {
   tuples::param_nested_tuples(std::make_tuple(std::make_tuple(1, 2), 3));

@@ -105,7 +105,14 @@ class Slot {
 
   // SAFETY REQUIREMENTS: The value contained in `other` must be initialized
   // (but may be moved-from).
-  Slot(Slot&& other) { value_ = std::move(other.value_); }
+  Slot(Slot&& other) {
+    if constexpr (requires(T x) { T(UnsafeRelocateTag{}, std::move(x)); }) {
+      new (&value_) T(UnsafeRelocateTag{}, std::move(other.value_));
+    } else {
+      new (&value_) T(std::move(other.value_));
+      std::destroy_at(&other.value_);
+    }
+  }
 
   // Does not destroy the contained value.
   //

@@ -54,6 +54,7 @@ crubit_cc_test(
     platforms = ["android"],
     deps = [
         ":async_fn_cc_api",
+        "//support:movable",
         "//support/internal:bindings_support",
         "//support/rs_std:waker",
         "//testing/base/public:gunit_main",

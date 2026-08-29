@@ -19,6 +19,7 @@
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
+#include "support/movable.h"
 #include "support/rs_std/option.h"
 #include "support/rs_std/result.h"
 #include "support/rs_std/str_ref.h"
@@ -185,9 +186,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
 
 // Error generating bindings for constant `tuples_golden::TUPLE_CONSTANT`
 // defined at
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=125:
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=200:
 // const of type `(i32,)` cannot be generated as only scalars, string
 // references, and simple aggregate types are supported.
+
+// CRUBIT_ANNOTATE: must_bind=
+void assert_non_cpp_movable_drop_count(::std::uint8_t drop_count);
 
 // CRUBIT_ANNOTATE: must_bind=
 void assert_nontrivial_drop_count(::std::uint8_t drop_count);
@@ -202,8 +206,43 @@ void param_c_abi_compatible_five_in_tuple(::std::tuple<::std::int32_t> five);
 void param_ffi_alias_in_tuple(::std::tuple<::std::uint8_t> five);
 
 // CRUBIT_ANNOTATE: must_bind=
+void param_nested_tuple_with_non_cpp_movable_at_2nd(
+    ::std::tuple<
+        ::std::int32_t,
+        ::std::tuple<::std::int32_t, ::rs::Movable<::tuples::NonCppMovable>>>
+        v);
+
+// CRUBIT_ANNOTATE: must_bind=
 void param_nested_tuples(
     ::std::tuple<::std::tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>
+        v);
+
+// CRUBIT_ANNOTATE: must_bind=
+void param_non_cpp_movable_at_1st(
+    ::std::tuple<::rs::Movable<::tuples::NonCppMovable>, ::std::int32_t,
+                 ::std::int32_t>
+        v);
+
+// CRUBIT_ANNOTATE: must_bind=
+void param_non_cpp_movable_at_2nd(
+    ::std::tuple<::std::int32_t, ::rs::Movable<::tuples::NonCppMovable>,
+                 ::std::int32_t>
+        v);
+
+// CRUBIT_ANNOTATE: must_bind=
+void param_non_cpp_movable_at_3rd(
+    ::std::tuple<::std::int32_t, ::std::int32_t,
+                 ::rs::Movable<::tuples::NonCppMovable>>
+        v);
+
+// CRUBIT_ANNOTATE: must_bind=
+void param_non_cpp_movable_in_tuple(
+    ::std::tuple<::rs::Movable<::tuples::NonCppMovable>> v);
+
+// CRUBIT_ANNOTATE: must_bind=
+void param_non_cpp_movable_multi(
+    ::std::tuple<::rs::Movable<::tuples::NonCppMovable>, ::std::int32_t,
+                 ::rs::Movable<::tuples::NonCppMovable>>
         v);
 
 // CRUBIT_ANNOTATE: must_bind=
@@ -212,7 +251,7 @@ void param_nontrivial_drop_in_tuple(
 
 // Error generating bindings for function `tuples_golden::param_option_in_tuple`
 // defined at
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=295:
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=370:
 // Error handling parameter #0 of type `(std::option::Option<i32>,)`:
 // crubit.rs/errors/bridge_compound_type: Tuples containing bridged type
 // `std::option::Option<i32>` are not supported. Pass `std::option::Option<i32>`
@@ -221,6 +260,9 @@ void param_nontrivial_drop_in_tuple(
 // CRUBIT_ANNOTATE: must_bind=
 void param_triply_nested_tuple(
     ::std::tuple<::std::tuple<::std::tuple<::std::int32_t>>> v);
+
+// CRUBIT_ANNOTATE: must_bind=
+void reset_non_cpp_movable_drop_count();
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::tuple<::tuples::AdtHoldingFiveAndSix> return_adt_in_tuple();
@@ -232,21 +274,49 @@ void param_triply_nested_tuple(
 ::std::tuple<::std::uint8_t> return_ffi_alias_in_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
+::std::tuple<
+    ::std::int32_t,
+    ::std::tuple<::std::int32_t, ::rs::Movable<::tuples::NonCppMovable>>>
+return_nested_tuple_with_non_cpp_movable_at_2nd();
+
+// CRUBIT_ANNOTATE: must_bind=
 ::std::tuple<::std::tuple<::std::int32_t, ::std::int32_t>, ::std::int32_t>
 return_nested_tuples();
 
-// Error generating bindings for function
-// `tuples_golden::return_new_non_cpp_movable_in_tuple` defined at
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=78:
-// Can't return type `tuples_golden::NonCppMovable` by value inside a compound
-// data type without a move constructor
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::std::tuple<::rs::Movable<::tuples::NonCppMovable>>>
+return_new_non_cpp_movable_in_nested_tuple();
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::rs::Movable<::tuples::NonCppMovable>>
+return_new_non_cpp_movable_in_tuple();
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::tuple<::tuples::NontrivialDrop> return_new_nontrivial_drop_in_tuple();
 
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::rs::Movable<::tuples::NonCppMovable>, ::std::int32_t,
+             ::std::int32_t>
+return_non_cpp_movable_at_1st();
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::std::int32_t, ::rs::Movable<::tuples::NonCppMovable>,
+             ::std::int32_t>
+return_non_cpp_movable_at_2nd();
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::std::int32_t, ::std::int32_t,
+             ::rs::Movable<::tuples::NonCppMovable>>
+return_non_cpp_movable_at_3rd();
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::tuple<::rs::Movable<::tuples::NonCppMovable>, ::std::int32_t,
+             ::rs::Movable<::tuples::NonCppMovable>>
+return_non_cpp_movable_multi();
+
 // Error generating bindings for function
 // `tuples_golden::return_option_in_tuple` defined at
-// cc_bindings_from_rs/test/tuples/tuples.rs;l=291:
+// cc_bindings_from_rs/test/tuples/tuples.rs;l=366:
 // Error formatting function return type `(std::option::Option<i32>,)`:
 // crubit.rs/errors/bridge_compound_type: Tuples containing bridged type
 // `std::option::Option<i32>` are not supported. Pass `std::option::Option<i32>`
@@ -367,7 +437,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TupleStruct") alignas(4)
 
   // Error generating bindings for associated function
   // `tuples_golden::TupleStruct::tuple_not_by_value` defined at
-  // cc_bindings_from_rs/test/tuples/tuples.rs;l=120:
+  // cc_bindings_from_rs/test/tuples/tuples.rs;l=195:
   // Error formatting function return type `*const ()`: Failed to format the
   // pointee of the pointer type `*const ()`: Tuple type `()` is not supported
   // in this context
@@ -2891,6 +2961,15 @@ inline void TuplesWithU64::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(TuplesWithU64, u64_in_tuple1));
 }
 namespace __crubit_internal {
+extern "C" void __crubit_thunk_assert_unon_ucpp_umovable_udrop_ucount(
+    ::std::uint8_t);
+}
+inline void assert_non_cpp_movable_drop_count(::std::uint8_t drop_count) {
+  return __crubit_internal::
+      __crubit_thunk_assert_unon_ucpp_umovable_udrop_ucount(drop_count);
+}
+
+namespace __crubit_internal {
 extern "C" void __crubit_thunk_assert_unontrivial_udrop_ucount(::std::uint8_t);
 }
 inline void assert_nontrivial_drop_count(::std::uint8_t drop_count) {
@@ -2934,6 +3013,32 @@ inline void param_ffi_alias_in_tuple(::std::tuple<::std::uint8_t> five) {
 }
 
 namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_param_unested_utuple_uwith_unon_ucpp_umovable_uat_u2nd(void**);
+}
+inline void param_nested_tuple_with_non_cpp_movable_at_2nd(
+    ::std::tuple<
+        ::std::int32_t,
+        ::std::tuple<::std::int32_t, ::rs::Movable<::tuples::NonCppMovable>>>
+        v) {
+  auto&& v_0 = ::std::get<0>(v);
+  auto&& v_cabi_0 = v_0;
+  auto&& v_1 = ::std::get<1>(v);
+  auto&& v_1_0 = ::std::get<0>(v_1);
+  auto&& v_1_cabi_0 = v_1_0;
+  auto&& v_1_1 = ::std::get<1>(v_1);
+  crubit::Slot<::tuples::NonCppMovable> v_1_1_slot;
+  ::std::move(v_1_1).MoveToSlot(v_1_1_slot);
+  auto&& v_1_cabi_1 = v_1_1_slot.Get();
+  void* v_1_cabi[] = {&v_1_cabi_0, &v_1_cabi_1};
+  auto* v_cabi_1 = &v_1_cabi;
+  void* v_cabi[] = {&v_cabi_0, &v_cabi_1};
+  return __crubit_internal::
+      __crubit_thunk_param_unested_utuple_uwith_unon_ucpp_umovable_uat_u2nd(
+          v_cabi);
+}
+
+namespace __crubit_internal {
 extern "C" void __crubit_thunk_param_unested_utuples(void**);
 }
 inline void param_nested_tuples(
@@ -2950,6 +3055,102 @@ inline void param_nested_tuples(
   auto&& v_cabi_1 = v_1;
   void* v_cabi[] = {&v_cabi_0, &v_cabi_1};
   return __crubit_internal::__crubit_thunk_param_unested_utuples(v_cabi);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_param_unon_ucpp_umovable_uat_u1st(void**);
+}
+inline void param_non_cpp_movable_at_1st(
+    ::std::tuple<::rs::Movable<::tuples::NonCppMovable>, ::std::int32_t,
+                 ::std::int32_t>
+        v) {
+  auto&& v_0 = ::std::get<0>(v);
+  crubit::Slot<::tuples::NonCppMovable> v_0_slot;
+  ::std::move(v_0).MoveToSlot(v_0_slot);
+  auto&& v_cabi_0 = v_0_slot.Get();
+  auto&& v_1 = ::std::get<1>(v);
+  auto&& v_cabi_1 = v_1;
+  auto&& v_2 = ::std::get<2>(v);
+  auto&& v_cabi_2 = v_2;
+  void* v_cabi[] = {&v_cabi_0, &v_cabi_1, &v_cabi_2};
+  return __crubit_internal::__crubit_thunk_param_unon_ucpp_umovable_uat_u1st(
+      v_cabi);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_param_unon_ucpp_umovable_uat_u2nd(void**);
+}
+inline void param_non_cpp_movable_at_2nd(
+    ::std::tuple<::std::int32_t, ::rs::Movable<::tuples::NonCppMovable>,
+                 ::std::int32_t>
+        v) {
+  auto&& v_0 = ::std::get<0>(v);
+  auto&& v_cabi_0 = v_0;
+  auto&& v_1 = ::std::get<1>(v);
+  crubit::Slot<::tuples::NonCppMovable> v_1_slot;
+  ::std::move(v_1).MoveToSlot(v_1_slot);
+  auto&& v_cabi_1 = v_1_slot.Get();
+  auto&& v_2 = ::std::get<2>(v);
+  auto&& v_cabi_2 = v_2;
+  void* v_cabi[] = {&v_cabi_0, &v_cabi_1, &v_cabi_2};
+  return __crubit_internal::__crubit_thunk_param_unon_ucpp_umovable_uat_u2nd(
+      v_cabi);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_param_unon_ucpp_umovable_uat_u3rd(void**);
+}
+inline void param_non_cpp_movable_at_3rd(
+    ::std::tuple<::std::int32_t, ::std::int32_t,
+                 ::rs::Movable<::tuples::NonCppMovable>>
+        v) {
+  auto&& v_0 = ::std::get<0>(v);
+  auto&& v_cabi_0 = v_0;
+  auto&& v_1 = ::std::get<1>(v);
+  auto&& v_cabi_1 = v_1;
+  auto&& v_2 = ::std::get<2>(v);
+  crubit::Slot<::tuples::NonCppMovable> v_2_slot;
+  ::std::move(v_2).MoveToSlot(v_2_slot);
+  auto&& v_cabi_2 = v_2_slot.Get();
+  void* v_cabi[] = {&v_cabi_0, &v_cabi_1, &v_cabi_2};
+  return __crubit_internal::__crubit_thunk_param_unon_ucpp_umovable_uat_u3rd(
+      v_cabi);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_param_unon_ucpp_umovable_uin_utuple(void**);
+}
+inline void param_non_cpp_movable_in_tuple(
+    ::std::tuple<::rs::Movable<::tuples::NonCppMovable>> v) {
+  auto&& v_0 = ::std::get<0>(v);
+  crubit::Slot<::tuples::NonCppMovable> v_0_slot;
+  ::std::move(v_0).MoveToSlot(v_0_slot);
+  auto&& v_cabi_0 = v_0_slot.Get();
+  void* v_cabi[] = {&v_cabi_0};
+  return __crubit_internal::__crubit_thunk_param_unon_ucpp_umovable_uin_utuple(
+      v_cabi);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_param_unon_ucpp_umovable_umulti(void**);
+}
+inline void param_non_cpp_movable_multi(
+    ::std::tuple<::rs::Movable<::tuples::NonCppMovable>, ::std::int32_t,
+                 ::rs::Movable<::tuples::NonCppMovable>>
+        v) {
+  auto&& v_0 = ::std::get<0>(v);
+  crubit::Slot<::tuples::NonCppMovable> v_0_slot;
+  ::std::move(v_0).MoveToSlot(v_0_slot);
+  auto&& v_cabi_0 = v_0_slot.Get();
+  auto&& v_1 = ::std::get<1>(v);
+  auto&& v_cabi_1 = v_1;
+  auto&& v_2 = ::std::get<2>(v);
+  crubit::Slot<::tuples::NonCppMovable> v_2_slot;
+  ::std::move(v_2).MoveToSlot(v_2_slot);
+  auto&& v_cabi_2 = v_2_slot.Get();
+  void* v_cabi[] = {&v_cabi_0, &v_cabi_1, &v_cabi_2};
+  return __crubit_internal::__crubit_thunk_param_unon_ucpp_umovable_umulti(
+      v_cabi);
 }
 
 namespace __crubit_internal {
@@ -2980,6 +3181,14 @@ inline void param_triply_nested_tuple(
   auto* v_cabi_0 = &v_0_cabi;
   void* v_cabi[] = {&v_cabi_0};
   return __crubit_internal::__crubit_thunk_param_utriply_unested_utuple(v_cabi);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_reset_unon_ucpp_umovable_udrop_ucount();
+}
+inline void reset_non_cpp_movable_drop_count() {
+  return __crubit_internal::
+      __crubit_thunk_reset_unon_ucpp_umovable_udrop_ucount();
 }
 
 namespace __crubit_internal {
@@ -3021,6 +3230,36 @@ inline ::std::tuple<::std::uint8_t> return_ffi_alias_in_tuple() {
 }
 
 namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_return_unested_utuple_uwith_unon_ucpp_umovable_uat_u2nd(
+    void** __ret_ptr);
+}
+inline ::std::tuple<
+    ::std::int32_t,
+    ::std::tuple<::std::int32_t, ::rs::Movable<::tuples::NonCppMovable>>>
+return_nested_tuple_with_non_cpp_movable_at_2nd() {
+  ::std::int32_t __return_value_0_ret_val_holder;
+  ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
+  ::std::int32_t __return_value_1_0_ret_val_holder;
+  ::std::int32_t* __return_value_1_0_storage =
+      &__return_value_1_0_ret_val_holder;
+  crubit::Slot<::tuples::NonCppMovable> __return_value_1_1_ret_val_holder;
+  auto* __return_value_1_1_storage = __return_value_1_1_ret_val_holder.Get();
+  void* __return_value_1_storage[] = {__return_value_1_0_storage,
+                                      __return_value_1_1_storage};
+  void* __return_value_storage[] = {__return_value_0_storage,
+                                    __return_value_1_storage};
+  __crubit_internal::
+      __crubit_thunk_return_unested_utuple_uwith_unon_ucpp_umovable_uat_u2nd(
+          __return_value_storage);
+  return ::std::make_tuple(
+      *__return_value_0_storage,
+      ::std::make_tuple(*__return_value_1_0_storage,
+                        ::rs::Movable<::tuples::NonCppMovable>::TakeFromSlot(
+                            ::std::move(__return_value_1_1_ret_val_holder))));
+}
+
+namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_unested_utuples(void** __ret_ptr);
 }
 inline ::std::tuple<::std::tuple<::std::int32_t, ::std::int32_t>,
@@ -3046,6 +3285,40 @@ return_nested_tuples() {
 }
 
 namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_return_unew_unon_ucpp_umovable_uin_unested_utuple(
+    void** __ret_ptr);
+}
+inline ::std::tuple<::std::tuple<::rs::Movable<::tuples::NonCppMovable>>>
+return_new_non_cpp_movable_in_nested_tuple() {
+  crubit::Slot<::tuples::NonCppMovable> __return_value_0_0_ret_val_holder;
+  auto* __return_value_0_0_storage = __return_value_0_0_ret_val_holder.Get();
+  void* __return_value_0_storage[] = {__return_value_0_0_storage};
+  void* __return_value_storage[] = {__return_value_0_storage};
+  __crubit_internal::
+      __crubit_thunk_return_unew_unon_ucpp_umovable_uin_unested_utuple(
+          __return_value_storage);
+  return ::std::make_tuple(
+      ::std::make_tuple(::rs::Movable<::tuples::NonCppMovable>::TakeFromSlot(
+          ::std::move(__return_value_0_0_ret_val_holder))));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_unew_unon_ucpp_umovable_uin_utuple(
+    void** __ret_ptr);
+}
+inline ::std::tuple<::rs::Movable<::tuples::NonCppMovable>>
+return_new_non_cpp_movable_in_tuple() {
+  crubit::Slot<::tuples::NonCppMovable> __return_value_0_ret_val_holder;
+  auto* __return_value_0_storage = __return_value_0_ret_val_holder.Get();
+  void* __return_value_storage[] = {__return_value_0_storage};
+  __crubit_internal::__crubit_thunk_return_unew_unon_ucpp_umovable_uin_utuple(
+      __return_value_storage);
+  return ::std::make_tuple(::rs::Movable<::tuples::NonCppMovable>::TakeFromSlot(
+      ::std::move(__return_value_0_ret_val_holder)));
+}
+
+namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_unew_unontrivial_udrop_uin_utuple(
     void** __ret_ptr);
 }
@@ -3058,6 +3331,102 @@ return_new_nontrivial_drop_in_tuple() {
       __return_value_storage);
   return ::std::make_tuple(
       ::std::move(__return_value_0_ret_val_holder).AssumeInitAndTakeValue());
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_unon_ucpp_umovable_uat_u1st(
+    void** __ret_ptr);
+}
+inline ::std::tuple<::rs::Movable<::tuples::NonCppMovable>, ::std::int32_t,
+                    ::std::int32_t>
+return_non_cpp_movable_at_1st() {
+  crubit::Slot<::tuples::NonCppMovable> __return_value_0_ret_val_holder;
+  auto* __return_value_0_storage = __return_value_0_ret_val_holder.Get();
+  ::std::int32_t __return_value_1_ret_val_holder;
+  ::std::int32_t* __return_value_1_storage = &__return_value_1_ret_val_holder;
+  ::std::int32_t __return_value_2_ret_val_holder;
+  ::std::int32_t* __return_value_2_storage = &__return_value_2_ret_val_holder;
+  void* __return_value_storage[] = {__return_value_0_storage,
+                                    __return_value_1_storage,
+                                    __return_value_2_storage};
+  __crubit_internal::__crubit_thunk_return_unon_ucpp_umovable_uat_u1st(
+      __return_value_storage);
+  return ::std::make_tuple(::rs::Movable<::tuples::NonCppMovable>::TakeFromSlot(
+                               ::std::move(__return_value_0_ret_val_holder)),
+                           *__return_value_1_storage,
+                           *__return_value_2_storage);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_unon_ucpp_umovable_uat_u2nd(
+    void** __ret_ptr);
+}
+inline ::std::tuple<::std::int32_t, ::rs::Movable<::tuples::NonCppMovable>,
+                    ::std::int32_t>
+return_non_cpp_movable_at_2nd() {
+  ::std::int32_t __return_value_0_ret_val_holder;
+  ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
+  crubit::Slot<::tuples::NonCppMovable> __return_value_1_ret_val_holder;
+  auto* __return_value_1_storage = __return_value_1_ret_val_holder.Get();
+  ::std::int32_t __return_value_2_ret_val_holder;
+  ::std::int32_t* __return_value_2_storage = &__return_value_2_ret_val_holder;
+  void* __return_value_storage[] = {__return_value_0_storage,
+                                    __return_value_1_storage,
+                                    __return_value_2_storage};
+  __crubit_internal::__crubit_thunk_return_unon_ucpp_umovable_uat_u2nd(
+      __return_value_storage);
+  return ::std::make_tuple(*__return_value_0_storage,
+                           ::rs::Movable<::tuples::NonCppMovable>::TakeFromSlot(
+                               ::std::move(__return_value_1_ret_val_holder)),
+                           *__return_value_2_storage);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_unon_ucpp_umovable_uat_u3rd(
+    void** __ret_ptr);
+}
+inline ::std::tuple<::std::int32_t, ::std::int32_t,
+                    ::rs::Movable<::tuples::NonCppMovable>>
+return_non_cpp_movable_at_3rd() {
+  ::std::int32_t __return_value_0_ret_val_holder;
+  ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
+  ::std::int32_t __return_value_1_ret_val_holder;
+  ::std::int32_t* __return_value_1_storage = &__return_value_1_ret_val_holder;
+  crubit::Slot<::tuples::NonCppMovable> __return_value_2_ret_val_holder;
+  auto* __return_value_2_storage = __return_value_2_ret_val_holder.Get();
+  void* __return_value_storage[] = {__return_value_0_storage,
+                                    __return_value_1_storage,
+                                    __return_value_2_storage};
+  __crubit_internal::__crubit_thunk_return_unon_ucpp_umovable_uat_u3rd(
+      __return_value_storage);
+  return ::std::make_tuple(*__return_value_0_storage, *__return_value_1_storage,
+                           ::rs::Movable<::tuples::NonCppMovable>::TakeFromSlot(
+                               ::std::move(__return_value_2_ret_val_holder)));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_unon_ucpp_umovable_umulti(
+    void** __ret_ptr);
+}
+inline ::std::tuple<::rs::Movable<::tuples::NonCppMovable>, ::std::int32_t,
+                    ::rs::Movable<::tuples::NonCppMovable>>
+return_non_cpp_movable_multi() {
+  crubit::Slot<::tuples::NonCppMovable> __return_value_0_ret_val_holder;
+  auto* __return_value_0_storage = __return_value_0_ret_val_holder.Get();
+  ::std::int32_t __return_value_1_ret_val_holder;
+  ::std::int32_t* __return_value_1_storage = &__return_value_1_ret_val_holder;
+  crubit::Slot<::tuples::NonCppMovable> __return_value_2_ret_val_holder;
+  auto* __return_value_2_storage = __return_value_2_ret_val_holder.Get();
+  void* __return_value_storage[] = {__return_value_0_storage,
+                                    __return_value_1_storage,
+                                    __return_value_2_storage};
+  __crubit_internal::__crubit_thunk_return_unon_ucpp_umovable_umulti(
+      __return_value_storage);
+  return ::std::make_tuple(::rs::Movable<::tuples::NonCppMovable>::TakeFromSlot(
+                               ::std::move(__return_value_0_ret_val_holder)),
+                           *__return_value_1_storage,
+                           ::rs::Movable<::tuples::NonCppMovable>::TakeFromSlot(
+                               ::std::move(__return_value_2_ret_val_holder)));
 }
 
 namespace __crubit_internal {

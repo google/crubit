@@ -158,11 +158,8 @@ return_cpp_layout_equivalent(::std::int32_t x);
 ::crubit::DynErasedFuture<::async_fn::StructWithDrop> return_struct_with_drop(
     ::std::int32_t x);
 
-// Error generating bindings for function `async_fn_golden::return_unmovable`
-// defined at
-// cc_bindings_from_rs/test/async_fn/async_fn.rs;l=119:
-// Can't pass a type by value without a move constructor. See
-// crubit.rs/rust/movable_types for what types are C++ movable.
+::crubit::DynErasedFuture<::async_fn::NotCppMovable> return_unmovable(
+    ::std::int32_t x);
 
 ::crubit::DynErasedFuture<::std::int32_t> sum_slice(
     rs_std::SliceRef<const ::std::int32_t> slice CRUBIT_LIFETIME_BOUND);
@@ -295,6 +292,20 @@ return_struct_with_drop(::std::int32_t x) {
   ::crubit::Slot<::crubit::DynErasedFuture<::async_fn::StructWithDrop>>
       __return_value_ret_val_holder;
   __crubit_internal::__crubit_thunk_return_ustruct_uwith_udrop(
+      x, __return_value_ret_val_holder.Get());
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_return_uunmovable(
+    ::std::int32_t,
+    ::crubit::DynErasedFuture<::async_fn::NotCppMovable>* __ret_ptr);
+}
+inline ::crubit::DynErasedFuture<::async_fn::NotCppMovable> return_unmovable(
+    ::std::int32_t x) {
+  ::crubit::Slot<::crubit::DynErasedFuture<::async_fn::NotCppMovable>>
+      __return_value_ret_val_holder;
+  __crubit_internal::__crubit_thunk_return_uunmovable(
       x, __return_value_ret_val_holder.Get());
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }

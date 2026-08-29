@@ -8,8 +8,8 @@
 
 #include <utility>
 
-#include "gtest/gtest.h"
 #include "support/internal/slot.h"
+#include "gtest/gtest.h"
 #include "support/movable.h"
 
 namespace {
@@ -174,6 +174,30 @@ TEST(MovableTest, MoveAssignmentRustMovable) {
   }
   // v2 went out of scope (contains 42)
   EXPECT_EQ(RustMovable::destructor_calls, 2);
+}
+
+TEST(MovableTest, MoveToSlot) {
+  RustMovable::relocate_calls = 0;
+  RustMovable::destructor_calls = 0;
+  {
+    crubit::Slot<RustMovable> slot1;
+    new (slot1.Get()) RustMovable(42);
+    auto v = rs::Movable<RustMovable>::TakeFromSlot(std::move(slot1));
+    EXPECT_EQ(RustMovable::relocate_calls, 1);
+    EXPECT_EQ(RustMovable::destructor_calls, 0);
+
+    crubit::Slot<RustMovable> slot2;
+    std::move(v).MoveToSlot(slot2);
+    EXPECT_TRUE(v.valueless_after_move());  // NOLINT(bugprone-use-after-move)
+    EXPECT_EQ(RustMovable::relocate_calls, 2);
+    EXPECT_EQ(RustMovable::destructor_calls, 0);
+
+    // Take out of slot2 and destroy
+    auto v2 = rs::Movable<RustMovable>::TakeFromSlot(std::move(slot2));
+    EXPECT_EQ(RustMovable::relocate_calls, 3);
+    EXPECT_EQ(RustMovable::destructor_calls, 0);
+  }
+  EXPECT_EQ(RustMovable::destructor_calls, 1);
 }
 
 struct Copyable {

@@ -1725,10 +1725,25 @@ fn test_imported_cpp_type_pass_by_value_unmovable() {
             pub fn pass_by_value(_x: ImportedCppType) {}
         "#;
     test_format_item(test_src, "pass_by_value", |result| {
-        let err = result.unwrap_err();
-        assert_eq!(
-            err,
-            "Can't pass type `ImportedCppType` by value without a move constructor. See crubit.rs/rust/movable_types for what types are C++ movable."
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void pass_by_value(::rs::Movable<::SomeCppType> _x);
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                namespace __crubit_internal {
+                    extern "C" void __crubit_thunk_pass_uby_uvalue(::SomeCppType*);
+                }
+                inline void pass_by_value(::rs::Movable<::SomeCppType> _x) {
+                    crubit::Slot<::SomeCppType> _x_slot;
+                    ::std::move(_x).MoveToSlot(_x_slot);
+                    return __crubit_internal::__crubit_thunk_pass_uby_uvalue(_x_slot.Get());
+                }
+            }
         );
     });
 }
@@ -1788,7 +1803,7 @@ fn test_imported_cpp_type_return_by_value_movable() {
 }
 
 #[test]
-fn test_unmovable_type_error_message() {
+fn test_unmovable_type_param_wrapped_in_movable() {
     let test_src = r#"
             pub struct Unmovable {
                 pub x: i32,
@@ -1801,10 +1816,22 @@ fn test_unmovable_type_error_message() {
             pub fn pass_unmovable(_x: Unmovable) {}
         "#;
     test_format_item(test_src, "pass_unmovable", |result| {
-        let err = result.unwrap_err();
-        assert_eq!(
-            err,
-            "Can't pass type `Unmovable` by value without a move constructor. See crubit.rs/rust/movable_types for what types are C++ movable."
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void pass_unmovable(::rs::Movable<::rust_out::Unmovable> _x);
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                inline void pass_unmovable(::rs::Movable<::rust_out::Unmovable> _x) {
+                    crubit::Slot<::rust_out::Unmovable> _x_slot;
+                    ::std::move(_x).MoveToSlot(_x_slot);
+                    return __crubit_internal::__crubit_thunk_pass_uunmovable(_x_slot.Get());
+                }
+            }
         );
     });
 }

@@ -217,6 +217,10 @@ const _: () = assert!(::std::mem::size_of::<::tuples_golden::TuplesWithU64>() ==
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::TuplesWithU64>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::TuplesWithU64, u64_in_tuple1) == 0);
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_assert_unon_ucpp_umovable_udrop_ucount(drop_count: u8) -> () {
+    unsafe { ::tuples_golden::assert_non_cpp_movable_drop_count(drop_count) }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_assert_unontrivial_udrop_ucount(drop_count: u8) -> () {
     unsafe { ::tuples_golden::assert_nontrivial_drop_count(drop_count) }
 }
@@ -259,6 +263,37 @@ unsafe extern "C" fn __crubit_thunk_param_uffi_ualias_uin_utuple(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_param_unested_utuple_uwith_unon_ucpp_umovable_uat_u2nd(
+    v: *const [*const core::ffi::c_void; 2usize],
+) -> () {
+    unsafe {
+        let v = (
+            {
+                let v_0: i32 = ((*v)[0usize] as *const i32).read();
+                v_0
+            },
+            {
+                let v_1: *const [*const core::ffi::c_void; 2usize] =
+                    ((*v)[1usize] as *const *const [*const core::ffi::c_void; 2usize]).read();
+                let v_1 = (
+                    {
+                        let v_1_0: i32 = ((*v_1)[0usize] as *const i32).read();
+                        v_1_0
+                    },
+                    {
+                        let v_1_1: *mut ::tuples_golden::NonCppMovable =
+                            ((*v_1)[1usize] as *const *mut ::tuples_golden::NonCppMovable).read();
+                        let v_1_1 = v_1_1.read();
+                        v_1_1
+                    },
+                );
+                v_1
+            },
+        );
+        ::tuples_golden::param_nested_tuple_with_non_cpp_movable_at_2nd(v)
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_param_unested_utuples(
     v: *const [*const core::ffi::c_void; 2usize],
 ) -> () {
@@ -285,6 +320,118 @@ unsafe extern "C" fn __crubit_thunk_param_unested_utuples(
             },
         );
         ::tuples_golden::param_nested_tuples(v)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_param_unon_ucpp_umovable_uat_u1st(
+    v: *const [*const core::ffi::c_void; 3usize],
+) -> () {
+    unsafe {
+        let v = (
+            {
+                let v_0: *mut ::tuples_golden::NonCppMovable =
+                    ((*v)[0usize] as *const *mut ::tuples_golden::NonCppMovable).read();
+                let v_0 = v_0.read();
+                v_0
+            },
+            {
+                let v_1: i32 = ((*v)[1usize] as *const i32).read();
+                v_1
+            },
+            {
+                let v_2: i32 = ((*v)[2usize] as *const i32).read();
+                v_2
+            },
+        );
+        ::tuples_golden::param_non_cpp_movable_at_1st(v)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_param_unon_ucpp_umovable_uat_u2nd(
+    v: *const [*const core::ffi::c_void; 3usize],
+) -> () {
+    unsafe {
+        let v = (
+            {
+                let v_0: i32 = ((*v)[0usize] as *const i32).read();
+                v_0
+            },
+            {
+                let v_1: *mut ::tuples_golden::NonCppMovable =
+                    ((*v)[1usize] as *const *mut ::tuples_golden::NonCppMovable).read();
+                let v_1 = v_1.read();
+                v_1
+            },
+            {
+                let v_2: i32 = ((*v)[2usize] as *const i32).read();
+                v_2
+            },
+        );
+        ::tuples_golden::param_non_cpp_movable_at_2nd(v)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_param_unon_ucpp_umovable_uat_u3rd(
+    v: *const [*const core::ffi::c_void; 3usize],
+) -> () {
+    unsafe {
+        let v = (
+            {
+                let v_0: i32 = ((*v)[0usize] as *const i32).read();
+                v_0
+            },
+            {
+                let v_1: i32 = ((*v)[1usize] as *const i32).read();
+                v_1
+            },
+            {
+                let v_2: *mut ::tuples_golden::NonCppMovable =
+                    ((*v)[2usize] as *const *mut ::tuples_golden::NonCppMovable).read();
+                let v_2 = v_2.read();
+                v_2
+            },
+        );
+        ::tuples_golden::param_non_cpp_movable_at_3rd(v)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_param_unon_ucpp_umovable_uin_utuple(
+    v: *const [*const core::ffi::c_void; 1usize],
+) -> () {
+    unsafe {
+        let v = ({
+            let v_0: *mut ::tuples_golden::NonCppMovable =
+                ((*v)[0usize] as *const *mut ::tuples_golden::NonCppMovable).read();
+            let v_0 = v_0.read();
+            v_0
+        },);
+        ::tuples_golden::param_non_cpp_movable_in_tuple(v)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_param_unon_ucpp_umovable_umulti(
+    v: *const [*const core::ffi::c_void; 3usize],
+) -> () {
+    unsafe {
+        let v = (
+            {
+                let v_0: *mut ::tuples_golden::NonCppMovable =
+                    ((*v)[0usize] as *const *mut ::tuples_golden::NonCppMovable).read();
+                let v_0 = v_0.read();
+                v_0
+            },
+            {
+                let v_1: i32 = ((*v)[1usize] as *const i32).read();
+                v_1
+            },
+            {
+                let v_2: *mut ::tuples_golden::NonCppMovable =
+                    ((*v)[2usize] as *const *mut ::tuples_golden::NonCppMovable).read();
+                let v_2 = v_2.read();
+                v_2
+            },
+        );
+        ::tuples_golden::param_non_cpp_movable_multi(v)
     }
 }
 #[unsafe(no_mangle)]
@@ -324,6 +471,10 @@ unsafe extern "C" fn __crubit_thunk_param_utriply_unested_utuple(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_reset_unon_ucpp_umovable_udrop_ucount() -> () {
+    unsafe { ::tuples_golden::reset_non_cpp_movable_drop_count() }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uadt_uin_utuple(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -357,6 +508,22 @@ unsafe extern "C" fn __crubit_thunk_return_uffi_ualias_uin_utuple(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_unested_utuple_uwith_unon_ucpp_umovable_uat_u2nd(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::tuples_golden::return_nested_tuple_with_non_cpp_movable_at_2nd();
+        let (__rs_return_value_0, __rs_return_value_1) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 2usize]);
+        ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
+        let (__rs_return_value_1_0, __rs_return_value_1_1) = __rs_return_value_1;
+        let [__ret_ptr_1_0, __ret_ptr_1_1] =
+            *(__ret_ptr_1 as *mut [*mut core::ffi::c_void; 2usize]);
+        ::core::ptr::write(__ret_ptr_1_0 as *mut _, __rs_return_value_1_0);
+        ::core::ptr::write(__ret_ptr_1_1 as *mut _, __rs_return_value_1_1);
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_unested_utuples(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -373,6 +540,30 @@ unsafe extern "C" fn __crubit_thunk_return_unested_utuples(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_unew_unon_ucpp_umovable_uin_unested_utuple(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::tuples_golden::return_new_non_cpp_movable_in_nested_tuple();
+        let (__rs_return_value_0,) = __rs_return_value;
+        let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
+        let (__rs_return_value_0_0,) = __rs_return_value_0;
+        let [__ret_ptr_0_0] = *(__ret_ptr_0 as *mut [*mut core::ffi::c_void; 1usize]);
+        ::core::ptr::write(__ret_ptr_0_0 as *mut _, __rs_return_value_0_0);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_unew_unon_ucpp_umovable_uin_utuple(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::tuples_golden::return_new_non_cpp_movable_in_tuple();
+        let (__rs_return_value_0,) = __rs_return_value;
+        let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
+        ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_unew_unontrivial_udrop_uin_utuple(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -381,6 +572,62 @@ unsafe extern "C" fn __crubit_thunk_return_unew_unontrivial_udrop_uin_utuple(
         let (__rs_return_value_0,) = __rs_return_value;
         let [__ret_ptr_0] = *(__ret_ptr as *mut [*mut core::ffi::c_void; 1usize]);
         ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_unon_ucpp_umovable_uat_u1st(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::tuples_golden::return_non_cpp_movable_at_1st();
+        let (__rs_return_value_0, __rs_return_value_1, __rs_return_value_2) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1, __ret_ptr_2] =
+            *(__ret_ptr as *mut [*mut core::ffi::c_void; 3usize]);
+        ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
+        ::core::ptr::write(__ret_ptr_1 as *mut _, __rs_return_value_1);
+        ::core::ptr::write(__ret_ptr_2 as *mut _, __rs_return_value_2);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_unon_ucpp_umovable_uat_u2nd(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::tuples_golden::return_non_cpp_movable_at_2nd();
+        let (__rs_return_value_0, __rs_return_value_1, __rs_return_value_2) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1, __ret_ptr_2] =
+            *(__ret_ptr as *mut [*mut core::ffi::c_void; 3usize]);
+        ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
+        ::core::ptr::write(__ret_ptr_1 as *mut _, __rs_return_value_1);
+        ::core::ptr::write(__ret_ptr_2 as *mut _, __rs_return_value_2);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_unon_ucpp_umovable_uat_u3rd(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::tuples_golden::return_non_cpp_movable_at_3rd();
+        let (__rs_return_value_0, __rs_return_value_1, __rs_return_value_2) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1, __ret_ptr_2] =
+            *(__ret_ptr as *mut [*mut core::ffi::c_void; 3usize]);
+        ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
+        ::core::ptr::write(__ret_ptr_1 as *mut _, __rs_return_value_1);
+        ::core::ptr::write(__ret_ptr_2 as *mut _, __rs_return_value_2);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_unon_ucpp_umovable_umulti(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::tuples_golden::return_non_cpp_movable_multi();
+        let (__rs_return_value_0, __rs_return_value_1, __rs_return_value_2) = __rs_return_value;
+        let [__ret_ptr_0, __ret_ptr_1, __ret_ptr_2] =
+            *(__ret_ptr as *mut [*mut core::ffi::c_void; 3usize]);
+        ::core::ptr::write(__ret_ptr_0 as *mut _, __rs_return_value_0);
+        ::core::ptr::write(__ret_ptr_1 as *mut _, __rs_return_value_1);
+        ::core::ptr::write(__ret_ptr_2 as *mut _, __rs_return_value_2);
     }
 }
 #[unsafe(no_mangle)]

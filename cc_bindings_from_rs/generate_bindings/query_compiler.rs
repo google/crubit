@@ -75,6 +75,9 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
         // - Discriminant-only enums (b/259984090).
         ty::TyKind::Tuple { .. } => false, // An empty tuple (`()` - the unit type) is handled above.
         ty::TyKind::Adt(adt, substs) => {
+            if !db.is_cpp_move_constructible(ty) {
+                return false;
+            }
             let attrs = crubit_attr::get_attrs(tcx, adt.did()).unwrap_or_default();
             if attrs.same_abi {
                 return true;
