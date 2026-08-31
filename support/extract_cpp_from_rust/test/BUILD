@@ -57,6 +57,9 @@ crubit_cc_test(
     srcs = [
         "verify_iwyu_export_test.cc",
     ],
+    platforms = [
+        "ios",
+    ],
     deps = [
         ":library_with_embedded_cpp_cc_api",
         "//testing/base/public:gunit_main",

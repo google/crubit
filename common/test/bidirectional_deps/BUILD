@@ -90,6 +90,9 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "cc_test",
     srcs = ["cc_test.cc"],
+    platforms = [
+        "ios",
+    ],
     deps = [
         ":leaf_cc_lib",
         ":middle_rs_lib_cc_api",

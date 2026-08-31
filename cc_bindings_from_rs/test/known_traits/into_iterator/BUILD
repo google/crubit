@@ -48,7 +48,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "into_iterator_cc_test",
     srcs = ["into_iterator_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":into_iterator_cc_api",
         "//testing/base/public:gunit_main",

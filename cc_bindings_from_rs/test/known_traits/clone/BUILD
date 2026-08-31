@@ -31,7 +31,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "clone_test",
     srcs = ["clone_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     # TODO(b/537283300): Re-enable x86 Android platforms once x86 ABI assertion failures are resolved.
     tags = ["no_test_android_x86"],
     deps = [

@@ -53,7 +53,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "cross_crate_test",
     srcs = ["cross_crate_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":other_crate_cc_api",
         ":test_api_cc_api",

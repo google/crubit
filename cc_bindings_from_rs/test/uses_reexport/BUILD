@@ -44,7 +44,10 @@ golden_test(
 crubit_cc_test(
     name = "uses_reexport_test",
     srcs = ["uses_reexport_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":uses_reexport_cc_api",
         "//testing/base/public:gunit_main",

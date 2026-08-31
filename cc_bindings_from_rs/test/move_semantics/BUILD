@@ -38,7 +38,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "move_test",
     srcs = ["move_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":move_cc_api",
         "//support:movable",

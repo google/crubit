@@ -45,6 +45,9 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "shared_ptr_test",
     srcs = ["shared_ptr_test.cc"],
+    platforms = [
+        "ios",
+    ],
     deps = [
         ":shared_ptr_cc_api",
         "//testing/base/public:gunit_main",

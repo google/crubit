@@ -47,6 +47,9 @@ crubit_rust_test(
 crubit_cc_test(
     name = "string_view_cc_test",
     srcs = ["test.cc"],
+    platforms = [
+        "ios",
+    ],
     deps = [
         ":string_view_rs_apis_cc",
         "//testing/base/public:gunit_main",

@@ -46,7 +46,10 @@ golden_test(
 crubit_cc_test(
     name = "hash_test",
     srcs = ["hash_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":rs_hash_cc_api",
         "//testing/base/public:gunit_main",

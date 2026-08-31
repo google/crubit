@@ -41,6 +41,10 @@ cc_test(
 crubit_cc_test(
     name = "memswap_test",
     srcs = ["memswap_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":bindings_support",
         "//testing/base/public:gunit_main",
@@ -50,6 +54,10 @@ crubit_cc_test(
 crubit_cc_test(
     name = "offsetof_test",
     srcs = ["offsetof_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":bindings_support",
         "//testing/base/public:gunit_main",
@@ -59,6 +67,10 @@ crubit_cc_test(
 crubit_cc_test(
     name = "slot_test",
     srcs = ["slot_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":bindings_support",
         "//testing/base/public:gunit_main",
@@ -70,6 +82,10 @@ crubit_cc_test(
 crubit_cc_test(
     name = "sizeof_test",
     srcs = ["sizeof_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":bindings_support",
         "//testing/base/public:gunit_main",

@@ -18,7 +18,12 @@ def crubit_rust_binary(**kwargs):
     kwargs.pop("crubit_dep", default = False)
     rust_binary(**kwargs)
 
-crubit_cc_test = cc_test
+def crubit_cc_test(**kwargs):
+    # Ignore the `platforms` argument, as the OSS version of
+    # `crubit_cc_test` runs on the host platform.
+    kwargs.pop("platforms", default = [])
+    cc_test(**kwargs)
+
 crubit_sh_test = sh_test
 crubit_cc_binary = cc_binary
 

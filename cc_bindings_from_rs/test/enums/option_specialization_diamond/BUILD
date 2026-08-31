@@ -47,7 +47,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "option_specialization_diamond",
     srcs = ["foobar_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":foobar_cc_api",
         "//testing/base/public:gunit_main",

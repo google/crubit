@@ -62,7 +62,10 @@ golden_test(
 crubit_cc_test(
     name = "user_of_rust_lib",
     srcs = ["user_of_rust_lib.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":foo_cc_proto",
         ":rust_lib_cc_api",

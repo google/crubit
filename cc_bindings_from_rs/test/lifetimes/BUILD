@@ -40,7 +40,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "lifetimes_test",
     srcs = ["lifetimes_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":lifetimes_cc_api",
         "//testing/base/public:gunit_main",

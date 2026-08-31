@@ -40,6 +40,10 @@ golden_test(
 crubit_cc_test(
     name = "type_identity_test",
     srcs = ["type_identity_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":rust_api_cc_api",
     ],

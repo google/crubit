@@ -44,7 +44,10 @@ golden_test(
 crubit_cc_test(
     name = "non_trivially_destructible_test",
     srcs = ["non_trivially_destructible_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":non_trivially_destructible_cc_api",
         "//testing/base/public:gunit_main",

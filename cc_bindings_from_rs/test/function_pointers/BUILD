@@ -41,7 +41,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "function_pointers_test",
     srcs = ["function_pointers_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":function_pointers_cc_api",
         "//testing/base/public:gunit_main",

@@ -52,7 +52,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "enums_test",
     srcs = ["enums_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     # TODO(b/537283300): Re-enable x86 Android platforms once x86 ABI assertion failures are resolved.
     tags = [
         "no_test_android_arm",
@@ -90,7 +93,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "cpp_enums_test",
     srcs = ["cpp_enums_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":cpp_enums_cc_api",
         "//testing/base/public:gunit_main",
@@ -160,7 +166,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "result_test",
     srcs = ["result_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":result_cc_api",
         "//testing/base/public:gunit_main",

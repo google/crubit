@@ -44,7 +44,10 @@ golden_test(
 crubit_cc_test(
     name = "compare_test",
     srcs = ["compare_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":compare_cc_api",
         "//testing/base/public:gunit_main",

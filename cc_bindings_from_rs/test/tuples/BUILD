@@ -43,7 +43,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "tuples_test",
     srcs = ["tuples_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":tuples_cc_api",
         "//support/rs_std:rs_alloc",

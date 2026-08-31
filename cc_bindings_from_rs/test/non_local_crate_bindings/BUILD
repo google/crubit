@@ -5,7 +5,10 @@ package(default_applicable_licenses = ["//:license"])
 crubit_cc_test(
     name = "core_bindings_test",
     srcs = ["core_bindings_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         "//support/rs_std:rs_core",
         "//testing/base/public:gunit_main",
