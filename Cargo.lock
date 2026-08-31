@@ -446,6 +446,7 @@ dependencies = [
 name = "crubit_bridge_rust"
 version = "0.1.0"
 dependencies = [
+ "crubit_support",
  "googletest",
 ]
 
@@ -469,6 +470,14 @@ dependencies = [
 
 [[package]]
 name = "crubit_hash_rust"
+version = "0.1.0"
+dependencies = [
+ "crubit_support",
+ "googletest",
+]
+
+[[package]]
+name = "crubit_support"
 version = "0.1.0"
 dependencies = [
  "googletest",

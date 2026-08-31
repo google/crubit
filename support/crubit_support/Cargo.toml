@@ -3,19 +3,18 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 [package]
-name = "crubit_hash_rust"
+name = "crubit_support"
 version = "0.1.0"
-description = "A hasher and hashing helpers for Crubit FFI."
+description = "Unified runtime support library for Crubit generated bindings."
 edition.workspace = true
 license-file.workspace = true
 repository.workspace = true
 categories.workspace = true
 
 [lib]
-path = "src/hash.rs"
+path = "src/lib.rs"
 
 [dependencies]
-crubit_support = { path = "../crubit_support" }
 
 [dev-dependencies]
 googletest.workspace = true
