@@ -12,7 +12,7 @@
 namespace crubit {
 namespace internal_dyn_erased_future {
 extern "C" {
-// These functions are defined in dyn_erased_future.rs and exposed by the
+// These functions are defined in crubit_support and exposed by the
 // linker.
 void rs_std_dyn_erased_future_init(void* storage);
 void rs_std_dyn_erased_future_drop(void* storage);
