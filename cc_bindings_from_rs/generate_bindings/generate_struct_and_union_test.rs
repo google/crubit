@@ -340,7 +340,7 @@ fn test_format_item_unsupported_struct_zero_sized_type_with_no_fields() {
     for name in ["ZeroSizedType1", "ZeroSizedType2", "ZeroSizedType3"] {
         test_format_item(test_src, name, |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Zero-sized types (ZSTs) are not supported (b/258259459)");
+            assert_eq!(err, format!("Zero-sized type `{name}` is not supported (b/258259459)"));
         });
     }
 }
@@ -356,7 +356,7 @@ fn test_format_item_unsupported_struct_with_only_zero_sized_type_fields() {
         "#;
     test_format_item(test_src, "SomeStruct", |result| {
         let err = result.unwrap_err();
-        assert_eq!(err, "Zero-sized types (ZSTs) are not supported (b/258259459)",);
+        assert_eq!(err, "Zero-sized type `SomeStruct` is not supported (b/258259459)",);
     });
 }
 
@@ -470,7 +470,7 @@ fn test_format_item_unsupported_enum_zero_variants() {
         "#;
     test_format_item(test_src, "ZeroVariantEnum", |result| {
         let err = result.unwrap_err();
-        assert_eq!(err, "Zero-sized types (ZSTs) are not supported (b/258259459)");
+        assert_eq!(err, "Zero-sized type `ZeroVariantEnum` is not supported (b/258259459)");
     });
 }
 

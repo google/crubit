@@ -540,8 +540,28 @@ fn test_format_ty_for_cc_failures() {
         ),
         (
             "core::alloc::LayoutError",
-            "Failed to format type for the definition of `std::alloc::LayoutError`: \
-             Zero-sized types (ZSTs) are not supported (b/258259459)",
+            "\n  Failed to format type for the definition of `std::alloc::LayoutError`: \
+             Zero-sized type `std::alloc::LayoutError` is not supported (b/258259459)",
+        ),
+        (
+            "Result<i32, core::alloc::LayoutError>",
+            "\n  Failed to format type for the definition of `std::alloc::LayoutError`: \
+             Zero-sized type `std::alloc::LayoutError` is not supported (b/258259459)",
+        ),
+        (
+            "Result<core::alloc::LayoutError, i32>",
+            "\n  Failed to format type for the definition of `std::alloc::LayoutError`: \
+             Zero-sized type `std::alloc::LayoutError` is not supported (b/258259459)",
+        ),
+        (
+            "(i32, core::alloc::LayoutError)",
+            "\n  Failed to format type for the definition of `std::alloc::LayoutError`: \
+             Zero-sized type `std::alloc::LayoutError` is not supported (b/258259459)",
+        ),
+        (
+            "Vec<core::alloc::LayoutError>",
+            "\n  Failed to format type for the definition of `std::alloc::LayoutError`: \
+             Zero-sized type `std::alloc::LayoutError` is not supported (b/258259459)",
         ),
     ];
     let preamble = quote! {

@@ -2178,7 +2178,7 @@ pub fn generate_adt_core<'tcx>(
         layout.align().abi.bytes()
     };
     let size_in_bytes = layout.size().bytes();
-    ensure!(size_in_bytes != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
+    ensure!(size_in_bytes != 0, "Zero-sized type `{self_ty}` is not supported (b/258259459)");
 
     Ok(Rc::new(AdtCoreBindings {
         common: Rc::new(CoreBindingsCommon {

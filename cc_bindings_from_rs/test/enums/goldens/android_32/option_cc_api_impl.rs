@@ -253,6 +253,15 @@ unsafe extern "C" fn __crubit_thunk_stringify_ulen(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_take_uoption_ubridged(
+    x: *mut ::core::option::Option<::option_golden::BridgedType>,
+) -> i32 {
+    unsafe {
+        let x = x.read();
+        ::option_golden::take_option_bridged(x)
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_take_uoption_uresult_uunmovable(
     _x: *mut ::core::option::Option<
         ::core::result::Result<::option_golden::HasNoDefault, ::alloc::string::String>,

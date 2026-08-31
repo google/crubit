@@ -239,4 +239,9 @@ TEST(OptionTest, OptionUnitSome) {
   static_assert(!HasValue<rs_std::Option<rs_std::unit_t>>);
 }
 
+TEST(OptionTest, TakeOptionBridged) {
+  EXPECT_EQ(option::take_option_bridged(rs_std::Option<int>(42)), 42);
+  EXPECT_EQ(option::take_option_bridged(rs_std::Option<int>(std::nullopt)), -1);
+}
+
 }  // namespace

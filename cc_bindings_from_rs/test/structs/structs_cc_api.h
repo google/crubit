@@ -758,17 +758,20 @@ namespace structs::zst_fields {
 // Error generating bindings for struct `structs_golden::zst_fields::Zst1`
 // defined at
 // cc_bindings_from_rs/test/structs/structs.rs;l=88:
-// Zero-sized types (ZSTs) are not supported (b/258259459)
+// Zero-sized type `structs_golden::zst_fields::Zst1` is not supported
+// (b/258259459)
 
 // Error generating bindings for struct `structs_golden::zst_fields::Zst2`
 // defined at
 // cc_bindings_from_rs/test/structs/structs.rs;l=89:
-// Zero-sized types (ZSTs) are not supported (b/258259459)
+// Zero-sized type `structs_golden::zst_fields::Zst2` is not supported
+// (b/258259459)
 
 // Error generating bindings for struct `structs_golden::zst_fields::Zst3`
 // defined at
 // cc_bindings_from_rs/test/structs/structs.rs;l=90:
-// Zero-sized types (ZSTs) are not supported (b/258259459)
+// Zero-sized type `structs_golden::zst_fields::Zst3` is not supported
+// (b/258259459)
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -821,7 +824,9 @@ struct rs_std::impl<::structs::display::DisplayStruct,
   // defined at
   // cc_bindings_from_rs/test/structs/structs.rs;l=410:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`:
+  //   Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  //   type `std::fmt::Error` is not supported (b/258259459)
 };
 
 template <>
@@ -834,7 +839,9 @@ struct rs_std::impl<::structs::interior_mutability::SomeStruct,
   // defined at
   // cc_bindings_from_rs/test/structs/structs.rs;l=358:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`:
+  //   Failed to format type for the definition of `std::fmt::Error`: Zero-sized
+  //   type `std::fmt::Error` is not supported (b/258259459)
 };
 
 namespace structs::abi_classification {

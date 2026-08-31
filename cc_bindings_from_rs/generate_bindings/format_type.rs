@@ -585,39 +585,42 @@ pub fn format_ty_for_cc<'tcx>(
                 );
             }
 
-            let specialization = db.parse_rs_std_template_specialization(ty);
-            if specialization.as_ref().is_some_and(|specialization| {
-                // We only want to consider errors when bridging could not occur.
-                // Otherwise, fallthrough to the normal bridging logic.
-                let error_occurred = !location.is_bridgeable() && specialization.is_err();
-                let is_option_or_result = specialization.as_ref().is_ok_and(|rs_std_enum| {
-                    (!location.is_bridgeable() && rs_std_enum.is_option())
-                        || rs_std_enum.is_result()
-                        || rs_std_enum.is_vec()
-                        || db
-                            .crate_features(db.source_crate_num())
-                            .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust)
-                });
-                error_occurred || is_option_or_result
-            }) {
-                let rs_std = specialization.unwrap()?;
-                let tokens = rs_std.self_ty_cc.clone().into_tokens(&mut prereqs);
-                prereqs.includes.insert(rs_std.support_header(db));
-                if matches!(
-                    location,
-                    TypeLocation::Field
-                        | TypeLocation::Const
-                        | TypeLocation::NestedBridgeable
-                        | TypeLocation::TemplateArg
-                ) {
-                    prereqs.template_specializations.insert(TemplateSpecialization::RsStd(rs_std));
-                } else {
-                    prereqs
-                        .lazy_template_specializations
-                        .insert(TemplateSpecialization::RsStd(rs_std));
+            if let Some(bridged_builtin) = BridgedBuiltin::new(db, adt) {
+                let always_specialize_generics = db
+                    .crate_features(db.source_crate_num())
+                    .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
+
+                let use_specialization = match bridged_builtin {
+                    BridgedBuiltin::Result | BridgedBuiltin::Vec => true,
+                    BridgedBuiltin::Option => {
+                        !location.is_bridgeable() || always_specialize_generics
+                    }
+                };
+
+                if use_specialization {
+                    let rs_std = db
+                        .parse_rs_std_template_specialization(ty)
+                        .ok_or_else(|| anyhow!("Failed to parse template specialization for `{ty}`"))??;
+                    let tokens = rs_std.self_ty_cc.clone().into_tokens(&mut prereqs);
+                    prereqs.includes.insert(rs_std.support_header(db));
+                    if matches!(
+                        location,
+                        TypeLocation::Field
+                            | TypeLocation::Const
+                            | TypeLocation::NestedBridgeable
+                            | TypeLocation::TemplateArg
+                    ) {
+                        prereqs.template_specializations.insert(TemplateSpecialization::RsStd(rs_std));
+                    } else {
+                        prereqs
+                            .lazy_template_specializations
+                            .insert(TemplateSpecialization::RsStd(rs_std));
+                    }
+                    return Ok(CcSnippet { tokens, prereqs });
                 }
-                return Ok(CcSnippet { tokens, prereqs });
-            } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
+            }
+
+            if let Some(bridged_type) = is_bridged_type(db, ty)? {
                 if !bridged_type.is_layout_compatible() {
                     location.check_bridgeable()?;
                 }
@@ -690,8 +693,9 @@ pub fn format_ty_for_cc<'tcx>(
                 prereqs.depend_on_def(db, def_id)?;
 
                 // Verify if definition of `ty` can be successfully imported and bail otherwise.
-                db.generate_adt_core(def_id).with_context(|| {
-                    format!("Failed to format type for the definition of `{ty}`")
+                db.generate_adt_core(def_id).map_err(|err| {
+                    let err = format!("{err:#}").replace('\n', "\n  ");
+                    anyhow!("\n  Failed to format type for the definition of `{ty}`: {err}")
                 })?;
             }
 
@@ -1056,10 +1060,10 @@ fn try_ty_as_maybe_uninit<'tcx>(
     db: &BindingsGenerator<'_>,
     ty: Ty<'tcx>,
 ) -> Option<GenericArg<'tcx>> {
-    if let ty::TyKind::Adt(adt, substs) = ty.kind() {
-        if matches_qualified_name(db, adt.did(), &["core", "mem", "maybe_uninit", "MaybeUninit"]) {
-            return Some(substs[0]);
-        }
+    if let ty::TyKind::Adt(adt, substs) = ty.kind()
+        && matches_qualified_name(db, adt.did(), &["core", "mem", "maybe_uninit", "MaybeUninit"])
+    {
+        return Some(substs[0]);
     }
     None
 }
@@ -1739,10 +1743,10 @@ pub fn is_bridged_type<'tcx>(
                 // Bridge types behind a reference are not allowed. But Option is an exception
                 // because it can have a specialization generated (rs_std::Option<T>& is valid),
                 // so the following check allows it when detected.
-                if let ty::TyKind::Adt(adt, _) = referent.kind() {
-                    if let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt) {
-                        return Ok(None);
-                    }
+                if let ty::TyKind::Adt(adt, _) = referent.kind()
+                    && let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt)
+                {
+                    return Ok(None);
                 }
                 bail!(
                     "crubit.rs/errors/unsupported_type: Bridged type `{referent}` cannot be passed by reference; pass it by value instead."

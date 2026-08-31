@@ -44,6 +44,29 @@ use rustc_span::def_id::DefId;
 use std::collections::HashSet;
 use std::rc::Rc;
 
+fn canonicalize_name_for_guard(symbol: &str) -> String {
+    let s = symbol
+        .replace(":: std :: int8_t", "signed char")
+        .replace("std :: int8_t", "signed char")
+        .replace("int8_t", "signed char")
+        .replace(":: std :: uint8_t", "unsigned char")
+        .replace("std :: uint8_t", "unsigned char")
+        .replace("uint8_t", "unsigned char")
+        .replace(":: std :: int16_t", "short")
+        .replace("std :: int16_t", "short")
+        .replace("int16_t", "short")
+        .replace(":: std :: uint16_t", "unsigned short")
+        .replace("std :: uint16_t", "unsigned short")
+        .replace("uint16_t", "unsigned short")
+        .replace(":: std :: int32_t", "int")
+        .replace("std :: int32_t", "int")
+        .replace("int32_t", "int")
+        .replace(":: std :: uint32_t", "unsigned int")
+        .replace("std :: uint32_t", "unsigned int")
+        .replace("uint32_t", "unsigned int");
+    escape_non_identifier_chars(&s)
+}
+
 pub(crate) fn parse_rs_std_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
@@ -652,7 +675,7 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
 
         let mut construct_elements = quote! {};
         let mut convert_elements = Vec::new();
-        for (i, (formatted_ty, element_cc_ty)) in
+        for (i, (_formatted_ty, element_cc_ty)) in
             self.element_tys.iter().zip(&element_cc_tys).enumerate()
         {
             let field_ident = anonymous_field_ident(i);
@@ -1805,7 +1828,7 @@ fn ifdef_guard_specialization<'tcx>(
         .collect::<Vec<_>>();
 
     let name = quote! { #template_name<#(#formatted_tys),*> }.to_string();
-    let name = escape_non_identifier_chars(&name);
+    let name = canonicalize_name_for_guard(&name);
     let guard_name = format_ident!("_CRUBIT_BINDINGS_FOR_{}", name);
     let main_api_tokens = wrap_in_ifdef_guard(&guard_name, main_api);
 
