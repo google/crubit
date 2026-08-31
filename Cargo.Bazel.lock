@@ -1,5 +1,5 @@
 {
-  "checksum": "2cdf627cce4123704383995986ca94978fc45992fa5d3ab4dc0347a508e2ac49",
+  "checksum": "8897f12f06c1e1b930f23f258890b6cb545dd8cec0b428102644893b2c678b2e",
   "crates": {
     "aho-corasick 1.1.5": {
       "name": "aho-corasick",
@@ -2267,46 +2267,6 @@
       "license_ids": [],
       "license_file": "../../LICENSE"
     },
-    "crubit_hash_rust 0.1.0": {
-      "name": "crubit_hash_rust",
-      "version": "0.1.0",
-      "package_url": "https://github.com/google/crubit",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "crubit_hash_rust",
-            "crate_root": "src/hash.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "crubit_hash_rust",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps_dev": {
-          "common": [
-            {
-              "id": "googletest 0.14.3",
-              "target": "googletest"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2024",
-        "version": "0.1.0"
-      },
-      "license": null,
-      "license_ids": [],
-      "license_file": "../../LICENSE"
-    },
     "crubit_build 0.0.0": {
       "name": "crubit_build",
       "version": "0.0.0",
@@ -2403,6 +2363,46 @@
       "license": null,
       "license_ids": [],
       "license_file": "../../../LICENSE"
+    },
+    "crubit_hash_rust 0.1.0": {
+      "name": "crubit_hash_rust",
+      "version": "0.1.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "crubit_hash_rust",
+            "crate_root": "src/hash.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "crubit_hash_rust",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps_dev": {
+          "common": [
+            {
+              "id": "googletest 0.14.3",
+              "target": "googletest"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.1.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../LICENSE"
     },
     "dyn_format 0.0.0": {
       "name": "dyn_format",
@@ -10574,9 +10574,9 @@
     "crubit_abi_type 0.0.0": "cargo/common/crubit_abi_type",
     "crubit_annotate 0.1.0": "support/crubit_annotate",
     "crubit_bridge_rust 0.1.0": "support/crubit_bridge_rust",
-    "crubit_hash_rust 0.1.0": "support/crubit_hash_rust",
     "crubit_build 0.0.0": "cargo/build",
     "crubit_feature 0.0.0": "cargo/common/crubit_feature",
+    "crubit_hash_rust 0.1.0": "support/crubit_hash_rust",
     "dyn_format 0.0.0": "cargo/common/dyn_format",
     "error_report 0.0.0": "cargo/common/error_report",
     "errors 0.0.0": "cargo/common/errors",

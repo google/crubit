@@ -1,0 +1,27 @@
+Allow transitive crate_universe repinning for Protobuf.
+
+TODO(b/379928127): Remove this patch once rules_rust supports dynamic transitive
+repinning without lockfiles, or protobuf provides a lockfile in BCR (cl/974008598).
+
+rules_rust 0.71.3 fails when a transitive dependency (such as
+@protobuf//:MODULE.bazel) declares crate.from_specs() without providing
+a pre-generated lockfile ("Transitive crate_universe repositories must ship
+a lockfile"). We allow dynamic metadata generation for non-root modules.
+
+diff -Naur a/crate_universe/extensions.bzl b/crate_universe/extensions.bzl
+--- a/crate_universe/extensions.bzl	2026-08-27 18:39:35.993786218 +0000
++++ b/crate_universe/extensions.bzl	2026-08-27 18:39:35.994166531 +0000
+@@ -616,12 +616,7 @@
+     # cargo / rules_rust version differences between the producing module
+     # and the consumer, and the producer's lockfile typically lives in a
+     # read-only bzlmod cache so repinning isn't an option anyway.
+-    if not is_root:
+-        if not lockfile:
+-            fail(("crate_universe extension call `{}` is in a non-root module " +
+-                  "but has no lockfile. Transitive crate_universe repositories " +
+-                  "must ship a `lockfile = ...` because repinning is not " +
+-                  "supported across module boundaries.").format(cfg.name))
++    if not is_root and lockfile:
+         repin = False
+     else:
+         repin = not lockfile or determine_repin(

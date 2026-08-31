@@ -15,7 +15,7 @@ bazel_dep(name = "fuzztest", version = "20250214.0")
 bazel_dep(name = "google_benchmark", version = "1.9.1")
 bazel_dep(name = "googletest", version = "1.17.0")
 bazel_dep(name = "platforms", version = "1.1.0")
-bazel_dep(name = "protobuf", version = "35.0")
+bazel_dep(name = "protobuf", version = "36.0.bcr.1")
 bazel_dep(name = "re2", version = "2024-07-02.bcr.1")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "rules_proto", version = "7.1.0")
@@ -61,4 +61,24 @@ register_toolchains(
     "@rust_toolchains//:all",
     "@llvm_toolchain//:all",
     "//common/bazel_support/toolchains:cc_bindings_from_rs_on_demand_linux",
+)
+
+# TODO(b/379928127): Remove this override once cl/974009395 is released in BCR.
+single_version_override(
+    module_name = "protobuf",
+    patch_strip = 1,
+    patches = [
+        "//patches:protobuf_visibility.patch",
+    ],
+    version = "36.0.bcr.1",
+)
+
+# TODO(b/379928127): Remove this override once cl/974008598 is released in BCR.
+single_version_override(
+    module_name = "rules_rust",
+    patch_strip = 1,
+    patches = [
+        "//patches:rules_rust_transitive_repin.patch",
+    ],
+    version = "0.71.3",
 )

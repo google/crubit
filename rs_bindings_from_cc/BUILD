@@ -472,11 +472,13 @@ rust_library(
     name = "ir",
     srcs = [
         "ir.rs",
+        "proto_to_ir.rs",
     ],
     rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = ["//:__subpackages__"],
     deps = [
         ":bazel_label",
+        ":ir_rust_proto",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_feature",
@@ -486,6 +488,7 @@ rust_library(
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
         "@crate_index//:syn",  # v1
+        "@protobuf//rust:protobuf",
     ],
 )
 
