@@ -24,7 +24,10 @@ golden_test(
     basename = "pass_by_value_unmovable",
     golden_h = "pass_by_value_unmovable_cc_api.h",
     golden_rs = "pass_by_value_unmovable_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "pass_by_value_unmovable",
 )
 

@@ -33,7 +33,10 @@ golden_test(
     basename = "traits",
     golden_h = "traits_cc_api.h",
     golden_rs = "traits_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "traits",
 )
 
@@ -78,7 +81,10 @@ golden_test(
     basename = "generic_traits",
     golden_h = "generic_traits_cc_api.h",
     golden_rs = "generic_traits_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "generic_traits",
 )
 

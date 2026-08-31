@@ -30,7 +30,10 @@ golden_test(
     basename = "vec",
     golden_h = "vec_cc_api.h",
     golden_rs = "vec_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "vec",
 )
 

@@ -29,7 +29,10 @@ golden_test(
     basename = "structs",
     golden_h = "structs_cc_api.h",
     golden_rs = "structs_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "structs",
 )
 

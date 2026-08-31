@@ -27,7 +27,10 @@ golden_test(
     basename = "lifetimes",
     golden_h = "lifetimes_cc_api.h",
     golden_rs = "lifetimes_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "lifetimes",
 )
 

@@ -28,7 +28,10 @@ golden_test(
     basename = "function_pointers",
     golden_h = "function_pointers_cc_api.h",
     golden_rs = "function_pointers_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "function_pointers",
 )
 

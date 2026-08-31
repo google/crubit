@@ -60,6 +60,9 @@ golden_test(
     basename = "transitive_reexports",
     golden_h = "transitive_reexports_cc_api.h",
     golden_rs = "transitive_reexports_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "transitive_reexports",
 )

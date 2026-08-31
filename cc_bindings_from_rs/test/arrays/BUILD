@@ -30,7 +30,10 @@ golden_test(
     basename = "arrays",
     golden_h = "arrays_cc_api.h",
     golden_rs = "arrays_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "arrays",
 )
 

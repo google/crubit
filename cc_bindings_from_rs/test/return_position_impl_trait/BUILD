@@ -37,6 +37,9 @@ golden_test(
     basename = "return_position_impl_trait",
     golden_h = "return_position_impl_trait_cc_api.h",
     golden_rs = "return_position_impl_trait_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "return_position_impl_trait",
 )

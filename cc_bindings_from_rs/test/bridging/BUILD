@@ -82,7 +82,10 @@ golden_test(
     basename = "layout_equivalent_generics",
     golden_h = "layout_equivalent_generics_cc_api.h",
     golden_rs = "layout_equivalent_generics_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "layout_equivalent_generics",
 )
 
@@ -116,7 +119,10 @@ golden_test(
     basename = "bridged_types",
     golden_h = "bridged_types_cc_api.h",
     golden_rs = "bridged_types_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "bridged_types",
 )
 
@@ -136,7 +142,10 @@ golden_test(
     basename = "layout_equivalent_pointers",
     golden_h = "layout_equivalent_pointers_cc_api.h",
     golden_rs = "layout_equivalent_pointers_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "layout_equivalent_pointers",
 )
 

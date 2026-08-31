@@ -33,7 +33,10 @@ golden_test(
     basename = "from",
     golden_h = "from_cc_api.h",
     golden_rs = "from_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "from",
 )
 

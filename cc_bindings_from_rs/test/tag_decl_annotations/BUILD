@@ -38,7 +38,10 @@ golden_test(
     golden_h = "tag_decl_annotations_cc_api.h",
     golden_rs = "tag_decl_annotations_cc_api_impl.rs",
     kythe_annotations = True,
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "tag_decl_annotations",
 )
 

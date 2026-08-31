@@ -38,7 +38,10 @@ golden_test(
     golden_h = "function_annotations_cc_api.h",
     golden_rs = "function_annotations_cc_api_impl.rs",
     kythe_annotations = True,
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "function_annotations",
 )
 

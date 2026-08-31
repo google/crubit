@@ -24,7 +24,10 @@ golden_test(
     basename = "never",
     golden_h = "never_cc_api.h",
     golden_rs = "never_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "never",
 )
 

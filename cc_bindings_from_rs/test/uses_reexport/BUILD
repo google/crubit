@@ -37,7 +37,10 @@ golden_test(
     basename = "uses_reexport",
     golden_h = "uses_reexport_cc_api.h",
     golden_rs = "uses_reexport_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "uses_reexport",
 )
 

@@ -31,7 +31,10 @@ golden_test(
     basename = "stdlib",
     golden_h = "stdlib_cc_api.h",
     golden_rs = "stdlib_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "stdlib",
 )
 

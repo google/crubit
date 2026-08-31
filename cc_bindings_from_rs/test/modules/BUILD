@@ -28,7 +28,10 @@ golden_test(
     basename = "modules",
     golden_h = "modules_cc_api.h",
     golden_rs = "modules_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "modules",
 )
 

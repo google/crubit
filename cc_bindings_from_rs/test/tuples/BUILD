@@ -30,7 +30,10 @@ golden_test(
     basename = "tuples",
     golden_h = "tuples_cc_api.h",
     golden_rs = "tuples_cc_api_impl.rs",
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "tuples",
 )
 
