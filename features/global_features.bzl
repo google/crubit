@@ -9,6 +9,7 @@ visibility(["//..."])
 SUPPORTED_FEATURES = [
     "supported",
     "assume_lifetimes",
+    "template_instantiation",
 ]
 
 # A list of targets that should not be granted the `assume_lifetimes` feature by default.
@@ -43,4 +44,8 @@ NO_ASSUME_LIFETIMES_TARGETS = [
     "//rs_bindings_from_cc/test/wrapper/fallback_bridge_types:wrapper_library",
     "//rs_bindings_from_cc/test/wrapper/fallback_types:wrapper_library",
     "//support/cc_std_impl/test/string_view/...",
+]
+
+# buildifier: keep sorted <internal link>
+NO_TEMPLATE_INSTANTIATION_TARGETS = [
 ]
