@@ -1167,12 +1167,24 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
             quote! { [ #rs_element_type; #unsuffixed_length ] }
         }
         ty::TyKind::Adt(adt, substs) => {
-            if let Some(BridgedBuiltin::Vec) = BridgedBuiltin::new(db, adt) {
-                let t_param = match substs[0].kind() {
-                    ty::GenericArgKind::Type(ty) => db.format_ty_for_rs(ty)?,
-                    _ => panic!("First generic argument of Vec must be a type"),
-                };
-                return Ok(quote! { ::alloc::vec::Vec<#t_param> });
+            if let Some(bridged_builtin) = BridgedBuiltin::new(db, adt) {
+                match bridged_builtin {
+                    BridgedBuiltin::Vec => {
+                        let t_param = match substs[0].kind() {
+                            ty::GenericArgKind::Type(ty) => db.format_ty_for_rs(ty)?,
+                            _ => panic!("First generic argument of Vec must be a type"),
+                        };
+                        return Ok(quote! { ::alloc::vec::Vec<#t_param> });
+                    }
+                    BridgedBuiltin::Option if db.crate_features(db.source_crate_num()).contains(crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust) => {
+                        let t_param = match substs[0].kind() {
+                            ty::GenericArgKind::Type(ty) => db.format_ty_for_rs(ty)?,
+                            _ => panic!("First generic argument of Option must be a type"),
+                        };
+                        return Ok(quote! { ::core::option::Option<#t_param> });
+                    }
+                    _ => {}
+                }
             }
             let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
             let has_composable_bridging =
