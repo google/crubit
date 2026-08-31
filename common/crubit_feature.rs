@@ -184,6 +184,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
                 - CrubitFeature::OoCasting
                 - CrubitFeature::ProtoReferences
+                - CrubitFeature::CppMoveConstructibleAnnotation
         }
         // `supported` automatically implies `types`.
         b"supported" => CrubitFeature::Supported | CrubitFeature::Types,
@@ -345,7 +346,6 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::AsyncFnSendModuloRegions
-                | CrubitFeature::CppMoveConstructibleAnnotation
         );
     }
 
@@ -385,7 +385,6 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::AsyncFnSendModuloRegions
-                | CrubitFeature::CppMoveConstructibleAnnotation
         );
     }
 
@@ -410,7 +409,6 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::AsyncFnSendModuloRegions
-                | CrubitFeature::CppMoveConstructibleAnnotation
         );
     }
 
@@ -436,7 +434,6 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::AsyncFnSendModuloRegions
-                | CrubitFeature::CppMoveConstructibleAnnotation
         );
     }
 
@@ -462,7 +459,6 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::AsyncFnSendModuloRegions
-                | CrubitFeature::CppMoveConstructibleAnnotation
         );
     }
 }

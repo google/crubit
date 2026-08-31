@@ -18,7 +18,6 @@
 #[cfi_encoding = "2SV"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: SV
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct SV<'a> {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
     __marker_a: ::core::marker::PhantomData<&'a ()>,

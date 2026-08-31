@@ -25,7 +25,6 @@ pub type OtherTypeAliasInSameTarget = crate::__CcTemplateInst10MyTemplateIiE;
 #[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=:: MyTemplate < int >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct __CcTemplateInst10MyTemplateIiE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:

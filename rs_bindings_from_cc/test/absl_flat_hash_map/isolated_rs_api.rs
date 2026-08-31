@@ -95,7 +95,6 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test8NoDeleteE"]
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=:: crubit :: test :: NoDelete
-        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct NoDelete {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
         }
@@ -170,7 +169,6 @@ pub mod crubit {
 #[cfi_encoding = "__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: absl :: flat_hash_map < int , unsigned long , 42 >
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

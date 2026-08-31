@@ -26,7 +26,6 @@
 #[cfi_encoding = "1B"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: B
-///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct B {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'A<B::PrivateMember>': Failed to create bindings for template specialization type A<PrivateMember>: Type 'struct B::PrivateMember' uses non-public declaration 'B::PrivateMember', which cannot be spelled in C++ by generated code.
