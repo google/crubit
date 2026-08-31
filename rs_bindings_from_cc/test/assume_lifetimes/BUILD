@@ -109,9 +109,6 @@ crubit_test_cc_library(
     aspect_hints = [
         "//features:experimental",
     ],
-    deps = [
-        ":test_annotations",
-    ],
 )
 
 golden_test(
@@ -141,10 +138,7 @@ crubit_test_cc_library(
     aspect_hints = [
         "//features:experimental",
     ],
-    deps = [
-        ":test_annotations",
-        "@abseil-cpp//absl/types:span",
-    ],
+    deps = ["@abseil-cpp//absl/types:span"],
 )
 
 crubit_rust_test(
@@ -293,7 +287,6 @@ crubit_rust_test(
         "//support/cc_std",
     ],
     deps = [
-        "//support:cref",
         "//support:ctor",
         "@crate_index//:googletest",
     ],
