@@ -1,6 +1,7 @@
 Make use_upb_kernel config_setting public in Protobuf Rust.
 
-TODO(b/379928127): Remove this patch once cl/974009395 is released in BCR.
+TODO(b/379928127): Remove this patch once cl/974009395 or cl/947225402 are
+submitted and released in BCR (Bazel Central Registry).
 
 When rust_proto_library is used from external repositories, the generated
 aspect references Label("@protobuf//rust:use_upb_kernel"). In Protobuf 36.0,
