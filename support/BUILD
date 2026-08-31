@@ -266,12 +266,16 @@ rust_library(
     visibility = [
         "//visibility:public",
     ],
+    deps = [
+        ":crubit_support",
+    ],
 )
 
 rust_test(
     name = "bridge_rust_test",
     srcs = ["crubit_bridge_rust/src/bridge.rs"],
     deps = [
+        ":crubit_support",
         "@crate_index//:googletest",
     ],
 )
@@ -283,11 +287,41 @@ rust_library(
     visibility = [
         "//visibility:public",
     ],
+    deps = [
+        ":crubit_support",
+    ],
 )
 
 rust_test(
     name = "hash_rust_test",
     srcs = ["crubit_hash_rust/src/hash.rs"],
+    deps = [
+        ":crubit_support",
+        "@crate_index//:googletest",
+    ],
+)
+
+rust_library(
+    name = "crubit_support",
+    srcs = [
+        "crubit_support/src/bridge.rs",
+        "crubit_support/src/dyn_erased_future.rs",
+        "crubit_support/src/erased_future.rs",
+        "crubit_support/src/hash.rs",
+        "crubit_support/src/lib.rs",
+    ],
+    compatible_with = ["//buildenv/target:non_prod"],
+    link_deps = [
+        "//support/rs_std:waker",
+    ],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+rust_test(
+    name = "crubit_support_test",
+    crate = ":crubit_support",
     deps = [
         "@crate_index//:googletest",
     ],
