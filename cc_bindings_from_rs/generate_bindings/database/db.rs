@@ -237,6 +237,11 @@ memoized::query_group! {
           ty: Ty<'tcx>
       ) -> Result<TokenStream>;
 
+      /// Returns true if the type implements the `::protobuf::Message` trait.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:is_proto_message
+      fn is_proto_message(&self, ty: Ty<'tcx>) -> bool;
+
       /// Returns true if the type has a default constructor.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:has_default_ctor

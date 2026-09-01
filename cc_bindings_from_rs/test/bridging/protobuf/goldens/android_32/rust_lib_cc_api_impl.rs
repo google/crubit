@@ -97,6 +97,108 @@ unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
 unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: ::foo_proto::FooEnum) -> () {
     unsafe { ::rust_lib_golden::FooService::enum_in_signature(_e) }
 }
+const _: () = assert!(::std::mem::size_of::<::rust_lib_golden::StructWithProto>() == 4);
+const _: () = assert!(::std::mem::align_of::<::rust_lib_golden::StructWithProto>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_urust_ulib_ugolden_x0000003a_x0000003aStructWithProto(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::rust_lib_golden::StructWithProto as ::core::default::Default>::default();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aStructWithProto(
+    __self: *mut ::rust_lib_golden::StructWithProto,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+const _: () = assert!(::core::mem::offset_of!(::rust_lib_golden::StructWithProto, stats) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_create_uproto_ustatus_uor(
+    num: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::rust_lib_golden::create_proto_status_or(num);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_create_uproto_uvec(
+    num: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::rust_lib_golden::create_proto_vec(num);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_create_ustruct_uwith_uproto(
+    num: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::rust_lib_golden::create_struct_with_proto(num);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_read_uproto_upointer(
+    p: *const ::foo_proto::FooRequestStats,
+) -> i32 {
+    unsafe { ::rust_lib_golden::read_proto_pointer(p) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_read_uproto_uref(
+    p: &'static ::foo_proto::FooRequestStats,
+) -> i32 {
+    unsafe { ::rust_lib_golden::read_proto_ref(p) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::alloc::vec::Vec<::foo_proto::FooRequestStats> as ::core::default::Default>::default(
+            );
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
+    __self: &'static ::alloc::vec::Vec<::foo_proto::FooRequestStats>,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::alloc::vec::Vec<::foo_proto::FooRequestStats> as ::core::clone::Clone>::clone(
+                __self,
+            );
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
+    __self: &'static mut ::alloc::vec::Vec<::foo_proto::FooRequestStats>,
+    source: &'static ::alloc::vec::Vec<::foo_proto::FooRequestStats>,
+) -> () {
+    unsafe {
+        <::alloc::vec::Vec<::foo_proto::FooRequestStats> as ::core::clone::Clone>::clone_from(
+            __self, source,
+        )
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
+    vec: *mut ::alloc::vec::Vec<::foo_proto::FooRequestStats>,
+) {
+    unsafe { ::core::ptr::drop_in_place(vec) };
+}
 unsafe extern "C" {
     fn proto2_rust_thunk_Message_foo_service_FooRequestStats_crubit_cpp_to_rust_converter(
         cpp_in: *const core::ffi::c_void,

@@ -45,5 +45,30 @@ TEST(ProtoBridging, OwnedMessages) {
   EXPECT_EQ(service.request_stats()->num_requests(), 2);
 }
 
+TEST(ProtoBridging, StructWithProtoField) {
+  rust_lib::StructWithProto s = rust_lib::create_struct_with_proto(42);
+  EXPECT_EQ(s.stats->num_requests(), 42);
+}
+
+TEST(ProtoBridging, ProtoPointerAndReference) {
+  rust_lib::StructWithProto s = rust_lib::create_struct_with_proto(42);
+  EXPECT_EQ(rust_lib::read_proto_pointer(&s.stats), 42);
+  EXPECT_EQ(rust_lib::read_proto_ref(s.stats), 42);
+}
+
+TEST(ProtoBridging, ProtoVec) {
+  rs_std::Vec<proto::Rust<foo_service::FooRequestStats>> v =
+      rust_lib::create_proto_vec(42);
+  EXPECT_EQ(v.size(), 1);
+  EXPECT_EQ(v[0]->num_requests(), 42);
+}
+
+TEST(ProtoBridging, ProtoStatusOr) {
+  absl::StatusOr<proto::Rust<foo_service::FooRequestStats>> status_or =
+      rust_lib::create_proto_status_or(42);
+  EXPECT_TRUE(status_or.ok());
+  EXPECT_EQ((*status_or)->num_requests(), 42);
+}
+
 }  // namespace
 }  // namespace crubit
