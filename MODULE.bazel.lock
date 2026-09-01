@@ -3991,13 +3991,13 @@
     "//bazel:llvm_extension.bzl%llvm_extension": {
       "general": {
         "bzlTransitiveDigest": "wynlmDa8nKF1eLsfdQTJj6rv3hjXWyecGesTaUrfJY0=",
-        "usagesDigest": "F84QdKHMQR8jh9NyvOfH7lgPAxRNvQQcQc8fPGgRlsg=",
+        "usagesDigest": "XvoBnRUesxmYy+jlsl3/XCbQSwc596+DdA8KqctnnBw=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
           "llvm-raw": {
             "repoRuleId": "@@//bazel:llvm_extension.bzl%llvm_source_fetch",
             "attributes": {
-              "commit": "a6b0af7536ef0ae8383ec729c5fbf23c73243776"
+              "commit": "ab547095ead5464dc024d66264d9b8a987f429f3"
             }
           },
           "llvm_zlib": {

@@ -30,12 +30,20 @@ bazel_dep(name = "rules_foreign_cc", version = "0.15.0")
 ########################################################################
 # Building of Clang/LLVM from sources
 llvm_ext = use_extension("//bazel:llvm_extension.bzl", "llvm_extension")
-llvm_ext.configure(commit = "a6b0af7536ef0ae8383ec729c5fbf23c73243776")
+llvm_ext.configure(commit = "ab547095ead5464dc024d66264d9b8a987f429f3")
 use_repo(llvm_ext, "llvm-raw", "llvm_libxml2", "llvm_zlib", "llvm_zstd")
 
 llvm_configure = use_repo_rule("@llvm-raw//utils/bazel:configure.bzl", "llvm_configure")
 
-llvm_configure(name = "llvm-project")
+llvm_configure(
+    name = "llvm-project",
+    # Crubit generates source bindings, not machine code,
+    # so only ask for a few target architecures.
+    targets = [
+        "AArch64",
+        "X86",
+    ],
+)
 
 ########################################################################
 # Rust Crate Dependencies

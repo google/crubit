@@ -369,7 +369,7 @@ rust_library(
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
-        "@crate_index//:rustc_stable_hash",  # v0_1
+        "@crate_index//:rustc-stable-hash",
         "@crate_index//:syn",  # v1
         "@crate_index//:unicode-ident",
     ],
