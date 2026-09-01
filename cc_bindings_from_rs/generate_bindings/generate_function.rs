@@ -24,10 +24,7 @@ use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::{
-    does_type_implement_trait, does_type_implement_trait_considering_regions, is_copy,
-    post_analysis_typing_env,
-};
+use query_compiler::{does_type_implement_trait, is_copy, post_analysis_typing_env};
 use quote::quote;
 use rustc_hir::attrs::AttributeKind;
 use rustc_hir::{self as hir, def::DefKind};
@@ -880,21 +877,7 @@ pub fn generate_function<'tcx>(
         let send_trait_id = tcx
             .get_diagnostic_item(sym::Send)
             .ok_or_else(|| anyhow!("crubit.rs-bug: Send trait not found"))?;
-        let is_send = if db
-            .crate_features(db.source_crate_num())
-            .contains(crubit_feature::CrubitFeature::AsyncFnSendModuloRegions)
-        {
-            does_type_implement_trait(tcx, rs_return_type, send_trait_id, [])
-        } else {
-            does_type_implement_trait_considering_regions(
-                tcx,
-                rs_return_type,
-                send_trait_id,
-                def_id,
-                [],
-            )
-        };
-        if !is_send {
+        if !does_type_implement_trait(tcx, rs_return_type, send_trait_id, []) {
             bail!("Crubit currently only supports async functions that return a Send future.");
         }
         let future_output_ty = get_async_future_output_ty(tcx, rs_return_type)?;
