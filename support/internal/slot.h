@@ -12,20 +12,9 @@
 #include <memory>
 #include <utility>
 
-namespace crubit {
+#include "support/unsafe_relocate_tag.h"
 
-// A type tag for constructors to move-construct via a trivial relocation
-// operation, or a Rust move, rather than by running the actual logic of a move
-// constructor.
-//
-// A constructor which accepts `(UnsafeRelocateTag, T&& x)` will relocate `x`
-// into the new object, leaving `x` in an uninitialized state. The caller must
-// not run the destructor of `x` (or otherwise use it) without first
-// reinitializing it.
-//
-// This can be used, for example, to initialize a value on the stack, and then
-// move it into a return value without performing a C++ move operation.
-struct UnsafeRelocateTag {};
+namespace crubit {
 
 // `Slot<T>` provides a slot that can store a relocatable return value.
 // This class is used to return non-`#[repr(C)]` structs from Rust
