@@ -1034,6 +1034,298 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
+template <>
+struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: option :: Option < :: core :: result :: Result < i32 , :: alloc :: "
+    "string :: String > >")
+    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>
+    : public rs_std::OptionBase<
+          rs_std::Option<
+              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>> {
+ public:
+  // Clone::clone
+  Option(const Option&);
+
+  // Clone::clone_from
+  rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+  operator=(const Option&);
+
+  Option(Option&&);
+  rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
+  operator=(Option&&);
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
+  using base_type = rs_std::OptionBase<
+      rs_std::Option<
+          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+      rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>;
+  constexpr Option() = default;
+  constexpr Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
+  template <typename U>
+    requires(rs_std::OptionForwardConstructible<
+             Option,
+             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, U>)
+  Option(U&& value) noexcept;
+  template <typename U>
+    requires(rs_std::OptionForwardConstructible<
+             Option,
+             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, U>)
+  Option& operator=(U&& value) noexcept;
+  template <typename Opt>
+    requires(rs_std::OptionFromStdOptional<
+             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, Opt>)
+  Option(Opt&& value) noexcept;
+  template <typename Opt>
+    requires(rs_std::OptionFromStdOptional<
+             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, Opt>)
+  Option& operator=(Opt&& value) noexcept;
+  template <typename... Args>
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
+  constexpr ~Option() noexcept;
+
+ private:
+  friend base_type;
+  using tag_type = ::std::uint64_t;
+  static constexpr tag_type kNoneVal = UINT64_C(18446744073709551614);
+  rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*
+  some_ptr() noexcept {
+    return reinterpret_cast<
+        rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(storage_);
+  }
+  rs_std::Result<::std::int32_t, ::rs::alloc::string::String> const*
+  some_const_ptr() const noexcept {
+    return reinterpret_cast<
+        rs_std::Result<::std::int32_t, ::rs::alloc::string::String> const*>(
+        storage_);
+  }
+  void set_some_tag() noexcept {}
+  constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
+  constexpr bool is_none() const noexcept { return tag() == kNoneVal; }
+  constexpr ::std::uint64_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
+
+ private:
+  unsigned char storage_[24];
+};
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
+template <>
+struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: option :: Option < :: core :: result :: Result < :: option_golden "
+    ":: HasNoDefault , :: alloc :: string :: String > >") rs_std::
+    Option<rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>
+    : public rs_std::OptionBase<
+          rs_std::Option<rs_std::Result<::option::HasNoDefault,
+                                        ::rs::alloc::string::String>>,
+          rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>> {
+ public:
+  // `core::option::Option` doesn't implement the `Clone` trait
+  Option(const Option&) = delete;
+  Option& operator=(const Option&) = delete;
+  Option(Option&&);
+  rs_std::Option<
+      rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>&
+  operator=(Option&&);
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
+  using base_type = rs_std::OptionBase<
+      rs_std::Option<
+          rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>,
+      rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>;
+  constexpr Option() = default;
+  constexpr Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
+  template <typename U>
+    requires(
+        rs_std::OptionForwardConstructible<
+            Option,
+            rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
+            U>)
+  Option(U&& value) noexcept;
+  template <typename U>
+    requires(
+        rs_std::OptionForwardConstructible<
+            Option,
+            rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
+            U>)
+  Option& operator=(U&& value) noexcept;
+  template <typename Opt>
+    requires(
+        rs_std::OptionFromStdOptional<
+            rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
+            Opt>)
+  Option(Opt&& value) noexcept;
+  template <typename Opt>
+    requires(
+        rs_std::OptionFromStdOptional<
+            rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
+            Opt>)
+  Option& operator=(Opt&& value) noexcept;
+  template <typename... Args>
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
+  constexpr ~Option() noexcept;
+
+ private:
+  friend base_type;
+  using tag_type = ::std::uint64_t;
+  static constexpr tag_type kNoneVal = UINT64_C(18446744073709551614);
+  rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>*
+  some_ptr() noexcept {
+    return reinterpret_cast<
+        rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>*>(
+        storage_);
+  }
+  rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String> const*
+  some_const_ptr() const noexcept {
+    return reinterpret_cast<rs_std::Result<::option::HasNoDefault,
+                                           ::rs::alloc::string::String> const*>(
+        storage_);
+  }
+  void set_some_tag() noexcept {}
+  constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
+  constexpr bool is_none() const noexcept { return tag() == kNoneVal; }
+  constexpr ::std::uint64_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
+
+ private:
+  unsigned char storage_[32];
+};
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
+template <>
+struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: option :: Option < :: core :: result :: Result < :: core :: option "
+    ":: Option < :: core :: result :: Result < i32 , :: alloc :: string :: "
+    "String > > , :: core :: result :: Result < :: core :: option :: Option < "
+    "i32 > , :: core :: option :: Option < i32 > > > >") rs_std::
+    Option<rs_std::Result<rs_std::Option<rs_std::Result<
+                              ::std::int32_t, ::rs::alloc::string::String>>,
+                          rs_std::Result<rs_std::Option<::std::int32_t>,
+                                         rs_std::Option<::std::int32_t>>>>
+    : public rs_std::OptionBase<
+          rs_std::Option<
+              rs_std::Result<rs_std::Option<rs_std::Result<
+                                 ::std::int32_t, ::rs::alloc::string::String>>,
+                             rs_std::Result<rs_std::Option<::std::int32_t>,
+                                            rs_std::Option<::std::int32_t>>>>,
+          rs_std::Result<rs_std::Option<rs_std::Result<
+                             ::std::int32_t, ::rs::alloc::string::String>>,
+                         rs_std::Result<rs_std::Option<::std::int32_t>,
+                                        rs_std::Option<::std::int32_t>>>> {
+ public:
+  // Clone::clone
+  Option(const Option&);
+
+  // Clone::clone_from
+  rs_std::Option<
+      rs_std::Result<rs_std::Option<rs_std::Result<
+                         ::std::int32_t, ::rs::alloc::string::String>>,
+                     rs_std::Result<rs_std::Option<::std::int32_t>,
+                                    rs_std::Option<::std::int32_t>>>>&
+  operator=(const Option&);
+
+  Option(Option&&);
+  rs_std::Option<
+      rs_std::Result<rs_std::Option<rs_std::Result<
+                         ::std::int32_t, ::rs::alloc::string::String>>,
+                     rs_std::Result<rs_std::Option<::std::int32_t>,
+                                    rs_std::Option<::std::int32_t>>>>&
+  operator=(Option&&);
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
+  using base_type = rs_std::OptionBase<
+      rs_std::Option<
+          rs_std::Result<rs_std::Option<rs_std::Result<
+                             ::std::int32_t, ::rs::alloc::string::String>>,
+                         rs_std::Result<rs_std::Option<::std::int32_t>,
+                                        rs_std::Option<::std::int32_t>>>>,
+      rs_std::Result<rs_std::Option<rs_std::Result<
+                         ::std::int32_t, ::rs::alloc::string::String>>,
+                     rs_std::Result<rs_std::Option<::std::int32_t>,
+                                    rs_std::Option<::std::int32_t>>>>;
+  constexpr Option() = default;
+  constexpr Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
+  template <typename U>
+    requires(rs_std::OptionForwardConstructible<
+             Option,
+             rs_std::Result<rs_std::Option<rs_std::Result<
+                                ::std::int32_t, ::rs::alloc::string::String>>,
+                            rs_std::Result<rs_std::Option<::std::int32_t>,
+                                           rs_std::Option<::std::int32_t>>>,
+             U>)
+  Option(U&& value) noexcept;
+  template <typename U>
+    requires(rs_std::OptionForwardConstructible<
+             Option,
+             rs_std::Result<rs_std::Option<rs_std::Result<
+                                ::std::int32_t, ::rs::alloc::string::String>>,
+                            rs_std::Result<rs_std::Option<::std::int32_t>,
+                                           rs_std::Option<::std::int32_t>>>,
+             U>)
+  Option& operator=(U&& value) noexcept;
+  template <typename Opt>
+    requires(rs_std::OptionFromStdOptional<
+             rs_std::Result<rs_std::Option<rs_std::Result<
+                                ::std::int32_t, ::rs::alloc::string::String>>,
+                            rs_std::Result<rs_std::Option<::std::int32_t>,
+                                           rs_std::Option<::std::int32_t>>>,
+             Opt>)
+  Option(Opt&& value) noexcept;
+  template <typename Opt>
+    requires(rs_std::OptionFromStdOptional<
+             rs_std::Result<rs_std::Option<rs_std::Result<
+                                ::std::int32_t, ::rs::alloc::string::String>>,
+                            rs_std::Result<rs_std::Option<::std::int32_t>,
+                                           rs_std::Option<::std::int32_t>>>,
+             Opt>)
+  Option& operator=(Opt&& value) noexcept;
+  template <typename... Args>
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
+  constexpr ~Option() noexcept;
+
+ private:
+  friend base_type;
+  using tag_type = ::std::uint64_t;
+  static constexpr tag_type kNoneVal = UINT64_C(18446744073709551612);
+  rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
+                                               ::rs::alloc::string::String>>,
+                 rs_std::Result<rs_std::Option<::std::int32_t>,
+                                rs_std::Option<::std::int32_t>>>*
+  some_ptr() noexcept {
+    return reinterpret_cast<rs_std::Result<
+        rs_std::Option<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+        rs_std::Result<rs_std::Option<::std::int32_t>,
+                       rs_std::Option<::std::int32_t>>>*>(storage_);
+  }
+  rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
+                                               ::rs::alloc::string::String>>,
+                 rs_std::Result<rs_std::Option<::std::int32_t>,
+                                rs_std::Option<::std::int32_t>>> const*
+  some_const_ptr() const noexcept {
+    return reinterpret_cast<rs_std::Result<
+        rs_std::Option<
+            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
+        rs_std::Result<rs_std::Option<::std::int32_t>,
+                       rs_std::Option<::std::int32_t>>> const*>(storage_);
+  }
+  void set_some_tag() noexcept {}
+  constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
+  constexpr bool is_none() const noexcept { return tag() == kNoneVal; }
+  constexpr ::std::uint64_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint64_t tag) noexcept;
+
+ private:
+  unsigned char storage_[24];
+};
+#endif
+
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 template <>
@@ -1410,84 +1702,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
-template <>
-struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: core :: result :: Result < i32 , :: alloc :: "
-    "string :: String > >")
-    rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>
-    : public rs_std::OptionBase<
-          rs_std::Option<
-              rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
-          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>> {
- public:
-  // Clone::clone
-  Option(const Option&);
-
-  // Clone::clone_from
-  rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
-  operator=(const Option&);
-
-  Option(Option&&);
-  rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
-  operator=(Option&&);
-  Option(::crubit::UnsafeRelocateTag, Option&& value);
-  using base_type = rs_std::OptionBase<
-      rs_std::Option<
-          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
-      rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>;
-  constexpr Option() = default;
-  constexpr Option(::std::nullopt_t) noexcept;
-  constexpr Option& operator=(::std::nullopt_t) noexcept;
-  template <typename U>
-    requires(rs_std::OptionForwardConstructible<
-             Option,
-             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, U>)
-  Option(U&& value) noexcept;
-  template <typename U>
-    requires(rs_std::OptionForwardConstructible<
-             Option,
-             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, U>)
-  Option& operator=(U&& value) noexcept;
-  template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, Opt>)
-  Option(Opt&& value) noexcept;
-  template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             rs_std::Result<::std::int32_t, ::rs::alloc::string::String>, Opt>)
-  Option& operator=(Opt&& value) noexcept;
-  template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
-  constexpr ~Option() noexcept;
-
- private:
-  friend base_type;
-  using tag_type = ::std::uint64_t;
-  static constexpr tag_type kNoneVal = UINT64_C(18446744073709551614);
-  rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*
-  some_ptr() noexcept {
-    return reinterpret_cast<
-        rs_std::Result<::std::int32_t, ::rs::alloc::string::String>*>(storage_);
-  }
-  rs_std::Result<::std::int32_t, ::rs::alloc::string::String> const*
-  some_const_ptr() const noexcept {
-    return reinterpret_cast<
-        rs_std::Result<::std::int32_t, ::rs::alloc::string::String> const*>(
-        storage_);
-  }
-  void set_some_tag() noexcept {}
-  constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
-  constexpr bool is_none() const noexcept { return tag() == kNoneVal; }
-  constexpr ::std::uint64_t tag() const& noexcept;
-  constexpr void set_tag(::std::uint64_t tag) noexcept;
-
- private:
-  unsigned char storage_[24];
-};
-#endif
-
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 template <>
@@ -1560,90 +1774,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   unsigned char __storage[32];
-};
-#endif
-
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
-template <>
-struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: core :: result :: Result < :: option_golden "
-    ":: HasNoDefault , :: alloc :: string :: String > >") rs_std::
-    Option<rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>
-    : public rs_std::OptionBase<
-          rs_std::Option<rs_std::Result<::option::HasNoDefault,
-                                        ::rs::alloc::string::String>>,
-          rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>> {
- public:
-  // `core::option::Option` doesn't implement the `Clone` trait
-  Option(const Option&) = delete;
-  Option& operator=(const Option&) = delete;
-  Option(Option&&);
-  rs_std::Option<
-      rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>&
-  operator=(Option&&);
-  Option(::crubit::UnsafeRelocateTag, Option&& value);
-  using base_type = rs_std::OptionBase<
-      rs_std::Option<
-          rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>,
-      rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>;
-  constexpr Option() = default;
-  constexpr Option(::std::nullopt_t) noexcept;
-  constexpr Option& operator=(::std::nullopt_t) noexcept;
-  template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<
-            Option,
-            rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
-            U>)
-  Option(U&& value) noexcept;
-  template <typename U>
-    requires(
-        rs_std::OptionForwardConstructible<
-            Option,
-            rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
-            U>)
-  Option& operator=(U&& value) noexcept;
-  template <typename Opt>
-    requires(
-        rs_std::OptionFromStdOptional<
-            rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
-            Opt>)
-  Option(Opt&& value) noexcept;
-  template <typename Opt>
-    requires(
-        rs_std::OptionFromStdOptional<
-            rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>,
-            Opt>)
-  Option& operator=(Opt&& value) noexcept;
-  template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
-  constexpr ~Option() noexcept;
-
- private:
-  friend base_type;
-  using tag_type = ::std::uint64_t;
-  static constexpr tag_type kNoneVal = UINT64_C(18446744073709551614);
-  rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>*
-  some_ptr() noexcept {
-    return reinterpret_cast<
-        rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>*>(
-        storage_);
-  }
-  rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String> const*
-  some_const_ptr() const noexcept {
-    return reinterpret_cast<rs_std::Result<::option::HasNoDefault,
-                                           ::rs::alloc::string::String> const*>(
-        storage_);
-  }
-  void set_some_tag() noexcept {}
-  constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
-  constexpr bool is_none() const noexcept { return tag() == kNoneVal; }
-  constexpr ::std::uint64_t tag() const& noexcept;
-  constexpr void set_tag(::std::uint64_t tag) noexcept;
-
- private:
-  unsigned char storage_[32];
 };
 #endif
 
@@ -1839,136 +1969,6 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   unsigned char __storage[24];
-};
-#endif
-
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
-template <>
-struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: core :: result :: Result < :: core :: option "
-    ":: Option < :: core :: result :: Result < i32 , :: alloc :: string :: "
-    "String > > , :: core :: result :: Result < :: core :: option :: Option < "
-    "i32 > , :: core :: option :: Option < i32 > > > >") rs_std::
-    Option<rs_std::Result<rs_std::Option<rs_std::Result<
-                              ::std::int32_t, ::rs::alloc::string::String>>,
-                          rs_std::Result<rs_std::Option<::std::int32_t>,
-                                         rs_std::Option<::std::int32_t>>>>
-    : public rs_std::OptionBase<
-          rs_std::Option<
-              rs_std::Result<rs_std::Option<rs_std::Result<
-                                 ::std::int32_t, ::rs::alloc::string::String>>,
-                             rs_std::Result<rs_std::Option<::std::int32_t>,
-                                            rs_std::Option<::std::int32_t>>>>,
-          rs_std::Result<rs_std::Option<rs_std::Result<
-                             ::std::int32_t, ::rs::alloc::string::String>>,
-                         rs_std::Result<rs_std::Option<::std::int32_t>,
-                                        rs_std::Option<::std::int32_t>>>> {
- public:
-  // Clone::clone
-  Option(const Option&);
-
-  // Clone::clone_from
-  rs_std::Option<
-      rs_std::Result<rs_std::Option<rs_std::Result<
-                         ::std::int32_t, ::rs::alloc::string::String>>,
-                     rs_std::Result<rs_std::Option<::std::int32_t>,
-                                    rs_std::Option<::std::int32_t>>>>&
-  operator=(const Option&);
-
-  Option(Option&&);
-  rs_std::Option<
-      rs_std::Result<rs_std::Option<rs_std::Result<
-                         ::std::int32_t, ::rs::alloc::string::String>>,
-                     rs_std::Result<rs_std::Option<::std::int32_t>,
-                                    rs_std::Option<::std::int32_t>>>>&
-  operator=(Option&&);
-  Option(::crubit::UnsafeRelocateTag, Option&& value);
-  using base_type = rs_std::OptionBase<
-      rs_std::Option<
-          rs_std::Result<rs_std::Option<rs_std::Result<
-                             ::std::int32_t, ::rs::alloc::string::String>>,
-                         rs_std::Result<rs_std::Option<::std::int32_t>,
-                                        rs_std::Option<::std::int32_t>>>>,
-      rs_std::Result<rs_std::Option<rs_std::Result<
-                         ::std::int32_t, ::rs::alloc::string::String>>,
-                     rs_std::Result<rs_std::Option<::std::int32_t>,
-                                    rs_std::Option<::std::int32_t>>>>;
-  constexpr Option() = default;
-  constexpr Option(::std::nullopt_t) noexcept;
-  constexpr Option& operator=(::std::nullopt_t) noexcept;
-  template <typename U>
-    requires(rs_std::OptionForwardConstructible<
-             Option,
-             rs_std::Result<rs_std::Option<rs_std::Result<
-                                ::std::int32_t, ::rs::alloc::string::String>>,
-                            rs_std::Result<rs_std::Option<::std::int32_t>,
-                                           rs_std::Option<::std::int32_t>>>,
-             U>)
-  Option(U&& value) noexcept;
-  template <typename U>
-    requires(rs_std::OptionForwardConstructible<
-             Option,
-             rs_std::Result<rs_std::Option<rs_std::Result<
-                                ::std::int32_t, ::rs::alloc::string::String>>,
-                            rs_std::Result<rs_std::Option<::std::int32_t>,
-                                           rs_std::Option<::std::int32_t>>>,
-             U>)
-  Option& operator=(U&& value) noexcept;
-  template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             rs_std::Result<rs_std::Option<rs_std::Result<
-                                ::std::int32_t, ::rs::alloc::string::String>>,
-                            rs_std::Result<rs_std::Option<::std::int32_t>,
-                                           rs_std::Option<::std::int32_t>>>,
-             Opt>)
-  Option(Opt&& value) noexcept;
-  template <typename Opt>
-    requires(rs_std::OptionFromStdOptional<
-             rs_std::Result<rs_std::Option<rs_std::Result<
-                                ::std::int32_t, ::rs::alloc::string::String>>,
-                            rs_std::Result<rs_std::Option<::std::int32_t>,
-                                           rs_std::Option<::std::int32_t>>>,
-             Opt>)
-  Option& operator=(Opt&& value) noexcept;
-  template <typename... Args>
-  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
-  constexpr ~Option() noexcept;
-
- private:
-  friend base_type;
-  using tag_type = ::std::uint64_t;
-  static constexpr tag_type kNoneVal = UINT64_C(18446744073709551612);
-  rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
-                                               ::rs::alloc::string::String>>,
-                 rs_std::Result<rs_std::Option<::std::int32_t>,
-                                rs_std::Option<::std::int32_t>>>*
-  some_ptr() noexcept {
-    return reinterpret_cast<rs_std::Result<
-        rs_std::Option<
-            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
-        rs_std::Result<rs_std::Option<::std::int32_t>,
-                       rs_std::Option<::std::int32_t>>>*>(storage_);
-  }
-  rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
-                                               ::rs::alloc::string::String>>,
-                 rs_std::Result<rs_std::Option<::std::int32_t>,
-                                rs_std::Option<::std::int32_t>>> const*
-  some_const_ptr() const noexcept {
-    return reinterpret_cast<rs_std::Result<
-        rs_std::Option<
-            rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
-        rs_std::Result<rs_std::Option<::std::int32_t>,
-                       rs_std::Option<::std::int32_t>>> const*>(storage_);
-  }
-  void set_some_tag() noexcept {}
-  constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
-  constexpr bool is_none() const noexcept { return tag() == kNoneVal; }
-  constexpr ::std::uint64_t tag() const& noexcept;
-  constexpr void set_tag(::std::uint64_t tag) noexcept;
-
- private:
-  unsigned char storage_[24];
 };
 #endif
 

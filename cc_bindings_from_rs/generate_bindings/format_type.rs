@@ -107,6 +107,24 @@ fn does_type_implement_delete<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) 
     query_compiler::does_type_implement_trait(tcx, ty, delete_trait_id, [])
 }
 
+/// Implementation of `BindingsGenerator::is_proto_message`.
+///
+/// Returns true if `ty` implements the `::protobuf::Message` trait.
+pub fn is_proto_message<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+    let tcx = db.tcx();
+    let message_trait_id = tcx.all_traits_including_private().find(|&trait_id| {
+        // In Bazel and Cargo builds, the protobuf runtime crate name can vary
+        // (e.g. `protobuf`, `protobuf_cpp`, `protobuf_upb`, or `protobuf_runtime`).
+        // Matching `starts_with("protobuf")` ensures we match any of these variants.
+        tcx.item_name(trait_id).as_str() == "Message"
+            && tcx.crate_name(trait_id.krate).as_str().starts_with("protobuf")
+    });
+    let Some(message_trait_id) = message_trait_id else {
+        return false;
+    };
+    query_compiler::does_type_implement_trait(tcx, ty, message_trait_id, [])
+}
+
 /// Returns true if `ty` is annotated with `cpp_thread_safe`.
 fn is_cpp_thread_safe<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<bool> {
     let ty::TyKind::Adt(adt, _) = ty.kind() else {
@@ -442,26 +460,13 @@ pub fn format_ty_for_cc<'tcx>(
                     .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
                     && !types.is_empty())
             {
-                let Some(rs_std) = db.parse_rs_std_template_specialization(ty) else {
+                let Some(adt_spec) = db.parse_adt_template_specialization(ty) else {
                     bail!("Tuple type `{ty}` is not supported in this context");
                 };
-                let rs_std = rs_std?;
+                let adt_spec = adt_spec?;
                 let mut prereqs = CcPrerequisites::default();
-                let tokens = rs_std.self_ty_cc.clone().into_tokens(&mut prereqs);
-                prereqs.includes.insert(rs_std.support_header(db));
-                if matches!(
-                    location,
-                    TypeLocation::Field
-                        | TypeLocation::Const
-                        | TypeLocation::NestedBridgeable
-                        | TypeLocation::TemplateArg
-                ) {
-                    prereqs.template_specializations.insert(TemplateSpecialization::RsStd(rs_std));
-                } else {
-                    prereqs
-                        .lazy_template_specializations
-                        .insert(TemplateSpecialization::RsStd(rs_std));
-                }
+                let tokens = adt_spec.self_ty_cc.clone().into_tokens(&mut prereqs);
+                prereqs.depend_on_spec(db, location, adt_spec);
                 return Ok(CcSnippet { tokens, prereqs });
             } else {
                 let mut prereqs = CcPrerequisites::default();
@@ -585,44 +590,48 @@ pub fn format_ty_for_cc<'tcx>(
                 );
             }
 
-            let specialization = db.parse_rs_std_template_specialization(ty);
+            let specialization = db.parse_adt_template_specialization(ty);
             if specialization.as_ref().is_some_and(|specialization| {
                 // We only want to consider errors when bridging could not occur.
                 // Otherwise, fallthrough to the normal bridging logic.
                 let error_occurred = !location.is_bridgeable() && specialization.is_err();
-                let is_option_or_result = specialization.as_ref().is_ok_and(|rs_std_enum| {
-                    (!location.is_bridgeable() && rs_std_enum.is_option())
-                        || rs_std_enum.is_result()
-                        || rs_std_enum.is_vec()
+                let is_option_or_result = specialization.as_ref().is_ok_and(|adt_spec_enum| {
+                    (!location.is_bridgeable() && adt_spec_enum.is_option())
+                        || adt_spec_enum.is_result()
+                        || adt_spec_enum.is_vec()
                         || db
                             .crate_features(db.source_crate_num())
                             .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust)
                 });
                 error_occurred || is_option_or_result
             }) {
-                let rs_std = specialization.unwrap()?;
-                let tokens = rs_std.self_ty_cc.clone().into_tokens(&mut prereqs);
-                prereqs.includes.insert(rs_std.support_header(db));
-                if matches!(
-                    location,
-                    TypeLocation::Field
-                        | TypeLocation::Const
-                        | TypeLocation::NestedBridgeable
-                        | TypeLocation::TemplateArg
-                ) {
-                    prereqs.template_specializations.insert(TemplateSpecialization::RsStd(rs_std));
-                } else {
-                    prereqs
-                        .lazy_template_specializations
-                        .insert(TemplateSpecialization::RsStd(rs_std));
-                }
+                let adt_spec = specialization.unwrap()?;
+                let tokens = adt_spec.self_ty_cc.clone().into_tokens(&mut prereqs);
+                prereqs.depend_on_spec(db, location, adt_spec);
                 return Ok(CcSnippet { tokens, prereqs });
             } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
-                if !bridged_type.is_layout_compatible() {
-                    location.check_bridgeable()?;
-                }
+                let is_layout_compat = bridged_type.is_layout_compatible();
                 match bridged_type {
-                    BridgedType::Legacy { include_paths, cpp_type, .. } => {
+                    BridgedType::Legacy { include_paths, cpp_type, conversion_info: _ } => {
+                        if !is_layout_compat {
+                            if db.is_proto_message(ty) {
+                                if !matches!(
+                                    location,
+                                    TypeLocation::FnReturn { is_constructor: false }
+                                        | TypeLocation::FnParam { .. }
+                                ) {
+                                    return Ok(
+                                        format_layout_compatible_cpp_type_for_rust_proto_msg(
+                                            db,
+                                            &include_paths,
+                                            &cpp_type,
+                                        ),
+                                    );
+                                }
+                            } else {
+                                location.check_bridgeable()?;
+                            }
+                        }
                         for path in &include_paths {
                             prereqs.includes.insert(CcInclude::from_path(path.as_str()));
                         }
@@ -885,6 +894,37 @@ pub(crate) fn ty_as_alias_ty<'tcx>(ty: Ty<'tcx>) -> Option<&'tcx ty::AliasTy<'tc
     Some(alias_ty)
 }
 
+/// Formats a Protobuf message as `::proto::Rust<CppType>` for layout-compatible locations.
+///
+/// This representation is specific to Protobuf messages. Unlike general non-layout-compatible
+/// bridged types, a Rust Protobuf message (using the C++ kernel) is internally an owned pointer to a
+/// heap-allocated C++ Protobuf object, making its memory layout compatible with `proto::Rust<CppType>`.
+/// In C++ struct fields, pointers, references, and container types, it is represented via `::proto::Rust<CppType>`.
+fn format_layout_compatible_cpp_type_for_rust_proto_msg<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    include_paths: &[Symbol],
+    cpp_type: &CcType,
+) -> CcSnippet<'tcx> {
+    let mut prereqs = CcPrerequisites::default();
+    for path in include_paths {
+        prereqs.includes.insert(CcInclude::from_path(path.as_str()));
+    }
+    prereqs.includes.insert(CcInclude::from_path("support/protobuf/rust.h"));
+    let cpp_type_str = match cpp_type {
+        CcType::Other(symbol) => symbol.as_str(),
+        CcType::Pointer { cpp_type, .. } => cpp_type.as_str(),
+    };
+    let inner_tokens = match cpp_type_str.parse::<TokenStream>() {
+        Ok(tokens) => tokens,
+        Err(err) => {
+            db.fatal_errors()
+                .report(&format!("Failed to parse `cpp_type` `{}`: {err}", cpp_type_str));
+            quote! {}
+        }
+    };
+    CcSnippet { tokens: quote! { ::proto::Rust< #inner_tokens > }, prereqs }
+}
+
 /// Returns `Some(def_id)` if `alias_ty` represents an `Opaque` alias
 /// (`-> impl Trait` / `async fn`).
 pub(crate) fn alias_ty_as_opaque_def_id<'tcx>(
@@ -1056,10 +1096,10 @@ fn try_ty_as_maybe_uninit<'tcx>(
     db: &BindingsGenerator<'_>,
     ty: Ty<'tcx>,
 ) -> Option<GenericArg<'tcx>> {
-    if let ty::TyKind::Adt(adt, substs) = ty.kind() {
-        if matches_qualified_name(db, adt.did(), &["core", "mem", "maybe_uninit", "MaybeUninit"]) {
-            return Some(substs[0]);
-        }
+    if let ty::TyKind::Adt(adt, substs) = ty.kind()
+        && matches_qualified_name(db, adt.did(), &["core", "mem", "maybe_uninit", "MaybeUninit"])
+    {
+        return Some(substs[0]);
     }
     None
 }
@@ -1457,7 +1497,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                     return bridged_builtin.crubit_abi_type(db, substs);
                 }
 
-                if let Some(spec) = db.parse_rs_std_template_specialization(ty) {
+                if let Some(spec) = db.parse_adt_template_specialization(ty) {
                     // Specifically when embedding a template specialization within an Option, we
                     // need it to be movable.
                     if !db.is_cpp_move_constructible(ty) {
@@ -1469,7 +1509,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                     let mut prereqs = CcPrerequisites::default();
                     let rust_type = db.format_ty_for_rs(spec.self_ty_rs)?;
                     let cpp_type = spec.self_ty_cc.clone().into_tokens(&mut prereqs);
-                    prereqs.template_specializations.insert(TemplateSpecialization::RsStd(spec));
+                    prereqs.template_specializations.insert(TemplateSpecialization::Adt(spec));
                     let crubit_abi_type = CrubitAbiType::Transmute { rust_type, cpp_type };
                     return Ok(CrubitAbiTypeWithCcPrereqs { crubit_abi_type, prereqs });
                 }
@@ -1748,13 +1788,16 @@ pub fn is_bridged_type<'tcx>(
             if let Some(bridged) = is_bridged_type(db, referent)?
                 && !bridged.is_layout_compatible()
             {
-                // Bridge types behind a reference are not allowed. But Option is an exception
-                // because it can have a specialization generated (rs_std::Option<T>& is valid),
-                // so the following check allows it when detected.
-                if let ty::TyKind::Adt(adt, _) = referent.kind() {
-                    if let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt) {
-                        return Ok(None);
-                    }
+                // Bridge types behind a reference are not allowed. But Option and Proto messages
+                // are exceptions because they have a layout-compatible C++ representation
+                // (rs_std::Option<T>& and proto::Rust<T>& are valid).
+                if db.is_proto_message(referent) {
+                    return Ok(None);
+                }
+                if let ty::TyKind::Adt(adt, _) = referent.kind()
+                    && let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt)
+                {
+                    return Ok(None);
                 }
                 bail!(
                     "crubit.rs/errors/unsupported_type: Bridged type `{referent}` cannot be passed by reference; pass it by value instead."
@@ -1766,6 +1809,9 @@ pub fn is_bridged_type<'tcx>(
             if let Some(bridged) = is_bridged_type(db, pointee)?
                 && !bridged.is_layout_compatible()
             {
+                if db.is_proto_message(pointee) {
+                    return Ok(None);
+                }
                 bail!(
                     "crubit.rs/errors/unsupported_type: Bridged type `{pointee}` cannot be passed by pointer; pass it by value instead."
                 )

@@ -364,6 +364,7 @@ pub fn new_database<'db>(
         format_top_level_ns_for_crate,
         format_type::format_ty_for_cc,
         format_type::format_ty_for_rs,
+        format_type::is_proto_message,
         has_default_ctor,
         copy_ctor_and_assignment_operator_codegen_style,
         move_ctor_and_assignment_operator_codegen_style,
@@ -380,7 +381,7 @@ pub fn new_database<'db>(
         into_trait_impls_by_destination,
         get_generic_args::get_generic_args,
         renamed_crate_original_name,
-        generate_template_specialization::parse_rs_std_template_specialization,
+        generate_template_specialization::parse_adt_template_specialization,
     )
 }
 
@@ -1630,6 +1631,9 @@ fn copy_ctor_and_assignment_operator_codegen_style<'tcx>(
     def_id: Option<DefId>,
     self_ty: Ty<'tcx>,
 ) -> Option<CopyCodegenStyle> {
+    if db.is_proto_message(self_ty) {
+        return None;
+    }
     let tcx = db.tcx();
     let clone_trait_id = tcx.lang_items().clone_trait().expect("Can't find the `Clone` trait");
     CopyCodegenStyle::from_available_traits(
@@ -1777,6 +1781,9 @@ fn move_ctor_and_assignment_operator_codegen_style<'tcx>(
     def_id: Option<DefId>,
     self_ty: Ty<'tcx>,
 ) -> Option<MoveCodegenStyle> {
+    if db.is_proto_message(self_ty) {
+        return None;
+    }
     let tcx = db.tcx();
     let typing_env = def_id
         .map(|id| post_analysis_typing_env(tcx, id))
@@ -1811,6 +1818,9 @@ fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -
 
         // ADT: check CrubitAttrs if C++-originated, else check move_ctor_and_assignment_operator_codegen_style.
         ty::Adt(adt_def, _) => {
+            if db.is_proto_message(ty) {
+                return false;
+            }
             if let Ok(attrs) = crubit_attr::get_attrs(db.tcx(), adt_def.did())
                 && attrs.cpp_move_constructible
             {
@@ -1821,7 +1831,7 @@ fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -
                 .crate_features(db.source_crate_num())
                 .contains(crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
             let def_id = if always_specialize_generics
-                && db.parse_rs_std_template_specialization(ty).is_some()
+                && db.parse_adt_template_specialization(ty).is_some()
             {
                 None
             } else {
@@ -2426,7 +2436,7 @@ impl NodeSortKey {
 
     fn new<'tcx>(tcx: TyCtxt<'tcx>, spec: &TemplateSpecialization<'tcx>) -> Self {
         match spec {
-            TemplateSpecialization::RsStd(e) => {
+            TemplateSpecialization::Adt(e) => {
                 let ty = e.self_ty_rs;
 
                 #[cfg_accessible(rustc_data_structures::stable_hash)]

@@ -31,3 +31,55 @@ impl FooService {
 
     pub fn enum_in_signature(_e: foo_rust_proto::FooEnum) {}
 }
+
+#[derive(Default)]
+pub struct StructWithProto {
+    pub stats: FooRequestStats,
+}
+
+pub fn create_struct_with_proto(num: i32) -> StructWithProto {
+    let mut stats = FooRequestStats::new();
+    stats.set_num_requests(num);
+    StructWithProto { stats }
+}
+
+/// # Safety
+///
+/// `p` must be valid for reads.
+pub unsafe fn read_proto_pointer(p: *const FooRequestStats) -> i32 {
+    // SAFETY: The caller guarantees `p` is valid for reads.
+    unsafe { (*p).num_requests() }
+}
+
+pub fn read_proto_ref(p: &FooRequestStats) -> i32 {
+    p.num_requests()
+}
+
+#[doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>"]
+#[doc = "CRUBIT_ANNOTATE: include_path=third_party/absl/status/statusor.h"]
+#[repr(C)]
+pub struct NewStatusOr<T> {
+    status: usize,
+    data: std::mem::MaybeUninit<T>,
+}
+
+impl<T> NewStatusOr<T> {
+    pub fn ok(value: T) -> Self {
+        Self {
+            status: 1, // Inlined absl::Status::Ok() representation
+            data: std::mem::MaybeUninit::new(value),
+        }
+    }
+}
+
+pub fn create_proto_vec(num: i32) -> Vec<FooRequestStats> {
+    let mut stats = FooRequestStats::new();
+    stats.set_num_requests(num);
+    vec![stats]
+}
+
+pub fn create_proto_status_or(num: i32) -> NewStatusOr<FooRequestStats> {
+    let mut stats = FooRequestStats::new();
+    stats.set_num_requests(num);
+    NewStatusOr::ok(stats)
+}
