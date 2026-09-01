@@ -44,13 +44,21 @@ For example, a C++ `std::unique_ptr<int>` is a Rust `cpp_std::unique_ptr<int>`,
 but a C++ `std::unique_ptr<ios_base>` would become a Rust
 `cpp_std::virtual_unique_ptr<ios_base>`.
 
+Both types implement `Deref<Target = T>` and `DerefMut<Target = T>` (when `T: Unpin`).
+While C++ `std::unique_ptr` is only shallow-const (i.e. `const std::unique_ptr<T>&` allows
+mutating the underlying `T`), it is conventionally treated as deep-const. In order for
+`&unique_ptr<T>` to be usable at all from Rust, we treat it as deep-const. C++ code which
+mutates a value of type `T` while Rust has obtained a `&T` via `&unique_ptr<T>` -> `&T`
+deref will result in undefined behavior.
+
 API: support/cc_std_impl/unique_ptr.rs
 
 See also: crubit.rs/errors/delete
 
 ## `std::shared_ptr<T>` {#shared_ptr}
 
-A C++ `std::shared_ptr<T>` becomes a Rust `cpp_std::shared_ptr<T>`.
+A C++ `std::shared_ptr<T>` becomes a Rust `cpp_std::shared_ptr<T>`. It implements
+`Deref<Target = T>`, allowing `&shared_ptr<T>` to be dereferenced to `&T`.
 
 API: support/cc_std_impl/shared_ptr.rs
 
