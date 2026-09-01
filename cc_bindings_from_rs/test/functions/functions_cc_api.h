@@ -358,8 +358,7 @@ struct rs_std::impl<
   // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::Error`
   // defined at
   // cc_bindings_from_rs/test/functions/functions.rs;l=299:
-  // Failed to format type for the definition of `std::convert::Infallible`:
-  // Zero-sized types (ZSTs) are not supported (b/258259459)
+  // The never type `!` is only supported as a return type (b/254507801)
 
   // Error generating bindings for associated function
   // `<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable as
