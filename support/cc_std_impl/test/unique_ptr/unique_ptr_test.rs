@@ -148,3 +148,100 @@ fn test_unique_ptr_with_custom_delete() {
     drop(p);
     assert_eq!(test_helpers::unique_ptr_test::get_custom_delete_count(), 1);
 }
+
+#[gtest]
+fn test_unique_ptr_deref() {
+    let up = test_helpers::unique_ptr_test::create_unique_ptr();
+    let r: &i32 = &up;
+    assert_eq!(*r, 1);
+    assert_eq!(*up, 1);
+}
+
+#[gtest]
+fn test_unique_ptr_deref_mut() {
+    let mut up = test_helpers::unique_ptr_test::create_unique_ptr();
+    *up = 654321;
+    assert_eq!(*up, 654321);
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null unique_ptr")]
+fn test_unique_ptr_deref_null_panics() {
+    let up = unsafe { cc_std::std::unique_ptr::<i32>::from_raw(std::ptr::null_mut()) };
+    let _ = *up;
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null unique_ptr")]
+fn test_unique_ptr_deref_mut_null_panics() {
+    let mut up = unsafe { cc_std::std::unique_ptr::<i32>::from_raw(std::ptr::null_mut()) };
+    *up = 1;
+}
+
+#[gtest]
+fn test_unique_ptr_as_ref_shared() {
+    let up = test_helpers::unique_ptr_test::create_unique_ptr();
+    assert_eq!(up.as_ref(), Some(&1));
+    assert_eq!(cc_std::std::unique_ptr::as_ref(&up), Some(&1));
+
+    let null_up = unsafe { cc_std::std::unique_ptr::<i32>::from_raw(std::ptr::null_mut()) };
+    assert_eq!(null_up.as_ref(), None);
+}
+
+#[gtest]
+fn test_unique_ptr_helpers() {
+    let mut up = test_helpers::unique_ptr_test::create_unique_ptr();
+    assert!(!up.is_null());
+    assert!(!cc_std::std::unique_ptr::is_null(&up));
+    assert!(!up.as_ptr().is_null());
+    assert!(!up.as_mut_ptr().is_null());
+
+    let raw = up.into_raw();
+    let mut up = unsafe { cc_std::std::unique_ptr::from_raw(raw) };
+    assert_eq!(*up, 1);
+
+    let raw = up.release();
+    assert!(up.is_null());
+    let up = unsafe { cc_std::std::unique_ptr::from_raw(raw) };
+    drop(up);
+}
+
+#[gtest]
+fn test_virtual_unique_ptr_deref() {
+    let p = test_helpers::unique_ptr_test::create_virtual_base();
+    let r: &test_helpers::unique_ptr_test::Base = &p;
+    assert!(r.is_derived());
+    assert!(!p.is_null());
+    assert_eq!(p.is_derived(), true);
+}
+
+#[gtest]
+fn test_virtual_unique_ptr_deref_mut() {
+    let up: cc_std::std::unique_ptr<test_helpers::unique_ptr_test::CustomDelete> =
+        unsafe { cc_std::std::unique_ptr::from_raw(std::ptr::null_mut()) };
+    let mut vp: cc_std::std::virtual_unique_ptr<test_helpers::unique_ptr_test::CustomDelete> =
+        up.into();
+    assert!(vp.is_null());
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null virtual_unique_ptr")]
+fn test_virtual_unique_ptr_deref_null_panics() {
+    let vp = unsafe {
+        cc_std::std::virtual_unique_ptr::<test_helpers::unique_ptr_test::CustomDelete>::from_raw(
+            std::ptr::null_mut(),
+        )
+    };
+    let _ = *vp;
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null virtual_unique_ptr")]
+fn test_virtual_unique_ptr_deref_mut_null_panics() {
+    let mut vp = unsafe {
+        cc_std::std::virtual_unique_ptr::<test_helpers::unique_ptr_test::CustomDelete>::from_raw(
+            std::ptr::null_mut(),
+        )
+    };
+    let _mut_ref: &mut test_helpers::unique_ptr_test::CustomDelete = &mut *vp;
+}

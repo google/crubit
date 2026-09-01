@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::crubit_cc_std_internal::std_allocator;
+use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 use core::ptr::null_mut;
 
@@ -15,18 +16,20 @@ pub use operator::Delete;
 /// If the class has a virtual destructor and is not the most-derived class, or if it overloads
 /// `operator delete`, it is UB to use `unique_ptr`. Instead, use [`virtual_unique_ptr`].
 ///
-/// Note that `unique_ptr` has "shallow" const semantics: having a `&unique_ptr<T>` means that the
-/// `unique_ptr` will not be mutated, but does not guarantee that the underlying `T` will not be
-/// mutated. Therefore, to get access to `T`, you must have exclusive access to the `unique_ptr`.
+/// Note that while C++ `unique_ptr` is only shallow-const (i.e. a `const unique_ptr<T>&` allows
+/// mutating the underlying `T`), it is conventionally treated as deep-const. In order for
+/// `&unique_ptr<T>` to be usable at all from Rust, we treat it as deep-const. C++ code which
+/// mutates a value of type `T` while Rust has obtained a `&T` via `&unique_ptr<T>` -> `&T`
+/// dereference will result in undefined behavior.
 ///
 /// # Safety
 ///
 /// Because `unique_ptr` implicitly pins the underlying object, direct accesses to the underlying
 /// object that would violate the pin guarantee are potentially UB.
 ///
-/// Because `unique_ptr` has shallow const, it is not safe to construct Rust references from a
-/// `&unique_ptr`, even indirectly via a raw pointer, unless you can guarantee that the pointee will
-///  not be mutated.
+/// Because Rust treats `unique_ptr` as deep-const, C++ code that mutates the underlying `T`
+/// while a Rust `&T` or `&unique_ptr<T>` exists will violate Rust's aliasing rules and cause
+/// undefined behavior.
 #[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "::std::unique_ptr<{T}>",
     include_path = "<memory>"
@@ -45,9 +48,9 @@ pub struct unique_ptr<T: Sized> {
 // pointer.
 unsafe impl<T: Sized + Send> Send for unique_ptr<T> {}
 
-// SAFETY: unique_ptr has "shallow" semantics, and you cannot do anything with a `&unique_ptr`
-// except pass it to C++, where the unsafe operation of internal mutability requires C++ programmers
-// to prove safety.
+// SAFETY: unique_ptr exclusively owns `T`, and `&unique_ptr<T>` allows obtaining a `&T`
+// (treating unique_ptr as deep-const). Thus, sharing `&unique_ptr<T>` across threads is safe
+// if and only if `T: Sync`.
 unsafe impl<T: Sized + Sync> Sync for unique_ptr<T> {}
 
 impl<T: Sized> unique_ptr<T> {
@@ -65,37 +68,59 @@ impl<T: Sized> unique_ptr<T> {
         Self { ptr }
     }
 
+    /// Takes ownership of the provided raw pointer.
+    ///
+    /// # Safety
+    ///
+    /// Same safety requirements as [`new`].
+    pub unsafe fn from_raw(ptr: *mut T) -> Self {
+        Self { ptr }
+    }
+
+    /// Returns `true` if `self` is a null pointer.
+    pub fn is_null(&self) -> bool {
+        self.ptr.is_null()
+    }
+
+    /// Returns a raw pointer to the contents.
+    pub fn as_ptr(&self) -> *const T {
+        self.ptr
+    }
+
+    /// Returns a mutable raw pointer to the contents.
+    pub fn as_mut_ptr(&mut self) -> *mut T {
+        self.ptr
+    }
+
     /// Returns a copy of the held raw pointer to the owned object.
     ///
     /// The returned pointer is null for moved-from `unique_ptr` objects. It is valid until
     /// the underlying object is destroyed, such as by dropping the `unique_ptr`.
-    ///
-    /// It is not safe to form Rust references from this pointer, because the pointed-to `T` may be
-    /// mutated when a `&unique_ptr` is shared between C++ and Rust. You must ensure that no such
-    /// aliasing occurs before converting the pointer to a Rust reference.
     pub fn get(&self) -> *mut T {
         self.ptr
     }
 
-    /// Replaces `self` with null and returns the previously held pointer.
+    /// Releases the ownership of the object pointed to by `self`, replacing this `unique_ptr` with
+    /// a null pointer.
     ///
-    /// The returned pointer is null for moved-from `unique_ptr` objects. Because the caller
-    /// has exclusive ownership over the `unique_ptr`, it is otherwise valid to dereference, or to
-    /// pass to `unique_ptr::new`.
+    /// Where possible, prefer `into_raw` in order to avoid null `unique_ptr`s.
     pub fn release(&mut self) -> *mut T {
         core::mem::replace(&mut self.ptr, null_mut())
     }
 
-    /// Returns an shared reference to the owned object, if-non-null, or None otherwise.
-    ///
-    /// Note that it is not safe to obtain a `&T` from a `&unique_ptr`, because the pointed-to `T`
-    /// may be mutated when a `&unique_ptr` is shared between C++ and Rust.
-    pub fn as_ref(&mut self) -> Option<&T> {
+    /// Consumes the `unique_ptr`, returning the owned pointer.
+    pub fn into_raw(mut self) -> *mut T {
+        self.release()
+    }
+
+    /// Returns a shared reference to the owned object, if non-null, or None otherwise.
+    pub fn as_ref(&self) -> Option<&T> {
         // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
+        // C++ unique_ptr is treated as deep-const to allow safe Rust references.
         unsafe { self.ptr.as_ref() }
     }
 
-    /// Returns an exclusive reference to the owned object, if-non-null, or None otherwise.
+    /// Returns an exclusive reference to the owned object, if non-null, or None otherwise.
     pub fn as_mut(&mut self) -> Option<&mut T>
     where
         T: Unpin,
@@ -104,11 +129,39 @@ impl<T: Sized> unique_ptr<T> {
         unsafe { self.ptr.as_mut() }
     }
 
-    /// Returns an exclusive reference to the owned object, if-non-null, or None otherwise.
+    /// Returns an exclusive reference to the owned object, if non-null, or None otherwise.
     pub fn as_pin(&mut self) -> Option<Pin<&mut T>> {
         // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
         // The pointee is pinned.
         unsafe { Some(Pin::new_unchecked(self.ptr.as_mut()?)) }
+    }
+}
+
+impl<T: Sized> Deref for unique_ptr<T> {
+    type Target = T;
+
+    #[track_caller]
+    fn deref(&self) -> &Self::Target {
+        assert!(!self.ptr.is_null(), "dereferencing a null unique_ptr");
+        // SAFETY: `self.ptr` is non-null, properly aligned, and points to a valid `T`.
+        // C++ unique_ptr is treated as deep-const to allow safe Rust references.
+        unsafe { &*self.ptr }
+    }
+}
+
+impl<T: Sized + Unpin> DerefMut for unique_ptr<T> {
+    #[track_caller]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        assert!(!self.ptr.is_null(), "dereferencing a null unique_ptr");
+        // SAFETY: `self.ptr` is non-null, properly aligned, points to an exclusively-owned `T`,
+        // and `T: Unpin` guarantees that obtaining a `&mut T` does not violate pinning invariants.
+        unsafe { &mut *self.ptr }
+    }
+}
+
+impl<T: Sized + Delete> From<unique_ptr<T>> for virtual_unique_ptr<T> {
+    fn from(value: unique_ptr<T>) -> Self {
+        Self { ptr: unique_ptr::into_raw(value) }
     }
 }
 
@@ -134,20 +187,20 @@ impl<T> Drop for unique_ptr<T> {
 /// This type is ABI-compatible with C++'s `std::unique_ptr<T>`, where `T` is a base class with a
 /// virtual destructor.
 ///
-/// Note that `virtual_unique_ptr` has "shallow" const semantics: having a `&virtual_unique_ptr<T>`
-/// means that the `virtual_unique_ptr` will not be mutated, but does not guarantee that the
-/// underlying `T` will not be mutated. Therefore, to get access to `T`, you must have exclusive
-/// access to the `virtual_unique_ptr`.
+/// Note that while C++ `unique_ptr` is only shallow-const (i.e. a `const unique_ptr<T>&` allows
+/// mutating the underlying `T`), it is conventionally treated as deep-const. In order for
+/// `&virtual_unique_ptr<T>` to be usable at all from Rust, we treat it as deep-const. C++ code
+/// which mutates a value of type `T` while Rust has obtained a `&T` via `&virtual_unique_ptr<T>` ->
+/// `&T` dereference will result in undefined behavior.
 ///
 /// # Safety
 ///
 /// Because `virtual_unique_ptr` implicitly pins the underlying object, direct accesses to the
 /// underlying object that would violate the pin guarantee are potentially UB.
 ///
-///
-/// Because `virtual_unique_ptr` has shallow const, it is not safe to construct Rust references from
-/// a `&virtual_unique_ptr`, even indirectly via a raw pointer, unless you can guarantee that the
-/// pointee will not be mutated.
+/// Because Rust treats `virtual_unique_ptr` as deep-const, C++ code that mutates the underlying `T`
+/// while a Rust `&T` or `&virtual_unique_ptr<T>` exists will violate Rust's aliasing rules and cause
+/// undefined behavior.
 #[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "::std::unique_ptr<{T}>",
     include_path = "<memory>"
@@ -182,38 +235,59 @@ impl<T: Sized + Delete> virtual_unique_ptr<T> {
         Self { ptr }
     }
 
+    /// Takes ownership of the provided raw pointer to a polymorphic type.
+    ///
+    /// # Safety
+    ///
+    /// Same safety requirements as [`new`].
+    pub unsafe fn from_raw(ptr: *mut T) -> Self {
+        Self { ptr }
+    }
+
+    /// Returns `true` if `self` is a null pointer.
+    pub fn is_null(&self) -> bool {
+        self.ptr.is_null()
+    }
+
+    /// Returns a raw pointer to the contents.
+    pub fn as_ptr(&self) -> *const T {
+        self.ptr
+    }
+
+    /// Returns a mutable raw pointer to the contents.
+    pub fn as_mut_ptr(&mut self) -> *mut T {
+        self.ptr
+    }
+
     /// Returns a copy of the held raw pointer to the owned object.
     ///
     /// The returned pointer is null for null `virtual_unique_ptr` objects. It is valid until
     /// the underlying object is destroyed, such as by dropping the `virtual_unique_ptr`.
-    ///
-    /// It is not safe to form a Rust reference from this pointer, because the pointed-to `T` may be
-    /// mutably aliased when a `&virtual_unique_ptr` is shared between C++ and Rust. You must ensure
-    /// that no such aliasing occurs before converting the pointer to a Rust reference.
     pub fn get(&self) -> *mut T {
         self.ptr
     }
 
-    /// Replaces `self` with null and returns the previously held pointer.
+    /// Releases the ownership of the object pointed to by `self`, replacing this `virtual_unique_ptr` with
+    /// a null pointer.
     ///
-    /// The returned pointer is null for null `virtual_unique_ptr` objects. Because the caller has
-    /// exclusive ownership over the `virtual_unique_ptr`, it is otherwise valid to dereference, or
-    /// to pass to `virtual_unique_ptr::new`.
+    /// Where possible, prefer `into_raw` in order to avoid null `virtual_unique_ptr`s.
     pub fn release(&mut self) -> *mut T {
         core::mem::replace(&mut self.ptr, null_mut())
     }
 
-    /// Returns an shared reference to the owned object, if-non-null, or None otherwise.
-    ///
-    /// Note that it is not safe to obtain a `&T` from a `&virtual_unique_ptr`, because the
-    /// pointed-to `T` may be mutably aliased when a `&virtual_unique_ptr` is shared between C++ and
-    /// Rust.
-    pub fn as_ref(&mut self) -> Option<&T> {
+    /// Consumes the `virtual_unique_ptr`, returning the owned pointer.
+    pub fn into_raw(mut self) -> *mut T {
+        self.release()
+    }
+
+    /// Returns a shared reference to the owned object, if non-null, or None otherwise.
+    pub fn as_ref(&self) -> Option<&T> {
         // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
+        // C++ unique_ptr is treated as deep-const to allow safe Rust references.
         unsafe { self.ptr.as_ref() }
     }
 
-    /// Returns an exclusive reference to the owned object, if-non-null, or None otherwise.
+    /// Returns an exclusive reference to the owned object, if non-null, or None otherwise.
     pub fn as_mut(&mut self) -> Option<&mut T>
     where
         T: Unpin,
@@ -222,11 +296,33 @@ impl<T: Sized + Delete> virtual_unique_ptr<T> {
         unsafe { self.ptr.as_mut() }
     }
 
-    /// Returns an exclusive reference to the owned object, if-non-null, or None otherwise.
+    /// Returns an exclusive reference to the owned object, if non-null, or None otherwise.
     pub fn as_pin(&mut self) -> Option<Pin<&mut T>> {
         // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
         // The pointee is pinned.
         unsafe { Some(Pin::new_unchecked(self.ptr.as_mut()?)) }
+    }
+}
+
+impl<T: Sized + Delete> Deref for virtual_unique_ptr<T> {
+    type Target = T;
+
+    #[track_caller]
+    fn deref(&self) -> &Self::Target {
+        assert!(!self.ptr.is_null(), "dereferencing a null virtual_unique_ptr");
+        // SAFETY: `self.ptr` is non-null, properly aligned, and points to a valid `T`.
+        // C++ unique_ptr is treated as deep-const to allow safe Rust references.
+        unsafe { &*self.ptr }
+    }
+}
+
+impl<T: Sized + Delete + Unpin> DerefMut for virtual_unique_ptr<T> {
+    #[track_caller]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        assert!(!self.ptr.is_null(), "dereferencing a null virtual_unique_ptr");
+        // SAFETY: `self.ptr` is non-null, properly aligned, points to an exclusively-owned `T`,
+        // and `T: Unpin` guarantees that obtaining a `&mut T` does not violate pinning invariants.
+        unsafe { &mut *self.ptr }
     }
 }
 

@@ -11,6 +11,7 @@ use alloc::boxed::Box;
 use alloc::sync::Arc;
 use core::ffi::c_void;
 use core::mem::{ManuallyDrop, MaybeUninit};
+use core::ops::Deref;
 use core::pin::Pin;
 
 /// A smart pointer that shares ownership of another object of type `T` via a pointer,
@@ -244,31 +245,31 @@ impl<T: Sized> shared_ptr<T> {
         shared_ptr { ptr, cntrl }
     }
 
-    /// Returns `true` if `this` is a null pointer.
-    pub fn is_null(this: &Self) -> bool {
-        this.ptr.is_null()
+    /// Returns `true` if `self` is a null pointer.
+    pub fn is_null(&self) -> bool {
+        self.ptr.is_null()
     }
 
     /// Returns a raw pointer to the contents.
-    pub fn as_ptr(this: &Self) -> *const T {
-        this.ptr
+    pub fn as_ptr(&self) -> *const T {
+        self.ptr
     }
 
-    /// Releases the ownership of the object and control block pointed to by `this` without
+    /// Releases the ownership of the object and control block pointed to by `self` without
     /// decrementing the reference count, replacing this `shared_ptr` with a null pointer.
     ///
     /// Where possible, prefer `into_raw_parts` in order to avoid null `shared_ptr`s.
-    pub fn release(this: &mut Self) -> (*const T, *mut shared_weak_count) {
+    pub fn release(&mut self) -> (*const T, *mut shared_weak_count) {
         (
-            core::mem::replace(&mut this.ptr, core::ptr::null()),
-            core::mem::replace(&mut this.cntrl, core::ptr::null_mut()),
+            core::mem::replace(&mut self.ptr, core::ptr::null()),
+            core::mem::replace(&mut self.cntrl, core::ptr::null_mut()),
         )
     }
 
     /// Consumes the `shared_ptr` without decrementing the reference count, returning the
     /// owned raw pointer and control block pointer.
-    pub fn into_raw_parts(mut this: Self) -> (*const T, *mut shared_weak_count) {
-        Self::release(&mut this)
+    pub fn into_raw_parts(mut self) -> (*const T, *mut shared_weak_count) {
+        self.release()
     }
 
     /// Returns a reference to the underlying object, if it exists.
@@ -278,17 +279,17 @@ impl<T: Sized> shared_ptr<T> {
     /// If the inner object not thread safe and is mutated by C++ in a nonlocally-synchronized way,
     /// it's unsafe to hold references to `&T` across the mutations (unless the mutated data is
     /// wrapped in `UnsafeCell`).
-    pub fn try_as_ref(this: &Self) -> Option<&T> {
-        // SAFETY: By `shared_ptr` invariants, `this.ptr` is either null or points to an
-        // initialized `T` whose lifetime is managed by `this`.
-        unsafe { this.ptr.as_ref() }
+    pub fn try_as_ref(&self) -> Option<&T> {
+        // SAFETY: By `shared_ptr` invariants, `self.ptr` is either null or points to an
+        // initialized `T` whose lifetime is managed by `self`.
+        unsafe { self.ptr.as_ref() }
     }
 
     /// Returns the number of `shared_ptr` instances managing the current object.
     #[must_use]
-    pub fn use_count(this: &Self) -> usize {
-        // SAFETY: `this.cntrl` is a nullable pointer to a valid `std::__shared_weak_count`.
-        unsafe { std_allocator::shared_ptr_use_count(this.cntrl) }
+    pub fn use_count(&self) -> usize {
+        // SAFETY: `self.cntrl` is a nullable pointer to a valid `std::__shared_weak_count`.
+        unsafe { std_allocator::shared_ptr_use_count(self.cntrl) }
     }
 
     /// Returns `true` if the two `shared_ptr`s manage the same control block.
@@ -297,8 +298,20 @@ impl<T: Sized> shared_ptr<T> {
     /// parts of the same underlying object, thus having different `T` types, but still share the
     /// same control block.
     #[must_use]
-    pub fn owner_equal<U: Sized>(this: &Self, other: &shared_ptr<U>) -> bool {
-        core::ptr::addr_eq(this.cntrl, other.cntrl)
+    pub fn owner_equal<U: Sized>(&self, other: &shared_ptr<U>) -> bool {
+        core::ptr::addr_eq(self.cntrl, other.cntrl)
+    }
+}
+
+impl<T: Sized> Deref for shared_ptr<T> {
+    type Target = T;
+
+    #[track_caller]
+    fn deref(&self) -> &Self::Target {
+        assert!(!self.ptr.is_null(), "dereferencing a null shared_ptr");
+        // SAFETY: By `shared_ptr` invariants, `self.ptr` is either null or points to an
+        // initialized `T` whose lifetime is managed by `self`. We asserted that it is not null.
+        unsafe { &*self.ptr }
     }
 }
 

@@ -3,7 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use cc_std::std::shared_ptr;
-use googletest::prelude::*;
+use googletest::expect_eq;
+use googletest::expect_false;
+use googletest::expect_true;
+use googletest::gtest;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
@@ -35,7 +38,17 @@ fn test_polymorphic_destructor() {
 #[gtest]
 fn test_deref() {
     let shared = test_helpers::shared_ptr_test::create_shared_ptr();
+    let r: &i32 = &shared;
+    expect_eq!(*r, 1);
+    expect_eq!(*shared, 1);
     expect_eq!(*shared_ptr::try_as_ref(&shared).unwrap(), 1);
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null shared_ptr")]
+fn test_shared_ptr_deref_null_panics() {
+    let null_shared = test_helpers::shared_ptr_test::create_shared_ptr_void_ptr();
+    let _ = *null_shared;
 }
 
 #[gtest]
