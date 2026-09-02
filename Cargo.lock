@@ -577,6 +577,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "google-protobuf"
+version = "0.36.1-release"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c1b1799baa729b23385d7b48428279c3ecbd1222083e872a507ffb794631932"
+dependencies = [
+ "cc",
+ "linkme",
+ "paste-complete",
+ "protobuf-macros",
+]
+
+[[package]]
 name = "googletest"
 version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -824,27 +836,24 @@ dependencies = [
 
 [[package]]
 name = "protobuf"
-version = "4.35.0-release"
+version = "4.36.1-release"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d05968b8b2df70d7d65ec6bbdb9c9403441d3155c22af783d9eb3c20142313fd"
+checksum = "ee794de60d9736458ad4316aee4339f0761b87a7b6b10b2ac6d4c99b1c8af0ff"
 dependencies = [
- "cc",
- "linkme",
- "paste-complete",
- "protobuf-macros",
+ "google-protobuf",
 ]
 
 [[package]]
 name = "protobuf-codegen"
-version = "4.35.0-release"
+version = "4.36.1-release"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ccd419b3785dd1692b50c9a9b81b1dbff75ec75a9f5b103224f669d7cc164af"
+checksum = "ea064ac566d3f94e5017da436d8c47d6afb8101febf62194055171b6ed4b5577"
 
 [[package]]
 name = "protobuf-macros"
-version = "4.35.0-release"
+version = "0.36.1-release"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1cfbd93f1e3dd18db139a79c002c9e33eff8749e5ebf4e24250957fd98689be1"
+checksum = "16a4745e7f0a32c238439105b43ad064d6dbda6ed4d9f7f0c7957e573f10eb40"
 dependencies = [
  "quote",
  "syn 2.0.119",

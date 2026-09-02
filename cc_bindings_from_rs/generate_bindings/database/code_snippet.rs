@@ -6,7 +6,7 @@ extern crate rustc_abi;
 extern crate rustc_middle;
 extern crate rustc_span;
 
-use crate::{BindingsGenerator, FineGrainedFeature};
+use crate::{BindingsGenerator, FineGrainedFeature, TypeLocation};
 use arc_anyhow::{anyhow, Result};
 use code_gen_utils::CcInclude;
 use crubit_abi_type::CrubitAbiType;
@@ -84,7 +84,7 @@ pub struct CcPrerequisites<'tcx> {
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 #[allow(clippy::large_enum_variant)]
 pub enum TemplateSpecialization<'tcx> {
-    RsStd(RsStdTemplateSpecialization<'tcx>),
+    Adt(AdtTemplateSpecialization<'tcx>),
     TraitImpl(TraitImplTemplateSpecialization),
     NegativeAutoTraitImpl(NegativeAutoTraitImplTemplateSpecialization),
     StdHash(StdHashTemplateSpecialization<'tcx>),
@@ -145,18 +145,18 @@ impl Hash for NegativeAutoTraitImplTemplateSpecialization {
 }
 
 #[derive(Clone, Debug)]
-pub struct RsStdTemplateSpecialization<'tcx> {
+pub struct AdtTemplateSpecialization<'tcx> {
     pub layout: rustc_abi::Layout<'tcx>,
     pub self_ty_rs: Ty<'tcx>,
     pub self_ty_cc: CcSnippet<'tcx>,
-    pub args: RsStdSpecializationArgs<'tcx>,
+    pub args: AdtSpecializationArgs<'tcx>,
 }
 
-impl<'tcx> RsStdTemplateSpecialization<'tcx> {
+impl<'tcx> AdtTemplateSpecialization<'tcx> {
     pub fn is_option(&self) -> bool {
         matches!(
             self.args,
-            RsStdSpecializationArgs::Enum(RsStdEnumSpecialization {
+            AdtSpecializationArgs::Enum(AdtEnumSpecialization {
                 kind: EnumSpecializationKind::Option { .. },
                 ..
             })
@@ -165,37 +165,38 @@ impl<'tcx> RsStdTemplateSpecialization<'tcx> {
     pub fn is_result(&self) -> bool {
         matches!(
             self.args,
-            RsStdSpecializationArgs::Enum(RsStdEnumSpecialization {
+            AdtSpecializationArgs::Enum(AdtEnumSpecialization {
                 kind: EnumSpecializationKind::Result { .. },
                 ..
             })
         )
     }
     pub fn is_vec(&self) -> bool {
-        matches!(self.args, RsStdSpecializationArgs::Vec(_))
+        matches!(self.args, AdtSpecializationArgs::Vec(_))
     }
 
-    pub fn support_header(&self, db: &BindingsGenerator<'tcx>) -> CcInclude {
+    pub fn support_header(&self, db: &BindingsGenerator<'tcx>) -> Option<CcInclude> {
         match &self.args {
-            RsStdSpecializationArgs::Enum(RsStdEnumSpecialization { kind, .. }) => match kind {
-                EnumSpecializationKind::Option { .. } => db.support_header("rs_std/option.h"),
-                EnumSpecializationKind::Result { .. } => db.support_header("rs_std/result.h"),
+            AdtSpecializationArgs::Enum(AdtEnumSpecialization { kind, .. }) => match kind {
+                EnumSpecializationKind::Option { .. } => Some(db.support_header("rs_std/option.h")),
+                EnumSpecializationKind::Result { .. } => Some(db.support_header("rs_std/result.h")),
             },
-            RsStdSpecializationArgs::Tuple(_) => db.support_header("rs_std/tuple.h"),
-            RsStdSpecializationArgs::Vec(_) => db.support_header("rs_std/vec.h"),
+            AdtSpecializationArgs::Tuple(_) => Some(db.support_header("rs_std/tuple.h")),
+            AdtSpecializationArgs::Vec(_) => Some(db.support_header("rs_std/vec.h")),
+            AdtSpecializationArgs::UserDefinedAdt => None,
         }
     }
 }
 
-impl PartialEq for RsStdTemplateSpecialization<'_> {
+impl PartialEq for AdtTemplateSpecialization<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.self_ty_rs == other.self_ty_rs
     }
 }
 
-impl Eq for RsStdTemplateSpecialization<'_> {}
+impl Eq for AdtTemplateSpecialization<'_> {}
 
-impl Hash for RsStdTemplateSpecialization<'_> {
+impl Hash for AdtTemplateSpecialization<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.self_ty_rs.hash(state);
     }
@@ -203,14 +204,15 @@ impl Hash for RsStdTemplateSpecialization<'_> {
 
 #[derive(Clone, Debug)]
 #[allow(clippy::large_enum_variant)]
-pub enum RsStdSpecializationArgs<'tcx> {
-    Enum(RsStdEnumSpecialization<'tcx>),
+pub enum AdtSpecializationArgs<'tcx> {
+    Enum(AdtEnumSpecialization<'tcx>),
     Tuple(Vec<FormattedTy<'tcx>>),
     Vec(FormattedTy<'tcx>),
+    UserDefinedAdt,
 }
 
 #[derive(Clone, Debug)]
-pub struct RsStdEnumSpecialization<'tcx> {
+pub struct AdtEnumSpecialization<'tcx> {
     pub tag_type_rs: Ty<'tcx>,
     pub tag_type_cc: CcSnippet<'tcx>,
     pub kind: EnumSpecializationKind<'tcx>,
@@ -359,6 +361,25 @@ impl<'tcx> CcPrerequisites<'tcx> {
             })?;
         self.includes.extend(includes.iter().cloned());
         Ok(())
+    }
+
+    pub fn depend_on_spec(
+        &mut self,
+        db: &BindingsGenerator<'tcx>,
+        location: TypeLocation,
+        adt_spec: AdtTemplateSpecialization<'tcx>,
+    ) {
+        if let Some(header) = adt_spec.support_header(db) {
+            self.includes.insert(header);
+        }
+        if matches!(
+            location,
+            TypeLocation::Field | TypeLocation::Const | TypeLocation::NestedBridgeable
+        ) {
+            self.template_specializations.insert(TemplateSpecialization::Adt(adt_spec));
+        } else {
+            self.lazy_template_specializations.insert(TemplateSpecialization::Adt(adt_spec));
+        }
     }
 }
 

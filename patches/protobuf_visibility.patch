@@ -4,13 +4,13 @@ TODO(b/379928127): Remove this patch once cl/974009395 or cl/947225402 are
 submitted and released in BCR (Bazel Central Registry).
 
 When rust_proto_library is used from external repositories, the generated
-aspect references Label("@protobuf//rust:use_upb_kernel"). In Protobuf 36.0,
+aspect references Label("@protobuf//rust:use_upb_kernel"). In Protobuf 36.1,
 use_upb_kernel has visibility = ["//:__subpackages__"], causing visibility
 errors when expanding rust_proto_library in consumer modules.
 
 --- a/rust/BUILD
 +++ b/rust/BUILD
-@@ -458,5 +458,5 @@ config_setting(
+@@ -343,5 +343,5 @@ config_setting(
      flag_values = {
          ":rust_proto_library_kernel": "upb",
      },

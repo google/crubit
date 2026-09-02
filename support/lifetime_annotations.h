@@ -19,7 +19,22 @@
 // TODO(mboehme): We would prefer `$(...)` to be a variadic macro that
 // stringizes each of its macro arguments individually. This is possible but
 // requires some contortions: https://stackoverflow.com/a/5958315
+#if defined(__clang__) && __has_cpp_attribute(clang::annotate_type)
 #define $(l) [[clang::annotate_type("lifetime", #l)]]
+#else
+#define $(l)
+#endif
+
+// Shorthand for lifetime parameter annotations on types and functions.
+// This can be used like `$lifetime_param("a")` or `$lifetime_param("a", "b")`.
+#if defined(__clang__) && __has_cpp_attribute(clang::annotate)
+#define $lifetime_param(...) [[clang::annotate("lifetime_params", __VA_ARGS__)]]
+#define $lifetime_params(...) \
+  [[clang::annotate("lifetime_params", __VA_ARGS__)]]
+#else
+#define $lifetime_param(...)
+#define $lifetime_params(...)
+#endif
 
 // Shorthand for a static lifetime annotation.
 #define $static $(static)
