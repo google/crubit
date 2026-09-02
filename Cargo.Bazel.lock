@@ -1,5 +1,5 @@
 {
-  "checksum": "8897f12f06c1e1b930f23f258890b6cb545dd8cec0b428102644893b2c678b2e",
+  "checksum": "a0f8275a49984c6be1388023fbc85d3f6a1700681c72909638aa139314662dfd",
   "crates": {
     "aho-corasick 1.1.5": {
       "name": "aho-corasick",
@@ -1955,7 +1955,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 3.0.3",
+              "id": "syn 3.0.4",
               "target": "syn"
             }
           ],
@@ -3124,6 +3124,104 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
+    "google-protobuf 0.36.1-release": {
+      "name": "google-protobuf",
+      "version": "0.36.1-release",
+      "package_url": null,
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/google-protobuf/0.36.1-release/download",
+          "sha256": "4c1b1799baa729b23385d7b48428279c3ecbd1222083e872a507ffb794631932"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "google_protobuf",
+            "crate_root": "src/shared.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "google_protobuf",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "google-protobuf 0.36.1-release",
+              "target": "build_script_build"
+            },
+            {
+              "id": "linkme 0.3.37",
+              "target": "linkme"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "paste-complete 1.0.15",
+              "target": "paste_complete",
+              "alias": "paste"
+            },
+            {
+              "id": "protobuf-macros 0.36.1-release",
+              "target": "protobuf_macros"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.36.1-release"
+      },
+      "build_script_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "compile_data_glob_excludes": [
+          "**/*.rs"
+        ],
+        "data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "cc 1.4.4",
+              "target": "cc"
+            }
+          ],
+          "selects": {}
+        },
+        "links": "upb"
+      },
+      "license": "BSD-3-Clause",
+      "license_ids": [
+        "BSD-3-Clause"
+      ],
+      "license_file": "LICENSE"
+    },
     "googletest 0.14.3": {
       "name": "googletest",
       "version": "0.14.3",
@@ -4062,7 +4160,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 3.0.3",
+              "id": "syn 3.0.4",
               "target": "syn"
             }
           ],
@@ -4608,7 +4706,7 @@
               "target": "phf_shared"
             },
             {
-              "id": "rand 0.8.7",
+              "id": "rand 0.8.8",
               "target": "rand"
             }
           ],
@@ -4884,33 +4982,21 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "protobuf 4.35.0-release": {
+    "protobuf 4.36.1-release": {
       "name": "protobuf",
-      "version": "4.35.0-release",
+      "version": "4.36.1-release",
       "package_url": null,
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/protobuf/4.35.0-release/download",
-          "sha256": "d05968b8b2df70d7d65ec6bbdb9c9403441d3155c22af783d9eb3c20142313fd"
+          "url": "https://static.crates.io/crates/protobuf/4.36.1-release/download",
+          "sha256": "ee794de60d9736458ad4316aee4339f0761b87a7b6b10b2ac6d4c99b1c8af0ff"
         }
       },
       "targets": [
         {
           "Library": {
             "crate_name": "protobuf",
-            "crate_root": "src/shared.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
+            "crate_root": "src/lib.rs",
             "srcs": {
               "allow_empty": true,
               "include": [
@@ -4928,53 +5014,14 @@
         "deps": {
           "common": [
             {
-              "id": "linkme 0.3.37",
-              "target": "linkme"
-            },
-            {
-              "id": "protobuf 4.35.0-release",
-              "target": "build_script_build"
+              "id": "google-protobuf 0.36.1-release",
+              "target": "google_protobuf"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "paste-complete 1.0.15",
-              "target": "paste_complete",
-              "alias": "paste"
-            },
-            {
-              "id": "protobuf-macros 4.35.0-release",
-              "target": "protobuf_macros"
-            }
-          ],
-          "selects": {}
-        },
-        "version": "4.35.0-release"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "cc 1.4.4",
-              "target": "cc"
-            }
-          ],
-          "selects": {}
-        },
-        "links": "upb"
+        "version": "4.36.1-release"
       },
       "license": "BSD-3-Clause",
       "license_ids": [
@@ -4982,14 +5029,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "protobuf-codegen 4.35.0-release": {
+    "protobuf-codegen 4.36.1-release": {
       "name": "protobuf-codegen",
-      "version": "4.35.0-release",
+      "version": "4.36.1-release",
       "package_url": null,
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/protobuf-codegen/4.35.0-release/download",
-          "sha256": "5ccd419b3785dd1692b50c9a9b81b1dbff75ec75a9f5b103224f669d7cc164af"
+          "url": "https://static.crates.io/crates/protobuf-codegen/4.36.1-release/download",
+          "sha256": "ea064ac566d3f94e5017da436d8c47d6afb8101febf62194055171b6ed4b5577"
         }
       },
       "targets": [
@@ -5012,7 +5059,7 @@
           "**"
         ],
         "edition": "2021",
-        "version": "4.35.0-release"
+        "version": "4.36.1-release"
       },
       "license": "BSD-3-Clause",
       "license_ids": [
@@ -5020,14 +5067,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "protobuf-macros 4.35.0-release": {
+    "protobuf-macros 0.36.1-release": {
       "name": "protobuf-macros",
-      "version": "4.35.0-release",
+      "version": "0.36.1-release",
       "package_url": null,
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/protobuf-macros/4.35.0-release/download",
-          "sha256": "1cfbd93f1e3dd18db139a79c002c9e33eff8749e5ebf4e24250957fd98689be1"
+          "url": "https://static.crates.io/crates/protobuf-macros/0.36.1-release/download",
+          "sha256": "16a4745e7f0a32c238439105b43ad064d6dbda6ed4d9f7f0c7957e573f10eb40"
         }
       },
       "targets": [
@@ -5063,7 +5110,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.35.0-release"
+        "version": "0.36.1-release"
       },
       "license": "BSD-3-Clause",
       "license_ids": [
@@ -5193,14 +5240,14 @@
       ],
       "license_file": null
     },
-    "rand 0.8.7": {
+    "rand 0.8.8": {
       "name": "rand",
-      "version": "0.8.7",
+      "version": "0.8.8",
       "package_url": "https://github.com/rust-random/rand",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rand/0.8.7/download",
-          "sha256": "22f6172bdec972074665ed81ed53b71da00bfc44b65a753cfde883ec4c702a1a"
+          "url": "https://static.crates.io/crates/rand/0.8.8/download",
+          "sha256": "e058c7de0b26af77780c769414d6257830bb240f3c38477dbc2c16e5f54d6d4c"
         }
       },
       "targets": [
@@ -5238,7 +5285,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.8.7"
+        "version": "0.8.8"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -5833,7 +5880,7 @@
         "deps": {
           "common": [
             {
-              "id": "protobuf 4.35.0-release",
+              "id": "protobuf 4.36.1-release",
               "target": "protobuf"
             }
           ],
@@ -5873,7 +5920,7 @@
         "deps": {
           "common": [
             {
-              "id": "protobuf 4.35.0-release",
+              "id": "protobuf 4.36.1-release",
               "target": "protobuf"
             }
           ],
@@ -7116,7 +7163,7 @@
         "deps": {
           "common": [
             {
-              "id": "protobuf 4.35.0-release",
+              "id": "protobuf 4.36.1-release",
               "target": "protobuf"
             },
             {
@@ -7142,17 +7189,8 @@
         "deps": {
           "common": [
             {
-              "id": "protobuf-codegen 4.35.0-release",
+              "id": "protobuf-codegen 4.36.1-release",
               "target": "protobuf_codegen"
-            }
-          ],
-          "selects": {}
-        },
-        "link_deps": {
-          "common": [
-            {
-              "id": "protobuf 4.35.0-release",
-              "target": "protobuf"
             }
           ],
           "selects": {}
@@ -7687,7 +7725,7 @@
               "target": "proc_macro2"
             },
             {
-              "id": "protobuf 4.35.0-release",
+              "id": "protobuf 4.36.1-release",
               "target": "protobuf"
             },
             {
@@ -8006,7 +8044,7 @@
         "deps": {
           "common": [
             {
-              "id": "protobuf 4.35.0-release",
+              "id": "protobuf 4.36.1-release",
               "target": "protobuf"
             },
             {
@@ -8032,17 +8070,8 @@
         "deps": {
           "common": [
             {
-              "id": "protobuf-codegen 4.35.0-release",
+              "id": "protobuf-codegen 4.36.1-release",
               "target": "protobuf_codegen"
-            }
-          ],
-          "selects": {}
-        },
-        "link_deps": {
-          "common": [
-            {
-              "id": "protobuf 4.35.0-release",
-              "target": "protobuf"
             }
           ],
           "selects": {}
@@ -8087,7 +8116,7 @@
               "target": "itertools"
             },
             {
-              "id": "protobuf 4.35.0-release",
+              "id": "protobuf 4.36.1-release",
               "target": "protobuf"
             }
           ],
@@ -9377,7 +9406,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 3.0.3",
+              "id": "syn 3.0.4",
               "target": "syn"
             }
           ],
@@ -9748,14 +9777,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "syn 3.0.3": {
+    "syn 3.0.4": {
       "name": "syn",
-      "version": "3.0.3",
+      "version": "3.0.4",
       "package_url": "https://github.com/dtolnay/syn",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/syn/3.0.3/download",
-          "sha256": "53e9bae58849f64dfa4f5d5ae372c8341f7305f82a3868709269343628b659a3"
+          "url": "https://static.crates.io/crates/syn/3.0.4/download",
+          "sha256": "e6275cddf4610d1775e6d1fe9469b2e77d0f39fd98fb7450901b821e0c53649f"
         }
       },
       "targets": [
@@ -9807,7 +9836,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "3.0.3"
+        "version": "3.0.4"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -10051,7 +10080,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 3.0.3",
+              "id": "syn 3.0.4",
               "target": "syn"
             }
           ],
@@ -10739,8 +10768,8 @@
     "once_cell 1.21.4",
     "phf 0.11.3",
     "proc-macro2 1.0.107",
-    "protobuf 4.35.0-release",
-    "protobuf-codegen 4.35.0-release",
+    "protobuf 4.36.1-release",
+    "protobuf-codegen 4.36.1-release",
     "quote 1.0.47",
     "regex 1.13.1",
     "rustc-stable-hash 0.1.2",
