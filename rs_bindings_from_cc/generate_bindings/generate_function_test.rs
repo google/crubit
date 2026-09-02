@@ -110,8 +110,8 @@ fn test_inline_function_with_inline_cpp() -> Result<()> {
             unsafe {
                 (::crubit_support::inline_cpp! {
                     (int a, int b) -> int {
-                        return a + b;
-                    }
+                                                                                    return a + b;
+                                                                                }
                 })(a, b)
             }
         }
@@ -143,8 +143,8 @@ fn test_non_inline_function_with_inline_cpp() -> Result<()> {
             unsafe {
                 (::crubit_support::inline_cpp! {
                     (int a, int b) -> int {
-                        return a + b;
-                    }
+                                                                                    return a + b;
+                                                                                }
                 })(a, b)
             }
         }
@@ -166,8 +166,8 @@ fn test_member_function_with_inline_cpp() -> Result<()> {
             unsafe {
                 (::crubit_support::inline_cpp! {
                     (struct SomeStruct const* __this, int arg) -> int {
-                        return 42 + arg;
-                    }
+                                                                                    return 42 + arg;
+                                                                                }
                 })((__this as *const _), arg)
             }
         }
@@ -191,9 +191,9 @@ fn test_non_pod_param_with_inline_cpp() -> Result<()> {
                 unsafe {
                     (::crubit_support::inline_cpp! {
                         (struct NonPod* __s) -> void {
-                            auto&& s = std::move(*__s);
-                            {}
-                        }
+                                                                                                    auto&& s = std::move(*__s);
+                                                                                                    {}
+                                                                                                }
                     })((::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(s)) as *const _))
                 }
             }
@@ -218,10 +218,10 @@ fn test_non_pod_return_with_inline_cpp() -> Result<()> {
                 unsafe {
                     (::crubit_support::inline_cpp! {
                         (struct NonPod* __return) -> void {
-                            new(__return) struct NonPod(([&]() {
-                                return NonPod();
-                            })());
-                        }
+                                                                                                    new(__return) struct NonPod(([&]() {
+                                                                                                        return NonPod();
+                                                                                                    })());
+                                                                                                }
                     })()
                 }
             }
@@ -246,11 +246,11 @@ fn test_non_pod_param_and_return_with_inline_cpp() -> Result<()> {
                 unsafe {
                     (::crubit_support::inline_cpp! {
                         (struct NonPod* __return, struct NonPod* __s) -> void {
-                            auto&& s = std::move(*__s);
-                            new(__return) struct NonPod(([&]() {
-                                return s;
-                            })());
-                        }
+                                                                                                    auto&& s = std::move(*__s);
+                                                                                                    new(__return) struct NonPod(([&]() {
+                                                                                                        return s;
+                                                                                                    })());
+                                                                                                }
                     })((::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(s)) as *const _))
                 }
             }
