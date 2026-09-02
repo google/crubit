@@ -60,6 +60,11 @@ pub struct Point {
     pub y: i32,
 }
 
+impl Point {
+    #[must_bind]
+    pub const ZERO: Point = Point { x: 0, y: 0 };
+}
+
 #[must_bind]
 pub const POINT_CONST: Point = Point { x: 10, y: -20 };
 

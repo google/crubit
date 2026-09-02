@@ -40,6 +40,9 @@ TEST(ConstsTest, AllAreExpected) {
   static_assert(consts::POINT_CONST.x == 10);
   static_assert(consts::POINT_CONST.y == -20);
 
+  static_assert(consts::Point::ZERO.x == 0);
+  static_assert(consts::Point::ZERO.y == 0);
+
   static_assert(consts::TUPLE_STRUCT_CONST.__field0 == 123);
   static_assert(consts::TUPLE_STRUCT_CONST.__field1 == 456);
 

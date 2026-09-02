@@ -41,6 +41,8 @@ static constexpr ::std::int64_t LARGE_INT = INT64_C(9223372036854775807);
 struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: Point") alignas(4)
     [[clang::trivial_abi]] Point final {
  public:
+  static const ::consts::Point ZERO;
+
   bool operator==(::consts::Point const& other) const;
 
   ::std::int32_t x = {};
@@ -177,7 +179,7 @@ struct rs_std::impl<::consts::NestedStruct, ::rs::core::fmt::Debug> {
 
   // Error generating bindings for associated function
   // `<consts_golden::NestedStruct as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=72:
+  // cc_bindings_from_rs/test/consts/consts.rs;l=77:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
 };
@@ -209,7 +211,7 @@ struct rs_std::impl<::consts::StructWithArray, ::rs::core::fmt::Debug> {
 
   // Error generating bindings for associated function
   // `<consts_golden::StructWithArray as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=87:
+  // cc_bindings_from_rs/test/consts/consts.rs;l=92:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
 };
@@ -225,7 +227,7 @@ struct rs_std::impl<::consts::StructWithStr, ::rs::core::fmt::Debug> {
 
   // Error generating bindings for associated function
   // `<consts_golden::StructWithStr<'a> as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=97:
+  // cc_bindings_from_rs/test/consts/consts.rs;l=102:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
 };
@@ -241,7 +243,7 @@ struct rs_std::impl<::consts::TupleStruct, ::rs::core::fmt::Debug> {
 
   // Error generating bindings for associated function
   // `<consts_golden::TupleStruct as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=66:
+  // cc_bindings_from_rs/test/consts/consts.rs;l=71:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
 };
@@ -286,6 +288,8 @@ static_assert(::std::is_trivially_move_constructible_v<::consts::Point>);
 static_assert(::std::is_trivially_move_assignable_v<::consts::Point>);
 static_assert(::std::is_trivially_copy_constructible_v<::consts::Point>);
 static_assert(::std::is_trivially_copy_assignable_v<::consts::Point>);
+constexpr ::consts::Point(::consts::Point::ZERO) = ::consts::Point{
+    .x = INT32_C(0), .y = INT32_C(0)};
 namespace __crubit_internal {
 extern "C" bool
 __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aPoint_uconsts_ugolden_x0000003a_x0000003aPoint(

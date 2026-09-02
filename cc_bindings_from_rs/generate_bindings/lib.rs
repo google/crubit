@@ -1315,15 +1315,34 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
     let const_value: ConstValue = tcx.const_eval_poly(def_id).unwrap();
     let cc_value = format_const_value(db, const_value, ty)?.into_tokens(&mut prereqs);
 
-    Ok(ApiSnippets {
-        main_api: CcSnippet {
+    let is_self_referential = tcx.inherent_impl_of_assoc(def_id).is_some_and(|impl_id| {
+        let impl_ty =
+            normalize_ty(tcx, tcx.param_env(impl_id), tcx.type_of(impl_id).instantiate_identity());
+        impl_ty == ty
+    });
+
+    Ok(if is_self_referential {
+        ApiSnippets {
+            main_api: CcSnippet {
+                tokens: quote! {
+                    static const #cc_type #cc_name;
+                },
+                prereqs,
+            },
+            // We know this works because cc_type is Self when is_self_referential is true.
+            cc_details: CcSnippet::new(quote! {
+                constexpr #cc_type (#cc_type :: #cc_name) = #cc_value;
+            }),
+            rs_details: RsSnippet::default(),
+        }
+    } else {
+        CcSnippet {
             tokens: quote! {
                 static constexpr #cc_type #cc_name = #cc_value;
             },
             prereqs,
-        },
-        cc_details: CcSnippet::default(),
-        rs_details: RsSnippet::default(),
+        }
+        .into_main_api()
     })
 }
 
