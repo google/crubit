@@ -236,8 +236,7 @@ static SmallVector<PointerNullabilityDiagnostic> diagnoseNonnullExpected(
   if (const Expr* NullCheck =
           matchesNonConstCallNullCheck(*E, Ctx, State.Env.getCurrentFunc()))
     return {{
-        .Code = PointerNullabilityDiagnostic::ErrorCode::
-            ExpectedNonnullWithCheckOnNonConstCall,
+        .Code = PointerNullabilityDiagnostic::ErrorCode::ExpectedNonnull,
         .Ctx = DiagCtx,
         .Range = getRangeModuloMacros(Range, Ctx),
         .Callee = Callee,
