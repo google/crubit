@@ -11,10 +11,10 @@ use crate::generate_unsupported_def;
 use arc_anyhow::{bail, Result};
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
-    ApiSnippets, CcPrerequisites, CcSnippet, EnumSpecializationKind, FormattedTy,
-    NegativeAutoTraitImplTemplateSpecialization, RsStdEnumSpecialization, RsStdSpecializationArgs,
-    RsStdTemplateSpecialization, StdHashTemplateSpecialization, TemplateSpecialization,
-    TraitImplTemplateSpecialization,
+    AdtEnumSpecialization, AdtSpecializationArgs, AdtTemplateSpecialization, ApiSnippets,
+    CcPrerequisites, CcSnippet, EnumSpecializationKind, FormattedTy,
+    NegativeAutoTraitImplTemplateSpecialization, StdHashTemplateSpecialization,
+    TemplateSpecialization, TraitImplTemplateSpecialization,
 };
 use database::{
     AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, StaticMethodMode, TypeLocation,
@@ -44,10 +44,10 @@ use rustc_span::def_id::DefId;
 use std::collections::HashSet;
 use std::rc::Rc;
 
-pub(crate) fn parse_rs_std_template_specialization<'tcx>(
+pub(crate) fn parse_adt_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
-) -> Option<Result<RsStdTemplateSpecialization<'tcx>>> {
+) -> Option<Result<AdtTemplateSpecialization<'tcx>>> {
     let tcx = db.tcx();
     #[rustversion::before(2026-04-22)]
     let unnorm_ty = self_ty;
@@ -69,7 +69,7 @@ pub(crate) fn parse_rs_std_template_specialization<'tcx>(
 
     match self_ty.kind() {
         ty::TyKind::Adt(adt, substs) => {
-            parse_adt_template_specialization(db, self_ty, *adt, substs)
+            parse_adt_def_template_specialization(db, self_ty, *adt, substs)
         }
         ty::TyKind::Tuple(types) if !types.is_empty() => {
             parse_tuple_template_specialization(db, self_ty, types)
@@ -95,12 +95,12 @@ fn parse_unit_in_specialization<'tcx>(
     })
 }
 
-fn parse_adt_template_specialization<'tcx>(
+fn parse_adt_def_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     adt: ty::AdtDef<'tcx>,
     substs: ty::GenericArgsRef<'tcx>,
-) -> Option<Result<RsStdTemplateSpecialization<'tcx>>> {
+) -> Option<Result<AdtTemplateSpecialization<'tcx>>> {
     use crate::BridgedBuiltin;
     use database::code_snippet::EnumSpecializationKind;
     let tcx = db.tcx();
@@ -139,11 +139,11 @@ fn parse_adt_template_specialization<'tcx>(
                     prereqs.forward_declare_type(substs.type_at(0));
                     CcSnippet { tokens: quote! { rs_std::Option<#some_ty_cc> }, prereqs }
                 };
-                Ok(RsStdTemplateSpecialization {
+                Ok(AdtTemplateSpecialization {
                     layout,
                     self_ty_rs: self_ty,
                     self_ty_cc,
-                    args: RsStdSpecializationArgs::Enum(RsStdEnumSpecialization {
+                    args: AdtSpecializationArgs::Enum(AdtEnumSpecialization {
                         tag_type_rs,
                         tag_type_cc: tag_type_cc.clone(),
                         kind: EnumSpecializationKind::Option { some_ty },
@@ -200,11 +200,11 @@ fn parse_adt_template_specialization<'tcx>(
                         prereqs,
                     }
                 };
-                Ok(RsStdTemplateSpecialization {
+                Ok(AdtTemplateSpecialization {
                     layout,
                     self_ty_rs: self_ty,
                     self_ty_cc,
-                    args: RsStdSpecializationArgs::Enum(RsStdEnumSpecialization {
+                    args: AdtSpecializationArgs::Enum(AdtEnumSpecialization {
                         tag_type_rs,
                         tag_type_cc: tag_type_cc.clone(),
                         kind: EnumSpecializationKind::Result { ok_ty, err_ty },
@@ -224,11 +224,11 @@ fn parse_adt_template_specialization<'tcx>(
                     prereqs.forward_declare_type(substs.type_at(0));
                     CcSnippet { tokens: quote! { rs_std::Vec<#inner_ty_cc> }, prereqs }
                 };
-                Ok(RsStdTemplateSpecialization {
+                Ok(AdtTemplateSpecialization {
                     layout,
                     self_ty_rs: self_ty,
                     self_ty_cc,
-                    args: RsStdSpecializationArgs::Vec(inner_ty),
+                    args: AdtSpecializationArgs::Vec(inner_ty),
                 })
             }
         }
@@ -239,7 +239,7 @@ fn parse_tuple_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     types: &'tcx ty::List<Ty<'tcx>>,
-) -> Option<Result<RsStdTemplateSpecialization<'tcx>>> {
+) -> Option<Result<AdtTemplateSpecialization<'tcx>>> {
     let tcx = db.tcx();
     let element_tys = types
         .iter()
@@ -259,11 +259,11 @@ fn parse_tuple_template_specialization<'tcx>(
             .collect::<Vec<_>>();
         CcSnippet { tokens: quote! { rs_std::Tuple<#(#element_tys_cc),*> }, prereqs }
     };
-    Some(Ok(RsStdTemplateSpecialization {
+    Some(Ok(AdtTemplateSpecialization {
         layout,
         self_ty_rs: self_ty,
         self_ty_cc,
-        args: RsStdSpecializationArgs::Tuple(element_tys),
+        args: AdtSpecializationArgs::Tuple(element_tys),
     }))
 }
 
@@ -797,16 +797,16 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
 
 fn specialize_tuple<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    rs_std: &RsStdTemplateSpecialization<'tcx>,
+    adt_spec: &AdtTemplateSpecialization<'tcx>,
     element_tys: Vec<FormattedTy<'tcx>>,
 ) -> ApiSnippets<'tcx> {
-    let layout = rs_std.layout;
+    let layout = adt_spec.layout;
     let mut prereqs = CcPrerequisites::default();
     let element_cc_tys =
         element_tys.iter().map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs)).collect_vec();
 
     let tuple_api =
-        TupleApiGenerator { db, element_tys: element_tys.clone(), self_ty: rs_std.self_ty_rs };
+        TupleApiGenerator { db, element_tys: element_tys.clone(), self_ty: adt_spec.self_ty_rs };
 
     let rs_fully_qualified_name = {
         let element_rs_tys = element_tys.iter().map(|ty| &ty.for_rs);
@@ -819,7 +819,7 @@ fn specialize_tuple<'tcx>(
             keyword: quote! { struct },
             cc_short_name: format_ident!("Tuple"),
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
-            self_ty: rs_std.self_ty_rs,
+            self_ty: adt_spec.self_ty_rs,
             alignment_in_bytes: layout.align().abi.bytes(),
             size_in_bytes: layout.size().bytes(),
         }),
@@ -987,11 +987,11 @@ fn compute_vec_layout_offsets<'tcx>(
 
 fn specialize_vec<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    rs_std: &RsStdTemplateSpecialization<'tcx>,
+    adt_spec: &AdtTemplateSpecialization<'tcx>,
     inner_ty: FormattedTy<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
-    let layout = rs_std.layout;
+    let layout = adt_spec.layout;
     let mut prereqs = CcPrerequisites::default();
     let inner_ty_cc = inner_ty.for_cc.clone().into_tokens(&mut prereqs);
     let inner_ty_rs = &inner_ty.for_rs;
@@ -999,14 +999,14 @@ fn specialize_vec<'tcx>(
     let rs_fully_qualified_name = quote! { ::alloc::vec::Vec<#inner_ty_rs> };
     let cc_fully_qualified_name = quote! { rs_std::Vec<#inner_ty_cc> };
 
-    let adt_def = rs_std.self_ty_rs.ty_adt_def().expect("Vec should be an ADT");
+    let adt_def = adt_spec.self_ty_rs.ty_adt_def().expect("Vec should be an ADT");
 
     let core = Rc::new(AdtCoreBindings {
         common: Rc::new(CoreBindingsCommon {
             keyword: quote! { struct },
             cc_short_name: format_ident!("Vec"),
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
-            self_ty: rs_std.self_ty_rs,
+            self_ty: adt_spec.self_ty_rs,
             alignment_in_bytes: layout.align().abi.bytes(),
             size_in_bytes: layout.size().bytes(),
         }),
@@ -1032,7 +1032,7 @@ fn specialize_vec<'tcx>(
         .in_definition_order()
         .find(|item| matches!(item.kind, ty::AssocKind::Fn { .. }))
         .expect("Drop should have a method");
-    let substs = tcx.mk_args_trait(rs_std.self_ty_rs, std::iter::empty());
+    let substs = tcx.mk_args_trait(adt_spec.self_ty_rs, std::iter::empty());
     let drop_thunk_name = format_ident!(
         "{}",
         make_thunk_name(db, ThunkKind::TraitMethod { method: drop_assoc_fn, substs })
@@ -1056,7 +1056,7 @@ fn specialize_vec<'tcx>(
         }
     };
 
-    let offsets = compute_vec_layout_offsets(tcx, rs_std.self_ty_rs, layout);
+    let offsets = compute_vec_layout_offsets(tcx, adt_spec.self_ty_rs, layout);
 
     let ptr_offset = Literal::u64_unsuffixed(offsets.ptr_offset);
     let len_offset = Literal::u64_unsuffixed(offsets.len_offset);
@@ -1161,8 +1161,8 @@ fn specialize_vec<'tcx>(
 
 fn specialize_result<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    rs_std: &RsStdTemplateSpecialization<'tcx>,
-    enum_spec: &RsStdEnumSpecialization<'tcx>,
+    adt_spec: &AdtTemplateSpecialization<'tcx>,
+    enum_spec: &AdtEnumSpecialization<'tcx>,
     ok_ty: FormattedTy<'tcx>,
     err_ty: FormattedTy<'tcx>,
 ) -> ApiSnippets<'tcx> {
@@ -1170,10 +1170,10 @@ fn specialize_result<'tcx>(
     let mut prereqs = CcPrerequisites::default();
     let ok_ty_tokens = ok_ty.for_cc.clone().into_tokens(&mut prereqs);
     let err_ty_tokens = err_ty.for_cc.clone().into_tokens(&mut prereqs);
-    let layout = rs_std.layout;
+    let layout = adt_spec.layout;
     let (tag_encoding, tag_field) = match layout.variants() {
         rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
-            unreachable!("This should have been checked in parse_rs_std_template_specialization")
+            unreachable!("This should have been checked in parse_adt_template_specialization")
         }
         rustc_abi::Variants::Multiple { tag_encoding, tag_field, .. } => (tag_encoding, tag_field),
     };
@@ -1183,7 +1183,7 @@ fn specialize_result<'tcx>(
     let ok_ty_for_rs = ok_ty.for_rs;
     let err_ty_for_rs = err_ty.for_rs;
 
-    let ty::TyKind::Adt(adt, _) = rs_std.self_ty_rs.kind() else {
+    let ty::TyKind::Adt(adt, _) = adt_spec.self_ty_rs.kind() else {
         unreachable!("Result<T, E> must be an ADT");
     };
     let ResultVariantIndices { ok_idx, err_idx } = get_result_variant_indices(tcx, *adt);
@@ -1225,14 +1225,14 @@ fn specialize_result<'tcx>(
         ..Default::default()
     };
 
-    let needs_drop = rs_std.self_ty_rs.needs_drop(tcx, post_analysis_typing_env(tcx, adt.did()));
-    let discr_for_ok = rs_std.self_ty_rs.discriminant_for_variant(tcx, ok_idx).expect(
+    let needs_drop = adt_spec.self_ty_rs.needs_drop(tcx, post_analysis_typing_env(tcx, adt.did()));
+    let discr_for_ok = adt_spec.self_ty_rs.discriminant_for_variant(tcx, ok_idx).expect(
         "We do not support zero sized types. Before generating a specialization, we\
             check that the type can be formatted as a C++ type. That should exclude this case \
             from occurring",
     );
     let ok_discr_val = literal_of_tag_ty(tcx, discr_for_ok.val, tag_type);
-    let discr_for_err = rs_std.self_ty_rs.discriminant_for_variant(tcx, err_idx).expect(
+    let discr_for_err = adt_spec.self_ty_rs.discriminant_for_variant(tcx, err_idx).expect(
         "We do not support zero sized types. Before generating a specialization, we\
             check that the type can be formatted as a C++ type. That should exclude this case \
             from occurring",
@@ -1243,9 +1243,7 @@ fn specialize_result<'tcx>(
     let (ok_offset, err_offset) = {
         let variants = match layout.variants() {
             rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
-                unreachable!(
-                    "This should have been checked in parse_rs_std_template_specialization"
-                )
+                unreachable!("This should have been checked in parse_adt_template_specialization")
             }
             rustc_abi::Variants::Multiple { variants, .. } => variants,
         };
@@ -1289,7 +1287,7 @@ fn specialize_result<'tcx>(
                 let ok_relative_idx =
                     ok_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
                 let ok_relative_val =
-                    literal_of_tag_ty(tcx, *niche_start + ok_relative_idx, tag_type);
+                    literal_of_tag_ty(tcx, niche_start + ok_relative_idx, tag_type);
                 has_value_impl = quote! { tag() == #ok_relative_val };
                 (
                     quote! { set_tag(#ok_relative_val); },
@@ -1308,7 +1306,7 @@ fn specialize_result<'tcx>(
                 let err_relative_idx =
                     err_idx.as_u32().strict_sub(niche_variants.start.as_u32()) as u128;
                 let err_relative_val =
-                    literal_of_tag_ty(tcx, *niche_start + err_relative_idx, tag_type);
+                    literal_of_tag_ty(tcx, niche_start + err_relative_idx, tag_type);
                 has_value_impl = quote! { tag() != #err_relative_val };
                 (
                     quote! { set_tag(#err_relative_val); },
@@ -1338,7 +1336,7 @@ fn specialize_result<'tcx>(
             keyword: quote! { struct },
             cc_short_name: format_ident!("Result"),
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
-            self_ty: rs_std.self_ty_rs,
+            self_ty: adt_spec.self_ty_rs,
             alignment_in_bytes: layout.align().abi.bytes(),
             size_in_bytes: layout.size().bytes(),
         }),
@@ -1403,18 +1401,18 @@ fn specialize_result<'tcx>(
 
 fn specialize_option<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    rs_std: &RsStdTemplateSpecialization<'tcx>,
-    enum_spec: &RsStdEnumSpecialization<'tcx>,
+    adt_spec: &AdtTemplateSpecialization<'tcx>,
+    enum_spec: &AdtEnumSpecialization<'tcx>,
     arg_ty: FormattedTy<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
     let ty_tokens = arg_ty.for_cc.clone().into_tokens(&mut prereqs);
-    let layout = rs_std.layout;
+    let layout = adt_spec.layout;
 
     let (tag_encoding, tag_field) = match layout.variants() {
         rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
-            unreachable!("This should have been checked in parse_rs_std_template_specialization")
+            unreachable!("This should have been checked in parse_adt_template_specialization")
         }
         rustc_abi::Variants::Multiple { tag_encoding, tag_field, .. } => (tag_encoding, tag_field),
     };
@@ -1422,10 +1420,10 @@ fn specialize_option<'tcx>(
     let tag_type_cc: TokenStream = enum_spec.tag_type_cc.clone().into_tokens(&mut prereqs);
     let arg_ty_for_rs = arg_ty.for_rs;
 
-    let ty::TyKind::Adt(adt, _) = rs_std.self_ty_rs.kind() else {
+    let ty::TyKind::Adt(adt, _) = adt_spec.self_ty_rs.kind() else {
         unreachable!("Option<T> must be an ADT");
     };
-    let needs_drop = rs_std.self_ty_rs.needs_drop(tcx, post_analysis_typing_env(tcx, adt.did()));
+    let needs_drop = adt_spec.self_ty_rs.needs_drop(tcx, post_analysis_typing_env(tcx, adt.did()));
 
     let OptionVariantIndices { some_idx, none_idx } = get_option_variant_indices(tcx, *adt);
 
@@ -1470,7 +1468,7 @@ fn specialize_option<'tcx>(
             a specialization, we check that the type can be formatted as a C++ type. That should \
             exclude this case from occurring.";
     let discr_for_none =
-        rs_std.self_ty_rs.discriminant_for_variant(tcx, none_idx).expect(expect_msg);
+        adt_spec.self_ty_rs.discriminant_for_variant(tcx, none_idx).expect(expect_msg);
     let none_discr_val = literal_of_tag_ty(tcx, discr_for_none.val, tag_type);
     let option_api = match tag_encoding {
         rustc_abi::TagEncoding::Direct => {
@@ -1480,7 +1478,7 @@ fn specialize_option<'tcx>(
                 let variants = match layout.variants() {
                     rustc_abi::Variants::Empty | rustc_abi::Variants::Single { .. } => {
                         unreachable!(
-                            "This should have been checked in parse_rs_std_template_specialization"
+                            "This should have been checked in parse_adt_template_specialization"
                         )
                     }
                     rustc_abi::Variants::Multiple { variants, .. } => variants,
@@ -1493,7 +1491,7 @@ fn specialize_option<'tcx>(
                 LayoutData::for_variant(&layout, some_idx).fields.offset(0).bytes(),
             );
             let discr_for_some =
-                rs_std.self_ty_rs.discriminant_for_variant(tcx, some_idx).expect(expect_msg);
+                adt_spec.self_ty_rs.discriminant_for_variant(tcx, some_idx).expect(expect_msg);
             let some_discr_val = literal_of_tag_ty(tcx, discr_for_some.val, tag_type);
 
             OptionApiGenerator {
@@ -1545,7 +1543,7 @@ fn specialize_option<'tcx>(
             keyword: quote! { struct },
             cc_short_name: format_ident!("Option"),
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
-            self_ty: rs_std.self_ty_rs,
+            self_ty: adt_spec.self_ty_rs,
             alignment_in_bytes: layout.align().abi.bytes(),
             size_in_bytes: layout.size().bytes(),
         }),
@@ -1614,10 +1612,10 @@ trait TemplateSpecializationExt<'tcx> {
     fn api_snippets(self, db: &BindingsGenerator<'tcx>) -> ApiSnippets<'tcx>;
 }
 
-impl<'tcx> TemplateSpecializationExt<'tcx> for RsStdTemplateSpecialization<'tcx> {
+impl<'tcx> TemplateSpecializationExt<'tcx> for AdtTemplateSpecialization<'tcx> {
     fn api_snippets(self, db: &BindingsGenerator<'tcx>) -> ApiSnippets<'tcx> {
         match &self.args {
-            RsStdSpecializationArgs::Enum(enum_spec) => match &enum_spec.kind {
+            AdtSpecializationArgs::Enum(enum_spec) => match &enum_spec.kind {
                 EnumSpecializationKind::Option { some_ty } => {
                     let some_ty_ty = some_ty.ty;
                     let mut snippets = specialize_option(db, &self, enum_spec, some_ty.clone());
@@ -1634,19 +1632,20 @@ impl<'tcx> TemplateSpecializationExt<'tcx> for RsStdTemplateSpecialization<'tcx>
                     snippets
                 }
             },
-            RsStdSpecializationArgs::Tuple(element_tys) => {
+            AdtSpecializationArgs::Tuple(element_tys) => {
                 let mut snippets = specialize_tuple(db, &self, element_tys.clone());
                 for element_ty in element_tys {
                     snippets.main_api.prereqs.forward_declare_type(element_ty.ty);
                 }
                 snippets
             }
-            RsStdSpecializationArgs::Vec(inner_ty) => {
+            AdtSpecializationArgs::Vec(inner_ty) => {
                 let inner_ty_ty = inner_ty.ty;
                 let mut snippets = specialize_vec(db, &self, inner_ty.clone());
                 snippets.main_api.prereqs.forward_declare_type(inner_ty_ty);
                 snippets
             }
+            AdtSpecializationArgs::UserDefinedAdt => ApiSnippets::default(),
         }
     }
 }
@@ -2014,7 +2013,7 @@ pub fn generate_template_specialization<'tcx>(
     specialization: TemplateSpecialization<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let mut snippets = match &specialization {
-        TemplateSpecialization::RsStd(rs_std) => rs_std.clone().api_snippets(db),
+        TemplateSpecialization::Adt(adt) => adt.clone().api_snippets(db),
         TemplateSpecialization::TraitImpl(trait_impl) => {
             generate_trait_impl_specialization(db, trait_impl).unwrap_or_else(|err| {
                 generate_unsupported_def(db, trait_impl.trait_impl, err).into_main_api()

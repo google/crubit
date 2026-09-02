@@ -381,7 +381,7 @@ pub fn new_database<'db>(
         into_trait_impls_by_destination,
         get_generic_args::get_generic_args,
         renamed_crate_original_name,
-        generate_template_specialization::parse_rs_std_template_specialization,
+        generate_template_specialization::parse_adt_template_specialization,
     )
 }
 
@@ -1831,7 +1831,7 @@ fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -
                 .crate_features(db.source_crate_num())
                 .contains(crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
             let def_id = if always_specialize_generics
-                && db.parse_rs_std_template_specialization(ty).is_some()
+                && db.parse_adt_template_specialization(ty).is_some()
             {
                 None
             } else {
@@ -2436,7 +2436,7 @@ impl NodeSortKey {
 
     fn new<'tcx>(tcx: TyCtxt<'tcx>, spec: &TemplateSpecialization<'tcx>) -> Self {
         match spec {
-            TemplateSpecialization::RsStd(e) => {
+            TemplateSpecialization::Adt(e) => {
                 let ty = e.self_ty_rs;
 
                 #[cfg_accessible(rustc_data_structures::stable_hash)]

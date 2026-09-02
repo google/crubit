@@ -460,26 +460,13 @@ pub fn format_ty_for_cc<'tcx>(
                     .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
                     && !types.is_empty())
             {
-                let Some(rs_std) = db.parse_rs_std_template_specialization(ty) else {
+                let Some(adt_spec) = db.parse_adt_template_specialization(ty) else {
                     bail!("Tuple type `{ty}` is not supported in this context");
                 };
-                let rs_std = rs_std?;
+                let adt_spec = adt_spec?;
                 let mut prereqs = CcPrerequisites::default();
-                let tokens = rs_std.self_ty_cc.clone().into_tokens(&mut prereqs);
-                prereqs.includes.insert(rs_std.support_header(db));
-                if matches!(
-                    location,
-                    TypeLocation::Field
-                        | TypeLocation::Const
-                        | TypeLocation::NestedBridgeable
-                        | TypeLocation::TemplateArg
-                ) {
-                    prereqs.template_specializations.insert(TemplateSpecialization::RsStd(rs_std));
-                } else {
-                    prereqs
-                        .lazy_template_specializations
-                        .insert(TemplateSpecialization::RsStd(rs_std));
-                }
+                let tokens = adt_spec.self_ty_cc.clone().into_tokens(&mut prereqs);
+                prereqs.depend_on_spec(db, location, adt_spec);
                 return Ok(CcSnippet { tokens, prereqs });
             } else {
                 let mut prereqs = CcPrerequisites::default();
@@ -603,37 +590,24 @@ pub fn format_ty_for_cc<'tcx>(
                 );
             }
 
-            let specialization = db.parse_rs_std_template_specialization(ty);
+            let specialization = db.parse_adt_template_specialization(ty);
             if specialization.as_ref().is_some_and(|specialization| {
                 // We only want to consider errors when bridging could not occur.
                 // Otherwise, fallthrough to the normal bridging logic.
                 let error_occurred = !location.is_bridgeable() && specialization.is_err();
-                let is_option_or_result = specialization.as_ref().is_ok_and(|rs_std_enum| {
-                    (!location.is_bridgeable() && rs_std_enum.is_option())
-                        || rs_std_enum.is_result()
-                        || rs_std_enum.is_vec()
+                let is_option_or_result = specialization.as_ref().is_ok_and(|adt_spec_enum| {
+                    (!location.is_bridgeable() && adt_spec_enum.is_option())
+                        || adt_spec_enum.is_result()
+                        || adt_spec_enum.is_vec()
                         || db
                             .crate_features(db.source_crate_num())
                             .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust)
                 });
                 error_occurred || is_option_or_result
             }) {
-                let rs_std = specialization.unwrap()?;
-                let tokens = rs_std.self_ty_cc.clone().into_tokens(&mut prereqs);
-                prereqs.includes.insert(rs_std.support_header(db));
-                if matches!(
-                    location,
-                    TypeLocation::Field
-                        | TypeLocation::Const
-                        | TypeLocation::NestedBridgeable
-                        | TypeLocation::TemplateArg
-                ) {
-                    prereqs.template_specializations.insert(TemplateSpecialization::RsStd(rs_std));
-                } else {
-                    prereqs
-                        .lazy_template_specializations
-                        .insert(TemplateSpecialization::RsStd(rs_std));
-                }
+                let adt_spec = specialization.unwrap()?;
+                let tokens = adt_spec.self_ty_cc.clone().into_tokens(&mut prereqs);
+                prereqs.depend_on_spec(db, location, adt_spec);
                 return Ok(CcSnippet { tokens, prereqs });
             } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
                 let is_layout_compat = bridged_type.is_layout_compatible();
@@ -1523,7 +1497,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                     return bridged_builtin.crubit_abi_type(db, substs);
                 }
 
-                if let Some(spec) = db.parse_rs_std_template_specialization(ty) {
+                if let Some(spec) = db.parse_adt_template_specialization(ty) {
                     // Specifically when embedding a template specialization within an Option, we
                     // need it to be movable.
                     if !db.is_cpp_move_constructible(ty) {
@@ -1535,7 +1509,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                     let mut prereqs = CcPrerequisites::default();
                     let rust_type = db.format_ty_for_rs(spec.self_ty_rs)?;
                     let cpp_type = spec.self_ty_cc.clone().into_tokens(&mut prereqs);
-                    prereqs.template_specializations.insert(TemplateSpecialization::RsStd(spec));
+                    prereqs.template_specializations.insert(TemplateSpecialization::Adt(spec));
                     let crubit_abi_type = CrubitAbiType::Transmute { rust_type, cpp_type };
                     return Ok(CrubitAbiTypeWithCcPrereqs { crubit_abi_type, prereqs });
                 }
