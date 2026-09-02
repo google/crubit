@@ -801,8 +801,32 @@ impl Default for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
     }
 }
 
-// error: constructor `CopyCtorHasUnevaluatableExprInUnevaluatedContext::CopyCtorHasUnevaluatableExprInUnevaluatedContext` could not be bound
-//   Defaulted function relies on an invalid decl: std::declval
+/// In libc++, `std::unique_ptr::operator*()` declares a conditional `noexcept`
+/// specification using `std::declval`:
+///
+/// ```cpp
+/// operator*() const noexcept(noexcept(*std::declval<pointer>()))
+/// ```
+///
+/// Because `std::declval` cannot be evaluated, attempting to instantiate its
+/// definition triggers a static assertion error. But since it appears in a
+/// position that should never be evaluated (the body of a noexcept specifier),
+/// Crubit shouldn't complain about it.
+///
+/// This struct tests that Crubit skips unevaluated operands (such as
+/// `noexcept`, `decltype`, or `sizeof`) during AST validation, ensuring that
+/// calling `*other.int_ptr_` in a copy constructor correctly generates
+/// `impl Clone`.
+impl Clone for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
+    #[inline(always)]
+    fn clone<'other>(&'other self) -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN48CopyCtorHasUnevaluatableExprInUnevaluatedContextC1ERKS_(&raw mut tmp as*mut _,self);
+            tmp.assume_init()
+        }
+    }
+}
 
 forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_3pmr21polymorphic_allocatorIDiEEEE = forward_declare::symbol!(":: std :: basic_string < char32_t , std :: char_traits < char32_t >, std :: pmr :: polymorphic_allocator < char32_t >>"));
 
@@ -946,6 +970,12 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZN48CopyCtorHasUnevaluatableExprInUnevaluatedContextC1Ev(
             __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN48CopyCtorHasUnevaluatableExprInUnevaluatedContextC1ERKS_<
+            'other,
+        >(
+            __this: *mut ::core::ffi::c_void,
+            other: &'other crate::CopyCtorHasUnevaluatableExprInUnevaluatedContext,
         );
     }
 }
