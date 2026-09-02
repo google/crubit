@@ -580,105 +580,6 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 };
 #endif
 
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
-template <>
-struct alignas(4)
-    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < u32 , u32 >")
-        rs_std::Result<::std::uint32_t, ::std::uint32_t>
-    : public rs_std::ResultBase<
-          rs_std::Result<::std::uint32_t, ::std::uint32_t>, ::std::uint32_t,
-          ::std::uint32_t> {
- public:
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  Result(const Result&) = default;
-  Result& operator=(const Result&) = default;
-  Result(Result&&) = default;
-  Result& operator=(Result&&) = default;
-
-  Result(::crubit::UnsafeRelocateTag, Result&& value);
-
- public:
-  using base_type =
-      rs_std::ResultBase<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
-                         ::std::uint32_t, ::std::uint32_t>;
-  template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint32_t, U>)
-  explicit constexpr Result(U&& ok) noexcept;
-  template <typename U>
-    requires(rs_std::ResultForwardConstructible<Result, ::std::uint32_t, U>)
-  constexpr Result& operator=(U&& ok) noexcept;
-  template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<::std::uint32_t, F>)
-  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
-  template <typename F>
-    requires(rs_std::ResultUnexpectedConstructible<::std::uint32_t, F>)
-  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
-  template <typename... Args>
-  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
-  template <typename... Args>
-  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
-  ~Result() noexcept = default;
-
- private:
-  friend base_type;
-  bool has_value_impl() const noexcept { return tag() == 0; }
-  ::std::uint32_t* ok_ptr() noexcept {
-    return reinterpret_cast<::std::uint32_t*>(__storage + 4);
-  }
-  ::std::uint32_t const* ok_const_ptr() const noexcept {
-    return reinterpret_cast<::std::uint32_t const*>(__storage + 4);
-  }
-  ::std::uint32_t* err_ptr() noexcept {
-    return reinterpret_cast<::std::uint32_t*>(__storage + 4);
-  }
-  ::std::uint32_t const* err_const_ptr() const noexcept {
-    return reinterpret_cast<::std::uint32_t const*>(__storage + 4);
-  }
-  void set_ok_tag() noexcept { set_tag(0); }
-  void set_err_tag() noexcept { set_tag(1); }
-  constexpr ::std::uint32_t tag() const& noexcept;
-  constexpr void set_tag(::std::uint32_t tag) noexcept;
-
- private:
-  unsigned char __storage[8];
-};
-#endif
-
-namespace result {
-
-struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: GetsResult") alignas(4)
-    [[clang::trivial_abi]] GetsResult final {
- public:
-  // Type is not a C++ aggregate: Field `value` is not default-constructible in
-  // C++
-
-  // `result_golden::GetsResult` doesn't implement the `Default` trait
-  GetsResult() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~GetsResult() = default;
-  GetsResult(GetsResult&&) = default;
-  GetsResult& operator=(GetsResult&&) = default;
-
-  // `result_golden::GetsResult` doesn't implement the `Clone` trait
-  GetsResult(const GetsResult&) = delete;
-  GetsResult& operator=(const GetsResult&) = delete;
-  GetsResult(::crubit::UnsafeRelocateTag, GetsResult&& value);
-
-  static ::result::GetsResult new_(::std::uint32_t val);
-
-  union {
-    rs_std::Result<::std::uint32_t, ::std::uint32_t> value;
-  };
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-
-}  // namespace result
-
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 template <>
@@ -859,6 +760,105 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: NestedResult") alignas(4)
     rs_std::Result<::std::uint32_t,
                    rs_std::Result<::std::uint32_t, ::std::uint32_t>>
         in_err;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace result
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
+template <>
+struct alignas(4)
+    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < u32 , u32 >")
+        rs_std::Result<::std::uint32_t, ::std::uint32_t>
+    : public rs_std::ResultBase<
+          rs_std::Result<::std::uint32_t, ::std::uint32_t>, ::std::uint32_t,
+          ::std::uint32_t> {
+ public:
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Result(const Result&) = default;
+  Result& operator=(const Result&) = default;
+  Result(Result&&) = default;
+  Result& operator=(Result&&) = default;
+
+  Result(::crubit::UnsafeRelocateTag, Result&& value);
+
+ public:
+  using base_type =
+      rs_std::ResultBase<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
+                         ::std::uint32_t, ::std::uint32_t>;
+  template <typename U>
+    requires(rs_std::ResultForwardConstructible<Result, ::std::uint32_t, U>)
+  explicit constexpr Result(U&& ok) noexcept;
+  template <typename U>
+    requires(rs_std::ResultForwardConstructible<Result, ::std::uint32_t, U>)
+  constexpr Result& operator=(U&& ok) noexcept;
+  template <typename F>
+    requires(rs_std::ResultUnexpectedConstructible<::std::uint32_t, F>)
+  explicit constexpr Result(rs_std::unexpected<F>&& err) noexcept;
+  template <typename F>
+    requires(rs_std::ResultUnexpectedConstructible<::std::uint32_t, F>)
+  constexpr Result& operator=(rs_std::unexpected<F>&& err) noexcept;
+  template <typename... Args>
+  explicit constexpr Result(::std::in_place_t ip, Args&&... args) noexcept;
+  template <typename... Args>
+  explicit constexpr Result(rs_std::unexpect_t u, Args&&... args) noexcept;
+  ~Result() noexcept = default;
+
+ private:
+  friend base_type;
+  bool has_value_impl() const noexcept { return tag() == 0; }
+  ::std::uint32_t* ok_ptr() noexcept {
+    return reinterpret_cast<::std::uint32_t*>(__storage + 4);
+  }
+  ::std::uint32_t const* ok_const_ptr() const noexcept {
+    return reinterpret_cast<::std::uint32_t const*>(__storage + 4);
+  }
+  ::std::uint32_t* err_ptr() noexcept {
+    return reinterpret_cast<::std::uint32_t*>(__storage + 4);
+  }
+  ::std::uint32_t const* err_const_ptr() const noexcept {
+    return reinterpret_cast<::std::uint32_t const*>(__storage + 4);
+  }
+  void set_ok_tag() noexcept { set_tag(0); }
+  void set_err_tag() noexcept { set_tag(1); }
+  constexpr ::std::uint32_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint32_t tag) noexcept;
+
+ private:
+  unsigned char __storage[8];
+};
+#endif
+
+namespace result {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: GetsResult") alignas(4)
+    [[clang::trivial_abi]] GetsResult final {
+ public:
+  // Type is not a C++ aggregate: Field `value` is not default-constructible in
+  // C++
+
+  // `result_golden::GetsResult` doesn't implement the `Default` trait
+  GetsResult() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~GetsResult() = default;
+  GetsResult(GetsResult&&) = default;
+  GetsResult& operator=(GetsResult&&) = default;
+
+  // `result_golden::GetsResult` doesn't implement the `Clone` trait
+  GetsResult(const GetsResult&) = delete;
+  GetsResult& operator=(const GetsResult&) = delete;
+  GetsResult(::crubit::UnsafeRelocateTag, GetsResult&& value);
+
+  static ::result::GetsResult new_(::std::uint32_t val);
+
+  union {
+    rs_std::Result<::std::uint32_t, ::std::uint32_t> value;
   };
 
  private:

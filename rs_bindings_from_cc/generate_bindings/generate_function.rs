@@ -444,7 +444,16 @@ fn generate_cc_operator_index_nonmut_impls<'a>(
     let func_name = make_rs_ident("cc_index");
 
     let output_type: Rc<RsTypeKind> = match return_type {
-        RsTypeKind::Reference { referent, mutability, .. } => {
+        RsTypeKind::Reference { referent, mutability, is_cref, .. } => {
+            if *is_cref {
+                // If operator[] maps natively to an incomplete/unsupported CRef type proxy, it
+                // is fundamentally incompatible with the restrictive `std::ops::Index` trait which
+                // statically dictates the return type must be a fully native `&Output` reference.
+                bail_to_errors!(
+                    errors,
+                    "operator[] would, but cannot, return a CRef, as std::ops::Index requires returning a native Rust reference"
+                );
+            }
             if !mutability.is_const() {
                 errors.add(anyhow!("operator[] must return a const value"));
             }
@@ -483,7 +492,13 @@ fn generate_cc_operator_index_mut_impls<'a>(
     let func_name = make_rs_ident("cc_index_mut");
 
     let output_type: Rc<RsTypeKind> = match return_type {
-        RsTypeKind::Reference { referent, mutability, .. } => {
+        RsTypeKind::Reference { referent, mutability, is_cref, .. } => {
+            if *is_cref {
+                bail_to_errors!(
+                    errors,
+                    "operator[] would, but cannot, return a CRef, as std::ops::IndexMut requires returning a native Rust reference"
+                );
+            }
             if mutability.is_const() {
                 errors.add(anyhow!("(mutable) operator[] must return a non-const value"));
             }
@@ -2404,14 +2419,36 @@ pub fn generate_function<'a>(
                         quote! {}
                     };
 
-                    let is_item_unpin = match referent.as_ref() {
-                        RsTypeKind::Record { record, .. } => record.is_unpin(),
-                        _ => true,
+                    for lt in referent.lifetimes() {
+                        if !lt.is_elided()
+                            && &*lt.0 != "static"
+                            && lt != container_lifetime
+                            && !trait_lifetime_params.contains(&lt)
+                        {
+                            bail!(
+                                "Cannot implement {} because the return type contains unbound lifetime '{}'",
+                                match trait_name {
+                                    TraitName::CcIndex { .. } => "CcIndex",
+                                    TraitName::CcIndexMut { .. } => "CcIndexMut",
+                                    _ => bail!("Unexpected indexing trait: {:?}", trait_name),
+                                },
+                                lt.0,
+                            );
+                        }
+                    }
+
+                    // Ascertain whether the returned value maps to an opaque proxy like CRef.
+                    // This determines whether the output type uses native Rust references vs CRef wrapped ones.
+                    let is_cref = match &return_type {
+                        RsTypeKind::Reference { is_cref, .. } => *is_cref,
+                        _ => false,
                     };
 
-                    associated_type = if is_item_unpin
-                        || matches!(trait_name, TraitName::CcIndex { .. })
-                    {
+                    let is_item_unpin = referent.is_unpin();
+
+                    associated_type = if is_cref {
+                        quote! { type #name<#container_lifetime> = ::cref::CRef<#container_lifetime, #referent_tokens>; }
+                    } else if is_item_unpin || matches!(trait_name, TraitName::CcIndex { .. }) {
                         quote! { type #name<#container_lifetime> = &#container_lifetime #mut_tokens #referent_tokens; }
                     } else {
                         quote! { type #name<#container_lifetime> = ::core::pin::Pin<&#container_lifetime #mut_tokens #referent_tokens>; }
@@ -3474,9 +3511,13 @@ pub fn generate_standard_indexing_impl<'a>(
                 Some(metadata) => metadata.reference() == ReferenceQualification::RValue,
                 None => false,
             };
+            // Extract the unpin status accurately from the core referent, as wrapper references
+            // (e.g. RsTypeKind::Reference) are inherently `Unpin` conceptually, while the payload
+            // mapping must reflect the actual C++ type's pinned constraints.
             let is_item_unpin = match output_type.as_ref() {
-                RsTypeKind::Record { record, .. } => record.is_unpin(),
-                _ => true,
+                RsTypeKind::Reference { referent, .. } => referent.is_unpin(),
+                RsTypeKind::RvalueReference { referent, .. } => referent.is_unpin(),
+                _ => output_type.is_unpin(),
             };
             if is_rvalue || !is_item_unpin || !has_matching_cc_index(db, trait_record, index_type) {
                 quote! {}

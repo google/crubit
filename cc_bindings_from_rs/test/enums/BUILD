@@ -140,7 +140,10 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "option_test",
     srcs = ["option_test.cc"],
-    platforms = ["android"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":option_cc_api",
         "//support/rs_std",

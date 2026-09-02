@@ -10,7 +10,7 @@ use crate::adt_core_bindings::{
     AdtCoreBindings, CopyCodegenStyle, MoveCodegenStyle, NoMoveOrAssign,
 };
 use crate::code_snippet::{
-    ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs, RsStdTemplateSpecialization,
+    AdtTemplateSpecialization, ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs,
 };
 use crate::fully_qualified_name::{FullyQualifiedName, PublicPaths, UnqualifiedName};
 use crate::include_guard::IncludeGuard;
@@ -237,6 +237,11 @@ memoized::query_group! {
           ty: Ty<'tcx>
       ) -> Result<TokenStream>;
 
+      /// Returns true if the type implements the `::protobuf::Message` trait.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:is_proto_message
+      fn is_proto_message(&self, ty: Ty<'tcx>) -> bool;
+
       /// Returns true if the type has a default constructor.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:has_default_ctor
@@ -385,11 +390,11 @@ memoized::query_group! {
       /// and contains valid types. It does not check if the template specialization should be used
       /// (vs using composable bridging).
       ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/generate_template_specialization.rs?q=function:parse_rs_std_template_specialization
-      fn parse_rs_std_template_specialization(
+      /// Implementation: cc_bindings_from_rs/generate_bindings/generate_template_specialization.rs?q=function:parse_adt_template_specialization
+      fn parse_adt_template_specialization(
           &self,
           self_ty: Ty<'tcx>,
-      ) -> Option<Result<RsStdTemplateSpecialization<'tcx>>>;
+      ) -> Option<Result<AdtTemplateSpecialization<'tcx>>>;
   }
 }
 

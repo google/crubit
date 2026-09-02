@@ -15,7 +15,7 @@ bazel_dep(name = "fuzztest", version = "20250214.0")
 bazel_dep(name = "google_benchmark", version = "1.9.1")
 bazel_dep(name = "googletest", version = "1.17.0")
 bazel_dep(name = "platforms", version = "1.1.0")
-bazel_dep(name = "protobuf", version = "36.0.bcr.1")
+bazel_dep(name = "protobuf", version = "36.1.bcr.1")
 bazel_dep(name = "re2", version = "2024-07-02.bcr.1")
 bazel_dep(name = "rules_license", version = "1.0.0")
 bazel_dep(name = "rules_proto", version = "7.1.0")
@@ -78,7 +78,7 @@ single_version_override(
     patches = [
         "//patches:protobuf_visibility.patch",
     ],
-    version = "36.0.bcr.1",
+    version = "36.1.bcr.1",
 )
 
 # TODO(b/379928127): Remove this override once cl/974008598 is released in BCR.
