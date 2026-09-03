@@ -22,14 +22,14 @@ fn test_layout() {
 
 #[gtest]
 fn test_polymorphic_destructor() {
-    // Initial destructor count should be 0.
-    expect_eq!(test_helpers::shared_ptr_test::get_derived_destructor_count(), 0);
+    let mut count = 0;
     {
-        let _shared_base = test_helpers::shared_ptr_test::create_virtual_base();
+        let _shared_base =
+            unsafe { test_helpers::shared_ptr_test::create_virtual_base(&mut count) };
         expect_eq!(core::mem::size_of_val(&_shared_base), 16);
     }
     // After dropping shared_ptr<Base> which points to Derived, count should be 1.
-    expect_eq!(test_helpers::shared_ptr_test::get_derived_destructor_count(), 1);
+    expect_eq!(count, 1);
 }
 
 #[gtest]
@@ -209,6 +209,7 @@ fn test_from_box_sole_owner_destroyed_in_cpp() {
     test_helpers::shared_ptr_test::destroy_shared_ptr(sp);
 }
 
+#[allow(dead_code)]
 struct Point {
     x: i32,
     y: i32,
@@ -316,4 +317,70 @@ fn test_ptr_eq() {
     // Different allocations
     expect_false!(shared_ptr::owner_equal(&sp1, &sp2));
     expect_false!(shared_ptr::owner_equal(&sp1_x, &sp2));
+}
+
+#[gtest]
+fn test_from_unique_ptr() {
+    let u = test_helpers::shared_ptr_test::create_unique_ptr();
+    let sp = shared_ptr::from_unique_ptr(u);
+    expect_false!(shared_ptr::is_null(&sp));
+    expect_eq!(*shared_ptr::try_as_ref(&sp).unwrap(), 42);
+    expect_eq!(shared_ptr::use_count(&sp), 1);
+
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp), 2);
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+
+    drop(sp);
+    expect_eq!(shared_ptr::use_count(&sp_clone), 1);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+}
+
+#[gtest]
+fn test_from_unique_ptr_null() {
+    let u = test_helpers::shared_ptr_test::create_null_unique_ptr();
+    let sp = shared_ptr::from_unique_ptr(u);
+    expect_true!(shared_ptr::is_null(&sp));
+    expect_eq!(shared_ptr::use_count(&sp), 0);
+}
+
+#[gtest]
+fn test_from_unique_ptr_destroyed_in_cpp() {
+    let u = test_helpers::shared_ptr_test::create_unique_ptr();
+    let sp = shared_ptr::from_unique_ptr(u);
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+
+    test_helpers::shared_ptr_test::destroy_shared_ptr(sp);
+
+    expect_eq!(shared_ptr::use_count(&sp_clone), 1);
+    expect_eq!(*shared_ptr::try_as_ref(&sp_clone).unwrap(), 42);
+}
+
+#[gtest]
+fn test_from_virtual_unique_ptr() {
+    let mut count = 0;
+    {
+        let u = unsafe { test_helpers::shared_ptr_test::create_virtual_unique_base(&mut count) };
+        let sp = shared_ptr::from_virtual_unique_ptr(u);
+        expect_false!(shared_ptr::is_null(&sp));
+        expect_eq!(shared_ptr::use_count(&sp), 1);
+
+        let sp_clone = sp.clone();
+        expect_eq!(shared_ptr::use_count(&sp), 2);
+        expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+        drop(sp);
+        expect_eq!(shared_ptr::use_count(&sp_clone), 1);
+        expect_eq!(count, 0);
+    }
+    expect_eq!(count, 1);
+}
+
+#[gtest]
+fn test_from_virtual_unique_ptr_null() {
+    let u = test_helpers::shared_ptr_test::create_null_virtual_unique_base();
+    let sp = shared_ptr::from_virtual_unique_ptr(u);
+    expect_true!(shared_ptr::is_null(&sp));
+    expect_eq!(shared_ptr::use_count(&sp), 0);
 }

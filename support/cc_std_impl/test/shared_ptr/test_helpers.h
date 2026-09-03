@@ -48,20 +48,39 @@ CRUBIT_MUST_BIND inline std::shared_ptr<void> create_shared_ptr_void_ptr() {
 // type.
 struct Base {
   virtual ~Base() = default;
-  static inline int derived_destructor_count = 0;
   virtual bool is_derived() const { return false; }
 };
 struct Derived : public Base {
-  ~Derived() override { derived_destructor_count++; }
+  explicit Derived(int* count) : count(count) {}
+  ~Derived() override {
+    if (count != nullptr) {
+      (*count)++;
+    }
+  }
   bool is_derived() const override { return true; }
+  int* count = nullptr;
 };
 
-CRUBIT_MUST_BIND inline std::shared_ptr<Base> create_virtual_base() {
-  return std::make_shared<Derived>();
+CRUBIT_MUST_BIND inline std::shared_ptr<Base> create_virtual_base(int* count) {
+  return std::make_shared<Derived>(count);
 }
 
-CRUBIT_MUST_BIND inline int get_derived_destructor_count() {
-  return Base::derived_destructor_count;
+CRUBIT_MUST_BIND inline std::unique_ptr<int> create_unique_ptr() {
+  return std::make_unique<int>(42);
+}
+
+CRUBIT_MUST_BIND inline std::unique_ptr<int> create_null_unique_ptr() {
+  return nullptr;
+}
+
+CRUBIT_MUST_BIND inline std::unique_ptr<Base> create_virtual_unique_base(
+    int* count) {
+  return std::make_unique<Derived>(count);
+}
+
+CRUBIT_MUST_BIND inline std::unique_ptr<Base>
+create_null_virtual_unique_base() {
+  return nullptr;
 }
 
 }  // namespace shared_ptr_test

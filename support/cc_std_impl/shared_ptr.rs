@@ -7,6 +7,7 @@ extern crate alloc;
 use crate::crubit_cc_std_internal::std_allocator::{
     self, shared_weak_count, DynControlBlock, FunctionToCall,
 };
+use crate::std::{unique_ptr, virtual_unique_ptr, Delete};
 use alloc::boxed::Box;
 use alloc::sync::Arc;
 use core::ffi::c_void;
@@ -183,6 +184,21 @@ impl<T: Sized> shared_ptr<T> {
         unsafe { shared_ptr::project_unchecked(shared_ptr::new(arc), |a| &**a) }
     }
 
+    /// Creates a new `shared_ptr` taking ownership of an existing `unique_ptr<T>`.
+    ///
+    /// If `u` is null, returns a null `shared_ptr` with no control block allocated.
+    /// Otherwise, creates a control block that will drop `T` and deallocate its storage
+    /// using C++ `delete` when the last reference is dropped.
+    pub fn from_unique_ptr(u: unique_ptr<T>) -> Self {
+        if u.get().is_null() {
+            shared_ptr { ptr: core::ptr::null(), cntrl: core::ptr::null_mut() }
+        } else {
+            let ptr = u.get();
+            let (_inner_ptr, cntrl) = shared_ptr::into_raw_parts(shared_ptr::new(u));
+            shared_ptr { ptr, cntrl }
+        }
+    }
+
     /// Creates a new `shared_ptr` from a raw pointer and a custom deleter.
     ///
     /// When the number of strong owners reaches zero, the deleter will be called with the raw
@@ -299,6 +315,23 @@ impl<T: Sized> shared_ptr<T> {
     #[must_use]
     pub fn owner_equal<U: Sized>(this: &Self, other: &shared_ptr<U>) -> bool {
         core::ptr::addr_eq(this.cntrl, other.cntrl)
+    }
+}
+
+impl<T: Sized + Delete> shared_ptr<T> {
+    /// Creates a new `shared_ptr` taking ownership of an existing `virtual_unique_ptr<T>`.
+    ///
+    /// If `u` is null, returns a null `shared_ptr` with no control block allocated.
+    /// Otherwise, creates a control block that will destroy `T` using `T::delete`
+    /// when the last reference is dropped.
+    pub fn from_virtual_unique_ptr(u: virtual_unique_ptr<T>) -> Self {
+        if u.get().is_null() {
+            shared_ptr { ptr: core::ptr::null(), cntrl: core::ptr::null_mut() }
+        } else {
+            let ptr = u.get();
+            let (_inner_ptr, cntrl) = shared_ptr::into_raw_parts(shared_ptr::new(u));
+            shared_ptr { ptr, cntrl }
+        }
     }
 }
 
