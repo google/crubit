@@ -96,6 +96,11 @@ pub(crate) fn should_receive_bindings<'tcx>(db: &BindingsGenerator<'tcx>, def_id
     if attributes.do_not_bind {
         return false;
     }
+    // If the type has a `cpp_type` attribute, it should receive bindings even if it is defined in
+    // an ignored file.
+    if attributes.cpp_type.is_some() {
+        return true;
+    }
     !is_in_ignore_symbols_from_files(db, def_id)
 }
 
@@ -886,6 +891,13 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
     // is pointing at alongside the use as we generate_items and pass that when we want to determine
     // canonical name.
     let def_id = resolve_if_use(db, def_id).unwrap_or(def_id);
+
+    // Symbols that should not receive bindings should not have a canonical name, so that we do not
+    // attempt to bind other items that depend on them (functions that use them in their signature
+    // etc.).
+    if !should_receive_bindings(db, def_id) {
+        return None;
+    }
 
     let (full_path_strs, type_alias_def_id, krate_num) = {
         let paths = db.all_public_paths_by_def_id().get(&def_id).cloned()?;
@@ -2410,9 +2422,6 @@ fn formatted_items_in_crate<'tcx>(
     defs_in_crate
         .into_iter()
         .filter_map(|(def_id, paths)| {
-            if !crate::should_receive_bindings(db, def_id) {
-                return None;
-            }
             let mut snippets = None;
             let canonical_name = db.symbol_canonical_name(def_id)?;
             let aliases = if canonical_name.krate_num == db.source_crate_num() {

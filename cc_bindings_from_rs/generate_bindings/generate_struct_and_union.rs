@@ -390,13 +390,6 @@ pub(crate) fn generate_associated_item<'tcx>(
                         tcx.param_env(def_id),
                         tcx.type_of(def_id).instantiate_identity(),
                     );
-                    if alias_type.walk().any(|arg| {
-                        arg.as_type()
-                            .and_then(|ty| ty.ty_adt_def())
-                            .is_some_and(|adt| !crate::should_receive_bindings(db, adt.did()))
-                    }) {
-                        bail!("Associated type `{name}` contains a type that shouldn't receive bindings.");
-                    }
                     let rs_type_spelling = format!("<{} as {}>::{}", self_ty, trait_rs_name, name);
                     crate::create_type_alias_with_rs_type(
                         db,

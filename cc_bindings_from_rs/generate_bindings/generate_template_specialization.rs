@@ -57,15 +57,6 @@ pub(crate) fn parse_adt_template_specialization<'tcx>(
         tcx,
         tcx.normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), unnorm_ty),
     );
-    // If our specialization contains a status type from additional srcs, we should not generate a
-    // specialization for it.
-    if self_ty.walk().any(|arg| {
-        arg.as_type()
-            .and_then(|ty| ty.ty_adt_def())
-            .is_some_and(|adt| !crate::should_receive_bindings(db, adt.did()))
-    }) {
-        return None;
-    }
 
     match self_ty.kind() {
         ty::TyKind::Adt(adt, substs) => {

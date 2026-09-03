@@ -483,6 +483,10 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         if RustBindingsFromCcInfo in dep
     ])
     for file in ignore_symbols_from_files.to_list():
+        # These are internal to Crubit and we want them receive bindings despite being in additional
+        # sources.
+        if "cc_std_impl" in file.path or "cc_std_impl" in file.short_path:
+            continue
         cli_flags.append("--ignore-symbols-from-files=" + file.path)
     dep_bindings_infos = _get_dep_bindings_infos(ctx.rule.attr) + [
         target[CcBindingsFromRustInfo]
