@@ -45,7 +45,7 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
 
     let absl_include_dirs = absl::collect_absl_includes();
     let (absl_lib_dirs, absl_libs) = absl::collect_absl_libs();
-    paths::print_link_searchs(&absl_lib_dirs)?;
+    paths::print_link_searches(&absl_lib_dirs)?;
     paths::print_link_libs(&absl_libs)?;
 
     // ===== LLVM libtooling =====
@@ -53,16 +53,16 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
     // TODO: Use llvm-config instead of LIBCLANG_STATIC_PATH?
     let clang_include_dirs = clang::collect_clang_includes();
     let (clang_lib_dirs, clang_libs) = clang::collect_clang_libs();
-    paths::print_link_searchs(&clang_lib_dirs)?;
+    paths::print_link_searches(&clang_lib_dirs)?;
     paths::print_link_libs(&clang_libs)?;
 
     // ===== Protobuf =====
 
     let gen_proto_sources = protobuf::compile_protos(&path_to_src_root, proto_sources, &obj_dir)?;
     let proto_include_dirs = protobuf::collect_protobuf_includes();
-    let proto_lib_dirs = protobuf::collect_protobuf_lib_dirs();
-    paths::print_link_searchs(&proto_lib_dirs)?;
-    paths::print_link_libs(&["protobuf"])?;
+    let (proto_lib_dirs, proto_libs) = protobuf::collect_protobuf_libs();
+    paths::print_link_searches(&proto_lib_dirs)?;
+    paths::print_link_libs(&proto_libs)?;
 
     // ===== The cc lib ======
 

@@ -10,21 +10,15 @@ use std::process::Command;
 
 /// Returns a list of include paths for protobuf headers.
 pub fn collect_protobuf_includes() -> Vec<PathBuf> {
-    if let Some(env_paths) = paths::print_env_to_string("PROTOBUF_INCLUDE_PATH") {
-        env_paths.split(',').map(|s| Path::new(s).to_owned()).collect()
-    } else {
-        vec![]
-    }
+    paths::get_env_paths("PROTOBUF_INCLUDE_PATH")
 }
 
-/// Returns search paths to protobuf static libraries.
-pub fn collect_protobuf_lib_dirs() -> Vec<PathBuf> {
-    paths::print_env_to_string("PROTOBUF_LIB_STATIC_PATH")
-        .unwrap_or_default()
-        .split(',')
-        .filter(|s| !s.is_empty())
-        .map(PathBuf::from)
-        .collect()
+/// Returns the paths to the protobuf libraries (to be used as a search path) and a
+/// list of libraries to be linked.
+pub fn collect_protobuf_libs() -> (Vec<PathBuf>, Vec<OsString>) {
+    paths::collect_static_libs("PROTOBUF_LIB_STATIC_PATH", |name| {
+        name.strip_prefix("lib").unwrap_or(name) == "protobuf"
+    })
 }
 
 /// Compiles `.proto` files to C++ source/headers using `protoc`, and returns paths to all
@@ -63,10 +57,10 @@ pub fn compile_protos<P1: AsRef<Path>, P2: AsRef<Path>>(
             let stderr = String::from_utf8_lossy(&output.stderr);
             let stdout = String::from_utf8_lossy(&output.stdout);
             if !stderr.is_empty() {
-                println!("cargo:warning=protoc stderr: {}", stderr.trim());
+                println!("cargo::warning=protoc stderr: {}", stderr.trim());
             }
             if !stdout.is_empty() {
-                println!("cargo:warning=protoc stdout: {}", stdout.trim());
+                println!("cargo::warning=protoc stdout: {}", stdout.trim());
             }
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
