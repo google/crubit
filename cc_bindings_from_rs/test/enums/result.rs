@@ -173,3 +173,19 @@ pub fn return_result_unit_err(has_err: bool) -> Result<u8, ()> {
 pub fn take_result_unit_err(val: Result<u8, ()>) -> bool {
     val.is_err()
 }
+
+pub struct DropNoDefault(pub u8);
+impl Drop for DropNoDefault {
+    fn drop(&mut self) {}
+}
+
+pub fn take_result_drop_no_default_unit(val: Result<(), DropNoDefault>) -> bool {
+    val.is_ok()
+}
+
+pub fn take_result_drop_no_default_ok(val: Result<DropNoDefault, u8>) -> u8 {
+    match val {
+        Ok(v) => v.0,
+        Err(e) => e,
+    }
+}

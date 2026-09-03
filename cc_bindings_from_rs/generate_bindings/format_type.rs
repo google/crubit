@@ -606,8 +606,17 @@ pub fn format_ty_for_cc<'tcx>(
                 error_occurred || is_option_or_result
             }) {
                 let adt_spec = specialization.unwrap()?;
-                let tokens = adt_spec.self_ty_cc.clone().into_tokens(&mut prereqs);
+                let mut tokens = adt_spec.self_ty_cc.clone().into_tokens(&mut prereqs);
                 prereqs.depend_on_spec(db, location, adt_spec);
+                if !db.is_cpp_move_constructible(ty)
+                    && matches!(
+                        location,
+                        TypeLocation::FnParam { .. } | TypeLocation::NestedBridgeable
+                    )
+                {
+                    prereqs.includes.insert(db.support_header("movable.h"));
+                    tokens = quote! { ::rs::Movable< #tokens > };
+                }
                 return Ok(CcSnippet { tokens, prereqs });
             } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
                 let is_layout_compat = bridged_type.is_layout_compatible();
