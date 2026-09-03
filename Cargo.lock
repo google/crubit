@@ -474,6 +474,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "crubit_support"
+version = "0.1.0"
+dependencies = [
+ "googletest",
+]
+
+[[package]]
 name = "dyn_format"
 version = "0.0.0"
 dependencies = [
