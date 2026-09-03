@@ -51,9 +51,6 @@ golden_test(
 crubit_cc_test(
     name = "trait_test",
     srcs = ["trait_test.cc"],
-    platforms = [
-        "ios",
-    ],
     deps = [
         ":cc_type",
         ":trait_cc_api",

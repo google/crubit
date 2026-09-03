@@ -93,6 +93,7 @@ crubit_cc_test(
     name = "bridging_test",
     srcs = ["bridging_test.cc"],
     platforms = [
+        "android",
         "ios",
     ],
     deps = [

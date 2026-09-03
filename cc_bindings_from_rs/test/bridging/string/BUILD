@@ -28,9 +28,6 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "string_test",
     srcs = ["string_test.cc"],
-    platforms = [
-        "ios",
-    ],
     deps = [
         ":string_cc_api",
         "//testing/base/public:gunit_main",

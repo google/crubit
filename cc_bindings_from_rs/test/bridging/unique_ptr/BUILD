@@ -40,9 +40,6 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "unique_ptr_test",
     srcs = ["unique_ptr_test.cc"],
-    platforms = [
-        "ios",
-    ],
     deps = [
         ":test_helpers",
         ":unique_ptr_cc_api",

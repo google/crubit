@@ -52,9 +52,6 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "composable_bridging_test",
     srcs = ["composable_bridging_test.cc"],
-    platforms = [
-        "ios",
-    ],
     deps = [
         ":composable_bridging_cc_api",
         "//support/rs_std:slice_ref",
