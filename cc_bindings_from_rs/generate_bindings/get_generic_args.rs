@@ -87,7 +87,7 @@ pub fn get_generic_args<'tcx>(
             let param_def = generics.param_at(idx, tcx);
             let replacement = match param_def.kind {
                 ty::GenericParamDefKind::Const { .. } => {
-                    bail!("`const`-generic functions are not supported (b/259749023)");
+                    bail!("crubit.rs/errors/unsupported_type: `const`-generic functions are not supported (b/259749023)");
                 }
                 ty::GenericParamDefKind::Lifetime => tcx.mk_param_from_def(param_def),
                 ty::GenericParamDefKind::Type { .. } => {

@@ -544,8 +544,8 @@ mod tests {
         let test_args =
             TestArgs::default_args()?.with_error_report_out("error_report.json").with_rs_input(
                 r#"
-                pub struct Unsupported<T> {
-                    pub field: T,
+                pub struct Unsupported<const N: usize> {
+                    pub field: [u8; N],
                 }
                 "#,
             );
@@ -561,7 +561,7 @@ mod tests {
     "name": "test_crate::Unsupported",
     "errors": [
       {
-        "fmt": "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"
+        "fmt": "crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)"
       }
     ]
   }

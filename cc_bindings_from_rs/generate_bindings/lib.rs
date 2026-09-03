@@ -36,8 +36,8 @@ use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
-    generate_adt_core, into_trait_impls_by_destination, is_struct_aggregate,
-    scalar_value_to_string,
+    generate_adt_core, generate_generic_adt_declaration, into_trait_impls_by_destination,
+    is_struct_aggregate, scalar_value_to_string,
 };
 use crate::generate_template_specialization::append_trait_impls;
 use arc_anyhow::{Context, Error, Result};
@@ -2176,7 +2176,11 @@ fn generate_item_impl<'tcx>(
     };
     let item = match tcx.def_kind(def_id) {
         DefKind::Struct | DefKind::Enum | DefKind::Union => {
-            db.adt_needs_bindings(def_id).map(|core| Some(generate_adt(db, core)))
+            if query_compiler::has_non_lifetime_generics(tcx, def_id) {
+                generate_generic_adt_declaration(db, def_id).map(Some)
+            } else {
+                db.adt_needs_bindings(def_id).map(|core| Some(generate_adt(db, core)))
+            }
         }
         DefKind::Fn => db.generate_function(def_id, None, StaticMethodMode::Infer).map(Some),
         DefKind::TyAlias => generate_type_alias(db, def_id, tcx.item_name(def_id).as_str())

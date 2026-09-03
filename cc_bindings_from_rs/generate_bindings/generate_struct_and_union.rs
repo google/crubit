@@ -2111,6 +2111,81 @@ pub fn adt_needs_bindings<'tcx>(
     db.generate_adt_core(def_id)
 }
 
+/// Formats a primary C++ class template declaration for a generic ADT.
+pub fn generate_generic_adt_declaration<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+) -> Result<ApiSnippets<'tcx>> {
+    let tcx = db.tcx();
+    let Some(fully_qualified_name) = db.symbol_canonical_name(def_id) else {
+        bail!("No public path could be found for type {}", tcx.def_path_str(def_id));
+    };
+
+    let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
+    if let Some(cpp_type) = fully_qualified_name.unqualified.cpp_type {
+        let item_name = tcx.def_path_str(def_id);
+        bail!(
+            "Type bindings for {item_name} suppressed due to being mapped to \
+                    an existing C++ type ({cpp_type})"
+        );
+    }
+
+    let adt_def = tcx.adt_def(def_id);
+    let keyword = match adt_def.adt_kind() {
+        ty::AdtKind::Struct => match attributes.cpp_enum {
+            Some(cpp_enum_symbol) => {
+                let s = cpp_enum_symbol.as_str();
+                match s {
+                    "enum" => quote! { enum },
+                    "enum class" => quote! { enum class },
+                    _ => panic!("Unsupported `cpp_enum` tag: {s}"),
+                }
+            }
+            None => quote! { struct },
+        },
+        ty::AdtKind::Enum => quote! { struct },
+        ty::AdtKind::Union => quote! { union },
+    };
+
+    let cpp_name = format_cc_ident(db, fully_qualified_name.unqualified.cpp_name.as_str())
+        .context("Error formatting item name")?;
+
+    let generics = tcx.generics_of(def_id);
+    let template_params = generics
+        .own_params
+        .iter()
+        .enumerate()
+        .filter_map(|(i, param)| match param.kind {
+            ty::GenericParamDefKind::Type { .. } => {
+                let param_name = format_cc_ident(db, param.name.as_str())
+                    .unwrap_or_else(|_| format_ident!("T{}", i));
+                Some(Ok(quote! { typename #param_name }))
+            }
+            ty::GenericParamDefKind::Const { .. } => {
+                Some(Err(anyhow!(
+                    "crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)"
+                )))
+            }
+            ty::GenericParamDefKind::Lifetime => None,
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    ensure!(!template_params.is_empty(), "Generic ADT must have at least one type parameter");
+
+    let doc_comment = generate_doc_comment(db, def_id);
+
+    let main_api = CcSnippet::new(quote! {
+        __NEWLINE__ #doc_comment
+        template <#(#template_params),*>
+        #keyword #cpp_name {
+            static_assert(false, "This template can only be used via a specialization");
+        };
+        __NEWLINE__
+    });
+
+    Ok(main_api.into_main_api())
+}
+
 /// Implementation of `BindingsGenerator::generate_adt_core`.
 pub fn generate_adt_core<'tcx>(
     db: &BindingsGenerator<'tcx>,

@@ -168,7 +168,7 @@ fn test_format_struct_cpp_name_with_kythe_annotations() {
 }
 
 #[test]
-fn test_format_item_unsupported_type_generic_struct() {
+fn test_format_item_generic_struct() {
     let test_src = r#"
             pub struct Point<T> {
                 pub x: T,
@@ -176,10 +176,16 @@ fn test_format_item_unsupported_type_generic_struct() {
             }
         "#;
     test_format_item(test_src, "Point", |result| {
-        let err = result.unwrap_err();
-        assert_eq!(
-            err,
-            "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                template <typename T>
+                struct Point {
+                    static_assert(false, "This template can only be used via a specialization");
+                };
+            }
         );
     });
 }
@@ -222,7 +228,7 @@ fn test_format_item_unsupported_lifetime_generic_struct() {
 }
 
 #[test]
-fn test_format_item_unsupported_generic_enum() {
+fn test_format_item_generic_enum() {
     let test_src = r#"
             pub enum Point<T> {
                 Cartesian{x: T, y: T},
@@ -230,16 +236,22 @@ fn test_format_item_unsupported_generic_enum() {
             }
         "#;
     test_format_item(test_src, "Point", |result| {
-        let err = result.unwrap_err();
-        assert_eq!(
-            err,
-            "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                template <typename T>
+                struct Point {
+                    static_assert(false, "This template can only be used via a specialization");
+                };
+            }
         );
     });
 }
 
 #[test]
-fn test_format_item_unsupported_generic_union() {
+fn test_format_item_generic_union() {
     let test_src = r#"
             pub union SomeUnion<T> {
                 pub x: std::mem::ManuallyDrop<T>,
@@ -247,10 +259,16 @@ fn test_format_item_unsupported_generic_union() {
             }
         "#;
     test_format_item(test_src, "SomeUnion", |result| {
-        let err = result.unwrap_err();
-        assert_eq!(
-            err,
-            "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                template <typename T>
+                union SomeUnion {
+                    static_assert(false, "This template can only be used via a specialization");
+                };
+            }
         );
     });
 }

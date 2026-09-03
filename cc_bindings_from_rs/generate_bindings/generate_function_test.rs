@@ -996,7 +996,7 @@ fn test_format_item_generic_fn_unsupported_const_param() {
         "#;
     test_format_item(test_src, "generic_function", |result| {
         let err = result.unwrap_err();
-        assert_eq!(err, "`const`-generic functions are not supported (b/259749023)");
+        assert_eq!(err, "crubit.rs/errors/unsupported_type: `const`-generic functions are not supported (b/259749023)");
     });
 }
 
