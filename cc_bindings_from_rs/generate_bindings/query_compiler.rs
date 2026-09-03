@@ -463,10 +463,26 @@ pub fn does_type_implement_trait<'tcx>(
     trait_id: DefId,
     generic_args: impl IntoIterator<Item = GenericArg<'tcx>>,
 ) -> bool {
+    does_type_implement_trait_with_param_env(
+        tcx,
+        self_ty,
+        trait_id,
+        tcx.param_env(trait_id),
+        generic_args,
+    )
+}
+
+pub fn does_type_implement_trait_with_param_env<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    self_ty: Ty<'tcx>,
+    trait_id: DefId,
+    param_env: ty::ParamEnv<'tcx>,
+    generic_args: impl IntoIterator<Item = GenericArg<'tcx>>,
+) -> bool {
     let substs = does_type_implement_trait_substs(tcx, self_ty, trait_id, generic_args);
     use rustc_middle::ty::TypingMode;
     tcx.infer_ctxt()
         .build(TypingMode::non_body_analysis())
-        .type_implements_trait(trait_id, substs, tcx.param_env(trait_id))
+        .type_implements_trait(trait_id, substs, param_env)
         .must_apply_modulo_regions()
 }

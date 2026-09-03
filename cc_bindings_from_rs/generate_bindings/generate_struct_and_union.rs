@@ -79,6 +79,33 @@ pub(crate) fn adt_core_bindings_needs_drop<'tcx>(
     bindings.common.self_ty.needs_drop(tcx, typing_env)
 }
 
+/// Similar to the method `TyCtxt::non_blanket_impls_for_ty` but checks for precise self_ty matching of the impl rather than SimplifiedType.
+/// This is important for generics, so we don't return impls from other instantiations when we query for something like `impl From<T> for NonZero<u32>`.
+pub(crate) fn non_blanket_impls_for_ty<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    trait_def_id: DefId,
+    self_ty: Ty<'tcx>,
+) -> impl Iterator<Item = DefId> {
+    tcx.non_blanket_impls_for_ty(trait_def_id, self_ty).filter(move |&impl_id| {
+        does_impl_apply(tcx, impl_id, self_ty) && {
+            let trait_ref = crate::normalize_ty(
+                tcx,
+                tcx.param_env(impl_id),
+                tcx.impl_trait_ref(impl_id).instantiate_identity(),
+            );
+            use crate::ty::GenericArg;
+            let generic_args = trait_ref.args.into_iter().skip(1).collect::<Vec<GenericArg<'_>>>();
+            query_compiler::does_type_implement_trait_with_param_env(
+                tcx,
+                self_ty,
+                trait_def_id,
+                tcx.param_env(impl_id), // Use impl_id as param_env to keep its parameters in scope
+                generic_args,
+            )
+        }
+    })
+}
+
 /// Returns the Rust underlying type of the `cpp_enum` struct specified by the given def id.
 pub fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
     let fields = tcx.adt_def(def_id).all_fields().collect::<Vec<_>>();
@@ -429,6 +456,29 @@ fn get_trait_ref_from_impl_id<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId) -> ty::Tr
     )
 }
 
+fn does_impl_apply<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId, target_ty: Ty<'tcx>) -> bool {
+    use rustc_infer::infer::TyCtxtInferExt;
+    use rustc_infer::traits::ObligationCause;
+    use rustc_trait_selection::infer::canonical::ir::TypingMode;
+    use rustc_trait_selection::traits::ObligationCtxt;
+
+    let infcx = tcx.infer_ctxt().build(TypingMode::non_body_analysis());
+    let ocxt = ObligationCtxt::new(&infcx);
+
+    let impl_args = infcx.fresh_args_for_item(tcx.def_span(impl_id), impl_id);
+    let param_env = tcx.param_env(impl_id);
+    let cause = ObligationCause::dummy(); // RESPECTFUL_TERMS_EXCEPTION
+
+    let instantiated_impl_ty =
+        ocxt.normalize(&cause, param_env, tcx.type_of(impl_id).instantiate(tcx, impl_args));
+
+    if ocxt.eq(&cause, param_env, instantiated_impl_ty, target_ty).is_err() {
+        return false;
+    }
+
+    ocxt.evaluate_obligations_error_on_ambiguity().no_errors()
+}
+
 pub fn from_trait_impls_by_argument<'tcx>(
     db: &BindingsGenerator<'tcx>,
     crate_num: CrateNum,
@@ -527,7 +577,7 @@ fn generate_into_impls<'tcx>(
             Some((from_middle_ty, cc_ty, *from_impl_id))
         });
     let into_impls =
-        tcx.non_blanket_impls_for_ty(into_trait, core.common.self_ty).filter_map(|into_impl_id| {
+        non_blanket_impls_for_ty(tcx, into_trait, core.common.self_ty).filter_map(|into_impl_id| {
             let trait_ref = get_trait_ref_from_impl_id(tcx, into_impl_id);
             // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
             // into.
@@ -685,7 +735,7 @@ fn generate_constructor_impls<'tcx>(
     // Find From impls from the selected ADT
     let from_trait = tcx.get_diagnostic_item(sym::From).expect("Could not find From trait");
     let from_impls =
-        tcx.non_blanket_impls_for_ty(from_trait, core.common.self_ty).filter_map(|impl_id| {
+        non_blanket_impls_for_ty(tcx, from_trait, core.common.self_ty).filter_map(|impl_id| {
             let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
             let src_ty = trait_ref.args.type_at(1);
             if src_ty.flags().intersects(has_type_or_const_vars()) {
@@ -923,7 +973,7 @@ fn generate_trait_operator_impls<'tcx>(
      -> Vec<ApiSnippets<'_>> {
         let trait_name = tcx.item_name(trait_def_id).to_string();
 
-        tcx.non_blanket_impls_for_ty(trait_def_id, core.common.self_ty)
+        non_blanket_impls_for_ty(tcx, trait_def_id, core.common.self_ty)
             .map(|impl_id| {
                 let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
                 // Index 0 of our trait ref is the self type.
@@ -1121,7 +1171,7 @@ fn generate_ord_and_partialord_impls<'tcx>(
     let mut snippets = Vec::new();
 
     // Handle Ord impls (Rhs is always Self)
-    for impl_id in tcx.non_blanket_impls_for_ty(ord_trait_id, core.common.self_ty) {
+    for impl_id in non_blanket_impls_for_ty(tcx, ord_trait_id, core.common.self_ty) {
         match generate_ord_impls(db, core) {
             Ok(s) => snippets.push(s),
             Err(err) => snippets.push(generate_unsupported_def(db, impl_id, err).into_main_api()),
@@ -1131,12 +1181,12 @@ fn generate_ord_and_partialord_impls<'tcx>(
     // Handle PartialOrd impls
     let mut ord_rhs_types = HashSet::new();
     let implements_ord =
-        tcx.non_blanket_impls_for_ty(ord_trait_id, core.common.self_ty).next().is_some();
+        non_blanket_impls_for_ty(tcx, ord_trait_id, core.common.self_ty).next().is_some();
     if implements_ord {
         ord_rhs_types.insert(erase_regions(tcx, core.common.self_ty));
     }
 
-    for impl_id in tcx.non_blanket_impls_for_ty(partial_ord_trait_id, core.common.self_ty) {
+    for impl_id in non_blanket_impls_for_ty(tcx, partial_ord_trait_id, core.common.self_ty) {
         let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
         let rhs_ty = trait_ref.args.type_at(1);
         let erased_rhs_ty = erase_regions(tcx, rhs_ty);
@@ -1518,10 +1568,7 @@ fn is_type_default_constructible_in_cpp<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
             {
                 return true;
             }
-            if adt_def.is_struct() && is_struct_aggregate(db, Some(adt_def.did()), ty).is_ok() {
-                return true;
-            }
-            false
+            adt_def.is_struct() && is_struct_aggregate(db, Some(adt_def.did()), ty).is_ok()
         }
         _ => false,
     }
@@ -1870,12 +1917,18 @@ pub fn generate_adt<'tcx>(
     };
 
     let mut member_function_names = HashSet::<String>::new();
+
+    let self_is_not_generic = core.def_id.is_some_and(|id| tcx.generics_of(id).is_empty());
+
     let impl_items_snippets = core
         .def_id
         .map(|id| tcx.inherent_impls(id))
         .unwrap_or_default()
         .iter()
         .copied()
+        .filter(|&impl_id| {
+            self_is_not_generic || does_impl_apply(tcx, impl_id, core.common.self_ty)
+        })
         .sorted_by_def(tcx)
         .flat_map(|impl_id| tcx.associated_items(impl_id).in_definition_order())
         .flat_map(|assoc_item| {
@@ -1951,7 +2004,12 @@ pub fn generate_adt<'tcx>(
         is_aggregate,
     );
 
-    fields_main_api.prereqs.forward_declare_type(core.common.self_ty);
+    if let Some(def_id) = core.def_id
+        && fields_main_api.prereqs.defs.contains(&def_id)
+    {
+        fields_main_api.prereqs.fwd_decls.insert(def_id);
+        fields_main_api.prereqs.defs.remove(&def_id);
+    }
 
     let alignment = Literal::u64_unsuffixed(core.common.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.common.size_in_bytes);
@@ -3743,7 +3801,7 @@ fn generate_begin_and_end_for_type<'tcx>(
     let iterator_trait_id = tcx
         .get_diagnostic_item(sym::Iterator)
         .ok_or_else(|| anyhow!("Iterator trait not found"))?;
-    let mut impls = tcx.non_blanket_impls_for_ty(iterator_trait_id, into_iter_ty);
+    let mut impls = non_blanket_impls_for_ty(tcx, iterator_trait_id, into_iter_ty);
     let Some(trait_impl_def_id) = impls.next() else {
         return Ok(None);
     };
