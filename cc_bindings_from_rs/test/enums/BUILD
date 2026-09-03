@@ -187,6 +187,7 @@ crubit_cc_test(
     ],
     deps = [
         ":result_cc_api",
+        "//support:movable",
         "//testing/base/public:gunit_main",
     ],
 )
