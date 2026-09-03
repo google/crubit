@@ -302,6 +302,15 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "unsafe_relocate_tag",
+    hdrs = ["unsafe_relocate_tag.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
 cc_test(
     name = "bridge_cpp_test",
     srcs = ["bridge_test.cc"],

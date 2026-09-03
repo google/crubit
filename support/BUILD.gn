@@ -84,6 +84,20 @@ source_set("movable") {
   ]
 }
 
+source_set("unsafe_relocate_tag") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "unsafe_relocate_tag.h",
+  ]
+}
+
 rust_static_library("bridge_rust") {
   if (defined(crubit_gn_configs_to_remove)) {
     configs -= crubit_gn_configs_to_remove
@@ -283,6 +297,7 @@ group("support_cpp") {
     ":bridge_cpp",
     ":lifetime_annotations",
     ":movable",
+    ":unsafe_relocate_tag",
   ]
 }
 
