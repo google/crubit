@@ -555,6 +555,7 @@ extern crate proc_macro;
             .pkg_to_artifact
             .get(&self.root.id.repr)
             .ok_or_else(|| anyhow!("Failed to find root package artifact"))?;
+        let target_name = &root_artifact.name;
         let hash_suffix = if root_artifact.hash.is_empty() {
             "".to_string()
         } else {
@@ -563,9 +564,8 @@ extern crate proc_macro;
         let project_dir = deps_dir.join(format!("{}{}", root_name, hash_suffix));
         fs::create_dir_all(&project_dir)?;
 
-        let lib_rs_path = project_dir.join(format!("{}_cc_api.rs", root_name));
+        let lib_rs_path = project_dir.join(format!("{}_cc_api.rs", target_name));
         fs::write(&lib_rs_path, lib_rs_content)?;
-        let static_lib_path = profile_dir.join(format!("lib{}.a", root_name));
 
         let get_support_dep = |env_var: &str,
                                dep_name: &str,
@@ -700,6 +700,11 @@ crate-type = ["staticlib"]
         }
         let cargo_static_lib_path =
             cargo_static_lib_path.ok_or_else(|| anyhow!("Failed to find staticlib output"))?;
+
+        let is_msvc = cargo_static_lib_path.extension().is_some_and(|ext| ext == "lib");
+        let static_lib_name =
+            if is_msvc { format!("{target_name}.lib") } else { format!("lib{target_name}.a") };
+        let static_lib_path = profile_dir.join(static_lib_name);
 
         fs::copy(&cargo_static_lib_path, &static_lib_path).map_err(|err| {
             anyhow!(
