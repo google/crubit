@@ -46,6 +46,30 @@ crubit_rust_test(
 )
 
 cc_library(
+    name = "uses_local_defines",
+    hdrs = ["uses_local_defines.h"],
+    local_defines = ["DEFINE_FROM_LOCAL_DEFINES"],
+)
+
+crubit_rust_test(
+    name = "calls_generator_on_uses_local_defines",
+    srcs = ["empty.rs"],
+    cc_deps = [":uses_local_defines"],
+)
+
+cc_library(
+    name = "consumes_local_defines_dep",
+    hdrs = ["consumes_local_defines_dep.h"],
+    deps = [":uses_local_defines"],
+)
+
+crubit_rust_test(
+    name = "calls_generator_on_consumes_local_defines_dep",
+    srcs = ["empty.rs"],
+    cc_deps = [":consumes_local_defines_dep"],
+)
+
+cc_library(
     name = "consumes_header_from_includes",
     hdrs = ["consumes_header_from_includes.h"],
     deps = ["//nowhere/experimentstargets_for_testing:uses_includes"],

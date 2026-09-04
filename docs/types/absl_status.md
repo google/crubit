@@ -24,8 +24,9 @@ pub fn Bar() -> StatusOr<i32> { ... }
 ## Calling C++ APIs using `Status` {#cpp}
 
 To enable `absl::Status` and `absl::StatusOr` bindings for C++ libraries, enable
-`defines = ["CRUBIT_NEW_STATUS"]` on the `cc_library` (TODO(b/490215742): clean
-this up when the old API is removed):
+`local_defines = ["CRUBIT_NEW_STATUS"]` on the `cc_library` (TODO(b/490215742): clean
+this up when the old API is removed; note that `local_defines` is preferred over
+`defines` to prevent leaking the macro transitively to downstream dependencies):
 
 ```python
 cc_library(
@@ -35,7 +36,7 @@ cc_library(
     aspect_hints = [
         "//features:supported",
     ],
-    defines = ["CRUBIT_NEW_STATUS"],
+    local_defines = ["CRUBIT_NEW_STATUS"],
     deps = [
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

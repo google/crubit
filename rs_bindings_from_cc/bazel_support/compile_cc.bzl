@@ -40,6 +40,10 @@ def compile_cc(
         # ctx.expand_make_variables is deprecated, but its replacement ctx.var does not suffice.
         user_copts.append(ctx.expand_make_variables("copts", copt, {}))
 
+    local_defines = []
+    for d in getattr(attr, "local_defines", []):
+        local_defines.append(ctx.expand_make_variables("local_defines", d, {}))
+
     (compilation_context, compilation_outputs) = cc_common.compile(
         name = src.basename,
         actions = ctx.actions,
@@ -49,6 +53,7 @@ def compile_cc(
         public_hdrs = extra_hdrs,
         additional_inputs = extra_cc_compilation_action_inputs,
         user_compile_flags = user_copts,
+        local_defines = local_defines,
         compilation_contexts = [cc_info.compilation_context],
     )
 

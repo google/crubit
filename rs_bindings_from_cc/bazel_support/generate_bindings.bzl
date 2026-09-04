@@ -162,6 +162,10 @@ def generate_bindings(
        transitive = [compilation_context.system_includes],
     )
 
+    local_defines = []
+    for d in getattr(attr, "local_defines", []):
+        local_defines.append(ctx.expand_make_variables("local_defines", d, {}))
+
     variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
@@ -173,7 +177,10 @@ def generate_bindings(
                              header_includes + (
             attr.copts if hasattr(attr, "copts") else []
         ),
-        preprocessor_defines = compilation_context.defines,
+        preprocessor_defines = depset(
+            local_defines,
+            transitive = [compilation_context.defines],
+        ),
         variables_extension = {
             "rs_bindings_from_cc_tool": rs_bindings_from_cc_tool.path,
             "rs_bindings_from_cc_flags": rs_bindings_from_cc_flags + _get_hdrs_command_line(public_hdrs) + _get_extra_rs_srcs_command_line(extra_rs_srcs) + _get_unstable_rust_features_command_line(unstable_rust_features) + _get_extra_cpp_srcs_command_line(extra_cpp_srcs),
