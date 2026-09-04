@@ -11,7 +11,7 @@ use query_compiler::liberate_and_deanonymize_late_bound_regions;
 use quote::quote;
 use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
 use rustc_middle::ty::{Ty, TyCtxt};
-use test_helpers::bindings_db_for_tests;
+use test_helpers::{bindings_db_for_tests, bindings_db_for_tests_with_ignore_symbols_from_files};
 use token_stream_matchers::assert_cc_matches;
 
 fn test_ty<TestFn, Expectation>(
@@ -872,6 +872,38 @@ fn test_format_ty_for_cc_unique_ptr_with_delete_fails() {
         unique_ptr_preamble(),
         |desc, tcx, ty, expected_err| {
             let db = bindings_db_for_tests(tcx);
+            let anyhow_err = db
+                .format_ty_for_cc(
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .expect_err(&format!("Expecting error for: {desc}"));
+            let actual_err = format!("{anyhow_err:#}");
+            assert_eq!(&actual_err, *expected_err, "{desc}");
+        },
+    );
+}
+
+#[test]
+fn test_format_ty_for_cc_ignored_symbols_fails() {
+    let preamble = quote! {
+        pub struct IgnoredStruct {
+            pub x: i32,
+        }
+    };
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &[(
+            "IgnoredStruct",
+            "`IgnoredStruct` does not receive bindings because it is defined in an \
+            additional Rust source on a `rust_api_from_cpp` rule. See \
+            crubit.rs/cpp/best_practices#types-in-srcs-do-not-receive-cpp-bindings.",
+        )],
+        preamble,
+        |desc, tcx, ty, expected_err| {
+            let mut ignore_files = std::collections::HashSet::new();
+            ignore_files.insert(std::path::PathBuf::from("<crubit_unittests.rs>"));
+            let db = bindings_db_for_tests_with_ignore_symbols_from_files(tcx, ignore_files);
             let anyhow_err = db
                 .format_ty_for_cc(
                     ty,

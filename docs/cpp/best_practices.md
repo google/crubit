@@ -59,6 +59,31 @@ extern crate std;
 use std::boxed::Box;
 ```
 
+#### Types in `srcs` do not receive C++ bindings {#types-in-srcs-do-not-receive-cpp-bindings}
+
+Types defined in the `srcs` of a `rust_api_from_cpp` target are intended for
+customizing or extending the generated Rust API. However, Crubit **does not**
+generate C++ bindings for types defined in `srcs`.
+
+Because Crubit only generates C++ bindings for the underlying C++ target, any
+struct, enum, or union defined in these custom Rust source files has no C++
+counterpart. If a downstream Rust crate attempts to expose a function, method,
+or type that uses one of these types in its public interface, Crubit cannot
+generate C++ bindings for that item and will report an error.
+
+If you need a type to be accessible from both C++ and Rust, you can either:
+
+*   **Define the type in C++**: Define the type in the C++ library wrapped by
+    `rust_api_from_cpp` so that Crubit generates Rust bindings for it, or
+*   **Define the type in a separate `rust_library`**: Define the type in a
+    separate `rust_library` target that is then used as a dependency in both
+    Rust and (via `cc_bindings_from_rs`) in C++.
+
+If the type is purely for internal use within Rust and is never intended to be
+used from C++, you can silence the warning on the type definition using the
+`#[crubit_annotate::allow_unbindable_type]` attribute (or the
+`CRUBIT_ALLOW_UNBINDABLE_TYPE` macro in C++-accessible contexts).
+
 <section class="zippy" markdown="1">
 
 Read on only if you're curious about *why* Rust bindings targets are structured this way.

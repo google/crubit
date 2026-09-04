@@ -2275,6 +2275,25 @@ fn test_unbindable_types_warning() {
 }
 
 #[test]
+fn test_ignore_symbols_from_files_as_param() {
+    let test_src = r#"
+        pub struct IgnoredStruct {
+            pub x: i32,
+        }
+        pub fn fn_with_ignored_param(_param: IgnoredStruct) {}
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let mut ignore_files = std::collections::HashSet::new();
+        ignore_files.insert(std::path::PathBuf::from("<crubit_unittests.rs>"));
+        let db = bindings_db_for_tests_with_ignore_symbols_from_files(tcx, ignore_files);
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+
+        assert!(!bindings.cc_api.to_string().contains("IgnoredStruct"));
+        assert!(!bindings.cc_api.to_string().contains("fn_with_ignored_param"));
+    });
+}
+
+#[test]
 fn test_allow_unbindable_type_suppresses_warning() {
     let test_src = r#"
             #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]

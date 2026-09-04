@@ -121,7 +121,8 @@ fn check_unbindable_type(db: &BindingsGenerator, def_id: DefId) {
             );
             diag.note(
                 "types defined in the `srcs` files of `rust_api_from_cpp` targets won't receive C++ bindings; \
-                consider defining types inside a separate target and adding it as a dep of the `rust_api_from_cpp` target",
+                consider defining types inside a separate target and adding it as a dep of the `rust_api_from_cpp` target. \
+                See crubit.rs/cpp/best_practices#types-in-srcs-do-not-receive-cpp-bindings",
             );
             diag.emit();
         }

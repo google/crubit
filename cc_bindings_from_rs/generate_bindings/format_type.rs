@@ -686,10 +686,22 @@ pub fn format_ty_for_cc<'tcx>(
                     }
                 }
             } else {
-                let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
+                let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())?;
+                let has_cpp_type = attrs.cpp_type.is_some();
                 ensure!(
                     has_cpp_type || !has_non_lifetime_substs(substs),
                     "Generic types are not supported yet (b/259749095)"
+                );
+                if crate::is_in_ignore_symbols_from_files(db, adt.did()) {
+                    bail!(
+                        "`{ty}` does not receive bindings because it is defined in an \
+                        additional Rust source on a `rust_api_from_cpp` rule. See \
+                        crubit.rs/cpp/best_practices#types-in-srcs-do-not-receive-cpp-bindings."
+                    );
+                }
+                ensure!(
+                    !attrs.do_not_bind,
+                    "`{ty}` does not receive bindings because it is marked `#[do_not_bind]`."
                 );
                 ensure!(
                     db.symbol_canonical_name(adt.did()).is_some(),
