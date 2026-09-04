@@ -2440,3 +2440,23 @@ fn test_is_cpp_move_constructible() {
         assert!(!db.is_cpp_move_constructible(find_ty("NonMovableResult")));
     });
 }
+
+/// Verifies that generating bindings for types implementing operator traits (like `#[derive(PartialEq)]`
+/// or `bitflags!` on `Source` in `libs/input/rust`) when `--crate-header` for `core` is not provided
+/// gracefully emits an unsupported comment instead of panicking.
+#[test]
+fn test_trait_operator_without_core_crate_header_returns_error() {
+    let test_src = r#"
+        #[derive(PartialEq)]
+        pub struct Source(pub u32);
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_crate_headers(tcx, &[]);
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        let cc_api = cc_tokens_to_formatted_string_for_tests(bindings.cc_api).unwrap();
+        assert!(
+            cc_api.contains("trait does not have a canonical"),
+            "Expected unsupported error message in cc_api, got:\n{cc_api}"
+        );
+    });
+}

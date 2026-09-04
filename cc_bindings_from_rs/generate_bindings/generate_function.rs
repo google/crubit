@@ -955,7 +955,12 @@ fn format_trait_ref_for_rs<'tcx>(
     let trait_name = db
         .symbol_canonical_name(trait_ref.def_id)
         .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
-        .expect("Generated trait method for a trait with an invalid rs name");
+        .ok_or_else(|| {
+            anyhow!(
+                "Failed to format trait name `{}`: trait does not have a canonical name",
+                db.tcx().def_path_str(trait_ref.def_id)
+            )
+        })?;
     let mut trait_args = trait_ref.args[1..].iter().filter_map(|arg| arg.as_type()).peekable();
     if trait_args.peek().is_none() {
         Ok(quote! { #trait_name })
