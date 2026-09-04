@@ -8,6 +8,7 @@ mod flags;
 mod paths;
 mod protobuf;
 
+use std::collections::BTreeSet;
 use std::path::Path;
 
 /// Build a C++ library of `sources`, with paths specified relative to the
@@ -32,12 +33,7 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
     let obj_dir = Path::new(&out_dir).join("obj");
     // Ensure the directory exists. The linker makes the dir on Linux but will
     // fail on Windows.
-    if let Err(e) = std::fs::create_dir(&obj_dir) {
-        match e.kind() {
-            std::io::ErrorKind::AlreadyExists => (),
-            _ => Err(e)?,
-        }
-    }
+    std::fs::create_dir_all(&obj_dir)?;
 
     paths::print_compiler_deps();
 
@@ -45,24 +41,32 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
 
     let absl_include_dirs = absl::collect_absl_includes();
     let (absl_lib_dirs, absl_libs) = absl::collect_absl_libs();
-    paths::print_link_searches(&absl_lib_dirs)?;
-    paths::print_link_libs(&absl_libs)?;
 
     // ===== LLVM libtooling =====
 
     // TODO: Use llvm-config instead of LIBCLANG_STATIC_PATH?
     let clang_include_dirs = clang::collect_clang_includes();
     let (clang_lib_dirs, clang_libs) = clang::collect_clang_libs();
-    paths::print_link_searches(&clang_lib_dirs)?;
-    paths::print_link_libs(&clang_libs)?;
 
     // ===== Protobuf =====
 
-    let gen_proto_sources = protobuf::compile_protos(&path_to_src_root, proto_sources, &obj_dir)?;
     let proto_include_dirs = protobuf::collect_protobuf_includes();
     let (proto_lib_dirs, proto_libs) = protobuf::collect_protobuf_libs();
-    paths::print_link_searches(&proto_lib_dirs)?;
-    paths::print_link_libs(&proto_libs)?;
+    let gen_proto_sources =
+        protobuf::collect_generated_proto_sources(proto_sources, &proto_include_dirs);
+
+    // ===== Linking directives =====
+
+    // Combine and deduplicate link search paths and libraries across dependencies.
+    // `BTreeSet` deduplicates and sorts without an additional `itertools` dep.
+    let all_lib_dirs = [absl_lib_dirs, clang_lib_dirs, proto_lib_dirs]
+        .into_iter()
+        .flatten()
+        .collect::<BTreeSet<_>>();
+    paths::print_link_searches(all_lib_dirs)?;
+    let all_libs =
+        [absl_libs, clang_libs, proto_libs].into_iter().flatten().collect::<BTreeSet<_>>();
+    paths::print_link_libs(all_libs)?;
 
     // ===== The cc lib ======
 
@@ -72,10 +76,11 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
         cc_lib.flag(f);
     }
     cc_lib.include(path_to_src_root.as_ref());
-    cc_lib.include(&obj_dir);
-    for p in sources.into_iter().map(|p| path_to_src_root.as_ref().join(p.as_ref())) {
+    let mut num_sources = 0;
+    for p in sources.iter().map(|p| path_to_src_root.as_ref().join(p.as_ref())) {
         if p.exists() {
             paths::add_source_file(&mut cc_lib, &p)?;
+            num_sources += 1;
         } else {
             // Trigger a rebuild if a copybara-stripped file is added later
             println!("cargo::rerun-if-changed={}", p.display());
@@ -84,6 +89,12 @@ pub fn compile_cc_lib<P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path>>(
     }
     for p in &gen_proto_sources {
         paths::add_source_file(&mut cc_lib, p)?;
+        num_sources += 1;
+    }
+    if num_sources == 0 {
+        let placeholder = obj_dir.join("empty.cc");
+        std::fs::write(&placeholder, "// Empty placeholder for header-only library\n")?;
+        cc_lib.file(&placeholder);
     }
     for p in absl_include_dirs.into_iter().chain(clang_include_dirs).chain(proto_include_dirs) {
         paths::add_include_path(&mut cc_lib, p, false);

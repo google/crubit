@@ -13,15 +13,15 @@ pub fn print_link_search<T: AsRef<OsStr>>(s: T) -> io::Result<()> {
     Ok(())
 }
 
-pub fn print_link_searches<T: AsRef<OsStr>>(paths: &[T]) -> io::Result<()> {
-    for path in paths {
+pub fn print_link_searches<T: AsRef<OsStr>>(paths: impl IntoIterator<Item = T>) -> io::Result<()> {
+    for path in paths.into_iter() {
         print_link_search(path)?;
     }
     Ok(())
 }
 
-pub fn print_link_libs<T: AsRef<OsStr>>(libs: &[T]) -> io::Result<()> {
-    for lib in libs {
+pub fn print_link_libs<T: AsRef<OsStr>>(libs: impl IntoIterator<Item = T>) -> io::Result<()> {
+    for lib in libs.into_iter() {
         print!("cargo::rustc-link-lib=");
         io::stdout().write_all(lib.as_ref().as_encoded_bytes())?;
         println!();
@@ -145,11 +145,6 @@ where
     libs.sort_unstable();
     libs.dedup();
     (lib_dirs, libs)
-}
-
-pub fn print_env_to_string(env_var: &str) -> Option<String> {
-    println!("cargo::rerun-if-env-changed={}", env_var);
-    std::env::var(env_var).ok()
 }
 
 pub fn add_source_file<P: AsRef<Path>>(build: &mut cc::Build, path: P) -> io::Result<()> {

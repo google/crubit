@@ -23,4 +23,10 @@ pub const CC_FLAGS: &[&str] = &[
     "-fno-rtti",
     #[cfg(windows)]
     "/GR-",
+    // LLVM headers conditionally enable Unix-specific features (e.g. in
+    // llvm/Support/FileSystem.h and llvm/Support/Threading.h) based on
+    // LLVM_ON_UNIX. In build environments where llvm-config.h is not
+    // transitively included first, we must define it explicitly on Unix.
+    #[cfg(unix)]
+    "-DLLVM_ON_UNIX",
 ];
