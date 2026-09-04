@@ -82,8 +82,8 @@ fn test_format_bridged_type_in_generic_types() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `std::boxed::Box<RustType>`: \
-            crubit.rs/errors/unsupported_type: Types containing generic parameter `RustType` (which is a bridged type) are not supported."
+            "Error handling parameter #0 of type `std::boxed::Box<rust_out::RustType>`: \
+            crubit.rs/errors/unsupported_type: Types containing generic parameter `rust_out::RustType` (which is a bridged type) are not supported."
         );
     });
 
@@ -91,8 +91,8 @@ fn test_format_bridged_type_in_generic_types() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `std::option::Option<std::boxed::Box<std::result::Result<RustType, ()>>>`: \
-            Failed to construct CrubitAbiType for std::boxed::Box<std::result::Result<RustType, ()>> because it does not have a move ctor or assignment operator."
+            "Error handling parameter #0 of type `std::option::Option<std::boxed::Box<std::result::Result<rust_out::RustType, ()>>>`: \
+            Failed to construct CrubitAbiType for std::boxed::Box<std::result::Result<rust_out::RustType, ()>> because it does not have a move ctor or assignment operator."
         );
     });
 }
@@ -609,7 +609,9 @@ fn test_cpp_enum_fails_if_not_repr_transparent() {
     }
     "#;
 
-    test_format_item(test_src, "Color", |_result| {});
+    test_format_item(test_src, "Color", |result| {
+        result.unwrap();
+    });
 }
 
 #[test]
@@ -664,12 +666,14 @@ fn test_cpp_enum_fails_for_rust_enum() {
     let test_src = r#"
     #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
     #[repr(transparent)]
-    enum Color {
+    pub enum Color {
         Value(i32),
     }
     "#;
 
-    test_format_item(test_src, "Color", |_result| {});
+    test_format_item(test_src, "Color", |result| {
+        result.unwrap();
+    });
 }
 
 #[test]
@@ -733,7 +737,7 @@ fn test_format_cpp_name_for_struct() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Type bindings for RustType suppressed \
+            "Type bindings for rust_out::RustType suppressed \
                 due to being mapped to an existing C++ type (cpp_ns::CppType)"
         );
     });
@@ -1496,11 +1500,11 @@ fn test_hash_trait_support() {
             cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" ::std::uint64_t __crubit_thunk_Hash_uhash_uPoint(...);
+                    extern "C" ::std::uint64_t __crubit_thunk_Hash_uhash_urust_uout_x0000003a_x0000003aPoint(...);
                 }
                 template <typename H>
                 inline H AbslHashValue(H h, const Point& self) {
-                    return H::combine(::std::move(h), __crubit_internal::__crubit_thunk_Hash_uhash_uPoint(self));
+                    return H::combine(::std::move(h), __crubit_internal::__crubit_thunk_Hash_uhash_urust_uout_x0000003a_x0000003aPoint(self));
                 }
             }
         );
@@ -1509,7 +1513,7 @@ fn test_hash_trait_support() {
             rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                extern "C" fn __crubit_thunk_Hash_uhash_uPoint (self_: &::rust_out::Point) -> u64 {
+                extern "C" fn __crubit_thunk_Hash_uhash_urust_uout_x0000003a_x0000003aPoint (self_: &::rust_out::Point) -> u64 {
                     ::hash_rust::hash_u64(self_)
                 }
             }
@@ -1565,11 +1569,11 @@ fn test_hash_trait_support_for_enum() {
             cc_details.tokens,
             quote! {
                 namespace __crubit_internal {
-                    extern "C" ::std::uint64_t __crubit_thunk_Hash_uhash_uColor(...);
+                    extern "C" ::std::uint64_t __crubit_thunk_Hash_uhash_urust_uout_x0000003a_x0000003aColor(...);
                 }
                 template <typename H>
                 inline H AbslHashValue(H h, const Color& self) {
-                    return H::combine(::std::move(h), __crubit_internal::__crubit_thunk_Hash_uhash_uColor(self));
+                    return H::combine(::std::move(h), __crubit_internal::__crubit_thunk_Hash_uhash_urust_uout_x0000003a_x0000003aColor(self));
                 }
             }
         );

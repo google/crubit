@@ -1653,7 +1653,7 @@ fn test_format_item_fn_repr_transparent_generic_struct_param() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `Wrapper<Inner>`: \
+            "Error handling parameter #0 of type `rust_out::Wrapper<rust_out::Inner>`: \
             Generic types are not supported yet (b/259749095)"
         );
     });

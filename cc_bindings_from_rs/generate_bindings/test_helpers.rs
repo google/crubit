@@ -58,16 +58,17 @@ where
 {
     let features = features.into();
     run_compiler_for_testing(source, |tcx| {
-        let local_def_id = find_def_id_by_name(tcx, name);
-        let result =
-            bindings_db_for_tests_with_features(tcx, features, with_kythe_annotations, None)
-                .generate_item(local_def_id.to_def_id());
+        let def_id = find_def_id_by_name(tcx, name);
+        let db = bindings_db_for_tests_with_features(tcx, features, with_kythe_annotations, None);
+        let result = db.generate_item(def_id);
 
         // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
         // To print causes as well [...], use the alternate selector “{:#}”.
         let result = result.map_err(|anyhow_err| format!("{anyhow_err:#}"));
 
-        test_function(result)
+        let ret = test_function(result);
+        drop(db);
+        ret
     })
 }
 
@@ -104,14 +105,14 @@ fn bindings_db_for_tests_with_features<'tcx>(
     }
     new_database(
         tcx,
-        /* source_crate_name= */ None,
+        /* source_crate_name= */ Some("rust_out".into()),
         /* crubit_support_path_format= */
         Format::parse_with_metavars("<crubit/support/for/tests/{header}>", &["header"]).unwrap(),
         /* crubit_debug_path_format= */ None,
         /* default_features= */ Default::default(),
         /* kythe_annotations= */ with_kythe_annotations,
         /* portable_abi_compatible= */ false,
-        /* enable_rmeta_interface= */ false,
+        /* enable_rmeta_interface= */ true,
         Rc::new(crate_name_to_include_paths),
         Rc::new(crate_name_to_features),
         Rc::new(crate_name_to_namespace),
