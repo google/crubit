@@ -5,7 +5,9 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ABSL_FLAT_HASH_MAP_ISOLATED_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_ABSL_FLAT_HASH_MAP_ISOLATED_H_
 
+#include <cstddef>
 #include <cstdint>
+#include <utility>
 
 #include "support/annotations.h"
 
@@ -20,6 +22,13 @@ class flat_hash_map final {
 
   template <typename F>
   void HarmlessTemplateFunction(F f) const;
+
+  size_t size() const { return 0; }
+  size_t capacity() const { return 0; }
+  template <typename... Args>
+  std::pair<std::pair<const K, V>*, bool> try_emplace(K key, Args&&... args) {
+    return std::make_pair(nullptr, false);
+  }
 };
 
 }  // namespace absl

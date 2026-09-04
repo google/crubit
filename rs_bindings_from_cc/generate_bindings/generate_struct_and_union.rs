@@ -28,6 +28,10 @@ use std::iter;
 use std::num::NonZeroUsize;
 use std::rc::Rc;
 
+mod generate_customized_methods;
+
+use crate::generate_customized_methods::generate_customized_methods;
+
 /// Returns whether fields of type `ty` need to be wrapped in `ManuallyDrop<T>`
 /// to prevent the fields from being destructed twice (once by the C++
 /// destructor calkled from the `impl Drop` of the struct and once by `drop` on
@@ -791,6 +795,18 @@ pub fn generate_record<'a>(
             },
         })
     };
+
+    if let RsTypeKind::Record { customize_methods: Some(customize_methods), .. } =
+        &record_rs_type_kind
+    {
+        generate_customized_methods(
+            db,
+            &mut api_snippets,
+            &record,
+            &qualified_ident,
+            customize_methods,
+        )?;
+    }
 
     let owned_ptr_config =
         record.owned_ptr_config().as_ref().map(|cfg| database::code_snippet::OwnedPtrConfig {
