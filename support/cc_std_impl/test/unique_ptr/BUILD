@@ -23,6 +23,7 @@ crubit_rust_test(
         ":test_helpers",
         "//support/cc_std",
     ],
+    rustc_flags = ["-Zallow-features=allocator_api"],
     deps = [
         "@crate_index//:googletest",
     ],

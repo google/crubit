@@ -1071,18 +1071,13 @@ mod empty_vector {
 
     #[gtest]
     fn test_from_shared_allocator() {
-        let v = cc_std::std::vector::from(Vec::new_in(
-            cc_std::crubit_cc_std_internal::std_allocator::StdAllocator {},
-        ));
+        let v = cc_std::std::vector::from(Vec::new_in(cc_std::std::Allocator));
         assert_eq!(cc_helper_functions::crubit_test::vector_size_by_value(v), 0);
     }
 
     #[gtest]
     fn test_from_shared_allocator_with_capacity() {
-        let v = cc_std::std::vector::from(Vec::with_capacity_in(
-            1,
-            cc_std::crubit_cc_std_internal::std_allocator::StdAllocator {},
-        ));
+        let v = cc_std::std::vector::from(Vec::with_capacity_in(1, cc_std::std::Allocator));
         assert_eq!(cc_helper_functions::crubit_test::vector_size_by_value(v), 0);
     }
 

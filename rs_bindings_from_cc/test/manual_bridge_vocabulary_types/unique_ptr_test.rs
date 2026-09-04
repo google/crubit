@@ -28,7 +28,7 @@ fn test_nontrivial_type_wrapped_by_unique_ptr_as_function_arg_and_return_value()
 #[gtest]
 fn test_unique_ptr_string() {
     let mut p: cc_std::std::unique_ptr<cc_std::std::string> = unique_ptr_lib::MakeUniquePtrString();
-    let s: &cc_std::std::string = p.as_ref().unwrap();
+    let s: &cc_std::std::string = cc_std::std::unique_ptr::as_ref(&mut p).unwrap();
     assert_eq!(&*s, &b"hello, world"[..]);
 }
 

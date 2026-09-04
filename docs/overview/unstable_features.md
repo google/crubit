@@ -103,8 +103,8 @@ For each feature we use, we document the following:
 ### `allocator_api`
 
 *   **Crubit feature:** unreleased
-*   **Use case:** Used for an ABI-compatible implementation of `std::vector`
-    that can reuse the C++ allocator.
+*   **Use case:** Used for an ABI-compatible implementation of `std::vector` and
+    `std::unique_ptr` that can reuse the C++ allocator.
 *   **Exit strategy:** Do not release, or release but require that the Rust
     global allocator *is* the C++ allocator.
 
