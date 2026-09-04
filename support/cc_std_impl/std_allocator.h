@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_ALLOCATOR_H_
-#define THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_ALLOCATOR_H_
+#ifndef THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_STD_ALLOCATOR_H_
+#define THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_STD_ALLOCATOR_H_
 
 #include <__memory/shared_count.h>
 #include <stdio.h>
@@ -122,4 +122,4 @@ struct DynControlBlock : private shared_weak_count {
 
 }  // namespace crubit_cc_std_internal::std_allocator
 
-#endif  // THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_ALLOCATOR_H_
+#endif  // THIRD_PARTY_CRUBIT_SUPPORT_CC_STD_STD_ALLOCATOR_H_

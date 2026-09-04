@@ -339,7 +339,7 @@ fn generate_make_cpp_invoker_tokens<'a>(
 
     let mut invoke_ffi_and_transform_to_rust = quote! {
         unsafe {
-            crate::detail::#invoke_any_invocable_ident(::cc_std::std::unique_ptr::as_ptr(&raw_any_invocable) as *mut _ #(, #arg_exprs)*)
+            crate::detail::#invoke_any_invocable_ident(raw_any_invocable.get() #(, #arg_exprs)*)
         }
     };
 
