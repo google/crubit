@@ -6,7 +6,6 @@ use alloc::borrow::Borrow;
 use alloc::borrow::BorrowMut;
 use core::cmp::Ordering;
 
-use crate::std::Allocator;
 use alloc::collections::TryReserveError;
 use alloc::vec::Vec;
 #[cfg(sanitize = "address")]
@@ -21,6 +20,8 @@ use core::ops::{Deref, DerefMut};
 use core::ops::{Index, IndexMut};
 use core::slice;
 use core::slice::SliceIndex;
+
+use crate::crubit_cc_std_internal::std_allocator as cpp_std_allocator;
 
 unsafe extern "C" {
     // https://github.com/llvm/llvm-project/blob/9d0616ce52fc2a75c8e4808adec41d5189f4240c/compiler-rt/lib/sanitizer_common/sanitizer_interface_internal.h#L70
@@ -166,7 +167,7 @@ impl<T> vector<T> {
     ///   the time `self` is next used.
     ///
     /// These requirements are always upheld by any `begin` that has been
-    /// allocated via Vec<T, cc_std::std::Allocator> and the corresponding Vec is
+    /// allocated via Vec<T, StdAllocator> and the corresponding Vec is
     /// forgotten after the call of this function. It follows by the properties
     /// of the `Vec`.
     unsafe fn set_begin_len_capacity(&mut self, mut begin: *mut T, len: usize, capacity: usize) {
@@ -294,7 +295,7 @@ impl<T: Unpin> vector<T> {
     /// Mutates `self` as if it were a `Vec<T>`.
     fn mutate_self_as_vec<F, R>(&mut self, mutate_self: F) -> R
     where
-        F: FnOnce(&mut Vec<T, Allocator>) -> R,
+        F: FnOnce(&mut Vec<T, cpp_std_allocator::StdAllocator>) -> R,
     {
         unsafe {
             self.asan_unpoison_tail();
@@ -540,7 +541,7 @@ impl<T> Drop for vector<T> {
                     self.begin as *mut T,
                     self.len(),
                     self.capacity(),
-                    Allocator,
+                    cpp_std_allocator::StdAllocator {},
                 );
             }
         }
@@ -656,23 +657,23 @@ impl<T: Ord + Unpin> Ord for vector<T> {
 /// - `T` needs to have the same alignment as what `begin` was allocated with.
 ///
 /// These requirements are always upheld by any `begin` that has been
-/// allocated via Vec<T, cc_std::std::Allocator>.
+/// allocated via Vec<T, StdAllocator>.
 unsafe fn create_vec_from_raw_parts<T>(
     begin: *mut T,
     len: usize,
     capacity: usize,
-) -> Vec<T, Allocator> {
+) -> Vec<T, cpp_std_allocator::StdAllocator> {
     if begin.is_null() {
-        Vec::new_in(Allocator)
+        Vec::new_in(cpp_std_allocator::StdAllocator {})
     } else {
-        unsafe { Vec::from_raw_parts_in(begin, len, capacity, Allocator) }
+        unsafe { Vec::from_raw_parts_in(begin, len, capacity, cpp_std_allocator::StdAllocator {}) }
     }
 }
 
 mod iter {
     use super::alloc;
+    use super::cpp_std_allocator;
     use super::vector;
-    use crate::std::Allocator;
     use core::fmt;
     use core::fmt::Debug;
     use core::iter::FusedIterator;
@@ -683,10 +684,10 @@ mod iter {
     /// should not be made public. If the current implementation
     /// strategy stops working, the wrapped iterator will be replaced with
     /// a more complex implementation.
-    pub struct VectorIntoIter<T>(alloc::vec::IntoIter<T, Allocator>);
+    pub struct VectorIntoIter<T>(alloc::vec::IntoIter<T, cpp_std_allocator::StdAllocator>);
 
     impl<T> VectorIntoIter<T> {
-        pub fn new(v: alloc::vec::IntoIter<T, Allocator>) -> Self {
+        pub fn new(v: alloc::vec::IntoIter<T, cpp_std_allocator::StdAllocator>) -> Self {
             VectorIntoIter(v)
         }
 
@@ -834,11 +835,11 @@ impl<T: Unpin> From<Vec<T>> for vector<T> {
     }
 }
 
-impl<T: Unpin> From<Vec<T, Allocator>> for vector<T> {
+impl<T: Unpin> From<Vec<T, cpp_std_allocator::StdAllocator>> for vector<T> {
     /// Creates a `vector<T>` from a `Vec<T, StdAllocator>`.
     ///
     /// Ownership of elements from `v` are taken by the returned `vector<T>`.
-    fn from(mut v: Vec<T, Allocator>) -> Self {
+    fn from(mut v: Vec<T, cpp_std_allocator::StdAllocator>) -> Self {
         let mut result = vector::new();
         // Safety:
         //

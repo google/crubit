@@ -7,21 +7,18 @@ use crate::crubit_cc_std_internal::std_allocator::{
     cpp_delete, cpp_new, DynControlBlock, FunctionToCall,
 };
 use core::alloc::AllocError;
+use core::alloc::Allocator;
 use core::alloc::GlobalAlloc;
 use core::alloc::Layout;
 use core::ffi::c_void;
+use core::mem::MaybeUninit;
 use core::ptr::{self, NonNull};
 
-/// An allocator that uses C++ `new` and `delete` to allocate and deallocate memory.
-///
-/// This allocator should be used when allocating memory that will be deallocated by C++,
-/// or when deallocating memory allocated by C++.
-#[derive(Copy, Clone, Debug, Default)]
-pub struct Allocator;
+pub struct StdAllocator {}
 
-unsafe impl core::alloc::Allocator for Allocator {
+unsafe impl Allocator for StdAllocator {
     fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
-        // SAFETY: Allocator allows for zero-sized allocations.
+        // SAFETY: StdAllocator allows for zero-sized allocations.
         let raw_ptr = unsafe { self.alloc(layout) };
         let ptr = NonNull::new(raw_ptr).ok_or(AllocError)?;
         Ok(NonNull::slice_from_raw_parts(ptr, layout.size()))
@@ -37,12 +34,12 @@ unsafe impl core::alloc::Allocator for Allocator {
     // NOTE: Also change the GlobalAlloc impl if you add grow/etc.
 }
 
-/// `Allocator` is a global allocator which also accepts zero-sized allocations.
+/// StdAllocator is a global allocator which also accepts zero-sized allocations.
 ///
 /// This allows allocations (even of size 0) in Rust to be mixed with deallocations in C++.
 /// (Though, since `Global` will not pass through 0-sized allocations, this is currently of
 /// limited use.)
-unsafe impl GlobalAlloc for Allocator {
+unsafe impl GlobalAlloc for StdAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         cpp_new(layout.size(), layout.align()) as *mut u8
     }
@@ -50,6 +47,12 @@ unsafe impl GlobalAlloc for Allocator {
         unsafe {
             cpp_delete(ptr as *mut c_void, layout.size(), layout.align());
         }
+    }
+}
+
+impl Clone for StdAllocator {
+    fn clone(&self) -> Self {
+        Self {}
     }
 }
 
