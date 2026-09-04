@@ -692,17 +692,7 @@ pub fn format_ty_for_cc<'tcx>(
                     has_cpp_type || !has_non_lifetime_substs(substs),
                     "Generic types are not supported yet (b/259749095)"
                 );
-                if crate::is_in_ignore_symbols_from_files(db, adt.did()) {
-                    bail!(
-                        "`{ty}` does not receive bindings because it is defined in an \
-                        additional Rust source on a `rust_api_from_cpp` rule. See \
-                        crubit.rs/cpp/best_practices#types-in-srcs-do-not-receive-cpp-bindings."
-                    );
-                }
-                ensure!(
-                    !attrs.do_not_bind,
-                    "`{ty}` does not receive bindings because it is marked `#[do_not_bind]`."
-                );
+                crate::should_receive_bindings(db, adt.did())?;
                 ensure!(
                     db.symbol_canonical_name(adt.did()).is_some(),
                     "Not a public or a supported reexported type (b/262052635)."

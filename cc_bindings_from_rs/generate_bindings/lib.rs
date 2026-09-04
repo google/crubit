@@ -91,17 +91,27 @@ pub(crate) fn is_in_ignore_symbols_from_files<'tcx>(
     db.ignore_symbols_from_files().contains(Path::new(file_name))
 }
 
-pub(crate) fn should_receive_bindings<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> bool {
-    let attributes = crubit_attr::get_attrs(db.tcx(), def_id).unwrap_or_default();
+pub fn should_receive_bindings<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<()> {
+    let tcx = db.tcx();
+    let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
     if attributes.do_not_bind {
-        return false;
+        let name = tcx.def_path_str(def_id);
+        bail!("`{name}` does not receive bindings because it is marked `#[do_not_bind]`.");
     }
     // If the type has a `cpp_type` attribute, it should receive bindings even if it is defined in
     // an ignored file.
     if attributes.cpp_type.is_some() {
-        return true;
+        return Ok(());
     }
-    !is_in_ignore_symbols_from_files(db, def_id)
+    if is_in_ignore_symbols_from_files(db, def_id) {
+        let name = tcx.def_path_str(def_id);
+        bail!(
+            "`{name}` does not receive bindings because it is defined in an \
+            additional Rust source on a `rust_api_from_cpp` rule. See \
+            crubit.rs/cpp/best_practices#types-in-srcs-do-not-receive-cpp-bindings."
+        );
+    }
+    Ok(())
 }
 
 fn check_unbindable_type(db: &BindingsGenerator, def_id: DefId) {
@@ -896,7 +906,7 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
     // Symbols that should not receive bindings should not have a canonical name, so that we do not
     // attempt to bind other items that depend on them (functions that use them in their signature
     // etc.).
-    if !should_receive_bindings(db, def_id) {
+    if should_receive_bindings(db, def_id).is_err() {
         return None;
     }
 
