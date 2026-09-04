@@ -197,12 +197,19 @@ pub fn generate_function_thunk<'a>(
         }
     }
 
+    let mut all_types: Vec<RsTypeKind<'a>> = param_types.clone().cloned().collect();
+    all_types.push(return_type.clone());
+
     // Of the remaining lifetimes, put them in the generic parameters.
-    let lifetimes: Vec<_> = unique_lifetimes(param_types.clone(), func.lifetime_inputs())
+    let mut lifetimes: Vec<_> = unique_lifetimes(&all_types, func.lifetime_inputs())
         .into_iter()
-        .chain(extra_return_lifetime)
         .filter(|lifetime| !lifetime.is_elided())
         .collect();
+    if let Some(extra) = extra_return_lifetime {
+        if !lifetimes.contains(&extra) {
+            lifetimes.push(extra);
+        }
+    }
 
     let thunk_ident = thunk_ident(db, func);
 

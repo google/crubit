@@ -2836,3 +2836,31 @@ fn test_diagnose_if_skipped() -> Result<()> {
     assert_cc_not_matches!(rs_api_impl, quote! { diagnose_if_func });
     Ok(())
 }
+
+#[gtest]
+fn test_return_type_only_lifetime_captured() -> Result<()> {
+    // In assume_lifetimes mode, a struct with a reference member gets an inferred lifetime.
+    // A function returning it should capture this lifetime.
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+        struct LIFETIME_PARAMS("a") View final {
+            const int& ptr;
+        };
+        View MakeView();
+        "#,
+    )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+
+    // Verify that MakeView has a lifetime parameter in its signature.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn MakeView < ... > () -> crate :: View < ... >
+        }
+    );
+
+    Ok(())
+}
+
