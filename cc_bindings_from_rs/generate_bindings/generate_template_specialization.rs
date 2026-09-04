@@ -643,9 +643,7 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
 
         let mut construct_elements = quote! {};
         let mut convert_elements = Vec::new();
-        for (i, (formatted_ty, element_cc_ty)) in
-            self.element_tys.iter().zip(&element_cc_tys).enumerate()
-        {
+        for (i, element_cc_ty) in element_cc_tys.iter().enumerate() {
             let field_ident = anonymous_field_ident(i);
             let i_idx = Literal::usize_unsuffixed(i);
             let elem_size = element_sizes[i];
