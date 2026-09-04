@@ -960,6 +960,286 @@ fn test_format_item_generic_fn_as_ref_trait_basic_replacement() {
     });
 }
 
+#[test]
+fn test_format_item_generic_fn_impl_fn_trait() {
+    let test_src = r#"
+            #![allow(unused)]
+            pub fn call_fn(f: impl Fn(i32) -> i32) -> i32 { f(42) }
+        "#;
+    test_format_item(test_src, "call_fn", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                ::std::int32_t call_fn(::rs::FnRef<::std::int32_t(::std::int32_t) const> f);
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                unsafe extern "C" fn __crubit_thunk_call_ufn(
+                    f: ::bridge_rust::FnRefPayload
+                ) -> i32 {
+                    unsafe {
+                        ::rust_out::call_fn(move |__arg_0: i32| {
+                            let __invoker: unsafe extern "C" fn(*mut core::ffi::c_void, i32) -> i32 =
+                                unsafe { ::core::mem::transmute(f.invoker()) };
+                            unsafe { __invoker(f.data(), __arg_0) }
+                        })
+                    }
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_generic_fn_impl_fn_once_static() {
+    let test_src = r#"
+            #![allow(unused)]
+            pub fn call_fn_once_static(f: impl FnOnce(i32) -> i32 + 'static) -> i32 { f(42) }
+        "#;
+    test_format_item(test_src, "call_fn_once_static", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                ::std::int32_t call_fn_once_static(::rs::Fn<::std::int32_t(::std::int32_t) &&> f);
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                unsafe extern "C" fn __crubit_thunk_call_ufn_uonce_ustatic(
+                    f: ::bridge_rust::FnPayload
+                ) -> i32 {
+                    unsafe {
+                        ::rust_out::call_fn_once_static(move |__arg_0: i32| {
+                            let __invoker: unsafe extern "C" fn(*mut core::ffi::c_void, i32) -> i32 =
+                                unsafe { ::core::mem::transmute(f.invoker()) };
+                            unsafe { __invoker(f.data(), __arg_0) }
+                        })
+                    }
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_dyn_fn_ref() {
+    let test_src = r#"
+            #![allow(unused)]
+            pub fn call_dyn_ref(f: &dyn Fn(i32) -> i32) -> i32 { f(42) }
+        "#;
+    test_format_item(test_src, "call_dyn_ref", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                ::std::int32_t call_dyn_ref(::rs::FnRef<::std::int32_t(::std::int32_t) const> f);
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_box_dyn_fn_once() {
+    let test_src = r#"
+            #![allow(unused)]
+            pub fn call_boxed(f: Box<dyn FnOnce(i32) -> i32>) -> i32 { f(42) }
+        "#;
+    test_format_item(test_src, "call_boxed", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                ::std::int32_t call_boxed(::rs::Fn<::std::int32_t(::std::int32_t) &&> f);
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_fn_abi_compatible_types() {
+    let test_src = r#"
+            #![allow(unused)]
+            pub fn call_abi_compat(f: impl Fn(i32, bool, *const i32) -> f64) -> f64 {
+                f(42, true, core::ptr::null())
+            }
+        "#;
+    test_format_item(test_src, "call_abi_compat", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                double call_abi_compat(
+                    ::rs::FnRef<double(::std::int32_t, bool, ::std::int32_t const*) const> f);
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                unsafe extern "C" fn __crubit_thunk_call_uabi_ucompat(
+                    f: ::bridge_rust::FnRefPayload
+                ) -> f64 {
+                    unsafe {
+                        ::rust_out::call_abi_compat(move |__arg_0: i32, __arg_1: bool, __arg_2: *const i32| {
+                            let __invoker: unsafe extern "C" fn(
+                                *mut core::ffi::c_void,
+                                i32,
+                                bool,
+                                *const i32
+                            ) -> f64 = unsafe { ::core::mem::transmute(f.invoker()) };
+                            unsafe { __invoker(f.data(), __arg_0, __arg_1, __arg_2) }
+                        })
+                    }
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_fn_layout_compatible_not_abi_compatible_type() {
+    let test_src = r#"
+            #![allow(unused)]
+            pub struct Point {
+                pub x: i32,
+                pub y: i32,
+            }
+            pub fn call_point(f: impl Fn(Point) -> Point) -> Point {
+                f(Point { x: 1, y: 2 })
+            }
+        "#;
+    test_format_item(test_src, "call_point", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                ::rust_out::Point call_point(
+                    ::rs::FnRef<::rust_out::Point(::rust_out::Point) const> f);
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                unsafe extern "C" fn __crubit_thunk_call_upoint(
+                    f: ::bridge_rust::FnRefPayload,
+                    __ret_ptr: *mut core::ffi::c_void
+                ) -> () {
+                    unsafe {
+                        let __rs_return_value = ::rust_out::call_point(move |__arg_0: ::rust_out::Point| {
+                            let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
+                            let __invoker: unsafe extern "C" fn(
+                                *mut core::ffi::c_void,
+                                *mut ::rust_out::Point,
+                                *mut core::ffi::c_void
+                            ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                            let mut __ret_storage = ::core::mem::MaybeUninit::<::rust_out::Point>::uninit();
+                            unsafe {
+                                __invoker(
+                                    f.data(),
+                                    &mut *__arg_0 as *mut _,
+                                    __ret_storage.as_mut_ptr() as *mut _
+                                );
+                                __ret_storage.assume_init()
+                            }
+                        });
+                        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+                    }
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_fn_bridged_type() {
+    let test_src = r#"
+            #![allow(unused)]
+            pub fn call_str(f: impl Fn(&str)) {
+                f("hello")
+            }
+        "#;
+    test_format_item(test_src, "call_str", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void call_str(::rs::FnRef<void(rs_std::StrRef) const> f);
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                unsafe extern "C" fn __crubit_thunk_call_ustr(
+                    f: ::bridge_rust::FnRefPayload
+                ) -> () {
+                    unsafe {
+                        ::rust_out::call_str(move |__arg_0: &str| {
+                            let __invoker: unsafe extern "C" fn(*mut core::ffi::c_void, &str) -> () =
+                                unsafe { ::core::mem::transmute(f.invoker()) };
+                            unsafe { __invoker(f.data(), __arg_0); }
+                        })
+                    }
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_fn_with_bridgeable_types() {
+    let test_src = r#"
+            #![allow(unused)]
+            pub fn take_fn_with_bridgeable_types(
+                f: Box<dyn FnOnce((i32, Option<i32>)) -> (i32, Option<i32>)>,
+            ) {}
+        "#;
+    test_format_item(test_src, "take_fn_with_bridgeable_types", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void take_fn_with_bridgeable_types(
+                    ::rs::Fn<rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>(
+                        rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>) &&> f);
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                unsafe extern "C" fn __crubit_thunk_take_ufn_uwith_ubridgeable_utypes(
+                    f: ::bridge_rust::FnPayload
+                ) -> () {
+                    unsafe {
+                        ::rust_out::take_fn_with_bridgeable_types(::alloc::boxed::Box::new(
+                            move |__arg_0: (i32, ::core::option::Option<i32>,)| {
+                                let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
+                                let __invoker: unsafe extern "C" fn(
+                                    *mut core::ffi::c_void,
+                                    *mut (i32, ::core::option::Option<i32>,),
+                                    *mut core::ffi::c_void
+                                ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                                let mut __ret_storage = ::core::mem::MaybeUninit::<(i32, ::core::option::Option<i32>,)>::uninit();
+                                unsafe {
+                                    __invoker(
+                                        f.data(),
+                                        &mut *__arg_0 as *mut _,
+                                        __ret_storage.as_mut_ptr() as *mut _
+                                    );
+                                    __ret_storage.assume_init()
+                                }
+                            }
+                        ))
+                    }
+                }
+            }
+        );
+    });
+}
+
 /// This test was initially added to provide coverage/verification that
 /// _all_ generic parameters need to have valid replacements.
 #[test]
@@ -1831,6 +2111,95 @@ fn test_return_composable_bridged_type_in_tuple() {
         assert_eq!(
             err,
             "Error formatting function return type `(std::option::Option<i32>,)`: crubit.rs/errors/bridge_compound_type: Tuples containing bridged type `std::option::Option<i32>` are not supported. Pass `std::option::Option<i32>` directly as a parameter or return value instead of inside a tuple."
+        );
+    });
+}
+
+#[test]
+fn test_callable_param_non_movable_type_error() {
+    let test_src = r#"
+            pub struct NonCppMovable(pub i32);
+            impl Drop for NonCppMovable {
+                fn drop(&mut self) {}
+            }
+            pub fn call_with_non_movable(_f: impl Fn(NonCppMovable)) {}
+        "#;
+    test_format_item(test_src, "call_with_non_movable", |result| {
+        let err = result.unwrap_err();
+        assert_eq!(
+            err,
+            "Error handling parameter #0 of type `&dyn std::ops::Fn(NonCppMovable)`: Callable parameter type `NonCppMovable` is not C++-movable. Types without C++ move constructors cannot be passed by value to a callable. See crubit.rs/rust/movable_types for what types are C++ movable."
+        );
+    });
+}
+
+#[test]
+fn test_callable_param_boxed_non_movable_type_error() {
+    let test_src = r#"
+            pub struct NonCppMovable(pub i32);
+            impl Drop for NonCppMovable {
+                fn drop(&mut self) {}
+            }
+            pub fn call_with_boxed_non_movable(_f: Box<dyn FnOnce(NonCppMovable)>) {}
+        "#;
+    test_format_item(test_src, "call_with_boxed_non_movable", |result| {
+        let err = result.unwrap_err();
+        assert_eq!(
+            err,
+            "Error handling parameter #0 of type `std::boxed::Box<(dyn std::ops::FnOnce(NonCppMovable) + 'static)>`: Callable parameter type `NonCppMovable` is not C++-movable. Types without C++ move constructors cannot be passed by value to a callable. See crubit.rs/rust/movable_types for what types are C++ movable."
+        );
+    });
+}
+
+#[test]
+fn test_callable_param_non_movable_by_ref() {
+    let test_src = r#"
+            pub struct NonCppMovable(pub i32);
+            impl Drop for NonCppMovable {
+                fn drop(&mut self) {}
+            }
+            pub fn call_with_non_movable_ref(_f: impl Fn(&NonCppMovable)) {}
+        "#;
+    test_format_item(test_src, "call_with_non_movable_ref", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void call_with_non_movable_ref(
+                    ::rs::FnRef<void(::rust_out::NonCppMovable const* ...) const> ...);
+            }
+        );
+    });
+}
+
+#[test]
+fn test_callable_return_non_movable() {
+    let test_src = r#"
+            pub struct NonCppMovable(pub i32);
+            impl Drop for NonCppMovable {
+                fn drop(&mut self) {}
+            }
+            pub fn call_ret_non_movable(f: impl Fn() -> NonCppMovable) -> NonCppMovable {
+                f()
+            }
+        "#;
+    test_format_item(test_src, "call_ret_non_movable", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                ::rust_out::NonCppMovable call_ret_non_movable(
+                    ::rs::FnRef<::rust_out::NonCppMovable() const> f);
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                auto __f_invoker = [](void* __data, void* __ret_ptr) -> void {
+                    new (__ret_ptr) ::rust_out::NonCppMovable(
+                        (*reinterpret_cast<::rs::FnRef<::rust_out::NonCppMovable() const>*>(__data))());
+                };
+            }
         );
     });
 }

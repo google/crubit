@@ -39,9 +39,10 @@ use rustc_hir::attrs::lang_items::LangItem;
 use rustc_hir::lang_items::LangItem;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::layout::IntegerExt;
-use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt};
+use rustc_middle::ty::{self, AdtDef, GenericArg, Ty, TyCtxt, TypeVisitableExt};
 use rustc_span::def_id::{CrateNum, DefId};
-use rustc_span::symbol::Symbol;
+use rustc_span::symbol::{sym, Symbol};
+use std::collections::BTreeSet;
 use std::rc::Rc;
 
 #[rustversion::since(2026-07-31)]
@@ -76,8 +77,12 @@ fn is_unique_ptr(db: &BindingsGenerator<'_>, did: DefId) -> bool {
         || matches_qualified_name(db, did, &["rust_out", "unique_ptr"])
         || matches_qualified_name(db, did, &["unique_ptr", "unique_ptr"])
         || {
-            let Ok(attrs) = crubit_attr::get_attrs(tcx, did) else { return false };
-            let Ok(Some(bridging_attrs)) = attrs.get_bridging_attrs() else { return false };
+            let Ok(attrs) = crubit_attr::get_attrs(tcx, did) else {
+                return false;
+            };
+            let Ok(Some(bridging_attrs)) = attrs.get_bridging_attrs() else {
+                return false;
+            };
             let cpp_type = match bridging_attrs {
                 BridgingAttrs::JustCppType { cpp_type, .. } => cpp_type,
                 BridgingAttrs::ExternCFuncConverters { cpp_type, .. } => cpp_type,
@@ -405,6 +410,120 @@ fn format_uint_ty_for_cc<'tcx>(
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CallableKind {
+    FnRef,
+    FnMutRef,
+    FnBox,
+    FnMutBox,
+    FnOnceBox,
+}
+
+impl CallableKind {
+    pub fn is_owning(&self) -> bool {
+        matches!(self, CallableKind::FnBox | CallableKind::FnMutBox | CallableKind::FnOnceBox)
+    }
+}
+
+pub struct CallableInfo<'tcx> {
+    pub kind: CallableKind,
+    pub param_tys: Vec<Ty<'tcx>>,
+    pub return_ty: Ty<'tcx>,
+}
+
+fn escaping_bound_vars_err<'tcx>(tcx: TyCtxt<'tcx>, kind_str: &str, ty: Ty<'tcx>) -> String {
+    let vars: BTreeSet<String> = ty
+        .walk()
+        .filter_map(|arg| match arg.kind() {
+            ty::GenericArgKind::Lifetime(r) if r.has_escaping_bound_vars() => {
+                Some(r.get_name(tcx).map(|s| s.to_string()).unwrap_or_else(|| format!("{r}")))
+            }
+            ty::GenericArgKind::Type(t) if matches!(t.kind(), ty::TyKind::Bound(..)) => {
+                Some(format!("{t}"))
+            }
+            _ => None,
+        })
+        .collect();
+    let vars_desc = if vars.is_empty() {
+        String::new()
+    } else {
+        format!(": {}", vars.into_iter().map(|v| format!("`{v}`")).collect::<Vec<_>>().join(", "))
+    };
+    format!(
+        "Callable {kind_str} type `{ty}` references lifetimes or types that are bound at the function level{vars_desc}"
+    )
+}
+
+pub fn get_callable_info<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    ty: Ty<'tcx>,
+) -> Result<Option<CallableInfo<'tcx>>> {
+    let (kind, principal) = match *ty.kind() {
+        ty::TyKind::Ref(_, referent, mutability) => {
+            let ty::TyKind::Dynamic(preds, _) = referent.kind() else {
+                return Ok(None);
+            };
+            let Some(principal) = preds.principal() else {
+                return Ok(None);
+            };
+            let Some(closure_kind) = tcx.fn_trait_kind_from_def_id(principal.skip_binder().def_id)
+            else {
+                return Ok(None);
+            };
+            let kind = match (closure_kind, mutability) {
+                (ty::ClosureKind::Fn, Mutability::Not) => CallableKind::FnRef,
+                (ty::ClosureKind::FnMut, Mutability::Mut) => CallableKind::FnMutRef,
+                _ => return Ok(None),
+            };
+            (kind, principal)
+        }
+        ty::TyKind::Adt(adt, substs) if tcx.is_lang_item(adt.did(), LangItem::OwnedBox) => {
+            let Some(referent) = substs.first().and_then(|a| a.as_type()) else {
+                return Ok(None);
+            };
+            let ty::TyKind::Dynamic(preds, _) = referent.kind() else {
+                return Ok(None);
+            };
+            let Some(principal) = preds.principal() else {
+                return Ok(None);
+            };
+            let Some(closure_kind) = tcx.fn_trait_kind_from_def_id(principal.skip_binder().def_id)
+            else {
+                return Ok(None);
+            };
+            let kind = match closure_kind {
+                ty::ClosureKind::Fn => CallableKind::FnBox,
+                ty::ClosureKind::FnMut => CallableKind::FnMutBox,
+                ty::ClosureKind::FnOnce => CallableKind::FnOnceBox,
+            };
+            (kind, principal)
+        }
+        _ => return Ok(None),
+    };
+
+    // Higher-ranked trait bounds (e.g. `for<'a> Fn(&'a str)`) have bound lifetime variables
+    // attached to the trait binder (`principal.bound_vars()`). We instantiate any late-bound
+    // regions with `'static` to inspect and format their types.
+    let existential_trait_ref =
+        tcx.instantiate_bound_regions_uncached(principal, |_| tcx.lifetimes.re_static);
+    let args_tuple = existential_trait_ref.args.type_at(0);
+    if args_tuple.has_escaping_bound_vars() {
+        bail!("{}", escaping_bound_vars_err(tcx, "argument", args_tuple));
+    }
+    let ty::TyKind::Tuple(param_tys) = args_tuple.kind() else {
+        panic!("Fn trait argument type must be a tuple, but found `{args_tuple}`");
+    };
+
+    let return_ty =
+        get_associated_type(tcx, ty, sym::Output).unwrap_or_else(|| Ty::new_tup(tcx, &[]));
+
+    if return_ty.has_escaping_bound_vars() {
+        bail!("{}", escaping_bound_vars_err(tcx, "return", return_ty));
+    }
+
+    Ok(Some(CallableInfo { kind, param_tys: param_tys.to_vec(), return_ty }))
+}
+
 /// Implementation of `BindingsGenerator::format_ty_for_cc`.
 pub fn format_ty_for_cc<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -443,16 +562,70 @@ pub fn format_ty_for_cc<'tcx>(
         return Ok(CcSnippet { tokens, prereqs });
     }
 
+    if let Some(info) = get_callable_info(tcx, ty)? {
+        if !matches!(location, TypeLocation::FnParam { .. }) {
+            bail!("Callable types are only supported in function parameter position");
+        }
+        let mut prereqs = CcPrerequisites::default();
+        // Use `TypeLocation::ClosureReturn` so that `()` is formatted as `void`, while types like
+        // tuples and `Option` are formatted as their layout-compatible representations (e.g.
+        // `rs_std::Tuple`, `rs_std::Option`) rather than bridged C++ types (`std::tuple`,
+        // `std::optional`), since the FFI trampoline invokes the callback directly without
+        // inserting bridging conversion logic.
+        let ret_snippet = db
+            .format_ty_for_cc(info.return_ty, TypeLocation::ClosureReturn)?
+            .into_tokens(&mut prereqs);
+        let param_snippets = info
+            .param_tys
+            .iter()
+            .map(|&param_ty| -> Result<TokenStream> {
+                ensure!(
+                    db.is_cpp_move_constructible(param_ty),
+                    "Callable parameter type `{param_ty}` is not C++-movable. Types without C++ move constructors cannot be passed by value to a callable. See crubit.rs/rust/movable_types for what types are C++ movable."
+                );
+                Ok(db
+                    .format_ty_for_cc(param_ty, TypeLocation::Other)?
+                    .into_tokens(&mut prereqs))
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        let tokens = match info.kind {
+            CallableKind::FnRef => {
+                prereqs.includes.insert(db.support_header("rs_std/fn_ref.h"));
+                quote! { ::rs::FnRef<#ret_snippet(#(#param_snippets),*) const> }
+            }
+            CallableKind::FnMutRef => {
+                prereqs.includes.insert(db.support_header("rs_std/fn_ref.h"));
+                quote! { ::rs::FnRef<#ret_snippet(#(#param_snippets),*)> }
+            }
+            CallableKind::FnBox => {
+                prereqs.includes.insert(db.support_header("rs_std/fn.h"));
+                quote! { ::rs::Fn<#ret_snippet(#(#param_snippets),*) const> }
+            }
+            CallableKind::FnMutBox => {
+                prereqs.includes.insert(db.support_header("rs_std/fn.h"));
+                quote! { ::rs::Fn<#ret_snippet(#(#param_snippets),*)> }
+            }
+            CallableKind::FnOnceBox => {
+                prereqs.includes.insert(db.support_header("rs_std/fn.h"));
+                quote! { ::rs::Fn<#ret_snippet(#(#param_snippets),*) &&> }
+            }
+        };
+        return Ok(CcSnippet { tokens, prereqs });
+    }
+
     Ok(match *ty.kind() {
         ty::TyKind::Never => match location {
-            TypeLocation::FnReturn { .. } => keyword(quote! { void }),
+            TypeLocation::FnReturn { .. } | TypeLocation::ClosureReturn => keyword(quote! { void }),
             _ => {
                 // TODO(b/254507801): Maybe translate into `crubit::Never`?
                 bail!("The never type `!` is only supported as a return type (b/254507801)");
             }
         },
         ty::TyKind::Tuple(types) => {
-            if types.is_empty() && matches!(location, TypeLocation::FnReturn { .. }) {
+            if types.is_empty()
+                && matches!(location, TypeLocation::FnReturn { .. } | TypeLocation::ClosureReturn)
+            {
                 keyword(quote! { void })
             } else if !location.is_bridgeable()
                 || (db
@@ -488,7 +661,10 @@ pub fn format_ty_for_cc<'tcx>(
                             .into_tokens(&mut prereqs),
                     );
                 }
-                CcSnippet { prereqs, tokens: quote! { ::std::tuple<#(#cc_types),*> } }
+                CcSnippet {
+                    prereqs,
+                    tokens: quote! { ::std::tuple<#(#cc_types),*> },
+                }
             }
         }
         ty::TyKind::Array(element_type, length) => {
@@ -497,10 +673,14 @@ pub fn format_ty_for_cc<'tcx>(
             // We need to be able to handle expressions at the type level that are not simple
             // numeric literals.
             let target_size = evaluate_const_as_u64(db.tcx(), length)?;
-            let cc_element_ty =
-                db.format_ty_for_cc(element_type, TypeLocation::Other)?.into_tokens(&mut prereqs);
+            let cc_element_ty = db
+                .format_ty_for_cc(element_type, TypeLocation::Other)?
+                .into_tokens(&mut prereqs);
             let c_int = Literal::u64_unsuffixed(target_size);
-            CcSnippet { prereqs, tokens: quote! { ::std::array<#cc_element_ty, #c_int> } }
+            CcSnippet {
+                prereqs,
+                tokens: quote! { ::std::array<#cc_element_ty, #c_int> },
+            }
         }
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#bool documents
@@ -562,16 +742,17 @@ pub fn format_ty_for_cc<'tcx>(
             // (Likely this should be merged with the handling for actual Rust references.)
             let referent = substs[1].expect_ty();
             let mut prereqs = CcPrerequisites::default();
-            let sigil =
-                if matches!(location, TypeLocation::FnParam { .. } | TypeLocation::FnReturn { .. })
-                {
-                    quote! { && }
-                } else {
-                    let region = substs[0]
-                        .as_region()
-                        .expect("RvalueReference/ByValue's first parameter should be a lifetime");
-                    format_non_owning_pointer_prefix(db, region, referent, &mut prereqs)
-                };
+            let sigil = if matches!(
+                location,
+                TypeLocation::FnParam { .. } | TypeLocation::FnReturn { .. }
+            ) {
+                quote! { && }
+            } else {
+                let region = substs[0]
+                    .as_region()
+                    .expect("RvalueReference/ByValue's first parameter should be a lifetime");
+                format_non_owning_pointer_prefix(db, region, referent, &mut prereqs)
+            };
 
             let mut snippet =
                 format_pointer_or_reference_ty_for_cc(db, referent, Mutability::Mut, sigil)?;
@@ -612,13 +793,18 @@ pub fn format_ty_for_cc<'tcx>(
             } else if let Some(bridged_type) = is_bridged_type(db, ty)? {
                 let is_layout_compat = bridged_type.is_layout_compatible();
                 match bridged_type {
-                    BridgedType::Legacy { include_paths, cpp_type, conversion_info: _ } => {
+                    BridgedType::Legacy {
+                        include_paths,
+                        cpp_type,
+                        conversion_info: _,
+                    } => {
                         if !is_layout_compat {
                             if db.is_proto_message(ty) {
                                 if !matches!(
                                     location,
-                                    TypeLocation::FnReturn { is_constructor: false }
-                                        | TypeLocation::FnParam { .. }
+                                    TypeLocation::FnReturn {
+                                        is_constructor: false
+                                    } | TypeLocation::FnParam { .. }
                                 ) {
                                     return Ok(
                                         format_layout_compatible_cpp_type_for_rust_proto_msg(
@@ -682,7 +868,10 @@ pub fn format_ty_for_cc<'tcx>(
                             quote! { < #(#generic_types_tokens),* > }.to_tokens(&mut tokens);
                         }
 
-                        return Ok(CcSnippet { tokens, prereqs: composable.prereqs });
+                        return Ok(CcSnippet {
+                            tokens,
+                            prereqs: composable.prereqs,
+                        });
                     }
                 }
             } else {
@@ -766,14 +955,15 @@ pub fn format_ty_for_cc<'tcx>(
                 return Ok(format_str_ref_for_cc(db));
             }
 
-            let mutability =
-                if matches!(location, TypeLocation::FnParam { .. } | TypeLocation::FnReturn { .. })
-                    && is_cpp_thread_safe(db, referent)?
-                {
-                    Mutability::Mut
-                } else {
-                    mutability
-                };
+            let mutability = if matches!(
+                location,
+                TypeLocation::FnParam { .. } | TypeLocation::FnReturn { .. }
+            ) && is_cpp_thread_safe(db, referent)?
+            {
+                Mutability::Mut
+            } else {
+                mutability
+            };
 
             let treat_ref_as_ptr = treat_ref_as_ptr(tcx, ty, location);
 
@@ -863,6 +1053,7 @@ pub fn format_ty_for_cc<'tcx>(
                 }
                 TypeLocation::NestedBridgeable
                 | TypeLocation::Other
+                | TypeLocation::ClosureReturn
                 | TypeLocation::Field
                 | TypeLocation::TemplateArg => {
                     quote! { * }
@@ -870,7 +1061,9 @@ pub fn format_ty_for_cc<'tcx>(
             };
 
             let mut prereqs = CcPrerequisites::default();
-            prereqs.includes.insert(db.support_header("internal/cxx20_backports.h"));
+            prereqs
+                .includes
+                .insert(db.support_header("internal/cxx20_backports.h"));
 
             let ret_type = format_ret_ty_for_cc(db, &sig)?.into_tokens(&mut prereqs);
             let param_types =
@@ -951,6 +1144,61 @@ pub(crate) fn alias_ty_as_opaque_def_id<'tcx>(
     (tcx.def_kind(def_id) == rustc_hir::def::DefKind::OpaqueTy).then_some(def_id)
 }
 
+/// Finds the associated type `assoc_name` (e.g. `Output`) for a given type `ty`.
+///
+/// Supports opaque types (`impl Trait`, including `async fn` desugared futures) and
+/// dynamic types (`dyn Trait`, `&dyn Trait`, `Box<dyn Trait>`).
+pub fn get_associated_type<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    ty: Ty<'tcx>,
+    assoc_name: Symbol,
+) -> Option<Ty<'tcx>> {
+    if let Some(alias_ty) = ty_as_alias_ty(ty)
+        && let Some(alias_def_id) = alias_ty_as_opaque_def_id(tcx, alias_ty)
+    {
+        return tcx
+            .explicit_item_bounds(alias_def_id)
+            .iter_instantiated_copied(tcx, alias_ty.args)
+            .find_map(|unnorm| {
+                let (predicate, _span) =
+                    crate::normalize_ty(tcx, tcx.param_env(alias_def_id), unnorm);
+                if let ty::ClauseKind::Projection(projection_predicate) =
+                    predicate.kind().skip_binder()
+                    && tcx.item_name(projection_predicate.def_id()) == assoc_name
+                {
+                    return projection_predicate.term.as_type();
+                }
+                None
+            });
+    }
+
+    let dyn_preds = match *ty.kind() {
+        ty::TyKind::Dynamic(preds, _) => Some(preds),
+        ty::TyKind::Ref(_, referent, _) => match referent.kind() {
+            ty::TyKind::Dynamic(preds, _) => Some(*preds),
+            _ => None,
+        },
+        ty::TyKind::Adt(adt, substs) if tcx.is_lang_item(adt.did(), LangItem::OwnedBox) => {
+            substs.first().and_then(|a| a.as_type()).and_then(|referent| match referent.kind() {
+                ty::TyKind::Dynamic(preds, _) => Some(*preds),
+                _ => None,
+            })
+        }
+        _ => None,
+    };
+
+    dyn_preds.and_then(|preds| {
+        preds.projection_bounds().find_map(|proj| {
+            let proj = tcx.instantiate_bound_regions_uncached(proj, |_| tcx.lifetimes.re_static);
+            if tcx.item_name(proj.def_id) == assoc_name {
+                proj.term.as_type()
+            } else {
+                None
+            }
+        })
+    })
+}
+
 enum RefConvert {
     ToPtr { is_lifetime_bound: bool },
     ToRef,
@@ -994,6 +1242,7 @@ fn treat_ref_as_ptr<'tcx>(
         // of an array, etc.).
         TypeLocation::NestedBridgeable
         | TypeLocation::Other
+        | TypeLocation::ClosureReturn
         | TypeLocation::Field
         | TypeLocation::TemplateArg => RefConvert::ToPtr { is_lifetime_bound: false },
     }
@@ -1167,7 +1416,9 @@ fn format_fn_ptr_for_rs<'tcx>(
             ty::BoundVariableKind::Region(bound_region_kind) => bound_region_kind,
         };
         if let Some(name) = bound_region_kind.get_name(tcx) {
-            bail!("Function pointers with explicit HRTBs are not yet supported, found bound var: {name}")
+            bail!(
+                "Function pointers with explicit HRTBs are not yet supported, found bound var: {name}"
+            )
         }
     }
     let inputs = fn_sig_tys
@@ -1192,6 +1443,29 @@ fn format_fn_ptr_for_rs<'tcx>(
 /// names whenever necessary - for example: `target_crate::SomeStruct` rather
 /// than just `SomeStruct`.
 pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
+    if let Some(info) = get_callable_info(db.tcx(), ty)? {
+        let rs_ret_ty = db.format_ty_for_rs(info.return_ty)?;
+        let rs_param_tys =
+            info.param_tys.iter().map(|&t| db.format_ty_for_rs(t)).collect::<Result<Vec<_>>>()?;
+        return Ok(match info.kind {
+            CallableKind::FnRef => {
+                quote! { &'static (dyn ::core::ops::Fn(#(#rs_param_tys),*) -> #rs_ret_ty + 'static) }
+            }
+            CallableKind::FnMutRef => {
+                quote! { &'static mut (dyn ::core::ops::FnMut(#(#rs_param_tys),*) -> #rs_ret_ty + 'static) }
+            }
+            CallableKind::FnBox => {
+                quote! { ::alloc::boxed::Box<dyn (::core::ops::Fn(#(#rs_param_tys),*) -> #rs_ret_ty) + 'static> }
+            }
+            CallableKind::FnMutBox => {
+                quote! { ::alloc::boxed::Box<dyn (::core::ops::FnMut(#(#rs_param_tys),*) -> #rs_ret_ty) + 'static> }
+            }
+            CallableKind::FnOnceBox => {
+                quote! { ::alloc::boxed::Box<dyn (::core::ops::FnOnce(#(#rs_param_tys),*) -> #rs_ret_ty) + 'static> }
+            }
+        });
+    }
+
     Ok(match *ty.kind() {
         ty::TyKind::Bool
         | ty::TyKind::Float(_)
@@ -1228,7 +1502,11 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
                         };
                         return Ok(quote! { ::alloc::vec::Vec<#t_param> });
                     }
-                    BridgedBuiltin::Option if db.crate_features(db.source_crate_num()).contains(crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust) => {
+                    BridgedBuiltin::Option
+                        if db.crate_features(db.source_crate_num()).contains(
+                            crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust,
+                        ) =>
+                    {
                         let t_param = match substs[0].kind() {
                             ty::GenericArgKind::Type(ty) => db.format_ty_for_rs(ty)?,
                             _ => panic!("First generic argument of Option must be a type"),
@@ -1238,7 +1516,9 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
                     _ => {}
                 }
             }
-            let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
+            let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?
+                .cpp_type
+                .is_some();
             let has_composable_bridging =
                 matches!(is_bridged_type(db, ty)?, Some(BridgedType::Composable(_)));
             // We support generics if they're for `std::option::Option` or `std::result::Result`.
@@ -1477,13 +1757,19 @@ pub fn crubit_abi_type_from_ty<'tcx>(
 
             if let Some(bridging_attrs) = attrs.get_bridging_attrs()? {
                 match bridging_attrs {
-                    BridgingAttrs::Composable { abi_rust, abi_cpp, .. } => {
+                    BridgingAttrs::Composable {
+                        abi_rust, abi_cpp, ..
+                    } => {
                         return crubit_abi_type_from_bridged_adt(db, abi_rust, abi_cpp, substs);
                     }
-                    BridgingAttrs::JustCppType { include_paths, cpp_type } => {
-                        let fully_qualified_name = db.symbol_canonical_name(adt.did()).ok_or_else(|| {
-                            anyhow!("Failed to get canonical name for {:?}", adt.did())
-                        })?;
+                    BridgingAttrs::JustCppType {
+                        include_paths,
+                        cpp_type,
+                    } => {
+                        let fully_qualified_name =
+                            db.symbol_canonical_name(adt.did()).ok_or_else(|| {
+                                anyhow!("Failed to get canonical name for {:?}", adt.did())
+                            })?;
                         let mut prereqs = CcPrerequisites::default();
                         for path in &include_paths {
                             prereqs.includes.insert(CcInclude::from_path(path.as_str()));
@@ -1494,12 +1780,17 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                                     let parts = fully_qualified_name.rs_name_parts();
                                     quote! { #(::#parts)* }
                                 },
-                                cpp_type: cpp_type.as_str().parse().expect("Malformed cpp_type annotation"),
+                                cpp_type: cpp_type
+                                    .as_str()
+                                    .parse()
+                                    .expect("Malformed cpp_type annotation"),
                             },
                             prereqs,
                         });
                     }
-                    _ => bail!("Failed to construct the CrubitAbiType for {ty} because it has bridging attrs for a different kind of bridging: {bridging_attrs:?}"),
+                    _ => bail!(
+                        "Failed to construct the CrubitAbiType for {ty} because it has bridging attrs for a different kind of bridging: {bridging_attrs:?}"
+                    ),
                 }
             } else {
                 // if it doesn't, try seeing if it's a builtin.
@@ -1535,9 +1826,11 @@ pub fn crubit_abi_type_from_ty<'tcx>(
 
                 let tcx = db.tcx();
                 ensure!(
-                    db.is_cpp_move_constructible(
-                        crate::normalize_ty(tcx, tcx.param_env(adt.did()), tcx.type_of(adt.did()).instantiate(tcx, substs))
-                    ),
+                    db.is_cpp_move_constructible(crate::normalize_ty(
+                        tcx,
+                        tcx.param_env(adt.did()),
+                        tcx.type_of(adt.did()).instantiate(tcx, substs)
+                    )),
                     "Failed to construct CrubitAbiType for {ty} because it does not have a move ctor or assignment operator."
                 );
 
@@ -1753,7 +2046,9 @@ fn is_manually_annotated_bridged_adt<'tcx>(
             rust_to_cpp_converter,
         } => {
             if include_paths.is_empty() {
-                panic!("Failed to parse CrubitAttrs.include_paths for {ty} = {cpp_type}: missing include_path")
+                panic!(
+                    "Failed to parse CrubitAttrs.include_paths for {ty} = {cpp_type}: missing include_path"
+                )
             }
 
             let ts = cpp_type.as_str().parse::<TokenStream>().unwrap_or_else(|err| {

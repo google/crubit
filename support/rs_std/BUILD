@@ -252,6 +252,45 @@ crubit_cc_test(
 )
 
 cc_library(
+    name = "fn_ref",
+    hdrs = ["fn_ref.h"],
+    aspect_hints = ["//features:experimental"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = ["//visibility:public"],
+    deps = [],
+)
+
+crubit_cc_test(
+    name = "fn_ref_test",
+    srcs = ["fn_ref_test.cc"],
+    deps = [
+        ":fn_ref",
+        "@fuzztest//:fuzztest_gtest_main",
+        "@googletest//:gmock",
+    ],
+)
+
+cc_library(
+    name = "fn",
+    hdrs = ["fn.h"],
+    aspect_hints = ["//features:experimental"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = ["//visibility:public"],
+    deps = [],
+)
+
+crubit_cc_test(
+    name = "fn_test",
+    srcs = ["fn_test.cc"],
+    deps = [
+        ":fn",
+        "//support:movable",
+        "@fuzztest//:fuzztest_gtest_main",
+        "@googletest//:gmock",
+    ],
+)
+
+cc_library(
     name = "traits",
     hdrs = ["traits.h"],
     aspect_hints = ["//features:experimental"],

@@ -566,6 +566,8 @@ private_common_attrs = {
             "//support/rs_std:int",
             "//support/rs_std:slice_ref",
             "//support/rs_std:str_ref",
+            "//support/rs_std:fn_ref",
+            "//support/rs_std:fn",
             "//support:bridge_cpp",
             "//support/rs_std:traits",
             "//support/rs_std:option",

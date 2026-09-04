@@ -4,7 +4,7 @@
 
 use crate::format_type::{
     alias_ty_as_opaque_def_id, format_cc_ident, has_elided_region, region_is_elided,
-    ty_as_alias_ty, CcParamTy,
+    ty_as_alias_ty, CallableInfo, CallableKind, CcParamTy,
 };
 use crate::generate_doc_comment;
 use crate::generate_function_thunk::{
@@ -167,6 +167,9 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
     includes: &mut BTreeSet<CcInclude>,
     statements: &mut TokenStream,
 ) -> Result<TokenStream> {
+    if let Some(info) = crate::format_type::get_callable_info(db.tcx(), ty)? {
+        return cc_callable_param_to_c_abi(db, cc_ident, ty, &info, includes, statements);
+    }
     Ok(if let Some(bridged_type) = is_bridged_type(db, ty)? {
         match bridged_type {
             BridgedType::Legacy { cpp_type, .. } => {
@@ -291,6 +294,136 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
         });
         quote! { #slot_name.Get() }
     })
+}
+
+/// Returns a `TokenStream` containing an expression that evaluates to the
+/// C-ABI-compatible version of a callable parameter.
+fn cc_callable_param_to_c_abi<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    cc_ident: Ident,
+    ty: Ty<'tcx>,
+    info: &CallableInfo<'tcx>,
+    includes: &mut BTreeSet<CcInclude>,
+    statements: &mut TokenStream,
+) -> Result<TokenStream> {
+    let is_ret_unit = info.return_ty.is_unit();
+    let is_ret_compat = is_c_abi_compatible_by_value(db, info.return_ty);
+    let all_params_compat =
+        info.param_tys.iter().all(|&p_ty| is_c_abi_compatible_by_value(db, p_ty));
+    let needs_trampoline = !is_ret_compat || !all_params_compat;
+
+    if !needs_trampoline {
+        return Ok(if info.kind.is_owning() {
+            includes.insert(db.support_header("rs_std/fn.h"));
+            includes.insert(code_gen_utils::CcInclude::utility());
+            quote! { ::std::move(#cc_ident).release_payload() }
+        } else {
+            includes.insert(db.support_header("rs_std/fn_ref.h"));
+            quote! { #cc_ident.payload() }
+        });
+    }
+
+    // When parameters or return values are not C-ABI compatible by value, we generate a
+    // C++ trampoline lambda that adapts the C++ signature to the C ABI expected by Rust's
+    // closure thunk: non-C-ABI parameters are passed as pointers (which we dereference
+    // and std::move), and non-C-ABI return values are passed via an out-pointer (which we
+    // placement-new into).
+    includes.insert(code_gen_utils::CcInclude::utility());
+    if !is_ret_compat {
+        includes.insert(code_gen_utils::CcInclude::from_path("<new>"));
+    }
+
+    let CcSnippet { tokens: fn_type, prereqs: fn_prereqs } = db.format_ty_for_cc(
+        ty,
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+    )?;
+    includes.extend(fn_prereqs.includes);
+
+    let CcSnippet { tokens: ret_cc_type, prereqs } =
+        db.format_ty_for_cc(info.return_ty, TypeLocation::ClosureReturn)?;
+    includes.extend(prereqs.includes);
+
+    let mut invoker_params = vec![quote! { void* __data }];
+    let mut fn_call_args = Vec::new();
+
+    for (i, &p_ty) in info.param_tys.iter().enumerate() {
+        let arg_name = expect_format_cc_ident(&format!("__arg_{i}"));
+        let CcSnippet { tokens: p_cc_tok, prereqs } =
+            db.format_ty_for_cc(p_ty, TypeLocation::Other)?;
+        includes.extend(prereqs.includes);
+
+        if is_c_abi_compatible_by_value(db, p_ty) {
+            invoker_params.push(quote! { #p_cc_tok #arg_name });
+            fn_call_args.push(quote! { ::std::move(#arg_name) });
+        } else {
+            invoker_params.push(quote! { #p_cc_tok* #arg_name });
+            fn_call_args.push(quote! { ::std::move(*#arg_name) });
+        }
+    }
+
+    let fn_invocation = match info.kind {
+        CallableKind::FnOnceBox => {
+            quote! { ::std::move(*reinterpret_cast<#fn_type*>(__data))(#( #fn_call_args ),*) }
+        }
+        CallableKind::FnBox
+        | CallableKind::FnMutBox
+        | CallableKind::FnRef
+        | CallableKind::FnMutRef => {
+            quote! { (*reinterpret_cast<#fn_type*>(__data))(#( #fn_call_args ),*) }
+        }
+    };
+
+    let (trampoline_ret_ty, invoke_stmt) = if is_ret_compat {
+        (
+            ret_cc_type,
+            if is_ret_unit {
+                quote! { #fn_invocation; }
+            } else {
+                quote! { return #fn_invocation; }
+            },
+        )
+    } else {
+        invoker_params.push(quote! { void* __ret_ptr });
+        (quote! { void }, quote! { new (__ret_ptr) #ret_cc_type(#fn_invocation); })
+    };
+
+    let invoker_name = expect_format_cc_ident(&format!("__{cc_ident}_invoker"));
+    let payload_name = expect_format_cc_ident(&format!("__{cc_ident}_payload"));
+
+    if info.kind.is_owning() {
+        includes.insert(db.support_header("rs_std/fn.h"));
+        let heap_fn_name = expect_format_cc_ident(&format!("__{cc_ident}_heap_fn"));
+        let destroyer_name = expect_format_cc_ident(&format!("__{cc_ident}_destroyer"));
+
+        statements.extend(quote! {
+            auto* #heap_fn_name = new #fn_type(::std::move(#cc_ident));
+            auto #invoker_name = [](#( #invoker_params ),*) -> #trampoline_ret_ty {
+                #invoke_stmt
+            };
+            auto #destroyer_name = [](void* __data) noexcept {
+                delete reinterpret_cast<#fn_type*>(__data);
+            };
+            ::rs::internal::FnPayload #payload_name{
+                #heap_fn_name,
+                reinterpret_cast<void (*)()>(+#invoker_name),
+                +#destroyer_name,
+            };
+        });
+    } else {
+        includes.insert(db.support_header("rs_std/fn_ref.h"));
+
+        statements.extend(quote! {
+            auto #invoker_name = [](#( #invoker_params ),*) -> #trampoline_ret_ty {
+                #invoke_stmt
+            };
+            ::rs::internal::FnRefPayload #payload_name{
+                const_cast<void*>(reinterpret_cast<const void*>(&#cc_ident)),
+                reinterpret_cast<void (*)()>(+#invoker_name),
+            };
+        });
+    }
+
+    Ok(quote! { #payload_name })
 }
 
 struct ReturnConversion {
@@ -472,7 +605,7 @@ fn function_kind<'tcx>(
             }
             match param_types[0].kind() {
                 ty::TyKind::Ref(_, referent_ty, _) if *referent_ty == self_ty => {
-                    return Ok(FunctionKind::MethodTakingSelfByRef { self_ty })
+                    Ok(FunctionKind::MethodTakingSelfByRef { self_ty })
                 }
                 _ => bail!("Unsupported `self` type `{}`", param_types[0]),
             }
@@ -573,6 +706,9 @@ fn refs_to_check_for_aliasing<'tcx, 'a>(
     // TODO: b/351876244 - Apply this check to reference-like types such as
     // `cpp_std::string_view` and `absl::Span`.
     for param in params {
+        if matches!(crate::format_type::get_callable_info(tcx, param.ty), Ok(Some(_))) {
+            continue;
+        }
         if let ty::TyKind::Ref(_region, target_ty, mutability) = param.ty.kind() {
             if mutability.is_mut() {
                 refs.mutable.push(param);
@@ -884,7 +1020,9 @@ pub fn generate_function<'tcx>(
         if let Some(bridged) = is_bridged_type(db, future_output_ty)?
             && !bridged.is_layout_compatible()
         {
-            bail!("Crubit currently does not support async functions returning bridged types that require conversion thunks, found `{future_output_ty}`.");
+            bail!(
+                "Crubit currently does not support async functions returning bridged types that require conversion thunks, found `{future_output_ty}`."
+            );
         }
         future_output_ty
     } else {
@@ -1095,10 +1233,11 @@ pub fn generate_function<'tcx>(
         // Also check the impl block to which this function belongs (if there is one).
         // Note: parent_def_id can be Some(...) even if the function is not inside an
         // impl block.
-        if let Some(parent_def_id) = tcx.opt_parent(def_id) {
-            if let Some(cc_deprecated_tag) = generate_deprecated_tag(tcx, parent_def_id) {
-                attributes.push(cc_deprecated_tag);
-            }
+        if let Some(cc_deprecated_tag) = tcx
+            .opt_parent(def_id)
+            .and_then(|parent_def_id| generate_deprecated_tag(tcx, parent_def_id))
+        {
+            attributes.push(cc_deprecated_tag);
         }
         // Attribute: noreturn
         if rs_return_type.is_never() {
@@ -1240,30 +1379,16 @@ pub fn get_async_future_output_ty<'tcx>(
     rs_return_type: Ty<'tcx>,
 ) -> Result<Ty<'tcx>> {
     let Some(alias_ty) = ty_as_alias_ty(rs_return_type) else {
-        bail!("async functions should always return a TyKind::Alias (`{rs_return_type}`), this should never happen.");
+        bail!(
+            "async functions should always return a TyKind::Alias (`{rs_return_type}`), this should never happen."
+        );
     };
-    let Some(alias_def_id) = alias_ty_as_opaque_def_id(tcx, alias_ty) else {
-        bail!("crubit.rs-bug: Future::Output alias is not an opaque type (`{rs_return_type}`), this should never happen.");
+    if alias_ty_as_opaque_def_id(tcx, alias_ty).is_none() {
+        bail!(
+            "crubit.rs-bug: Future::Output alias is not an opaque type (`{rs_return_type}`), this should never happen."
+        );
     };
-    let future_output = tcx
-        .lang_items()
-        .future_output()
-        .ok_or_else(|| anyhow!("crubit.rs-bug: Future::Output lang item not found"))?;
-    tcx.explicit_item_bounds(alias_def_id)
-        .iter_instantiated_copied(tcx, alias_ty.args)
-        .find_map(|unnorm| {
-            let (predicate, _span) = crate::normalize_ty(tcx, tcx.param_env(alias_def_id), unnorm);
-            if let ty::ClauseKind::Projection(projection_predicate) = predicate.kind().skip_binder()
-                && Some(projection_predicate.def_id()) == Some(future_output)
-            {
-                return projection_predicate.term.as_type();
-            }
-            None
-        })
-        .ok_or_else(|| {
-            anyhow!(
-                "Failed to find Future::Output associated type in bounds of {:?}",
-                rs_return_type
-            )
-        })
+    crate::format_type::get_associated_type(tcx, rs_return_type, sym::Output).ok_or_else(|| {
+        anyhow!("Failed to find Future::Output associated type in bounds of {:?}", rs_return_type)
+    })
 }

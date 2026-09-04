@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use crate::format_type::{CallableInfo, CallableKind};
 use crate::generate_function::{fn_arg_idents, get_async_future_output_ty};
 use crate::{
     does_type_implement_trait, format_cc_ident, format_param_types_for_cc_thunk, is_bridged_type,
@@ -23,11 +24,9 @@ use quote::format_ident;
 use quote::quote;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
-use rustc_middle::ty::{self, Ty, TyCtxt, TypingEnv};
+use rustc_middle::ty::{self, Mutability, Ty, TyCtxt, TypingEnv};
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::{kw, sym, Symbol};
-#[rustversion::before(2026-07-21)] // cfg_accessible is "not sure" if it's accessible.
-use rustc_type_ir::inherent::Region;
 use std::collections::{BTreeSet, HashMap};
 
 /// Returns a C ABI-compatible C type to pass a tuple, or `None` if `possibly_tuple_ty` is not a
@@ -138,6 +137,15 @@ pub fn generate_thunk_decl<'tcx>(
             .iter()
             .zip(cpp_types)
             .map(|(&ty, cpp_type)| -> Result<TokenStream> {
+                if let Some(info) = crate::format_type::get_callable_info(db.tcx(), ty)? {
+                    return Ok(if info.kind.is_owning() {
+                        prereqs.includes.insert(db.support_header("rs_std/fn.h"));
+                        quote! { ::rs::internal::FnPayload }
+                    } else {
+                        prereqs.includes.insert(db.support_header("rs_std/fn_ref.h"));
+                        quote! { ::rs::internal::FnRefPayload }
+                    });
+                }
                 let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
                 let bridged_type_opt = is_bridged_type(db, ty)?;
                 if let Some(bridged_type) = bridged_type_opt {
@@ -321,6 +329,104 @@ fn convert_tuple_from_c_abi_to_rust<'tcx>(
     })
 }
 
+fn format_ty_for_closure_param_rs<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+    is_return_ty: bool,
+) -> Result<TokenStream> {
+    if let ty::TyKind::Ref(_, referent_ty, mutability) = ty.kind() {
+        if matches!(referent_ty.kind(), ty::TyKind::Str) {
+            return Ok(match mutability {
+                Mutability::Mut => quote! { &mut str },
+                Mutability::Not => quote! { &str },
+            });
+        }
+        let mutability_prefix = match mutability {
+            Mutability::Mut => quote! { mut },
+            Mutability::Not => quote! {},
+        };
+        let formatted_referent = format_ty_for_closure_param_rs(db, *referent_ty, is_return_ty)?;
+        return Ok(quote! { &#mutability_prefix #formatted_referent });
+    }
+    if let ty::TyKind::Slice(elem_ty) = ty.kind() {
+        let formatted_elem = format_ty_for_closure_param_rs(db, *elem_ty, is_return_ty)?;
+        return Ok(quote! { [#formatted_elem] });
+    }
+    if let ty::TyKind::Tuple(types) = ty.kind() {
+        let rs_types = types
+            .iter()
+            .map(|t| format_ty_for_closure_param_rs(db, t, is_return_ty))
+            .collect::<Result<Vec<_>>>()?;
+        return Ok(quote! { (#(#rs_types,)*) });
+    }
+    if let ty::TyKind::RawPtr(pointee_ty, mutbl) = ty.kind() {
+        let mutability = match mutbl {
+            Mutability::Mut => quote! { *mut },
+            Mutability::Not => quote! { *const },
+        };
+        let formatted_ty = format_ty_for_closure_param_rs(db, *pointee_ty, is_return_ty)?;
+        return Ok(quote! { #mutability #formatted_ty });
+    }
+    if let ty::TyKind::Adt(adt, substs) = ty.kind() {
+        if let Some(bridged_builtin) = BridgedBuiltin::new(db, *adt) {
+            match bridged_builtin {
+                BridgedBuiltin::Vec => {
+                    let t_param = match substs[0].kind() {
+                        ty::GenericArgKind::Type(ty) => {
+                            format_ty_for_closure_param_rs(db, ty, is_return_ty)?
+                        }
+                        _ => panic!("First generic argument of Vec must be a type"),
+                    };
+                    return Ok(quote! { ::alloc::vec::Vec<#t_param> });
+                }
+                BridgedBuiltin::Option
+                    if db.crate_features(db.source_crate_num()).contains(
+                        crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust,
+                    ) =>
+                {
+                    let t_param = match substs[0].kind() {
+                        ty::GenericArgKind::Type(ty) => {
+                            format_ty_for_closure_param_rs(db, ty, is_return_ty)?
+                        }
+                        _ => panic!("First generic argument of Option must be a type"),
+                    };
+                    return Ok(quote! { ::core::option::Option<#t_param> });
+                }
+                _ => {}
+            }
+        }
+        let canonical_name = db
+            .symbol_canonical_name(adt.did())
+            .ok_or_else(|| anyhow!("Failed to get canonical name for {:?}", adt.did()))?;
+        let type_name = canonical_name.format_for_rs();
+        let generic_params = if substs.is_empty() {
+            quote! {}
+        } else {
+            let generic_params = substs
+                .iter()
+                .map(|subst| match subst.kind() {
+                    ty::GenericArgKind::Type(ty) => {
+                        format_ty_for_closure_param_rs(db, ty, is_return_ty)
+                    }
+                    ty::GenericArgKind::Lifetime(_) => {
+                        if is_return_ty {
+                            Ok(quote! { 'static })
+                        } else {
+                            Ok(quote! { '_ })
+                        }
+                    }
+                    ty::GenericArgKind::Const(_) => {
+                        panic!("Const parameters are not supported, but found {ty}")
+                    }
+                })
+                .collect::<Result<Vec<TokenStream>>>()?;
+            quote! { < #(#generic_params),* > }
+        };
+        return Ok(quote! { #type_name #generic_params });
+    }
+    db.format_ty_for_rs(ty)
+}
+
 /// Returns code to convert a local named `local_name` from its C ABI-compatible type to its Rust
 /// type.
 fn convert_value_from_c_abi_to_rust<'tcx>(
@@ -329,6 +435,9 @@ fn convert_value_from_c_abi_to_rust<'tcx>(
     local_name: &Ident,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
 ) -> Result<TokenStream> {
+    if crate::format_type::get_callable_info(db.tcx(), ty)?.is_some() {
+        return Ok(quote! {});
+    }
     if let Some(bridged) = is_bridged_type(db, ty)? {
         return convert_bridged_type_from_c_abi_to_rust(
             db,
@@ -354,6 +463,13 @@ fn convert_value_from_c_abi_to_rust<'tcx>(
 }
 
 fn c_abi_for_param_type<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
+    if let Some(info) = crate::format_type::get_callable_info(db.tcx(), ty)? {
+        return Ok(if info.kind.is_owning() {
+            quote! { ::bridge_rust::FnPayload }
+        } else {
+            quote! { ::bridge_rust::FnRefPayload }
+        });
+    }
     if let Some(bridged) = is_bridged_type(db, ty)? {
         match bridged {
             BridgedType::Legacy { .. } => Ok(quote! { *const core::ffi::c_void }),
@@ -536,7 +652,7 @@ where
         }
     }
 
-    value.fold_with(&mut Staticifier { tcx, static_region: ty::Region::new_static(tcx) })
+    value.fold_with(&mut Staticifier { tcx, static_region: tcx.lifetimes.re_static })
 }
 
 /// Formats a thunk implementation in Rust that provides an `extern "C"` ABI for
@@ -591,8 +707,26 @@ pub fn generate_thunk_impl<'tcx>(
         })
         .collect::<Result<Vec<TokenStream>>>()?;
 
-    let fn_args: Vec<Ident> =
-        param_names_and_types.into_iter().map(|(rs_name, _ty)| rs_name).collect();
+    let uninstantiated_sig = liberate_and_deanonymize_late_bound_regions(
+        tcx,
+        tcx.fn_sig(fn_def_id).instantiate_identity(),
+        fn_def_id,
+    );
+    let fn_args: Vec<TokenStream> = param_names_and_types
+        .iter()
+        .enumerate()
+        .map(|(i, (rs_name, ty))| -> Result<TokenStream> {
+            if let Some(info) = crate::format_type::get_callable_info(db.tcx(), *ty)? {
+                let is_generic_param = matches!(
+                    uninstantiated_sig.inputs().get(i).map(|t| t.kind()),
+                    Some(ty::TyKind::Param(_))
+                );
+                format_callable_thunk_arg(db, rs_name, is_generic_param, &info)
+            } else {
+                Ok(quote! { #rs_name })
+            }
+        })
+        .collect::<Result<Vec<TokenStream>>>()?;
     let output_is_bridged = is_bridged_type(db, sig.output())?;
     let thunk_return_type;
     let thunk_return_expression;
@@ -659,6 +793,99 @@ pub fn generate_thunk_impl<'tcx>(
         },
         extern_c_decls,
     })
+}
+
+fn format_callable_thunk_arg<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    rs_name: &Ident,
+    is_generic_param: bool,
+    info: &CallableInfo<'tcx>,
+) -> Result<TokenStream> {
+    let rs_ret_ty = format_ty_for_closure_param_rs(db, info.return_ty, true)?;
+    let is_ret_unit = info.return_ty.is_unit();
+    let is_ret_c_abi_compat = is_c_abi_compatible_by_value(db, info.return_ty);
+
+    let mut closure_params = Vec::new();
+    let mut invoker_param_tys = Vec::new();
+    let mut prep_stmts = Vec::new();
+    let mut invoker_args = Vec::new();
+
+    for (arg_idx, &param_ty) in info.param_tys.iter().enumerate() {
+        let arg_name = format_ident!("__arg_{arg_idx}");
+        let rs_param_ty = format_ty_for_closure_param_rs(db, param_ty, false)?;
+        closure_params.push(quote! { #arg_name: #rs_param_ty });
+
+        if is_c_abi_compatible_by_value(db, param_ty) {
+            invoker_param_tys.push(quote! { #rs_param_ty });
+            invoker_args.push(quote! { #arg_name });
+        } else {
+            invoker_param_tys.push(quote! { *mut #rs_param_ty });
+            prep_stmts.push(quote! {
+                let mut #arg_name = ::core::mem::ManuallyDrop::new(#arg_name);
+            });
+            invoker_args.push(quote! { &mut *#arg_name as *mut _ });
+        }
+    }
+
+    let mut full_invoker_param_tys = vec![quote! { *mut core::ffi::c_void }];
+    full_invoker_param_tys.extend(invoker_param_tys);
+
+    let mut full_invoker_call_args = vec![quote! { #rs_name.data() }];
+    full_invoker_call_args.extend(invoker_args);
+
+    let (invoker_ret_ty, call_body) = if is_ret_c_abi_compat {
+        if is_ret_unit {
+            (
+                quote! { () },
+                quote! {
+                    unsafe {
+                        __invoker(#( #full_invoker_call_args ),*);
+                    }
+                },
+            )
+        } else {
+            (
+                quote! { #rs_ret_ty },
+                quote! {
+                    unsafe {
+                        __invoker(#( #full_invoker_call_args ),*)
+                    }
+                },
+            )
+        }
+    } else {
+        full_invoker_param_tys.push(quote! { *mut core::ffi::c_void });
+        (
+            quote! { () },
+            quote! {
+                let mut __ret_storage = ::core::mem::MaybeUninit::<#rs_ret_ty>::uninit();
+                unsafe {
+                    __invoker(#( #full_invoker_call_args, )* __ret_storage.as_mut_ptr() as *mut _);
+                    __ret_storage.assume_init()
+                }
+            },
+        )
+    };
+
+    let closure = quote! {
+        move |#( #closure_params ),*| {
+            #( #prep_stmts )*
+            let __invoker: unsafe extern "C" fn(#( #full_invoker_param_tys ),*) -> #invoker_ret_ty =
+                unsafe { ::core::mem::transmute(#rs_name.invoker()) };
+            #call_body
+        }
+    };
+    if is_generic_param {
+        Ok(quote! { #closure })
+    } else {
+        Ok(match info.kind {
+            CallableKind::FnRef => quote! { &#closure },
+            CallableKind::FnMutRef => quote! { &mut #closure },
+            CallableKind::FnBox | CallableKind::FnMutBox | CallableKind::FnOnceBox => {
+                quote! { ::alloc::boxed::Box::new(#closure) }
+            }
+        })
+    }
 }
 
 /// Returns `Ok(())` if no thunk is required.

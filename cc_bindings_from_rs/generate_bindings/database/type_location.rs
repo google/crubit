@@ -51,6 +51,12 @@ pub enum TypeLocation {
     /// Other location (e.g. pointee type, etc.).
     Other,
 
+    /// The return type of a closure / callable argument.
+    ///
+    /// In this context, unit `()` and never `!` are formatted as `void`, but bridging is not supported
+    /// (types must be layout-compatible or unbridged).
+    ClosureReturn,
+
     /// The type of a field of a struct or union.
     Field,
 }
@@ -67,7 +73,7 @@ impl TypeLocation {
             TypeLocation::TemplateArg => bail!("Template arguments do not support bridgeable types"),
             // TODO(jeanpierreda): Why?
             TypeLocation::FnReturn { is_constructor: true } => bail!("Constructor functions cannot return bridge types"),
-            TypeLocation::Other => bail!("crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"),
+            TypeLocation::ClosureReturn | TypeLocation::Other => bail!("crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"),
             TypeLocation::Field => bail!("crubit.rs/errors/bridge_field: Fields containing bridge types cannot receive bindings"),
         }
     }
