@@ -100,12 +100,9 @@ cargo build --bin rs_bindings_from_cc
 
 ## Bazel
 
-```sh
-apt install clang lld bazel
-git clone git@github.com:google/crubit.git
-cd crubit
-bazel build --linkopt=-fuse-ld=/usr/bin/ld.lld //rs_bindings_from_cc:rs_bindings_from_cc_impl
-```
+Building with the Bazel-provided LLVM installation without `LLVM_INSTALL_PATH` is not supported. The instructions that used `bazel/llvm.bzl` to download LLVM via the `llvm-raw` repository are API incompatible and the LLVM Bazel build is not actively maintained, as described in https://github.com/google/crubit/issues/3. That option has been retired to simplify the user setup and contract the support surface.
+
+Use a prebuilt LLVM tree via `LLVM_INSTALL_PATH` as the supported Bazel workflow:
 
 ### Using a prebuilt LLVM tree
 
