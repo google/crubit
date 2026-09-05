@@ -15,8 +15,10 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
+#include "support/internal/slot.h"
 
 #include <cstdint>
+#include <utility>
 
 namespace cpp_enums::forward_declared_enum {
 enum class B : ::std::uint8_t;
@@ -72,10 +74,15 @@ enum class CRUBIT_INTERNAL_RUST_TYPE(
 namespace cpp_enums::forward_declared_enum {
 
 namespace __crubit_internal {
-extern "C" ::cpp_enums::forward_declared_enum::B __crubit_thunk_AFunction();
+extern "C" void __crubit_thunk_AFunction(
+    ::cpp_enums::forward_declared_enum::B* __ret_ptr);
 }
 inline ::cpp_enums::forward_declared_enum::B AFunction() {
-  return __crubit_internal::__crubit_thunk_AFunction();
+  crubit::Slot<::cpp_enums::forward_declared_enum::B>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_AFunction(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace cpp_enums::forward_declared_enum

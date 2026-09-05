@@ -262,10 +262,10 @@ inline void FooService::update_request_stats(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_enum_uin_usignature(::foo_proto::FooEnum);
+extern "C" void __crubit_thunk_enum_uin_usignature(::foo_proto::FooEnum*);
 }
 inline void FooService::enum_in_signature(::foo_proto::FooEnum _e) {
-  return __crubit_internal::__crubit_thunk_enum_uin_usignature(_e);
+  return __crubit_internal::__crubit_thunk_enum_uin_usignature(&_e);
 }
 inline void FooService::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(FooService, stats));

@@ -337,9 +337,9 @@ inline ::rs_index::Map Map::new_(::std::uintptr_t row_size,
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef
+extern "C" void
 __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000028usize_x0000002c_x00000020usize_x00000029(
-    ::rs_index::Map const&, void**);
+    ::rs_index::Map const&, void**, rs_std::StrRef* __ret_ptr);
 }
 inline rs_std::StrRef Map::operator[](
     ::std::tuple<::std::uintptr_t, ::std::uintptr_t> index) const& $(__anon1)
@@ -350,23 +350,30 @@ inline rs_std::StrRef Map::operator[](
   auto&& index_1 = ::std::get<1>(index);
   auto&& index_cabi_1 = index_1;
   void* index_cabi[] = {&index_cabi_0, &index_cabi_1};
-  return __crubit_internal::
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
       __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000028usize_x0000002c_x00000020usize_x00000029(
-          self, index_cabi);
+          self, index_cabi, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef
+extern "C" void
 __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
-    ::rs_index::Map const&, ::rs_index::Id const* $(__anon2) crubit_nonnull);
+    ::rs_index::Map const&, ::rs_index::Id const* $(__anon2) crubit_nonnull,
+    rs_std::StrRef* __ret_ptr);
 }
 inline rs_std::StrRef Map::operator[](
     ::rs_index::Id const* $(__anon2) crubit_nonnull _index
         CRUBIT_LIFETIME_BOUND) const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  return __crubit_internal::
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
       __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
-          self, _index);
+          self, _index, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void Map::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(Map, data));

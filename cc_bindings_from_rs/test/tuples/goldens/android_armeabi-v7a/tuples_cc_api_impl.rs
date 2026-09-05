@@ -71,10 +71,11 @@ const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasDefault>() == 12
 const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasDefault>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
-    val: &'static str,
+    val: *mut &'static str,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
+        let val = val.read();
         let __rs_return_value = ::tuples_golden::HasDefault::new(val);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
@@ -82,8 +83,12 @@ unsafe extern "C" fn __crubit_thunk_new(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_val(
     __self: &'static ::tuples_golden::HasDefault,
-) -> &'static str {
-    unsafe { ::tuples_golden::HasDefault::val(__self) }
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::tuples_golden::HasDefault::val(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasDefault, val) == 0);
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasDefaultTuple>() == 32);
@@ -96,10 +101,11 @@ extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasDe
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
-    val: &'static str,
+    val: *mut &'static str,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
+        let val = val.read();
         let __rs_return_value = ::tuples_golden::HasDefaultTuple::new(val);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
@@ -111,8 +117,12 @@ const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasNoDefault>() ==
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_val(
     __self: &'static ::tuples_golden::HasNoDefault,
-) -> &'static str {
-    unsafe { ::tuples_golden::HasNoDefault::val(__self) }
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::tuples_golden::HasNoDefault::val(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasNoDefault, val) == 0);
 const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasNoDefaultTuple>() == 32);
@@ -125,10 +135,11 @@ extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasNo
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
-    val: &'static str,
+    val: *mut &'static str,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
+        let val = val.read();
         let __rs_return_value = ::tuples_golden::HasNoDefaultTuple::new(val);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
@@ -680,8 +691,12 @@ unsafe extern "C" fn __crubit_thunk_take_utuple_ucopy_uno_udefault_u1(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_take_utuple_uhas_udefault(
     r: &'static (::tuples_golden::HasDefault, u8),
-) -> &'static str {
-    unsafe { ::tuples_golden::take_tuple_has_default(r) }
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::tuples_golden::take_tuple_has_default(r);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028_x00000028_x00000028u32_x0000002c_x00000020u32_x00000029_x0000002c_x00000020u32_x00000029_x0000002c_x00000020u32_x00000029(

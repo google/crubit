@@ -85,16 +85,15 @@ const _: () =
 const _: () =
     assert!(::core::mem::offset_of!(::primitive_types_golden::field_types::Types, u8) == 116);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_uchar() -> ::ffi_11::c_char {
-    unsafe { ::primitive_types_golden::return_types::c_char() }
+unsafe extern "C" fn __crubit_thunk_c_uchar(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::primitive_types_golden::return_types::c_char();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_c_uchar_uconst_uptr() -> *const ::ffi_11::c_char {
     unsafe { ::primitive_types_golden::return_types::c_char_const_ptr() }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_uchar_ufunc() -> extern "C" fn(::ffi_11::c_char) {
-    unsafe { ::primitive_types_golden::return_types::c_char_func() }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_c_uchar_umut_uptr() -> *mut ::ffi_11::c_char {
@@ -113,8 +112,11 @@ unsafe extern "C" fn __crubit_thunk_c_uint() -> i32 {
     unsafe { ::primitive_types_golden::return_types::c_int() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_ulong() -> ::ffi_11::c_long {
-    unsafe { ::primitive_types_golden::return_types::c_long() }
+unsafe extern "C" fn __crubit_thunk_c_ulong(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::primitive_types_golden::return_types::c_long();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_c_ulonglong() -> i64 {
@@ -137,8 +139,11 @@ unsafe extern "C" fn __crubit_thunk_c_uuint() -> u32 {
     unsafe { ::primitive_types_golden::return_types::c_uint() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_c_uulong() -> ::ffi_11::c_ulong {
-    unsafe { ::primitive_types_golden::return_types::c_ulong() }
+unsafe extern "C" fn __crubit_thunk_c_uulong(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::primitive_types_golden::return_types::c_ulong();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_c_uulonglong() -> u64 {

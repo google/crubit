@@ -20,8 +20,12 @@ const _: () = assert!(::core::mem::offset_of!(::option_golden::CopyNoDefault, va
 const _: () = assert!(::std::mem::size_of::<::option_golden::HasDefault>() == 12);
 const _: () = assert!(::std::mem::align_of::<::option_golden::HasDefault>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    s: *mut &'static str,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
+        let s = s.read();
         let __rs_return_value = ::option_golden::HasDefault::new(s);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
@@ -29,8 +33,12 @@ unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::f
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_ustring_uinside_uoption(
     __self: &'static ::option_golden::HasDefault,
-) -> &'static str {
-    unsafe { ::option_golden::HasDefault::get_string_inside_option(__self) }
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::option_golden::HasDefault::get_string_inside_option(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 const _: () = assert!(::core::mem::offset_of!(::option_golden::HasDefault, foo) == 0);
 const _: () = assert!(::std::mem::size_of::<::option_golden::HasHasOptions>() == 4);
@@ -46,8 +54,12 @@ const _: () = assert!(::core::mem::offset_of!(::option_golden::HasHasOptions, me
 const _: () = assert!(::std::mem::size_of::<::option_golden::HasNoDefault>() == 16);
 const _: () = assert!(::std::mem::align_of::<::option_golden::HasNoDefault>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    s: *mut &'static str,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
+        let s = s.read();
         let __rs_return_value = ::option_golden::HasNoDefault::new(s);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
@@ -55,8 +67,12 @@ unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::f
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_ustring_uinside_uoption(
     __self: &'static ::option_golden::HasNoDefault,
-) -> &'static str {
-    unsafe { ::option_golden::HasNoDefault::get_string_inside_option(__self) }
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::option_golden::HasNoDefault::get_string_inside_option(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 const _: () = assert!(::core::mem::offset_of!(::option_golden::HasNoDefault, foo) == 0);
 const _: () = assert!(::core::mem::offset_of!(::option_golden::HasNoDefault, a) == 12);
@@ -139,8 +155,12 @@ const _: () = assert!(::core::mem::offset_of!(::option_golden::OptCopyNoDefault,
 const _: () = assert!(::std::mem::size_of::<::option_golden::OptDefaultWithDrop>() == 12);
 const _: () = assert!(::std::mem::align_of::<::option_golden::OptDefaultWithDrop>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    s: *mut &'static str,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
+        let s = s.read();
         let __rs_return_value = ::option_golden::OptDefaultWithDrop::new(s);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
@@ -149,8 +169,12 @@ const _: () = assert!(::core::mem::offset_of!(::option_golden::OptDefaultWithDro
 const _: () = assert!(::std::mem::size_of::<::option_golden::OptNoDefaultWithDrop>() == 16);
 const _: () = assert!(::std::mem::align_of::<::option_golden::OptNoDefaultWithDrop>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_new(
+    s: *mut &'static str,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
+        let s = s.read();
         let __rs_return_value = ::option_golden::OptNoDefaultWithDrop::new(s);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
@@ -158,8 +182,13 @@ unsafe extern "C" fn __crubit_thunk_new(s: &'static str, __ret_ptr: *mut core::f
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_get_ustring_uinside_uoption(
     __self: &'static ::option_golden::OptNoDefaultWithDrop,
-) -> &'static str {
-    unsafe { ::option_golden::OptNoDefaultWithDrop::get_string_inside_option(__self) }
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::option_golden::OptNoDefaultWithDrop::get_string_inside_option(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 const _: () = assert!(::core::mem::offset_of!(::option_golden::OptNoDefaultWithDrop, val) == 0);
 const _: () = assert!(::std::mem::size_of::<::option_golden::OptZst>() == 1);

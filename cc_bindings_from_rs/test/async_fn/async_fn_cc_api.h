@@ -312,7 +312,7 @@ inline ::crubit::DynErasedFuture<::async_fn::NotCppMovable> return_unmovable(
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_sum_uslice(
-    rs_std::SliceRef<const ::std::int32_t>,
+    rs_std::SliceRef<const ::std::int32_t>*,
     ::crubit::DynErasedFuture<::std::int32_t>* __ret_ptr);
 }
 inline ::crubit::DynErasedFuture<::std::int32_t> sum_slice(
@@ -320,7 +320,7 @@ inline ::crubit::DynErasedFuture<::std::int32_t> sum_slice(
   ::crubit::Slot<::crubit::DynErasedFuture<::std::int32_t>>
       __return_value_ret_val_holder;
   __crubit_internal::__crubit_thunk_sum_uslice(
-      slice, __return_value_ret_val_holder.Get());
+      &slice, __return_value_ret_val_holder.Get());
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 

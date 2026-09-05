@@ -19,6 +19,7 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -62,9 +63,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   union {
     crubit::type_identity_t<void(::std::int8_t)>* i8_func;
   };
-  union {
-    crubit::type_identity_t<void(decltype(char(0)))>* c_char_func;
-  };
+
+ private:
+  // Field type has been replaced with a blob of bytes: Function pointers can't
+  // have a thunk: Type of parameter #0 requires a thunk
+  ::std::array<unsigned char, 8> c_char_func;
+
+ public:
   union {
     void* c_void_mut_ptr;
   };
@@ -162,7 +167,11 @@ decltype(char(0)) c_char();
 
 decltype(char(0)) const* c_char_const_ptr();
 
-crubit::type_identity_t<void(decltype(char(0)))>& c_char_func();
+// Error generating bindings for function
+// `primitive_types_golden::return_types::c_char_func` defined at
+// cc_bindings_from_rs/test/primitive_types/primitive_types.rs;l=162:
+// Error formatting function return type `extern "C" fn(ffi_11::c_char)`:
+// Function pointers can't have a thunk: Type of parameter #0 requires a thunk
 
 decltype(char(0))* c_char_mut_ptr();
 
@@ -332,10 +341,13 @@ inline void Types::__crubit_field_offset_assertions() {
 namespace primitive_types::return_types {
 
 namespace __crubit_internal {
-extern "C" decltype(char(0)) __crubit_thunk_c_uchar();
+extern "C" void __crubit_thunk_c_uchar(decltype(char(0))* __ret_ptr);
 }
 inline decltype(char(0)) c_char() {
-  return __crubit_internal::__crubit_thunk_c_uchar();
+  crubit::Slot<decltype(char(0))> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_c_uchar(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -343,14 +355,6 @@ extern "C" decltype(char(0)) const* __crubit_thunk_c_uchar_uconst_uptr();
 }
 inline decltype(char(0)) const* c_char_const_ptr() {
   return __crubit_internal::__crubit_thunk_c_uchar_uconst_uptr();
-}
-
-namespace __crubit_internal {
-extern "C" crubit::type_identity_t<void(decltype(char(0)))>&
-__crubit_thunk_c_uchar_ufunc();
-}
-inline crubit::type_identity_t<void(decltype(char(0)))>& c_char_func() {
-  return __crubit_internal::__crubit_thunk_c_uchar_ufunc();
 }
 
 namespace __crubit_internal {
@@ -387,10 +391,13 @@ inline ::std::int64_t c_long() {
 }
 
 namespace __crubit_internal {
-extern "C" long long __crubit_thunk_c_ulonglong();
+extern "C" void __crubit_thunk_c_ulonglong(long long* __ret_ptr);
 }
 inline long long c_longlong() {
-  return __crubit_internal::__crubit_thunk_c_ulonglong();
+  crubit::Slot<long long> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_c_ulonglong(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -429,10 +436,13 @@ inline ::std::uint64_t c_ulong() {
 }
 
 namespace __crubit_internal {
-extern "C" unsigned long long __crubit_thunk_c_uulonglong();
+extern "C" void __crubit_thunk_c_uulonglong(unsigned long long* __ret_ptr);
 }
 inline unsigned long long c_ulonglong() {
-  return __crubit_internal::__crubit_thunk_c_uulonglong();
+  crubit::Slot<unsigned long long> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_c_uulonglong(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {

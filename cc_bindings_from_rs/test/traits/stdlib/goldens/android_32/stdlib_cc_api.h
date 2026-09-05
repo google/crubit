@@ -314,14 +314,14 @@ static_assert(::std::is_trivially_destructible_v<RefIterator>);
 static_assert(::std::is_trivially_move_constructible_v<::stdlib::RefIterator>);
 static_assert(::std::is_trivially_move_assignable_v<::stdlib::RefIterator>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::SliceRef<const ::std::int32_t>,
+extern "C" void __crubit_thunk_new(rs_std::SliceRef<const ::std::int32_t>*,
                                    ::stdlib::RefIterator* __ret_ptr);
 }
 inline ::stdlib::RefIterator RefIterator::new_(
     rs_std::SliceRef<const ::std::int32_t> slice) {
   crubit::Slot<::stdlib::RefIterator> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_new(slice, __return_value_storage);
+  __crubit_internal::__crubit_thunk_new(&slice, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void RefIterator::__crubit_field_offset_assertions() {
