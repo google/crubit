@@ -10,6 +10,7 @@
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 namespace crubit {
@@ -96,10 +97,12 @@ class Slot {
   T AssumeInitAndTakeValue() && {
     if constexpr (requires(T x) { T(UnsafeRelocateTag{}, std::move(x)); }) {
       return T(UnsafeRelocateTag{}, std::move(value_));
-    } else {
+    } else if constexpr (std::is_move_constructible_v<T>) {
       T return_value(std::move(value_));
       std::destroy_at(&value_);
       return return_value;
+    } else {
+      __builtin_unreachable();
     }
   }
 
@@ -108,9 +111,11 @@ class Slot {
   Slot(Slot&& other) {
     if constexpr (requires(T x) { T(UnsafeRelocateTag{}, std::move(x)); }) {
       new (&value_) T(UnsafeRelocateTag{}, std::move(other.value_));
-    } else {
+    } else if constexpr (std::is_move_constructible_v<T>) {
       new (&value_) T(std::move(other.value_));
       std::destroy_at(&other.value_);
+    } else {
+      __builtin_unreachable();
     }
   }
 
@@ -155,8 +160,10 @@ class Slot<std::array<UT, S>> {
   explicit constexpr Slot(T&& x) {
     if constexpr (requires(UT t) { UT(UnsafeRelocateTag{}, std::move(t)); }) {
       memcpy(value_.data(), x.data(), sizeof(UT) * S);
-    } else {
+    } else if constexpr (std::is_move_constructible_v<T>) {
       value_ = std::move(x);
+    } else {
+      __builtin_unreachable();
     }
   }
   T* Get() { return &value_; }
@@ -164,10 +171,12 @@ class Slot<std::array<UT, S>> {
     if constexpr (requires(UT x) { UT(UnsafeRelocateTag{}, std::move(x)); }) {
       return unsafe_move_array<UT, S>(value_.data(),
                                       std::make_index_sequence<S>());
-    } else {
+    } else if constexpr (std::is_move_constructible_v<T>) {
       T return_value(std::move(value_));
       std::destroy_at(&value_);
       return return_value;
+    } else {
+      __builtin_unreachable();
     }
   }
   Slot(Slot&& other) { value_ = std::move(other.value_); }
