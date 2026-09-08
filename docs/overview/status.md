@@ -39,18 +39,18 @@ References                               | `const T&` / `T&`            | `&T` /
 String slices                            | `rs_std::StrRef`             | `&str`                   | Layout compatible |
 Slices                                   | `rs_std::SliceRef<T>`        | `&[T]`, `&mut [T]`       | Layout compatible |
 **Smart Pointers**                       |                              |                          |                   |
-[Unique pointer](/cpp/std#unique_ptr)    | `std::unique_ptr<T>`         | `cpp_std::unique_ptr<T>` | Layout compatible |
-[Shared pointer](/cpp/std#shared_ptr)    | `std::shared_ptr<T>`         | `cpp_std::shared_ptr<T>` | Layout compatible | Not directly constructible from Rust yet.
+[Unique pointer](http://crubit.rs/cpp/std#unique_ptr)    | `std::unique_ptr<T>`         | `cpp_std::unique_ptr<T>` | Layout compatible |
+[Shared pointer](http://crubit.rs/cpp/std#shared_ptr)    | `std::shared_ptr<T>`         | `cpp_std::shared_ptr<T>` | Layout compatible | Not directly constructible from Rust yet.
 **Containers**                           |                              |                          |                   |
-[Vector (C++)](/cpp/std#vector)          | `std::vector<T>`             | `cpp_std::vector<T>`     | Layout compatible | C++ `std::vector` in Rust
+[Vector (C++)](http://crubit.rs/cpp/std#vector)          | `std::vector<T>`             | `cpp_std::vector<T>`     | Layout compatible | C++ `std::vector` in Rust
 Vec (Rust)                               | `rs_std::Vec<T>`             | `Vec<T>`                 | Layout compatible | Rust `Vec` in C++
 Fixed-size array                         | `std::array<T, N>`           | `[T; N]`                 | Layout compatible |
 **Strings**                              |                              |                          |                   |
-[String view](/cpp/std#string_view)      | `std::string_view`           | `cpp_std::string_view`   | Layout compatible |
-[Growable string (C++)](/cpp/std#string) | `std::string`                | `cpp_std::string_wrapper`| Bridged           |
+[String view](http://crubit.rs/cpp/std#string_view)      | `std::string_view`           | `cpp_std::string_view`   | Layout compatible |
+[Growable string (C++)](http://crubit.rs/cpp/std#string) | `std::string`                | `cpp_std::string_wrapper`| Bridged           |
 Growable string (Rust)                   | `rs::alloc::string::String`  | `String`                 | Layout compatible |
 **Option & Result**                      |                              |                          |                   |
-[Optional (C++)](/cpp/std#optional)      | `std::optional<T>`           | `cpp_std::optional<T>`   | Layout compatible |
+[Optional (C++)](http://crubit.rs/cpp/std#optional)      | `std::optional<T>`           | `cpp_std::optional<T>`   | Layout compatible |
 Option (Rust)                            | `rs_std::Option<T>`          | `Option<T>`              | Layout compatible | Converts to/from `std::optional<T>` in C++
 Result                                   | `rs_std::Result<T, E>`       | `Result<T, E>`           | Layout compatible |
 **Other**                                |                              |                          |                   |
