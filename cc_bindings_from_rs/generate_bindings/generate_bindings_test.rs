@@ -2294,6 +2294,60 @@ fn test_ignore_symbols_from_files_as_param() {
 }
 
 #[test]
+fn test_should_receive_bindings_ignored_file() {
+    let test_src = r#"
+        pub struct IgnoredStruct {
+            pub x: i32,
+        }
+        pub struct NotIgnoredStruct {
+            pub x: i32,
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let mut ignore_files = std::collections::HashSet::new();
+        ignore_files.insert(std::path::PathBuf::from("<crubit_unittests.rs>"));
+        let db = bindings_db_for_tests_with_ignore_symbols_from_files(tcx, ignore_files);
+
+        let ignored_def_id = find_def_id_by_name(tcx, "IgnoredStruct");
+        let err = generate_bindings::should_receive_bindings(&db, ignored_def_id.to_def_id())
+            .unwrap_err();
+        assert!(err.to_string().contains(
+            "does not receive bindings because it is defined in an additional Rust source"
+        ));
+
+        let not_ignored_def_id = find_def_id_by_name(tcx, "NotIgnoredStruct");
+        let empty_ignore_files = std::collections::HashSet::new();
+        let db_empty =
+            bindings_db_for_tests_with_ignore_symbols_from_files(tcx, empty_ignore_files);
+        assert!(generate_bindings::should_receive_bindings(
+            &db_empty,
+            not_ignored_def_id.to_def_id()
+        )
+        .is_ok());
+    });
+}
+
+#[test]
+fn test_should_receive_bindings_do_not_bind() {
+    let test_src = r#"
+        #[doc="CRUBIT_ANNOTATE: do_not_bind="]
+        pub fn fn_do_not_bind() {}
+        pub fn fn_allowed() {}
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = bindings_db_for_tests(tcx);
+        let def_id = find_def_id_by_name(tcx, "fn_do_not_bind");
+        let err = generate_bindings::should_receive_bindings(&db, def_id.to_def_id()).unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("does not receive bindings because it is marked `#[do_not_bind]`"));
+
+        let allowed_def_id = find_def_id_by_name(tcx, "fn_allowed");
+        assert!(generate_bindings::should_receive_bindings(&db, allowed_def_id.to_def_id()).is_ok());
+    });
+}
+
+#[test]
 fn test_allow_unbindable_type_suppresses_warning() {
     let test_src = r#"
             #[doc="CRUBIT_ANNOTATE: allow_unbindable_type="]
