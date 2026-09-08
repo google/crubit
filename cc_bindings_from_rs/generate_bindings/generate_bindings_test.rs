@@ -2460,3 +2460,58 @@ fn test_trait_operator_without_core_crate_header_returns_error() {
         );
     });
 }
+
+#[test]
+fn test_method_returning_self_in_tuple() {
+    let test_src = r#"
+        pub struct Foo {
+            pub x: i32,
+        }
+        impl Foo {
+            pub fn split(self) -> (Foo, i32) {
+                (self, 42)
+            }
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Experimental
+                | crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::LayoutCompatTuple,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        let cc_api = bindings.cc_api;
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                ...
+                namespace rust_out {
+                    ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] Foo final {
+                        ...
+                        rs_std::Tuple<::rust_out::Foo, ::std::int32_t> split() &&;
+                        ...
+                    };
+                    ...
+                }
+                ...
+                template <>
+                struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(...)
+                    rs_std::Tuple<::rust_out::Foo, ::std::int32_t> {
+                    ...
+                    union {
+                        ::rust_out::Foo __field0;
+                    };
+                    union {
+                        ::std::int32_t __field1;
+                    };
+                    ...
+                };
+                ...
+            }
+        );
+    });
+}

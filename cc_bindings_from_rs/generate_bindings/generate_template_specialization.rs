@@ -243,10 +243,7 @@ fn parse_tuple_template_specialization<'tcx>(
         let mut prereqs = CcPrerequisites::default();
         let element_tys_cc = element_tys
             .iter()
-            .map(|ty| {
-                prereqs.forward_declare_type(ty.ty);
-                ty.for_cc.clone().into_tokens(&mut prereqs)
-            })
+            .map(|ty| ty.for_cc.clone().into_tokens(&mut prereqs))
             .collect::<Vec<_>>();
         CcSnippet { tokens: quote! { rs_std::Tuple<#(#element_tys_cc),*> }, prereqs }
     };
@@ -1622,11 +1619,7 @@ impl<'tcx> TemplateSpecializationExt<'tcx> for AdtTemplateSpecialization<'tcx> {
                 }
             },
             AdtSpecializationArgs::Tuple(element_tys) => {
-                let mut snippets = specialize_tuple(db, &self, element_tys.clone());
-                for element_ty in element_tys {
-                    snippets.main_api.prereqs.forward_declare_type(element_ty.ty);
-                }
-                snippets
+                specialize_tuple(db, &self, element_tys.clone())
             }
             AdtSpecializationArgs::Vec(inner_ty) => {
                 let inner_ty_ty = inner_ty.ty;

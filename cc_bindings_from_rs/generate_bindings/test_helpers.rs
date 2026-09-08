@@ -120,7 +120,7 @@ pub fn bindings_db_for_tests_with_crate_headers<'tcx>(
     )
 }
 
-fn bindings_db_for_tests_with_features<'tcx>(
+pub fn bindings_db_for_tests_with_features<'tcx>(
     tcx: TyCtxt<'tcx>,
     features: flagset::FlagSet<crubit_feature::CrubitFeature>,
     with_kythe_annotations: bool,

@@ -2203,3 +2203,39 @@ fn test_callable_return_non_movable() {
         );
     });
 }
+
+#[test]
+fn test_unmovable_template_specialization_param_wrapped_in_movable() {
+    let test_src = r#"
+            pub struct Unmovable {
+                pub x: i32,
+            }
+
+            impl Drop for Unmovable {
+                fn drop(&mut self) {}
+            }
+
+            pub fn pass_unmovable_result(_x: Result<(), Unmovable>) {}
+        "#;
+    test_format_item(test_src, "pass_unmovable_result", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void pass_unmovable_result(
+                    ::rs::Movable<rs_std::Result<rs_std::unit_t, ::rust_out::Unmovable>> _x);
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                inline void pass_unmovable_result(
+                    ::rs::Movable<rs_std::Result<rs_std::unit_t, ::rust_out::Unmovable>> _x) {
+                    crubit::Slot<rs_std::Result<rs_std::unit_t, ::rust_out::Unmovable>> _x_slot;
+                    ::std::move(_x).MoveToSlot(_x_slot);
+                    return __crubit_internal::__crubit_thunk_pass_uunmovable_uresult(_x_slot.Get());
+                }
+            }
+        );
+    });
+}
