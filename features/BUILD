@@ -35,6 +35,8 @@ _WRAPPER_FEATURES = [
 # A feature set containing wrapper-library Crubit features, in addition to the officially supported
 # features.
 #
+# NOTE: New usage of wrapper mode is discouraged.
+#
 # See crubit.rs-features#wrapper
 crubit_feature_hint(
     name = "wrapper",
