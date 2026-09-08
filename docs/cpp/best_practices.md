@@ -84,6 +84,42 @@ used from C++, you can silence the warning on the type definition using the
 `#[crubit_annotate::allow_unbindable_type]` attribute (or the
 `CRUBIT_ALLOW_UNBINDABLE_TYPE` macro in C++-accessible contexts).
 
+#### Limiting C++ function visibility to `srcs` with `CRUBIT_PUB_CRATE` {#limiting-cpp-function-visibility-to-srcs}
+
+When writing custom Rust code in `srcs` to wrap or customize a C++ API, you may
+need C++ helper functions or internal methods to be callable from your Rust
+`srcs` files, but without exposing them in the public Rust API of the generated
+crate.
+
+You can mark a C++ function or method with `CRUBIT_PUB_CRATE` from
+`"support/annotations.h"`:
+
+```cpp
+#include "support/annotations.h"
+
+class MyClass {
+ public:
+  // Publicly available to all Rust callers:
+  void SafeMethod();
+
+  // Internal helper: generated with `pub(crate)` visibility in Rust,
+  // making it accessible only to custom `srcs` of this `rust_api_from_cpp`:
+  CRUBIT_PUB_CRATE void InternalHelper();
+};
+
+// Free function limited to this crate:
+CRUBIT_PUB_CRATE void HelperFunction();
+```
+
+In the generated Rust bindings, functions and methods marked with
+`CRUBIT_PUB_CRATE` receive `pub(crate)` visibility instead of `pub`. This allows
+custom Rust code in `srcs` to call them while hiding them from external crates
+that depend on this `rust_api_from_cpp` target.
+
+> **Note**: `CRUBIT_PUB_CRATE` can only be used on functions and methods. Using
+> it on types (structs, classes, enums, unions, or type aliases) results in a
+> compile-time error.
+
 <section class="zippy" markdown="1">
 
 Read on only if you're curious about *why* Rust bindings targets are structured this way.

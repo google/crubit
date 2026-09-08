@@ -1200,6 +1200,12 @@ absl_nullable std::unique_ptr<ir_proto::Item> Importer::ImportDecl(
     return nullptr;
   }
 
+  const absl::StatusOr<bool> pub_crate =
+      HasAnnotationWithoutArgs(*decl, "crubit_pub_crate");
+  if (!pub_crate.ok()) {
+    return HardError(*decl, FormattedError::FromStatus(pub_crate.status()));
+  }
+
   const absl::StatusOr<bool> do_not_bind =
       HasAnnotationWithoutArgs(*decl, "crubit_do_not_bind");
   if (!do_not_bind.ok()) {
@@ -1209,6 +1215,11 @@ absl_nullable std::unique_ptr<ir_proto::Item> Importer::ImportDecl(
     if (*must_bind) {
       return HardError(
           *decl, FormattedError::Static("Conflicting CRUBIT_MUST_BIND and "
+                                        "CRUBIT_DO_NOT_BIND annotations"));
+    }
+    if (*pub_crate) {
+      return HardError(
+          *decl, FormattedError::Static("Conflicting CRUBIT_PUB_CRATE and "
                                         "CRUBIT_DO_NOT_BIND annotations"));
     }
     const std::optional<absl::flat_hash_set<std::string>>&
@@ -1231,6 +1242,23 @@ absl_nullable std::unique_ptr<ir_proto::Item> Importer::ImportDecl(
     return nullptr;
   }
 
+  if (*pub_crate) {
+    if (clang::isa<clang::TypeDecl>(decl) ||
+        clang::isa<clang::ClassTemplateDecl>(decl) ||
+        clang::isa<clang::TypeAliasTemplateDecl>(decl)) {
+      return HardError(
+          *decl, FormattedError::Static(
+                     "`CRUBIT_PUB_CRATE` cannot be used on types; it can only "
+                     "be used on functions and methods"));
+    }
+    if (!clang::isa<clang::FunctionDecl>(decl)) {
+      return HardError(
+          *decl,
+          FormattedError::Static(
+              "`CRUBIT_PUB_CRATE` can only be used on functions and methods"));
+    }
+  }
+
   std::string unavailable_error;
   if (decl->isUnavailable(&unavailable_error)) {
     return ImportUnsupportedItem(
@@ -1246,6 +1274,11 @@ absl_nullable std::unique_ptr<ir_proto::Item> Importer::ImportDecl(
     if (result != nullptr) {
       if (*must_bind) {
         SetMustBindItem(*result);
+      }
+      if (*pub_crate) {
+        if (result->has_func()) {
+          result->mutable_func()->set_is_pub_crate(true);
+        }
       }
       return result;
     }

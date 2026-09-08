@@ -153,6 +153,7 @@ fn test_function() {
                 inline_cpp_source_text: None,
                 lifetime_inputs: [],
                 semantic: None,
+                is_pub_crate: false,
             }
         }
     );
@@ -1362,6 +1363,151 @@ fn test_must_bind_annotation_on_unbindable_function_produces_must_bind_error(
     let ir = ir_testing::make_test_ir(&proto).or_fail()?;
     let func = ir.unsupported_items().find(|item| item.name() == "f").or_fail()?;
     expect_eq!(func.must_bind(), true);
+    Ok(())
+}
+
+#[gtest]
+fn test_pub_crate_annotation_on_function() -> googletest::Result<()> {
+    let proto =
+        ir_proto_from_cc(r#"[[clang::annotate("crubit_pub_crate")]] void f() {}"#).or_fail()?;
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
+    let func = ir.functions().find(|func| *func.rs_name() == "f").or_fail()?;
+    expect_eq!(func.is_pub_crate(), true);
+    Ok(())
+}
+
+#[gtest]
+fn test_pub_crate_annotation_on_method() -> googletest::Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct S {
+            [[clang::annotate("crubit_pub_crate")]] void f() {}
+        };
+        "#,
+    )
+    .or_fail()?;
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
+    let func = ir.functions().find(|func| *func.rs_name() == "f").or_fail()?;
+    expect_eq!(func.is_pub_crate(), true);
+    Ok(())
+}
+
+#[gtest]
+fn test_pub_crate_annotation_on_struct_produces_error() -> googletest::Result<()> {
+    let proto =
+        ir_proto_from_cc(r#"struct [[clang::annotate("crubit_pub_crate")]] S {};"#).or_fail()?;
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
+    let item = ir.unsupported_items().find(|item| item.name() == "S").or_fail()?;
+    expect_eq!(item.must_bind(), true);
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "S",
+            ...
+            errors: [FormattedError {
+                ... message: "`CRUBIT_PUB_CRATE` cannot be used on types; it can only be used on functions and methods", ...
+            }],
+            ...
+            must_bind: true,
+            ...
+        }}
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_pub_crate_annotation_on_enum_produces_error() -> googletest::Result<()> {
+    let proto = ir_proto_from_cc(r#"enum [[clang::annotate("crubit_pub_crate")]] E { kVal };"#)
+        .or_fail()?;
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
+    let item = ir.unsupported_items().find(|item| item.name() == "E").or_fail()?;
+    expect_eq!(item.must_bind(), true);
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "E",
+            ...
+            errors: [FormattedError {
+                ... message: "`CRUBIT_PUB_CRATE` cannot be used on types; it can only be used on functions and methods", ...
+            }],
+            ...
+            must_bind: true,
+            ...
+        }}
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_pub_crate_annotation_on_type_alias_produces_error() -> googletest::Result<()> {
+    let proto =
+        ir_proto_from_cc(r#"using T [[clang::annotate("crubit_pub_crate")]] = int;"#).or_fail()?;
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
+    let item = ir.unsupported_items().find(|item| item.name() == "T").or_fail()?;
+    expect_eq!(item.must_bind(), true);
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "T",
+            ...
+            errors: [FormattedError {
+                ... message: "`CRUBIT_PUB_CRATE` cannot be used on types; it can only be used on functions and methods", ...
+            }],
+            ...
+            must_bind: true,
+            ...
+        }}
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_pub_crate_annotation_on_class_template_produces_error() -> googletest::Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"template <typename T> struct [[clang::annotate("crubit_pub_crate")]] S {};"#,
+    )
+    .or_fail()?;
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
+    let item = ir.unsupported_items().find(|item| item.name() == "S").or_fail()?;
+    expect_eq!(item.must_bind(), true);
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "S",
+            ...
+            errors: [FormattedError {
+                ... message: "`CRUBIT_PUB_CRATE` cannot be used on types; it can only be used on functions and methods", ...
+            }],
+            ...
+            must_bind: true,
+            ...
+        }}
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_pub_crate_and_do_not_bind_conflict_produces_error() -> googletest::Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"[[clang::annotate("crubit_pub_crate"), clang::annotate("crubit_do_not_bind")]] void f() {}"#,
+    )
+    .or_fail()?;
+    let ir = ir_testing::make_test_ir(&proto).or_fail()?;
+    let item = ir.unsupported_items().find(|item| item.name() == "f").or_fail()?;
+    expect_eq!(item.must_bind(), true);
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "f",
+            ...
+            errors: [FormattedError {
+                ... message: "Conflicting CRUBIT_PUB_CRATE and CRUBIT_DO_NOT_BIND annotations", ...
+            }],
+            ...
+            must_bind: true,
+            ...
+        }}
+    );
     Ok(())
 }
 

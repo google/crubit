@@ -57,6 +57,18 @@
 // `do_not_bind_allowlist` or bindings generation will fail with a hard error.
 #define CRUBIT_DO_NOT_BIND CRUBIT_INTERNAL_ANNOTATE("crubit_do_not_bind")
 
+// Marks a function or method as having `pub(crate)` visibility in the generated
+// Rust bindings, restricting its visibility to the crate being generated.
+//
+// This is useful when providing custom handwritten Rust wrappers or extensions
+// via the `srcs` attribute of `rust_api_from_cpp`. Annotated C++ functions or
+// methods will be accessible to those custom Rust sources within the same
+// crate, but will not be exposed to downstream Rust callers.
+//
+// This annotation can only be applied to functions and methods. Using it on
+// types will result in a compilation error.
+#define CRUBIT_PUB_CRATE CRUBIT_INTERNAL_ANNOTATE("crubit_pub_crate")
+
 // By default, crubit.rs will infer Rust safety based on the types of the
 // function's parameters. This annotation can be used to override that
 // inference.

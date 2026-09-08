@@ -327,6 +327,10 @@ fn func_has_bindings<'a>(
         return Err(NoBindingsReason::MissingRequiredFeatures { missing_features });
     }
 
+    if func.is_pub_crate() {
+        visibility = Visibility::PubCrate;
+    }
+
     Ok(BindingsInfo { visibility })
 }
 

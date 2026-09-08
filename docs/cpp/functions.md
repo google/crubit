@@ -132,6 +132,34 @@ incorrectly. Regardless of whether a C++ function is marked as `unsafe`, calls
 into C++ will only be memory-safe if the caller verifies that all function
 preconditions are met.
 
+### Function Visibility: `pub(crate)` {#pub-crate}
+
+By default, bindings for C++ functions and methods are generated with `pub`
+visibility in Rust.
+
+You can restrict the visibility of a function or method to the generated crate
+using `CRUBIT_PUB_CRATE` from `"support/annotations.h"`:
+
+```cpp
+#include "support/annotations.h"
+
+CRUBIT_PUB_CRATE void HelperFunction();
+
+class MyClass {
+ public:
+  CRUBIT_PUB_CRATE void InternalMethod();
+};
+```
+
+This is especially useful when providing handwritten Rust APIs via the `srcs`
+attribute of `rust_api_from_cpp` (see
+[Best Practices](best_practices.md#limiting-cpp-function-visibility-to-srcs)).
+The custom Rust code in `srcs` can call the `pub(crate)` functions or methods,
+while keeping them hidden from downstream crates.
+
+`CRUBIT_PUB_CRATE` is only valid on functions and methods; applying it to types
+will produce an error.
+
 ## Function Attributes
 
 Function attributes are **not currently supported**. Functions marked

@@ -249,6 +249,8 @@ message Func {
   string inline_cpp_source_text = 28;
   MemberFuncSemantic semantic = 30;
   CallingConv call_conv = 31;
+  // Whether the function or method should have `pub(crate)` visibility.
+  bool is_pub_crate = 32;
 }
 
 // Access specifier for a member or base class.

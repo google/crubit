@@ -22,6 +22,8 @@
 %enddef
 %define CRUBIT_DO_NOT_BIND
 %enddef
+%define CRUBIT_PUB_CRATE
+%enddef
 %define CRUBIT_OWNED_POINTEE(name, ...)
 %enddef
 %define CRUBIT_OWNED_POINTER

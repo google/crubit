@@ -1478,6 +1478,10 @@ derive_debug_partialeq_eq_hash! {
         pub fn semantic(&self) -> Option<&MemberFuncSemantic> {
             self.semantic.as_ref()
         }
+
+        pub fn is_pub_crate(&self) -> bool {
+            self.proto.is_pub_crate()
+        }
     }
 }
 impl<'pb> Func<'pb> {

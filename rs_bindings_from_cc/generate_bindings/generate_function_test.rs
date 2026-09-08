@@ -110,8 +110,8 @@ fn test_inline_function_with_inline_cpp() -> Result<()> {
             unsafe {
                 (::crubit_support::inline_cpp! {
                     (int a, int b) -> int {
-                                                                                    return a + b;
-                                                                                }
+                      return a + b;
+                    }
                 })(a, b)
             }
         }
@@ -143,8 +143,8 @@ fn test_non_inline_function_with_inline_cpp() -> Result<()> {
             unsafe {
                 (::crubit_support::inline_cpp! {
                     (int a, int b) -> int {
-                                                                                    return a + b;
-                                                                                }
+                      return a + b;
+                    }
                 })(a, b)
             }
         }
@@ -165,9 +165,10 @@ fn test_member_function_with_inline_cpp() -> Result<()> {
         quote! {
             unsafe {
                 (::crubit_support::inline_cpp! {
-                    (struct SomeStruct const* __this, int arg) -> int {
-                                                                                    return 42 + arg;
-                                                                                }
+                    (
+                        struct SomeStruct const* __this, int arg) -> int {
+                      return 42 + arg;
+                    }
                 })((__this as *const _), arg)
             }
         }
@@ -190,10 +191,12 @@ fn test_non_pod_param_with_inline_cpp() -> Result<()> {
             pub fn TakeNonPod(s: ::ctor::Ctor![crate::NonPod]) {
                 unsafe {
                     (::crubit_support::inline_cpp! {
-                        (struct NonPod* __s) -> void {
-                                                                                                    auto&& s = std::move(*__s);
-                                                                                                    {}
-                                                                                                }
+                        (struct NonPod* __s)
+                            -> void {
+                          auto&& s = std::move(*__s);
+                          {
+                          }
+                        }
                     })((::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(s)) as *const _))
                 }
             }
@@ -217,11 +220,11 @@ fn test_non_pod_return_with_inline_cpp() -> Result<()> {
             pub fn ReturnNonPod() -> ::ctor::Ctor![crate::NonPod] {
                 unsafe {
                     (::crubit_support::inline_cpp! {
-                        (struct NonPod* __return) -> void {
-                                                                                                    new(__return) struct NonPod(([&]() {
-                                                                                                        return NonPod();
-                                                                                                    })());
-                                                                                                }
+                        (
+                            struct NonPod* __return) -> void {
+                          new (__return) struct NonPod(
+                              ([&]() { return NonPod(); })());
+                        }
                     })()
                 }
             }
@@ -245,12 +248,12 @@ fn test_non_pod_param_and_return_with_inline_cpp() -> Result<()> {
             pub fn Transform(s: ::ctor::Ctor![crate::NonPod]) -> ::ctor::Ctor![crate::NonPod] {
                 unsafe {
                     (::crubit_support::inline_cpp! {
-                        (struct NonPod* __return, struct NonPod* __s) -> void {
-                                                                                                    auto&& s = std::move(*__s);
-                                                                                                    new(__return) struct NonPod(([&]() {
-                                                                                                        return s;
-                                                                                                    })());
-                                                                                                }
+                        (
+                            struct NonPod* __return, struct NonPod* __s)
+                            -> void {
+                          auto&& s = std::move(*__s);
+                          new (__return) struct NonPod(([&]() { return s; })());
+                        }
                     })((::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(s)) as *const _))
                 }
             }
@@ -2834,5 +2837,51 @@ fn test_diagnose_if_skipped() -> Result<()> {
     let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
     assert_rs_not_matches!(rs_api, quote! { diagnose_if_func });
     assert_cc_not_matches!(rs_api_impl, quote! { diagnose_if_func });
+    Ok(())
+}
+
+#[gtest]
+fn test_pub_crate_function() -> Result<()> {
+    let proto =
+        ir_proto_from_cc(r#"[[clang::annotate("crubit_pub_crate")]] int Add(int a, int b);"#)?;
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub(crate) fn Add(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int {
+                unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
+            }
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { pub fn Add });
+    Ok(())
+}
+
+#[gtest]
+fn test_pub_crate_method() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct MyStruct {
+            [[clang::annotate("crubit_pub_crate")]] void Method();
+        };
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl MyStruct {
+                ...
+                #[inline(always)]
+                pub(crate) unsafe fn Method(__this: *mut Self) {
+                    unsafe { self::my_struct::Method(__this) }
+                }
+            }
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { pub unsafe fn Method });
     Ok(())
 }
