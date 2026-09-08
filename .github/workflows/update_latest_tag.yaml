@@ -41,5 +41,9 @@ jobs:
 
           echo "Latest passing commit SHA: $LATEST_SHA"
 
-          # Force push the tag 'latest' to point to the passing commit SHA
-          git push --force origin "$LATEST_SHA:refs/tags/latest"
+          # Update the 'latest' tag to point to the passing commit SHA.
+          # Try PATCH first (tag exists), fall back to POST (first run).
+          gh api -X PATCH "/repos/${{ github.repository }}/git/refs/tags/latest" \
+            --field sha="$LATEST_SHA" --field force=true \
+          || gh api -X POST "/repos/${{ github.repository }}/git/refs" \
+            --field ref="refs/tags/latest" --field sha="$LATEST_SHA"
