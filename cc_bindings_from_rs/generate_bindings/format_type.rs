@@ -46,6 +46,7 @@ use std::collections::BTreeSet;
 use std::rc::Rc;
 
 #[rustversion::since(2026-07-31)]
+#[rustversion::before(2026-09-05)]
 #[allow(unused_imports)]
 use rustc_middle::ty::RegionExt as _;
 

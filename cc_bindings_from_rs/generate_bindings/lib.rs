@@ -64,7 +64,10 @@ use query_compiler::{
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
 use rustc_hir::def::{DefKind, Res};
+#[cfg_accessible(rustc_middle::metadata)] // Before nightly-2026-09-06
 use rustc_middle::metadata::{ModChild, Reexport};
+#[cfg_accessible(rustc_middle::middle::resolve)] // Since nightly-2026-09-06
+use rustc_middle::middle::resolve::{ModChild, Reexport};
 use rustc_middle::mir::ConstValue;
 use rustc_middle::ty::{self, GenericParamDefKind, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
@@ -233,7 +236,6 @@ fn source_crate_num(db: &BindingsGenerator<'_>) -> CrateNum {
                     .source_crate_name()
                     .is_some_and(|name| name.as_ref() == mod_child.ident.as_str())
                 {
-                    use rustc_middle::metadata::Reexport;
                     mod_child.reexport_chain.first().and_then(|reexport| match reexport {
                         Reexport::ExternCrate(def_id) => def_id.as_local(),
                         _ => None,
@@ -556,7 +558,6 @@ fn public_paths_by_def_id(
     /// This is retooled logic from rustc's `visible_parent_map` function. Except where that only
     /// selects the shortest visible path, we track all paths and defer selecting the correct one
     /// to callers.
-    use rustc_middle::metadata::ModChild;
     use rustc_span::kw;
     use std::collections::vec_deque::VecDeque;
 
