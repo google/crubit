@@ -63,12 +63,5 @@ TEST(ProtoBridging, ProtoVec) {
   EXPECT_EQ(v[0]->num_requests(), 42);
 }
 
-TEST(ProtoBridging, ProtoStatusOr) {
-  absl::StatusOr<proto::Rust<foo_service::FooRequestStats>> status_or =
-      rust_lib::create_proto_status_or(42);
-  EXPECT_TRUE(status_or.ok());
-  EXPECT_EQ((*status_or)->num_requests(), 42);
-}
-
 }  // namespace
 }  // namespace crubit

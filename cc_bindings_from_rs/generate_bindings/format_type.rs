@@ -293,6 +293,7 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
     adt: ty::AdtDef<'tcx>,
     substs: &'tcx ty::List<ty::GenericArg<'tcx>>,
     prereqs: &mut CcPrerequisites<'tcx>,
+    location: TypeLocation,
 ) -> Result<TokenStream> {
     let tcx = db.tcx();
     let generics = tcx.generics_of(adt.did());
@@ -323,6 +324,38 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
         let placeholder = format!("{{{name}}}");
         if !result_str.contains(&placeholder) {
             continue;
+        }
+        // If the bridged wrapper type itself is annotated with `cpp_move_constructible=`,
+        // it means its C++ move constructor is unconditionally available (e.g. pointer/heap
+        // wrappers like `std::unique_ptr<T>` and `std::vector<T>` only transfer internal
+        // pointers upon move and never invoke `{T}`'s move constructor).
+        //
+        // NOTE: We also check for standard pointer/heap wrappers (`unique_ptr`, `shared_ptr`,
+        // `vector`) as a temporary fallback until the compiler rollout containing
+        // `cpp_move_constructible` reaches stable Crosstool, at which point `support/cc_std_impl`
+        // can be annotated directly without breaking the stable compiler on targets using `cc_std`.
+        let is_unconditionally_cpp_movable = crubit_attr::get_attrs(tcx, adt.did())
+            .map(|attrs| attrs.cpp_move_constructible)
+            .unwrap_or(false)
+            // TODO(b/545883191): When `cpp_move_constructible` is in crosstool stable clean these
+            // up and annotate the types in `support/cc_std_impl` directly.
+            || cpp_type_str.contains("unique_ptr")
+            || cpp_type_str.contains("shared_ptr")
+            || cpp_type_str.contains("vector");
+        if matches!(
+            location,
+            TypeLocation::FnReturn { is_constructor: false }
+                | TypeLocation::FnParam { .. }
+                | TypeLocation::NestedBridgeable
+        ) && !is_unconditionally_cpp_movable
+            && !db.is_cpp_move_constructible(ty)
+        {
+            bail!(
+                "crubit.rs/errors/unsupported_type: Bridged type `{}` cannot be passed \
+                 by value because `{ty}` is not C++ move-constructible. \
+                 See crubit.rs/rust/movable_types for what types are C++ movable.",
+                tcx.def_path_str(adt.did())
+            );
         }
         let snippet = db.format_ty_for_cc(ty, TypeLocation::Other).map_err(|err| {
             let err = err.to_string().replace('\n', "\n  ");
@@ -844,6 +877,7 @@ pub fn format_ty_for_cc<'tcx>(
                                 adt,
                                 substs,
                                 &mut prereqs,
+                                location,
                             )?
                         } else {
                             match cpp_type_str.parse::<TokenStream>() {

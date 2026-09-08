@@ -27,7 +27,6 @@
 #include <cstring>
 #include <utility>
 
-#include "absl/status/statusor.h"
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo.pb.h"
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo_cpp_rust_proto.h"
 #include "support/protobuf/rust.h"
@@ -107,8 +106,16 @@ StructWithProto final {
   static void __crubit_field_offset_assertions();
 };
 
-absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>
-create_proto_status_or(::std::int32_t num);
+// Error generating bindings for function
+// `rust_lib_golden::create_proto_status_or` defined at
+// cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=85:
+// Error formatting function return type
+// `rust_lib_golden::NewStatusOr<foo_proto::third_party_crubit_cc_bindings_from_rs_test_bridging_protobuf_foo_proto::FooRequestStats>`:
+// crubit.rs/errors/unsupported_type: Bridged type
+// `rust_lib_golden::NewStatusOr` cannot be passed by value because
+// `foo_proto::third_party_crubit_cc_bindings_from_rs_test_bridging_protobuf_foo_proto::FooRequestStats`
+// is not C++ move-constructible. See crubit.rs/rust/movable_types for what
+// types are C++ movable.
 
 rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>> create_proto_vec(
     ::std::int32_t num);
@@ -312,24 +319,6 @@ inline ::rust_lib::StructWithProto::StructWithProto(::crubit::UnsafeRelocateTag,
 inline void StructWithProto::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(StructWithProto, stats));
 }
-namespace __crubit_internal {
-extern "C" void __crubit_thunk_create_uproto_ustatus_uor(
-    ::std::int32_t,
-    absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>* __ret_ptr);
-}
-inline absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>
-create_proto_status_or(::std::int32_t num) {
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>> val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
-  __crubit_internal::__crubit_thunk_create_uproto_ustatus_uor(
-      num, __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
-}
-
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create_uproto_uvec(
     ::std::int32_t,

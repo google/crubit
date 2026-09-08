@@ -73,6 +73,5 @@ crubit_cc_test(
         ":foo_cc_proto",
         ":rust_lib_cc_api",
         "//testing/base/public:gunit_main",
-        "@abseil-cpp//absl/status:statusor",
     ],
 )

@@ -2239,3 +2239,53 @@ fn test_unmovable_template_specialization_param_wrapped_in_movable() {
         );
     });
 }
+
+#[test]
+fn test_bridged_type_with_non_cpp_movable_type_arg_rejected() {
+    let test_src = r#"
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=third_party/absl/status/statusor.h"]
+        pub struct StatusOr<T>(std::marker::PhantomData<T>);
+        // Has Drop and no Default/Copy -> not C++ move-constructible.
+        pub struct Unmovable(pub i32);
+        impl Drop for Unmovable {
+            fn drop(&mut self) {}
+        }
+        pub fn returns_status_or_unmovable() -> StatusOr<Unmovable> {
+            todo!()
+        }
+    "#;
+    test_format_item(test_src, "returns_status_or_unmovable", |result| {
+        let err = result.unwrap_err();
+        assert!(
+            err.contains("Error formatting function return type `StatusOr<Unmovable>`: crubit.rs/errors/unsupported_type: Bridged type `StatusOr` cannot be passed by value because `Unmovable` is not C++ move-constructible."),
+            "Unexpected error message: {err}"
+        );
+    });
+}
+
+#[test]
+fn test_bridged_type_with_cpp_move_constructible_allows_unmovable_type_arg() {
+    let test_src = r#"
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=std::unique_ptr<{T}>"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=<memory>"]
+        #[doc = "CRUBIT_ANNOTATE: cpp_move_constructible="]
+        pub struct UniquePtr<T>(std::marker::PhantomData<T>);
+        pub struct Unmovable(pub i32);
+        impl Drop for Unmovable {
+            fn drop(&mut self) {}
+        }
+        pub fn returns_unique_ptr_unmovable() -> UniquePtr<Unmovable> {
+            todo!()
+        }
+    "#;
+    test_format_item(test_src, "returns_unique_ptr_unmovable", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                std::unique_ptr<::rust_out::Unmovable> returns_unique_ptr_unmovable();
+            }
+        );
+    });
+}
