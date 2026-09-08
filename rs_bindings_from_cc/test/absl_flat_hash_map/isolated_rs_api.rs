@@ -37,10 +37,10 @@ pub mod crubit {
         forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!(":: crubit :: test :: Incomplete"));
 
         // error: type alias `crubit::test::MapWithIncompleteKey` could not be bound
-        //   depends on `crubit::test::MapWithIncompleteKey` which cannot be bound because `crate::crubit::test::Incomplete` can't be used in a Rust absl::flat_hash_map<K, _> because it is an incomplete type
+        //   depends on `crubit::test::MapWithIncompleteKey` which cannot be bound because Type `absl::flat_hash_map<crubit::test::Incomplete, int, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
 
         // error: type alias `crubit::test::MapWithIncompleteValue` could not be bound
-        //   depends on `crubit::test::MapWithIncompleteValue` which cannot be bound because `crate::crubit::test::Incomplete` can't be used in a Rust absl::flat_hash_map<_, V> because it is an incomplete type
+        //   depends on `crubit::test::MapWithIncompleteValue` which cannot be bound because Type `absl::flat_hash_map<int, crubit::test::Incomplete, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
 
         #[::ctor::recursively_pinned]
         #[cfi_encoding = "N6crubit4test12NoDestructorE"]
@@ -138,7 +138,7 @@ pub mod crubit {
 // namespace crubit::test
 
 // error: class `absl::flat_hash_map<crubit::test::Incomplete, int, 42>` could not be bound
-//   `crate::crubit::test::Incomplete` can't be used in a Rust absl::flat_hash_map<K, _> because it is an incomplete type
+//   Type `absl::flat_hash_map<crubit::test::Incomplete, int, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
 
 // error: class `absl::flat_hash_map<crubit::test::NoDestructor, int, 42>` could not be bound
 //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public destructor
@@ -151,7 +151,7 @@ pub mod crubit {
 //   `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public operator delete
 
 // error: class `absl::flat_hash_map<int, crubit::test::Incomplete, 42>` could not be bound
-//   `crate::crubit::test::Incomplete` can't be used in a Rust absl::flat_hash_map<_, V> because it is an incomplete type
+//   Type `absl::flat_hash_map<int, crubit::test::Incomplete, 42>` uses forward-declared type `crate::crubit::test::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.
 
 // error: class `absl::flat_hash_map<int, crubit::test::NoDestructor, 42>` could not be bound
 //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor

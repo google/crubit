@@ -1509,6 +1509,13 @@ fn test_existing_rust_type_assert_incomplete_template_arg() -> Result<()> {
             ::core::mem::align_of
         }
     );
+
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            pub fn Function
+        }
+    );
     Ok(())
 }
 
@@ -1676,6 +1683,97 @@ fn test_existing_rust_type_with_bridge_type_template_arg_fails() -> Result<()> {
             expect_that!(
                 error.to_string(),
                 contains_substring("Type parameter `crate::MyMessage` is a bridged type (such as a Protobuf message or std::string) and is not layout-compatible between Rust and C++. See crubit.rs/types.")
+            );
+        }
+        other => panic!("Expected RsTypeKind::Error, got {other:?}"),
+    }
+    Ok(())
+}
+
+#[gtest]
+fn test_existing_rust_type_with_incomplete_template_arg_fails() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+            namespace crubit::rust_type {
+            template <typename...>
+            struct Args {};
+            }
+            template <typename T>
+            struct [[clang::annotate("crubit_internal_rust_type", "RustContainer<{}>", crubit::rust_type::Args<T>())]] Container {};
+
+            struct ForwardDeclared;
+
+            void Accept(Container<ForwardDeclared> a);
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let func = retrieve_func(db.ir(), "Accept");
+    let rs_type = db.rs_type_kind(func.params()[0].type_().clone())?;
+    match rs_type {
+        RsTypeKind::Error { error, .. } => {
+            expect_that!(
+                error.to_string(),
+                contains_substring("Type `Container<ForwardDeclared>` uses forward-declared type `crate::ForwardDeclared` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.")
+            );
+        }
+        other => panic!("Expected RsTypeKind::Error, got {other:?}"),
+    }
+    Ok(())
+}
+
+#[gtest]
+fn test_std_optional_with_incomplete_type_fails() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+            template <typename T>
+            class optional {};
+        }
+        struct Incomplete;
+        void TestOptional(std::optional<Incomplete> o);
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let func = retrieve_func(db.ir(), "TestOptional");
+    let rs_type = db.rs_type_kind(func.params()[0].type_().clone())?;
+    match rs_type {
+        RsTypeKind::Error { error, .. } => {
+            expect_that!(
+                error.to_string(),
+                contains_substring("Type `std::optional<Incomplete>` uses forward-declared type `crate::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.")
+            );
+        }
+        other => panic!("Expected RsTypeKind::Error, got {other:?}"),
+    }
+    Ok(())
+}
+
+#[gtest]
+fn test_std_pair_with_incomplete_type_fails() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace std {
+            template <typename T, typename U>
+            struct pair {};
+        }
+        struct Incomplete;
+        void TestPair(std::pair<Incomplete, int> p);
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let func = retrieve_func(db.ir(), "TestPair");
+    let rs_type = db.rs_type_kind(func.params()[0].type_().clone())?;
+    match rs_type {
+        RsTypeKind::Error { error, .. } => {
+            expect_that!(
+                error.to_string(),
+                contains_substring("Type `std::pair<Incomplete, int>` uses forward-declared type `crate::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.")
             );
         }
         other => panic!("Expected RsTypeKind::Error, got {other:?}"),

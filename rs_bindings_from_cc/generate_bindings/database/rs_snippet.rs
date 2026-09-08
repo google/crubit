@@ -362,6 +362,7 @@ impl<'a> UniformReprTemplateType<'a> {
     /// one of `UniformReprTemplateType`s variants.
     fn new(
         db: &BindingsGenerator<'a>,
+        container_name: &str,
         template_specialization_kind: Option<&TemplateSpecializationKind>,
         options: &LifetimeOptions,
         template_args: &Option<Rc<[CcType]>>,
@@ -380,22 +381,12 @@ impl<'a> UniformReprTemplateType<'a> {
                 "`{}` cannot be used as a template argument because it is a non-layout-compatible bridged type\nSee crubit.rs/types.",
                 arg_type_kind.display(db),
             );
-            // We don't do this in required_crubit_features() because it doesn't know which
-            // template arguments actually need to be free of errors. (For example,
-            // allocator/deleter do not.)
-            if let RsTypeKind::Error { error, .. } = arg_type_kind {
-                return Err(error);
-            }
+            arg_type_kind.ensure_complete_type_arg(db, container_name)?;
             Ok(arg_type_kind)
         };
         match template_specialization_kind {
             Some(TemplateSpecializationKind::StdSharedPtr { raw_element_type }) => {
                 let element_type_kind = type_arg(raw_element_type)?;
-                ensure!(
-                    element_type_kind.is_complete(),
-                    "Crubit does not support std::shared_ptr<incomplete T>, got: `{}`",
-                    element_type_kind.display(db)
-                );
                 Ok(Some(Rc::new(UniformReprTemplateType::StdSharedPtr {
                     element_type: element_type_kind,
                 })))
@@ -403,9 +394,6 @@ impl<'a> UniformReprTemplateType<'a> {
             Some(TemplateSpecializationKind::StdUniquePtr { raw_element_type }) => {
                 let element_type = choose_one_type(raw_element_type, template_args)?;
                 let element_type = type_arg(&element_type)?;
-                ensure!(element_type.is_complete(),
-                    "`{}` can't be used in a Rust std::unique_ptr<T> because it is an incomplete type",
-                    element_type.display(db));
                 ensure!(element_type.is_destructible(),
                     "`{}` can't be used in a Rust std::unique_ptr<T> because it has a deleted or non-public destructor",
                     element_type.display(db));
@@ -709,6 +697,7 @@ impl<'a> CustomizeMethodsKind<'a> {
     /// of `CustomizeMethodsKind`s variants.
     fn new(
         db: &BindingsGenerator<'a>,
+        container_name: &str,
         template_specialization_kind: Option<&TemplateSpecializationKind>,
         options: &LifetimeOptions,
         template_args: &Option<Rc<[CcType]>>,
@@ -724,12 +713,7 @@ impl<'a> CustomizeMethodsKind<'a> {
                 "`{}` cannot be used as a template argument because it is a non-layout-compatible bridged type\nSee crubit.rs/types.",
                 arg_type_kind.display(db),
             );
-            // We don't do this in required_crubit_features() because it doesn't know which
-            // template arguments actually need to be free of errors. (For example,
-            // allocator/deleter do not.)
-            if let RsTypeKind::Error { error, .. } = arg_type_kind {
-                return Err(error);
-            }
+            arg_type_kind.ensure_complete_type_arg(db, container_name)?;
             Ok(arg_type_kind)
         };
         match template_specialization_kind {
@@ -738,18 +722,12 @@ impl<'a> CustomizeMethodsKind<'a> {
                     choose_types(&[raw_key_type, raw_value_type], template_args);
                 let key_type = type_arg(&key_type)?;
                 let value_type = type_arg(&value_type)?;
-                ensure!(key_type.is_complete(),
-                    "`{}` can't be used in a Rust absl::flat_hash_map<K, _> because it is an incomplete type",
-                    key_type.display(db));
                 ensure!(key_type.is_destructible(),
                     "`{}` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public destructor",
                     key_type.display(db));
                 ensure!(!key_type.has_private_or_deleted_operator_delete(),
                     "`{}` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public operator delete",
                     key_type.display(db));
-                ensure!(value_type.is_complete(),
-                    "`{}` can't be used in a Rust absl::flat_hash_map<_, V> because it is an incomplete type",
-                    value_type.display(db));
                 ensure!(value_type.is_destructible(),
                     "`{}` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor",
                     value_type.display(db));
@@ -990,12 +968,17 @@ impl<'a> BridgeRsTypeKind<'a> {
                 }
             }
             BridgeType::StdOptional(t) => {
-                BridgeRsTypeKind::StdOptional(Rc::new(db.rs_type_kind(t)?))
+                let inner = db.rs_type_kind(t)?;
+                inner.ensure_complete_type_arg(db, record.cc_name())?;
+                BridgeRsTypeKind::StdOptional(Rc::new(inner))
             }
-            BridgeType::StdPair(t1, t2) => BridgeRsTypeKind::StdPair(
-                Rc::new(db.rs_type_kind(t1)?),
-                Rc::new(db.rs_type_kind(t2)?),
-            ),
+            BridgeType::StdPair(t1, t2) => {
+                let inner1 = db.rs_type_kind(t1)?;
+                inner1.ensure_complete_type_arg(db, record.cc_name())?;
+                let inner2 = db.rs_type_kind(t2)?;
+                inner2.ensure_complete_type_arg(db, record.cc_name())?;
+                BridgeRsTypeKind::StdPair(Rc::new(inner1), Rc::new(inner2))
+            }
             BridgeType::StdString => {
                 let in_cc_std = db.ir().is_current_target(record.owning_target())
                     && record.owning_target().target_name_escaped() == "cc_std";
@@ -1207,6 +1190,7 @@ impl<'a> RsTypeKind<'a> {
 
         let uniform_repr_template_type = UniformReprTemplateType::new(
             db,
+            record.cc_name().as_str(),
             record.template_specialization().as_ref().map(|ts| ts.kind()),
             options,
             template_args,
@@ -1215,6 +1199,7 @@ impl<'a> RsTypeKind<'a> {
         )?;
         let customize_methods = CustomizeMethodsKind::new(
             db,
+            record.cc_name().as_str(),
             record.template_specialization().as_ref().map(|ts| ts.kind()),
             options,
             template_args,
@@ -1299,7 +1284,7 @@ impl<'a> RsTypeKind<'a> {
             .template_args()
             .iter()
             .map(|subst| {
-                Ok(match subst {
+                match subst {
                     TemplateArg::Type(type_param) => {
                         let rs_type_kind = db.rs_type_kind(type_param.clone())?;
                         ensure!(
@@ -1307,11 +1292,12 @@ impl<'a> RsTypeKind<'a> {
                             "Type parameter `{}` is a bridged type (such as a Protobuf message or std::string) and is not layout-compatible between Rust and C++. See crubit.rs/types.",
                             rs_type_kind.display(&db),
                         );
-                        (rs_type_kind.to_token_stream(db), rs_type_kind.is_complete())
+                        rs_type_kind.ensure_complete_type_arg(&db, existing_rust_type.cc_name())?;
+                        Ok((rs_type_kind.to_token_stream(db), rs_type_kind.is_complete()))
                     }
-                    TemplateArg::Int(i) => (i.to_token_stream(), true),
-                    TemplateArg::Bool(b) => (b.to_token_stream(), true),
-                })
+                    TemplateArg::Int(i) => Ok((i.to_token_stream(), true)),
+                    TemplateArg::Bool(b) => Ok((b.to_token_stream(), true)),
+                }
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -1427,6 +1413,27 @@ impl<'a> RsTypeKind<'a> {
 
     pub fn pass_by_value_bridges(&self) -> bool {
         self.is_bridge_type() && !self.is_layout_compatible()
+    }
+
+    /// Ensures that this type is a complete type and does not contain an error.
+    ///
+    /// Generics such as `std::unique_ptr<T>`, `std::shared_ptr<T>`, `std::optional<T>`,
+    /// `std::pair<T1, T2>`, or `ExistingRustType` generics (e.g. `NewStatusOr<T>`) require
+    /// their type arguments to be complete types.
+    pub fn ensure_complete_type_arg(
+        &self,
+        db: &BindingsGenerator<'a>,
+        container_name: impl Display,
+    ) -> Result<()> {
+        if let RsTypeKind::Error { error, .. } = self.unalias() {
+            return Err(error.clone());
+        }
+        let type_name = self.display(db);
+        ensure!(
+            self.is_complete(),
+            "Type `{container_name}` uses forward-declared type `{type_name}` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.",
+        );
+        Ok(())
     }
 
     pub fn is_proto_message_bridge_type(&self) -> bool {

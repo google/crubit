@@ -109,6 +109,30 @@ fn bad_foo(_: &Status) {}
 
 </section>
 
+### Incomplete types in generic parameters {#incomplete_types}
+
+In C++, forward-declared (incomplete) types can sometimes appear as template
+arguments, such as in `std::optional<Incomplete>`,
+`std::unique_ptr<Incomplete>`, `std::shared_ptr<Incomplete>`, or
+`absl::StatusOr<Incomplete>`.
+
+However, Crubit cannot generate bindings for layout-compatible generic types
+instantiated with an incomplete type:
+
+*   **Unsized / extern types:** In Rust, forward-declared C++ types are
+    represented as incomplete types (conceptually unsized or `extern type`s,
+    such as `forward_declare::Incomplete<...>`) because their size and alignment
+    are unknown.
+*   **Generic parameters require `Sized`:** Layout-compatible generic types
+    (such as `Option<T>`, `unique_ptr<T>`, `shared_ptr<T>`, or `NewStatusOr<T>`)
+    rely on the concrete in-memory layout, size, and alignment of `T` to achieve
+    layout compatibility between Rust and C++. In Rust, generic type parameters
+    have an implicit `Sized` bound (`T: Sized`). An unsized or `extern type`
+    cannot be used as a generic type argument in these containers.
+
+To resolve this, include the C++ header providing the complete definition of the
+type so that Crubit has access to its size, alignment, and layout.
+
 ## Bidirectionality
 
 Usually, the mapping of types between languages is bidirectional. For example, a
