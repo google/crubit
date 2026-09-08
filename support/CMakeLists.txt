@@ -57,3 +57,12 @@ target_link_libraries(crubit_support_movable INTERFACE
 crubit_support_internal_bindings_support
 )
 
+add_library(crubit_support_unsafe_relocate_tag INTERFACE
+"unsafe_relocate_tag.h"
+)
+set_target_properties(crubit_support_unsafe_relocate_tag PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_unsafe_relocate_tag INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/.."
+)
+

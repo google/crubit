@@ -34,6 +34,7 @@
 
 namespace rust_lib {
 
+// CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
     [[clang::trivial_abi]] FooService final {
  public:
@@ -51,16 +52,21 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
   FooService& operator=(const FooService&) = delete;
   FooService(::crubit::UnsafeRelocateTag, FooService&& value);
 
+  // CRUBIT_ANNOTATE: must_bind=
   bool handle_request(const ::foo_service::FooRequest* req,
                       ::foo_service::FooResponse* rsp);
 
+  // CRUBIT_ANNOTATE: must_bind=
   const ::foo_service::FooRequestStats* request_stats() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
+  // CRUBIT_ANNOTATE: must_bind=
   ::foo_service::FooRequestStats clone_request_stats() const;
 
+  // CRUBIT_ANNOTATE: must_bind=
   void update_request_stats(::foo_service::FooRequestStats updated_stats);
 
+  // CRUBIT_ANNOTATE: must_bind=
   static void enum_in_signature(::foo_proto::FooEnum _e);
 
  private:
@@ -74,10 +80,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
 
 // Error generating bindings for struct `rust_lib_golden::NewStatusOr` defined
 // at
-// cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=65:
+// cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=76:
 // Type bindings for rust_lib_golden::NewStatusOr suppressed due to being mapped
 // to an existing C++ type (absl::StatusOr<{T}>)
 
+// CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rust_lib_golden :: StructWithProto") alignas(8) [[clang::trivial_abi]]
 StructWithProto final {
@@ -107,20 +114,25 @@ StructWithProto final {
   static void __crubit_field_offset_assertions();
 };
 
+// CRUBIT_ANNOTATE: must_bind=
 absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>
 create_proto_status_or(::std::int32_t num);
 
+// CRUBIT_ANNOTATE: must_bind=
 rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>> create_proto_vec(
     ::std::int32_t num);
 
+// CRUBIT_ANNOTATE: must_bind=
 ::rust_lib::StructWithProto create_struct_with_proto(::std::int32_t num);
 
+// CRUBIT_ANNOTATE: must_bind=
 //  # Safety
 //
 //  `p` must be valid for reads.
 ::std::int32_t read_proto_pointer(
     ::proto::Rust<::foo_service::FooRequestStats> const* p);
 
+// CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t read_proto_ref(
     ::proto::Rust<::foo_service::FooRequestStats> const& p);
 
@@ -319,15 +331,12 @@ extern "C" void __crubit_thunk_create_uproto_ustatus_uor(
 }
 inline absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>
 create_proto_status_or(::std::int32_t num) {
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>> val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create_uproto_ustatus_uor(
       num, __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {

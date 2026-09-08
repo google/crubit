@@ -22,3 +22,7 @@ target_include_directories(crubit_support_internal_bindings_support PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 )
 
+target_link_libraries(crubit_support_internal_bindings_support PUBLIC
+crubit_support_unsafe_relocate_tag
+)
+

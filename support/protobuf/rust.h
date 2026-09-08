@@ -9,6 +9,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "support/unsafe_relocate_tag.h"
+
 namespace proto2 {
 
 class MessageLite;
@@ -26,8 +28,11 @@ class MessageLite;
 //   memory layout of Rust's Protobuf message handle.
 // - Non-nullable: A `proto::Rust<T>` always points to a valid instance of `T`.
 // - Ownership: Destroys the owned C++ message via `delete` upon destruction.
-// - Movable in C++: Transfers ownership via `Rust(Rust&&)` and sets the
-//   moved-from pointer to `nullptr`.
+// - Non-movable and non-copyable in C++: Cannot be moved or copied in C++ to
+//   preserve the non-null invariant.
+// - Destructive relocation via `crubit::UnsafeRelocateTag`: Supports Rust-style
+//   destructive relocation where the source object's destructor is not
+//   executed.
 template <typename T>
   requires std::is_base_of_v<::google::protobuf::MessageLite, T>
 class Rust final {
@@ -48,14 +53,10 @@ class Rust final {
 
   Rust(const Rust&) = delete;
   Rust& operator=(const Rust&) = delete;
-  Rust(Rust&& other) noexcept : ptr_(std::exchange(other.ptr_, nullptr)) {}
-  Rust& operator=(Rust&& other) noexcept {
-    if (this != &other) {
-      delete ptr_;
-      ptr_ = std::exchange(other.ptr_, nullptr);
-    }
-    return *this;
-  }
+  Rust(Rust&&) = delete;
+  Rust& operator=(Rust&&) = delete;
+
+  Rust(::crubit::UnsafeRelocateTag, Rust&& other) noexcept : ptr_(other.ptr_) {}
 
   T* _Nonnull get() noexcept { return ptr_; }
   const T* _Nonnull get() const noexcept { return ptr_; }
