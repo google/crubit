@@ -62,8 +62,6 @@ jobs:
   test_cmake:
 
     runs-on: ubuntu-latest
-    env:
-      HAS_GCP_SA_KEY: ${{ secrets.GCP_SA_KEY && 'true' || 'false' }}
     strategy:
       matrix:
         project: [cmake, cmake_demo]
@@ -72,72 +70,35 @@ jobs:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
         persist-credentials: false
-    - name: Authenticate to Google Cloud
-      if: env.HAS_GCP_SA_KEY == 'true'
-      id: auth
-      uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
+    - name: Setup sccache
+      id: sccache
+      uses: ./.github/actions/setup_sccache
       with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
-    - name: Install sccache
-      id: install_sccache
-      if: env.HAS_GCP_SA_KEY == 'true'
-      uses: mozilla-actions/sccache-action@65101d47ea8028ed0c98a1cdea8dd9182e9b5133 # v0.0.8
+        gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+        gcs_key_prefix: sccache/${{ matrix.project }}
     - name: Test CMake project
-      env:
-        SCCACHE_GCS_BUCKET: crubit-ci-cmake
-        SCCACHE_GCS_RW_MODE: READ_WRITE
-        SCCACHE_GCS_KEY_PATH: ${{ steps.auth.outputs.credentials_file_path }}
-        SCCACHE_GCS_KEY_PREFIX: sccache/${{ matrix.project }}
       run: |
         cd examples/build_systems/${{ matrix.project }}
-        if [[ "$HAS_GCP_SA_KEY" == "true" ]]; then
-          LAUNCHER_FLAGS="-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
-        else
-          LAUNCHER_FLAGS=""
-        fi
         cmake -B build -S . $LAUNCHER_FLAGS
         cmake --build build --parallel
         cd build
         ctest --output-on-failure --parallel 2
     - name: Show sccache stats
-      if: steps.install_sccache.outcome == 'success' && always()
+      if: steps.sccache.outputs.enabled == 'true' && always()
       run: sccache --show-stats
 
   test_bazel:
 
     runs-on: ubuntu-latest
-    env:
-      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
 
     steps:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
         persist-credentials: false
-    - name: Authenticate to Google Cloud
-      id: auth
-      env:
-        GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-      if: ${{ env.GCP_SA_KEY != '' }}
-      uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
-      with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
     - name: Setup Bazel
-      uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+      uses: ./.github/actions/setup_bazel
       with:
-        bazelisk-cache: true
-        repository-cache: true
-        external-cache: true
-        disk-cache: false
-    - name: Setup Bazel Remote Cache Flags
-      id: bazel_cache_flags
-      run: |
-        if [[ -n "$GCP_SA_KEY" ]]; then
-          echo "RCACHE_FLAGS=--remote_cache=https://storage.googleapis.com/crubit-ci-bazel --google_default_credentials" >> $GITHUB_ENV
-          echo "Using GCS Remote Cache (Read-Write)"
-        else
-          echo "RCACHE_FLAGS=--remote_cache=https://storage.googleapis.com/crubit-ci-bazel --remote_upload_local_results=false" >> $GITHUB_ENV
-          echo "Using GCS Remote Cache (Read-Only)"
-        fi
+        gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
     - name: Build Bazel test project (example)
       run: |
         cd examples/build_systems/bazel

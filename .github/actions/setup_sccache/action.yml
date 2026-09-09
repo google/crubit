@@ -1,0 +1,60 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: 'Setup sccache'
+description: 'Sets up sccache with optional GCP authentication and GCS backend'
+
+inputs:
+  gcp_sa_key:
+    description: 'GCP Service Account Key JSON for sccache authentication (optional)'
+    required: false
+    default: ''
+  gcs_key_prefix:
+    description: 'Key prefix inside the GCS bucket'
+    required: false
+    default: 'sccache'
+
+outputs:
+  enabled:
+    description: "Whether sccache was installed and configured ('true' or 'false')"
+    value: ${{ steps.config.outputs.enabled }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Authenticate to Google Cloud
+      id: auth
+      if: ${{ inputs.gcp_sa_key != '' }}
+      uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
+      with:
+        credentials_json: ${{ inputs.gcp_sa_key }}
+
+    - name: Install sccache
+      id: install_sccache
+      if: ${{ inputs.gcp_sa_key != '' }}
+      uses: mozilla-actions/sccache-action@65101d47ea8028ed0c98a1cdea8dd9182e9b5133 # v0.0.8
+
+    - name: Configure sccache
+      id: config
+      shell: bash
+      env:
+        GCP_SA_KEY: ${{ inputs.gcp_sa_key }}
+        CREDS_PATH: ${{ steps.auth.outputs.credentials_file_path }}
+        PREFIX: ${{ inputs.gcs_key_prefix }}
+      run: |
+        if [[ -n "$GCP_SA_KEY" ]]; then
+          echo "SCCACHE_GCS_BUCKET=crubit-ci-cmake" >> $GITHUB_ENV
+          echo "SCCACHE_GCS_RW_MODE=READ_WRITE" >> $GITHUB_ENV
+          echo "SCCACHE_GCS_KEY_PATH=${CREDS_PATH}" >> $GITHUB_ENV
+          echo "SCCACHE_GCS_KEY_PREFIX=${PREFIX}" >> $GITHUB_ENV
+          echo "CMAKE_C_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
+          echo "CMAKE_CXX_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
+          echo "LAUNCHER_FLAGS=-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
+          echo "enabled=true" >> $GITHUB_OUTPUT
+          echo "sccache enabled with GCS bucket crubit-ci-cmake"
+        else
+          echo "LAUNCHER_FLAGS=" >> $GITHUB_ENV
+          echo "enabled=false" >> $GITHUB_OUTPUT
+          echo "sccache disabled (no credentials)"
+        fi
