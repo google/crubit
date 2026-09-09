@@ -89,6 +89,36 @@ static_assert(!std::is_constructible_v<rs_std::SliceRef<int>, std::list<int>&>);
 static_assert(!std::is_constructible_v<rs_std::SliceRef<const int>,
                                        const std::list<int>&>);
 
+// Regression test for b/558688351: A range type with a converting constructor
+// from SliceRef should not trigger a circular constraint check when testing
+// whether it is copy-constructible.
+struct RangeWithSliceRefConstructor {
+  struct Iterator {
+    using value_type = uint8_t;
+    using difference_type = std::ptrdiff_t;
+    const uint8_t& operator*() const;
+    Iterator& operator++() { return *this; }
+    void operator++(int) {}
+    bool operator==(const Iterator&) const { return true; }
+  };
+
+  RangeWithSliceRefConstructor() = default;
+  RangeWithSliceRefConstructor(const RangeWithSliceRefConstructor&) = default;
+  RangeWithSliceRefConstructor(RangeWithSliceRefConstructor&&) = default;
+  explicit RangeWithSliceRefConstructor(rs_std::SliceRef<const uint8_t>);
+
+  Iterator begin() const { return {}; }
+  Iterator end() const { return {}; }
+};
+
+static_assert(std::is_copy_constructible_v<RangeWithSliceRefConstructor>);
+static_assert(std::is_move_constructible_v<RangeWithSliceRefConstructor>);
+
+TEST(SliceTest, RangeWithSliceRefConstructorIsCopyConstructible) {
+  EXPECT_TRUE(std::is_copy_constructible_v<RangeWithSliceRefConstructor>);
+  EXPECT_TRUE(std::is_move_constructible_v<RangeWithSliceRefConstructor>);
+}
+
 TEST(SliceTest, Comparison) {
   static constexpr std::array<uint8_t, 5> kArr = {1, 2, 3, 4, 5};
   static constexpr std::array<uint8_t, 5> kArrCopy = {1, 2, 3, 4, 5};

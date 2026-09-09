@@ -92,9 +92,9 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   // Implicit conversion from views.
   template <typename View>
   // NOLINTNEXTLINE(build/c++20)
-    requires(std::ranges::view<std::decay_t<View>> &&
+    requires(!std::is_same_v<std::decay_t<View>, std::span<T>> &&
              std::convertible_to<View &&, std::span<T>> &&
-             !std::is_same_v<std::decay_t<View>, std::span<T>>)
+             std::ranges::view<std::decay_t<View>>)
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr SliceRef(View&& view) noexcept
       : SliceRef(static_cast<std::span<T>>(std::forward<View>(view))) {}
@@ -103,19 +103,19 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   // std::span).
   template <typename View>
   // NOLINTNEXTLINE(build/c++20)
-    requires(std::ranges::view<std::decay_t<View>> &&
-             std::constructible_from<std::span<T>, View &&> &&
+    requires(!std::is_same_v<std::decay_t<View>, std::span<T>> &&
              !std::convertible_to<View &&, std::span<T>> &&
-             !std::is_same_v<std::decay_t<View>, std::span<T>>)
+             std::constructible_from<std::span<T>, View &&> &&
+             std::ranges::view<std::decay_t<View>>)
   constexpr explicit SliceRef(View&& view) noexcept
       : SliceRef(std::span<T>(std::forward<View>(view))) {}
 
   // Implicit conversion from non-view containers (only allowed if T is const).
   template <typename Container>
   // NOLINTNEXTLINE(build/c++20)
-    requires(!std::ranges::view<std::decay_t<Container>> &&
-             std::is_const_v<T> &&
-             std::convertible_to<Container &&, std::span<T>>)
+    requires(std::is_const_v<T> &&
+             std::convertible_to<Container &&, std::span<T>> &&
+             !std::ranges::view<std::decay_t<Container>>)
   // NOLINTNEXTLINE(google-explicit-constructor)
   constexpr SliceRef(Container&& container CRUBIT_LIFETIME_BOUND) noexcept
       : SliceRef(
@@ -127,12 +127,12 @@ class CRUBIT_INTERNAL_RUST_TYPE("&[]", T) CRUBIT_TRIVIAL_ABI CRUBIT_VIEW
   // convertible to std::span.
   template <typename Container>
   // NOLINTNEXTLINE(build/c++20)
-    requires(!std::ranges::view<std::decay_t<Container>> &&
-             ((!std::is_const_v<T> &&
+    requires(((!std::is_const_v<T> &&
                std::constructible_from<std::span<T>, Container &&>) ||
               (std::is_const_v<T> &&
                std::constructible_from<std::span<T>, Container &&> &&
-               !std::convertible_to<Container &&, std::span<T>>)))
+               !std::convertible_to<Container &&, std::span<T>>)) &&
+             !std::ranges::view<std::decay_t<Container>>)
   constexpr explicit SliceRef(
       Container&& container CRUBIT_LIFETIME_BOUND) noexcept
       : SliceRef(std::span<T>(std::forward<Container>(container))) {}
