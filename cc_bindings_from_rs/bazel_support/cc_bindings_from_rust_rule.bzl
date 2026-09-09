@@ -234,7 +234,14 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
             arg = dep_bindings_info.crate_key + "=" + feature
             crubit_args.add("--crate-feature", arg)
 
-    crubit_args.add("--default-features", ",".join(SUPPORTED_FEATURES))
+    toolchain = ctx.toolchains["//cc_bindings_from_rs/bazel_support:toolchain_type"]
+    if toolchain != None:
+        unsupported_features = getattr(toolchain.cc_bindings_from_rs_toolchain_info, "unsupported_features", [])
+        default_features = [f for f in SUPPORTED_FEATURES if f not in unsupported_features]
+    else:
+        default_features = SUPPORTED_FEATURES
+
+    crubit_args.add("--default-features", ",".join(default_features))
 
     for feature in features:
         crubit_args.add("--crate-feature", "self=" + feature)

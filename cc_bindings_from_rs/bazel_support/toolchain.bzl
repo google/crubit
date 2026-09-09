@@ -14,6 +14,7 @@ def _cc_bindings_from_rs_toolchain_impl(ctx):
         platform_common.ToolchainInfo(
             cc_bindings_from_rs_toolchain_info = CcBindingsFromRustToolchainInfo(
                 binary = ctx.executable.binary,
+                unsupported_features = ctx.attr.unsupported_features,
             ),
         ),
     ]
@@ -25,6 +26,10 @@ cc_bindings_from_rs_toolchain = rule(
             executable = True,
             allow_single_file = True,
             cfg = "exec",
+        ),
+        "unsupported_features": attr.string_list(
+            default = [],
+            doc = "Features that are unsupported by this toolchain binary",
         ),
     },
 )
