@@ -1507,7 +1507,7 @@ impl<'a> RsTypeKind<'a> {
                     }
                 }
                 RsTypeKind::IncompleteRecord { .. } => require_any_feature(
-                    <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Wrapper),
+                    <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::ForwardDeclarations),
                     format_args!("forward declared types are not yet supported"),
                 ),
                 // Here, we can very carefully be non-recursive into the _structure_ of the type.

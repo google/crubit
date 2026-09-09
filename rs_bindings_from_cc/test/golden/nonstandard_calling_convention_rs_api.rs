@@ -42,7 +42,6 @@ impl ::core::fmt::Debug for SomeClass {
         formatter.debug_struct("SomeClass").finish()
     }
 }
-forward_declare::unsafe_define!(forward_declare::symbol!(":: SomeClass"), crate::SomeClass);
 impl SomeClass {
     #[inline(always)]
     pub fn function_vectorcall<'__this>(&'__this mut self, a: f32, b: f32) -> f32 {

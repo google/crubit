@@ -69,6 +69,7 @@ static TESTING_FEATURES: LazyLock<flagset::FlagSet<crubit_feature::CrubitFeature
     LazyLock::new(|| {
         crubit_feature::CrubitFeature::Experimental
             | crubit_feature::CrubitFeature::Wrapper
+            | crubit_feature::CrubitFeature::ForwardDeclarations
             | crubit_feature::CrubitFeature::Types
             | crubit_feature::CrubitFeature::Supported
             | crubit_feature::CrubitFeature::TemplateInstantiation
@@ -240,6 +241,7 @@ mod tests {
             enabled_features,
             CrubitFeature::Experimental
                 | CrubitFeature::Wrapper
+                | CrubitFeature::ForwardDeclarations
                 | CrubitFeature::Types
                 | CrubitFeature::Supported
                 | CrubitFeature::TemplateInstantiation
@@ -255,6 +257,7 @@ mod tests {
             enabled_features,
             CrubitFeature::Experimental
                 | CrubitFeature::Wrapper
+                | CrubitFeature::ForwardDeclarations
                 | CrubitFeature::Types
                 | CrubitFeature::Supported
                 | CrubitFeature::TemplateInstantiation

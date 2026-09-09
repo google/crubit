@@ -45,7 +45,6 @@ impl ::core::fmt::Debug for SV<'_> {
         formatter.debug_struct("SV").finish()
     }
 }
-forward_declare::unsafe_define!(forward_declare::symbol!(":: SV"), crate::SV<'_>);
 
 impl<'a> Default for SV<'a> {
     #[inline(always)]

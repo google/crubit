@@ -16,10 +16,10 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert((::A & (*)()) & ::fwd_source);
+static_assert((A & (*)()) & ::fwd_source);
 
-static_assert((::A & (*)(::A&)) & ::fwd_ident);
+static_assert((A & (*)(A&)) & ::fwd_ident);
 
-static_assert((::A const& (*)(::A const&)) & ::fwd_ident_const);
+static_assert((A const& (*)(A const&)) & ::fwd_ident_const);
 
 #pragma clang diagnostic pop

@@ -42,7 +42,6 @@ impl ::core::fmt::Debug for B {
         formatter.debug_struct("B").finish_non_exhaustive()
     }
 }
-forward_declare::unsafe_define!(forward_declare::symbol!(":: B"), crate::B);
 
 impl Default for B {
     #[inline(always)]

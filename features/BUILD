@@ -43,6 +43,14 @@ crubit_feature_hint(
     visibility = _EXPERIMENTAL_CLIENTS,
 )
 
+# A feature set enabling forward declaration support.
+crubit_feature_hint(
+    name = "forward_declare",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["forward_declare"],
+    visibility = _EXPERIMENTAL_CLIENTS,
+)
+
 # A rust_api_from_cpp feature which only enables bindings for types.
 #
 # If `types` is enabled, but `supported` is not, then named functions and methods will not receive
