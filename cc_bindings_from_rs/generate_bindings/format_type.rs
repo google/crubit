@@ -842,13 +842,8 @@ pub fn format_ty_for_cc<'tcx>(
                         conversion_info: _,
                     } => {
                         if !is_layout_compat {
-                            if db.is_proto_message(ty) {
-                                if !matches!(
-                                    location,
-                                    TypeLocation::FnReturn {
-                                        is_constructor: false
-                                    } | TypeLocation::FnParam { .. }
-                                ) {
+                            if db.is_proto_message(ty)
+                              && !location.is_bridgeable() {
                                     return Ok(
                                         format_layout_compatible_cpp_type_for_rust_proto_msg(
                                             db,
@@ -856,10 +851,8 @@ pub fn format_ty_for_cc<'tcx>(
                                             &cpp_type,
                                         ),
                                     );
-                                }
-                            } else {
-                                location.check_bridgeable()?;
                             }
+                            location.check_bridgeable()?;
                         }
                         for path in &include_paths {
                             prereqs.includes.insert(CcInclude::from_path(path.as_str()));
