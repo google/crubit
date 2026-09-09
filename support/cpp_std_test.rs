@@ -28,6 +28,12 @@ fn test_cpp_std_unique_ptr_type() {
 }
 
 #[gtest]
+fn test_cpp_std_shared_ptr_deref() {
+    let sp = cpp_std::shared_ptr::new(42);
+    expect_eq!(*sp, 42);
+}
+
+#[gtest]
 fn test_cpp_std_string_wrapper() {
     let s = cpp_std::string_wrapper::from("hello string");
     expect_eq!(s.as_slice(), b"hello string");

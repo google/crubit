@@ -12,6 +12,7 @@ use alloc::boxed::Box;
 use alloc::sync::Arc;
 use core::ffi::c_void;
 use core::mem::{ManuallyDrop, MaybeUninit};
+use core::ops::Deref;
 use core::pin::Pin;
 
 /// A smart pointer that shares ownership of another object of type `T` via a pointer,
@@ -332,6 +333,15 @@ impl<T: Sized + Delete> shared_ptr<T> {
             let (_inner_ptr, cntrl) = shared_ptr::into_raw_parts(shared_ptr::new(u));
             shared_ptr { ptr, cntrl }
         }
+    }
+}
+
+impl<T: Sized> Deref for shared_ptr<T> {
+    type Target = T;
+
+    #[track_caller]
+    fn deref(&self) -> &Self::Target {
+        shared_ptr::try_as_ref(self).expect("dereferencing a null shared_ptr")
     }
 }
 

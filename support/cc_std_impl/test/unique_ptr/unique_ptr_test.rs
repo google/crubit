@@ -5,7 +5,7 @@
 #![feature(allocator_api)]
 
 use cc_std::std::{unique_ptr, virtual_unique_ptr, Allocator};
-use googletest::gtest;
+use googletest::{expect_eq, expect_false, expect_true, gtest};
 use std::sync::atomic::{AtomicI32, Ordering};
 
 static INSTANCE_COUNTER: AtomicI32 = AtomicI32::new(0);
@@ -195,4 +195,64 @@ fn test_covariance() {
     fn _assert_unique_ptr_covariance<'a: 'b, 'b>(x: unique_ptr<&'a i32>) -> unique_ptr<&'b i32> {
         x
     }
+}
+
+#[gtest]
+fn test_unique_ptr_deref() {
+    let up = test_helpers::unique_ptr_test::create_unique_ptr();
+    let r: &i32 = &up;
+    expect_eq!(*r, 1);
+    expect_eq!(*up, 1);
+}
+
+#[gtest]
+fn test_unique_ptr_deref_mut() {
+    let mut up = test_helpers::unique_ptr_test::create_unique_ptr();
+    *up = 654321;
+    expect_eq!(*up, 654321);
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null unique_ptr")]
+fn test_unique_ptr_deref_null_panics() {
+    let up = unsafe { unique_ptr::<i32>::from_raw(std::ptr::null_mut()) };
+    let _ = *up;
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null unique_ptr")]
+fn test_unique_ptr_deref_mut_null_panics() {
+    let mut up = unsafe { unique_ptr::<i32>::from_raw(std::ptr::null_mut()) };
+    *up = 1;
+}
+
+#[gtest]
+fn test_virtual_unique_ptr_deref() {
+    let p = test_helpers::unique_ptr_test::create_virtual_base();
+    let r: &test_helpers::unique_ptr_test::Base = &p;
+    expect_true!(r.is_derived());
+    expect_false!(virtual_unique_ptr::is_null(&p));
+    expect_true!(p.is_derived());
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null virtual_unique_ptr")]
+fn test_virtual_unique_ptr_deref_null_panics() {
+    let vp = unsafe {
+        virtual_unique_ptr::<test_helpers::unique_ptr_test::CustomDelete>::from_raw(
+            std::ptr::null_mut(),
+        )
+    };
+    let _ = *vp;
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null virtual_unique_ptr")]
+fn test_virtual_unique_ptr_deref_mut_null_panics() {
+    let mut vp = unsafe {
+        virtual_unique_ptr::<test_helpers::unique_ptr_test::CustomDelete>::from_raw(
+            std::ptr::null_mut(),
+        )
+    };
+    let _mut_ref: &mut test_helpers::unique_ptr_test::CustomDelete = &mut *vp;
 }

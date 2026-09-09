@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::std::Allocator;
+use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 use core::ptr::null_mut;
 
@@ -26,12 +27,13 @@ pub use operator::Delete;
 /// For `T` types with virtual destructors or which overload `operator delete`, Crubit will
 /// instead generate bindings to `virtual_unique_ptr`. It is UB to use `unique_ptr` in that case.
 ///
-/// ## Shallow const
+/// ## Shallow const vs Deep const
 ///
-/// `unique_ptr` has "shallow" `const` semantics: C++ allows accessing a non-`const` `T`
-/// via a `const unique_ptr<T>&`, so the existence of a Rust `&unique_ptr<T>` does not guarantee
-/// that the underlying `T` is not mutated. Therefore, to get access to `T`, you must have exclusive
-/// access to the `unique_ptr`.
+/// While C++ `unique_ptr` is only shallow-const (i.e. a `const unique_ptr<T>&` allows
+/// mutating the underlying `T`), it is conventionally treated as deep-const. In order for
+/// `&unique_ptr<T>` to be usable at all from Rust, we treat it as deep-const. C++ code which
+/// mutates a value of type `T` while Rust has obtained a `&T` via `&unique_ptr<T>` -> `&T`
+/// deref will result in undefined behavior.
 #[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "::std::unique_ptr<{T}>",
     include_path = "<memory>"
@@ -183,8 +185,25 @@ impl<T: Sized> unique_ptr<T> {
 impl<T: Unpin> AsMut<T> for unique_ptr<T> {
     /// Note: this method will panic if `this` is null.
     fn as_mut(&mut self) -> &mut T {
+        self
+    }
+}
+
+impl<T: Sized> Deref for unique_ptr<T> {
+    type Target = T;
+
+    #[track_caller]
+    fn deref(&self) -> &Self::Target {
         // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
-        unsafe { (self.ptr as *mut T).as_mut().unwrap() }
+        unsafe { self.ptr.as_ref().expect("dereferencing a null unique_ptr") }
+    }
+}
+
+impl<T: Sized + Unpin> DerefMut for unique_ptr<T> {
+    #[track_caller]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
+        unsafe { (self.ptr as *mut T).as_mut().expect("dereferencing a null unique_ptr") }
     }
 }
 
@@ -233,12 +252,13 @@ impl<T> Drop for unique_ptr<T> {
 /// semantics). This allows it to be ABI-compatible with C++'s `std::unique_ptr`. However,
 /// `virtual_unique_ptr` is conventionally non-null.
 ///
-/// ## Shallow const
+/// ## Shallow const vs Deep const
 ///
-/// `virtual_unique_ptr` has "shallow" `const` semantics: C++ allows accessing a non-`const` `T`
-/// via a `const unique_ptr<T>&`, so the existence of a Rust `&virtual_unique_ptr<T>` does not guarantee
-/// that the underlying `T` is not mutated. Therefore, to get access to `T`, you must have exclusive
-/// access to the `virtual_unique_ptr`.
+/// While C++ `unique_ptr` is only shallow-const (i.e. a `const unique_ptr<T>&` allows
+/// mutating the underlying `T`), it is conventionally treated as deep-const. In order for
+/// `&virtual_unique_ptr<T>` to be usable at all from Rust, we treat it as deep-const. C++ code
+/// which mutates a value of type `T` while Rust has obtained a `&T` via `&virtual_unique_ptr<T>` ->
+/// `&T` deref will result in undefined behavior.
 #[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "::std::unique_ptr<{T}>",
     include_path = "<memory>"
@@ -356,6 +376,24 @@ impl<T: Delete> From<T> for virtual_unique_ptr<T> {
 impl<T: Delete> From<unique_ptr<T>> for virtual_unique_ptr<T> {
     fn from(value: unique_ptr<T>) -> Self {
         Self { ptr: unique_ptr::into_raw(value) }
+    }
+}
+
+impl<T: Sized + Delete> Deref for virtual_unique_ptr<T> {
+    type Target = T;
+
+    #[track_caller]
+    fn deref(&self) -> &Self::Target {
+        // SAFETY: `this.ptr` is either null or points to a valid, exclusively owned, `T`.
+        unsafe { self.ptr.as_ref().expect("dereferencing a null virtual_unique_ptr") }
+    }
+}
+
+impl<T: Sized + Delete + Unpin> DerefMut for virtual_unique_ptr<T> {
+    #[track_caller]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        // SAFETY: `this.ptr` is either null or points to a valid, exclusively owned, `T`.
+        unsafe { (self.ptr as *mut T).as_mut().expect("dereferencing a null virtual_unique_ptr") }
     }
 }
 
