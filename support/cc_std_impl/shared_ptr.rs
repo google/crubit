@@ -48,6 +48,7 @@ use core::pin::Pin;
 )]
 #[allow(non_snake_case)]
 #[repr(C)]
+#[derive(Debug)]
 pub struct shared_ptr<T: Sized> {
     // Safety: `ptr` and `cntrl` come from a valid `std::shared_ptr<T>`
     ptr: *const T,

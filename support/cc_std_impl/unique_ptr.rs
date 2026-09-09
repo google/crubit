@@ -38,6 +38,7 @@ pub use operator::Delete;
 )]
 #[allow(non_snake_case)]
 #[repr(C)]
+#[derive(Debug)]
 pub struct unique_ptr<T: Sized> {
     // Invariants:
     // 1. `ptr` is either null, or allocated by C++ `new`.
@@ -245,6 +246,7 @@ impl<T> Drop for unique_ptr<T> {
 )]
 #[allow(non_snake_case)]
 #[repr(C)]
+#[derive(Debug)]
 pub struct virtual_unique_ptr<T: Sized + Delete> {
     // Invariants:
     // 1. `ptr` is either null, or allocated by C++ `new`.
