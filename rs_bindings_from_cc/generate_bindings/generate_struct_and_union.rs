@@ -14,7 +14,7 @@ use database::code_snippet::{
 };
 use database::rs_snippet::{should_derive_clone, RsTypeKind};
 use database::{intern, BindingsGenerator};
-use error_report::{bail, ensure};
+use error_report::ensure;
 use flagset::FlagSet;
 use generate_comment::generate_doc_comment;
 use ir::*;
@@ -123,50 +123,7 @@ fn get_field_rs_type_kind_for_layout<'a>(
     record: &Record<'a>,
     field: &Field<'a>,
 ) -> Result<RsTypeKind<'a>> {
-    if field.is_no_unique_address() {
-        bail!("`[[no_unique_address]]` attribute was present.");
-    }
-    let ir = db.ir();
-    match field.unknown_attr() {
-        Err(e) => bail!("{e}"),
-        Ok(None) => (),
-        Ok(Some(unknown_attr)) => {
-            // Both the template definition and its instantiation should enable experimental
-            // features.
-            for target in
-                db.defining_target(record.id()).as_ref().into_iter().chain([record.owning_target()])
-            {
-                let enabled_features = ir.target_crubit_features(target);
-                ensure!(
-                    enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
-                    "crubit.rs/errors/unknown_attribute: unknown field attributes are only \
-                    supported with experimental features \
-                    enabled on {target}\nUnknown attribute: {unknown_attr}`"
-                );
-            }
-        }
-    }
-    let mut type_kind = db.rs_type_kind(field.type_().clone())?;
-    type_kind.force_layout_compatible();
-
-    if let RsTypeKind::Error { error, .. } = type_kind {
-        return Err(error.clone());
-    }
-
-    if !type_kind.is_layout_compatible() {
-        bail!(
-            "crubit.rs/errors/bridge_field: '{}' is not layout-compatible between Rust and C++.",
-            type_kind.display(db)
-        )
-    }
-
-    for target in
-        db.defining_target(record.id()).as_ref().into_iter().chain([record.owning_target()])
-    {
-        let enabled_features = ir.target_crubit_features(target);
-        let reasons = type_kind.missing_feature_descriptions_of_type(target, enabled_features);
-        ensure!(reasons.is_empty(), reasons.join(", "));
-    }
+    let type_kind = db.field_rs_type_kind_for_layout(record, field)?;
 
     // In supported, we replace nontrivial fields with opaque blobs.
     // This is because we likely don't want the `ManuallyDrop<T>` solution to be the
@@ -180,7 +137,7 @@ fn get_field_rs_type_kind_for_layout<'a>(
         for target in
             db.defining_target(record.id()).as_ref().into_iter().chain([record.owning_target()])
         {
-            let enabled_features = ir.target_crubit_features(target);
+            let enabled_features = db.ir().target_crubit_features(target);
             ensure!(
                 enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
                 "nontrivial fields would be destroyed in the wrong order"

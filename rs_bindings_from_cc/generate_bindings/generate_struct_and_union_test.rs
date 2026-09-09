@@ -1922,6 +1922,52 @@ fn test_supported_no_unique_address_field() -> Result<()> {
 }
 
 #[gtest]
+fn test_supported_no_unique_address_nontrivial_field_does_not_bypass_drop() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct [[clang::trivial_abi]] Inner {
+            char x;
+            ~Inner();
+        };
+        struct [[clang::trivial_abi]] Outer {
+            [[no_unique_address]] Inner inner_field;
+            int y;
+        };
+    "#,
+    )?;
+
+    let mut ir = make_test_ir(&proto)?;
+    enable_supported(&mut ir);
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(rs_api, quote! {pub struct Inner});
+    // Outer has a nontrivial field that cannot be represented for layout,
+    // so it must not bypass Drop.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct Outer {
+                ...
+                pub(crate) inner_field: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 4],
+                ...
+                pub y: ::ffi_11::c_int,
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl Drop for Outer {
+                #[inline(always)]
+                fn drop<'a>(&'a mut self) {
+                    ...
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_nested_type_definitions() -> Result<()> {
     for nested_type in ["enum Present {};", "struct Present {};"] {
         let proto = ir_proto_from_cc(&format!(

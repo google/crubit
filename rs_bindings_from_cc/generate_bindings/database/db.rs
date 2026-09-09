@@ -8,7 +8,7 @@ use crate::rs_snippet::{LifetimeOptions, RsTypeKind, UnsafeReason};
 use arc_anyhow::{anyhow, Error, Result};
 use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiType;
-use error_report::{ErrorReporting, ReportFatalError};
+use error_report::{bail, ensure, ErrorReporting, ReportFatalError};
 use heck::ToSnakeCase;
 use ir::{BazelLabel, CcType, Enum, Field, Func, GenericItem, Record, UnqualifiedIdentifier, IR};
 use proc_macro2::Ident;
@@ -284,6 +284,67 @@ impl<'db> BindingsGenerator<'db> {
         self.rs_type_kind_with_lifetime_elision(cc_type, LifetimeOptions::default())
     }
 
+    /// Returns the `RsTypeKind` of `field` for layout purposes, or an error if
+    /// the field cannot be represented for layout and should be replaced with
+    /// opaque padding bytes.
+    ///
+    /// See docs/design/struct_layout.md
+    pub fn field_rs_type_kind_for_layout(
+        &self,
+        record: &Record<'db>,
+        field: &Field<'db>,
+    ) -> Result<RsTypeKind<'db>> {
+        if field.is_no_unique_address() {
+            bail!("`[[no_unique_address]]` attribute was present.");
+        }
+        let ir = self.ir();
+        match field.unknown_attr() {
+            Err(e) => bail!("{e}"),
+            Ok(None) => (),
+            Ok(Some(unknown_attr)) => {
+                // Both the template definition and its instantiation should enable experimental
+                // features.
+                for target in self
+                    .defining_target(record.id())
+                    .as_ref()
+                    .into_iter()
+                    .chain([record.owning_target()])
+                {
+                    let enabled_features = ir.target_crubit_features(target);
+                    ensure!(
+                        enabled_features.contains(crubit_feature::CrubitFeature::Experimental),
+                        "crubit.rs/errors/unknown_attribute: unknown field attributes are only \
+                        supported with experimental features \
+                        enabled on {target}\nUnknown attribute: {unknown_attr}`"
+                    );
+                }
+            }
+        }
+        let mut type_kind = self.rs_type_kind(field.type_().clone())?;
+        type_kind.force_layout_compatible();
+
+        if let RsTypeKind::Error { error, .. } = type_kind {
+            return Err(error.clone());
+        }
+
+        if !type_kind.is_layout_compatible() {
+            bail!(
+                "crubit.rs/errors/bridge_field: '{}' is not layout-compatible between Rust and C++.",
+                type_kind.display(self)
+            )
+        }
+
+        for target in
+            self.defining_target(record.id()).as_ref().into_iter().chain([record.owning_target()])
+        {
+            let enabled_features = ir.target_crubit_features(target);
+            let reasons = type_kind.missing_feature_descriptions_of_type(target, enabled_features);
+            ensure!(reasons.is_empty(), reasons.join(", "));
+        }
+
+        Ok(type_kind)
+    }
+
     /// Returns true if we should implement `Drop` (or `PinnedDrop`) for the record.
     ///
     /// This may differ from `record.should_implement_drop()` if the record only has
@@ -294,7 +355,6 @@ impl<'db> BindingsGenerator<'db> {
             ir::SpecialMemberFunc::Trivial => false,
             ir::SpecialMemberFunc::NontrivialUserDefined => true,
             ir::SpecialMemberFunc::NontrivialMembers => {
-                let mut nontrivial_fields_count = 0;
                 for base in record.unambiguous_public_bases() {
                     let Ok(base_record) = self.find_decl::<Rc<Record<'db>>>(base.base_record_id())
                     else {
@@ -307,18 +367,28 @@ impl<'db> BindingsGenerator<'db> {
                         return true;
                     }
                 }
+                let mut nontrivial_fields_count = 0;
                 for field in record.fields() {
-                    let Ok(type_kind) = self.rs_type_kind(field.type_().clone()) else {
-                        return true;
+                    let type_kind = match self.field_rs_type_kind_for_layout(record, field) {
+                        Ok(type_kind) => type_kind,
+                        Err(_) => {
+                            // If the field cannot be represented for layout, it will be erased into
+                            // padding bytes. If it needs destruction, Rust cannot run its destructor,
+                            // so the record must implement Drop to invoke the C++ destructor.
+                            if self
+                                .rs_type_kind(field.type_().clone())
+                                .is_ok_and(|t| !t.needs_destruction())
+                            {
+                                continue;
+                            }
+                            return true;
+                        }
                     };
-                    if !type_kind.is_layout_compatible() {
-                        return true;
-                    }
                     if type_kind.needs_destruction() {
                         nontrivial_fields_count += 1;
                     }
                 }
-                nontrivial_fields_count > 1
+                nontrivial_fields_count != 1
             }
             ir::SpecialMemberFunc::Unavailable => false,
         }
