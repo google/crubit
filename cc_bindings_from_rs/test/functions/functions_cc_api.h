@@ -153,7 +153,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static void __crubit_field_offset_assertions();
 };
 
-//  The substitution `impl AsRef<[i32]>` => `&[u32]` needs to "conjure" a new,
+//  The substitution `impl AsRef<[i32]>` => `&[i32]` needs to "conjure" a new,
 //  late-bound lifetime/region.  The test below is an ad-hoc attempt to test
 //  that the new region doesn't somehow clobber/conflict with existing implicit
 //  or explicit lifetimes. `impl AsRef<[i32]>` is "sandwiched" in the middle to
@@ -177,6 +177,12 @@ void diverse_lifetimes(rs_std::SliceRef<const ::std::int32_t> arg1,
 
 ::std::int32_t struct_ref(
     ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& arg);
+
+//  The substitution `impl AsRef<[i32]>` => `&[i32]` needs to "conjure" a new,
+//  late-bound lifetime/region.  The test below is an ad-hoc attempt to test
+//  that nothing breaks if this substitution happens twice in a single function.
+::std::int32_t two_args(rs_std::SliceRef<const ::std::int32_t> x,
+                        rs_std::SliceRef<const ::std::int32_t> y);
 
 }  // namespace functions::generic_fn_tests::as_ref_trait_tests
 
@@ -228,7 +234,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // Error generating bindings for function
 // `functions_golden::generic_fn_tests::ctor_trait_tests::return_ctor` defined
 // at
-// cc_bindings_from_rs/test/functions/functions.rs;l=331:
+// cc_bindings_from_rs/test/functions/functions.rs;l=338:
 // Attempted to write out unknown type from Rust to C
 
 ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&
@@ -349,7 +355,7 @@ struct rs_std::impl<
   // ctor::CtorNew<ctor::RvalueReference<'a,
   // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::CtorType`
   // defined at
-  // cc_bindings_from_rs/test/functions/functions.rs;l=298:
+  // cc_bindings_from_rs/test/functions/functions.rs;l=305:
   // Generic types are not supported yet (b/259749095)
 
   // Error generating bindings for associated type
@@ -357,7 +363,7 @@ struct rs_std::impl<
   // ctor::CtorNew<ctor::RvalueReference<'a,
   // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::Error`
   // defined at
-  // cc_bindings_from_rs/test/functions/functions.rs;l=299:
+  // cc_bindings_from_rs/test/functions/functions.rs;l=306:
   // The never type `!` is only supported as a return type (b/254507801)
 
   // Error generating bindings for associated function
@@ -365,7 +371,7 @@ struct rs_std::impl<
   // ctor::CtorNew<ctor::RvalueReference<'a,
   // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::ctor_new`
   // defined at
-  // cc_bindings_from_rs/test/functions/functions.rs;l=300:
+  // cc_bindings_from_rs/test/functions/functions.rs;l=307:
   // Error formatting function return type
   // `ctor::RustMoveCtor<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>`:
   // Generic types are not supported yet (b/259749095)
@@ -611,6 +617,16 @@ extern "C" ::std::int32_t __crubit_thunk_struct_uref(
 inline ::std::int32_t struct_ref(
     ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& arg) {
   return __crubit_internal::__crubit_thunk_struct_uref(arg);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_two_uargs(
+    rs_std::SliceRef<const ::std::int32_t>,
+    rs_std::SliceRef<const ::std::int32_t>);
+}
+inline ::std::int32_t two_args(rs_std::SliceRef<const ::std::int32_t> x,
+                               rs_std::SliceRef<const ::std::int32_t> y) {
+  return __crubit_internal::__crubit_thunk_two_uargs(x, y);
 }
 
 }  // namespace functions::generic_fn_tests::as_ref_trait_tests

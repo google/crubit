@@ -213,7 +213,14 @@ pub mod generic_fn_tests {
             arg.as_ref().iter().sum()
         }
 
-        /// The substitution `impl AsRef<[i32]>` => `&[u32]` needs to "conjure" a new, late-bound
+        /// The substitution `impl AsRef<[i32]>` => `&[i32]` needs to "conjure" a new, late-bound
+        /// lifetime/region.  The test below is an ad-hoc attempt to test that nothing breaks
+        /// if this substitution happens twice in a single function.
+        pub fn two_args(x: impl AsRef<[i32]>, y: impl AsRef<[i32]>) -> i32 {
+            [x.as_ref(), y.as_ref()].into_iter().flatten().sum()
+        }
+
+        /// The substitution `impl AsRef<[i32]>` => `&[i32]` needs to "conjure" a new, late-bound
         /// lifetime/region.  The test below is an ad-hoc attempt to test that the new region
         /// doesn't somehow clobber/conflict with existing implicit or explicit lifetimes.
         /// `impl AsRef<[i32]>` is "sandwiched" in the middle to increase the chances that
