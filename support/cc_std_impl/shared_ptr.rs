@@ -11,6 +11,7 @@ use crate::std::{unique_ptr, virtual_unique_ptr, Delete};
 use alloc::boxed::Box;
 use alloc::sync::Arc;
 use core::ffi::c_void;
+use core::fmt::{Debug, Formatter, Result};
 use core::mem::{ManuallyDrop, MaybeUninit};
 use core::ops::Deref;
 use core::pin::Pin;
@@ -342,6 +343,16 @@ impl<T: Sized> Deref for shared_ptr<T> {
     #[track_caller]
     fn deref(&self) -> &Self::Target {
         shared_ptr::try_as_ref(self).expect("dereferencing a null shared_ptr")
+    }
+}
+
+impl<T: Debug> Debug for shared_ptr<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        if let Some(r) = Self::try_as_ref(self) {
+            Debug::fmt(r, f)
+        } else {
+            f.pad("null")
+        }
     }
 }
 

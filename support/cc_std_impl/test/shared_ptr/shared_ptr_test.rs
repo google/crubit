@@ -394,3 +394,25 @@ fn test_from_virtual_unique_ptr_null() {
     expect_true!(shared_ptr::is_null(&sp));
     expect_eq!(shared_ptr::use_count(&sp), 0);
 }
+
+#[gtest]
+fn test_debug() {
+    let sp = shared_ptr::new(42);
+    expect_eq!(format!("{sp:?}"), "42");
+
+    #[derive(Debug)]
+    #[allow(dead_code)]
+    struct Foo {
+        a: i32,
+    }
+    let sp_foo = shared_ptr::new(Foo { a: 123 });
+    expect_eq!(format!("{sp_foo:?}"), "Foo { a: 123 }");
+
+    let null_sp =
+        shared_ptr::from_unique_ptr(test_helpers::shared_ptr_test::create_null_unique_ptr());
+    expect_eq!(format!("{null_sp:?}"), "null");
+    expect_eq!(format!("{null_sp:>8?}"), "    null");
+    expect_eq!(format!("{null_sp:<8?}"), "null    ");
+    expect_eq!(format!("{null_sp:^8?}"), "  null  ");
+    expect_eq!(format!("{null_sp:_>8?}"), "____null");
+}
