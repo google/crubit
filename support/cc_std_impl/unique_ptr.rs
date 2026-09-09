@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::std::Allocator;
+use core::fmt::{Debug, Formatter, Result};
 use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 use core::ptr::null_mut;
@@ -241,6 +242,18 @@ impl<T> Drop for unique_ptr<T> {
     }
 }
 
+impl<T: Debug> Debug for unique_ptr<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        // SAFETY: By `unique_ptr` invariants, `self.ptr` is either null or points to an
+        // initialized `T` whose lifetime is managed by `self`.
+        if let Some(r) = unsafe { self.ptr.as_ref() } {
+            Debug::fmt(r, f)
+        } else {
+            f.pad("null")
+        }
+    }
+}
+
 /// A smart pointer that owns and manages a polymorphic object with base class `T`.
 ///
 /// This type is ABI-compatible with C++'s `std::unique_ptr<T>`, where `T` is a base class with a
@@ -405,6 +418,18 @@ impl<T: Delete> Drop for virtual_unique_ptr<T> {
         unsafe {
             // SAFETY: valid and allocated with `new` per type invariants.
             T::delete(self.ptr as *mut T);
+        }
+    }
+}
+
+impl<T: Delete + Debug> Debug for virtual_unique_ptr<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        // SAFETY: By `virtual_unique_ptr` invariants, `self.ptr` is either null or points to an
+        // initialized `T` whose lifetime is managed by `self`.
+        if let Some(r) = unsafe { self.ptr.as_ref() } {
+            Debug::fmt(r, f)
+        } else {
+            f.pad("null")
         }
     }
 }

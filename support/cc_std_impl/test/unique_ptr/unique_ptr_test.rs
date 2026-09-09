@@ -256,3 +256,49 @@ fn test_virtual_unique_ptr_deref_mut_null_panics() {
     };
     let _mut_ref: &mut test_helpers::unique_ptr_test::CustomDelete = &mut *vp;
 }
+
+#[gtest]
+fn test_unique_ptr_debug() {
+    let up = unique_ptr::new(42);
+    assert_eq!(format!("{up:?}"), "42");
+
+    #[derive(Debug)]
+    #[allow(dead_code)]
+    struct Foo {
+        a: i32,
+    }
+    let up_foo = unique_ptr::new(Foo { a: 123 });
+    assert_eq!(format!("{up_foo:?}"), "Foo { a: 123 }");
+
+    let null_up = unsafe { unique_ptr::<i32>::from_raw(std::ptr::null_mut()) };
+    assert_eq!(format!("{null_up:?}"), "null");
+    assert_eq!(format!("{null_up:>8?}"), "    null");
+    assert_eq!(format!("{null_up:<8?}"), "null    ");
+    assert_eq!(format!("{null_up:^8?}"), "  null  ");
+    assert_eq!(format!("{null_up:_>8?}"), "____null");
+}
+
+#[gtest]
+fn test_virtual_unique_ptr_debug() {
+    #[derive(Debug)]
+    struct VirtualFoo {
+        #[allow(unused)]
+        val: i32,
+    }
+    unsafe impl cc_std::std::Delete for VirtualFoo {
+        unsafe fn delete(p: *mut Self) {
+            unsafe { drop(Box::from_raw(p)) }
+        }
+    }
+
+    let vp =
+        unsafe { virtual_unique_ptr::from_raw(Box::into_raw(Box::new(VirtualFoo { val: 42 }))) };
+    assert_eq!(format!("{vp:?}"), "VirtualFoo { val: 42 }");
+
+    let null_vp = unsafe { virtual_unique_ptr::<VirtualFoo>::from_raw(std::ptr::null_mut()) };
+    assert_eq!(format!("{null_vp:?}"), "null");
+    assert_eq!(format!("{null_vp:>8?}"), "    null");
+    assert_eq!(format!("{null_vp:<8?}"), "null    ");
+    assert_eq!(format!("{null_vp:^8?}"), "  null  ");
+    assert_eq!(format!("{null_vp:_>8?}"), "____null");
+}
