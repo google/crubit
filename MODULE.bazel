@@ -29,6 +29,10 @@ bazel_dep(name = "rules_foreign_cc", version = "0.15.0")
 
 ########################################################################
 # Building of Clang/LLVM from sources
+#
+# Note that the `commit` specified below is used only if
+# `CRUBIT_LLVM_COMMIT` environment variable is missing
+# (it is typically set present in CI/CQ via `rust.yml`).
 llvm_ext = use_extension("//bazel:llvm_extension.bzl", "llvm_extension")
 llvm_ext.configure(commit = "ab547095ead5464dc024d66264d9b8a987f429f3")
 use_repo(llvm_ext, "llvm-raw", "llvm_libxml2", "llvm_zlib", "llvm_zstd")
