@@ -223,7 +223,16 @@ C++ dependencies and pre-generate C++ Protobuf headers before invoking `cargo`:
             `generate_bindings_rust_proto`.
     *   **Toolchain & Linker**:
         *   `CC` / `CXX`: C and C++ compilers (e.g. Clang/Clang++).
-        *   `CXXFLAGS`: Extra C++ compiler flags (e.g. `-stdlib=libc++`).
+
+        *   `CXXFLAGS`: Extra C++ compiler flags. You must include
+            `-DCRUBIT_LLVM_DEV_DATE=<YYYYMMDD>` in addition to standard flags
+            like `-stdlib=libc++`. For example:
+
+            ```sh
+            LLVM_DATE=$(python3 cargo/build/get_llvm_commit_date.py <llvm_commit_hash>)
+            export CXXFLAGS="-stdlib=libc++ -DCRUBIT_LLVM_DEV_DATE=${LLVM_DATE}"
+            ```
+
         *   `RUSTFLAGS`: Rust compiler flags for linking (e.g. `-C linker=...`,
             `-C link-arg=-stdlib=libc++`, `-C link-arg=-lc++`, `-C
             link-arg=-lzstd`).

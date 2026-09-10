@@ -122,6 +122,7 @@ cc_library(
         "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc:cc_ir",
+        "//rs_bindings_from_cc:clang_compat_macros",
         "//rs_bindings_from_cc:decl_importer",
         "//rs_bindings_from_cc:ir_cc_proto",
         "//rs_bindings_from_cc:recording_diagnostic_consumer",

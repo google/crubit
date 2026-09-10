@@ -178,12 +178,20 @@ crubit_cc_test(
 )
 
 cc_library(
+    name = "clang_compat_macros",
+    hdrs = ["clang_compat_macros.h"],
+    visibility = ["//:__subpackages__"],
+    deps = ["@llvm-raw//:llvm_dev_date"],
+)
+
+cc_library(
     name = "ast_util",
     srcs = ["ast_util.cc"],
     hdrs = ["ast_util.h"],
     visibility = ["//:__subpackages__"],
     deps = [
         ":cc_ir",
+        ":clang_compat_macros",
         ":decl_importer",
         ":recording_diagnostic_consumer",
         "//common:annotation_reader",

@@ -29,6 +29,7 @@
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
+#include "rs_bindings_from_cc/clang_compat_macros.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir.pb.h"
@@ -639,7 +640,14 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   // See DefineDefaultedFunction in SemaDeclCXX.cpp.
   // TODO(zarko): This is intentionally very narrow in scope (just for
   // copy assignments) right now. See b/436870965.
-  if (auto defaulted_kind = function_decl->getDefaultedFunctionKind();
+  if (auto defaulted_kind =
+#if LLVM_DEV_DATE_GE(20260818)
+          // The new API has been introduced in
+          // https://github.com/llvm/llvm-project/commit/ab547095ead5464dc024d66264d9b8a987f429f3
+      function_decl->getDefaultedFunctionKind();
+#else
+          ictx_.sema_.getDefaultedFunctionKind(function_decl);
+#endif
       defaulted_kind.isSpecialMember()) {
     // TODO(zarko): Possibly eliminate a redundant check here (have we done this
     // already if function_decl is a function template that is also defaulted?)

@@ -16,6 +16,7 @@ import sys
 from typing import NoReturn
 
 import generate_proto_headers
+import get_llvm_commit_date
 
 Path = pathlib.Path
 
@@ -109,6 +110,14 @@ def resolve_external_repo(repo_name, query_target, prereq_hint):
         f" 'bazelisk build {prereq_hint}' first?"
     )
   return src_dir.resolve(), bin_dir.resolve()
+
+
+def get_llvm_dev_date() -> str:
+  """Retrieves the LLVM dev date for the commit in MODULE.bazel."""
+  commit = get_llvm_commit_date.get_llvm_commit_from_module_bazel()
+  dev_date = get_llvm_commit_date.get_commit_date_from_gitiles(commit)
+  log(f"Computed LLVM dev date: {dev_date}")
+  return dev_date
 
 
 def find_hermetic_toolchain():
@@ -327,7 +336,10 @@ def main():
   log(f"Found hermetic Clang: {toolchain['clang']}")
   env_vars["CC"] = toolchain["clang"]
   env_vars["CXX"] = toolchain["clang_xx"]
-  env_vars["CXXFLAGS"] = "-stdlib=libc++"
+  llvm_dev_date = get_llvm_dev_date()
+  env_vars["CXXFLAGS"] = (
+      f"-stdlib=libc++ -DCRUBIT_LLVM_DEV_DATE={llvm_dev_date}"
+  )
 
   hermetic_clang_dir = Path(toolchain["clang"]).parent
   rustflags = [

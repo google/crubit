@@ -20,14 +20,37 @@ def _llvm_source_fetch_impl(repository_ctx):
         strip = 1,
     )
 
-    # Create an empty BUILD file at the root to make it a package,
-    # so that files like WORKSPACE can be referenced as labels.
-    repository_ctx.file("BUILD.bazel", "")
+    # Query Gitiles for the LLVM commit date (YYYYmmDD UTC).
+    python = repository_ctx.which("python3")
+    if not python:
+        python = repository_ctx.which("python")
+    if not python:
+        fail("Neither python3 nor python found in PATH")
+
+    script = repository_ctx.path(repository_ctx.attr._get_llvm_commit_date)
+    res = repository_ctx.execute([python, str(script), commit])
+    if res.return_code != 0:
+        fail("Failed to get LLVM commit date for commit %s: %s" % (commit, res.stderr))
+    dev_date = res.stdout.strip()
+
+    # Create a `BUILD` to expose the date of the LLVM/Clang commit.
+    repository_ctx.file("BUILD.bazel", """load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
+cc_library(
+    name = "llvm_dev_date",
+    defines = ["CRUBIT_LLVM_DEV_DATE={dev_date}"],
+    visibility = ["//visibility:public"],
+)
+""".format(dev_date = dev_date))
 
 llvm_source_fetch = repository_rule(
     implementation = _llvm_source_fetch_impl,
     attrs = {
         "commit": attr.string(mandatory = True),
+        "_get_llvm_commit_date": attr.label(
+            default = Label("//cargo/build:get_llvm_commit_date.py"),
+            allow_single_file = True,
+        ),
     },
 )
 

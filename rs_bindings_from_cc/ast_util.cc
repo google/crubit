@@ -19,6 +19,7 @@
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
 #include "common/string_view_conversion.h"
+#include "rs_bindings_from_cc/clang_compat_macros.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/recording_diagnostic_consumer.h"
@@ -401,7 +402,14 @@ const clang::TagDecl* StripCStyleNameIntroducingTypedef(
 
 bool ForceDefineImplicitFunction(ImportContext& ictx,
                                  clang::FunctionDecl* function_decl) {
-  if (auto defaulted_kind = function_decl->getDefaultedFunctionKind();
+  if (auto defaulted_kind =
+#if LLVM_DEV_DATE_GE(20260818)
+          // The new API has been introduced in
+          // https://github.com/llvm/llvm-project/commit/ab547095ead5464dc024d66264d9b8a987f429f3
+      function_decl->getDefaultedFunctionKind();
+#else
+          ictx.getDefaultedFunctionKind(function_decl);
+#endif
       defaulted_kind.isSpecialMember()) {
     auto special_member_kind = defaulted_kind.asSpecialMember();
     if (!function_decl->isDeleted() &&
