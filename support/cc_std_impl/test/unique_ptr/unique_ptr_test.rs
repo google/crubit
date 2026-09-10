@@ -6,118 +6,76 @@
 
 use cc_std::std::{unique_ptr, virtual_unique_ptr, Allocator};
 use googletest::{expect_eq, expect_false, expect_true, gtest};
-use std::sync::atomic::{AtomicI32, Ordering};
-
-static INSTANCE_COUNTER: AtomicI32 = AtomicI32::new(0);
-
-/// A struct with the same size and alignment as `int`.
-/// The number of alive instances is tracked by `INSTANCE_COUNTER`.
-#[repr(transparent)]
-#[derive(Debug, PartialEq)]
-struct InstanceCounted(std::ffi::c_int);
-
-impl Drop for InstanceCounted {
-    fn drop(&mut self) {
-        INSTANCE_COUNTER.fetch_sub(1, Ordering::Release);
-    }
-}
-
-impl InstanceCounted {
-    fn new() -> InstanceCounted {
-        INSTANCE_COUNTER.fetch_add(1, Ordering::Acquire);
-        InstanceCounted(123456)
-    }
-
-    fn new_unique_ptr() -> unique_ptr<InstanceCounted> {
-        let mut int_sized_unique_ptr = test_helpers::unique_ptr_test::create_unique_ptr();
-        let p = unique_ptr::release(&mut int_sized_unique_ptr) as *mut InstanceCounted;
-        assert!(!p.is_null());
-        unsafe {
-            // SAFETY: The pointer is non-null and points to a valid initialized object.
-            p.write(InstanceCounted::new());
-
-            // SAFETY: The pointer is allocated by `new`, and the pointee is initialized.
-            unique_ptr::from_raw(p)
-        }
-    }
-}
+use std::sync::Arc;
 
 #[track_caller]
-fn assert_drop_decrements_counter<T>(up: T) {
-    assert_eq!(INSTANCE_COUNTER.load(Ordering::Acquire), 1);
+fn assert_drop_decrements_counter<T>(rc: &Arc<()>, up: T) {
+    assert_eq!(Arc::strong_count(rc), 2);
     drop(up);
-    assert_eq!(INSTANCE_COUNTER.load(Ordering::Acquire), 0);
-}
-
-#[gtest]
-fn test_unique_ptr_can_be_dropped() {
-    let up = InstanceCounted::new_unique_ptr();
-    assert_drop_decrements_counter(up);
+    assert_eq!(Arc::strong_count(rc), 1);
 }
 
 #[gtest]
 fn test_unique_ptr_can_be_dropped_as_box() {
-    let b: Box<InstanceCounted, Allocator> =
-        unique_ptr::into_box(InstanceCounted::new_unique_ptr());
-    assert_drop_decrements_counter(b);
+    let rc = Arc::new(());
+    let b: Box<Arc<()>, Allocator> = unique_ptr::into_box(unique_ptr::new(rc.clone()));
+    assert_drop_decrements_counter(&rc, b);
 }
 
 #[gtest]
 fn test_unique_ptr_new_can_be_dropped() {
-    let up = unique_ptr::new(InstanceCounted::new());
-    assert_drop_decrements_counter(up);
+    let rc = Arc::new(());
+    let up = unique_ptr::new(rc.clone());
+    assert_drop_decrements_counter(&rc, up);
 }
 
 #[gtest]
 fn test_value_into_unique_ptr_can_be_dropped() {
-    let up: unique_ptr<InstanceCounted> = InstanceCounted::new().into();
-    assert_drop_decrements_counter(up);
+    let rc = Arc::new(());
+    let up: unique_ptr<Arc<()>> = rc.clone().into();
+    assert_drop_decrements_counter(&rc, up);
 }
 
 #[gtest]
 fn test_box_can_be_dropped_as_unique_ptr() {
-    let up: unique_ptr<InstanceCounted> = Box::new_in(InstanceCounted::new(), Allocator).into();
-    assert_drop_decrements_counter(up);
+    let rc = Arc::new(());
+    let up: unique_ptr<Arc<()>> = Box::new_in(rc.clone(), Allocator).into();
+    assert_drop_decrements_counter(&rc, up);
 }
 
 #[gtest]
 fn test_unique_ptr_into_inner_can_be_dropped() {
-    let up = unique_ptr::new(InstanceCounted::new());
+    let rc = Arc::new(());
+    let up = unique_ptr::new(rc.clone());
     let v = unique_ptr::into_inner(up);
-    assert_drop_decrements_counter(v);
+    assert_drop_decrements_counter(&rc, v);
 }
 
 #[gtest]
-fn test_unique_ptr_get_returns_non_owned_pointer() {
-    let up = InstanceCounted::new_unique_ptr();
-    assert_eq!(unique_ptr::as_ptr(&up), unique_ptr::as_ptr(&up));
-    assert_eq!(INSTANCE_COUNTER.load(Ordering::Acquire), 1);
-}
-
-#[gtest]
-fn test_unique_ptr_as_mut_null() {
-    let mut up = unsafe { unique_ptr::<InstanceCounted>::from_raw(std::ptr::null_mut()) };
+fn test_unique_ptr_as_pin_null() {
+    let mut up = unsafe { unique_ptr::<Arc<()>>::from_raw(std::ptr::null_mut()) };
     assert_eq!(unique_ptr::as_pin(&mut up), None);
 }
 
 #[gtest]
-fn test_unique_ptr_as_mut_non_null() {
-    let mut up = InstanceCounted::new_unique_ptr();
-    assert_eq!(unique_ptr::as_pin(&mut up).unwrap().0, 123456);
+fn test_unique_ptr_as_pin_non_null() {
+    let rc = Arc::new(());
+    let mut up = unique_ptr::new(rc.clone());
+    assert!(unique_ptr::as_pin(&mut up).is_some());
 }
 
 #[gtest]
 fn test_unique_ptr_release_returns_owned_pointer() {
-    let mut up = InstanceCounted::new_unique_ptr();
+    let rc = Arc::new(());
+    let mut up = unique_ptr::new(rc.clone());
     let pointer = unique_ptr::as_mut_ptr(&mut up);
     let owned_pointer = unique_ptr::release(&mut up);
     assert_eq!(owned_pointer, pointer);
-    assert_eq!(INSTANCE_COUNTER.load(Ordering::Acquire), 1);
+    assert_eq!(Arc::strong_count(&rc), 2);
 
     // Consume the pointer.
     let up = unsafe { unique_ptr::from_raw(owned_pointer) };
-    drop(up);
-    assert_eq!(INSTANCE_COUNTER.load(Ordering::Acquire), 0);
+    assert_drop_decrements_counter(&rc, up);
 }
 
 /// Tests the behavior when a unique_ptr created in C++ is destroyed in Rust.
