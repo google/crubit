@@ -138,6 +138,18 @@ jobs:
           echo "RCACHE_FLAGS=--remote_cache=https://storage.googleapis.com/crubit-ci-bazel --remote_upload_local_results=false" >> $GITHUB_ENV
           echo "Using GCS Remote Cache (Read-Only)"
         fi
+    - name: "Discover and report latest LLVM commit"
+      run: |
+        LLVM_COMMIT=$(git ls-remote https://github.com/llvm/llvm-project.git refs/heads/main | cut -f1)
+        if [[ -z "$LLVM_COMMIT" ]]; then
+          echo "::error::Failed to discover latest LLVM commit"
+          exit 1
+        fi
+        echo "Latest LLVM commit: $LLVM_COMMIT"
+        echo "CRUBIT_LLVM_COMMIT=$LLVM_COMMIT" >> $GITHUB_ENV
+        echo "### LLVM Dependency" >> $GITHUB_STEP_SUMMARY
+        echo "Building against LLVM \`main\` commit [\`$LLVM_COMMIT\`](https://github.com/llvm/llvm-project/commit/$LLVM_COMMIT)" >> $GITHUB_STEP_SUMMARY
+
     - name: Build Bazel test project (example)
       run: |
         cd examples/build_systems/bazel

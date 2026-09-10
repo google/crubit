@@ -5,7 +5,7 @@
 """Module extension for downloading LLVM source and configuring host C dependencies."""
 
 def _llvm_source_fetch_impl(repository_ctx):
-    commit = repository_ctx.attr.commit
+    commit = repository_ctx.os.environ.get("CRUBIT_LLVM_COMMIT") or repository_ctx.attr.commit
     url = "https://github.com/llvm/llvm-project/archive/" + commit + ".tar.gz"
 
     repository_ctx.download_and_extract(
@@ -29,6 +29,7 @@ llvm_source_fetch = repository_rule(
     attrs = {
         "commit": attr.string(mandatory = True),
     },
+    environ = ["CRUBIT_LLVM_COMMIT"],
 )
 
 def _host_c_library_impl(repository_ctx):

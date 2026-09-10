@@ -3990,7 +3990,7 @@
     },
     "//bazel:llvm_extension.bzl%llvm_extension": {
       "general": {
-        "bzlTransitiveDigest": "wynlmDa8nKF1eLsfdQTJj6rv3hjXWyecGesTaUrfJY0=",
+        "bzlTransitiveDigest": "ckIrIARBh9AFlmZDOfbfViOlhb5/9+aUVvpKA33mFKk=",
         "usagesDigest": "XvoBnRUesxmYy+jlsl3/XCbQSwc596+DdA8KqctnnBw=",
         "recordedInputs": [],
         "generatedRepoSpecs": {
