@@ -53,6 +53,37 @@ fn test_subcommand_end_to_end() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test] // allow_core_test
+fn test_subcommand_hyphenated_package_name() -> Result<(), Box<dyn std::error::Error>> {
+    let tmp_dir = tempfile::tempdir()?;
+    let cwd = std::env::current_dir()?;
+    let project_dir = cwd.join("tests/test_hyphenated_project");
+
+    let mut cmd = setup_command(&tmp_dir, &project_dir);
+    cmd.arg("cpp_api_from_rust");
+
+    let output = cmd.output().expect("Failed to execute");
+
+    if !output.status.success() {
+        println!("{}", String::from_utf8_lossy(&output.stdout));
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+        panic!("cargo-cpp_api_from_rust failed");
+    }
+
+    // Verify output files
+    let target_dir = tmp_dir.path();
+    let debug_dir = target_dir.join("debug");
+    let headers_dir = debug_dir.join("include").join("crubit");
+
+    // We expect the generated header and staticlib to match the normalized
+    // library target name (with underscores), not the hyphenated package name.
+    assert!(headers_dir.join("test_hyphenated_project.h").exists());
+    assert!(debug_dir.join("libtest_hyphenated_project.a").exists());
+    assert!(!debug_dir.join("libtest-hyphenated-project.a").exists());
+
+    Ok(())
+}
+
+#[test] // allow_core_test
 fn test_subcommand_target_dir() -> Result<(), Box<dyn std::error::Error>> {
     let tmp_dir = tempfile::tempdir()?;
     let cwd = std::env::current_dir()?;
