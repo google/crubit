@@ -231,8 +231,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     "StructWithCVoidPointerMember") alignas(4) [[clang::trivial_abi]]
 StructWithCVoidPointerMember final {
  public:
-  const void* ptr_const = {};
-  void* ptr_mut = {};
+  const void* ptr_const{};
+  void* ptr_mut{};
 
  private:
   static void __crubit_field_offset_assertions();

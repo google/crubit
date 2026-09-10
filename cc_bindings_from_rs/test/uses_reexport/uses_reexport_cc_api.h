@@ -93,7 +93,7 @@ namespace uses_reexport {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G") alignas(4)
     [[clang::trivial_abi]] G final {
  public:
-  ::std::int32_t field = {};
+  ::std::int32_t field{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -106,7 +106,7 @@ namespace uses_reexport {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: InnerX") alignas(4)
     [[clang::trivial_abi]] InnerX final {
  public:
-  ::std::int32_t field = {};
+  ::std::int32_t field{};
 
  private:
   static void __crubit_field_offset_assertions();

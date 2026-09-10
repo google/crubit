@@ -43,7 +43,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: function_pointers_golden :: CStruct") alignas(4) [[clang::trivial_abi]]
 CStruct final {
  public:
-  ::std::int32_t field = {};
+  ::std::int32_t field{};
 
  private:
   static void __crubit_field_offset_assertions();

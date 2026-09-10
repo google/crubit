@@ -36,7 +36,7 @@ namespace result {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault") alignas(
     1) [[clang::trivial_abi]] CloneNoDefault final {
  public:
-  ::std::uint8_t val = {};
+  ::std::uint8_t val{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -45,7 +45,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CloneNoDefault") alignas(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: CopyNoDefault") alignas(1)
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
-  ::std::uint8_t val = {};
+  ::std::uint8_t val{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -60,7 +60,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasDefault") alignas(8)
 
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  ::rs::alloc::string::String val_ = {};
+  ::rs::alloc::string::String val_{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -71,7 +71,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: HasNoDefault") alignas(8)
  public:
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  ::rs::alloc::string::String val_ = {};
+  ::rs::alloc::string::String val_{};
 
  private:
   static void __crubit_field_offset_assertions();

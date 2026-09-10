@@ -39,7 +39,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyOrd") alignas(4)
 
   ::std::strong_ordering operator<=>(const MyOrd& other) const;
 
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -53,7 +53,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyUnordered") alignas(4)
   ::std::partial_ordering operator<=>(
       ::compare::MyUnordered const& other) const;
 
-  float __field0 = {};
+  float __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -141,7 +141,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyPartialOrd") alignas(4)
   ::std::partial_ordering operator<=>(
       ::compare::MyPartialOrd const& other) const;
 
-  rs_std::Option<::std::int32_t> __field0 = {};
+  rs_std::Option<::std::int32_t> __field0{};
 
  private:
   static void __crubit_field_offset_assertions();

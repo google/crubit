@@ -37,7 +37,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Copyable") alignas(1)
   //  as it will be copied regardless.
   ::std::uint8_t consume_self() const;
 
-  ::std::uint8_t field = {};
+  ::std::uint8_t field{};
 
  private:
   static void __crubit_field_offset_assertions();

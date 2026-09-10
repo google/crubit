@@ -78,7 +78,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: StructWithVec") alignas(8)
  public:
   static ::vec::StructWithVec new_(::std::int32_t val);
 
-  rs_std::Vec<::std::int32_t> v = {};
+  rs_std::Vec<::std::int32_t> v{};
 
  private:
   static void __crubit_field_offset_assertions();

@@ -37,7 +37,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocTarget") alignas(
   // CRUBIT_ANNOTATE: must_bind=
   rs_std::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  ::rs::alloc::string::String value = {};
+  ::rs::alloc::string::String value{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -55,7 +55,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocType") alignas(4)
 
   explicit operator ::into::CloneAllocTarget();
 
-  ::rs::alloc::string::String value = {};
+  ::rs::alloc::string::String value{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -65,7 +65,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocType") alignas(4)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneCopyTarget") alignas(4)
     [[clang::trivial_abi]] CloneCopyTarget final {
  public:
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -77,7 +77,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneCopyType") alignas(4)
  public:
   explicit operator ::into::CloneCopyTarget() const;
 
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -96,7 +96,7 @@ CollidingOperators final {
 
   explicit operator ::std::uintptr_t();
 
-  ::std::uint64_t __field0 = {};
+  ::std::uint64_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -114,7 +114,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
 
   explicit operator ::std::int16_t();
 
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -128,7 +128,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertModule") alignas(4)
 
   explicit operator ::std::int64_t();
 
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -176,7 +176,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: LoopA") alignas(4)
  public:
   explicit operator ::into::LoopB();
 
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -188,7 +188,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: LoopB") alignas(4)
  public:
   explicit operator ::into::LoopA();
 
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -199,7 +199,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_golden :: NoCloneCopyDropTarget") alignas(4) [[clang::trivial_abi]]
 NoCloneCopyDropTarget final {
  public:
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -212,7 +212,7 @@ NoCloneCopyDropType final {
  public:
   explicit operator ::into::NoCloneCopyDropTarget();
 
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -223,7 +223,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_golden :: NoCloneDefaultTarget") alignas(4) [[clang::trivial_abi]]
 NoCloneDefaultTarget final {
  public:
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -236,7 +236,7 @@ NoCloneDefaultType final {
  public:
   explicit operator ::into::NoCloneDefaultTarget();
 
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();

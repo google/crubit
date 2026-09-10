@@ -78,7 +78,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   void shared_self_and_shared_ref_allows_alias(
       ::std::int32_t const& __param_1) const;
 
-  ::std::int32_t field = {};
+  ::std::int32_t field{};
 
  private:
   static void __crubit_field_offset_assertions();

@@ -39,7 +39,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: CustomIndex") alignas(4)
  public:
   static ::rs_index::CustomIndex new_(::std::uintptr_t index);
 
-  ::std::uintptr_t __field0 = {};
+  ::std::uintptr_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -50,7 +50,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Id") alignas(4)
  public:
   static ::rs_index::Id new_(::std::int32_t id);
 
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -85,8 +85,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   ::std::int32_t& $(__anon1) operator[](::rs_index::CustomIndex index) &
       $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  ::std::int32_t x = {};
-  ::std::int32_t y = {};
+  ::std::int32_t x{};
+  ::std::int32_t y{};
 
  private:
   static void __crubit_field_offset_assertions();

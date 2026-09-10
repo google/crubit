@@ -71,7 +71,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuple_structs::CopyNoDefault create(::std::int32_t value);
 
-  ::std::int32_t value = {};
+  ::std::int32_t value{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -114,7 +114,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: DefaultNoCopyNoClone") alignas(4)
     [[clang::trivial_abi]] DefaultNoCopyNoClone final {
  public:
-  ::std::int32_t value = {};
+  ::std::int32_t value{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -199,7 +199,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // CRUBIT_ANNOTATE: must_bind=
   ::std::int32_t get_arg() const;
 
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -314,8 +314,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // CRUBIT_ANNOTATE: must_bind=
   ::std::int32_t get_second_arg() const;
 
-  ::std::int32_t __field0 = {};
-  ::std::int32_t __field1 = {};
+  ::std::int32_t __field0{};
+  ::std::int32_t __field1{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -432,7 +432,7 @@ struct
   // CRUBIT_ANNOTATE: must_bind=
   ::std::int32_t get_arg() const;
 
-  ::tuple_structs::DefaultAndCloneNoUnpin __field0 = {};
+  ::tuple_structs::DefaultAndCloneNoUnpin __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -443,7 +443,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithDefaultNoCopyNoClone") alignas(4)
     [[clang::trivial_abi]] TupleStructWithDefaultNoCopyNoClone final {
  public:
-  ::tuple_structs::DefaultNoCopyNoClone __field0 = {};
+  ::tuple_structs::DefaultNoCopyNoClone __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -454,7 +454,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuple_structs_golden :: TupleStructWithNoDefault") alignas(4)
     [[clang::trivial_abi]] TupleStructWithNoDefault final {
  public:
-  ::tuple_structs::CopyNoDefault __field0 = {};
+  ::tuple_structs::CopyNoDefault __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -593,7 +593,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // CRUBIT_ANNOTATE: must_bind=
   ::std::tuple<::std::int32_t, ::std::int32_t> get_arg() const;
 
-  rs_std::Tuple<::std::int32_t, ::std::int32_t> __field0 = {};
+  rs_std::Tuple<::std::int32_t, ::std::int32_t> __field0{};
 
  private:
   static void __crubit_field_offset_assertions();

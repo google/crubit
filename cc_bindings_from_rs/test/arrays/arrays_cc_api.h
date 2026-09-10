@@ -33,7 +33,7 @@ namespace arrays {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: arrays_golden :: ArrayStruct") alignas(4)
     [[clang::trivial_abi]] ArrayStruct final {
  public:
-  ::std::array<::std::int32_t, 2> array = {};
+  ::std::array<::std::int32_t, 2> array{};
 
  private:
   static void __crubit_field_offset_assertions();

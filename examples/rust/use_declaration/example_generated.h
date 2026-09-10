@@ -25,7 +25,7 @@ namespace example_crate {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") alignas(4)
     [[clang::trivial_abi]] Type final {
  public:
-  ::std::int32_t x = {};
+  ::std::int32_t x{};
 
  private:
   static void __crubit_field_offset_assertions();

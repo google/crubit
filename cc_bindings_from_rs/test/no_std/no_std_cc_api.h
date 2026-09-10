@@ -34,7 +34,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct") alignas(8)
 
   rs_std::StrRef display() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  ::rs::alloc::string::String test = {};
+  ::rs::alloc::string::String test{};
 
  private:
   static void __crubit_field_offset_assertions();

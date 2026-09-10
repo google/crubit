@@ -33,7 +33,7 @@ AliasOfExportedStruct final {
  public:
   static ::uses::AliasOfExportedStruct create(::std::int32_t field);
 
-  ::std::int32_t field = {};
+  ::std::int32_t field{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -47,7 +47,7 @@ namespace uses {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Original final {
  public:
-  ::std::int32_t field = {};
+  ::std::int32_t field{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -60,7 +60,7 @@ namespace uses {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: OtherPublicName") alignas(4)
     [[clang::trivial_abi]] OtherPublicName final {
  public:
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();

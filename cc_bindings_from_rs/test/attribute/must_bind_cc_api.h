@@ -31,7 +31,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: must_bind_golden :: Original") alignas(4)
   // CRUBIT_ANNOTATE: must_bind=
   static ::must_bind::Original new_();
 
-  ::std::int32_t x = {};
+  ::std::int32_t x{};
 
  private:
   static void __crubit_field_offset_assertions();

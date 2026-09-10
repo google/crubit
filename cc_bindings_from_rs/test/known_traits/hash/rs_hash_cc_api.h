@@ -96,8 +96,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   template <typename H>
   friend H AbslHashValue(H h, const Point& self);
 
-  ::std::int32_t x = {};
-  ::std::int32_t y = {};
+  ::std::int32_t x{};
+  ::std::int32_t y{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -121,8 +121,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   template <typename H>
   friend H AbslHashValue(H h, const TupleStruct& self);
 
-  ::std::int32_t __field0 = {};
-  ::std::int32_t __field1 = {};
+  ::std::int32_t __field0{};
+  ::std::int32_t __field1{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -146,7 +146,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   template <typename H>
   friend H AbslHashValue(H h, const CustomHashStruct& self);
 
-  ::std::int32_t value = {};
+  ::std::int32_t value{};
 
  private:
   static void __crubit_field_offset_assertions();

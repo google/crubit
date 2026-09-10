@@ -177,8 +177,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     "AnnotatedTwoDrops") alignas(4) [[clang::trivial_abi]]
 AnnotatedTwoDrops final {
  public:
-  ::rs::alloc::string::String __field0 = {};
-  ::rs::alloc::string::String __field1 = {};
+  ::rs::alloc::string::String __field0{};
+  ::rs::alloc::string::String __field1{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -191,8 +191,8 @@ struct
         "BasicAggregate") alignas(4) [[clang::trivial_abi]]
     BasicAggregate final {
  public:
-  ::std::int32_t x = {};
-  ::std::int32_t y = {};
+  ::std::int32_t x{};
+  ::std::int32_t y{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -282,7 +282,7 @@ struct
         "SingleDropField") alignas(4) [[clang::trivial_abi]]
     SingleDropField final {
  public:
-  ::rs::alloc::string::String __field0 = {};
+  ::rs::alloc::string::String __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -336,8 +336,8 @@ struct
         "TupleAggregate") alignas(8) [[clang::trivial_abi]]
     TupleAggregate final {
  public:
-  double __field1 = {};
-  ::std::int32_t __field0 = {};
+  double __field1{};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -397,8 +397,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: default_repr :: Point") alignas(4)
     [[clang::trivial_abi]] Point final {
  public:
-  ::std::int32_t x = {};
-  ::std::int32_t y = {};
+  ::std::int32_t x{};
+  ::std::int32_t y{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -437,7 +437,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                ::std::move(s).AssumeInitAndTakeValue().as_str());
   }
 
-  ::std::int32_t value = {};
+  ::std::int32_t value{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -617,8 +617,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: repr_c :: Point") alignas(4) [[clang::trivial_abi]]
 Point final {
  public:
-  ::std::int32_t x = {};
-  ::std::int32_t y = {};
+  ::std::int32_t x{};
+  ::std::int32_t y{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -745,7 +745,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // CRUBIT_ANNOTATE: must_bind=
   static ::structs::unsupported_types::SomeStruct create(rs_std::char_ x);
 
-  rs_std::char_ unsupported_field = {};
+  rs_std::char_ unsupported_field{};
 
  private:
   static void __crubit_field_offset_assertions();

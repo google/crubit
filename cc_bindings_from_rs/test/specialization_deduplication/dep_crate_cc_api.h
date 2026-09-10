@@ -30,7 +30,7 @@ namespace dep_crate {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: dep_crate_golden :: ExpectedName") alignas(
     4) [[clang::trivial_abi]] ExpectedName final {
  public:
-  ::std::int32_t x = {};
+  ::std::int32_t x{};
 
  private:
   static void __crubit_field_offset_assertions();

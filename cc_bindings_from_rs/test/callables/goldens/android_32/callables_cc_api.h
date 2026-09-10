@@ -154,8 +154,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: Point") alignas(4)
  public:
   bool operator==(::callables::Point const& other) const;
 
-  ::std::int32_t x = {};
-  ::std::int32_t y = {};
+  ::std::int32_t x{};
+  ::std::int32_t y{};
 
  private:
   static void __crubit_field_offset_assertions();

@@ -33,7 +33,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: trait_impl_golden :: MyStruct") alignas(4)
  public:
   static ::trait_impl::MyStruct new_(::std::int32_t x);
 
-  ::std::int32_t x = {};
+  ::std::int32_t x{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -43,7 +43,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: trait_impl_golden :: NotImplemented") alignas(8) [[clang::trivial_abi]]
 NotImplemented final {
  public:
-  ::rs::alloc::string::String foo = {};
+  ::rs::alloc::string::String foo{};
 
  private:
   static void __crubit_field_offset_assertions();

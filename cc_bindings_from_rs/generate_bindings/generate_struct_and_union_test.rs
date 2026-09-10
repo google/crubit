@@ -158,7 +158,7 @@ fn test_format_struct_cpp_name_with_kythe_annotations() {
                       ...
                       __CAPTURE_TAG__ "<crubit_unittests.rs>" "101" "102"
                       __COMMENT__ #field_comment
-                      ::std :: int32_t __CAPTURE_BEGIN__ x __CAPTURE_END__ = {};
+                      ::std :: int32_t __CAPTURE_BEGIN__ x __CAPTURE_END__ {};
                       ...
                     };
                 }
@@ -1080,9 +1080,9 @@ fn test_deprecated_attr_for_struct_fields() {
                 struct ... SomeStruct final {
                     public:
                     ...
-                    [[deprecated("Use `y` instead")]] ::std::uint32_t x = {};
+                    [[deprecated("Use `y` instead")]] ::std::uint32_t x {};
                     ...
-                    ::std::uint32_t y = {};
+                    ::std::uint32_t y {};
                     ...
                 };
             }
@@ -1144,8 +1144,8 @@ fn test_format_item_struct_aggregate_basic() {
             quote! {
                 struct ... Point final {
                     public:
-                    ::std::int32_t x = {};
-                    ::std::int32_t y = {};
+                    ::std::int32_t x {};
+                    ::std::int32_t y {};
                     private:
                     static void __crubit_field_offset_assertions();
                 };
@@ -1167,7 +1167,7 @@ fn test_format_item_struct_aggregate_with_one_drop_field() {
             quote! {
                 struct ... StructWithDrop final {
                     public:
-                    ::rs::alloc::string::String __field0 = {};
+                    ::rs::alloc::string::String __field0 {};
                     private:
                     static void __crubit_field_offset_assertions();
                 };
@@ -1223,8 +1223,8 @@ fn test_format_item_struct_aggregate_with_two_drop_fields_annotated() {
             quote! {
                 struct ... TwoDrops final {
                     public:
-                    ::rs::alloc::string::String __field0 = {};
-                    ::rs::alloc::string::String __field1 = {};
+                    ::rs::alloc::string::String __field0 {};
+                    ::rs::alloc::string::String __field1 {};
                     private:
                     static void __crubit_field_offset_assertions();
                 };
@@ -1351,8 +1351,8 @@ fn test_format_item_struct_aggregate_with_derived_default() {
             quote! {
                 struct ... DerivedDefault final {
                     public:
-                    ::std::int32_t x = {};
-                    ::std::int32_t y = {};
+                    ::std::int32_t x {};
+                    ::std::int32_t y {};
                     private:
                     static void __crubit_field_offset_assertions();
                 };

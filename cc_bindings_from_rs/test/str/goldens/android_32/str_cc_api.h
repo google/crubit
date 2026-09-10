@@ -41,7 +41,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(4)
 
   ::std::uint8_t const* get_str_data() const;
 
-  rs_std::StrRef str_field = {};
+  rs_std::StrRef str_field{};
 
  private:
   static void __crubit_field_offset_assertions();

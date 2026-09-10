@@ -77,7 +77,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CloneNoDefault") alignas(
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::CloneNoDefault new_(::std::uint8_t val);
 
-  ::std::uint8_t val = {};
+  ::std::uint8_t val{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -90,7 +90,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: CopyNoDefault") alignas(1)
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::CopyNoDefault new_(::std::uint8_t val);
 
-  ::std::uint8_t val = {};
+  ::std::uint8_t val{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -106,7 +106,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasDefault") alignas(8)
   // CRUBIT_ANNOTATE: must_bind=
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  ::rs::alloc::string::String val_ = {};
+  ::rs::alloc::string::String val_{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -119,7 +119,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: HasNoDefault") alignas(8)
   // CRUBIT_ANNOTATE: must_bind=
   rs_std::StrRef val() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  ::rs::alloc::string::String val_ = {};
+  ::rs::alloc::string::String val_{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1014,7 +1014,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: GetsTuple") alignas(4)
   // CRUBIT_ANNOTATE: must_bind=
   static ::tuples::GetsTuple new_(::std::uint32_t val);
 
-  rs_std::Tuple<::std::uint32_t, ::std::uint32_t> value = {};
+  rs_std::Tuple<::std::uint32_t, ::std::uint32_t> value{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1277,10 +1277,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  public:
   rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                 ::std::uint32_t>
-      v1 = {};
+      v1{};
   rs_std::Tuple<::std::uint32_t,
                 rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>
-      v2 = {};
+      v2{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1387,11 +1387,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                               ::std::uint32_t>,
                 ::std::uint32_t>
-      v1 = {};
+      v1{};
   rs_std::Tuple<::std::uint32_t,
                 rs_std::Tuple<::std::uint32_t,
                               rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>
-      v2 = {};
+      v2{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1408,11 +1408,11 @@ NestedTupleStruct final {
   rs_std::Tuple<rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                               ::std::uint32_t>,
                 ::std::uint32_t>
-      in_tuple1 = {};
+      in_tuple1{};
   rs_std::Tuple<::std::uint32_t,
                 rs_std::Tuple<::std::uint32_t,
                               rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>
-      in_tuple2 = {};
+      in_tuple2{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1501,7 +1501,7 @@ namespace tuples {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: TuplesWithU64") alignas(8)
     [[clang::trivial_abi]] TuplesWithU64 final {
  public:
-  rs_std::Tuple<::std::uint64_t, ::std::uint64_t> u64_in_tuple1 = {};
+  rs_std::Tuple<::std::uint64_t, ::std::uint64_t> u64_in_tuple1{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -2158,10 +2158,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: tuples_golden :: TupleWithSizeTypes") alignas(8) [[clang::trivial_abi]]
 TupleWithSizeTypes final {
  public:
-  rs_std::Tuple<::std::uint64_t, ::std::uint8_t> uval_in_tuple1 = {};
-  rs_std::Tuple<::std::uint8_t, ::std::uint64_t> uval_in_tuple2 = {};
-  rs_std::Tuple<::std::int64_t, ::std::int8_t> ival_in_tuple1 = {};
-  rs_std::Tuple<::std::int8_t, ::std::int64_t> ival_in_tuple2 = {};
+  rs_std::Tuple<::std::uint64_t, ::std::uint8_t> uval_in_tuple1{};
+  rs_std::Tuple<::std::uint8_t, ::std::uint64_t> uval_in_tuple2{};
+  rs_std::Tuple<::std::int64_t, ::std::int8_t> ival_in_tuple1{};
+  rs_std::Tuple<::std::int8_t, ::std::int64_t> ival_in_tuple2{};
 
  private:
   static void __crubit_field_offset_assertions();

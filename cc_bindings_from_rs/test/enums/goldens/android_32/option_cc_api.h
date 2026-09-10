@@ -47,7 +47,7 @@ struct HasOptions;
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
     1) [[clang::trivial_abi]] CloneNoDefault final {
  public:
-  ::std::uint8_t val = {};
+  ::std::uint8_t val{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -57,7 +57,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
-  ::std::uint8_t val = {};
+  ::std::uint8_t val{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -76,7 +76,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(4)
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
-  ::rs::alloc::string::String foo = {};
+  ::rs::alloc::string::String foo{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -93,8 +93,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(4)
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
-  ::rs::alloc::string::String foo = {};
-  ::std::uint32_t a = {};
+  ::rs::alloc::string::String foo{};
+  ::std::uint32_t a{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -325,7 +325,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: UnitOptionField") alignas(
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::UnitOptionField new_with_some();
 
-  rs_std::Option<rs_std::unit_t> unit = {};
+  rs_std::Option<rs_std::unit_t> unit{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -583,7 +583,7 @@ OptCloneNoDefault final {
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptCloneNoDefault new_(::std::uint8_t x);
 
-  rs_std::Option<::option::CloneNoDefault> val = {};
+  rs_std::Option<::option::CloneNoDefault> val{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -662,7 +662,7 @@ OptCopyNoDefault final {
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptCopyNoDefault new_(::std::uint8_t x);
 
-  rs_std::Option<::option::CopyNoDefault> val = {};
+  rs_std::Option<::option::CopyNoDefault> val{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -739,7 +739,7 @@ OptDefaultWithDrop final {
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::OptDefaultWithDrop new_(rs_std::StrRef s);
 
-  rs_std::Option<::option::HasDefault> opt = {};
+  rs_std::Option<::option::HasDefault> opt{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -820,7 +820,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::StrRef get_string_inside_option() const& $(__anon1)
       CRUBIT_LIFETIME_BOUND;
 
-  rs_std::Option<::option::HasNoDefault> val = {};
+  rs_std::Option<::option::HasNoDefault> val{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -897,7 +897,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::HasHasOptions new_(::std::uint8_t value);
 
-  rs_std::Option<::option::HasOptions> me = {};
+  rs_std::Option<::option::HasOptions> me{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1461,9 +1461,9 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
   // CRUBIT_ANNOTATE: must_bind=
   static ::option::HasOptions with_none();
 
-  rs_std::Option<::std::uint8_t> direct = {};
-  rs_std::Option<::option::LessThan20U8> niche = {};
-  rs_std::Option<rs_std::Option<::option::LessThan20U8>> nested = {};
+  rs_std::Option<::std::uint8_t> direct{};
+  rs_std::Option<::option::LessThan20U8> niche{};
+  rs_std::Option<rs_std::Option<::option::LessThan20U8>> nested{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1545,7 +1545,7 @@ namespace option {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: ZStream") alignas(4)
     [[clang::trivial_abi]] ZStream final {
  public:
-  rs_std::Option<crubit::type_identity_t<void(void*, void*)>*> zfree = {};
+  rs_std::Option<crubit::type_identity_t<void(void*, void*)>*> zfree{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1623,8 +1623,8 @@ OptionWithSizeTypes final {
       rs_std::Option<::std::uint32_t> uval,
       rs_std::Option<::std::int32_t> ival);
 
-  rs_std::Option<::std::uint32_t> uval = {};
-  rs_std::Option<::std::int32_t> ival = {};
+  rs_std::Option<::std::uint32_t> uval{};
+  rs_std::Option<::std::int32_t> ival{};
 
  private:
   static void __crubit_field_offset_assertions();

@@ -48,7 +48,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // `begin`, `end`, or `into_iter`, which prevents binding methods for
   // IntoIterator.
 
-  ::std::array<::std::int32_t, 3> data = {};
+  ::std::array<::std::int32_t, 3> data{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -64,7 +64,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // IntoIterator/Iterator impls with generic type or const parameters are not
   // supported yet.
 
-  ::into_iterator_rust::MyIterator* crubit_nonnull iter = {};
+  ::into_iterator_rust::MyIterator* crubit_nonnull iter{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -79,8 +79,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
   }
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
-  ::std::int32_t val = {};
-  ::std::int32_t count = {};
+  ::std::int32_t val{};
+  ::std::int32_t count{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -92,7 +92,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  public:
   ::std::int32_t mutating_method();
 
-  ::std::int32_t val = {};
+  ::std::int32_t val{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -209,7 +209,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
   }
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
-  ::std::int32_t value = {};
+  ::std::int32_t value{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -224,7 +224,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
   }
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
-  ::std::int32_t val = {};
+  ::std::int32_t val{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -356,7 +356,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   rs::IteratorAdapter<::into_iterator_rust::MyContainerIterMut> begin() &;
   template <typename TAdaptedSelf_ = MyContainer>
   rs::IteratorEnd end() &;
-  ::std::array<::std::int32_t, 3> data = {};
+  ::std::array<::std::int32_t, 3> data{};
 
  private:
   static void __crubit_field_offset_assertions();

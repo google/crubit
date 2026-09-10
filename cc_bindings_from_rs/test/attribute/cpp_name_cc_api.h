@@ -31,7 +31,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
   // CRUBIT_ANNOTATE: cpp_name=create
   static ::cpp_name::Replaced create();
 
-  ::std::int32_t x = {};
+  ::std::int32_t x{};
 
  private:
   static void __crubit_field_offset_assertions();

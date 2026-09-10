@@ -50,7 +50,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  public:
   // Generated from:
   // cc_bindings_from_rs/test/tag_decl_annotations/tag_decl_annotations.rs;l=15
-  ::std::int32_t f = {};
+  ::std::int32_t f{};
 
  private:
   static void __crubit_field_offset_assertions();

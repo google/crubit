@@ -78,7 +78,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyInt") alignas(4)
 
   void operator-=(::rs_ops::MyInt rhs);
 
-  ::std::int32_t value = {};
+  ::std::int32_t value{};
 
  private:
   static void __crubit_field_offset_assertions();

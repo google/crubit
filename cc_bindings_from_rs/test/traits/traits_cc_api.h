@@ -175,7 +175,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: traits_golden :: StructWithAssociatedConst") alignas(4)
     [[clang::trivial_abi]] StructWithAssociatedConst final {
  public:
-  ::std::int32_t x = {};
+  ::std::int32_t x{};
 
  private:
   static void __crubit_field_offset_assertions();

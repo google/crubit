@@ -3038,7 +3038,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                 #visibility __NEWLINE__
                 #doc_comment
                 #(#attributes)*
-                #cpp_type #bracketed_cc_name = {};
+                #cpp_type #bracketed_cc_name {};
             };
             CcSnippet { tokens, prereqs }
         } else {

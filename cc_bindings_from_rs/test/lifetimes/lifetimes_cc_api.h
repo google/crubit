@@ -57,7 +57,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   explicit operator ::std::int32_t() const;
 
-  ::std::int32_t const* crubit_nonnull field_with_lifetime = {};
+  ::std::int32_t const* crubit_nonnull field_with_lifetime{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -69,8 +69,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  public:
   static ::lifetimes::StructWithLifetimeAndDropGlue make_static_42();
 
-  ::rs::alloc::string::String field_with_drop_glue = {};
-  ::std::int32_t const* crubit_nonnull field_with_lifetime = {};
+  ::rs::alloc::string::String field_with_drop_glue{};
+  ::std::int32_t const* crubit_nonnull field_with_lifetime{};
 
  private:
   static void __crubit_field_offset_assertions();

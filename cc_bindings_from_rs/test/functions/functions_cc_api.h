@@ -190,7 +190,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static ::functions::generic_fn_tests::ctor_trait_tests::CppMovable new_(
       ::std::int32_t value);
 
-  ::std::int32_t value = {};
+  ::std::int32_t value{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -289,7 +289,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: functions_golden :: thread_safety_tests :: ThreadSafeStruct") alignas(4)
     [[clang::trivial_abi]] ThreadSafeStruct final {
  public:
-  ::std::int32_t value = {};
+  ::std::int32_t value{};
 
  private:
   static void __crubit_field_offset_assertions();

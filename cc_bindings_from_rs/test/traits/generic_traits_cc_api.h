@@ -29,7 +29,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: generic_traits_golden :: AnotherStruct") alignas(4)
     [[clang::trivial_abi]] AnotherStruct final {
  public:
-  ::std::int32_t y = {};
+  ::std::int32_t y{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -41,7 +41,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  public:
   static ::generic_traits::StructGeneric new_(::std::int32_t x);
 
-  ::std::int32_t x = {};
+  ::std::int32_t x{};
 
  private:
   static void __crubit_field_offset_assertions();

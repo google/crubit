@@ -50,7 +50,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static ::std::int32_t into_i32(
       ::modules::impl_in_separate_private_module::Foo s);
 
-  ::std::int32_t __field0 = {};
+  ::std::int32_t __field0{};
 
  private:
   static void __crubit_field_offset_assertions();

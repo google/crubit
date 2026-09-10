@@ -45,8 +45,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: Point") alignas(4)
 
   bool operator==(::consts::Point const& other) const;
 
-  ::std::int32_t x = {};
-  ::std::int32_t y = {};
+  ::std::int32_t x{};
+  ::std::int32_t y{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -86,7 +86,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithArray") alignas(
  public:
   bool operator==(::consts::StructWithArray const& other) const;
 
-  ::std::array<::std::int32_t, 2> values = {};
+  ::std::array<::std::int32_t, 2> values{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -99,8 +99,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithStr") alignas(4)
  public:
   bool operator==(::consts::StructWithStr const& other) const;
 
-  rs_std::StrRef msg = {};
-  ::std::int32_t count = {};
+  rs_std::StrRef msg{};
+  ::std::int32_t count{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -113,8 +113,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: TupleStruct") alignas(4)
  public:
   bool operator==(::consts::TupleStruct const& other) const;
 
-  ::std::int32_t __field0 = {};
-  ::std::uint32_t __field1 = {};
+  ::std::int32_t __field0{};
+  ::std::uint32_t __field1{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -125,8 +125,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: NestedStruct") alignas(4)
  public:
   bool operator==(::consts::NestedStruct const& other) const;
 
-  ::consts::Point point = {};
-  ::consts::TupleStruct tuple = {};
+  ::consts::Point point{};
+  ::consts::TupleStruct tuple{};
 
  private:
   static void __crubit_field_offset_assertions();

@@ -89,7 +89,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
   }
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
-  ::std::int32_t x = {};
+  ::std::int32_t x{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -99,7 +99,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: stdlib_golden :: NonCloneableValue") alignas(4) [[clang::trivial_abi]]
 NonCloneableValue final {
  public:
-  ::std::int32_t x = {};
+  ::std::int32_t x{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -115,8 +115,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: RefIterator") alignas(4)
     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
   }
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
-  rs_std::SliceRef<const ::std::int32_t> slice = {};
-  ::std::uintptr_t index = {};
+  rs_std::SliceRef<const ::std::int32_t> slice{};
+  ::std::uintptr_t index{};
 
  private:
   static void __crubit_field_offset_assertions();
