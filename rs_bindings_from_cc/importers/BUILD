@@ -8,10 +8,15 @@ package(
     default_visibility = ["//:__subpackages__"],
 )
 
+# Undefine NDEBUG to ensure assertions (including inlined Clang AST assertions)
+# remain active even in opt compilation mode (see b/541930690).
+_CRUBIT_COPTS = ["-UNDEBUG"]
+
 cc_library(
     name = "class_template",
     srcs = ["class_template.cc"],
     hdrs = ["class_template.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
@@ -23,6 +28,7 @@ cc_library(
     name = "cxx_record",
     srcs = ["cxx_record.cc"],
     hdrs = ["cxx_record.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         "//common:annotation_reader",
         "//common:status_macros",
@@ -53,6 +59,7 @@ cc_library(
     name = "enum",
     srcs = ["enum.cc"],
     hdrs = ["enum.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc:ast_util",
@@ -70,6 +77,7 @@ cc_library(
     name = "enum_constant",
     srcs = ["enum_constant.cc"],
     hdrs = ["enum_constant.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc:cc_ir",
@@ -85,6 +93,7 @@ cc_library(
     name = "var",
     srcs = ["var.cc"],
     hdrs = ["var.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc:cc_ir",
@@ -100,6 +109,7 @@ cc_library(
     name = "friend",
     srcs = ["friend.cc"],
     hdrs = ["friend.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
@@ -113,6 +123,7 @@ cc_library(
     name = "function",
     srcs = ["function.cc"],
     hdrs = ["function.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         "//common:annotation_reader",
         "//lifetime_annotations",
@@ -143,6 +154,7 @@ cc_library(
     name = "function_template",
     srcs = ["function_template.cc"],
     hdrs = ["function_template.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         "//rs_bindings_from_cc:cc_ir",
         "//rs_bindings_from_cc:decl_importer",
@@ -155,6 +167,7 @@ cc_library(
     name = "namespace",
     srcs = ["namespace.cc"],
     hdrs = ["namespace.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc:cc_ir",
@@ -168,6 +181,7 @@ cc_library(
     name = "type_alias",
     srcs = ["type_alias.cc"],
     hdrs = ["type_alias.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc:ast_util",
@@ -187,6 +201,7 @@ cc_library(
     name = "existing_rust_type",
     srcs = ["existing_rust_type.cc"],
     hdrs = ["existing_rust_type.h"],
+    copts = _CRUBIT_COPTS,
     deps = [
         "//common:annotation_reader",
         "//common:status_macros",
