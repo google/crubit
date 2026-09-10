@@ -544,6 +544,39 @@ mod tests {
         let test_args =
             TestArgs::default_args()?.with_error_report_out("error_report.json").with_rs_input(
                 r#"
+                pub struct Unsupported<T> {
+                    pub field: T,
+                }
+                "#,
+            );
+
+        let test_result = test_args.run().expect("Error report generation should succeed");
+        assert!(test_result.error_report_out_path.is_some());
+        let error_report_out_path = test_result.error_report_out_path.as_ref().unwrap();
+        assert!(error_report_out_path.exists());
+        let error_report = std::fs::read_to_string(&error_report_out_path)?;
+        let expected_error_report = r#"[
+  {
+    "source_language": "Rust",
+    "name": "test_crate::Unsupported",
+    "errors": [
+      {
+        "fmt": "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"
+      }
+    ]
+  }
+]"#;
+        assert_eq!(expected_error_report, error_report);
+        Ok(())
+    }
+
+    #[test]
+    fn test_error_reporting_generation_const_generics() -> Result<()> {
+        let test_args = TestArgs::default_args()?
+            .with_extra_crubit_args(&["--crate-feature=self=generics"])
+            .with_error_report_out("error_report.json")
+            .with_rs_input(
+                r#"
                 pub struct Unsupported<const N: usize> {
                     pub field: [u8; N],
                 }

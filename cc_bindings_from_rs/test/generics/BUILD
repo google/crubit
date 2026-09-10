@@ -18,6 +18,7 @@ rust_library(
     name = "generics",
     srcs = ["generics.rs"],
     aspect_hints = [
+        "//features:generics",
         "//features:supported",
     ],
 )
