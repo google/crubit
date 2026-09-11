@@ -2130,6 +2130,11 @@ pub fn generate_generic_adt_declaration<'tcx>(
         );
     }
 
+    ensure!(
+        db.crate_features(db.source_crate_num()).contains(crubit_feature::CrubitFeature::Generics),
+        "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"
+    );
+
     let adt_def = tcx.adt_def(def_id);
     let keyword = match adt_def.adt_kind() {
         ty::AdtKind::Struct => match attributes.cpp_enum {
