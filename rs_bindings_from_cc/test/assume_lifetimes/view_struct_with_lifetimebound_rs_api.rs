@@ -326,8 +326,8 @@ impl<'__implicit, '__param_0, '__param_0_0>
     for DropClassWithLifetimeboundRefMemberFunction<'__implicit>
 {
     #[inline(always)]
-    fn assign<'__this, '__this_0>(
-        self: ::core::pin::Pin<&'__this_0 mut Self>,
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
         __param_0: &'__param_0_0 crate::DropClassWithLifetimeboundRefMemberFunction<'__param_0>,
     ) {
         unsafe {
@@ -340,7 +340,7 @@ impl<'__implicit, '__param_0, '__param_0_0>
 
 impl<'__implicit> ::ctor::PinnedDrop for DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
     #[inline(always)]
-    unsafe fn pinned_drop<'__this, '__this_0>(self: ::core::pin::Pin<&'__this_0 mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionD1Ev(self)
         }
@@ -597,8 +597,8 @@ impl<'__implicit, '__param_0, '__param_0_0>
     for DropStructWithLifetimeboundRefCtor<'__implicit>
 {
     #[inline(always)]
-    fn assign<'__this, '__this_0>(
-        self: ::core::pin::Pin<&'__this_0 mut Self>,
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
         __param_0: &'__param_0_0 crate::DropStructWithLifetimeboundRefCtor<'__param_0>,
     ) {
         unsafe {
@@ -642,7 +642,7 @@ impl<'__implicit> ::ctor::CtorNew<(&'__implicit crate::PlainStruct,)>
 
 impl<'__implicit> ::ctor::PinnedDrop for DropStructWithLifetimeboundRefCtor<'__implicit> {
     #[inline(always)]
-    unsafe fn pinned_drop<'__this, '__this_0>(self: ::core::pin::Pin<&'__this_0 mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN34DropStructWithLifetimeboundRefCtorD1Ev(self) }
     }
 }
@@ -718,8 +718,8 @@ impl<'__implicit, '__param_0, '__param_0_0>
     for DropStructWithRefCtorAndRefMemberFunction<'__implicit>
 {
     #[inline(always)]
-    fn assign<'__this, '__this_0>(
-        self: ::core::pin::Pin<&'__this_0 mut Self>,
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
         __param_0: &'__param_0_0 crate::DropStructWithRefCtorAndRefMemberFunction<'__param_0>,
     ) {
         unsafe {
@@ -763,7 +763,7 @@ impl<'__implicit> ::ctor::CtorNew<(&'__implicit crate::PlainStruct,)>
 
 impl<'__implicit> ::ctor::PinnedDrop for DropStructWithRefCtorAndRefMemberFunction<'__implicit> {
     #[inline(always)]
-    unsafe fn pinned_drop<'__this, '__this_0>(self: ::core::pin::Pin<&'__this_0 mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionD1Ev(self)
         }
@@ -1060,8 +1060,8 @@ impl<'__implicit, '__param_0, '__param_0_0>
     for DropStructWithRefCtorAndMemberFunction<'__implicit>
 {
     #[inline(always)]
-    fn assign<'__this, '__this_0>(
-        self: ::core::pin::Pin<&'__this_0 mut Self>,
+    fn assign<'__this>(
+        self: ::core::pin::Pin<&'__this mut Self>,
         __param_0: &'__param_0_0 crate::DropStructWithRefCtorAndMemberFunction<'__param_0>,
     ) {
         unsafe {
@@ -1105,7 +1105,7 @@ impl<'__implicit> ::ctor::CtorNew<(&'__implicit crate::PlainStruct,)>
 
 impl<'__implicit> ::ctor::PinnedDrop for DropStructWithRefCtorAndMemberFunction<'__implicit> {
     #[inline(always)]
-    unsafe fn pinned_drop<'__this, '__this_0>(self: ::core::pin::Pin<&'__this_0 mut Self>) {
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionD1Ev(self)
         }
@@ -1195,17 +1195,17 @@ mod detail {
             __param_0: &'__param_0_0 crate::DropClassWithLifetimeboundRefMemberFunction<'__param_0>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionaSERKS_<
+            '__implicit,
             '__param_0,
             '__param_0_0,
             '__this,
-            '__this_0,
         >(
             __this: ::core::pin::Pin<
-                &'__this_0 mut crate::DropClassWithLifetimeboundRefMemberFunction<'__this>,
+                &'__this mut crate::DropClassWithLifetimeboundRefMemberFunction<'__implicit>,
             >,
             __param_0: &'__param_0_0 crate::DropClassWithLifetimeboundRefMemberFunction<'__param_0>,
         ) -> ::core::pin::Pin<
-            &'__this_0 mut crate::DropClassWithLifetimeboundRefMemberFunction<'__this_0>,
+            &'__this mut crate::DropClassWithLifetimeboundRefMemberFunction<'__this>,
         >;
         #[link_name = "_ZNK43DropClassWithLifetimeboundRefMemberFunction1fEv"]
         pub(crate) unsafe fn __rust_thunk___ZNK43DropClassWithLifetimeboundRefMemberFunction1fEv<
@@ -1216,11 +1216,11 @@ mod detail {
         ) -> ::cref::CRef<'__implicit, crate::PlainStruct>;
         #[link_name = "_ZN43DropClassWithLifetimeboundRefMemberFunctionD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionD1Ev<
+            '__implicit,
             '__this,
-            '__this_0,
         >(
             __this: ::core::pin::Pin<
-                &'__this_0 mut crate::DropClassWithLifetimeboundRefMemberFunction<'__this>,
+                &'__this mut crate::DropClassWithLifetimeboundRefMemberFunction<'__implicit>,
             >,
         );
         pub(crate) unsafe fn __rust_thunk___ZN27StructWithLifetimeboundCtorC1E11PlainStruct(
@@ -1260,16 +1260,16 @@ mod detail {
             __param_0: &'__param_0_0 crate::DropStructWithLifetimeboundRefCtor<'__param_0>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN34DropStructWithLifetimeboundRefCtoraSERKS_<
+            '__implicit,
             '__param_0,
             '__param_0_0,
             '__this,
-            '__this_0,
         >(
             __this: ::core::pin::Pin<
-                &'__this_0 mut crate::DropStructWithLifetimeboundRefCtor<'__this>,
+                &'__this mut crate::DropStructWithLifetimeboundRefCtor<'__implicit>,
             >,
             __param_0: &'__param_0_0 crate::DropStructWithLifetimeboundRefCtor<'__param_0>,
-        ) -> ::core::pin::Pin<&'__this_0 mut crate::DropStructWithLifetimeboundRefCtor<'__this_0>>;
+        ) -> ::core::pin::Pin<&'__this mut crate::DropStructWithLifetimeboundRefCtor<'__this>>;
         pub(crate) unsafe fn __rust_thunk___ZN34DropStructWithLifetimeboundRefCtorC1ERK11PlainStruct<
             '__implicit,
         >(
@@ -1278,11 +1278,11 @@ mod detail {
         );
         #[link_name = "_ZN34DropStructWithLifetimeboundRefCtorD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN34DropStructWithLifetimeboundRefCtorD1Ev<
+            '__implicit,
             '__this,
-            '__this_0,
         >(
             __this: ::core::pin::Pin<
-                &'__this_0 mut crate::DropStructWithLifetimeboundRefCtor<'__this>,
+                &'__this mut crate::DropStructWithLifetimeboundRefCtor<'__implicit>,
             >,
         );
         pub(crate) unsafe fn __rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionC1ERKS_<
@@ -1293,18 +1293,16 @@ mod detail {
             __param_0: &'__param_0_0 crate::DropStructWithRefCtorAndRefMemberFunction<'__param_0>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionaSERKS_<
+            '__implicit,
             '__param_0,
             '__param_0_0,
             '__this,
-            '__this_0,
         >(
             __this: ::core::pin::Pin<
-                &'__this_0 mut crate::DropStructWithRefCtorAndRefMemberFunction<'__this>,
+                &'__this mut crate::DropStructWithRefCtorAndRefMemberFunction<'__implicit>,
             >,
             __param_0: &'__param_0_0 crate::DropStructWithRefCtorAndRefMemberFunction<'__param_0>,
-        ) -> ::core::pin::Pin<
-            &'__this_0 mut crate::DropStructWithRefCtorAndRefMemberFunction<'__this_0>,
-        >;
+        ) -> ::core::pin::Pin<&'__this mut crate::DropStructWithRefCtorAndRefMemberFunction<'__this>>;
         pub(crate) unsafe fn __rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionC1ERK11PlainStruct<
             '__implicit,
         >(
@@ -1320,11 +1318,11 @@ mod detail {
         ) -> ::cref::CRef<'__implicit, crate::PlainStruct>;
         #[link_name = "_ZN41DropStructWithRefCtorAndRefMemberFunctionD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionD1Ev<
+            '__implicit,
             '__this,
-            '__this_0,
         >(
             __this: ::core::pin::Pin<
-                &'__this_0 mut crate::DropStructWithRefCtorAndRefMemberFunction<'__this>,
+                &'__this mut crate::DropStructWithRefCtorAndRefMemberFunction<'__implicit>,
             >,
         );
         pub(crate) unsafe fn __rust_thunk___ZN35DropStructWithCtorAndMemberFunctionC1ERKS_<
@@ -1389,16 +1387,16 @@ mod detail {
             __param_0: &'__param_0_0 crate::DropStructWithRefCtorAndMemberFunction<'__param_0>,
         );
         pub(crate) unsafe fn __rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionaSERKS_<
+            '__implicit,
             '__param_0,
             '__param_0_0,
             '__this,
-            '__this_0,
         >(
             __this: ::core::pin::Pin<
-                &'__this_0 mut crate::DropStructWithRefCtorAndMemberFunction<'__this>,
+                &'__this mut crate::DropStructWithRefCtorAndMemberFunction<'__implicit>,
             >,
             __param_0: &'__param_0_0 crate::DropStructWithRefCtorAndMemberFunction<'__param_0>,
-        ) -> ::core::pin::Pin<&'__this_0 mut crate::DropStructWithRefCtorAndMemberFunction<'__this_0>>;
+        ) -> ::core::pin::Pin<&'__this mut crate::DropStructWithRefCtorAndMemberFunction<'__this>>;
         pub(crate) unsafe fn __rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionC1ERK11PlainStruct<
             '__implicit,
         >(
@@ -1414,11 +1412,11 @@ mod detail {
         );
         #[link_name = "_ZN38DropStructWithRefCtorAndMemberFunctionD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionD1Ev<
+            '__implicit,
             '__this,
-            '__this_0,
         >(
             __this: ::core::pin::Pin<
-                &'__this_0 mut crate::DropStructWithRefCtorAndMemberFunction<'__this>,
+                &'__this mut crate::DropStructWithRefCtorAndMemberFunction<'__implicit>,
             >,
         );
     }

@@ -104,9 +104,9 @@ pub unsafe fn sv_ident_unknown_elided(mut s: crate::SV<'static>) -> crate::SV<'s
 }
 
 #[inline(always)]
-pub fn sv_make_raw() -> crate::SV<'static> {
+pub fn sv_make_raw<'lt>() -> crate::SV<'lt> {
     unsafe {
-        let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
+        let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SV<'lt>>::uninit();
         crate::detail::__rust_thunk___Z11sv_make_rawv(
             &raw mut __crubit_return as *mut ::core::ffi::c_void,
         );
@@ -149,7 +149,9 @@ mod detail {
             __return: *mut ::core::ffi::c_void,
             s: &mut crate::SV<'static>,
         );
-        pub(crate) unsafe fn __rust_thunk___Z11sv_make_rawv(__return: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___Z11sv_make_rawv<'lt>(
+            __return: *mut ::core::ffi::c_void,
+        );
         pub(crate) unsafe fn __rust_thunk___Z6sva_lb2SV<'__rv>(
             __return: *mut ::core::ffi::c_void,
             s: &mut crate::SVA<'__rv>,

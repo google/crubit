@@ -61,6 +61,12 @@ impl<'a> string_view<'a> {
         unsafe { &*self.raw.as_raw_bytes() }
     }
 
+    /// Returns a raw pointer for an equivalent Rust slice.
+    #[inline(always)]
+    pub unsafe fn as_raw_bytes(&self) -> *const [u8] {
+        self.raw.as_raw_bytes()
+    }
+
     ///  Returns a Rust byte slice referring to the string_view's data.
     #[inline]
     pub fn as_slice(&self) -> &'a [u8] {
