@@ -69,5 +69,5 @@ bzl_library(
 
 toolchain_type(
     name = "toolchain_type",
-    visibility = ["//:__subpackages__"],
+    visibility = ["//visibility:public"],
 )

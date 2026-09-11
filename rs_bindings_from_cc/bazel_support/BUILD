@@ -192,7 +192,7 @@ bool_flag(
 
 toolchain_type(
     name = "toolchain_type",
-    visibility = ["//:__subpackages__"],
+    visibility = ["//visibility:public"],
 )
 
 # Targets on this allowlist will use legacy (non-mangled) crate names even if
