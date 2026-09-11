@@ -1094,6 +1094,132 @@ TEST(ImporterTest, NontrivialMembersDestructor) {
           Destructor(SpecialMemberFunc::kNontrivialMembers)))));
 }
 
+TEST(ImporterTest, RequireExplicitInitFieldBlocksDefaultConstructor) {
+  absl::string_view file = R"cc(
+    struct S {
+      int a;
+      [[clang::require_explicit_initialization]] int b;
+    };
+  )cc";
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
+
+  EXPECT_THAT(
+      get_items_if<UnsupportedItem>(ir),
+      ElementsAre(Pointee(AllOf(
+          UnsupportedItemNameIs("S::S"),
+          HasErrorMessage("Cannot be default-constructed: fields `b` require "
+                          "explicit initialization.")))));
+}
+
+TEST(ImporterTest, RequireExplicitInitFieldNamesAreQualified) {
+  // The attribute propagates from an aggregate member's type, so the error must
+  // name the nested field by its full path.
+  absl::string_view file = R"cc(
+    struct Inner {
+      [[clang::require_explicit_initialization]] int b;
+    };
+    struct Outer {
+      Inner inner;
+    };
+  )cc";
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
+
+  EXPECT_THAT(
+      get_items_if<UnsupportedItem>(ir),
+      UnorderedElementsAre(
+          Pointee(
+              AllOf(UnsupportedItemNameIs("Inner::Inner"),
+                    HasErrorMessage("Cannot be default-constructed: fields "
+                                    "`b` require explicit initialization."))),
+          Pointee(AllOf(
+              UnsupportedItemNameIs("Outer::Outer"),
+              HasErrorMessage("Cannot be default-constructed: fields `inner.b` "
+                              "require explicit initialization.")))));
+}
+
+TEST(ImporterTest, RequireExplicitInitFieldFromBaseClass) {
+  // Fields inherited from an aggregate base are qualified by the base class, so
+  // that they can be told apart from direct members.
+  absl::string_view file = R"cc(
+    struct Base {
+      [[clang::require_explicit_initialization]] int b;
+    };
+    struct Derived : Base {
+      int a;
+    };
+  )cc";
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
+
+  EXPECT_THAT(
+      get_items_if<UnsupportedItem>(ir),
+      Contains(Pointee(AllOf(
+          UnsupportedItemNameIs("Derived::Derived"),
+          HasErrorMessage("Cannot be default-constructed: fields "
+                          "`Base::b` require explicit initialization.")))));
+}
+
+TEST(ImporterTest, RequireExplicitInitBaseClassNameIsQualified) {
+  // The base class is named by its qualified name, and a field reached through
+  // a base and then a member composes both separators.
+  absl::string_view file = R"cc(
+    namespace ns {
+    struct Inner {
+      [[clang::require_explicit_initialization]] int b;
+    };
+    struct Base {
+      Inner inner;
+    };
+    }  // namespace ns
+    struct Derived : ns::Base {};
+  )cc";
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
+
+  EXPECT_THAT(
+      get_items_if<UnsupportedItem>(ir),
+      Contains(Pointee(
+          AllOf(UnsupportedItemNameIs("Derived::Derived"),
+                HasErrorMessage(
+                    "Cannot be default-constructed: fields `ns::Base::inner.b` "
+                    "require explicit initialization.")))));
+}
+
+TEST(ImporterTest, RequireExplicitInitFieldWithAnnotatedBaseClass) {
+  // The attribute also propagates through a field whose type inherits it, which
+  // is the mirror image of the case above: here the member comes first and the
+  // base class second.
+  absl::string_view file = R"cc(
+    struct Base {
+      [[clang::require_explicit_initialization]] int b;
+    };
+    struct Middle : Base {};
+    struct Outer {
+      Middle m;
+    };
+  )cc";
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
+
+  EXPECT_THAT(
+      get_items_if<UnsupportedItem>(ir),
+      Contains(Pointee(AllOf(
+          UnsupportedItemNameIs("Outer::Outer"),
+          HasErrorMessage("Cannot be default-constructed: fields `m.Base::b` "
+                          "require explicit initialization.")))));
+}
+
+TEST(ImporterTest, RequireExplicitInitIgnoredOnNonAggregate) {
+  // A user-provided constructor makes the type a non-aggregate, so Clang
+  // ignores the attribute entirely and the default constructor is still bound.
+  absl::string_view file = R"cc(
+    struct S {
+      S() : b(0) {}
+      [[clang::require_explicit_initialization]] int b;
+    };
+  )cc";
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
+
+  EXPECT_THAT(get_items_if<UnsupportedItem>(ir), IsEmpty());
+}
+
 TEST(ImporterTest, DeletedDestructor) {
   absl::string_view file = R"cc(
     struct Deleted {

@@ -9,6 +9,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -77,6 +78,62 @@ struct Errors {
     Add(FormattedError::FromStatus(status));
   }
 };
+
+// Appends to `out` the names of the fields of `record_decl` that are annotated
+// with `[[clang::require_explicit_initialization]]`, qualified by `prefix`.
+//
+// This mirrors the propagation performed by Clang when it computes
+// `RecordDecl::hasUninitializedExplicitInitFields()`: the bit is set by direct
+// fields carrying the attribute, and propagated up from aggregate field types
+// and aggregate base classes. Recursion terminates because value containment
+// cannot be cyclic.
+void CollectExplicitInitFieldNames(const clang::CXXRecordDecl& record_decl,
+                                   std::string_view prefix,
+                                   std::vector<std::string>& out) {
+  // Returns the definition of `type`, if it is a record that (transitively) has
+  // fields requiring explicit initialization.
+  auto as_explicit_init_record =
+      [](clang::QualType type) -> const clang::CXXRecordDecl* {
+    const clang::CXXRecordDecl* decl = type->getAsCXXRecordDecl();
+    if (decl != nullptr && decl->hasDefinition() &&
+        decl->hasUninitializedExplicitInitFields()) {
+      return decl;
+    }
+    return nullptr;
+  };
+
+  // Fields of a base class are accessed as if they were direct members, but
+  // naming the base class makes the annotation easier to track down.
+  for (const clang::CXXBaseSpecifier& base : record_decl.bases()) {
+    if (const clang::CXXRecordDecl* decl =
+            as_explicit_init_record(base.getType())) {
+      CollectExplicitInitFieldNames(
+          *decl, absl::StrCat(prefix, decl->getQualifiedNameAsString(), "::"),
+          out);
+    }
+  }
+
+  for (const clang::FieldDecl* field : record_decl.fields()) {
+    // Members of an anonymous struct or union are named as if they were direct
+    // members, so the prefix is unchanged.
+    if (field->getName().empty()) {
+      if (const clang::CXXRecordDecl* decl =
+              as_explicit_init_record(field->getType())) {
+        CollectExplicitInitFieldNames(*decl, prefix, out);
+      }
+      continue;
+    }
+    std::string name = absl::StrCat(prefix, std::string_view(field->getName()));
+    if (field->hasAttr<clang::ExplicitInitAttr>()) {
+      out.push_back(std::move(name));
+      continue;
+    }
+    if (const clang::CXXRecordDecl* decl =
+            as_explicit_init_record(field->getType())) {
+      CollectExplicitInitFieldNames(*decl, absl::StrCat(name, "."), out);
+    }
+  }
+}
 
 SafetyAnnotation GetCrubitSafetyAnnotation(const clang::Decl& decl,
                                            Errors& errors) {
@@ -538,6 +595,29 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
 
   if (function_decl->isWeakImported()) {
     return unsupported(FormattedError::Static("Function is weakly imported"));
+  }
+
+  // A record that (transitively) has a field annotated
+  // `[[clang::require_explicit_initialization]]` (e.g. via
+  // `ABSL_REQUIRE_EXPLICIT_INIT`) cannot be default-constructed: the thunk we
+  // would generate (`crubit::construct_at(__this)`) value-initializes the
+  // record, which fails to compile with `-Wuninitialized-explicit-init`. Note
+  // that Clang clears this bit for non-aggregates, where the attribute is
+  // ignored. See b/555410712.
+  if (const auto* constructor_decl =
+          clang::dyn_cast<clang::CXXConstructorDecl>(function_decl);
+      constructor_decl != nullptr && constructor_decl->getNumParams() == 0 &&
+      constructor_decl->getParent()->hasUninitializedExplicitInitFields()) {
+    std::vector<std::string> field_names;
+    CollectExplicitInitFieldNames(*constructor_decl->getParent(), "",
+                                  field_names);
+    return unsupported(FormattedError::Substitute(
+        "Cannot be default-constructed: fields $0 require explicit "
+        "initialization.",
+        absl::StrJoin(field_names, ", ",
+                      [](std::string* out, const std::string& name) {
+                        absl::StrAppend(out, "`", name, "`");
+                      })));
   }
 
   // We should only import methods of class template specializations
