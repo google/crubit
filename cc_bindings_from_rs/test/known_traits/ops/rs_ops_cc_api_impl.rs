@@ -11,6 +11,61 @@
 
 extern crate alloc;
 extern crate core;
+const _: () = assert!(::std::mem::size_of::<::rs_ops_golden::MyBorrowedInt>() == 4);
+const _: () = assert!(::std::mem::align_of::<::rs_ops_golden::MyBorrowedInt>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::rs_ops_golden::MyBorrowedInt::new(value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_urs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_urs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+    __self: &'static ::rs_ops_golden::MyBorrowedInt,
+    other: &'static ::rs_ops_golden::MyBorrowedInt,
+) -> bool {
+    unsafe {
+        <::rs_ops_golden::MyBorrowedInt as::core::cmp::PartialEq<::rs_ops_golden::MyBorrowedInt>>::eq(__self,other)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+    __self: &'static ::rs_ops_golden::MyBorrowedInt,
+    rhs: &'static ::rs_ops_golden::MyBorrowedInt,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = <&'static ::rs_ops_golden::MyBorrowedInt as ::core::ops::Add<
+            &'static ::rs_ops_golden::MyBorrowedInt,
+        >>::add(__self, rhs);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+    __self: &'static ::rs_ops_golden::MyBorrowedInt,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <&'static ::rs_ops_golden::MyBorrowedInt as ::core::ops::Neg>::neg(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32(
+    __self: &'static ::rs_ops_golden::MyBorrowedInt,
+    rhs: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <&'static ::rs_ops_golden::MyBorrowedInt as ::core::ops::Shl<i32>>::shl(__self, rhs);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::rs_ops_golden::MyBorrowedInt, value) == 0);
 const _: () = assert!(::std::mem::size_of::<::rs_ops_golden::MyInt>() == 4);
 const _: () = assert!(::std::mem::align_of::<::rs_ops_golden::MyInt>() == 4);
 #[unsafe(no_mangle)]
