@@ -18,6 +18,10 @@ flagset::flags! {
 
         Wrapper,
 
+        /// Enable support for forward-declared types: b/489120100
+        /// We intend for this feature to be turned on by default.
+        ForwardDeclarations,
+
         /// Enable support for types, but not necessarily functions.
         /// This is automatically enabled by `Supported`.
         Types,
@@ -101,6 +105,7 @@ impl CrubitFeature {
         match self {
             Self::Supported => "supported",
             Self::Wrapper => "wrapper",
+            Self::ForwardDeclarations => "forward_declare",
             Self::Types => "types",
             Self::Experimental => "experimental",
             Self::AssumeLifetimes => "assume_lifetimes",
@@ -134,6 +139,7 @@ impl CrubitFeature {
         match self {
             Self::Supported => "//features:supported",
             Self::Wrapper => "//features:wrapper",
+            Self::ForwardDeclarations => "//features:forward_declare",
             Self::Types => "//features:types",
             Self::Experimental => "//features:experimental",
             Self::AssumeLifetimes => "//features:assume_lifetimes",
@@ -185,10 +191,12 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::OoCasting
                 - CrubitFeature::ProtoReferences
                 - CrubitFeature::CppMoveConstructibleAnnotation
+                - CrubitFeature::ForwardDeclarations
         }
         // `supported` automatically implies `types`.
         b"supported" => CrubitFeature::Supported | CrubitFeature::Types,
-        b"wrapper" => CrubitFeature::Wrapper.into(),
+        b"wrapper" => CrubitFeature::Wrapper | CrubitFeature::ForwardDeclarations,
+        b"forward_declare" => CrubitFeature::ForwardDeclarations.into(),
         b"types" => CrubitFeature::Types.into(),
         b"experimental" => CrubitFeature::Experimental.into(),
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),

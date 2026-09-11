@@ -32,10 +32,6 @@ impl ::core::fmt::Debug for UnpinStructWithRefQualifiedMethods {
         formatter.debug_struct("UnpinStructWithRefQualifiedMethods").field("i", &self.i).finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: UnpinStructWithRefQualifiedMethods"),
-    crate::UnpinStructWithRefQualifiedMethods
-);
 impl UnpinStructWithRefQualifiedMethods {
     #[inline(always)]
     pub fn increment_i<'__this>(&'__this mut self) {

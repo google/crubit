@@ -33,7 +33,6 @@ impl ::core::fmt::Debug for NoDiscard {
         formatter.debug_struct("NoDiscard").finish()
     }
 }
-forward_declare::unsafe_define!(forward_declare::symbol!(":: NoDiscard"), crate::NoDiscard);
 
 impl Default for NoDiscard {
     #[inline(always)]
@@ -65,10 +64,6 @@ impl ::core::fmt::Debug for NoDiscardWithMessage {
         formatter.debug_struct("NoDiscardWithMessage").finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: NoDiscardWithMessage"),
-    crate::NoDiscardWithMessage
-);
 
 impl Default for NoDiscardWithMessage {
     #[inline(always)]
@@ -152,7 +147,6 @@ impl ::core::fmt::Debug for NodiscardCtor {
         formatter.debug_struct("NodiscardCtor").finish()
     }
 }
-forward_declare::unsafe_define!(forward_declare::symbol!(":: NodiscardCtor"), crate::NodiscardCtor);
 
 impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
     #[inline(always)]
@@ -192,10 +186,6 @@ impl ::core::fmt::Debug for NodiscardCtorWithMessage {
         formatter.debug_struct("NodiscardCtorWithMessage").finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: NodiscardCtorWithMessage"),
-    crate::NodiscardCtorWithMessage
-);
 
 impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtorWithMessage {
     #[inline(always)]

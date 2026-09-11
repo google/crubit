@@ -45,10 +45,6 @@ impl ::core::fmt::Debug for DeprecatedStruct {
         formatter.debug_struct("DeprecatedStruct").finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: DeprecatedStruct"),
-    crate::DeprecatedStruct
-);
 
 impl Default for DeprecatedStruct {
     #[inline(always)]
@@ -80,10 +76,6 @@ impl ::core::fmt::Debug for DeprecatedStructWithMessage {
         formatter.debug_struct("DeprecatedStructWithMessage").finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: DeprecatedStructWithMessage"),
-    crate::DeprecatedStructWithMessage
-);
 
 impl Default for DeprecatedStructWithMessage {
     #[inline(always)]
@@ -152,10 +144,6 @@ impl ::core::fmt::Debug for StructWithDeprecatedCtor {
         formatter.debug_struct("StructWithDeprecatedCtor").finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: StructWithDeprecatedCtor"),
-    crate::StructWithDeprecatedCtor
-);
 
 impl Default for StructWithDeprecatedCtor {
     #[inline(always)]
@@ -186,10 +174,6 @@ impl ::core::fmt::Debug for StructWithDeprecatedCtorWithMessage {
         formatter.debug_struct("StructWithDeprecatedCtorWithMessage").finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: StructWithDeprecatedCtorWithMessage"),
-    crate::StructWithDeprecatedCtorWithMessage
-);
 
 impl Default for StructWithDeprecatedCtorWithMessage {
     #[inline(always)]
@@ -314,10 +298,6 @@ impl ::core::fmt::Debug for DeprecatedFields {
             .finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: DeprecatedFields"),
-    crate::DeprecatedFields
-);
 
 impl Default for DeprecatedFields {
     #[inline(always)]

@@ -18,23 +18,23 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
-static_assert(CRUBIT_SIZEOF(class ::MyTemplate<int>) == 4);
-static_assert(alignof(class ::MyTemplate<int>) == 4);
+static_assert(CRUBIT_SIZEOF(class MyTemplate<int>) == 4);
+static_assert(alignof(class MyTemplate<int>) == 4);
 
 extern "C" void __rust_thunk__de4d35d3__ZN10MyTemplateIiEC1Ev(
-    class ::MyTemplate<int>* __this) {
+    class MyTemplate<int>* __this) {
   crubit::construct_at(__this);
 }
 
 extern "C" void __rust_thunk__5a9d55c6__ZN10MyTemplateIiE6CreateEi(
-    class ::MyTemplate<int>* __return, int value) {
-  new (__return) auto(::MyTemplate<int>::Create(value));
+    class MyTemplate<int>* __return, int value) {
+  new (__return) auto(MyTemplate<int>::Create(value));
 }
 
-static_assert((class ::MyTemplate<int> (*)(int)) & ::MyTemplate<int>::Create);
+static_assert((class MyTemplate<int> (*)(int)) & ::MyTemplate<int>::Create);
 
 extern "C" int const* __rust_thunk__758630aa__ZNK10MyTemplateIiE5valueEv(
-    class ::MyTemplate<int> const* __this) {
+    class MyTemplate<int> const* __this) {
   return std::addressof(__this->value());
 }
 
