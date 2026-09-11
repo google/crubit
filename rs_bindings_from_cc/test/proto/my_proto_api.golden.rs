@@ -108,35 +108,6 @@ pub mod test {
 
 // namespace test
 
-// error: class `std::basic_filebuf<char, std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_filebuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ifstream<char, std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ifstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ofstream<char, std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ofstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_fstream<char, std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_fstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `absl::container_internal::HashtableInlineDataImpl<absl::container_internal::kCapacityByLog>` could not be bound
-//   Crubit is not enabled on defining target:
-//     third_party/absl/container/internal/raw_hash_set.h
-//   template instantiation is not yet supported
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

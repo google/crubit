@@ -804,22 +804,6 @@ impl Default for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
 // error: constructor `CopyCtorHasUnevaluatableExprInUnevaluatedContext::CopyCtorHasUnevaluatableExprInUnevaluatedContext` could not be bound
 //   Defaulted function relies on an invalid decl: std::declval
 
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_3pmr21polymorphic_allocatorIDiEEEE = forward_declare::symbol!(":: std :: basic_string < char32_t , std :: char_traits < char32_t >, std :: pmr :: polymorphic_allocator < char32_t >>"));
-
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_9allocatorIDiEEEE = forward_declare::symbol!(":: std :: basic_string < char32_t , std :: char_traits < char32_t >, std :: allocator < char32_t >>"));
-
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_3pmr21polymorphic_allocatorIDsEEEE = forward_declare::symbol!(":: std :: basic_string < char16_t , std :: char_traits < char16_t >, std :: pmr :: polymorphic_allocator < char16_t >>"));
-
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_9allocatorIDsEEEE = forward_declare::symbol!(":: std :: basic_string < char16_t , std :: char_traits < char16_t >, std :: allocator < char16_t >>"));
-
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIcNS_11char_traitsIcEENS_3pmr21polymorphic_allocatorIcEEEE = forward_declare::symbol!(":: std :: basic_string < char , std :: char_traits < char >, std :: pmr :: polymorphic_allocator < char >>"));
-
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEE = forward_declare::symbol!(":: std :: basic_string < char , std :: char_traits < char >, std :: allocator < char >>"));
-
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_ostreamIcNS_11char_traitsIcEEEE = forward_declare::symbol!(":: std :: basic_ostream < char , std :: char_traits < char >>"));
-
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_ostreamIwNS_11char_traitsIwEEEE = forward_declare::symbol!(":: std :: basic_ostream < wchar_t , std :: char_traits < wchar_t >>"));
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

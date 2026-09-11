@@ -39,8 +39,8 @@ use std::fmt::Write;
 use std::path::Path;
 use std::rc::Rc;
 use token_stream_printer::{
-    cc_tokens_to_formatted_string, rs_tokens_to_formatted_string,
-    rs_tokens_to_formatted_string_with_provenance, RustfmtConfig,
+    cc_string_to_formatted_string, rs_string_to_formatted_string, tokens_to_string,
+    tokens_to_string_with_provenance, RustfmtConfig,
 };
 
 mod generate_dyn_callable;
@@ -84,45 +84,63 @@ pub fn generate_bindings(
 
     let top_level_comment = generate_top_level_comment(ir, is_golden_test);
 
-    let rs_api: String = {
-        let rustfmt_exe_path =
-            if rustfmt_exe_path.is_empty() { None } else { Some(Path::new(rustfmt_exe_path)) };
-        let rustfmt_config_path = if rustfmt_config_path.is_empty() {
-            None
-        } else {
-            Some(Path::new(rustfmt_config_path))
-        };
-        let rustfmt_config =
-            rustfmt_exe_path.map(|path| RustfmtConfig::new(path, rustfmt_config_path));
-        // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't
-        // be needed when `@generated` comment/keyword is present...
-        let adjust_rs_api = |rs_api: String| -> String {
-            format!(
+    let (rs_api_tokens_str, rs_api_provenance) = if kythe_annotations {
+        let (s, p) = tokens_to_string_with_provenance(rs_api)?;
+        (s, Some(p))
+    } else {
+        (tokens_to_string(rs_api)?, None)
+    };
+    let rs_api_impl_tokens_str = tokens_to_string(rs_api_impl)?;
+
+    let (rs_api, rs_api_impl) = std::thread::scope(|s| -> Result<(String, String)> {
+        let rs_handle = s.spawn(|| -> Result<String> {
+            let rustfmt_exe_path =
+                if rustfmt_exe_path.is_empty() { None } else { Some(Path::new(rustfmt_exe_path)) };
+            let rustfmt_config_path = if rustfmt_config_path.is_empty() {
+                None
+            } else {
+                Some(Path::new(rustfmt_config_path))
+            };
+            let rustfmt_config =
+                rustfmt_exe_path.map(|path| RustfmtConfig::new(path, rustfmt_config_path));
+            // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't
+            // be needed when `@generated` comment/keyword is present...
+            let adjust_rs_api = |rs_api: String| -> String {
+                format!(
+                    "{top_level_comment}\n\
+                    #![rustfmt::skip]\n\
+                    {rs_api}"
+                )
+            };
+            let formatted =
+                rs_string_to_formatted_string(rs_api_tokens_str, rustfmt_config.as_ref())?;
+            Ok(if let Some(provenance_map) = rs_api_provenance {
+                rs_embed_provenance_map(
+                    &provenance_map,
+                    kythe_default_corpus,
+                    adjust_rs_api(formatted),
+                )
+            } else {
+                adjust_rs_api(formatted)
+            })
+        });
+
+        let cc_handle = s.spawn(|| -> Result<String> {
+            let clang_format_exe_path = if clang_format_exe_path.is_empty() {
+                None
+            } else {
+                Some(Path::new(clang_format_exe_path))
+            };
+            let formatted =
+                cc_string_to_formatted_string(rs_api_impl_tokens_str, clang_format_exe_path)?;
+            Ok(format!(
                 "{top_level_comment}\n\
-                #![rustfmt::skip]\n\
-                {rs_api}"
-            )
-        };
-        if kythe_annotations {
-            let (rs_api, provenance_map) =
-                rs_tokens_to_formatted_string_with_provenance(rs_api, rustfmt_config.as_ref())?;
-            rs_embed_provenance_map(&provenance_map, kythe_default_corpus, adjust_rs_api(rs_api))
-        } else {
-            adjust_rs_api(rs_tokens_to_formatted_string(rs_api, rustfmt_config.as_ref())?)
-        }
-    };
-    let rs_api_impl: String = {
-        let clang_format_exe_path = if clang_format_exe_path.is_empty() {
-            None
-        } else {
-            Some(Path::new(clang_format_exe_path))
-        };
-        cc_tokens_to_formatted_string(rs_api_impl, clang_format_exe_path)?
-    };
-    let rs_api_impl = format!(
-        "{top_level_comment}\n\
-        {rs_api_impl}"
-    );
+                {formatted}"
+            ))
+        });
+
+        Ok((rs_handle.join().unwrap()?, cc_handle.join().unwrap()?))
+    })?;
 
     Ok(Bindings { rs_api, rs_api_impl })
 }
