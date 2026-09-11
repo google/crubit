@@ -20,92 +20,6 @@ jobs:
   test:
 
     runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      with:
-        persist-credentials: false
-    - name: Cache protoc
-      id: cache-protoc
-      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
-      with:
-        path: ${{ runner.temp }}/proto
-        key: ${{ runner.os }}-protoc-36.1
-    - name: Install protoc
-      env:
-        CACHE_HIT: ${{ steps.cache-protoc.outputs.cache-hit }}
-      run: |
-        if [ "$CACHE_HIT" != "true" ]; then
-          PROTOC_VER=36.1
-          curl -sSLO "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-x86_64.zip"
-          unzip -o "protoc-${PROTOC_VER}-linux-x86_64.zip" -d "${{ runner.temp }}/proto"
-          rm "protoc-${PROTOC_VER}-linux-x86_64.zip"
-        fi
-        echo "${{ runner.temp }}/proto/bin" >> $GITHUB_PATH
-    - name: Test Cargo project
-      run: >
-        cargo test --verbose --locked --workspace --no-fail-fast
-        --exclude '*_sys'
-        --exclude 'rs_bindings_from_cc*'
-    - name: Build not-yet-testable Cargo crates
-      run: >
-        cargo build --verbose --locked --workspace
-        --exclude '*_sys'
-        --exclude=rs_bindings_from_cc
-        --exclude=rs_bindings_from_cc_cc_api
-        --exclude=rs_bindings_from_cc_cc_api_ffi
-        --exclude=rs_bindings_from_cc_ir_matchers
-        --exclude=rs_bindings_from_cc_ir_testing
-        --exclude=rs_bindings_from_cc_multiplatform_ir_testing
-        --exclude=rs_bindings_from_cc_test_generators
-
-  test_cmake:
-
-    runs-on: ubuntu-latest
-    env:
-      HAS_GCP_SA_KEY: ${{ secrets.GCP_SA_KEY && 'true' || 'false' }}
-    strategy:
-      matrix:
-        project: [cmake, cmake_demo]
-
-    steps:
-    - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      with:
-        persist-credentials: false
-    - name: Authenticate to Google Cloud
-      if: env.HAS_GCP_SA_KEY == 'true'
-      id: auth
-      uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
-      with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
-    - name: Install sccache
-      id: install_sccache
-      if: env.HAS_GCP_SA_KEY == 'true'
-      uses: mozilla-actions/sccache-action@65101d47ea8028ed0c98a1cdea8dd9182e9b5133 # v0.0.8
-    - name: Test CMake project
-      env:
-        SCCACHE_GCS_BUCKET: crubit-ci-cmake
-        SCCACHE_GCS_RW_MODE: READ_WRITE
-        SCCACHE_GCS_KEY_PATH: ${{ steps.auth.outputs.credentials_file_path }}
-        SCCACHE_GCS_KEY_PREFIX: sccache/${{ matrix.project }}
-      run: |
-        cd examples/build_systems/${{ matrix.project }}
-        if [[ "$HAS_GCP_SA_KEY" == "true" ]]; then
-          LAUNCHER_FLAGS="-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
-        else
-          LAUNCHER_FLAGS=""
-        fi
-        cmake -B build -S . $LAUNCHER_FLAGS
-        cmake --build build --parallel
-        cd build
-        ctest --output-on-failure --parallel 2
-    - name: Show sccache stats
-      if: steps.install_sccache.outcome == 'success' && always()
-      run: sccache --show-stats
-
-  test_bazel:
-
-    runs-on: ubuntu-latest
     env:
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
 
@@ -155,6 +69,59 @@ jobs:
     - name: "Set up Bazel environment for Cargo"
       run: python3 cargo/build/setup_bazel_env.py
 
-    - name: "Build rs_bindings_from_cc using Cargo"
-      run: cargo build --verbose --locked -p rs_bindings_from_cc
+    # TODO: Expand `cargo test` coverage to all workspace crates once tests in
+    # `rs_bindings_from_cc*` and subcrates can be run in standalone Cargo builds.
+    # Once that happens - remove the separate `cargo build` step below.
+    - name: Test Cargo project
+      run: >
+        cargo test --verbose --locked --workspace --no-fail-fast
+        --exclude '*_sys'
+        --exclude 'rs_bindings_from_cc*'
+
+    - name: Build Cargo project (remaining, non-testable-yet crates)
+      run: cargo build --verbose --locked --workspace
+
+  test_cmake:
+
+    runs-on: ubuntu-latest
+    env:
+      HAS_GCP_SA_KEY: ${{ secrets.GCP_SA_KEY && 'true' || 'false' }}
+    strategy:
+      matrix:
+        project: [cmake, cmake_demo]
+
+    steps:
+    - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      with:
+        persist-credentials: false
+    - name: Authenticate to Google Cloud
+      if: env.HAS_GCP_SA_KEY == 'true'
+      id: auth
+      uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+    - name: Install sccache
+      id: install_sccache
+      if: env.HAS_GCP_SA_KEY == 'true'
+      uses: mozilla-actions/sccache-action@65101d47ea8028ed0c98a1cdea8dd9182e9b5133 # v0.0.8
+    - name: Test CMake project
+      env:
+        SCCACHE_GCS_BUCKET: crubit-ci-cmake
+        SCCACHE_GCS_RW_MODE: READ_WRITE
+        SCCACHE_GCS_KEY_PATH: ${{ steps.auth.outputs.credentials_file_path }}
+        SCCACHE_GCS_KEY_PREFIX: sccache/${{ matrix.project }}
+      run: |
+        cd examples/build_systems/${{ matrix.project }}
+        if [[ "$HAS_GCP_SA_KEY" == "true" ]]; then
+          LAUNCHER_FLAGS="-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+        else
+          LAUNCHER_FLAGS=""
+        fi
+        cmake -B build -S . $LAUNCHER_FLAGS
+        cmake --build build --parallel
+        cd build
+        ctest --output-on-failure --parallel 2
+    - name: Show sccache stats
+      if: steps.install_sccache.outcome == 'success' && always()
+      run: sccache --show-stats
 # LINT.ThenChange(//depot/copy.bara.sky)
