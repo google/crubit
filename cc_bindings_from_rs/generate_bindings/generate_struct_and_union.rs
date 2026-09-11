@@ -48,6 +48,7 @@ use rustc_abi::{Endian, FieldIdx, FieldsShape, LayoutData, VariantIdx, Variants}
 
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
+use rustc_middle::mir::Mutability;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, AssocKind, Ty, TyCtxt, TyKind, TypeFlags, TypingEnv};
@@ -911,6 +912,54 @@ fn generate_constructor_impls<'tcx>(
         .collect()
 }
 
+/// Returns the `impl`s of `trait_def_id` whose operator should become a C++ operator on the C++
+/// class generated for `self_ty`.
+///
+/// This covers both `impl Trait for T` and `impl Trait for &T`. The latter is the idiomatic Rust
+/// spelling for an operator that borrows rather than consumes its left operand, and it maps to a
+/// `const`-qualified C++ member operator on `T`, so it belongs on the same C++ class.
+///
+/// `impl Trait for &mut T` is deliberately not covered: the only operator traits that make sense
+/// on a `&mut` self type are the compound-assignment ones, and those take `&mut self`, giving a
+/// `&mut &mut T` receiver that has no C++ equivalent.
+fn operator_impls_for_ty<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    trait_def_id: DefId,
+    self_ty: Ty<'tcx>,
+) -> Vec<DefId> {
+    let mut impls: Vec<DefId> = tcx.non_blanket_impls_for_ty(trait_def_id, self_ty).collect();
+
+    // The self type of an impl only decides how the C++ receiver is qualified, so an
+    // `impl Trait<Rhs> for &T` and an `impl Trait<Rhs> for T` produce the same C++ overload.
+    // Since `forward_ref_binop!`/`forward_ref_unop!` usually create both, we dedup them.
+    let overloads_covered_by_adt_impls: HashSet<Option<Ty<'tcx>>> = impls
+        .iter()
+        .map(|impl_id| operator_rhs_ty(get_trait_ref_from_impl_id(tcx, *impl_id)))
+        .collect();
+
+    let ref_to_self_ty = Ty::new_ref(tcx, tcx.lifetimes.re_erased, self_ty, Mutability::Not);
+    impls.extend(tcx.non_blanket_impls_for_ty(trait_def_id, ref_to_self_ty).filter(|impl_id| {
+        // Normalizing builds an inference context, so do it once and read both the self type
+        // and the right-hand operand off the same trait ref.
+        let trait_ref = get_trait_ref_from_impl_id(tcx, *impl_id);
+        // A `SimplifiedType::Ref` bucket does not discriminate on the referent, so it holds
+        // every `impl ... for &_`. Keep only the ones for a reference to `self_ty`.
+        let is_impl_for_ref_to_self_ty = matches!(
+            trait_ref.self_ty().kind(),
+            ty::TyKind::Ref(_, referent_ty, Mutability::Not) if *referent_ty == self_ty
+        );
+        is_impl_for_ref_to_self_ty
+            && !overloads_covered_by_adt_impls.contains(&operator_rhs_ty(trait_ref))
+    }));
+    impls
+}
+
+/// Returns the type of an operator's right-hand operand, or `None` for a unary operator.
+fn operator_rhs_ty<'tcx>(trait_ref: ty::TraitRef<'tcx>) -> Option<Ty<'tcx>> {
+    let trait_args = trait_ref.args;
+    (trait_args.len() > 1).then(|| trait_args.type_at(1))
+}
+
 fn generate_trait_operator_impls<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
@@ -923,18 +972,14 @@ fn generate_trait_operator_impls<'tcx>(
      -> Vec<ApiSnippets<'_>> {
         let trait_name = tcx.item_name(trait_def_id).to_string();
 
-        tcx.non_blanket_impls_for_ty(trait_def_id, core.common.self_ty)
+        operator_impls_for_ty(tcx, trait_def_id, core.common.self_ty)
+            .into_iter()
             .map(|impl_id| {
                 let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
-                // Index 0 of our trait ref is the self type.
-                // If there is a second argument, it is the real type arg (e.g. `T` in `Index<T>`).
-                // Otherwise (e.g. for `Neg` or `Not`), we use the self type as a placeholder.
-                let trait_args = trait_ref.args;
-                let trait_arg_ty = if trait_args.len() > 1 {
-                    trait_args.type_at(1)
-                } else {
-                    trait_args.type_at(0)
-                };
+                // For a unary operator (e.g. `Neg` or `Not`) there is no right-hand operand, so
+                // fall back to index 0 of the trait ref - the self type - as a placeholder.
+                let trait_arg_ty =
+                    operator_rhs_ty(trait_ref).unwrap_or_else(|| trait_ref.args.type_at(0));
                 (impl_id, trait_arg_ty)
             })
             .avoid_colliding_types(tcx, |(_impl_id, trait_arg_ty)| *trait_arg_ty)

@@ -47,6 +47,10 @@ enum FunctionKind<'tcx> {
 
     /// Instance method taking `self` by reference (i.e. `&self` or `&mut
     /// self`).
+    ///
+    /// This also covers methods from an `impl Trait for &T` block: their `Self` type *is* the
+    /// reference, so a by-value `self` is still a by-reference receiver. In that case `self_ty`
+    /// is the referent `T` (the ADT the C++ method is generated on), not `&T`.
     MethodTakingSelfByRef { self_ty: Ty<'tcx> },
 }
 
@@ -595,7 +599,13 @@ fn function_kind<'tcx>(
     match tcx.def_kind(def_id) {
         DefKind::Fn => Ok(FunctionKind::Free),
         DefKind::AssocFn => {
-            let self_ty = self_ty_of_method(tcx, def_id);
+            // The type the enclosing `impl` block is for. For `impl Trait for &T` this is `&T`.
+            let impl_self_ty = self_ty_of_method(tcx, def_id);
+            // There is no C++ class for `&T`, so bind such items to the referent `T` instead.
+            let self_ty = match impl_self_ty.kind() {
+                ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
+                _ => impl_self_ty,
+            };
             if !tcx.associated_item(def_id).is_method() {
                 return Ok(FunctionKind::AssociatedFn { self_ty });
             }
@@ -1336,9 +1346,18 @@ pub fn generate_function<'tcx>(
                 .as_ref()
                 .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
                 .expect("Generated trait method for an ADT with an invalid rust name");
+            // `struct_name` names the ADT, which is what the C++ class is generated for. But for
+            // an `impl Trait for &T` block the trait is implemented on the reference type, so
+            // that is what the qualified call has to name. Regions are `'static` here because
+            // `generate_thunk_impl` erases all regions in the thunk signature to `'static`.
+            let rs_self_ty = match trait_ref.self_ty().kind() {
+                ty::TyKind::Ref(_, _, Mutability::Not) => quote! { & 'static #struct_name },
+                ty::TyKind::Ref(_, _, Mutability::Mut) => quote! { & 'static mut #struct_name },
+                _ => struct_name,
+            };
             let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
             let trait_name_with_args = format_trait_ref_for_rs(db, trait_ref)?;
-            quote! { <#struct_name as #trait_name_with_args>::#fn_name }
+            quote! { <#rs_self_ty as #trait_name_with_args>::#fn_name }
         } else if let Some(struct_name) = struct_name.as_ref() {
             let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
             let struct_name = struct_name.format_for_rs();

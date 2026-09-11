@@ -9,6 +9,7 @@
 
 namespace {
 
+using ::rs_ops::MyBorrowedInt;
 using ::rs_ops::MyInt;
 
 TEST(OpsTest, Add) {
@@ -157,6 +158,39 @@ TEST(OpsTest, SubAssign) {
   MyInt b = MyInt::new_(5);
   a -= b;
   EXPECT_EQ(a.value, 15);
+}
+
+// The tests below cover operators declared as `impl Trait for &T` rather than
+// `impl Trait for T`.
+
+TEST(OpsTest, AddWithReferenceSelfType) {
+  const MyBorrowedInt a = MyBorrowedInt::new_(10);
+  const MyBorrowedInt b = MyBorrowedInt::new_(20);
+
+  const MyBorrowedInt c = a + b;
+
+  EXPECT_EQ(c.value, 30);
+  // Neither operand was consumed.
+  EXPECT_EQ(a.value, 10);
+  EXPECT_EQ(b.value, 20);
+}
+
+TEST(OpsTest, NegWithReferenceSelfType) {
+  const MyBorrowedInt a = MyBorrowedInt::new_(5);
+
+  const MyBorrowedInt b = -a;
+
+  EXPECT_EQ(b.value, -5);
+  EXPECT_EQ(a.value, 5);
+}
+
+TEST(OpsTest, ShlWithReferenceSelfType) {
+  const MyBorrowedInt a = MyBorrowedInt::new_(5);
+
+  const MyBorrowedInt b = a << 2;
+
+  EXPECT_EQ(b.value, 20);
+  EXPECT_EQ(a.value, 5);
 }
 
 }  // namespace
