@@ -90,24 +90,6 @@ impl ::ctor::CtorNew<()> for UncopyableDespiteDecl {
 // error: constructor `UncopyableDespiteDecl::UncopyableDespiteDecl` could not be bound
 //   Defaulted function relies on an invalid decl: UncopyableDespiteDecl::UncopyableDespiteDecl
 
-// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_string<char, std::char_traits<char>, std::allocator<char>>` could not be bound
-//   incomplete type
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
