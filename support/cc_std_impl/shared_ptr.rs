@@ -7,13 +7,12 @@ extern crate alloc;
 use crate::crubit_cc_std_internal::std_allocator::{
     self, shared_weak_count, DynControlBlock, FunctionToCall,
 };
-use crate::std::{unique_ptr, virtual_unique_ptr, Delete};
+use crate::std::{unique_ptr, virtual_unique_ptr, Delete, StableNullness, TryDeref};
 use alloc::boxed::Box;
 use alloc::sync::Arc;
 use core::ffi::c_void;
 use core::fmt::{Debug, Formatter, Result};
 use core::mem::{ManuallyDrop, MaybeUninit};
-use core::ops::Deref;
 use core::pin::Pin;
 
 /// A smart pointer that shares ownership of another object of type `T` via a pointer,
@@ -337,12 +336,28 @@ impl<T: Sized + Delete> shared_ptr<T> {
     }
 }
 
-impl<T: Sized> Deref for shared_ptr<T> {
+// SAFETY: `self.ptr` is a plain pointer field with no interior mutability, so it can only change
+// through a `&mut shared_ptr<T>` or a C++ move. Sharing ownership with other `shared_ptr`s cannot
+// null it out, because each `shared_ptr` holds its own pointer and a strong reference count.
+unsafe impl<T: Sized> StableNullness for shared_ptr<T> {
+    fn is_null(&self) -> bool {
+        self.ptr.is_null()
+    }
+}
+
+impl<T: Sized> TryDeref for shared_ptr<T> {
     type Target = T;
 
-    #[track_caller]
-    fn deref(&self) -> &Self::Target {
-        shared_ptr::try_as_ref(self).expect("dereferencing a null shared_ptr")
+    /// # Safety
+    ///
+    /// In addition to `self` being non-null, the caveat on
+    /// [`try_as_ref`](shared_ptr::try_as_ref) applies: if the inner object is not thread safe and
+    /// is mutated by C++ in a nonlocally-synchronized way, it's unsafe to hold references to `&T`
+    /// across the mutations.
+    unsafe fn deref_unchecked(&self) -> &Self::Target {
+        // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `shared_ptr` invariants
+        // it points to an initialized `T` whose lifetime is managed by `self`.
+        unsafe { &*self.ptr }
     }
 }
 

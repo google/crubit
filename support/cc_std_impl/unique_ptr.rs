@@ -2,9 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::std::Allocator;
+use crate::std::{Allocator, NonNull, StableNullness, TryDeref, TryDerefPin};
 use core::fmt::{Debug, Formatter, Result};
-use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 use core::ptr::null_mut;
 
@@ -185,26 +184,35 @@ impl<T: Sized> unique_ptr<T> {
 
 impl<T: Unpin> AsMut<T> for unique_ptr<T> {
     /// Note: this method will panic if `this` is null.
+    #[track_caller]
     fn as_mut(&mut self) -> &mut T {
-        self
+        NonNull::from_mut(self).expect("dereferencing a null unique_ptr")
     }
 }
 
-impl<T: Sized> Deref for unique_ptr<T> {
+// SAFETY: `self.ptr` is a plain pointer field with no interior mutability, so it can only change
+// through a `&mut unique_ptr<T>` or a C++ move.
+unsafe impl<T: Sized> StableNullness for unique_ptr<T> {
+    fn is_null(&self) -> bool {
+        self.ptr.is_null()
+    }
+}
+
+impl<T: Sized> TryDeref for unique_ptr<T> {
     type Target = T;
 
-    #[track_caller]
-    fn deref(&self) -> &Self::Target {
-        // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
-        unsafe { self.ptr.as_ref().expect("dereferencing a null unique_ptr") }
+    unsafe fn deref_unchecked(&self) -> &Self::Target {
+        // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `unique_ptr` invariants
+        // it points to a valid, exclusively owned `T`.
+        unsafe { &*self.ptr }
     }
 }
 
-impl<T: Sized + Unpin> DerefMut for unique_ptr<T> {
-    #[track_caller]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        // SAFETY: `self.ptr` is either null or points to a valid, exclusively owned, `T`.
-        unsafe { (self.ptr as *mut T).as_mut().expect("dereferencing a null unique_ptr") }
+impl<T: Sized> TryDerefPin for unique_ptr<T> {
+    unsafe fn deref_pin_unchecked(&mut self) -> Pin<&mut Self::Target> {
+        // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `unique_ptr` invariants
+        // it points to a valid, exclusively owned `T`. The pointee is pinned.
+        unsafe { Pin::new_unchecked(&mut *(self.ptr as *mut T)) }
     }
 }
 
@@ -392,21 +400,29 @@ impl<T: Delete> From<unique_ptr<T>> for virtual_unique_ptr<T> {
     }
 }
 
-impl<T: Sized + Delete> Deref for virtual_unique_ptr<T> {
-    type Target = T;
-
-    #[track_caller]
-    fn deref(&self) -> &Self::Target {
-        // SAFETY: `this.ptr` is either null or points to a valid, exclusively owned, `T`.
-        unsafe { self.ptr.as_ref().expect("dereferencing a null virtual_unique_ptr") }
+// SAFETY: `self.ptr` is a plain pointer field with no interior mutability, so it can only change
+// through a `&mut virtual_unique_ptr<T>` or a C++ move.
+unsafe impl<T: Delete> StableNullness for virtual_unique_ptr<T> {
+    fn is_null(&self) -> bool {
+        self.ptr.is_null()
     }
 }
 
-impl<T: Sized + Delete + Unpin> DerefMut for virtual_unique_ptr<T> {
-    #[track_caller]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        // SAFETY: `this.ptr` is either null or points to a valid, exclusively owned, `T`.
-        unsafe { (self.ptr as *mut T).as_mut().expect("dereferencing a null virtual_unique_ptr") }
+impl<T: Delete> TryDeref for virtual_unique_ptr<T> {
+    type Target = T;
+
+    unsafe fn deref_unchecked(&self) -> &Self::Target {
+        // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `virtual_unique_ptr`
+        // invariants it points to a valid, exclusively owned `T`.
+        unsafe { &*self.ptr }
+    }
+}
+
+impl<T: Delete> TryDerefPin for virtual_unique_ptr<T> {
+    unsafe fn deref_pin_unchecked(&mut self) -> Pin<&mut Self::Target> {
+        // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `virtual_unique_ptr`
+        // invariants it points to a valid, exclusively owned `T`. The pointee is pinned.
+        unsafe { Pin::new_unchecked(&mut *(self.ptr as *mut T)) }
     }
 }
 

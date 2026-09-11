@@ -30,7 +30,8 @@ fn test_cpp_std_unique_ptr_type() {
 #[gtest]
 fn test_cpp_std_shared_ptr_deref() {
     let sp = cpp_std::shared_ptr::new(42);
-    expect_eq!(*sp, 42);
+    let non_null = cpp_std::NonNull::new(sp).unwrap();
+    expect_eq!(*non_null, 42);
 }
 
 #[gtest]

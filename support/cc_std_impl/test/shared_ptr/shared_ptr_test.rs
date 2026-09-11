@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use cc_std::std::shared_ptr;
+use cc_std::std::{shared_ptr, NonNull, TryDeref};
 use googletest::{expect_eq, expect_false, expect_true, gtest};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
@@ -35,17 +35,38 @@ fn test_polymorphic_destructor() {
 #[gtest]
 fn test_deref() {
     let shared = test_helpers::shared_ptr_test::create_shared_ptr();
-    let r: &i32 = &shared;
+    expect_eq!(*shared.try_deref().unwrap(), 1);
+
+    let nn_ref = NonNull::from_ref(&shared).unwrap();
+    expect_eq!(**nn_ref, 1);
+
+    let nn = NonNull::new(shared).unwrap();
+    let r: &i32 = &nn;
     expect_eq!(*r, 1);
-    expect_eq!(*shared, 1);
-    expect_eq!(*shared_ptr::try_as_ref(&shared).unwrap(), 1);
+    expect_eq!(*nn, 1);
+    expect_eq!(*shared_ptr::try_as_ref(NonNull::as_inner(&nn)).unwrap(), 1);
+    let recovered = NonNull::into_inner(nn);
+    expect_eq!(*shared_ptr::try_as_ref(&recovered).unwrap(), 1);
+}
+
+/// `shared_ptr` intentionally has no mutable accessor, but [`NonNull::from_mut`] requires only
+/// `StableNullness`, so a `&mut shared_ptr` can still be wrapped and then read through.
+#[gtest]
+fn test_from_mut() {
+    let mut shared = test_helpers::shared_ptr_test::create_shared_ptr();
+    let nn_mut = NonNull::from_mut(&mut shared).unwrap();
+    expect_eq!(**nn_mut, 1);
+
+    let mut null_shared = test_helpers::shared_ptr_test::create_shared_ptr_void_ptr();
+    expect_true!(NonNull::from_mut(&mut null_shared).is_none());
 }
 
 #[gtest]
-#[should_panic(expected = "dereferencing a null shared_ptr")]
-fn test_shared_ptr_deref_null_panics() {
+fn test_shared_ptr_null_returns_none() {
     let null_shared = test_helpers::shared_ptr_test::create_shared_ptr_void_ptr();
-    let _ = *null_shared;
+    expect_true!(null_shared.try_deref().is_none());
+    expect_true!(NonNull::from_ref(&null_shared).is_none());
+    expect_true!(NonNull::new(null_shared).is_none());
 }
 
 #[gtest]

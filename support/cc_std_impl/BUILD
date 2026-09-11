@@ -52,6 +52,7 @@ additional_rust_srcs_for_crubit_bindings(
     name = "manually_bridged_types",
     srcs = [
         "allocator.rs",
+        "non_null.rs",
         "optional.rs",
         "shared_ptr.rs",
         "string.rs",

@@ -4,7 +4,9 @@
 
 #![feature(allocator_api)]
 
-use cc_std::std::{unique_ptr, virtual_unique_ptr, Allocator};
+use cc_std::std::{
+    unique_ptr, virtual_unique_ptr, Allocator, NonNull, TryDeref, TryDerefMut, TryDerefPin,
+};
 use googletest::{expect_eq, expect_false, expect_true, gtest};
 use std::sync::Arc;
 
@@ -158,61 +160,78 @@ fn test_covariance() {
 #[gtest]
 fn test_unique_ptr_deref() {
     let up = test_helpers::unique_ptr_test::create_unique_ptr();
-    let r: &i32 = &up;
+    let nn = NonNull::new(up).unwrap();
+    let r: &i32 = &nn;
     expect_eq!(*r, 1);
-    expect_eq!(*up, 1);
+    expect_eq!(*nn, 1);
 }
 
 #[gtest]
 fn test_unique_ptr_deref_mut() {
+    let up = test_helpers::unique_ptr_test::create_unique_ptr();
+    let mut nn = NonNull::new(up).unwrap();
+    *nn = 654321;
+    expect_eq!(*nn, 654321);
+}
+
+#[gtest]
+fn test_unique_ptr_non_null_ref_and_mut() {
     let mut up = test_helpers::unique_ptr_test::create_unique_ptr();
-    *up = 654321;
-    expect_eq!(*up, 654321);
+    expect_eq!(*up.try_deref().unwrap(), 1);
+
+    let nn_ref = NonNull::from_ref(&up).unwrap();
+    expect_eq!(**nn_ref, 1);
+
+    *up.try_deref_mut().unwrap() = 42;
+    expect_eq!(*up.try_deref().unwrap(), 42);
+
+    let nn_mut = NonNull::from_mut(&mut up).unwrap();
+    **nn_mut = 100;
+    expect_eq!(**nn_mut, 100);
 }
 
 #[gtest]
-#[should_panic(expected = "dereferencing a null unique_ptr")]
-fn test_unique_ptr_deref_null_panics() {
-    let up = unsafe { unique_ptr::<i32>::from_raw(std::ptr::null_mut()) };
-    let _ = *up;
+fn test_unique_ptr_deref_pin() {
+    let up = test_helpers::unique_ptr_test::create_unique_ptr();
+    let mut nn = NonNull::new(up).unwrap();
+    let mut pin = NonNull::deref_pin(&mut nn);
+    *pin = 999;
+    expect_eq!(*pin, 999);
 }
 
 #[gtest]
-#[should_panic(expected = "dereferencing a null unique_ptr")]
-fn test_unique_ptr_deref_mut_null_panics() {
+fn test_unique_ptr_null_returns_none() {
     let mut up = unsafe { unique_ptr::<i32>::from_raw(std::ptr::null_mut()) };
-    *up = 1;
+    expect_true!(up.try_deref().is_none());
+    expect_true!(up.try_deref_mut().is_none());
+    expect_true!(up.try_deref_pin().is_none());
+    expect_true!(NonNull::from_ref(&up).is_none());
+    expect_true!(NonNull::from_mut(&mut up).is_none());
+    expect_true!(NonNull::new(up).is_none());
 }
 
 #[gtest]
 fn test_virtual_unique_ptr_deref() {
     let p = test_helpers::unique_ptr_test::create_virtual_base();
-    let r: &test_helpers::unique_ptr_test::Base = &p;
+    let nn = NonNull::new(p).unwrap();
+    let r: &test_helpers::unique_ptr_test::Base = &nn;
     expect_true!(r.is_derived());
-    expect_false!(virtual_unique_ptr::is_null(&p));
-    expect_true!(p.is_derived());
+    expect_true!(nn.is_derived());
 }
 
 #[gtest]
-#[should_panic(expected = "dereferencing a null virtual_unique_ptr")]
-fn test_virtual_unique_ptr_deref_null_panics() {
-    let vp = unsafe {
-        virtual_unique_ptr::<test_helpers::unique_ptr_test::CustomDelete>::from_raw(
-            std::ptr::null_mut(),
-        )
-    };
-    let _ = *vp;
-}
-
-#[gtest]
-#[should_panic(expected = "dereferencing a null virtual_unique_ptr")]
-fn test_virtual_unique_ptr_deref_mut_null_panics() {
+fn test_virtual_unique_ptr_null_returns_none() {
     let mut vp = unsafe {
         virtual_unique_ptr::<test_helpers::unique_ptr_test::CustomDelete>::from_raw(
             std::ptr::null_mut(),
         )
     };
-    let _mut_ref: &mut test_helpers::unique_ptr_test::CustomDelete = &mut *vp;
+    expect_true!(vp.try_deref().is_none());
+    expect_true!(vp.try_deref_mut().is_none());
+    expect_true!(vp.try_deref_pin().is_none());
+    expect_true!(NonNull::from_ref(&vp).is_none());
+    expect_true!(NonNull::from_mut(&mut vp).is_none());
+    expect_true!(NonNull::new(vp).is_none());
 }
 
 #[gtest]
