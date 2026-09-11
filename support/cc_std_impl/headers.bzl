@@ -70,4 +70,7 @@ LIBCXX_HEADERS = [
     "vector",
 ]
 
-LIBC_HEADERS = []
+LIBC_HEADERS = [
+    "netinet/in.h",
+    "sys/socket.h",
+]
