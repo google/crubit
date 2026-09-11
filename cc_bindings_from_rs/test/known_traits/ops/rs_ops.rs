@@ -164,3 +164,58 @@ impl SubAssign for MyInt {
         self.value -= rhs.value;
     }
 }
+
+/// Exercises operator impls whose `Self` type is a *reference* to the ADT.
+///
+/// `MyBorrowedInt` does intentially no derive `Copy`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MyBorrowedInt {
+    pub value: i32,
+}
+
+impl MyBorrowedInt {
+    pub fn new(value: i32) -> Self {
+        Self { value }
+    }
+}
+
+impl Add<&MyBorrowedInt> for &MyBorrowedInt {
+    type Output = MyBorrowedInt;
+    fn add(self, rhs: &MyBorrowedInt) -> MyBorrowedInt {
+        MyBorrowedInt::new(self.value + rhs.value)
+    }
+}
+
+impl Neg for &MyBorrowedInt {
+    type Output = MyBorrowedInt;
+    fn neg(self) -> MyBorrowedInt {
+        MyBorrowedInt::new(-self.value)
+    }
+}
+
+impl Shl<i32> for &MyBorrowedInt {
+    type Output = MyBorrowedInt;
+    fn shl(self, rhs: i32) -> MyBorrowedInt {
+        MyBorrowedInt::new(self.value << rhs)
+    }
+}
+
+// Rust's `forward_ref_binop!`/`forward_ref_unop!` pattern: the same operator implemented on both
+// `MyInt` and `&MyInt`. The self type only decides how the C++ receiver is qualified, so both map
+// to the same C++ overload and Crubit must emit exactly one of them -- otherwise the generated
+// header does not compile. The impl on the ADT wins, so the bindings for `MyInt` are unaffected
+// by the two impls below.
+
+impl Add<MyInt> for &MyInt {
+    type Output = MyInt;
+    fn add(self, rhs: MyInt) -> MyInt {
+        MyInt::new(self.value + rhs.value)
+    }
+}
+
+impl Not for &MyInt {
+    type Output = MyInt;
+    fn not(self) -> MyInt {
+        MyInt::new(!self.value)
+    }
+}
