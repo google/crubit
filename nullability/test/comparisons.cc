@@ -374,3 +374,89 @@ TEST void nonnullNotEqualsUnknown(int *X, int *_Nonnull Y) {
   unknown(X);
   nonnull(Y);
 }
+
+// Known limitation: narrowing Top pointers (from loop widening) when the
+// null-check comparison is the RHS of a logical && operator.
+//
+// When P has Top null state (from loop widening) and the comparison
+// `P == nullptr` appears on the RHS of `&&` (after a variable), the pointer is
+// NOT narrowed to Nonnull.  The same comparison on the LHS works correctly.
+//
+// Root cause: processPointerComparison() returns makeTopValue() for Top
+// pointers — an unconnected atom.  When the comparison is on the LHS of &&,
+// the CFG terminator branches directly on it, and unpackPointerValue() handles
+// the Top→fresh-atom conversion first.  When on the RHS, the comparison runs
+// in a short-circuit block and the unconnected atom gets buried inside
+// makeAnd(), losing the connection to the pointer's is_null property.
+//
+// Unannotated parameters (int *P) are Null_unspecified but have real is_null
+// atoms (not Top), so they narrow correctly in both positions.
+
+// Unannotated parameter (has real atoms, not Top): both positions work.
+TEST void unknownPointerNarrowingCompOnLHSOfAnd(int* P) {
+  unknown(P);
+  bool V = true;
+  if ((P == nullptr) && V) __builtin_abort();
+  nonnull(P);
+}
+
+TEST void unknownPointerNarrowingCompOnRHSOfAnd(int* P) {
+  unknown(P);
+  bool V = true;
+  if (V && P == nullptr) __builtin_abort();
+  nonnull(P);
+}
+
+// Known limitation: narrowing Top pointers (from loop widening) when the
+// null-check comparison is the RHS of a logical && operator.
+//
+// When P has Top null state (from loop widening) and the comparison
+// `P == nullptr` appears on the RHS of `&&` (after a variable), the pointer is
+// NOT narrowed to Nonnull.  The same comparison on the LHS works correctly.
+//
+// Root cause: processPointerComparison() returns makeTopValue() for Top
+// pointers — an unconnected atom.  When the comparison is on the LHS of &&,
+// the CFG terminator branches directly on it, and unpackPointerValue() handles
+// the Top→fresh-atom conversion first.  When on the RHS, the comparison runs
+// in a short-circuit block and the unconnected atom gets buried inside
+// makeAnd(), losing the connection to the pointer's is_null property.
+//
+// Unannotated parameters (int *P) are Null_unspecified but have real is_null
+// atoms (not Top), so they narrow correctly in both positions.
+
+// Unannotated parameter (has real atoms, not Top): both positions work.
+TEST void unknownPointerNarrowingCompOnLHSOfAnd(int* P) {
+  unknown(P);
+  bool V = true;
+  if ((P == nullptr) && V) __builtin_abort();
+  nonnull(P);
+}
+
+TEST void unknownPointerNarrowingCompOnRHSOfAnd(int* P) {
+  unknown(P);
+  bool V = true;
+  if (V && P == nullptr) __builtin_abort();
+  nonnull(P);
+}
+
+// Loop-widened pointer (has Top/nullptr is_null): only LHS works.
+TEST void topPointerNarrowingCompOnLHSOfAnd(int* _Nullable P, int N, bool B) {
+  int X = 17;
+  for (int I = 0; I < N; ++I) {
+    if (B) P = &X;
+  }
+  bool V = true;
+  if ((P == nullptr) && V) __builtin_abort();
+  nonnull(P);
+}
+
+// TODO: fix this — the expected result should be nonnull(P).
+TEST void topPointerNarrowingCompOnRHSOfAnd(int* _Nullable P, int N, bool B) {
+  int X = 17;
+  for (int I = 0; I < N; ++I) {
+    if (B) P = &X;
+  }
+  bool V = true;
+  if (V && P == nullptr) __builtin_abort();
+  nullable(P);  // Wrong: should be nonnull(P).
+}
