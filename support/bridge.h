@@ -249,11 +249,20 @@ struct TransmuteAbi {
     std::memcpy(encoder.Next(kSize), new (buf) Value(std::move(value)), kSize);
   }
   Value Decode(Decoder& decoder) && {
-    alignas(Value) char buf[kSize];
-    // Copy the value from the decoder buffer into the intermediate buffer.
-    std::memcpy(buf, decoder.Next(kSize), kSize);
-    // Move-construct the value from the buffer.
-    return std::move(*reinterpret_cast<Value*>(buf));
+    // Create a slot that does not initialize the value but will call the
+    // destructor on the value. Then, memcpy the value into the slot and
+    // return the value. The destructor ensures that the destructor is called
+    // on the moved-from value, because some types depend on this to avoid
+    // leaking.
+    struct Slot {
+      ~Slot() { value()->~Value(); }
+
+      Value* value() { return reinterpret_cast<Value*>(buf); }
+
+      alignas(Value) char buf[kSize];
+    } slot;
+    std::memcpy(&slot.buf, decoder.Next(kSize), kSize);
+    return std::move(*slot.value());
   }
 };
 

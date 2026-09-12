@@ -78,3 +78,21 @@ unsafe impl<A: CrubitAbi> CrubitAbi for MyOptionRustAbi<A> {
         }
     }
 }
+
+#[crubit_annotate::must_bind]
+#[derive(Clone)]
+pub struct CountLiveClones {
+    arc: std::sync::Arc<()>,
+}
+
+impl CountLiveClones {
+    #[crubit_annotate::must_bind]
+    pub fn count_live_clones(&self) -> usize {
+        std::sync::Arc::strong_count(&self.arc)
+    }
+}
+
+#[crubit_annotate::must_bind]
+pub fn bridge_count_live_clones() -> Option<CountLiveClones> {
+    Some(CountLiveClones { arc: std::sync::Arc::new(()) })
+}
