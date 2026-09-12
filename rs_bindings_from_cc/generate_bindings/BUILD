@@ -164,6 +164,7 @@ rust_library(
 rust_library(
     name = "generate_struct_and_union",
     srcs = [
+        "generate_customized_methods.rs",
         "generate_struct_and_union.rs",
     ],
     rustc_flags = _PROFILING_RUSTC_FLAGS,

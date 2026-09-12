@@ -333,6 +333,15 @@ cc_test(
     ],
 )
 
+rust_library(
+    name = "container",
+    srcs = ["container.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
 # Used to fix SWIG syntax errors when you see Crubit annotations.
 filegroup(
     name = "annotations_swig",

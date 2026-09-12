@@ -183,13 +183,90 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!(":: absl :: flat_hash_map < int , unsigned long , 42 >"),
     crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE
 );
+impl __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
+    /// Returns the number of elements currently within the `flat_hash_map`.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        unsafe {
+            crate::detail::__crubit_flat_hash_map_len___CcTemplateInstN4absl13flat_hash_mapIimLi42EEE___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(self)
+        }
+    }
+    /// Returns whether or not the `flat_hash_map` is empty.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+    /// Returns the number of element slots (assigned, deleted, and empty) available
+    /// within the `flat_hash_map`.
+    #[must_use]
+    pub fn capacity(&self) -> usize {
+        unsafe {
+            crate::detail::__crubit_flat_hash_map_capacity___CcTemplateInstN4absl13flat_hash_mapIimLi42EEE___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(self)
+        }
+    }
+    /// Inserts an element with the specified key and value by move-constructing them
+    /// into the `flat_hash_map` (copy constructing if there is no move constructor),
+    /// provided that no element with the given key already exists, returning
+    /// references to the newly inserted element.
+    ///
+    /// If an element with the given key already exists, returns references to the
+    /// existing element along with the provided key and value. In this case if either
+    /// the key or the value is an [`RvalueReference`](::ctor::RvalueReference), it
+    /// was not moved from.
+    ///
+    /// The key and value are accepted as [`AsRvalue`](::ctor::AsRvalue), which is
+    /// implemented for any `T: Unpin` and for
+    /// [`RvalueReference<T>`](::ctor::RvalueReference).
+    ///
+    /// Usage passing `Unpin` key and value types by value:
+    ///
+    /// ```ignore
+    /// use ctor::{emplace, CtorNew};
+    /// let mut map = emplace!(Self::ctor_new());
+    /// map.as_mut().try_insert("my_key", 123).unwrap();
+    /// ```
+    ///
+    /// Usage passing potentially-`!Unpin` key and value types by rvalue reference:
+    ///
+    /// ```ignore
+    /// use ctor::{emplace, mov, CtorNew};
+    /// let mut map = emplace!(Self::ctor_new());
+    /// let mut key: Pin<&mut KeyType> = get_key();
+    /// let mut value: Pin<&mut ValueType> = get_value();
+    /// map.as_mut().try_insert(mov!(key), mov!(value)).unwrap();
+    /// ```
+    pub fn try_insert<'a, K, V>(
+        self: ::core::pin::Pin<&'a mut Self>,
+        mut key: K,
+        mut value: V,
+    ) -> Result<
+        (&'a ::ffi_11::c_int, &'a mut ::ffi_11::c_ulong),
+        ::flat_hash_map::OccupiedError<(&'a ::ffi_11::c_int, &'a mut ::ffi_11::c_ulong), K, V>,
+    >
+    where
+        K: ::ctor::AsRvalue<::ffi_11::c_int>,
+        V: ::ctor::AsRvalue<::ffi_11::c_ulong>,
+    {
+        let mut result_key: *const ::ffi_11::c_int = ::core::ptr::null();
+        let mut result_value: *mut ::ffi_11::c_ulong = ::core::ptr::null_mut();
+        let was_inserted = unsafe {
+            crate::detail::__crubit_flat_hash_map_try_insert___CcTemplateInstN4absl13flat_hash_mapIimLi42EEE___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(self,::ctor::RvalueReference::into_mut_ptr(::ctor::AsRvalue::as_rvalue(::core::pin::Pin::new(&mut key)),),::ctor::RvalueReference::into_mut_ptr(::ctor::AsRvalue::as_rvalue(::core::pin::Pin::new(&mut value)),),&raw mut result_key,&raw mut result_value,)
+        };
+        let element = unsafe { (&*result_key, &mut *result_value) };
+        if was_inserted {
+            ::core::result::Result::Ok(element)
+        } else {
+            ::core::result::Result::Err(::flat_hash_map::OccupiedError { element, key, value })
+        }
+    }
+}
 
 impl Default for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
     #[inline(always)]
     fn default() -> Self {
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk__25d7606d__ZN4absl13flat_hash_mapIimLi42EEC1Ev(
+            crate::detail::__rust_thunk__8d414ec0__ZN4absl13flat_hash_mapIimLi42EEC1Ev(
                 &raw mut tmp as *mut _,
             );
             tmp.assume_init()
@@ -198,6 +275,9 @@ impl Default for __CcTemplateInstN4absl13flat_hash_mapIimLi42EEE {
 }
 
 // error: function `absl::flat_hash_map<int, unsigned long>::HarmlessTemplateFunction` could not be bound
+//   Function templates are not yet supported
+
+// error: function `absl::flat_hash_map<int, unsigned long>::try_emplace` could not be bound
 //   Function templates are not yet supported
 
 mod detail {
@@ -214,9 +294,26 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test8NoDeleteC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
-        pub(crate) unsafe fn __rust_thunk__25d7606d__ZN4absl13flat_hash_mapIimLi42EEC1Ev(
+        pub(crate) unsafe fn __rust_thunk__8d414ec0__ZN4absl13flat_hash_mapIimLi42EEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __crubit_flat_hash_map_len___CcTemplateInstN4absl13flat_hash_mapIimLi42EEE___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated<
+            'a,
+        >(
+            __this: &'a crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE,
+        ) -> usize;
+        pub(crate) unsafe fn __crubit_flat_hash_map_capacity___CcTemplateInstN4absl13flat_hash_mapIimLi42EEE___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated<
+            'a,
+        >(
+            __this: &'a crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE,
+        ) -> usize;
+        pub(crate) unsafe fn __crubit_flat_hash_map_try_insert___CcTemplateInstN4absl13flat_hash_mapIimLi42EEE___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fabsl_5fflat_5fhash_5fmap_3aisolated(
+            __this: ::core::pin::Pin<&mut crate::__CcTemplateInstN4absl13flat_hash_mapIimLi42EEE>,
+            key: *mut ::ffi_11::c_int,
+            value: *mut ::ffi_11::c_ulong,
+            result_key: *mut *const ::ffi_11::c_int,
+            result_value: *mut *mut ::ffi_11::c_ulong,
+        ) -> bool;
     }
 }
 
