@@ -20,4 +20,5 @@ doctest = false
 [dependencies]
 tempfile.workspace = true
 itertools.workspace = true
+run_compiler = { path = "../../../cargo/cc_bindings_from_rs/run_compiler", package = "cc_bindings_from_rs_run_compiler"}
 rustversion = { path = "../../../cargo/cc_bindings_from_rs/rustversion", package = "cc_bindings_from_rs_rustversion"}

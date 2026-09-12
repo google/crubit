@@ -633,8 +633,8 @@ fn test_format_bridged_type_pointer_like_errors() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `MissingReprTransparent`: Can't convert \
-            MissingReprTransparent to a C++ pointer as it's not `repr(transparent)`"
+            "Error handling parameter #0 of type `rust_out::MissingReprTransparent`: Can't convert \
+            rust_out::MissingReprTransparent to a C++ pointer as it's not `repr(transparent)`"
         );
     });
 
@@ -642,8 +642,8 @@ fn test_format_bridged_type_pointer_like_errors() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `NotPointerLike`: Can't convert \
-            NotPointerLike to a C++ pointer as its layout is not pointer-like. To be \
+            "Error handling parameter #0 of type `rust_out::NotPointerLike`: Can't convert \
+            rust_out::NotPointerLike to a C++ pointer as its layout is not pointer-like. To be \
             considered pointer-like it may only have one non-ZST field that needs to be a C \
             ABI compatible pointer."
         );
@@ -719,7 +719,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `fn() -> RustType`: Function pointers can't \
+            "Error handling parameter #0 of type `fn() -> rust_out::RustType`: Function pointers can't \
             have a thunk: Any calling convention other than `extern \"C\"` requires a thunk"
         );
     });
@@ -728,7 +728,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error formatting function return type `&'static RustType`: Failed to format the referent of the reference type `&'static RustType`: crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"
+            "Error formatting function return type `&'static rust_out::RustType`: Failed to format the referent of the reference type `&'static rust_out::RustType`: crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"
         );
     });
 
@@ -736,7 +736,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error formatting function return type `*const RustType`: Failed to format the pointee of the pointer type `*const RustType`: crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"
+            "Error formatting function return type `*const rust_out::RustType`: Failed to format the pointee of the pointer type `*const rust_out::RustType`: crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"
         );
     });
 
@@ -744,7 +744,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `&'a RustType`: Failed to format the referent of the reference type `&'a RustType`: crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"
+            "Error handling parameter #0 of type `&'a rust_out::RustType`: Failed to format the referent of the reference type `&'a rust_out::RustType`: crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"
         );
     });
 
@@ -752,7 +752,7 @@ fn test_bridged_type_unsupported() {
         let err = result.unwrap_err();
         assert_eq!(
             err,
-            "Error handling parameter #0 of type `*const RustType`: Failed to format the pointee of the pointer type `*const RustType`: crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"
+            "Error handling parameter #0 of type `*const rust_out::RustType`: Failed to format the pointee of the pointer type `*const rust_out::RustType`: crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"
         );
     });
 }
@@ -914,7 +914,7 @@ fn test_format_item_static_method_with_generic_type_parameters() {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
         let unsupported_msg =
-            "Error generating bindings for associated function `SomeStruct::generic_method` \
+            "Error generating bindings for associated function `rust_out::SomeStruct::generic_method` \
                                defined at <crubit_unittests.rs>;l=12: \
                                No valid non-generic replacement for generic type param `T`";
         assert_cc_matches!(
@@ -1257,9 +1257,9 @@ fn test_format_item_method_taking_self_by_arc() {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
         let unsupported_msg =
-            "Error generating bindings for associated function `SomeStruct::get_f32` \
+            "Error generating bindings for associated function `rust_out::SomeStruct::get_f32` \
                                defined at <crubit_unittests.rs>;l=7: \
-                               Unsupported `self` type `std::sync::Arc<SomeStruct>`";
+                               Unsupported `self` type `std::sync::Arc<rust_out::SomeStruct>`";
         assert_cc_matches!(
             main_api.tokens,
             quote! {
@@ -1294,9 +1294,9 @@ fn test_format_item_method_taking_self_by_pinned_mut_ref() {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
         let unsupported_msg =
-            "Error generating bindings for associated function `SomeStruct::set_f32` \
+            "Error generating bindings for associated function `rust_out::SomeStruct::set_f32` \
                                defined at <crubit_unittests.rs>;l=7: \
-                               Unsupported `self` type `std::pin::Pin<&'__anon1 mut SomeStruct>`";
+                               Unsupported `self` type `std::pin::Pin<&'__anon1 mut rust_out::SomeStruct>`";
         assert_cc_matches!(
             main_api.tokens,
             quote! {
@@ -1884,7 +1884,7 @@ fn test_trait_impl_for_std_iter_iterator_trait() {
                     static constexpr bool kIsImplemented = true;
                     ...
                     using Item CRUBIT_INTERNAL_RUST_TYPE(
-                        "<MyStruct as :: core :: iter :: Iterator>::Item") = ::std::int32_t;
+                        "<rust_out::MyStruct as :: core :: iter :: Iterator>::Item") = ::std::int32_t;
                     ...
                 };
             }
@@ -1956,7 +1956,7 @@ fn test_trait_impl_for_std_future_future_trait() {
                     static constexpr bool kIsImplemented = true;
                     ...
                     using Output CRUBIT_INTERNAL_RUST_TYPE(
-                        "<MyStruct as :: core :: future :: Future>::Output") = ::std::int32_t;
+                        "<rust_out::MyStruct as :: core :: future :: Future>::Output") = ::std::int32_t;
                     ...
                 };
             }
@@ -2109,7 +2109,7 @@ fn test_generated_bindings_hash_trait() {
                 template <>
                 struct hash<::rust_out::Point> {
                     ::std::size_t operator()(const ::rust_out::Point& self) const {
-                        return static_cast<::std::size_t>(__crubit_internal::__crubit_thunk_Hash_uhash_uPoint(self));
+                        return static_cast<::std::size_t>(__crubit_internal::__crubit_thunk_Hash_uhash_urust_uout_x0000003a_x0000003aPoint(self));
                     }
                 };
                 }
@@ -2117,11 +2117,11 @@ fn test_generated_bindings_hash_trait() {
                 namespace rust_out {
                     ...
                     namespace __crubit_internal {
-                        extern "C" ::std::uint64_t __crubit_thunk_Hash_uhash_uPoint(...);
+                        extern "C" ::std::uint64_t __crubit_thunk_Hash_uhash_urust_uout_x0000003a_x0000003aPoint(...);
                     }
                     template <typename H>
                     inline H AbslHashValue(H h, const Point& self) {
-                        return H::combine(::std::move(h), __crubit_internal::__crubit_thunk_Hash_uhash_uPoint(self));
+                        return H::combine(::std::move(h), __crubit_internal::__crubit_thunk_Hash_uhash_urust_uout_x0000003a_x0000003aPoint(self));
                     }
                     ...
                 }

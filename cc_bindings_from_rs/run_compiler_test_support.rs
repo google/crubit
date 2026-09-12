@@ -11,24 +11,17 @@ extern crate rustc_driver;
 extern crate rustc_error_codes;
 extern crate rustc_errors;
 extern crate rustc_feature;
+extern crate rustc_hir;
 extern crate rustc_interface;
 extern crate rustc_lint_defs;
 extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
-#[rustversion::since(2026-08-22)]
-extern crate rustc_structures;
 extern crate rustc_target;
 use itertools::Itertools;
 
 use rustc_middle::ty::TyCtxt;
-#[rustversion::before(2026-08-22)]
-use rustc_session::config::CrateType;
-use rustc_session::config::{Input, Options, OutputType, OutputTypes, Sysroot};
-use rustc_span::def_id::LocalDefId;
-#[rustversion::since(2026-08-22)]
-use rustc_structures::CrateType;
-use rustc_target::spec::TargetTuple;
+use rustc_span::def_id::DefId;
 
 use std::path::Path;
 use std::path::PathBuf;
@@ -108,35 +101,6 @@ where
     output.unwrap()
 }
 
-static USING_INTERNAL_FEATURES: std::sync::atomic::AtomicBool =
-    std::sync::atomic::AtomicBool::new(false);
-
-const TEST_FILENAME: &str = "crubit_unittests.rs";
-
-fn rustc_interface_config(opts: Options, source: String) -> rustc_interface::interface::Config {
-    rustc_interface::interface::Config {
-        opts,
-        crate_cfg: Default::default(),
-        crate_check_cfg: Default::default(),
-        input: Input::Str {
-            name: rustc_span::FileName::Custom(TEST_FILENAME.to_string()),
-            input: source,
-        },
-        output_file: None,
-        output_dir: None,
-        file_loader: None,
-        lint_caps: Default::default(),
-        psess_created: None,
-        register_lints: None,
-        override_queries: None,
-        make_codegen_backend: None,
-        track_state: None,
-        ice_file: None,
-        extra_symbols: vec![],
-        using_internal_features: &USING_INTERNAL_FEATURES,
-    }
-}
-
 /// A non-generic implementation of `run_compiler_for_testing`.
 ///
 /// This is used to ensure that the body of `run_compiler_for_testing` is not recompiled for every
@@ -148,91 +112,170 @@ fn run_compiler_for_testing_impl(
     source: String,
     callback: Box<dyn for<'tcx> FnOnce(TyCtxt<'tcx>) + Send + '_>,
 ) {
-    // Setting `output_types` that will trigger code gen - otherwise some parts of
-    // the analysis will be missing (e.g. `tcx.exported_symbols()`).
-    // The choice of `Bitcode` is somewhat arbitrary (e.g. `Assembly`,
-    // `Mir`, etc. would also trigger code gen).
-    let output_types = OutputTypes::new(&[(OutputType::Bitcode, None /* PathBuf */)]);
-
-    let mut opts = Options {
-        crate_types: vec![CrateType::Rlib], // Test inputs simulate library crates.
-        sysroot: Sysroot::new(sysroot_path()),
-        output_types,
-        edition: rustc_span::edition::Edition::Edition2021,
-        unstable_features: rustc_feature::UnstableFeatures::Allow,
-        lint_opts: vec![
-            ("warnings".to_string(), rustc_lint_defs::Level::Deny),
-            ("stable_features".to_string(), rustc_lint_defs::Level::Allow),
-        ],
-        ..Default::default()
-    };
-
-    // Needed for using target.json; avoids:
-    // error loading target specification: custom targets are unstable and require `-Zunstable-options`
-    // TODO: use `Session::unstable_options` instead of
-    // `unstable_opts.unstable_options` and remove the function #[allow(rustc::internal)].
-    opts.unstable_opts.unstable_options = true;
-
     let target_dir = tempfile::TempDir::new().unwrap();
+    let src_path = target_dir.path().join("rust_out.rs");
+    std::fs::write(&src_path, &source).expect("Failed to write test source file");
 
-    if let Some(target) = &setup_rustc_target_for_testing(target_dir.path()) {
-        let target_path = &Path::new(target);
-        opts.target_triple = TargetTuple::from_path(target_path).unwrap_or_else(|_| {
-            panic!("failed to construct a TargetTuple from target: '{}'", target_path.display())
-        });
+    let rmeta_path = target_dir.path().join("librust_out.rmeta");
+
+    let target = setup_rustc_target_for_testing(target_dir.path());
+
+    // Stage 1: Compile the test input to an .rmeta file.
+    let mut stage1_args = vec![
+        "rustc".to_string(),
+        src_path.display().to_string(),
+        format!("--remap-path-prefix={}=<crubit_unittests.rs>", src_path.display()),
+        "--crate-name=rust_out".to_string(),
+        "--crate-type=lib".to_string(),
+        "--emit=metadata".to_string(),
+        "-o".to_string(),
+        rmeta_path.display().to_string(),
+        "--edition=2021".to_string(),
+        "-Dwarnings".to_string(),
+        "-Astable_features".to_string(),
+        "-Aunused".to_string(),
+        "-Aunused_features".to_string(),
+    ];
+    if let Some(sysroot) = sysroot_path() {
+        stage1_args.push(format!("--sysroot={}", sysroot.display()));
+    }
+    if let Some(target) = &target {
+        stage1_args.push(format!("--target={target}"));
+        stage1_args.push("-Zunstable-options".to_string());
     }
 
-    let config = rustc_interface_config(opts, source);
+    struct Stage1Callbacks;
+    impl rustc_driver::Callbacks for Stage1Callbacks {}
 
-    rustc_interface::interface::run_compiler(config, |compiler| {
-        use std::panic::{catch_unwind, AssertUnwindSafe};
-        let sess = &compiler.sess;
-        let krate = catch_unwind(AssertUnwindSafe(|| rustc_interface::passes::parse(sess)))
-            .expect("Test input compilation failed while parsing");
-
-        let result = rustc_interface::create_and_enter_global_ctxt(compiler, krate, |tcx| {
-            if sess.dcx().has_errors().is_some() {
-                sess.dcx().fatal("Compilation failed, aborting");
-            }
-            // Explicitly force full `analysis` stage to detect compilation
-            // errors that the earlier stages might miss.  This helps ensure that the
-            // test inputs are valid Rust (even if `callback` wouldn't
-            // have triggered full analysis).
-            catch_unwind(AssertUnwindSafe(|| tcx.ensure_ok().analysis(())))
-                .expect("Test input compilation failed while analyzing");
-            callback(tcx)
-        });
-
-        // TODO(b/390671870): somehow this is failing to reject warnings.
-        if let Some(_error_guaranteed) = compiler.sess.dcx().has_errors() {
-            panic!("Test input compilation failed while linting")
-        }
-        result
+    let stage1_res = rustc_driver::catch_fatal_errors(|| {
+        rustc_driver::run_compiler(&stage1_args, &mut Stage1Callbacks);
     });
+
+    if stage1_res.is_err() || !rmeta_path.exists() {
+        panic!("Test input compilation failed");
+    }
+
+    // Stage 2: Analyze a stub crate importing the metadata.
+    let mut stage2_args = vec![
+        "rustc".to_string(),
+        "unused_input.rs".to_string(),
+        "--crate-name=rust_out_wrapper".to_string(),
+        "--crate-type=lib".to_string(),
+        format!("--extern=rust_out={}", rmeta_path.display()),
+        "--edition=2021".to_string(),
+    ];
+    if let Some(sysroot) = sysroot_path() {
+        stage2_args.push(format!("--sysroot={}", sysroot.display()));
+    }
+    if let Some(target) = &target {
+        stage2_args.push(format!("--target={target}"));
+        stage2_args.push("-Zunstable-options".to_string());
+    }
+
+    let stub_input = "extern crate rust_out;\n".to_string();
+
+    let stage2_res =
+        run_compiler::run_compiler_with_input(&stage2_args, stub_input, |tcx| Ok(callback(tcx)));
+
+    if let Err(err) = stage2_res {
+        panic!("Failed in stage 2 compilation: {err:#}");
+    }
 }
 
 /// Finds the definition id of a Rust item with the specified `name`.
 /// Panics if no such item is found, or if there is more than one match.
-pub fn find_def_id_by_name(tcx: TyCtxt, name: &str) -> LocalDefId {
-    let hir_items = || tcx.hir_free_items().map(|item_id| tcx.hir_item(item_id));
-    let items_with_matching_name = hir_items()
-        .filter(|item| item.kind.ident().map_or(false, |ident| ident.name.as_str() == name))
-        .collect_vec();
-    match *items_with_matching_name.as_slice() {
+pub fn find_def_id_by_name(tcx: TyCtxt, name: &str) -> DefId {
+    let mut matches = Vec::new();
+    let mut all_names = Vec::new();
+
+    fn search_module(
+        tcx: TyCtxt,
+        mod_def_id: DefId,
+        target_name: &str,
+        matches: &mut Vec<DefId>,
+        all_names: &mut Vec<String>,
+    ) {
+        let children: &[rustc_middle::metadata::ModChild] =
+            if let Some(local_def_id) = mod_def_id.as_local() {
+                tcx.module_children_local(local_def_id)
+            } else {
+                tcx.module_children(mod_def_id)
+            };
+        for child in children {
+            let child_name = child.ident.name.as_str();
+            if !child_name.is_empty() {
+                all_names.push(child_name.to_string());
+            }
+            if let Some(def_id) = child.res.opt_def_id() {
+                let def_kind = tcx.def_kind(def_id);
+                if matches!(def_kind, rustc_hir::def::DefKind::Ctor(..)) {
+                    continue;
+                }
+                if child_name == target_name {
+                    matches.push(def_id);
+                }
+                if matches!(
+                    def_kind,
+                    rustc_hir::def::DefKind::Struct
+                        | rustc_hir::def::DefKind::Enum
+                        | rustc_hir::def::DefKind::Union
+                ) {
+                    for &impl_def_id in tcx.inherent_impls(def_id) {
+                        for &assoc_id in tcx.associated_item_def_ids(impl_def_id) {
+                            let sym = tcx.item_name(assoc_id);
+                            let assoc_name = sym.as_str();
+                            if !assoc_name.is_empty() {
+                                all_names.push(assoc_name.to_string());
+                            }
+                            if assoc_name == target_name {
+                                matches.push(assoc_id);
+                            }
+                        }
+                    }
+                } else if def_kind == rustc_hir::def::DefKind::Trait {
+                    for &assoc_id in tcx.associated_item_def_ids(def_id) {
+                        let sym = tcx.item_name(assoc_id);
+                        let assoc_name = sym.as_str();
+                        if !assoc_name.is_empty() {
+                            all_names.push(assoc_name.to_string());
+                        }
+                        if assoc_name == target_name {
+                            matches.push(assoc_id);
+                        }
+                    }
+                } else if def_kind == rustc_hir::def::DefKind::Mod
+                    && def_id.krate == mod_def_id.krate
+                {
+                    search_module(tcx, def_id, target_name, matches, all_names);
+                }
+            }
+        }
+    }
+
+    for krate in
+        tcx.used_crates(()).iter().copied().chain(std::iter::once(rustc_span::def_id::LOCAL_CRATE))
+    {
+        if krate != rustc_span::def_id::LOCAL_CRATE && tcx.crate_name(krate).as_str() != "rust_out"
+        {
+            continue;
+        }
+        if krate == rustc_span::def_id::LOCAL_CRATE
+            && tcx.crate_name(krate).as_str() == "rust_out_wrapper"
+        {
+            continue;
+        }
+        search_module(tcx, krate.as_def_id(), name, &mut matches, &mut all_names);
+    }
+
+    matches.dedup();
+    match matches.as_slice() {
         [] => {
-            let found_names = hir_items()
-                .map(|item| item.kind.ident())
-                .filter(|ident| ident.is_some())
-                .map(|ident| ident.unwrap().name.as_str().to_owned())
-                .filter(|s| !s.is_empty())
-                .sorted()
-                .dedup()
-                .map(|name| format!("`{name}`"))
-                .join(",\n");
+            let found_names =
+                all_names.into_iter().sorted().dedup().map(|n| format!("`{n}`")).join(",\n");
             panic!("No items named `{name}`.\nInstead found:\n{found_names}");
         }
-        [item] => item.owner_id.def_id,
-        _ => panic!("More than one item named `{name}`"),
+        [def_id] => *def_id,
+        _ => panic!("More than one item named `{name}`: {matches:?}"),
     }
 }
 
@@ -241,13 +284,13 @@ mod tests {
     use super::*;
 
     #[test]
-    #[should_panic(expected = "Test input compilation failed while parsing")]
+    #[should_panic(expected = "Test input compilation failed")]
     fn test_run_compiler_for_testing_panic_when_test_input_contains_syntax_errors() {
         run_compiler_for_testing("syntax error here", |_tcx| panic!("This part shouldn't execute"))
     }
 
     #[test]
-    #[should_panic(expected = "Test input compilation failed while analyzing")]
+    #[should_panic(expected = "Test input compilation failed")]
     fn test_run_compiler_for_testing_panic_when_test_input_triggers_analysis_errors() {
         run_compiler_for_testing("#![feature(no_such_feature)]", |_tcx| {
             panic!("This part shouldn't execute")
