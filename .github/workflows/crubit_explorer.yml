@@ -19,6 +19,8 @@ permissions:
 jobs:
   crubit_explorer:
     runs-on: ubuntu-latest
+    env:
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
 
     steps:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -33,18 +35,36 @@ jobs:
         key: ${{ runner.os }}-npm-${{ hashFiles('crubit_explorer/frontend/package.json') }}
         restore-keys: |
           ${{ runner.os }}-npm-
-    - name: Cache Bazel
-      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+    - name: Authenticate to Google Cloud
+      id: auth
+      env:
+        GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+      if: ${{ env.GCP_SA_KEY != '' }}
+      uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
       with:
-        path: ~/.cache/bazel
-        key: ${{ runner.os }}-bazel-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-bazel-
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+    - name: Setup Bazel
+      uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+      with:
+        bazelisk-cache: true
+        repository-cache: true
+        external-cache: true
+        disk-cache: false
+    - name: Setup Bazel Remote Cache Flags
+      id: bazel_cache_flags
+      run: |
+        if [[ -n "$GCP_SA_KEY" ]]; then
+          echo "RCACHE_FLAGS=--remote_cache=https://storage.googleapis.com/crubit-ci-bazel --google_default_credentials" >> $GITHUB_ENV
+          echo "Using GCS Remote Cache (Read-Write)"
+        else
+          echo "RCACHE_FLAGS=--remote_cache=https://storage.googleapis.com/crubit-ci-bazel --remote_upload_local_results=false" >> $GITHUB_ENV
+          echo "Using GCS Remote Cache (Read-Only)"
+        fi
     - name: Build and test Crubit Explorer
       run: |
         cd crubit_explorer/frontend
         npm i --package-lock-only
         npx pnpm import
         cd ..
-        bazel build //:server
-        bazel test //:server_test
+        bazelisk build ${RCACHE_FLAGS} //:server
+        bazelisk test ${RCACHE_FLAGS} //:server_test
