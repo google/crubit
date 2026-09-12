@@ -94,8 +94,11 @@ unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: ::foo_proto::FooEnum) -> () {
-    unsafe { ::rust_lib_golden::FooService::enum_in_signature(_e) }
+unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: *mut ::foo_proto::FooEnum) -> () {
+    unsafe {
+        let _e = _e.read();
+        ::rust_lib_golden::FooService::enum_in_signature(_e)
+    }
 }
 const _: () = assert!(::std::mem::size_of::<::rust_lib_golden::StructWithProto>() == 4);
 const _: () = assert!(::std::mem::align_of::<::rust_lib_golden::StructWithProto>() == 4);

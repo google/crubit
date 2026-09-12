@@ -103,7 +103,8 @@ unsafe extern "C" fn __crubit_thunk_new(
 unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000028usize_x0000002c_x00000020usize_x00000029(
     __self: &'static ::rs_index_golden::Map,
     index: *const [*const core::ffi::c_void; 2usize],
-) -> &'static str {
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
         let index = (
             {
@@ -115,18 +116,22 @@ unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0
                 index_1
             },
         );
-        <::rs_index_golden::Map as ::core::ops::Index<(usize, usize)>>::index(__self, index)
+        let __rs_return_value =
+            <::rs_index_golden::Map as ::core::ops::Index<(usize, usize)>>::index(__self, index);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
     __self: &'static ::rs_index_golden::Map,
     _index: &'static ::rs_index_golden::Id,
-) -> &'static str {
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
     unsafe {
-        <::rs_index_golden::Map as ::core::ops::Index<&'static ::rs_index_golden::Id>>::index(
-            __self, _index,
-        )
+        let __rs_return_value = <::rs_index_golden::Map as ::core::ops::Index<
+            &'static ::rs_index_golden::Id,
+        >>::index(__self, _index);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]

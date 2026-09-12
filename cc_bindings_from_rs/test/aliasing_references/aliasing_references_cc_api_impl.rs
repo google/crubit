@@ -79,9 +79,12 @@ const _: () =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_mut_uref_uand_umut_uslice(
     __param_0: &'static mut i32,
-    __param_1: &'static mut [i32],
+    __param_1: *mut &'static mut [i32],
 ) -> () {
-    unsafe { ::aliasing_references_golden::mut_ref_and_mut_slice(__param_0, __param_1) }
+    unsafe {
+        let __param_1 = __param_1.read();
+        ::aliasing_references_golden::mut_ref_and_mut_slice(__param_0, __param_1)
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_mut_uref_uand_ushared_urefs(
@@ -96,16 +99,22 @@ unsafe extern "C" fn __crubit_thunk_mut_uref_uand_ushared_urefs(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_mut_uref_uand_ushared_uslice(
     __param_0: &'static mut i32,
-    __param_1: &'static [i32],
+    __param_1: *mut &'static [i32],
 ) -> () {
-    unsafe { ::aliasing_references_golden::mut_ref_and_shared_slice(__param_0, __param_1) }
+    unsafe {
+        let __param_1 = __param_1.read();
+        ::aliasing_references_golden::mut_ref_and_shared_slice(__param_0, __param_1)
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_mut_uref_uand_ustr(
     __param_0: &'static mut i32,
-    __param_1: &'static str,
+    __param_1: *mut &'static str,
 ) -> () {
-    unsafe { ::aliasing_references_golden::mut_ref_and_str(__param_0, __param_1) }
+    unsafe {
+        let __param_1 = __param_1.read();
+        ::aliasing_references_golden::mut_ref_and_str(__param_0, __param_1)
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_mut_urefs(

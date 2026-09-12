@@ -134,17 +134,20 @@ rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::add_with(
 
 namespace example_crate {
 namespace __crubit_internal {
-extern "C" rs_std::StrRef
+extern "C" void
 __crubit_thunk_MyTrait_udescribe_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
-    ::example_crate::MyStruct const&);
+    ::example_crate::MyStruct const&, rs_std::StrRef* __ret_ptr);
 }
 }  // namespace example_crate
 inline rs_std::StrRef
 rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait>::describe(
     ::example_crate::MyStruct const& self) {
-  return example_crate::__crubit_internal::
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  example_crate::__crubit_internal::
       __crubit_thunk_MyTrait_udescribe_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
-          self);
+          self, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 #pragma clang diagnostic pop

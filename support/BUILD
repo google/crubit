@@ -57,6 +57,7 @@ rust_library(
     name = "ctor",
     srcs = ["ctor.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    crate_features = ["same_abi"],
     proc_macro_deps = [":ctor_proc_macros"],
     visibility = [
         "//visibility:public",
