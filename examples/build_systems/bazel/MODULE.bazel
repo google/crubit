@@ -15,7 +15,7 @@ local_path_override(
 
 bazel_dep(name = "rules_rust", version = "0.71.3")
 bazel_dep(name = "rules_cc", version = "0.2.19")
-bazel_dep(name = "toolchains_llvm", version = "1.8.0")
+bazel_dep(name = "toolchains_llvm", version = "1.9.0")
 
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 crate.from_cargo(
@@ -28,8 +28,8 @@ use_repo(crate, "crates")
 
 crubit_toolchains = use_extension("@rules_crubit//bazel:extensions.bzl", "crubit_toolchains")
 crubit_toolchains.configure(
-  llvm_version = "22.1.0",
-  rust_version = "nightly/2026-07-15",
+  llvm_version = "23.1.0",
+  rust_version = "nightly/2026-09-03",
 )
 use_repo(crubit_toolchains, "llvm_toolchain", "rust_toolchains")
 
