@@ -39,6 +39,15 @@ unsafe extern "C" fn __crubit_thunk_new(val: u8, __ret_ptr: *mut core::ffi::c_vo
 }
 const _: () = assert!(::core::mem::offset_of!(::result_golden::CopyNoDefaultResult, in_ok) == 0);
 const _: () = assert!(::core::mem::offset_of!(::result_golden::CopyNoDefaultResult, in_err) == 2);
+const _: () = assert!(::std::mem::size_of::<::result_golden::DropNoDefault>() == 1);
+const _: () = assert!(::std::mem::align_of::<::result_golden::DropNoDefault>() == 1);
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_uresult_ugolden_x0000003a_x0000003aDropNoDefault(
+    __self: *mut ::result_golden::DropNoDefault,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+const _: () = assert!(::core::mem::offset_of!(::result_golden::DropNoDefault, 0) == 0);
 const _: () = assert!(::std::mem::size_of::<::result_golden::GetsResult>() == 8);
 const _: () = assert!(::std::mem::align_of::<::result_golden::GetsResult>() == 4);
 #[unsafe(no_mangle)]
@@ -190,6 +199,24 @@ unsafe extern "C" fn __crubit_thunk_take_uresult_ucopy_uno_udefault_uok(
     r: &'static ::core::result::Result<::result_golden::CopyNoDefault, u8>,
 ) -> u8 {
     unsafe { ::result_golden::take_result_copy_no_default_ok(r) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_take_uresult_udrop_uno_udefault_uok(
+    val: *mut ::core::result::Result<::result_golden::DropNoDefault, u8>,
+) -> u8 {
+    unsafe {
+        let val = val.read();
+        ::result_golden::take_result_drop_no_default_ok(val)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_take_uresult_udrop_uno_udefault_uunit(
+    val: *mut ::core::result::Result<(), ::result_golden::DropNoDefault>,
+) -> bool {
+    unsafe {
+        let val = val.read();
+        ::result_golden::take_result_drop_no_default_unit(val)
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_take_uresult_uhas_udefault(
