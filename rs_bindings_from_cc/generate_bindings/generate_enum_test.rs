@@ -382,3 +382,48 @@ fn test_display() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_enum_doc_comment() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        "// Doc comment for Color.\n\
+         enum Color {\n\
+             kRed,\n\
+         };",
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[doc = " Doc comment for Color.\n \n Generated from: ir_from_cc_virtual_header.h;l=4"]
+            ...
+            pub struct Color(::ffi_11::c_uint);
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_enumerator_doc_comment() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        "enum Color {\n\
+             // Red color variant.\n\
+             kRed,\n\
+         };",
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl Color {
+                #[doc = " Red color variant."]
+                pub const kRed: Color = Color(::ffi_11::new_c_uint(0));
+            }
+        }
+    );
+    Ok(())
+}

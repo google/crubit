@@ -261,6 +261,31 @@ pub type MyTypeAlias = crate::DocCommentSlashes;
 // error: type alias `ConcreteNestedStruct` could not be bound
 //   incomplete type
 
+/// Doc comment for an enum.
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[cfi_encoding = "14DocCommentEnum"]
+///CRUBIT_ANNOTATE: cpp_type=DocCommentEnum
+pub struct DocCommentEnum(::ffi_11::c_uint);
+impl DocCommentEnum {
+    /// Red color variant.
+    pub const kDocCommentRed: DocCommentEnum = DocCommentEnum(::ffi_11::new_c_uint(0));
+    /// Blue color variant.
+    pub const kDocCommentBlue: DocCommentEnum = DocCommentEnum(::ffi_11::new_c_uint(1));
+    /// Green color variant.
+    pub const kDocCommentGreen: DocCommentEnum = DocCommentEnum(::ffi_11::new_c_uint(2));
+}
+impl From<::ffi_11::c_uint> for DocCommentEnum {
+    fn from(value: ::ffi_11::c_uint) -> DocCommentEnum {
+        DocCommentEnum(value)
+    }
+}
+impl From<DocCommentEnum> for ::ffi_11::c_uint {
+    fn from(value: DocCommentEnum) -> ::ffi_11::c_uint {
+        value.0
+    }
+}
+
 // error: struct `MyTemplate<int>` could not be bound
 //   template instantiation is not yet supported
 

@@ -53,8 +53,15 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
                     Ok(value) => value,
                     Err(err) => return omitting_bindings_comment(err.to_string()),
                 };
+            let doc_comment = generate_doc_comment(
+                enumerator.doc_comment(),
+                None,
+                None,
+                db.is_golden_test(),
+                db.kythe_annotations(),
+            );
             let deprecated_attr = enumerator.deprecated().map(|s| DeprecatedAttr(Rc::from(s)));
-            quote! { #deprecated_attr pub const #ident: #name = #name(#value); }
+            quote! { #doc_comment #deprecated_attr pub const #ident: #name = #name(#value); }
         })
         .collect();
     let underlying_type_tokens = underlying_type.to_token_stream(db);
@@ -85,9 +92,8 @@ pub fn generate_enum(db: &BindingsGenerator, enum_: Rc<Enum>) -> Result<ApiSnipp
     };
 
     let annotation = format!("CRUBIT_ANNOTATE: cpp_type={fully_qualified_cc_name}");
-    // TODO(b/494281055): enums don't have doc_comments.
     let doc_comment = generate_doc_comment(
-        None,
+        enum_.doc_comment(),
         None,
         Some(enum_.source_loc()),
         db.is_golden_test(),

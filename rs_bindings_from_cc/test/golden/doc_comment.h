@@ -110,4 +110,14 @@ struct OuterTemplate final {
 /// Type alias to a struct nested in a template instantiation.
 using ConcreteNestedStruct = OuterTemplate<int>::NestedStruct;
 
+/// Doc comment for an enum.
+enum DocCommentEnum {
+  /// Red color variant.
+  kDocCommentRed,
+  /// Blue color variant.
+  kDocCommentBlue,
+  /// Green color variant.
+  kDocCommentGreen,
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DOC_COMMENT_H_
