@@ -240,66 +240,6 @@ pub fn ReturnsEnumInNamespaceInComposableBridgeType(
     }
 }
 
-// error: class `std::basic_istream<char, std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_istream<wchar_t, std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_iostream<char, std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_iostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_filebuf<char, std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_filebuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ifstream<char, std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ifstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ofstream<char, std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ofstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_fstream<char, std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_fstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_stringbuf<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_istringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ostringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_stringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
-//   incomplete type
-
 // Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::ffi_11::c_int])
 
 // Type bindings for rs_std::SliceRef<std::string_view> suppressed due to being mapped to an existing Rust type (*mut[::cc_std::std::__u::raw_string_view])

@@ -220,6 +220,8 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
     options.headers_to_targets.insert(
         {HeaderName(cc_src), options.current_target});
   }
+  options.headers_to_targets.insert(
+      {HeaderName(std::string(kVirtualInputPath)), options.current_target});
   if (!options.extra_instantiations.empty()) {
     absl::SubstituteAndAppend(&virtual_input_file_content, "namespace $0 {\n",
                               kInstantiationsNamespaceName);

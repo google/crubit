@@ -7,7 +7,9 @@
 #include <stdint.h>
 
 #include <cassert>
+#include <chrono>
 #include <functional>
+#include <iostream>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -652,9 +654,16 @@ Importer::DeclItems Importer::GetDeclItems(const clang::Decl& decl) {
   absl::flat_hash_set<ItemId> visited_item_ids;
 
   const auto& decl_context = clang::cast<clang::DeclContext>(decl);
+  const bool is_record = clang::isa<clang::RecordDecl>(&decl_context);
   for (auto decl : GetCanonicalChildren(decl_context)) {
+    const ir_proto::Item* item = nullptr;
+    if (is_record || IsFromCurrentTarget(*decl)) {
+      item = GetDeclItem(decl);
+    } else if (auto it = import_cache_.find(decl); it != import_cache_.end()) {
+      item = it->second.proto_item.get();
+    }
     // Only add item ids for decls that can be successfully imported.
-    if (auto item = GetDeclItem(decl); item != nullptr) {
+    if (item != nullptr) {
       auto item_id = GenerateItemId(*decl);
       // TODO(rosica): Drop this check when we start importing also other
       // redecls, not just the canonical
@@ -958,6 +967,36 @@ void Importer::Import(
     }
   }
 
+  // Ensure all enclosing namespaces (and their canonical declarations) of
+  // imported declarations are also imported so that parent-child relationships
+  // and reopened namespaces are complete.
+  std::vector<clang::NamespaceDecl*> enclosing_namespaces;
+  for (const auto& [decl, entry] : import_cache_) {
+    if (entry.proto_item == nullptr) continue;
+    for (const clang::DeclContext* dc = decl->getDeclContext();
+         dc != nullptr && !dc->isTranslationUnit(); dc = dc->getParent()) {
+      if (const auto* ns_decl = llvm::dyn_cast<clang::NamespaceDecl>(dc)) {
+        auto* mutable_ns_decl = const_cast<clang::NamespaceDecl*>(ns_decl);
+        enclosing_namespaces.push_back(mutable_ns_decl);
+        enclosing_namespaces.push_back(mutable_ns_decl->getCanonicalDecl());
+      }
+    }
+  }
+  for (clang::NamespaceDecl* ns_decl : enclosing_namespaces) {
+    GetDeclItem(ns_decl);
+  }
+
+  // Refresh child_item_ids_ for all imported namespaces so any lazily imported
+  // children are included in source order.
+  for (const auto& [decl, entry] : import_cache_) {
+    if (entry.proto_item == nullptr) continue;
+    if (auto* ns_decl = llvm::dyn_cast<clang::NamespaceDecl>(decl)) {
+      ItemId id = GenerateItemId(*ns_decl);
+      invocation_.child_item_ids_[id] =
+          GetItemIdsInSourceOrder(const_cast<clang::NamespaceDecl*>(ns_decl));
+    }
+  }
+
   invocation_.top_level_item_ids_ =
       GetTopLevelItemIdsInSourceOrder(*translation_unit_decl);
 
@@ -1052,10 +1091,36 @@ void Importer::Import(
   }
 }
 
+static bool HasDeclsFromCurrentTarget(const clang::DeclContext& dc,
+                                      const ImportContext& ictx) {
+  for (const clang::Decl* decl : dc.decls()) {
+    if (ictx.IsFromCurrentTarget(*decl)) {
+      return true;
+    }
+    if (const auto* child_dc = clang::dyn_cast<clang::DeclContext>(decl)) {
+      if (clang::isa<clang::NamespaceDecl>(decl) ||
+          clang::isa<clang::LinkageSpecDecl>(decl)) {
+        if (HasDeclsFromCurrentTarget(*child_dc, ictx)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 void Importer::ImportDeclsFromDeclContext(
     const clang::DeclContext& decl_context) {
+  const bool is_record = clang::isa<clang::RecordDecl>(&decl_context);
   for (auto decl : GetCanonicalChildren(decl_context)) {
-    GetDeclItem(decl);
+    if (is_record || IsFromCurrentTarget(*decl)) {
+      GetDeclItem(decl);
+    } else if (const auto* ns_decl =
+                   clang::dyn_cast<clang::NamespaceDecl>(decl)) {
+      if (HasDeclsFromCurrentTarget(*ns_decl, *this)) {
+        GetDeclItem(decl);
+      }
+    }
   }
 }
 
@@ -1146,6 +1211,14 @@ const ir_proto::Item* absl_nullable Importer::GetDeclItem(
   // not have its corresponding IR item, resulting in lookup failures (crashes)
   // when generating bindings.
   if (item_ptr != nullptr) {
+    for (clang::DeclContext* dc = decl->getDeclContext();
+         dc != nullptr && !dc->isTranslationUnit(); dc = dc->getParent()) {
+      if (auto* ns_decl = clang::dyn_cast<clang::NamespaceDecl>(dc)) {
+        GetDeclItem(ns_decl);
+      } else if (auto* parent_record = clang::dyn_cast<clang::RecordDecl>(dc)) {
+        GetDeclItem(parent_record);
+      }
+    }
     if (auto* specialization_decl =
             llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl);
         specialization_decl && IsFromCurrentTarget(*specialization_decl)) {

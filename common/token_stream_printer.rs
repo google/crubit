@@ -66,12 +66,12 @@ impl RustfmtConfig {
     }
 }
 
-/// Like `tokens_to_string` but also runs the result through `rustfmt`.
-pub fn rs_tokens_to_formatted_string(
-    tokens: TokenStream,
+/// Formats a string of Rust code through `rustfmt`.
+pub fn rs_string_to_formatted_string(
+    tokens_string: String,
     config: Option<&RustfmtConfig>,
 ) -> Result<String> {
-    let mut tokens_string = tokens_to_string(tokens)?
+    let mut tokens_string = tokens_string
         // NOTE: This is a terrible hack. `rustfmt` became more strict about appearances of `...`
         // (the `DotDotDot` token) at some point in the past. This is not a precise or general
         // solution, but rewriting this token to a comment produces formattable code in some cases,
@@ -85,23 +85,21 @@ pub fn rs_tokens_to_formatted_string(
     Ok(tokens_string)
 }
 
+/// Like `tokens_to_string` but also runs the result through `rustfmt`.
+pub fn rs_tokens_to_formatted_string(
+    tokens: TokenStream,
+    config: Option<&RustfmtConfig>,
+) -> Result<String> {
+    rs_string_to_formatted_string(tokens_to_string(tokens)?, config)
+}
+
 /// Like `tokens_to_string` but also runs the result through `rustfmt` and returns provenance.
 pub fn rs_tokens_to_formatted_string_with_provenance(
     tokens: TokenStream,
     config: Option<&RustfmtConfig>,
 ) -> Result<(String, SubstringProvenanceMap)> {
-    let (mut tokens_string, provenance_map) = tokens_to_string_with_provenance(tokens)?;
-    // NOTE: This is a terrible hack. `rustfmt` became more strict about appearances of `...`
-    // (the `DotDotDot` token) at some point in the past. This is not a precise or general
-    // solution, but rewriting this token to a comment produces formattable code in some cases,
-    // making test failure messages better.
-    tokens_string = tokens_string.replace("...", "/*...*/");
-    if let Some(config) = config {
-        tokens_string = rustfmt(tokens_string.clone(), config).with_context(|| {
-            format!("Failed to rustfmt the following Rust tokens:\n\n{tokens_string}")
-        })?;
-    }
-    Ok((tokens_string, provenance_map))
+    let (tokens_string, provenance_map) = tokens_to_string_with_provenance(tokens)?;
+    Ok((rs_string_to_formatted_string(tokens_string, config)?, provenance_map))
 }
 
 /// Like `rs_tokens_to_formatted_string`, but always using a Crubit-internal,
@@ -112,16 +110,23 @@ pub fn rs_tokens_to_formatted_string_for_tests(input: TokenStream) -> Result<Str
     rs_tokens_to_formatted_string(input, Some(&RustfmtConfig::for_testing()))
 }
 
+/// Formats a string of C++ code through `clang-format`.
+pub fn cc_string_to_formatted_string(
+    mut result: String,
+    clang_format_exe_path: Option<&Path>,
+) -> Result<String> {
+    if let Some(clang_format_exe_path) = clang_format_exe_path {
+        result = clang_format(result, clang_format_exe_path)?;
+    }
+    Ok(result)
+}
+
 /// Like `tokens_to_string` but also runs the result through `clang-format`.
 pub fn cc_tokens_to_formatted_string(
     tokens: TokenStream,
     clang_format_exe_path: Option<&Path>,
 ) -> Result<String> {
-    let mut result = tokens_to_string(tokens)?;
-    if let Some(clang_format_exe_path) = clang_format_exe_path {
-        result = clang_format(result, clang_format_exe_path)?;
-    }
-    Ok(result)
+    cc_string_to_formatted_string(tokens_to_string(tokens)?, clang_format_exe_path)
 }
 
 /// Like `tokens_to_string` but also runs the result through `clang-format` and returns provenance.
@@ -129,11 +134,8 @@ pub fn cc_tokens_to_formatted_string_with_provenance(
     tokens: TokenStream,
     clang_format_exe_path: Option<&Path>,
 ) -> Result<(String, SubstringProvenanceMap)> {
-    let (mut result, provenance_map) = tokens_to_string_with_provenance(tokens)?;
-    if let Some(clang_format_exe_path) = clang_format_exe_path {
-        result = clang_format(result, clang_format_exe_path)?;
-    }
-    Ok((result, provenance_map))
+    let (result, provenance_map) = tokens_to_string_with_provenance(tokens)?;
+    Ok((cc_string_to_formatted_string(result, clang_format_exe_path)?, provenance_map))
 }
 
 /// Like `cc_tokens_to_formatted_string`, but always using a hardcoded path to
