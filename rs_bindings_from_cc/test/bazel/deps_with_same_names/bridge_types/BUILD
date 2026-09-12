@@ -7,6 +7,7 @@ load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
+    "rust_test",
 )
 
 package(
@@ -24,6 +25,26 @@ _tags = [
     "manual",
     "nobuilder",
 ]
+
+# Test case 1: absl::StatusOr user
+cc_library(
+    name = "status_user_cc",
+    hdrs = ["status_user.h"],
+    aspect_hints = ["//features:supported"],
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+    deps = [
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+rust_library(
+    name = "status_user_rust",
+    srcs = ["status_user.rs"],
+    cc_deps = [":status_user_cc"],
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+)
 
 # Test case 2: Same-name deps with bridging
 cc_library(
@@ -62,11 +83,25 @@ rust_library(
     target_compatible_with = _compatible_with_flag,
 )
 
+rust_test(
+    name = "status_user_test",
+    srcs = ["status_user_test.rs"],
+    harness = "libtest",
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+    deps = [
+        ":status_user_rust",
+        "@crate_index//:googletest",
+    ],
+)
+
 build_test(
     name = "build_test",
     tags = _tags,
     target_compatible_with = _compatible_with_flag,
     targets = [
+        ":status_user_rust",
+        ":status_user_test",
         ":client_rust",
     ],
 )
