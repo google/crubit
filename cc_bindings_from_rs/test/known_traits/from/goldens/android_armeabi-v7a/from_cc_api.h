@@ -107,11 +107,7 @@ CollidingConstructor final {
   CollidingConstructor(::crubit::UnsafeRelocateTag,
                        CollidingConstructor&& value);
 
-  // Error generating bindings for implementation
-  // `<from_golden::CollidingConstructor as std::convert::From<u64>>` defined at
-  // cc_bindings_from_rs/test/known_traits/from/from.rs;l=190:
-  // From implementation for `u64` is not supported when `From<usize>` is
-  // implemented as it may overlap.
+  explicit CollidingConstructor(::std::uint64_t value);
 
   explicit CollidingConstructor(::std::uintptr_t value);
 
@@ -406,6 +402,16 @@ static_assert(
 inline ::from::CollidingConstructor::CollidingConstructor(
     ::crubit::UnsafeRelocateTag, CollidingConstructor&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCollidingConstructor_uu64(
+    ::std::uint64_t, ::from::CollidingConstructor* __ret_ptr);
+}
+inline CollidingConstructor::CollidingConstructor(::std::uint64_t value) {
+  __crubit_internal::
+      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCollidingConstructor_uu64(
+          value, this);
 }
 namespace __crubit_internal {
 extern "C" void

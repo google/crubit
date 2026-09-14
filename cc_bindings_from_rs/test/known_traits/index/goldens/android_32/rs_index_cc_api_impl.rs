@@ -48,6 +48,13 @@ unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0
     unsafe { <::rs_index_golden::IntPair as ::core::ops::Index<usize>>::index(__self, index) }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uu64(
+    __self: &'static ::rs_index_golden::IntPair,
+    index: u64,
+) -> &'static i32 {
+    unsafe { <::rs_index_golden::IntPair as ::core::ops::Index<u64>>::index(__self, index) }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
     __self: &'static ::rs_index_golden::IntPair,
     index: *mut ::rs_index_golden::CustomIndex,
@@ -67,6 +74,13 @@ unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x000
     unsafe {
         <::rs_index_golden::IntPair as ::core::ops::IndexMut<usize>>::index_mut(__self, index)
     }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uu64(
+    __self: &'static mut ::rs_index_golden::IntPair,
+    index: u64,
+) -> &'static mut i32 {
+    unsafe { <::rs_index_golden::IntPair as ::core::ops::IndexMut<u64>>::index_mut(__self, index) }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(

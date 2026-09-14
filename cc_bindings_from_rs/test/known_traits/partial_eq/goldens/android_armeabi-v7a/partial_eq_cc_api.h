@@ -139,7 +139,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 #ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000002c_x00000020bool_x00000020_x0000003e
 template <>
-struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
+struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
     "(u64 , bool ,)") rs_std::Tuple<::std::uint64_t, bool> {
  public:
   // Default::default
@@ -208,7 +208,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   };
 
  private:
-  unsigned char __padding1[3];
+  unsigned char __padding1[7];
 
  private:
   static void __crubit_field_offset_assertions();

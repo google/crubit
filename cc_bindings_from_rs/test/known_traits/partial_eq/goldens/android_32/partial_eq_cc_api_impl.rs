@@ -42,6 +42,17 @@ unsafe extern "C" fn __crubit_thunk_new(val: usize, __ret_ptr: *mut core::ffi::c
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003atuple_ucollision_x0000003a_x0000003aMyStruct_u_x00000028u64_x0000002c_x00000020bool_x00000029(
+    __self: &'static ::partial_eq_golden::tuple_collision::MyStruct,
+    _other: &'static (u64, bool),
+) -> bool {
+    unsafe {
+        <::partial_eq_golden::tuple_collision::MyStruct as ::core::cmp::PartialEq<(u64, bool)>>::eq(
+            __self, _other,
+        )
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003atuple_ucollision_x0000003a_x0000003aMyStruct_u_x00000028usize_x0000002c_x00000020bool_x00000029(
     __self: &'static ::partial_eq_golden::tuple_collision::MyStruct,
     _other: &'static (usize, bool),
@@ -70,6 +81,17 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a
         )
     }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028u64_x0000002c_x00000020bool_x00000029(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = <(u64, bool) as ::core::default::Default>::default();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+const _: () = assert!(::core::mem::offset_of!((u64, bool,), 0) == 0);
+const _: () = assert!(::core::mem::offset_of!((u64, bool,), 1) == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020bool_x00000029(
     __ret_ptr: *mut core::ffi::c_void,

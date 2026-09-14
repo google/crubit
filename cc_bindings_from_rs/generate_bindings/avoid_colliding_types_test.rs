@@ -66,14 +66,7 @@ fn test_no_preferred_type_is_present() {
 #[test]
 fn test_preferred_type_is_present() {
     run_compiler_for_testing("", |tcx| {
-        let input = [
-            tcx.types.u32,
-            tcx.types.usize,
-            tcx.types.u64,
-            tcx.types.i32,
-            tcx.types.isize,
-            tcx.types.i64,
-        ];
+        let input = [tcx.types.usize, tcx.types.u64, tcx.types.isize, tcx.types.i64];
         let expected_output = [tcx.types.usize, tcx.types.isize].to_vec();
         let actual_output = filter_colliding_types(tcx, input);
         assert_eq!(actual_output, expected_output);
@@ -136,14 +129,14 @@ fn test_ref_collision() {
 #[test]
 fn test_type_collision_risk_details() {
     run_compiler_for_testing("", |tcx| {
-        let u32_ty = tcx.types.u32;
+        let u64_ty = tcx.types.u64;
         let usize_ty = tcx.types.usize;
 
-        let input = [u32_ty, usize_ty];
+        let input = [u64_ty, usize_ty];
         let actual_output = input.into_iter().avoid_colliding_types(tcx, |ty| *ty);
 
         let expected_output = [
-            Err(TypeCollisionRisk { item: u32_ty, key_type: u32_ty, preferred_type: usize_ty }),
+            Err(TypeCollisionRisk { item: u64_ty, key_type: u64_ty, preferred_type: usize_ty }),
             Ok(usize_ty),
         ]
         .to_vec();
