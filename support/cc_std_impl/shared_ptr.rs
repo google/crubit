@@ -336,6 +336,44 @@ impl<T: Sized + Delete> shared_ptr<T> {
     }
 }
 
+// --- Conversions to `shared_ptr` ---
+
+impl<T> From<T> for shared_ptr<T> {
+    fn from(value: T) -> Self {
+        shared_ptr::new(value)
+    }
+}
+
+impl<T> From<Box<T>> for shared_ptr<T> {
+    fn from(value: Box<T>) -> Self {
+        shared_ptr::from_box(value)
+    }
+}
+
+impl<T> From<Pin<Box<T>>> for shared_ptr<T> {
+    fn from(value: Pin<Box<T>>) -> Self {
+        shared_ptr::from_pinned_box(value)
+    }
+}
+
+impl<T> From<Arc<T>> for shared_ptr<T> {
+    fn from(value: Arc<T>) -> Self {
+        shared_ptr::from_arc(value)
+    }
+}
+
+impl<T> From<unique_ptr<T>> for shared_ptr<T> {
+    fn from(value: unique_ptr<T>) -> Self {
+        shared_ptr::from_unique_ptr(value)
+    }
+}
+
+impl<T: Delete> From<virtual_unique_ptr<T>> for shared_ptr<T> {
+    fn from(value: virtual_unique_ptr<T>) -> Self {
+        shared_ptr::from_virtual_unique_ptr(value)
+    }
+}
+
 // SAFETY: `self.ptr` is a plain pointer field with no interior mutability, so it can only change
 // through a `&mut shared_ptr<T>` or a C++ move. Sharing ownership with other `shared_ptr`s cannot
 // null it out, because each `shared_ptr` holds its own pointer and a strong reference count.
