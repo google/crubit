@@ -19,6 +19,7 @@ pub mod ns {
     #[cfi_encoding = "N2ns1XE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=ns :: X
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct X {
         pub f: ::ffi_11::c_int,
     }

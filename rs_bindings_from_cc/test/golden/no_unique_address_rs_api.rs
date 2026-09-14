@@ -23,6 +23,7 @@
 #[cfi_encoding = "6Struct"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=Struct
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Struct {
     /// Nobody would ever use a no_unique_address int/char field, this is just
     /// enough to test that the transmute is correct.
@@ -82,6 +83,7 @@ pub mod r#struct {
 #[cfi_encoding = "20PaddingBetweenFields"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=PaddingBetweenFields
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct PaddingBetweenFields {
     /// size: 1, alignment: 1 => offset: 0
     pub field1: ::ffi_11::c_char,
@@ -228,6 +230,7 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 #[cfi_encoding = "18FieldInTailPadding"]
 #[repr(C, align(4))]
 ///CRUBIT_ANNOTATE: cpp_type=FieldInTailPadding
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct FieldInTailPadding {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     /// Reason for representing this field as a blob of bytes:

@@ -18,6 +18,7 @@
 #[cfi_encoding = "10Nontrivial"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub value: ::ffi_11::c_int,

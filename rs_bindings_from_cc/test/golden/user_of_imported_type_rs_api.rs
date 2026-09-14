@@ -36,6 +36,7 @@ pub fn UsesImportedType(mut t: ::trivial_type_cc::ns::Trivial) -> ::trivial_type
 #[cfi_encoding = "18UserOfImportedType"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UserOfImportedType
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct UserOfImportedType {
     pub trivial: *mut ::trivial_type_cc::ns::Trivial,
 }

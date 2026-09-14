@@ -18,6 +18,7 @@
 #[cfi_encoding = "11RustDerived"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=RustDerived
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct RustDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
     /// Reason for representing this field as a blob of bytes:

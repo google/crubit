@@ -18,6 +18,7 @@
 #[cfi_encoding = "9SomeClass"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=SomeClass
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct SomeClass {
     pub int_var: ::ffi_11::c_int,
 }
@@ -95,6 +96,7 @@ pub mod some_class {
 #[cfi_encoding = "15InstanceMethods"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=InstanceMethods
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct InstanceMethods {
     pub int_field: ::ffi_11::c_int,
 }

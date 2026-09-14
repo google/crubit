@@ -92,6 +92,7 @@ pub mod crubit {
         #[cfi_encoding = "N6crubit4test13RegularStructE"]
         #[repr(C, align(4))]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: RegularStruct
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct RegularStruct {
             __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
             /// Reason for representing this field as a blob of bytes:
@@ -170,6 +171,7 @@ pub mod crubit {
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafeUnpin
         ///CRUBIT_ANNOTATE: cpp_thread_safe=
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct ThreadSafeUnpin {
             __opaque: ::core::cell::UnsafeCell<[::core::mem::MaybeUninit<u8>; 1]>,
         }
@@ -262,6 +264,7 @@ pub mod crubit {
         #[repr(C)]
         ///CRUBIT_ANNOTATE: cpp_type=crubit :: test :: ThreadSafePinned
         ///CRUBIT_ANNOTATE: cpp_thread_safe=
+        ///CRUBIT_ANNOTATE: cpp_move_constructible=
         pub struct ThreadSafePinned {
             __opaque: ::core::cell::UnsafeCell<[::core::mem::MaybeUninit<u8>; 1]>,
         }

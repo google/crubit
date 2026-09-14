@@ -31,6 +31,7 @@ pub fn SomeApi<'i>(i: &'i crate::NiIF) {
 #[cfi_encoding = "__CcTemplateInst2NiIifE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Ni < int , float >
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct __CcTemplateInst2NiIifE {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

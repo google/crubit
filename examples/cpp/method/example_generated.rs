@@ -19,6 +19,7 @@ pub mod foo {
     #[cfi_encoding = "N3foo3BarE"]
     #[repr(C)]
     ///CRUBIT_ANNOTATE: cpp_type=foo :: Bar
+    ///CRUBIT_ANNOTATE: cpp_move_constructible=
     pub struct Bar {
         pub x: ::ffi_11::c_int,
     }

@@ -53,6 +53,7 @@ pub type BadSameAbiAttr = ::ffi_11::c_uchar;
 #[cfi_encoding = "26ExistingRustTypeFieldTypes"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=ExistingRustTypeFieldTypes
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct ExistingRustTypeFieldTypes {
     pub my_i8_struct: i8,
     pub my_i8_class: i8,

@@ -193,6 +193,7 @@ pub mod polymorphic_base2 {
 #[cfi_encoding = "18PolymorphicDerived"]
 #[repr(C, align(8))]
 ///CRUBIT_ANNOTATE: cpp_type=PolymorphicDerived
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct PolymorphicDerived {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 16],
 }

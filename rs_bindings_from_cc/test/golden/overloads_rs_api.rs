@@ -56,6 +56,7 @@ pub fn AlsoTemplateOverload() {
 #[cfi_encoding = "3Foo"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Foo
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Foo {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }

@@ -22,6 +22,7 @@
 #[cfi_encoding = "10EmptyUnion"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=EmptyUnion
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub union EmptyUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -47,6 +48,7 @@ impl Default for EmptyUnion {
 #[cfi_encoding = "10Nontrivial"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Nontrivial
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct Nontrivial {
     __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
     pub field: ::ffi_11::c_int,
@@ -108,6 +110,7 @@ impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
 #[cfi_encoding = "13UnionToRename"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionToRename
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub union RenamedUnion {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
 }
@@ -198,6 +201,7 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
 #[cfi_encoding = "13NonEmptyUnion"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NonEmptyUnion
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub union NonEmptyUnion {
     pub bool_field: bool,
     pub char_field: ::ffi_11::c_char,
@@ -248,6 +252,7 @@ unsafe impl ::cxx::ExternType for NonCopyUnion {
 #[cfi_encoding = "13NonCopyUnion2"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=NonCopyUnion2
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub union NonCopyUnion2 {
     pub trivial_member: bool,
     pub nontrivial_member:
@@ -324,6 +329,7 @@ impl ::ctor::UnpinAssign<::ctor::RvalueReference<'_, Self>> for NonCopyUnion2 {
 #[cfi_encoding = "20UnionWithOpaqueField"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionWithOpaqueField
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub union UnionWithOpaqueField {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
@@ -351,6 +357,7 @@ impl Default for UnionWithOpaqueField {
 #[cfi_encoding = "21TrivialButInheritable"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TrivialButInheritable
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct TrivialButInheritable {
     pub x: ::ffi_11::c_int,
 }
@@ -380,6 +387,7 @@ impl Default for TrivialButInheritable {
 #[cfi_encoding = "20UnionWithInheritable"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=UnionWithInheritable
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub union UnionWithInheritable {
     pub t: crate::TrivialButInheritable,
 }
@@ -409,6 +417,7 @@ impl Default for UnionWithInheritable {
 #[cfi_encoding = "12TypedefUnion"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypedefUnion
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub union TypedefUnion {
     pub trivial_member: bool,
 }
@@ -438,6 +447,7 @@ impl Default for TypedefUnion {
 #[cfi_encoding = "27TypedefUnionWithInheritable"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=TypedefUnionWithInheritable
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub union TypedefUnionWithInheritable {
     pub t: crate::TrivialButInheritable,
 }

@@ -10,6 +10,7 @@ SUPPORTED_FEATURES = [
     "supported",
     "assume_lifetimes",
     "async_fn_send_modulo_regions",
+    "cpp_move_constructible_annotation",
 ]
 
 # A list of targets that should not be granted the `assume_lifetimes` feature by default.
