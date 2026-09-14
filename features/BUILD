@@ -249,6 +249,16 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling generating bindings for generic types.
+#
+# See b/259749095
+crubit_feature_hint(
+    name = "generics",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["generics"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

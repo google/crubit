@@ -168,7 +168,7 @@ fn test_format_struct_cpp_name_with_kythe_annotations() {
 }
 
 #[test]
-fn test_format_item_generic_struct() {
+fn test_format_item_generic_struct_without_feature() {
     let test_src = r#"
             pub struct Point<T> {
                 pub x: T,
@@ -176,18 +176,41 @@ fn test_format_item_generic_struct() {
             }
         "#;
     test_format_item(test_src, "Point", |result| {
-        let result = result.unwrap().unwrap();
-        let main_api = &result.main_api;
-        assert_cc_matches!(
-            main_api.tokens,
-            quote! {
-                template <typename T>
-                struct Point {
-                    static_assert(false, "This template can only be used via a specialization");
-                };
-            }
+        let err = result.unwrap_err();
+        assert_eq!(
+            err,
+            "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"
         );
     });
+}
+
+#[test]
+fn test_format_item_generic_struct() {
+    let test_src = r#"
+            pub struct Point<T> {
+                pub x: T,
+                pub y: T,
+            }
+        "#;
+    test_format_item_with_features(
+        test_src,
+        "Point",
+        crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    template <typename T>
+                    struct Point {
+                        static_assert(false, "This template can only be used via a specialization");
+                    };
+                }
+            );
+        },
+    );
 }
 
 #[test]
@@ -235,19 +258,25 @@ fn test_format_item_generic_enum() {
                 Polar{angle: T, dist: T},
             }
         "#;
-    test_format_item(test_src, "Point", |result| {
-        let result = result.unwrap().unwrap();
-        let main_api = &result.main_api;
-        assert_cc_matches!(
-            main_api.tokens,
-            quote! {
-                template <typename T>
-                struct Point {
-                    static_assert(false, "This template can only be used via a specialization");
-                };
-            }
-        );
-    });
+    test_format_item_with_features(
+        test_src,
+        "Point",
+        crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    template <typename T>
+                    struct Point {
+                        static_assert(false, "This template can only be used via a specialization");
+                    };
+                }
+            );
+        },
+    );
 }
 
 #[test]
@@ -258,19 +287,25 @@ fn test_format_item_generic_union() {
                 pub y: i32,
             }
         "#;
-    test_format_item(test_src, "SomeUnion", |result| {
-        let result = result.unwrap().unwrap();
-        let main_api = &result.main_api;
-        assert_cc_matches!(
-            main_api.tokens,
-            quote! {
-                template <typename T>
-                union SomeUnion {
-                    static_assert(false, "This template can only be used via a specialization");
-                };
-            }
-        );
-    });
+    test_format_item_with_features(
+        test_src,
+        "SomeUnion",
+        crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Generics,
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            let main_api = &result.main_api;
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    template <typename T>
+                    union SomeUnion {
+                        static_assert(false, "This template can only be used via a specialization");
+                    };
+                }
+            );
+        },
+    );
 }
 
 #[test]

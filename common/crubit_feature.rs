@@ -88,6 +88,9 @@ flagset::flags! {
 
         /// Emit `*View` and `*Mut` directly for C++ proto references (`const Proto&` and `Proto&`).
         ProtoReferences,
+
+        /// Generate bindings for generic types (templates).
+        Generics,
     }
 }
 
@@ -124,6 +127,7 @@ impl CrubitFeature {
             Self::AsyncFnSendModuloRegions => "async_fn_send_modulo_regions",
             Self::CppMoveConstructibleAnnotation => "cpp_move_constructible_annotation",
             Self::ProtoReferences => "proto_references",
+            Self::Generics => "generics",
         }
     }
 
@@ -167,6 +171,7 @@ impl CrubitFeature {
                 "//features:cpp_move_constructible_annotation"
             }
             Self::ProtoReferences => "//features:proto_references",
+            Self::Generics => "//features:generics",
         }
     }
 }
@@ -185,6 +190,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::OoCasting
                 - CrubitFeature::ProtoReferences
                 - CrubitFeature::CppMoveConstructibleAnnotation
+                - CrubitFeature::Generics
         }
         // `supported` automatically implies `types`.
         b"supported" => CrubitFeature::Supported | CrubitFeature::Types,
@@ -214,6 +220,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
             CrubitFeature::CppMoveConstructibleAnnotation.into()
         }
         b"proto_references" => CrubitFeature::ProtoReferences.into(),
+        b"generics" => CrubitFeature::Generics.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
@@ -324,6 +331,12 @@ mod tests {
     fn test_serialized_crubit_feature() {
         let SerializedCrubitFeature(features) = serde_json::from_str("\"supported\"").unwrap();
         assert_eq!(features, CrubitFeature::Supported | CrubitFeature::Types);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_feature_generics() {
+        let SerializedCrubitFeature(features) = serde_json::from_str("\"generics\"").unwrap();
+        assert_eq!(features, CrubitFeature::Generics);
     }
 
     #[gtest]
