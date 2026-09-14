@@ -157,6 +157,17 @@ unsafe extern "C" fn __crubit_thunk_struct_uref(
 ) -> i32 {
     unsafe { ::functions_golden::generic_fn_tests::as_ref_trait_tests::struct_ref(arg) }
 }
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_two_uargs(
+    x: *mut &'static [i32],
+    y: *mut &'static [i32],
+) -> i32 {
+    unsafe {
+        let x = x.read();
+        let y = y.read();
+        ::functions_golden::generic_fn_tests::as_ref_trait_tests::two_args(x, y)
+    }
+}
 const _: () = assert!(
     ::std::mem::size_of::<::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>()
         == 4

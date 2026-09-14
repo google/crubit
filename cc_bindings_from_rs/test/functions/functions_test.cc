@@ -170,6 +170,10 @@ TEST(GenericFnTest, AsRefTraitTests) {
   EXPECT_EQ(222, result[1]);
   EXPECT_EQ(333, result[2]);
 
+  EXPECT_EQ(1 + 2 + 3 + 10 + 20 + 30,
+            tests::two_args(rs_std::SliceRef<const int32_t>{vec1},
+                            rs_std::SliceRef<const int32_t>{vec2}));
+
   tests::MyStruct my_struct = tests::MyStruct::new_(123);
   EXPECT_EQ(123, tests::struct_ref(my_struct));
 }
