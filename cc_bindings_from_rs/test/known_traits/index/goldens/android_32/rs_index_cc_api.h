@@ -64,11 +64,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   ::std::int32_t const& $(__anon1) operator[](::std::uintptr_t index) const& $(
       __anon1) CRUBIT_LIFETIME_BOUND;
 
-  // Error generating bindings for implementation `<rs_index_golden::IntPair as
-  // std::ops::Index<u64>>` defined at
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=44:
-  // Index implementation for `u64` is not supported when `Index<usize>` is
-  // implemented as it may overlap.
+  ::std::int32_t const& $(__anon1) operator[](::std::uint64_t index) const& $(
+      __anon1) CRUBIT_LIFETIME_BOUND;
 
   ::std::int32_t const& $(__anon1) operator[](
       ::rs_index::CustomIndex index) const& $(__anon1) CRUBIT_LIFETIME_BOUND;
@@ -76,11 +73,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   ::std::int32_t& $(__anon1) operator[](::std::uintptr_t index) &
       $(__anon1) CRUBIT_LIFETIME_BOUND;
 
-  // Error generating bindings for implementation `<rs_index_golden::IntPair as
-  // std::ops::IndexMut<u64>>` defined at
-  // cc_bindings_from_rs/test/known_traits/index/rs_index.rs;l=56:
-  // IndexMut implementation for `u64` is not supported when `IndexMut<usize>`
-  // is implemented as it may overlap.
+  ::std::int32_t& $(__anon1) operator[](::std::uint64_t index) &
+      $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   ::std::int32_t& $(__anon1) operator[](::rs_index::CustomIndex index) &
       $(__anon1) CRUBIT_LIFETIME_BOUND;
@@ -262,6 +256,19 @@ inline ::std::int32_t const& $(__anon1) IntPair::operator[](
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t const& $(__anon1)
+    __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uu64(
+        ::rs_index::IntPair const&, ::std::uint64_t);
+}
+inline ::std::int32_t const& $(__anon1) IntPair::operator[](
+    ::std::uint64_t index) const& $(__anon1) CRUBIT_LIFETIME_BOUND {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uu64(
+          self, index);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t const& $(__anon1)
     __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aIntPair_urs_uindex_ugolden_x0000003a_x0000003aCustomIndex(
         ::rs_index::IntPair const&, ::rs_index::CustomIndex*);
 }
@@ -283,6 +290,19 @@ inline ::std::int32_t& $(__anon1) IntPair::operator[](::std::uintptr_t index) &
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uusize(
+          self, index);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t& $(__anon1)
+    __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uu64(
+        ::rs_index::IntPair&, ::std::uint64_t);
+}
+inline ::std::int32_t& $(__anon1) IntPair::operator[](::std::uint64_t index) &
+    $(__anon1) CRUBIT_LIFETIME_BOUND {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x0000003a_x0000003aIntPair_uu64(
           self, index);
 }
 

@@ -63,19 +63,28 @@ impl<'tcx, T: 'tcx, I> AvoidCollidingTypes<'tcx, T> for I where I: Iterator<Item
 /// to `avoid_colliding_types`).
 ///
 /// Implementation covers 3 kinds of types:
-/// * Types that may map to the same C++ type (e.g. `usize` and `u64`) are grouped into
-///   equivalence classes (e.g. `usize`, `u32`, and `u64`) and one of the types is chosen
-///   as the preferred type (e.g. `usize`, because it is common in `Index<T>`).
-/// * Structured types that need to be recursively handled (e.g. tuples, refs, slices, etc.,
-///   but not ADTs/structs)
+/// * Types that map to the same C++ type based on target pointer size (e.g. `usize` and `u64`
+///   on 64-bit targets, or `usize` and `u32` on 32-bit targets) are mapped to a canonical preferred type
+///   (e.g. `usize`) to avoid emitting ambiguous C++ overloads.
+/// * Structured types that need to be recursively handled (e.g. tuples, refs, slices, ADTs, etc.).
 /// * Types that don't risk a C++ collision (e.g. `char` and `u8`) are returned as their
 ///   own preferred type (i.e. their equivalence class contains only 1 type - themselves).
 fn get_preferred_type<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
     use ty::IntTy::*;
     use ty::UintTy::*;
     match ty.kind() {
-        ty::TyKind::Int(Isize | I32 | I64) => Ty::new_int(tcx, Isize),
-        ty::TyKind::Uint(Usize | U32 | U64) => Ty::new_uint(tcx, Usize),
+        ty::TyKind::Int(Isize | I64) if tcx.data_layout.pointer_size().bytes() == 8 => {
+            Ty::new_int(tcx, Isize)
+        }
+        ty::TyKind::Uint(Usize | U64) if tcx.data_layout.pointer_size().bytes() == 8 => {
+            Ty::new_uint(tcx, Usize)
+        }
+        ty::TyKind::Int(Isize | I32) if tcx.data_layout.pointer_size().bytes() == 4 => {
+            Ty::new_int(tcx, Isize)
+        }
+        ty::TyKind::Uint(Usize | U32) if tcx.data_layout.pointer_size().bytes() == 4 => {
+            Ty::new_uint(tcx, Usize)
+        }
         ty::TyKind::Tuple(substs) => {
             let new_substs: Vec<Ty<'tcx>> =
                 substs.iter().map(|subst_ty| get_preferred_type(tcx, subst_ty)).collect();
@@ -96,6 +105,19 @@ fn get_preferred_type<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
         ty::TyKind::Array(elem_ty, const_val) => {
             let new_elem_ty = get_preferred_type(tcx, *elem_ty);
             Ty::new_array_with_const_len(tcx, new_elem_ty, *const_val)
+        }
+        ty::TyKind::Adt(def, args) => {
+            let new_args: Vec<ty::GenericArg<'tcx>> = args
+                .iter()
+                .map(|arg| {
+                    if let Some(ty) = arg.as_type() {
+                        ty::GenericArg::from(get_preferred_type(tcx, ty))
+                    } else {
+                        arg
+                    }
+                })
+                .collect();
+            Ty::new_adt(tcx, *def, tcx.mk_args(&new_args))
         }
         _ => ty,
     }

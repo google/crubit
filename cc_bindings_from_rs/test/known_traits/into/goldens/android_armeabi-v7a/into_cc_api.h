@@ -88,11 +88,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_golden :: CollidingOperators") alignas(8) [[clang::trivial_abi]]
 CollidingOperators final {
  public:
-  // Error generating bindings for implementation
-  // `<into_golden::CollidingOperators as std::convert::Into<u64>>` defined at
-  // cc_bindings_from_rs/test/known_traits/into/into.rs;l=215:
-  // Conversion to `u64` is not supported when conversion to `usize` is
-  // implemented as they may overlap in C++.
+  explicit operator ::std::uint64_t();
 
   explicit operator ::std::uintptr_t();
 
@@ -388,6 +384,17 @@ static_assert(
     ::std::is_trivially_move_constructible_v<::into::CollidingOperators>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::into::CollidingOperators>);
+namespace __crubit_internal {
+extern "C" ::std::uint64_t
+__crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aCollidingOperators_uu64(
+    ::into::CollidingOperators*);
+}
+inline CollidingOperators::operator ::std::uint64_t() {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aCollidingOperators_uu64(
+          &self);
+}
 namespace __crubit_internal {
 extern "C" ::std::uintptr_t
 __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aCollidingOperators_uusize(

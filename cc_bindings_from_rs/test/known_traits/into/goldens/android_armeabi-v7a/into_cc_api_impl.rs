@@ -74,6 +74,15 @@ const _: () = assert!(::core::mem::offset_of!(::into_golden::CloneCopyType, 0) =
 const _: () = assert!(::std::mem::size_of::<::into_golden::CollidingOperators>() == 8);
 const _: () = assert!(::std::mem::align_of::<::into_golden::CollidingOperators>() == 8);
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aCollidingOperators_uu64(
+    __self: *mut ::into_golden::CollidingOperators,
+) -> u64 {
+    unsafe {
+        let __self = __self.read();
+        <::into_golden::CollidingOperators as ::core::convert::Into<u64>>::into(__self)
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Into_uinto_uinto_ugolden_x0000003a_x0000003aCollidingOperators_uusize(
     __self: *mut ::into_golden::CollidingOperators,
 ) -> usize {
