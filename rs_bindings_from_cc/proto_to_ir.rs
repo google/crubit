@@ -341,6 +341,11 @@ impl TryFrom<::ir_rust_proto::TemplateSpecializationView<'_>> for TemplateSpecia
                     raw_element_type: CcType::try_from(v.element_type())?,
                 }
             }
+            ::ir_rust_proto::template_specialization::KindOneof::StdOptional(o) => {
+                TemplateSpecializationKind::StdOptional {
+                    raw_element_type: CcType::try_from(o.element_type())?,
+                }
+            }
             ::ir_rust_proto::template_specialization::KindOneof::StdSharedPtr(up) => {
                 TemplateSpecializationKind::StdSharedPtr {
                     raw_element_type: CcType::try_from(up.element_type())?,
