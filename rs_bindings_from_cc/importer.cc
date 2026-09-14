@@ -1994,6 +1994,13 @@ absl::StatusOr<CcType> Importer::ConvertType(
   absl::StatusOr<CcType> cpp_type =
       ConvertUnattributedType(type, lifetimes, nullable, assume_lifetimes);
   if (cpp_type.ok()) {
+    // Nullability is sugar: it lives on an `AttributedType` wrapping the type,
+    // and `ConvertUnattributedType` looks straight through that. `type` is
+    // still sugared here, so this is the last point at which we can see it.
+    clang::NullabilityKindOrNone nullability = type.getNullability();
+    cpp_type->is_nonnull = nullability.has_value() &&
+                           *nullability == clang::NullabilityKind::NonNull;
+
     std::optional<std::string> unknown_attr =
         CollectUnknownTypeAttrs(type, [](clang::attr::Kind kind) {
           using enum clang::attr::Kind;
@@ -2002,9 +2009,12 @@ absl::StatusOr<CcType> Importer::ConvertType(
             // understood. The major exception is lifetimes, which we do
             // already handle separately.
             case AnnotateType:
-            // Simply ignore nullability attributes for now.
-            // TODO(mboehme): Ultimately, we want to interpret these and
-            // change the bindings we produce based on the nullability.
+            // Nullability is read above, via `Type::getNullability()`. These
+            // cases only mark the attributes as recognized, so that they are
+            // not reported as unknown; removing them would cost every
+            // annotated type its bindings.
+            // TODO(mboehme): `_Nonnull` currently only changes the bindings we
+            // produce for smart pointers. Extend this to raw pointers.
             case TypeNullable:
             case TypeNonNull:
             case TypeNullUnspecified:

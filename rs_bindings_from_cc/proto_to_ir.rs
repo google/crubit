@@ -115,6 +115,7 @@ impl TryFrom<::ir_rust_proto::CcTypeView<'_>> for CcType {
         Ok(CcType {
             variant,
             is_const: proto.is_const(),
+            is_nonnull: proto.is_nonnull(),
             unknown_attr: Rc::from(proto.unknown_attr().to_str()?),
             explicit_lifetimes: proto
                 .explicit_lifetimes()

@@ -216,6 +216,10 @@ struct CcType {
 
   Variant variant;
   bool is_const = false;
+  // True if this use of the type was annotated `_Nonnull` (e.g. via
+  // `absl_nonnull`). Like `is_const`, this describes one use of the type
+  // rather than the type itself.
+  bool is_nonnull = false;
   std::string unknown_attr = "";
   // An ordered list of lifetime variable names applied to this type. It is
   // valid for the same name to appear multiple times.

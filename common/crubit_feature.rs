@@ -91,6 +91,10 @@ flagset::flags! {
 
         /// Generate bindings for generic types (templates).
         Generics,
+
+        /// Honor `absl_nonnull` (clang's `_Nonnull`) on `std::unique_ptr` and `std::shared_ptr` by
+        /// wrapping the generated Rust type in `cc_std::std::NonNull`.
+        NonnullSmartPointers,
     }
 }
 
@@ -128,6 +132,7 @@ impl CrubitFeature {
             Self::CppMoveConstructibleAnnotation => "cpp_move_constructible_annotation",
             Self::ProtoReferences => "proto_references",
             Self::Generics => "generics",
+            Self::NonnullSmartPointers => "nonnull_smart_pointers",
         }
     }
 
@@ -172,6 +177,7 @@ impl CrubitFeature {
             }
             Self::ProtoReferences => "//features:proto_references",
             Self::Generics => "//features:generics",
+            Self::NonnullSmartPointers => "//features:nonnull_smart_pointers",
         }
     }
 }
@@ -191,6 +197,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::ProtoReferences
                 - CrubitFeature::CppMoveConstructibleAnnotation
                 - CrubitFeature::Generics
+                - CrubitFeature::NonnullSmartPointers
         }
         // `supported` automatically implies `types`.
         b"supported" => CrubitFeature::Supported | CrubitFeature::Types,
@@ -221,6 +228,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         }
         b"proto_references" => CrubitFeature::ProtoReferences.into(),
         b"generics" => CrubitFeature::Generics.into(),
+        b"nonnull_smart_pointers" => CrubitFeature::NonnullSmartPointers.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)

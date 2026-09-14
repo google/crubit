@@ -259,6 +259,15 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling `absl_nonnull` on `std::unique_ptr` and `std::shared_ptr` to generate
+# `cc_std::std::NonNull`-wrapped Rust types.
+crubit_feature_hint(
+    name = "nonnull_smart_pointers",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["nonnull_smart_pointers"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

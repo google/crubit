@@ -399,6 +399,8 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::LifetimeNameView<'pb> {
 pub struct CcType {
     pub(crate) variant: CcTypeVariant,
     pub(crate) is_const: bool,
+    // Whether this use of the type was annotated `_Nonnull` (e.g. via `absl_nonnull`).
+    pub(crate) is_nonnull: bool,
     pub(crate) unknown_attr: Rc<str>,
     // An ordered list of lifetime variable names applied to this type. It is valid for the same
     // name to appear multiple times.
@@ -412,7 +414,13 @@ impl CcType {
         unknown_attr: impl Into<Rc<str>>,
         explicit_lifetimes: Vec<Rc<str>>,
     ) -> Self {
-        Self { variant, is_const, unknown_attr: unknown_attr.into(), explicit_lifetimes }
+        Self {
+            variant,
+            is_const,
+            is_nonnull: false,
+            unknown_attr: unknown_attr.into(),
+            explicit_lifetimes,
+        }
     }
 
     pub fn variant(&self) -> &CcTypeVariant {
@@ -429,6 +437,14 @@ impl CcType {
 
     pub fn set_is_const(&mut self, is_const: bool) {
         self.is_const = is_const;
+    }
+
+    /// Whether this use of the type was annotated `_Nonnull` (e.g. via `absl_nonnull`).
+    ///
+    /// This is recorded for every type that can carry the annotation, but only smart pointers
+    /// currently act on it. See `RsTypeKind::into_nonnull_smart_pointer`.
+    pub fn is_nonnull(&self) -> bool {
+        self.is_nonnull
     }
 
     pub fn unknown_attr(&self) -> &str {
@@ -453,6 +469,7 @@ impl From<&Record<'_>> for CcType {
         CcType {
             variant: CcTypeVariant::Decl { id: record.id(), template_args: None },
             is_const: false,
+            is_nonnull: false,
             unknown_attr: Rc::default(),
             explicit_lifetimes: Vec::default(),
         }
@@ -464,6 +481,7 @@ impl From<&TypeAlias<'_>> for CcType {
         CcType {
             variant: CcTypeVariant::Decl { id: alias.id(), template_args: None },
             is_const: false,
+            is_nonnull: false,
             unknown_attr: Rc::default(),
             explicit_lifetimes: Vec::default(),
         }
@@ -475,6 +493,7 @@ impl From<&ExistingRustType<'_>> for CcType {
         CcType {
             variant: CcTypeVariant::Decl { id: existing_rust_type.id(), template_args: None },
             is_const: false,
+            is_nonnull: false,
             unknown_attr: Rc::default(),
             explicit_lifetimes: Vec::default(),
         }

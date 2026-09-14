@@ -325,7 +325,18 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
             // This is the implementation of `BindingsGenerator::rs_type_kind()`, so of
             // course we can't call `rs_type_kind` here, and instead reuse the raw construction
             // logic.
-            RsTypeKind::from_item_raw(db, item, &lifetime_options, template_args, &lifetimes)
+            let type_kind =
+                RsTypeKind::from_item_raw(db, item, &lifetime_options, template_args, &lifetimes)?;
+
+            let nonnull_smart_pointers = db
+                .ir()
+                .target_crubit_features(db.ir().current_target())
+                .contains(crubit_feature::CrubitFeature::NonnullSmartPointers);
+            Ok(if ty.is_nonnull() && nonnull_smart_pointers {
+                type_kind.into_nonnull_smart_pointer()
+            } else {
+                type_kind
+            })
         }
         CcTypeVariant::Error(e) => {
             let e = error_report::FormattedError::new(

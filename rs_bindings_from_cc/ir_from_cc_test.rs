@@ -1214,6 +1214,37 @@ fn test_pointer_member_variable() {
 }
 
 #[gtest]
+fn test_nonnull_annotation_is_recorded() {
+    let proto = ir_proto_from_cc("void f(int* _Nonnull annotated, int* plain);").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            params: [
+                FuncParam {
+                    type_: CcType {
+                        ...
+                        is_nonnull: true,
+                        // `_Nonnull` must not be reported as an unknown attribute: types with
+                        // unknown attributes get no bindings at all.
+                        unknown_attr: "", ...
+                    },
+                    identifier: "annotated", ...
+                },
+                FuncParam {
+                    type_: CcType {
+                        ...
+                        is_nonnull: false, ...
+                    },
+                    identifier: "plain", ...
+                },
+            ]
+        }
+    );
+}
+
+#[gtest]
 fn test_doc_comment() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
@@ -4846,11 +4877,13 @@ fn test_assumed_lifetimes_function() {
                                 pointee_type: CcType {
                                     variant: Primitive(Int),
                                     is_const: false,
+                                    is_nonnull: false,
                                     unknown_attr: "",
                                     explicit_lifetimes: [],
                                 },
                             }),
                             is_const: false,
+                            is_nonnull: false,
                             unknown_attr: "",
                             explicit_lifetimes: ["a"],
                         },
@@ -4889,11 +4922,13 @@ fn test_assumed_lifetimes_function_with_explicit_binding() {
                                 pointee_type: CcType {
                                     variant: Primitive(Int),
                                     is_const: false,
+                                    is_nonnull: false,
                                     unknown_attr: "",
                                     explicit_lifetimes: [],
                                 },
                             }),
                             is_const: false,
+                            is_nonnull: false,
                             unknown_attr: "",
                             explicit_lifetimes: ["a"],
                         },
@@ -4936,11 +4971,13 @@ fn test_assumed_lifetimes_function_with_explicit_bindings() {
                                 pointee_type: CcType {
                                     variant: Primitive(Int),
                                     is_const: false,
+                                    is_nonnull: false,
                                     unknown_attr: "",
                                     explicit_lifetimes: [],
                                 },
                             }),
                             is_const: false,
+                            is_nonnull: false,
                             unknown_attr: "",
                             explicit_lifetimes: ["a"],
                         },
@@ -4982,11 +5019,13 @@ fn test_assumed_lifetimes_lifetimebound_free_function() {
                                 pointee_type: CcType {
                                     variant: Primitive(Int),
                                     is_const: false,
+                                    is_nonnull: false,
                                     unknown_attr: "",
                                     explicit_lifetimes: [],
                                 },
                             }),
                             is_const: false,
+                            is_nonnull: false,
                             unknown_attr: "",
                             explicit_lifetimes: [],
                         },
@@ -5003,11 +5042,13 @@ fn test_assumed_lifetimes_lifetimebound_free_function() {
                                 pointee_type: CcType {
                                     variant: Primitive(Int),
                                     is_const: false,
+                                    is_nonnull: false,
                                     unknown_attr: "",
                                     explicit_lifetimes: [],
                                 },
                             }),
                             is_const: false,
+                            is_nonnull: false,
                             unknown_attr: "",
                             explicit_lifetimes: [],
                         },
@@ -5048,11 +5089,13 @@ fn test_assumed_lifetimes_lifetime_capture_by_free_function() {
                                 pointee_type: CcType {
                                     variant: Primitive(Int),
                                     is_const: false,
+                                    is_nonnull: false,
                                     unknown_attr: "",
                                     explicit_lifetimes: [],
                                 },
                             }),
                             is_const: false,
+                            is_nonnull: false,
                             unknown_attr: "",
                             explicit_lifetimes: [],
                         },
@@ -5069,11 +5112,13 @@ fn test_assumed_lifetimes_lifetime_capture_by_free_function() {
                                 pointee_type: CcType {
                                     variant: Primitive(Int),
                                     is_const: false,
+                                    is_nonnull: false,
                                     unknown_attr: "",
                                     explicit_lifetimes: [],
                                 },
                             }),
                             is_const: false,
+                            is_nonnull: false,
                             unknown_attr: "",
                             explicit_lifetimes: [],
                         },

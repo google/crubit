@@ -119,6 +119,17 @@ message CcType {
   // An ordered list of lifetime variable names applied to this type. It is
   // valid for the same name to appear multiple times.
   repeated string explicit_lifetimes = 8;
+  // True if this use of the type was annotated `_Nonnull` (e.g. via
+  // `absl_nonnull`).
+  //
+  // Like `is_const`, this is a property of one particular use of the type, not
+  // of the type itself, so it lives here rather than on the referenced decl.
+  //
+  // Clang only permits the annotation on types that opt in to nullability, so
+  // this is only ever set for pointers and for smart pointers such as
+  // `std::unique_ptr` and `std::shared_ptr`. Only the smart pointer cases are
+  // acted on today; see `RsTypeKind`.
+  bool is_nonnull = 9;
 }
 
 // An identifier involved in bindings.

@@ -164,3 +164,28 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+cc_library(
+    name = "nonnull_smart_pointer_lib",
+    hdrs = ["nonnull_smart_pointer_lib.h"],
+    aspect_hints = [
+        "//features:nonnull_smart_pointers",
+    ],
+    deps = [
+        ":common",
+        "@abseil-cpp//absl/base:nullability",
+    ],
+)
+
+crubit_rust_test(
+    name = "nonnull_smart_pointer_test",
+    srcs = ["nonnull_smart_pointer_test.rs"],
+    cc_deps = [
+        ":common",
+        ":nonnull_smart_pointer_lib",
+        "//support/cc_std",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)

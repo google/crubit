@@ -35,6 +35,7 @@ struct visitor : Ts... {
 
 void CcType::WriteToProto(ir_proto::CcType& proto) const {
   proto.set_is_const(is_const);
+  proto.set_is_nonnull(is_nonnull);
   proto.set_unknown_attr(unknown_attr);
   proto.mutable_explicit_lifetimes()->Add(explicit_lifetimes.begin(),
                                           explicit_lifetimes.end());
