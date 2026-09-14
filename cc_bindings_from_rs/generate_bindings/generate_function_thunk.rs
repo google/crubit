@@ -685,7 +685,27 @@ pub fn generate_thunk_impl<'tcx>(
     let param_names_and_types: Vec<(Ident, Ty)> = {
         let param_names = thunk_param_names(tcx, fn_def_id);
         let param_types = sig.inputs().iter().copied();
-        param_names.zip(param_types).collect_vec()
+        param_names
+            .zip(param_types)
+            .enumerate()
+            .map(|(i, (name, ty))| {
+                let has_collision = if let Some(adt_def) = ty.peel_refs().ty_adt_def()
+                    && adt_def.is_enum()
+                {
+                    adt_def
+                        .variants()
+                        .iter()
+                        .any(|v| v.name.as_str() == name.to_string().trim_start_matches("r#"))
+                } else {
+                    false
+                };
+                if has_collision {
+                    (format_ident!("__param_{i}"), ty)
+                } else {
+                    (name, ty)
+                }
+            })
+            .collect_vec()
     };
 
     let mut thunk_params = param_names_and_types

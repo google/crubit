@@ -11,6 +11,109 @@
 
 extern crate alloc;
 extern crate core;
+const _: () = assert!(::std::mem::size_of::<::enums_golden::param_name_collisions::FooBar>() == 1);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::param_name_collisions::FooBar>() == 1);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aFooBar_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aFooBar(
+    __self: &'static ::enums_golden::param_name_collisions::FooBar,
+    other: &'static ::enums_golden::param_name_collisions::FooBar,
+) -> bool {
+    unsafe {
+        <::enums_golden::param_name_collisions::FooBar as ::core::cmp::PartialEq<
+            ::enums_golden::param_name_collisions::FooBar,
+        >>::eq(__self, other)
+    }
+}
+const _: () =
+    assert!(::std::mem::size_of::<::enums_golden::param_name_collisions::KeywordEnum>() == 1);
+const _: () =
+    assert!(::std::mem::align_of::<::enums_golden::param_name_collisions::KeywordEnum>() == 1);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aKeywordEnum_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aKeywordEnum(
+    __self: &'static ::enums_golden::param_name_collisions::KeywordEnum,
+    __param_1: &'static ::enums_golden::param_name_collisions::KeywordEnum,
+) -> bool {
+    unsafe {
+        <::enums_golden::param_name_collisions::KeywordEnum as ::core::cmp::PartialEq<
+            ::enums_golden::param_name_collisions::KeywordEnum,
+        >>::eq(__self, __param_1)
+    }
+}
+const _: () =
+    assert!(::std::mem::size_of::<::enums_golden::param_name_collisions::OptionLike>() == 1);
+const _: () =
+    assert!(::std::mem::align_of::<::enums_golden::param_name_collisions::OptionLike>() == 1);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_matches_uvariant(
+    __self: &'static ::enums_golden::param_name_collisions::OptionLike,
+    __param_1: *mut ::enums_golden::param_name_collisions::OptionLike,
+) -> bool {
+    unsafe {
+        let __param_1 = __param_1.read();
+        ::enums_golden::param_name_collisions::OptionLike::matches_variant(__self, __param_1)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aOptionLike_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aOptionLike(
+    __self: &'static ::enums_golden::param_name_collisions::OptionLike,
+    other: &'static ::enums_golden::param_name_collisions::OptionLike,
+) -> bool {
+    unsafe {
+        <::enums_golden::param_name_collisions::OptionLike as ::core::cmp::PartialEq<
+            ::enums_golden::param_name_collisions::OptionLike,
+        >>::eq(__self, other)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_check_uboth(
+    __param_0: *mut ::enums_golden::param_name_collisions::OptionLike,
+    __param_1: *mut ::enums_golden::param_name_collisions::OptionLike,
+) -> bool {
+    unsafe {
+        let __param_0 = __param_0.read();
+        let __param_1 = __param_1.read();
+        ::enums_golden::param_name_collisions::check_both(__param_0, __param_1)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_ubar(
+    __param_0: &'static ::enums_golden::param_name_collisions::FooBar,
+) -> bool {
+    unsafe { ::enums_golden::param_name_collisions::is_bar(__param_0) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_ufoo(
+    __param_0: *mut ::enums_golden::param_name_collisions::FooBar,
+) -> bool {
+    unsafe {
+        let __param_0 = __param_0.read();
+        ::enums_golden::param_name_collisions::is_foo(__param_0)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_umatch(
+    __param_0: *mut ::enums_golden::param_name_collisions::KeywordEnum,
+) -> bool {
+    unsafe {
+        let __param_0 = __param_0.read();
+        ::enums_golden::param_name_collisions::is_match(__param_0)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_unone(
+    __param_0: &'static ::enums_golden::param_name_collisions::OptionLike,
+) -> bool {
+    unsafe { ::enums_golden::param_name_collisions::is_none(__param_0) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_usome(
+    __param_0: *mut ::enums_golden::param_name_collisions::OptionLike,
+) -> bool {
+    unsafe {
+        let __param_0 = __param_0.read();
+        ::enums_golden::param_name_collisions::is_some(__param_0)
+    }
+}
 const _: () = assert!(::std::mem::size_of::<::enums_golden::qr_error::QrError>() == 24);
 const _: () = assert!(::std::mem::align_of::<::enums_golden::qr_error::QrError>() == 8);
 #[unsafe(no_mangle)]

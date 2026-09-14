@@ -219,4 +219,39 @@ TEST(EnumsTest, TestReprI128) {
   EXPECT_FALSE(e_zero.is_max_i128());
 }
 
+TEST(EnumsTest, TestParamNameCollisions) {
+  using enums::param_name_collisions::check_both;
+  using enums::param_name_collisions::FooBar;
+  using enums::param_name_collisions::is_bar;
+  using enums::param_name_collisions::is_foo;
+  using enums::param_name_collisions::is_match;
+  using enums::param_name_collisions::is_none;
+  using enums::param_name_collisions::is_some;
+  using enums::param_name_collisions::KeywordEnum;
+  using enums::param_name_collisions::OptionLike;
+
+  auto some = OptionLike::Makesome();
+  auto none = OptionLike::Makenone();
+  EXPECT_TRUE(is_some(some));
+  EXPECT_FALSE(is_some(none));
+  EXPECT_TRUE(is_none(none));
+  EXPECT_FALSE(is_none(some));
+  EXPECT_TRUE(check_both(some, none));
+  EXPECT_FALSE(check_both(none, some));
+  EXPECT_TRUE(some.matches_variant(some));
+  EXPECT_FALSE(some.matches_variant(none));
+
+  auto foo = FooBar::MakeFoo();
+  auto bar = FooBar::MakeBar();
+  EXPECT_TRUE(is_foo(foo));
+  EXPECT_FALSE(is_foo(bar));
+  EXPECT_TRUE(is_bar(bar));
+  EXPECT_FALSE(is_bar(foo));
+
+  auto match = KeywordEnum::Makematch();
+  auto other = KeywordEnum::Makeother();
+  EXPECT_TRUE(is_match(match));
+  EXPECT_FALSE(is_match(other));
+}
+
 }  // namespace

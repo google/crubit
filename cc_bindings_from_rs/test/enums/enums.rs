@@ -407,3 +407,66 @@ pub mod repr_128 {
         }
     }
 }
+
+pub mod param_name_collisions {
+    #[allow(non_camel_case_types)]
+    #[derive(Copy, Clone, PartialEq, Eq)]
+    pub enum OptionLike {
+        some,
+        none,
+    }
+
+    #[allow(bindings_with_variant_name)]
+    pub fn is_some(some: OptionLike) -> bool {
+        matches!(some, OptionLike::some)
+    }
+
+    #[allow(bindings_with_variant_name)]
+    pub fn is_none(none: &OptionLike) -> bool {
+        matches!(none, OptionLike::none)
+    }
+
+    #[allow(bindings_with_variant_name)]
+    pub fn check_both(some: OptionLike, none: OptionLike) -> bool {
+        matches!((some, none), (OptionLike::some, OptionLike::none))
+    }
+
+    impl OptionLike {
+        #[allow(bindings_with_variant_name)]
+        pub fn matches_variant(&self, some: OptionLike) -> bool {
+            matches!(
+                (*self, some),
+                (OptionLike::some, OptionLike::some) | (OptionLike::none, OptionLike::none)
+            )
+        }
+    }
+
+    #[allow(non_snake_case, bindings_with_variant_name)]
+    #[derive(Copy, Clone, PartialEq, Eq)]
+    pub enum FooBar {
+        Foo,
+        Bar,
+    }
+
+    #[allow(non_snake_case, bindings_with_variant_name)]
+    pub fn is_foo(Foo: FooBar) -> bool {
+        matches!(Foo, FooBar::Foo)
+    }
+
+    #[allow(non_snake_case, bindings_with_variant_name)]
+    pub fn is_bar(Bar: &FooBar) -> bool {
+        matches!(Bar, FooBar::Bar)
+    }
+
+    #[allow(non_camel_case_types)]
+    #[derive(Copy, Clone, PartialEq, Eq)]
+    pub enum KeywordEnum {
+        r#match,
+        other,
+    }
+
+    #[allow(bindings_with_variant_name)]
+    pub fn is_match(r#match: KeywordEnum) -> bool {
+        matches!(r#match, KeywordEnum::r#match)
+    }
+}

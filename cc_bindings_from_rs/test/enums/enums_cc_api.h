@@ -31,6 +31,148 @@
 
 namespace enums::qr_error {
 struct StructuredQrError;
+}
+
+namespace enums::param_name_collisions {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: enums_golden :: param_name_collisions :: FooBar") alignas(1)
+    [[clang::trivial_abi]] FooBar final {
+ public:
+  // `enums_golden::param_name_collisions::FooBar` doesn't implement the
+  // `Default` trait
+  FooBar() = delete;
+
+  static constexpr FooBar MakeFoo();
+
+  static constexpr FooBar MakeBar();
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~FooBar() = default;
+  FooBar(FooBar&&) = default;
+  FooBar& operator=(FooBar&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  FooBar(const FooBar&) = default;
+  FooBar& operator=(const FooBar&) = default;
+  FooBar(::crubit::UnsafeRelocateTag, FooBar&& value);
+
+  bool operator==(::enums::param_name_collisions::FooBar const& other) const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
+
+ private:
+  struct PrivateBytesTag {};
+  constexpr FooBar(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: enums_golden :: param_name_collisions :: KeywordEnum") alignas(1)
+    [[clang::trivial_abi]] KeywordEnum final {
+ public:
+  // `enums_golden::param_name_collisions::KeywordEnum` doesn't implement the
+  // `Default` trait
+  KeywordEnum() = delete;
+
+  static constexpr KeywordEnum Makematch();
+
+  static constexpr KeywordEnum Makeother();
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~KeywordEnum() = default;
+  KeywordEnum(KeywordEnum&&) = default;
+  KeywordEnum& operator=(KeywordEnum&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  KeywordEnum(const KeywordEnum&) = default;
+  KeywordEnum& operator=(const KeywordEnum&) = default;
+  KeywordEnum(::crubit::UnsafeRelocateTag, KeywordEnum&& value);
+
+  bool operator==(
+      ::enums::param_name_collisions::KeywordEnum const& other) const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
+
+ private:
+  struct PrivateBytesTag {};
+  constexpr KeywordEnum(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: enums_golden :: param_name_collisions :: OptionLike") alignas(1)
+    [[clang::trivial_abi]] OptionLike final {
+ public:
+  // `enums_golden::param_name_collisions::OptionLike` doesn't implement the
+  // `Default` trait
+  OptionLike() = delete;
+
+  static constexpr OptionLike Makesome();
+
+  static constexpr OptionLike Makenone();
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~OptionLike() = default;
+  OptionLike(OptionLike&&) = default;
+  OptionLike& operator=(OptionLike&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  OptionLike(const OptionLike&) = default;
+  OptionLike& operator=(const OptionLike&) = default;
+  OptionLike(::crubit::UnsafeRelocateTag, OptionLike&& value);
+
+  bool matches_variant(::enums::param_name_collisions::OptionLike some) const;
+
+  bool operator==(
+      ::enums::param_name_collisions::OptionLike const& other) const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: No support for bindings
+  // of individual non-repr(C) `enum`s
+  ::std::array<unsigned char, 1> __opaque_blob_of_bytes;
+
+ private:
+  struct PrivateBytesTag {};
+  constexpr OptionLike(PrivateBytesTag, ::std::array<unsigned char, 1> bytes)
+      : __opaque_blob_of_bytes(bytes) {}
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+bool check_both(::enums::param_name_collisions::OptionLike some,
+                ::enums::param_name_collisions::OptionLike none);
+
+bool is_bar(::enums::param_name_collisions::FooBar const& Bar);
+
+bool is_foo(::enums::param_name_collisions::FooBar Foo);
+
+bool is_match(::enums::param_name_collisions::KeywordEnum match);
+
+bool is_none(::enums::param_name_collisions::OptionLike const& none);
+
+bool is_some(::enums::param_name_collisions::OptionLike some);
+
+}  // namespace enums::param_name_collisions
+
+namespace enums::qr_error {
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: qr_error :: QrError") alignas(8) [[clang::trivial_abi]]
 QrError final {
@@ -1003,6 +1145,24 @@ RustReprWithSingleTuplePayloadVariant final {
 }  // namespace enums::repr_rust
 
 template <>
+struct rs_std::impl<::enums::param_name_collisions::FooBar,
+                    ::rs::core::cmp::Eq> {
+  static constexpr bool kIsImplemented = true;
+};
+
+template <>
+struct rs_std::impl<::enums::param_name_collisions::KeywordEnum,
+                    ::rs::core::cmp::Eq> {
+  static constexpr bool kIsImplemented = true;
+};
+
+template <>
+struct rs_std::impl<::enums::param_name_collisions::OptionLike,
+                    ::rs::core::cmp::Eq> {
+  static constexpr bool kIsImplemented = true;
+};
+
+template <>
 struct rs_std::impl<::enums::qr_error::QrError, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
@@ -1035,6 +1195,208 @@ struct rs_std::impl<::enums::qr_error::StructuredQrError,
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
 };
+
+namespace enums::param_name_collisions {
+
+static_assert(
+    sizeof(FooBar) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(FooBar) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+
+// `static` constructor
+inline constexpr FooBar FooBar::MakeFoo() {
+  return FooBar(PrivateBytesTag{}, {0});
+}
+
+// `static` constructor
+inline constexpr FooBar FooBar::MakeBar() {
+  return FooBar(PrivateBytesTag{}, {1});
+}
+static_assert(::std::is_trivially_destructible_v<FooBar>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::enums::param_name_collisions::FooBar>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::enums::param_name_collisions::FooBar>);
+static_assert(::std::is_trivially_copy_constructible_v<
+              ::enums::param_name_collisions::FooBar>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              ::enums::param_name_collisions::FooBar>);
+inline ::enums::param_name_collisions::FooBar::FooBar(
+    ::crubit::UnsafeRelocateTag, FooBar&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" bool
+__crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aFooBar_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aFooBar(
+    ::enums::param_name_collisions::FooBar const&,
+    ::enums::param_name_collisions::FooBar const&);
+}
+inline bool FooBar::operator==(
+    ::enums::param_name_collisions::FooBar const& other) const {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aFooBar_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aFooBar(
+          self, other);
+}
+inline void FooBar::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(FooBar, __opaque_blob_of_bytes));
+}
+static_assert(
+    sizeof(KeywordEnum) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(KeywordEnum) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+
+// `static` constructor
+inline constexpr KeywordEnum KeywordEnum::Makematch() {
+  return KeywordEnum(PrivateBytesTag{}, {0});
+}
+
+// `static` constructor
+inline constexpr KeywordEnum KeywordEnum::Makeother() {
+  return KeywordEnum(PrivateBytesTag{}, {1});
+}
+static_assert(::std::is_trivially_destructible_v<KeywordEnum>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::enums::param_name_collisions::KeywordEnum>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::enums::param_name_collisions::KeywordEnum>);
+static_assert(::std::is_trivially_copy_constructible_v<
+              ::enums::param_name_collisions::KeywordEnum>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              ::enums::param_name_collisions::KeywordEnum>);
+inline ::enums::param_name_collisions::KeywordEnum::KeywordEnum(
+    ::crubit::UnsafeRelocateTag, KeywordEnum&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" bool
+__crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aKeywordEnum_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aKeywordEnum(
+    ::enums::param_name_collisions::KeywordEnum const&,
+    ::enums::param_name_collisions::KeywordEnum const&);
+}
+inline bool KeywordEnum::operator==(
+    ::enums::param_name_collisions::KeywordEnum const& other) const {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aKeywordEnum_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aKeywordEnum(
+          self, other);
+}
+inline void KeywordEnum::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(KeywordEnum, __opaque_blob_of_bytes));
+}
+static_assert(
+    sizeof(OptionLike) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(OptionLike) == 1,
+    "Verify that ADT layout didn't change since this header got generated");
+
+// `static` constructor
+inline constexpr OptionLike OptionLike::Makesome() {
+  return OptionLike(PrivateBytesTag{}, {0});
+}
+
+// `static` constructor
+inline constexpr OptionLike OptionLike::Makenone() {
+  return OptionLike(PrivateBytesTag{}, {1});
+}
+static_assert(::std::is_trivially_destructible_v<OptionLike>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::enums::param_name_collisions::OptionLike>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::enums::param_name_collisions::OptionLike>);
+static_assert(::std::is_trivially_copy_constructible_v<
+              ::enums::param_name_collisions::OptionLike>);
+static_assert(::std::is_trivially_copy_assignable_v<
+              ::enums::param_name_collisions::OptionLike>);
+inline ::enums::param_name_collisions::OptionLike::OptionLike(
+    ::crubit::UnsafeRelocateTag, OptionLike&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_matches_uvariant(
+    ::enums::param_name_collisions::OptionLike const&,
+    ::enums::param_name_collisions::OptionLike*);
+}
+inline bool OptionLike::matches_variant(
+    ::enums::param_name_collisions::OptionLike some) const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_matches_uvariant(self, &some);
+}
+
+namespace __crubit_internal {
+extern "C" bool
+__crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aOptionLike_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aOptionLike(
+    ::enums::param_name_collisions::OptionLike const&,
+    ::enums::param_name_collisions::OptionLike const&);
+}
+inline bool OptionLike::operator==(
+    ::enums::param_name_collisions::OptionLike const& other) const {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aOptionLike_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aOptionLike(
+          self, other);
+}
+inline void OptionLike::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(OptionLike, __opaque_blob_of_bytes));
+}
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_check_uboth(
+    ::enums::param_name_collisions::OptionLike*,
+    ::enums::param_name_collisions::OptionLike*);
+}
+inline bool check_both(::enums::param_name_collisions::OptionLike some,
+                       ::enums::param_name_collisions::OptionLike none) {
+  return __crubit_internal::__crubit_thunk_check_uboth(&some, &none);
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_is_ubar(
+    ::enums::param_name_collisions::FooBar const&);
+}
+inline bool is_bar(::enums::param_name_collisions::FooBar const& Bar) {
+  return __crubit_internal::__crubit_thunk_is_ubar(Bar);
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_is_ufoo(::enums::param_name_collisions::FooBar*);
+}
+inline bool is_foo(::enums::param_name_collisions::FooBar Foo) {
+  return __crubit_internal::__crubit_thunk_is_ufoo(&Foo);
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_is_umatch(
+    ::enums::param_name_collisions::KeywordEnum*);
+}
+inline bool is_match(::enums::param_name_collisions::KeywordEnum match) {
+  return __crubit_internal::__crubit_thunk_is_umatch(&match);
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_is_unone(
+    ::enums::param_name_collisions::OptionLike const&);
+}
+inline bool is_none(::enums::param_name_collisions::OptionLike const& none) {
+  return __crubit_internal::__crubit_thunk_is_unone(none);
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_is_usome(
+    ::enums::param_name_collisions::OptionLike*);
+}
+inline bool is_some(::enums::param_name_collisions::OptionLike some) {
+  return __crubit_internal::__crubit_thunk_is_usome(&some);
+}
+
+}  // namespace enums::param_name_collisions
 
 namespace enums::qr_error {
 
