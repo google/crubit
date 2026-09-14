@@ -92,6 +92,7 @@ impl Clone for StructWithUserProvidedConstructors {
 #[cfi_encoding = "39StructWithExplicitConversionConstructor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithExplicitConversionConstructor
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithExplicitConversionConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -143,6 +144,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithExplicitConversionConstructo
 #[cfi_encoding = "30StructWithMultipleConstructors"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithMultipleConstructors
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithMultipleConstructors {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -244,6 +246,7 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int, ::ffi_11::c_int)>
 #[cfi_encoding = "39StructWithImplicitConversionConstructor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithImplicitConversionConstructor
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithImplicitConversionConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -295,6 +298,7 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for StructWithImplicitConversionConstructo
 #[cfi_encoding = "17OtherSimpleStruct"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: OtherSimpleStruct
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct OtherSimpleStruct {
     pub int_field: ::ffi_11::c_int,
 }
@@ -329,6 +333,7 @@ impl Default for OtherSimpleStruct {
 #[cfi_encoding = "41StructWithImplicitConversionFromReference"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithImplicitConversionFromReference
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithImplicitConversionFromReference {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub int_field: ::ffi_11::c_int,
@@ -704,6 +709,7 @@ impl ::ctor::PinnedDrop for NonTrivialStructWithConstructors {
 #[cfi_encoding = "27StructWithUnsafeConstructor"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=:: StructWithUnsafeConstructor
+///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct StructWithUnsafeConstructor {
     __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
     pub ptr_field: *mut ::ffi_11::c_int,
