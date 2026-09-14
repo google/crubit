@@ -511,8 +511,9 @@ const _: () =
 const _: () =
     assert!(::std::mem::align_of::<::structs_golden::unsupported_types::SomeStruct>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create(x: char, __ret_ptr: *mut core::ffi::c_void) -> () {
+unsafe extern "C" fn __crubit_thunk_create(x: *mut char, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
+        let x = x.read();
         let __rs_return_value = ::structs_golden::unsupported_types::SomeStruct::create(x);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }

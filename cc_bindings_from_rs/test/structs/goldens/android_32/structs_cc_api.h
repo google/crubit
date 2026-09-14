@@ -1632,14 +1632,14 @@ static_assert(::std::is_trivially_move_assignable_v<
               ::structs::unsupported_types::SomeStruct>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
-    rs_std::char_, ::structs::unsupported_types::SomeStruct* __ret_ptr);
+    rs_std::char_*, ::structs::unsupported_types::SomeStruct* __ret_ptr);
 }
 inline ::structs::unsupported_types::SomeStruct SomeStruct::create(
     rs_std::char_ x) {
   crubit::Slot<::structs::unsupported_types::SomeStruct>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_create(x, __return_value_storage);
+  __crubit_internal::__crubit_thunk_create(&x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void SomeStruct::__crubit_field_offset_assertions() {

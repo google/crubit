@@ -1013,22 +1013,42 @@ inline void call_void_once(::rs::FnRef<void(::std::int32_t)> f,
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_call_uwith_uhrtb_ustr(
-    ::rs::internal::FnRefPayload, rs_std::StrRef);
+    ::rs::internal::FnRefPayload, rs_std::StrRef*);
 }
 inline ::std::int32_t call_with_hrtb_str(
     ::rs::FnRef<::std::int32_t(rs_std::StrRef) const> f, rs_std::StrRef s) {
-  return __crubit_internal::__crubit_thunk_call_uwith_uhrtb_ustr(f.payload(),
-                                                                 s);
+  auto __f_invoker = [](void* __data,
+                        rs_std::StrRef* __arg_0) -> ::std::int32_t {
+    return (
+        *reinterpret_cast<::rs::FnRef<::std::int32_t(rs_std::StrRef) const>*>(
+            __data))(::std::move(*__arg_0));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  return __crubit_internal::__crubit_thunk_call_uwith_uhrtb_ustr(__f_payload,
+                                                                 &s);
 }
 
 namespace __crubit_internal {
 extern "C" ::std::uintptr_t __crubit_thunk_call_uwith_uhrtb_ustr_uto_ustr(
-    ::rs::internal::FnRefPayload, rs_std::StrRef);
+    ::rs::internal::FnRefPayload, rs_std::StrRef*);
 }
 inline ::std::uintptr_t call_with_hrtb_str_to_str(
     ::rs::FnRef<rs_std::StrRef(rs_std::StrRef) const> f, rs_std::StrRef s) {
+  auto __f_invoker = [](void* __data, rs_std::StrRef* __arg_0,
+                        void* __ret_ptr) -> void {
+    new (__ret_ptr) rs_std::StrRef(
+        (*reinterpret_cast<::rs::FnRef<rs_std::StrRef(rs_std::StrRef) const>*>(
+            __data))(::std::move(*__arg_0)));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
   return __crubit_internal::__crubit_thunk_call_uwith_uhrtb_ustr_uto_ustr(
-      f.payload(), s);
+      __f_payload, &s);
 }
 
 namespace __crubit_internal {
@@ -1091,21 +1111,44 @@ inline ::callables::Point call_with_point(
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_call_uwith_ustr(
-    ::rs::internal::FnRefPayload, rs_std::StrRef);
+    ::rs::internal::FnRefPayload, rs_std::StrRef*);
 }
 inline ::std::int32_t call_with_str(
     ::rs::FnRef<::std::int32_t(rs_std::StrRef) const> f, rs_std::StrRef s) {
-  return __crubit_internal::__crubit_thunk_call_uwith_ustr(f.payload(), s);
+  auto __f_invoker = [](void* __data,
+                        rs_std::StrRef* __arg_0) -> ::std::int32_t {
+    return (
+        *reinterpret_cast<::rs::FnRef<::std::int32_t(rs_std::StrRef) const>*>(
+            __data))(::std::move(*__arg_0));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  return __crubit_internal::__crubit_thunk_call_uwith_ustr(__f_payload, &s);
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_call_uwith_ustr_uto_ustr(
-    ::rs::internal::FnRefPayload, rs_std::StrRef);
+extern "C" void __crubit_thunk_call_uwith_ustr_uto_ustr(
+    ::rs::internal::FnRefPayload, rs_std::StrRef*, rs_std::StrRef* __ret_ptr);
 }
 inline rs_std::StrRef call_with_str_to_str(
     ::rs::FnRef<rs_std::StrRef(rs_std::StrRef) const> f, rs_std::StrRef s) {
-  return __crubit_internal::__crubit_thunk_call_uwith_ustr_uto_ustr(f.payload(),
-                                                                    s);
+  auto __f_invoker = [](void* __data, rs_std::StrRef* __arg_0,
+                        void* __ret_ptr) -> void {
+    new (__ret_ptr) rs_std::StrRef(
+        (*reinterpret_cast<::rs::FnRef<rs_std::StrRef(rs_std::StrRef) const>*>(
+            __data))(::std::move(*__arg_0)));
+  };
+  ::rs::internal::FnRefPayload __f_payload{
+      const_cast<void*>(reinterpret_cast<const void*>(&f)),
+      reinterpret_cast<void (*)()>(+__f_invoker),
+  };
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_call_uwith_ustr_uto_ustr(
+      __f_payload, &s, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {

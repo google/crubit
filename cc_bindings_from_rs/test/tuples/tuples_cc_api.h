@@ -2651,23 +2651,27 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
+extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::tuples::HasDefault* __ret_ptr);
 }
 inline ::tuples::HasDefault HasDefault::new_(rs_std::StrRef val) {
   crubit::Slot<::tuples::HasDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
+  __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_val(::tuples::HasDefault const&);
+extern "C" void __crubit_thunk_val(::tuples::HasDefault const&,
+                                   rs_std::StrRef* __ret_ptr);
 }
 inline rs_std::StrRef HasDefault::val() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_val(self);
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_val(self, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasDefault, val_));
@@ -2694,13 +2698,13 @@ inline ::tuples::HasDefaultTuple::HasDefaultTuple(::crubit::UnsafeRelocateTag,
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
+extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::tuples::HasDefaultTuple* __ret_ptr);
 }
 inline ::tuples::HasDefaultTuple HasDefaultTuple::new_(rs_std::StrRef val) {
   crubit::Slot<::tuples::HasDefaultTuple> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
+  __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasDefaultTuple::__crubit_field_offset_assertions() {
@@ -2715,12 +2719,16 @@ static_assert(
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_val(::tuples::HasNoDefault const&);
+extern "C" void __crubit_thunk_val(::tuples::HasNoDefault const&,
+                                   rs_std::StrRef* __ret_ptr);
 }
 inline rs_std::StrRef HasNoDefault::val() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_val(self);
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_val(self, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasNoDefault::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(HasNoDefault, val_));
@@ -2747,13 +2755,13 @@ inline ::tuples::HasNoDefaultTuple::HasNoDefaultTuple(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::StrRef,
+extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::tuples::HasNoDefaultTuple* __ret_ptr);
 }
 inline ::tuples::HasNoDefaultTuple HasNoDefaultTuple::new_(rs_std::StrRef val) {
   crubit::Slot<::tuples::HasNoDefaultTuple> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
+  __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void HasNoDefaultTuple::__crubit_field_offset_assertions() {
@@ -3493,14 +3501,19 @@ inline ::std::uint8_t take_tuple_copy_no_default_1(
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_take_utuple_uhas_udefault(
+extern "C" void __crubit_thunk_take_utuple_uhas_udefault(
     rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t> const* $(__anon1)
-        crubit_nonnull);
+        crubit_nonnull,
+    rs_std::StrRef* __ret_ptr);
 }
 inline rs_std::StrRef take_tuple_has_default(
     rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t> const* $(__anon1)
         crubit_nonnull r CRUBIT_LIFETIME_BOUND) {
-  return __crubit_internal::__crubit_thunk_take_utuple_uhas_udefault(r);
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_take_utuple_uhas_udefault(
+      r, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace tuples

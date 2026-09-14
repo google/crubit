@@ -15,8 +15,13 @@ const _: () = assert!(::std::mem::size_of::<::pass_by_value_unmovable_golden::Cp
 const _: () = assert!(::std::mem::align_of::<::pass_by_value_unmovable_golden::CppMovable>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aCppMovable(
-) -> ::pass_by_value_unmovable_golden::CppMovable {
-    unsafe { <::pass_by_value_unmovable_golden::CppMovable as ::core::default::Default>::default() }
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::pass_by_value_unmovable_golden::CppMovable as ::core::default::Default>::default();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aCppMovable(
@@ -40,9 +45,12 @@ const _: () =
     assert!(::core::mem::offset_of!(::pass_by_value_unmovable_golden::NotCppMovable, 0) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_takes_uval_umovable(
-    _val: ::pass_by_value_unmovable_golden::CppMovable,
+    _val: *mut ::pass_by_value_unmovable_golden::CppMovable,
 ) -> () {
-    unsafe { ::pass_by_value_unmovable_golden::takes_val_movable(_val) }
+    unsafe {
+        let _val = _val.read();
+        ::pass_by_value_unmovable_golden::takes_val_movable(_val)
+    }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_takes_uval_uunmovable(

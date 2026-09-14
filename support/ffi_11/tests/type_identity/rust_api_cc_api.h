@@ -14,7 +14,10 @@
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
+#include "support/internal/slot.h"
+
 #include <cstdint>
+#include <utility>
 
 #include "support/ffi_11/ffi_11.h"
 
@@ -63,31 +66,43 @@ unsigned long long c_ulonglong();
 // reserved word and can't be used as a C++ identifier
 
 namespace __crubit_internal {
-extern "C" decltype(char(0)) __crubit_thunk_c_uchar();
+extern "C" void __crubit_thunk_c_uchar(decltype(char(0))* __ret_ptr);
 }
 inline decltype(char(0)) c_char() {
-  return __crubit_internal::__crubit_thunk_c_uchar();
+  crubit::Slot<decltype(char(0))> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_c_uchar(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" decltype(char16_t(0)) __crubit_thunk_c_uchar16_ut();
+extern "C" void __crubit_thunk_c_uchar16_ut(decltype(char16_t(0))* __ret_ptr);
 }
 inline decltype(char16_t(0)) c_char16_t() {
-  return __crubit_internal::__crubit_thunk_c_uchar16_ut();
+  crubit::Slot<decltype(char16_t(0))> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_c_uchar16_ut(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" decltype(char32_t(0)) __crubit_thunk_c_uchar32_ut();
+extern "C" void __crubit_thunk_c_uchar32_ut(decltype(char32_t(0))* __ret_ptr);
 }
 inline decltype(char32_t(0)) c_char32_t() {
-  return __crubit_internal::__crubit_thunk_c_uchar32_ut();
+  crubit::Slot<decltype(char32_t(0))> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_c_uchar32_ut(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" decltype(char8_t(0)) __crubit_thunk_c_uchar8_ut();
+extern "C" void __crubit_thunk_c_uchar8_ut(decltype(char8_t(0))* __ret_ptr);
 }
 inline decltype(char8_t(0)) c_char8_t() {
-  return __crubit_internal::__crubit_thunk_c_uchar8_ut();
+  crubit::Slot<decltype(char8_t(0))> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_c_uchar8_ut(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -117,17 +132,23 @@ inline ::std::int64_t c_long() {
 }
 
 namespace __crubit_internal {
-extern "C" long long __crubit_thunk_c_ulonglong();
+extern "C" void __crubit_thunk_c_ulonglong(long long* __ret_ptr);
 }
 inline long long c_longlong() {
-  return __crubit_internal::__crubit_thunk_c_ulonglong();
+  crubit::Slot<long long> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_c_ulonglong(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" decltype(nullptr) __crubit_thunk_c_unullptr_ut();
+extern "C" void __crubit_thunk_c_unullptr_ut(decltype(nullptr)* __ret_ptr);
 }
 inline decltype(nullptr) c_nullptr_t() {
-  return __crubit_internal::__crubit_thunk_c_unullptr_ut();
+  crubit::Slot<decltype(nullptr)> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_c_unullptr_ut(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -166,10 +187,13 @@ inline ::std::uint64_t c_ulong() {
 }
 
 namespace __crubit_internal {
-extern "C" unsigned long long __crubit_thunk_c_uulonglong();
+extern "C" void __crubit_thunk_c_uulonglong(unsigned long long* __ret_ptr);
 }
 inline unsigned long long c_ulonglong() {
-  return __crubit_internal::__crubit_thunk_c_uulonglong();
+  crubit::Slot<unsigned long long> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_c_uulonglong(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {

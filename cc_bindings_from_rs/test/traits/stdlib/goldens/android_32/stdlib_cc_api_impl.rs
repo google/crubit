@@ -81,10 +81,11 @@ const _: () = assert!(::std::mem::size_of::<::stdlib_golden::RefIterator>() == 1
 const _: () = assert!(::std::mem::align_of::<::stdlib_golden::RefIterator>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
-    slice: &'static [i32],
+    slice: *mut &'static [i32],
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
+        let slice = slice.read();
         let __rs_return_value = ::stdlib_golden::RefIterator::new(slice);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }

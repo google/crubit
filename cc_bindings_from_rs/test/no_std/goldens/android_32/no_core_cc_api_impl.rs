@@ -27,6 +27,12 @@ unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> ()
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_s(__self: &'static ::no_core_golden::Test) -> &'static str {
-    unsafe { ::no_core_golden::Test::s(__self) }
+unsafe extern "C" fn __crubit_thunk_s(
+    __self: &'static ::no_core_golden::Test,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::no_core_golden::Test::s(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
 }

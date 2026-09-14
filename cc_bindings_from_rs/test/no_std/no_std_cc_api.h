@@ -59,12 +59,16 @@ inline ::no_std::NoStdStruct NoStdStruct::new_(::std::int32_t x, float y) {
 }
 
 namespace __crubit_internal {
-extern "C" rs_std::StrRef __crubit_thunk_display(::no_std::NoStdStruct const&);
+extern "C" void __crubit_thunk_display(::no_std::NoStdStruct const&,
+                                       rs_std::StrRef* __ret_ptr);
 }
 inline rs_std::StrRef NoStdStruct::display() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  return __crubit_internal::__crubit_thunk_display(self);
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_display(self, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void NoStdStruct::__crubit_field_offset_assertions() {
   static_assert(0 == offsetof(NoStdStruct, test));
