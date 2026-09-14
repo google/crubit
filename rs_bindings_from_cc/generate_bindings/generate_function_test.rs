@@ -2414,6 +2414,32 @@ fn test_nonunpin_param() -> Result<()> {
     Ok(())
 }
 
+/// The `BindingFailedFor...` trait name embeds the mangled name of the C++
+/// function.  A mangled name is not a valid Rust identifier on every target -
+/// the Microsoft mangling scheme uses `?`, `@` and `$` - so it has to be
+/// escaped the same way thunk names are.  Without the escaping,
+/// `rs_bindings_from_cc` panics with "... is not a valid Ident" when
+/// targeting an MSVC-ABI platform.  See b/561578105.
+#[gtest]
+fn test_binding_failure_trait_name_is_escaped_on_every_platform() -> Result<()> {
+    const HEADER: &str = r#"
+        struct Nonmovable {
+            Nonmovable(Nonmovable&&) = delete;
+        };
+
+        void TakesByValue(Nonmovable) {}
+        "#;
+    for platform in
+        [multiplatform_testing::Platform::X86Linux, multiplatform_testing::Platform::X86Windows]
+    {
+        let proto = ir_testing::ir_proto_from_cc(platform, HEADER)?;
+        let ir = make_test_ir(&proto)?;
+        let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+        expect_that!(rs_api.to_string(), contains_substring("BindingFailedFor"), "{platform:?}");
+    }
+    Ok(())
+}
+
 #[gtest]
 fn test_nonmovable_param() -> Result<()> {
     let proto = ir_proto_from_cc(
