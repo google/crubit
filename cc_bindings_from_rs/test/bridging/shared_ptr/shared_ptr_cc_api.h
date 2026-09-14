@@ -14,6 +14,7 @@
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
+#include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
 #include <cstdint>
@@ -27,6 +28,12 @@ namespace shared_ptr {
 
 // CRUBIT_ANNOTATE: must_bind=
 void consume_shared_ptr(::std::shared_ptr<::std::int32_t> _val);
+
+// CRUBIT_ANNOTATE: must_bind=
+//  `NonNull<Ptr>` is spelled in C++ as `Ptr` plus the `crubit_nonnull`
+//  attribute.
+::std::shared_ptr<::std::int32_t> crubit_nonnull roundtrip_nonnull_shared_ptr(
+    ::std::shared_ptr<::std::int32_t> crubit_nonnull val);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::shared_ptr<::std::int32_t> roundtrip_shared_ptr(
@@ -54,6 +61,23 @@ inline void consume_shared_ptr(::std::shared_ptr<::std::int32_t> _val) {
   crubit::Slot _val_slot((::std::move(_val)));
   return __crubit_internal::__crubit_thunk_consume_ushared_uptr(
       _val_slot.Get());
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_roundtrip_unonnull_ushared_uptr(
+    ::std::shared_ptr<::std::int32_t> crubit_nonnull*,
+    ::std::shared_ptr<::std::int32_t> crubit_nonnull* __ret_ptr);
+}
+inline ::std::shared_ptr<::std::int32_t> crubit_nonnull
+roundtrip_nonnull_shared_ptr(
+    ::std::shared_ptr<::std::int32_t> crubit_nonnull val) {
+  crubit::Slot val_slot((::std::move(val)));
+  crubit::Slot<::std::shared_ptr<::std::int32_t> crubit_nonnull>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_roundtrip_unonnull_ushared_uptr(
+      val_slot.Get(), __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {

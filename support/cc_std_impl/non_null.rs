@@ -179,6 +179,10 @@ where
 ///     assert_eq!(*non_null, 42);
 /// }
 /// ```
+#[crubit_annotate::cpp_layout_equivalent(
+    cpp_type = "{Ptr} crubit_nonnull",
+    include_path = "<crubit/support/annotations_internal.h>"
+)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct NonNull<Ptr: StableNullness> {

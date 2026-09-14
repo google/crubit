@@ -4,6 +4,7 @@
 
 use cc_std::std::unique_ptr;
 use cc_std::std::virtual_unique_ptr;
+use cc_std::std::NonNull;
 use crubit_annotate::must_bind;
 use test_helpers::unique_ptr_test::Base;
 use test_helpers::unique_ptr_test::Derived;
@@ -52,5 +53,21 @@ pub fn accept_unique_ptr_tuple(val: unique_ptr<(i32, i32)>) -> unique_ptr<(i32, 
 
 #[must_bind]
 pub fn accept_unique_ptr_option(val: unique_ptr<Option<i32>>) -> unique_ptr<Option<i32>> {
+    val
+}
+
+/// `NonNull<Ptr>` is spelled in C++ as `Ptr` plus the `crubit_nonnull` attribute, so passing one
+/// by value exercises the wrapped pointer's own movability rather than `NonNull`'s.
+#[must_bind]
+pub fn roundtrip_nonnull_unique_ptr(
+    val: NonNull<unique_ptr<Target>>,
+) -> NonNull<unique_ptr<Target>> {
+    val
+}
+
+#[must_bind]
+pub fn roundtrip_nonnull_virtual_unique_ptr(
+    val: NonNull<virtual_unique_ptr<Base>>,
+) -> NonNull<virtual_unique_ptr<Base>> {
     val
 }

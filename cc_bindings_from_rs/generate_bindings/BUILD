@@ -57,6 +57,7 @@ crubit_rust_test(
         "//cc_bindings_from_rs:run_compiler_test_support",
         "//cc_bindings_from_rs/generate_bindings/database",
         "//common:code_gen_utils",
+        "//common:crubit_feature",
         "//common:token_stream_matchers",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
