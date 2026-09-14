@@ -22,7 +22,8 @@ use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use crubit_attr::BridgingAttrs;
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{
-    CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs, TemplateSpecialization,
+    AdtSpecializationArgs, CcPrerequisites, CcSnippet, CrubitAbiTypeWithCcPrereqs,
+    TemplateSpecialization,
 };
 use database::BindingsGenerator;
 use database::{
@@ -31,7 +32,7 @@ use database::{
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use query_compiler::is_c_abi_compatible_by_value;
-use quote::{quote, ToTokens};
+use quote::{format_ident, quote, ToTokens};
 use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
 #[rustversion::since(2026-08-09)]
 use rustc_hir::attrs::lang_items::LangItem;
@@ -198,6 +199,28 @@ pub fn format_cc_ident(db: &BindingsGenerator, ident: &str) -> Result<Ident> {
     } else {
         code_gen_utils::format_cc_ident(ident, features)
     }
+}
+
+pub fn get_cc_template_args<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    generics: &ty::Generics,
+) -> Result<Vec<Ident>> {
+    generics
+        .own_params
+        .iter()
+        .enumerate()
+        .filter_map(|(i, param)| match param.kind {
+            ty::GenericParamDefKind::Type { .. } => {
+                let param_name = format_cc_ident(db, param.name.as_str())
+                    .unwrap_or_else(|_| format_ident!("T{}", i));
+                Some(Ok(param_name))
+            }
+            ty::GenericParamDefKind::Const { .. } => {
+                Some(Err(anyhow!("crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)")))
+            }
+            ty::GenericParamDefKind::Lifetime => None,
+        })
+        .collect()
 }
 
 fn format_pointer_or_reference_ty_for_cc<'tcx>(
@@ -810,15 +833,16 @@ pub fn format_ty_for_cc<'tcx>(
                 // We only want to consider errors when bridging could not occur.
                 // Otherwise, fallthrough to the normal bridging logic.
                 let error_occurred = !location.is_bridgeable() && specialization.is_err();
-                let is_option_or_result = specialization.as_ref().is_ok_and(|adt_spec_enum| {
+                let is_layout_compatible_spec = specialization.as_ref().is_ok_and(|adt_spec_enum| {
                     (!location.is_bridgeable() && adt_spec_enum.is_option())
                         || adt_spec_enum.is_result()
                         || adt_spec_enum.is_vec()
+                        || matches!(adt_spec_enum.args, AdtSpecializationArgs::UserDefinedAdt)
                         || db
                             .crate_features(db.source_crate_num())
                             .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust)
                 });
-                error_occurred || is_option_or_result
+                error_occurred || is_layout_compatible_spec
             }) {
                 let adt_spec = specialization.unwrap()?;
                 let mut tokens = adt_spec.self_ty_cc.clone().into_tokens(&mut prereqs);
@@ -912,8 +936,7 @@ pub fn format_ty_for_cc<'tcx>(
                     }
                 }
             } else {
-                let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())?;
-                let has_cpp_type = attrs.cpp_type.is_some();
+                let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
                 ensure!(
                     has_cpp_type || !has_non_lifetime_substs(substs),
                     "Generic types are not supported yet (b/259749095)"
@@ -937,6 +960,22 @@ pub fn format_ty_for_cc<'tcx>(
                 .ok_or_else(|| anyhow!("Failed to generate canonical name for `{ty}`"))?;
 
             let mut tokens = canonical_name.format_for_cc(db)?;
+            // Add generic arguments for a generic ADT.
+            let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
+            if !has_cpp_type && !substs.is_empty() {
+                let mut generic_types_tokens = Vec::new();
+                for subst in substs {
+                    if let Some(subst_ty) = subst.as_type() {
+                        let snippet = format_ty_for_cc(db, subst_ty, TypeLocation::NestedBridgeable)?;
+                        generic_types_tokens.push(snippet.into_tokens(&mut prereqs));
+                    }
+                }
+                if !generic_types_tokens.is_empty() {
+                    quote! { < #(#generic_types_tokens),* > }.to_tokens(&mut tokens);
+                }
+            }
+
+            // Wrap in rs::Movable if the type is not C++ movable.
             if !db.is_cpp_move_constructible(ty)
                 && matches!(
                     location,
@@ -1552,7 +1591,8 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
             let is_supported_generic_type = BridgedBuiltin::new(db, adt).is_some()
                 || !has_non_lifetime_substs(substs)
                 || is_rvalue_reference(db, adt.did())
-                || is_ctor_by_value(db, adt.did());
+                || is_ctor_by_value(db, adt.did())
+                || db.parse_adt_template_specialization(ty).is_some();
             ensure!(
                 has_cpp_type || is_supported_generic_type || has_composable_bridging,
                 "Generic types without composable bridging are not supported yet (b/259749095)"
@@ -1568,16 +1608,7 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
                     .iter()
                     .map(|subst| match subst.kind() {
                         ty::GenericArgKind::Type(ty) => db.format_ty_for_rs(ty),
-                        ty::GenericArgKind::Lifetime(region) => {
-                            if !region.is_static() {
-                                panic!(
-                                    "We should never format types with non-'static regions, as \
-                                    thunks should first call `replace_all_regions_with_static`. \
-                                    Found type: `{ty}`."
-                                );
-                            }
-                            Ok(quote! { 'static })
-                        }
+                        ty::GenericArgKind::Lifetime(_) => Ok(quote! { 'static }),
                         ty::GenericArgKind::Const(_) => {
                             panic!("Const parameters are not supported, but found {ty}")
                         }
