@@ -94,7 +94,7 @@ To examine the generated C++ bindings for the target, you can run the following
 command:
 
 ```sh
-$ bazel build --config=crubit-genfiles //examples/cpp/function:example_lib_broken
+$ bazel build --config=crubit-genfiles //examples/cpp/function:example_lib
 ```
 
 This is the best way to preview the generated bindings for a given C++ target
