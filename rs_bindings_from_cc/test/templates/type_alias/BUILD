@@ -12,7 +12,10 @@ package(default_applicable_licenses = ["//:license"])
 cc_library(
     name = "type_alias",
     hdrs = ["type_alias.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = [
+        "//features:forward_declare",
+        "//features:template_instantiation",
+    ],
     deps = ["//support:annotations"],
 )
 
@@ -27,7 +30,10 @@ golden_test(
 cc_library(
     name = "type_alias_in_different_target",
     hdrs = ["type_alias_in_different_target.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = [
+        "//features:forward_declare",
+        "//features:template_instantiation",
+    ],
     deps = [":type_alias"],
 )
 

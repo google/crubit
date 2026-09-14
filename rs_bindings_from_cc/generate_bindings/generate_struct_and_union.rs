@@ -725,7 +725,8 @@ pub fn generate_record<'a>(
         } else {
             vec![]
         };
-    let incomplete_definition = if crubit_features.contains(crubit_feature::CrubitFeature::Wrapper)
+    let incomplete_definition = if crubit_features
+        .contains(crubit_feature::CrubitFeature::ForwardDeclarations)
     {
         Some(quote! {
             forward_declare::unsafe_define!(forward_declare::symbol!(#fully_qualified_cc_name), #qualified_ident #stubbed_lifetime_params);

@@ -39,10 +39,6 @@ impl ::core::fmt::Debug for StructWithUserProvidedConstructors {
             .finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: StructWithUserProvidedConstructors"),
-    crate::StructWithUserProvidedConstructors
-);
 
 impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for StructWithUserProvidedConstructors {
     #[inline(always)]
@@ -111,10 +107,6 @@ impl ::core::fmt::Debug for StructWithExplicitConversionConstructor {
             .finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: StructWithExplicitConversionConstructor"),
-    crate::StructWithExplicitConversionConstructor
-);
 
 /// Testing `impl From<int> for /*...*/` when the constructor is `explicit`.
 impl From<::ffi_11::c_int> for StructWithExplicitConversionConstructor {
@@ -163,10 +155,6 @@ impl ::core::fmt::Debug for StructWithMultipleConstructors {
             .finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: StructWithMultipleConstructors"),
-    crate::StructWithMultipleConstructors
-);
 
 impl From<::ffi_11::c_int> for StructWithMultipleConstructors {
     #[inline(always)]
@@ -265,10 +253,6 @@ impl ::core::fmt::Debug for StructWithImplicitConversionConstructor {
             .finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: StructWithImplicitConversionConstructor"),
-    crate::StructWithImplicitConversionConstructor
-);
 
 /// Testing `impl From<int> for /*...*/` when the constructor is *not* `explicit`.
 impl From<::ffi_11::c_int> for StructWithImplicitConversionConstructor {
@@ -313,10 +297,6 @@ impl ::core::fmt::Debug for OtherSimpleStruct {
         formatter.debug_struct("OtherSimpleStruct").field("int_field", &self.int_field).finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: OtherSimpleStruct"),
-    crate::OtherSimpleStruct
-);
 
 impl Default for OtherSimpleStruct {
     #[inline(always)]
@@ -352,10 +332,6 @@ impl ::core::fmt::Debug for StructWithImplicitConversionFromReference {
             .finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: StructWithImplicitConversionFromReference"),
-    crate::StructWithImplicitConversionFromReference
-);
 
 /// Testing `impl<'b> From<&'b OtherSimpleStruct> for /*...*/`.
 impl<'other> From<&'other crate::OtherSimpleStruct> for StructWithImplicitConversionFromReference {
@@ -403,10 +379,6 @@ impl ::core::fmt::Debug for StructWithInlineConstructors {
             .finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: StructWithInlineConstructors"),
-    crate::StructWithInlineConstructors
-);
 
 impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for StructWithInlineConstructors {
     #[inline(always)]
@@ -493,10 +465,6 @@ impl ::core::fmt::Debug for StructWithDeletedConstructors {
             .finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: StructWithDeletedConstructors"),
-    crate::StructWithDeletedConstructors
-);
 
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithDeletedConstructors {
     #[inline(always)]
@@ -528,10 +496,6 @@ impl ::core::fmt::Debug for StructWithPrivateConstructors {
         formatter.debug_struct("StructWithPrivateConstructors").finish_non_exhaustive()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: StructWithPrivateConstructors"),
-    crate::StructWithPrivateConstructors
-);
 
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for StructWithPrivateConstructors {
     #[inline(always)]
@@ -566,10 +530,6 @@ impl ::core::fmt::Debug for StructWithExplicitlyDefaultedConstructors {
             .finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: StructWithExplicitlyDefaultedConstructors"),
-    crate::StructWithExplicitlyDefaultedConstructors
-);
 
 impl Default for StructWithExplicitlyDefaultedConstructors {
     #[inline(always)]
@@ -608,10 +568,6 @@ impl ::core::fmt::Debug for NonTrivialStructWithConstructors {
             .finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: NonTrivialStructWithConstructors"),
-    crate::NonTrivialStructWithConstructors
-);
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NonTrivialStructWithConstructors {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
@@ -728,10 +684,6 @@ impl ::core::fmt::Debug for StructWithUnsafeConstructor {
             .finish()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: StructWithUnsafeConstructor"),
-    crate::StructWithUnsafeConstructor
-);
 
 impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for StructWithUnsafeConstructor {
     #[inline(always)]
@@ -778,10 +730,6 @@ impl ::core::fmt::Debug for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
             .finish_non_exhaustive()
     }
 }
-forward_declare::unsafe_define!(
-    forward_declare::symbol!(":: CopyCtorHasUnevaluatableExprInUnevaluatedContext"),
-    crate::CopyCtorHasUnevaluatableExprInUnevaluatedContext
-);
 
 impl Drop for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
     #[inline(always)]
@@ -810,21 +758,29 @@ impl Default for CopyCtorHasUnevaluatableExprInUnevaluatedContext {
 // error: constructor `CopyCtorHasUnevaluatableExprInUnevaluatedContext::CopyCtorHasUnevaluatableExprInUnevaluatedContext` could not be bound
 //   Defaulted function relies on an invalid decl: std::declval
 
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_3pmr21polymorphic_allocatorIDiEEEE = forward_declare::symbol!(":: std :: basic_string < char32_t , std :: char_traits < char32_t >, std :: pmr :: polymorphic_allocator < char32_t >>"));
+// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>` could not be bound
+//   incomplete type
 
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_9allocatorIDiEEEE = forward_declare::symbol!(":: std :: basic_string < char32_t , std :: char_traits < char32_t >, std :: allocator < char32_t >>"));
+// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>` could not be bound
+//   incomplete type
 
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_3pmr21polymorphic_allocatorIDsEEEE = forward_declare::symbol!(":: std :: basic_string < char16_t , std :: char_traits < char16_t >, std :: pmr :: polymorphic_allocator < char16_t >>"));
+// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>` could not be bound
+//   incomplete type
 
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_9allocatorIDsEEEE = forward_declare::symbol!(":: std :: basic_string < char16_t , std :: char_traits < char16_t >, std :: allocator < char16_t >>"));
+// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>` could not be bound
+//   incomplete type
 
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIcNS_11char_traitsIcEENS_3pmr21polymorphic_allocatorIcEEEE = forward_declare::symbol!(":: std :: basic_string < char , std :: char_traits < char >, std :: pmr :: polymorphic_allocator < char >>"));
+// error: class `std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>` could not be bound
+//   incomplete type
 
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEE = forward_declare::symbol!(":: std :: basic_string < char , std :: char_traits < char >, std :: allocator < char >>"));
+// error: class `std::basic_string<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
 
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_ostreamIcNS_11char_traitsIcEEEE = forward_declare::symbol!(":: std :: basic_ostream < char , std :: char_traits < char >>"));
+// error: class `std::basic_ostream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
 
-forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_ostreamIwNS_11char_traitsIwEEEE = forward_declare::symbol!(":: std :: basic_ostream < wchar_t , std :: char_traits < wchar_t >>"));
+// error: class `std::basic_ostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
 
 mod detail {
     #[allow(unused_imports)]

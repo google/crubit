@@ -250,7 +250,7 @@ pub fn missing_feature_descriptions<'a>(
             }
         }
         Item::IncompleteRecord(_) => {
-            if !have_feature(CrubitFeature::Wrapper) {
+            if !have_feature(CrubitFeature::ForwardDeclarations) {
                 missing_features.push("incomplete type".to_string());
             }
         }
