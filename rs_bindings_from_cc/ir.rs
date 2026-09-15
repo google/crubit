@@ -3759,6 +3759,7 @@ pub struct ExistingRustType<'pb> {
     proto: ExistingRustTypeView<'pb>,
     pub(crate) template_args: Vec<TemplateArg>,
     pub(crate) owning_target: BazelLabel,
+    pub(crate) label_hint: Option<&'pb str>,
 }
 
 impl<'pb> ProtoToIr for ExistingRustTypeView<'pb> {
@@ -3772,7 +3773,8 @@ impl<'pb> ProtoToIr for ExistingRustTypeView<'pb> {
             let _ = TemplateArg::try_from(template_arg)?;
         }
         self.owning_target().validate()?;
-        self.size_align_opt().into_option().validate()
+        self.size_align_opt().into_option().validate()?;
+        self.label_hint_opt().into_option().validate()
     }
 
     fn to_ir(self) -> ExistingRustType<'pb> {
@@ -3786,7 +3788,8 @@ impl<'pb> ProtoToIr for ExistingRustTypeView<'pb> {
                 )
             })
             .collect();
-        ExistingRustType { proto: self, template_args, owning_target }
+        let label_hint = self.label_hint_opt().into_option().to_ir().filter(|s| !s.is_empty());
+        ExistingRustType { proto: self, template_args, owning_target, label_hint }
     }
 }
 
@@ -3835,6 +3838,10 @@ derive_debug_partialeq_eq_hash! {
 
         pub fn impl_debug(&self) -> bool {
             self.proto.impl_debug()
+        }
+
+        pub fn label_hint(&self) -> Option<&'pb str> {
+            self.label_hint
         }
     }
 }

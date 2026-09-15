@@ -904,11 +904,23 @@ pub enum BridgeRsTypeKind<'a> {
     },
 }
 
+/// Validates that the first component of a Rust path in `CRUBIT_BRIDGE` (representing the crate
+/// name) matches the target name of the provided Bazel label hint.
+fn validate_bridge_path_prefix(path: &str, label: &BazelLabel, field_name: &str) -> Result<()> {
+    validate_path_prefix(path, label, field_name, "CRUBIT_BRIDGE")
+}
+
 /// Validates that the first component of a Rust path (representing the crate name)
 /// matches the target name of the provided Bazel label hint.
 ///
-/// Returns an error if there is a mismatch, using `field_name` to customize the error message.
-fn validate_bridge_path_prefix(path: &str, label: &BazelLabel, field_name: &str) -> Result<()> {
+/// Returns an error if there is a mismatch, using `field_name` and `macro_name` to customize the
+/// error message.
+fn validate_path_prefix(
+    path: &str,
+    label: &BazelLabel,
+    field_name: &str,
+    macro_name: &str,
+) -> Result<()> {
     let starts_with_colon2 = path.starts_with("::");
     let path_without_colon = if starts_with_colon2 { &path[2..] } else { path };
     let parts: Vec<&str> = path_without_colon.split("::").collect();
@@ -917,7 +929,7 @@ fn validate_bridge_path_prefix(path: &str, label: &BazelLabel, field_name: &str)
         let target_name = label.target_name();
         if crate_name != target_name {
             return Err(anyhow!(
-                "CRUBIT_BRIDGE error: crate name `{}` in {} `{}` does not match target name `{}` in hint `{}`",
+                "{macro_name} error: crate name `{}` in {} `{}` does not match target name `{}` in hint `{}`",
                 crate_name, field_name, path, target_name, label.as_str()
             ));
         }
@@ -1325,11 +1337,59 @@ impl<'a> RsTypeKind<'a> {
             });
         }
 
-        let uninterpolated_rust_type = fully_qualify_type(
-            db,
-            ir::Item::ExistingRustType(existing_rust_type.clone()),
-            existing_rust_type.rs_name(),
-        );
+        // Determine the target owning the Rust type to support crate name remapping
+        // when crate name mangling is enabled (e.g. `use_label_encoded_names_for_deps`).
+        //
+        // 1. Explicit hint: Specified via `CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT` (or
+        //    `CRUBIT_INTERNAL_RUST_TYPE_WITH_HINT`). This is required when the C++ type's
+        //    owning target differs from the target providing its Rust bindings (e.g.
+        //    `absl::StatusOr` in `@abseil-cpp//absl/status:statusor` whose Rust type
+        //    `NewStatusOr` is provided by `@abseil-cpp//absl/status:status`).
+        // 2. Fallback heuristic: When no explicit hint is provided, infer the target from
+        //    `existing_rust_type.owning_target()` if the crate prefix of `rs_name` matches
+        //    `owning_target.target_name()` (e.g. `absl::Status` in `@abseil-cpp//absl/status:status`
+        //    mapped to `::status::absl::NewStatus`).
+        let label_hint = if let Some(hint_str) = existing_rust_type.label_hint() {
+            if hint_str.starts_with("//") {
+                let label = BazelLabel::from(hint_str);
+                validate_path_prefix(
+                    existing_rust_type.rs_name(),
+                    &label,
+                    "Rust path",
+                    "CRUBIT_INTERNAL_RUST_TYPE",
+                )?;
+                Some(label)
+            } else {
+                bail!(
+                    "Invalid CRUBIT_INTERNAL_RUST_TYPE label hint format: `{}`. Expected `//package:target` or `//package`",
+                    hint_str
+                );
+            }
+        } else {
+            let rs_name = existing_rust_type.rs_name();
+            let starts_with_colon2 = rs_name.starts_with("::");
+            let path_without_colon = if starts_with_colon2 { &rs_name[2..] } else { rs_name };
+            let parts: Vec<&str> = path_without_colon.split("::").collect();
+            existing_rust_type.owning_target().filter(|owning_target| {
+                !parts.is_empty() && parts[0] == owning_target.target_name()
+            })
+        };
+
+        let uninterpolated_rust_type = if let Some(label) = label_hint {
+            let resolved_rs_name =
+                resolve_bridge_rust_name(existing_rust_type.rs_name(), &Some(label), db.ir());
+            fully_qualify_type(
+                db,
+                ir::Item::ExistingRustType(existing_rust_type.clone()),
+                &resolved_rs_name,
+            )
+        } else {
+            fully_qualify_type(
+                db,
+                ir::Item::ExistingRustType(existing_rust_type.clone()),
+                existing_rust_type.rs_name(),
+            )
+        };
 
         let args = existing_rust_type
             .template_args()
@@ -3428,6 +3488,49 @@ mod tests {
         assert_eq!(
             err2.to_string(),
             "CRUBIT_BRIDGE error: crate name `status` in Rust ABI path `status::absl::StatusOr` does not match target name `other` in hint `@abseil-cpp//absl/status:other`"
+        );
+    }
+
+    #[gtest]
+    fn test_validate_path_prefix_for_internal_rust_type() {
+        assert!(validate_path_prefix(
+            "::status::absl::NewStatusOr",
+            &BazelLabel::from("@abseil-cpp//absl/status:status"),
+            "label_hint",
+            "CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT",
+        )
+        .is_ok());
+
+        assert!(validate_path_prefix(
+            "::status::absl::NewStatusOr",
+            &BazelLabel::from("@abseil-cpp//absl/status"),
+            "label_hint",
+            "CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT",
+        )
+        .is_ok());
+
+        let err = validate_path_prefix(
+            "status::absl::NewStatusOr",
+            &BazelLabel::from("@abseil-cpp//absl/status"),
+            "label_hint",
+            "CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT",
+        )
+        .unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            "Unexpected `label_hint` in `CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT`: `status::absl::NewStatusOr` (expected a leading `::`, e.g. `::status::...`)"
+        );
+
+        let err2 = validate_path_prefix(
+            "::status::absl::NewStatusOr",
+            &BazelLabel::from("@abseil-cpp//absl/status:other"),
+            "label_hint",
+            "CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT",
+        )
+        .unwrap_err();
+        assert_eq!(
+            err2.to_string(),
+            "CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT error: crate name `status` in label_hint `::status::absl::NewStatusOr` does not match target name `other` in hint `@abseil-cpp//absl/status:other`"
         );
     }
 }

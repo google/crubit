@@ -1917,6 +1917,21 @@ TEST(ImporterTest, ExistingRustTypeWithImplDebug) {
               ElementsAre(Pointee(AllOf(CcNameIs("S"), ImplDebug()))));
 }
 
+TEST(ImporterTest, ExistingRustTypeWithLabelHint) {
+  ASSERT_OK_AND_ASSIGN(
+      const IR ir,
+      IrFromCc({R"cc(
+                  struct [[clang::annotate("crubit_internal_rust_type",
+                                           "::my_crate::MyType")]]
+                  [[clang::annotate("crubit_internal_rust_type_label_hint",
+                                    "//my/package:my_crate")]] S {};
+                )cc"}));
+  EXPECT_THAT(get_items_if<ExistingRustType>(ir),
+              ElementsAre(Pointee(AllOf(
+                  CcNameIs("S"), Property(&ExistingRustType::label_hint,
+                                          Eq("//my/package:my_crate"))))));
+}
+
 TEST(ImporterTest, RecordTruncatesAndHashesRustNameWhenOver160Chars) {
   ASSERT_OK_AND_ASSIGN(
       const IR ir,
