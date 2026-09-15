@@ -474,7 +474,7 @@ fn does_impl_apply<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId, target_ty: Ty<'tcx>)
         return false;
     }
 
-    ocxt.evaluate_obligations_error_on_ambiguity().no_errors()
+    ocxt.evaluate_obligations_error_on_ambiguity().into_iter().next().is_none()
 }
 
 pub fn from_trait_impls_by_argument<'tcx>(
