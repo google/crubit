@@ -66,23 +66,15 @@ Calling C++ APIs which use protobuf is slightly more difficult.
 When a C++ proto message is passed or returned by value, it is mapped directly
 to the Rust message type, as you would expect.
 
-### Passing by reference
+### Passing by pointer
 
-| C++                                | Rust                                         |
-| :--------------------------------- | :------------------------------------------- |
-| `const Message*`, `const Message&` | `*const Incomplete<symbol!("Message"), ...>` |
-| `Message*`, `Message&`             | `*mut Incomplete<symbol!("Message"), ...>`   |
+| C++              | Rust                                         |
+| :--------------- | :------------------------------------------- |
+| `const Message*` | `*const Incomplete<symbol!("Message"), ...>` |
+| `Message*`       | `*mut Incomplete<symbol!("Message"), ...>`   |
 
-When a C++ proto is passed by pointer or by reference, the Rust type is a
-pointer to a forward declaration of the C++ protocol buffer type.
-
-In particular, C++ APIs are **not** exposed using the `View` or `Mut` types.
-
-These are pointers because C++ APIs do not annotate ownership, lifetime, or
-aliasing properties, and so these cannot be mapped to the distinct owned,
-`View`, or `Mut` types of the Rust protobuf API. And these are forward-declared
-because the C++ types do not have direct Rust bindings: the generated `.proto.h`
-file does not get piped through Crubit.
+When a C++ proto is passed by pointer, the Rust type is a pointer to a forward
+declaration of the C++ protocol buffer type.
 
 *   **To convert a Rust `Proto` to a C++ `const Proto*`**: use
     `my_proto.as_view().cpp_cast()`
@@ -93,5 +85,66 @@ file does not get piped through Crubit.
 *   **To convert a C++ `(const) Proto*` to a Rust `View`/`Mut`**: use `unsafe
     {my_ptr.unsafe_cpp_cast()}`.
 
+### Passing by reference
+
+| C++              | Rust                                            |
+| :--------------- | :---------------------------------------------- |
+| `const Message&` | `&Incomplete<symbol!("Message"), ...>`          |
+| `Message&`       | `Pin<&mut Incomplete<symbol!("Message"), ...>>` |
+
+When a C++ proto is passed by reference, Crubit uses lifetime inference
+(`assume_lifetimes`, enabled by default in
+`//features:supported`) to map the C++ reference to a Rust
+reference to a forward declaration of the C++ protocol buffer type. Note that
+because incomplete types are `!Unpin`, non-const references are wrapped in
+`Pin<&mut ...>`.
+
+Because `cpp_cast()` currently produces a raw pointer (`*const Incomplete` or
+`*mut Incomplete`), to call a C++ API expecting `&Incomplete` or `Pin<&mut
+Incomplete>`, you must dereference the pointer in an `unsafe` block:
+
+*   **To convert a Rust `Proto` to a C++ `const Proto&`**: use
+    `unsafe { &*my_proto.as_view().cpp_cast() }`
+
+*   **To convert a Rust `Proto` to a C++ `Proto&`**: use
+    `unsafe { Pin::new_unchecked(&mut *my_proto.as_mut().cpp_cast()) }`
+
+*   **To convert a C++ `const Proto&` (`&Incomplete`) to a Rust `View`**: obtain a
+    pointer with `std::ptr::from_ref` and call `unsafe_cpp_cast`:
+    ```rust
+    let ptr = std::ptr::from_ref(my_ref);
+    let view: ProtoView = unsafe { ptr.unsafe_cpp_cast() };
+    ```
+
+*   **To convert a C++ `Proto&` (`Pin<&mut Incomplete>`) to a Rust `Mut`**:
+    unpin the reference, obtain a mutable pointer with `std::ptr::from_mut`, and
+    call `unsafe_cpp_cast` on `&mut ptr`:
+    ```rust
+    let mut ptr = std::ptr::from_mut(unsafe { Pin::into_inner_unchecked(my_pin) });
+    let mut_msg: ProtoMut = unsafe { (&mut ptr).unsafe_cpp_cast() };
+    ```
+
+#### Returning references from C++
+
+When a C++ API returns a reference:
+
+*   **Tied to an input lifetime**: Crubit infers the lifetime and returns
+    `::cref::CRef<'a, Incomplete>` for `const Message&` or
+    `::cref::CMut<'a, Incomplete>` for `Message&`.
+    *   To convert `CRef` to `ProtoView`:
+        ```rust
+        let ptr = CRef::as_ptr(cref);
+        let view: ProtoView = unsafe { ptr.unsafe_cpp_cast() };
+        ```
+    *   To convert `CMut` to `ProtoMut`:
+        ```rust
+        let mut ptr = CMut::as_mut_ptr(cmut);
+        let mut_msg: ProtoMut = unsafe { (&mut ptr).unsafe_cpp_cast() };
+        ```
+*   **Static or unbound reference**: If the return reference cannot be tied to an
+    input parameter's lifetime, Crubit falls back to returning raw pointers
+    (`*const Incomplete` and `*mut Incomplete`).
+
 See support/forward_declare.rs for the definition of
-`Incomplete`, `CppCast`, and `UnsafeCppCast`.
+`Incomplete`, `CppCast`, and `UnsafeCppCast`, and
+support/cref.rs for `CRef` and `CMut`.
