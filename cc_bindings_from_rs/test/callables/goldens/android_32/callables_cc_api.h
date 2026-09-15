@@ -161,6 +161,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: Point") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
+// Error generating bindings for function
+// `callables_golden::call_and_return_borrowed_callable` defined at
+// cc_bindings_from_rs/test/callables/callables.rs;l=224:
+// Function parameter #0 is a borrowed callable (`&'a (dyn std::ops::Fn(i32) ->
+// i32 + 'a)`), whose lifetime is captured by the return type `&'a i32`. This is
+// not supported because callable trampoline closures are temporary and cannot
+// outlive the function call.
+
 // CRUBIT_ANNOTATE: must_bind=
 ::callables::NonCppMovable call_and_return_non_movable(
     ::rs::FnRef<::callables::NonCppMovable() const> f);

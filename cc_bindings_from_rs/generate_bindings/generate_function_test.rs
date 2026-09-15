@@ -2289,3 +2289,41 @@ fn test_bridged_type_with_cpp_move_constructible_allows_unmovable_type_arg() {
         );
     });
 }
+
+#[test]
+fn test_callable_param_borrowed_in_return_error() {
+    let test_src = r#"
+            pub fn return_borrowed_callable<'a>(_f: &'a dyn Fn(i32) -> i32, x: &'a i32) -> &'a i32 {
+                x
+            }
+        "#;
+    test_format_item(test_src, "return_borrowed_callable", |result| {
+        let err = result.unwrap_err();
+        assert!(err.contains("is a borrowed callable"), "Unexpected error: {err}");
+        assert!(
+            err.contains("whose lifetime is captured by the return type `&'a i32`"),
+            "Unexpected error: {err}"
+        );
+        assert!(
+            err.contains("This is not supported because callable trampoline closures are temporary and cannot outlive the function call."),
+            "Unexpected error: {err}"
+        );
+    });
+}
+
+#[test]
+fn test_callable_param_borrowed_in_return_struct_error() {
+    let test_src = r#"
+            pub struct StructWithLifetime<'a>(pub &'a i32);
+            pub fn return_struct_with_callable<'a>(_f: &'a dyn Fn(f64), x: &'a i32) -> StructWithLifetime<'a> {
+                StructWithLifetime(x)
+            }
+        "#;
+    test_format_item(test_src, "return_struct_with_callable", |result| {
+        let err = result.unwrap_err();
+        assert!(
+            err.contains("whose lifetime is captured by the return type `StructWithLifetime<'a>`"),
+            "Unexpected error: {err}"
+        );
+    });
+}

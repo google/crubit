@@ -218,3 +218,10 @@ impl Drop for CppMovableDrop {
 pub fn call_with_movable_drop(f: impl Fn(CppMovableDrop), x: i32) {
     f(CppMovableDrop(x));
 }
+
+/// Functions whose return type captures the lifetime of a borrowed callable parameter
+/// cannot have bindings generated.
+pub fn call_and_return_borrowed_callable<'a>(f: &'a dyn Fn(i32) -> i32, x: &'a i32) -> &'a i32 {
+    let _y = f(*x);
+    x
+}

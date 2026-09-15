@@ -1033,6 +1033,7 @@ pub fn generate_function<'tcx>(
     } else {
         rs_return_type
     };
+    check_callable_params_not_borrowed_in_return(tcx, &sig_mid, actual_rs_return_type)?;
 
     let trait_ref = tcx
         .impl_of_assoc(def_id)
@@ -1373,6 +1374,50 @@ pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
     if is_c_variadic {
         // TODO(b/254097223): Add support for variadic functions.
         bail!("C variadic functions are not supported (b/254097223)");
+    }
+
+    Ok(())
+}
+
+fn check_callable_params_not_borrowed_in_return<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    sig_mid: &ty::FnSig<'tcx>,
+    actual_return_ty: Ty<'tcx>,
+) -> Result<()> {
+    use rustc_middle::ty::TypeVisitor;
+    use std::collections::HashSet;
+
+    struct RegionCollector<'tcx> {
+        regions: HashSet<ty::Region<'tcx>>,
+    }
+
+    impl<'tcx> TypeVisitor<TyCtxt<'tcx>> for RegionCollector<'tcx> {
+        fn visit_region(&mut self, region: ty::Region<'tcx>) {
+            self.regions.insert(region);
+        }
+    }
+
+    let mut return_regions = RegionCollector { regions: HashSet::new() };
+    return_regions.visit_ty(sig_mid.output());
+    return_regions.visit_ty(actual_return_ty);
+
+    if return_regions.regions.is_empty() {
+        return Ok(());
+    }
+
+    for (i, &param_ty) in sig_mid.inputs().iter().enumerate() {
+        if let ty::TyKind::Ref(region, _, _) = *param_ty.kind()
+            && return_regions.regions.contains(&region)
+            && let Ok(Some(info)) = crate::format_type::get_callable_info(tcx, param_ty)
+            && !info.kind.is_owning()
+        {
+            bail!(
+                "Function parameter #{i} is a borrowed callable (`{param_ty}`), \
+                whose lifetime is captured by the return type `{actual_return_ty}`. \
+                This is not supported because callable trampoline closures are \
+                temporary and cannot outlive the function call."
+            );
+        }
     }
 
     Ok(())
