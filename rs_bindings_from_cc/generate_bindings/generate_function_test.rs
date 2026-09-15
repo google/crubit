@@ -37,7 +37,7 @@ fn test_simple_function() -> Result<()> {
         quote! {
             #[inline(always)]
             pub fn Add(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int {
-                unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
+                unsafe { crate::detail::...(a, b) }
             }
         }
     );
@@ -48,8 +48,8 @@ fn test_simple_function() -> Result<()> {
                 #[allow(unused_imports)]
                 use super::*;
                 unsafe extern "C" {
-                    #[link_name = "_Z3Addii"]
-                    pub(crate) unsafe fn __rust_thunk___Z3Addii(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int;
+                    #[link_name = ...]
+                    pub(crate) unsafe fn ...(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int;
                 }
             }
         }
@@ -71,7 +71,7 @@ fn test_inline_function() -> Result<()> {
         quote! {
             #[inline(always)]
             pub fn Add(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int {
-                unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
+                unsafe { crate::detail::...(a, b) }
             }
         }
     );
@@ -82,7 +82,7 @@ fn test_inline_function() -> Result<()> {
                 #[allow(unused_imports)]
                 use super::*;
                 unsafe extern "C" {
-                    pub(crate) unsafe fn __rust_thunk___Z3Addii(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int;
+                    pub(crate) unsafe fn ...(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int;
                 }
             }
         }
@@ -91,7 +91,7 @@ fn test_inline_function() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" int __rust_thunk___Z3Addii(int a, int b) {
+            extern "C" int ...(int a, int b) {
                 return Add(a, b);
             }
         }
@@ -123,7 +123,7 @@ fn test_inline_function_with_inline_cpp() -> Result<()> {
                 #[allow(unused_imports)]
                 use super::*;
                 unsafe extern "C" {
-                    pub(crate) unsafe fn __rust_thunk___Z3Addii(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int;
+                    pub(crate) unsafe fn ...(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int;
                 }
             }
         }
@@ -280,7 +280,7 @@ fn test_simple_function_with_types_from_other_target() -> Result<()> {
             pub fn DoSomething(mut param: ::dependency::ParamStruct) -> ::dependency::ReturnStruct {
                 unsafe {
                     let mut __crubit_return = ::core::mem::MaybeUninit::<::dependency::ReturnStruct>::uninit();
-                    crate::detail::__rust_thunk___Z11DoSomething11ParamStruct(
+                    crate::detail::...(
                        &raw mut __crubit_return as *mut ::core::ffi::c_void,
                        &mut param
                     );
@@ -296,7 +296,7 @@ fn test_simple_function_with_types_from_other_target() -> Result<()> {
             #[allow(unused_imports)]
             use super::*;
             unsafe extern "C" {
-                pub(crate) unsafe fn __rust_thunk___Z11DoSomething11ParamStruct(
+                pub(crate) unsafe fn ...(
                     __return: *mut ::core::ffi::c_void,
                     param: &mut ::dependency::ParamStruct
                 );
@@ -307,8 +307,7 @@ fn test_simple_function_with_types_from_other_target() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z11DoSomething11ParamStruct(
-                    struct ReturnStruct* __return, struct ParamStruct* param) {
+            extern "C" void ...(struct ReturnStruct* __return, struct ParamStruct* param) {
                 new (__return) auto(DoSomething(std::move(*param)));
             }
         }
@@ -325,7 +324,7 @@ fn test_ref_to_struct_in_thunk_impls() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z3fooR1S(struct S* s) {
+            extern "C" void ...(struct S* s) {
                 foo(*s);
             }
         }
@@ -342,7 +341,7 @@ fn test_const_ref_to_struct_in_thunk_impls() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z3fooRK1S(struct S const * s) {
+            extern "C" void ...(struct S const * s) {
                 foo(*s);
             }
         }
@@ -359,7 +358,7 @@ fn test_unsigned_int_in_thunk_impls() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z3fooj(unsigned int i) {
+            extern "C" void ...(unsigned int i) {
                 foo(i);
             }
         }
@@ -381,7 +380,7 @@ fn test_record_static_methods_qualify_call_in_thunk() -> Result<()> {
     assert_cc_matches!(
         generate_bindings_tokens_for_test(ir)?.rs_api_impl,
         quote! {
-            extern "C" int __rust_thunk___ZN10SomeStruct9some_funcEv() {
+            extern "C" int ...() {
                 return SomeStruct::some_func();
             }
         }
@@ -403,8 +402,7 @@ fn test_record_instance_methods_deref_this_in_thunk() -> Result<()> {
     assert_cc_matches!(
         generate_bindings_tokens_for_test(ir)?.rs_api_impl,
         quote! {
-            extern "C" int __rust_thunk___ZNK10SomeStruct9some_funcEi(
-                    struct SomeStruct const * __this, int arg) {
+            extern "C" int ...(struct SomeStruct const * __this, int arg) {
                 return __this->some_func(arg);
             }
         }
@@ -424,7 +422,7 @@ fn test_ptr_func() -> Result<()> {
         quote! {
             #[inline(always)]
             pub unsafe fn Deref(p: *const *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int {
-                unsafe { crate::detail::__rust_thunk___Z5DerefPKPi(p) }
+                unsafe { crate::detail::...(p) }
             }
         }
     );
@@ -435,7 +433,7 @@ fn test_ptr_func() -> Result<()> {
                 #[allow(unused_imports)]
                 use super::*;
                 unsafe extern "C" {
-                    pub(crate) unsafe fn __rust_thunk___Z5DerefPKPi(p: *const *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int;
+                    pub(crate) unsafe fn ...(p: *const *mut ::ffi_11::c_int) -> *mut ::ffi_11::c_int;
                 }
             }
         }
@@ -444,7 +442,7 @@ fn test_ptr_func() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" int* __rust_thunk___Z5DerefPKPi(int* const * p) {
+            extern "C" int* ...(int* const * p) {
                 return Deref(p);
             }
         }
@@ -469,7 +467,7 @@ fn test_const_char_ptr_func() -> Result<()> {
         quote! {
             #[inline(always)]
             pub unsafe fn f(str: *const ::ffi_11::c_schar) {
-                unsafe { crate::detail::__rust_thunk___Z1fPKa(str) }
+                unsafe { crate::detail::...(str) }
             }
         }
     );
@@ -477,7 +475,7 @@ fn test_const_char_ptr_func() -> Result<()> {
         rs_api,
         quote! {
             extern "C" {
-                pub(crate) unsafe fn __rust_thunk___Z1fPKa(str: *const ::ffi_11::c_schar);
+                pub(crate) unsafe fn ...(str: *const ::ffi_11::c_schar);
             }
         }
     );
@@ -485,7 +483,7 @@ fn test_const_char_ptr_func() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z1fPKa(signed char const * str){ f(str); }
+            extern "C" void ...(signed char const * str){ f(str); }
         }
     );
     Ok(())
@@ -509,8 +507,7 @@ fn test_func_ptr_thunk() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" crubit::type_identity_t<int(int , int)>*
-            __rust_thunk___Z30inline_get_pointer_to_functionv() {
+            extern "C" crubit::type_identity_t<int(int , int)>* ...() {
                 return inline_get_pointer_to_function();
             }
         }
@@ -609,7 +606,7 @@ fn test_impl_default_explicitly_defaulted_constructor() -> Result<()> {
                 fn default() -> Self {
                     let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
-                        crate::detail::__rust_thunk___ZN20DefaultedConstructorC1Ev(&raw mut tmp as *mut _);
+                        crate::detail::...(&raw mut tmp as *mut _);
                         tmp.assume_init()
                     }
                 }
@@ -619,8 +616,7 @@ fn test_impl_default_explicitly_defaulted_constructor() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___ZN20DefaultedConstructorC1Ev(
-                    struct DefaultedConstructor* __this) {
+            extern "C" void ...(struct DefaultedConstructor* __this) {
                 crubit::construct_at(__this);
             }
         }
@@ -711,7 +707,7 @@ fn test_impl_cc_index_for_member_function() -> Result<()> {
                 type Output<'ctnr> = &'ctnr ::ffi_11::c_int;
                 #[inline(always)]
                 fn cc_index<'ctnr>(&'ctnr self, index: ::ffi_11::c_uint) -> Self::Output<'ctnr> {
-                    unsafe { crate::detail::__rust_thunk___ZNK10SomeStructixEj(self, index) }
+                    unsafe { crate::detail::...(self, index) }
                 }
             }
         }
@@ -740,7 +736,7 @@ fn test_impl_cc_index_mut_for_member_function() -> Result<()> {
                 type Output<'ctnr> = &'ctnr mut ::ffi_11::c_int;
                 #[inline(always)]
                 fn cc_index_mut<'ctnr>(self: ::core::pin::Pin<&'ctnr mut Self>, index: ::ffi_11::c_uint) -> Self::Output<'ctnr> {
-                    unsafe { crate::detail::__rust_thunk___ZN10SomeStructixEj(self.get_unchecked_mut(), index) }
+                    unsafe { crate::detail::...(self.get_unchecked_mut(), index) }
                 }
             }
         }
@@ -964,7 +960,7 @@ fn test_impl_eq_for_member_function() -> Result<()> {
             impl PartialEq for SomeStruct {
                 #[inline(always)]
                 fn eq<'__this, 'other>(&'__this self, other: &'other Self) -> bool {
-                    unsafe { crate::detail::__rust_thunk___ZNK10SomeStructeqERKS_(self, other) }
+                    unsafe { crate::detail::...(self, other) }
                 }
             }
         }
@@ -972,8 +968,7 @@ fn test_impl_eq_for_member_function() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" bool __rust_thunk___ZNK10SomeStructeqERKS_(
-                    struct SomeStruct const * __this, struct SomeStruct const * other) {
+            extern "C" bool ...(struct SomeStruct const * __this, struct SomeStruct const * other) {
                 return __this->operator==(*other);
             }
         }
@@ -1002,7 +997,7 @@ fn test_impl_eq_for_free_function() -> Result<()> {
             impl PartialEq for crate::ns::SomeStruct {
                 #[inline(always)]
                 fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs Self) -> bool {
-                    unsafe { crate::detail::__rust_thunk___ZeqRKN2ns10SomeStructES2_(self, rhs) }
+                    unsafe { crate::detail::...(self, rhs) }
                 }
             }
         }
@@ -1031,7 +1026,7 @@ fn test_impl_eq_for_free_function_with_lifetime_params() -> Result<()> {
             impl<'a, 'rhs> PartialEq<crate::ns::SomeView<'rhs>> for crate::ns::SomeView<'a> {
                 #[inline(always)]
                 fn eq<'lhs>(&self, rhs: &crate::ns::SomeView<'rhs>) -> bool {
-                    unsafe { crate::detail::__rust_thunk___ZeqN2ns8SomeViewES0_(&mut self.clone(), &mut rhs.clone()) }
+                    unsafe { crate::detail::...(&mut self.clone(), &mut rhs.clone()) }
                 }
             }
         }
@@ -1062,7 +1057,7 @@ fn test_impl_eq_ne_for_member_function() -> Result<()> {
             impl PartialEq for SomeStruct {
                 #[inline(always)]
                 fn eq<'__this, 'other>(&'__this self, other: &'other Self) -> bool {
-                    unsafe { crate::detail::__rust_thunk___ZNK10SomeStructeqERKS_(self, other) }
+                    unsafe { crate::detail::...(self, other) }
                 }
             }
         }
@@ -1070,8 +1065,7 @@ fn test_impl_eq_ne_for_member_function() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" bool __rust_thunk___ZNK10SomeStructeqERKS_(
-                    struct SomeStruct const * __this, struct SomeStruct const * other) {
+            extern "C" bool ...(struct SomeStruct const * __this, struct SomeStruct const * other) {
                 return __this->operator==(*other);
             }
         }
@@ -1103,7 +1097,7 @@ fn test_impl_eq_ne_for_free_function() -> Result<()> {
             impl PartialEq for crate::ns::SomeStruct {
                 #[inline(always)]
                 fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs Self) -> bool {
-                    unsafe { crate::detail::__rust_thunk___ZeqRKN2ns10SomeStructES2_(self, rhs) }
+                    unsafe { crate::detail::...(self, rhs) }
                 }
 
             }
@@ -1132,7 +1126,7 @@ fn test_impl_ne_for_member_function() -> Result<()> {
             impl PartialEq for SomeStruct {
                 #[inline(always)]
                 fn eq<'__this, 'other>(&'__this self, other: &'other Self) -> bool {
-                    unsafe { !crate::detail::__rust_thunk___ZNK10SomeStructneERKS_(self, other) }
+                    unsafe { !crate::detail::...(self, other) }
                 }
             }
         }
@@ -1140,8 +1134,7 @@ fn test_impl_ne_for_member_function() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" bool __rust_thunk___ZNK10SomeStructneERKS_(
-                    struct SomeStruct const * __this, struct SomeStruct const * other) {
+            extern "C" bool ...(struct SomeStruct const * __this, struct SomeStruct const * other) {
                 return __this->operator!=(*other);
             }
         }
@@ -1170,7 +1163,7 @@ fn test_impl_ne_for_free_function() -> Result<()> {
             impl PartialEq for crate::ns::SomeStruct {
                 #[inline(always)]
                 fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs Self) -> bool {
-                    unsafe { !crate::detail::__rust_thunk___ZneRKN2ns10SomeStructES2_(self, rhs) }
+                    unsafe { !crate::detail::...(self, rhs) }
                 }
             }
         }
@@ -1197,7 +1190,7 @@ fn test_impl_eq_for_free_function_different_types() -> Result<()> {
             impl PartialEq<crate::SomeOtherStruct> for crate::SomeStruct {
                 #[inline(always)]
                 fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs crate::SomeOtherStruct) -> bool {
-                    unsafe { crate::detail::__rust_thunk___ZeqRK10SomeStructRK15SomeOtherStruct(self, rhs) }
+                    unsafe { crate::detail::...(self, rhs) }
                 }
             }
         }
@@ -1223,9 +1216,7 @@ fn test_impl_eq_for_free_function_by_value() -> Result<()> {
             impl PartialEq for crate::SomeStruct {
                 #[inline(always)]
                 fn eq(&self, rhs: &Self) -> bool {
-                    unsafe {
-                        crate::detail::__rust_thunk___Zeq10SomeStructS_(&mut self.clone(), &mut rhs.clone())
-                    }
+                    unsafe { crate::detail::...(&mut self.clone(), &mut rhs.clone()) }
                 }
             }
         }
@@ -1252,7 +1243,7 @@ fn test_impl_ne_for_free_function_different_types() -> Result<()> {
             impl PartialEq<crate::SomeOtherStruct> for crate::SomeStruct {
                 #[inline(always)]
                 fn eq<'lhs, 'rhs>(&'lhs self, rhs: &'rhs crate::SomeOtherStruct) -> bool {
-                    unsafe { !crate::detail::__rust_thunk___ZneRK10SomeStructRK15SomeOtherStruct(self, rhs) }
+                    unsafe { !crate::detail::...(self, rhs) }
                 }
             }
         }
@@ -1278,9 +1269,7 @@ fn test_impl_ne_for_free_function_by_value() -> Result<()> {
             impl PartialEq for crate::SomeStruct {
                 #[inline(always)]
                 fn eq(&self, rhs: &Self) -> bool {
-                    unsafe {
-                        !crate::detail::__rust_thunk___Zne10SomeStructS_(&mut self.clone(), &mut rhs.clone())
-                    }
+                    unsafe { !crate::detail::...(&mut self.clone(), &mut rhs.clone()) }
                 }
             }
         }
@@ -1310,7 +1299,7 @@ fn test_impl_eq_ne_for_free_function_different_types() -> Result<()> {
             impl PartialEq<crate::SomeOtherStruct> for crate::SomeStruct {
                 #[inline(always)]
                 fn eq<'a, 'b>(&'a self, rhs: &'b crate::SomeOtherStruct) -> bool {
-                    unsafe { crate::detail::__rust_thunk___ZeqRK10SomeStructRK15SomeOtherStruct(self, rhs) }
+                    unsafe { crate::detail::...(self, rhs) }
                 }
             }
         }
@@ -1339,9 +1328,7 @@ fn test_impl_eq_ne_for_free_function_by_value() -> Result<()> {
             impl PartialEq for crate::SomeStruct {
                 #[inline(always)]
                 fn eq(&self, rhs: &Self) -> bool {
-                    unsafe {
-                        crate::detail::__rust_thunk___Zeq10SomeStructS_(&mut self.clone(), &mut rhs.clone())
-                    }
+                    unsafe { crate::detail::...(&mut self.clone(), &mut rhs.clone()) }
                 }
             }
         }
@@ -1385,7 +1372,7 @@ fn test_impl_lt_for_member_function() -> Result<()> {
                 }
                 #[inline(always)]
                 fn lt<'a, 'b>(&'a self, other: &'b Self) -> bool {
-                    unsafe { crate::detail::__rust_thunk___ZNK10SomeStructltERKS_(self, other) }
+                    unsafe { crate::detail::...(self, other) }
                 }
             }
         }
@@ -1393,8 +1380,7 @@ fn test_impl_lt_for_member_function() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" bool __rust_thunk___ZNK10SomeStructltERKS_(
-                    struct SomeStruct const * __this, struct SomeStruct const * other) {
+            extern "C" bool ...(struct SomeStruct const * __this, struct SomeStruct const * other) {
                 return __this->operator<(*other);
             }
         }
@@ -1438,7 +1424,7 @@ fn test_impl_lt_for_free_function() -> Result<()> {
                 }
                 #[inline(always)]
                 fn lt<'a, 'b>(&'a self, rhs: &'b Self) -> bool {
-                    unsafe { crate::detail::__rust_thunk___ZltRK10SomeStructS1_(self, rhs) }
+                    unsafe { crate::detail::...(self, rhs) }
                 }
             }
         }
@@ -1480,8 +1466,7 @@ fn test_impl_lt_for_free_function_by_value() -> Result<()> {
                 }
                 #[inline(always)]
                 fn lt(& self, rhs: &Self) -> bool {
-                    unsafe { crate::detail::__rust_thunk___Zlt10SomeStructS_(
-                            &mut self.clone(), &mut rhs.clone()) }
+                    unsafe { crate::detail::...(&mut self.clone(), &mut rhs.clone()) }
                 }
             }
         }
@@ -1509,7 +1494,7 @@ fn test_assign() -> Result<()> {
                 #[inline(always)]
                 fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, other: &'b Self) {
                     unsafe {
-                        crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, other);
+                        crate::detail::...(self, other);
                     }
                 }
             }
@@ -1538,7 +1523,7 @@ fn test_assign_nonreference_other() -> Result<()> {
                 #[inline(always)]
                 fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
                     unsafe {
-                        crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, __param_0);
+                        crate::detail::...(self, __param_0);
                     }
                 }
             }
@@ -1567,7 +1552,7 @@ fn test_assign_nonreference_return() -> Result<()> {
                 #[inline(always)]
                 fn assign<'a>(self: ::core::pin::Pin<&'a mut Self>, other: &'b Self) {
                     unsafe {
-                        crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, other);
+                        crate::detail::...(self, other);
                     }
                 }
             }
@@ -1732,7 +1717,7 @@ fn test_elided_lifetimes() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) unsafe fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'a mut crate::S, i: &'b mut ::ffi_11::c_int)
+            pub(crate) unsafe fn ...<'a, 'b>(__this: &'a mut crate::S, i: &'b mut ::ffi_11::c_int)
                 -> &'a mut ::ffi_11::c_int;
         }
     );
@@ -1758,7 +1743,7 @@ fn test_annotated_lifetimes() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) unsafe fn __rust_thunk___Z1fRiS_<'a>(i1: &'a mut ::ffi_11::c_int, i2: &'a mut ::ffi_11::c_int)
+            pub(crate) unsafe fn ...<'a>(i1: &'a mut ::ffi_11::c_int, i2: &'a mut ::ffi_11::c_int)
                 -> &'a mut ::ffi_11::c_int;
         }
     );
@@ -1977,7 +1962,7 @@ fn test_nonunpin_0_arg_constructor() -> Result<()> {
                     let () = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(__crubit_dest as *mut ::core::ffi::c_void);
+                            crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void);
                         })
                     }
                 }
@@ -2013,7 +1998,7 @@ fn test_nonunpin_1_arg_constructor() -> Result<()> {
                     let mut input = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(__crubit_dest as *mut ::core::ffi::c_void, input);
+                            crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, input);
                         })
                     }
                 }
@@ -2049,7 +2034,7 @@ fn test_nonunpin_2_arg_constructor() -> Result<()> {
                     let (mut input1, mut input2) = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(__crubit_dest as *mut ::core::ffi::c_void, input1, input2);
+                            crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, input1, input2);
                         })
                     }
                 }
@@ -2103,7 +2088,7 @@ fn test_nonunpin_by_value_params() -> Result<()> {
                     let (mut x, mut y, mut b) = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
-                            crate::detail::__rust_thunk___ZN14HasConstructorC1ERKiS_S_(__crubit_dest as *mut ::core::ffi::c_void, x, y, b);
+                            crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, x, y, b);
                         })
                     }
                 }
@@ -2133,7 +2118,7 @@ fn test_nonunpin_return() -> Result<()> {
             -> impl ::ctor::Ctor<Output=crate::Nontrivial, Error=::ctor::Infallible> + use<'a, 'b> {
                 unsafe {
                     ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
-                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(__crubit_dest as *mut ::core::ffi::c_void, x, y);
+                        crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, x, y);
                     })
                 }
 
@@ -2144,8 +2129,7 @@ fn test_nonunpin_return() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z14ReturnsByValueRKiS0_(
-                    struct Nontrivial* __return, int const* x, int const* y) {
+            extern "C" void ...(struct Nontrivial* __return, int const* x, int const* y) {
                 new(__return) auto(ReturnsByValue(*x, *y));
             }
         }
@@ -2173,7 +2157,7 @@ fn test_nonunpin_const_return() -> Result<()> {
             -> impl ::ctor::Ctor<Output=crate::Nontrivial, Error=::ctor::Infallible> + use<'a, 'b> {
                 unsafe {
                     ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
-                        crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(__crubit_dest as *mut ::core::ffi::c_void, x, y);
+                        crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, x, y);
                     })
                 }
 
@@ -2184,8 +2168,7 @@ fn test_nonunpin_const_return() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z14ReturnsByValueRKiS0_(
-                    struct Nontrivial* __return, int const* x, int const* y) {
+            extern "C" void ...(struct Nontrivial* __return, int const* x, int const* y) {
                 new(__return) auto(ReturnsByValue(*x, *y));
             }
         }
@@ -2212,20 +2195,20 @@ fn test_unpin_by_value_param() -> Result<()> {
         quote! {
             #[inline(always)]
             pub fn foo(mut param: crate::Trivial) {
-                unsafe { crate::detail::__rust_thunk___Z3foo7Trivial(&mut param) }
+                unsafe { crate::detail::...(&mut param) }
             }
         }
     );
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) unsafe fn __rust_thunk___Z3foo7Trivial(param: &mut crate::Trivial);
+            pub(crate) unsafe fn ...(param: &mut crate::Trivial);
         }
     );
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z3foo7Trivial(struct Trivial* param) {
+            extern "C" void ...(struct Trivial* param) {
                 foo(std::move(*param));
             }
         }
@@ -2254,7 +2237,7 @@ fn test_unpin_by_value_return() -> Result<()> {
             pub fn foo() -> crate::Trivial {
                 unsafe {
                     let mut __crubit_return = ::core::mem::MaybeUninit::<crate::Trivial>::uninit();
-                    crate::detail::__rust_thunk___Z3foov(&raw mut __crubit_return as *mut ::core::ffi::c_void);
+                    crate::detail::...(&raw mut __crubit_return as *mut ::core::ffi::c_void);
                     __crubit_return.assume_init()
                 }
             }
@@ -2263,15 +2246,13 @@ fn test_unpin_by_value_return() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) unsafe fn __rust_thunk___Z3foov(
-                __return: *mut ::core::ffi::c_void
-            );
+            pub(crate) unsafe fn ...(__return: *mut ::core::ffi::c_void);
         }
     );
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z3foov(struct Trivial* __return) {
+            extern "C" void ...(struct Trivial* __return) {
                 new (__return) auto(foo());
             }
         }
@@ -2303,8 +2284,8 @@ fn test_unpin_rvalue_ref_qualified_method() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            #[link_name = "_ZNO35TrivialWithRvalueRefQualifiedMethod27rvalue_ref_qualified_methodEv"]
-            pub(crate) unsafe fn __rust_thunk___ZNO35TrivialWithRvalueRefQualifiedMethod27rvalue_ref_qualified_methodEv < 'a > (__this :
+            #[link_name = ...]
+            pub(crate) unsafe fn ... < 'a > (__this :
                 :: ctor :: RvalueReference < 'a , crate :: TrivialWithRvalueRefQualifiedMethod >) ;
         }
     );
@@ -2335,8 +2316,8 @@ fn test_unpin_rvalue_ref_const_qualified_method() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            #[link_name = "_ZNKO40TrivialWithRvalueRefConstQualifiedMethod33rvalue_ref_const_qualified_methodEv"]
-            pub(crate) unsafe fn __rust_thunk___ZNKO40TrivialWithRvalueRefConstQualifiedMethod33rvalue_ref_const_qualified_methodEv < 'a > (__this :
+            #[link_name = ...]
+            pub(crate) unsafe fn ... < 'a > (__this :
                 :: ctor :: ConstRvalueReference < 'a , crate :: TrivialWithRvalueRefConstQualifiedMethod >) ;
         }
     );
@@ -2368,7 +2349,7 @@ fn test_nonunpin_return_assign() -> Result<()> {
                     unsafe {
                         let _ = ::ctor::emplace!(::ctor::FnCtor::new(
                             move |__crubit_dest: *mut Self| {
-                                crate::detail::__rust_thunk___ZN10NontrivialaSERKS_(
+                                crate::detail::...(
                                     __crubit_dest as *mut ::core::ffi::c_void,
                                     self,
                                     other
@@ -2384,7 +2365,7 @@ fn test_nonunpin_return_assign() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___ZN10NontrivialaSERKS_(
+            extern "C" void ...(
                 struct Nontrivial* __return, struct Nontrivial* __this,
                 struct Nontrivial const * other
             ) {
@@ -2416,7 +2397,7 @@ fn test_nonunpin_param() -> Result<()> {
         quote! {
             pub fn TakesByValue(x: ::ctor::Ctor![crate::Nontrivial]) {
                 unsafe {
-                    crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(x)))
+                    crate::detail::...(::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(x)))
                 }
             }
         }
@@ -2425,7 +2406,7 @@ fn test_nonunpin_param() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z12TakesByValue10Nontrivial(struct Nontrivial*x) {
+            extern "C" void ...(struct Nontrivial*x) {
                 TakesByValue(std::move(*x));
             }
         }
@@ -2507,9 +2488,8 @@ fn test_function_returning_rvalue_reference() -> Result<()> {
         quote! {
             extern "C" {
                 ...
-                pub(crate) unsafe fn __rust_thunk___ZN10SomeStruct18GetRValueReferenceEv<'a>(
-                        __this: &'a mut crate::SomeStruct
-                   ) -> ::ctor::RvalueReference<'a, crate::SomeStruct>;
+                pub(crate) unsafe fn ...<'a>(__this: &'a mut crate::SomeStruct)
+                    -> ::ctor::RvalueReference<'a, crate::SomeStruct>;
                 ...
             }
         }
@@ -2528,8 +2508,7 @@ fn test_function_returning_rvalue_reference() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" struct SomeStruct*
-            __rust_thunk___ZN10SomeStruct18GetRValueReferenceEv(struct SomeStruct* __this) {
+            extern "C" struct SomeStruct* ...(struct SomeStruct* __this) {
                 struct SomeStruct&& lvalue = __this->GetRValueReference();
                 return &lvalue;
             }
@@ -2554,7 +2533,7 @@ fn test_c_abi_compatible_type_by_value_with_move() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z1fiPvi(MyTypedefDecl a, void* b, int c) {
+            extern "C" void ...(MyTypedefDecl a, void* b, int c) {
                 f(a, b, c);
             }
         }
@@ -2573,7 +2552,7 @@ fn test_simple_explicit_lifetime() -> Result<()> {
         quote! {
             #[inline(always)]
             pub fn Add<'a>(x: &'a mut ::ffi_11::c_int) -> ::cref::CMut<'a, ::ffi_11::c_int> {
-                unsafe { crate::detail::__rust_thunk___Z3AddRi(x) }
+                unsafe { crate::detail::...(x) }
             }
         }
     );
@@ -2584,8 +2563,8 @@ fn test_simple_explicit_lifetime() -> Result<()> {
                 #[allow(unused_imports)]
                 use super::*;
                 unsafe extern "C" {
-                    #[link_name = "_Z3AddRi"]
-                    pub(crate) unsafe fn __rust_thunk___Z3AddRi<'a>(x: &'a mut ::ffi_11::c_int) -> ::cref::CMut<'a, ::ffi_11::c_int>;
+                    #[link_name = ...]
+                    pub(crate) unsafe fn ...<'a>(x: &'a mut ::ffi_11::c_int) -> ::cref::CMut<'a, ::ffi_11::c_int>;
                 }
             }
         }
@@ -2649,10 +2628,7 @@ fn test_unsafe_constructor_unpin() -> Result<()> {
                     let mut p = args;
                     let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
-                        crate::detail::__rust_thunk___ZN27StructWithUnsafeConstructorC1EPi(
-                            &raw mut tmp as *mut _,
-                            p
-                        );
+                        crate::detail::...(&raw mut tmp as *mut _, p);
                         tmp.assume_init()
                     }
                 }
@@ -2686,10 +2662,7 @@ fn test_unsafe_constructor_nonunpin() -> Result<()> {
                     let mut p = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
-                            crate::detail::__rust_thunk___ZN35NonUnpinStructWithUnsafeConstructorC1EPi(
-                                __crubit_dest as *mut ::core::ffi::c_void,
-                                p
-                            );
+                            crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, p);
                         })
                     }
                 }
@@ -2878,7 +2851,7 @@ fn test_pub_crate_function() -> Result<()> {
         quote! {
             #[inline(always)]
             pub(crate) fn Add(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int {
-                unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
+                unsafe { crate::detail::...(a, b) }
             }
         }
     );

@@ -52,7 +52,7 @@ fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
         quote! {
             #[inline(always)]
             pub fn get_ptr_to_func() -> Option<extern "C" fn (f32, f64) -> ::ffi_11::c_int> {
-                unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
+                unsafe { crate::detail::...() }
             }
         }
     );
@@ -63,8 +63,8 @@ fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
                 #[allow(unused_imports)]
                 use super::*;
                 unsafe extern "C" {
-                    #[link_name = "_Z15get_ptr_to_funcv"]
-                    pub(crate) unsafe fn __rust_thunk___Z15get_ptr_to_funcv()
+                    #[link_name = ...]
+                    pub(crate) unsafe fn ...()
                     -> Option<extern "C" fn(f32, f64) -> ::ffi_11::c_int>;
                 }
             }
@@ -93,7 +93,7 @@ fn test_func_ref() -> Result<()> {
         quote! {
             #[inline(always)]
             pub fn get_ref_to_func() -> extern "C" fn (f32, f64) -> ::ffi_11::c_int {
-                unsafe { crate::detail::__rust_thunk___Z15get_ref_to_funcv() }
+                unsafe { crate::detail::...() }
             }
         }
     );
@@ -110,7 +110,7 @@ fn test_func_ptr_where_params_are_raw_ptrs() -> Result<()> {
         quote! {
             #[inline(always)]
             pub fn get_ptr_to_func() -> Option<unsafe extern "C" fn (*const ::ffi_11::c_int) -> *const ::ffi_11::c_int> {
-                unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
+                unsafe { crate::detail::...() }
             }
         }
     );
@@ -121,8 +121,8 @@ fn test_func_ptr_where_params_are_raw_ptrs() -> Result<()> {
                 #[allow(unused_imports)]
                 use super::*;
                 unsafe extern "C" {
-                    #[link_name = "_Z15get_ptr_to_funcv"]
-                    pub(crate) unsafe fn __rust_thunk___Z15get_ptr_to_funcv()
+                    #[link_name = ...]
+                    pub(crate) unsafe fn ...()
                     -> Option<unsafe extern "C" fn(*const ::ffi_11::c_int) -> *const ::ffi_11::c_int>;
                 }
             }
@@ -192,7 +192,7 @@ mod custom_abi_tests {
             quote! {
                 #[inline(always)]
                 pub fn get_ptr_to_func() -> Option<extern "vectorcall" fn (f32, f64) -> ::ffi_11::c_int> {
-                    unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
+                    unsafe { crate::detail::...() }
                 }
             }
         );
@@ -205,8 +205,8 @@ mod custom_abi_tests {
                     #[allow(unused_imports)]
                     use super::*;
                     unsafe extern "C" {
-                        #[link_name = "_Z15get_ptr_to_funcv"]
-                        pub(crate) unsafe fn __rust_thunk___Z15get_ptr_to_funcv()
+                        #[link_name = ...]
+                        pub(crate) unsafe fn ...()
                         -> Option<extern "vectorcall" fn(f32, f64) -> ::ffi_11::c_int>;
                     }
                 }
@@ -263,7 +263,7 @@ mod custom_abi_tests {
             quote! {
                 extern "C" crubit::type_identity_t<
                         int(float , double) __attribute__((vectorcall))
-                    >* __rust_thunk___Z22inline_get_ptr_to_funcv() {
+                    >* ...() {
                     return inline_get_ptr_to_func();
                 }
             }
@@ -289,9 +289,7 @@ mod custom_abi_tests {
             quote! {
                 #[inline(always)]
                 pub fn f_vectorcall_calling_convention(p1: f32, p2: f32) -> f32 {
-                    unsafe {
-                        crate::detail::__rust_thunk___Z31f_vectorcall_calling_conventionff(p1, p2)
-                    }
+                    unsafe { crate::detail::...(p1, p2) }
                 }
             }
         );
@@ -300,7 +298,7 @@ mod custom_abi_tests {
             quote! {
                 #[inline(always)]
                 pub fn f_c_calling_convention(p1: f64, p2: f64) -> f64 {
-                    unsafe { crate::detail::__rust_thunk___Z22f_c_calling_conventiondd(p1, p2) }
+                    unsafe { crate::detail::...(p1, p2) }
                 }
             }
         );
@@ -314,11 +312,9 @@ mod custom_abi_tests {
                     #[allow(unused_imports)]
                     use super::*;
                     unsafe extern "C" {
-                        pub(crate) unsafe fn __rust_thunk___Z31f_vectorcall_calling_conventionff(
-                            p1: f32, p2: f32) -> f32;
-                        #[link_name = "_Z22f_c_calling_conventiondd"]
-                        pub(crate) unsafe fn __rust_thunk___Z22f_c_calling_conventiondd(
-                            p1: f64, p2: f64) -> f64;
+                        pub(crate) unsafe fn ...(p1: f32, p2: f32) -> f32;
+                        #[link_name = ...]
+                        pub(crate) unsafe fn ...(p1: f64, p2: f64) -> f64;
                     }
                 }
             }
@@ -327,9 +323,8 @@ mod custom_abi_tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" float __rust_thunk___Z31f_vectorcall_calling_conventionff(
-                    float p1, float p2) {
-                        return f_vectorcall_calling_convention(p1, p2);
+                extern "C" float ...(float p1, float p2) {
+                    return f_vectorcall_calling_convention(p1, p2);
                 }
             }
         );
@@ -402,7 +397,7 @@ fn test_impl_drop_user_defined_destructor() -> Result<()> {
             impl ::ctor::PinnedDrop for UserDefinedDestructor {
                 #[inline(always)]
                 unsafe fn pinned_drop<'a>(self: ::core::pin::Pin<&'a mut Self>) {
-                    unsafe { crate::detail::__rust_thunk___ZN21UserDefinedDestructorD1Ev(self) }
+                    unsafe { crate::detail::...(self) }
                 }
             }
         }
@@ -481,7 +476,7 @@ fn test_type_alias() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___Z1fi(MyTypedefDecl t) { f(t); }
+            extern "C" void ...(MyTypedefDecl t) { f(t); }
         }
     );
     Ok(())
@@ -875,8 +870,8 @@ fn test_detail_outside_of_namespace_module() -> Result<()> {
                 #[allow(unused_imports)]
                 use super::*;
                 unsafe extern "C" {
-                    #[link_name = "_ZN23test_namespace_bindings1fEv"]
-                    pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1fEv() -> ::ffi_11::c_int;
+                    #[link_name = ...]
+                    pub(crate) unsafe fn ...() -> ::ffi_11::c_int;
                 }
             }
             ...
@@ -968,12 +963,11 @@ fn test_qualified_identifiers_in_impl_file() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___ZN23test_namespace_bindings1fEv() {
+            extern "C" void ...() {
                 test_namespace_bindings::f();
             }
             ...
-            extern "C" void __rust_thunk___Z4useSN23test_namespace_bindings1SE(
-                    struct test_namespace_bindings::S* s) {
+            extern "C" void ...(struct test_namespace_bindings::S* s) {
                 useS(std::move(*s));
             }
             ...
@@ -1408,7 +1402,7 @@ fn test_existing_rust_type_c_abi_incompatible() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) unsafe fn __rust_thunk___Z4Makev(__return: *mut ::core::ffi::c_void);
+            pub(crate) unsafe fn ...(__return: *mut ::core::ffi::c_void);
         }
     );
     Ok(())
@@ -1439,7 +1433,7 @@ fn test_existing_rust_type_c_abi_compatible() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) unsafe fn __rust_thunk___Z4Makev() -> i8;
+            pub(crate) unsafe fn ...() -> i8;
         }
     );
     Ok(())

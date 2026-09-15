@@ -203,7 +203,7 @@ fn test_simple_struct() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___ZN10SomeStructD1Ev(struct SomeStruct * __this) {
+            extern "C" void ...(struct SomeStruct * __this) {
                 std::destroy_at(__this);
             }
         }
@@ -1114,7 +1114,7 @@ fn test_basic_union() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___ZN9SomeUnionC1Ev(union SomeUnion*__this) {...}
+            extern "C" void ...(union SomeUnion*__this) {...}
         }
     );
     assert_cc_matches!(rs_api_impl, quote! { static_assert(CRUBIT_SIZEOF(union SomeUnion)==8) });
@@ -1441,7 +1441,7 @@ fn test_union_with_constructors() -> Result<()> {
                 fn default() -> Self {
                     let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
-                        crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1Ev(&raw mut tmp as *mut _);
+                        crate::detail::...(&raw mut tmp as *mut _);
                         tmp.assume_init()
                     }
                 }
@@ -1539,7 +1539,7 @@ fn test_virtual_thunk() -> Result<()> {
     assert_cc_matches!(
         generate_bindings_tokens_for_test(ir)?.rs_api_impl,
         quote! {
-            extern "C" void __rust_thunk___ZN11Polymorphic3FooEv(struct Polymorphic * __this)
+            extern "C" void ...(struct Polymorphic * __this)
         }
     );
     Ok(())
@@ -2032,7 +2032,7 @@ fn test_typedef_member() -> Result<()> {
     assert_cc_matches!(
         rs_api_impl,
         quote! {
-            extern "C" SomeStruct::Type __rust_thunk___Z8Functionv(){ return Function(); }
+            extern "C" SomeStruct::Type ...(){ return Function(); }
         },
     );
     Ok(())
