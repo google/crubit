@@ -708,6 +708,7 @@ message ExistingRustType {
   uint64 id = 8;
   bool must_bind = 9;
   bool impl_debug = 10;
+  string label_hint = 11;
 }
 
 message Item {

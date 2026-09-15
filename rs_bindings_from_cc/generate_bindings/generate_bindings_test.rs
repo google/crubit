@@ -1927,3 +1927,75 @@ fn test_proto_message_references() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_existing_rust_type_with_label_hint() -> Result<()> {
+    let mut proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+            struct [[clang::annotate("crubit_internal_rust_type", "::my_crate::MyType")]]
+            [[clang::annotate("crubit_internal_rust_type_label_hint", "//other/pkg:my_crate")]]
+            MyStruct {};
+            void Func(MyStruct x);
+        "#,
+    )?;
+    proto.crate_names_mut().insert("//other/pkg:my_crate", "mangled_my_crate");
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn Func(mut x: ::mangled_my_crate::MyType)
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_existing_rust_type_auto_infer_owning_target() -> Result<()> {
+    let mut proto = ir_proto_from_assumed_lifetimes_cc_dependency(
+        r#"
+            void Func(MyType x);
+        "#,
+        r#"
+            struct [[clang::annotate("crubit_internal_rust_type", "::dependency::MyType")]]
+            MyType {};
+        "#,
+    )?;
+    proto.crate_names_mut().insert("//test:dependency", "mangled_dependency");
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn Func(mut x: ::mangled_dependency::MyType)
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_existing_rust_type_label_hint_mismatch_fails() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+            struct [[clang::annotate("crubit_internal_rust_type", "::my_crate::MyType")]]
+            [[clang::annotate("crubit_internal_rust_type_label_hint", "//other/pkg:other_crate")]]
+            MyStruct {};
+            void Func(MyStruct x);
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let func = retrieve_func(db.ir(), "Func");
+    let rs_type = db.rs_type_kind(func.params()[0].type_().clone())?;
+    match rs_type {
+        RsTypeKind::Error { error, .. } => {
+            expect_that!(
+                error.to_string(),
+                contains_substring("CRUBIT_INTERNAL_RUST_TYPE error: crate name `my_crate` in Rust path `::my_crate::MyType` does not match target name `other_crate` in hint `//other/pkg:other_crate`")
+            );
+        }
+        other => panic!("Expected RsTypeKind::Error, got {other:?}"),
+    }
+    Ok(())
+}
