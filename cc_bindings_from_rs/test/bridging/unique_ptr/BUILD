@@ -26,6 +26,7 @@ rust_library(
     srcs = [
         "unique_ptr.rs",
     ],
+    aspect_hints = ["//features:nonnull_smart_pointers"],
     cc_deps = [":test_helpers"],
     proc_macro_deps = ["//support:crubit_annotate"],
     deps = ["//support/cc_std"],
