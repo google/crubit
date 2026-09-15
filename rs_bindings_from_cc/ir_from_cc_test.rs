@@ -3126,6 +3126,26 @@ fn test_struct() {
     );
 }
 
+/// `mangled_cc_name` is used to build Rust and C++ identifiers (e.g. thunk
+/// names and template instantiation names) and to provide `#[cfi_encoding]`.
+/// All of these require an *Itanium*-mangled name, on all target platforms.
+/// Crubit therefore must not use the Microsoft mangling scheme, even when
+/// targeting an MSVC-ABI platform such as `x86_64-pc-windows-msvc` (where
+/// `rs_bindings_from_cc` used to abort - see b/561578105).
+#[gtest]
+fn test_mangled_cc_name_does_not_depend_on_target_cxx_abi() -> Result<()> {
+    const HEADER: &str = "struct SomeStruct {}; enum SomeEnum { kSomeEnumerator };";
+    for platform in
+        [multiplatform_testing::Platform::X86Linux, multiplatform_testing::Platform::X86Windows]
+    {
+        let proto = ir_testing::ir_proto_from_cc(platform, HEADER)?;
+        let ir = ir_testing::make_test_ir(&proto)?;
+        expect_eq!(retrieve_record(&ir, "SomeStruct").mangled_cc_name(), "10SomeStruct");
+        expect_eq!(ir.enums().map(|e| e.mangled_cc_name()).collect::<Vec<_>>(), vec!["8SomeEnum"]);
+    }
+    Ok(())
+}
+
 #[gtest]
 fn test_class() {
     // This test verifies that `record_type` correectly captures whether the C++

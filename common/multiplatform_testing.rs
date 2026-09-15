@@ -13,6 +13,7 @@ pub enum Platform {
     ArmLinux,
     X86MacOS,
     ArmMacOS,
+    X86Windows,
 }
 
 impl Platform {
@@ -22,6 +23,7 @@ impl Platform {
             Platform::ArmLinux => "aarch64-unknown-linux-gnu",
             Platform::X86MacOS => "x86_64-apple-darwin",
             Platform::ArmMacOS => "arm64-apple-darwin",
+            Platform::X86Windows => "x86_64-pc-windows-msvc",
         }
     }
 }

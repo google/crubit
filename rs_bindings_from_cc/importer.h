@@ -218,6 +218,11 @@ class Importer final : public ImportContext {
   // to successfully match a decl "wins", and no other importers are tried.
   std::vector<std::unique_ptr<DeclImporter>> decl_importers_;
   std::unique_ptr<clang::MangleContext> mangler_;
+  // Mangler used *only* for mangling tag type names (see `GetMangledName`).
+  //
+  // This is always an Itanium mangler, even when the target platform uses
+  // another C++ ABI (e.g. the Microsoft ABI).  See `GetMangledName` for why.
+  std::unique_ptr<clang::MangleContext> itanium_tag_name_mangler_;
   absl::flat_hash_map<const clang::Decl*, ItemCacheEntry> import_cache_;
   absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
       class_template_instantiations_;

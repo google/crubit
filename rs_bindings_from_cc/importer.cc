@@ -302,6 +302,8 @@ Importer::Importer(Invocation& invocation, clang::ASTContext& ctx,
                    clang::Sema& sema)
     : ImportContext(invocation, ctx, sema),
       mangler_(ABSL_DIE_IF_NULL(ctx_.createMangleContext())),
+      itanium_tag_name_mangler_(ABSL_DIE_IF_NULL(
+          clang::ItaniumMangleContext::create(ctx_, ctx_.getDiagnostics()))),
       rs_core_fmt_debug_(LookupRsCoreFmtDebug(&ctx)),
       rs_std_impl_(LookupCanonicalRsStdImpl(&ctx)) {
   decl_importers_.push_back(std::make_unique<ExistingRustTypeImporter>(*this));
@@ -2286,10 +2288,25 @@ std::string Importer::GetMangledName(const clang::NamedDecl& named_decl) const {
     // Mangled tag names are used to 1) provide valid Rust identifiers for
     // C++ template specializations, 2) help build unique names for virtual
     // upcast thunks, and 3) provide cfi_encoding for structs and enums.
+    //
+    // All three consumers want an Itanium-mangled name, regardless of the C++
+    // ABI of the target platform:
+    // * 1) and 2) need a name that is a valid Rust and C++ identifier.  The
+    //   Microsoft mangling scheme uses characters such as `?`, `@` and `$`,
+    //   which are not valid in identifiers.
+    // * 3) `#[cfi_encoding]` is defined by `rustc` in terms of the Itanium C++
+    //   ABI mangling, on all target platforms.
+    //   TODO(b/561578105): Verify the CFI story on MSVC-ABI targets.  `rustc`
+    //   does not support CFI on `*-windows-msvc` and `clang-cl` derives CFI
+    //   type ids from Microsoft-mangled names, so the Itanium name emitted
+    //   here is expected to be unused (rather than wrong) there.
+    //
+    // Therefore we deliberately use `itanium_tag_name_mangler_` here, rather
+    // than the target platform's `mangler_`.
     llvm::SmallString<128> storage;
     llvm::raw_svector_ostream buffer(storage);
-    mangler_->mangleCanonicalTypeName(ctx_.getCanonicalTagType(tag_decl),
-                                      buffer);
+    itanium_tag_name_mangler_->mangleCanonicalTypeName(
+        ctx_.getCanonicalTagType(tag_decl), buffer);
 
     // The Itanium mangler does not provide a way to get the mangled
     // representation of a type. Instead, we call mangleTypeName() that
