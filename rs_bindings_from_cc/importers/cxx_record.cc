@@ -660,6 +660,19 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
               t, /*lifetimes=*/nullptr, /*nullable=*/true,
               ictx.AreAssumedLifetimesEnabledForTarget(
                   ictx.GetOwningTarget(*specialization_decl))));
+    } else if (templated_decl->getName() == "optional") {
+      if (specialization_decl->getTemplateArgs().size() != 1) {
+        return absl::InvalidArgumentError(
+            "std::optional must have exactly one template argument");
+      }
+      clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
+      return TemplateSpecialization::StdOptional(
+          // TODO(b/454627672): is specialization_decl the right decl to check
+          // for assumed_lifetimes?
+          ictx.ConvertQualType(
+              t, /*lifetimes=*/nullptr, /*nullable=*/true,
+              ictx.AreAssumedLifetimesEnabledForTarget(
+                  ictx.GetOwningTarget(*specialization_decl))));
     } else if (templated_decl->getName() == "vector") {
       CRUBIT_ASSIGN_OR_RETURN(
           clang::QualType t,
@@ -1730,6 +1743,9 @@ CXXRecordDeclImporter::GetBuiltinBridgeType(
             ictx_.GetOwningTarget(*cxx_record_decl)));
   };
 
+  // Both `BridgeType::StdOptional` and `TemplateSpecialization::StdOptional`
+  // are recorded for `std::optional`; the bindings generator picks between them
+  // depending on whether the `layout_compat_optional` feature is enabled.
   if (name == "optional") {
     CcType inner = cc_type_of_arg(0);
     return BridgeType{BridgeType::StdOptional{

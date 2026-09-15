@@ -1879,6 +1879,125 @@ fn test_std_string_with_layout_compat_feature() -> Result<()> {
     Ok(())
 }
 
+/// The C++ source of a fake `std::optional`, laid out the way libc++ and libstdc++ lay it out.
+const FAKE_STD_OPTIONAL: &str = r#"
+    namespace std {
+        template <typename T> class optional { T t; bool b; };
+    }
+"#;
+
+/// Without `layout_compat_optional`, `std::optional<T>` is bridged to `Option<T>` by value, and
+/// is not usable in layout-compatible positions.
+#[gtest]
+fn test_std_optional_without_layout_compat_feature() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        "void takes_optional_by_value(std::optional<int> o);",
+        FAKE_STD_OPTIONAL,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_optional_by_value(
+                o: ::core::option::Option<::ffi_11::c_int>
+            )
+        }
+    );
+    Ok(())
+}
+
+/// With `layout_compat_optional`, `std::optional<T>` is layout-compatible everywhere: by value,
+/// as a field, and as a pointee. `int` is `Copy`, so the binding is `trivial_optional<T>`.
+#[gtest]
+fn test_std_optional_with_layout_compat_feature() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        struct StructWithOptional final { std::optional<int> o; };
+        void takes_optional_by_value(std::optional<int> o);
+        void takes_optional_ref(const std::optional<int>& o);
+        "#,
+        FAKE_STD_OPTIONAL,
+    )?;
+    let mut ir = make_test_ir_dependency(&proto, None)?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::LayoutCompatOptional;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct StructWithOptional {
+                pub o: ::cc_std::std::trivial_optional::<::ffi_11::c_int>,
+            }
+        }
+    );
+    // `std::optional<int>` is trivially copyable in C++, and `cc_std::std::trivial_optional<T>`
+    // has no `Drop` impl, so the struct stays `Copy` just as it is in C++.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            static_assertions::assert_impl_all!(crate::StructWithOptional: Copy, Clone);
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            static_assertions::assert_not_impl_any!(crate::StructWithOptional: Drop);
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_optional_by_value(
+                mut o: ::cc_std::std::trivial_optional::<::ffi_11::c_int>
+            )
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn takes_optional_ref(
+                o: *const ::cc_std::std::trivial_optional::<::ffi_11::c_int>
+            )
+        }
+    );
+    Ok(())
+}
+
+/// `cc_std::std::optional<T>` stores `T` inline, so a `!Unpin` `T` is rejected for now.
+#[gtest]
+fn test_std_optional_of_non_unpin_type_fails() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        "void takes_optional_by_value(std::optional<NonUnpin> o);",
+        r#"
+        struct NonUnpin final {
+            NonUnpin(NonUnpin&&);
+        };
+        namespace std {
+            template <typename T> class optional { T t; bool b; };
+        }
+        "#,
+    )?;
+    let mut ir = make_test_ir_dependency(&proto, None)?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::LayoutCompatOptional;
+    let db_factory = TestDbFactory::new(ir);
+    let db = db_factory.make_db();
+    let func = retrieve_func(db.ir(), "takes_optional_by_value");
+    let rs_type = db.rs_type_kind(func.params()[0].type_().clone())?;
+    match rs_type {
+        RsTypeKind::Error { error, .. } => {
+            expect_that!(error.to_string(), contains_substring("is not Rust-movable"));
+        }
+        other => panic!("Expected RsTypeKind::Error, got {other:?}"),
+    }
+    Ok(())
+}
+
 #[gtest]
 fn test_proto_message_references() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc_dependency(

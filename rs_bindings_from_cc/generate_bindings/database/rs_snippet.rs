@@ -297,6 +297,11 @@ pub enum UniformReprTemplateType<'a> {
         // No lifetime: owned by the vector
         element_type: RsTypeKind<'a>,
     },
+    /// std::optional<T>
+    StdOptional {
+        // No lifetime: owned by the optional
+        element_type: RsTypeKind<'a>,
+    },
     /// std::unique_ptr<T, std::default_delete<T>>
     StdUniquePtr {
         // No lifetime here: owned by the unique_ptr
@@ -446,6 +451,20 @@ impl<'a> UniformReprTemplateType<'a> {
                 }
                 Ok(Some(Rc::new(UniformReprTemplateType::StdVector { element_type })))
             }
+            Some(TemplateSpecializationKind::StdOptional { raw_element_type }) => {
+                let element_type = choose_one_type(raw_element_type, template_args)?;
+                let element_type = type_arg(&element_type)?;
+                ensure!(element_type.is_destructible(),
+                    "`{}` can't be used in a Rust std::optional<T> because it has a deleted or non-public destructor",
+                    element_type.display(db));
+                // TODO(b/493911621): support `!Unpin` element types. They would make
+                // `optional<T>` itself `!Unpin`, so every `optional<T>` value would have to be
+                // produced via `Ctor`.
+                ensure!(element_type.is_unpin(),
+                    "`{}` can't be used in a Rust std::optional<T> because it is not Rust-movable. See crubit.rs/cpp/classes_and_structs#rust_movable",
+                    element_type.display(db));
+                Ok(Some(Rc::new(UniformReprTemplateType::StdOptional { element_type })))
+            }
             Some(TemplateSpecializationKind::AbslSpan { raw_element_type }) => {
                 let element_type = choose_one_type(raw_element_type, template_args)?;
                 let element_type_kind = type_arg(&element_type)?;
@@ -484,11 +503,43 @@ impl<'a> UniformReprTemplateType<'a> {
         }
     }
 
+    /// Whether this is a `std::optional<T>` whose Rust binding is `cc_std::std::optional<T>`
+    /// rather than `cc_std::std::trivial_optional<T>`.
+    ///
+    /// Crubit maps `std::optional<T>` to `trivial_optional<T>` when `T` is `Copy`, mirroring C++,
+    /// where `std::optional<T>` is trivially copyable and trivially destructible whenever `T` is.
+    /// When `T` is not `Copy`, the binding is `optional<T>`, which has a `Drop` impl to destroy
+    /// the engaged value and therefore cannot be `Copy` -- even if the C++ `std::optional<T>`
+    /// happens to be trivially copyable and trivially destructible.
+    ///
+    /// This is the single source of truth for that choice: it decides both the type Crubit
+    /// spells in `to_token_stream` and the `implements_copy`/`needs_destruction` answers for it.
+    ///
+    /// TODO(b/481398972): a C++ type can be trivially copyable while its Rust representation is
+    /// not `Copy` -- a `mutable` field, for instance, becomes a `Cell<T>`. For such a `T`, Crubit
+    /// correctly picks `optional<T>` here, but a record *containing* that `optional<T>` still
+    /// looks trivially copyable to `Record::should_derive_copy`, so Crubit derives `Copy` for it
+    /// and the generated code fails to compile. This is the same pre-existing bug that a plain
+    /// `T` field already triggers, and the general fix -- making `implements_copy` recurse into
+    /// fields, which subsumes `should_derive_copy`'s non-transitive `is_mutable` check -- covers
+    /// both.
+    pub fn is_non_trivial_optional(&self) -> bool {
+        matches!(self, Self::StdOptional { element_type } if !element_type.implements_copy())
+    }
+
     pub fn to_token_stream(&self, db: &BindingsGenerator<'a>) -> TokenStream {
         match self {
             Self::StdVector { element_type } => {
                 let element_type_tokens = element_type.to_token_stream(db);
                 quote! { ::cc_std::std::vector::<#element_type_tokens> }
+            }
+            Self::StdOptional { element_type } => {
+                let element_type_tokens = element_type.to_token_stream(db);
+                if element_type.implements_copy() {
+                    quote! { ::cc_std::std::trivial_optional::<#element_type_tokens> }
+                } else {
+                    quote! { ::cc_std::std::optional::<#element_type_tokens> }
+                }
             }
             Self::StdUniquePtr { element_type, is_nonnull } => {
                 let element_type_tokens = element_type.to_token_stream(db);
@@ -616,6 +667,7 @@ impl<'a> UniformReprTemplateType<'a> {
     pub fn lifetime(&self) -> Option<Lifetime> {
         match self {
             Self::StdVector { .. } => None,
+            Self::StdOptional { .. } => None,
             Self::StdUniquePtr { .. } => None,
             Self::StdAtomic { .. } => None,
             Self::StdSharedPtr { .. } => None,
@@ -768,6 +820,7 @@ impl<'a> CustomizeMethodsKind<'a> {
                 TemplateSpecializationKind::StdStringView
                 | TemplateSpecializationKind::StdWStringView
                 | TemplateSpecializationKind::StdVector { .. }
+                | TemplateSpecializationKind::StdOptional { .. }
                 | TemplateSpecializationKind::StdSharedPtr { .. }
                 | TemplateSpecializationKind::StdUniquePtr { .. }
                 | TemplateSpecializationKind::StdAtomic { .. }
@@ -996,6 +1049,18 @@ impl<'a> BridgeRsTypeKind<'a> {
                 }
             }
             BridgeType::StdOptional(t) => {
+                if db
+                    .ir()
+                    .target_crubit_features(db.ir().current_target())
+                    .contains(CrubitFeature::LayoutCompatOptional)
+                {
+                    // Not a bridge type: `std::optional<T>` is layout-compatible with
+                    // `cc_std::std::optional<T>`. Returning `None` makes the caller fall back to
+                    // the `RsTypeKind::Record` path, which maps the
+                    // `TemplateSpecialization::StdOptional` specialization to a
+                    // `UniformReprTemplateType::StdOptional`.
+                    return Ok(None);
+                }
                 let inner = db.rs_type_kind(t)?;
                 inner.ensure_complete_type_arg(db, record.cc_name())?;
                 BridgeRsTypeKind::StdOptional(Rc::new(inner))
@@ -1449,10 +1514,21 @@ impl<'a> RsTypeKind<'a> {
 
     pub fn needs_destruction(&self) -> bool {
         match self.unalias() {
-            RsTypeKind::Record { record, .. } => !matches!(
-                record.destructor(),
-                ir::SpecialMemberFunc::Trivial | ir::SpecialMemberFunc::Unavailable
-            ),
+            RsTypeKind::Record { record, uniform_repr_template_type, .. } => {
+                // `cc_std::std::optional<T>` has a `Drop` impl which destroys the engaged
+                // value, even when the C++ `std::optional<T>` is trivially destructible.
+                // `cc_std::std::trivial_optional<T>` does not.
+                if uniform_repr_template_type
+                    .as_deref()
+                    .is_some_and(UniformReprTemplateType::is_non_trivial_optional)
+                {
+                    return true;
+                }
+                !matches!(
+                    record.destructor(),
+                    ir::SpecialMemberFunc::Trivial | ir::SpecialMemberFunc::Unavailable
+                )
+            }
             RsTypeKind::BridgeType { original_type, .. } => !matches!(
                 original_type.destructor(),
                 ir::SpecialMemberFunc::Trivial | ir::SpecialMemberFunc::Unavailable
@@ -1805,7 +1881,19 @@ impl<'a> RsTypeKind<'a> {
             RsTypeKind::Reference { mutability: Mutability::Mut, .. } => false,
             RsTypeKind::RvalueReference { .. } => false,
             RsTypeKind::IncompleteRecord { .. } => false,
-            RsTypeKind::Record { record, .. } => record.should_derive_copy(),
+            RsTypeKind::Record { record, uniform_repr_template_type, .. } => {
+                // `cc_std::std::optional<T>` has a `Drop` impl (to destroy the engaged value),
+                // and Rust forbids implementing both `Copy` and `Drop`. This holds even when the
+                // C++ `std::optional<T>` is trivially copyable. `cc_std::std::trivial_optional<T>`
+                // has no `Drop` impl, so it is `Copy` exactly when the C++ type is.
+                if uniform_repr_template_type
+                    .as_deref()
+                    .is_some_and(UniformReprTemplateType::is_non_trivial_optional)
+                {
+                    return false;
+                }
+                record.should_derive_copy()
+            }
             RsTypeKind::Enum { .. } => true,
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
             RsTypeKind::BridgeType { bridge_type, .. } => match bridge_type {
@@ -2201,6 +2289,16 @@ fn all_static_lifetimes_internal<'a>(
                 Rc::new(match r.as_ref() {
                     UniformReprTemplateType::StdVector { element_type } => {
                         UniformReprTemplateType::StdVector {
+                            element_type: all_static_lifetimes_internal(
+                                element_type,
+                                strip_aliases,
+                            )
+                            .as_ref()
+                            .clone(),
+                        }
+                    }
+                    UniformReprTemplateType::StdOptional { element_type } => {
+                        UniformReprTemplateType::StdOptional {
                             element_type: all_static_lifetimes_internal(
                                 element_type,
                                 strip_aliases,

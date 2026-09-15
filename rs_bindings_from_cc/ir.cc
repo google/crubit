@@ -261,6 +261,10 @@ void TemplateSpecialization::WriteToProto(
             std_vector.element_type.WriteToProto(
                 *proto.mutable_std_vector()->mutable_element_type());
           },
+          [&](const StdOptional& std_optional) {
+            std_optional.element_type.WriteToProto(
+                *proto.mutable_std_optional()->mutable_element_type());
+          },
           [&](const StdSharedPtr& std_shared_ptr) {
             std_shared_ptr.element_type.WriteToProto(
                 *proto.mutable_std_shared_ptr()->mutable_element_type());
