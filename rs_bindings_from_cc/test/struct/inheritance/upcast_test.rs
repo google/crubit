@@ -5,6 +5,7 @@
 use ctor::{emplace, CtorNew as _};
 use googletest::gtest;
 use oops::Upcast as _;
+use oops::VirtualUpcast;
 use upcast::*;
 
 #[gtest]
@@ -30,18 +31,20 @@ fn test_virtual_upcast() {
     let derived = emplace!(VirtualDerived::ctor_new(()));
     let derived = &*derived;
 
-    let base1: &Base1 = derived.upcast();
-    let base1_address = base1 as *const _ as usize;
+    let base1: *const Base1 = (derived as *const VirtualDerived).virtual_upcast();
+    let base1_address = base1 as usize;
     assert_eq!(base1_address, derived.base1_address());
-    let base2: &VirtualBase2 = derived.upcast();
-    assert_eq!(base2 as *const _ as usize, derived.base2_address());
-    let base3: &VirtualBase3 = derived.upcast();
+
+    let base2: *const VirtualBase2 = (derived as *const VirtualDerived).virtual_upcast();
+    assert_eq!(base2 as usize, derived.base2_address());
+
+    let base3: *const VirtualBase3 = (derived as *const VirtualDerived).virtual_upcast();
     assert_eq!(base3 as *const _ as usize, derived.base3_address());
 
-    let base1: &Base1 = base2.upcast();
-    assert_eq!(base1 as *const _ as usize, base1_address);
-    let base1: &Base1 = base3.upcast();
-    assert_eq!(base1 as *const _ as usize, base1_address);
+    let base1: *const Base1 = base2.virtual_upcast();
+    assert_eq!(base1 as usize, base1_address);
+    let base1: *const Base1 = base3.virtual_upcast();
+    assert_eq!(base1 as usize, base1_address);
 }
 
 #[gtest]
@@ -49,7 +52,7 @@ fn test_upcast_thunk_name_uniqueness() {
     let derived = emplace!(another_namespace::VirtualBase2::ctor_new(()));
     let derived = &*derived;
 
-    let base1: &Base1 = derived.upcast();
-    let base1_address = base1 as *const _ as usize;
+    let base1: *const Base1 = (derived as *const another_namespace::VirtualBase2).virtual_upcast();
+    let base1_address = base1 as usize;
     assert_eq!(base1_address, derived.base1_address());
 }
