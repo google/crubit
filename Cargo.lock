@@ -290,6 +290,7 @@ dependencies = [
 name = "cc_bindings_from_rs_run_compiler_test_support"
 version = "0.0.0"
 dependencies = [
+ "cc_bindings_from_rs_run_compiler",
  "cc_bindings_from_rs_rustversion",
  "itertools",
  "tempfile",
