@@ -11,3 +11,4 @@ path = "lib.rs"
 
 [dependencies]
 cc = { version = "1", features = [ "parallel" ] }
+object = { version = "0.36", default-features = false, features = [ "archive", "coff", "read_core" ] }

@@ -69,11 +69,69 @@ pub fn get_env_paths(env_var: &str) -> Vec<PathBuf> {
         .collect()
 }
 
+/// Returns whether `path` is a Windows *import* library rather than a static
+/// library.
+///
+/// On Unix the two kinds of library are told apart by their extension: a
+/// shared library is `libfoo.so` or `libfoo.dylib`, so the `.a` filter in
+/// [`collect_static_libs`] already excludes it.  Windows has no such
+/// distinction.  The import library that describes `foo.dll` is an archive
+/// named `foo.lib`, exactly like a static library, and a build of LLVM
+/// installs both kinds side by side in the same `lib` directory:
+/// `LLVM-C.lib`, `LTO.lib`, `Remarks.lib` and `libclang.lib` describe DLLs,
+/// while the couple of hundred archives beside them are static.  Linking an
+/// import library by mistake gives the resulting executable a load-time
+/// dependency on a DLL that is not part of the toolchain, and lets symbols
+/// that the DLL happens to re-export (zlib's, in LLVM's case) win over the
+/// static library that was meant to provide them.
+///
+/// The two are therefore told apart by content.  An import library's members
+/// include "short import" records, which begin with an `IMPORT_OBJECT_HEADER`
+/// whose first two `u16`s are `IMAGE_FILE_MACHINE_UNKNOWN` (`0x0000`) and the
+/// sentinel `0xFFFF`.  That pair cannot begin a COFF object file, where the
+/// same two fields are the machine type and the number of sections, so the
+/// presence of a single such member is conclusive.  Note that an import
+/// library also contains a few ordinary COFF members - the import descriptor
+/// and null-thunk objects that the linker generates - so it is the *presence*
+/// of a short import record that identifies it, not the absence of COFF
+/// members.
+///
+/// Anything that cannot be opened, or that is not an archive this function
+/// understands, is reported as not an import library: it is not a build
+/// script's job to diagnose a malformed archive, and the linker's error
+/// message will be far more useful than one invented here.  Archive member
+/// reading and COFF import object parsing are delegated to the `object` crate
+/// ([`object::read::archive::ArchiveFile`] and
+/// [`object::read::coff::ImportFile`]).
+#[cfg(any(windows, test))]
+fn is_import_library(path: &Path) -> bool {
+    use object::read::archive::ArchiveFile;
+    use object::read::coff::ImportFile;
+
+    let Ok(data) = std::fs::read(path) else {
+        return false;
+    };
+    let Ok(archive) = ArchiveFile::parse(&*data) else {
+        return false;
+    };
+    for member in archive.members() {
+        let Ok(member) = member else { continue };
+        let Ok(member_data) = member.data(&*data) else { continue };
+        if ImportFile::parse(member_data).is_ok() {
+            return true;
+        }
+    }
+    false
+}
+
 /// Discovers and validates static library archives (`.a` / `.lib`) in directories specified by
 /// `env_var`.
 ///
 /// Filters libraries using `include_lib_fn` and emits `cargo::rerun-if-changed` for each included
 /// archive.
+///
+/// On Windows, archives that are import libraries rather than static libraries are excluded, even
+/// if `include_lib_fn` accepts them; see [`is_import_library`].
 ///
 /// Returns a tuple `(search_directories, library_names)`:
 /// - `search_directories`: directories where the libraries were found, suitable for link search
@@ -127,10 +185,20 @@ where
                 // On Unix, drop the lib prefix and the extension: `libname.a` => `name`.
                 stem_str.strip_prefix("lib").unwrap_or(stem_str)
             };
-            if include_lib_fn(libname) {
-                println!("cargo::rerun-if-changed={}", path.display());
-                libs.push(OsString::from(libname));
+            if !include_lib_fn(libname) {
+                continue;
             }
+            // The extension check above excludes shared libraries on Unix, where they are
+            // `.so` / `.dylib` rather than `.a`.  On Windows the import library of a DLL is
+            // a `.lib` archive just like a static library, so it has to be recognised by its
+            // contents instead.  Checked here, after `include_lib_fn`, so that the scan is
+            // only paid for archives that would otherwise be linked.
+            #[cfg(windows)]
+            if is_import_library(&path) {
+                continue;
+            }
+            println!("cargo::rerun-if-changed={}", path.display());
+            libs.push(OsString::from(libname));
         }
     }
 
@@ -162,4 +230,107 @@ pub fn print_compiler_deps() {
     println!("cargo::rerun-if-env-changed=CFLAGS");
     println!("cargo::rerun-if-env-changed=CXXFLAGS");
     println!("cargo::rerun-if-env-changed=LDFLAGS");
+}
+
+/// Unit tests for import library detection.
+///
+/// Note: These tests use standard `#[test]` rather than `googletest` because
+/// `crubit_build` is a build helper crate built via Cargo.
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_archive_file(dir: &Path, filename: &str, members: &[(&[u8], &[u8])]) -> PathBuf {
+        let path = dir.join(filename);
+        let mut archive = Vec::new();
+        archive.extend_from_slice(b"!<arch>\n");
+        for (name, data) in members {
+            let mut header = [b' '; 60];
+            let name_len = name.len().min(16);
+            header[..name_len].copy_from_slice(&name[..name_len]);
+            let size_str = format!("{}", data.len());
+            header[48..48 + size_str.len()].copy_from_slice(size_str.as_bytes());
+            header[58..60].copy_from_slice(b"`\n");
+            archive.extend_from_slice(&header);
+            archive.extend_from_slice(data);
+            if data.len() % 2 != 0 {
+                archive.push(b'\n');
+            }
+        }
+        std::fs::write(&path, archive).unwrap();
+        path
+    }
+
+    fn create_short_import_data(symbol: &str, dll: &str) -> Vec<u8> {
+        let mut data = Vec::new();
+        data.extend_from_slice(&0u16.to_le_bytes()); // sig1: IMAGE_FILE_MACHINE_UNKNOWN
+        data.extend_from_slice(&0xFFFFu16.to_le_bytes()); // sig2: IMPORT_OBJECT_HDR_SIG2
+        data.extend_from_slice(&0u16.to_le_bytes()); // version
+        data.extend_from_slice(&0x8664u16.to_le_bytes()); // machine: AMD64
+        data.extend_from_slice(&0u32.to_le_bytes()); // time_date_stamp
+        let data_len = (symbol.len() + 1 + dll.len() + 1) as u32;
+        data.extend_from_slice(&data_len.to_le_bytes()); // size_of_data
+        data.extend_from_slice(&0u16.to_le_bytes()); // ordinal_or_hint
+        data.extend_from_slice(&0u16.to_le_bytes()); // name_type: IMPORT_OBJECT_NAME
+        data.extend_from_slice(symbol.as_bytes());
+        data.push(0);
+        data.extend_from_slice(dll.as_bytes());
+        data.push(0);
+        data
+    }
+
+    #[test] // allow_core_test (see mod tests doc comment)
+    fn test_is_import_library_detects_short_import() {
+        let temp_dir = std::env::temp_dir().join("crubit_test_import_lib");
+        std::fs::create_dir_all(&temp_dir).unwrap();
+        let short_import_data = create_short_import_data("AddInts", "foo.dll");
+        let path = create_archive_file(&temp_dir, "test.lib", &[(b"foo.dll/", &short_import_data)]);
+        let result = is_import_library(&path);
+        let _ = std::fs::remove_dir_all(&temp_dir);
+        assert!(result);
+    }
+
+    #[test] // allow_core_test (see mod tests doc comment)
+    fn test_is_import_library_ignores_regular_coff() {
+        let temp_dir = std::env::temp_dir().join("crubit_test_coff_lib");
+        std::fs::create_dir_all(&temp_dir).unwrap();
+        let coff_data = [0x64, 0x86, 0x01, 0x00]; // IMAGE_FILE_MACHINE_AMD64, 1 section
+        let path = create_archive_file(&temp_dir, "test.lib", &[(b"foo.obj/", &coff_data)]);
+        let result = is_import_library(&path);
+        let _ = std::fs::remove_dir_all(&temp_dir);
+        assert!(!result);
+    }
+
+    #[test] // allow_core_test (see mod tests doc comment)
+    fn test_is_import_library_skips_bookkeeping_symbols() {
+        let temp_dir = std::env::temp_dir().join("crubit_test_bookkeeping_lib");
+        std::fs::create_dir_all(&temp_dir).unwrap();
+        // Symbol table member `/` starting with 0x0000FFFF (65535 symbols).
+        let symtab_data = [0x00, 0x00, 0xFF, 0xFF];
+        let coff_data = [0x64, 0x86, 0x01, 0x00];
+        let path = create_archive_file(
+            &temp_dir,
+            "test.lib",
+            &[(b"/", &symtab_data), (b"foo.obj/", &coff_data)],
+        );
+        let result = is_import_library(&path);
+        let _ = std::fs::remove_dir_all(&temp_dir);
+        assert!(!result);
+    }
+
+    #[test] // allow_core_test (see mod tests doc comment)
+    fn test_is_import_library_finds_short_import_after_coff_members() {
+        let temp_dir = std::env::temp_dir().join("crubit_test_mixed_lib");
+        std::fs::create_dir_all(&temp_dir).unwrap();
+        let coff_data = [0x64, 0x86, 0x01, 0x00];
+        let short_import_data = create_short_import_data("AddInts", "foo.dll");
+        let path = create_archive_file(
+            &temp_dir,
+            "test.lib",
+            &[(b"null_thunk.obj/", &coff_data), (b"foo.dll/", &short_import_data)],
+        );
+        let result = is_import_library(&path);
+        let _ = std::fs::remove_dir_all(&temp_dir);
+        assert!(result);
+    }
 }

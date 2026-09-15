@@ -84,7 +84,9 @@ Run the build step via cargo:
 # Paths for Crubit's cargo to use.
 ## This path contains clang/ and llvm/ dirs with their respective headers.
 export CLANG_INCLUDE_PATH=/path/to/llvm/and/clang/headers
-## This path contains libLLVM*.a and libclang*.a.
+## This path contains libLLVM*.a and libclang*.a.  On Windows it may also hold the
+## import libraries of LLVM's DLLs (LLVM-C.lib and friends); those are recognised by
+## their contents and skipped, so the whole `lib` dir can be given as-is.
 export CLANG_LIB_STATIC_PATH=/path/to/llvm/and/clang/libs
 ## This path contains absl/ dir with all the includes.
 export ABSL_INCLUDE_PATH=/path/to/absl/include/dir
