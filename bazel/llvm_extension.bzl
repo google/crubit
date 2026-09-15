@@ -5,19 +5,12 @@
 """Module extension for downloading LLVM source and configuring host C dependencies."""
 
 def _llvm_source_fetch_impl(repository_ctx):
-    commit = repository_ctx.attr.commit
+    commit = repository_ctx.os.environ.get("CRUBIT_LLVM_COMMIT") or repository_ctx.attr.commit
     url = "https://github.com/llvm/llvm-project/archive/" + commit + ".tar.gz"
 
     repository_ctx.download_and_extract(
         url = url,
         stripPrefix = "llvm-project-" + commit,
-    )
-
-    # Patch LLVM's config.bzl to avoid platform config errors on standard platforms.
-    # See comments in //patches:llvm_platforms_config.patch for details and precedents.
-    repository_ctx.patch(
-        Label("//patches:llvm_platforms_config.patch"),
-        strip = 1,
     )
 
     # Query Gitiles for the LLVM commit date (YYYYmmDD UTC).
@@ -52,6 +45,7 @@ llvm_source_fetch = repository_rule(
             allow_single_file = True,
         ),
     },
+    environ = ["CRUBIT_LLVM_COMMIT"],
 )
 
 def _host_c_library_impl(repository_ctx):

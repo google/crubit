@@ -99,6 +99,17 @@ jobs:
       uses: ./.github/actions/setup_bazel
       with:
         gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+    - name: "Discover and report latest LLVM commit"
+      run: |
+        LLVM_COMMIT=$(git ls-remote https://github.com/llvm/llvm-project.git refs/heads/main | cut -f1)
+        if [[ -z "$LLVM_COMMIT" ]]; then
+          echo "::error::Failed to discover latest LLVM commit"
+          exit 1
+        fi
+        echo "Latest LLVM commit: $LLVM_COMMIT"
+        echo "CRUBIT_LLVM_COMMIT=$LLVM_COMMIT" >> $GITHUB_ENV
+        echo "### LLVM Dependency" >> $GITHUB_STEP_SUMMARY
+        echo "Building against LLVM \`main\` commit [\`$LLVM_COMMIT\`](https://github.com/llvm/llvm-project/commit/$LLVM_COMMIT)" >> $GITHUB_STEP_SUMMARY
     - name: Build Bazel test project (example)
       run: |
         cd examples/build_systems/bazel
