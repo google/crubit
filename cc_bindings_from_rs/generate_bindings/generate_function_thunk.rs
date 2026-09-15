@@ -395,9 +395,7 @@ fn format_ty_for_closure_param_rs<'tcx>(
                 _ => {}
             }
         }
-        let canonical_name = db
-            .symbol_canonical_name(adt.did())
-            .ok_or_else(|| anyhow!("Failed to get canonical name for {:?}", adt.did()))?;
+        let canonical_name = db.symbol_canonical_name(adt.did())?;
         let type_name = canonical_name.format_for_rs();
         let generic_params = if substs.is_empty() {
             quote! {}
@@ -980,7 +978,7 @@ pub fn generate_trait_thunks<'tcx>(
         type_args.iter().copied().map(ty::GenericArg::from),
     ) {
         let display_name = def_id
-            .and_then(|id| db.symbol_canonical_name(id))
+            .and_then(|id| db.symbol_canonical_name(id).ok())
             .map(|canon| {
                 let parts = canon.rs_name_parts().map(|s| format!("{}", s)).collect::<Vec<_>>();
                 parts.join("::")
@@ -1073,12 +1071,7 @@ pub fn generate_trait_thunks<'tcx>(
                 }
             })
         } else {
-            let fully_qualified_trait_name = db
-                .symbol_canonical_name(trait_id)
-                .ok_or_else(|| {
-                    anyhow!("Failed to get canonical name for {}", tcx.def_path_str(trait_id))
-                })?
-                .format_for_rs();
+            let fully_qualified_trait_name = db.symbol_canonical_name(trait_id)?.format_for_rs();
             let method_name = make_rs_ident(method.name().as_str());
             let args = type_args
                 .iter()

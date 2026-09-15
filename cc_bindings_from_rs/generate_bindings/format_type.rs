@@ -942,10 +942,7 @@ pub fn format_ty_for_cc<'tcx>(
                     "Generic types are not supported yet (b/259749095)"
                 );
                 crate::should_receive_bindings(db, adt.did())?;
-                ensure!(
-                    db.symbol_canonical_name(adt.did()).is_some(),
-                    "Not a public or a supported reexported type (b/262052635)."
-                );
+                db.symbol_canonical_name(adt.did())?;
 
                 prereqs.depend_on_def(db, def_id)?;
 
@@ -955,9 +952,7 @@ pub fn format_ty_for_cc<'tcx>(
                 })?;
             }
 
-            let canonical_name = db
-                .symbol_canonical_name(def_id)
-                .ok_or_else(|| anyhow!("Failed to generate canonical name for `{ty}`"))?;
+            let canonical_name = db.symbol_canonical_name(def_id)?;
 
             let mut tokens = canonical_name.format_for_cc(db)?;
             // Add generic arguments for a generic ADT.
@@ -1597,9 +1592,7 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
                 has_cpp_type || is_supported_generic_type || has_composable_bridging,
                 "Generic types without composable bridging are not supported yet (b/259749095)"
             );
-            let canonical_name = db
-                .symbol_canonical_name(adt.did())
-                .ok_or_else(|| anyhow!("Failed to get canonical name for {:?}", adt.did()))?;
+            let canonical_name = db.symbol_canonical_name(adt.did())?;
             let type_name = canonical_name.format_for_rs();
             let generic_params = if substs.is_empty() {
                 quote! {}
@@ -1824,10 +1817,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                         include_paths,
                         cpp_type,
                     } => {
-                        let fully_qualified_name =
-                            db.symbol_canonical_name(adt.did()).ok_or_else(|| {
-                                anyhow!("Failed to get canonical name for {:?}", adt.did())
-                            })?;
+                        let fully_qualified_name = db.symbol_canonical_name(adt.did())?;
                         let mut prereqs = CcPrerequisites::default();
                         for path in &include_paths {
                             prereqs.includes.insert(CcInclude::from_path(path.as_str()));
@@ -1875,9 +1865,7 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                     return Ok(CrubitAbiTypeWithCcPrereqs { crubit_abi_type, prereqs });
                 }
 
-                let fully_qualified_name = db
-                    .symbol_canonical_name(adt.did())
-                    .ok_or_else(|| anyhow!("Failed to get canonical name for {:?}", adt.did()))?;
+                let fully_qualified_name = db.symbol_canonical_name(adt.did())?;
 
                 // It's just a regular old type.
                 // Question: do we need to check that it doesn't have any generics?

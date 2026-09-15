@@ -892,7 +892,7 @@ fn generate_constructor_impls<'tcx>(
                     let is_src_local_adt = match src_ty.kind() {
                         ty::TyKind::Adt(adt_def, _) => db
                             .symbol_canonical_name(adt_def.did())
-                            .is_none_or(|name| name.krate_num == db.source_crate_num()),
+                            .map_or(true, |name| name.krate_num == db.source_crate_num()),
                         _ => false,
                     };
                     if is_src_local_adt {
@@ -2144,9 +2144,7 @@ pub fn adt_needs_bindings<'tcx>(
     let tcx = db.tcx();
     let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
 
-    let Some(fully_qualified_name) = db.symbol_canonical_name(def_id) else {
-        bail!("No public path could be found for type {}", tcx.def_path_str(def_id));
-    };
+    let fully_qualified_name = db.symbol_canonical_name(def_id)?;
     if let Some(cpp_type) = fully_qualified_name.unqualified.cpp_type {
         let item_name = tcx.def_path_str(def_id);
         bail!(
@@ -2178,9 +2176,7 @@ pub fn generate_generic_adt_declaration<'tcx>(
     def_id: DefId,
 ) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
-    let Some(fully_qualified_name) = db.symbol_canonical_name(def_id) else {
-        bail!("No public path could be found for type {}", tcx.def_path_str(def_id));
-    };
+    let fully_qualified_name = db.symbol_canonical_name(def_id)?;
 
     let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
     if let Some(cpp_type) = fully_qualified_name.unqualified.cpp_type {
@@ -2269,11 +2265,7 @@ pub fn generate_adt_core<'tcx>(
         crate::normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity()),
     );
     assert!(self_ty.is_adt());
-    assert!(db.symbol_canonical_name(def_id).is_some(), "Caller should verify");
-
-    let Some(fully_qualified_name) = db.symbol_canonical_name(def_id) else {
-        bail!("`generate_adt_core` called on non-reachable type {}", tcx.def_path_str(def_id));
-    };
+    let fully_qualified_name = db.symbol_canonical_name(def_id)?;
     let rs_fully_qualified_name = fully_qualified_name.format_for_rs();
     let cpp_name = format_cc_ident(db, fully_qualified_name.unqualified.cpp_name.as_str())
         .context("Error formatting item name")?;

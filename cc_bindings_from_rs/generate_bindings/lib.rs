@@ -897,7 +897,7 @@ fn renamed_crate_original_name(db: &BindingsGenerator<'_>, krate_id: CrateNum) -
 }
 
 /// Implementation of `BindingsGenerator::symbol_canonical_name`.
-fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<FullyQualifiedName> {
+fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<FullyQualifiedName> {
     let tcx = db.tcx();
 
     // TODO: b/433286909 - We shouldn't pass DefKind::Use to this method and instead should keep what our use
@@ -908,12 +908,13 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
     // Symbols that should not receive bindings should not have a canonical name, so that we do not
     // attempt to bind other items that depend on them (functions that use them in their signature
     // etc.).
-    if should_receive_bindings(db, def_id).is_err() {
-        return None;
-    }
+    should_receive_bindings(db, def_id)?;
 
     let (full_path_strs, type_alias_def_id, krate_num) = {
-        let paths = db.all_public_paths_by_def_id().get(&def_id).cloned()?;
+        let paths =
+            db.all_public_paths_by_def_id().get(&def_id).cloned().ok_or_else(|| {
+                anyhow!("Not a public or a supported reexported type (b/262052635).")
+            })?;
 
         // Select a canonical path for this symbol from available paths.
         // Our paths are kept in sorted order, so the canonical path will be the first one.
@@ -938,7 +939,10 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
                 db.symbol_unqualified_name(alias_def_id)
             }
         })
-        .or_else(|| db.symbol_unqualified_name(def_id))?;
+        .or_else(|| db.symbol_unqualified_name(def_id))
+        .ok_or_else(|| {
+            anyhow!("Failed to get unqualified name for `{}`", tcx.def_path_str(def_id))
+        })?;
 
     // `crate_name` gets the crate name written out in the rmeta file, which is not always the name
     // we want to spell out in our generated bindings. Proto targets, for example, rename their crate
@@ -962,7 +966,7 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
         // See https://github.com/rust-lang/rust/issues/144333 for details.
         let path_strs: Vec<&str> = full_path_strs.iter().map(|x| &**x).collect();
         if matches!(&*path_strs, ["dsl"]) {
-            return None;
+            bail!("Unsupported ambiguous re-export in polars_plan::dsl");
         }
     }
 
@@ -976,7 +980,7 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<Fu
         use_leading_colons,
     );
     let cpp_top_level_ns = format_top_level_ns_for_crate(db, krate_num);
-    Some(FullyQualifiedName {
+    Ok(FullyQualifiedName {
         krate,
         krate_num,
         cpp_top_level_ns,
@@ -1132,9 +1136,9 @@ fn generate_using<'tcx>(
                     bail!("Unable to `use` function whose bindings failed: {err:?}");
                 }
             };
-            let fully_qualified_fn_name = db
-                .symbol_canonical_name(def_id)
-                .unwrap_or_else(|| panic!("Failed to get canonical name for {:?}", def_id));
+            let fully_qualified_fn_name = db.symbol_canonical_name(def_id).unwrap_or_else(|err| {
+                panic!("Failed to get canonical name for {:?}: {err}", def_id)
+            });
             let formatted_fully_qualified_fn_name = fully_qualified_fn_name.format_for_cc(db)?;
             let main_api_fn_name =
                 format_cc_ident(db, fully_qualified_fn_name.unqualified.cpp_name.as_str())
@@ -1378,7 +1382,7 @@ fn supported_traits(db: &BindingsGenerator<'_>) -> Rc<[DefId]> {
         .visible_traits()
         .filter(|trait_id| {
             // Does the trait get bindings?
-            db.symbol_canonical_name(*trait_id).is_some()
+            db.symbol_canonical_name(*trait_id).is_ok()
         })
         .filter(|trait_id| {
             // Traits do not support const generics.
@@ -1536,9 +1540,7 @@ fn create_type_alias<'tcx>(
     alias_name: &str,
     alias_type: Ty<'tcx>,
 ) -> Result<CcSnippet<'tcx>> {
-    let fully_qualified_name = db
-        .symbol_canonical_name(def_id)
-        .ok_or_else(|| anyhow!("Failed to get canonical name for {:?}", def_id))?;
+    let fully_qualified_name = db.symbol_canonical_name(def_id)?;
     let rs_type = format!("{}", fully_qualified_name.format_for_rs());
     create_type_alias_with_rs_type(db, def_id, &rs_type, alias_name, alias_type)
 }
@@ -1783,7 +1785,7 @@ fn copy_codegen_style_to_snippets<'tcx>(
             None => {
                 let display_name = core
                     .def_id
-                    .and_then(|id| db.symbol_canonical_name(id))
+                    .and_then(|id| db.symbol_canonical_name(id).ok())
                     .map(|canon| {
                         let parts =
                             canon.rs_name_parts().map(|s| format!("{}", s)).collect::<Vec<_>>();
@@ -2200,7 +2202,7 @@ fn generate_item_impl<'tcx>(
     def_id: DefId,
 ) -> Result<Option<ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
-    if db.symbol_canonical_name(def_id).is_none() {
+    if db.symbol_canonical_name(def_id).is_err() {
         return Ok(None);
     };
     let item = match tcx.def_kind(def_id) {
@@ -2456,7 +2458,7 @@ fn formatted_items_in_crate<'tcx>(
         .into_iter()
         .filter_map(|(def_id, paths)| {
             let mut snippets = None;
-            let canonical_name = db.symbol_canonical_name(def_id)?;
+            let canonical_name = db.symbol_canonical_name(def_id).ok()?;
             let aliases = if canonical_name.krate_num == db.source_crate_num() {
                 // We only want to call `generate_item` on DefIds from our source crate. External
                 // crate DefIds might appear in this map if our crate re-exports them, but we don't
@@ -2613,9 +2615,9 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
         cc_details.push(CcDetails::new(
             def_id,
             db.symbol_canonical_name(def_id)
-                .unwrap_or_else(|| {
+                .unwrap_or_else(|err| {
                     panic!(
-                        "Exported item {} should have a canonical name",
+                        "Exported item {} should have a canonical name: {err}",
                         db.tcx().def_path_str(def_id)
                     )
                 })
@@ -2784,9 +2786,9 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
                         NamespaceQualifier::new(
                             cpp_top_level_ns.iter().cloned().chain({
                                 db.symbol_canonical_name(def_id)
-                                    .unwrap_or_else(|| {
+                                    .unwrap_or_else(|err| {
                                         panic!(
-                                            "Exported item {} should have a canonical name",
+                                            "Exported item {} should have a canonical name: {err}",
                                             tcx.def_path_str(def_id),
                                         )
                                     })

@@ -931,7 +931,7 @@ fn format_trait_ref_for_cc<'tcx>(
 ) -> Result<CcSnippet<'tcx>> {
     let trait_name = db
         .symbol_canonical_name(trait_ref.def_id)
-        .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db).ok())
+        .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db))
         .expect("Generated trait method for a trait with an invalid cc name");
     let mut trait_args = trait_ref.args[1..].iter().filter_map(|arg| arg.as_type()).peekable();
     let mut prereqs = CcPrerequisites::default();
@@ -954,13 +954,7 @@ fn format_trait_ref_for_rs<'tcx>(
 ) -> Result<TokenStream> {
     let trait_name = db
         .symbol_canonical_name(trait_ref.def_id)
-        .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
-        .ok_or_else(|| {
-            anyhow!(
-                "Failed to format trait name `{}`: trait does not have a canonical name",
-                db.tcx().def_path_str(trait_ref.def_id)
-            )
-        })?;
+        .map(|fully_qualified_name| fully_qualified_name.format_for_rs())?;
     let mut trait_args = trait_ref.args[1..].iter().filter_map(|arg| arg.as_type()).peekable();
     if trait_args.peek().is_none() {
         Ok(quote! { #trait_name })
@@ -1165,7 +1159,7 @@ pub fn generate_function<'tcx>(
         Some(ty) => match ty.kind() {
             ty::TyKind::Adt(adt, substs) => {
                 assert!(!has_non_lifetime_substs(substs), "Callers should filter out generics");
-                db.symbol_canonical_name(adt.did())
+                db.symbol_canonical_name(adt.did()).ok()
             }
             _ => panic!("Non-ADT `impl`s should be filtered by caller"),
         },
@@ -1344,7 +1338,7 @@ pub fn generate_function<'tcx>(
             let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
             let struct_name = struct_name.format_for_rs();
             quote! { #struct_name :: #fn_name }
-        } else if let Some(canonical) = db.symbol_canonical_name(def_id) {
+        } else if let Ok(canonical) = db.symbol_canonical_name(def_id) {
             canonical.format_for_rs()
         } else {
             panic!(

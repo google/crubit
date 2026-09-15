@@ -177,11 +177,11 @@ memoized::query_group! {
       /// at either `Bar` or `foo::Bar` due to our `use` statements. This method would give `Bar`
       /// the canonical name `foo::Bar`, preferring the more specific of our two available paths.
       ///
-      /// If no canonical name can be determined, `None` is returned. This will occur when our
+      /// If no canonical name can be determined, an error is returned. This will occur when our
       /// `def_id` has no publicly visible paths, for example.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:symbol_canonical_name
-      fn symbol_canonical_name(&self, def_id: DefId) -> Option<FullyQualifiedName>;
+      fn symbol_canonical_name(&self, def_id: DefId) -> Result<FullyQualifiedName>;
 
       /// Computes a mapping from a `DefId` to a list of public paths that reference it in a given
       /// crate. This accounts for `use` statements that reexport, and optionally alias, the same

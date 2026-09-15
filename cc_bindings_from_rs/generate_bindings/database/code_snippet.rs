@@ -341,9 +341,7 @@ impl<'tcx> CcPrerequisites<'tcx> {
     /// or this will fail.
     pub fn depend_on_def(&mut self, db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<()> {
         let tcx = db.tcx();
-        let canonical_name = db.symbol_canonical_name(def_id).ok_or_else(|| {
-            anyhow!("Failed to generate canonical name for `{}`", tcx.def_path_str(def_id))
-        })?;
+        let canonical_name = db.symbol_canonical_name(def_id)?;
         // Definition with a local canonical name can be immediately added to the `defs` set.
         if canonical_name.krate_num == db.source_crate_num() {
             self.defs.insert(def_id);

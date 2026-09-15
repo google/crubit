@@ -1674,7 +1674,7 @@ fn append_explicit_trait_impls<'tcx>(
             continue;
         };
         // Only bind implementations for supported ADTs.
-        let Some(canonical_name) = db.symbol_canonical_name(*did) else {
+        let Ok(canonical_name) = db.symbol_canonical_name(*did) else {
             continue;
         };
         // We explicitly want to allow ADTs that specify cpp_type.
@@ -1719,7 +1719,7 @@ fn append_negative_auto_trait_impls<'tcx>(
         }) {
             continue;
         }
-        let Some(canonical_name) = db.symbol_canonical_name(self_def_id) else {
+        let Ok(canonical_name) = db.symbol_canonical_name(self_def_id) else {
             continue;
         };
         if canonical_name.krate_num != db.source_crate_num() {

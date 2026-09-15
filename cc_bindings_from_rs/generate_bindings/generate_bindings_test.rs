@@ -2509,7 +2509,7 @@ fn test_trait_operator_without_core_crate_header_returns_error() {
         let bindings = generate_bindings::generate_bindings(&db).unwrap();
         let cc_api = cc_tokens_to_formatted_string_for_tests(bindings.cc_api).unwrap();
         assert!(
-            cc_api.contains("trait does not have a canonical"),
+            cc_api.contains("public or a supported reexported type"),
             "Expected unsupported error message in cc_api, got:\n{cc_api}"
         );
     });
