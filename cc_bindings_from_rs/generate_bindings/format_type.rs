@@ -1533,6 +1533,7 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
         | ty::TyKind::Char
         | ty::TyKind::Int(_)
         | ty::TyKind::Uint(_)
+        | ty::TyKind::Str
         | ty::TyKind::Never => ty
             .to_string()
             .parse()

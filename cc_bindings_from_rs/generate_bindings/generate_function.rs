@@ -972,6 +972,16 @@ fn format_trait_ref_for_rs<'tcx>(
     }
 }
 
+/// Returns `template <typename __CrubitBoolT> requires(::std::is_same_v<__CrubitBoolT, bool>)`
+/// to prevent C++ standard conversions (e.g. from `const char*` or `int` to `bool`) from
+/// hijacking overload resolution on constructors and overloaded operators.
+pub(crate) fn bool_constraint_template_prefix() -> TokenStream {
+    quote! {
+        template <typename __CrubitBoolT>
+          requires(::std::is_same_v<__CrubitBoolT, bool>)
+    }
+}
+
 /// Implementation of `BindingsGenerator::generate_function`.
 pub fn generate_function<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -1166,21 +1176,45 @@ pub fn generate_function<'tcx>(
         None => None,
     };
     let needs_definition = unqualified_rust_fn_name.as_str() != thunk_name;
+    let constrain_bool_param = method_name_override.is_some()
+        && params.iter().skip(if thunk_self.is_inherent_self_method() { 1 } else { 0 }).any(
+            |Param { ty, .. }| match ty.kind() {
+                ty::TyKind::Bool => true,
+                ty::TyKind::Ref(_, inner, Mutability::Not) => inner.is_bool(),
+                _ => false,
+            },
+        );
+    if constrain_bool_param {
+        main_api_prereqs.includes.insert(CcInclude::type_traits());
+    }
     let main_api_params = params
         .iter()
         // Include self param for a trait method.
         .skip(if thunk_self.is_inherent_self_method() { 1 } else { 0 })
-        .map(|Param { cc_name, cpp_type, .. }| {
+        .map(|Param { cc_name, cpp_type, ty }| {
             let annotation = if cpp_type.is_lifetime_bound {
                 main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
                 quote! { CRUBIT_LIFETIME_BOUND }
             } else {
                 quote! {}
             };
-            let cpp_type = cpp_type.snippet.clone().into_tokens(&mut main_api_prereqs);
+            let cpp_type = if constrain_bool_param && ty.is_bool() {
+                quote! { __CrubitBoolT }
+            } else if constrain_bool_param
+                && matches!(ty.kind(), ty::TyKind::Ref(_, inner, Mutability::Not) if inner.is_bool())
+            {
+                quote! { __CrubitBoolT const& }
+            } else {
+                cpp_type.snippet.clone().into_tokens(&mut main_api_prereqs)
+            };
             quote! { #cpp_type #cc_name #annotation }
         })
         .collect_vec();
+    let template_prefix = if constrain_bool_param {
+        bool_constraint_template_prefix()
+    } else {
+        quote! {}
+    };
     let thunk_name_cc = format_cc_ident(db, &thunk_name).context("Error formatting thunk name")?;
     let impl_body = generate_thunk_call(
         db,
@@ -1249,6 +1283,7 @@ pub fn generate_function<'tcx>(
             tokens: quote! {
                 __NEWLINE__
                 #doc_comment
+                #template_prefix
                 #extern_c #(#attributes)* #static_
                     #main_api_ret_type #bracketed_decl_name (
                         #( #main_api_params ),*
@@ -1312,6 +1347,7 @@ pub fn generate_function<'tcx>(
             #thunk_decl
 
             __NEWLINE__
+            #template_prefix
             inline #main_api_ret_type #decl_name (
                     #( #main_api_params ),* ) #method_qualifiers {
                 #impl_body

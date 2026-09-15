@@ -12,7 +12,8 @@ use crate::format_cc_ident;
 use crate::format_type::CcParamTy;
 use crate::generate_doc_comment;
 use crate::generate_function::{
-    cc_param_to_c_abi, format_variant_ctor_cc_name, generate_thunk_call, Param, ThunkSelfParameter,
+    bool_constraint_template_prefix, cc_param_to_c_abi, format_variant_ctor_cc_name,
+    generate_thunk_call, Param, ThunkSelfParameter,
 };
 use crate::generate_function_thunk::{
     generate_thunk_decl, generate_thunk_impl, make_thunk_name, replace_all_regions_with_static,
@@ -943,10 +944,17 @@ fn generate_constructor_impls<'tcx>(
                 }
             };
             prereqs.move_defs_to_fwd_decls();
+            let (template_prefix, cc_ty) = if src_ty.is_bool() {
+                prereqs.includes.insert(CcInclude::type_traits());
+                (bool_constraint_template_prefix(), quote! { __CrubitBoolT })
+            } else {
+                (quote! {}, cc_ty)
+            };
             Some(ApiSnippets {
                 main_api: CcSnippet {
                     tokens: quote! {
                         __NEWLINE__ #doc_comment
+                        #template_prefix
                         explicit #cc_struct_name ( #cc_ty value ) ; __NEWLINE__
                         __NEWLINE__
                     },
@@ -954,6 +962,7 @@ fn generate_constructor_impls<'tcx>(
                 },
                 cc_details: CcSnippet::new(quote! {
                     #cc_thunk_decls
+                    #template_prefix
                     inline #cc_struct_name :: #cc_struct_name ( #cc_ty value ) {
                         #impl_body_tokens
                     }
@@ -1319,15 +1328,6 @@ fn generate_partial_ord_impls<'tcx>(
     )?;
     let thunk_name = format_ident!("{}", thunk_name_str);
 
-    let main_api = CcSnippet {
-        tokens: quote! {
-            __NEWLINE__
-            ::std::partial_ordering operator<=>(#rhs_cc_tokens_for_main other) const;
-            __NEWLINE__
-        },
-        prereqs: main_api_prereqs,
-    };
-
     let mut cc_details_prereqs = CcPrerequisites::default();
     let rhs_cc_tokens_for_impl = rhs_cc_ty_for_impl.into_tokens(&mut cc_details_prereqs);
 
@@ -1344,11 +1344,30 @@ fn generate_partial_ord_impls<'tcx>(
     )?;
     let ref_rhs_cc_tokens = ref_rhs_cc_ty.into_tokens(&mut cc_details_prereqs);
 
+    let (template_prefix, rhs_cc_tokens_for_main, rhs_cc_tokens_for_impl) = if rhs_ty.is_bool() {
+        main_api_prereqs.includes.insert(CcInclude::type_traits());
+        cc_details_prereqs.includes.insert(CcInclude::type_traits());
+        let param_ty = quote! { __CrubitBoolT const& };
+        (bool_constraint_template_prefix(), param_ty.clone(), param_ty)
+    } else {
+        (quote! {}, rhs_cc_tokens_for_main, rhs_cc_tokens_for_impl)
+    };
+
+    let main_api = CcSnippet {
+        tokens: quote! {
+            __NEWLINE__
+            #template_prefix
+            ::std::partial_ordering operator<=>(#rhs_cc_tokens_for_main other) const;
+            __NEWLINE__
+        },
+        prereqs: main_api_prereqs,
+    };
     let cc_details = CcSnippet {
         tokens: quote! {
             namespace __crubit_internal {
                 extern "C" ::std::int8_t #thunk_name(#ref_self_cc_tokens, #ref_rhs_cc_tokens);
             }
+            #template_prefix
             inline ::std::partial_ordering #adt_cc_short_name::operator<=>(#rhs_cc_tokens_for_impl other) const {
                 auto val = __crubit_internal::#thunk_name(*this, other);
                 switch (val) {
