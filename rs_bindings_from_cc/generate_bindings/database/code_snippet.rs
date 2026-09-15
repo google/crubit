@@ -1290,8 +1290,12 @@ pub struct BitfieldComment {
 
 impl ToTokens for BitfieldComment {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let s = format!("{} : {} bits", self.field_name.as_deref().unwrap_or(""), self.bits.get());
-        quote! { __COMMENT__ #s }.to_tokens(tokens);
+        let bits = self.bits.get();
+        let s = match self.field_name.as_deref() {
+            Some(field_name) => format!(" * `{field_name}` : {bits} bits."),
+            None => format!(" * Unnamed C++ bit field : {bits} bits."),
+        };
+        quote! { #[doc = #s] }.to_tokens(tokens);
     }
 }
 
@@ -1327,8 +1331,9 @@ impl ToTokens for FieldDefinition {
                 let bitfield_name =
                     syn::parse_str::<Ident>(&format!("__bitfields{field_index}")).unwrap();
                 quote! {
-                    __NEWLINE__ #( #desc )*
+                    __NEWLINE__
                     #padding_field
+                    #( #desc )*
                     #bitfield_name: #bits,
                 }
                 .to_tokens(tokens);

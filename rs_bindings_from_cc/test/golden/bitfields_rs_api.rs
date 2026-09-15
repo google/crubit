@@ -20,20 +20,20 @@
 ///CRUBIT_ANNOTATE: cpp_type=WithBitfields
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct WithBitfields {
-    // f1 : 2 bits
+    /// * `f1` : 2 bits.
     __bitfields0: [::core::mem::MaybeUninit<u8>; 1],
     pub f2: ::ffi_11::c_int,
-    // f3 : 4 bits
-    // f4 : 8 bits
-    //  : 45 bits
+    /// * `f3` : 4 bits.
+    /// * `f4` : 8 bits.
+    /// * Unnamed C++ bit field : 45 bits.
     __bitfields2: [::core::mem::MaybeUninit<u8>; 10],
     pub f5: ::ffi_11::c_int,
-    // f6 : 23 bits
+    /// * `f6` : 23 bits.
     __bitfields4: [::core::mem::MaybeUninit<u8>; 3],
     /// Reason for representing this field as a blob of bytes:
     /// `[[no_unique_address]]` attribute was present.
     pub(crate) f7: [::core::mem::MaybeUninit<u8>; 1],
-    // f8 : 2 bits
+    /// * `f8` : 2 bits.
     __bitfields6: [::core::mem::MaybeUninit<u8>; 1],
 }
 impl !Send for WithBitfields {}
@@ -68,8 +68,8 @@ impl Default for WithBitfields {
 ///CRUBIT_ANNOTATE: cpp_type=AlignmentRegressionTest
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct AlignmentRegressionTest {
-    // code_point : 31 bits
-    // status : 1 bits
+    /// * `code_point` : 31 bits.
+    /// * `status` : 1 bits.
     __bitfields0: [::core::mem::MaybeUninit<u8>; 4],
 }
 impl !Send for AlignmentRegressionTest {}
