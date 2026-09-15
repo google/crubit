@@ -18,6 +18,7 @@ bzl_library(
     visibility = [
         "//:__subpackages__",
         "//cloud/vmm/tiny/vmm:__pkg__",
+        "//security/avro:__subpackages__",
     ],
     deps = [
         ":cc_bindings_from_rust_cli_flag_aspect_hint_bzl",
