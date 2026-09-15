@@ -1,0 +1,50 @@
+load(
+    "@rules_rust//rust:defs.bzl",
+    "rust_library",
+)
+load(
+    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
+    "cc_bindings_from_rust",
+)
+load(
+    "//cc_bindings_from_rs/test/golden:golden_test.bzl",
+    "golden_test",
+)
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+
+package(default_applicable_licenses = ["//:license"])
+
+rust_library(
+    name = "do_not_bind",
+    testonly = 1,
+    srcs = ["do_not_bind.rs"],
+    aspect_hints = [
+        "//features:experimental",
+    ],
+    proc_macro_deps = [
+        "//support:crubit_annotate",
+    ],
+)
+
+cc_bindings_from_rust(
+    name = "do_not_bind_cc_api",
+    testonly = 1,
+    crate = ":do_not_bind",
+)
+
+golden_test(
+    name = "do_not_bind_golden_test",
+    basename = "do_not_bind",
+    golden_h = "do_not_bind_cc_api.h",
+    golden_rs = "do_not_bind_cc_api_impl.rs",
+    rust_library = "do_not_bind",
+)
+
+crubit_cc_test(
+    name = "do_not_bind_test",
+    srcs = ["do_not_bind_test.cc"],
+    deps = [
+        ":do_not_bind_cc_api",
+        "//testing/base/public:gunit_main",
+    ],
+)

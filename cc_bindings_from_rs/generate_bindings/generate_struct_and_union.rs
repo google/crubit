@@ -371,6 +371,11 @@ pub(crate) fn generate_associated_item<'tcx>(
     if !is_supported_associated_item(tcx, def_id) {
         return None;
     }
+    // Associated items resolve names via `symbol_unqualified_name`, which - unlike
+    // `symbol_canonical_name` - does not consult `should_receive_bindings`.
+    if crate::should_receive_bindings(db, def_id).is_err() {
+        return None;
+    }
     crate::error_scope!(db, def_id);
     let result = match assoc_item.kind {
         ty::AssocKind::Fn { .. } => {
