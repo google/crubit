@@ -94,7 +94,9 @@ export ABSL_INCLUDE_PATH=/path/to/absl/include/dir
 export ABSL_LIB_STATIC_PATH=/path/to/absl/libs
 ## This path contains google/protobuf/ dir with all the includes.
 export PROTOBUF_INCLUDE_PATH=/path/to/protobuf/include/dir
-## This path contains libprotobuf.a
+## This path contains libprotobuf.a and libutf8_validity.a.  Other archives that a
+## protobuf install tree holds (libutf8_range.a, libprotobuf-lite.a, libprotoc.a,
+## libupb.a) are ignored; the first two would collide with the ones above.
 export PROTOBUF_LIB_STATIC_PATH=/path/to/protobuf/libs
 
 cargo build --bin rs_bindings_from_cc
