@@ -33,7 +33,7 @@ use rustc_middle::ty::{
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use rustc_trait_selection::infer::InferCtxtExt;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use database::BindingsGenerator;
@@ -248,51 +248,7 @@ pub fn is_directly_public(tcx: TyCtxt, def_id: DefId) -> bool {
     }
 }
 
-/// Returns whether `ty` contains unrevealed opaque types (or aliases).
-///
-/// In newer rustc versions, calling `tcx.layout_of` in an empty
-/// `TypingEnv::fully_monomorphized()` environment on a type containing unrevealed
-/// opaque types (such as `std::env::SplitPaths`, which contains an opaque path
-/// iterator) results in an internal compiler error (delayed bug: "unexpected
-/// rigid alias in layout_of after normalization"). Checking beforehand allows
-/// `get_layout` to gracefully bail and return an error instead.
-fn has_unrevealed_opaque_type<'tcx>(
-    tcx: TyCtxt<'tcx>,
-    ty: Ty<'tcx>,
-    seen: &mut HashSet<DefId>,
-) -> bool {
-    let ty =
-        try_normalize(tcx, ty::TypingEnv::fully_monomorphized().as_query_input(ty)).unwrap_or(ty);
-    for generic_arg in ty.walk() {
-        if let Some(inner_ty) = generic_arg.as_type() {
-            if matches!(inner_ty.kind(), ty::TyKind::Alias(..)) {
-                return true;
-            }
-            if let ty::TyKind::Adt(adt_def, substs) = inner_ty.kind() {
-                if !seen.insert(adt_def.did()) || adt_def.is_phantom_data() {
-                    continue;
-                }
-                for variant in adt_def.variants() {
-                    for field in &variant.fields {
-                        #[rustversion::before(2026-04-19)]
-                        let field_ty = field.ty(tcx, substs);
-                        #[rustversion::since(2026-04-19)]
-                        let field_ty = field.ty(tcx, substs).skip_norm_wip();
-                        if has_unrevealed_opaque_type(tcx, field_ty, seen) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    false
-}
-
 pub fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>> {
-    if has_unrevealed_opaque_type(tcx, ty, &mut HashSet::new()) {
-        return Err(anyhow!("Cannot compute layout for type with unrevealed opaque types: {ty}"));
-    }
     tcx.layout_of(ty::TypingEnv::fully_monomorphized().as_query_input(ty))
         .map(|ty_and_layout| ty_and_layout.layout)
         .map_err(|layout_err| {
