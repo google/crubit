@@ -38,5 +38,16 @@ TEST(PartialEqTest, TestUsizeRhs) {
   EXPECT_NE(one, 2);
 }
 
+TEST(PartialEqTest, TestBoolAndStrRhs) {
+  auto s = partial_eq::bool_and_str_rhs::MyStruct::new_(true, 5, 42);
+
+  EXPECT_TRUE(s == true);     // NOLINT(readability/check)
+  EXPECT_FALSE(s == false);   // NOLINT(readability/check)
+  EXPECT_TRUE(s == "hello");  // NOLINT(readability/check)
+  EXPECT_FALSE(s == "hi");    // NOLINT(readability/check)
+  EXPECT_TRUE(s == 42);       // NOLINT(readability/check)
+  EXPECT_FALSE(s == 99);      // NOLINT(readability/check)
+}
+
 }  // namespace
 }  // namespace crubit

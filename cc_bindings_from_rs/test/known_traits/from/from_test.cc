@@ -83,5 +83,22 @@ TEST(FromTest, FromLoop) {
   EXPECT_EQ(static_cast<from::LoopA>(std::move(b3)).__field0, 4);
 }
 
+TEST(FromTest, BoolAndStr) {
+  from::BoolAndStr b(true);
+  EXPECT_TRUE(b.is_bool());
+  EXPECT_EQ(b.str_len(), 0u);
+  EXPECT_EQ(b.int_val(), 0);
+
+  from::BoolAndStr s("hello");
+  EXPECT_FALSE(s.is_bool());
+  EXPECT_EQ(s.str_len(), 5u);
+  EXPECT_EQ(s.int_val(), 0);
+
+  from::BoolAndStr i(42);
+  EXPECT_FALSE(i.is_bool());
+  EXPECT_EQ(i.str_len(), 0u);
+  EXPECT_EQ(i.int_val(), 42);
+}
+
 }  // namespace
 }  // namespace crubit

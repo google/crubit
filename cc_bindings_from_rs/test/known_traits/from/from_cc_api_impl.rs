@@ -11,6 +11,54 @@
 
 extern crate alloc;
 extern crate core;
+const _: () = assert!(::std::mem::size_of::<::from_golden::BoolAndStr>() == 24);
+const _: () = assert!(::std::mem::align_of::<::from_golden::BoolAndStr>() == 8);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_ubool(__self: &'static ::from_golden::BoolAndStr) -> bool {
+    unsafe { ::from_golden::BoolAndStr::is_bool(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_str_ulen(__self: &'static ::from_golden::BoolAndStr) -> usize {
+    unsafe { ::from_golden::BoolAndStr::str_len(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_int_uval(__self: &'static ::from_golden::BoolAndStr) -> isize {
+    unsafe { ::from_golden::BoolAndStr::int_val(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_ubool(
+    value: bool,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::from_golden::BoolAndStr as ::core::convert::From<bool>>::from(value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_u_x00000026str(
+    value: *mut &'static str,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let value = value.read();
+        let __rs_return_value =
+            <::from_golden::BoolAndStr as ::core::convert::From<&'static str>>::from(value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_uisize(
+    value: isize,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::from_golden::BoolAndStr as ::core::convert::From<isize>>::from(value);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
 const _: () = assert!(::std::mem::size_of::<::from_golden::CloneAllocSource>() == 24);
 const _: () = assert!(::std::mem::align_of::<::from_golden::CloneAllocSource>() == 8);
 #[unsafe(no_mangle)]

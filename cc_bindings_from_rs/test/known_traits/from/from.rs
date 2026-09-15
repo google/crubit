@@ -198,3 +198,43 @@ impl From<usize> for CollidingConstructor {
         Self { value: value as u64 }
     }
 }
+
+#[must_bind]
+pub struct BoolAndStr {
+    is_bool: bool,
+    str_len: usize,
+    int_val: isize,
+}
+
+impl BoolAndStr {
+    #[must_bind]
+    pub fn is_bool(&self) -> bool {
+        self.is_bool
+    }
+    #[must_bind]
+    pub fn str_len(&self) -> usize {
+        self.str_len
+    }
+    #[must_bind]
+    pub fn int_val(&self) -> isize {
+        self.int_val
+    }
+}
+
+impl From<bool> for BoolAndStr {
+    fn from(b: bool) -> Self {
+        Self { is_bool: b, str_len: 0, int_val: 0 }
+    }
+}
+
+impl From<&str> for BoolAndStr {
+    fn from(s: &str) -> Self {
+        Self { is_bool: false, str_len: s.len(), int_val: 0 }
+    }
+}
+
+impl From<isize> for BoolAndStr {
+    fn from(i: isize) -> Self {
+        Self { is_bool: false, str_len: 0, int_val: i }
+    }
+}
