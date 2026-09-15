@@ -632,11 +632,13 @@ fn public_paths_by_def_id(
         // Map type aliases to their underlying type.
         let mut type_alias_def_id = None;
         if def_kind == DefKind::TyAlias {
-            let underlying_type = normalize_ty(
+            let normalize_result = try_normalize_ty(
                 tcx,
                 tcx.param_env(def_id),
                 tcx.type_of(def_id).instantiate_identity(),
             );
+            // If we can't normalize the underlying type of our alias, skip it.
+            let Ok(underlying_type) = normalize_result else { return };
             if let crate::ty::TyKind::Adt(def, args) = underlying_type.kind() {
                 let alias_generics = tcx.generics_of(def_id);
                 // Check if generics match.
@@ -1526,11 +1528,12 @@ fn generate_type_alias<'tcx>(
     def_id: DefId,
     using_name: &str,
 ) -> Result<CcSnippet<'tcx>> {
-    let alias_type = normalize_ty(
-        db.tcx(),
-        db.tcx().param_env(def_id),
-        db.tcx().type_of(def_id).instantiate_identity(),
-    );
+    let tcx = db.tcx();
+    let unnorm_ty = tcx.type_of(def_id).instantiate_identity();
+    let norm_result = try_normalize_ty(tcx, tcx.param_env(def_id), unnorm_ty);
+    let Ok(alias_type) = norm_result else {
+        bail!("Generic type aliases of {} not supported", unnorm_ty.skip_normalization());
+    };
     create_type_alias(db, def_id, using_name, alias_type)
 }
 
@@ -2864,11 +2867,11 @@ pub fn normalize_ty<'tcx, T>(_tcx: TyCtxt<'tcx>, _param_env: ty::ParamEnv<'tcx>,
 }
 
 #[rustversion::since(2026-04-19)]
-pub fn normalize_ty<'tcx, T>(
+pub fn try_normalize_ty<'tcx, T>(
     tcx: TyCtxt<'tcx>,
     param_env: ty::ParamEnv<'tcx>,
     val: ty::Unnormalized<'tcx, T>,
-) -> T
+) -> Result<T>
 where
     T: ty::TypeFoldable<TyCtxt<'tcx>>,
 {
@@ -2880,7 +2883,26 @@ where
     let infcx = tcx.infer_ctxt().build(TypingMode::non_body_analysis());
     let ocx = ObligationCtxt::new_with_diagnostics(&infcx);
     let cause = ObligationCause::dummy(); // RESPECTFUL_TERMS_EXCEPTION
-    ocx.normalize(&cause, param_env, val)
+    let normalized = ocx.normalize(&cause, param_env, val);
+    let (tyid, _, _) = infcx.unresolved_root_variables();
+    if !tyid.is_empty() {
+        bail!("val contained unresolved type variables and could not be normalized");
+    }
+    Ok(normalized)
+}
+
+#[rustversion::since(2026-04-19)]
+pub fn normalize_ty<'tcx, T>(
+    tcx: TyCtxt<'tcx>,
+    param_env: ty::ParamEnv<'tcx>,
+    val: ty::Unnormalized<'tcx, T>,
+) -> T
+where
+    T: ty::TypeFoldable<TyCtxt<'tcx>> + std::fmt::Debug,
+{
+    try_normalize_ty(tcx, param_env, val).expect(
+        "normalize_ty called on a type that could not be normalized. Consider try_normalize_ty",
+    )
 }
 
 /// Returns true if the field is public and stable.
