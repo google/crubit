@@ -64,6 +64,7 @@ deps_for_bindings(
         "//support:forward_declare",
         "//support:oops",
         "//support:bridge_rust",
+        "//support:crubit_support",
         "//support:cref",
         "//support/rs_std:dyn_callable_rs",
         "//support/rs_std:lossy_formatter",

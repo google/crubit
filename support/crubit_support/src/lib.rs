@@ -2,6 +2,9 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-//! Forwarding module to `crubit_support::dyn_erased_future`.
+//! Unified runtime support library for Crubit generated bindings.
 
-pub use crubit_support::dyn_erased_future::*;
+pub mod bridge;
+pub mod dyn_erased_future;
+pub mod erased_future;
+pub mod hash;
