@@ -4,7 +4,7 @@
 
 extern crate rustc_middle;
 
-use rustc_middle::ty::{self, Ty, TyCtxt}; // See also <internal link>/ty.html#import-convention
+use rustc_middle::ty::{self, Ty, TyCtxt, TypeFoldable, TypeSuperFoldable}; // See also <internal link>/ty.html#import-convention
 use std::collections::HashSet;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -71,32 +71,25 @@ impl<'tcx, T: 'tcx, I> AvoidCollidingTypes<'tcx, T> for I where I: Iterator<Item
 /// * Types that don't risk a C++ collision (e.g. `char` and `u8`) are returned as their
 ///   own preferred type (i.e. their equivalence class contains only 1 type - themselves).
 fn get_preferred_type<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
-    use ty::IntTy::*;
-    use ty::UintTy::*;
-    match ty.kind() {
-        ty::TyKind::Int(Isize | I32 | I64) => Ty::new_int(tcx, Isize),
-        ty::TyKind::Uint(Usize | U32 | U64) => Ty::new_uint(tcx, Usize),
-        ty::TyKind::Tuple(substs) => {
-            let new_substs: Vec<Ty<'tcx>> =
-                substs.iter().map(|subst_ty| get_preferred_type(tcx, subst_ty)).collect();
-            Ty::new_tup(tcx, &new_substs)
-        }
-        ty::TyKind::Ref(region, ref_ty, mutability) => {
-            let new_ref_ty = get_preferred_type(tcx, *ref_ty);
-            Ty::new_ref(tcx, *region, new_ref_ty, *mutability)
-        }
-        ty::TyKind::Slice(slice_ty) => {
-            let new_slice_ty = get_preferred_type(tcx, *slice_ty);
-            Ty::new_slice(tcx, new_slice_ty)
-        }
-        ty::TyKind::RawPtr(ptr_ty, mutability) => {
-            let new_ptr_ty = get_preferred_type(tcx, *ptr_ty);
-            Ty::new_ptr(tcx, new_ptr_ty, *mutability)
-        }
-        ty::TyKind::Array(elem_ty, const_val) => {
-            let new_elem_ty = get_preferred_type(tcx, *elem_ty);
-            Ty::new_array_with_const_len(tcx, new_elem_ty, *const_val)
-        }
-        _ => ty,
+    struct PreferredTypeFolder<'tcx> {
+        tcx: TyCtxt<'tcx>,
     }
+
+    impl<'tcx> ty::TypeFolder<TyCtxt<'tcx>> for PreferredTypeFolder<'tcx> {
+        fn cx(&self) -> TyCtxt<'tcx> {
+            self.tcx
+        }
+
+        fn fold_ty(&mut self, ty: Ty<'tcx>) -> Ty<'tcx> {
+            use ty::IntTy::*;
+            use ty::UintTy::*;
+            match ty.kind() {
+                ty::TyKind::Int(Isize | I32 | I64) => Ty::new_int(self.tcx, Isize),
+                ty::TyKind::Uint(Usize | U32 | U64) => Ty::new_uint(self.tcx, Usize),
+                _ => ty.super_fold_with(self),
+            }
+        }
+    }
+
+    ty.fold_with(&mut PreferredTypeFolder { tcx })
 }
