@@ -141,17 +141,20 @@ impl<T: Debug> Debug for trivial_optional<T> {
     }
 }
 
-/// Rust layout-compatible implementation of C++ `std::optional<T>`, where `T` is `Copy`.
+/// Rust layout-compatible implementation of C++ `std::optional<T>`.
 ///
-/// ## Relationship to [`trivial_optional`]
+/// ## Missing `Copy` implementation and [`trivial_optional`]
 ///
-/// This type is [`trivial_optional<T>`](trivial_optional) plus a [`Drop`] impl which destroys the
-/// engaged value and minus the `T: Copy` requirement. That makes it usable with any `T`, but Crubit
-/// still needs [`trivial_optional<T>`] for fields of `Copy` structs to enable them to be `Copy`.
+/// [`optional<T>`] is not `Copy`, even when `T: Copy`. If you need a `Copy` version of e.g.
+/// C++ `std::optional<int>`, use [`trivial_optional<i32>`].
 ///
-/// Every `trivial_optional<T>` converts into an `optional<T>` with [`From`]; the reverse
-/// conversion requires `T: Copy`. Therefore, use `optional` when you can and [`trivial_optional`]
-/// only when you must.
+/// This restriction exists because it is not possible to make Rust's manual `Drop` impl for this
+/// type conditional on whether or not the inner `T` has drop glue, so even `Copy` types would
+/// incur a destructor call.
+///
+/// Prefer to use `optional<T>` over `trivial_optional<T>` in generic code. Any
+/// `trivial_optional<T>` can be converted into `optional<T>` via [`From`], so `optional` is more
+/// flexible.
 #[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "::std::optional<{T}>",
     include_path = "<optional>"
