@@ -12,6 +12,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Testing/CommandLineArgs.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/Support/ErrorHandling.h"
 
@@ -25,9 +26,16 @@ NamedDecl *absl_nonnull lookup(absl::string_view Name, const DeclContext &DC) {
   return Result.front();
 }
 
-void benchmarkAnalysisOnCode(benchmark::State &State, llvm::StringRef Code) {
-  TestAST AST(Code);
-  auto *Target = cast<FunctionDecl>(
+void benchmarkAnalysisOnCode(benchmark::State& State, llvm::StringRef Code) {
+  clang::TestInputs Inputs(Code);
+  Inputs.Language = TestLanguage::Lang_CXX20;
+  Inputs.ExtraArgs = {
+      "-fsyntax-only",
+      "-Wno-unused-value",
+      "-Wno-nonnull",
+  };
+  TestAST AST(Inputs);
+  auto* Target = cast<FunctionDecl>(
       lookup("Target", *AST.context().getTranslationUnitDecl()));
   NullabilityPragmas NoPragmas;
   LambdaCaptureNullabilityMap CaptureMap;
@@ -376,7 +384,7 @@ void BM_PointerAnalysisBatchMemberPointerInit(benchmark::State& State) {
       Metric* m50_;
     };
 
-    void Target(PipelineService* self, Context* ctx) {
+    void Target(PipelineService* _Nullable self, Context* _Nullable ctx) {
       if (!self || !ctx) return;
       self->m1_ = ctx->getMetric("m1");
       self->m2_ = ctx->getMetric("m2");
