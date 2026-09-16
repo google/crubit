@@ -36,6 +36,56 @@ struct NoCloneCopyDropType;
 struct NoCloneDefaultType;
 struct OpaqueRef;
 // CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: BoolAndStr") alignas(4)
+    [[clang::trivial_abi]] BoolAndStr final {
+ public:
+  // `from_golden::BoolAndStr` doesn't implement the `Default` trait
+  BoolAndStr() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~BoolAndStr() = default;
+  BoolAndStr(BoolAndStr&&) = default;
+  BoolAndStr& operator=(BoolAndStr&&) = default;
+
+  // `from_golden::BoolAndStr` doesn't implement the `Clone` trait
+  BoolAndStr(const BoolAndStr&) = delete;
+  BoolAndStr& operator=(const BoolAndStr&) = delete;
+  BoolAndStr(::crubit::UnsafeRelocateTag, BoolAndStr&& value);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  bool is_bool() const;
+
+  // CRUBIT_ANNOTATE: must_bind=
+  ::std::uintptr_t str_len() const;
+
+  // CRUBIT_ANNOTATE: must_bind=
+  ::std::intptr_t int_val() const;
+
+  template <typename __CrubitBoolT>
+    requires(::std::is_same_v<__CrubitBoolT, bool>)
+  explicit BoolAndStr(__CrubitBoolT value);
+
+  explicit BoolAndStr(rs_std::StrRef value);
+
+  explicit BoolAndStr(::std::intptr_t value);
+
+ private:
+  union {
+    ::std::uintptr_t str_len_;
+  };
+  union {
+    ::std::intptr_t int_val_;
+  };
+  union {
+    bool is_bool_;
+  };
+  unsigned char __padding0[3];
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocSource") alignas(
     4) [[clang::trivial_abi]] CloneAllocSource final {
  public:
@@ -284,6 +334,80 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
+static_assert(
+    sizeof(BoolAndStr) == 12,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(BoolAndStr) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<BoolAndStr>);
+static_assert(::std::is_trivially_move_constructible_v<::from::BoolAndStr>);
+static_assert(::std::is_trivially_move_assignable_v<::from::BoolAndStr>);
+inline ::from::BoolAndStr::BoolAndStr(::crubit::UnsafeRelocateTag,
+                                      BoolAndStr&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_is_ubool(::from::BoolAndStr const&);
+}
+inline bool BoolAndStr::is_bool() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_is_ubool(self);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t __crubit_thunk_str_ulen(::from::BoolAndStr const&);
+}
+inline ::std::uintptr_t BoolAndStr::str_len() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_str_ulen(self);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::intptr_t __crubit_thunk_int_uval(::from::BoolAndStr const&);
+}
+inline ::std::intptr_t BoolAndStr::int_val() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_int_uval(self);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_ubool(
+    bool, ::from::BoolAndStr* __ret_ptr);
+}
+template <typename __CrubitBoolT>
+  requires(::std::is_same_v<__CrubitBoolT, bool>)
+inline BoolAndStr::BoolAndStr(__CrubitBoolT value) {
+  __crubit_internal::
+      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_ubool(
+          value, this);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_u_x00000026str(
+    rs_std::StrRef*, ::from::BoolAndStr* __ret_ptr);
+}
+inline BoolAndStr::BoolAndStr(rs_std::StrRef value) {
+  __crubit_internal::
+      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_u_x00000026str(
+          &value, this);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_uisize(
+    ::std::intptr_t, ::from::BoolAndStr* __ret_ptr);
+}
+inline BoolAndStr::BoolAndStr(::std::intptr_t value) {
+  __crubit_internal::
+      __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_uisize(
+          value, this);
+}
+inline void BoolAndStr::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(BoolAndStr, str_len_));
+  static_assert(4 == offsetof(BoolAndStr, int_val_));
+  static_assert(8 == offsetof(BoolAndStr, is_bool_));
+}
 static_assert(
     sizeof(CloneAllocSource) == 12,
     "Verify that ADT layout didn't change since this header got generated");

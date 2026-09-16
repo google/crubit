@@ -60,3 +60,35 @@ pub mod tuple_collision {
         }
     }
 }
+
+pub mod bool_and_str_rhs {
+    pub struct MyStruct {
+        bool_val: bool,
+        str_len: usize,
+        int_val: isize,
+    }
+
+    impl MyStruct {
+        pub fn new(bool_val: bool, str_len: usize, int_val: isize) -> Self {
+            Self { bool_val, str_len, int_val }
+        }
+    }
+
+    impl PartialEq<bool> for MyStruct {
+        fn eq(&self, other: &bool) -> bool {
+            self.bool_val == *other
+        }
+    }
+
+    impl PartialEq<str> for MyStruct {
+        fn eq(&self, other: &str) -> bool {
+            self.str_len == other.len()
+        }
+    }
+
+    impl PartialEq<isize> for MyStruct {
+        fn eq(&self, other: &isize) -> bool {
+            self.int_val == *other
+        }
+    }
+}
