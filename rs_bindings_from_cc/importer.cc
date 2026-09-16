@@ -7,7 +7,9 @@
 #include <stdint.h>
 
 #include <cassert>
+#include <chrono>
 #include <functional>
+#include <iostream>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -654,9 +656,16 @@ Importer::DeclItems Importer::GetDeclItems(const clang::Decl& decl) {
   absl::flat_hash_set<ItemId> visited_item_ids;
 
   const auto& decl_context = clang::cast<clang::DeclContext>(decl);
+  const bool is_record = clang::isa<clang::RecordDecl>(&decl_context);
   for (auto decl : GetCanonicalChildren(decl_context)) {
+    const ir_proto::Item* item = nullptr;
+    if (is_record || IsFromCurrentTarget(*decl)) {
+      item = GetDeclItem(decl);
+    } else if (auto it = import_cache_.find(decl); it != import_cache_.end()) {
+      item = it->second.proto_item.get();
+    }
     // Only add item ids for decls that can be successfully imported.
-    if (auto item = GetDeclItem(decl); item != nullptr) {
+    if (item != nullptr) {
       auto item_id = GenerateItemId(*decl);
       // TODO(rosica): Drop this check when we start importing also other
       // redecls, not just the canonical
@@ -960,6 +969,84 @@ void Importer::Import(
     }
   }
 
+  // Because alien declarations are imported lazily (i.e. only once something
+  // in the current target refers to them), an import can appear *after* its
+  // enclosing contexts have already been processed. The two steps below repair
+  // the namespace structure, and are repeated until they reach a fixpoint,
+  // because each step can itself trigger further lazy imports.
+  //
+  // Both steps need to look at every entry of `import_cache_`, which is a hash
+  // map. Importing while iterating it directly is not safe here, for two
+  // separate reasons:
+  //
+  //  1. Importing inserts into `import_cache_`, and a rehash invalidates any
+  //     live iterator.
+  //  2. Its iteration order is unspecified (and deliberately randomized
+  //     between processes), so importing in that order would make the
+  //     generated bindings depend on the hash seed.
+  //
+  // We therefore snapshot the decls of interest into a vector and sort them by
+  // source order before doing any work that can import. This terminates
+  // because `import_cache_` only ever grows, and is bounded by the number of
+  // decls in the translation unit.
+  while (true) {
+    // Ensure all enclosing namespaces (and their canonical declarations) of
+    // imported declarations are also imported so that parent-child
+    // relationships and reopened namespaces are complete. Importing a
+    // namespace can pull in further items, so repeat until nothing is missing.
+    while (true) {
+      std::vector<std::pair<SourceOrderKey, clang::NamespaceDecl*>>
+          namespaces_to_import;
+      absl::flat_hash_set<const clang::NamespaceDecl*> seen_namespaces;
+      auto collect_namespace = [&](clang::NamespaceDecl* ns_decl) {
+        // Already imported (or already attempted), so `GetDeclItem` would just
+        // be a cache lookup.
+        if (import_cache_.contains(ns_decl)) return;
+        if (!seen_namespaces.insert(ns_decl).second) return;
+        namespaces_to_import.push_back({GetSourceOrderKey(*ns_decl), ns_decl});
+      };
+      for (const auto& [decl, entry] : import_cache_) {
+        if (entry.proto_item == nullptr) continue;
+        for (const clang::DeclContext* dc = decl->getDeclContext();
+             dc != nullptr && !dc->isTranslationUnit(); dc = dc->getParent()) {
+          if (const auto* ns_decl = llvm::dyn_cast<clang::NamespaceDecl>(dc)) {
+            auto* mutable_ns_decl = const_cast<clang::NamespaceDecl*>(ns_decl);
+            collect_namespace(mutable_ns_decl);
+            collect_namespace(mutable_ns_decl->getCanonicalDecl());
+          }
+        }
+      }
+      if (namespaces_to_import.empty()) break;
+      llvm::stable_sort(namespaces_to_import, compare_locations);
+      for (const auto& [key, ns_decl] : namespaces_to_import) {
+        GetDeclItem(ns_decl);
+      }
+    }
+
+    // Refresh child_item_ids_ for all imported namespaces so that any lazily
+    // imported children are included, in source order.
+    const size_t cache_size_before_refresh = import_cache_.size();
+    std::vector<std::pair<SourceOrderKey, clang::NamespaceDecl*>>
+        namespaces_to_refresh;
+    for (const auto& [decl, entry] : import_cache_) {
+      if (entry.proto_item == nullptr) continue;
+      if (const auto* ns_decl = llvm::dyn_cast<clang::NamespaceDecl>(decl)) {
+        namespaces_to_refresh.push_back(
+            {GetSourceOrderKey(*ns_decl),
+             const_cast<clang::NamespaceDecl*>(ns_decl)});
+      }
+    }
+    llvm::stable_sort(namespaces_to_refresh, compare_locations);
+    for (const auto& [key, ns_decl] : namespaces_to_refresh) {
+      invocation_.child_item_ids_[GenerateItemId(*ns_decl)] =
+          GetItemIdsInSourceOrder(ns_decl);
+    }
+
+    // The refresh imported nothing new, so the `child_item_ids_` assigned
+    // above were computed against the final set of items and are complete.
+    if (import_cache_.size() == cache_size_before_refresh) break;
+  }
+
   invocation_.top_level_item_ids_ =
       GetTopLevelItemIdsInSourceOrder(*translation_unit_decl);
 
@@ -1054,10 +1141,36 @@ void Importer::Import(
   }
 }
 
+static bool HasDeclsFromCurrentTarget(const clang::DeclContext& dc,
+                                      const ImportContext& ictx) {
+  for (const clang::Decl* decl : dc.decls()) {
+    if (ictx.IsFromCurrentTarget(*decl)) {
+      return true;
+    }
+    if (const auto* child_dc = clang::dyn_cast<clang::DeclContext>(decl)) {
+      if (clang::isa<clang::NamespaceDecl>(decl) ||
+          clang::isa<clang::LinkageSpecDecl>(decl)) {
+        if (HasDeclsFromCurrentTarget(*child_dc, ictx)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 void Importer::ImportDeclsFromDeclContext(
     const clang::DeclContext& decl_context) {
+  const bool is_record = clang::isa<clang::RecordDecl>(&decl_context);
   for (auto decl : GetCanonicalChildren(decl_context)) {
-    GetDeclItem(decl);
+    if (is_record || IsFromCurrentTarget(*decl)) {
+      GetDeclItem(decl);
+    } else if (const auto* ns_decl =
+                   clang::dyn_cast<clang::NamespaceDecl>(decl)) {
+      if (HasDeclsFromCurrentTarget(*ns_decl, *this)) {
+        GetDeclItem(decl);
+      }
+    }
   }
 }
 
@@ -1148,6 +1261,14 @@ const ir_proto::Item* absl_nullable Importer::GetDeclItem(
   // not have its corresponding IR item, resulting in lookup failures (crashes)
   // when generating bindings.
   if (item_ptr != nullptr) {
+    for (clang::DeclContext* dc = decl->getDeclContext();
+         dc != nullptr && !dc->isTranslationUnit(); dc = dc->getParent()) {
+      if (auto* ns_decl = clang::dyn_cast<clang::NamespaceDecl>(dc)) {
+        GetDeclItem(ns_decl);
+      } else if (auto* parent_record = clang::dyn_cast<clang::RecordDecl>(dc)) {
+        GetDeclItem(parent_record);
+      }
+    }
     if (auto* specialization_decl =
             llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl);
         specialization_decl && IsFromCurrentTarget(*specialization_decl)) {
