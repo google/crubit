@@ -113,15 +113,15 @@ impl T {
     }
     #[inline(always)]
     pub fn get_x<'__this>(&'__this mut self) -> ::ffi_11::c_int {
-        unsafe { self::t::get_x(oops::Upcast::<_>::upcast(self)) }
+        unsafe { self::t::get_x(unsafe { &mut *oops::Upcast::<_>::upcast(self as *mut _) }) }
     }
     #[inline(always)]
     pub fn set_x<'__this>(&'__this mut self, x: ::ffi_11::c_int) {
-        unsafe { self::t::set_x(oops::Upcast::<_>::upcast(self), x) }
+        unsafe { self::t::set_x(unsafe { &mut *oops::Upcast::<_>::upcast(self as *mut _) }, x) }
     }
     #[inline(always)]
     pub fn x<'__this>(&'__this self) -> ::ffi_11::c_int {
-        unsafe { self::t::x(oops::Upcast::<_>::upcast(self)) }
+        unsafe { self::t::x(unsafe { oops::Upcast::<_>::upcast(self) }) }
     }
 }
 

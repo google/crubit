@@ -123,14 +123,14 @@ unsafe impl ::cxx::ExternType for Derived {
 impl Derived {
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {
-        unsafe { self::derived::has_bindings(oops::Upcast::<_>::upcast(self)) }
+        unsafe { self::derived::has_bindings(unsafe { oops::Upcast::<_>::upcast(self) }) }
     }
     #[inline(always)]
     pub fn no_bindings<'__this>(&'__this self, __param_0: ::ctor::Ctor![crate::Nonmovable])
     where
         for<'error> &'error (): BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable,
     {
-        unsafe { self::derived::no_bindings(oops::Upcast::<_>::upcast(self), __param_0) }
+        unsafe { self::derived::no_bindings(unsafe { oops::Upcast::<_>::upcast(self) }, __param_0) }
     }
 }
 

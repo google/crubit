@@ -2270,21 +2270,97 @@ pub fn generate_function<'a>(
 
             // Delegate from the method to the free function.
             // When translating args, `__this` acts as the first arg.
-            let mut method_delegation_args = param_idents.iter().enumerate().map(|(i, ident)| {
-                if i == 0 && impl_kind.format_first_param_as_self() {
-                    if derived_record.is_some() {
-                        quote! { oops::Upcast::<_>::upcast(self) }
+            let mut method_delegation_args = param_idents
+                .iter()
+                .enumerate()
+                .map(|(i, ident)| -> Result<TokenStream> {
+                    if i == 0 && impl_kind.format_first_param_as_self() {
+                        if let Some(derived_record) = &derived_record {
+                            let RsTypeKind::Reference { mutability, referent, .. } = &param_types[0] else {
+                                bail!("Expected reference type for `self` parameter of method");
+                            };
+                            let use_virtual_upcast = derived_record
+                                .unambiguous_public_bases()
+                                .iter()
+                                .any(|x| x.base_record_id() == record.id() && x.offset().is_none());
+                            let is_item_unpin = match referent.as_ref() {
+                                RsTypeKind::Record { record, .. } => record.is_unpin(),
+                                _ => true,
+                            };
+                            let is_mut = mutability == &Mutability::Mut;
+                            Ok(
+                                match (is_mut, is_item_unpin, use_virtual_upcast) {
+                                    (true, false, true) => quote! {
+                                        // SAFETY: Calling `get_unchecked_mut` on `self` is safe, as `virtual_upcast` does not move or copy the
+                                        // underlying object to a different memory address.
+                                        // Calling `virtual_upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced
+                                        // to a `Derived` object.
+                                        // Dereferencing the returned pointer is safe, as it is a valid, properly aligned, and initialized pointer
+                                        // to the `base` subobject with the same lifetime as `self`.
+                                        // `Pin::new_unchecked` is safe as the because the underlying object `self` was already pinned.
+                                        unsafe { ::std::pin::Pin::new_unchecked(&mut *oops::VirtualUpcast::<_>::virtual_upcast(self.get_unchecked_mut() as *mut _)) }
+                                    },
+                                    (true, false, false) => quote! {
+                                        // SAFETY: Calling `get_unchecked_mut` on `self` is safe, as `upcast` does not move or copy the underlying
+                                        // object to a different memory address.
+                                        // Calling `upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced to a
+                                        // `Derived` object.
+                                        // Dereferencing the returned pointer is safe, as it is a valid, properly aligned, and initialized pointer
+                                        // to the `base` subobject with the same lifetime as `self`.
+                                        // `Pin::new_unchecked` is safe as the because the underlying object `self` was already pinned.
+                                        unsafe { ::std::pin::Pin::new_unchecked(&mut *oops::Upcast::<_>::upcast(self.get_unchecked_mut() as *mut _)) }
+                                    },
+                                    (true, true, true) => quote! {
+                                        // SAFETY: Calling `virtual_upcast` on self is safe, as self is a valid reference to `Derived`, and
+                                        // dereferenced to a `Derived` object.
+                                        // Dereferencing the returned pointer from `virtual_upcast` is safe, as it is a valid, properly aligned,
+                                        // and initialized pointer the `base` subobject with the same lifetime as `self`.
+                                        unsafe { &mut *oops::VirtualUpcast::<_>::virtual_upcast(self as *mut _) }
+                                    },
+                                    (true, true, false) => quote! {
+                                        // SAFETY: Calling `upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced to a
+                                        // `Derived` object.
+                                        // Dereferencing the returned pointer from `upcast` is safe, as it is a valid, properly aligned, and
+                                        // initialized pointer to the `base` subobject with the same lifetime as `self`.
+                                        unsafe { &mut *oops::Upcast::<_>::upcast(self as *mut _) }
+                                    },
+                                    (false, _, true) =>  quote! {
+                                        // SAFETY: Calling `virtual_upcast` on self is safe, as self is a valid reference to `Derived`, and
+                                        // dereferenced to a `Derived` object.
+                                        // Dereferencing the returned pointer from `virtual_upcast` is safe, as it is a valid, properly aligned, and
+                                        // initialized pointer to the `base` subobject with the same lifetime as `self`.
+                                        unsafe { & *oops::VirtualUpcast::<_>::virtual_upcast(self as *const _) }
+                                    },
+                                    (false, _, false) =>  quote! {
+                                        // SAFETY: Calling `upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced to a
+                                        // `Derived` object.
+                                        unsafe { oops::Upcast::<_>::upcast(self) }
+                                    },
+                                })
+                        } else {
+                            Ok(quote! { self })
+                        }
                     } else {
-                        quote! { self }
+                        // TODO(ivip) Crubit bindings fails to compile on hello_rs function present in B
+                        // impl.
+                        //
+                        // class A {
+                        //  public:
+                        //   static void hello_rs(A& a){}
+                        // };
+                        // class B: public A {
+                        //  public:
+                        //  };
+                        Ok(quote! { #ident })
                     }
-                } else {
-                    quote! { #ident }
-                }
-            });
+                })
+                .collect::<Result<Vec<_>>>()?;
             if is_renamed_unpin_constructor {
                 // For constructors which have been renamed to methods, skip the `__this` parameter,
                 // as it isn't accepted as an argument to the underlying function.
-                method_delegation_args.next();
+                if !method_delegation_args.is_empty() {
+                    method_delegation_args.remove(0);
+                }
             }
 
             let mod_name = db.record_to_associated_module_name(target_record.clone())?;
@@ -3142,7 +3218,11 @@ fn function_signature<'a>(
                     if first_api_param.is_c_abi_compatible_by_value() {
                         let rs_snippet = first_api_param.format_as_self_param()?;
                         thunk_args[0] = if derived_record.is_some() {
-                            quote! { oops::Upcast::<_>::upcast(self) }
+                            quote! {
+                                // SAFETY: Calling `upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced to a
+                                // `Derived` object.
+                                unsafe { oops::Upcast::<_>::upcast(self) }
+                            }
                         } else {
                             quote! { self }
                         };
@@ -3151,7 +3231,13 @@ fn function_signature<'a>(
                     } else {
                         api_params[0] = quote! { mut self };
                         if derived_record.is_some() {
-                            thunk_args[0] = quote! { oops::Upcast::<_>::upcast(&mut self) };
+                            thunk_args[0] = quote! {
+                                // SAFETY: Calling `upcast` on &mut self is safe, as self is a valid reference to `Derived`, and dereferenced to
+                                // a `Derived` object.
+                                // Dereferencing the returned pointer from `upcast` is safe, as it is a valid, properly aligned, and initialized
+                                // pointer to the `base` subobject with the same lifetime as `self`.
+                                unsafe { &mut *oops::Upcast::<_>::upcast(&mut self as *mut _) }
+                            };
                         } else {
                             thunk_args[0] = quote! { &mut self };
                         }
@@ -3164,7 +3250,11 @@ fn function_signature<'a>(
                 // has that type and can be passed to a thunk via the expression `self`.
                 api_params[0] = quote! { self };
                 if derived_record.is_some() {
-                    thunk_args[0] = quote! { oops::Upcast::<_>::upcast(self) };
+                    thunk_args[0] = quote! {
+                        // SAFETY: Calling `upcast` on self is safe, as self is a valid reference to `Derived`, and dereferenced to a
+                        // `Derived` object.
+                        unsafe { oops::Upcast::<_>::upcast(self) }
+                    };
                 } else {
                     thunk_args[0] = quote! { self };
                 }
@@ -3176,7 +3266,11 @@ fn function_signature<'a>(
         && thunk_args[0].to_string() == "__this"
     {
         let arg_this = thunk_args[0].clone();
-        thunk_args[0] = quote! { oops::UnsafeUpcast::<_>::unsafe_upcast(#arg_this) };
+        thunk_args[0] = quote! {
+            // SAFETY: Calling `upcast` on arg_this is safe, as self is a valid reference to `Derived`, and dereferenced to a
+            // `Derived` object.
+            unsafe { oops::Upcast::<_>::upcast(#arg_this) }
+        };
     } else if matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator)
         && !thunk_args.is_empty()
         && matches!(param_types.first(), Some(RsTypeKind::Record { .. }))

@@ -1471,20 +1471,40 @@ fn test_unambiguous_public_bases() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            unsafe impl oops::Inherits<crate::VirtualBase> for crate::Derived {
-                unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase {
-                    unsafe { crate::detail::__crubit_dynamic_upcast__7Derived__to__11VirtualBase___2f_2ftest_3atesting_5ftarget(derived) }
+            unsafe impl oops::InheritsVirtual<crate::VirtualBase> for crate::Derived {
+                unsafe fn upcast_ptr_to_virtual_base(derived: *const Self) -> *const crate::VirtualBase {
+                    unsafe {
+                        crate::detail::__crubit_dynamic_upcast__7Derived__to__11VirtualBase___2f_2ftest_3atesting_5ftarget(derived)
+                    }
                 }
             }
         }
     );
     assert_rs_matches!(
         rs_api,
-        quote! { unsafe impl oops::Inherits<crate::UnambiguousPublicBase> for crate::Derived }
+        quote! {
+            unsafe impl oops::Inherits<crate::UnambiguousPublicBase> for crate::MultipleInheritance {
+                unsafe fn upcast_ptr(derived: *const Self) -> *const crate::UnambiguousPublicBase {
+                    unsafe {
+                       (derived as *const _ as *const u8).offset(0) as *const crate::UnambiguousPublicBase
+                    }
+                }
+            }
+        }
     );
     assert_rs_matches!(
         rs_api,
-        quote! { unsafe impl oops::Inherits<crate::MultipleInheritance> for crate::Derived }
+        quote! {
+            unsafe impl oops::Inherits<crate::AmbiguousPublicBase> for crate::MultipleInheritance {
+                unsafe fn upcast_ptr(derived: *const Self) -> *const crate::AmbiguousPublicBase {
+                    unsafe { (derived as *const _ as *const u8).offset(0) as *const crate::AmbiguousPublicBase }
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! { unsafe impl oops::InheritsVirtual<crate::VirtualBase> for crate::Derived }
     );
     assert_rs_not_matches!(
         rs_api,
