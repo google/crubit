@@ -26,9 +26,11 @@ use rustc_abi::{FieldIdx, Integer, Layout, Primitive, Scalar, Variants};
 use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
 use rustc_hir::attrs::IntType;
 use rustc_infer::infer::TyCtxtInferExt;
+use rustc_middle::ty::layout::IntegerExt;
 use rustc_middle::ty::solve::NoSolution;
 use rustc_middle::ty::{
-    self, GenericArg, GenericArgKind, GenericParamDefKind, IntTy, Region, Ty, TyCtxt, UintTy,
+    self, GenericArg, GenericArgKind, GenericParamDefKind, IntTy, Region, Ty, TyCtxt,
+    TypeSuperFoldable, UintTy,
 };
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
@@ -37,6 +39,31 @@ use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use database::BindingsGenerator;
+
+/// A type folder that replaces `isize` and `usize` with the pointer-sized integer type.
+pub struct ConcreteWidthFolder<'tcx> {
+    pub tcx: TyCtxt<'tcx>,
+}
+
+impl<'tcx> ty::TypeFolder<TyCtxt<'tcx>> for ConcreteWidthFolder<'tcx> {
+    fn cx(&self) -> TyCtxt<'tcx> {
+        self.tcx
+    }
+
+    fn fold_ty(&mut self, ty: Ty<'tcx>) -> Ty<'tcx> {
+        match ty.kind() {
+            ty::TyKind::Int(ty::IntTy::Isize) => {
+                let ptr_int = self.cx().data_layout.ptr_sized_integer();
+                ptr_int.to_ty(self.cx(), /*signed=*/ true)
+            }
+            ty::TyKind::Uint(ty::UintTy::Usize) => {
+                let ptr_int = self.cx().data_layout.ptr_sized_integer();
+                ptr_int.to_ty(self.cx(), /*signed=*/ false)
+            }
+            _ => ty.super_fold_with(self),
+        }
+    }
+}
 
 /// Whether functions using `extern "C"` ABI can safely handle values of type
 /// `ty` (e.g. when passing by value arguments or return values of such type).
