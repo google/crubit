@@ -27,6 +27,28 @@
 
 namespace rs_ops {
 
+//  Exercises operator impls whose `Self` type is a *reference* to the ADT.
+//
+//  `MyBorrowedInt` does intentially no derive `Copy`.
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyBorrowedInt") alignas(4)
+    [[clang::trivial_abi]] MyBorrowedInt final {
+ public:
+  static ::rs_ops::MyBorrowedInt new_(::std::int32_t value);
+
+  bool operator==(::rs_ops::MyBorrowedInt const& other) const;
+
+  ::rs_ops::MyBorrowedInt operator+(::rs_ops::MyBorrowedInt const& rhs) const;
+
+  ::rs_ops::MyBorrowedInt operator-() const;
+
+  ::rs_ops::MyBorrowedInt operator<<(::std::int32_t rhs) const;
+
+  ::std::int32_t value{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyInt") alignas(4)
     [[clang::trivial_abi]] MyInt final {
  public:
@@ -87,6 +109,22 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyInt") alignas(4)
 }  // namespace rs_ops
 
 template <>
+struct rs_std::impl<::rs_ops::MyBorrowedInt, ::rs::core::cmp::Eq> {
+  static constexpr bool kIsImplemented = true;
+};
+
+template <>
+struct rs_std::impl<::rs_ops::MyBorrowedInt, ::rs::core::fmt::Debug> {
+  static constexpr bool kIsImplemented = true;
+
+  // Error generating bindings for associated function
+  // `<rs_ops_golden::MyBorrowedInt as std::fmt::Debug>::fmt` defined at
+  // cc_bindings_from_rs/test/known_traits/ops/rs_ops.rs;l=171:
+  // Error formatting function return type `std::result::Result<(),
+  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+};
+
+template <>
 struct rs_std::impl<::rs_ops::MyInt, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
@@ -104,6 +142,91 @@ struct rs_std::impl<::rs_ops::MyInt, ::rs::core::fmt::Debug> {
 
 namespace rs_ops {
 
+static_assert(
+    sizeof(MyBorrowedInt) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(MyBorrowedInt) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<MyBorrowedInt>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::rs_ops::MyBorrowedInt>);
+static_assert(::std::is_trivially_move_assignable_v<::rs_ops::MyBorrowedInt>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::std::int32_t,
+                                   ::rs_ops::MyBorrowedInt* __ret_ptr);
+}
+inline ::rs_ops::MyBorrowedInt MyBorrowedInt::new_(::std::int32_t value) {
+  crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" bool
+__crubit_thunk_PartialEq_ueq_urs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_urs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+    ::rs_ops::MyBorrowedInt const&, ::rs_ops::MyBorrowedInt const&);
+}
+inline bool MyBorrowedInt::operator==(
+    ::rs_ops::MyBorrowedInt const& other) const {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_PartialEq_ueq_urs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_urs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+          self, other);
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+    ::rs_ops::MyBorrowedInt const&, ::rs_ops::MyBorrowedInt const&,
+    ::rs_ops::MyBorrowedInt* __ret_ptr);
+}
+inline ::rs_ops::MyBorrowedInt MyBorrowedInt::operator+(
+    ::rs_ops::MyBorrowedInt const& rhs) const {
+  auto&& self = *this;
+  crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+          self, rhs, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+    ::rs_ops::MyBorrowedInt const&, ::rs_ops::MyBorrowedInt* __ret_ptr);
+}
+inline ::rs_ops::MyBorrowedInt MyBorrowedInt::operator-() const {
+  auto&& self = *this;
+  crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+          self, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32(
+    ::rs_ops::MyBorrowedInt const&, ::std::int32_t,
+    ::rs_ops::MyBorrowedInt* __ret_ptr);
+}
+inline ::rs_ops::MyBorrowedInt MyBorrowedInt::operator<<(
+    ::std::int32_t rhs) const {
+  auto&& self = *this;
+  crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32(
+          self, rhs, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void MyBorrowedInt::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(MyBorrowedInt, value));
+}
 static_assert(
     sizeof(MyInt) == 4,
     "Verify that ADT layout didn't change since this header got generated");
