@@ -275,12 +275,13 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 namespace partial_eq::basic_test {
 
 static_assert(
-    sizeof(MyStruct) == 4,
+    sizeof(::partial_eq::basic_test::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyStruct) == 4,
+    alignof(::partial_eq::basic_test::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyStruct>);
+static_assert(
+    ::std::is_trivially_destructible_v<::partial_eq::basic_test::MyStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::partial_eq::basic_test::MyStruct>);
 static_assert(
@@ -294,7 +295,8 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
     ::std::uintptr_t, ::partial_eq::basic_test::MyStruct* __ret_ptr);
 }
-inline ::partial_eq::basic_test::MyStruct MyStruct::new_(::std::uintptr_t val) {
+inline ::partial_eq::basic_test::MyStruct(MyStruct::new_)(
+    ::std::uintptr_t val) {
   crubit::Slot<::partial_eq::basic_test::MyStruct>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -308,27 +310,32 @@ __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003abasic_utest
     ::partial_eq::basic_test::MyStruct const&,
     ::partial_eq::basic_test::MyStruct const&);
 }
-inline bool MyStruct::operator==(
+inline bool(MyStruct::operator==)(
     ::partial_eq::basic_test::MyStruct const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003abasic_utest_x0000003a_x0000003aMyStruct_upartial_ueq_ugolden_x0000003a_x0000003abasic_utest_x0000003a_x0000003aMyStruct(
           self, other);
 }
-inline void MyStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyStruct, __field0));
+inline void ::partial_eq::basic_test::MyStruct::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::partial_eq::basic_test::MyStruct;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 }  // namespace partial_eq::basic_test
 
 namespace partial_eq::bool_and_str_rhs {
 
 static_assert(
-    sizeof(MyStruct) == 12,
+    sizeof(::partial_eq::bool_and_str_rhs::MyStruct) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyStruct) == 4,
+    alignof(::partial_eq::bool_and_str_rhs::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyStruct>);
+static_assert(::std::is_trivially_destructible_v<
+              ::partial_eq::bool_and_str_rhs::MyStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::partial_eq::bool_and_str_rhs::MyStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -343,7 +350,7 @@ extern "C" void __crubit_thunk_new(
     bool, ::std::uintptr_t, ::std::intptr_t,
     ::partial_eq::bool_and_str_rhs::MyStruct* __ret_ptr);
 }
-inline ::partial_eq::bool_and_str_rhs::MyStruct MyStruct::new_(
+inline ::partial_eq::bool_and_str_rhs::MyStruct(MyStruct::new_)(
     bool bool_val, ::std::uintptr_t str_len, ::std::intptr_t int_val) {
   crubit::Slot<::partial_eq::bool_and_str_rhs::MyStruct>
       __return_value_ret_val_holder;
@@ -360,7 +367,7 @@ __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003abool_uand_u
 }
 template <typename __CrubitBoolT>
   requires(::std::is_same_v<__CrubitBoolT, bool>)
-inline bool MyStruct::operator==(__CrubitBoolT const& other) const {
+inline bool(MyStruct::operator==)(__CrubitBoolT const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003abool_uand_ustr_urhs_x0000003a_x0000003aMyStruct_ubool(
@@ -372,7 +379,7 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003abool_uand_ustr_urhs_x0000003a_x0000003aMyStruct_ustr(
     ::partial_eq::bool_and_str_rhs::MyStruct const&, rs_std::StrRef*);
 }
-inline bool MyStruct::operator==(rs_std::StrRef other) const {
+inline bool(MyStruct::operator==)(rs_std::StrRef other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003abool_uand_ustr_urhs_x0000003a_x0000003aMyStruct_ustr(
@@ -384,28 +391,39 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003abool_uand_ustr_urhs_x0000003a_x0000003aMyStruct_uisize(
     ::partial_eq::bool_and_str_rhs::MyStruct const&, ::std::intptr_t const&);
 }
-inline bool MyStruct::operator==(::std::intptr_t const& other) const {
+inline bool(MyStruct::operator==)(::std::intptr_t const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003abool_uand_ustr_urhs_x0000003a_x0000003aMyStruct_uisize(
           self, other);
 }
-inline void MyStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyStruct, str_len));
-  static_assert(4 == offsetof(MyStruct, int_val));
-  static_assert(8 == offsetof(MyStruct, bool_val));
+inline void ::partial_eq::bool_and_str_rhs::MyStruct::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::partial_eq::bool_and_str_rhs::MyStruct;
+    static_assert(0 == offsetof(__crubit_assert_type, str_len));
+  }
+  {
+    using __crubit_assert_type = ::partial_eq::bool_and_str_rhs::MyStruct;
+    static_assert(4 == offsetof(__crubit_assert_type, int_val));
+  }
+  {
+    using __crubit_assert_type = ::partial_eq::bool_and_str_rhs::MyStruct;
+    static_assert(8 == offsetof(__crubit_assert_type, bool_val));
+  }
 }
 }  // namespace partial_eq::bool_and_str_rhs
 
 namespace partial_eq::tuple_collision {
 
 static_assert(
-    sizeof(MyStruct) == 4,
+    sizeof(::partial_eq::tuple_collision::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyStruct) == 4,
+    alignof(::partial_eq::tuple_collision::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyStruct>);
+static_assert(::std::is_trivially_destructible_v<
+              ::partial_eq::tuple_collision::MyStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::partial_eq::tuple_collision::MyStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -419,7 +437,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
     ::std::uintptr_t, ::partial_eq::tuple_collision::MyStruct* __ret_ptr);
 }
-inline ::partial_eq::tuple_collision::MyStruct MyStruct::new_(
+inline ::partial_eq::tuple_collision::MyStruct(MyStruct::new_)(
     ::std::uintptr_t val) {
   crubit::Slot<::partial_eq::tuple_collision::MyStruct>
       __return_value_ret_val_holder;
@@ -434,27 +452,32 @@ __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003atuple_ucoll
     ::partial_eq::tuple_collision::MyStruct const&,
     rs_std::Tuple<::std::uint32_t, bool> const&);
 }
-inline bool MyStruct::operator==(
+inline bool(MyStruct::operator==)(
     rs_std::Tuple<::std::uint32_t, bool> const& _other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003atuple_ucollision_x0000003a_x0000003aMyStruct_u_x00000028usize_x0000002c_x00000020bool_x00000029(
           self, _other);
 }
-inline void MyStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyStruct, __field0));
+inline void ::partial_eq::tuple_collision::MyStruct::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::partial_eq::tuple_collision::MyStruct;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 }  // namespace partial_eq::tuple_collision
 
 namespace partial_eq::usize_rhs {
 
 static_assert(
-    sizeof(MyStruct) == 4,
+    sizeof(::partial_eq::usize_rhs::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyStruct) == 4,
+    alignof(::partial_eq::usize_rhs::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyStruct>);
+static_assert(
+    ::std::is_trivially_destructible_v<::partial_eq::usize_rhs::MyStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::partial_eq::usize_rhs::MyStruct>);
 static_assert(
@@ -468,7 +491,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
     ::std::uintptr_t, ::partial_eq::usize_rhs::MyStruct* __ret_ptr);
 }
-inline ::partial_eq::usize_rhs::MyStruct MyStruct::new_(::std::uintptr_t val) {
+inline ::partial_eq::usize_rhs::MyStruct(MyStruct::new_)(::std::uintptr_t val) {
   crubit::Slot<::partial_eq::usize_rhs::MyStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
@@ -480,14 +503,18 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003ausize_urhs_x0000003a_x0000003aMyStruct_uusize(
     ::partial_eq::usize_rhs::MyStruct const&, ::std::uintptr_t const&);
 }
-inline bool MyStruct::operator==(::std::uintptr_t const& other) const {
+inline bool(MyStruct::operator==)(::std::uintptr_t const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003ausize_urhs_x0000003a_x0000003aMyStruct_uusize(
           self, other);
 }
-inline void MyStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyStruct, __field0));
+inline void ::partial_eq::usize_rhs::MyStruct::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::partial_eq::usize_rhs::MyStruct;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 }  // namespace partial_eq::usize_rhs
 
@@ -499,7 +526,7 @@ __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020bool_x000000
     rs_std::Tuple<::std::uint32_t, bool>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::uint32_t, bool>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020bool_x00000029(
           this);
 }
@@ -528,8 +555,14 @@ inline rs_std::Tuple<::std::uint32_t, bool>::operator std::tuple<
 
 inline void ::rs_std::Tuple<::std::uint32_t,
                             bool>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(4 == offsetof(Tuple, __field1));
+  {
+    using __crubit_assert_type = ::rs_std::Tuple<::std::uint32_t, bool>;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
+  {
+    using __crubit_assert_type = ::rs_std::Tuple<::std::uint32_t, bool>;
+    static_assert(4 == offsetof(__crubit_assert_type, __field1));
+  }
 }
 #endif
 

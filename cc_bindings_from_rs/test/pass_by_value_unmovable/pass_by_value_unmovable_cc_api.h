@@ -101,10 +101,10 @@ void takes_val_unmovable(
     ::rs::Movable<::pass_by_value_unmovable::NotCppMovable> _val);
 
 static_assert(
-    sizeof(CppMovable) == 4,
+    sizeof(::pass_by_value_unmovable::CppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CppMovable) == 4,
+    alignof(::pass_by_value_unmovable::CppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -121,7 +121,7 @@ extern "C" void
 __crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aCppMovable(
     ::pass_by_value_unmovable::CppMovable&);
 }
-inline CppMovable::~CppMovable() {
+inline ::pass_by_value_unmovable::CppMovable::~CppMovable() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aCppMovable(
           *this);
@@ -139,21 +139,25 @@ inline ::pass_by_value_unmovable::CppMovable::CppMovable(
     ::crubit::UnsafeRelocateTag, CppMovable&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void CppMovable::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CppMovable, __field0));
+inline void ::pass_by_value_unmovable::CppMovable::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::pass_by_value_unmovable::CppMovable;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 static_assert(
-    sizeof(NotCppMovable) == 4,
+    sizeof(::pass_by_value_unmovable::NotCppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NotCppMovable) == 4,
+    alignof(::pass_by_value_unmovable::NotCppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aNotCppMovable(
     ::pass_by_value_unmovable::NotCppMovable&);
 }
-inline NotCppMovable::~NotCppMovable() {
+inline ::pass_by_value_unmovable::NotCppMovable::~NotCppMovable() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aNotCppMovable(
           *this);
@@ -162,8 +166,12 @@ inline ::pass_by_value_unmovable::NotCppMovable::NotCppMovable(
     ::crubit::UnsafeRelocateTag, NotCppMovable&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void NotCppMovable::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NotCppMovable, __field0));
+inline void ::pass_by_value_unmovable::NotCppMovable::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::pass_by_value_unmovable::NotCppMovable;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_takes_uval_umovable(

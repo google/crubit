@@ -243,31 +243,34 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 namespace arrays {
 
 static_assert(
-    sizeof(ArrayStruct) == 8,
+    sizeof(::arrays::ArrayStruct) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(ArrayStruct) == 4,
+    alignof(::arrays::ArrayStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<ArrayStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_copy_constructible_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_copy_assignable_v<::arrays::ArrayStruct>);
-inline void ArrayStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(ArrayStruct, array));
+inline void ::arrays::ArrayStruct::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::arrays::ArrayStruct;
+    static_assert(0 == offsetof(__crubit_assert_type, array));
+  }
 }
 static_assert(
-    sizeof(HasDrop) == 4,
+    sizeof(::arrays::HasDrop) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasDrop) == 4,
+    alignof(::arrays::HasDrop) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDrop(
     ::arrays::HasDrop&);
 }
-inline HasDrop::~HasDrop() {
+inline ::arrays::HasDrop::~HasDrop() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDrop(
           *this);
@@ -281,20 +284,23 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::arrays::HasDrop* __ret_ptr);
 }
-inline ::arrays::HasDrop HasDrop::new_(::std::int32_t x) {
+inline ::arrays::HasDrop(HasDrop::new_)(::std::int32_t x) {
   crubit::Slot<::arrays::HasDrop> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void HasDrop::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(HasDrop, x));
+inline void ::arrays::HasDrop::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::arrays::HasDrop;
+    static_assert(0 == offsetof(__crubit_assert_type, x));
+  }
 }
 static_assert(
-    sizeof(HasDropAndDefault) == 4,
+    sizeof(::arrays::HasDropAndDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasDropAndDefault) == 4,
+    alignof(::arrays::HasDropAndDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -311,7 +317,7 @@ extern "C" void
 __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDropAndDefault(
     ::arrays::HasDropAndDefault&);
 }
-inline HasDropAndDefault::~HasDropAndDefault() {
+inline ::arrays::HasDropAndDefault::~HasDropAndDefault() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDropAndDefault(
           *this);
@@ -329,8 +335,11 @@ inline ::arrays::HasDropAndDefault::HasDropAndDefault(
     ::crubit::UnsafeRelocateTag, HasDropAndDefault&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void HasDropAndDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(HasDropAndDefault, x));
+inline void ::arrays::HasDropAndDefault::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::arrays::HasDropAndDefault;
+    static_assert(0 == offsetof(__crubit_assert_type, x));
+  }
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_uarray_uid(void*,
@@ -525,7 +534,7 @@ __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
     rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
           this);
 }
@@ -554,8 +563,16 @@ inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::operator std::tuple<
 
 inline void ::rs_std::Tuple<
     ::std::int32_t, ::std::int32_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(4 == offsetof(Tuple, __field1));
+  {
+    using __crubit_assert_type =
+        ::rs_std::Tuple<::std::int32_t, ::std::int32_t>;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
+  {
+    using __crubit_assert_type =
+        ::rs_std::Tuple<::std::int32_t, ::std::int32_t>;
+    static_assert(4 == offsetof(__crubit_assert_type, __field1));
+  }
 }
 #endif
 

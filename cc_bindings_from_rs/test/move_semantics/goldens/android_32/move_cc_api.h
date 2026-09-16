@@ -122,10 +122,10 @@ void initialize_unmovable_foo(::move::UnmovableFoo* out, ::std::uint8_t byte);
 ::move::UnmovableFoo new_unmovable_foo(::std::uint8_t byte);
 
 static_assert(
-    sizeof(Copyable) == 1,
+    sizeof(::move::Copyable) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Copyable) == 1,
+    alignof(::move::Copyable) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<Copyable>);
 static_assert(::std::is_trivially_move_constructible_v<::move::Copyable>);
@@ -136,7 +136,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
                                           ::move::Copyable* __ret_ptr);
 }
-inline ::move::Copyable Copyable::from_byte(::std::uint8_t byte) {
+inline ::move::Copyable(Copyable::from_byte)(::std::uint8_t byte) {
   crubit::Slot<::move::Copyable> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ubyte(byte, __return_value_storage);
@@ -146,18 +146,21 @@ inline ::move::Copyable Copyable::from_byte(::std::uint8_t byte) {
 namespace __crubit_internal {
 extern "C" ::std::uint8_t __crubit_thunk_consume_uself(::move::Copyable*);
 }
-inline ::std::uint8_t Copyable::consume_self() const {
+inline ::std::uint8_t(Copyable::consume_self)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_consume_uself(&self);
 }
-inline void Copyable::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Copyable, field));
+inline void ::move::Copyable::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::move::Copyable;
+    static_assert(0 == offsetof(__crubit_assert_type, field));
+  }
 }
 static_assert(
-    sizeof(Foo) == 4,
+    sizeof(::move::Foo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Foo) == 4,
+    alignof(::move::Foo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -173,7 +176,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aFoo(
     ::move::Foo&);
 }
-inline Foo::~Foo() {
+inline ::move::Foo::~Foo() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aFoo(*this);
 }
@@ -190,7 +193,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
                                           ::move::Foo* __ret_ptr);
 }
-inline ::move::Foo Foo::from_byte(::std::uint8_t byte) {
+inline ::move::Foo(Foo::from_byte)(::std::uint8_t byte) {
   crubit::Slot<::move::Foo> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ubyte(byte, __return_value_storage);
@@ -200,7 +203,7 @@ inline ::move::Foo Foo::from_byte(::std::uint8_t byte) {
 namespace __crubit_internal {
 extern "C" ::std::uint8_t __crubit_thunk_read_ubyte(::move::Foo const&);
 }
-inline ::std::uint8_t Foo::read_byte() const {
+inline ::std::uint8_t(Foo::read_byte)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_read_ubyte(self);
 }
@@ -208,26 +211,29 @@ inline ::std::uint8_t Foo::read_byte() const {
 namespace __crubit_internal {
 extern "C" ::std::uint8_t __crubit_thunk_into_ubyte(::move::Foo*);
 }
-inline ::std::uint8_t Foo::into_byte() && {
+inline ::std::uint8_t(Foo::into_byte)() && {
   auto&& self = *this;
   crubit::Slot self_slot((::std::move(self)));
   return __crubit_internal::__crubit_thunk_into_ubyte(self_slot.Get());
 }
-inline void Foo::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Foo, buf));
+inline void ::move::Foo::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::move::Foo;
+    static_assert(0 == offsetof(__crubit_assert_type, buf));
+  }
 }
 static_assert(
-    sizeof(UnmovableFoo) == 4,
+    sizeof(::move::UnmovableFoo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(UnmovableFoo) == 4,
+    alignof(::move::UnmovableFoo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aUnmovableFoo(
     ::move::UnmovableFoo&);
 }
-inline UnmovableFoo::~UnmovableFoo() {
+inline ::move::UnmovableFoo::~UnmovableFoo() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aUnmovableFoo(
           *this);
@@ -241,7 +247,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_ubyte(::std::uint8_t,
                                           ::move::UnmovableFoo* __ret_ptr);
 }
-inline ::move::UnmovableFoo UnmovableFoo::from_byte(::std::uint8_t byte) {
+inline ::move::UnmovableFoo(UnmovableFoo::from_byte)(::std::uint8_t byte) {
   crubit::Slot<::move::UnmovableFoo> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_from_ubyte(byte, __return_value_storage);
@@ -252,12 +258,15 @@ namespace __crubit_internal {
 extern "C" ::std::uint8_t __crubit_thunk_read_ubyte(
     ::move::UnmovableFoo const&);
 }
-inline ::std::uint8_t UnmovableFoo::read_byte() const {
+inline ::std::uint8_t(UnmovableFoo::read_byte)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_read_ubyte(self);
 }
-inline void UnmovableFoo::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(UnmovableFoo, buf));
+inline void ::move::UnmovableFoo::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::move::UnmovableFoo;
+    static_assert(0 == offsetof(__crubit_assert_type, buf));
+  }
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_consume_ufoo(::move::Foo*);

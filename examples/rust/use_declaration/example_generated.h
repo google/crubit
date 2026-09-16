@@ -44,16 +44,19 @@ using Type CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Type") =
 namespace example_crate {
 
 static_assert(
-    sizeof(Type) == 4,
+    sizeof(::example_crate::Type) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Type) == 4,
+    alignof(::example_crate::Type) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<Type>);
 static_assert(::std::is_trivially_move_constructible_v<::example_crate::Type>);
 static_assert(::std::is_trivially_move_assignable_v<::example_crate::Type>);
-inline void Type::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Type, x));
+inline void ::example_crate::Type::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::example_crate::Type;
+    static_assert(0 == offsetof(__crubit_assert_type, x));
+  }
 }
 }  // namespace example_crate
 

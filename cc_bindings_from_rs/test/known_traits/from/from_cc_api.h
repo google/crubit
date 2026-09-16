@@ -36,6 +36,7 @@ struct NoCloneCopyDropType;
 struct NoCloneDefaultType;
 struct OpaqueRef;
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: BoolAndStr") alignas(8)
     [[clang::trivial_abi]] BoolAndStr final {
  public:
@@ -86,6 +87,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: BoolAndStr") alignas(8)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocSource") alignas(
     8) [[clang::trivial_abi]] CloneAllocSource final {
  public:
@@ -104,6 +106,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocSource") alignas(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocType") alignas(8)
     [[clang::trivial_abi]] CloneAllocType final {
  public:
@@ -117,6 +120,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneAllocType") alignas(8)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopySource") alignas(4)
     [[clang::trivial_abi]] CloneCopySource final {
  public:
@@ -129,6 +133,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopySource") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopyType") alignas(4)
     [[clang::trivial_abi]] CloneCopyType final {
  public:
@@ -139,6 +144,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: CloneCopyType") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: from_golden :: CollidingConstructor") alignas(8) [[clang::trivial_abi]]
 CollidingConstructor final {
@@ -175,6 +181,7 @@ CollidingConstructor final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopA") alignas(4)
     [[clang::trivial_abi]] LoopA final {
  public:
@@ -187,6 +194,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopA") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopB") alignas(4)
     [[clang::trivial_abi]] LoopB final {
  public:
@@ -199,6 +207,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: LoopB") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: from_golden :: NoCloneCopyDropSource") alignas(4) [[clang::trivial_abi]]
 NoCloneCopyDropSource final {
@@ -212,6 +221,7 @@ NoCloneCopyDropSource final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: from_golden :: NoCloneCopyDropType") alignas(4) [[clang::trivial_abi]]
 NoCloneCopyDropType final {
@@ -223,6 +233,7 @@ NoCloneCopyDropType final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: from_golden :: NoCloneDefaultSource") alignas(4) [[clang::trivial_abi]]
 NoCloneDefaultSource final {
@@ -236,6 +247,7 @@ NoCloneDefaultSource final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: from_golden :: NoCloneDefaultType") alignas(4) [[clang::trivial_abi]]
 NoCloneDefaultType final {
@@ -247,6 +259,7 @@ NoCloneDefaultType final {
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
     [[clang::trivial_abi]] NotFfiSafe final {
  public:
@@ -279,6 +292,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(8)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
     [[clang::trivial_abi]] Opaque final {
  public:
@@ -299,6 +313,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: Opaque") alignas(4)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
     [[clang::trivial_abi]] OpaqueRef final {
  public:
@@ -335,12 +350,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
 };
 
 static_assert(
-    sizeof(BoolAndStr) == 24,
+    sizeof(::from::BoolAndStr) == 24,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(BoolAndStr) == 8,
+    alignof(::from::BoolAndStr) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<BoolAndStr>);
+static_assert(::std::is_trivially_destructible_v<::from::BoolAndStr>);
 static_assert(::std::is_trivially_move_constructible_v<::from::BoolAndStr>);
 static_assert(::std::is_trivially_move_assignable_v<::from::BoolAndStr>);
 inline ::from::BoolAndStr::BoolAndStr(::crubit::UnsafeRelocateTag,
@@ -351,7 +366,7 @@ inline ::from::BoolAndStr::BoolAndStr(::crubit::UnsafeRelocateTag,
 namespace __crubit_internal {
 extern "C" bool __crubit_thunk_is_ubool(::from::BoolAndStr const&);
 }
-inline bool BoolAndStr::is_bool() const {
+inline bool(BoolAndStr::is_bool)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_is_ubool(self);
 }
@@ -359,7 +374,7 @@ inline bool BoolAndStr::is_bool() const {
 namespace __crubit_internal {
 extern "C" ::std::uintptr_t __crubit_thunk_str_ulen(::from::BoolAndStr const&);
 }
-inline ::std::uintptr_t BoolAndStr::str_len() const {
+inline ::std::uintptr_t(BoolAndStr::str_len)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_str_ulen(self);
 }
@@ -367,7 +382,7 @@ inline ::std::uintptr_t BoolAndStr::str_len() const {
 namespace __crubit_internal {
 extern "C" ::std::intptr_t __crubit_thunk_int_uval(::from::BoolAndStr const&);
 }
-inline ::std::intptr_t BoolAndStr::int_val() const {
+inline ::std::intptr_t(BoolAndStr::int_val)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_int_uval(self);
 }
@@ -378,7 +393,7 @@ __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_ubool(
 }
 template <typename __CrubitBoolT>
   requires(::std::is_same_v<__CrubitBoolT, bool>)
-inline BoolAndStr::BoolAndStr(__CrubitBoolT value) {
+inline ::from::BoolAndStr::BoolAndStr(__CrubitBoolT value) {
   __crubit_internal::
       __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_ubool(
           value, this);
@@ -388,7 +403,7 @@ extern "C" void
 __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_u_x00000026str(
     rs_std::StrRef*, ::from::BoolAndStr* __ret_ptr);
 }
-inline BoolAndStr::BoolAndStr(rs_std::StrRef value) {
+inline ::from::BoolAndStr::BoolAndStr(rs_std::StrRef value) {
   __crubit_internal::
       __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_u_x00000026str(
           &value, this);
@@ -398,28 +413,37 @@ extern "C" void
 __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_uisize(
     ::std::intptr_t, ::from::BoolAndStr* __ret_ptr);
 }
-inline BoolAndStr::BoolAndStr(::std::intptr_t value) {
+inline ::from::BoolAndStr::BoolAndStr(::std::intptr_t value) {
   __crubit_internal::
       __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aBoolAndStr_uisize(
           value, this);
 }
-inline void BoolAndStr::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(BoolAndStr, str_len_));
-  static_assert(8 == offsetof(BoolAndStr, int_val_));
-  static_assert(16 == offsetof(BoolAndStr, is_bool_));
+inline void ::from::BoolAndStr::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::BoolAndStr;
+    static_assert(0 == offsetof(__crubit_assert_type, str_len_));
+  }
+  {
+    using __crubit_assert_type = ::from::BoolAndStr;
+    static_assert(8 == offsetof(__crubit_assert_type, int_val_));
+  }
+  {
+    using __crubit_assert_type = ::from::BoolAndStr;
+    static_assert(16 == offsetof(__crubit_assert_type, is_bool_));
+  }
 }
 static_assert(
-    sizeof(CloneAllocSource) == 24,
+    sizeof(::from::CloneAllocSource) == 24,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CloneAllocSource) == 8,
+    alignof(::from::CloneAllocSource) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef*,
                                       ::from::CloneAllocSource* __ret_ptr);
 }
-inline ::from::CloneAllocSource CloneAllocSource::create(rs_std::StrRef s) {
+inline ::from::CloneAllocSource(CloneAllocSource::create)(rs_std::StrRef s) {
   crubit::Slot<::from::CloneAllocSource> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(&s, __return_value_storage);
@@ -430,7 +454,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_get_uvalue(::from::CloneAllocSource const&,
                                           rs_std::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef CloneAllocSource::get_value() const& $(__anon1)
+inline rs_std::StrRef(CloneAllocSource::get_value)() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
@@ -443,7 +467,7 @@ extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aCloneAllocSource_ufrom_ugolden_x0000003a_x0000003aCloneAllocType(
     ::from::CloneAllocSource*, ::from::CloneAllocType* __ret_ptr);
 }
-inline CloneAllocSource::operator ::from::CloneAllocType() {
+inline ::from::CloneAllocSource::operator ::from::CloneAllocType() {
   auto&& self = *this;
   crubit::Slot self_slot((::std::move(self)));
   crubit::Slot<::from::CloneAllocType> __return_value_ret_val_holder;
@@ -453,21 +477,24 @@ inline CloneAllocSource::operator ::from::CloneAllocType() {
           self_slot.Get(), __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void CloneAllocSource::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CloneAllocSource, value));
+inline void ::from::CloneAllocSource::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::CloneAllocSource;
+    static_assert(0 == offsetof(__crubit_assert_type, value));
+  }
 }
 static_assert(
-    sizeof(CloneAllocType) == 24,
+    sizeof(::from::CloneAllocType) == 24,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CloneAllocType) == 8,
+    alignof(::from::CloneAllocType) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_get_uvalue(::from::CloneAllocType const&,
                                           rs_std::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef CloneAllocType::get_value() const& $(__anon1)
+inline rs_std::StrRef(CloneAllocType::get_value)() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
@@ -475,14 +502,17 @@ inline rs_std::StrRef CloneAllocType::get_value() const& $(__anon1)
   __crubit_internal::__crubit_thunk_get_uvalue(self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void CloneAllocType::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CloneAllocType, value));
+inline void ::from::CloneAllocType::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::CloneAllocType;
+    static_assert(0 == offsetof(__crubit_assert_type, value));
+  }
 }
 static_assert(
-    sizeof(CloneCopySource) == 4,
+    sizeof(::from::CloneCopySource) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CloneCopySource) == 4,
+    alignof(::from::CloneCopySource) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<CloneCopySource>);
 static_assert(
@@ -496,7 +526,7 @@ extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aCloneCopySource_ufrom_ugolden_x0000003a_x0000003aCloneCopyType(
     ::from::CloneCopySource*, ::from::CloneCopyType* __ret_ptr);
 }
-inline CloneCopySource::operator ::from::CloneCopyType() const {
+inline ::from::CloneCopySource::operator ::from::CloneCopyType() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::from::CloneCopyType> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -505,30 +535,36 @@ inline CloneCopySource::operator ::from::CloneCopyType() const {
           &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void CloneCopySource::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CloneCopySource, __field0));
+inline void ::from::CloneCopySource::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::CloneCopySource;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 static_assert(
-    sizeof(CloneCopyType) == 4,
+    sizeof(::from::CloneCopyType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CloneCopyType) == 4,
+    alignof(::from::CloneCopyType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<CloneCopyType>);
 static_assert(::std::is_trivially_move_constructible_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_move_assignable_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_copy_constructible_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_copy_assignable_v<::from::CloneCopyType>);
-inline void CloneCopyType::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CloneCopyType, __field0));
+inline void ::from::CloneCopyType::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::CloneCopyType;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 static_assert(
-    sizeof(CollidingConstructor) == 8,
+    sizeof(::from::CollidingConstructor) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CollidingConstructor) == 8,
+    alignof(::from::CollidingConstructor) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CollidingConstructor>);
+static_assert(::std::is_trivially_destructible_v<::from::CollidingConstructor>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::from::CollidingConstructor>);
 static_assert(
@@ -542,19 +578,23 @@ extern "C" void
 __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCollidingConstructor_uusize(
     ::std::uintptr_t, ::from::CollidingConstructor* __ret_ptr);
 }
-inline CollidingConstructor::CollidingConstructor(::std::uintptr_t value) {
+inline ::from::CollidingConstructor::CollidingConstructor(
+    ::std::uintptr_t value) {
   __crubit_internal::
       __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aCollidingConstructor_uusize(
           value, this);
 }
-inline void CollidingConstructor::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CollidingConstructor, value));
+inline void ::from::CollidingConstructor::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::CollidingConstructor;
+    static_assert(0 == offsetof(__crubit_assert_type, value));
+  }
 }
 static_assert(
-    sizeof(LoopA) == 4,
+    sizeof(::from::LoopA) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(LoopA) == 4,
+    alignof(::from::LoopA) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<LoopA>);
 static_assert(::std::is_trivially_move_constructible_v<::from::LoopA>);
@@ -564,7 +604,7 @@ extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopA_ufrom_ugolden_x0000003a_x0000003aLoopB(
     ::from::LoopA*, ::from::LoopB* __ret_ptr);
 }
-inline LoopA::operator ::from::LoopB() {
+inline ::from::LoopA::operator ::from::LoopB() {
   auto&& self = *this;
   crubit::Slot<::from::LoopB> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -573,14 +613,17 @@ inline LoopA::operator ::from::LoopB() {
           &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void LoopA::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(LoopA, __field0));
+inline void ::from::LoopA::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::LoopA;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 static_assert(
-    sizeof(LoopB) == 4,
+    sizeof(::from::LoopB) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(LoopB) == 4,
+    alignof(::from::LoopB) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<LoopB>);
 static_assert(::std::is_trivially_move_constructible_v<::from::LoopB>);
@@ -590,7 +633,7 @@ extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aLoopB_ufrom_ugolden_x0000003a_x0000003aLoopA(
     ::from::LoopB*, ::from::LoopA* __ret_ptr);
 }
-inline LoopB::operator ::from::LoopA() {
+inline ::from::LoopB::operator ::from::LoopA() {
   auto&& self = *this;
   crubit::Slot<::from::LoopA> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -599,14 +642,17 @@ inline LoopB::operator ::from::LoopA() {
           &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void LoopB::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(LoopB, __field0));
+inline void ::from::LoopB::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::LoopB;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 static_assert(
-    sizeof(NoCloneCopyDropSource) == 4,
+    sizeof(::from::NoCloneCopyDropSource) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NoCloneCopyDropSource) == 4,
+    alignof(::from::NoCloneCopyDropSource) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<NoCloneCopyDropSource>);
 static_assert(
@@ -618,7 +664,7 @@ extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropSource_ufrom_ugolden_x0000003a_x0000003aNoCloneCopyDropType(
     ::from::NoCloneCopyDropSource*, ::from::NoCloneCopyDropType* __ret_ptr);
 }
-inline NoCloneCopyDropSource::operator ::from::NoCloneCopyDropType() {
+inline ::from::NoCloneCopyDropSource::operator ::from::NoCloneCopyDropType() {
   auto&& self = *this;
   crubit::Slot<::from::NoCloneCopyDropType> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -627,28 +673,34 @@ inline NoCloneCopyDropSource::operator ::from::NoCloneCopyDropType() {
           &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void NoCloneCopyDropSource::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NoCloneCopyDropSource, __field0));
+inline void ::from::NoCloneCopyDropSource::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::NoCloneCopyDropSource;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 static_assert(
-    sizeof(NoCloneCopyDropType) == 4,
+    sizeof(::from::NoCloneCopyDropType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NoCloneCopyDropType) == 4,
+    alignof(::from::NoCloneCopyDropType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<NoCloneCopyDropType>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneCopyDropType>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneCopyDropType>);
-inline void NoCloneCopyDropType::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NoCloneCopyDropType, __field0));
+inline void ::from::NoCloneCopyDropType::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::NoCloneCopyDropType;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 static_assert(
-    sizeof(NoCloneDefaultSource) == 4,
+    sizeof(::from::NoCloneDefaultSource) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NoCloneDefaultSource) == 4,
+    alignof(::from::NoCloneDefaultSource) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<NoCloneDefaultSource>);
 static_assert(
@@ -660,7 +712,7 @@ extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultSource_ufrom_ugolden_x0000003a_x0000003aNoCloneDefaultType(
     ::from::NoCloneDefaultSource*, ::from::NoCloneDefaultType* __ret_ptr);
 }
-inline NoCloneDefaultSource::operator ::from::NoCloneDefaultType() {
+inline ::from::NoCloneDefaultSource::operator ::from::NoCloneDefaultType() {
   auto&& self = *this;
   crubit::Slot<::from::NoCloneDefaultType> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -669,30 +721,36 @@ inline NoCloneDefaultSource::operator ::from::NoCloneDefaultType() {
           &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void NoCloneDefaultSource::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NoCloneDefaultSource, __field0));
+inline void ::from::NoCloneDefaultSource::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::NoCloneDefaultSource;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 static_assert(
-    sizeof(NoCloneDefaultType) == 4,
+    sizeof(::from::NoCloneDefaultType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NoCloneDefaultType) == 4,
+    alignof(::from::NoCloneDefaultType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<NoCloneDefaultType>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneDefaultType>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::from::NoCloneDefaultType>);
-inline void NoCloneDefaultType::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NoCloneDefaultType, __field0));
+inline void ::from::NoCloneDefaultType::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::NoCloneDefaultType;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 static_assert(
-    sizeof(NotFfiSafe) == 8,
+    sizeof(::from::NotFfiSafe) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NotFfiSafe) == 8,
+    alignof(::from::NotFfiSafe) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NotFfiSafe>);
+static_assert(::std::is_trivially_destructible_v<::from::NotFfiSafe>);
 static_assert(::std::is_trivially_move_constructible_v<::from::NotFfiSafe>);
 static_assert(::std::is_trivially_move_assignable_v<::from::NotFfiSafe>);
 inline ::from::NotFfiSafe::NotFfiSafe(::crubit::UnsafeRelocateTag,
@@ -703,7 +761,7 @@ inline ::from::NotFfiSafe::NotFfiSafe(::crubit::UnsafeRelocateTag,
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::from::NotFfiSafe* __ret_ptr);
 }
-inline ::from::NotFfiSafe NotFfiSafe::create() {
+inline ::from::NotFfiSafe(NotFfiSafe::create)() {
   crubit::Slot<::from::NotFfiSafe> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(__return_value_storage);
@@ -714,20 +772,23 @@ extern "C" ::std::int32_t
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNotFfiSafe_ui32(
     ::from::NotFfiSafe*);
 }
-inline NotFfiSafe::operator ::std::int32_t() {
+inline ::from::NotFfiSafe::operator ::std::int32_t() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aNotFfiSafe_ui32(
           &self);
 }
-inline void NotFfiSafe::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NotFfiSafe, __field0));
+inline void ::from::NotFfiSafe::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::NotFfiSafe;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 static_assert(
-    sizeof(Opaque) == 4,
+    sizeof(::from::Opaque) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Opaque) == 4,
+    alignof(::from::Opaque) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<Opaque>);
 static_assert(::std::is_trivially_move_constructible_v<::from::Opaque>);
@@ -737,7 +798,7 @@ extern "C" ::std::int32_t
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui32(
     ::from::Opaque*);
 }
-inline Opaque::operator ::std::int32_t() {
+inline ::from::Opaque::operator ::std::int32_t() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui32(
@@ -748,7 +809,7 @@ extern "C" ::std::int64_t
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui64(
     ::from::Opaque*);
 }
-inline Opaque::operator ::std::int64_t() {
+inline ::from::Opaque::operator ::std::int64_t() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui64(
@@ -759,7 +820,7 @@ extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_u_x00000026_x00000027static_x00000020str(
     ::from::Opaque*, rs_std::StrRef* __ret_ptr);
 }
-inline Opaque::operator rs_std::StrRef() {
+inline ::from::Opaque::operator rs_std::StrRef() {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -773,7 +834,7 @@ extern "C" ::std::int16_t
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui16(
     ::from::Opaque*);
 }
-inline Opaque::operator ::std::int16_t() {
+inline ::from::Opaque::operator ::std::int16_t() {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ui16(
@@ -784,7 +845,7 @@ extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaque_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027static_x0000003e(
     ::from::Opaque*, ::from::OpaqueRef* __ret_ptr);
 }
-inline Opaque::operator ::from::OpaqueRef() {
+inline ::from::Opaque::operator ::from::OpaqueRef() {
   auto&& self = *this;
   crubit::Slot<::from::OpaqueRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -793,16 +854,19 @@ inline Opaque::operator ::from::OpaqueRef() {
           &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void Opaque::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Opaque, __field0));
+inline void ::from::Opaque::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::Opaque;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 static_assert(
-    sizeof(OpaqueRef) == 16,
+    sizeof(::from::OpaqueRef) == 16,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(OpaqueRef) == 8,
+    alignof(::from::OpaqueRef) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<OpaqueRef>);
+static_assert(::std::is_trivially_destructible_v<::from::OpaqueRef>);
 static_assert(::std::is_trivially_move_constructible_v<::from::OpaqueRef>);
 static_assert(::std::is_trivially_move_assignable_v<::from::OpaqueRef>);
 inline ::from::OpaqueRef::OpaqueRef(::crubit::UnsafeRelocateTag,
@@ -814,7 +878,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef*,
                                       ::from::OpaqueRef* __ret_ptr);
 }
-inline ::from::OpaqueRef OpaqueRef::create(rs_std::StrRef s) {
+inline ::from::OpaqueRef(OpaqueRef::create)(rs_std::StrRef s) {
   crubit::Slot<::from::OpaqueRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(&s, __return_value_storage);
@@ -825,7 +889,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_get_uarg(::from::OpaqueRef const&,
                                         rs_std::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef OpaqueRef::get_arg() const {
+inline rs_std::StrRef(OpaqueRef::get_arg)() const {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -837,7 +901,7 @@ extern "C" void
 __crubit_thunk_Into_uinto_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020str(
     ::from::OpaqueRef*, rs_std::StrRef* __ret_ptr);
 }
-inline OpaqueRef::operator rs_std::StrRef() {
+inline ::from::OpaqueRef::operator rs_std::StrRef() {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -851,13 +915,16 @@ extern "C" void
 __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027_u_x0000003e_ufrom_ugolden_x0000003a_x0000003aOpaque(
     ::from::Opaque*, ::from::OpaqueRef* __ret_ptr);
 }
-inline OpaqueRef::OpaqueRef(::from::Opaque value) {
+inline ::from::OpaqueRef::OpaqueRef(::from::Opaque value) {
   __crubit_internal::
       __crubit_thunk_From_ufrom_ufrom_ugolden_x0000003a_x0000003aOpaqueRef_x0000003c_x00000027_u_x0000003e_ufrom_ugolden_x0000003a_x0000003aOpaque(
           &value, this);
 }
-inline void OpaqueRef::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(OpaqueRef, __field0));
+inline void ::from::OpaqueRef::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::from::OpaqueRef;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 }  // namespace from
 

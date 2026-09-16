@@ -95,6 +95,7 @@ namespace rs_default::field_with_no_default {
 //  It is important that `StructWithoutDefault` is `pub` so that `field`
 //  above is typed correctly in the C++ bindings and not replaced with a
 //  blob of bytes.
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: rs_default_golden :: field_with_no_default :: "
     "StructWithoutDefault") alignas(4) [[clang::trivial_abi]]
@@ -214,10 +215,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace rs_default::derived_impl {
 
 static_assert(
-    sizeof(SomeStruct) == 4,
+    sizeof(::rs_default::derived_impl::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(SomeStruct) == 4,
+    alignof(::rs_default::derived_impl::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -229,7 +230,8 @@ inline ::rs_default::derived_impl::SomeStruct::SomeStruct() {
       __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003aderived_uimpl_x0000003a_x0000003aSomeStruct(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<SomeStruct>);
+static_assert(
+    ::std::is_trivially_destructible_v<::rs_default::derived_impl::SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::derived_impl::SomeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -243,22 +245,26 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::derived_impl::SomeStruct*);
 }
-inline ::std::int32_t SomeStruct::extract_int(
+inline ::std::int32_t(SomeStruct::extract_int)(
     ::rs_default::derived_impl::SomeStruct s) {
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
 }
-inline void SomeStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(SomeStruct, field));
+inline void ::rs_default::derived_impl::SomeStruct::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::rs_default::derived_impl::SomeStruct;
+    static_assert(0 == offsetof(__crubit_assert_type, field));
+  }
 }
 }  // namespace rs_default::derived_impl
 
 namespace rs_default::explicit_impl {
 
 static_assert(
-    sizeof(SomeStruct) == 4,
+    sizeof(::rs_default::explicit_impl::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(SomeStruct) == 4,
+    alignof(::rs_default::explicit_impl::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -270,7 +276,8 @@ inline ::rs_default::explicit_impl::SomeStruct::SomeStruct() {
       __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003aexplicit_uimpl_x0000003a_x0000003aSomeStruct(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<SomeStruct>);
+static_assert(::std::is_trivially_destructible_v<
+              ::rs_default::explicit_impl::SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::explicit_impl::SomeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -284,22 +291,28 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::explicit_impl::SomeStruct*);
 }
-inline ::std::int32_t SomeStruct::extract_int(
+inline ::std::int32_t(SomeStruct::extract_int)(
     ::rs_default::explicit_impl::SomeStruct s) {
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
 }
-inline void SomeStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(SomeStruct, field));
+inline void ::rs_default::explicit_impl::SomeStruct::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::rs_default::explicit_impl::SomeStruct;
+    static_assert(0 == offsetof(__crubit_assert_type, field));
+  }
 }
 }  // namespace rs_default::explicit_impl
 
 namespace rs_default::field_with_no_default {
 
 static_assert(
-    sizeof(StructWithFieldWithNoDefault) == 4,
+    sizeof(::rs_default::field_with_no_default::StructWithFieldWithNoDefault) ==
+        4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(StructWithFieldWithNoDefault) == 4,
+    alignof(
+        ::rs_default::field_with_no_default::StructWithFieldWithNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -313,7 +326,9 @@ inline ::rs_default::field_with_no_default::StructWithFieldWithNoDefault::
       __crubit_thunk_Default_udefault_urs_udefault_ugolden_x0000003a_x0000003afield_uwith_uno_udefault_x0000003a_x0000003aStructWithFieldWithNoDefault(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<StructWithFieldWithNoDefault>);
+static_assert(
+    ::std::is_trivially_destructible_v<
+        ::rs_default::field_with_no_default::StructWithFieldWithNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<
         ::rs_default::field_with_no_default::StructWithFieldWithNoDefault>);
@@ -330,20 +345,26 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::field_with_no_default::StructWithFieldWithNoDefault*);
 }
-inline ::std::int32_t StructWithFieldWithNoDefault::extract_int(
+inline ::std::int32_t(StructWithFieldWithNoDefault::extract_int)(
     ::rs_default::field_with_no_default::StructWithFieldWithNoDefault s) {
   return __crubit_internal::__crubit_thunk_extract_uint(&s);
 }
-inline void StructWithFieldWithNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(StructWithFieldWithNoDefault, field));
+inline void ::rs_default::field_with_no_default::StructWithFieldWithNoDefault::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type =
+        ::rs_default::field_with_no_default::StructWithFieldWithNoDefault;
+    static_assert(0 == offsetof(__crubit_assert_type, field));
+  }
 }
 static_assert(
-    sizeof(StructWithoutDefault) == 4,
+    sizeof(::rs_default::field_with_no_default::StructWithoutDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(StructWithoutDefault) == 4,
+    alignof(::rs_default::field_with_no_default::StructWithoutDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<StructWithoutDefault>);
+static_assert(::std::is_trivially_destructible_v<
+              ::rs_default::field_with_no_default::StructWithoutDefault>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::field_with_no_default::StructWithoutDefault>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -353,20 +374,26 @@ inline ::rs_default::field_with_no_default::StructWithoutDefault::
                          StructWithoutDefault&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void StructWithoutDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(StructWithoutDefault, __field0));
+inline void ::rs_default::field_with_no_default::StructWithoutDefault::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type =
+        ::rs_default::field_with_no_default::StructWithoutDefault;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 }  // namespace rs_default::field_with_no_default
 
 namespace rs_default::no_impl {
 
 static_assert(
-    sizeof(SomeStruct) == 4,
+    sizeof(::rs_default::no_impl::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(SomeStruct) == 4,
+    alignof(::rs_default::no_impl::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<SomeStruct>);
+static_assert(
+    ::std::is_trivially_destructible_v<::rs_default::no_impl::SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::rs_default::no_impl::SomeStruct>);
 static_assert(
@@ -375,18 +402,22 @@ inline ::rs_default::no_impl::SomeStruct::SomeStruct(
     ::crubit::UnsafeRelocateTag, SomeStruct&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void SomeStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(SomeStruct, field));
+inline void ::rs_default::no_impl::SomeStruct::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::rs_default::no_impl::SomeStruct;
+    static_assert(0 == offsetof(__crubit_assert_type, field));
+  }
 }
 }  // namespace rs_default::no_impl
 
 namespace rs_default::transparent_struct {
 
 static_assert(
-    sizeof(SomeStruct) == 4,
+    sizeof(::rs_default::transparent_struct::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(SomeStruct) == 4,
+    alignof(::rs_default::transparent_struct::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -397,12 +428,16 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_extract_uint(
     ::rs_default::transparent_struct::SomeStruct const&);
 }
-inline ::std::int32_t SomeStruct::extract_int() const {
+inline ::std::int32_t(SomeStruct::extract_int)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_extract_uint(self);
 }
-inline void SomeStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(SomeStruct, __field0));
+inline void ::rs_default::transparent_struct::SomeStruct::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::rs_default::transparent_struct::SomeStruct;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 }  // namespace rs_default::transparent_struct
 

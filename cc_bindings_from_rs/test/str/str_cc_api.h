@@ -57,10 +57,10 @@ void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
                                          ::std::uint8_t& __param_1);
 
 static_assert(
-    sizeof(TypeWithStr) == 16,
+    sizeof(::str::TypeWithStr) == 16,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TypeWithStr) == 8,
+    alignof(::str::TypeWithStr) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<TypeWithStr>);
 static_assert(::std::is_trivially_move_constructible_v<::str::TypeWithStr>);
@@ -71,7 +71,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(rs_std::StrRef*,
                                       ::str::TypeWithStr* __ret_ptr);
 }
-inline ::str::TypeWithStr TypeWithStr::create(rs_std::StrRef s) {
+inline ::str::TypeWithStr(TypeWithStr::create)(rs_std::StrRef s) {
   crubit::Slot<::str::TypeWithStr> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(&s, __return_value_storage);
@@ -82,7 +82,7 @@ namespace __crubit_internal {
 extern "C" ::std::uintptr_t __crubit_thunk_get_ustr_ulen(
     ::str::TypeWithStr const&);
 }
-inline ::std::uintptr_t TypeWithStr::get_str_len() const {
+inline ::std::uintptr_t(TypeWithStr::get_str_len)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ustr_ulen(self);
 }
@@ -91,12 +91,15 @@ namespace __crubit_internal {
 extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(
     ::str::TypeWithStr const&);
 }
-inline ::std::uint8_t const* TypeWithStr::get_str_data() const {
+inline ::std::uint8_t const*(TypeWithStr::get_str_data)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ustr_udata(self);
 }
-inline void TypeWithStr::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TypeWithStr, str_field));
+inline void ::str::TypeWithStr::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::str::TypeWithStr;
+    static_assert(0 == offsetof(__crubit_assert_type, str_field));
+  }
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_foo_uas_ustr(rs_std::StrRef* __ret_ptr);

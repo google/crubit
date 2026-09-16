@@ -27,6 +27,7 @@
 namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") alignas(4) [[clang::trivial_abi]]
 AliasOfExportedStruct final {
@@ -44,6 +45,7 @@ AliasOfExportedStruct final {
 namespace uses {
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") alignas(4)
     [[clang::trivial_abi]] Original final {
  public:
@@ -117,10 +119,10 @@ namespace uses {
 using ExportedStruct CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: AliasOfExportedStruct") = ::uses::AliasOfExportedStruct;
 static_assert(
-    sizeof(AliasOfExportedStruct) == 4,
+    sizeof(::uses::AliasOfExportedStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(AliasOfExportedStruct) == 4,
+    alignof(::uses::AliasOfExportedStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<AliasOfExportedStruct>);
 static_assert(
@@ -131,15 +133,18 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::std::int32_t,
                                       ::uses::AliasOfExportedStruct* __ret_ptr);
 }
-inline ::uses::AliasOfExportedStruct AliasOfExportedStruct::create(
+inline ::uses::AliasOfExportedStruct(AliasOfExportedStruct::create)(
     ::std::int32_t field) {
   crubit::Slot<::uses::AliasOfExportedStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(field, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void AliasOfExportedStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(AliasOfExportedStruct, field));
+inline void ::uses::AliasOfExportedStruct::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::uses::AliasOfExportedStruct;
+    static_assert(0 == offsetof(__crubit_assert_type, field));
+  }
 }
 }  // namespace uses
 
@@ -152,16 +157,19 @@ using Alias CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
 using Alias2 CRUBIT_INTERNAL_RUST_TYPE(":: uses_golden :: Original") =
     ::uses::Original;
 static_assert(
-    sizeof(Original) == 4,
+    sizeof(::uses::Original) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Original) == 4,
+    alignof(::uses::Original) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<Original>);
 static_assert(::std::is_trivially_move_constructible_v<::uses::Original>);
 static_assert(::std::is_trivially_move_assignable_v<::uses::Original>);
-inline void Original::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Original, field));
+inline void ::uses::Original::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::uses::Original;
+    static_assert(0 == offsetof(__crubit_assert_type, field));
+  }
 }
 }  // namespace uses
 
@@ -170,17 +178,20 @@ namespace uses {
 using PublicName CRUBIT_INTERNAL_RUST_TYPE(
     ":: uses_golden :: OtherPublicName") = ::uses::OtherPublicName;
 static_assert(
-    sizeof(OtherPublicName) == 4,
+    sizeof(::uses::OtherPublicName) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(OtherPublicName) == 4,
+    alignof(::uses::OtherPublicName) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<OtherPublicName>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::uses::OtherPublicName>);
 static_assert(::std::is_trivially_move_assignable_v<::uses::OtherPublicName>);
-inline void OtherPublicName::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(OtherPublicName, __field0));
+inline void ::uses::OtherPublicName::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::uses::OtherPublicName;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 }  // namespace uses
 

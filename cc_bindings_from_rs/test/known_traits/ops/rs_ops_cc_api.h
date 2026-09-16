@@ -30,6 +30,7 @@ namespace rs_ops {
 //  Exercises operator impls whose `Self` type is a *reference* to the ADT.
 //
 //  `MyBorrowedInt` does intentially no derive `Copy`.
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyBorrowedInt") alignas(4)
     [[clang::trivial_abi]] MyBorrowedInt final {
  public:
@@ -143,10 +144,10 @@ struct rs_std::impl<::rs_ops::MyInt, ::rs::core::fmt::Debug> {
 namespace rs_ops {
 
 static_assert(
-    sizeof(MyBorrowedInt) == 4,
+    sizeof(::rs_ops::MyBorrowedInt) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyBorrowedInt) == 4,
+    alignof(::rs_ops::MyBorrowedInt) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<MyBorrowedInt>);
 static_assert(
@@ -156,7 +157,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::rs_ops::MyBorrowedInt* __ret_ptr);
 }
-inline ::rs_ops::MyBorrowedInt MyBorrowedInt::new_(::std::int32_t value) {
+inline ::rs_ops::MyBorrowedInt(MyBorrowedInt::new_)(::std::int32_t value) {
   crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
@@ -168,7 +169,7 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_urs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_urs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
     ::rs_ops::MyBorrowedInt const&, ::rs_ops::MyBorrowedInt const&);
 }
-inline bool MyBorrowedInt::operator==(
+inline bool(MyBorrowedInt::operator==)(
     ::rs_ops::MyBorrowedInt const& other) const {
   auto&& self = *this;
   return __crubit_internal::
@@ -182,7 +183,7 @@ __crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowed
     ::rs_ops::MyBorrowedInt const&, ::rs_ops::MyBorrowedInt const&,
     ::rs_ops::MyBorrowedInt* __ret_ptr);
 }
-inline ::rs_ops::MyBorrowedInt MyBorrowedInt::operator+(
+inline ::rs_ops::MyBorrowedInt(MyBorrowedInt::operator+)(
     ::rs_ops::MyBorrowedInt const& rhs) const {
   auto&& self = *this;
   crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
@@ -198,7 +199,7 @@ extern "C" void
 __crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
     ::rs_ops::MyBorrowedInt const&, ::rs_ops::MyBorrowedInt* __ret_ptr);
 }
-inline ::rs_ops::MyBorrowedInt MyBorrowedInt::operator-() const {
+inline ::rs_ops::MyBorrowedInt(MyBorrowedInt::operator-)() const {
   auto&& self = *this;
   crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -214,7 +215,7 @@ __crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowed
     ::rs_ops::MyBorrowedInt const&, ::std::int32_t,
     ::rs_ops::MyBorrowedInt* __ret_ptr);
 }
-inline ::rs_ops::MyBorrowedInt MyBorrowedInt::operator<<(
+inline ::rs_ops::MyBorrowedInt(MyBorrowedInt::operator<<)(
     ::std::int32_t rhs) const {
   auto&& self = *this;
   crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
@@ -224,14 +225,17 @@ inline ::rs_ops::MyBorrowedInt MyBorrowedInt::operator<<(
           self, rhs, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void MyBorrowedInt::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyBorrowedInt, value));
+inline void ::rs_ops::MyBorrowedInt::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::rs_ops::MyBorrowedInt;
+    static_assert(0 == offsetof(__crubit_assert_type, value));
+  }
 }
 static_assert(
-    sizeof(MyInt) == 4,
+    sizeof(::rs_ops::MyInt) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyInt) == 4,
+    alignof(::rs_ops::MyInt) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<MyInt>);
 static_assert(::std::is_trivially_move_constructible_v<::rs_ops::MyInt>);
@@ -241,7 +245,7 @@ static_assert(::std::is_trivially_copy_assignable_v<::rs_ops::MyInt>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::new_(::std::int32_t value) {
+inline ::rs_ops::MyInt(MyInt::new_)(::std::int32_t value) {
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
@@ -253,7 +257,7 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt const&, ::rs_ops::MyInt const&);
 }
-inline bool MyInt::operator==(::rs_ops::MyInt const& other) const {
+inline bool(MyInt::operator==)(::rs_ops::MyInt const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
@@ -265,7 +269,7 @@ extern "C" void
 __crubit_thunk_Add_uadd_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt*, ::rs_ops::MyInt*, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::operator+(::rs_ops::MyInt rhs) const {
+inline ::rs_ops::MyInt(MyInt::operator+)(::rs_ops::MyInt rhs) const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -280,7 +284,7 @@ extern "C" void
 __crubit_thunk_AddAssign_uadd_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt&, ::rs_ops::MyInt*);
 }
-inline void MyInt::operator+=(::rs_ops::MyInt rhs) {
+inline void(MyInt::operator+=)(::rs_ops::MyInt rhs) {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_AddAssign_uadd_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
@@ -292,7 +296,7 @@ extern "C" void
 __crubit_thunk_BitAnd_ubitand_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt*, ::rs_ops::MyInt*, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::operator&(::rs_ops::MyInt rhs) const {
+inline ::rs_ops::MyInt(MyInt::operator&)(::rs_ops::MyInt rhs) const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -307,7 +311,7 @@ extern "C" void
 __crubit_thunk_BitAndAssign_ubitand_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt&, ::rs_ops::MyInt*);
 }
-inline void MyInt::operator&=(::rs_ops::MyInt rhs) {
+inline void(MyInt::operator&=)(::rs_ops::MyInt rhs) {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_BitAndAssign_ubitand_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
@@ -319,7 +323,7 @@ extern "C" void
 __crubit_thunk_BitOr_ubitor_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt*, ::rs_ops::MyInt*, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::operator|(::rs_ops::MyInt rhs) const {
+inline ::rs_ops::MyInt(MyInt::operator|)(::rs_ops::MyInt rhs) const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -334,7 +338,7 @@ extern "C" void
 __crubit_thunk_BitOrAssign_ubitor_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt&, ::rs_ops::MyInt*);
 }
-inline void MyInt::operator|=(::rs_ops::MyInt rhs) {
+inline void(MyInt::operator|=)(::rs_ops::MyInt rhs) {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_BitOrAssign_ubitor_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
@@ -346,7 +350,7 @@ extern "C" void
 __crubit_thunk_BitXor_ubitxor_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt*, ::rs_ops::MyInt*, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::operator^(::rs_ops::MyInt rhs) const {
+inline ::rs_ops::MyInt(MyInt::operator^)(::rs_ops::MyInt rhs) const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -361,7 +365,7 @@ extern "C" void
 __crubit_thunk_BitXorAssign_ubitxor_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt&, ::rs_ops::MyInt*);
 }
-inline void MyInt::operator^=(::rs_ops::MyInt rhs) {
+inline void(MyInt::operator^=)(::rs_ops::MyInt rhs) {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_BitXorAssign_ubitxor_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
@@ -373,7 +377,7 @@ extern "C" void
 __crubit_thunk_Div_udiv_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt*, ::rs_ops::MyInt*, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::operator/(::rs_ops::MyInt rhs) const {
+inline ::rs_ops::MyInt(MyInt::operator/)(::rs_ops::MyInt rhs) const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -388,7 +392,7 @@ extern "C" void
 __crubit_thunk_DivAssign_udiv_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt&, ::rs_ops::MyInt*);
 }
-inline void MyInt::operator/=(::rs_ops::MyInt rhs) {
+inline void(MyInt::operator/=)(::rs_ops::MyInt rhs) {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_DivAssign_udiv_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
@@ -400,7 +404,7 @@ extern "C" void
 __crubit_thunk_Mul_umul_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt*, ::rs_ops::MyInt*, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::operator*(::rs_ops::MyInt rhs) const {
+inline ::rs_ops::MyInt(MyInt::operator*)(::rs_ops::MyInt rhs) const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -415,7 +419,7 @@ extern "C" void
 __crubit_thunk_MulAssign_umul_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt&, ::rs_ops::MyInt*);
 }
-inline void MyInt::operator*=(::rs_ops::MyInt rhs) {
+inline void(MyInt::operator*=)(::rs_ops::MyInt rhs) {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_MulAssign_umul_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
@@ -427,7 +431,7 @@ extern "C" void
 __crubit_thunk_Neg_uneg_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt*, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::operator-() const {
+inline ::rs_ops::MyInt(MyInt::operator-)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -442,7 +446,7 @@ extern "C" void
 __crubit_thunk_Not_unot_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt*, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::operator!() const {
+inline ::rs_ops::MyInt(MyInt::operator!)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -457,7 +461,7 @@ extern "C" void
 __crubit_thunk_Rem_urem_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt*, ::rs_ops::MyInt*, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::operator%(::rs_ops::MyInt rhs) const {
+inline ::rs_ops::MyInt(MyInt::operator%)(::rs_ops::MyInt rhs) const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -472,7 +476,7 @@ extern "C" void
 __crubit_thunk_RemAssign_urem_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt&, ::rs_ops::MyInt*);
 }
-inline void MyInt::operator%=(::rs_ops::MyInt rhs) {
+inline void(MyInt::operator%=)(::rs_ops::MyInt rhs) {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_RemAssign_urem_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
@@ -484,7 +488,7 @@ extern "C" void
 __crubit_thunk_Shl_ushl_urs_uops_ugolden_x0000003a_x0000003aMyInt_ui32(
     ::rs_ops::MyInt*, ::std::int32_t, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::operator<<(::std::int32_t rhs) const {
+inline ::rs_ops::MyInt(MyInt::operator<<)(::std::int32_t rhs) const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -499,7 +503,7 @@ extern "C" void
 __crubit_thunk_ShlAssign_ushl_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_ui32(
     ::rs_ops::MyInt&, ::std::int32_t);
 }
-inline void MyInt::operator<<=(::std::int32_t rhs) {
+inline void(MyInt::operator<<=)(::std::int32_t rhs) {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_ShlAssign_ushl_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_ui32(
@@ -511,7 +515,7 @@ extern "C" void
 __crubit_thunk_Shr_ushr_urs_uops_ugolden_x0000003a_x0000003aMyInt_ui32(
     ::rs_ops::MyInt*, ::std::int32_t, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::operator>>(::std::int32_t rhs) const {
+inline ::rs_ops::MyInt(MyInt::operator>>)(::std::int32_t rhs) const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -526,7 +530,7 @@ extern "C" void
 __crubit_thunk_ShrAssign_ushr_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_ui32(
     ::rs_ops::MyInt&, ::std::int32_t);
 }
-inline void MyInt::operator>>=(::std::int32_t rhs) {
+inline void(MyInt::operator>>=)(::std::int32_t rhs) {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_ShrAssign_ushr_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_ui32(
@@ -538,7 +542,7 @@ extern "C" void
 __crubit_thunk_Sub_usub_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt*, ::rs_ops::MyInt*, ::rs_ops::MyInt* __ret_ptr);
 }
-inline ::rs_ops::MyInt MyInt::operator-(::rs_ops::MyInt rhs) const {
+inline ::rs_ops::MyInt(MyInt::operator-)(::rs_ops::MyInt rhs) const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   crubit::Slot<::rs_ops::MyInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -553,14 +557,17 @@ extern "C" void
 __crubit_thunk_SubAssign_usub_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
     ::rs_ops::MyInt&, ::rs_ops::MyInt*);
 }
-inline void MyInt::operator-=(::rs_ops::MyInt rhs) {
+inline void(MyInt::operator-=)(::rs_ops::MyInt rhs) {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_SubAssign_usub_uassign_urs_uops_ugolden_x0000003a_x0000003aMyInt_urs_uops_ugolden_x0000003a_x0000003aMyInt(
           self, &rhs);
 }
-inline void MyInt::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyInt, value));
+inline void ::rs_ops::MyInt::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::rs_ops::MyInt;
+    static_assert(0 == offsetof(__crubit_assert_type, value));
+  }
 }
 }  // namespace rs_ops
 
