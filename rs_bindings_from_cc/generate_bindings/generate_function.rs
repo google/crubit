@@ -12,6 +12,7 @@ use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind,
 use database::rs_snippet::{
     format_generic_params, format_generic_params_replacing_by_self, should_derive_clone,
     unique_lifetimes, Lifetime, LifetimeOptions, Mutability, PassingConvention, RsTypeKind,
+    RustPtrKind,
 };
 use database::{intern, BindingsGenerator};
 use error_report::{anyhow, bail, ErrorList};
@@ -1412,15 +1413,113 @@ fn adjust_param_types_for_trait_impl<'a>(
     ParamValueAdjustments { clone_prefixes, clone_suffixes }
 }
 
+/// A getter or setter which can be implemented by directly reading or writing the underlying
+/// field, instead of by calling a C++ thunk.
+struct ThunklessAccessor<'a> {
+    kind: ThunklessAccessorKind,
+    /// The type of the field which is read (getter) or written (setter).
+    field_type: RsTypeKind<'a>,
+    /// The offset of the field within the record, in bits.
+    offset: usize,
+    /// How the field value is converted to (getter) or from (setter) the type used in the
+    /// generated Rust API.
+    conversion: AccessorConversion,
+}
+
+enum ThunklessAccessorKind {
+    Getter,
+    Setter,
+}
+
+/// How the value of a field is converted to or from the type used in the generated Rust API.
+enum AccessorConversion {
+    /// The field type and the API type are identical, so no conversion is necessary.
+    Identity,
+    /// The field value is converted with an `as` cast.
+    Cast,
+}
+
+/// Returns how a field of type `field_type` is converted to or from `api_type` (the type used for
+/// the value in the generated Rust API), or `None` if the field does not support thunkless access.
+fn thunkless_accessor_conversion(
+    field_type: &RsTypeKind,
+    api_type: &RsTypeKind,
+) -> Option<AccessorConversion> {
+    match field_type {
+        // An `as` cast between primitives is a value-preserving numeric conversion, so it is safe
+        // even if the two types are not identical (e.g. an `int` field exposed by a getter which
+        // returns a `long`).
+        RsTypeKind::Primitive(_) if matches!(api_type, RsTypeKind::Primitive(_)) => {
+            Some(AccessorConversion::Cast)
+        }
+        // Raw pointers are copied verbatim. Note that we deliberately do *not* use an `as` cast
+        // here: casts between raw pointer types are reinterpreting casts, so they would silently
+        // paper over a mismatch between the field and the API type (e.g. discarding `const`, or a
+        // derived-to-base conversion, which in C++ may adjust the address). Requiring the types to
+        // be identical means that if the importer ever starts accepting accessors which convert
+        // their value (see b/482092715), pointer accessors fall back to a thunk instead of
+        // generating subtly wrong code.
+        //
+        // Only plain C++ pointers qualify: `Owned` pointers have ownership semantics, `Slice` is
+        // `rs_std::SliceRef` rather than a raw pointer, and C++ references (`LValueRef` and
+        // `RValueRef`, which are mapped to `RsTypeKind::Reference` when they have a lifetime)
+        // carry aliasing requirements which a raw read or write would not uphold.
+        RsTypeKind::Pointer {
+            kind: RustPtrKind::CcPtr(PointerTypeKind::Nullable | PointerTypeKind::NonNull),
+            ..
+        } if field_type == api_type => Some(AccessorConversion::Identity),
+        _ => None,
+    }
+}
+
+/// Returns a description of the accessor which `func` can be generated as, if it can be generated
+/// without a C++ thunk.
+///
+/// `param_types` and `return_type` must be the types as they are before any adjustments made for
+/// the shape of the generated API (see `adjust_param_types_for_trait_impl` and
+/// `function_signature`): the result of this function decides whether a thunk is generated, so it
+/// must be computed once, and before those types are modified.
+fn thunkless_accessor<'a>(
+    db: &BindingsGenerator<'a>,
+    func: &Func<'a>,
+    param_types: &[RsTypeKind<'a>],
+    return_type: &RsTypeKind<'a>,
+) -> Option<ThunklessAccessor<'a>> {
+    if !db
+        .ir()
+        .target_crubit_features(func.owning_target())
+        .contains(crubit_feature::CrubitFeature::ThunklessAccessors)
+    {
+        return None;
+    }
+    let (kind, cc_field_type, offset, api_type) = match func.semantic()? {
+        MemberFuncSemantic::Getter(getter) => {
+            (ThunklessAccessorKind::Getter, &getter.type_, getter.offset, return_type)
+        }
+        MemberFuncSemantic::Setter(setter) => {
+            // The first parameter is `this`, the second is the new value of the field.
+            (ThunklessAccessorKind::Setter, &setter.type_, setter.offset, param_types.get(1)?)
+        }
+    };
+    // Field offsets are in bits. Accessors are never generated for bitfields, so the offset is
+    // expected to be byte-aligned, but bail out rather than truncate if that ever changes.
+    if offset % 8 != 0 {
+        return None;
+    }
+    let field_type = db.rs_type_kind(cc_field_type.clone()).ok()?;
+    let conversion = thunkless_accessor_conversion(&field_type, api_type)?;
+    Some(ThunklessAccessor { kind, field_type, offset, conversion })
+}
+
 #[allow(clippy::too_many_arguments)]
 fn generate_func_body<'a>(
     db: &BindingsGenerator<'a>,
-    func: &Func<'a>,
     impl_kind: &ImplKind<'a>,
     crate_root_path: &TokenStream,
     return_type: &RsTypeKind<'a>,
     param_types: &[RsTypeKind<'a>],
     param_value_adjustments: &ParamValueAdjustments,
+    thunkless_accessor: Option<&ThunklessAccessor<'a>>,
     thunk_ident: Ident,
     thunk_prepare: TokenStream,
     thunk_args: Vec<TokenStream>,
@@ -1444,54 +1543,59 @@ fn generate_func_body<'a>(
         return_type.to_token_stream_replacing_by_self(db, self_type.as_ref())
     };
 
-    if db
-        .ir()
-        .target_crubit_features(func.owning_target())
-        .contains(crubit_feature::CrubitFeature::ThunklessAccessors)
-    {
-        if let Some(MemberFuncSemantic::Getter(getter)) = func.semantic()
-            && let (Ok(field_type @ RsTypeKind::Primitive(_)), RsTypeKind::Primitive(_)) =
-                (db.rs_type_kind(getter.type_.clone()), return_type)
-        {
-            let self_arg = &thunk_args[0];
-            let offset_bytes = syn::Index::from(getter.offset / 8);
-            let field_type_tokens = field_type.to_token_stream(db);
-            let body = quote! {
-                (*((&*#self_arg as *const _ as *const u8).add(#offset_bytes) as *const #field_type_tokens)) as #return_type_or_self
-            };
-            return Ok(quote! {
-                #thunk_prepare
-                unsafe { #body }
-            });
-        }
-
-        if let Some(MemberFuncSemantic::Setter(setter)) = func.semantic()
-            && let (Ok(field_type @ RsTypeKind::Primitive(_)), Some(RsTypeKind::Primitive(_))) =
-                (db.rs_type_kind(setter.type_.clone()), param_types.get(1))
-        {
-            let self_arg = &thunk_args[0];
-            let val_arg = &thunk_args[1];
-            let offset_bytes = syn::Index::from(setter.offset / 8);
-            let field_type_tokens = field_type.to_token_stream(db);
-            let is_pinned_mut_ref = match param_types.first() {
-                Some(RsTypeKind::Reference { mutability: Mutability::Mut, referent, .. }) => {
-                    !referent.is_unpin()
+    // Note that whether this accessor is thunkless was decided by the caller, which also used it
+    // to decide whether to generate a thunk at all. It must not be recomputed here: `param_types`
+    // and `return_type` have since been adjusted to match the shape of the generated API, so
+    // recomputing it could disagree with the decision to skip the thunk.
+    if let Some(ThunklessAccessor { kind, field_type, offset, conversion }) = thunkless_accessor {
+        let self_arg = &thunk_args[0];
+        let offset_bytes = syn::Index::from(offset / 8);
+        let field_type_tokens = field_type.to_token_stream(db);
+        let body = match kind {
+            ThunklessAccessorKind::Getter => {
+                // Caveat: this is a *typed* read out of storage which, on the Rust side, is
+                // merely a blob of `MaybeUninit` bytes. If C++ left the field uninitialized, or
+                // left it holding a bit pattern that is invalid for the field's Rust type (e.g.
+                // a `bool` byte that is neither 0 nor 1), this read is UB, whereas a thunk would
+                // merely have returned garbage. This is accepted: reading such a field through
+                // the C++ accessor is already UB in C++, and `thunkless_accessors` is an opt-in
+                // feature.
+                let field_value = quote! {
+                    (*((&*#self_arg as *const _ as *const u8).add(#offset_bytes) as *const #field_type_tokens))
+                };
+                match conversion {
+                    AccessorConversion::Identity => field_value,
+                    AccessorConversion::Cast => quote! { #field_value as #return_type_or_self },
                 }
-                _ => false,
-            };
-            let self_ptr = if is_pinned_mut_ref {
-                quote! { (::core::pin::Pin::into_inner_unchecked(#self_arg) as *mut _ as *mut u8) }
-            } else {
-                quote! { (#self_arg as *mut _ as *mut u8) }
-            };
-            let body = quote! {
-                *((#self_ptr).add(#offset_bytes) as *mut #field_type_tokens) = (#val_arg as #field_type_tokens)
-            };
-            return Ok(quote! {
-                #thunk_prepare
-                unsafe { #body }
-            });
-        }
+            }
+            ThunklessAccessorKind::Setter => {
+                let val_arg = &thunk_args[1];
+                // Unlike the decision above, this must be based on the adjusted `param_types`,
+                // because it has to match the signature of the function being generated.
+                let is_pinned_mut_ref = match param_types.first() {
+                    Some(RsTypeKind::Reference {
+                        mutability: Mutability::Mut, referent, ..
+                    }) => !referent.is_unpin(),
+                    _ => false,
+                };
+                let self_ptr = if is_pinned_mut_ref {
+                    quote! { ::core::pin::Pin::into_inner_unchecked(#self_arg) as *mut _ as *mut u8 }
+                } else {
+                    quote! { #self_arg as *mut _ as *mut u8 }
+                };
+                let new_value = match conversion {
+                    AccessorConversion::Identity => quote! { #val_arg },
+                    AccessorConversion::Cast => quote! { (#val_arg as #field_type_tokens) },
+                };
+                quote! {
+                    *((#self_ptr).add(#offset_bytes) as *mut #field_type_tokens) = #new_value
+                }
+            }
+        };
+        return Ok(quote! {
+            #thunk_prepare
+            unsafe { #body }
+        });
     }
 
     match &impl_kind {
@@ -1923,25 +2027,12 @@ pub fn generate_function<'a>(
     // Skip thunk generation if the function is a method on a public base class,
     // as the base class thunk will already have been generated, or if we generate
     // a direct Rust getter or setter implementation.
-    let is_direct_access = db
-        .ir()
-        .target_crubit_features(func.as_ref().owning_target())
-        .contains(crubit_feature::CrubitFeature::ThunklessAccessors)
-        && match func.semantic() {
-            Some(MemberFuncSemantic::Getter(getter)) => {
-                matches!(
-                    (db.rs_type_kind(getter.type_.clone()), &return_type),
-                    (Ok(RsTypeKind::Primitive(_)), RsTypeKind::Primitive(_))
-                )
-            }
-            Some(MemberFuncSemantic::Setter(setter)) => {
-                matches!(
-                    (db.rs_type_kind(setter.type_.clone()), param_types.get(1)),
-                    (Ok(RsTypeKind::Primitive(_)), Some(RsTypeKind::Primitive(_)))
-                )
-            }
-            _ => false,
-        };
+    //
+    // Note that this must be computed before `param_types` and `return_type` are adjusted below
+    // to match the shape of the generated API: the same value is passed to `generate_func_body`,
+    // so that the body cannot end up calling a thunk which was never generated.
+    let thunkless_accessor = thunkless_accessor(db, &func, &param_types, &return_type);
+    let is_direct_access = thunkless_accessor.is_some();
     let skip_thunk_generation: bool = is_direct_access || {
         || {
             // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
@@ -2057,12 +2148,12 @@ pub fn generate_function<'a>(
             }
             generate_func_body(
                 db,
-                &func,
                 &impl_kind,
                 &crate_root_path,
                 &return_type,
                 &param_types,
                 &param_value_adjustments,
+                thunkless_accessor.as_ref(),
                 thunk_ident(db, &func),
                 thunk_prepare,
                 thunk_args,
@@ -2227,12 +2318,12 @@ pub fn generate_function<'a>(
                 } else {
                     generate_func_body(
                         db,
-                        &func,
                         &impl_kind,
                         &crate_root_path,
                         &free_return_type,
                         &free_param_types,
                         &param_value_adjustments,
+                        thunkless_accessor.as_ref(),
                         thunk_ident(db, &func),
                         free_thunk_prepare,
                         free_thunk_args,
