@@ -447,10 +447,11 @@ impl<'db> BindingsGenerator<'db> {
         let item = self.find_untyped_decl(item_id);
         match item {
             ir::Item::Func(f) => {
-                if let Some(parent_id) = f.enclosing_item_id()
-                    && let Ok(record) = self.find_decl::<Rc<ir::Record>>(parent_id)
-                {
-                    return self.defining_target(record.id());
+                if let Some(parent_id) = f.enclosing_item_id() {
+                    let parent = self.find_untyped_decl(parent_id);
+                    if let ir::Item::Record(record) = parent {
+                        return self.defining_target(record.id());
+                    }
                 }
                 None
             }
