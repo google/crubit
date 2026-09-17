@@ -708,6 +708,12 @@ pub enum RsTypeKind<'a> {
         /// How the Rust type should be spelled, after interpolating template arguments.
         /// This is the stringified TokenStream because TokenStream is not PartialEq + Eq + Hash.
         rust_type: Rc<str>,
+        /// The type arguments, for a generic such as `NewStatusOr<T>`.
+        ///
+        /// These are retained, rather than only being interpolated into `rust_type`, because a
+        /// generic of this kind stores its payload in place and therefore inherits the payload's
+        /// movability and destructor behavior. See [`RsTypeKind::inline_payloads`].
+        type_args: Rc<[RsTypeKind<'a>]>,
         is_complete: bool,
     },
 }
@@ -1408,16 +1414,22 @@ impl<'a> RsTypeKind<'a> {
                             rs_type_kind.display(&db),
                         );
                         rs_type_kind.ensure_complete_type_arg(&db, existing_rust_type.cc_name())?;
-                        Ok((rs_type_kind.to_token_stream(db), rs_type_kind.is_complete()))
+                        Ok((
+                            rs_type_kind.to_token_stream(db),
+                            rs_type_kind.is_complete(),
+                            Some(rs_type_kind),
+                        ))
                     }
-                    TemplateArg::Int(i) => Ok((i.to_token_stream(), true)),
-                    TemplateArg::Bool(b) => Ok((b.to_token_stream(), true)),
+                    TemplateArg::Int(i) => Ok((i.to_token_stream(), true, None)),
+                    TemplateArg::Bool(b) => Ok((b.to_token_stream(), true, None)),
                 }
             })
             .collect::<Result<Vec<_>>>()?;
 
-        let is_complete = args.iter().all(|(_, complete)| *complete);
-        let mut iter = args.into_iter().map(|(tokens, _)| Ok(tokens));
+        let is_complete = args.iter().all(|(_, complete, _)| *complete);
+        let type_args: Rc<[RsTypeKind]> =
+            args.iter().filter_map(|(_, _, kind)| kind.clone()).collect();
+        let mut iter = args.into_iter().map(|(tokens, _, _)| Ok(tokens));
 
         let rust_type = interpolate_spelled_rust_type(uninterpolated_rust_type, &mut iter)
             .map_err(|e| {
@@ -1432,12 +1444,35 @@ impl<'a> RsTypeKind<'a> {
         Ok(RsTypeKind::ExistingRustType {
             existing_rust_type,
             rust_type: rust_type.to_string().into(),
+            type_args,
             is_complete,
         })
     }
 
+    /// The types which this type stores *in place*, and whose properties it therefore inherits.
+    ///
+    /// A Rust type mapped onto a C++ generic -- `absl::StatusOr<T>` mapped onto
+    /// `status::absl::NewStatusOr<T>` by `CRUBIT_NEW_STATUS`, say -- stores its payload inline, so
+    /// it is only `Unpin` and only destructor-free if every payload is.
+    ///
+    /// Generics which keep their payload behind indirection (`std::vector<T>`,
+    /// `std::unique_ptr<T>`) or require it to be trivial (`std::atomic<T>`) are deliberately not
+    /// included: their own behavior does not depend on `T`. Neither are bridged containers, whose
+    /// payload already had to be Rust-movable to be memcpy'd through the bridge buffer, and whose
+    /// Rust spelling is a native Rust type rather than the C++ one.
+    pub fn inline_payloads(&self) -> &[RsTypeKind<'a>] {
+        match self.unalias() {
+            RsTypeKind::ExistingRustType { type_args, .. } => type_args,
+            _ => &[],
+        }
+    }
+
     /// Returns true if the type is known to be `Unpin`, false otherwise.
     pub fn is_unpin(&self) -> bool {
+        // A type which stores its payload in place is no more movable than the payload.
+        if !self.inline_payloads().iter().all(RsTypeKind::is_unpin) {
+            return false;
+        }
         match self.unalias() {
             RsTypeKind::Error { .. } | RsTypeKind::IncompleteRecord { .. } => false,
             RsTypeKind::Record { record, uniform_repr_template_type, .. } => {
@@ -1512,6 +1547,10 @@ impl<'a> RsTypeKind<'a> {
     }
 
     pub fn needs_destruction(&self) -> bool {
+        // A type which stores its payload in place has to destroy it.
+        if self.inline_payloads().iter().any(RsTypeKind::needs_destruction) {
+            return true;
+        }
         match self.unalias() {
             RsTypeKind::Record { record, .. } => !matches!(
                 record.destructor(),

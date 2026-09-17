@@ -1216,7 +1216,22 @@ fn crubit_abi_type<'a>(
                 let second_abi = db.crubit_abi_type(second.as_ref().clone())?;
                 Ok(CrubitAbiType::Pair(Rc::from(first_abi), Rc::from(second_abi)))
             }
-            BridgeRsTypeKind::StdString { in_cc_std, .. } => {
+            BridgeRsTypeKind::StdString { in_cc_std, layout_compatible } => {
+                // The bridge for `std::string` boxes it, because `std::string` is not trivially
+                // relocatable, so the value it produces in Rust is a `string_wrapper`. That
+                // contradicts the layout-compatible spelling of the type, which is `string`, and
+                // would produce generated code that does not compile.
+                //
+                // Rather than silently boxing, refuse to bind: the enclosing type needs the
+                // layout-compatible treatment too, so that it is not bridged by value at all.
+                ensure!(
+                    !layout_compatible,
+                    "crubit.rs/errors/bridge_layout_compat_string: a layout-compatible \
+                     `std::string` cannot be bridged by value, so the type containing it also \
+                     needs to be layout-compatible. Either enable the layout-compatible feature \
+                     for the containing type, or remove \
+                     `//features:layout_compat_string` from this target."
+                );
                 Ok(CrubitAbiType::StdString { in_cc_std })
             }
             BridgeRsTypeKind::Callable(callable) => {

@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/golden:crubit_internal_rust_type_cc
 
 #![rustfmt::skip]
-#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -130,6 +130,75 @@ pub fn AcceptSpecialized(
     }
 }
 
+#[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "14NonRustMovable"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=NonRustMovable
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct NonRustMovable {
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    pub x: ::ffi_11::c_int,
+}
+impl !Send for NonRustMovable {}
+impl !Sync for NonRustMovable {}
+unsafe impl ::cxx::ExternType for NonRustMovable {
+    type Id = ::cxx::type_id!("NonRustMovable");
+    type Kind = ::cxx::kind::Opaque;
+}
+
+impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for NonRustMovable {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN14NonRustMovableC1EOS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__unelided> ::ctor::CtorNew<(::ctor::RvalueReference<'__unelided, Self>,)>
+    for NonRustMovable
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'__unelided, Self>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>>::ctor_new(arg)
+    }
+}
+
+impl ::ctor::PinnedDrop for NonRustMovable {
+    #[inline(always)]
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN14NonRustMovableD1Ev(self) }
+    }
+}
+
+/// A generic existing Rust type stores its type arguments in place, and so is
+/// only Rust-movable, and only free of a destructor, if they all are.
+/// `MyRustContainer<NonRustMovable>` is therefore returned by `Ctor`, rather
+/// than by value.
+#[inline(always)]
+pub fn ReturnContainerOfNonRustMovable(
+) -> ::ctor::Ctor![crate::MyRustContainer<crate::NonRustMovable>] {
+    unsafe {
+        ::ctor::FnCtor::new(
+            move |__crubit_dest: *mut crate::MyRustContainer<crate::NonRustMovable>| {
+                crate::detail::__rust_thunk___Z31ReturnContainerOfNonRustMovablev(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                );
+            },
+        )
+    }
+}
+
 // Type bindings for Ptr<int> suppressed due to being mapped to an existing Rust type (crate::RustPtr<::ffi_11::c_int>)
 
 // Type bindings for CppTypeWithTemplateArgs<int, float, true> suppressed due to being mapped to an existing Rust type (crate::RustTypeWithReorderedGenerics<::ffi_11::c_int,f32,true>)
@@ -137,6 +206,8 @@ pub fn AcceptSpecialized(
 // Type bindings for ConvertPtrs<float, int> suppressed due to being mapped to an existing Rust type (crate::RustTypeReordered<f32,::ffi_11::c_int>)
 
 // Type bindings for WithDefault<float> suppressed due to being mapped to an existing Rust type (crate::RustTypeWithDefault<f32,::ffi_11::c_int>)
+
+// Type bindings for MyContainer<NonRustMovable> suppressed due to being mapped to an existing Rust type (crate::MyRustContainer<crate::NonRustMovable>)
 
 // Type bindings for MyContainer<int> suppressed due to being mapped to an existing Rust type (crate::MyRustContainer<::ffi_11::c_int>)
 
@@ -165,6 +236,18 @@ mod detail {
             a: &mut crate::MyRustContainer<::ffi_11::c_int>,
             b: &mut crate::MyRustContainerVoid,
         );
+        #[link_name = "_ZN14NonRustMovableC1EOS_"]
+        pub(crate) unsafe fn __rust_thunk___ZN14NonRustMovableC1EOS_<'__unelided>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: ::ctor::RvalueReference<'__unelided, crate::NonRustMovable>,
+        );
+        #[link_name = "_ZN14NonRustMovableD1Ev"]
+        pub(crate) unsafe fn __rust_thunk___ZN14NonRustMovableD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NonRustMovable>,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z31ReturnContainerOfNonRustMovablev(
+            __return: *mut ::core::ffi::c_void,
+        );
     }
 }
 
@@ -186,6 +269,12 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_enum) == 2);
     assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, my_i8_alias) == 3);
     assert!(::core::mem::offset_of!(crate::ExistingRustTypeFieldTypes, error) == 4);
+    assert!(::core::mem::size_of::<crate::NonRustMovable>() == 4);
+    assert!(::core::mem::align_of::<crate::NonRustMovable>() == 4);
+    static_assertions::assert_impl_all!(crate::NonRustMovable: Drop);
+    static_assertions::assert_not_impl_any!(crate::NonRustMovable: Copy);
+    assert!(::core::mem::offset_of!(crate::NonRustMovable, x) == 0);
+    static_assertions::assert_impl_all!(::ffi_11::c_int: Copy);
     assert!(::core::mem::size_of::<crate::RustPtr<::ffi_11::c_int>>() == 8);
     assert!(::core::mem::align_of::<crate::RustPtr<::ffi_11::c_int>>() == 8);
     assert!(
@@ -200,6 +289,8 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::RustTypeReordered<f32, ::ffi_11::c_int>>() == 1);
     assert!(::core::mem::size_of::<crate::RustTypeWithDefault<f32, ::ffi_11::c_int>>() == 1);
     assert!(::core::mem::align_of::<crate::RustTypeWithDefault<f32, ::ffi_11::c_int>>() == 1);
+    assert!(::core::mem::size_of::<crate::MyRustContainer<crate::NonRustMovable>>() == 1);
+    assert!(::core::mem::align_of::<crate::MyRustContainer<crate::NonRustMovable>>() == 1);
     assert!(::core::mem::size_of::<crate::MyRustContainer<::ffi_11::c_int>>() == 1);
     assert!(::core::mem::align_of::<crate::MyRustContainer<::ffi_11::c_int>>() == 1);
     assert!(::core::mem::size_of::<crate::MyRustContainerVoid>() == 1);
