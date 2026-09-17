@@ -72,4 +72,16 @@ extern "C" void __rust_thunk___Z17AcceptSpecialized11MyContainerIiES_IvE(
 static_assert((void (*)(MyContainer<int>, MyContainer<void>)) &
               ::AcceptSpecialized);
 
+static_assert(CRUBIT_SIZEOF(struct NonRustMovable) == 4);
+static_assert(alignof(struct NonRustMovable) == 4);
+static_assert(CRUBIT_OFFSET_OF(x, struct NonRustMovable) == 0);
+
+extern "C" void __rust_thunk___Z31ReturnContainerOfNonRustMovablev(
+    MyContainer<NonRustMovable>* __return) {
+  new (__return) auto(ReturnContainerOfNonRustMovable());
+}
+
+static_assert((MyContainer<NonRustMovable> (*)()) &
+              ::ReturnContainerOfNonRustMovable);
+
 #pragma clang diagnostic pop
