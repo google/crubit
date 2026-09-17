@@ -119,5 +119,18 @@ struct Const {};
 #define CRUBIT_INTERNAL_SAME_ABI \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_same_abi")
 
+// (Optional) The target that owns the Rust type for CRUBIT_INTERNAL_RUST_TYPE.
+// Format: "//package:target" or a short-form like "@abseil-cpp//absl/status".
+//
+// When crate name mangling is enabled (e.g.
+// `use_label_encoded_names_for_deps`), if the Rust type starts with `::` and
+// its crate prefix matches the target name of the hint, the crate prefix will
+// be replaced with the mangled crate name of the hint target.
+#define CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT(label_hint) \
+  CRUBIT_INTERNAL_ANNOTATE("crubit_internal_rust_type_label_hint", label_hint)
+
+#define CRUBIT_INTERNAL_RUST_TYPE_WITH_HINT(t, label_hint, ...) \
+  CRUBIT_INTERNAL_RUST_TYPE(t, __VA_ARGS__)                     \
+  CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT(label_hint)
 
 #endif  // CRUBIT_SUPPORT_ANNOTATIONS_INTERNAL_H_

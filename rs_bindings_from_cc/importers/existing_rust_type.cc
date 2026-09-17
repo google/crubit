@@ -272,6 +272,21 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
                                is_same_abi.status().message()));
   }
 
+  std::optional<std::string> label_hint;
+  absl::StatusOr<std::optional<std::string>> hint_val =
+      GetAnnotationWithStringArg(*type_decl,
+                                 "crubit_internal_rust_type_label_hint");
+  if (!hint_val.ok()) {
+    return ictx_.HardError(
+        *type_decl,
+        FormattedError::PrefixedStrCat(
+            "Invalid crubit_internal_rust_type_label_hint attribute",
+            hint_val.status().message()));
+  }
+  if (hint_val->has_value()) {
+    label_hint = **std::move(hint_val);
+  }
+
   clang::ASTContext& context = type_decl->getASTContext();
   clang::QualType cc_qualtype = context.getTypeDeclType(type_decl);
   const clang::Type* cpp_type = cc_qualtype.getTypePtr();
@@ -304,6 +319,9 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
   existing->set_impl_debug(ictx_.IsRecordImplDebugEnabledForTarget(
                                ictx_.GetOwningTarget(*type_decl)) &&
                            ictx_.ImplementsCoreFmtDebug(*type_decl));
+  if (label_hint.has_value()) {
+    existing->set_label_hint(*std::move(label_hint));
+  }
   return item;
 }
 
