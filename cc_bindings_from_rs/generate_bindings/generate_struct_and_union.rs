@@ -9,7 +9,7 @@ extern crate rustc_span;
 
 use crate::avoid_colliding_types::{AvoidCollidingTypes, TypeCollisionRisk};
 use crate::format_cc_ident;
-use crate::format_type::CcParamTy;
+use crate::format_type::{get_cc_template_args, CcParamTy};
 use crate::generate_doc_comment;
 use crate::generate_function::{
     bool_constraint_template_prefix, cc_param_to_c_abi, format_variant_ctor_cc_name,
@@ -105,7 +105,6 @@ pub(crate) fn non_blanket_impls_for_ty<'tcx>(
         }
     })
 }
-
 /// Returns the Rust underlying type of the `cpp_enum` struct specified by the given def id.
 pub fn cpp_enum_rust_underlying_type(tcx: TyCtxt, def_id: DefId) -> Result<Ty> {
     let fields = tcx.adt_def(def_id).all_fields().collect::<Vec<_>>();
@@ -449,7 +448,7 @@ pub(crate) fn generate_associated_item<'tcx>(
 }
 
 fn erase_regions<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
-    return tcx.erase_and_anonymize_regions(ty);
+    tcx.erase_and_anonymize_regions(ty)
 }
 
 fn get_trait_ref_from_impl_id<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId) -> ty::TraitRef<'tcx> {
@@ -483,7 +482,6 @@ fn does_impl_apply<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId, target_ty: Ty<'tcx>)
 
     ocxt.evaluate_obligations_error_on_ambiguity().into_iter().next().is_none()
 }
-
 pub fn from_trait_impls_by_argument<'tcx>(
     db: &BindingsGenerator<'tcx>,
     crate_num: CrateNum,
@@ -552,7 +550,7 @@ fn generate_into_impls<'tcx>(
     core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
-    let cc_struct_name = &core.common.cc_short_name;
+    let cc_fully_qualified_name = &core.common.cc_fully_qualified_name;
 
     let into_trait = tcx.get_diagnostic_item(sym::Into).expect("Could not find Into trait");
     let Some(def_id) = core.def_id else {
@@ -652,6 +650,9 @@ fn generate_into_impls<'tcx>(
                     "ADT's self type should be C++-convertible after generate_adt_core succeeds",
                 );
             let self_cpp_ty = self_cpp_ty.into_tokens(&mut prereqs);
+            let is_generic = core
+                .def_id
+                .is_none_or(|def_id| query_compiler::has_non_lifetime_generics(tcx, def_id));
             let is_copy = is_copy(tcx, def_id, core.common.self_ty);
             if !is_copy && !db.is_cpp_move_constructible(core.common.self_ty) {
                 return None;
@@ -662,7 +663,7 @@ fn generate_into_impls<'tcx>(
                 thunk_name.clone(),
                 middle_ty,
                 ThunkSelfParameter::new(
-                    /*has_self=*/ true, is_copy, /*is_trait_method =*/ false,
+                    /*has_self=*/ true, is_copy, /*is_trait_method =*/ false, is_generic,
                 ),
                 &[Param {
                     cc_name: format_ident!("self"),
@@ -696,7 +697,7 @@ fn generate_into_impls<'tcx>(
                 cc_details: CcSnippet::new(quote! {
                     #cc_thunk_decls
 
-                    inline #cc_struct_name :: operator  #cc_ty ( ) #method_qualifiers {
+                    inline #cc_fully_qualified_name :: operator  #cc_ty ( ) #method_qualifiers {
                         #impl_body_tokens
                     }
                 }),
@@ -733,6 +734,7 @@ fn generate_constructor_impls<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let cc_struct_name = &core.common.cc_short_name;
+    let cc_fully_qualified_name = &core.common.cc_fully_qualified_name;
 
     // We need there to be a `def_id` to generate a constructor from.
     let def_id = core.def_id.expect("ADT must have a def_id");
@@ -932,16 +934,19 @@ fn generate_constructor_impls<'tcx>(
             )
             .ok()?;
 
+            let is_specialization = core.def_id.is_none_or(|id| query_compiler::has_non_lifetime_generics(tcx, id));
+            let thunk_qualifier = crate::thunk_qualifier(is_specialization);
+
             let returns_by_value = is_c_abi_compatible_by_value(db, core.common.self_ty);
             let impl_body_tokens = if returns_by_value {
                 quote! {
                     #statements
-                    *this = __crubit_internal::#thunk_name(#c_abi_expression);
+                    *this = #thunk_qualifier::#thunk_name(#c_abi_expression);
                 }
             } else {
                 quote! {
                     #statements
-                    __crubit_internal::#thunk_name(#c_abi_expression, this);
+                    #thunk_qualifier::#thunk_name(#c_abi_expression, this);
                 }
             };
             prereqs.move_defs_to_fwd_decls();
@@ -964,7 +969,7 @@ fn generate_constructor_impls<'tcx>(
                 cc_details: CcSnippet::new(quote! {
                     #cc_thunk_decls
                     #template_prefix
-                    inline #cc_struct_name :: #cc_struct_name ( #cc_ty value ) {
+                    inline #cc_fully_qualified_name :: #cc_struct_name ( #cc_ty value ) {
                         #impl_body_tokens
                     }
                 }),
@@ -1267,6 +1272,7 @@ fn generate_ord_impls<'tcx>(
 ) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
     let adt_cc_short_name = &core.common.cc_short_name;
+    let cc_fully_qualified_name = &core.common.cc_fully_qualified_name;
 
     let static_self_ty = replace_all_regions_with_static(tcx, core.common.self_ty);
     let self_rs_ty = db.format_ty_for_rs(static_self_ty)?;
@@ -1293,13 +1299,17 @@ fn generate_ord_impls<'tcx>(
     )?;
     let ref_self_cc_tokens = ref_self_cc_ty.into_tokens(&mut cc_details_prereqs);
 
+    let is_specialization =
+        core.def_id.is_none_or(|id| query_compiler::has_non_lifetime_generics(tcx, id));
+    let thunk_qualifier = crate::thunk_qualifier(is_specialization);
+
     let cc_details = CcSnippet {
         tokens: quote! {
             namespace __crubit_internal {
                 extern "C" ::std::int8_t #thunk_name(#ref_self_cc_tokens, #ref_self_cc_tokens);
             }
-            inline ::std::strong_ordering #adt_cc_short_name::operator<=>(const #adt_cc_short_name& other) const {
-                auto val = __crubit_internal::#thunk_name(*this, other);
+            inline ::std::strong_ordering (#cc_fully_qualified_name::operator<=>)(const #adt_cc_short_name& other) const {
+                auto val = #thunk_qualifier::#thunk_name(*this, other);
                 switch (val) {
                     case -1: return ::std::strong_ordering::less;
                     case 0: return ::std::strong_ordering::equal;
@@ -1330,7 +1340,7 @@ fn generate_partial_ord_impls<'tcx>(
     rhs_ty: Ty<'tcx>,
 ) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
-    let adt_cc_short_name = &core.common.cc_short_name;
+    let cc_fully_qualified_name = &core.common.cc_fully_qualified_name;
 
     let static_self_ty = replace_all_regions_with_static(tcx, core.common.self_ty);
     let self_rs_ty = db.format_ty_for_rs(static_self_ty)?;
@@ -1389,6 +1399,10 @@ fn generate_partial_ord_impls<'tcx>(
     )?;
     let ref_rhs_cc_tokens = ref_rhs_cc_ty.into_tokens(&mut cc_details_prereqs);
 
+    let is_specialization =
+        core.def_id.is_none_or(|id| query_compiler::has_non_lifetime_generics(tcx, id));
+    let thunk_qualifier = crate::thunk_qualifier(is_specialization);
+
     let (template_prefix, rhs_cc_tokens_for_main, rhs_cc_tokens_for_impl) = if rhs_ty.is_bool() {
         main_api_prereqs.includes.insert(CcInclude::type_traits());
         cc_details_prereqs.includes.insert(CcInclude::type_traits());
@@ -1413,8 +1427,8 @@ fn generate_partial_ord_impls<'tcx>(
                 extern "C" ::std::int8_t #thunk_name(#ref_self_cc_tokens, #ref_rhs_cc_tokens);
             }
             #template_prefix
-            inline ::std::partial_ordering #adt_cc_short_name::operator<=>(#rhs_cc_tokens_for_impl other) const {
-                auto val = __crubit_internal::#thunk_name(*this, other);
+            inline ::std::partial_ordering (#cc_fully_qualified_name::operator<=>)(#rhs_cc_tokens_for_impl other) const {
+                auto val = #thunk_qualifier::#thunk_name(*this, other);
                 switch (val) {
                     case -1: return ::std::partial_ordering::less;
                     case 0: return ::std::partial_ordering::equivalent;
@@ -1782,7 +1796,6 @@ fn generate_hash_impl<'tcx>(
         };
     let thunk_name = format_ident!("{}", thunk_name_str);
 
-    let adt_cc_short_name = &core.common.cc_short_name;
     let adt_cc_fully_qualified_name = &core.common.cc_fully_qualified_name;
 
     let mut main_api_prereqs = CcPrerequisites::default();
@@ -1799,7 +1812,7 @@ fn generate_hash_impl<'tcx>(
         tokens: quote! {
             __NEWLINE__ __COMMENT__ "AbslHashValue and std::hash support via core::hash::Hash"
             template <typename H>
-            friend H AbslHashValue(H h, const #adt_cc_short_name& self);
+            friend H AbslHashValue(H h, const #adt_cc_fully_qualified_name& self);
             __NEWLINE__
         },
         prereqs: main_api_prereqs,
@@ -1825,7 +1838,7 @@ fn generate_hash_impl<'tcx>(
                 extern "C" ::std::uint64_t #thunk_name(#ref_self_cc_tokens);
             }
             template <typename H>
-            inline H AbslHashValue(H h, const #adt_cc_short_name& self) {
+            inline H AbslHashValue(H h, const #adt_cc_fully_qualified_name& self) {
                 return H::combine(::std::move(h), __crubit_internal::#thunk_name(self));
             }
         },
@@ -1851,6 +1864,9 @@ pub fn generate_adt<'tcx>(
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let adt_cc_name = &core.common.cc_short_name;
+    let cc_fully_qualified_name = &core.common.cc_fully_qualified_name;
+    let is_specialization =
+        core.def_id.is_none_or(|id| query_compiler::has_non_lifetime_generics(tcx, id));
 
     // Handle `cpp_enum` structs.
     let crubit_attrs =
@@ -1911,10 +1927,12 @@ pub fn generate_adt<'tcx>(
         let cc_details = {
             let mut prereqs = CcPrerequisites::default();
             let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
+            let thunk_qualifier = crate::thunk_qualifier(is_specialization);
+
             let tokens = quote! {
                 #cc_thunk_decls
-                inline #adt_cc_name::~#adt_cc_name() {
-                    __crubit_internal::#drop_thunk_name(*this);
+                inline #cc_fully_qualified_name::~#adt_cc_name() {
+                    #thunk_qualifier::#drop_thunk_name(*this);
                 }
             };
             CcSnippet { tokens, prereqs }
@@ -1926,7 +1944,7 @@ pub fn generate_adt<'tcx>(
             ~#adt_cc_name() = default; __NEWLINE__
         });
         let cc_details = CcSnippet::with_include(
-            quote! { static_assert(::std::is_trivially_destructible_v<#adt_cc_name>); },
+            quote! { static_assert(::std::is_trivially_destructible_v<#cc_fully_qualified_name>); },
             CcInclude::type_traits(),
         );
         ApiSnippets { main_api, cc_details, ..Default::default() }
@@ -1984,9 +2002,13 @@ pub fn generate_adt<'tcx>(
     };
 
     let mut member_function_names = HashSet::<String>::new();
+    let self_is_not_generic =
+        core.def_id.is_some_and(|id| !query_compiler::has_non_lifetime_generics(tcx, id));
 
-    let self_is_not_generic = core.def_id.is_some_and(|id| tcx.generics_of(id).is_empty());
-
+    match core.common.self_ty.kind() {
+        TyKind::Adt(..) | TyKind::Tuple(..) => {}
+        _ => panic!("generate_adt called with an unexpected self type: {}", core.common.self_ty),
+    }
     let impl_items_snippets = core
         .def_id
         .map(|id| tcx.inherent_impls(id))
@@ -1998,7 +2020,7 @@ pub fn generate_adt<'tcx>(
         })
         .sorted_by_def(tcx)
         .flat_map(|impl_id| tcx.associated_items(impl_id).in_definition_order())
-        .flat_map(|assoc_item| {
+        .filter_map(|assoc_item| {
             generate_associated_item(
                 db,
                 assoc_item,
@@ -2065,7 +2087,7 @@ pub fn generate_adt<'tcx>(
         db,
         core.common.self_ty,
         &core.common.cc_short_name,
-        &quote! { #adt_cc_name },
+        &core.common.cc_fully_qualified_name,
         &core.rs_fully_qualified_name,
         &member_function_names,
         is_aggregate,
@@ -2138,16 +2160,22 @@ pub fn generate_adt<'tcx>(
             prereqs.fwd_decls.remove(&def_id);
         }
 
-        let bracketed_adt_cc_name = if db.kythe_annotations() {
-            quote! { __CAPTURE_BEGIN__ #adt_cc_name __CAPTURE_END__ }
+        let (full_cc_name, template) = if is_specialization {
+            (&core.common.cc_fully_qualified_name, quote! { template <> })
         } else {
-            quote! { #adt_cc_name }
+            (&core.common.cc_short_name, quote! {})
+        };
+        let bracketed_adt_cc_name = if db.kythe_annotations() {
+            quote! { __CAPTURE_BEGIN__ #full_cc_name __CAPTURE_END__ }
+        } else {
+            quote! { #full_cc_name }
         };
 
         CcSnippet {
             prereqs,
             tokens: quote! {
                 __NEWLINE__ #doc_comment
+                __NEWLINE__ #template
                 #keyword #(#attributes)* #bracketed_adt_cc_name final {
                     public: __NEWLINE__
                         #not_aggregate_comment
@@ -2165,15 +2193,16 @@ pub fn generate_adt<'tcx>(
         if let Some(def_id) = core.def_id {
             prereqs.defs.insert(def_id);
         }
+        let full_cc_name = &core.common.cc_fully_qualified_name;
         CcSnippet {
             prereqs,
             tokens: quote! {
                 __NEWLINE__
                 static_assert(
-                    sizeof(#adt_cc_name) == #size,
+                    sizeof(#full_cc_name) == #size,
                     "Verify that ADT layout didn't change since this header got generated");
                 static_assert(
-                    alignof(#adt_cc_name) == #alignment,
+                    alignof(#full_cc_name) == #alignment,
                     "Verify that ADT layout didn't change since this header got generated");
                 __NEWLINE__
                 #public_functions_cc_details
@@ -2206,7 +2235,6 @@ pub fn adt_needs_bindings<'tcx>(
     def_id: DefId,
 ) -> Result<Rc<AdtCoreBindings<'tcx>>> {
     let tcx = db.tcx();
-    let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
 
     let fully_qualified_name = db.symbol_canonical_name(def_id)?;
     if let Some(cpp_type) = fully_qualified_name.unqualified.cpp_type {
@@ -2217,28 +2245,65 @@ pub fn adt_needs_bindings<'tcx>(
         );
     }
 
-    let has_composable_bridging_attrs = matches!(
-        attributes.get_bridging_attrs()?,
-        Some(crubit_attr::BridgingAttrs::Composable { .. })
-    );
-
-    if !has_composable_bridging_attrs
-        && BridgedBuiltin::new(db, tcx.adt_def(def_id)).is_none()
-        && query_compiler::has_non_lifetime_generics(tcx, def_id)
-    {
-        bail!(
-            "crubit.rs/errors/unsupported_type: Generic types are not supported yet (b/259749095)"
+    if query_compiler::has_non_lifetime_generics(tcx, def_id) {
+        let generics = tcx.generics_of(def_id);
+        if generics
+            .own_params
+            .iter()
+            .any(|p| matches!(p.kind, ty::GenericParamDefKind::Const { .. }))
+        {
+            bail!("crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)");
+        }
+        let cpp_name = format_cc_ident(db, fully_qualified_name.unqualified.cpp_name.as_str())
+            .context("Error formatting item name")?;
+        #[rustversion::before(2026-04-19)]
+        let self_ty = erase_regions(tcx, tcx.type_of(def_id).instantiate_identity());
+        #[rustversion::since(2026-04-19)]
+        let self_ty = erase_regions(
+            tcx,
+            crate::normalize_ty(
+                tcx,
+                tcx.param_env(def_id),
+                tcx.type_of(def_id).instantiate_identity(),
+            ),
         );
+        let rs_fully_qualified_name =
+            db.format_ty_for_rs(replace_all_regions_with_static(tcx, self_ty))?;
+        let cc_fully_qualified_name = quote! { todo!() };
+
+        let keyword = match tcx.adt_def(def_id).adt_kind() {
+            ty::AdtKind::Struct => quote! { struct },
+            ty::AdtKind::Enum => quote! { struct },
+            ty::AdtKind::Union => quote! { union },
+        };
+
+        return Ok(Rc::new(AdtCoreBindings {
+            common: Rc::new(CoreBindingsCommon {
+                keyword,
+                cc_short_name: quote! { #cpp_name },
+                cc_fully_qualified_name,
+                self_ty,
+                alignment_in_bytes: 1,
+                size_in_bytes: 1,
+            }),
+            def_id: Some(def_id),
+            rs_fully_qualified_name,
+        }));
     }
 
     db.generate_adt_core(def_id)
 }
 
-/// Formats a primary C++ class template declaration for a generic ADT.
-pub fn generate_generic_adt_declaration<'tcx>(
+struct GenericAdtHeader {
+    keyword: TokenStream,
+    cpp_name: Ident,
+    template_params: Vec<TokenStream>,
+}
+
+fn get_generic_adt_header<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
-) -> Result<ApiSnippets<'tcx>> {
+) -> Result<GenericAdtHeader> {
     let tcx = db.tcx();
     let fully_qualified_name = db.symbol_canonical_name(def_id)?;
 
@@ -2277,39 +2342,33 @@ pub fn generate_generic_adt_declaration<'tcx>(
         .context("Error formatting item name")?;
 
     let generics = tcx.generics_of(def_id);
-    let template_params = generics
-        .own_params
-        .iter()
-        .enumerate()
-        .filter_map(|(i, param)| match param.kind {
-            ty::GenericParamDefKind::Type { .. } => {
-                let param_name = format_cc_ident(db, param.name.as_str())
-                    .unwrap_or_else(|_| format_ident!("T{}", i));
-                Some(Ok(quote! { typename #param_name }))
-            }
-            ty::GenericParamDefKind::Const { .. } => {
-                Some(Err(anyhow!(
-                    "crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)"
-                )))
-            }
-            ty::GenericParamDefKind::Lifetime => None,
-        })
-        .collect::<Result<Vec<_>>>()?;
+    let template_args = get_cc_template_args(db, generics)?;
+    let template_params =
+        template_args.iter().map(|arg| quote! { typename #arg }).collect::<Vec<_>>();
 
     ensure!(!template_params.is_empty(), "Generic ADT must have at least one type parameter");
 
+    Ok(GenericAdtHeader { keyword, cpp_name, template_params })
+}
+
+/// Formats a primary C++ class template declaration for a generic ADT.
+pub fn generate_generic_adt_declaration<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+) -> Result<TokenStream> {
+    let GenericAdtHeader { keyword, cpp_name, template_params } =
+        get_generic_adt_header(db, def_id)?;
+
     let doc_comment = generate_doc_comment(db, def_id);
 
-    let main_api = CcSnippet::new(quote! {
+    Ok(quote! {
         __NEWLINE__ #doc_comment
         template <#(#template_params),*>
         #keyword #cpp_name {
             static_assert(false, "This template can only be used via a specialization");
         };
         __NEWLINE__
-    });
-
-    Ok(main_api.into_main_api())
+    })
 }
 
 /// Implementation of `BindingsGenerator::generate_adt_core`.
@@ -2330,21 +2389,29 @@ pub fn generate_adt_core<'tcx>(
     );
     assert!(self_ty.is_adt());
     let fully_qualified_name = db.symbol_canonical_name(def_id)?;
-    let rs_fully_qualified_name = fully_qualified_name.format_for_rs();
+    let self_ty_cc = CcSnippet::new(fully_qualified_name.format_for_cc(db)?);
+    generate_adt_core_for_ty(db, self_ty, &self_ty_cc)
+}
+
+pub fn generate_adt_core_for_ty<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    self_ty: Ty<'tcx>,
+    self_ty_cc: &CcSnippet<'tcx>,
+) -> Result<Rc<AdtCoreBindings<'tcx>>> {
+    let tcx = db.tcx();
+    let adt_def = self_ty.ty_adt_def().ok_or_else(|| anyhow!("`self_ty` must be an ADT"))?;
+    let def_id = adt_def.did();
+
+    let fully_qualified_name = db.symbol_canonical_name(def_id)?;
+
+    let rs_fully_qualified_name = if query_compiler::has_non_lifetime_generics(tcx, def_id) {
+        let static_self_ty = replace_all_regions_with_static(tcx, self_ty);
+        db.format_ty_for_rs(static_self_ty)?
+    } else {
+        fully_qualified_name.format_for_rs()
+    };
     let cpp_name = format_cc_ident(db, fully_qualified_name.unqualified.cpp_name.as_str())
         .context("Error formatting item name")?;
-
-    // The check below ensures that `generate_trait_thunks` will succeed for the
-    // `Drop`, `Default`, and/or `Clone` trait. Ideally we would directly check
-    // if `generate_trait_thunks` or `format_ty_for_cc(..., self_ty, ...)`
-    // succeeds, but this would lead to infinite recursion, so we only replicate
-    // `format_ty_for_cc` / `TyKind::Adt` checks that are outside of
-    // `generate_adt_core`.
-    let cc_fully_qualified_name = fully_qualified_name.format_for_cc(db).with_context(|| {
-        format!("Error formatting the fully-qualified C++ name of `{cpp_name}`")
-    })?;
-
-    let adt_def = self_ty.ty_adt_def().expect("`def_id` needs to identify an ADT");
     let crubit_attrs = crubit_attr::get_attrs(tcx, def_id).unwrap_or_default();
 
     let keyword = match adt_def.adt_kind() {
@@ -2363,12 +2430,11 @@ pub fn generate_adt_core<'tcx>(
         ty::AdtKind::Union => quote! { union },
     };
 
-    // Verify that `cpp_enum` structs are also repr-transparent.
     if crubit_attrs.cpp_enum.is_some() {
         ensure!(
             adt_def.repr().transparent(),
             "`cpp_enum` struct must be annotated with `#[repr(transparent)]`"
-        )
+        );
     }
 
     let layout = get_layout(tcx, self_ty)
@@ -2377,20 +2443,17 @@ pub fn generate_adt_core<'tcx>(
         layout.backend_repr().is_sized(),
         "Bindings for dynamically sized types are not supported."
     );
-    let alignment_in_bytes = {
-        // Only the ABI-mandated alignment is considered (i.e. `AbiAndPrefAlign::pref`
-        // is ignored), because 1) Rust's `std::mem::align_of` returns the
-        // ABI-mandated alignment and 2) the generated C++'s `alignas(...)`
-        // should specify the minimal/mandatory alignment.
-        layout.align().abi.bytes()
-    };
+    let alignment_in_bytes = layout.align().abi.bytes();
     let size_in_bytes = layout.size().bytes();
     ensure!(size_in_bytes != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
+
+    let cc_short_name = quote! { #cpp_name };
+    let cc_fully_qualified_name = self_ty_cc.tokens.clone();
 
     Ok(Rc::new(AdtCoreBindings {
         common: Rc::new(CoreBindingsCommon {
             keyword,
-            cc_short_name: cpp_name,
+            cc_short_name,
             cc_fully_qualified_name,
             self_ty,
             alignment_in_bytes,
@@ -2541,6 +2604,7 @@ fn generate_variant_ctor<'tcx>(
     };
 
     let adt_cc_name = &core.common.cc_short_name;
+    let cc_fully_qualified_name = &core.common.cc_fully_qualified_name;
     match adt_def.adt_kind() {
         ty::AdtKind::Struct => {
             let explicit = (main_api_params.len() == 1).then_some(quote! { explicit });
@@ -2665,7 +2729,7 @@ fn generate_variant_ctor<'tcx>(
                 cc_details: CcSnippet::new(quote! {
                     __NEWLINE__
                     __COMMENT__ "`static` constructor"
-                    inline #constexpr #adt_cc_name #adt_cc_name::#method_name() { #body }
+                    inline #constexpr #cc_fully_qualified_name (#cc_fully_qualified_name::#method_name)() { #body }
                     __NEWLINE__
                 }),
                 ..Default::default()
@@ -2744,8 +2808,8 @@ struct CppFieldGenerator<'a, 'tcx> {
     self_ty: Ty<'tcx>,
     adt_def: Option<ty::AdtDef<'tcx>>,
     adt_generic_args: Option<ty::GenericArgsRef<'tcx>>,
-    cc_short_name: &'a Ident,
-    cc_qualifier: &'a TokenStream,
+    cc_short_name: &'a TokenStream,
+    cc_fully_qualified_name: &'a TokenStream,
     rs_fully_qualified_name: &'a TokenStream,
     repr_attrs: &'a [rustc_hir::attrs::ReprAttr],
     member_function_names: &'a HashSet<String>,
@@ -3035,8 +3099,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
     }
 
     fn generate_common_assertions(&self, fields: &[Field<'tcx>]) -> ApiSnippets<'tcx> {
-        let adt_cc_name = self.cc_short_name;
-        let adt_cc_qualifier = self.cc_qualifier;
+        let adt_cc_fully_qualified_name = self.cc_fully_qualified_name;
         let adt_rs_name = self.rs_fully_qualified_name;
 
         let cc_details = if fields.is_empty() {
@@ -3047,13 +3110,18 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                 .filter(|field| field.size() != 0)
                 .map(|Field { cc_name, offset, .. }| {
                     let offset = Literal::u64_unsuffixed(*offset);
-                    quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
+                    quote! {
+                        {
+                            using __crubit_assert_type = #adt_cc_fully_qualified_name;
+                            static_assert(#offset == offsetof(__crubit_assert_type, #cc_name));
+                        }
+                    }
                 })
                 .collect();
 
             CcSnippet::with_include(
                 quote! {
-                    inline void #adt_cc_qualifier::__crubit_field_offset_assertions() {
+                    inline void #adt_cc_fully_qualified_name::__crubit_field_offset_assertions() {
                         #cc_assertions
                     }
                 },
@@ -3312,8 +3380,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
     ) -> ApiSnippets<'tcx> {
         let adt_def = self.adt_def.expect("Enum should have adt_def");
         let tcx = self.db.tcx();
-        let adt_cc_name = self.cc_short_name;
-        let adt_cc_qualifier = self.cc_qualifier;
+        let adt_cc_fully_qualified_name = self.cc_fully_qualified_name;
         let adt_rs_name = self.rs_fully_qualified_name;
         let layout_variants = &self.layout.variants;
 
@@ -3327,7 +3394,12 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                     .filter(|field| field.size() != 0)
                     .map(|Field { cc_name, offset, .. }| {
                         let offset = Literal::u64_unsuffixed(*offset);
-                        quote! { static_assert(#offset == offsetof(#adt_cc_name, #cc_name)); }
+                        quote! {
+                            {
+                                using __crubit_assert_type = #adt_cc_fully_qualified_name;
+                                static_assert(#offset == offsetof(__crubit_assert_type, #cc_name));
+                            }
+                        }
                     })
                     .collect(),
                 EnumKind::ReprC => {
@@ -3339,7 +3411,12 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                                 let cc_variant_struct_name = format_cc_ident(self.db, variant_def.ident(tcx).as_str())
                                     .unwrap_or_else(|_err| format_ident!("err_field"));
                                 let tag_unsuffixed = Literal::u64_unsuffixed(tag_size_with_padding);
-                                quote! { static_assert(#tag_unsuffixed == offsetof(#adt_cc_name, #cc_variant_struct_name)); }
+                                quote! {
+                                    {
+                                        using __crubit_assert_type = #adt_cc_fully_qualified_name;
+                                        static_assert(#tag_unsuffixed == offsetof(__crubit_assert_type, #cc_variant_struct_name));
+                                    }
+                                }
                             }
                         }).collect();
                     let variant_field_assertions: TokenStream = variants
@@ -3349,13 +3426,18 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                             let variant_def = adt_def.variant(VariantIdx::from_usize(variant_index));
                             let cc_variant = variant_def.ident(tcx);
                             let qualified_struct_name =
-                                format_nonportable_cc_type_name(&format!("{}::__crubit_{}_struct", adt_cc_name, cc_variant)).expect("generated invalid C++ identifier");
+                                format_nonportable_cc_type_name(&format!("{}::__crubit_{}_struct", adt_cc_fully_qualified_name, cc_variant)).expect("generated invalid C++ identifier");
                             if variant_def.fields.is_empty() {
                                 quote! {}
                             } else {
                                 variant_layout.fields.iter().filter(|field| field.type_info.is_ok() && field.size() != 0 ).flat_map(move |Field { cc_name, offset, .. }| {
                                     let offset = Literal::u64_unsuffixed(*offset);
-                                    quote! { static_assert(#offset == offsetof(#qualified_struct_name, #cc_name)); }
+                                    quote! {
+                                        {
+                                            using __crubit_assert_variant_type = #qualified_struct_name;
+                                            static_assert(#offset == offsetof(__crubit_assert_variant_type, #cc_name));
+                                        }
+                                    }
                                 }).collect()
                             }
                     }).collect();
@@ -3365,7 +3447,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
 
             CcSnippet::with_include(
                 quote! {
-                    inline void #adt_cc_qualifier::__crubit_field_offset_assertions() {
+                    inline void #adt_cc_fully_qualified_name::__crubit_field_offset_assertions() {
                         #cc_assertions
                     }
                 },
@@ -3599,8 +3681,8 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
 pub(crate) fn generate_fields<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
-    cc_short_name: &Ident,
-    cc_qualifier: &TokenStream,
+    cc_short_name: &TokenStream,
+    cc_fully_qualified_name: &TokenStream,
     rs_fully_qualified_name: &TokenStream,
     member_function_names: &HashSet<String>,
     is_aggregate: bool,
@@ -3623,7 +3705,7 @@ pub(crate) fn generate_fields<'tcx>(
         adt_def,
         adt_generic_args,
         cc_short_name,
-        cc_qualifier,
+        cc_fully_qualified_name,
         rs_fully_qualified_name,
         repr_attrs: &repr_attrs,
         member_function_names,
@@ -3647,7 +3729,7 @@ pub(crate) fn generate_fields<'tcx>(
 /// Generates the `(UnsafeRelocateTag, T&&)` constructor for the given ADT.
 pub(crate) fn generate_relocating_ctor<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    adt_cc_name: &Ident,
+    adt_cc_name: &TokenStream,
     cc_fully_qualified_name: &TokenStream,
 ) -> ApiSnippets<'tcx> {
     let main_api = CcSnippet::with_include(
@@ -3752,6 +3834,7 @@ fn generate_begin_and_end_for_type<'tcx>(
 ) -> Result<Option<ApiSnippets<'tcx>>> {
     let tcx = db.tcx();
     let self_ty = core.common.self_ty;
+    let cc_fully_qualified_name = &core.common.cc_fully_qualified_name;
 
     let check_ty = match passing_mode {
         PassingMode::Value => self_ty,
@@ -3845,6 +3928,8 @@ fn generate_begin_and_end_for_type<'tcx>(
         ty: check_ty,
     };
 
+    let is_generic =
+        core.def_id.is_some_and(|def_id| query_compiler::has_non_lifetime_generics(tcx, def_id));
     let impl_body = generate_thunk_call(
         db,
         into_iter_fn_id,
@@ -3852,6 +3937,7 @@ fn generate_begin_and_end_for_type<'tcx>(
         into_iter_ty,
         ThunkSelfParameter::new(
             /*has_self=*/ false, /*by_copy=*/ false, /*is_trait_method=*/ false,
+            is_generic,
         ),
         &[param],
         /*is_async=*/ false,
@@ -3911,7 +3997,7 @@ fn generate_begin_and_end_for_type<'tcx>(
                     #cc_thunk_decls_tokens
 
                     template <typename TAdaptedSelf_>
-                    inline #into_iter_cc_ty_tokens_details #adt_cc_name :: into_iter () && {
+                    inline #into_iter_cc_ty_tokens_details (#cc_fully_qualified_name :: into_iter) () && {
                         #self_binding
                         auto call_into_iter = [&]() -> decltype(auto) {
                             #impl_body_tokens
@@ -3940,7 +4026,7 @@ fn generate_begin_and_end_for_type<'tcx>(
                     #cc_thunk_decls_tokens
 
                     template <typename TAdaptedSelf_>
-                    inline rs::IteratorAdapter< #into_iter_cc_ty_tokens_details > #adt_cc_name :: begin () #ref_qualifiers {
+                    inline rs::IteratorAdapter< #into_iter_cc_ty_tokens_details > (#cc_fully_qualified_name :: begin) () #ref_qualifiers {
                         #self_binding
                         auto call_into_iter = [&]() -> decltype(auto) {
                             #impl_body_tokens
@@ -3948,7 +4034,7 @@ fn generate_begin_and_end_for_type<'tcx>(
                         return rs::IteratorAdapter< #into_iter_cc_ty_tokens_details >(#call_expr);
                     }
                     template <typename TAdaptedSelf_>
-                    inline rs::IteratorEnd #adt_cc_name :: end () #ref_qualifiers {
+                    inline rs::IteratorEnd (#cc_fully_qualified_name :: end) () #ref_qualifiers {
                         return rs::IteratorEnd();
                     }
                 },

@@ -40,8 +40,8 @@ fn test_generated_bindings_struct() {
                         // `test_format_item_struct_with_fields`.
                         ...
                     };
-                    static_assert(sizeof(Point) == 8, ...);
-                    static_assert(alignof(Point) == 4, ...);
+                    static_assert(sizeof(::rust_out::Point) == 8, ...);
+                    static_assert(alignof(::rust_out::Point) == 4, ...);
                     ... // Other static_asserts are covered by
                         // `test_format_item_struct_with_fields`
                 }  // namespace rust_out
@@ -740,8 +740,8 @@ fn test_repr_c_union_unknown_fields() {
         assert_cc_matches!(
             result.cc_details.tokens,
             quote! {
-                static_assert(sizeof(SomeUnion) == 8, ...);
-                static_assert(alignof(SomeUnion) == 8, ...);
+                static_assert(sizeof(::rust_out::SomeUnion) == 8, ...);
+                static_assert(alignof(::rust_out::SomeUnion) == 8, ...);
                 ...
             }
         );
@@ -1521,7 +1521,7 @@ fn test_hash_trait_support() {
                 struct ... Point final {
                     ...
                     template <typename H>
-                    friend H AbslHashValue(H h, const Point& self);
+                    friend H AbslHashValue(H h, const ::rust_out::Point& self);
                     ...
                 };
             }
@@ -1534,7 +1534,7 @@ fn test_hash_trait_support() {
                     extern "C" ::std::uint64_t __crubit_thunk_Hash_uhash_uPoint(...);
                 }
                 template <typename H>
-                inline H AbslHashValue(H h, const Point& self) {
+                inline H AbslHashValue(H h, const ::rust_out::Point& self) {
                     return H::combine(::std::move(h), __crubit_internal::__crubit_thunk_Hash_uhash_uPoint(self));
                 }
             }
@@ -1590,7 +1590,7 @@ fn test_hash_trait_support_for_enum() {
                 struct ... Color final {
                     ...
                     template <typename H>
-                    friend H AbslHashValue(H h, const Color& self);
+                    friend H AbslHashValue(H h, const ::rust_out::Color& self);
                     ...
                 };
             }
@@ -1603,7 +1603,7 @@ fn test_hash_trait_support_for_enum() {
                     extern "C" ::std::uint64_t __crubit_thunk_Hash_uhash_uColor(...);
                 }
                 template <typename H>
-                inline H AbslHashValue(H h, const Color& self) {
+                inline H AbslHashValue(H h, const ::rust_out::Color& self) {
                     return H::combine(::std::move(h), __crubit_internal::__crubit_thunk_Hash_uhash_uColor(self));
                 }
             }

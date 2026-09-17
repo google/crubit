@@ -629,11 +629,7 @@ fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Ty<'tcx> {
     let impl_id = tcx.impl_of_assoc(def_id);
 
     let impl_id = impl_id.expect("`def_id` is not a method or an associated function");
-    return crate::normalize_ty(
-        tcx,
-        tcx.param_env(impl_id),
-        tcx.type_of(impl_id).instantiate_identity(),
-    );
+    crate::normalize_ty(tcx, tcx.param_env(impl_id), tcx.type_of(impl_id).instantiate_identity())
 }
 
 fn export_name_and_no_mangle_attrs_of<'tcx>(
@@ -744,12 +740,14 @@ pub enum Receiver {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct ThunkSelfParameter {
     pub is_trait_method: bool,
+    pub is_generic: bool,
     receiver: Option<Receiver>,
 }
 impl ThunkSelfParameter {
-    pub fn new(has_self: bool, by_copy: bool, is_trait_method: bool) -> Self {
+    pub fn new(has_self: bool, by_copy: bool, is_trait_method: bool, is_generic: bool) -> Self {
         Self {
             is_trait_method,
+            is_generic,
             receiver: has_self.then_some({
                 if by_copy {
                     Receiver::SelfByCopy
@@ -852,7 +850,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
             .collect::<Result<Vec<_>>>()?;
         quote! { #(#cpp_top_level_ns)::* :: __crubit_internal }
     } else {
-        quote! { __crubit_internal }
+        crate::thunk_qualifier(self_param.is_generic)
     };
 
     let return_body = if is_async {
@@ -1165,26 +1163,24 @@ pub fn generate_function<'tcx>(
         }
     }
 
+    let is_generic = self_ty.is_some_and(|ty| {
+        if let ty::TyKind::Adt(adt, _) = ty.kind() {
+            query_compiler::has_non_lifetime_generics(db.tcx(), adt.did())
+        } else {
+            false
+        }
+    });
     let thunk_self = ThunkSelfParameter::new(
         function_kind.has_self_param(),
         takes_self_by_copy,
         static_method_mode == StaticMethodMode::ForceStaticMethod,
+        is_generic,
     );
 
-    fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {
-        substs.iter().any(|subst| subst.as_region().is_none())
-    }
-
-    let struct_name = match self_ty {
-        Some(ty) => match ty.kind() {
-            ty::TyKind::Adt(adt, substs) => {
-                assert!(!has_non_lifetime_substs(substs), "Callers should filter out generics");
-                db.symbol_canonical_name(adt.did()).ok()
-            }
-            _ => panic!("Non-ADT `impl`s should be filtered by caller"),
-        },
-        None => None,
-    };
+    let struct_name = self_ty.and_then(|ty| match ty.kind() {
+        ty::TyKind::Adt(adt, _) => db.symbol_canonical_name(adt.did()).ok(),
+        _ => panic!("Non-ADT `impl`s should be filtered by caller"),
+    });
     let needs_definition = unqualified_rust_fn_name.as_str() != thunk_name;
     let constrain_bool_param = method_name_override.is_some()
         && params.iter().skip(if thunk_self.is_inherent_self_method() { 1 } else { 0 }).any(
@@ -1330,27 +1326,34 @@ pub fn generate_function<'tcx>(
 
         let decl_name = match static_method_mode {
             StaticMethodMode::ForceStaticMethod => {
-                let trait_ref =
-                    trait_ref.as_ref().expect("ForceStaticMethod requires a trait method");
+                let trait_ref = trait_ref
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("ForceStaticMethod requires a trait method"))?;
                 let struct_name = struct_name
                     .as_ref()
-                    .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db).ok())
-                    .expect("Generated trait method for an ADT with an invalid rust name");
-                let trait_name_with_args = format_trait_ref_for_cc(db, trait_ref)
-                    .expect("Implementation of trait containing invalid type requested. Caller should have verified type arguments were valid.")
-                    .into_tokens(&mut prereqs);
+                    .ok_or_else(|| anyhow!("Expected struct_name for trait method on ADT"))?
+                    .format_for_cc(db)?;
+                let trait_name_with_args =
+                    format_trait_ref_for_cc(db, trait_ref)?.into_tokens(&mut prereqs);
                 quote! { rs_std :: impl <#struct_name, #trait_name_with_args> :: #bracketed_decl_name }
             }
-            StaticMethodMode::Infer => struct_name
-                .as_ref()
-                .map(|fully_qualified_name| {
-                    let name = fully_qualified_name.unqualified.cpp_name;
-                    let name = format_cc_ident(db, name.as_str()).expect(
-                        "Caller of generate_function should verify struct via generate_adt_core",
-                    );
-                    quote! { #name :: #bracketed_decl_name }
-                })
-                .unwrap_or_else(|| quote! { #bracketed_decl_name }),
+            StaticMethodMode::Infer => {
+                if is_generic {
+                    let self_ty_val =
+                        self_ty.ok_or_else(|| anyhow!("Expected self_ty for generic ADT"))?;
+                    let snippet = db.format_ty_for_cc(self_ty_val, TypeLocation::Other)?;
+                    let qualifier = snippet.into_tokens(&mut prereqs);
+                    quote! { (#qualifier :: #bracketed_decl_name) }
+                } else {
+                    if let Some(fully_qualified_name) = struct_name.as_ref() {
+                        let name = fully_qualified_name.unqualified.cpp_name;
+                        let name = format_cc_ident(db, name.as_str())?;
+                        quote! { (#name :: #bracketed_decl_name) }
+                    } else {
+                        quote! { #bracketed_decl_name }
+                    }
+                }
+            }
         };
         let tokens = quote! {
             __NEWLINE__

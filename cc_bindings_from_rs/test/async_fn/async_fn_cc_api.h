@@ -165,17 +165,17 @@ return_cpp_layout_equivalent(::std::int32_t x);
     rs_std::SliceRef<const ::std::int32_t> slice CRUBIT_LIFETIME_BOUND);
 
 static_assert(
-    sizeof(NotCppMovable) == 4,
+    sizeof(::async_fn::NotCppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NotCppMovable) == 4,
+    alignof(::async_fn::NotCppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_uasync_ufn_ugolden_x0000003a_x0000003aNotCppMovable(
     ::async_fn::NotCppMovable&);
 }
-inline NotCppMovable::~NotCppMovable() {
+inline ::async_fn::NotCppMovable::~NotCppMovable() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_uasync_ufn_ugolden_x0000003a_x0000003aNotCppMovable(
           *this);
@@ -184,14 +184,17 @@ inline ::async_fn::NotCppMovable::NotCppMovable(::crubit::UnsafeRelocateTag,
                                                 NotCppMovable&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void NotCppMovable::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NotCppMovable, __field0));
+inline void ::async_fn::NotCppMovable::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::async_fn::NotCppMovable;
+    static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  }
 }
 static_assert(
-    sizeof(StructWithDrop) == 4,
+    sizeof(::async_fn::StructWithDrop) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(StructWithDrop) == 4,
+    alignof(::async_fn::StructWithDrop) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -208,7 +211,7 @@ extern "C" void
 __crubit_thunk_Drop_udrop_uasync_ufn_ugolden_x0000003a_x0000003aStructWithDrop(
     ::async_fn::StructWithDrop&);
 }
-inline StructWithDrop::~StructWithDrop() {
+inline ::async_fn::StructWithDrop::~StructWithDrop() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_uasync_ufn_ugolden_x0000003a_x0000003aStructWithDrop(
           *this);
@@ -226,8 +229,11 @@ inline ::async_fn::StructWithDrop::StructWithDrop(::crubit::UnsafeRelocateTag,
                                                   StructWithDrop&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void StructWithDrop::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(StructWithDrop, field));
+inline void ::async_fn::StructWithDrop::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::async_fn::StructWithDrop;
+    static_assert(0 == offsetof(__crubit_assert_type, field));
+  }
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_add(

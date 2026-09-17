@@ -44,6 +44,7 @@ struct HasOptions;
 // to an existing C++ type (int)
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
     1) [[clang::trivial_abi]] CloneNoDefault final {
  public:
@@ -54,6 +55,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
     [[clang::trivial_abi]] CopyNoDefault final {
  public:
@@ -66,6 +68,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CopyNoDefault") alignas(1)
 using FreeFunc CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: FreeFunc") =
     crubit::type_identity_t<void(void*, void*)>*;
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
     [[clang::trivial_abi]] HasDefault final {
  public:
@@ -83,6 +86,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasDefault") alignas(8)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
     [[clang::trivial_abi]] HasNoDefault final {
  public:
@@ -101,6 +105,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasNoDefault") alignas(8)
 };
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
     [[clang::trivial_abi]] LessThan20U8 final {
  public:
@@ -183,6 +188,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: LessThan20U8") alignas(1)
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: OptZst") alignas(1)
     [[clang::trivial_abi]] OptZst final {
  public:
@@ -319,6 +325,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: UnitOptionField") alignas(
     1) [[clang::trivial_abi]] UnitOptionField final {
  public:
@@ -576,6 +583,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptCloneNoDefault") alignas(1) [[clang::trivial_abi]]
 OptCloneNoDefault final {
@@ -655,6 +663,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptCopyNoDefault") alignas(1) [[clang::trivial_abi]]
 OptCopyNoDefault final {
@@ -732,6 +741,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptDefaultWithDrop") alignas(8) [[clang::trivial_abi]]
 OptDefaultWithDrop final {
@@ -809,6 +819,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptNoDefaultWithDrop") alignas(8)
     [[clang::trivial_abi]] OptNoDefaultWithDrop final {
@@ -891,6 +902,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
     [[clang::trivial_abi]] HasHasOptions final {
  public:
@@ -1445,6 +1457,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
     [[clang::trivial_abi]] HasOptions final {
  public:
@@ -1614,6 +1627,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 // CRUBIT_ANNOTATE: must_bind=
+
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: option_golden :: OptionWithSizeTypes") alignas(8) [[clang::trivial_abi]]
 OptionWithSizeTypes final {
@@ -1975,23 +1989,26 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 namespace option {
 
 static_assert(
-    sizeof(CloneNoDefault) == 1,
+    sizeof(::option::CloneNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CloneNoDefault) == 1,
+    alignof(::option::CloneNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<CloneNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::option::CloneNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<::option::CloneNoDefault>);
-inline void CloneNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CloneNoDefault, val));
+inline void ::option::CloneNoDefault::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::CloneNoDefault;
+    static_assert(0 == offsetof(__crubit_assert_type, val));
+  }
 }
 static_assert(
-    sizeof(CopyNoDefault) == 1,
+    sizeof(::option::CopyNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CopyNoDefault) == 1,
+    alignof(::option::CopyNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<CopyNoDefault>);
 static_assert(
@@ -2000,21 +2017,24 @@ static_assert(::std::is_trivially_move_assignable_v<::option::CopyNoDefault>);
 static_assert(
     ::std::is_trivially_copy_constructible_v<::option::CopyNoDefault>);
 static_assert(::std::is_trivially_copy_assignable_v<::option::CopyNoDefault>);
-inline void CopyNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CopyNoDefault, val));
+inline void ::option::CopyNoDefault::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::CopyNoDefault;
+    static_assert(0 == offsetof(__crubit_assert_type, val));
+  }
 }
 static_assert(
-    sizeof(HasDefault) == 24,
+    sizeof(::option::HasDefault) == 24,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasDefault) == 8,
+    alignof(::option::HasDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::option::HasDefault* __ret_ptr);
 }
-inline ::option::HasDefault HasDefault::new_(rs_std::StrRef s) {
+inline ::option::HasDefault(HasDefault::new_)(rs_std::StrRef s) {
   crubit::Slot<::option::HasDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&s, __return_value_storage);
@@ -2025,7 +2045,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_get_ustring_uinside_uoption(
     ::option::HasDefault const&, rs_std::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef HasDefault::get_string_inside_option() const& $(__anon1)
+inline rs_std::StrRef(HasDefault::get_string_inside_option)() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
@@ -2034,14 +2054,17 @@ inline rs_std::StrRef HasDefault::get_string_inside_option() const& $(__anon1)
       self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void HasDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(HasDefault, foo));
+inline void ::option::HasDefault::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::HasDefault;
+    static_assert(0 == offsetof(__crubit_assert_type, foo));
+  }
 }
 static_assert(
-    sizeof(HasHasOptions) == 4,
+    sizeof(::option::HasHasOptions) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasHasOptions) == 1,
+    alignof(::option::HasHasOptions) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<HasHasOptions>);
 static_assert(
@@ -2051,27 +2074,30 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::HasHasOptions* __ret_ptr);
 }
-inline ::option::HasHasOptions HasHasOptions::new_(::std::uint8_t value) {
+inline ::option::HasHasOptions(HasHasOptions::new_)(::std::uint8_t value) {
   crubit::Slot<::option::HasHasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void HasHasOptions::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(HasHasOptions, me));
+inline void ::option::HasHasOptions::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::HasHasOptions;
+    static_assert(0 == offsetof(__crubit_assert_type, me));
+  }
 }
 static_assert(
-    sizeof(HasNoDefault) == 32,
+    sizeof(::option::HasNoDefault) == 32,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasNoDefault) == 8,
+    alignof(::option::HasNoDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::option::HasNoDefault* __ret_ptr);
 }
-inline ::option::HasNoDefault HasNoDefault::new_(rs_std::StrRef s) {
+inline ::option::HasNoDefault(HasNoDefault::new_)(rs_std::StrRef s) {
   crubit::Slot<::option::HasNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&s, __return_value_storage);
@@ -2082,8 +2108,8 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_get_ustring_uinside_uoption(
     ::option::HasNoDefault const&, rs_std::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef HasNoDefault::get_string_inside_option() const& $(__anon1)
-    CRUBIT_LIFETIME_BOUND {
+inline rs_std::StrRef(HasNoDefault::get_string_inside_option)() const& $(
+    __anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2091,15 +2117,21 @@ inline rs_std::StrRef HasNoDefault::get_string_inside_option() const& $(__anon1)
       self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void HasNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(HasNoDefault, foo));
-  static_assert(24 == offsetof(HasNoDefault, a));
+inline void ::option::HasNoDefault::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::HasNoDefault;
+    static_assert(0 == offsetof(__crubit_assert_type, foo));
+  }
+  {
+    using __crubit_assert_type = ::option::HasNoDefault;
+    static_assert(24 == offsetof(__crubit_assert_type, a));
+  }
 }
 static_assert(
-    sizeof(HasOptions) == 4,
+    sizeof(::option::HasOptions) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasOptions) == 1,
+    alignof(::option::HasOptions) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<HasOptions>);
 static_assert(::std::is_trivially_move_constructible_v<::option::HasOptions>);
@@ -2108,7 +2140,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::HasOptions* __ret_ptr);
 }
-inline ::option::HasOptions HasOptions::new_(::std::uint8_t value) {
+inline ::option::HasOptions(HasOptions::new_)(::std::uint8_t value) {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
@@ -2119,7 +2151,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_with_uoption(rs_std::Option<::std::uint8_t>*,
                                             ::option::HasOptions* __ret_ptr);
 }
-inline ::option::HasOptions HasOptions::with_option(
+inline ::option::HasOptions(HasOptions::with_option)(
     rs_std::Option<::std::uint8_t> value) {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2132,7 +2164,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_uref(rs_std::Option<::std::uint8_t> const&,
                                          ::option::HasOptions* __ret_ptr);
 }
-inline ::option::HasOptions HasOptions::from_ref(
+inline ::option::HasOptions(HasOptions::from_ref)(
     rs_std::Option<::std::uint8_t> const& value) {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2143,124 +2175,133 @@ inline ::option::HasOptions HasOptions::from_ref(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_with_unone(::option::HasOptions* __ret_ptr);
 }
-inline ::option::HasOptions HasOptions::with_none() {
+inline ::option::HasOptions(HasOptions::with_none)() {
   crubit::Slot<::option::HasOptions> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_with_unone(__return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void HasOptions::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(HasOptions, direct));
-  static_assert(2 == offsetof(HasOptions, niche));
-  static_assert(3 == offsetof(HasOptions, nested));
+inline void ::option::HasOptions::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::HasOptions;
+    static_assert(0 == offsetof(__crubit_assert_type, direct));
+  }
+  {
+    using __crubit_assert_type = ::option::HasOptions;
+    static_assert(2 == offsetof(__crubit_assert_type, niche));
+  }
+  {
+    using __crubit_assert_type = ::option::HasOptions;
+    static_assert(3 == offsetof(__crubit_assert_type, nested));
+  }
 }
 static_assert(
-    sizeof(LessThan20U8) == 1,
+    sizeof(::option::LessThan20U8) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(LessThan20U8) == 1,
+    alignof(::option::LessThan20U8) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN0() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN0)() {
   return LessThan20U8(PrivateBytesTag{}, {0});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN1() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN1)() {
   return LessThan20U8(PrivateBytesTag{}, {1});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN2() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN2)() {
   return LessThan20U8(PrivateBytesTag{}, {2});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN3() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN3)() {
   return LessThan20U8(PrivateBytesTag{}, {3});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN4() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN4)() {
   return LessThan20U8(PrivateBytesTag{}, {4});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN5() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN5)() {
   return LessThan20U8(PrivateBytesTag{}, {5});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN6() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN6)() {
   return LessThan20U8(PrivateBytesTag{}, {6});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN7() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN7)() {
   return LessThan20U8(PrivateBytesTag{}, {7});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN8() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN8)() {
   return LessThan20U8(PrivateBytesTag{}, {8});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN9() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN9)() {
   return LessThan20U8(PrivateBytesTag{}, {9});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN10() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN10)() {
   return LessThan20U8(PrivateBytesTag{}, {10});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN11() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN11)() {
   return LessThan20U8(PrivateBytesTag{}, {11});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN12() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN12)() {
   return LessThan20U8(PrivateBytesTag{}, {12});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN13() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN13)() {
   return LessThan20U8(PrivateBytesTag{}, {13});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN14() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN14)() {
   return LessThan20U8(PrivateBytesTag{}, {14});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN15() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN15)() {
   return LessThan20U8(PrivateBytesTag{}, {15});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN16() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN16)() {
   return LessThan20U8(PrivateBytesTag{}, {16});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN17() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN17)() {
   return LessThan20U8(PrivateBytesTag{}, {17});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN18() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN18)() {
   return LessThan20U8(PrivateBytesTag{}, {18});
 }
 
 // `static` constructor
-inline constexpr LessThan20U8 LessThan20U8::MakeN19() {
+inline constexpr ::option::LessThan20U8(::option::LessThan20U8::MakeN19)() {
   return LessThan20U8(PrivateBytesTag{}, {19});
 }
-static_assert(::std::is_trivially_destructible_v<LessThan20U8>);
+static_assert(::std::is_trivially_destructible_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_move_constructible_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_move_assignable_v<::option::LessThan20U8>);
 static_assert(::std::is_trivially_copy_constructible_v<::option::LessThan20U8>);
@@ -2274,7 +2315,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(
     ::std::uint8_t, rs_std::Option<::option::LessThan20U8>* __ret_ptr);
 }
-inline rs_std::Option<::option::LessThan20U8> LessThan20U8::new_(
+inline rs_std::Option<::option::LessThan20U8>(LessThan20U8::new_)(
     ::std::uint8_t value) {
   crubit::Slot<rs_std::Option<::option::LessThan20U8>>
       __return_value_ret_val_holder;
@@ -2286,18 +2327,21 @@ inline rs_std::Option<::option::LessThan20U8> LessThan20U8::new_(
 namespace __crubit_internal {
 extern "C" ::std::uint8_t __crubit_thunk_value(::option::LessThan20U8*);
 }
-inline ::std::uint8_t LessThan20U8::value() const {
+inline ::std::uint8_t(LessThan20U8::value)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_value(&self);
 }
-inline void LessThan20U8::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(LessThan20U8, __opaque_blob_of_bytes));
+inline void ::option::LessThan20U8::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::LessThan20U8;
+    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
+  }
 }
 static_assert(
-    sizeof(OptCloneNoDefault) == 2,
+    sizeof(::option::OptCloneNoDefault) == 2,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(OptCloneNoDefault) == 1,
+    alignof(::option::OptCloneNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<OptCloneNoDefault>);
 static_assert(
@@ -2308,20 +2352,23 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::OptCloneNoDefault* __ret_ptr);
 }
-inline ::option::OptCloneNoDefault OptCloneNoDefault::new_(::std::uint8_t x) {
+inline ::option::OptCloneNoDefault(OptCloneNoDefault::new_)(::std::uint8_t x) {
   crubit::Slot<::option::OptCloneNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void OptCloneNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(OptCloneNoDefault, val));
+inline void ::option::OptCloneNoDefault::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::OptCloneNoDefault;
+    static_assert(0 == offsetof(__crubit_assert_type, val));
+  }
 }
 static_assert(
-    sizeof(OptCopyNoDefault) == 2,
+    sizeof(::option::OptCopyNoDefault) == 2,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(OptCopyNoDefault) == 1,
+    alignof(::option::OptCopyNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<OptCopyNoDefault>);
 static_assert(
@@ -2336,47 +2383,54 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::option::OptCopyNoDefault* __ret_ptr);
 }
-inline ::option::OptCopyNoDefault OptCopyNoDefault::new_(::std::uint8_t x) {
+inline ::option::OptCopyNoDefault(OptCopyNoDefault::new_)(::std::uint8_t x) {
   crubit::Slot<::option::OptCopyNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void OptCopyNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(OptCopyNoDefault, val));
+inline void ::option::OptCopyNoDefault::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::OptCopyNoDefault;
+    static_assert(0 == offsetof(__crubit_assert_type, val));
+  }
 }
 static_assert(
-    sizeof(OptDefaultWithDrop) == 24,
+    sizeof(::option::OptDefaultWithDrop) == 24,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(OptDefaultWithDrop) == 8,
+    alignof(::option::OptDefaultWithDrop) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::option::OptDefaultWithDrop* __ret_ptr);
 }
-inline ::option::OptDefaultWithDrop OptDefaultWithDrop::new_(rs_std::StrRef s) {
+inline ::option::OptDefaultWithDrop(OptDefaultWithDrop::new_)(
+    rs_std::StrRef s) {
   crubit::Slot<::option::OptDefaultWithDrop> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&s, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void OptDefaultWithDrop::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(OptDefaultWithDrop, opt));
+inline void ::option::OptDefaultWithDrop::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::OptDefaultWithDrop;
+    static_assert(0 == offsetof(__crubit_assert_type, opt));
+  }
 }
 static_assert(
-    sizeof(OptNoDefaultWithDrop) == 32,
+    sizeof(::option::OptNoDefaultWithDrop) == 32,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(OptNoDefaultWithDrop) == 8,
+    alignof(::option::OptNoDefaultWithDrop) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::option::OptNoDefaultWithDrop* __ret_ptr);
 }
-inline ::option::OptNoDefaultWithDrop OptNoDefaultWithDrop::new_(
+inline ::option::OptNoDefaultWithDrop(OptNoDefaultWithDrop::new_)(
     rs_std::StrRef s) {
   crubit::Slot<::option::OptNoDefaultWithDrop> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2388,8 +2442,8 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_get_ustring_uinside_uoption(
     ::option::OptNoDefaultWithDrop const&, rs_std::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef OptNoDefaultWithDrop::get_string_inside_option() const& $(
-    __anon1) CRUBIT_LIFETIME_BOUND {
+inline rs_std::StrRef(OptNoDefaultWithDrop::get_string_inside_option)()
+    const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -2397,14 +2451,17 @@ inline rs_std::StrRef OptNoDefaultWithDrop::get_string_inside_option() const& $(
       self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void OptNoDefaultWithDrop::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(OptNoDefaultWithDrop, val));
+inline void ::option::OptNoDefaultWithDrop::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::OptNoDefaultWithDrop;
+    static_assert(0 == offsetof(__crubit_assert_type, val));
+  }
 }
 static_assert(
-    sizeof(OptZst) == 1,
+    sizeof(::option::OptZst) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(OptZst) == 1,
+    alignof(::option::OptZst) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -2416,20 +2473,23 @@ inline ::option::OptZst::OptZst() {
       __crubit_thunk_Default_udefault_uoption_ugolden_x0000003a_x0000003aOptZst(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<OptZst>);
+static_assert(::std::is_trivially_destructible_v<::option::OptZst>);
 static_assert(::std::is_trivially_move_constructible_v<::option::OptZst>);
 static_assert(::std::is_trivially_move_assignable_v<::option::OptZst>);
 inline ::option::OptZst::OptZst(::crubit::UnsafeRelocateTag, OptZst&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void OptZst::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(OptZst, val));
+inline void ::option::OptZst::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::OptZst;
+    static_assert(0 == offsetof(__crubit_assert_type, val));
+  }
 }
 static_assert(
-    sizeof(OptionWithSizeTypes) == 32,
+    sizeof(::option::OptionWithSizeTypes) == 32,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(OptionWithSizeTypes) == 8,
+    alignof(::option::OptionWithSizeTypes) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<OptionWithSizeTypes>);
 static_assert(
@@ -2441,22 +2501,28 @@ extern "C" void __crubit_thunk_new(rs_std::Option<::std::uint64_t>*,
                                    rs_std::Option<::std::int64_t>*,
                                    ::option::OptionWithSizeTypes* __ret_ptr);
 }
-inline ::option::OptionWithSizeTypes OptionWithSizeTypes::new_(
+inline ::option::OptionWithSizeTypes(OptionWithSizeTypes::new_)(
     rs_std::Option<::std::uint64_t> uval, rs_std::Option<::std::int64_t> ival) {
   crubit::Slot<::option::OptionWithSizeTypes> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&uval, &ival, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void OptionWithSizeTypes::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(OptionWithSizeTypes, uval));
-  static_assert(16 == offsetof(OptionWithSizeTypes, ival));
+inline void ::option::OptionWithSizeTypes::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::OptionWithSizeTypes;
+    static_assert(0 == offsetof(__crubit_assert_type, uval));
+  }
+  {
+    using __crubit_assert_type = ::option::OptionWithSizeTypes;
+    static_assert(16 == offsetof(__crubit_assert_type, ival));
+  }
 }
 static_assert(
-    sizeof(UnitOptionField) == 1,
+    sizeof(::option::UnitOptionField) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(UnitOptionField) == 1,
+    alignof(::option::UnitOptionField) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<UnitOptionField>);
 static_assert(
@@ -2466,26 +2532,32 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new_uwith_usome(
     ::option::UnitOptionField* __ret_ptr);
 }
-inline ::option::UnitOptionField UnitOptionField::new_with_some() {
+inline ::option::UnitOptionField(UnitOptionField::new_with_some)() {
   crubit::Slot<::option::UnitOptionField> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new_uwith_usome(__return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void UnitOptionField::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(UnitOptionField, unit));
+inline void ::option::UnitOptionField::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::UnitOptionField;
+    static_assert(0 == offsetof(__crubit_assert_type, unit));
+  }
 }
 static_assert(
-    sizeof(ZStream) == 8,
+    sizeof(::option::ZStream) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(ZStream) == 8,
+    alignof(::option::ZStream) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<ZStream>);
 static_assert(::std::is_trivially_move_constructible_v<::option::ZStream>);
 static_assert(::std::is_trivially_move_assignable_v<::option::ZStream>);
-inline void ZStream::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(ZStream, zfree));
+inline void ::option::ZStream::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::option::ZStream;
+    static_assert(0 == offsetof(__crubit_assert_type, zfree));
+  }
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_pass_uoption_uptr(
@@ -2896,14 +2968,14 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000
     rs_std::Option<::option::CloneNoDefault> const&);
 }
 inline rs_std::Option<::option::CloneNoDefault>::Option(const Option& other) {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003coption_ugolden_x0000003a_x0000003aCloneNoDefault_x0000003e(
           other, this);
 }
 inline rs_std::Option<::option::CloneNoDefault>&
 rs_std::Option<::option::CloneNoDefault>::operator=(const Option& other) {
   if (this != &other) {
-    __crubit_internal::
+    ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003coption_ugolden_x0000003a_x0000003aCloneNoDefault_x0000003e(
             *this, other);
   }
@@ -3440,7 +3512,7 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000
 }
 inline rs_std::Option<rs_std::Result<
     ::std::int32_t, ::rs::alloc::string::String>>::Option(const Option& other) {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x0000003e(
           other, this);
 }
@@ -3449,7 +3521,7 @@ inline rs_std::Option<
 rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
 operator=(const Option& other) {
   if (this != &other) {
-    __crubit_internal::
+    ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x0000003e(
             *this, other);
   }
@@ -3695,7 +3767,7 @@ inline rs_std::Option<rs_std::Result<
     rs_std::Result<rs_std::Option<::std::int32_t>,
                    rs_std::Option<::std::int32_t>>>>::Option(const Option&
                                                                  other) {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000003e_x0000003e_x0000003e(
           other, this);
 }
@@ -3709,7 +3781,7 @@ rs_std::Option<rs_std::Result<
                    rs_std::Option<::std::int32_t>>>>::operator=(const Option&
                                                                     other) {
   if (this != &other) {
-    __crubit_internal::
+    ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000003e_x0000003e_x0000003e(
             *this, other);
   }
@@ -4188,7 +4260,7 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000
 }
 inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
     const Result& other) {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
           other, this);
 }
@@ -4196,7 +4268,7 @@ inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&
 rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
     const Result& other) {
   if (this != &other) {
-    __crubit_internal::
+    ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
             *this, other);
   }
@@ -4475,7 +4547,7 @@ inline rs_std::Result<
     rs_std::Result<rs_std::Option<::std::int32_t>,
                    rs_std::Option<::std::int32_t>>>::Result(const Result&
                                                                 other) {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000003e_x0000003e(
           other, this);
 }
@@ -4489,7 +4561,7 @@ rs_std::Result<
                    rs_std::Option<::std::int32_t>>>::operator=(const Result&
                                                                    other) {
   if (this != &other) {
-    __crubit_internal::
+    ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000003e_x0000003e(
             *this, other);
   }

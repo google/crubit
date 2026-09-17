@@ -49,10 +49,10 @@ ReprCUnion final {
 };
 
 static_assert(
-    sizeof(ReprCUnion) == 8,
+    sizeof(::example_crate::ReprCUnion) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(ReprCUnion) == 8,
+    alignof(::example_crate::ReprCUnion) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -64,7 +64,7 @@ inline ::example_crate::ReprCUnion::ReprCUnion() {
       __crubit_thunk_Default_udefault_uexample_ucrate_ugolden_x0000003a_x0000003aReprCUnion(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<ReprCUnion>);
+static_assert(::std::is_trivially_destructible_v<::example_crate::ReprCUnion>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::example_crate::ReprCUnion>);
 static_assert(
@@ -73,9 +73,15 @@ inline ::example_crate::ReprCUnion::ReprCUnion(::crubit::UnsafeRelocateTag,
                                                ReprCUnion&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void ReprCUnion::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(ReprCUnion, a));
-  static_assert(0 == offsetof(ReprCUnion, b));
+inline void ::example_crate::ReprCUnion::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::example_crate::ReprCUnion;
+    static_assert(0 == offsetof(__crubit_assert_type, a));
+  }
+  {
+    using __crubit_assert_type = ::example_crate::ReprCUnion;
+    static_assert(0 == offsetof(__crubit_assert_type, b));
+  }
 }
 }  // namespace example_crate
 

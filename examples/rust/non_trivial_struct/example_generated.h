@@ -55,10 +55,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 static_assert(
-    sizeof(NonTrivialStruct) == 4,
+    sizeof(::example_crate::NonTrivialStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NonTrivialStruct) == 4,
+    alignof(::example_crate::NonTrivialStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -75,7 +75,7 @@ extern "C" void
 __crubit_thunk_Drop_udrop_uexample_ucrate_ugolden_x0000003a_x0000003aNonTrivialStruct(
     ::example_crate::NonTrivialStruct&);
 }
-inline NonTrivialStruct::~NonTrivialStruct() {
+inline ::example_crate::NonTrivialStruct::~NonTrivialStruct() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_uexample_ucrate_ugolden_x0000003a_x0000003aNonTrivialStruct(
           *this);
@@ -94,8 +94,12 @@ inline ::example_crate::NonTrivialStruct::NonTrivialStruct(
     ::crubit::UnsafeRelocateTag, NonTrivialStruct&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void NonTrivialStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NonTrivialStruct, a));
+inline void ::example_crate::NonTrivialStruct::
+    __crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::example_crate::NonTrivialStruct;
+    static_assert(0 == offsetof(__crubit_assert_type, a));
+  }
 }
 }  // namespace example_crate
 

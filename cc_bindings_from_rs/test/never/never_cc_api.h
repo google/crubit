@@ -58,10 +58,10 @@ extern "C" [[noreturn]] void extern_never_return();
 [[noreturn]] void never_return();
 
 static_assert(
-    sizeof(NeverStruct) == 4,
+    sizeof(::never::NeverStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NeverStruct) == 4,
+    alignof(::never::NeverStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -73,7 +73,7 @@ inline ::never::NeverStruct::NeverStruct() {
       __crubit_thunk_Default_udefault_unever_ugolden_x0000003a_x0000003aNeverStruct(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<NeverStruct>);
+static_assert(::std::is_trivially_destructible_v<::never::NeverStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::never::NeverStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::never::NeverStruct>);
 inline ::never::NeverStruct::NeverStruct(::crubit::UnsafeRelocateTag,
@@ -84,7 +84,7 @@ inline ::never::NeverStruct::NeverStruct(::crubit::UnsafeRelocateTag,
 namespace __crubit_internal {
 extern "C" [[noreturn]] void __crubit_thunk_associated_ufn_unever_ureturn();
 }
-inline void NeverStruct::associated_fn_never_return() {
+inline void(NeverStruct::associated_fn_never_return)() {
   __crubit_internal::__crubit_thunk_associated_ufn_unever_ureturn();
 }
 
@@ -92,12 +92,15 @@ namespace __crubit_internal {
 extern "C" [[noreturn]] void __crubit_thunk_method_unever_ureturn(
     ::never::NeverStruct const&);
 }
-inline void NeverStruct::method_never_return() const {
+inline void(NeverStruct::method_never_return)() const {
   auto&& self = *this;
   __crubit_internal::__crubit_thunk_method_unever_ureturn(self);
 }
-inline void NeverStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NeverStruct, _non_zst_field));
+inline void ::never::NeverStruct::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::never::NeverStruct;
+    static_assert(0 == offsetof(__crubit_assert_type, _non_zst_field));
+  }
 }
 namespace __crubit_internal {
 extern "C" [[noreturn]] void __crubit_thunk_never_ureturn();

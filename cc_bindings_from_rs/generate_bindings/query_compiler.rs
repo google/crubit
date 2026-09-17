@@ -19,6 +19,7 @@ extern crate rustc_trait_selection;
 
 use arc_anyhow::Result;
 use error_report::anyhow;
+use error_report::ensure;
 #[rustversion::before(2026-05-18)]
 use rustc_abi::FieldsShape;
 use rustc_abi::IntegerType;
@@ -327,6 +328,16 @@ pub fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>>
             // `anyhow::context::ext::StdError` trait bound.
             anyhow!("Error computing the layout: {layout_err}")
         })
+}
+
+pub fn get_validated_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>> {
+    let layout = get_layout(tcx, ty)?;
+    ensure!(
+        layout.backend_repr().is_sized(),
+        "Bindings for dynamically sized types are not supported."
+    );
+    ensure!(layout.size().bytes() != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
+    Ok(layout)
 }
 
 fn convert_interger_type_to_int_type(input: IntegerType) -> IntType {

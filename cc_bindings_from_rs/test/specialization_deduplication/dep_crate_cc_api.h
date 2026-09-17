@@ -110,17 +110,20 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 namespace dep_crate {
 
 static_assert(
-    sizeof(ExpectedName) == 4,
+    sizeof(::dep_crate::ExpectedName) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(ExpectedName) == 4,
+    alignof(::dep_crate::ExpectedName) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<ExpectedName>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::dep_crate::ExpectedName>);
 static_assert(::std::is_trivially_move_assignable_v<::dep_crate::ExpectedName>);
-inline void ExpectedName::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(ExpectedName, x));
+inline void ::dep_crate::ExpectedName::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::dep_crate::ExpectedName;
+    static_assert(0 == offsetof(__crubit_assert_type, x));
+  }
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_use_us(

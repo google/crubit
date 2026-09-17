@@ -803,7 +803,7 @@ fn specialize_tuple<'tcx>(
     let core = Rc::new(AdtCoreBindings {
         common: Rc::new(CoreBindingsCommon {
             keyword: quote! { struct },
-            cc_short_name: format_ident!("Tuple"),
+            cc_short_name: quote! { Tuple },
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
             self_ty: adt_spec.self_ty_rs,
             alignment_in_bytes: layout.align().abi.bytes(),
@@ -990,7 +990,7 @@ fn specialize_vec<'tcx>(
     let core = Rc::new(AdtCoreBindings {
         common: Rc::new(CoreBindingsCommon {
             keyword: quote! { struct },
-            cc_short_name: format_ident!("Vec"),
+            cc_short_name: quote! { Vec },
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
             self_ty: adt_spec.self_ty_rs,
             alignment_in_bytes: layout.align().abi.bytes(),
@@ -1320,7 +1320,7 @@ fn specialize_result<'tcx>(
     let core = Rc::new(AdtCoreBindings {
         common: Rc::new(CoreBindingsCommon {
             keyword: quote! { struct },
-            cc_short_name: format_ident!("Result"),
+            cc_short_name: quote! { Result },
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
             self_ty: adt_spec.self_ty_rs,
             alignment_in_bytes: layout.align().abi.bytes(),
@@ -1527,7 +1527,7 @@ fn specialize_option<'tcx>(
     let core = Rc::new(AdtCoreBindings {
         common: Rc::new(CoreBindingsCommon {
             keyword: quote! { struct },
-            cc_short_name: format_ident!("Option"),
+            cc_short_name: quote! { Option },
             cc_fully_qualified_name: cc_fully_qualified_name.clone(),
             self_ty: adt_spec.self_ty_rs,
             alignment_in_bytes: layout.align().abi.bytes(),
