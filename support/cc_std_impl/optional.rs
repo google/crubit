@@ -5,6 +5,7 @@
 use core::fmt::{Debug, Formatter, Result};
 use core::mem::{ManuallyDrop, MaybeUninit};
 use core::pin::Pin;
+use ctor::{Ctor, CtorNew, FnCtor, Infallible};
 
 /// Rust layout-compatible implementation of C++ `std::optional<T>`, where `T` is `Copy`.
 ///
@@ -143,7 +144,7 @@ impl<T: Debug> Debug for trivial_optional<T> {
 
 /// Rust layout-compatible implementation of C++ `std::optional<T>`.
 ///
-/// ## Missing `Copy` implementation and [`trivial_optional`]
+/// ## Missing `Copy` implementation and [`trivial_optional<T>`]
 ///
 /// [`optional<T>`] is not `Copy`, even when `T: Copy`. If you need a `Copy` version of e.g.
 /// C++ `std::optional<int>`, use [`trivial_optional<i32>`].
@@ -155,6 +156,12 @@ impl<T: Debug> Debug for trivial_optional<T> {
 /// Prefer to use `optional<T>` over `trivial_optional<T>` in generic code. Any
 /// `trivial_optional<T>` can be converted into `optional<T>` via [`From`], so `optional` is more
 /// flexible.
+///
+/// ## `optional<T>` and [`ctor`]
+///
+/// The payload is stored inline, so `optional<T>` is [`Unpin`] exactly when `T` is. To ensure that
+/// `T: !Unpin` payloads are supported, `optional<T>` implements [`CtorNew<(C,)>`] for constructing
+/// an engaged `optional<T>` in place and [`CtorNew<()>`] for constructing a nullopt in place.
 #[crubit_annotate::cpp_layout_equivalent(
     cpp_type = "::std::optional<{T}>",
     include_path = "<optional>"
@@ -213,7 +220,36 @@ impl<T> optional<T> {
     }
 }
 
+impl<T, C> CtorNew<(C,)> for optional<T>
+where
+    C: Ctor<Output = T, Error = Infallible>,
+{
+    type CtorType = impl Ctor<Output = Self, Error = Infallible>;
+    type Error = Infallible;
+
+    fn ctor_new(args: (C,)) -> Self::CtorType {
+        let (value,) = args;
+        // SAFETY: the closure initializes all of `dest`: `value` initializes the payload, and
+        // `engaged` is then set to true, which restores the safety invariant. `value` constructs
+        // the payload where it will live, so a `!Unpin` payload is never moved.
+        unsafe {
+            FnCtor::new(move |dest: *mut Self| {
+                // Project through `dest` without materializing a reference to the whole
+                // `optional`, which is still uninitialized: `engaged` is not yet a valid `bool`.
+                let payload: *mut MaybeUninit<T> = &raw mut (*dest).inner.payload;
+                let Ok(()) = value.ctor(payload as *mut T);
+                (&raw mut (*dest).inner.engaged).write(true);
+            })
+        }
+    }
+}
+
 impl<T> Drop for optional<T> {
+    /// Destroys the contained value, if any.
+    ///
+    /// This is a plain `Drop` rather than a `PinnedDrop`, which is sound because the payload is
+    /// only ever dropped in place: it is never moved out of, so a pinned payload keeps the
+    /// address it was constructed at until it is destroyed.
     fn drop(&mut self) {
         if self.inner.engaged {
             // SAFETY: payload is initialized because engaged is true.
