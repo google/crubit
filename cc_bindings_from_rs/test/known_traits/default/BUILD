@@ -48,8 +48,6 @@ crubit_cc_test(
         "android",
         "ios",
     ],
-    # TODO(b/537283300): Re-enable x86 Android platforms once x86 ABI assertion failures are resolved.
-    tags = ["no_test_android_x86"],
     deps = [
         ":rs_default_cc_api",
         "//testing/base/public:gunit_main",
