@@ -285,7 +285,7 @@ const _: () = assert!(::core::mem::offset_of!(::from_golden::Opaque, 0) == 0);
 const _: () = assert!(::std::mem::size_of::<::from_golden::OpaqueRef>() == 8);
 const _: () = assert!(::std::mem::align_of::<::from_golden::OpaqueRef>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create(
+unsafe extern "C" fn __crubit_thunk_create_u_x00000027_u(
     s: *mut &'static str,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -296,7 +296,7 @@ unsafe extern "C" fn __crubit_thunk_create(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_get_uarg(
+unsafe extern "C" fn __crubit_thunk_get_uarg_u_x00000027_u(
     __self: &'static ::from_golden::OpaqueRef<'static>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {

@@ -927,7 +927,7 @@ fn test_format_item_generic_fn_into_trait_basic_replacement() {
         assert_rs_matches!(
             result.rs_details.tokens,
             quote! {
-                unsafe extern "C" fn __crubit_thunk_generic_ufunction(arg: i32) -> () {
+                unsafe extern "C" fn __crubit_thunk_generic_ufunction_ui32(arg: i32) -> () {
                     unsafe { ::rust_out::generic_function(arg) }
                 }
             }
@@ -952,7 +952,7 @@ fn test_format_item_generic_fn_as_ref_trait_basic_replacement() {
         assert_rs_matches!(
             result.rs_details.tokens,
             quote! {
-                unsafe extern "C" fn __crubit_thunk_generic_ufunction(arg: &'static [u8]) -> () {
+                unsafe extern "C" fn __crubit_thunk_generic_ufunction_u_x00000026_x0000005bu8_x0000005d(arg: &'static [u8]) -> () {
                     unsafe { ::rust_out::generic_function(arg) }
                 }
             }

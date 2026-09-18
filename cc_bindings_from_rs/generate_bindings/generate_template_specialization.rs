@@ -1889,6 +1889,7 @@ fn generate_trait_impl_specialization<'tcx>(
                 assoc_item,
                 &mut member_function_names,
                 None,
+                None,
                 StaticMethodMode::ForceStaticMethod,
             )
         })

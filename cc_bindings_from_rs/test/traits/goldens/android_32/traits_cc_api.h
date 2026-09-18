@@ -679,7 +679,7 @@ rs_std::impl<::traits::AssociatedTypeStruct, ::traits::AssociatedTypeTrait>::
 namespace traits {
 namespace __crubit_internal {
 extern "C" ::std::int32_t const& $a
-__crubit_thunk_LifetimeTrait_utrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a(
+__crubit_thunk_LifetimeTrait_utrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a_u_x00000027a(
     ::traits::LifetimeStruct const&);
 }
 }  // namespace traits
@@ -687,14 +687,14 @@ inline ::std::int32_t const& $a
 rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
     trait_do_something(::traits::LifetimeStruct const& self) {
   return traits::__crubit_internal::
-      __crubit_thunk_LifetimeTrait_utrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a(
+      __crubit_thunk_LifetimeTrait_utrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a_u_x00000027a(
           self);
 }
 
 namespace traits {
 namespace __crubit_internal {
 extern "C" ::std::int32_t const& $(__anon1)
-    __crubit_thunk_LifetimeTrait_ufunction_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a(
+    __crubit_thunk_LifetimeTrait_ufunction_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a_u_x00000027a(
         ::traits::LifetimeStruct const&);
 }
 }  // namespace traits
@@ -702,7 +702,7 @@ inline ::std::int32_t const& $(
     __anon1) rs_std::impl<::traits::LifetimeStruct, ::traits::LifetimeTrait>::
     function_do_something(::traits::LifetimeStruct const& self) {
   return traits::__crubit_internal::
-      __crubit_thunk_LifetimeTrait_ufunction_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a(
+      __crubit_thunk_LifetimeTrait_ufunction_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a_u_x00000027a(
           self);
 }
 

@@ -80,7 +80,7 @@ const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::NonCloneableValue
 const _: () = assert!(::std::mem::size_of::<::stdlib_golden::RefIterator>() == 12);
 const _: () = assert!(::std::mem::align_of::<::stdlib_golden::RefIterator>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_new(
+unsafe extern "C" fn __crubit_thunk_new_u_x00000027_u(
     slice: *mut &'static [i32],
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -139,13 +139,13 @@ unsafe extern "C" fn __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x00
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aRefIterator_x0000003c_x00000027a_x0000003e(
+unsafe extern "C" fn __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aRefIterator_x0000003c_x00000027a_x0000003e_u_x00000027a(
     __self: &'static mut ::stdlib_golden::RefIterator<'static>,
     __ret_ptr: *mut core::ffi::c_uchar,
 ) -> () {
     unsafe {
         let __rs_return_value =
-            <::stdlib_golden::RefIterator as ::core::iter::Iterator>::next(__self);
+            <::stdlib_golden::RefIterator<'static> as ::core::iter::Iterator>::next(__self);
         unsafe {
             ::bridge_rust::internal::encode(
                 ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<&'static i32>()),

@@ -316,10 +316,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(8)
   OpaqueRef(::crubit::UnsafeRelocateTag, OpaqueRef&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::from::OpaqueRef create(rs_std::StrRef s);
+  static ::from::OpaqueRef create(rs_std::StrRef s CRUBIT_LIFETIME_BOUND);
 
   // CRUBIT_ANNOTATE: must_bind=
-  rs_std::StrRef get_arg() const;
+  rs_std::StrRef get_arg() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
   explicit operator rs_std::StrRef();
 
@@ -811,25 +811,29 @@ inline ::from::OpaqueRef::OpaqueRef(::crubit::UnsafeRelocateTag,
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs_std::StrRef*,
-                                      ::from::OpaqueRef* __ret_ptr);
+extern "C" void __crubit_thunk_create_u_x00000027_u(
+    rs_std::StrRef*, ::from::OpaqueRef* __ret_ptr);
 }
-inline ::from::OpaqueRef OpaqueRef::create(rs_std::StrRef s) {
+inline ::from::OpaqueRef OpaqueRef::create(
+    rs_std::StrRef s CRUBIT_LIFETIME_BOUND) {
   crubit::Slot<::from::OpaqueRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_create(&s, __return_value_storage);
+  __crubit_internal::__crubit_thunk_create_u_x00000027_u(
+      &s, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_get_uarg(::from::OpaqueRef const&,
-                                        rs_std::StrRef* __ret_ptr);
+extern "C" void __crubit_thunk_get_uarg_u_x00000027_u(
+    ::from::OpaqueRef const&, rs_std::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef OpaqueRef::get_arg() const {
+inline rs_std::StrRef OpaqueRef::get_arg() const& $(__anon1)
+    CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_get_uarg(self, __return_value_storage);
+  __crubit_internal::__crubit_thunk_get_uarg_u_x00000027_u(
+      self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {

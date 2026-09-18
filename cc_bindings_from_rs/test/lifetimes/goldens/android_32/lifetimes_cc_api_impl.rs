@@ -14,7 +14,7 @@ extern crate core;
 const _: () = assert!(::std::mem::size_of::<::lifetimes_golden::StructWithLifetime>() == 4);
 const _: () = assert!(::std::mem::align_of::<::lifetimes_golden::StructWithLifetime>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_from_uref(
+unsafe extern "C" fn __crubit_thunk_from_uref_u_x00000027_u(
     field_with_lifetime: &'static i32,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -25,7 +25,7 @@ unsafe extern "C" fn __crubit_thunk_from_uref(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_into_uref(
+unsafe extern "C" fn __crubit_thunk_into_uref_u_x00000027_u(
     __self: *mut ::lifetimes_golden::StructWithLifetime<'static>,
 ) -> &'static i32 {
     unsafe {
@@ -34,7 +34,7 @@ unsafe extern "C" fn __crubit_thunk_into_uref(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_value(
+unsafe extern "C" fn __crubit_thunk_value_u_x00000027_u(
     __self: *mut ::lifetimes_golden::StructWithLifetime<'static>,
 ) -> i32 {
     unsafe {
@@ -43,7 +43,7 @@ unsafe extern "C" fn __crubit_thunk_value(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_borrow_ufrom_uself(
+unsafe extern "C" fn __crubit_thunk_borrow_ufrom_uself_u_x00000027_u(
     __self: &'static ::lifetimes_golden::StructWithLifetime<'static>,
 ) -> &'static i32 {
     unsafe { ::lifetimes_golden::StructWithLifetime::borrow_from_self(__self) }
@@ -63,18 +63,6 @@ unsafe extern "C" fn __crubit_thunk_from_ustatic_uref(
     unsafe {
         let __rs_return_value =
             ::lifetimes_golden::StructWithLifetime::from_static_ref(field_with_lifetime);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_from_ustatic_uref_uwhere_ubound(
-    field_with_lifetime: &'static i32,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value = ::lifetimes_golden::StructWithLifetime::from_static_ref_where_bound(
-            field_with_lifetime,
-        );
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }

@@ -158,7 +158,7 @@ const _: () = assert!(::core::mem::offset_of!(::into_golden::ConvertModule, 0) =
 const _: () = assert!(::std::mem::size_of::<::into_golden::ConvertRef>() == 8);
 const _: () = assert!(::std::mem::align_of::<::into_golden::ConvertRef>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_create(
+unsafe extern "C" fn __crubit_thunk_create_u_x00000027_u(
     s: *mut &'static str,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -169,7 +169,7 @@ unsafe extern "C" fn __crubit_thunk_create(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_transmigrate(
+unsafe extern "C" fn __crubit_thunk_transmigrate_u_x00000027_u(
     __self: *mut ::into_golden::ConvertRef<'static>,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
