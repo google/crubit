@@ -50,7 +50,7 @@ Fixed-size array                         | `std::array<T, N>`           | `[T; N
 [Growable string (C++)](http://crubit.rs/cpp/std#string) | `std::string`                | `cpp_std::string_wrapper`| Bridged           |
 Growable string (Rust)                   | `rs::alloc::string::String`  | `String`                 | Layout compatible |
 **Option & Result**                      |                              |                          |                   |
-[Optional (C++)](http://crubit.rs/cpp/std#optional)      | `std::optional<T>`           | `cpp_std::optional<T>`   | Layout compatible |
+[Optional (C++)](http://crubit.rs/cpp/std#optional)      | `std::optional<T>`           | `Option<T>`              | Bridged           | TODO(b/493911621): the layout-compatible `cpp_std::optional<T>` is used in positions which cannot hold a bridged type, and everywhere if the `layout_compat_optional` feature is enabled
 Option (Rust)                            | `rs_std::Option<T>`          | `Option<T>`              | Layout compatible | Converts to/from `std::optional<T>` in C++
 Result                                   | `rs_std::Result<T, E>`       | `Result<T, E>`           | Layout compatible |
 **Other**                                |                              |                          |                   |
