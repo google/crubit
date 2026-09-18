@@ -46,3 +46,9 @@ struct FieldDropOrderDoesNotMatter {}
 
 #[crubit_annotate::allow_unbindable_type]
 struct AllowUnbindableType {}
+
+#[crubit_annotate::unsafe_relocate_tag_constructible_if_type_params_are_rust_movable]
+struct UnsafeRelocateTagConstructibleIfTypeParamsAreRustMovable {}
+
+#[crubit_annotate::cpp_move_constructible]
+struct CppMoveConstructible {}

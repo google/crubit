@@ -2241,11 +2241,67 @@ fn test_unmovable_template_specialization_param_wrapped_in_movable() {
 }
 
 #[test]
+fn test_bridged_type_with_unsafe_relocate_tag_constructible() {
+    let test_src = r#"
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=third_party/absl/status/statusor.h"]
+        #[doc = "CRUBIT_ANNOTATE: unsafe_relocate_tag_constructible_if_type_params_are_rust_movable="]
+        pub struct StatusOr<T>(std::marker::PhantomData<T>);
+        // Has Drop and no Default/Copy -> not C++ move-constructible, but Rust-movable (has UnsafeRelocateTag).
+        pub struct Unmovable(pub i32);
+        impl Drop for Unmovable {
+            fn drop(&mut self) {}
+        }
+        // Imported C++ type without cpp_move_constructible -> neither C++ move-constructible nor relocatable.
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppUnmovable"]
+        pub struct CppUnmovable(pub i32);
+        impl Drop for CppUnmovable {
+            fn drop(&mut self) {}
+        }
+        pub fn returns_status_or_unmovable() -> StatusOr<Unmovable> {
+            todo!()
+        }
+        pub fn takes_status_or_unmovable(_x: StatusOr<Unmovable>) {}
+        pub fn returns_status_or_cpp_unmovable() -> StatusOr<CppUnmovable> {
+            todo!()
+        }
+    "#;
+    test_format_item(test_src, "returns_status_or_unmovable", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                absl::StatusOr<::rust_out::Unmovable> returns_status_or_unmovable();
+            }
+        );
+    });
+    test_format_item(test_src, "takes_status_or_unmovable", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void takes_status_or_unmovable(::rs::Movable<absl::StatusOr<::rust_out::Unmovable>> _x);
+            }
+        );
+    });
+    test_format_item(test_src, "returns_status_or_cpp_unmovable", |result| {
+        let err = result.unwrap_err();
+        assert!(
+            err.contains("Error formatting function return type `StatusOr<CppUnmovable>`: crubit.rs/errors/unsupported_type: Bridged type `StatusOr` cannot be passed by value because `CppUnmovable` is not C++ move-constructible."),
+            "Unexpected error message: {err}"
+        );
+    });
+}
+
+#[test]
 fn test_bridged_type_with_non_cpp_movable_type_arg_rejected() {
     let test_src = r#"
         #[doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>"]
         #[doc = "CRUBIT_ANNOTATE: include_path=third_party/absl/status/statusor.h"]
         pub struct StatusOr<T>(std::marker::PhantomData<T>);
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=MyWrapper<{T}>"]
+        #[doc = "CRUBIT_ANNOTATE: include_path=my_wrapper.h"]
+        pub struct MyWrapper<T>(std::marker::PhantomData<T>);
         // Has Drop and no Default/Copy -> not C++ move-constructible.
         pub struct Unmovable(pub i32);
         impl Drop for Unmovable {
@@ -2254,11 +2310,21 @@ fn test_bridged_type_with_non_cpp_movable_type_arg_rejected() {
         pub fn returns_status_or_unmovable() -> StatusOr<Unmovable> {
             todo!()
         }
+        pub fn returns_wrapper_unmovable() -> MyWrapper<Unmovable> {
+            todo!()
+        }
     "#;
     test_format_item(test_src, "returns_status_or_unmovable", |result| {
         let err = result.unwrap_err();
         assert!(
             err.contains("Error formatting function return type `StatusOr<Unmovable>`: crubit.rs/errors/unsupported_type: Bridged type `StatusOr` cannot be passed by value because `Unmovable` is not C++ move-constructible."),
+            "Unexpected error message: {err}"
+        );
+    });
+    test_format_item(test_src, "returns_wrapper_unmovable", |result| {
+        let err = result.unwrap_err();
+        assert!(
+            err.contains("Error formatting function return type `MyWrapper<Unmovable>`: crubit.rs/errors/unsupported_type: Bridged type `MyWrapper` cannot be passed by value because `Unmovable` is not C++ move-constructible."),
             "Unexpected error message: {err}"
         );
     });

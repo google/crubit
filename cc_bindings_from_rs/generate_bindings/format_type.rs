@@ -310,6 +310,26 @@ fn format_transparent_pointee_or_reference_for_cc<'tcx>(
     format_pointer_or_reference_ty_for_cc(db, referent, mutability, pointer_sigil).ok()
 }
 
+fn is_cpp_relocatable<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+    if db.is_cpp_move_constructible(ty) {
+        return true;
+    }
+    if db.is_proto_message(ty) {
+        return true;
+    }
+    let ty::TyKind::Adt(adt_def, substs) = ty.kind() else {
+        return false;
+    };
+    if let Ok(attrs) = crubit_attr::get_attrs(db.tcx(), adt_def.did())
+        && attrs.cpp_type.is_some()
+    {
+        return attrs.unsafe_relocate_tag_constructible_if_type_params_are_rust_movable
+            && substs.types().all(|t| is_cpp_relocatable(db, t));
+    }
+    // Rust-defined ADTs always receive a `T(::crubit::UnsafeRelocateTag, T&&)` constructor.
+    true
+}
+
 fn format_legacy_bridged_type_with_placeholders<'tcx>(
     db: &BindingsGenerator<'tcx>,
     cpp_type_str: &str,
@@ -339,37 +359,13 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
         start_idx = absolute_start + end + 1;
     }
 
-    // If the bridged wrapper type itself is annotated with `cpp_move_constructible=`,
-    // it means its C++ move constructor is unconditionally available (e.g. pointer/heap
-    // wrappers like `std::unique_ptr<T>` and `std::vector<T>` only transfer internal
-    // pointers upon move and never invoke `{T}`'s move constructor).
-    //
-    // NOTE: We also check for standard pointer/heap wrappers (`unique_ptr`, `shared_ptr`,
-    // `vector`) as a temporary fallback until the compiler rollout containing
-    // `cpp_move_constructible` reaches stable Crosstool, at which point `support/cc_std_impl`
-    // can be annotated directly without breaking the stable compiler on targets using `cc_std`.
-    //
-    // TODO(b/545883191): When `cpp_move_constructible` is in crosstool stable clean these up and
-    // annotate the types in `support/cc_std_impl` directly.
-    let is_unconditionally_cpp_movable = crubit_attr::get_attrs(tcx, adt.did())
-        .map(|attrs| attrs.cpp_move_constructible)
-        .unwrap_or(false)
-        || cpp_type_str.contains("unique_ptr")
-        || cpp_type_str.contains("shared_ptr")
-        || cpp_type_str.contains("vector")
-        // Unlike the three above, `NonNull<Ptr>` is *not* unconditionally movable: in C++ it is
-        // spelled as `Ptr` plus an attribute, so its movability is exactly `Ptr`'s. Exempting it
-        // is only sound because the check it suppresses would itself wrongly fail, as `Ptr` is
-        // always a `cc_std_impl` smart pointer that cannot carry `cpp_move_constructible` yet.
-        // Both halves of that go away together.
-        || cpp_type_str.contains("crubit_nonnull");
+    let attrs = crubit_attr::get_attrs(tcx, adt.did()).ok();
     let is_passed_by_value = matches!(
         location,
         TypeLocation::FnReturn { is_constructor: false }
             | TypeLocation::FnParam { .. }
             | TypeLocation::NestedBridgeable
     );
-
     for (param, subst) in generics.own_params.iter().zip(substs.iter()) {
         let ty::GenericArgKind::Type(ty) = subst.kind() else {
             continue;
@@ -379,10 +375,17 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
         if !result_str.contains(&placeholder) {
             continue;
         }
-        if is_passed_by_value
-            && !is_unconditionally_cpp_movable
-            && !db.is_cpp_move_constructible(ty)
-        {
+        let is_unconditionally_cpp_movable =
+            attrs.as_ref().map(|attrs| attrs.cpp_move_constructible).unwrap_or(false)
+                || cpp_type_str.contains("crubit_nonnull");
+        let is_unsafe_relocate_tag_constructible = attrs
+            .as_ref()
+            .map(|attrs| attrs.unsafe_relocate_tag_constructible_if_type_params_are_rust_movable)
+            .unwrap_or(false);
+        let can_pass_type_arg = is_unconditionally_cpp_movable
+            || db.is_cpp_move_constructible(ty)
+            || (is_unsafe_relocate_tag_constructible && is_cpp_relocatable(db, ty));
+        if is_passed_by_value && !can_pass_type_arg {
             bail!(
                 "crubit.rs/errors/unsupported_type: Bridged type `{}` cannot be passed \
                  by value because `{ty}` is not C++ move-constructible. \
@@ -897,7 +900,7 @@ pub fn format_ty_for_cc<'tcx>(
                             CcType::Pointer { cpp_type, .. } => cpp_type.as_str(),
                         };
 
-                        let tokens = if cpp_type_str.contains('{') {
+                        let mut tokens = if cpp_type_str.contains('{') {
                             format_legacy_bridged_type_with_placeholders(
                                 db,
                                 cpp_type_str,
@@ -918,6 +921,14 @@ pub fn format_ty_for_cc<'tcx>(
                                 }
                             }
                         };
+
+                        if is_layout_compat
+                            && !db.is_cpp_move_constructible(ty)
+                            && matches!(location, TypeLocation::FnParam { .. })
+                        {
+                            prereqs.includes.insert(db.support_header("movable.h"));
+                            tokens = quote! { ::rs::Movable< #tokens > };
+                        }
 
                         return Ok(CcSnippet { tokens, prereqs });
                     }
