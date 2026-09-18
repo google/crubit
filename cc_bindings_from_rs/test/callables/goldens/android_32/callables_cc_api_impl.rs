@@ -640,6 +640,26 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_umovable_udrop(
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_call_uwith_umut_uref_uto_umut_uref(
+    f: ::bridge_rust::FnRefPayload,
+    x: &'static mut ::callables_golden::NonCppMovable,
+) -> i32 {
+    unsafe {
+        ::callables_golden::call_with_mut_ref_to_mut_ref(
+            move |__arg_0: &mut ::callables_golden::NonCppMovable| {
+                let __invoker: unsafe extern "C" fn(
+                    *mut core::ffi::c_void,
+                    *mut ::callables_golden::NonCppMovable,
+                )
+                    -> *mut ::callables_golden::NonCppMovable =
+                    unsafe { ::core::mem::transmute(f.invoker()) };
+                unsafe { &mut *__invoker(f.data(), __arg_0 as *mut _) }
+            },
+            x,
+        )
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_call_uwith_unon_umovable_uref(
     f: ::bridge_rust::FnRefPayload,
     x: &'static ::callables_golden::NonCppMovable,
@@ -649,10 +669,10 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_unon_umovable_uref(
             move |__arg_0: &::callables_golden::NonCppMovable| {
                 let __invoker: unsafe extern "C" fn(
                     *mut core::ffi::c_void,
-                    &::callables_golden::NonCppMovable,
+                    *const ::callables_golden::NonCppMovable,
                 ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
                 unsafe {
-                    __invoker(f.data(), __arg_0);
+                    __invoker(f.data(), __arg_0 as *const _);
                 }
             },
             x,
@@ -689,6 +709,26 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_upoint(
             pt,
         );
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_call_uwith_uref_uto_uref(
+    f: ::bridge_rust::FnRefPayload,
+    x: &'static ::callables_golden::NonCppMovable,
+) -> i32 {
+    unsafe {
+        ::callables_golden::call_with_ref_to_ref(
+            move |__arg_0: &::callables_golden::NonCppMovable| {
+                let __invoker: unsafe extern "C" fn(
+                    *mut core::ffi::c_void,
+                    *const ::callables_golden::NonCppMovable,
+                )
+                    -> *const ::callables_golden::NonCppMovable =
+                    unsafe { ::core::mem::transmute(f.invoker()) };
+                unsafe { &*__invoker(f.data(), __arg_0 as *const _) }
+            },
+            x,
+        )
     }
 }
 #[unsafe(no_mangle)]

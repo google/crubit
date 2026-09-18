@@ -206,6 +206,31 @@ pub fn call_with_non_movable_ref(f: impl Fn(&NonCppMovable), x: &NonCppMovable) 
     x.0
 }
 
+/// Regression test for cross-language CFI.
+///
+/// The generated `__invoker` is an `extern "C"` function pointer shared with C++, so a
+/// Rust reference in its signature has to be spelled as a raw pointer: rustc encodes
+/// references with a Rust-specific vendor extension (`u3refI..E`) whereas Clang encodes
+/// the equivalent C++ pointer as `P..`, and the mismatch makes the CFI check on the
+/// indirect call fail. This covers a reference in *return* position, which also exercises
+/// lifetime elision in the generated fn-pointer type.
+#[must_bind]
+pub fn call_with_ref_to_ref(
+    f: impl Fn(&NonCppMovable) -> &NonCppMovable,
+    x: &NonCppMovable,
+) -> i32 {
+    f(x).0
+}
+
+/// Same as [`call_with_ref_to_ref`], but for `&mut`.
+#[must_bind]
+pub fn call_with_mut_ref_to_mut_ref(
+    f: impl Fn(&mut NonCppMovable) -> &mut NonCppMovable,
+    x: &mut NonCppMovable,
+) -> i32 {
+    f(x).0
+}
+
 #[must_bind]
 #[derive(Default)]
 pub struct CppMovableDrop(pub i32);

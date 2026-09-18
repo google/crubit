@@ -323,6 +323,31 @@ TEST(CallablesTest, CallWithNonMovableRef) {
   EXPECT_THAT(ret, Eq(999));
 }
 
+TEST(CallablesTest, CallWithRefToRef) {
+  callables::NonCppMovable x(111);
+  int observed = 0;
+  int ret = callables::call_with_ref_to_ref(
+      [&](const callables::NonCppMovable* ref) {
+        observed = ref->__field0;
+        return ref;
+      },
+      x);
+  EXPECT_THAT(observed, Eq(111));
+  EXPECT_THAT(ret, Eq(111));
+}
+
+TEST(CallablesTest, CallWithMutRefToMutRef) {
+  callables::NonCppMovable x(222);
+  int ret = callables::call_with_mut_ref_to_mut_ref(
+      [](callables::NonCppMovable* ref) {
+        ref->__field0 += 1;
+        return ref;
+      },
+      x);
+  EXPECT_THAT(x.__field0, Eq(223));
+  EXPECT_THAT(ret, Eq(223));
+}
+
 TEST(CallablesTest, CallWithMovableDrop) {
   int observed = 0;
   callables::call_with_movable_drop(

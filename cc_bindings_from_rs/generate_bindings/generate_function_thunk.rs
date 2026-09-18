@@ -813,6 +813,38 @@ pub fn generate_thunk_impl<'tcx>(
     })
 }
 
+/// Returns the raw pointer spelling of `ty`, if `ty` is a thin Rust reference.
+///
+/// The `__invoker` of a callable is an `extern "C"` function pointer that is shared with
+/// C++, so its signature has to be spelled in a way that both languages agree on for the
+/// purposes of cross-language CFI. A Rust reference `&T` is ABI-identical to `*const T`,
+/// but the two are *not* encoded identically in the CFI type id: rustc encodes references
+/// using a Rust-specific vendor extension (`u3refI..E`), whereas Clang encodes the
+/// corresponding C++ pointer as `P..`. Spelling references as raw pointers makes the two
+/// sides agree, so that the CFI check on the indirect call through `__invoker` passes.
+///
+/// Returns `None` for non-references and for wide references (`&str`, `&[T]`,
+/// `&dyn Trait`), which are not ABI-compatible with a thin pointer.
+fn format_ref_as_raw_ptr_for_invoker<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+) -> Result<Option<(Mutability, TokenStream)>> {
+    let ty::TyKind::Ref(_, referent_ty, mutability) = ty.kind() else {
+        return Ok(None);
+    };
+    if matches!(
+        referent_ty.kind(),
+        ty::TyKind::Str | ty::TyKind::Slice(_) | ty::TyKind::Dynamic(..)
+    ) {
+        return Ok(None);
+    }
+    let referent = format_ty_for_closure_param_rs(db, *referent_ty, false)?;
+    Ok(Some(match mutability {
+        Mutability::Mut => (Mutability::Mut, quote! { *mut #referent }),
+        Mutability::Not => (Mutability::Not, quote! { *const #referent }),
+    }))
+}
+
 fn format_callable_thunk_arg<'tcx>(
     db: &BindingsGenerator<'tcx>,
     rs_name: &Ident,
@@ -834,8 +866,17 @@ fn format_callable_thunk_arg<'tcx>(
         closure_params.push(quote! { #arg_name: #rs_param_ty });
 
         if is_c_abi_compatible_by_value(db, param_ty) {
-            invoker_param_tys.push(quote! { #rs_param_ty });
-            invoker_args.push(quote! { #arg_name });
+            if let Some((mutability, raw_ptr_ty)) = format_ref_as_raw_ptr_for_invoker(db, param_ty)?
+            {
+                invoker_param_tys.push(raw_ptr_ty);
+                invoker_args.push(match mutability {
+                    Mutability::Mut => quote! { #arg_name as *mut _ },
+                    Mutability::Not => quote! { #arg_name as *const _ },
+                });
+            } else {
+                invoker_param_tys.push(quote! { #rs_param_ty });
+                invoker_args.push(quote! { #arg_name });
+            }
         } else {
             invoker_param_tys.push(quote! { *mut #rs_param_ty });
             prep_stmts.push(quote! {
@@ -859,6 +900,17 @@ fn format_callable_thunk_arg<'tcx>(
                     unsafe {
                         __invoker(#( #full_invoker_call_args ),*);
                     }
+                },
+            )
+        } else if let Some((mutability, raw_ptr_ty)) =
+            format_ref_as_raw_ptr_for_invoker(db, info.return_ty)?
+        {
+            let call = quote! { __invoker(#( #full_invoker_call_args ),*) };
+            (
+                raw_ptr_ty,
+                match mutability {
+                    Mutability::Mut => quote! { unsafe { &mut *#call } },
+                    Mutability::Not => quote! { unsafe { &*#call } },
                 },
             )
         } else {

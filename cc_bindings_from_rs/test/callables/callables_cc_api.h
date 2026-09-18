@@ -163,7 +163,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: callables_golden :: Point") alignas(4)
 
 // Error generating bindings for function
 // `callables_golden::call_and_return_borrowed_callable` defined at
-// cc_bindings_from_rs/test/callables/callables.rs;l=224:
+// cc_bindings_from_rs/test/callables/callables.rs;l=249:
 // Function parameter #0 is a borrowed callable (`&'a (dyn std::ops::Fn(i32) ->
 // i32 + 'a)`), whose lifetime is captured by the return type `&'a i32`. This is
 // not supported because callable trampoline closures are temporary and cannot
@@ -280,6 +280,15 @@ void call_with_movable_drop(
     ::rs::FnRef<void(::callables::CppMovableDrop) const> f, ::std::int32_t x);
 
 // CRUBIT_ANNOTATE: must_bind=
+//  Same as [`call_with_ref_to_ref`], but for `&mut`.
+::std::int32_t call_with_mut_ref_to_mut_ref(
+    ::rs::FnRef<::callables::NonCppMovable *
+                $static crubit_nonnull(
+                    ::callables::NonCppMovable* $static crubit_nonnull) const>
+        f,
+    ::callables::NonCppMovable& x);
+
+// CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t call_with_non_movable_ref(
     ::rs::FnRef<void(::callables::NonCppMovable const* $static crubit_nonnull)
                     const>
@@ -290,6 +299,23 @@ void call_with_movable_drop(
 ::callables::Point call_with_point(
     ::rs::FnRef<::callables::Point(::callables::Point) const> f,
     ::callables::Point pt);
+
+// CRUBIT_ANNOTATE: must_bind=
+//  Regression test for cross-language CFI.
+//
+//  The generated `__invoker` is an `extern "C"` function pointer shared with
+//  C++, so a Rust reference in its signature has to be spelled as a raw
+//  pointer: rustc encodes references with a Rust-specific vendor extension
+//  (`u3refI..E`) whereas Clang encodes the equivalent C++ pointer as `P..`, and
+//  the mismatch makes the CFI check on the indirect call fail. This covers a
+//  reference in *return* position, which also exercises lifetime elision in the
+//  generated fn-pointer type.
+::std::int32_t call_with_ref_to_ref(
+    ::rs::FnRef<::callables::NonCppMovable const *
+                $static crubit_nonnull(::callables::NonCppMovable const* $static
+                                           crubit_nonnull) const>
+        f,
+    ::callables::NonCppMovable const& x);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::int32_t call_with_str(
@@ -1079,6 +1105,20 @@ inline void call_with_movable_drop(
 }
 
 namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_call_uwith_umut_uref_uto_umut_uref(
+    ::rs::internal::FnRefPayload, ::callables::NonCppMovable&);
+}
+inline ::std::int32_t call_with_mut_ref_to_mut_ref(
+    ::rs::FnRef<::callables::NonCppMovable *
+                $static crubit_nonnull(
+                    ::callables::NonCppMovable* $static crubit_nonnull) const>
+        f,
+    ::callables::NonCppMovable& x) {
+  return __crubit_internal::__crubit_thunk_call_uwith_umut_uref_uto_umut_uref(
+      f.payload(), x);
+}
+
+namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_call_uwith_unon_umovable_uref(
     ::rs::internal::FnRefPayload, ::callables::NonCppMovable const&);
 }
@@ -1115,6 +1155,20 @@ inline ::callables::Point call_with_point(
   __crubit_internal::__crubit_thunk_call_uwith_upoint(__f_payload, &pt,
                                                       __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_call_uwith_uref_uto_uref(
+    ::rs::internal::FnRefPayload, ::callables::NonCppMovable const&);
+}
+inline ::std::int32_t call_with_ref_to_ref(
+    ::rs::FnRef<::callables::NonCppMovable const *
+                $static crubit_nonnull(::callables::NonCppMovable const* $static
+                                           crubit_nonnull) const>
+        f,
+    ::callables::NonCppMovable const& x) {
+  return __crubit_internal::__crubit_thunk_call_uwith_uref_uto_uref(f.payload(),
+                                                                    x);
 }
 
 namespace __crubit_internal {

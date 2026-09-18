@@ -95,9 +95,16 @@ class FnRef<R(Args...) const> {
   FnRef(const F& f) noexcept
       : data_(const_cast<void*>(
             reinterpret_cast<const void*>(std::addressof(f)))),
-        invoker_([](const void* data, Args... args) -> R {
-          return internal::InvokeHelper<R>(*reinterpret_cast<const F*>(data),
-                                           std::forward<Args>(args)...);
+        // NOTE: the parameter is `void*`, not `const void*`, so that this
+        // function's CFI type id matches the signature that the generated Rust
+        // thunk transmutes to (`extern "C" fn(*mut c_void, ...)`). Clang's
+        // `-fsanitize-cfi-icall-generalize-pointers` preserves the pointee's
+        // cv-qualifiers, so `const void*` and `void*` are *not*
+        // interchangeable for CFI purposes.
+        invoker_([](void* data, Args... args) -> R {
+          return internal::InvokeHelper<R>(
+              *reinterpret_cast<const F*>(const_cast<const void*>(data)),
+              std::forward<Args>(args)...);
         }) {}
 
   template <typename F>
@@ -105,10 +112,9 @@ class FnRef<R(Args...) const> {
              std::is_invocable_r_v<R, const F&, Args...>)
   FnRef(F* f) noexcept
       : data_(reinterpret_cast<void*>(f)),
-        invoker_([](const void* data, Args... args) -> R {
-          return internal::InvokeHelper<R>(
-              reinterpret_cast<F*>(const_cast<void*>(data)),
-              std::forward<Args>(args)...);
+        invoker_([](void* data, Args... args) -> R {
+          return internal::InvokeHelper<R>(reinterpret_cast<F*>(data),
+                                           std::forward<Args>(args)...);
         }) {}
 
   FnRef(const FnRef&) noexcept = default;
@@ -130,7 +136,7 @@ class FnRef<R(Args...) const> {
 
  private:
   void* data_ = nullptr;
-  R (*invoker_)(const void*, Args...) = nullptr;
+  R (*invoker_)(void*, Args...) = nullptr;
 };
 
 }  // namespace rs

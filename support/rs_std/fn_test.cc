@@ -68,7 +68,7 @@ TEST(FnTest, ReleasePayload) {
   // holds it.
   EXPECT_THAT(tracker.use_count(), Eq(2));
 
-  auto invoker = reinterpret_cast<int (*)(const void*, int)>(payload.invoker);
+  auto invoker = reinterpret_cast<int (*)(void*, int)>(payload.invoker);
   EXPECT_THAT(invoker(payload.data, 5), Eq(205));
 
   // Destroying via payload.destroyer should release tracker.

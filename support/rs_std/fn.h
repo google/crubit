@@ -124,9 +124,15 @@ class Fn<R(Args...) const> {
   Fn(F&& f) {
     using DecayedF = std::decay_t<F>;
     data_ = new DecayedF(std::forward<F>(f));
-    invoker_ = [](const void* data, Args... args) -> R {
+    // NOTE: the parameter is `void*`, not `const void*`, so that this
+    // function's CFI type id matches the signature that the generated Rust
+    // thunk transmutes to (`extern "C" fn(*mut c_void, ...)`). Clang's
+    // `-fsanitize-cfi-icall-generalize-pointers` preserves the pointee's
+    // cv-qualifiers, so `const void*` and `void*` are *not* interchangeable
+    // for CFI purposes.
+    invoker_ = [](void* data, Args... args) -> R {
       return internal::FnInvokeHelper<R>(
-          *reinterpret_cast<const DecayedF*>(data),
+          *reinterpret_cast<const DecayedF*>(const_cast<const void*>(data)),
           std::forward<Args>(args)...);
     };
     destroyer_ = [](void* data) noexcept {
@@ -180,7 +186,7 @@ class Fn<R(Args...) const> {
 
  private:
   void* data_ = nullptr;
-  R (*invoker_)(const void*, Args...) = nullptr;
+  R (*invoker_)(void*, Args...) = nullptr;
   void (*destroyer_)(void*) noexcept = nullptr;
 };
 

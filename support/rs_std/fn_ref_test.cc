@@ -56,8 +56,7 @@ TEST(FnRefTest, PayloadInvoker) {
   auto lambda = [](int a, int b) { return a + b; };
   rs::FnRef<int(int, int) const> ref(lambda);
   auto payload = ref.payload();
-  auto invoker =
-      reinterpret_cast<int (*)(const void*, int, int)>(payload.invoker);
+  auto invoker = reinterpret_cast<int (*)(void*, int, int)>(payload.invoker);
   EXPECT_THAT(invoker(payload.data, 20, 22), Eq(42));
 }
 
