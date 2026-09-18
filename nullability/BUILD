@@ -191,6 +191,7 @@ cc_library(
     srcs = ["type_nullability.cc"],
     hdrs = ["type_nullability.h"],
     visibility = [
+        "//music/frontend/mediabrowser/service/mediaitems:__pkg__",
         "//nullability/inference:__pkg__",
         "//nullability/test:__pkg__",
     ],
