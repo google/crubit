@@ -10,6 +10,7 @@ use crate::generate_doc_comment;
 use crate::generate_function_thunk::{
     generate_thunk_decl, generate_thunk_impl, is_thunk_required, make_thunk_name, ThunkKind,
 };
+use crate::get_generic_args::GenericClausesExt;
 use crate::{
     format_param_types_for_cc_api, format_region_as_cc_lifetime, format_ret_ty_for_cc,
     format_top_level_ns_for_crate, generate_deprecated_tag, is_bridged_type,
@@ -28,7 +29,7 @@ use query_compiler::{does_type_implement_trait, is_copy, post_analysis_typing_en
 use quote::quote;
 use rustc_hir::attrs::AttributeKind;
 use rustc_hir::{self as hir, def::DefKind};
-use rustc_middle::mir::Mutability;
+use rustc_middle::mir::{self, Mutability};
 use rustc_middle::ty::{self, TraitRef, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::{sym, Symbol};
@@ -76,10 +77,11 @@ impl<'tcx> FunctionKind<'tcx> {
     }
 }
 
-pub(crate) fn function_symbol_name(
-    db: &BindingsGenerator,
+pub(crate) fn function_symbol_name<'tcx>(
+    db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     export_name: Option<Symbol>,
+    generic_args: ty::GenericArgsRef<'tcx>,
 ) -> String {
     let tcx = db.tcx();
     if db.is_golden_test() {
@@ -96,7 +98,8 @@ pub(crate) fn function_symbol_name(
                 })
                 .rs_name
                 .to_string();
-            tcx.trait_impl_of_assoc(def_id)
+            let base_name = tcx
+                .trait_impl_of_assoc(def_id)
                 .map(|impl_id| {
                     let trait_ref = crate::normalize_ty(
                         tcx,
@@ -122,27 +125,34 @@ pub(crate) fn function_symbol_name(
                         format!("{}_{}_{}", trait_name, def_name, trait_args.join("_"))
                     }
                 })
-                .unwrap_or(def_name)
+                .unwrap_or(def_name);
+
+            let args = generic_args.iter().map(|arg| format!("{}", arg)).collect_vec();
+            if args.is_empty() {
+                base_name
+            } else {
+                format!("{}_{}", base_name, args.join("_"))
+            }
         }
     } else {
         let typing_env = ty::TypingEnv::non_body_analysis(tcx, def_id);
-        let args = db.get_generic_args(def_id).expect("Generics should be checked earlier");
         let span = tcx.def_span(def_id);
-        let instance = ty::Instance::expect_resolve(tcx, typing_env, def_id, args, span);
+        let instance = ty::Instance::expect_resolve(tcx, typing_env, def_id, generic_args, span);
         tcx.symbol_name(instance).name.to_string()
     }
 }
 
-fn thunk_name(
-    db: &BindingsGenerator,
+fn thunk_name<'tcx>(
+    db: &BindingsGenerator<'tcx>,
     def_id: DefId,
     export_name: Option<Symbol>,
     needs_thunk: bool,
+    generic_args: ty::GenericArgsRef<'tcx>,
 ) -> String {
     if needs_thunk {
-        make_thunk_name(db, ThunkKind::Function { def_id, export_name })
+        make_thunk_name(db, ThunkKind::Function { def_id, export_name, substs: generic_args })
     } else {
-        function_symbol_name(db, def_id, export_name)
+        function_symbol_name(db, def_id, export_name, generic_args)
     }
 }
 
@@ -595,12 +605,13 @@ fn function_kind<'tcx>(
     tcx: TyCtxt<'tcx>,
     def_id: DefId,
     sig: &ty::FnSig<'tcx>,
+    generic_args: ty::GenericArgsRef<'tcx>,
 ) -> Result<FunctionKind<'tcx>> {
     match tcx.def_kind(def_id) {
         DefKind::Fn => Ok(FunctionKind::Free),
         DefKind::AssocFn => {
             // The type the enclosing `impl` block is for. For `impl Trait for &T` this is `&T`.
-            let impl_self_ty = self_ty_of_method(tcx, def_id);
+            let impl_self_ty = self_ty_of_method(tcx, def_id, generic_args);
             // There is no C++ class for `&T`, so bind such items to the referent `T` instead.
             let self_ty = match impl_self_ty.kind() {
                 ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
@@ -625,14 +636,23 @@ fn function_kind<'tcx>(
     }
 }
 
-fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Ty<'tcx> {
+fn self_ty_of_method<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    def_id: DefId,
+    generic_args: ty::GenericArgsRef<'tcx>,
+) -> Ty<'tcx> {
     let impl_id = tcx.impl_of_assoc(def_id);
 
     let impl_id = impl_id.expect("`def_id` is not a method or an associated function");
+
+    let impl_generics = tcx.generics_of(impl_id);
+    let num_impl_params = impl_generics.count();
+    let impl_args = tcx.mk_args(&generic_args[..num_impl_params]);
+
     return crate::normalize_ty(
         tcx,
         tcx.param_env(impl_id),
-        tcx.type_of(impl_id).instantiate_identity(),
+        tcx.type_of(impl_id).instantiate(tcx, impl_args),
     );
 }
 
@@ -996,13 +1016,38 @@ pub(crate) fn bool_constraint_template_prefix() -> TokenStream {
 pub fn generate_function<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
+    self_generic_args: Option<ty::GenericArgsRef<'tcx>>,
     method_name_override: Option<&'static str>,
     static_method_mode: StaticMethodMode,
 ) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
 
+    // Suppress inherent methods that have their own predicates (e.g., `where` clause)
+    if let Some(parent_id) = tcx.opt_parent(def_id)
+        && matches!(tcx.def_kind(parent_id), rustc_hir::def::DefKind::Impl { .. })
+        && tcx.trait_impl_of_assoc(def_id).is_none()
+    {
+        let explicit_predicates = tcx.explicit_clauses_of(def_id);
+        if !explicit_predicates.clauses().is_empty() {
+            bail!("Inherent methods with their own predicates are not supported");
+        }
+    }
+
+    let generic_args = match self_generic_args {
+        Some(args) => {
+            let generics = tcx.generics_of(def_id);
+            if !generics.is_own_empty() {
+                bail!("Generic methods are not supported");
+            }
+            args
+        }
+        None => db.get_generic_args(def_id)?,
+    };
+    if fn_has_unreturnable_const(tcx, def_id) {
+        bail!("Function contains a const block that cannot return");
+    }
+
     let sig_mid = {
-        let generic_args = db.get_generic_args(def_id)?;
         let early_bound_fn_sig = tcx.fn_sig(def_id).instantiate(tcx, generic_args);
         let is_trait_method = tcx.trait_impl_of_assoc(def_id).is_some();
         let early_bound_fn_sig = if is_trait_method {
@@ -1055,14 +1100,14 @@ pub fn generate_function<'tcx>(
         .map(|trait_ref| {
             crate::normalize_ty(tcx, tcx.param_env(def_id), trait_ref.instantiate_identity())
         });
-    let function_kind = function_kind(tcx, def_id, &sig_mid)?;
+    let function_kind = function_kind(tcx, def_id, &sig_mid, generic_args)?;
     let self_ty = function_kind.self_ty();
     // TODO(b/262904507): Don't require thunks for mangled extern "C" functions.
     let (export_name, has_no_mangle) = export_name_and_no_mangle_attrs_of(tcx, def_id);
     let has_export_name = export_name.is_some();
     let needs_thunk =
         is_thunk_required(db, &sig_mid).is_err() || (!has_no_mangle && !has_export_name);
-    let thunk_name = thunk_name(db, def_id, export_name, needs_thunk);
+    let thunk_name = thunk_name(db, def_id, export_name, needs_thunk, generic_args);
 
     let Some(unqualified_fn_name) = db.symbol_unqualified_name(def_id) else {
         panic!("`generate_function` called on unnamed function {}", tcx.def_path_str(def_id));
@@ -1372,19 +1417,36 @@ pub fn generate_function<'tcx>(
         RsSnippet::default()
     } else {
         // Trait method
+        let struct_name_tokens = if let Some(self_ty) = self_ty {
+            let static_self_ty =
+                crate::generate_function_thunk::replace_all_regions_with_static(db.tcx(), self_ty);
+            let formatted = db.format_ty_for_rs(static_self_ty)?;
+            Some(formatted)
+        } else {
+            None
+        };
+
         let fully_qualified_fn_name = if let Some(trait_ref) = trait_ref.as_ref() {
-            let struct_name = struct_name
-                .as_ref()
-                .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
-                .expect("Generated trait method for an ADT with an invalid rust name");
+            let struct_name_for_trait = if let Some(tokens) = struct_name_tokens.as_ref() {
+                tokens.clone()
+            } else {
+                struct_name
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("Expected struct_name for trait method"))?
+                    .format_for_rs()
+            };
             // `struct_name` names the ADT, which is what the C++ class is generated for. But for
             // an `impl Trait for &T` block the trait is implemented on the reference type, so
             // that is what the qualified call has to name. Regions are `'static` here because
             // `generate_thunk_impl` erases all regions in the thunk signature to `'static`.
             let rs_self_ty = match trait_ref.self_ty().kind() {
-                ty::TyKind::Ref(_, _, Mutability::Not) => quote! { & 'static #struct_name },
-                ty::TyKind::Ref(_, _, Mutability::Mut) => quote! { & 'static mut #struct_name },
-                _ => struct_name,
+                ty::TyKind::Ref(_, _, Mutability::Not) => {
+                    quote! { & 'static #struct_name_for_trait }
+                }
+                ty::TyKind::Ref(_, _, Mutability::Mut) => {
+                    quote! { & 'static mut #struct_name_for_trait }
+                }
+                _ => struct_name_for_trait,
             };
             let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
             let trait_name_with_args = format_trait_ref_for_rs(db, trait_ref)?;
@@ -1490,4 +1552,39 @@ pub fn get_async_future_output_ty<'tcx>(
     crate::format_type::get_associated_type(tcx, rs_return_type, sym::Output).ok_or_else(|| {
         anyhow!("Failed to find Future::Output associated type in bounds of {:?}", rs_return_type)
     })
+}
+
+fn fn_has_unreturnable_const<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool {
+    if !tcx.is_mir_available(def_id) {
+        return false;
+    }
+    let body = tcx.optimized_mir(def_id);
+    if let Some(req_consts) = &body.required_consts {
+        for req_const in req_consts {
+            let const_def_id = match req_const.const_ {
+                mir::Const::Unevaluated(uneval, _) => Some(uneval.def),
+                mir::Const::Ty(_, ct) => match ct.kind() {
+                    ty::ConstKind::Alias(_, alias_const) => alias_const.kind.opt_def_id(),
+                    _ => None,
+                },
+                _ => None,
+            };
+            if let Some(const_def_id) = const_def_id {
+                if matches!(tcx.def_kind(const_def_id), DefKind::AnonConst)
+                    && tcx.anon_const_kind(const_def_id) == ty::AnonConstKind::NonTypeSystemInline
+                    && !tcx.is_trivial_const(const_def_id)
+                {
+                    let const_mir = tcx.mir_for_ctfe(const_def_id);
+                    let has_return = const_mir
+                        .basic_blocks
+                        .iter()
+                        .any(|bb| matches!(bb.terminator().kind, mir::TerminatorKind::Return));
+                    if !has_return {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
 }

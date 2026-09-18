@@ -152,7 +152,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   ConvertRef(::crubit::UnsafeRelocateTag, ConvertRef&& value);
 
   // CRUBIT_ANNOTATE: must_bind=
-  static ::into::ConvertRef create(rs_std::StrRef s);
+  static ::into::ConvertRef create(rs_std::StrRef s CRUBIT_LIFETIME_BOUND);
 
   // CRUBIT_ANNOTATE: must_bind=
   ::into::Convert transmigrate() &&;
@@ -516,25 +516,28 @@ inline ::into::ConvertRef::ConvertRef(::crubit::UnsafeRelocateTag,
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs_std::StrRef*,
-                                      ::into::ConvertRef* __ret_ptr);
+extern "C" void __crubit_thunk_create_u_x00000027_u(
+    rs_std::StrRef*, ::into::ConvertRef* __ret_ptr);
 }
-inline ::into::ConvertRef ConvertRef::create(rs_std::StrRef s) {
+inline ::into::ConvertRef ConvertRef::create(
+    rs_std::StrRef s CRUBIT_LIFETIME_BOUND) {
   crubit::Slot<::into::ConvertRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_create(&s, __return_value_storage);
+  __crubit_internal::__crubit_thunk_create_u_x00000027_u(
+      &s, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_transmigrate(::into::ConvertRef*,
-                                            ::into::Convert* __ret_ptr);
+extern "C" void __crubit_thunk_transmigrate_u_x00000027_u(
+    ::into::ConvertRef*, ::into::Convert* __ret_ptr);
 }
 inline ::into::Convert ConvertRef::transmigrate() && {
   auto&& self = *this;
   crubit::Slot<::into::Convert> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_transmigrate(&self, __return_value_storage);
+  __crubit_internal::__crubit_thunk_transmigrate_u_x00000027_u(
+      &self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {

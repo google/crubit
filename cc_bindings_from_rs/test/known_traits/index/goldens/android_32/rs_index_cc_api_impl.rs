@@ -122,7 +122,7 @@ unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
+unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId_u_x00000027_u(
     __self: &'static ::rs_index_golden::Map,
     _index: &'static ::rs_index_golden::Id,
     __ret_ptr: *mut core::ffi::c_void,

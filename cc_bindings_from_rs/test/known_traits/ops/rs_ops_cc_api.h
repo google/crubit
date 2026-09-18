@@ -178,7 +178,7 @@ inline bool MyBorrowedInt::operator==(
 
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+__crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000027_u_u_x00000027_u(
     ::rs_ops::MyBorrowedInt const&, ::rs_ops::MyBorrowedInt const&,
     ::rs_ops::MyBorrowedInt* __ret_ptr);
 }
@@ -188,14 +188,14 @@ inline ::rs_ops::MyBorrowedInt MyBorrowedInt::operator+(
   crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+      __crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000027_u_u_x00000027_u(
           self, rhs, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+__crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000027_u(
     ::rs_ops::MyBorrowedInt const&, ::rs_ops::MyBorrowedInt* __ret_ptr);
 }
 inline ::rs_ops::MyBorrowedInt MyBorrowedInt::operator-() const {
@@ -203,14 +203,14 @@ inline ::rs_ops::MyBorrowedInt MyBorrowedInt::operator-() const {
   crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+      __crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000027_u(
           self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32(
+__crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32_u_x00000027_u(
     ::rs_ops::MyBorrowedInt const&, ::std::int32_t,
     ::rs_ops::MyBorrowedInt* __ret_ptr);
 }
@@ -220,7 +220,7 @@ inline ::rs_ops::MyBorrowedInt MyBorrowedInt::operator<<(
   crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32(
+      __crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32_u_x00000027_u(
           self, rhs, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }

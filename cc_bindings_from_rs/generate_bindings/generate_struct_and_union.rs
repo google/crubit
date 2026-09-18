@@ -87,22 +87,10 @@ pub(crate) fn non_blanket_impls_for_ty<'tcx>(
     tcx: TyCtxt<'tcx>,
     trait_def_id: DefId,
     self_ty: Ty<'tcx>,
-) -> impl Iterator<Item = DefId> {
-    tcx.non_blanket_impls_for_ty(trait_def_id, self_ty).filter(move |&impl_id| {
-        does_impl_apply(tcx, impl_id, self_ty) && {
-            let trait_ref = crate::normalize_ty(
-                tcx,
-                tcx.param_env(impl_id),
-                tcx.impl_trait_ref(impl_id).instantiate_identity(),
-            );
-            query_compiler::does_type_implement_trait_with_param_env(
-                tcx,
-                self_ty,
-                trait_def_id,
-                tcx.param_env(impl_id), // Use impl_id as param_env to keep its parameters in scope
-                trait_ref.args.into_iter().skip(1),
-            )
-        }
+) -> impl Iterator<Item = (DefId, ty::GenericArgsRef<'tcx>)> {
+    tcx.non_blanket_impls_for_ty(trait_def_id, self_ty).filter_map(move |impl_id| {
+        let impl_args = does_impl_apply(tcx, impl_id, self_ty)?;
+        Some((impl_id, impl_args))
     })
 }
 
@@ -365,6 +353,7 @@ pub(crate) fn generate_associated_item<'tcx>(
     db: &BindingsGenerator<'tcx>,
     assoc_item: &ty::AssocItem,
     member_function_names: &mut HashSet<String>,
+    generic_args: Option<ty::GenericArgsRef<'tcx>>,
     method_name_override: Option<&'static str>,
     static_method_mode: StaticMethodMode,
 ) -> Option<ApiSnippets<'tcx>> {
@@ -381,7 +370,7 @@ pub(crate) fn generate_associated_item<'tcx>(
     crate::error_scope!(db, def_id);
     let result = match assoc_item.kind {
         ty::AssocKind::Fn { .. } => {
-            db.generate_function(def_id, method_name_override, static_method_mode).inspect(|_binding| {
+            db.generate_function(def_id, generic_args, method_name_override, static_method_mode).inspect(|_binding| {
                 // If `generate_function` succeeds, record the method in `member_function_names`.
                 let Some(unqualified_name) = db.symbol_unqualified_name(def_id) else {
                     panic!("Associated item should have an unqualified name: {}", tcx.def_path_str(def_id));
@@ -461,27 +450,47 @@ fn get_trait_ref_from_impl_id<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId) -> ty::Tr
     )
 }
 
-fn does_impl_apply<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId, target_ty: Ty<'tcx>) -> bool {
+fn does_impl_apply<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    impl_id: DefId,
+    target_ty: Ty<'tcx>,
+) -> Option<ty::GenericArgsRef<'tcx>> {
     use rustc_infer::infer::TyCtxtInferExt;
-    use rustc_infer::traits::ObligationCause;
+    use rustc_infer::traits::{Obligation, ObligationCause};
     use rustc_trait_selection::infer::canonical::ir::TypingMode;
     use rustc_trait_selection::traits::ObligationCtxt;
 
     let infcx = tcx.infer_ctxt().build(TypingMode::non_body_analysis());
-    let ocxt = ObligationCtxt::new(&infcx);
+    let ocxt = ObligationCtxt::new_with_diagnostics(&infcx);
+    let cause = ObligationCause::dummy(); // RESPECTFUL_TERMS_EXCEPTION
 
     let impl_args = infcx.fresh_args_for_item(tcx.def_span(impl_id), impl_id);
     let param_env = tcx.param_env(impl_id);
-    let cause = ObligationCause::dummy(); // RESPECTFUL_TERMS_EXCEPTION
 
     let instantiated_impl_ty =
         ocxt.normalize(&cause, param_env, tcx.type_of(impl_id).instantiate(tcx, impl_args));
 
     if ocxt.eq(&cause, param_env, instantiated_impl_ty, target_ty).is_err() {
-        return false;
+        return None;
     }
 
-    ocxt.evaluate_obligations_error_on_ambiguity().into_iter().next().is_none()
+    #[cfg_accessible(rustc_middle::ty::GenericPredicates)]
+    let predicates = tcx.predicates_of(impl_id);
+    #[cfg_accessible(rustc_middle::ty::GenericClauses)]
+    let predicates = tcx.clauses_of(impl_id);
+
+    for (predicate, _span) in predicates.instantiate(tcx, impl_args) {
+        let predicate = ocxt.normalize(&cause, param_env, predicate);
+        ocxt.register_obligation(Obligation::new(tcx, cause.clone(), param_env, predicate));
+    }
+
+    use ty::TypeVisitableExt;
+    ocxt.evaluate_obligations_error_on_ambiguity()
+        .into_iter()
+        .next()
+        .is_none()
+        .then_some(impl_args)
+        .filter(|resolved| !resolved.has_non_region_infer())
 }
 
 pub fn from_trait_impls_by_argument<'tcx>(
@@ -581,8 +590,8 @@ fn generate_into_impls<'tcx>(
                 .ok()?;
             Some((from_middle_ty, cc_ty, *from_impl_id))
         });
-    let into_impls =
-        non_blanket_impls_for_ty(tcx, into_trait, core.common.self_ty).filter_map(|into_impl_id| {
+    let into_impls = non_blanket_impls_for_ty(tcx, into_trait, core.common.self_ty).filter_map(
+        |(into_impl_id, _)| {
             let trait_ref = get_trait_ref_from_impl_id(tcx, into_impl_id);
             // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
             // into.
@@ -597,7 +606,8 @@ fn generate_into_impls<'tcx>(
                 .ok()?;
 
             Some((into_middle_ty, cc_ty, into_impl_id))
-        });
+        },
+    );
 
     from_impls
         .chain(into_impls)
@@ -739,8 +749,8 @@ fn generate_constructor_impls<'tcx>(
 
     // Find From impls from the selected ADT
     let from_trait = tcx.get_diagnostic_item(sym::From).expect("Could not find From trait");
-    let from_impls =
-        non_blanket_impls_for_ty(tcx, from_trait, core.common.self_ty).filter_map(|impl_id| {
+    let from_impls = non_blanket_impls_for_ty(tcx, from_trait, core.common.self_ty).filter_map(
+        |(impl_id, _)| {
             let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
             let src_ty = trait_ref.args.type_at(1);
             if src_ty.flags().intersects(has_type_or_const_vars()) {
@@ -769,7 +779,8 @@ fn generate_constructor_impls<'tcx>(
                 .ok()?;
 
             Some((src_ty, cc_ty, impl_id, /*is_from=*/ true))
-        });
+        },
+    );
 
     // Find Into impls to the selected ADT
     let into_map = db.into_trait_impls_by_destination(def_id.krate);
@@ -988,31 +999,33 @@ fn operator_impls_for_ty<'tcx>(
     tcx: TyCtxt<'tcx>,
     trait_def_id: DefId,
     self_ty: Ty<'tcx>,
-) -> Vec<DefId> {
-    let mut impls: Vec<DefId> = non_blanket_impls_for_ty(tcx, trait_def_id, self_ty).collect();
+) -> Vec<(DefId, ty::GenericArgsRef<'tcx>)> {
+    let mut impls: Vec<_> = non_blanket_impls_for_ty(tcx, trait_def_id, self_ty).collect();
 
     // The self type of an impl only decides how the C++ receiver is qualified, so an
     // `impl Trait<Rhs> for &T` and an `impl Trait<Rhs> for T` produce the same C++ overload.
     // Since `forward_ref_binop!`/`forward_ref_unop!` usually create both, we dedup them.
     let overloads_covered_by_adt_impls: HashSet<Option<Ty<'tcx>>> = impls
         .iter()
-        .map(|impl_id| operator_rhs_ty(get_trait_ref_from_impl_id(tcx, *impl_id)))
+        .map(|(impl_id, _)| operator_rhs_ty(get_trait_ref_from_impl_id(tcx, *impl_id)))
         .collect();
 
     let ref_to_self_ty = Ty::new_ref(tcx, tcx.lifetimes.re_erased, self_ty, Mutability::Not);
-    impls.extend(non_blanket_impls_for_ty(tcx, trait_def_id, ref_to_self_ty).filter(|impl_id| {
-        // Normalizing builds an inference context, so do it once and read both the self type
-        // and the right-hand operand off the same trait ref.
-        let trait_ref = get_trait_ref_from_impl_id(tcx, *impl_id);
-        // A `SimplifiedType::Ref` bucket does not discriminate on the referent, so it holds
-        // every `impl ... for &_`. Keep only the ones for a reference to `self_ty`.
-        let is_impl_for_ref_to_self_ty = matches!(
-            trait_ref.self_ty().kind(),
-            ty::TyKind::Ref(_, referent_ty, Mutability::Not) if *referent_ty == self_ty
-        );
-        is_impl_for_ref_to_self_ty
-            && !overloads_covered_by_adt_impls.contains(&operator_rhs_ty(trait_ref))
-    }));
+    impls.extend(non_blanket_impls_for_ty(tcx, trait_def_id, ref_to_self_ty).filter(
+        |(impl_id, _)| {
+            // Normalizing builds an inference context, so do it once and read both the self type
+            // and the right-hand operand off the same trait ref.
+            let trait_ref = get_trait_ref_from_impl_id(tcx, *impl_id);
+            // A `SimplifiedType::Ref` bucket does not discriminate on the referent, so it holds
+            // every `impl ... for &_`. Keep only the ones for a reference to `self_ty`.
+            let is_impl_for_ref_to_self_ty = matches!(
+                trait_ref.self_ty().kind(),
+                ty::TyKind::Ref(_, referent_ty, Mutability::Not) if *referent_ty == self_ty
+            );
+            is_impl_for_ref_to_self_ty
+                && !overloads_covered_by_adt_impls.contains(&operator_rhs_ty(trait_ref))
+        },
+    ));
     impls
 }
 
@@ -1036,25 +1049,27 @@ fn generate_trait_operator_impls<'tcx>(
 
         operator_impls_for_ty(tcx, trait_def_id, core.common.self_ty)
             .into_iter()
-            .map(|impl_id| {
+            .map(|(impl_id, impl_args)| {
                 let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
                 // For a unary operator (e.g. `Neg` or `Not`) there is no right-hand operand, so
                 // fall back to index 0 of the trait ref - the self type - as a placeholder.
                 let trait_arg_ty =
                     operator_rhs_ty(trait_ref).unwrap_or_else(|| trait_ref.args.type_at(0));
-                (impl_id, trait_arg_ty)
+                (impl_id, impl_args, trait_arg_ty)
             })
-            .avoid_colliding_types(tcx, |(_impl_id, trait_arg_ty)| *trait_arg_ty)
+            .avoid_colliding_types(tcx, |(_, _, trait_arg_ty)| *trait_arg_ty)
             .into_iter()
             .map(|res| {
-                res.map_err(|TypeCollisionRisk { item: (impl_id, _), key_type, preferred_type }| {
-                    let err = anyhow!(
-                        "{trait_name} implementation for `{key_type}` is not supported when \
+                res.map_err(
+                    |TypeCollisionRisk { item: (impl_id, _, _), key_type, preferred_type }| {
+                        let err = anyhow!(
+                            "{trait_name} implementation for `{key_type}` is not supported when \
                          `{trait_name}<{preferred_type}>` is implemented as it may overlap."
-                    );
-                    (err, impl_id)
-                })
-                .and_then(|(impl_id, trait_arg_ty)| {
+                        );
+                        (err, impl_id)
+                    },
+                )
+                .and_then(|(impl_id, impl_args, trait_arg_ty)| {
                     if trait_arg_ty.flags().intersects(has_type_or_const_vars()) {
                         let err = anyhow!(
                             "{trait_name} impl has uninstantiated generic parameters, \
@@ -1074,8 +1089,13 @@ fn generate_trait_operator_impls<'tcx>(
                             panic!("Caller should ensure {trait_name} has method {method_name}");
                         })
                         .def_id;
-                    db.generate_function(assoc_fn_id, Some(operator_name), StaticMethodMode::Infer)
-                        .map_err(|e| (e, assoc_fn_id))
+                    db.generate_function(
+                        assoc_fn_id,
+                        Some(impl_args),
+                        Some(operator_name),
+                        StaticMethodMode::Infer,
+                    )
+                    .map_err(|e| (e, assoc_fn_id))
                 })
                 .unwrap_or_else(|(err, def_id)| {
                     generate_unsupported_def(db, def_id, err).into_main_api()
@@ -1228,7 +1248,7 @@ fn generate_ord_and_partialord_impls<'tcx>(
     let mut snippets = Vec::new();
 
     // Handle Ord impls (Rhs is always Self)
-    for impl_id in non_blanket_impls_for_ty(tcx, ord_trait_id, core.common.self_ty) {
+    for (impl_id, _) in non_blanket_impls_for_ty(tcx, ord_trait_id, core.common.self_ty) {
         match generate_ord_impls(db, core) {
             Ok(s) => snippets.push(s),
             Err(err) => snippets.push(generate_unsupported_def(db, impl_id, err).into_main_api()),
@@ -1243,7 +1263,7 @@ fn generate_ord_and_partialord_impls<'tcx>(
         ord_rhs_types.insert(erase_regions(tcx, core.common.self_ty));
     }
 
-    for impl_id in non_blanket_impls_for_ty(tcx, partial_ord_trait_id, core.common.self_ty) {
+    for (impl_id, _) in non_blanket_impls_for_ty(tcx, partial_ord_trait_id, core.common.self_ty) {
         let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
         let rhs_ty = trait_ref.args.type_at(1);
         let erased_rhs_ty = erase_regions(tcx, rhs_ty);
@@ -1993,16 +2013,24 @@ pub fn generate_adt<'tcx>(
         .unwrap_or_default()
         .iter()
         .copied()
-        .filter(|&impl_id| {
-            self_is_not_generic || does_impl_apply(tcx, impl_id, core.common.self_ty)
+        .filter_map(|impl_id| {
+            if self_is_not_generic {
+                Some((impl_id, None))
+            } else {
+                let impl_args = does_impl_apply(tcx, impl_id, core.common.self_ty)?;
+                Some((impl_id, Some(impl_args)))
+            }
         })
-        .sorted_by_def(tcx)
-        .flat_map(|impl_id| tcx.associated_items(impl_id).in_definition_order())
-        .flat_map(|assoc_item| {
+        .sorted_by_def_with(tcx, |(impl_id, _)| *impl_id)
+        .flat_map(|(impl_id, impl_args)| {
+            tcx.associated_items(impl_id).in_definition_order().map(move |item| (item, impl_args))
+        })
+        .flat_map(|(assoc_item, impl_args)| {
             generate_associated_item(
                 db,
                 assoc_item,
                 &mut member_function_names,
+                impl_args,
                 None,
                 StaticMethodMode::Infer,
             )
@@ -2572,7 +2600,7 @@ fn generate_variant_ctor<'tcx>(
                 assert!(was_inserted, "Conflicting names rejected earlier (above)");
             };
             if !main_api_params.is_empty() {
-                let result = db.generate_function(ctor_def_id, None, StaticMethodMode::Infer);
+                let result = db.generate_function(ctor_def_id, None, None, StaticMethodMode::Infer);
                 if result.is_ok() {
                     mark_method_name_as_used();
                 }
@@ -3866,7 +3894,7 @@ fn generate_begin_and_end_for_type<'tcx>(
         .get_diagnostic_item(sym::Iterator)
         .ok_or_else(|| anyhow!("Iterator trait not found"))?;
     let mut impls = non_blanket_impls_for_ty(tcx, iterator_trait_id, into_iter_ty);
-    let Some(trait_impl_def_id) = impls.next() else {
+    let Some((trait_impl_def_id, _)) = impls.next() else {
         return Ok(None);
     };
     let generics = tcx.generics_of(trait_impl_def_id);

@@ -1132,15 +1132,14 @@ fn generate_using<'tcx>(
     }
     match tcx.def_kind(def_id) {
         DefKind::Fn => {
-            let mut prereqs = match db.generate_function(def_id, None, StaticMethodMode::Infer) {
-                Ok(snippet) => snippet.main_api.prereqs,
-                Err(err) => {
-                    bail!("Unable to `use` function whose bindings failed: {err:?}");
-                }
-            };
-            let fully_qualified_fn_name = db.symbol_canonical_name(def_id).unwrap_or_else(|err| {
-                panic!("Failed to get canonical name for {:?}: {err}", def_id)
-            });
+            let mut prereqs =
+                match db.generate_function(def_id, None, None, StaticMethodMode::Infer) {
+                    Ok(snippet) => snippet.main_api.prereqs,
+                    Err(err) => {
+                        bail!("Unable to `use` function whose bindings failed: {err:?}");
+                    }
+                };
+            let fully_qualified_fn_name = db.symbol_canonical_name(def_id)?;
             let formatted_fully_qualified_fn_name = fully_qualified_fn_name.format_for_cc(db)?;
             let main_api_fn_name =
                 format_cc_ident(db, fully_qualified_fn_name.unqualified.cpp_name.as_str())
@@ -2216,7 +2215,7 @@ fn generate_item_impl<'tcx>(
                 db.adt_needs_bindings(def_id).map(|core| Some(generate_adt(db, core)))
             }
         }
-        DefKind::Fn => db.generate_function(def_id, None, StaticMethodMode::Infer).map(Some),
+        DefKind::Fn => db.generate_function(def_id, None, None, StaticMethodMode::Infer).map(Some),
         DefKind::TyAlias => generate_type_alias(db, def_id, tcx.item_name(def_id).as_str())
             .map(|snippets| Some(snippets.into_main_api())),
         DefKind::Const { .. } => generate_const(db, def_id).map(Some),
