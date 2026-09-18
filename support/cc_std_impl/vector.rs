@@ -43,6 +43,7 @@ unsafe extern "C" {
     cpp_type = "::std::vector<{T}>",
     include_path = "<vector>"
 )]
+#[crubit_annotate::cpp_move_constructible]
 #[cfg(not(feature = "len_capacity_encoding"))]
 #[repr(C)]
 pub struct vector<T> {
@@ -57,6 +58,7 @@ pub struct vector<T> {
     cpp_type = "::std::vector<{T}>",
     include_path = "<vector>"
 )]
+#[crubit_annotate::cpp_move_constructible]
 #[cfg(feature = "len_capacity_encoding")]
 #[repr(C)]
 pub struct vector<T> {

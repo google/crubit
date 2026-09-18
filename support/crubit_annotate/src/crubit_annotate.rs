@@ -155,6 +155,20 @@ fn make_prefix_for(body: TokenStream, make_prefix_fn: impl FnOnce() -> TokenStre
     output
 }
 
+/// Returns an error `TokenStream` if the attribute contains any arguments.
+fn expect_no_arguments(attribute: TokenStream, macro_name: &str) -> Result<(), TokenStream> {
+    if let Some(token) = attribute.into_iter().next() {
+        return Err(TokenStream::from(
+            syn::Error::new(
+                token.span().into(),
+                format!("The `{macro_name}` annotation does not accept any arguments."),
+            )
+            .into_compile_error(),
+        ));
+    }
+    Ok(())
+}
+
 /// Marks a Rust type as having equivalent layout to a particular pre-defined C++ type.
 ///
 /// This annotation prevents Crubit from generating a C++ type for the Rust type,
@@ -372,14 +386,8 @@ pub fn cpp_enum(attribute: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn must_bind(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
-        if !attribute.is_empty() {
-            return TokenStream::from(
-                syn::Error::new(
-                    attribute.into_iter().next().unwrap().span().into(),
-                    "The `must_bind` annotation does not accept any arguments.",
-                )
-                .into_compile_error(),
-            );
+        if let Err(e) = expect_no_arguments(attribute, "must_bind") {
+            return e;
         }
         key_value_to_doc_comment("must_bind", "")
     })
@@ -404,14 +412,8 @@ pub fn must_bind(attribute: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn cpp_thread_safe(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
-        if let Some(token) = attribute.into_iter().next() {
-            return TokenStream::from(
-                syn::Error::new(
-                    token.span().into(),
-                    "The `cpp_thread_safe` annotation does not accept any arguments.",
-                )
-                .into_compile_error(),
-            );
+        if let Err(e) = expect_no_arguments(attribute, "cpp_thread_safe") {
+            return e;
         }
         key_value_to_doc_comment("cpp_thread_safe", "")
     })
@@ -422,14 +424,8 @@ pub fn cpp_thread_safe(attribute: TokenStream, input: TokenStream) -> TokenStrea
 #[proc_macro_attribute]
 pub fn do_not_bind(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
-        if !attribute.is_empty() {
-            return TokenStream::from(
-                syn::Error::new(
-                    attribute.into_iter().next().unwrap().span().into(),
-                    "The `do_not_bind` annotation does not accept any arguments.",
-                )
-                .into_compile_error(),
-            );
+        if let Err(e) = expect_no_arguments(attribute, "do_not_bind") {
+            return e;
         }
         key_value_to_doc_comment("do_not_bind", "")
     })
@@ -446,14 +442,8 @@ pub fn do_not_bind(attribute: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn field_drop_order_does_not_matter(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
-        if let Some(token) = attribute.into_iter().next() {
-            return TokenStream::from(
-                syn::Error::new(
-                    token.span().into(),
-                    "The `field_drop_order_does_not_matter` annotation does not accept any arguments.",
-                )
-                .into_compile_error(),
-            );
+        if let Err(e) = expect_no_arguments(attribute, "field_drop_order_does_not_matter") {
+            return e;
         }
         key_value_to_doc_comment("field_drop_order_does_not_matter", "")
     })
@@ -464,15 +454,57 @@ pub fn field_drop_order_does_not_matter(attribute: TokenStream, input: TokenStre
 #[proc_macro_attribute]
 pub fn allow_unbindable_type(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
-        if let Some(token) = attribute.into_iter().next() {
-            return TokenStream::from(
-                syn::Error::new(
-                    token.span().into(),
-                    "The `allow_unbindable_type` annotation does not accept any arguments.",
-                )
-                .into_compile_error(),
-            );
+        if let Err(e) = expect_no_arguments(attribute, "allow_unbindable_type") {
+            return e;
         }
         key_value_to_doc_comment("allow_unbindable_type", "")
+    })
+}
+
+/// Marks a generic bridged C++ type as constructible via
+/// `T(const ::crubit::UnsafeRelocateTag&, T&&)` if its generic type parameters are Rust-movable.
+///
+/// Example:
+///
+/// ```rs
+/// #[crubit_annotate::cpp_layout_equivalent(
+///     cpp_type = "absl::StatusOr<{T}>",
+///     include_path = "third_party/absl/status/statusor.h",
+/// )]
+/// #[crubit_annotate::unsafe_relocate_tag_constructible_if_type_params_are_rust_movable]
+/// pub struct StatusOr<T> {
+///     ...
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn unsafe_relocate_tag_constructible_if_type_params_are_rust_movable(
+    attribute: TokenStream,
+    input: TokenStream,
+) -> TokenStream {
+    make_prefix_for(input, || {
+        if let Err(e) = expect_no_arguments(
+            attribute,
+            "unsafe_relocate_tag_constructible_if_type_params_are_rust_movable",
+        ) {
+            return e;
+        }
+        key_value_to_doc_comment(
+            "unsafe_relocate_tag_constructible_if_type_params_are_rust_movable",
+            "",
+        )
+    })
+}
+
+/// Marks a Rust type as being unconditionally C++ move-constructible.
+///
+/// This is used for types like smart pointers (e.g. `unique_ptr`, `shared_ptr`, `vector`)
+/// which can be moved in C++ without invoking move constructors of their generic type parameters.
+#[proc_macro_attribute]
+pub fn cpp_move_constructible(attribute: TokenStream, input: TokenStream) -> TokenStream {
+    make_prefix_for(input, || {
+        if let Err(e) = expect_no_arguments(attribute, "cpp_move_constructible") {
+            return e;
+        }
+        key_value_to_doc_comment("cpp_move_constructible", "")
     })
 }

@@ -47,6 +47,7 @@ use core::pin::Pin;
     cpp_type = "::std::shared_ptr<{T}>",
     include_path = "<memory>"
 )]
+#[crubit_annotate::cpp_move_constructible]
 #[allow(non_snake_case)]
 #[repr(C)]
 pub struct shared_ptr<T: Sized> {
