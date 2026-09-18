@@ -99,17 +99,17 @@ pub mod crubit {
         pub mod some_struct {
             #[inline(always)]
             pub(crate) fn ConstructorNewName(
-                __this: ::ffi_11::c_int,
                 a: ::ffi_11::c_int,
                 b: ::ffi_11::c_int,
+                c: ::ffi_11::c_int,
             ) -> crate::crubit::test::SomeStruct {
                 let mut tmp = ::core::mem::MaybeUninit::<crate::crubit::test::SomeStruct>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN6crubit4test10SomeStructC1Eiii(
                         &raw mut tmp as *mut _,
-                        __this,
                         a,
                         b,
+                        c,
                     );
                     tmp.assume_init()
                 }

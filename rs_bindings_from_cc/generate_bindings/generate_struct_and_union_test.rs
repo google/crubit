@@ -2298,3 +2298,71 @@ fn test_cpp_move_constructible_annotation_non_movable() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_static_function() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class BaseWithStaticFunc {
+        public:
+        static void hello(BaseWithStaticFunc& a) {}
+        static void hello_ptr(BaseWithStaticFunc* a) {}
+        static void hello_ptr_const(const BaseWithStaticFunc* a) {}
+        };
+        class DerivedClass : public BaseWithStaticFunc {
+        public:
+        };
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn hello(a: *mut Self) {
+                unsafe { self::base_with_static_func::hello(a) }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn hello(a: *mut crate::BaseWithStaticFunc) {
+                unsafe { self::derived_class::hello(a) }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn hello_ptr(a: *mut Self) {
+                unsafe { self::base_with_static_func::hello_ptr(a) }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn hello_ptr(a: *mut crate::BaseWithStaticFunc) {
+                unsafe { self::derived_class::hello_ptr(a) }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn hello_ptr_const(a: *const Self) {
+                unsafe { self::base_with_static_func::hello_ptr_const(a) }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn hello_ptr_const(a: *const crate::BaseWithStaticFunc) {
+                unsafe { self::derived_class::hello_ptr_const(a) }
+            }
+        }
+    );
+    Ok(())
+}

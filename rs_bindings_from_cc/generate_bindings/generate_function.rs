@@ -2184,7 +2184,11 @@ pub fn generate_function<'a>(
                 if format_first_param_as_self {
                     idents[0] = make_rs_ident("__this");
                 }
-                idents
+                if is_renamed_unpin_constructor {
+                    idents[1..].to_vec()
+                } else {
+                    idents
+                }
             };
             let mut free_param_types = param_types.clone();
             let mut free_return_type = return_type.clone();
@@ -2268,9 +2272,17 @@ pub fn generate_function<'a>(
                 }],
             );
 
+            // For constructors which have been renamed to methods, skip the `__this` parameter,
+            // as it isn't accepted as an argument to the underlying function.
+            let param_idents = if is_renamed_unpin_constructor {
+                param_idents[1..].to_vec()
+            } else {
+                param_idents.clone()
+            };
+
             // Delegate from the method to the free function.
             // When translating args, `__this` acts as the first arg.
-            let mut method_delegation_args = param_idents
+            let method_delegation_args = param_idents
                 .iter()
                 .enumerate()
                 .map(|(i, ident)| -> Result<TokenStream> {
@@ -2341,27 +2353,10 @@ pub fn generate_function<'a>(
                             Ok(quote! { self })
                         }
                     } else {
-                        // TODO(ivip) Crubit bindings fails to compile on hello_rs function present in B
-                        // impl.
-                        //
-                        // class A {
-                        //  public:
-                        //   static void hello_rs(A& a){}
-                        // };
-                        // class B: public A {
-                        //  public:
-                        //  };
                         Ok(quote! { #ident })
                     }
                 })
                 .collect::<Result<Vec<_>>>()?;
-            if is_renamed_unpin_constructor {
-                // For constructors which have been renamed to methods, skip the `__this` parameter,
-                // as it isn't accepted as an argument to the underlying function.
-                if !method_delegation_args.is_empty() {
-                    method_delegation_args.remove(0);
-                }
-            }
 
             let mod_name = db.record_to_associated_module_name(target_record.clone())?;
 
