@@ -94,9 +94,13 @@ unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: *mut ::foo_proto::FooEnum) -> () {
+unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: *const core::ffi::c_void) -> () {
     unsafe {
-        let _e = _e.read();
+        let _e = {
+            let mut __crubit_temp = ::core::mem::MaybeUninit::<::foo_proto::FooEnum>::uninit();
+            __crubit_temp.write((_e as *const ::foo_proto::FooEnum).read());
+            __crubit_temp.assume_init()
+        };
         ::rust_lib_golden::FooService::enum_in_signature(_e)
     }
 }

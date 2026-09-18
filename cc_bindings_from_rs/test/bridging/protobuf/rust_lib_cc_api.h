@@ -28,7 +28,6 @@
 #include <utility>
 
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo.pb.h"
-#include "cc_bindings_from_rs/test/bridging/protobuf/foo_cpp_rust_proto.h"
 #include "support/protobuf/rust.h"
 
 namespace rust_lib {
@@ -60,7 +59,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
 
   void update_request_stats(::foo_service::FooRequestStats updated_stats);
 
-  static void enum_in_signature(::foo_proto::FooEnum _e);
+  static void enum_in_signature(::foo_service::FooEnum _e);
 
  private:
   union {
@@ -269,9 +268,9 @@ inline void FooService::update_request_stats(
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_enum_uin_usignature(::foo_proto::FooEnum*);
+extern "C" void __crubit_thunk_enum_uin_usignature(::foo_service::FooEnum*);
 }
-inline void FooService::enum_in_signature(::foo_proto::FooEnum _e) {
+inline void FooService::enum_in_signature(::foo_service::FooEnum _e) {
   return __crubit_internal::__crubit_thunk_enum_uin_usignature(&_e);
 }
 inline void FooService::__crubit_field_offset_assertions() {
