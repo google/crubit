@@ -238,6 +238,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
     if toolchain != None:
         unsupported_features = getattr(toolchain.cc_bindings_from_rs_toolchain_info, "unsupported_features", [])
         default_features = [f for f in SUPPORTED_FEATURES if f not in unsupported_features]
+        features = [f for f in features if f not in unsupported_features]
     else:
         default_features = SUPPORTED_FEATURES
 
