@@ -16,7 +16,7 @@ use crate::{
     is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedType, CcType,
     RsSnippet,
 };
-use arc_anyhow::{Context, Result};
+use arc_anyhow::{ensure, Context, Result};
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiTypeToCppExprTokens, CrubitAbiTypeToCppTokens};
 use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
@@ -1178,10 +1178,13 @@ pub fn generate_function<'tcx>(
     let struct_name = match self_ty {
         Some(ty) => match ty.kind() {
             ty::TyKind::Adt(adt, substs) => {
-                assert!(!has_non_lifetime_substs(substs), "Callers should filter out generics");
-                db.symbol_canonical_name(adt.did()).ok()
+                ensure!(
+                    !has_non_lifetime_substs(substs),
+                    "Methods of a generic ADT are not supported"
+                );
+                Some(db.symbol_canonical_name(adt.did())?)
             }
-            _ => panic!("Non-ADT `impl`s should be filtered by caller"),
+            _ => bail!("Non-ADT `impl`s are not supported"),
         },
         None => None,
     };
