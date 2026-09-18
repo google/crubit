@@ -2884,6 +2884,9 @@ where
     let ocx = ObligationCtxt::new_with_diagnostics(&infcx);
     let cause = ObligationCause::dummy(); // RESPECTFUL_TERMS_EXCEPTION
     let normalized = ocx.normalize(&cause, param_env, val);
+    #[rustversion::before(2026-08-06)]
+    let tyid = infcx.unresolved_variables();
+    #[rustversion::since(2026-08-06)]
     let (tyid, _, _) = infcx.unresolved_root_variables();
     if !tyid.is_empty() {
         bail!("val contained unresolved type variables and could not be normalized");
