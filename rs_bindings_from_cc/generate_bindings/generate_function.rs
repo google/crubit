@@ -20,7 +20,7 @@ use flagset::FlagSet;
 use generate_comment::{generate_doc_comment, parse_extended_source_loc};
 use generate_function_thunk::{
     generate_function_assertion, generate_function_thunk, generate_function_thunk_impl,
-    generate_inline_cpp_call, thunk_ident,
+    generate_inline_cpp_call, ident_fragment_from_mangled_name, thunk_ident,
 };
 use ir::*;
 use itertools::Itertools;
@@ -2051,7 +2051,10 @@ pub fn generate_function<'a>(
     let ErrorsAsUnsatisfiedTraitBound { unsatisfied_where_clause, unimplemented_trait_def } =
         errors_as_unsatisfied_trait_bound(
             &reportable_status,
-            &format!("{sep}{derived_class_prefix}{sep}{}", func.mangled_name()),
+            &format!(
+                "{sep}{derived_class_prefix}{sep}{}",
+                ident_fragment_from_mangled_name(func.mangled_name())
+            ),
         );
 
     let create_func_body = || -> Result<TokenStream> {
