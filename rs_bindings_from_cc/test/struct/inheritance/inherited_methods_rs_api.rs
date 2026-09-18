@@ -70,6 +70,47 @@ impl Base {
     {
         unsafe { self::base::no_bindings(self, __param_0) }
     }
+    /// Static member functions are inherited by `Derived`, but unlike instance
+    /// methods they have no implicit `this` parameter. Parameters naming the
+    /// enclosing class must therefore keep their declared type in the bindings
+    /// generated for `Derived`, rather than being rewritten to `Self`.
+    #[inline(always)]
+    pub fn static_no_params() {
+        unsafe { self::base::static_no_params() }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `a`: raw pointer
+    #[inline(always)]
+    pub unsafe fn static_ptr_param(a: *mut Self) {
+        unsafe { self::base::static_ptr_param(a) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `a`: raw pointer
+    /// * `b`: raw pointer
+    #[inline(always)]
+    pub unsafe fn static_two_ptr_params(a: *mut Self, b: *mut Self) {
+        unsafe { self::base::static_two_ptr_params(a, b) }
+    }
+    #[inline(always)]
+    pub fn static_ref_param<'a>(a: &'a Self) {
+        unsafe { self::base::static_ref_param(a) }
+    }
+    #[inline(always)]
+    pub fn static_value_param(mut a: Self) {
+        unsafe { self::base::static_value_param(a) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `a`: raw pointer
+    #[inline(always)]
+    pub unsafe fn static_ptr_return(a: *mut Self) -> *mut crate::Base {
+        unsafe { self::base::static_ptr_return(a) }
+    }
 }
 
 impl Default for Base {
@@ -104,6 +145,47 @@ pub mod base {
                     If this message appears at runtime, please report a crubit.rs-bug."
         )
     }
+    /// Static member functions are inherited by `Derived`, but unlike instance
+    /// methods they have no implicit `this` parameter. Parameters naming the
+    /// enclosing class must therefore keep their declared type in the bindings
+    /// generated for `Derived`, rather than being rewritten to `Self`.
+    #[inline(always)]
+    pub(crate) fn static_no_params() {
+        unsafe { crate::detail::__rust_thunk___ZN4Base16static_no_paramsEv() }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `a`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn static_ptr_param(a: *mut crate::Base) {
+        unsafe { crate::detail::__rust_thunk___ZN4Base16static_ptr_paramEPS_(a) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `a`: raw pointer
+    /// * `b`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn static_two_ptr_params(a: *mut crate::Base, b: *mut crate::Base) {
+        unsafe { crate::detail::__rust_thunk___ZN4Base21static_two_ptr_paramsEPS_S0_(a, b) }
+    }
+    #[inline(always)]
+    pub(crate) fn static_ref_param<'a>(a: &'a crate::Base) {
+        unsafe { crate::detail::__rust_thunk___ZN4Base16static_ref_paramERKS_(a) }
+    }
+    #[inline(always)]
+    pub(crate) fn static_value_param(mut a: crate::Base) {
+        unsafe { crate::detail::__rust_thunk___ZN4Base18static_value_paramES_(&mut a) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `a`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn static_ptr_return(a: *mut crate::Base) -> *mut crate::Base {
+        unsafe { crate::detail::__rust_thunk___ZN4Base17static_ptr_returnEPS_(a) }
+    }
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -131,6 +213,47 @@ impl Derived {
         for<'error> &'error (): BindingFailedFor_7Derived__ZNK4Base11no_bindingsE10Nonmovable,
     {
         unsafe { self::derived::no_bindings(unsafe { oops::Upcast::<_>::upcast(self) }, __param_0) }
+    }
+    /// Static member functions are inherited by `Derived`, but unlike instance
+    /// methods they have no implicit `this` parameter. Parameters naming the
+    /// enclosing class must therefore keep their declared type in the bindings
+    /// generated for `Derived`, rather than being rewritten to `Self`.
+    #[inline(always)]
+    pub fn static_no_params() {
+        unsafe { self::derived::static_no_params() }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `a`: raw pointer
+    #[inline(always)]
+    pub unsafe fn static_ptr_param(a: *mut crate::Base) {
+        unsafe { self::derived::static_ptr_param(a) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `a`: raw pointer
+    #[inline(always)]
+    pub unsafe fn static_ptr_return(a: *mut crate::Base) -> *mut crate::Base {
+        unsafe { self::derived::static_ptr_return(a) }
+    }
+    #[inline(always)]
+    pub fn static_ref_param<'a>(a: &'a crate::Base) {
+        unsafe { self::derived::static_ref_param(a) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `a`: raw pointer
+    /// * `b`: raw pointer
+    #[inline(always)]
+    pub unsafe fn static_two_ptr_params(a: *mut crate::Base, b: *mut crate::Base) {
+        unsafe { self::derived::static_two_ptr_params(a, b) }
+    }
+    #[inline(always)]
+    pub fn static_value_param(mut a: crate::Base) {
+        unsafe { self::derived::static_value_param(a) }
     }
 }
 
@@ -172,6 +295,47 @@ pub mod derived {
                     If this message appears at runtime, please report a crubit.rs-bug."
         )
     }
+    /// Static member functions are inherited by `Derived`, but unlike instance
+    /// methods they have no implicit `this` parameter. Parameters naming the
+    /// enclosing class must therefore keep their declared type in the bindings
+    /// generated for `Derived`, rather than being rewritten to `Self`.
+    #[inline(always)]
+    pub(crate) fn static_no_params() {
+        unsafe { crate::detail::__rust_thunk___ZN4Base16static_no_paramsEv() }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `a`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn static_ptr_param(a: *mut crate::Base) {
+        unsafe { crate::detail::__rust_thunk___ZN4Base16static_ptr_paramEPS_(a) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `a`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn static_ptr_return(a: *mut crate::Base) -> *mut crate::Base {
+        unsafe { crate::detail::__rust_thunk___ZN4Base17static_ptr_returnEPS_(a) }
+    }
+    #[inline(always)]
+    pub(crate) fn static_ref_param<'a>(a: &'a crate::Base) {
+        unsafe { crate::detail::__rust_thunk___ZN4Base16static_ref_paramERKS_(a) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `a`: raw pointer
+    /// * `b`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn static_two_ptr_params(a: *mut crate::Base, b: *mut crate::Base) {
+        unsafe { crate::detail::__rust_thunk___ZN4Base21static_two_ptr_paramsEPS_S0_(a, b) }
+    }
+    #[inline(always)]
+    pub(crate) fn static_value_param(mut a: crate::Base) {
+        unsafe { crate::detail::__rust_thunk___ZN4Base18static_value_paramES_(&mut a) }
+    }
 }
 
 mod detail {
@@ -183,6 +347,17 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZNK4Base12has_bindingsEv<'__this>(
             __this: &'__this crate::Base,
         ) -> bool;
+        pub(crate) unsafe fn __rust_thunk___ZN4Base16static_no_paramsEv();
+        pub(crate) unsafe fn __rust_thunk___ZN4Base16static_ptr_paramEPS_(a: *mut crate::Base);
+        pub(crate) unsafe fn __rust_thunk___ZN4Base21static_two_ptr_paramsEPS_S0_(
+            a: *mut crate::Base,
+            b: *mut crate::Base,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN4Base16static_ref_paramERKS_<'a>(a: &'a crate::Base);
+        pub(crate) unsafe fn __rust_thunk___ZN4Base18static_value_paramES_(a: &mut crate::Base);
+        pub(crate) unsafe fn __rust_thunk___ZN4Base17static_ptr_returnEPS_(
+            a: *mut crate::Base,
+        ) -> *mut crate::Base;
         pub(crate) unsafe fn __rust_thunk___ZN7DerivedC1Ev(__this: *mut ::core::ffi::c_void);
     }
 }

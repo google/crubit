@@ -42,6 +42,7 @@ crubit_rust_test(
     srcs = ["inherited_methods_test.rs"],
     cc_deps = [":inherited_methods"],
     deps = [
+        "//support:oops",
         "@crate_index//:googletest",
     ],
 )

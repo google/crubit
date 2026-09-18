@@ -2940,9 +2940,10 @@ fn function_signature<'a>(
     for (i, (ident, type_)) in param_idents.iter().zip(param_types.iter()).enumerate() {
         // If we are generating bindings for a derived record, parameter types should be
         // kept the same because `Self` will refer to the derived record type.
-        // One exception is the first parameter, as it points to the derived
-        // record.
-        let should_replace_by_self = derived_record.is_none() || i == 0;
+        // One exception is the first parameter of an instance method, as it is the
+        // `__this` pointer, which points to the derived record.
+        let should_replace_by_self =
+            derived_record.is_none() || (i == 0 && func.is_instance_method());
         if let Err(err) = type_.check_by_value() {
             errors.add(err);
         }
