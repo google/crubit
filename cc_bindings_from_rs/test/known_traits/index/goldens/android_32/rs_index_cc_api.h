@@ -358,7 +358,7 @@ inline rs_std::StrRef(Map::operator[])(
 
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
+__crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId_u_x00000027_u(
     ::rs_index::Map const&, ::rs_index::Id const* $(__anon2) crubit_nonnull,
     rs_std::StrRef* __ret_ptr);
 }
@@ -369,7 +369,7 @@ inline rs_std::StrRef(Map::operator[])(
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId(
+      __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0000003aMap_u_x00000026rs_uindex_ugolden_x0000003a_x0000003aId_u_x00000027_u(
           self, _index, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }

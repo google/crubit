@@ -165,12 +165,12 @@ unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_uru
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithRefIntoIter_x0000003c_x00000027a_x0000003e(
+unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithRefIntoIter_x0000003c_x00000027a_x0000003e_u_x00000027a(
     __self: *mut ::into_iterator_rust_golden::ContainerWithRefIntoIter<'static>,
 ) -> &'static mut ::into_iterator_rust_golden::MyIterator {
     unsafe {
         let __self = __self.read();
-        <::into_iterator_rust_golden::ContainerWithRefIntoIter as::core::iter::IntoIterator>::into_iter(__self)
+        <::into_iterator_rust_golden::ContainerWithRefIntoIter<'static>as::core::iter::IntoIterator>::into_iter(__self)
     }
 }
 #[unsafe(no_mangle)]
@@ -226,13 +226,15 @@ unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIter_x0000003c_x00000027a_x0000003e(
+unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIter_x0000003c_x00000027a_x0000003e_u_x00000027a(
     __self: &'static mut ::into_iterator_rust_golden::MyContainerIter<'static>,
     __ret_ptr: *mut core::ffi::c_uchar,
 ) -> () {
     unsafe {
         let __rs_return_value =
-            <::into_iterator_rust_golden::MyContainerIter as ::core::iter::Iterator>::next(__self);
+            <::into_iterator_rust_golden::MyContainerIter<'static> as ::core::iter::Iterator>::next(
+                __self,
+            );
         unsafe {
             ::bridge_rust::internal::encode(
                 ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<&'static i32>()),
@@ -243,15 +245,12 @@ unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIterMut_x0000003c_x00000027a_x0000003e(
+unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIterMut_x0000003c_x00000027a_x0000003e_u_x00000027a(
     __self: &'static mut ::into_iterator_rust_golden::MyContainerIterMut<'static>,
     __ret_ptr: *mut core::ffi::c_uchar,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::into_iterator_rust_golden::MyContainerIterMut as ::core::iter::Iterator>::next(
-                __self,
-            );
+        let __rs_return_value=<::into_iterator_rust_golden::MyContainerIterMut<'static>as::core::iter::Iterator>::next(__self);
         unsafe {
             ::bridge_rust::internal::encode(
                 ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<&'static mut i32>()),

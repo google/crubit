@@ -318,14 +318,15 @@ static_assert(::std::is_trivially_destructible_v<RefIterator>);
 static_assert(::std::is_trivially_move_constructible_v<::stdlib::RefIterator>);
 static_assert(::std::is_trivially_move_assignable_v<::stdlib::RefIterator>);
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_new(rs_std::SliceRef<const ::std::int32_t>*,
-                                   ::stdlib::RefIterator* __ret_ptr);
+extern "C" void __crubit_thunk_new_u_x00000027a(
+    rs_std::SliceRef<const ::std::int32_t>*, ::stdlib::RefIterator* __ret_ptr);
 }
 inline ::stdlib::RefIterator(RefIterator::new_)(
     rs_std::SliceRef<const ::std::int32_t> slice) {
   crubit::Slot<::stdlib::RefIterator> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_new(&slice, __return_value_storage);
+  __crubit_internal::__crubit_thunk_new_u_x00000027a(&slice,
+                                                     __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 inline void ::stdlib::RefIterator::__crubit_field_offset_assertions() {
@@ -400,7 +401,7 @@ rs_std::impl<::stdlib::NonCloneableIterator, ::rs::core::iter::Iterator>::next(
 namespace stdlib {
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aRefIterator_x0000003c_x00000027a_x0000003e(
+__crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aRefIterator_x0000003c_x00000027a_x0000003e_u_x00000027a(
     ::stdlib::RefIterator&, unsigned char* __ret_ptr);
 }
 }  // namespace stdlib
@@ -411,7 +412,7 @@ rs_std::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator>::next(
       __return_value_storage[::crubit::OptionAbi<::crubit::TransmuteAbi<
           ::std::int32_t const * $static crubit_nonnull>>::kSize];
   stdlib::__crubit_internal::
-      __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aRefIterator_x0000003c_x00000027a_x0000003e(
+      __crubit_thunk_Iterator_unext_ustdlib_ugolden_x0000003a_x0000003aRefIterator_x0000003c_x00000027a_x0000003e_u_x00000027a(
           self, __return_value_storage);
   return ::crubit::internal::Decode<::crubit::OptionAbi<
       ::crubit::TransmuteAbi<::std::int32_t const * $static crubit_nonnull>>>(

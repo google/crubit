@@ -31,7 +31,7 @@ type GenericClauses<'tcx> = ty::GenericPredicates<'tcx>;
 #[cfg_accessible(rustc_middle::ty::GenericClauses)]
 type GenericClauses<'tcx> = ty::GenericClauses<'tcx>;
 
-trait GenericClausesExt<'tcx> {
+pub(crate) trait GenericClausesExt<'tcx> {
     fn clauses(&self) -> &[(ty::Clause<'tcx>, rustc_span::Span)];
 }
 
@@ -55,6 +55,18 @@ pub fn get_generic_args<'tcx>(
     fn_def_id: DefId,
 ) -> Result<ty::GenericArgsRef<'tcx>> {
     let tcx = db.tcx();
+
+    // Suppress inherent methods that have their own predicates (e.g., `where` clause)
+    if let Some(parent_id) = tcx.opt_parent(fn_def_id)
+        && matches!(tcx.def_kind(parent_id), rustc_hir::def::DefKind::Impl { .. })
+        && tcx.trait_impl_of_assoc(fn_def_id).is_none()
+    {
+        let explicit_predicates = tcx.explicit_clauses_of(fn_def_id);
+        if !explicit_predicates.clauses().is_empty() {
+            bail!("Inherent methods with their own predicates are not supported");
+        }
+    }
+
     let generics = tcx.generics_of(fn_def_id);
     #[cfg_accessible(rustc_middle::ty::GenericPredicates)]
     let predicates = tcx.predicates_of(fn_def_id);

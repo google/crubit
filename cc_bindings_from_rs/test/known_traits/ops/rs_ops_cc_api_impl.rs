@@ -30,7 +30,7 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_urs_uops_ugolden_x0000003a_x00
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+unsafe extern "C" fn __crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000027_u_u_x00000027_u(
     __self: &'static ::rs_ops_golden::MyBorrowedInt,
     rhs: &'static ::rs_ops_golden::MyBorrowedInt,
     __ret_ptr: *mut core::ffi::c_void,
@@ -43,7 +43,7 @@ unsafe extern "C" fn __crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+unsafe extern "C" fn __crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000027_u(
     __self: &'static ::rs_ops_golden::MyBorrowedInt,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -54,7 +54,7 @@ unsafe extern "C" fn __crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32(
+unsafe extern "C" fn __crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32_u_x00000027_u(
     __self: &'static ::rs_ops_golden::MyBorrowedInt,
     rhs: i32,
     __ret_ptr: *mut core::ffi::c_void,

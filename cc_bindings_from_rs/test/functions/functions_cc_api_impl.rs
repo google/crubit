@@ -98,7 +98,9 @@ unsafe extern "C" fn __crubit_thunk_sum_ubytes(bytes: *mut &'static [u8]) -> u32
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_prefix_usums(arg: *mut &'static mut [i32]) -> () {
+unsafe extern "C" fn __crubit_thunk_prefix_usums_u_x00000026mut_x00000020_x0000005bi32_x0000005d(
+    arg: *mut &'static mut [i32],
+) -> () {
     unsafe {
         let arg = arg.read();
         ::functions_golden::generic_fn_tests::as_mut_trait_tests::prefix_sums(arg)
@@ -121,7 +123,7 @@ unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_voi
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_diverse_ulifetimes(
+unsafe extern "C" fn __crubit_thunk_diverse_ulifetimes_u_x00000026_x0000005bi32_x0000005d(
     arg1: *mut &'static [i32],
     arg2: *mut &'static [i32],
     arg3: *mut &'static [i32],
@@ -138,27 +140,31 @@ unsafe extern "C" fn __crubit_thunk_diverse_ulifetimes(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_slice_uref_usum(arg: *mut &'static [i32]) -> i32 {
+unsafe extern "C" fn __crubit_thunk_slice_uref_usum_u_x00000026_x0000005bi32_x0000005d(
+    arg: *mut &'static [i32],
+) -> i32 {
     unsafe {
         let arg = arg.read();
         ::functions_golden::generic_fn_tests::as_ref_trait_tests::slice_ref_sum(arg)
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_static_ulifetime_urequirement(arg: *mut &'static [i32]) -> i32 {
+unsafe extern "C" fn __crubit_thunk_static_ulifetime_urequirement_u_x00000026_x0000005bi32_x0000005d(
+    arg: *mut &'static [i32],
+) -> i32 {
     unsafe {
         let arg = arg.read();
         ::functions_golden::generic_fn_tests::as_ref_trait_tests::static_lifetime_requirement(arg)
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_struct_uref(
+unsafe extern "C" fn __crubit_thunk_struct_uref_u_x00000026functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
     arg: &'static ::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct,
 ) -> i32 {
     unsafe { ::functions_golden::generic_fn_tests::as_ref_trait_tests::struct_ref(arg) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_two_uargs(
+unsafe extern "C" fn __crubit_thunk_two_uargs_u_x00000026_x0000005bi32_x0000005d_u_x00000026_x0000005bi32_x0000005d(
     x: *mut &'static [i32],
     y: *mut &'static [i32],
 ) -> i32 {
@@ -191,7 +197,7 @@ const _: () = assert!(
     ) == 0
 );
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_accept_uctor(
+unsafe extern "C" fn __crubit_thunk_accept_uctor_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
     c1: ::ctor::ByValue<
         'static,
         ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
@@ -204,7 +210,7 @@ unsafe extern "C" fn __crubit_thunk_accept_uctor(
     unsafe { ::functions_golden::generic_fn_tests::ctor_trait_tests::accept_ctor(c1, c2) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_accept_uctor_uarray(
+unsafe extern "C" fn __crubit_thunk_accept_uctor_uarray_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
     a: *mut [::ctor::ByValue<
         'static,
         ::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable,
@@ -216,7 +222,7 @@ unsafe extern "C" fn __crubit_thunk_accept_uctor_uarray(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_accept_uctor_utuple(
+unsafe extern "C" fn __crubit_thunk_accept_uctor_utuple_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
     c: *const [*const core::ffi::c_void; 1usize],
 ) -> i32 {
     unsafe {
@@ -323,11 +329,11 @@ unsafe extern "C" fn __crubit_thunk_return_urvalue_ureference_utuple(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_basic_utest(arg: i32) -> i32 {
+unsafe extern "C" fn __crubit_thunk_basic_utest_ui32(arg: i32) -> i32 {
     unsafe { ::functions_golden::generic_fn_tests::into_trait_tests::basic_test(arg) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_generic_uparam_unested_udeeper_uin_uparam_uty(
+unsafe extern "C" fn __crubit_thunk_generic_uparam_unested_udeeper_uin_uparam_uty_ui32(
     xs: *mut [i32; 3],
 ) -> i32 {
     unsafe {
@@ -336,19 +342,19 @@ unsafe extern "C" fn __crubit_thunk_generic_uparam_unested_udeeper_uin_uparam_ut
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_multiple_ugeneric_uparams(x: i32, y: i32) -> i32 {
+unsafe extern "C" fn __crubit_thunk_multiple_ugeneric_uparams_ui32_ui32(x: i32, y: i32) -> i32 {
     unsafe { ::functions_golden::generic_fn_tests::into_trait_tests::multiple_generic_params(x, y) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_return_utype() -> i32 {
+unsafe extern "C" fn __crubit_thunk_return_utype_ui32() -> i32 {
     unsafe { ::functions_golden::generic_fn_tests::into_trait_tests::return_type() }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_reused_ugeneric_uparam(x: i32, y: i32) -> i32 {
+unsafe extern "C" fn __crubit_thunk_reused_ugeneric_uparam_ui32(x: i32, y: i32) -> i32 {
     unsafe { ::functions_golden::generic_fn_tests::into_trait_tests::reused_generic_param(x, y) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_where_uclause(x: i32) -> i32 {
+unsafe extern "C" fn __crubit_thunk_where_uclause_ui32(x: i32) -> i32 {
     unsafe { ::functions_golden::generic_fn_tests::into_trait_tests::where_clause(x) }
 }
 const _: () = assert!(::std::mem::size_of::<::functions_golden::non_null_tests::SomeStruct>() == 4);

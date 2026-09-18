@@ -916,7 +916,7 @@ fn test_format_item_static_method_with_generic_type_parameters() {
         let unsupported_msg =
             "Error generating bindings for associated function `SomeStruct::generic_method` \
                                defined at <crubit_unittests.rs>;l=12: \
-                               No valid non-generic replacement for generic type param `T`";
+                               Inherent methods with their own predicates are not supported";
         assert_cc_matches!(
             main_api.tokens,
             quote! {
