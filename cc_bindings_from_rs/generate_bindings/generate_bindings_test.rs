@@ -2453,10 +2453,20 @@ fn test_is_cpp_move_constructible() {
             fn drop(&mut self) {}
         }
 
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=absl::StatusOr<{T}>"]
+        pub struct StatusOr<T> {
+            data: std::mem::MaybeUninit<T>,
+        }
+        impl<T> Drop for StatusOr<T> {
+            fn drop(&mut self) {}
+        }
+
         pub type MovableTuple = (i32, CppMovable);
         pub type NonMovableTuple = (i32, CppNonMovable);
         pub type MovableOption = Option<PureRustNonMovable>;
         pub type NonMovableResult = Result<PureRustNonMovable, i32>;
+        pub type MovableStatusOr = StatusOr<PureRustMovable>;
+        pub type NonMovableStatusOr = StatusOr<PureRustNonMovable>;
     "#;
     run_compiler_for_testing(test_src, |tcx| {
         let db = bindings_db_for_tests(tcx);
@@ -2492,6 +2502,10 @@ fn test_is_cpp_move_constructible() {
 
         // Result containing a non-movable type is not movable (Result doesn't implement Default)
         assert!(!db.is_cpp_move_constructible(find_ty("NonMovableResult")));
+
+        // Bridged type with placeholder is C++-movable if and only if its type argument is C++-movable
+        assert!(db.is_cpp_move_constructible(find_ty("MovableStatusOr")));
+        assert!(!db.is_cpp_move_constructible(find_ty("NonMovableStatusOr")));
     });
 }
 

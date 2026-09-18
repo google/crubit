@@ -94,9 +94,13 @@ unsafe extern "C" fn __crubit_thunk_update_urequest_ustats(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: *mut ::foo_proto::FooEnum) -> () {
+unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: *const core::ffi::c_void) -> () {
     unsafe {
-        let _e = _e.read();
+        let _e = {
+            let mut __crubit_temp = ::core::mem::MaybeUninit::<::foo_proto::FooEnum>::uninit();
+            __crubit_temp.write((_e as *const ::foo_proto::FooEnum).read());
+            __crubit_temp.assume_init()
+        };
         ::rust_lib_golden::FooService::enum_in_signature(_e)
     }
 }
@@ -119,6 +123,16 @@ extern "C" fn __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aSt
     unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::rust_lib_golden::StructWithProto, stats) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_create_uproto_ustatus_uor(
+    num: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::rust_lib_golden::create_proto_status_or(num);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create_uproto_uvec(
     num: i32,

@@ -175,18 +175,31 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
         return cc_callable_param_to_c_abi(db, cc_ident, ty, &info, includes, statements);
     }
     Ok(if let Some(bridged_type) = is_bridged_type(db, ty)? {
+        let is_layout_compat = bridged_type.is_layout_compatible();
         match bridged_type {
             BridgedType::Legacy { cpp_type, .. } => {
                 if let CcType::Pointer { .. } = cpp_type {
                     quote! { #cc_ident }
-                } else if !ty.needs_drop(db.tcx(), post_analysis_typing_env) {
+                } else if !ty.needs_drop(db.tcx(), post_analysis_typing_env)
+                    && (!is_layout_compat || db.is_cpp_move_constructible(ty))
+                {
                     quote! { & #cc_ident }
                 } else {
                     includes.insert(db.support_header("internal/slot.h"));
                     let slot_name = expect_format_cc_ident(&format!("{cc_ident}_slot"));
-                    statements.extend(quote! {
-                        crubit::Slot #slot_name((::std::move(#cc_ident)));
-                    });
+                    if is_layout_compat && !db.is_cpp_move_constructible(ty) {
+                        let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =
+                            db.format_ty_for_cc(ty, TypeLocation::Other)?;
+                        includes.extend(ty_prereqs.includes);
+                        statements.extend(quote! {
+                            crubit::Slot<#cc_type> #slot_name;
+                            ::std::move(#cc_ident).MoveToSlot(#slot_name);
+                        });
+                    } else {
+                        statements.extend(quote! {
+                            crubit::Slot #slot_name((::std::move(#cc_ident)));
+                        });
+                    }
                     quote! { #slot_name.Get() }
                 }
             }
@@ -468,7 +481,10 @@ fn cc_return_value_from_c_abi<'tcx>(
                 let cpp_type = db
                     .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })?
                     .into_tokens(prereqs);
-                if ty.needs_drop(db.tcx(), post_analysis_typing_env) {
+                let is_layout_compat = bridged_type.is_layout_compatible();
+                if ty.needs_drop(db.tcx(), post_analysis_typing_env)
+                    || (is_layout_compat && !db.is_cpp_move_constructible(ty))
+                {
                     prereqs.includes.insert(db.support_header("internal/slot.h"));
                     let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
                     storage_statements.extend(quote! {
@@ -629,11 +645,7 @@ fn self_ty_of_method<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Ty<'tcx> {
     let impl_id = tcx.impl_of_assoc(def_id);
 
     let impl_id = impl_id.expect("`def_id` is not a method or an associated function");
-    return crate::normalize_ty(
-        tcx,
-        tcx.param_env(impl_id),
-        tcx.type_of(impl_id).instantiate_identity(),
-    );
+    crate::normalize_ty(tcx, tcx.param_env(impl_id), tcx.type_of(impl_id).instantiate_identity())
 }
 
 fn export_name_and_no_mangle_attrs_of<'tcx>(
