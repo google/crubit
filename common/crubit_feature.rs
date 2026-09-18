@@ -63,6 +63,13 @@ flagset::flags! {
         /// Emit layout-compatible `std::string` everywhere instead of `string_wrapper`.
         LayoutCompatString,
 
+        /// Emit layout-compatible `cc_std::std::optional` in by-value positions, instead of
+        /// bridging `std::optional<T>` to `Option<T>`.
+        ///
+        /// Positions which cannot hold a bridged type, such as struct fields, pointees, and
+        /// template arguments, use the layout-compatible type regardless of this feature.
+        LayoutCompatOptional,
+
         /// Always specialize generics in cpp_api_from_rust, instead of doing composable bridging
         /// when possible.
         AlwaysSpecializeGenericsInCppApiFromRust,
@@ -125,6 +132,7 @@ impl CrubitFeature {
             Self::TemplateInstantiation => "template_instantiation",
             Self::LayoutCompatTuple => "layout_compat_tuple",
             Self::LayoutCompatString => "layout_compat_string",
+            Self::LayoutCompatOptional => "layout_compat_optional",
             Self::AlwaysSpecializeGenericsInCppApiFromRust => {
                 "always_specialize_generics_in_cpp_api_from_rust"
             }
@@ -167,6 +175,7 @@ impl CrubitFeature {
             Self::TemplateInstantiation => "//features:template_instantiation",
             Self::LayoutCompatTuple => "//features:layout_compat_tuple",
             Self::LayoutCompatString => "//features:layout_compat_string",
+            Self::LayoutCompatOptional => "//features:layout_compat_optional",
             Self::AlwaysSpecializeGenericsInCppApiFromRust => {
                 "//features:always_specialize_generics_in_cpp_api_from_rust"
             }
@@ -198,6 +207,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::NoTemplateInstantiation
                 - CrubitFeature::LayoutCompatTuple
                 - CrubitFeature::LayoutCompatString
+                - CrubitFeature::LayoutCompatOptional
                 - CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
                 - CrubitFeature::OoCasting
                 - CrubitFeature::ProtoReferences
@@ -222,6 +232,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"template_instantiation" => CrubitFeature::TemplateInstantiation.into(),
         b"layout_compat_tuple" => CrubitFeature::LayoutCompatTuple.into(),
         b"layout_compat_string" => CrubitFeature::LayoutCompatString.into(),
+        b"layout_compat_optional" => CrubitFeature::LayoutCompatOptional.into(),
         b"always_specialize_generics_in_cpp_api_from_rust" => {
             CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust.into()
         }

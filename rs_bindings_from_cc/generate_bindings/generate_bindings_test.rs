@@ -1873,6 +1873,204 @@ fn test_std_string_with_layout_compat_feature() -> Result<()> {
     Ok(())
 }
 
+/// The C++ source of a fake `std::optional`, laid out the way libc++ and libstdc++ lay it out.
+const FAKE_STD_OPTIONAL: &str = r#"
+    namespace std {
+        template <typename T> class optional { T t; bool b; };
+    }
+"#;
+
+/// Without `layout_compat_optional`, `std::optional<T>` is still bridged to `Option<T>` by
+/// value. In positions which cannot hold a bridged type it is layout-compatible regardless of
+/// the feature, since the alternative is opaque padding bytes or no bindings at all.
+#[gtest]
+fn test_std_optional_without_layout_compat_feature() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        struct StructWithOptional final { std::optional<int> o; };
+        void takes_optional_by_value(std::optional<int> o);
+        void takes_optional_ref(const std::optional<int>& o);
+        "#,
+        FAKE_STD_OPTIONAL,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    // Composable bridging by value is unaffected: this is what the feature opts out of.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_optional_by_value(
+                o: ::core::option::Option<::ffi_11::c_int>
+            )
+        }
+    );
+
+    // A field cannot hold a bridged type, so it is layout-compatible without the feature.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct StructWithOptional {
+                pub o: ::cc_std::std::trivial_optional::<::ffi_11::c_int>,
+            }
+        }
+    );
+
+    // Neither can a pointee, which previously produced no bindings for the function.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn takes_optional_ref(
+                o: *const ::cc_std::std::trivial_optional::<::ffi_11::c_int>
+            )
+        }
+    );
+    Ok(())
+}
+
+/// With `layout_compat_optional`, `std::optional<T>` is additionally layout-compatible in
+/// by-value positions, replacing the composable bridging to `Option<T>`. `int` is `Copy`, so the
+/// binding is `trivial_optional<T>`.
+#[gtest]
+fn test_std_optional_with_layout_compat_feature() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        struct StructWithOptional final { std::optional<int> o; };
+        void takes_optional_by_value(std::optional<int> o);
+        void takes_optional_ref(const std::optional<int>& o);
+        "#,
+        FAKE_STD_OPTIONAL,
+    )?;
+    let mut ir = make_test_ir_dependency(&proto, None)?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::LayoutCompatOptional;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct StructWithOptional {
+                pub o: ::cc_std::std::trivial_optional::<::ffi_11::c_int>,
+            }
+        }
+    );
+    // `std::optional<int>` is trivially copyable in C++, and `cc_std::std::trivial_optional<T>`
+    // has no `Drop` impl, so the struct stays `Copy` just as it is in C++.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            static_assertions::assert_impl_all!(crate::StructWithOptional: Copy, Clone);
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            static_assertions::assert_not_impl_any!(crate::StructWithOptional: Drop);
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_optional_by_value(
+                mut o: ::cc_std::std::trivial_optional::<::ffi_11::c_int>
+            )
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn takes_optional_ref(
+                o: *const ::cc_std::std::trivial_optional::<::ffi_11::c_int>
+            )
+        }
+    );
+    Ok(())
+}
+
+/// `cc_std::std::optional<T>` stores `T` inline, so it is `!Unpin` exactly when `T` is. Such a
+/// `T` is supported: the generated API goes through the same `Ctor` machinery as any other
+/// non-Rust-movable type.
+#[gtest]
+fn test_std_optional_of_non_unpin_type() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        struct StructWithNonUnpinOptional final { std::optional<NonUnpin> o; };
+        void takes_optional_by_value(std::optional<NonUnpin> o);
+        "#,
+        r#"
+        struct NonUnpin final {
+            NonUnpin(NonUnpin&&);
+        };
+        namespace std {
+            template <typename T> class optional { T t; bool b; };
+        }
+        "#,
+    )?;
+    let mut ir = make_test_ir_dependency(&proto, None)?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::LayoutCompatOptional;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    // The payload is not Rust-movable, so neither is the `optional` which stores it inline: the
+    // by-value parameter is a `Ctor`, exactly as it would be for the payload itself.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_optional_by_value(
+                o: ::ctor::Ctor![::cc_std::std::optional::<::dependency::NonUnpin>]
+            )
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct StructWithNonUnpinOptional {
+                pub o: ::cc_std::std::optional::<::dependency::NonUnpin>,
+            }
+        }
+    );
+    Ok(())
+}
+
+/// A record can force a `Copy` derive with `CRUBIT_DERIVE("Copy")`, which bypasses the
+/// `is_unpin()` check in `Record::should_derive_copy`. `trivial_optional<T>` is `Copy` and has no
+/// `Drop` impl, so it must not be used for a `T` which is not Rust-movable, however `Copy` the
+/// C++ type claims to be.
+#[gtest]
+fn test_std_optional_of_non_unpin_copy_type_is_not_trivial() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        void takes_optional_by_value(std::optional<NonUnpinCopy> o);
+        "#,
+        r#"
+        struct [[clang::annotate("crubit_internal_trait_derive", "Copy")]] NonUnpinCopy final {
+            NonUnpinCopy(NonUnpinCopy&&);
+        };
+        namespace std {
+            template <typename T> class optional { T t; bool b; };
+        }
+        "#,
+    )?;
+    let mut ir = make_test_ir_dependency(&proto, None)?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::LayoutCompatOptional;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_optional_by_value(
+                o: ::ctor::Ctor![::cc_std::std::optional::<::dependency::NonUnpinCopy>]
+            )
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { trivial_optional });
+    Ok(())
+}
+
 #[gtest]
 fn test_proto_message_references() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc_dependency(

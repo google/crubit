@@ -189,3 +189,28 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+cc_library(
+    name = "optional_lib",
+    hdrs = ["optional_lib.h"],
+    aspect_hints = [
+        "//features:layout_compat_optional",
+    ],
+    deps = [
+        "//support:annotations",
+    ],
+)
+
+crubit_rust_test(
+    name = "optional_test",
+    srcs = ["optional_test.rs"],
+    cc_deps = [
+        ":optional_lib",
+        "//support/cc_std",
+    ],
+    deps = [
+        "//support:ctor",
+        "@crate_index//:googletest",
+        "@crate_index//:static_assertions",  # v1
+    ],
+)

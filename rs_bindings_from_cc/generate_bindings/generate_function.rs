@@ -1794,6 +1794,10 @@ fn rs_type_kinds_for_func<'a>(
                         have_reference_param: false,
                         assume_lifetimes: run_lifetime_transform,
                         is_operator,
+
+                        // A by-value parameter can hold a bridged type; whether it does is
+                        // up to the target's features.
+                        requires_layout_compatible: false,
                     },
                 )
                 .map_err(|err| {
@@ -1821,6 +1825,10 @@ fn rs_type_kinds_for_func<'a>(
                 }),
                 assume_lifetimes: run_lifetime_transform,
                 is_operator,
+
+                // A by-value return type can hold a bridged type; whether it does is up to
+                // the target's features.
+                requires_layout_compatible: false,
             },
         )
         .map_err(|err| anyhow!("Return type is not supported: {err}")),

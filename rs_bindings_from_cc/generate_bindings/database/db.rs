@@ -320,7 +320,10 @@ impl<'db> BindingsGenerator<'db> {
                 }
             }
         }
-        let mut type_kind = self.rs_type_kind(field.type_().clone())?;
+        let mut type_kind = self.rs_type_kind_with_lifetime_elision(
+            field.type_().clone(),
+            LifetimeOptions { requires_layout_compatible: true, ..Default::default() },
+        )?;
         type_kind.force_layout_compatible();
 
         if let RsTypeKind::Error { error, .. } = type_kind {

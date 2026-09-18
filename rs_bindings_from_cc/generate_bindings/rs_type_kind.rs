@@ -85,6 +85,7 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                     is_return_type: lifetime_options.is_return_type
                         && lifetime_options.assume_lifetimes,
                     is_operator: lifetime_options.is_operator,
+                    requires_layout_compatible: true,
                     ..LifetimeOptions::default()
                 },
             )?;
