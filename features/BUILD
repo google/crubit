@@ -279,8 +279,9 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
-# A feature set enabling `absl_nonnull` on `std::unique_ptr` and `std::shared_ptr` to generate
-# `cc_std::std::NonNull`-wrapped Rust types.
+# A feature set enabling the `cc_std::std::NonNull` bridge in both directions: `absl_nonnull` on
+# `std::unique_ptr` and `std::shared_ptr` generates `NonNull`-wrapped Rust types, and a `NonNull`
+# in a Rust API generates the wrapped C++ pointer type with the `crubit_nonnull` attribute.
 crubit_feature_hint(
     name = "nonnull_smart_pointers",
     compatible_with = ["//buildenv/target:non_prod"],

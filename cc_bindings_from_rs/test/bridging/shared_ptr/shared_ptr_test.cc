@@ -59,4 +59,21 @@ TEST(SharedPtrBridging, ConsumedByRust) {
   EXPECT_TRUE(weak.expired());
 }
 
+// Tests that a `NonNull`-wrapped `shared_ptr` round-trips. The C++ signature is
+// a plain `std::shared_ptr<T>` carrying the `crubit_nonnull` attribute, so
+// ownership and the reference count are unaffected.
+TEST(NonNullSharedPtrBridging, Roundtrip) {
+  auto ptr = std::make_shared<int32_t>(42);
+  std::weak_ptr<int32_t> weak = ptr;
+  EXPECT_FALSE(weak.expired());
+
+  auto ptr2 = shared_ptr::roundtrip_nonnull_shared_ptr(std::move(ptr));
+  EXPECT_FALSE(weak.expired());
+  EXPECT_NE(ptr2, nullptr);
+  EXPECT_EQ(*ptr2, 42);
+
+  ptr2 = nullptr;
+  EXPECT_TRUE(weak.expired());
+}
+
 }  // namespace

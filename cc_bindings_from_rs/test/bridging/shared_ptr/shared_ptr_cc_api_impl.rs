@@ -34,6 +34,25 @@ unsafe extern "C" fn __crubit_thunk_consume_ushared_uptr(_val: *const core::ffi:
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_roundtrip_unonnull_ushared_uptr(
+    val: *const core::ffi::c_void,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let val = {
+            let mut __crubit_temp = ::core::mem::MaybeUninit::<
+                ::cc_std::std::NonNull<::cc_std::std::shared_ptr<i32>>,
+            >::uninit();
+            __crubit_temp.write(
+                (val as *const ::cc_std::std::NonNull<::cc_std::std::shared_ptr<i32>>).read(),
+            );
+            __crubit_temp.assume_init()
+        };
+        let __rs_return_value = ::shared_ptr_golden::roundtrip_nonnull_shared_ptr(val);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_roundtrip_ushared_uptr(
     val: *const core::ffi::c_void,
     __ret_ptr: *mut core::ffi::c_void,

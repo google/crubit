@@ -339,6 +339,37 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
         start_idx = absolute_start + end + 1;
     }
 
+    // If the bridged wrapper type itself is annotated with `cpp_move_constructible=`,
+    // it means its C++ move constructor is unconditionally available (e.g. pointer/heap
+    // wrappers like `std::unique_ptr<T>` and `std::vector<T>` only transfer internal
+    // pointers upon move and never invoke `{T}`'s move constructor).
+    //
+    // NOTE: We also check for standard pointer/heap wrappers (`unique_ptr`, `shared_ptr`,
+    // `vector`) as a temporary fallback until the compiler rollout containing
+    // `cpp_move_constructible` reaches stable Crosstool, at which point `support/cc_std_impl`
+    // can be annotated directly without breaking the stable compiler on targets using `cc_std`.
+    //
+    // TODO(b/545883191): When `cpp_move_constructible` is in crosstool stable clean these up and
+    // annotate the types in `support/cc_std_impl` directly.
+    let is_unconditionally_cpp_movable = crubit_attr::get_attrs(tcx, adt.did())
+        .map(|attrs| attrs.cpp_move_constructible)
+        .unwrap_or(false)
+        || cpp_type_str.contains("unique_ptr")
+        || cpp_type_str.contains("shared_ptr")
+        || cpp_type_str.contains("vector")
+        // Unlike the three above, `NonNull<Ptr>` is *not* unconditionally movable: in C++ it is
+        // spelled as `Ptr` plus an attribute, so its movability is exactly `Ptr`'s. Exempting it
+        // is only sound because the check it suppresses would itself wrongly fail, as `Ptr` is
+        // always a `cc_std_impl` smart pointer that cannot carry `cpp_move_constructible` yet.
+        // Both halves of that go away together.
+        || cpp_type_str.contains("crubit_nonnull");
+    let is_passed_by_value = matches!(
+        location,
+        TypeLocation::FnReturn { is_constructor: false }
+            | TypeLocation::FnParam { .. }
+            | TypeLocation::NestedBridgeable
+    );
+
     for (param, subst) in generics.own_params.iter().zip(substs.iter()) {
         let ty::GenericArgKind::Type(ty) = subst.kind() else {
             continue;
@@ -348,29 +379,8 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
         if !result_str.contains(&placeholder) {
             continue;
         }
-        // If the bridged wrapper type itself is annotated with `cpp_move_constructible=`,
-        // it means its C++ move constructor is unconditionally available (e.g. pointer/heap
-        // wrappers like `std::unique_ptr<T>` and `std::vector<T>` only transfer internal
-        // pointers upon move and never invoke `{T}`'s move constructor).
-        //
-        // NOTE: We also check for standard pointer/heap wrappers (`unique_ptr`, `shared_ptr`,
-        // `vector`) as a temporary fallback until the compiler rollout containing
-        // `cpp_move_constructible` reaches stable Crosstool, at which point `support/cc_std_impl`
-        // can be annotated directly without breaking the stable compiler on targets using `cc_std`.
-        let is_unconditionally_cpp_movable = crubit_attr::get_attrs(tcx, adt.did())
-            .map(|attrs| attrs.cpp_move_constructible)
-            .unwrap_or(false)
-            // TODO(b/545883191): When `cpp_move_constructible` is in crosstool stable clean these
-            // up and annotate the types in `support/cc_std_impl` directly.
-            || cpp_type_str.contains("unique_ptr")
-            || cpp_type_str.contains("shared_ptr")
-            || cpp_type_str.contains("vector");
-        if matches!(
-            location,
-            TypeLocation::FnReturn { is_constructor: false }
-                | TypeLocation::FnParam { .. }
-                | TypeLocation::NestedBridgeable
-        ) && !is_unconditionally_cpp_movable
+        if is_passed_by_value
+            && !is_unconditionally_cpp_movable
             && !db.is_cpp_move_constructible(ty)
         {
             bail!(
@@ -2041,6 +2051,19 @@ fn is_manually_annotated_bridged_adt<'tcx>(
     };
     let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())
         .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
+
+    // `NonNull<Ptr>` is spelled `Ptr crubit_nonnull`. Gate that on `nonnull_smart_pointers`, the
+    // same feature that lets `rs_bindings_from_cc` produce `NonNull` from an `_Nonnull`-annotated
+    // smart pointer, so a target opts into both directions of the bridge at once. Without the
+    // feature, treat `NonNull` as non-bridged, which is how it behaved before it was annotated.
+    if attrs.cpp_type.is_some_and(|cpp_type| cpp_type.as_str().contains("crubit_nonnull"))
+        && !db
+            .crate_features(db.source_crate_num())
+            .contains(crubit_feature::CrubitFeature::NonnullSmartPointers)
+    {
+        return Ok(None);
+    }
+
     let Some(bridging_attrs) = attrs.get_bridging_attrs()? else {
         return Ok(None);
     };

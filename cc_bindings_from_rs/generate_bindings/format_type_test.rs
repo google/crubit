@@ -5,13 +5,16 @@
 #![feature(rustc_private)]
 
 use code_gen_utils::format_cc_includes;
-use database::TypeLocation;
+use database::{BindingsGenerator, TypeLocation};
 use proc_macro2::TokenStream;
 use query_compiler::liberate_and_deanonymize_late_bound_regions;
 use quote::quote;
 use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
 use rustc_middle::ty::{Ty, TyCtxt};
-use test_helpers::{bindings_db_for_tests, bindings_db_for_tests_with_ignore_symbols_from_files};
+use test_helpers::{
+    bindings_db_for_tests, bindings_db_for_tests_with_features,
+    bindings_db_for_tests_with_ignore_symbols_from_files,
+};
 use token_stream_matchers::assert_cc_matches;
 
 fn test_ty<TestFn, Expectation>(
@@ -810,6 +813,10 @@ fn unique_ptr_preamble() -> TokenStream {
                 #[doc="CRUBIT_ANNOTATE: cpp_type = ::std::unique_ptr<{T}>"]
                 #[doc="CRUBIT_ANNOTATE: include_path = <memory>"]
                 pub struct virtual_unique_ptr<T: crate::operator::Delete>(pub *mut T);
+
+                #[doc="CRUBIT_ANNOTATE: cpp_type = {Ptr} crubit_nonnull"]
+                #[doc="CRUBIT_ANNOTATE: include_path = <crubit/support/annotations_internal.h>"]
+                pub struct NonNull<Ptr>(pub Ptr);
             }
         }
     }
@@ -880,6 +887,71 @@ fn test_format_ty_for_cc_unique_ptr_with_delete_fails() {
                 .expect_err(&format!("Expecting error for: {desc}"));
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
+        },
+    );
+}
+
+/// The `NonNull` bridge is gated on `nonnull_smart_pointers`, which is not in the default test
+/// feature set.
+fn nonnull_bindings_db_for_tests(tcx: TyCtxt<'_>) -> BindingsGenerator<'_> {
+    bindings_db_for_tests_with_features(
+        tcx,
+        crubit_feature::CrubitFeature::Experimental
+            | crubit_feature::CrubitFeature::Supported
+            | crubit_feature::CrubitFeature::NonnullSmartPointers,
+        /* with_kythe_annotations= */ false,
+        None,
+    )
+}
+
+/// `NonNull<Ptr>` is spelled as `Ptr` plus an attribute, so the outer ADT is no longer
+/// `unique_ptr` and the `Delete` guard cannot match on it directly. The guard must still fire via
+/// the recursion that formats `{Ptr}`.
+#[test]
+fn test_format_ty_for_cc_nonnull_unique_ptr_with_delete_fails() {
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &[(
+            "cc_std::std::NonNull<cc_std::std::unique_ptr<StructWithDelete>>",
+            "`cc_std::std::unique_ptr<StructWithDelete>` has no layout-compatible C++ type, \
+             but is used as a generic parameter\n  crubit.rs/errors/delete: \
+             `StructWithDelete` implements the `Delete` trait and cannot be used in a \
+             `unique_ptr`. Use `virtual_unique_ptr` instead.",
+        )],
+        unique_ptr_preamble(),
+        |desc, tcx, ty, expected_err| {
+            let db = nonnull_bindings_db_for_tests(tcx);
+            let anyhow_err = db
+                .format_ty_for_cc(
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .expect_err(&format!("Expecting error for: {desc}"));
+            let actual_err = format!("{anyhow_err:#}");
+            assert_eq!(&actual_err, *expected_err, "{desc}");
+        },
+    );
+}
+
+#[test]
+fn test_format_ty_for_cc_nonnull_virtual_unique_ptr_with_delete_succeeds() {
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &[(
+            "cc_std::std::NonNull<cc_std::std::virtual_unique_ptr<StructWithDelete>>",
+            "::std::unique_ptr<::rust_out::StructWithDelete> crubit_nonnull",
+        )],
+        unique_ptr_preamble(),
+        |desc, tcx, ty, expected| {
+            let db = nonnull_bindings_db_for_tests(tcx);
+            let cc_snippet = db
+                .format_ty_for_cc(
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .unwrap();
+            let parsed_expected = expected.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(cc_snippet.tokens.to_string(), parsed_expected, "{desc}");
         },
     );
 }
