@@ -2079,6 +2079,102 @@ fn test_trait_impl_for_mapped_cpp_type() {
         assert!(!bindings.cc_api.to_string().contains("struct SomeCppStruct;"));
     });
 }
+
+#[test]
+fn test_trait_impl_for_generic_mapped_cpp_type_does_not_panic() {
+    // Regression test for b/557521397: implementing a trait for a generic mapped C++ type
+    // (such as `cc_std::std::shared_ptr<T>`) should be skipped rather than panicking in
+    // `generate_function` with "Callers should filter out generics".
+    let test_src = r#"
+            #![allow(unused, non_camel_case_types)]
+            #[doc = "CRUBIT_ANNOTATE: cpp_type=std::shared_ptr"]
+            pub struct shared_ptr<T>(std::marker::PhantomData<T>);
+
+            pub struct RpcService(i32);
+
+            pub trait IntoGrpcRpcService {
+                fn into_grpc_rpc_service(self);
+            }
+
+            impl IntoGrpcRpcService for shared_ptr<RpcService> {
+                fn into_grpc_rpc_service(self) {}
+            }
+
+            impl std::iter::Iterator for shared_ptr<RpcService> {
+                type Item = i32;
+                fn next(&mut self) -> Option<Self::Item> {
+                    None
+                }
+            }
+        "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                namespace rust_out {
+                    ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] RpcService final {
+                        ...
+                    };
+                    ...
+                }
+                ...
+            }
+        );
+        assert!(!bindings.cc_api.to_string().contains("rs_std::impl"));
+    });
+}
+
+#[test]
+fn test_into_iterator_with_generic_into_iter_does_not_panic() {
+    // Implementing `IntoIterator` with a concrete specialization of a generic iterator type
+    // should gracefully report unsupported rather than panicking in `generate_function`.
+    let test_src = r#"
+            #![allow(unused)]
+            #[doc = "CRUBIT_ANNOTATE: cpp_type = ::some_ns::GenericIter<{T}>"]
+            pub struct GenericIter<T>(pub T);
+
+            impl std::iter::Iterator for GenericIter<i32> {
+                type Item = i32;
+                fn next(&mut self) -> Option<Self::Item> {
+                    None
+                }
+            }
+
+            pub struct Container {
+                pub x: i32,
+            }
+
+            impl std::iter::IntoIterator for Container {
+                type Item = i32;
+                type IntoIter = GenericIter<i32>;
+                fn into_iter(self) -> Self::IntoIter {
+                    GenericIter(self.x)
+                }
+            }
+        "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                namespace rust_out {
+                    ...
+                    struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] Container final {
+                        ...
+                    };
+                    ...
+                }
+                ...
+            }
+        );
+        assert!(!bindings.cc_api.to_string().contains("rs_std::impl"));
+    });
+}
+
 #[test]
 fn test_generated_bindings_hash_trait() {
     let test_src = r#"

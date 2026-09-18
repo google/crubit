@@ -1673,6 +1673,9 @@ fn append_explicit_trait_impls<'tcx>(
             // TODO: b/457803426 - Support trait implementations for non-adt types.
             continue;
         };
+        if query_compiler::has_non_lifetime_generics(tcx, *did) {
+            continue;
+        }
         // Only bind implementations for supported ADTs.
         let Ok(canonical_name) = db.symbol_canonical_name(*did) else {
             continue;
@@ -1711,12 +1714,7 @@ fn append_negative_auto_trait_impls<'tcx>(
             continue;
         };
 
-        if tcx.generics_of(self_def_id).own_params.iter().any(|param| {
-            matches!(
-                param.kind,
-                ty::GenericParamDefKind::Type { .. } | ty::GenericParamDefKind::Const { .. }
-            )
-        }) {
+        if query_compiler::has_non_lifetime_generics(tcx, self_def_id) {
             continue;
         }
         let Ok(canonical_name) = db.symbol_canonical_name(self_def_id) else {
@@ -1844,6 +1842,13 @@ fn generate_trait_impl_specialization<'tcx>(
         "symbol_canonical_name was unexpectedly called on a trait without a canonical name",
     );
     let trait_name = canonical_trait_name.format_for_cc(db)?;
+
+    let ty::TyKind::Adt(self_adt, _) = trait_ref.self_ty().kind() else {
+        bail!("Trait implementations for non-ADT types are not supported yet.");
+    };
+    if query_compiler::has_non_lifetime_generics(tcx, self_adt.did()) {
+        bail!("Trait implementations for generic types are not supported yet.");
+    }
 
     let mut prereqs = CcPrerequisites::default();
     let trait_args: Vec<_> = trait_ref
