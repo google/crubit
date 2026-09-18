@@ -5,7 +5,6 @@ that entails, and additional subpages (available in the left-hand navigation)
 document specific aspects of the generated bindings.
 
 Tip: The code examples below are pulled straight from
-
 <https://github.com/google/crubit/tree/main/examples/rust/function/>. The other examples
 in <https://github.com/google/crubit/tree/main/examples/rust/> are also useful. If you
 prefer just copy-pasting something, start there.
