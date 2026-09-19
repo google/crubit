@@ -105,7 +105,7 @@ SpecialMemberFunc GetSpecialMemberFunc(
     // appears that we need to fully synthesize the special member functions
     // and the templates they use to catch any possible errors.
     crubit::RecordingDiagnosticConsumer diagnostic_recorder =
-        crubit::RecordDiagnostics(ictx->sema_.getDiagnostics(), [&] {
+        crubit::RecordDiagnosticsAndMarkFailedInstantiations(*ictx, [&] {
           auto* mutable_ctor = const_cast<clang::CXXConstructorDecl*>(ctor);
           FakeTUScope fake_tu_scope(*ictx);
           clang::Sema::SynthesizedFunctionScope synthesized_function_scope(

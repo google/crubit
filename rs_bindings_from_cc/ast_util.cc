@@ -64,6 +64,20 @@ bool IsClangLifetimeAnnotation(const clang::Attr& attr) {
          clang::isa<clang::LifetimeCaptureByAttr>(attr);
 }
 
+clang::QualType StripPointersReferencesAndArrays(
+    const clang::ASTContext& ast_context, clang::QualType type) {
+  while (true) {
+    if (type->isPointerType() || type->isReferenceType()) {
+      type = type->getPointeeType();
+    } else if (const clang::ArrayType* array_type =
+                   ast_context.getAsArrayType(type)) {
+      type = array_type->getElementType();
+    } else {
+      return type;
+    }
+  }
+}
+
 bool IsClangCoroAnnotation(const clang::Attr& attr) {
   return clang::isa<clang::CoroReturnTypeAttr>(attr) ||
          clang::isa<clang::CoroWrapperAttr>(attr) ||
@@ -425,6 +439,44 @@ const clang::TagDecl* StripCStyleNameIntroducingTypedef(
   return tag_decl;
 }
 
+RecordingDiagnosticConsumer RecordDiagnosticsAndMarkFailedInstantiations(
+    ImportContext& ictx, absl::FunctionRef<void()> callback) {
+  absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
+      failed_classes;
+  absl::flat_hash_set<clang::FunctionDecl*> failed_functions;
+  RecordingDiagnosticConsumer diagnostic_recorder =
+      RecordDiagnostics(ictx.sema_.getDiagnostics(), callback, [&] {
+        for (const clang::Sema::CodeSynthesisContext& context :
+             ictx.sema_.CodeSynthesisContexts) {
+          if (context.Kind !=
+              clang::Sema::CodeSynthesisContext::TemplateInstantiation) {
+            continue;
+          }
+          if (const auto* spec = clang::dyn_cast_or_null<
+                  clang::ClassTemplateSpecializationDecl>(context.Entity)) {
+            failed_classes.insert(spec);
+          } else if (auto* fn = clang::dyn_cast_or_null<clang::FunctionDecl>(
+                         context.Entity)) {
+            failed_functions.insert(fn);
+          }
+        }
+      });
+  // Only mutate the AST once Clang is done with it.
+  if (!failed_classes.empty()) {
+    std::string reason = diagnostic_recorder.ConcatenatedDiagnostics();
+    for (const clang::ClassTemplateSpecializationDecl* spec : failed_classes) {
+      ictx.MarkAsInvalidTemplateSpecialization(*spec, reason);
+    }
+  }
+  for (clang::FunctionDecl* fn : failed_functions) {
+    // Clang considers the function valid even though its instantiation failed.
+    // It is not valid as far as Crubit is concerned: calling it from a
+    // generated thunk would fail to compile.
+    fn->setInvalidDecl();
+  }
+  return diagnostic_recorder;
+}
+
 bool ForceDefineImplicitFunction(ImportContext& ictx,
                                  clang::FunctionDecl* function_decl) {
   if (auto defaulted_kind =
@@ -441,7 +493,7 @@ bool ForceDefineImplicitFunction(ImportContext& ictx,
         (function_decl->isImplicit() || function_decl->isDefaulted()) &&
         !function_decl->doesThisDeclarationHaveABody()) {
       crubit::RecordingDiagnosticConsumer diagnostic_recorder =
-          crubit::RecordDiagnostics(ictx.sema_.getDiagnostics(), [&] {
+          crubit::RecordDiagnosticsAndMarkFailedInstantiations(ictx, [&] {
             FakeTUScope fake_tu_scope(ictx);
             clang::Sema::SynthesizedFunctionScope synthesized_function_scope(
                 ictx.sema_, function_decl);
@@ -497,7 +549,7 @@ bool EnsureFunctionDefined(ImportContext& ictx, clang::FunctionDecl* fn) {
   }
   if (fn->isTemplateInstantiation()) {
     crubit::RecordingDiagnosticConsumer diagnostic_recorder =
-        crubit::RecordDiagnostics(ictx.sema_.getDiagnostics(), [&] {
+        crubit::RecordDiagnosticsAndMarkFailedInstantiations(ictx, [&] {
           FakeTUScope fake_tu_scope(ictx);
           auto poi = fn->getPointOfInstantiation();
           if (poi.isInvalid()) poi = fn->getLocation();

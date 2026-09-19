@@ -77,6 +77,11 @@ void RecordingDiagnosticConsumer::HandleDiagnostic(
   }
   diagnostics_.push_back({info.getID(), diagnostic_level, presumed_source_loc,
                           std::move(diagnostic)});
+
+  if (on_error_.has_value() &&
+      diagnostic_level >= clang::DiagnosticsEngine::Error) {
+    (*on_error_)();
+  }
 }
 
 void RecordingDiagnosticConsumer::clear() {
@@ -100,12 +105,14 @@ std::string RecordingDiagnosticConsumer::ConcatenatedDiagnostics(
 
 RecordingDiagnosticConsumer RecordDiagnostics(
     clang::DiagnosticsEngine& diagnostic_engine,
-    absl::FunctionRef<void()> callback) {
+    absl::FunctionRef<void()> callback,
+    std::optional<absl::FunctionRef<void()>> on_error) {
   // Reset the diagnostic engine to a known state. In particular, if there were
   // too many diagnostics reported previously (even in sfinae contexts),
   // the diagnostic engine's fatal bit will get stuck on.
   diagnostic_engine.Reset(/*soft=*/true);
   RecordingDiagnosticConsumer diagnostic_recorder;
+  diagnostic_recorder.on_error_ = on_error;
   std::unique_ptr<clang::DiagnosticConsumer> original_consumer =
       diagnostic_engine.takeClient();
   diagnostic_engine.setClient(&diagnostic_recorder, /*ShouldOwnClient=*/false);
@@ -114,6 +121,8 @@ RecordingDiagnosticConsumer RecordDiagnostics(
                                 /*ShouldOwnClient=*/true);
   });
   callback();
+  // `on_error` refers to the caller's state; don't let it outlive this call.
+  diagnostic_recorder.on_error_ = std::nullopt;
   return diagnostic_recorder;
 }
 

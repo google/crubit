@@ -133,6 +133,11 @@ class Importer final : public ImportContext {
   void MarkAsSuccessfullyImported(const clang::NamedDecl& decl) override;
   bool HasBeenAlreadySuccessfullyImported(
       const clang::NamedDecl& decl) const override;
+  void MarkAsInvalidTemplateSpecialization(
+      const clang::ClassTemplateSpecializationDecl& decl,
+      std::string reason) override;
+  bool IsInvalidTemplateSpecialization(
+      const clang::CXXRecordDecl& decl) const override;
   bool EnsureSuccessfullyImported(
       clang::NamedDecl* absl_nonnull decl) override {
     // First, return early so that we avoid re-entrant imports.
@@ -221,6 +226,17 @@ class Importer final : public ImportContext {
       CcType converted, const clang::TemplateSpecializationType& type,
       bool assume_lifetimes);
 
+  // Eagerly instantiates `specialization_decl` (and everything its template
+  // arguments name), and returns the diagnostics emitted while doing so, or
+  // `std::nullopt` if everything could be instantiated.
+  //
+  // The result is memoized in `instantiation_attempts_`, which is required for
+  // correctness rather than just for speed -- see the comment there.
+  std::optional<std::string> CheckSpecializationInstantiable(
+      clang::ClassTemplateSpecializationDecl* absl_nonnull specialization_decl);
+  std::optional<std::string> CheckTemplateArgInstantiable(
+      const clang::TemplateArgument& arg);
+
   bool RefersToOwnedDefinitionImpl(
       const clang::CXXRecordDecl& decl,
       absl::flat_hash_set<const clang::CXXRecordDecl*>& visited) const;
@@ -246,6 +262,18 @@ class Importer final : public ImportContext {
   absl::flat_hash_map<const clang::Decl*, ItemCacheEntry> import_cache_;
   absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
       class_template_instantiations_;
+  // Memoizes the outcome of the eager instantiation attempts performed by
+  // `CheckSpecializationInstantiable`, keyed by the canonical decl of the
+  // specialization. The value holds the diagnostics emitted by the (first and
+  // only) instantiation attempt, or `std::nullopt` if it succeeded.
+  //
+  // This cache is required for correctness, not just for speed: Clang reports
+  // the errors of a failed instantiation only once, and leaves behind a
+  // complete but ill-formed definition, so later attempts to complete the same
+  // type silently succeed.
+  absl::flat_hash_map<const clang::CXXRecordDecl*, std::optional<std::string>>
+      instantiation_attempts_;
+
   std::vector<const clang::RawComment*> comments_;
 
   // Set of decls that have been successfully imported (i.e. that will be

@@ -65,6 +65,7 @@ DEPS = {
         "template_fwd_without_crubit",
     ],
     "callables": ["//support/rs_std:dyn_callable"],
+    "bridge_wrapping_alias": ["//support:bridge_cpp"],
 }
 
 TAGS = {}
@@ -104,7 +105,16 @@ ASPECT_HINTS = {
     "nonstandard_calling_convention": [
         "//features:experimental",
     ],
+    "bridge_wrapping_alias": [
+        "//features:template_instantiation",
+        ":bridge_wrapping_alias_aspect_hint",
+    ],
 }
+
+additional_rust_srcs_for_crubit_bindings(
+    name = "bridge_wrapping_alias_aspect_hint",
+    srcs = ["bridge_wrapping_alias_extra.rs"],
+)
 
 additional_rust_srcs_for_crubit_bindings(
     name = "types_in_extra_cpp_srcs_aspect_hint",
@@ -153,7 +163,6 @@ NON_BUILDABLE_TEST = [
     # We can't support additional Rust srcs so we can't run the test.
     "composable_bridging",
     "composable_bridging_template_type",
-    "bridge_wrapping_alias",
 
     # Rust type is not defined in the C++ header, but in an extra .cc file.
     "types_in_extra_cpp_srcs",

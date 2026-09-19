@@ -41,7 +41,15 @@ class RecordingDiagnosticConsumer final : public clang::DiagnosticConsumer {
   std::string ConcatenatedDiagnostics(absl::string_view prefix = "") const;
 
  private:
+  friend RecordingDiagnosticConsumer RecordDiagnostics(
+      clang::DiagnosticsEngine& diagnostic_engine,
+      absl::FunctionRef<void()> callback,
+      std::optional<absl::FunctionRef<void()>> on_error);
+
   std::vector<Diagnostic> diagnostics_;
+  // Invoked synchronously while each error (or fatal error) is reported. Only
+  // set while `RecordDiagnostics` runs its callback.
+  std::optional<absl::FunctionRef<void()>> on_error_;
 };
 
 /// A function that records the diagnostics emitted by `diagnostic_engine` while
@@ -58,9 +66,14 @@ class RecordingDiagnosticConsumer final : public clang::DiagnosticConsumer {
 /// would be helpful to temporarily avoid sending the diagnostics for these
 /// fallable attempts to the original diagnostic consumer, and this is where
 /// this 'trap' becomes useful.
+///
+/// If `on_error` is set, it is invoked synchronously while each error is being
+/// reported, i.e. while the compiler state that caused the error (such as
+/// `clang::Sema::CodeSynthesisContexts`) is still live.
 RecordingDiagnosticConsumer RecordDiagnostics(
     clang::DiagnosticsEngine& diagnostic_engine,
-    absl::FunctionRef<void()> callback);
+    absl::FunctionRef<void()> callback,
+    std::optional<absl::FunctionRef<void()>> on_error = std::nullopt);
 }  // namespace crubit
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_RECORDING_DIAGNOSTIC_CONSUMER_H_
