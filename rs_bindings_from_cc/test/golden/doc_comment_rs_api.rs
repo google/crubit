@@ -254,11 +254,11 @@ pub type MyTypeAlias = crate::DocCommentSlashes;
 
 // Data member in a specialization.
 
-// error: type alias `MyInstantiation` could not be bound
-//   template instantiation is not yet supported
+/// Type alias to template instantiation.
+pub type MyInstantiation = crate::__CcTemplateInst10MyTemplateIiE;
 
-// error: type alias `MySpecializedInstantiation` could not be bound
-//   template instantiation is not yet supported
+/// Type alias to instantiation of a template specialization.
+pub type MySpecializedInstantiation = crate::__CcTemplateInst10MyTemplateIfE;
 
 // error: class `OuterTemplate` could not be bound
 //   Class templates are not yet supported
@@ -291,14 +291,87 @@ impl From<DocCommentEnum> for ::ffi_11::c_uint {
     }
 }
 
-// error: struct `MyTemplate<int>` could not be bound
-//   template instantiation is not yet supported
+/// Class template.
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst10MyTemplateIiE"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct __CcTemplateInst10MyTemplateIiE {
+    /// Data member.
+    pub value: ::ffi_11::c_int,
+}
+impl !Send for __CcTemplateInst10MyTemplateIiE {}
+impl !Sync for __CcTemplateInst10MyTemplateIiE {}
 
-// error: struct `MyTemplate<float>` could not be bound
-//   template instantiation is not yet supported
+impl Default for __CcTemplateInst10MyTemplateIiE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__c114dea5__ZN10MyTemplateIiEC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
-// error: struct `OuterTemplate<int>` could not be bound
-//   template instantiation is not yet supported
+// A non-static member function.
+
+/// Class template specialization.
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst10MyTemplateIfE"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=MyTemplate < float >
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct __CcTemplateInst10MyTemplateIfE {
+    /// Data member in a specialization.
+    pub value: f32,
+}
+impl !Send for __CcTemplateInst10MyTemplateIfE {}
+impl !Sync for __CcTemplateInst10MyTemplateIfE {}
+
+impl Default for __CcTemplateInst10MyTemplateIfE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__2a6ef96a__ZN10MyTemplateIfEC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+// A non-static member function in a specialization.
+
+/// Class template with nested struct inside.
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInst13OuterTemplateIiE"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=OuterTemplate < int >
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct __CcTemplateInst13OuterTemplateIiE {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for __CcTemplateInst13OuterTemplateIiE {}
+impl !Sync for __CcTemplateInst13OuterTemplateIiE {}
+
+impl Default for __CcTemplateInst13OuterTemplateIiE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__2cd151a5__ZN13OuterTemplateIiEC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+// Doc comment for the nested struct.
+
+// Data member in a nested struct.
+
+// error: struct `OuterTemplate<int>::NestedStruct` could not be bound
+//   incomplete type
 
 mod detail {
     #[allow(unused_imports)]
@@ -336,6 +409,15 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___Z3foov() -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk__c114dea5__ZN10MyTemplateIiEC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk__2a6ef96a__ZN10MyTemplateIfEC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk__2cd151a5__ZN13OuterTemplateIiEC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
     }
 }
 
@@ -365,4 +447,18 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::MultilineOneStar: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::MultilineOneStar: Drop);
     assert!(::core::mem::offset_of!(crate::MultilineOneStar, i) == 0);
+    assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
+    assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
+    assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value) == 0);
+    assert!(::core::mem::size_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
+    assert!(::core::mem::align_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIfE: Drop);
+    assert!(::core::mem::offset_of!(crate::__CcTemplateInst10MyTemplateIfE, value) == 0);
+    assert!(::core::mem::size_of::<crate::__CcTemplateInst13OuterTemplateIiE>() == 1);
+    assert!(::core::mem::align_of::<crate::__CcTemplateInst13OuterTemplateIiE>() == 1);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst13OuterTemplateIiE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst13OuterTemplateIiE: Drop);
 };

@@ -124,11 +124,14 @@ impl Default for HasCustomAlignmentWithGnuAttr {
     }
 }
 
-pub mod template_with_preferred_name { // error: class `template_with_preferred_name::SomeTemplate` could not be bound
-                                       //   Class templates are not yet supported
+pub mod template_with_preferred_name {
+    // error: class `template_with_preferred_name::SomeTemplate` could not be bound
+    //   Class templates are not yet supported
 
-    // error: type alias `template_with_preferred_name::SpecializedTypeAlias` could not be bound
-    //   template instantiation is not yet supported
+    /// Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics
+    /// definition of the `string_view` type alias.
+    pub type SpecializedTypeAlias =
+        crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE;
 
     // Based on `llvm/include/c++/v1/string_view` - mimics definition of
     // `basic_string_view` class template (focusing on the attributes related to the
@@ -137,8 +140,29 @@ pub mod template_with_preferred_name { // error: class `template_with_preferred_
 
 // namespace template_with_preferred_name
 
-// error: struct `template_with_preferred_name::SomeTemplate<int>` could not be bound
-//   template instantiation is not yet supported
+/// Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics
+/// forward declaration of `basic_string_view` class template.
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=template_with_preferred_name :: SomeTemplate < int >
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {}
+impl !Sync for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {}
+
+impl Default for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__90355363__ZN28template_with_preferred_name12SomeTemplateIiEC1Ev(&raw mut tmp as*mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
@@ -154,6 +178,9 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk__90355363__ZN28template_with_preferred_name12SomeTemplateIiEC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
     }
@@ -179,4 +206,17 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
     static_assertions::assert_impl_all!(crate::HasCustomAlignmentWithGnuAttr: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::HasCustomAlignmentWithGnuAttr: Drop);
+
+    assert!(
+        ::core::mem::size_of::<
+            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+        >() == 1
+    );
+    assert!(
+        ::core::mem::align_of::<
+            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+        >() == 1
+    );
+    static_assertions::assert_impl_all!(crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE: Drop);
 };

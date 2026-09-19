@@ -17,7 +17,7 @@
 // error: class `Template` could not be bound
 //   Class templates are not yet supported
 
-pub(crate) type TemplateIntAlias = crate::__CcTemplateInst8TemplateIiE;
+pub type TemplateIntAlias = crate::__CcTemplateInst8TemplateIiE;
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "16CompoundDataType"]
@@ -25,7 +25,7 @@ pub(crate) type TemplateIntAlias = crate::__CcTemplateInst8TemplateIiE;
 ///CRUBIT_ANNOTATE: cpp_type=CompoundDataType
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
 pub struct CompoundDataType {
-    pub(crate) template_int: crate::__CcTemplateInst8TemplateIiE,
+    pub template_int: crate::__CcTemplateInst8TemplateIiE,
 }
 impl !Send for CompoundDataType {}
 impl !Sync for CompoundDataType {}
@@ -50,7 +50,7 @@ impl Default for CompoundDataType {
 }
 
 #[inline(always)]
-pub(crate) fn GetTemplateInt() -> crate::__CcTemplateInst8TemplateIiE {
+pub fn GetTemplateInt() -> crate::__CcTemplateInst8TemplateIiE {
     unsafe {
         let mut __crubit_return =
             ::core::mem::MaybeUninit::<crate::__CcTemplateInst8TemplateIiE>::uninit();
@@ -62,7 +62,7 @@ pub(crate) fn GetTemplateInt() -> crate::__CcTemplateInst8TemplateIiE {
 }
 
 unsafe extern "C" {
-    pub(crate) static mut TemplateConstant: crate::__CcTemplateInst8TemplateIiE;
+    pub static mut TemplateConstant: crate::__CcTemplateInst8TemplateIiE;
 }
 
 #[inline(always)]
@@ -89,7 +89,7 @@ pub unsafe fn OtherPubCrateTypes(__param_0: *mut ::other_pub_crate_types::Forwar
 /// Templates, otoh, are pub(crate), but work because templates are already
 /// instantiated once per crate.
 #[inline(always)]
-pub(crate) fn GetOtherPubCrateTemplate2Int() -> crate::__CcTemplateInst9Template2IiE {
+pub fn GetOtherPubCrateTemplate2Int() -> crate::__CcTemplateInst9Template2IiE {
     unsafe {
         let mut __crubit_return =
             ::core::mem::MaybeUninit::<crate::__CcTemplateInst9Template2IiE>::uninit();
@@ -112,7 +112,7 @@ pub(crate) fn GetOtherPubCrateTemplate2Int() -> crate::__CcTemplateInst9Template
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Template2 < int >
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub(crate) struct __CcTemplateInst9Template2IiE {
+pub struct __CcTemplateInst9Template2IiE {
     pub value: ::ffi_11::c_int,
 }
 impl !Send for __CcTemplateInst9Template2IiE {}
@@ -122,27 +122,23 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst9Template2IiE
 );
 
-// error: constructor `Template2<int>::Template2<int>` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: constructor `Template2<int>::Template2<int>` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: constructor `Template2<int>::Template2<int>` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: function `Template2<int>::operator=` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: function `Template2<int>::operator=` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
+impl Default for __CcTemplateInst9Template2IiE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__0bcfea3f__ZN9Template2IiEC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "__CcTemplateInst8TemplateIiE"]
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Template < int >
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub(crate) struct __CcTemplateInst8TemplateIiE {
+pub struct __CcTemplateInst8TemplateIiE {
     pub value: ::ffi_11::c_int,
 }
 impl !Send for __CcTemplateInst8TemplateIiE {}
@@ -152,20 +148,16 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst8TemplateIiE
 );
 
-// error: constructor `Template<int>::Template<int>` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: constructor `Template<int>::Template<int>` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: constructor `Template<int>::Template<int>` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: function `Template<int>::operator=` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: function `Template<int>::operator=` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
+impl Default for __CcTemplateInst8TemplateIiE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__c8d197ec__ZN8TemplateIiEC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 // trigger b/248542210,
 
@@ -190,6 +182,12 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___Z28GetOtherPubCrateTemplate2Intv(
             __return: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk__0bcfea3f__ZN9Template2IiEC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        pub(crate) unsafe fn __rust_thunk__c8d197ec__ZN8TemplateIiEC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
     }
 }

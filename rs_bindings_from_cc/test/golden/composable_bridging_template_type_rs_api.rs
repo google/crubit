@@ -33,7 +33,7 @@ pub fn ReturnsValue() -> crate::MyOption<crate::__CcTemplateInst5ValueIiE> {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=Value < int >
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub(crate) struct __CcTemplateInst5ValueIiE {
+pub struct __CcTemplateInst5ValueIiE {
     pub value: ::ffi_11::c_int,
 }
 impl !Send for __CcTemplateInst5ValueIiE {}
@@ -43,20 +43,16 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst5ValueIiE
 );
 
-// error: constructor `Value<int>::Value<int>` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: constructor `Value<int>::Value<int>` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: constructor `Value<int>::Value<int>` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: function `Value<int>::operator=` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: function `Value<int>::operator=` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
+impl Default for __CcTemplateInst5ValueIiE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__79c7b51c__ZN5ValueIiEC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
@@ -64,6 +60,9 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z12ReturnsValuev(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
+        );
+        pub(crate) unsafe fn __rust_thunk__79c7b51c__ZN5ValueIiEC1Ev(
+            __this: *mut ::core::ffi::c_void,
         );
     }
 }
