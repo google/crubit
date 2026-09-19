@@ -1,0 +1,621 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// enums_golden
+
+#![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)]
+#![allow(improper_ctypes_definitions)]
+#![deny(warnings)]
+
+extern crate alloc;
+extern crate core;
+const _: () = assert!(::std::mem::size_of::<::enums_golden::param_name_collisions::FooBar>() == 1);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::param_name_collisions::FooBar>() == 1);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aFooBar_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aFooBar(
+    __self: &'static ::enums_golden::param_name_collisions::FooBar,
+    other: &'static ::enums_golden::param_name_collisions::FooBar,
+) -> bool {
+    unsafe {
+        <::enums_golden::param_name_collisions::FooBar as ::core::cmp::PartialEq<
+            ::enums_golden::param_name_collisions::FooBar,
+        >>::eq(__self, other)
+    }
+}
+const _: () =
+    assert!(::std::mem::size_of::<::enums_golden::param_name_collisions::KeywordEnum>() == 1);
+const _: () =
+    assert!(::std::mem::align_of::<::enums_golden::param_name_collisions::KeywordEnum>() == 1);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aKeywordEnum_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aKeywordEnum(
+    __self: &'static ::enums_golden::param_name_collisions::KeywordEnum,
+    __param_1: &'static ::enums_golden::param_name_collisions::KeywordEnum,
+) -> bool {
+    unsafe {
+        <::enums_golden::param_name_collisions::KeywordEnum as ::core::cmp::PartialEq<
+            ::enums_golden::param_name_collisions::KeywordEnum,
+        >>::eq(__self, __param_1)
+    }
+}
+const _: () =
+    assert!(::std::mem::size_of::<::enums_golden::param_name_collisions::OptionLike>() == 1);
+const _: () =
+    assert!(::std::mem::align_of::<::enums_golden::param_name_collisions::OptionLike>() == 1);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_matches_uvariant(
+    __self: &'static ::enums_golden::param_name_collisions::OptionLike,
+    __param_1: *mut ::enums_golden::param_name_collisions::OptionLike,
+) -> bool {
+    unsafe {
+        let __param_1 = __param_1.read();
+        ::enums_golden::param_name_collisions::OptionLike::matches_variant(__self, __param_1)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aOptionLike_uenums_ugolden_x0000003a_x0000003aparam_uname_ucollisions_x0000003a_x0000003aOptionLike(
+    __self: &'static ::enums_golden::param_name_collisions::OptionLike,
+    other: &'static ::enums_golden::param_name_collisions::OptionLike,
+) -> bool {
+    unsafe {
+        <::enums_golden::param_name_collisions::OptionLike as ::core::cmp::PartialEq<
+            ::enums_golden::param_name_collisions::OptionLike,
+        >>::eq(__self, other)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_check_uboth(
+    __param_0: *mut ::enums_golden::param_name_collisions::OptionLike,
+    __param_1: *mut ::enums_golden::param_name_collisions::OptionLike,
+) -> bool {
+    unsafe {
+        let __param_0 = __param_0.read();
+        let __param_1 = __param_1.read();
+        ::enums_golden::param_name_collisions::check_both(__param_0, __param_1)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_ubar(
+    __param_0: &'static ::enums_golden::param_name_collisions::FooBar,
+) -> bool {
+    unsafe { ::enums_golden::param_name_collisions::is_bar(__param_0) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_ufoo(
+    __param_0: *mut ::enums_golden::param_name_collisions::FooBar,
+) -> bool {
+    unsafe {
+        let __param_0 = __param_0.read();
+        ::enums_golden::param_name_collisions::is_foo(__param_0)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_umatch(
+    __param_0: *mut ::enums_golden::param_name_collisions::KeywordEnum,
+) -> bool {
+    unsafe {
+        let __param_0 = __param_0.read();
+        ::enums_golden::param_name_collisions::is_match(__param_0)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_unone(
+    __param_0: &'static ::enums_golden::param_name_collisions::OptionLike,
+) -> bool {
+    unsafe { ::enums_golden::param_name_collisions::is_none(__param_0) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_usome(
+    __param_0: *mut ::enums_golden::param_name_collisions::OptionLike,
+) -> bool {
+    unsafe {
+        let __param_0 = __param_0.read();
+        ::enums_golden::param_name_collisions::is_some(__param_0)
+    }
+}
+const _: () = assert!(::std::mem::size_of::<::enums_golden::qr_error::QrError>() == 12);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::qr_error::QrError>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Structured(
+    __param_0: *mut ::enums_golden::qr_error::StructuredQrError,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __param_0 = __param_0.read();
+        let __rs_return_value = ::enums_golden::qr_error::QrError::Structured(__param_0);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_udata_utoo_ulong(
+    __self: &'static ::enums_golden::qr_error::QrError,
+) -> bool {
+    unsafe { ::enums_golden::qr_error::QrError::is_data_too_long(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aQrError_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aQrError(
+    __self: &'static ::enums_golden::qr_error::QrError,
+    other: &'static ::enums_golden::qr_error::QrError,
+) -> bool {
+    unsafe {
+        <::enums_golden::qr_error::QrError as ::core::cmp::PartialEq<
+            ::enums_golden::qr_error::QrError,
+        >>::eq(__self, other)
+    }
+}
+const _: () = assert!(::std::mem::size_of::<::enums_golden::qr_error::StructuredQrError>() == 12);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::qr_error::StructuredQrError>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_TotalMismatch(
+    __param_0: usize,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::qr_error::StructuredQrError::TotalMismatch(__param_0);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_SeqGreaterThanTotal(
+    __param_0: u8,
+    __param_1: u8,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::qr_error::StructuredQrError::SeqGreaterThanTotal(__param_0, __param_1);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_LengthMismatch(
+    __param_0: usize,
+    __param_1: usize,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::qr_error::StructuredQrError::LengthMismatch(__param_0, __param_1);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_UnsupportedVersion(
+    __param_0: i16,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::qr_error::StructuredQrError::UnsupportedVersion(__param_0);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_SplitMax16(
+    __param_0: usize,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::enums_golden::qr_error::StructuredQrError::SplitMax16(__param_0);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError_uenums_ugolden_x0000003a_x0000003aqr_uerror_x0000003a_x0000003aStructuredQrError(
+    __self: &'static ::enums_golden::qr_error::StructuredQrError,
+    other: &'static ::enums_golden::qr_error::StructuredQrError,
+) -> bool {
+    unsafe {
+        <::enums_golden::qr_error::StructuredQrError as ::core::cmp::PartialEq<
+            ::enums_golden::qr_error::StructuredQrError,
+        >>::eq(__self, other)
+    }
+}
+const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_128::ReprI128>() == 16);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_128::ReprI128>() == 16);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_umin_ui128(
+    __self: &'static ::enums_golden::repr_128::ReprI128,
+) -> bool {
+    unsafe { ::enums_golden::repr_128::ReprI128::is_min_i128(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_umax_ui128(
+    __self: &'static ::enums_golden::repr_128::ReprI128,
+) -> bool {
+    unsafe { ::enums_golden::repr_128::ReprI128::is_max_i128(__self) }
+}
+const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_128::ReprU128>() == 16);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_128::ReprU128>() == 16);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_umax_uu128(
+    __self: &'static ::enums_golden::repr_128::ReprU128,
+) -> bool {
+    unsafe { ::enums_golden::repr_128::ReprU128::is_max_u128(__self) }
+}
+const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_c::MyEnum>() == 24);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_c::MyEnum>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_x0000003a_x0000003aMyEnum(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::enums_golden::repr_c::MyEnum as ::core::default::Default>::default();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_E(
+    __param_0: *mut ::alloc::string::String,
+    __param_1: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __param_0 = __param_0.read();
+        let __rs_return_value = ::enums_golden::repr_c::MyEnum::E(__param_0, __param_1);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_A(
+    __param_0: i32,
+    __param_1: i64,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = ::enums_golden::repr_c::MyEnum::A(__param_0, __param_1);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_uenums_ugolden_x0000003a_x0000003arepr_uc_x0000003a_x0000003aMyEnum(
+    __self: *mut ::enums_golden::repr_c::MyEnum,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+const _: () =
+    assert!(::std::mem::size_of::<::enums_golden::repr_c::ReprCWithExtremeDiscriminants>() == 4);
+const _: () =
+    assert!(::std::mem::align_of::<::enums_golden::repr_c::ReprCWithExtremeDiscriminants>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uminus_uone(
+    __self: &'static ::enums_golden::repr_c::ReprCWithExtremeDiscriminants,
+) -> bool {
+    unsafe { ::enums_golden::repr_c::ReprCWithExtremeDiscriminants::is_minus_one(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uminus_utwo(
+    __self: &'static ::enums_golden::repr_c::ReprCWithExtremeDiscriminants,
+) -> bool {
+    unsafe { ::enums_golden::repr_c::ReprCWithExtremeDiscriminants::is_minus_two(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_umin_ui32(
+    __self: &'static ::enums_golden::repr_c::ReprCWithExtremeDiscriminants,
+) -> bool {
+    unsafe { ::enums_golden::repr_c::ReprCWithExtremeDiscriminants::is_min_i32(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_umax_ui32(
+    __self: &'static ::enums_golden::repr_c::ReprCWithExtremeDiscriminants,
+) -> bool {
+    unsafe { ::enums_golden::repr_c::ReprCWithExtremeDiscriminants::is_max_i32(__self) }
+}
+const _: () =
+    assert!(::std::mem::size_of::<::enums_golden::repr_c::ReprCWithSingleNoPayloadVariant>() == 4);
+const _: () =
+    assert!(::std::mem::align_of::<::enums_golden::repr_c::ReprCWithSingleNoPayloadVariant>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_usingle_uvariant(
+    __self: &'static ::enums_golden::repr_c::ReprCWithSingleNoPayloadVariant,
+) -> bool {
+    unsafe { ::enums_golden::repr_c::ReprCWithSingleNoPayloadVariant::is_single_variant(__self) }
+}
+const _: () = assert!(
+    ::std::mem::size_of::<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant>() == 8
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant>() == 4
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value=<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::default::Default>::default();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_A(__param_0: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant::A(__param_0);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_B(__param_0: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant::B(__param_0);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_C(__param_0: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant::C(__param_0);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
+    __self: &'static ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value=<::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::clone::Clone>::clone(__self);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
+    __self: &'static mut ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
+    source: &'static ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
+) -> () {
+    unsafe {
+        <::enums_golden::repr_c_clone_active_variant::CloneActiveVariant as::core::clone::Clone>::clone_from(__self,source)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_ua(
+    e: &'static ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
+) -> bool {
+    unsafe { ::enums_golden::repr_c_clone_active_variant::is_a(e) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_ub(
+    e: &'static ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
+) -> bool {
+    unsafe { ::enums_golden::repr_c_clone_active_variant::is_b(e) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uc(
+    e: &'static ::enums_golden::repr_c_clone_active_variant::CloneActiveVariant,
+) -> bool {
+    unsafe { ::enums_golden::repr_c_clone_active_variant::is_c(e) }
+}
+const _: () =
+    assert!(::std::mem::size_of::<::enums_golden::repr_c_clone_counter::CloneCount>() == 8);
+const _: () =
+    assert!(::std::mem::align_of::<::enums_golden::repr_c_clone_counter::CloneCount>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::enums_golden::repr_c_clone_counter::CloneCount as ::core::default::Default>::default(
+            );
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
+    __self: &'static ::enums_golden::repr_c_clone_counter::CloneCount,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::enums_golden::repr_c_clone_counter::CloneCount as ::core::clone::Clone>::clone(
+                __self,
+            );
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
+    __self: &'static mut ::enums_golden::repr_c_clone_counter::CloneCount,
+    source: &'static ::enums_golden::repr_c_clone_counter::CloneCount,
+) -> () {
+    unsafe {
+        <::enums_golden::repr_c_clone_counter::CloneCount as ::core::clone::Clone>::clone_from(
+            __self, source,
+        )
+    }
+}
+const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_c_drop::DropMe>() == 12);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_c_drop::DropMe>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uenums_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aDropMe(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            <::enums_golden::repr_c_drop::DropMe as ::core::default::Default>::default();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_A(__param_0: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::enums_golden::repr_c_drop::DropMe::A(__param_0);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_B(__param_0: i64, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::enums_golden::repr_c_drop::DropMe::B(__param_0);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_uenums_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aDropMe(
+    __self: *mut ::enums_golden::repr_c_drop::DropMe,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+const _: () =
+    assert!(::std::mem::size_of::<::enums_golden::repr_int::IntReprEnumWithNoPayload>() == 4);
+const _: () =
+    assert!(::std::mem::align_of::<::enums_golden::repr_int::IntReprEnumWithNoPayload>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uno_upayload1(
+    __self: &'static ::enums_golden::repr_int::IntReprEnumWithNoPayload,
+) -> bool {
+    unsafe { ::enums_golden::repr_int::IntReprEnumWithNoPayload::is_no_payload1(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uno_upayload2(
+    __self: &'static ::enums_golden::repr_int::IntReprEnumWithNoPayload,
+) -> bool {
+    unsafe { ::enums_golden::repr_int::IntReprEnumWithNoPayload::is_no_payload2(__self) }
+}
+const _: () = assert!(
+    ::std::mem::size_of::<::enums_golden::repr_int::IntReprWithSingleNoPayloadVariant>() == 4
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::enums_golden::repr_int::IntReprWithSingleNoPayloadVariant>() == 4
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_usingle_uvariant(
+    __self: &'static ::enums_golden::repr_int::IntReprWithSingleNoPayloadVariant,
+) -> bool {
+    unsafe {
+        ::enums_golden::repr_int::IntReprWithSingleNoPayloadVariant::is_single_variant(__self)
+    }
+}
+const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_int::NegReprIntEnum>() == 1);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_int::NegReprIntEnum>() == 1);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uminus_uone(
+    __self: &'static ::enums_golden::repr_int::NegReprIntEnum,
+) -> bool {
+    unsafe { ::enums_golden::repr_int::NegReprIntEnum::is_minus_one(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uminus_utwo(
+    __self: &'static ::enums_golden::repr_int::NegReprIntEnum,
+) -> bool {
+    unsafe { ::enums_golden::repr_int::NegReprIntEnum::is_minus_two(__self) }
+}
+const _: () = assert!(::std::mem::size_of::<::enums_golden::repr_rust::RustReprEnum>() == 12);
+const _: () = assert!(::std::mem::align_of::<::enums_golden::repr_rust::RustReprEnum>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_TuplePayloadVariant(
+    __param_0: i32,
+    __param_1: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::repr_rust::RustReprEnum::TuplePayloadVariant(__param_0, __param_1);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_get_uvariant_unumber(
+    __self: &'static ::enums_golden::repr_rust::RustReprEnum,
+) -> i32 {
+    unsafe { ::enums_golden::repr_rust::RustReprEnum::get_variant_number(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_utuple_upayload_uvariant(
+    __self: &'static ::enums_golden::repr_rust::RustReprEnum,
+) -> bool {
+    unsafe { ::enums_golden::repr_rust::RustReprEnum::is_tuple_payload_variant(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_get_ufirst_uitem_ufrom_utuple_upayload(
+    __self: &'static ::enums_golden::repr_rust::RustReprEnum,
+) -> i32 {
+    unsafe { ::enums_golden::repr_rust::RustReprEnum::get_first_item_from_tuple_payload(__self) }
+}
+const _: () = assert!(
+    ::std::mem::size_of::<
+        ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods,
+    >() == 8
+);
+const _: () = assert!(
+    ::std::mem::align_of::<
+        ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods,
+    >() == 4
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_MakeNoPayloadVariant(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value=::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::MakeNoPayloadVariant();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_MakeTuplePayloadVariant(
+    i: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value=::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::MakeTuplePayloadVariant(i);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_MakeStructPayloadVariant(
+    x: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value=::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::MakeStructPayloadVariant(x);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_get_uvariant_unumber(
+    __self: &'static ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods,
+) -> i32 {
+    unsafe {
+        ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::get_variant_number(__self)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_get_uvalue(
+    __self: &'static ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods,
+) -> i32 {
+    unsafe {
+        ::enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::get_value(
+            __self,
+        )
+    }
+}
+const _: () = assert!(
+    ::std::mem::size_of::<::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant>() == 4
+);
+const _: () = assert!(
+    ::std::mem::align_of::<::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant>() == 4
+);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_SingleVariant(
+    __param_0: i32,
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value =
+            ::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant::SingleVariant(
+                __param_0,
+            );
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_get_usingle_uitem_ufrom_utuple_upayload(
+    __self: &'static ::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant,
+) -> i32 {
+    unsafe {
+        ::enums_golden::repr_rust::RustReprWithSingleTuplePayloadVariant::get_single_item_from_tuple_payload(__self)
+    }
+}

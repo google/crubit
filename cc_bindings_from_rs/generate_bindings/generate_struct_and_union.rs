@@ -3473,11 +3473,15 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                     #[rustversion::before(2026-05-18)]
                     let get_align =
                         |(_, layout): (VariantIdx, &LayoutData<FieldIdx, VariantIdx>)| {
-                            layout.align.abi.bytes() - tag_size_with_padding
+                            layout.align.abi.bytes().saturating_sub(tag_size_with_padding)
                         };
                     #[rustversion::since(2026-05-18)]
                     let get_align = |(i, _): (VariantIdx, &VariantLayout<FieldIdx>)| {
-                        LayoutData::for_variant(layout, i).align.abi.bytes() - tag_size_with_padding
+                        LayoutData::for_variant(layout, i)
+                            .align
+                            .abi
+                            .bytes()
+                            .saturating_sub(tag_size_with_padding)
                     };
                     layout_vars.iter_enumerated().map(get_align).collect_vec()
                 }
