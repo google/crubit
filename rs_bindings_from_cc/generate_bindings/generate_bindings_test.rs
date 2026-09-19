@@ -2165,6 +2165,61 @@ fn test_existing_rust_type_auto_infer_owning_target() -> Result<()> {
     Ok(())
 }
 
+/// A relative `rs_name` (no leading `::`) is relative to the crate root of the
+/// owning target, so its first segment is a module and must not be mistaken for
+/// a crate name -- even when it happens to match the owning target's name.
+///
+/// This is the shape produced for proto enums: `MyMessage::MyEnum` in
+/// `//test:dependency` is imported with `rs_name` `dependency::MyEnum`.
+#[gtest]
+fn test_existing_rust_type_relative_path_matching_target_name_does_not_infer_hint() -> Result<()> {
+    let mut proto = ir_proto_from_assumed_lifetimes_cc_dependency(
+        r#"
+            void Func(MyType x);
+        "#,
+        r#"
+            struct [[clang::annotate("crubit_internal_rust_type", "dependency::MyType")]]
+            MyType {};
+        "#,
+    )?;
+    proto.crate_names_mut().insert("//test:dependency", "mangled_dependency");
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn Func(mut x: ::mangled_dependency::dependency::MyType)
+        }
+    );
+    Ok(())
+}
+
+/// An `rs_name` beginning with the `crate` keyword refers to the crate of the
+/// target defining the annotated declaration, so it resolves to that target's
+/// (possibly mangled) crate name without needing a label hint.
+#[gtest]
+fn test_existing_rust_type_crate_relative_path() -> Result<()> {
+    let mut proto = ir_proto_from_assumed_lifetimes_cc_dependency(
+        r#"
+            void Func(MyType x);
+        "#,
+        r#"
+            struct [[clang::annotate("crubit_internal_rust_type", "crate::MyType")]]
+            MyType {};
+        "#,
+    )?;
+    proto.crate_names_mut().insert("//test:dependency", "mangled_dependency");
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn Func(mut x: ::mangled_dependency::MyType)
+        }
+    );
+    Ok(())
+}
+
 #[gtest]
 fn test_existing_rust_type_label_hint_mismatch_fails() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc(

@@ -100,6 +100,24 @@ struct Const {};
 // pub fn foo() -> char;  // returns '\0'
 // ```
 //
+// How to spell `t`:
+//
+// A path in `t` is spelled from the point of view of the Rust crate that
+// corresponds to the Bazel target defining the annotated C++ declaration (when
+// that target is the one bindings are being generated for, this is the crate
+// being generated):
+//
+//   * `::some_crate::path::To::Type` names a crate explicitly: the first path
+//     segment is a crate name, and the path is used exactly as spelled.
+//   * `crate::path::To::Type` refers to that crate itself. Use this spelling
+//     for items defined in the same target as the annotated declaration,
+//     rather than naming that target's crate, so that the path keeps working
+//     when the crate is renamed, e.g. by crate name mangling
+//     (`use_label_encoded_names_for_deps`).
+//   * `path::To::Type` is relative to the root of that same crate, i.e. it is
+//     equivalent to `crate::path::To::Type`. Its first path segment names a
+//     module, not a crate.
+//
 // SAFETY:
 //   If the type is not layout-compatible with `t`, the behavior is undefined.
 #define CRUBIT_INTERNAL_RUST_TYPE(t, ...)                  \
@@ -122,10 +140,21 @@ struct Const {};
 // (Optional) The target that owns the Rust type for CRUBIT_INTERNAL_RUST_TYPE.
 // Format: "//package:target" or a short-form like "@abseil-cpp//absl/status".
 //
-// When crate name mangling is enabled (e.g.
-// `use_label_encoded_names_for_deps`), if the Rust type starts with `::` and
-// its crate prefix matches the target name of the hint, the crate prefix will
-// be replaced with the mangled crate name of the hint target.
+// This is only meaningful for a Rust type spelled as an explicit
+// `::some_crate::path::To::Type` path (see "How to spell `t`" above): when
+// crate name mangling is enabled (e.g. `use_label_encoded_names_for_deps`) and
+// `some_crate` matches the target name of the hint, `some_crate` is replaced
+// with the mangled crate name of the hint target. It is required when the C++
+// type's owning target differs from the target providing its Rust bindings
+// (e.g. `absl::StatusOr` in `@abseil-cpp//absl/status:statusor`, whose Rust
+// type is provided by `@abseil-cpp//absl/status:status`); otherwise the
+// owning target is inferred.
+//
+// The other two spellings need no hint: their crate is already the one
+// corresponding to the target defining the annotated declaration, and Crubit
+// spells it with the mangled crate name where necessary. In particular, a
+// relative path is *not* rewritten, since its first segment names a module
+// rather than a crate.
 #define CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT(label_hint) \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_rust_type_label_hint", label_hint)
 

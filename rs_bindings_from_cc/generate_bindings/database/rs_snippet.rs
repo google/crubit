@@ -1434,6 +1434,20 @@ impl<'a> RsTypeKind<'a> {
         //    `existing_rust_type.owning_target()` if the crate prefix of `rs_name` matches
         //    `owning_target.target_name()` (e.g. `absl::Status` in
         //    `@abseil-cpp//absl/status:status` mapped to `::status::absl::NewStatus`).
+        //
+        //    The heuristic only applies to crate-absolute paths (those spelled
+        //    `::the_crate::...`), because only those begin with a crate name. See
+        //    `CRUBIT_INTERNAL_RUST_TYPE` in `support/annotations_internal.h` for how a path is
+        //    spelled and `fully_qualify_type` below for how each spelling is resolved:
+        //      * A path beginning with `crate::` is resolved against the crate root of the
+        //        defining target, which `fully_qualify_type` already spells with that target's
+        //        (possibly mangled) crate name, so no hint is needed.
+        //      * Any other path is relative to that same crate root, so its first segment is a
+        //        module. Rewriting it into a crate name would both drop the module and make
+        //        `fully_qualify_type` prepend the crate a second time. For example, proto enums
+        //        are imported as `ExistingRustType`s whose `rs_name` is a relative
+        //        `my_message::MyEnum`, and `my_message` can coincidentally equal the
+        //        `proto_library` target name.
         let label_hint = if let Some(hint_str) = existing_rust_type.label_hint() {
             ensure!(
                 hint_str.starts_with("//"),
@@ -1448,10 +1462,7 @@ impl<'a> RsTypeKind<'a> {
                 "CRUBIT_INTERNAL_RUST_TYPE",
             )?;
             Some(label)
-        } else {
-            let rs_name = existing_rust_type.rs_name();
-            let starts_with_colon2 = rs_name.starts_with("::");
-            let path_without_colon = if starts_with_colon2 { &rs_name[2..] } else { rs_name };
+        } else if let Some(path_without_colon) = existing_rust_type.rs_name().strip_prefix("::") {
             let mut parts = path_without_colon.split("::");
             let first = parts.next();
             let has_remainder = parts.next().is_some();
@@ -1462,6 +1473,8 @@ impl<'a> RsTypeKind<'a> {
             } else {
                 None
             }
+        } else {
+            None
         };
 
         let uninterpolated_rust_type = if let Some(label) = label_hint {
@@ -3006,10 +3019,22 @@ impl<'a> RsTypeKind<'a> {
     }
 }
 
-/// Take a user defined path, like `foo` or `::bar`, and convert it to
-/// an absolute path, like `crate::foo` or `::bar` respectively.
+/// Take a user defined path, like `foo`, `crate::foo`, or `::bar`, and convert
+/// it to an absolute path.
 ///
-/// The path is taken to be relative to crate defining the item.
+/// Paths are spelled from the point of view of the crate defining the item, and
+/// are resolved as follows:
+///
+/// *   A path beginning with `::` is already crate-absolute: its first segment
+///     names a crate, and the path is used as it is spelled (`::bar::Baz` stays
+///     `::bar::Baz`).
+/// *   A path beginning with the `crate` keyword is resolved against the root
+///     of the crate defining the item: `crate::foo::Bar` becomes
+///     `crate::foo::Bar` if that crate is the one currently being generated,
+///     and `::defining_crate::foo::Bar` otherwise.
+/// *   Any other path is relative to the root of the crate defining the item,
+///     so `foo::Bar` becomes `crate::foo::Bar` or `::defining_crate::foo::Bar`.
+///     Its first segment therefore names a module, not a crate.
 ///
 /// This has _very_ limited support for other type expressions, like `&T`,
 /// and special-cases well known builtin types like `char`.
@@ -3073,6 +3098,15 @@ fn fully_qualify_type_impl(
         return quote! { #prefix #suffix };
     }
 
+    // A path beginning with the `crate` keyword is resolved against the root of the crate defining
+    // the item, which is spelled `crate` only when that crate is the one currently being generated.
+    if let Some(suffix) = strip_crate_keyword(type_expression_suffix) {
+        let suffix =
+            suffix.parse::<TokenStream>().expect("Type expression should parse as a TokenStream");
+        let top_level_crate = root_crate();
+        return quote! { #prefix #top_level_crate::#suffix };
+    }
+
     let type_expression = type_expression_suffix
         .parse::<TokenStream>()
         .expect("Type expression should parse as a TokenStream");
@@ -3083,6 +3117,14 @@ fn fully_qualify_type_impl(
         let top_level_crate = root_crate();
         quote! { #prefix #top_level_crate::#type_expression }
     }
+}
+
+/// Strips a leading `crate::` from `type_expression`, if present.
+///
+/// Returns `None` if the first segment of the path is not the `crate` keyword, e.g. for
+/// `crate_name::Foo`.
+fn strip_crate_keyword(type_expression: &str) -> Option<&str> {
+    Some(type_expression.strip_prefix("crate")?.trim_start().strip_prefix("::")?.trim_start())
 }
 
 struct RsTypeKindIter<'a, 'ty> {
@@ -3481,6 +3523,49 @@ mod tests {
                 quote! {crate}
             }),
             quote! {crate::A},
+        );
+    }
+
+    /// A path beginning with the `crate` keyword resolves against the root of the crate defining
+    /// the item, which is the crate being generated.
+    #[gtest]
+    fn test_fully_qualify_crate_relative_type() {
+        assert_rs_matches!(
+            fully_qualify_type_impl("crate::foo::A", || {
+                quote! {crate}
+            }),
+            quote! {crate::foo::A},
+        );
+        // Generated paths may contain spaces around `::`.
+        assert_rs_matches!(
+            fully_qualify_type_impl("crate :: foo :: A", || {
+                quote! {crate}
+            }),
+            quote! {crate::foo::A},
+        );
+    }
+
+    /// The crate defining the item may be an imported crate, in which case the `crate` keyword
+    /// resolves to that crate's (possibly mangled) name.
+    #[gtest]
+    fn test_fully_qualify_crate_relative_type_in_imported_crate() {
+        assert_rs_matches!(
+            fully_qualify_type_impl("crate::foo::A", || {
+                quote! {::mangled_dependency}
+            }),
+            quote! {::mangled_dependency::foo::A},
+        );
+    }
+
+    /// Only the `crate` keyword itself is special: a module whose name merely starts with `crate`
+    /// is an ordinary relative path.
+    #[gtest]
+    fn test_fully_qualify_type_with_crate_like_module_name() {
+        assert_rs_matches!(
+            fully_qualify_type_impl("crate_like::A", || {
+                quote! {crate}
+            }),
+            quote! {crate::crate_like::A},
         );
     }
 
