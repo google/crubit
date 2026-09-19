@@ -12,6 +12,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Testing/CommandLineArgs.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/Support/ErrorHandling.h"
 
@@ -25,9 +26,16 @@ NamedDecl *absl_nonnull lookup(absl::string_view Name, const DeclContext &DC) {
   return Result.front();
 }
 
-void benchmarkAnalysisOnCode(benchmark::State &State, llvm::StringRef Code) {
-  TestAST AST(Code);
-  auto *Target = cast<FunctionDecl>(
+void benchmarkAnalysisOnCode(benchmark::State& State, llvm::StringRef Code) {
+  clang::TestInputs Inputs(Code);
+  Inputs.Language = TestLanguage::Lang_CXX20;
+  Inputs.ExtraArgs = {
+      "-fsyntax-only",
+      "-Wno-unused-value",
+      "-Wno-nonnull",
+  };
+  TestAST AST(Inputs);
+  auto* Target = cast<FunctionDecl>(
       lookup("Target", *AST.context().getTranslationUnitDecl()));
   NullabilityPragmas NoPragmas;
   LambdaCaptureNullabilityMap CaptureMap;
@@ -280,27 +288,27 @@ void BM_PointerAnalysisShortCircuitingAndEarlyReturnsOnIrrelevantConditions(
       } else if (target->hasFeatureB()) {
         unsigned size = getTypeSize(elt_ty);
 
-#define CASE_B(ELS, BITS, NF, SIGNED, FP, VAL)                  \
+#define CASE_B(ELS, BITS, NF, SIGNED, VAL)                      \
       if (!elt_ty->isBoolean() &&                                   \
           ((elt_ty->isInteger() && elt_ty->isSigned() == SIGNED) || \
-           (elt_ty->isFloat() && !elt_ty->isSpecial() && FP)) &&    \
+           (elt_ty->isFloat() && !elt_ty->isSpecial())) &&          \
           size == BITS && num_elts == ELS && num_fields == NF) {    \
         return insert(k, VAL);                                      \
       }
-        CASE_B(1, 8, 1, true, false, 101)
-        CASE_B(2, 8, 1, true, false, 102)
-        CASE_B(4, 8, 1, true, false, 103)
-        CASE_B(8, 8, 1, true, false, 104)
-        CASE_B(16, 8, 1, true, false, 105)
-        CASE_B(32, 8, 1, true, false, 106)
-        CASE_B(64, 8, 1, true, false, 107)
-        CASE_B(1, 8, 1, false, false, 108)
-        CASE_B(2, 8, 1, false, false, 109)
-        CASE_B(4, 8, 1, false, false, 110)
-        CASE_B(8, 8, 1, false, false, 111)
-        CASE_B(16, 8, 1, false, false, 112)
-        CASE_B(32, 8, 1, false, false, 113)
-        CASE_B(64, 8, 1, false, false, 114)
+        CASE_B(1, 8, 1, true, 101)
+        CASE_B(2, 8, 1, true, 102)
+        CASE_B(4, 8, 1, true, 103)
+        CASE_B(8, 8, 1, true, 104)
+        CASE_B(16, 8, 1, true, 105)
+        CASE_B(32, 8, 1, true, 106)
+        CASE_B(64, 8, 1, true, 107)
+        CASE_B(1, 8, 1, false, 108)
+        CASE_B(2, 8, 1, false, 109)
+        CASE_B(4, 8, 1, false, 110)
+        CASE_B(8, 8, 1, false, 111)
+        CASE_B(16, 8, 1, false, 112)
+        CASE_B(32, 8, 1, false, 113)
+        CASE_B(64, 8, 1, false, 114)
 #undef CASE_B
       }
       return nullptr;
@@ -376,7 +384,7 @@ void BM_PointerAnalysisBatchMemberPointerInit(benchmark::State& State) {
       Metric* m50_;
     };
 
-    void Target(PipelineService* self, Context* ctx) {
+    void Target(PipelineService* _Nullable self, Context* _Nullable ctx) {
       if (!self || !ctx) return;
       self->m1_ = ctx->getMetric("m1");
       self->m2_ = ctx->getMetric("m2");
