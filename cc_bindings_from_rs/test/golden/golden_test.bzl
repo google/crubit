@@ -30,6 +30,7 @@ load(
 )
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
+    "ENABLE_CRUBIT_ASSERTIONS_ATTR",
     "crubit_multiplatform_golden_transition",
 )
 load(
@@ -49,7 +50,7 @@ def _generate_bindings_impl(ctx):
     )
 
 _generate_bindings = rule(
-    attrs = {
+    attrs = ENABLE_CRUBIT_ASSERTIONS_ATTR | {
         # Multi-platform variant of crubit_flavor_transition.
         "rust_library": attr.label(
             providers = [CrateInfo],

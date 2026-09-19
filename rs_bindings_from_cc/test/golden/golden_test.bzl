@@ -7,6 +7,7 @@
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
+    "ENABLE_CRUBIT_ASSERTIONS_ATTR",
     "crubit_golden_flavor_transition",
 )
 load(
@@ -30,7 +31,8 @@ def _generate_bindings_impl(ctx):
     )
 
 _generate_bindings = rule(
-    attrs = {
+    # Golden tests are Crubit's own tests, so they want debug assertions.
+    attrs = ENABLE_CRUBIT_ASSERTIONS_ATTR | {
         "cc_library": attr.label(
             providers = [CcInfo],
             aspects = [rust_bindings_from_cc_aspect],
