@@ -293,8 +293,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # 1. We don't need Crubit bindings for `_cc_lib` for protobuf interop, we use protoc for that.
     # 2. We know that transitive deps of `_cc_lib` will get Crubit bindings through the "3 aspects"
     #    path if they are needed.
-    if not _has_cc_proto_aspect(ctx):
-        return []
+    # if not _has_cc_proto_aspect(ctx):
+    #     return []
 
     # We use a fake generator only when we are building the real one, in order to avoid
     # dependency cycles.
@@ -338,8 +338,10 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
 
     if _is_cc_proto_library(ctx.rule):
         # This is a cc_proto_library, we are interested in RustBindingsFromCcInfo provider of the
-        # proto_library.
-        return [ctx.rule.attr.deps[0][RustBindingsFromCcInfo]]
+        # proto_library if available.
+        if ctx.rule.attr.deps and RustBindingsFromCcInfo in ctx.rule.attr.deps[0]:
+            return [ctx.rule.attr.deps[0][RustBindingsFromCcInfo]]
+        return []
 
     if str(ctx.label) in targets_to_remove:
         return []
@@ -547,7 +549,7 @@ def _attr_predicate(_ctx):
 rust_bindings_from_cc_aspect = aspect(
     implementation = _rust_bindings_from_cc_aspect_impl,
     attr_aspects = _attr_predicate,
-    requires = [rust_cc_proto_library_aspect],
+    requires = [],
     required_aspect_providers = [CcInfo],
     attrs = bindings_attrs | {
         "_std": attr.label(
@@ -562,6 +564,26 @@ rust_bindings_from_cc_aspect = aspect(
         # "optional" dependency on the Crubit toolchain. We'll still fail, but fail during
         # execution, not toolchain resolution, so that additional_rust_srcs can depend on targets
         # that use Crubit and Nothing Bad Happens.
+        config_common.toolchain_type("@rules_crubit//rs_bindings_from_cc/bazel_support:toolchain_type", mandatory = False),
+    ],
+    fragments = ["cpp", "google_cpp"],
+)
+
+rust_bindings_from_cc_proto_aspect = aspect(
+    implementation = _rust_bindings_from_cc_aspect_impl,
+    attr_aspects = ["deps"],
+    requires = [rust_cc_proto_library_aspect],
+    required_providers = [ProtoInfo],
+    attrs = bindings_attrs | {
+        "_std": attr.label(
+            default = "//support/cc_std",
+        ),
+        "_use_auto_exec_groups": attr.bool(default = False),
+    },
+    toolchains = [
+        "@rules_rust//rust:toolchain_type",
+        "@bazel_tools//tools/cpp:toolchain_type",
+        "@bazel_tools//tools/cpp:cc_runtimes_toolchain_type",
         config_common.toolchain_type("@rules_crubit//rs_bindings_from_cc/bazel_support:toolchain_type", mandatory = False),
     ],
     fragments = ["cpp", "google_cpp"],
