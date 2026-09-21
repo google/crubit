@@ -851,4 +851,14 @@ unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
         );
         Ok(())
     }
+
+    #[test]
+    fn test_crate_rename_reserved_keyword() -> Result<()> {
+        let test_args = TestArgs::default_args()?
+            .with_extra_crubit_args(&["--crate-rename=some_proto_crate=type"]);
+        let test_result = test_args.run()?;
+        let rs_body = std::fs::read_to_string(&test_result.rs_path)?;
+        assert!(rs_body.contains("extern crate some_proto_crate as r#type;"));
+        Ok(())
+    }
 }

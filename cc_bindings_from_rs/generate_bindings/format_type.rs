@@ -17,7 +17,7 @@ use crate::{
     matches_qualified_name, CcType,
 };
 use arc_anyhow::{Context, Result};
-use code_gen_utils::CcInclude;
+use code_gen_utils::{make_rs_ident, CcInclude};
 use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use crubit_attr::BridgingAttrs;
 use crubit_feature::CrubitFeature;
@@ -2020,8 +2020,8 @@ fn crubit_abi_type_from_bridged_adt<'tcx>(
             parts: {
                 let tcx = db.tcx();
                 let krate = tcx.crate_name(db.source_crate_num());
-                let crate_name = Ident::new(krate.as_str(), Span::call_site());
-                let rust_abi_path = Ident::new(abi_rust.as_str(), Span::call_site());
+                let crate_name = make_rs_ident(krate.as_str());
+                let rust_abi_path = make_rs_ident(abi_rust.as_str());
                 Rc::from([crate_name, rust_abi_path])
             },
         },

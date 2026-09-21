@@ -41,7 +41,9 @@ use crate::generate_struct_and_union::{
 };
 use crate::generate_template_specialization::append_trait_impls;
 use arc_anyhow::{Context, Error, Result};
-use code_gen_utils::{format_cc_includes, CcConstQualifier, CcInclude, NamespaceQualifier};
+use code_gen_utils::{
+    format_cc_includes, make_rs_ident, CcConstQualifier, CcInclude, NamespaceQualifier,
+};
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet, TemplateSpecialization,
 };
@@ -469,8 +471,8 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
         if name.as_ref() == "alloc" {
             alloc_renamed = true;
         }
-        let name = format_ident!("{}", name.to_string());
-        let renamed = format_ident!("{}", renamed.to_string());
+        let name = make_rs_ident(name);
+        let renamed = make_rs_ident(renamed);
 
         extern_crate_decls.push(quote! {
             extern crate #name as #renamed;
