@@ -53,6 +53,7 @@ crubit_cc_test(
     ],
     deps = [
         ":partial_eq_cc_api",
+        "//support/rs_std:str_ref",
         "//testing/base/public:gunit_main",
     ],
 )

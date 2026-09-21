@@ -92,3 +92,29 @@ pub mod bool_and_str_rhs {
         }
     }
 }
+
+/// `PartialEq<str>` and `PartialEq<&str>` both generate an `operator==` that accepts an
+/// `rs_std::StrRef`, so bindings may only be generated for one of them.  This mirrors the shape
+/// of `alloc::string::String`.  The main verification is whether the generated bindings compile
+/// without any errors.
+pub mod str_and_ref_str_rhs {
+    pub struct MyStruct(usize);
+
+    impl MyStruct {
+        pub fn new(str_len: usize) -> Self {
+            Self(str_len)
+        }
+    }
+
+    impl PartialEq<str> for MyStruct {
+        fn eq(&self, other: &str) -> bool {
+            self.0 == other.len()
+        }
+    }
+
+    impl PartialEq<&str> for MyStruct {
+        fn eq(&self, other: &&str) -> bool {
+            self.0 == other.len()
+        }
+    }
+}

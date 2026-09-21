@@ -133,6 +133,39 @@ fn test_ref_collision() {
     });
 }
 
+/// `&T` and `T` map to overlapping C++ parameter types, so the referent wins.
+#[test]
+fn test_ref_collides_with_referent() {
+    run_compiler_for_testing("", |tcx| {
+        let str_ty = tcx.types.str_;
+        let region = tcx.lifetimes.re_erased;
+
+        let ref_str = Ty::new_ref(tcx, region, str_ty, rustc_middle::mir::Mutability::Not);
+
+        let input = [ref_str, str_ty];
+        // We expect `str` to win, so `&str` is filtered out.
+        let expected_output = [str_ty].to_vec();
+        let actual_output = filter_colliding_types(tcx, input);
+        assert_eq!(actual_output, expected_output);
+    });
+}
+
+/// A reference is only dropped when its referent is also present.
+#[test]
+fn test_ref_without_referent_is_kept() {
+    run_compiler_for_testing("", |tcx| {
+        let str_ty = tcx.types.str_;
+        let region = tcx.lifetimes.re_erased;
+
+        let ref_str = Ty::new_ref(tcx, region, str_ty, rustc_middle::mir::Mutability::Not);
+
+        let input = [ref_str];
+        let expected_output = [ref_str].to_vec();
+        let actual_output = filter_colliding_types(tcx, input);
+        assert_eq!(actual_output, expected_output);
+    });
+}
+
 #[test]
 fn test_type_collision_risk_details() {
     run_compiler_for_testing("", |tcx| {

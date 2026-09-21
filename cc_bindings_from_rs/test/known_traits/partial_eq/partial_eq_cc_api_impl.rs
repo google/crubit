@@ -82,6 +82,29 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a
         )
     }
 }
+const _: () =
+    assert!(::std::mem::size_of::<::partial_eq_golden::str_and_ref_str_rhs::MyStruct>() == 8);
+const _: () =
+    assert!(::std::mem::align_of::<::partial_eq_golden::str_and_ref_str_rhs::MyStruct>() == 8);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(str_len: usize, __ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::partial_eq_golden::str_and_ref_str_rhs::MyStruct::new(str_len);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003astr_uand_uref_ustr_urhs_x0000003a_x0000003aMyStruct_ustr(
+    __self: &'static ::partial_eq_golden::str_and_ref_str_rhs::MyStruct,
+    other: *mut &'static str,
+) -> bool {
+    unsafe {
+        let other = other.read();
+        <::partial_eq_golden::str_and_ref_str_rhs::MyStruct as ::core::cmp::PartialEq<str>>::eq(
+            __self, other,
+        )
+    }
+}
 const _: () = assert!(::std::mem::size_of::<::partial_eq_golden::tuple_collision::MyStruct>() == 8);
 const _: () =
     assert!(::std::mem::align_of::<::partial_eq_golden::tuple_collision::MyStruct>() == 8);

@@ -7,6 +7,7 @@
 #include <cstdint>
 
 #include "gtest/gtest.h"
+#include "support/rs_std/str_ref.h"
 
 namespace crubit {
 namespace {
@@ -47,6 +48,19 @@ TEST(PartialEqTest, TestBoolAndStrRhs) {
   EXPECT_FALSE(s == "hi");    // NOLINT(readability/check)
   EXPECT_TRUE(s == 42);       // NOLINT(readability/check)
   EXPECT_FALSE(s == 99);      // NOLINT(readability/check)
+}
+
+TEST(PartialEqTest, TestStrAndRefStrRhs) {
+  auto s = partial_eq::str_and_ref_str_rhs::MyStruct::new_(5);
+
+  EXPECT_TRUE(s == "hello");  // NOLINT(readability/check)
+  EXPECT_FALSE(s == "hi");    // NOLINT(readability/check)
+
+  // Verify that gTest EXPECT_EQ/EXPECT_NE macros also compile and work.  The
+  // `StrRef` has to be spelled out: `StrRef`'s constructor from a string
+  // literal is `consteval`, so it cannot run on gTest's runtime parameter.
+  EXPECT_EQ(s, rs_std::StrRef("hello"));
+  EXPECT_NE(s, rs_std::StrRef("hi"));
 }
 
 }  // namespace

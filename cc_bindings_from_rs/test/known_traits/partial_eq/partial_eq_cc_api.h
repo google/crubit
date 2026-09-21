@@ -114,6 +114,50 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 }  // namespace partial_eq::bool_and_str_rhs
 
+namespace partial_eq::str_and_ref_str_rhs {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: partial_eq_golden :: str_and_ref_str_rhs :: MyStruct") alignas(8)
+    [[clang::trivial_abi]] MyStruct final {
+ public:
+  // `partial_eq_golden::str_and_ref_str_rhs::MyStruct` doesn't implement the
+  // `Default` trait
+  MyStruct() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~MyStruct() = default;
+  MyStruct(MyStruct&&) = default;
+  MyStruct& operator=(MyStruct&&) = default;
+
+  // `partial_eq_golden::str_and_ref_str_rhs::MyStruct` doesn't implement the
+  // `Clone` trait
+  MyStruct(const MyStruct&) = delete;
+  MyStruct& operator=(const MyStruct&) = delete;
+  MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
+
+  static ::partial_eq::str_and_ref_str_rhs::MyStruct new_(
+      ::std::uintptr_t str_len);
+
+  bool operator==(rs_std::StrRef other) const;
+
+  // Error generating bindings for implementation
+  // `<partial_eq_golden::str_and_ref_str_rhs::MyStruct as
+  // std::cmp::PartialEq<&str>>` defined at
+  // cc_bindings_from_rs/test/known_traits/partial_eq/partial_eq.rs;l=115:
+  // PartialEq implementation for `&str` is not supported when `PartialEq<str>`
+  // is implemented as it may overlap.
+
+ private:
+  union {
+    ::std::uintptr_t __field0;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+}  // namespace partial_eq::str_and_ref_str_rhs
+
 namespace partial_eq::tuple_collision {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
@@ -396,6 +440,53 @@ inline void MyStruct::__crubit_field_offset_assertions() {
   static_assert(16 == offsetof(MyStruct, bool_val));
 }
 }  // namespace partial_eq::bool_and_str_rhs
+
+namespace partial_eq::str_and_ref_str_rhs {
+
+static_assert(
+    sizeof(MyStruct) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(MyStruct) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<MyStruct>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::partial_eq::str_and_ref_str_rhs::MyStruct>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::partial_eq::str_and_ref_str_rhs::MyStruct>);
+inline ::partial_eq::str_and_ref_str_rhs::MyStruct::MyStruct(
+    ::crubit::UnsafeRelocateTag, MyStruct&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(
+    ::std::uintptr_t, ::partial_eq::str_and_ref_str_rhs::MyStruct* __ret_ptr);
+}
+inline ::partial_eq::str_and_ref_str_rhs::MyStruct MyStruct::new_(
+    ::std::uintptr_t str_len) {
+  crubit::Slot<::partial_eq::str_and_ref_str_rhs::MyStruct>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(str_len, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" bool
+__crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003astr_uand_uref_ustr_urhs_x0000003a_x0000003aMyStruct_ustr(
+    ::partial_eq::str_and_ref_str_rhs::MyStruct const&, rs_std::StrRef*);
+}
+inline bool MyStruct::operator==(rs_std::StrRef other) const {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_PartialEq_ueq_upartial_ueq_ugolden_x0000003a_x0000003astr_uand_uref_ustr_urhs_x0000003a_x0000003aMyStruct_ustr(
+          self, &other);
+}
+inline void MyStruct::__crubit_field_offset_assertions() {
+  static_assert(0 == offsetof(MyStruct, __field0));
+}
+}  // namespace partial_eq::str_and_ref_str_rhs
 
 namespace partial_eq::tuple_collision {
 
