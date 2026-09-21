@@ -1,5 +1,5 @@
 {
-  "checksum": "a0f8275a49984c6be1388023fbc85d3f6a1700681c72909638aa139314662dfd",
+  "checksum": "cef3f74f842042df106656e595ecdeafdd582e97ff841c899ccf3af29dd98bb3",
   "crates": {
     "aho-corasick 1.1.5": {
       "name": "aho-corasick",
@@ -2384,6 +2384,46 @@
         }
       ],
       "library_target_name": "crubit_hash_rust",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps_dev": {
+          "common": [
+            {
+              "id": "googletest 0.14.3",
+              "target": "googletest"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2024",
+        "version": "0.1.0"
+      },
+      "license": null,
+      "license_ids": [],
+      "license_file": "../../LICENSE"
+    },
+    "crubit_support 0.1.0": {
+      "name": "crubit_support",
+      "version": "0.1.0",
+      "package_url": "https://github.com/google/crubit",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "crubit_support",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "crubit_support",
       "common_attrs": {
         "compile_data_glob": [
           "**"
@@ -10606,6 +10646,7 @@
     "crubit_build 0.0.0": "cargo/build",
     "crubit_feature 0.0.0": "cargo/common/crubit_feature",
     "crubit_hash_rust 0.1.0": "support/crubit_hash_rust",
+    "crubit_support 0.1.0": "support/crubit_support",
     "dyn_format 0.0.0": "cargo/common/dyn_format",
     "error_report 0.0.0": "cargo/common/error_report",
     "errors 0.0.0": "cargo/common/errors",

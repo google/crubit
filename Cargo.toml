@@ -10,7 +10,8 @@ members = [
   "support/ffi_11",
   "support/crubit_bridge_rust",
   "support/crubit_hash_rust",
-  "support/crubit_annotate"
+  "support/crubit_annotate",
+  "support/crubit_support",
 ]
 exclude = [
   "cargo/cc_bindings_from_rs/cargo-cpp_api_from_rust/tests/test_project",

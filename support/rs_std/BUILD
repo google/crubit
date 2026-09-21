@@ -124,14 +124,11 @@ rust_library(
     name = "dyn_erased_future",
     srcs = ["dyn_erased_future.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
-    link_deps = [
-        ":waker",
-    ],
     visibility = [
         "//:__subpackages__",
     ],
     deps = [
-        ":erased_future",
+        "//support:crubit_support",
     ],
 )
 
@@ -143,8 +140,8 @@ cc_library(
         "//:__subpackages__",
     ],
     deps = [
-        ":dyn_erased_future",  # build_cleaner: keep, defines extern "C" functions we declare.
         ":waker",
+        "//support:crubit_support",  # build_cleaner: keep, defines extern "C" functions we declare.
     ],
 )
 
