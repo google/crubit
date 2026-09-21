@@ -111,4 +111,17 @@ struct [[clang::annotate("crubit_internal_rust_type", "MyRustContainerVoid",
 
 void AcceptSpecialized(MyContainer<int> a, MyContainer<void> b);
 
+struct NonRustMovable final {
+  NonRustMovable(NonRustMovable&&);
+  ~NonRustMovable();
+
+  int x;
+};
+
+// A generic existing Rust type stores its type arguments in place, and so is
+// only Rust-movable, and only free of a destructor, if they all are.
+// `MyRustContainer<NonRustMovable>` is therefore returned by `Ctor`, rather
+// than by value.
+MyContainer<NonRustMovable> ReturnContainerOfNonRustMovable();
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CRUBIT_INTERNAL_RS_TYPE_H_
