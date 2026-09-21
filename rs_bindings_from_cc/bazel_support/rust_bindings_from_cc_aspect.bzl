@@ -293,8 +293,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # 1. We don't need Crubit bindings for `_cc_lib` for protobuf interop, we use protoc for that.
     # 2. We know that transitive deps of `_cc_lib` will get Crubit bindings through the "3 aspects"
     #    path if they are needed.
-    if not _has_cc_proto_aspect(ctx):
-        return []
+    # if not _has_cc_proto_aspect(ctx):
+    #     return []
 
     # We use a fake generator only when we are building the real one, in order to avoid
     # dependency cycles.
@@ -338,8 +338,10 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
 
     if _is_cc_proto_library(ctx.rule):
         # This is a cc_proto_library, we are interested in RustBindingsFromCcInfo provider of the
-        # proto_library.
-        return [ctx.rule.attr.deps[0][RustBindingsFromCcInfo]]
+        # proto_library if available.
+        if ctx.rule.attr.deps and RustBindingsFromCcInfo in ctx.rule.attr.deps[0]:
+            return [ctx.rule.attr.deps[0][RustBindingsFromCcInfo]]
+        return []
 
     if str(ctx.label) in targets_to_remove:
         return []
