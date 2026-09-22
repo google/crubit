@@ -100,32 +100,36 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
 ::leaf_rs_lib::LeafRsEnum wrap_enum(::std::uint8_t x);
 
 static_assert(
-    sizeof(LeafRsEnum) == 1,
+    sizeof(::leaf_rs_lib::LeafRsEnum) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(LeafRsEnum) == 1,
+    alignof(::leaf_rs_lib::LeafRsEnum) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 
 // `static` constructor
-inline constexpr LeafRsEnum LeafRsEnum::MakeKUnknown() {
+inline constexpr ::leaf_rs_lib::LeafRsEnum(
+    ::leaf_rs_lib::LeafRsEnum::MakeKUnknown)() {
   return LeafRsEnum(PrivateBytesTag{}, {0});
 }
 
 // `static` constructor
-inline constexpr LeafRsEnum LeafRsEnum::MakeKValue1() {
+inline constexpr ::leaf_rs_lib::LeafRsEnum(
+    ::leaf_rs_lib::LeafRsEnum::MakeKValue1)() {
   return LeafRsEnum(PrivateBytesTag{}, {1});
 }
 
 // `static` constructor
-inline constexpr LeafRsEnum LeafRsEnum::MakeKValue2() {
+inline constexpr ::leaf_rs_lib::LeafRsEnum(
+    ::leaf_rs_lib::LeafRsEnum::MakeKValue2)() {
   return LeafRsEnum(PrivateBytesTag{}, {2});
 }
 
 // `static` constructor
-inline constexpr LeafRsEnum LeafRsEnum::MakeKValue3() {
+inline constexpr ::leaf_rs_lib::LeafRsEnum(
+    ::leaf_rs_lib::LeafRsEnum::MakeKValue3)() {
   return LeafRsEnum(PrivateBytesTag{}, {3});
 }
-static_assert(::std::is_trivially_destructible_v<LeafRsEnum>);
+static_assert(::std::is_trivially_destructible_v<::leaf_rs_lib::LeafRsEnum>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::leaf_rs_lib::LeafRsEnum>);
 static_assert(::std::is_trivially_move_assignable_v<::leaf_rs_lib::LeafRsEnum>);
@@ -136,16 +140,19 @@ inline ::leaf_rs_lib::LeafRsEnum::LeafRsEnum(::crubit::UnsafeRelocateTag,
                                              LeafRsEnum&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void LeafRsEnum::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(LeafRsEnum, __opaque_blob_of_bytes));
+inline void ::leaf_rs_lib::LeafRsEnum::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::leaf_rs_lib::LeafRsEnum;
+    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
+  }
 }
 using LeafRsTypeAlias CRUBIT_INTERNAL_RUST_TYPE(
     ":: leaf_rs_lib_golden :: LeafRsType") = ::leaf_rs_lib::LeafRsType;
 static_assert(
-    sizeof(LeafRsType) == 1,
+    sizeof(::leaf_rs_lib::LeafRsType) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(LeafRsType) == 1,
+    alignof(::leaf_rs_lib::LeafRsType) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -157,7 +164,7 @@ inline ::leaf_rs_lib::LeafRsType::LeafRsType() {
       __crubit_thunk_Default_udefault_uleaf_urs_ulib_ugolden_x0000003a_x0000003aLeafRsType(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<LeafRsType>);
+static_assert(::std::is_trivially_destructible_v<::leaf_rs_lib::LeafRsType>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::leaf_rs_lib::LeafRsType>);
 static_assert(::std::is_trivially_move_assignable_v<::leaf_rs_lib::LeafRsType>);
@@ -168,8 +175,9 @@ inline ::leaf_rs_lib::LeafRsType::LeafRsType(::crubit::UnsafeRelocateTag,
                                              LeafRsType&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void LeafRsType::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(LeafRsType, field));
+inline void ::leaf_rs_lib::LeafRsType::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::leaf_rs_lib::LeafRsType;
+  static_assert(0 == offsetof(__crubit_assert_type, field));
 }
 namespace __crubit_internal {
 extern "C" ::std::uint8_t __crubit_thunk_unwrap(::leaf_rs_lib::LeafRsType*);

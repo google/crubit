@@ -391,10 +391,10 @@ struct rs_std::impl<::into_iterator_rust::SimpleIntoIter,
 namespace into_iterator_rust {
 
 static_assert(
-    sizeof(ContainerWithInherentBegin) == 12,
+    sizeof(::into_iterator_rust::ContainerWithInherentBegin) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(ContainerWithInherentBegin) == 4,
+    alignof(::into_iterator_rust::ContainerWithInherentBegin) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<ContainerWithInherentBegin>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -405,47 +405,53 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_begin(
     ::into_iterator_rust::ContainerWithInherentBegin const&);
 }
-inline ::std::int32_t ContainerWithInherentBegin::begin() const {
+inline ::std::int32_t(ContainerWithInherentBegin::begin)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_begin(self);
 }
-inline void ContainerWithInherentBegin::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(ContainerWithInherentBegin, data));
+inline void ::into_iterator_rust::ContainerWithInherentBegin::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::into_iterator_rust::ContainerWithInherentBegin;
+  static_assert(0 == offsetof(__crubit_assert_type, data));
 }
 static_assert(
-    sizeof(ContainerWithRefIntoIter) == 4,
+    sizeof(::into_iterator_rust::ContainerWithRefIntoIter) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(ContainerWithRefIntoIter) == 4,
+    alignof(::into_iterator_rust::ContainerWithRefIntoIter) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<ContainerWithRefIntoIter>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::ContainerWithRefIntoIter>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::ContainerWithRefIntoIter>);
-inline void ContainerWithRefIntoIter::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(ContainerWithRefIntoIter, iter));
+inline void ::into_iterator_rust::ContainerWithRefIntoIter::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::into_iterator_rust::ContainerWithRefIntoIter;
+  static_assert(0 == offsetof(__crubit_assert_type, iter));
 }
 static_assert(
-    sizeof(MoveOnlyIterator) == 8,
+    sizeof(::into_iterator_rust::MoveOnlyIterator) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MoveOnlyIterator) == 4,
+    alignof(::into_iterator_rust::MoveOnlyIterator) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<MoveOnlyIterator>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MoveOnlyIterator>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::MoveOnlyIterator>);
-inline void MoveOnlyIterator::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MoveOnlyIterator, val));
-  static_assert(4 == offsetof(MoveOnlyIterator, count));
+inline void ::into_iterator_rust::MoveOnlyIterator::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::into_iterator_rust::MoveOnlyIterator;
+  static_assert(0 == offsetof(__crubit_assert_type, val));
+  static_assert(4 == offsetof(__crubit_assert_type, count));
 }
 static_assert(
-    sizeof(MoveOnlyPayload) == 4,
+    sizeof(::into_iterator_rust::MoveOnlyPayload) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MoveOnlyPayload) == 4,
+    alignof(::into_iterator_rust::MoveOnlyPayload) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<MoveOnlyPayload>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -456,18 +462,20 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_mutating_umethod(
     ::into_iterator_rust::MoveOnlyPayload&);
 }
-inline ::std::int32_t MoveOnlyPayload::mutating_method() {
+inline ::std::int32_t(MoveOnlyPayload::mutating_method)() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_mutating_umethod(self);
 }
-inline void MoveOnlyPayload::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MoveOnlyPayload, val));
+inline void ::into_iterator_rust::MoveOnlyPayload::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::into_iterator_rust::MoveOnlyPayload;
+  static_assert(0 == offsetof(__crubit_assert_type, val));
 }
 static_assert(
-    sizeof(MyContainer) == 12,
+    sizeof(::into_iterator_rust::MyContainer) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyContainer) == 4,
+    alignof(::into_iterator_rust::MyContainer) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<MyContainer>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -481,7 +489,8 @@ __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_
     ::into_iterator_rust::MyContainerIntoIter* __ret_ptr);
 }
 template <typename TAdaptedSelf_>
-inline ::into_iterator_rust::MyContainerIntoIter MyContainer::into_iter() && {
+inline ::into_iterator_rust::MyContainerIntoIter(
+    ::into_iterator_rust::MyContainer::into_iter)() && {
   MyContainer&& self_ = ::std::move(*this);
   auto call_into_iter = [&]() -> decltype(auto) {
     crubit::Slot<::into_iterator_rust::MyContainerIntoIter>
@@ -501,8 +510,8 @@ __crubit_thunk_IntoIterator_uinto_uiter_u_x00000026into_uiterator_urust_ugolden_
     ::into_iterator_rust::MyContainerIter* __ret_ptr);
 }
 template <typename TAdaptedSelf_>
-inline rs::IteratorAdapter<::into_iterator_rust::MyContainerIter>
-MyContainer::begin() const& {
+inline rs::IteratorAdapter<::into_iterator_rust::MyContainerIter>(
+    ::into_iterator_rust::MyContainer::begin)() const& {
   const MyContainer& self_ = *this;
   auto call_into_iter = [&]() -> decltype(auto) {
     crubit::Slot<::into_iterator_rust::MyContainerIter>
@@ -517,7 +526,7 @@ MyContainer::begin() const& {
       call_into_iter());
 }
 template <typename TAdaptedSelf_>
-inline rs::IteratorEnd MyContainer::end() const& {
+inline rs::IteratorEnd(::into_iterator_rust::MyContainer::end)() const& {
   return rs::IteratorEnd();
 }
 namespace __crubit_internal {
@@ -527,8 +536,8 @@ __crubit_thunk_IntoIterator_uinto_uiter_u_x00000026mut_x00000020into_uiterator_u
     ::into_iterator_rust::MyContainerIterMut* __ret_ptr);
 }
 template <typename TAdaptedSelf_>
-inline rs::IteratorAdapter<::into_iterator_rust::MyContainerIterMut>
-MyContainer::begin() & {
+inline rs::IteratorAdapter<::into_iterator_rust::MyContainerIterMut>(
+    ::into_iterator_rust::MyContainer::begin)() & {
   MyContainer& self_ = *this;
   auto call_into_iter = [&]() -> decltype(auto) {
     crubit::Slot<::into_iterator_rust::MyContainerIterMut>
@@ -543,19 +552,22 @@ MyContainer::begin() & {
       call_into_iter());
 }
 template <typename TAdaptedSelf_>
-inline rs::IteratorEnd MyContainer::end() & {
+inline rs::IteratorEnd(::into_iterator_rust::MyContainer::end)() & {
   return rs::IteratorEnd();
 }
-inline void MyContainer::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyContainer, data));
+inline void ::into_iterator_rust::MyContainer::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::into_iterator_rust::MyContainer;
+  static_assert(0 == offsetof(__crubit_assert_type, data));
 }
 static_assert(
-    sizeof(MyContainerIntoIter) == 16,
+    sizeof(::into_iterator_rust::MyContainerIntoIter) == 16,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyContainerIntoIter) == 4,
+    alignof(::into_iterator_rust::MyContainerIntoIter) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyContainerIntoIter>);
+static_assert(::std::is_trivially_destructible_v<
+              ::into_iterator_rust::MyContainerIntoIter>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MyContainerIntoIter>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -564,17 +576,20 @@ inline ::into_iterator_rust::MyContainerIntoIter::MyContainerIntoIter(
     ::crubit::UnsafeRelocateTag, MyContainerIntoIter&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void MyContainerIntoIter::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyContainerIntoIter, data));
-  static_assert(12 == offsetof(MyContainerIntoIter, index));
+inline void ::into_iterator_rust::MyContainerIntoIter::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::into_iterator_rust::MyContainerIntoIter;
+  static_assert(0 == offsetof(__crubit_assert_type, data));
+  static_assert(12 == offsetof(__crubit_assert_type, index));
 }
 static_assert(
-    sizeof(MyContainerIter) == 8,
+    sizeof(::into_iterator_rust::MyContainerIter) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyContainerIter) == 4,
+    alignof(::into_iterator_rust::MyContainerIter) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyContainerIter>);
+static_assert(
+    ::std::is_trivially_destructible_v<::into_iterator_rust::MyContainerIter>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MyContainerIter>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -583,16 +598,19 @@ inline ::into_iterator_rust::MyContainerIter::MyContainerIter(
     ::crubit::UnsafeRelocateTag, MyContainerIter&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void MyContainerIter::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyContainerIter, data));
+inline void ::into_iterator_rust::MyContainerIter::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::into_iterator_rust::MyContainerIter;
+  static_assert(0 == offsetof(__crubit_assert_type, data));
 }
 static_assert(
-    sizeof(MyContainerIterMut) == 8,
+    sizeof(::into_iterator_rust::MyContainerIterMut) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyContainerIterMut) == 4,
+    alignof(::into_iterator_rust::MyContainerIterMut) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyContainerIterMut>);
+static_assert(::std::is_trivially_destructible_v<
+              ::into_iterator_rust::MyContainerIterMut>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MyContainerIterMut>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -601,36 +619,42 @@ inline ::into_iterator_rust::MyContainerIterMut::MyContainerIterMut(
     ::crubit::UnsafeRelocateTag, MyContainerIterMut&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void MyContainerIterMut::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyContainerIterMut, data));
+inline void ::into_iterator_rust::MyContainerIterMut::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::into_iterator_rust::MyContainerIterMut;
+  static_assert(0 == offsetof(__crubit_assert_type, data));
 }
 static_assert(
-    sizeof(MyIterator) == 4,
+    sizeof(::into_iterator_rust::MyIterator) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyIterator) == 4,
+    alignof(::into_iterator_rust::MyIterator) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<MyIterator>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::into_iterator_rust::MyIterator>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::into_iterator_rust::MyIterator>);
-inline void MyIterator::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyIterator, value));
+inline void ::into_iterator_rust::MyIterator::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::into_iterator_rust::MyIterator;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 static_assert(
-    sizeof(SimpleIntoIter) == 4,
+    sizeof(::into_iterator_rust::SimpleIntoIter) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(SimpleIntoIter) == 4,
+    alignof(::into_iterator_rust::SimpleIntoIter) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<SimpleIntoIter>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::SimpleIntoIter>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::SimpleIntoIter>);
-inline void SimpleIntoIter::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(SimpleIntoIter, val));
+inline void ::into_iterator_rust::SimpleIntoIter::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::into_iterator_rust::SimpleIntoIter;
+  static_assert(0 == offsetof(__crubit_assert_type, val));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_ucontainer(

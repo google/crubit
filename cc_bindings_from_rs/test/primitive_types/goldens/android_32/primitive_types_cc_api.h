@@ -291,12 +291,13 @@ inline void c_char_ptr_arg(decltype(char(0)) const* __param_0) {
 namespace primitive_types::field_types {
 
 static_assert(
-    sizeof(Types) == 120,
+    sizeof(::primitive_types::field_types::Types) == 120,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Types) == 4,
+    alignof(::primitive_types::field_types::Types) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Types>);
+static_assert(
+    ::std::is_trivially_destructible_v<::primitive_types::field_types::Types>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::primitive_types::field_types::Types>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -305,36 +306,38 @@ inline ::primitive_types::field_types::Types::Types(::crubit::UnsafeRelocateTag,
                                                     Types&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void Types::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Types, i8_func));
-  static_assert(4 == offsetof(Types, c_char_func));
-  static_assert(8 == offsetof(Types, c_void_mut_ptr));
-  static_assert(12 == offsetof(Types, c_void_const_ptr));
-  static_assert(16 == offsetof(Types, c_int));
-  static_assert(20 == offsetof(Types, c_uint));
-  static_assert(24 == offsetof(Types, c_long));
-  static_assert(28 == offsetof(Types, c_ulong));
-  static_assert(32 == offsetof(Types, c_longlong));
-  static_assert(40 == offsetof(Types, c_ulonglong));
-  static_assert(48 == offsetof(Types, c_float));
-  static_assert(52 == offsetof(Types, c_double));
-  static_assert(60 == offsetof(Types, i32));
-  static_assert(64 == offsetof(Types, u32));
-  static_assert(68 == offsetof(Types, i64));
-  static_assert(76 == offsetof(Types, u64));
-  static_assert(84 == offsetof(Types, isize));
-  static_assert(88 == offsetof(Types, usize));
-  static_assert(92 == offsetof(Types, f32));
-  static_assert(96 == offsetof(Types, f64));
-  static_assert(104 == offsetof(Types, c_short));
-  static_assert(106 == offsetof(Types, c_ushort));
-  static_assert(108 == offsetof(Types, i16));
-  static_assert(110 == offsetof(Types, u16));
-  static_assert(112 == offsetof(Types, c_char));
-  static_assert(113 == offsetof(Types, c_schar));
-  static_assert(114 == offsetof(Types, c_uchar));
-  static_assert(115 == offsetof(Types, i8));
-  static_assert(116 == offsetof(Types, u8));
+inline void ::primitive_types::field_types::Types::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::primitive_types::field_types::Types;
+  static_assert(0 == offsetof(__crubit_assert_type, i8_func));
+  static_assert(4 == offsetof(__crubit_assert_type, c_char_func));
+  static_assert(8 == offsetof(__crubit_assert_type, c_void_mut_ptr));
+  static_assert(12 == offsetof(__crubit_assert_type, c_void_const_ptr));
+  static_assert(16 == offsetof(__crubit_assert_type, c_int));
+  static_assert(20 == offsetof(__crubit_assert_type, c_uint));
+  static_assert(24 == offsetof(__crubit_assert_type, c_long));
+  static_assert(28 == offsetof(__crubit_assert_type, c_ulong));
+  static_assert(32 == offsetof(__crubit_assert_type, c_longlong));
+  static_assert(40 == offsetof(__crubit_assert_type, c_ulonglong));
+  static_assert(48 == offsetof(__crubit_assert_type, c_float));
+  static_assert(52 == offsetof(__crubit_assert_type, c_double));
+  static_assert(60 == offsetof(__crubit_assert_type, i32));
+  static_assert(64 == offsetof(__crubit_assert_type, u32));
+  static_assert(68 == offsetof(__crubit_assert_type, i64));
+  static_assert(76 == offsetof(__crubit_assert_type, u64));
+  static_assert(84 == offsetof(__crubit_assert_type, isize));
+  static_assert(88 == offsetof(__crubit_assert_type, usize));
+  static_assert(92 == offsetof(__crubit_assert_type, f32));
+  static_assert(96 == offsetof(__crubit_assert_type, f64));
+  static_assert(104 == offsetof(__crubit_assert_type, c_short));
+  static_assert(106 == offsetof(__crubit_assert_type, c_ushort));
+  static_assert(108 == offsetof(__crubit_assert_type, i16));
+  static_assert(110 == offsetof(__crubit_assert_type, u16));
+  static_assert(112 == offsetof(__crubit_assert_type, c_char));
+  static_assert(113 == offsetof(__crubit_assert_type, c_schar));
+  static_assert(114 == offsetof(__crubit_assert_type, c_uchar));
+  static_assert(115 == offsetof(__crubit_assert_type, i8));
+  static_assert(116 == offsetof(__crubit_assert_type, u8));
 }
 }  // namespace primitive_types::field_types
 
@@ -548,10 +551,12 @@ inline ::std::uintptr_t usize() {
 namespace primitive_types::test_c_void_ptr {
 
 static_assert(
-    sizeof(StructWithCVoidPointerMember) == 8,
+    sizeof(::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember) ==
+        8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(StructWithCVoidPointerMember) == 4,
+    alignof(::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember) ==
+        4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<StructWithCVoidPointerMember>);
 static_assert(
@@ -560,9 +565,12 @@ static_assert(
 static_assert(
     ::std::is_trivially_move_assignable_v<
         ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember>);
-inline void StructWithCVoidPointerMember::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(StructWithCVoidPointerMember, ptr_const));
-  static_assert(4 == offsetof(StructWithCVoidPointerMember, ptr_mut));
+inline void ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember;
+  static_assert(0 == offsetof(__crubit_assert_type, ptr_const));
+  static_assert(4 == offsetof(__crubit_assert_type, ptr_mut));
 }
 namespace __crubit_internal {
 extern "C" const void* __crubit_thunk_identity_uconst_uc_uvoid_uptr(

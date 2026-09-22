@@ -57,18 +57,20 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 static_assert(
-    sizeof(SomeStruct) == 4,
+    sizeof(::tag_decl_annotations::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(SomeStruct) == 4,
+    alignof(::tag_decl_annotations::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tag_decl_annotations::SomeStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::tag_decl_annotations::SomeStruct>);
-inline void SomeStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(SomeStruct, f));
+inline void ::tag_decl_annotations::SomeStruct::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tag_decl_annotations::SomeStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, f));
 }
 }  // namespace tag_decl_annotations
 

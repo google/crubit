@@ -181,10 +181,10 @@ struct rs_std::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator> {
 namespace stdlib {
 
 static_assert(
-    sizeof(MyStruct) == 4,
+    sizeof(::stdlib::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyStruct) == 4,
+    alignof(::stdlib::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -201,7 +201,7 @@ extern "C" void
 __crubit_thunk_Drop_udrop_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
     ::stdlib::MyStruct&);
 }
-inline MyStruct::~MyStruct() {
+inline ::stdlib::MyStruct::~MyStruct() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
           *this);
@@ -246,7 +246,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::stdlib::MyStruct* __ret_ptr);
 }
-inline ::stdlib::MyStruct MyStruct::new_(::std::int32_t x) {
+inline ::stdlib::MyStruct(MyStruct::new_)(::std::int32_t x) {
   crubit::Slot<::stdlib::MyStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
@@ -257,19 +257,20 @@ extern "C" void
 __crubit_thunk_From_ufrom_ustdlib_ugolden_x0000003a_x0000003aMyStruct_ui32(
     ::std::int32_t, ::stdlib::MyStruct* __ret_ptr);
 }
-inline MyStruct::MyStruct(::std::int32_t value) {
+inline ::stdlib::MyStruct::MyStruct(::std::int32_t value) {
   __crubit_internal::
       __crubit_thunk_From_ufrom_ustdlib_ugolden_x0000003a_x0000003aMyStruct_ui32(
           value, this);
 }
-inline void MyStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyStruct, x));
+inline void ::stdlib::MyStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::stdlib::MyStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 static_assert(
-    sizeof(NonCloneableIterator) == 4,
+    sizeof(::stdlib::NonCloneableIterator) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NonCloneableIterator) == 4,
+    alignof(::stdlib::NonCloneableIterator) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<NonCloneableIterator>);
 static_assert(
@@ -280,35 +281,37 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::stdlib::NonCloneableIterator* __ret_ptr);
 }
-inline ::stdlib::NonCloneableIterator NonCloneableIterator::new_(
+inline ::stdlib::NonCloneableIterator(NonCloneableIterator::new_)(
     ::std::int32_t x) {
   crubit::Slot<::stdlib::NonCloneableIterator> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void NonCloneableIterator::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NonCloneableIterator, x));
+inline void ::stdlib::NonCloneableIterator::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::stdlib::NonCloneableIterator;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 static_assert(
-    sizeof(NonCloneableValue) == 4,
+    sizeof(::stdlib::NonCloneableValue) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NonCloneableValue) == 4,
+    alignof(::stdlib::NonCloneableValue) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<NonCloneableValue>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::stdlib::NonCloneableValue>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::stdlib::NonCloneableValue>);
-inline void NonCloneableValue::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NonCloneableValue, x));
+inline void ::stdlib::NonCloneableValue::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::stdlib::NonCloneableValue;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 static_assert(
-    sizeof(RefIterator) == 12,
+    sizeof(::stdlib::RefIterator) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(RefIterator) == 4,
+    alignof(::stdlib::RefIterator) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<RefIterator>);
 static_assert(::std::is_trivially_move_constructible_v<::stdlib::RefIterator>);
@@ -317,16 +320,17 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::SliceRef<const ::std::int32_t>*,
                                    ::stdlib::RefIterator* __ret_ptr);
 }
-inline ::stdlib::RefIterator RefIterator::new_(
+inline ::stdlib::RefIterator(RefIterator::new_)(
     rs_std::SliceRef<const ::std::int32_t> slice) {
   crubit::Slot<::stdlib::RefIterator> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&slice, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void RefIterator::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(RefIterator, slice));
-  static_assert(8 == offsetof(RefIterator, index));
+inline void ::stdlib::RefIterator::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::stdlib::RefIterator;
+  static_assert(0 == offsetof(__crubit_assert_type, slice));
+  static_assert(8 == offsetof(__crubit_assert_type, index));
 }
 }  // namespace stdlib
 

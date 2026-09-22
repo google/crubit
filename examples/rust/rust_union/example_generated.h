@@ -58,10 +58,10 @@ union CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 static_assert(
-    sizeof(ReprRustUnion) == 8,
+    sizeof(::example_crate::ReprRustUnion) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(ReprRustUnion) == 8,
+    alignof(::example_crate::ReprRustUnion) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -73,7 +73,8 @@ inline ::example_crate::ReprRustUnion::ReprRustUnion() {
       __crubit_thunk_Default_udefault_uexample_ucrate_ugolden_x0000003a_x0000003aReprRustUnion(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<ReprRustUnion>);
+static_assert(
+    ::std::is_trivially_destructible_v<::example_crate::ReprRustUnion>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::example_crate::ReprRustUnion>);
 static_assert(
@@ -87,7 +88,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_set_ua(::example_crate::ReprRustUnion&,
                                       ::std::int32_t);
 }
-inline void ReprRustUnion::set_a(::std::int32_t a) {
+inline void(ReprRustUnion::set_a)(::std::int32_t a) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ua(self, a);
 }
@@ -95,13 +96,14 @@ inline void ReprRustUnion::set_a(::std::int32_t a) {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_set_ub(::example_crate::ReprRustUnion&, double);
 }
-inline void ReprRustUnion::set_b(double b) {
+inline void(ReprRustUnion::set_b)(double b) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ub(self, b);
 }
-inline void ReprRustUnion::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(ReprRustUnion, a));
-  static_assert(0 == offsetof(ReprRustUnion, b));
+inline void ::example_crate::ReprRustUnion::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::example_crate::ReprRustUnion;
+  static_assert(0 == offsetof(__crubit_assert_type, a));
+  static_assert(0 == offsetof(__crubit_assert_type, b));
 }
 }  // namespace example_crate
 

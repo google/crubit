@@ -488,10 +488,10 @@ struct alignas(4)
 namespace callables {
 
 static_assert(
-    sizeof(CallbackHolder) == 8,
+    sizeof(::callables::CallbackHolder) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CallbackHolder) == 4,
+    alignof(::callables::CallbackHolder) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -508,7 +508,7 @@ extern "C" void
 __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCallbackHolder(
     ::callables::CallbackHolder&);
 }
-inline CallbackHolder::~CallbackHolder() {
+inline ::callables::CallbackHolder::~CallbackHolder() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCallbackHolder(
           *this);
@@ -530,7 +530,7 @@ inline ::callables::CallbackHolder::CallbackHolder(::crubit::UnsafeRelocateTag,
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::callables::CallbackHolder* __ret_ptr);
 }
-inline ::callables::CallbackHolder CallbackHolder::new_() {
+inline ::callables::CallbackHolder(CallbackHolder::new_)() {
   crubit::Slot<::callables::CallbackHolder> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(__return_value_storage);
@@ -541,7 +541,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_set_ucallback(::callables::CallbackHolder&,
                                              ::rs::internal::FnPayload);
 }
-inline void CallbackHolder::set_callback(::rs::Fn<void() const> f) {
+inline void(CallbackHolder::set_callback)(::rs::Fn<void() const> f) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_set_ucallback(
       self, ::std::move(f).release_payload());
@@ -550,7 +550,7 @@ inline void CallbackHolder::set_callback(::rs::Fn<void() const> f) {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_call(::callables::CallbackHolder const&);
 }
-inline void CallbackHolder::call() const {
+inline void(CallbackHolder::call)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_call(self);
 }
@@ -558,18 +558,19 @@ inline void CallbackHolder::call() const {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_drop_ucallback(::callables::CallbackHolder&);
 }
-inline void CallbackHolder::drop_callback() {
+inline void(CallbackHolder::drop_callback)() {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_drop_ucallback(self);
 }
-inline void CallbackHolder::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CallbackHolder, cb));
+inline void ::callables::CallbackHolder::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::callables::CallbackHolder;
+  static_assert(0 == offsetof(__crubit_assert_type, cb));
 }
 static_assert(
-    sizeof(CppMovableDrop) == 4,
+    sizeof(::callables::CppMovableDrop) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CppMovableDrop) == 4,
+    alignof(::callables::CppMovableDrop) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -586,7 +587,7 @@ extern "C" void
 __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCppMovableDrop(
     ::callables::CppMovableDrop&);
 }
-inline CppMovableDrop::~CppMovableDrop() {
+inline ::callables::CppMovableDrop::~CppMovableDrop() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCppMovableDrop(
           *this);
@@ -604,21 +605,22 @@ inline ::callables::CppMovableDrop::CppMovableDrop(::crubit::UnsafeRelocateTag,
                                                    CppMovableDrop&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void CppMovableDrop::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CppMovableDrop, __field0));
+inline void ::callables::CppMovableDrop::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::callables::CppMovableDrop;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(NonCppMovable) == 4,
+    sizeof(::callables::NonCppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NonCppMovable) == 4,
+    alignof(::callables::NonCppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aNonCppMovable(
     ::callables::NonCppMovable&);
 }
-inline NonCppMovable::~NonCppMovable() {
+inline ::callables::NonCppMovable::~NonCppMovable() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aNonCppMovable(
           *this);
@@ -627,14 +629,15 @@ inline ::callables::NonCppMovable::NonCppMovable(::crubit::UnsafeRelocateTag,
                                                  NonCppMovable&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void NonCppMovable::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NonCppMovable, __field0));
+inline void ::callables::NonCppMovable::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::callables::NonCppMovable;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(Point) == 8,
+    sizeof(::callables::Point) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Point) == 4,
+    alignof(::callables::Point) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<Point>);
 static_assert(::std::is_trivially_move_constructible_v<::callables::Point>);
@@ -646,15 +649,16 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_ucallables_ugolden_x0000003a_x0000003aPoint_ucallables_ugolden_x0000003a_x0000003aPoint(
     ::callables::Point const&, ::callables::Point const&);
 }
-inline bool Point::operator==(::callables::Point const& other) const {
+inline bool(Point::operator==)(::callables::Point const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_ucallables_ugolden_x0000003a_x0000003aPoint_ucallables_ugolden_x0000003a_x0000003aPoint(
           self, other);
 }
-inline void Point::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Point, x));
-  static_assert(4 == offsetof(Point, y));
+inline void ::callables::Point::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::callables::Point;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
+  static_assert(4 == offsetof(__crubit_assert_type, y));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_call_uand_ureturn_unon_umovable(
@@ -1263,7 +1267,7 @@ __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020std_x0000003a_
 }
 inline ::rs_std::Tuple<::std::int32_t,
                        rs_std::Option<::std::int32_t>>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x00000029(
           this);
 }
@@ -1294,8 +1298,10 @@ operator std::tuple<::std::int32_t,
 
 inline void ::rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>::
     __crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(4 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 

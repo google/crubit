@@ -613,17 +613,17 @@ struct rs_std::impl<::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin,
 namespace tuple_structs {
 
 static_assert(
-    sizeof(CloneNoDefault) == 4,
+    sizeof(::tuple_structs::CloneNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CloneNoDefault) == 4,
+    alignof(::tuple_structs::CloneNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
     ::tuple_structs::CloneNoDefault&);
 }
-inline CloneNoDefault::~CloneNoDefault() {
+inline ::tuple_structs::CloneNoDefault::~CloneNoDefault() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
           *this);
@@ -658,14 +658,16 @@ inline ::tuple_structs::CloneNoDefault::CloneNoDefault(
     ::crubit::UnsafeRelocateTag, CloneNoDefault&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void CloneNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CloneNoDefault, value));
+inline void ::tuple_structs::CloneNoDefault::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::CloneNoDefault;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 static_assert(
-    sizeof(CopyNoDefault) == 4,
+    sizeof(::tuple_structs::CopyNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CopyNoDefault) == 4,
+    alignof(::tuple_structs::CopyNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<CopyNoDefault>);
 static_assert(
@@ -680,21 +682,22 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::CopyNoDefault* __ret_ptr);
 }
-inline ::tuple_structs::CopyNoDefault CopyNoDefault::create(
+inline ::tuple_structs::CopyNoDefault(CopyNoDefault::create)(
     ::std::int32_t value) {
   crubit::Slot<::tuple_structs::CopyNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(value, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void CopyNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CopyNoDefault, value));
+inline void ::tuple_structs::CopyNoDefault::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::CopyNoDefault;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 static_assert(
-    sizeof(DefaultAndCloneNoUnpin) == 4,
+    sizeof(::tuple_structs::DefaultAndCloneNoUnpin) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(DefaultAndCloneNoUnpin) == 4,
+    alignof(::tuple_structs::DefaultAndCloneNoUnpin) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -706,7 +709,8 @@ inline ::tuple_structs::DefaultAndCloneNoUnpin::DefaultAndCloneNoUnpin() {
       __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<DefaultAndCloneNoUnpin>);
+static_assert(::std::is_trivially_destructible_v<
+              ::tuple_structs::DefaultAndCloneNoUnpin>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::DefaultAndCloneNoUnpin>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -742,35 +746,39 @@ inline ::tuple_structs::DefaultAndCloneNoUnpin::DefaultAndCloneNoUnpin(
     ::crubit::UnsafeRelocateTag, DefaultAndCloneNoUnpin&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void DefaultAndCloneNoUnpin::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(DefaultAndCloneNoUnpin, value));
+inline void ::tuple_structs::DefaultAndCloneNoUnpin::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::DefaultAndCloneNoUnpin;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 static_assert(
-    sizeof(DefaultNoCopyNoClone) == 4,
+    sizeof(::tuple_structs::DefaultNoCopyNoClone) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(DefaultNoCopyNoClone) == 4,
+    alignof(::tuple_structs::DefaultNoCopyNoClone) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<DefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::DefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::DefaultNoCopyNoClone>);
-inline void DefaultNoCopyNoClone::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(DefaultNoCopyNoClone, value));
+inline void ::tuple_structs::DefaultNoCopyNoClone::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::DefaultNoCopyNoClone;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 static_assert(
-    sizeof(DontMoveMe) == 4,
+    sizeof(::tuple_structs::DontMoveMe) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(DontMoveMe) == 4,
+    alignof(::tuple_structs::DontMoveMe) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aDontMoveMe(
     ::tuple_structs::DontMoveMe&);
 }
-inline DontMoveMe::~DontMoveMe() {
+inline ::tuple_structs::DontMoveMe::~DontMoveMe() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aDontMoveMe(
           *this);
@@ -779,16 +787,18 @@ inline ::tuple_structs::DontMoveMe::DontMoveMe(::crubit::UnsafeRelocateTag,
                                                DontMoveMe&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void DontMoveMe::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(DontMoveMe, value));
+inline void ::tuple_structs::DontMoveMe::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::DontMoveMe;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 static_assert(
-    sizeof(TupleStructOnePrivateArg) == 4,
+    sizeof(::tuple_structs::TupleStructOnePrivateArg) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStructOnePrivateArg) == 4,
+    alignof(::tuple_structs::TupleStructOnePrivateArg) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TupleStructOnePrivateArg>);
+static_assert(::std::is_trivially_destructible_v<
+              ::tuple_structs::TupleStructOnePrivateArg>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructOnePrivateArg>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -806,8 +816,8 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::TupleStructOnePrivateArg* __ret_ptr);
 }
-inline ::tuple_structs::TupleStructOnePrivateArg
-TupleStructOnePrivateArg::create(::std::int32_t arg) {
+inline ::tuple_structs::TupleStructOnePrivateArg(
+    TupleStructOnePrivateArg::create)(::std::int32_t arg) {
   crubit::Slot<::tuple_structs::TupleStructOnePrivateArg>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -819,18 +829,20 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_get_uarg(
     ::tuple_structs::TupleStructOnePrivateArg*);
 }
-inline ::std::int32_t TupleStructOnePrivateArg::get_arg() const {
+inline ::std::int32_t(TupleStructOnePrivateArg::get_arg)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_uarg(&self);
 }
-inline void TupleStructOnePrivateArg::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructOnePrivateArg, __field0));
+inline void ::tuple_structs::TupleStructOnePrivateArg::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::TupleStructOnePrivateArg;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(TupleStructOnePublicArg) == 4,
+    sizeof(::tuple_structs::TupleStructOnePublicArg) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStructOnePublicArg) == 4,
+    alignof(::tuple_structs::TupleStructOnePublicArg) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<TupleStructOnePublicArg>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -845,8 +857,8 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::TupleStructOnePublicArg* __ret_ptr);
 }
-inline ::tuple_structs::TupleStructOnePublicArg TupleStructOnePublicArg::create(
-    ::std::int32_t arg) {
+inline ::tuple_structs::TupleStructOnePublicArg(
+    TupleStructOnePublicArg::create)(::std::int32_t arg) {
   crubit::Slot<::tuple_structs::TupleStructOnePublicArg>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -858,21 +870,23 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_get_uarg(
     ::tuple_structs::TupleStructOnePublicArg*);
 }
-inline ::std::int32_t TupleStructOnePublicArg::get_arg() const {
+inline ::std::int32_t(TupleStructOnePublicArg::get_arg)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_uarg(&self);
 }
-inline void TupleStructOnePublicArg::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructOnePublicArg, __field0));
+inline void ::tuple_structs::TupleStructOnePublicArg::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::TupleStructOnePublicArg;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(TupleStructOnePublicArgOnePrivateArg) == 8,
+    sizeof(::tuple_structs::TupleStructOnePublicArgOnePrivateArg) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStructOnePublicArgOnePrivateArg) == 4,
+    alignof(::tuple_structs::TupleStructOnePublicArgOnePrivateArg) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    ::std::is_trivially_destructible_v<TupleStructOnePublicArgOnePrivateArg>);
+static_assert(::std::is_trivially_destructible_v<
+              ::tuple_structs::TupleStructOnePublicArgOnePrivateArg>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructOnePublicArgOnePrivateArg>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -893,9 +907,9 @@ extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
     ::tuple_structs::TupleStructOnePublicArgOnePrivateArg* __ret_ptr);
 }
-inline ::tuple_structs::TupleStructOnePublicArgOnePrivateArg
-TupleStructOnePublicArgOnePrivateArg::create(::std::int32_t first_arg,
-                                             ::std::int32_t second_arg) {
+inline ::tuple_structs::TupleStructOnePublicArgOnePrivateArg(
+    TupleStructOnePublicArgOnePrivateArg::create)(::std::int32_t first_arg,
+                                                  ::std::int32_t second_arg) {
   crubit::Slot<::tuple_structs::TupleStructOnePublicArgOnePrivateArg>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -908,23 +922,26 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_get_usecond_uarg(
     ::tuple_structs::TupleStructOnePublicArgOnePrivateArg*);
 }
-inline ::std::int32_t TupleStructOnePublicArgOnePrivateArg::get_second_arg()
-    const {
+inline ::std::int32_t(
+    TupleStructOnePublicArgOnePrivateArg::get_second_arg)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_usecond_uarg(&self);
 }
-inline void
-TupleStructOnePublicArgOnePrivateArg::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructOnePublicArgOnePrivateArg, __field0));
-  static_assert(4 == offsetof(TupleStructOnePublicArgOnePrivateArg, __field1));
+inline void ::tuple_structs::TupleStructOnePublicArgOnePrivateArg::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::tuple_structs::TupleStructOnePublicArgOnePrivateArg;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 static_assert(
-    sizeof(TupleStructTwoPrivateArgs) == 8,
+    sizeof(::tuple_structs::TupleStructTwoPrivateArgs) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStructTwoPrivateArgs) == 4,
+    alignof(::tuple_structs::TupleStructTwoPrivateArgs) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TupleStructTwoPrivateArgs>);
+static_assert(::std::is_trivially_destructible_v<
+              ::tuple_structs::TupleStructTwoPrivateArgs>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructTwoPrivateArgs>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -943,9 +960,9 @@ extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
     ::tuple_structs::TupleStructTwoPrivateArgs* __ret_ptr);
 }
-inline ::tuple_structs::TupleStructTwoPrivateArgs
-TupleStructTwoPrivateArgs::create(::std::int32_t first_arg,
-                                  ::std::int32_t second_arg) {
+inline ::tuple_structs::TupleStructTwoPrivateArgs(
+    TupleStructTwoPrivateArgs::create)(::std::int32_t first_arg,
+                                       ::std::int32_t second_arg) {
   crubit::Slot<::tuple_structs::TupleStructTwoPrivateArgs>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -958,7 +975,7 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_get_ufirst_uarg(
     ::tuple_structs::TupleStructTwoPrivateArgs*);
 }
-inline ::std::int32_t TupleStructTwoPrivateArgs::get_first_arg() const {
+inline ::std::int32_t(TupleStructTwoPrivateArgs::get_first_arg)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_ufirst_uarg(&self);
 }
@@ -967,19 +984,21 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_get_usecond_uarg(
     ::tuple_structs::TupleStructTwoPrivateArgs*);
 }
-inline ::std::int32_t TupleStructTwoPrivateArgs::get_second_arg() const {
+inline ::std::int32_t(TupleStructTwoPrivateArgs::get_second_arg)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_usecond_uarg(&self);
 }
-inline void TupleStructTwoPrivateArgs::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructTwoPrivateArgs, __field0));
-  static_assert(4 == offsetof(TupleStructTwoPrivateArgs, __field1));
+inline void ::tuple_structs::TupleStructTwoPrivateArgs::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::TupleStructTwoPrivateArgs;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 static_assert(
-    sizeof(TupleStructTwoPublicArgs) == 8,
+    sizeof(::tuple_structs::TupleStructTwoPublicArgs) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStructTwoPublicArgs) == 4,
+    alignof(::tuple_structs::TupleStructTwoPublicArgs) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<TupleStructTwoPublicArgs>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -995,9 +1014,9 @@ extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
     ::tuple_structs::TupleStructTwoPublicArgs* __ret_ptr);
 }
-inline ::tuple_structs::TupleStructTwoPublicArgs
-TupleStructTwoPublicArgs::create(::std::int32_t first_arg,
-                                 ::std::int32_t second_arg) {
+inline ::tuple_structs::TupleStructTwoPublicArgs(
+    TupleStructTwoPublicArgs::create)(::std::int32_t first_arg,
+                                      ::std::int32_t second_arg) {
   crubit::Slot<::tuple_structs::TupleStructTwoPublicArgs>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -1010,7 +1029,7 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_get_ufirst_uarg(
     ::tuple_structs::TupleStructTwoPublicArgs*);
 }
-inline ::std::int32_t TupleStructTwoPublicArgs::get_first_arg() const {
+inline ::std::int32_t(TupleStructTwoPublicArgs::get_first_arg)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_ufirst_uarg(&self);
 }
@@ -1019,26 +1038,29 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_get_usecond_uarg(
     ::tuple_structs::TupleStructTwoPublicArgs*);
 }
-inline ::std::int32_t TupleStructTwoPublicArgs::get_second_arg() const {
+inline ::std::int32_t(TupleStructTwoPublicArgs::get_second_arg)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   return __crubit_internal::__crubit_thunk_get_usecond_uarg(&self);
 }
-inline void TupleStructTwoPublicArgs::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructTwoPublicArgs, __field0));
-  static_assert(4 == offsetof(TupleStructTwoPublicArgs, __field1));
+inline void ::tuple_structs::TupleStructTwoPublicArgs::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::TupleStructTwoPublicArgs;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 static_assert(
-    sizeof(TupleStructWithCloneNoDefault) == 4,
+    sizeof(::tuple_structs::TupleStructWithCloneNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStructWithCloneNoDefault) == 4,
+    alignof(::tuple_structs::TupleStructWithCloneNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCloneNoDefault(
     ::tuple_structs::TupleStructWithCloneNoDefault&);
 }
-inline TupleStructWithCloneNoDefault::~TupleStructWithCloneNoDefault() {
+inline ::tuple_structs::TupleStructWithCloneNoDefault::
+    ~TupleStructWithCloneNoDefault() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCloneNoDefault(
           *this);
@@ -1053,8 +1075,8 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::tuple_structs::TupleStructWithCloneNoDefault* __ret_ptr);
 }
-inline ::tuple_structs::TupleStructWithCloneNoDefault
-TupleStructWithCloneNoDefault::create(::std::int32_t value) {
+inline ::tuple_structs::TupleStructWithCloneNoDefault(
+    TupleStructWithCloneNoDefault::create)(::std::int32_t value) {
   crubit::Slot<::tuple_structs::TupleStructWithCloneNoDefault>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -1066,27 +1088,30 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t const& $(__anon1) __crubit_thunk_get_uvalue(
     ::tuple_structs::TupleStructWithCloneNoDefault const&);
 }
-inline ::std::int32_t const& $(__anon1)
-    TupleStructWithCloneNoDefault::get_value() const& $(__anon1)
-        CRUBIT_LIFETIME_BOUND {
+inline ::std::int32_t const& $(__anon1)(
+    TupleStructWithCloneNoDefault::get_value)() const& $(__anon1)
+    CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_uvalue(self);
 }
-inline void TupleStructWithCloneNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructWithCloneNoDefault, __field0));
+inline void ::tuple_structs::TupleStructWithCloneNoDefault::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::TupleStructWithCloneNoDefault;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(TupleStructWithCppImmovableType) == 8,
+    sizeof(::tuple_structs::TupleStructWithCppImmovableType) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStructWithCppImmovableType) == 4,
+    alignof(::tuple_structs::TupleStructWithCppImmovableType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCppImmovableType(
     ::tuple_structs::TupleStructWithCppImmovableType&);
 }
-inline TupleStructWithCppImmovableType::~TupleStructWithCppImmovableType() {
+inline ::tuple_structs::TupleStructWithCppImmovableType::
+    ~TupleStructWithCppImmovableType() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithCppImmovableType(
           *this);
@@ -1102,9 +1127,9 @@ extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
     ::tuple_structs::TupleStructWithCppImmovableType* __ret_ptr);
 }
-inline ::tuple_structs::TupleStructWithCppImmovableType
-TupleStructWithCppImmovableType::create(::std::int32_t first_arg,
-                                        ::std::int32_t second_arg) {
+inline ::tuple_structs::TupleStructWithCppImmovableType(
+    TupleStructWithCppImmovableType::create)(::std::int32_t first_arg,
+                                             ::std::int32_t second_arg) {
   crubit::Slot<::tuple_structs::TupleStructWithCppImmovableType>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -1117,7 +1142,7 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_get_ufirst_uarg(
     ::tuple_structs::TupleStructWithCppImmovableType const&);
 }
-inline ::std::int32_t TupleStructWithCppImmovableType::get_first_arg() const {
+inline ::std::int32_t(TupleStructWithCppImmovableType::get_first_arg)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_ufirst_uarg(self);
 }
@@ -1126,22 +1151,23 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t const& $(__anon1) __crubit_thunk_get_usecond_uarg(
     ::tuple_structs::TupleStructWithCppImmovableType const&);
 }
-inline ::std::int32_t const& $(__anon1)
-    TupleStructWithCppImmovableType::get_second_arg() const& $(__anon1)
-        CRUBIT_LIFETIME_BOUND {
+inline ::std::int32_t const& $(__anon1)(
+    TupleStructWithCppImmovableType::get_second_arg)() const& $(__anon1)
+    CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_usecond_uarg(self);
 }
-inline void
-TupleStructWithCppImmovableType::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructWithCppImmovableType, __field1));
-  static_assert(4 == offsetof(TupleStructWithCppImmovableType, __field0));
+inline void ::tuple_structs::TupleStructWithCppImmovableType::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::TupleStructWithCppImmovableType;
+  static_assert(0 == offsetof(__crubit_assert_type, __field1));
+  static_assert(4 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(TupleStructWithDefaultAndCloneNoUnpin) == 4,
+    sizeof(::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStructWithDefaultAndCloneNoUnpin) == 4,
+    alignof(::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
     ::std::is_trivially_destructible_v<TupleStructWithDefaultAndCloneNoUnpin>);
@@ -1153,8 +1179,8 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin* __ret_ptr);
 }
-inline ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin
-TupleStructWithDefaultAndCloneNoUnpin::create() {
+inline ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin(
+    TupleStructWithDefaultAndCloneNoUnpin::create)() {
   crubit::Slot<::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -1166,19 +1192,21 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_get_uarg(
     ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin const&);
 }
-inline ::std::int32_t TupleStructWithDefaultAndCloneNoUnpin::get_arg() const {
+inline ::std::int32_t(TupleStructWithDefaultAndCloneNoUnpin::get_arg)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_get_uarg(self);
 }
-inline void
-TupleStructWithDefaultAndCloneNoUnpin::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructWithDefaultAndCloneNoUnpin, __field0));
+inline void ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(TupleStructWithDefaultNoCopyNoClone) == 4,
+    sizeof(::tuple_structs::TupleStructWithDefaultNoCopyNoClone) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStructWithDefaultNoCopyNoClone) == 4,
+    alignof(::tuple_structs::TupleStructWithDefaultNoCopyNoClone) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
     ::std::is_trivially_destructible_v<TupleStructWithDefaultNoCopyNoClone>);
@@ -1186,29 +1214,33 @@ static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithDefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::TupleStructWithDefaultNoCopyNoClone>);
-inline void
-TupleStructWithDefaultNoCopyNoClone::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructWithDefaultNoCopyNoClone, __field0));
+inline void ::tuple_structs::TupleStructWithDefaultNoCopyNoClone::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::tuple_structs::TupleStructWithDefaultNoCopyNoClone;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(TupleStructWithNoDefault) == 4,
+    sizeof(::tuple_structs::TupleStructWithNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStructWithNoDefault) == 4,
+    alignof(::tuple_structs::TupleStructWithNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<TupleStructWithNoDefault>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::tuple_structs::TupleStructWithNoDefault>);
-inline void TupleStructWithNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructWithNoDefault, __field0));
+inline void ::tuple_structs::TupleStructWithNoDefault::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::TupleStructWithNoDefault;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(TupleStructWithNonExhaustiveCtor) == 8,
+    sizeof(::tuple_structs::TupleStructWithNonExhaustiveCtor) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStructWithNonExhaustiveCtor) == 4,
+    alignof(::tuple_structs::TupleStructWithNonExhaustiveCtor) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -1221,8 +1253,8 @@ inline ::tuple_structs::TupleStructWithNonExhaustiveCtor::
       __crubit_thunk_Default_udefault_utuple_ustructs_ugolden_x0000003a_x0000003aTupleStructWithNonExhaustiveCtor(
           this);
 }
-static_assert(
-    ::std::is_trivially_destructible_v<TupleStructWithNonExhaustiveCtor>);
+static_assert(::std::is_trivially_destructible_v<
+              ::tuple_structs::TupleStructWithNonExhaustiveCtor>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithNonExhaustiveCtor>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -1242,9 +1274,9 @@ extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::std::int32_t,
     ::tuple_structs::TupleStructWithNonExhaustiveCtor* __ret_ptr);
 }
-inline ::tuple_structs::TupleStructWithNonExhaustiveCtor
-TupleStructWithNonExhaustiveCtor::create(::std::int32_t first_arg,
-                                         ::std::int32_t second_arg) {
+inline ::tuple_structs::TupleStructWithNonExhaustiveCtor(
+    TupleStructWithNonExhaustiveCtor::create)(::std::int32_t first_arg,
+                                              ::std::int32_t second_arg) {
   crubit::Slot<::tuple_structs::TupleStructWithNonExhaustiveCtor>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -1252,16 +1284,18 @@ TupleStructWithNonExhaustiveCtor::create(::std::int32_t first_arg,
                                            __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void
-TupleStructWithNonExhaustiveCtor::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructWithNonExhaustiveCtor, __field0));
-  static_assert(4 == offsetof(TupleStructWithNonExhaustiveCtor, __field1));
+inline void ::tuple_structs::TupleStructWithNonExhaustiveCtor::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::tuple_structs::TupleStructWithNonExhaustiveCtor;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 static_assert(
-    sizeof(TupleStructWithTupleFieldType) == 8,
+    sizeof(::tuple_structs::TupleStructWithTupleFieldType) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStructWithTupleFieldType) == 4,
+    alignof(::tuple_structs::TupleStructWithTupleFieldType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
     ::std::is_trivially_destructible_v<TupleStructWithTupleFieldType>);
@@ -1277,8 +1311,8 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     void**, ::tuple_structs::TupleStructWithTupleFieldType* __ret_ptr);
 }
-inline ::tuple_structs::TupleStructWithTupleFieldType
-TupleStructWithTupleFieldType::create(
+inline ::tuple_structs::TupleStructWithTupleFieldType(
+    TupleStructWithTupleFieldType::create)(
     ::std::tuple<::std::int32_t, ::std::int32_t> __param_0) {
   auto&& __param_0_0 = ::std::get<0>(__param_0);
   auto&& __param_0_cabi_0 = __param_0_0;
@@ -1297,8 +1331,8 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_get_uarg(
     ::tuple_structs::TupleStructWithTupleFieldType*, void** __ret_ptr);
 }
-inline ::std::tuple<::std::int32_t, ::std::int32_t>
-TupleStructWithTupleFieldType::get_arg() const {
+inline ::std::tuple<::std::int32_t, ::std::int32_t>(
+    TupleStructWithTupleFieldType::get_arg)() const {
   auto& self = const_cast<::std::remove_cvref_t<decltype(*this)>&>(*this);
   ::std::int32_t __return_value_0_ret_val_holder;
   ::std::int32_t* __return_value_0_storage = &__return_value_0_ret_val_holder;
@@ -1310,8 +1344,10 @@ TupleStructWithTupleFieldType::get_arg() const {
   return ::std::make_tuple(*__return_value_0_storage,
                            *__return_value_1_storage);
 }
-inline void TupleStructWithTupleFieldType::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStructWithTupleFieldType, __field0));
+inline void ::tuple_structs::TupleStructWithTupleFieldType::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuple_structs::TupleStructWithTupleFieldType;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 }  // namespace tuple_structs
 
@@ -1323,7 +1359,7 @@ __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
     rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
           this);
 }
@@ -1352,8 +1388,9 @@ inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::operator std::tuple<
 
 inline void ::rs_std::Tuple<
     ::std::int32_t, ::std::int32_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(4 == offsetof(Tuple, __field1));
+  using __crubit_assert_type = ::rs_std::Tuple<::std::int32_t, ::std::int32_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 

@@ -127,10 +127,10 @@ void call_fn_ptr_no_args_or_return(crubit::type_identity_t<void()>& fn_ptr);
 // thunk: Any calling convention other than `extern "C"` requires a thunk
 
 static_assert(
-    sizeof(CStruct) == 4,
+    sizeof(::function_pointers::CStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CStruct) == 4,
+    alignof(::function_pointers::CStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<CStruct>);
 static_assert(
@@ -141,16 +141,18 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::function_pointers::CStruct>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::function_pointers::CStruct>);
-inline void CStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CStruct, field));
+inline void ::function_pointers::CStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::function_pointers::CStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, field));
 }
 static_assert(
-    sizeof(HasFnPtrField) == 4,
+    sizeof(::function_pointers::HasFnPtrField) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasFnPtrField) == 4,
+    alignof(::function_pointers::HasFnPtrField) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<HasFnPtrField>);
+static_assert(
+    ::std::is_trivially_destructible_v<::function_pointers::HasFnPtrField>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::function_pointers::HasFnPtrField>);
 static_assert(
@@ -168,15 +170,17 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_with_uadd_uten(
     ::function_pointers::HasFnPtrField* __ret_ptr);
 }
-inline ::function_pointers::HasFnPtrField HasFnPtrField::with_add_ten() {
+inline ::function_pointers::HasFnPtrField(HasFnPtrField::with_add_ten)() {
   crubit::Slot<::function_pointers::HasFnPtrField>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_with_uadd_uten(__return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void HasFnPtrField::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(HasFnPtrField, ptr));
+inline void ::function_pointers::HasFnPtrField::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::function_pointers::HasFnPtrField;
+  static_assert(0 == offsetof(__crubit_assert_type, ptr));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_call_ufn_uptr_uno_uargs_uor_ureturn(

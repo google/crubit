@@ -57,7 +57,7 @@ pub use database::{
 };
 use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
 use itertools::Itertools;
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::TokenStream;
 use query_compiler::{
     does_type_implement_trait, get_layout, get_scalar_int_type, get_tag_size_with_padding,
     is_c_abi_compatible_by_value, is_copy, liberate_and_deanonymize_late_bound_regions,
@@ -517,12 +517,9 @@ fn check_feature_enabled_on_self_and_all_deps(
     db: &BindingsGenerator,
     feature: FineGrainedFeature,
 ) -> bool {
-    for (_, crate_features) in db.crate_name_to_features().iter() {
-        if feature.ensure_crubit_feature(*crate_features).is_err() {
-            return false;
-        }
-    }
-    true
+    db.crate_name_to_features()
+        .values()
+        .all(|crate_features| feature.ensure_crubit_feature(*crate_features).is_ok())
 }
 
 fn format_with_cc_body(
@@ -892,12 +889,13 @@ fn symbol_unqualified_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<
 fn renamed_crate_original_name(db: &BindingsGenerator<'_>, krate_id: CrateNum) -> Option<Rc<str>> {
     let tcx = db.tcx();
     let crate_name = tcx.crate_name(krate_id);
-    for (name, renamed) in db.crate_renames().iter() {
+    db.crate_renames().iter().find_map(|(name, renamed)| {
         if renamed.as_ref() == crate_name.as_str() {
-            return Some(name.clone());
+            Some(name.clone())
+        } else {
+            None
         }
-    }
-    return None;
+    })
 }
 
 /// Implementation of `BindingsGenerator::symbol_canonical_name`.
@@ -1632,6 +1630,11 @@ fn generate_default_ctor<'tcx>(
             let mut prereqs = CcPrerequisites::default();
             let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
 
+            let is_specialization = core
+                .def_id
+                .is_none_or(|id| query_compiler::has_non_lifetime_generics(db.tcx(), id));
+            let thunk_qualifier = thunk_qualifier(is_specialization);
+
             let fully_qualified_name = &core.common.cc_fully_qualified_name;
             // This might be the case for `#[repr(transparent)]` types.
             // TODO: b/459482188 - This is ultimately dependent on the return ABI of the thunk and
@@ -1639,13 +1642,13 @@ fn generate_default_ctor<'tcx>(
             let ctor_impl = if is_c_abi_compatible_by_value(db, core.common.self_ty) {
                 quote! {
                     inline #fully_qualified_name::#cc_struct_name() {
-                       *this = __crubit_internal::#thunk_name();
+                       *this = #thunk_qualifier::#thunk_name();
                     }
                 }
             } else {
                 quote! {
                     inline #fully_qualified_name::#cc_struct_name() {
-                        __crubit_internal::#thunk_name(this);
+                        #thunk_qualifier::#thunk_name(this);
                     }
                 }
             };
@@ -1663,7 +1666,7 @@ fn generate_default_ctor<'tcx>(
 }
 
 fn generate_deleted_default_ctor<'tcx>(
-    adt_cc_name: &Ident,
+    adt_cc_name: &TokenStream,
     doc_comment: &str,
 ) -> ApiSnippets<'tcx> {
     ApiSnippets {
@@ -1762,13 +1765,18 @@ fn copy_codegen_style_to_snippets<'tcx>(
 
                     // TODO: b/459482188 - This is ultimately dependent on the return ABI of the thunk and
                     // should be centralized with the other callsites that depend on return type ABI.
+                    let is_specialization = core
+                        .def_id
+                        .is_none_or(|id| query_compiler::has_non_lifetime_generics(db.tcx(), id));
+                    let thunk_qualifier = thunk_qualifier(is_specialization);
+
                     let ctor_body = if is_c_abi_compatible_by_value(db, core.common.self_ty) {
                         quote! {
-                            *this = __crubit_internal::#clone_thunk_name(other);
+                            *this = #thunk_qualifier::#clone_thunk_name(other);
                         }
                     } else {
                         quote! {
-                            __crubit_internal::#clone_thunk_name(other, this);
+                            #thunk_qualifier::#clone_thunk_name(other, this);
                         }
                     };
                     let tokens = quote! {
@@ -1778,7 +1786,7 @@ fn copy_codegen_style_to_snippets<'tcx>(
                         }
                         inline #qualified_adt_name& #qualified_adt_name::operator=(const #cc_struct_name& other) {
                             if (this != &other) {
-                                __crubit_internal::#clone_from_thunk_name(*this, other);
+                                #thunk_qualifier::#clone_from_thunk_name(*this, other);
                             }
                             return *this;
                         }
@@ -2182,10 +2190,10 @@ fn generate_item<'tcx>(
     let tcx = db.tcx();
     let generated = generate_item_impl(db, def_id);
     let attributes = crubit_attr::get_attrs(tcx, def_id).unwrap();
-    if attributes.must_bind {
-        if let Err(e) = &generated {
-            report_must_bind_error(db, def_id, e);
-        }
+    if attributes.must_bind
+        && let Err(e) = &generated
+    {
+        report_must_bind_error(db, def_id, e);
     }
     generated
 }
@@ -2213,7 +2221,10 @@ fn generate_item_impl<'tcx>(
     let item = match tcx.def_kind(def_id) {
         DefKind::Struct | DefKind::Enum | DefKind::Union => {
             if query_compiler::has_non_lifetime_generics(tcx, def_id) {
-                generate_generic_adt_declaration(db, def_id).map(Some)
+                generate_generic_adt_declaration(db, def_id).map(|tokens| {
+                    let snippet = CcSnippet::new(tokens);
+                    Some(snippet.into_main_api())
+                })
             } else {
                 db.adt_needs_bindings(def_id).map(|core| Some(generate_adt(db, core)))
             }
@@ -2333,10 +2344,10 @@ pub fn format_namespace_bound_cc_tokens(
         })
         .map(|(ns_def_id_opt, ns, tokens)| {
             let mut ns_attributes = vec![];
-            if let Some(ns_def_id) = ns_def_id_opt {
-                if let Some(cc_deprecated_tag) = generate_deprecated_tag(tcx, ns_def_id) {
-                    ns_attributes.push(cc_deprecated_tag);
-                }
+            if let Some(ns_def_id) = ns_def_id_opt
+                && let Some(cc_deprecated_tag) = generate_deprecated_tag(tcx, ns_def_id)
+            {
+                ns_attributes.push(cc_deprecated_tag);
             }
             format_with_cc_body(db, &ns, tokens, ns_attributes).unwrap_or_else(|err| {
                 let name = ns.parts().join("::");
@@ -2861,6 +2872,14 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
     }
 
     Ok(BindingsTokens { cc_api, cc_api_impl })
+}
+
+pub fn thunk_qualifier(is_specialization: bool) -> TokenStream {
+    if is_specialization {
+        quote! { ::__crubit_internal }
+    } else {
+        quote! { __crubit_internal }
+    }
 }
 
 #[rustversion::before(2026-04-19)]

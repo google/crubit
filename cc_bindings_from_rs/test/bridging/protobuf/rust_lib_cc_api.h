@@ -174,10 +174,10 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 namespace rust_lib {
 
 static_assert(
-    sizeof(FooService) == 8,
+    sizeof(::rust_lib::FooService) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(FooService) == 8,
+    alignof(::rust_lib::FooService) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -194,7 +194,7 @@ extern "C" void
 __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aFooService(
     ::rust_lib::FooService&);
 }
-inline FooService::~FooService() {
+inline ::rust_lib::FooService::~FooService() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aFooService(
           *this);
@@ -217,8 +217,8 @@ extern "C" bool __crubit_thunk_handle_urequest(::rust_lib::FooService&,
                                                const ::foo_service::FooRequest*,
                                                ::foo_service::FooResponse*);
 }
-inline bool FooService::handle_request(const ::foo_service::FooRequest* req,
-                                       ::foo_service::FooResponse* rsp) {
+inline bool(FooService::handle_request)(const ::foo_service::FooRequest* req,
+                                        ::foo_service::FooResponse* rsp) {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_handle_urequest(self, req, rsp);
 }
@@ -228,8 +228,8 @@ extern "C" void __crubit_thunk_request_ustats(
     ::rust_lib::FooService const&,
     const ::foo_service::FooRequestStats** __ret_ptr);
 }
-inline const ::foo_service::FooRequestStats* FooService::request_stats()
-    const& $(__anon1) CRUBIT_LIFETIME_BOUND {
+inline const ::foo_service::FooRequestStats*(
+    FooService::request_stats)() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   union __return_value_crubit_return_union {
     constexpr __return_value_crubit_return_union() {}
@@ -246,7 +246,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_clone_urequest_ustats(
     ::rust_lib::FooService const&, ::foo_service::FooRequestStats* __ret_ptr);
 }
-inline ::foo_service::FooRequestStats FooService::clone_request_stats() const {
+inline ::foo_service::FooRequestStats(FooService::clone_request_stats)() const {
   auto&& self = *this;
   crubit::Slot<::foo_service::FooRequestStats> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -259,7 +259,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_update_urequest_ustats(
     ::rust_lib::FooService&, ::foo_service::FooRequestStats*);
 }
-inline void FooService::update_request_stats(
+inline void(FooService::update_request_stats)(
     ::foo_service::FooRequestStats updated_stats) {
   auto&& self = *this;
   crubit::Slot updated_stats_slot((::std::move(updated_stats)));
@@ -270,17 +270,18 @@ inline void FooService::update_request_stats(
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_enum_uin_usignature(::foo_service::FooEnum*);
 }
-inline void FooService::enum_in_signature(::foo_service::FooEnum _e) {
+inline void(FooService::enum_in_signature)(::foo_service::FooEnum _e) {
   return __crubit_internal::__crubit_thunk_enum_uin_usignature(&_e);
 }
-inline void FooService::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(FooService, stats));
+inline void ::rust_lib::FooService::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::rust_lib::FooService;
+  static_assert(0 == offsetof(__crubit_assert_type, stats));
 }
 static_assert(
-    sizeof(StructWithProto) == 8,
+    sizeof(::rust_lib::StructWithProto) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(StructWithProto) == 8,
+    alignof(::rust_lib::StructWithProto) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -297,7 +298,7 @@ extern "C" void
 __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aStructWithProto(
     ::rust_lib::StructWithProto&);
 }
-inline StructWithProto::~StructWithProto() {
+inline ::rust_lib::StructWithProto::~StructWithProto() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aStructWithProto(
           *this);
@@ -315,8 +316,9 @@ inline ::rust_lib::StructWithProto::StructWithProto(::crubit::UnsafeRelocateTag,
                                                     StructWithProto&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void StructWithProto::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(StructWithProto, stats));
+inline void ::rust_lib::StructWithProto::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::rust_lib::StructWithProto;
+  static_assert(0 == offsetof(__crubit_assert_type, stats));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create_uproto_uvec(
@@ -374,7 +376,7 @@ __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aV
     rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>* __ret_ptr);
 }
 inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
           this);
 }
@@ -392,7 +394,7 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003
 }
 inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
     const Vec& other) {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
           other, this);
 }
@@ -400,7 +402,7 @@ inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>&
 rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator=(
     const Vec& other) {
   if (this != &other) {
-    __crubit_internal::
+    ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
             *this, other);
   }

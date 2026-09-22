@@ -90,10 +90,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // 'static`: Generic types are not supported yet (b/259749095)
 
 static_assert(
-    sizeof(ArcWrapper) == 4,
+    sizeof(::return_position_impl_trait::ArcWrapper) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(ArcWrapper) == 4,
+    alignof(::return_position_impl_trait::ArcWrapper) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -110,7 +110,7 @@ extern "C" void
 __crubit_thunk_Drop_udrop_ureturn_uposition_uimpl_utrait_ugolden_x0000003a_x0000003aArcWrapper(
     ::return_position_impl_trait::ArcWrapper&);
 }
-inline ArcWrapper::~ArcWrapper() {
+inline ::return_position_impl_trait::ArcWrapper::~ArcWrapper() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_ureturn_uposition_uimpl_utrait_ugolden_x0000003a_x0000003aArcWrapper(
           *this);
@@ -160,12 +160,14 @@ namespace __crubit_internal {
 extern "C" ::std::uintptr_t __crubit_thunk_refcount(
     ::return_position_impl_trait::ArcWrapper const&);
 }
-inline ::std::uintptr_t ArcWrapper::refcount() const {
+inline ::std::uintptr_t(ArcWrapper::refcount)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_refcount(self);
 }
-inline void ArcWrapper::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(ArcWrapper, arc));
+inline void ::return_position_impl_trait::ArcWrapper::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::return_position_impl_trait::ArcWrapper;
+  static_assert(0 == offsetof(__crubit_assert_type, arc));
 }
 }  // namespace return_position_impl_trait
 

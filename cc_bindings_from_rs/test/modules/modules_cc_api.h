@@ -115,10 +115,10 @@ inline ::std::int32_t add_i32(::std::int32_t x, ::std::int32_t y) {
 namespace modules::impl_in_separate_private_module {
 
 static_assert(
-    sizeof(Foo) == 4,
+    sizeof(::modules::impl_in_separate_private_module::Foo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Foo) == 4,
+    alignof(::modules::impl_in_separate_private_module::Foo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<Foo>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -129,7 +129,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(
     ::std::int32_t, ::modules::impl_in_separate_private_module::Foo* __ret_ptr);
 }
-inline ::modules::impl_in_separate_private_module::Foo Foo::create(
+inline ::modules::impl_in_separate_private_module::Foo(Foo::create)(
     ::std::int32_t i) {
   crubit::Slot<::modules::impl_in_separate_private_module::Foo>
       __return_value_ret_val_holder;
@@ -142,12 +142,14 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_into_ui32(
     ::modules::impl_in_separate_private_module::Foo*);
 }
-inline ::std::int32_t Foo::into_i32(
+inline ::std::int32_t(Foo::into_i32)(
     ::modules::impl_in_separate_private_module::Foo s) {
   return __crubit_internal::__crubit_thunk_into_ui32(&s);
 }
-inline void Foo::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Foo, __field0));
+inline void ::modules::impl_in_separate_private_module::Foo::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::modules::impl_in_separate_private_module::Foo;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 }  // namespace modules::impl_in_separate_private_module
 

@@ -550,12 +550,13 @@ inline void prefix_sums(rs_std::SliceRef<::std::int32_t> arg) {
 namespace functions::generic_fn_tests::as_ref_trait_tests {
 
 static_assert(
-    sizeof(MyStruct) == 4,
+    sizeof(::functions::generic_fn_tests::as_ref_trait_tests::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyStruct) == 4,
+    alignof(::functions::generic_fn_tests::as_ref_trait_tests::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyStruct>);
+static_assert(::std::is_trivially_destructible_v<
+              ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -570,16 +571,19 @@ extern "C" void __crubit_thunk_new(
     ::std::int32_t,
     ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct* __ret_ptr);
 }
-inline ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct
-MyStruct::new_(::std::int32_t x) {
+inline ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct(
+    MyStruct::new_)(::std::int32_t x) {
   crubit::Slot<::functions::generic_fn_tests::as_ref_trait_tests::MyStruct>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void MyStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyStruct, __field0));
+inline void ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_diverse_ulifetimes(
@@ -643,10 +647,10 @@ inline ::std::int32_t two_args(rs_std::SliceRef<const ::std::int32_t> x,
 namespace functions::generic_fn_tests::ctor_trait_tests {
 
 static_assert(
-    sizeof(CppMovable) == 4,
+    sizeof(::functions::generic_fn_tests::ctor_trait_tests::CppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CppMovable) == 4,
+    alignof(::functions::generic_fn_tests::ctor_trait_tests::CppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<CppMovable>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -658,16 +662,19 @@ extern "C" void __crubit_thunk_new(
     ::std::int32_t,
     ::functions::generic_fn_tests::ctor_trait_tests::CppMovable* __ret_ptr);
 }
-inline ::functions::generic_fn_tests::ctor_trait_tests::CppMovable
-CppMovable::new_(::std::int32_t value) {
+inline ::functions::generic_fn_tests::ctor_trait_tests::CppMovable(
+    CppMovable::new_)(::std::int32_t value) {
   crubit::Slot<::functions::generic_fn_tests::ctor_trait_tests::CppMovable>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(value, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void CppMovable::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CppMovable, value));
+inline void ::functions::generic_fn_tests::ctor_trait_tests::CppMovable::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::functions::generic_fn_tests::ctor_trait_tests::CppMovable;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_accept_uctor(
@@ -870,18 +877,21 @@ inline ::std::int32_t add_i32_via_rust_abi_with_duplicated_param_names(
 namespace functions::thread_safety_tests {
 
 static_assert(
-    sizeof(ThreadSafeStruct) == 4,
+    sizeof(::functions::thread_safety_tests::ThreadSafeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(ThreadSafeStruct) == 4,
+    alignof(::functions::thread_safety_tests::ThreadSafeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<ThreadSafeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::functions::thread_safety_tests::ThreadSafeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::functions::thread_safety_tests::ThreadSafeStruct>);
-inline void ThreadSafeStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(ThreadSafeStruct, value));
+inline void ::functions::thread_safety_tests::ThreadSafeStruct::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::functions::thread_safety_tests::ThreadSafeStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_accepts_uthread_usafe_uref(

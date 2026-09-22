@@ -60,7 +60,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   // AbslHashValue and std::hash support via core::hash::Hash
   template <typename H>
-  friend H AbslHashValue(H h, const Color& self);
+  friend H AbslHashValue(H h, const ::rs_hash::derived_enum::Color& self);
 
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
@@ -94,7 +94,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   // AbslHashValue and std::hash support via core::hash::Hash
   template <typename H>
-  friend H AbslHashValue(H h, const Point& self);
+  friend H AbslHashValue(H h, const ::rs_hash::derived_struct::Point& self);
 
   ::std::int32_t x{};
   ::std::int32_t y{};
@@ -119,7 +119,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   // AbslHashValue and std::hash support via core::hash::Hash
   template <typename H>
-  friend H AbslHashValue(H h, const TupleStruct& self);
+  friend H AbslHashValue(
+      H h, const ::rs_hash::derived_tuple_struct::TupleStruct& self);
 
   ::std::int32_t __field0{};
   ::std::int32_t __field1{};
@@ -144,7 +145,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   // AbslHashValue and std::hash support via core::hash::Hash
   template <typename H>
-  friend H AbslHashValue(H h, const CustomHashStruct& self);
+  friend H AbslHashValue(
+      H h, const ::rs_hash::explicit_struct::CustomHashStruct& self);
 
   ::std::int32_t value{};
 
@@ -252,27 +254,31 @@ struct hash<::rs_hash::explicit_struct::CustomHashStruct> {
 namespace rs_hash::derived_enum {
 
 static_assert(
-    sizeof(Color) == 1,
+    sizeof(::rs_hash::derived_enum::Color) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Color) == 1,
+    alignof(::rs_hash::derived_enum::Color) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 
 // `static` constructor
-inline constexpr Color Color::MakeRed() {
+inline constexpr ::rs_hash::derived_enum::Color(
+    ::rs_hash::derived_enum::Color::MakeRed)() {
   return Color(PrivateBytesTag{}, {0});
 }
 
 // `static` constructor
-inline constexpr Color Color::MakeGreen() {
+inline constexpr ::rs_hash::derived_enum::Color(
+    ::rs_hash::derived_enum::Color::MakeGreen)() {
   return Color(PrivateBytesTag{}, {1});
 }
 
 // `static` constructor
-inline constexpr Color Color::MakeBlue() {
+inline constexpr ::rs_hash::derived_enum::Color(
+    ::rs_hash::derived_enum::Color::MakeBlue)() {
   return Color(PrivateBytesTag{}, {2});
 }
-static_assert(::std::is_trivially_destructible_v<Color>);
+static_assert(
+    ::std::is_trivially_destructible_v<::rs_hash::derived_enum::Color>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::rs_hash::derived_enum::Color>);
 static_assert(
@@ -313,7 +319,7 @@ __crubit_thunk_PartialEq_ueq_urs_uhash_ugolden_x0000003a_x0000003aderived_uenum_
     ::rs_hash::derived_enum::Color const&,
     ::rs_hash::derived_enum::Color const&);
 }
-inline bool Color::operator==(
+inline bool(Color::operator==)(
     ::rs_hash::derived_enum::Color const& other) const {
   auto&& self = *this;
   return __crubit_internal::
@@ -326,15 +332,18 @@ __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aderived_uenum_x00
     ::rs_hash::derived_enum::Color const&);
 }
 template <typename H>
-inline H AbslHashValue(H h, const Color& self) {
+inline H AbslHashValue(H h, const ::rs_hash::derived_enum::Color& self) {
   return H::combine(
       ::std::move(h),
       __crubit_internal::
           __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aderived_uenum_x0000003a_x0000003aColor(
               self));
 }
-inline void Color::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Color, __opaque_blob_of_bytes));
+inline void ::rs_hash::derived_enum::Color::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::rs_hash::derived_enum::Color;
+    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
+  }
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create_ublue(
@@ -374,10 +383,10 @@ inline ::rs_hash::derived_enum::Color create_red() {
 namespace rs_hash::derived_struct {
 
 static_assert(
-    sizeof(Point) == 8,
+    sizeof(::rs_hash::derived_struct::Point) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Point) == 4,
+    alignof(::rs_hash::derived_struct::Point) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<Point>);
 static_assert(
@@ -390,7 +399,7 @@ __crubit_thunk_PartialEq_ueq_urs_uhash_ugolden_x0000003a_x0000003aderived_ustruc
     ::rs_hash::derived_struct::Point const&,
     ::rs_hash::derived_struct::Point const&);
 }
-inline bool Point::operator==(
+inline bool(Point::operator==)(
     ::rs_hash::derived_struct::Point const& other) const {
   auto&& self = *this;
   return __crubit_internal::
@@ -403,16 +412,18 @@ __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aderived_ustruct_x
     ::rs_hash::derived_struct::Point const&);
 }
 template <typename H>
-inline H AbslHashValue(H h, const Point& self) {
+inline H AbslHashValue(H h, const ::rs_hash::derived_struct::Point& self) {
   return H::combine(
       ::std::move(h),
       __crubit_internal::
           __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aderived_ustruct_x0000003a_x0000003aPoint(
               self));
 }
-inline void Point::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Point, x));
-  static_assert(4 == offsetof(Point, y));
+inline void ::rs_hash::derived_struct::Point::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::rs_hash::derived_struct::Point;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
+  static_assert(4 == offsetof(__crubit_assert_type, y));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create_upoint(
@@ -432,10 +443,10 @@ inline ::rs_hash::derived_struct::Point create_point(::std::int32_t x,
 namespace rs_hash::derived_tuple_struct {
 
 static_assert(
-    sizeof(TupleStruct) == 8,
+    sizeof(::rs_hash::derived_tuple_struct::TupleStruct) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStruct) == 4,
+    alignof(::rs_hash::derived_tuple_struct::TupleStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<TupleStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -448,7 +459,7 @@ __crubit_thunk_PartialEq_ueq_urs_uhash_ugolden_x0000003a_x0000003aderived_utuple
     ::rs_hash::derived_tuple_struct::TupleStruct const&,
     ::rs_hash::derived_tuple_struct::TupleStruct const&);
 }
-inline bool TupleStruct::operator==(
+inline bool(TupleStruct::operator==)(
     ::rs_hash::derived_tuple_struct::TupleStruct const& other) const {
   auto&& self = *this;
   return __crubit_internal::
@@ -461,16 +472,19 @@ __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aderived_utuple_us
     ::rs_hash::derived_tuple_struct::TupleStruct const&);
 }
 template <typename H>
-inline H AbslHashValue(H h, const TupleStruct& self) {
+inline H AbslHashValue(
+    H h, const ::rs_hash::derived_tuple_struct::TupleStruct& self) {
   return H::combine(
       ::std::move(h),
       __crubit_internal::
           __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aderived_utuple_ustruct_x0000003a_x0000003aTupleStruct(
               self));
 }
-inline void TupleStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStruct, __field0));
-  static_assert(4 == offsetof(TupleStruct, __field1));
+inline void ::rs_hash::derived_tuple_struct::TupleStruct::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::rs_hash::derived_tuple_struct::TupleStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create_utuple(
@@ -491,10 +505,10 @@ inline ::rs_hash::derived_tuple_struct::TupleStruct create_tuple(
 namespace rs_hash::explicit_struct {
 
 static_assert(
-    sizeof(CustomHashStruct) == 4,
+    sizeof(::rs_hash::explicit_struct::CustomHashStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CustomHashStruct) == 4,
+    alignof(::rs_hash::explicit_struct::CustomHashStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<CustomHashStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -507,7 +521,7 @@ __crubit_thunk_PartialEq_ueq_urs_uhash_ugolden_x0000003a_x0000003aexplicit_ustru
     ::rs_hash::explicit_struct::CustomHashStruct const&,
     ::rs_hash::explicit_struct::CustomHashStruct const&);
 }
-inline bool CustomHashStruct::operator==(
+inline bool(CustomHashStruct::operator==)(
     ::rs_hash::explicit_struct::CustomHashStruct const& other) const {
   auto&& self = *this;
   return __crubit_internal::
@@ -520,15 +534,18 @@ __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aexplicit_ustruct_
     ::rs_hash::explicit_struct::CustomHashStruct const&);
 }
 template <typename H>
-inline H AbslHashValue(H h, const CustomHashStruct& self) {
+inline H AbslHashValue(
+    H h, const ::rs_hash::explicit_struct::CustomHashStruct& self) {
   return H::combine(
       ::std::move(h),
       __crubit_internal::
           __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aexplicit_ustruct_x0000003a_x0000003aCustomHashStruct(
               self));
 }
-inline void CustomHashStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CustomHashStruct, value));
+inline void ::rs_hash::explicit_struct::CustomHashStruct::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::rs_hash::explicit_struct::CustomHashStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create_ucustom(

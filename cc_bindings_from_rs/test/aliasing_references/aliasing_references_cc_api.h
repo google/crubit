@@ -99,10 +99,10 @@ void mut_ref_and_str(::std::int32_t& __param_0, rs_std::StrRef __param_1);
 void mut_refs(::std::int32_t& __param_0, ::std::int32_t& __param_1);
 
 static_assert(
-    sizeof(NonFreezeType) == 4,
+    sizeof(::aliasing_references::NonFreezeType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NonFreezeType) == 4,
+    alignof(::aliasing_references::NonFreezeType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -114,7 +114,8 @@ inline ::aliasing_references::NonFreezeType::NonFreezeType() {
       __crubit_thunk_Default_udefault_ualiasing_ureferences_ugolden_x0000003a_x0000003aNonFreezeType(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<NonFreezeType>);
+static_assert(
+    ::std::is_trivially_destructible_v<::aliasing_references::NonFreezeType>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::aliasing_references::NonFreezeType>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -128,8 +129,8 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t& $(__anon1) __crubit_thunk_as_umut_uunchecked(
     ::aliasing_references::NonFreezeType const&);
 }
-inline ::std::int32_t& $(__anon1)
-    NonFreezeType::as_mut_unchecked() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
+inline ::std::int32_t& $(__anon1)(NonFreezeType::as_mut_unchecked)() const& $(
+    __anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_as_umut_uunchecked(self);
 }
@@ -138,20 +139,22 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_shared_uself_umut_uref_uallows_ualias(
     ::aliasing_references::NonFreezeType const&, ::std::int32_t&);
 }
-inline void NonFreezeType::shared_self_mut_ref_allows_alias(
+inline void(NonFreezeType::shared_self_mut_ref_allows_alias)(
     ::std::int32_t& __param_1) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_shared_uself_umut_uref_uallows_ualias(self, __param_1);
 }
-inline void NonFreezeType::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NonFreezeType, __field0));
+inline void ::aliasing_references::NonFreezeType::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::aliasing_references::NonFreezeType;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(SomeStruct) == 4,
+    sizeof(::aliasing_references::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(SomeStruct) == 4,
+    alignof(::aliasing_references::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -166,7 +169,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_mut_uself_uand_umut_uref(
     ::aliasing_references::SomeStruct&, ::std::int32_t&);
 }
-inline void SomeStruct::mut_self_and_mut_ref(::std::int32_t& __param_1) {
+inline void(SomeStruct::mut_self_and_mut_ref)(::std::int32_t& __param_1) {
   auto&& self = *this;
   crubit::internal::CheckNoMutableAliasing(
       crubit::internal::AsMutPtrDatas<::aliasing_references::SomeStruct&,
@@ -180,7 +183,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_mut_uself_uand_ushared_uref(
     ::aliasing_references::SomeStruct&, ::std::int32_t const&);
 }
-inline void SomeStruct::mut_self_and_shared_ref(
+inline void(SomeStruct::mut_self_and_shared_ref)(
     ::std::int32_t const& __param_1) {
   auto&& self = *this;
   crubit::internal::CheckNoMutableAliasing(
@@ -194,7 +197,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_shared_uself_uand_umut_uref(
     ::aliasing_references::SomeStruct const&, ::std::int32_t&);
 }
-inline void SomeStruct::shared_self_and_mut_ref(
+inline void(SomeStruct::shared_self_and_mut_ref)(
     ::std::int32_t& __param_1) const {
   auto&& self = *this;
   crubit::internal::CheckNoMutableAliasing(
@@ -209,15 +212,17 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_shared_uself_uand_ushared_uref_uallows_ualias(
     ::aliasing_references::SomeStruct const&, ::std::int32_t const&);
 }
-inline void SomeStruct::shared_self_and_shared_ref_allows_alias(
+inline void(SomeStruct::shared_self_and_shared_ref_allows_alias)(
     ::std::int32_t const& __param_1) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_shared_uself_uand_ushared_uref_uallows_ualias(self,
                                                                    __param_1);
 }
-inline void SomeStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(SomeStruct, field));
+inline void ::aliasing_references::SomeStruct::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::aliasing_references::SomeStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, field));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_mut_uref_uand_umut_uslice(

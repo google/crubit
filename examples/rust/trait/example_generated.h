@@ -75,10 +75,10 @@ struct rs_std::impl<::example_crate::MyStruct, ::example_crate::MyTrait> {
 namespace example_crate {
 
 static_assert(
-    sizeof(MyStruct) == 4,
+    sizeof(::example_crate::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyStruct) == 4,
+    alignof(::example_crate::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -90,7 +90,7 @@ inline ::example_crate::MyStruct::MyStruct() {
       __crubit_thunk_Default_udefault_uexample_ucrate_ugolden_x0000003a_x0000003aMyStruct(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<MyStruct>);
+static_assert(::std::is_trivially_destructible_v<::example_crate::MyStruct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::example_crate::MyStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::example_crate::MyStruct>);
@@ -106,14 +106,15 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::example_crate::MyStruct* __ret_ptr);
 }
-inline ::example_crate::MyStruct MyStruct::new_(::std::int32_t x) {
+inline ::example_crate::MyStruct(MyStruct::new_)(::std::int32_t x) {
   crubit::Slot<::example_crate::MyStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void MyStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyStruct, x));
+inline void ::example_crate::MyStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::example_crate::MyStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 }  // namespace example_crate
 

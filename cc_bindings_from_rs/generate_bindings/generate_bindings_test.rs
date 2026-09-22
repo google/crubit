@@ -875,7 +875,7 @@ fn test_format_item_static_method() {
                 namespace __crubit_internal {
                     extern "C" float ... (float, float);
                 }
-                inline float Math::add_i32(float x, float y) {
+                inline float (Math::add_i32)(float x, float y) {
                   return __crubit_internal::...(x, y);
                 }
             }
@@ -970,7 +970,7 @@ fn test_format_item_static_method_with_generic_lifetime_parameters_at_fn_level()
                 extern "C" ::std::int32_t ...(
                     ::std::int32_t const* $a crubit_nonnull);
                 }
-                inline ::std::int32_t SomeStruct::fn_taking_reference(
+                inline ::std::int32_t (SomeStruct::fn_taking_reference)(
                     ::std::int32_t const* $a crubit_nonnull x) {
                   return __crubit_internal::...(x);
                 }
@@ -1044,7 +1044,7 @@ fn test_format_item_method_taking_self_by_value(test_src: &str) {
                 namespace __crubit_internal {
                 extern "C" float ...(::rust_out::SomeStruct*);
                 }
-                inline float SomeStruct::into_f32() && {
+                inline float (SomeStruct::into_f32)() && {
                   auto&& self = *this;
                   return __crubit_internal::...(&self);
                 }
@@ -1121,7 +1121,7 @@ fn test_format_item_method_taking_self_by_const_ref(test_src: &str) {
                 namespace __crubit_internal {
                 extern "C" float ...(::rust_out::SomeStruct const&);
                 }
-                inline float SomeStruct::get_f32() const {
+                inline float (SomeStruct::get_f32)() const {
                   auto&& self = *this;
                   return __crubit_internal::...(self);
                 }
@@ -1190,7 +1190,7 @@ fn test_format_item_method_taking_self_by_mutable_ref(test_src: &str) {
                 namespace __crubit_internal {
                 extern "C" void ...(::rust_out::SomeStruct&, float);
                 }
-                inline void SomeStruct::set_f32(float new_value) {
+                inline void (SomeStruct::set_f32)(float new_value) {
                   auto&& self = *this;
                   return __crubit_internal::...(self, new_value);
                 }
@@ -1354,7 +1354,7 @@ fn test_format_item_struct_with_custom_drop_and_no_default_and_clone(test_src: &
                 namespace __crubit_internal {  // `pass_by_value` thunk decl
                 extern "C" void ...(::rust_out::TypeUnderTest* __ret_ptr);
                 }
-                inline ::rust_out::TypeUnderTest TypeUnderTest::pass_by_value() {
+                inline ::rust_out::TypeUnderTest (TypeUnderTest::pass_by_value)() {
                     crubit::Slot<::rust_out::TypeUnderTest> __return_value_ret_val_holder;
                     auto* __return_value_storage = __return_value_ret_val_holder.Get();
                     __crubit_internal::__crubit_thunk_pass_uby_uvalue(__return_value_storage);
@@ -2099,7 +2099,7 @@ fn test_generated_bindings_hash_trait() {
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(4) [[clang::trivial_abi]] Point final {
                         ...
                         template <typename H>
-                        friend H AbslHashValue(H h, const Point& self);
+                        friend H AbslHashValue(H h, const ::rust_out::Point& self);
                         ...
                     };
                     ...
@@ -2120,7 +2120,7 @@ fn test_generated_bindings_hash_trait() {
                         extern "C" ::std::uint64_t __crubit_thunk_Hash_uhash_uPoint(...);
                     }
                     template <typename H>
-                    inline H AbslHashValue(H h, const Point& self) {
+                    inline H AbslHashValue(H h, const ::rust_out::Point& self) {
                         return H::combine(::std::move(h), __crubit_internal::__crubit_thunk_Hash_uhash_uPoint(self));
                     }
                     ...

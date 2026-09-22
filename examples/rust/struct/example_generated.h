@@ -32,17 +32,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Struct") alignas(4)
 };
 
 static_assert(
-    sizeof(Struct) == 4,
+    sizeof(::example_crate::Struct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Struct) == 4,
+    alignof(::example_crate::Struct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<Struct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::example_crate::Struct>);
 static_assert(::std::is_trivially_move_assignable_v<::example_crate::Struct>);
-inline void Struct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Struct, a));
+inline void ::example_crate::Struct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::example_crate::Struct;
+  static_assert(0 == offsetof(__crubit_assert_type, a));
 }
 }  // namespace example_crate
 

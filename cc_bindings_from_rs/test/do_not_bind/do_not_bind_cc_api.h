@@ -53,10 +53,10 @@ struct rs_std::impl<::do_not_bind::Struct, ::do_not_bind::Trait> {
 namespace do_not_bind {
 
 static_assert(
-    sizeof(Struct) == 4,
+    sizeof(::do_not_bind::Struct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Struct) == 4,
+    alignof(::do_not_bind::Struct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<Struct>);
 static_assert(::std::is_trivially_move_constructible_v<::do_not_bind::Struct>);
@@ -65,12 +65,13 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_bound_uinherent_umethod(
     ::do_not_bind::Struct const&);
 }
-inline ::std::int32_t Struct::bound_inherent_method() const {
+inline ::std::int32_t(Struct::bound_inherent_method)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_bound_uinherent_umethod(self);
 }
-inline void Struct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Struct, value));
+inline void ::do_not_bind::Struct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::do_not_bind::Struct;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_bound_ufree_ufn();

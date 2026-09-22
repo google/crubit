@@ -154,27 +154,28 @@ namespace uses_reexport {
 ::std::int32_t g2();
 
 static_assert(
-    sizeof(Bar) == 4,
+    sizeof(::uses_reexport::Bar) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Bar) == 4,
+    alignof(::uses_reexport::Bar) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Bar>);
+static_assert(::std::is_trivially_destructible_v<::uses_reexport::Bar>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::Bar>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::Bar>);
 inline ::uses_reexport::Bar::Bar(::crubit::UnsafeRelocateTag, Bar&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void Bar::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Bar, i));
+inline void ::uses_reexport::Bar::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::uses_reexport::Bar;
+  static_assert(0 == offsetof(__crubit_assert_type, i));
 }
 static_assert(
-    sizeof(Foo) == 8,
+    sizeof(::uses_reexport::Foo) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Foo) == 4,
+    alignof(::uses_reexport::Foo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Foo>);
+static_assert(::std::is_trivially_destructible_v<::uses_reexport::Foo>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::Foo>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::Foo>);
 inline ::uses_reexport::Foo::Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
@@ -184,7 +185,7 @@ inline ::uses_reexport::Foo::Foo(::crubit::UnsafeRelocateTag, Foo&& value) {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_create(::uses_reexport::Foo* __ret_ptr);
 }
-inline ::uses_reexport::Foo Foo::create() {
+inline ::uses_reexport::Foo(Foo::create)() {
   crubit::Slot<::uses_reexport::Foo> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create(__return_value_storage);
@@ -194,15 +195,16 @@ inline ::uses_reexport::Foo Foo::create() {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_bar(::uses_reexport::Bar* __ret_ptr);
 }
-inline ::uses_reexport::Bar Foo::bar() {
+inline ::uses_reexport::Bar(Foo::bar)() {
   crubit::Slot<::uses_reexport::Bar> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_bar(__return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void Foo::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Foo, i));
-  static_assert(4 == offsetof(Foo, bar_));
+inline void ::uses_reexport::Foo::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::uses_reexport::Foo;
+  static_assert(0 == offsetof(__crubit_assert_type, i));
+  static_assert(4 == offsetof(__crubit_assert_type, bar_));
 }
 }  // namespace uses_reexport
 
@@ -215,33 +217,35 @@ using S CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: G") =
 namespace uses_reexport {
 
 static_assert(
-    sizeof(G) == 4,
+    sizeof(::uses_reexport::G) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(G) == 4,
+    alignof(::uses_reexport::G) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<G>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::G>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::G>);
-inline void G::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(G, field));
+inline void ::uses_reexport::G::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::uses_reexport::G;
+  static_assert(0 == offsetof(__crubit_assert_type, field));
 }
 }  // namespace uses_reexport
 
 namespace uses_reexport {
 
 static_assert(
-    sizeof(InnerX) == 4,
+    sizeof(::uses_reexport::InnerX) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(InnerX) == 4,
+    alignof(::uses_reexport::InnerX) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<InnerX>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::uses_reexport::InnerX>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::InnerX>);
-inline void InnerX::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(InnerX, field));
+inline void ::uses_reexport::InnerX::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::uses_reexport::InnerX;
+  static_assert(0 == offsetof(__crubit_assert_type, field));
 }
 }  // namespace uses_reexport
 
@@ -254,19 +258,20 @@ using X1 CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: X1") =
 namespace uses_reexport {
 
 static_assert(
-    sizeof(X1) == 4,
+    sizeof(::uses_reexport::X1) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(X1) == 4,
+    alignof(::uses_reexport::X1) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<X1>);
+static_assert(::std::is_trivially_destructible_v<::uses_reexport::X1>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::X1>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::X1>);
 inline ::uses_reexport::X1::X1(::crubit::UnsafeRelocateTag, X1&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void X1::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(X1, x));
+inline void ::uses_reexport::X1::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::uses_reexport::X1;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 }  // namespace uses_reexport
 

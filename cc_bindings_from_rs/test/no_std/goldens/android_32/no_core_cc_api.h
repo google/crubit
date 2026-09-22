@@ -60,17 +60,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test") alignas(4)
 };
 
 static_assert(
-    sizeof(Test) == 12,
+    sizeof(::no_core::Test) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Test) == 4,
+    alignof(::no_core::Test) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_uno_ucore_ugolden_x0000003a_x0000003aTest(
     ::no_core::Test&);
 }
-inline Test::~Test() {
+inline ::no_core::Test::~Test() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_uno_ucore_ugolden_x0000003a_x0000003aTest(
           *this);
@@ -82,7 +82,7 @@ inline ::no_core::Test::Test(::crubit::UnsafeRelocateTag, Test&& value) {
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::no_core::Test* __ret_ptr);
 }
-inline ::no_core::Test Test::new_() {
+inline ::no_core::Test(Test::new_)() {
   crubit::Slot<::no_core::Test> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(__return_value_storage);
@@ -93,15 +93,16 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_s(::no_core::Test const&,
                                  rs_std::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef Test::s() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
+inline rs_std::StrRef(Test::s)() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_s(self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void Test::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Test, s_));
+inline void ::no_core::Test::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::no_core::Test;
+  static_assert(0 == offsetof(__crubit_assert_type, s_));
 }
 }  // namespace no_core
 

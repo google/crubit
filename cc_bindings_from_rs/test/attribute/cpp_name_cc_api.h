@@ -38,10 +38,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: cpp_name_golden :: Original") alignas(4)
 };
 
 static_assert(
-    sizeof(Replaced) == 4,
+    sizeof(::cpp_name::Replaced) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Replaced) == 4,
+    alignof(::cpp_name::Replaced) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<Replaced>);
 static_assert(::std::is_trivially_move_constructible_v<::cpp_name::Replaced>);
@@ -49,14 +49,15 @@ static_assert(::std::is_trivially_move_assignable_v<::cpp_name::Replaced>);
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::cpp_name::Replaced* __ret_ptr);
 }
-inline ::cpp_name::Replaced Replaced::create() {
+inline ::cpp_name::Replaced(Replaced::create)() {
   crubit::Slot<::cpp_name::Replaced> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(__return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void Replaced::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Replaced, x));
+inline void ::cpp_name::Replaced::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::cpp_name::Replaced;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 }  // namespace cpp_name
 

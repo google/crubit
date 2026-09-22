@@ -69,12 +69,12 @@ struct rs_std::impl<::trait_definition::MyStruct, ::trait_definition::MyTrait> {
 namespace trait_definition {
 
 static_assert(
-    sizeof(MyStruct) == 4,
+    sizeof(::trait_definition::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyStruct) == 4,
+    alignof(::trait_definition::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyStruct>);
+static_assert(::std::is_trivially_destructible_v<::trait_definition::MyStruct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::trait_definition::MyStruct>);
 static_assert(
@@ -83,8 +83,9 @@ inline ::trait_definition::MyStruct::MyStruct(::crubit::UnsafeRelocateTag,
                                               MyStruct&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void MyStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyStruct, y));
+inline void ::trait_definition::MyStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::trait_definition::MyStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, y));
 }
 }  // namespace trait_definition
 

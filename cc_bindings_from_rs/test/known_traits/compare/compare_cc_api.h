@@ -148,10 +148,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: compare_golden :: MyPartialOrd") alignas(4)
 };
 
 static_assert(
-    sizeof(MyOrd) == 4,
+    sizeof(::compare::MyOrd) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyOrd) == 4,
+    alignof(::compare::MyOrd) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<MyOrd>);
 static_assert(::std::is_trivially_move_constructible_v<::compare::MyOrd>);
@@ -161,7 +161,7 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyOrd_ucompare_ugolden_x0000003a_x0000003aMyOrd(
     ::compare::MyOrd const&, ::compare::MyOrd const&);
 }
-inline bool MyOrd::operator==(::compare::MyOrd const& other) const {
+inline bool(MyOrd::operator==)(::compare::MyOrd const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyOrd_ucompare_ugolden_x0000003a_x0000003aMyOrd(
@@ -172,7 +172,8 @@ extern "C" ::std::int8_t
 __crubit_thunk_Ord_ucmp_ucompare_ugolden_x0000003a_x0000003aMyOrd(
     ::compare::MyOrd const&, ::compare::MyOrd const&);
 }
-inline ::std::strong_ordering MyOrd::operator<=>(const MyOrd& other) const {
+inline ::std::strong_ordering(::compare::MyOrd::operator<=>)(
+    const MyOrd& other) const {
   auto val = __crubit_internal::
       __crubit_thunk_Ord_ucmp_ucompare_ugolden_x0000003a_x0000003aMyOrd(*this,
                                                                         other);
@@ -187,14 +188,15 @@ inline ::std::strong_ordering MyOrd::operator<=>(const MyOrd& other) const {
       CRUBIT_UNREACHABLE();
   }
 }
-inline void MyOrd::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyOrd, __field0));
+inline void ::compare::MyOrd::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::compare::MyOrd;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(MyPartialOrd) == 8,
+    sizeof(::compare::MyPartialOrd) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyPartialOrd) == 4,
+    alignof(::compare::MyPartialOrd) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<MyPartialOrd>);
 static_assert(
@@ -205,7 +207,7 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyPartialOrd_ucompare_ugolden_x0000003a_x0000003aMyPartialOrd(
     ::compare::MyPartialOrd const&, ::compare::MyPartialOrd const&);
 }
-inline bool MyPartialOrd::operator==(
+inline bool(MyPartialOrd::operator==)(
     ::compare::MyPartialOrd const& other) const {
   auto&& self = *this;
   return __crubit_internal::
@@ -217,7 +219,7 @@ extern "C" ::std::int8_t
 __crubit_thunk_PartialOrd_upartial_ucmp_ucompare_ugolden_x0000003a_x0000003aMyPartialOrd_ucompare_ugolden_x0000003a_x0000003aMyPartialOrd(
     ::compare::MyPartialOrd const&, ::compare::MyPartialOrd const&);
 }
-inline ::std::partial_ordering MyPartialOrd::operator<=>(
+inline ::std::partial_ordering(::compare::MyPartialOrd::operator<=>)(
     ::compare::MyPartialOrd const& other) const {
   auto val = __crubit_internal::
       __crubit_thunk_PartialOrd_upartial_ucmp_ucompare_ugolden_x0000003a_x0000003aMyPartialOrd_ucompare_ugolden_x0000003a_x0000003aMyPartialOrd(
@@ -235,14 +237,15 @@ inline ::std::partial_ordering MyPartialOrd::operator<=>(
       CRUBIT_UNREACHABLE();
   }
 }
-inline void MyPartialOrd::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyPartialOrd, __field0));
+inline void ::compare::MyPartialOrd::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::compare::MyPartialOrd;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(MyUnordered) == 4,
+    sizeof(::compare::MyUnordered) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyUnordered) == 4,
+    alignof(::compare::MyUnordered) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<MyUnordered>);
 static_assert(::std::is_trivially_move_constructible_v<::compare::MyUnordered>);
@@ -252,7 +255,8 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyUnordered_ucompare_ugolden_x0000003a_x0000003aMyUnordered(
     ::compare::MyUnordered const&, ::compare::MyUnordered const&);
 }
-inline bool MyUnordered::operator==(::compare::MyUnordered const& other) const {
+inline bool(MyUnordered::operator==)(
+    ::compare::MyUnordered const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyUnordered_ucompare_ugolden_x0000003a_x0000003aMyUnordered(
@@ -263,7 +267,7 @@ extern "C" ::std::int8_t
 __crubit_thunk_PartialOrd_upartial_ucmp_ucompare_ugolden_x0000003a_x0000003aMyUnordered_ucompare_ugolden_x0000003a_x0000003aMyUnordered(
     ::compare::MyUnordered const&, ::compare::MyUnordered const&);
 }
-inline ::std::partial_ordering MyUnordered::operator<=>(
+inline ::std::partial_ordering(::compare::MyUnordered::operator<=>)(
     ::compare::MyUnordered const& other) const {
   auto val = __crubit_internal::
       __crubit_thunk_PartialOrd_upartial_ucmp_ucompare_ugolden_x0000003a_x0000003aMyUnordered_ucompare_ugolden_x0000003a_x0000003aMyUnordered(
@@ -281,8 +285,9 @@ inline ::std::partial_ordering MyUnordered::operator<=>(
       CRUBIT_UNREACHABLE();
   }
 }
-inline void MyUnordered::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyUnordered, __field0));
+inline void ::compare::MyUnordered::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::compare::MyUnordered;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 }  // namespace compare
 

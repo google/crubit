@@ -66,10 +66,10 @@ struct
 void take_by_value(::non_trivially_destructible::NonTriviallyDestructable _x);
 
 static_assert(
-    sizeof(NonTriviallyDestructable) == 4,
+    sizeof(::non_trivially_destructible::NonTriviallyDestructable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NonTriviallyDestructable) == 4,
+    alignof(::non_trivially_destructible::NonTriviallyDestructable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -87,7 +87,8 @@ extern "C" void
 __crubit_thunk_Drop_udrop_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
     ::non_trivially_destructible::NonTriviallyDestructable&);
 }
-inline NonTriviallyDestructable::~NonTriviallyDestructable() {
+inline ::non_trivially_destructible::NonTriviallyDestructable::
+    ~NonTriviallyDestructable() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
           *this);
@@ -136,8 +137,11 @@ inline ::non_trivially_destructible::NonTriviallyDestructable::
                              NonTriviallyDestructable&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void NonTriviallyDestructable::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NonTriviallyDestructable, field));
+inline void ::non_trivially_destructible::NonTriviallyDestructable::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::non_trivially_destructible::NonTriviallyDestructable;
+  static_assert(0 == offsetof(__crubit_assert_type, field));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_return_uby_uvalue(

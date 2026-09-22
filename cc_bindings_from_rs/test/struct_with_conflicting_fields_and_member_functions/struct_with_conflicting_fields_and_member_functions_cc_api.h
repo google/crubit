@@ -66,12 +66,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 static_assert(
-    sizeof(X) == 12,
+    sizeof(::struct_with_conflicting_fields_and_member_functions::X) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(X) == 4,
+    alignof(::struct_with_conflicting_fields_and_member_functions::X) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<X>);
+static_assert(::std::is_trivially_destructible_v<
+              ::struct_with_conflicting_fields_and_member_functions::X>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::struct_with_conflicting_fields_and_member_functions::X>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -85,7 +86,7 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_a(
     ::struct_with_conflicting_fields_and_member_functions::X const&);
 }
-inline ::std::int32_t X::a() const {
+inline ::std::int32_t(X::a)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_a(self);
 }
@@ -94,14 +95,17 @@ namespace __crubit_internal {
 extern "C" ::std::int32_t __crubit_thunk_b(
     ::struct_with_conflicting_fields_and_member_functions::X const&);
 }
-inline ::std::int32_t X::b() const {
+inline ::std::int32_t(X::b)() const {
   auto&& self = *this;
   return __crubit_internal::__crubit_thunk_b(self);
 }
-inline void X::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(X, a_));
-  static_assert(4 == offsetof(X, b_));
-  static_assert(8 == offsetof(X, c));
+inline void ::struct_with_conflicting_fields_and_member_functions::X::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type =
+      ::struct_with_conflicting_fields_and_member_functions::X;
+  static_assert(0 == offsetof(__crubit_assert_type, a_));
+  static_assert(4 == offsetof(__crubit_assert_type, b_));
+  static_assert(8 == offsetof(__crubit_assert_type, c));
 }
 }  // namespace struct_with_conflicting_fields_and_member_functions
 

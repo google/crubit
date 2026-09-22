@@ -2492,12 +2492,13 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 };
 
 static_assert(
-    sizeof(AdtHoldingFiveAndSix) == 8,
+    sizeof(::tuples::AdtHoldingFiveAndSix) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(AdtHoldingFiveAndSix) == 4,
+    alignof(::tuples::AdtHoldingFiveAndSix) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<AdtHoldingFiveAndSix>);
+static_assert(
+    ::std::is_trivially_destructible_v<::tuples::AdtHoldingFiveAndSix>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::AdtHoldingFiveAndSix>);
 static_assert(
@@ -2506,15 +2507,16 @@ inline ::tuples::AdtHoldingFiveAndSix::AdtHoldingFiveAndSix(
     ::crubit::UnsafeRelocateTag, AdtHoldingFiveAndSix&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void AdtHoldingFiveAndSix::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(AdtHoldingFiveAndSix, five));
-  static_assert(4 == offsetof(AdtHoldingFiveAndSix, six));
+inline void ::tuples::AdtHoldingFiveAndSix::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::AdtHoldingFiveAndSix;
+  static_assert(0 == offsetof(__crubit_assert_type, five));
+  static_assert(4 == offsetof(__crubit_assert_type, six));
 }
 static_assert(
-    sizeof(CloneNoDefault) == 1,
+    sizeof(::tuples::CloneNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CloneNoDefault) == 1,
+    alignof(::tuples::CloneNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<CloneNoDefault>);
 static_assert(
@@ -2524,22 +2526,24 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::tuples::CloneNoDefault* __ret_ptr);
 }
-inline ::tuples::CloneNoDefault CloneNoDefault::new_(::std::uint8_t val) {
+inline ::tuples::CloneNoDefault(CloneNoDefault::new_)(::std::uint8_t val) {
   crubit::Slot<::tuples::CloneNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void CloneNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CloneNoDefault, val));
+inline void ::tuples::CloneNoDefault::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::CloneNoDefault;
+  static_assert(0 == offsetof(__crubit_assert_type, val));
 }
 static_assert(
-    sizeof(CloneNoDefaultTuple) == 4,
+    sizeof(::tuples::CloneNoDefaultTuple) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CloneNoDefaultTuple) == 1,
+    alignof(::tuples::CloneNoDefaultTuple) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CloneNoDefaultTuple>);
+static_assert(
+    ::std::is_trivially_destructible_v<::tuples::CloneNoDefaultTuple>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::CloneNoDefaultTuple>);
 static_assert(
@@ -2553,22 +2557,23 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::tuples::CloneNoDefaultTuple* __ret_ptr);
 }
-inline ::tuples::CloneNoDefaultTuple CloneNoDefaultTuple::new_(
+inline ::tuples::CloneNoDefaultTuple(CloneNoDefaultTuple::new_)(
     ::std::uint8_t val) {
   crubit::Slot<::tuples::CloneNoDefaultTuple> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void CloneNoDefaultTuple::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CloneNoDefaultTuple, in_tuple1));
-  static_assert(2 == offsetof(CloneNoDefaultTuple, in_tuple2));
+inline void ::tuples::CloneNoDefaultTuple::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::CloneNoDefaultTuple;
+  static_assert(0 == offsetof(__crubit_assert_type, in_tuple1));
+  static_assert(2 == offsetof(__crubit_assert_type, in_tuple2));
 }
 static_assert(
-    sizeof(CopyNoDefault) == 1,
+    sizeof(::tuples::CopyNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CopyNoDefault) == 1,
+    alignof(::tuples::CopyNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<CopyNoDefault>);
 static_assert(
@@ -2581,22 +2586,23 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::tuples::CopyNoDefault* __ret_ptr);
 }
-inline ::tuples::CopyNoDefault CopyNoDefault::new_(::std::uint8_t val) {
+inline ::tuples::CopyNoDefault(CopyNoDefault::new_)(::std::uint8_t val) {
   crubit::Slot<::tuples::CopyNoDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void CopyNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CopyNoDefault, val));
+inline void ::tuples::CopyNoDefault::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::CopyNoDefault;
+  static_assert(0 == offsetof(__crubit_assert_type, val));
 }
 static_assert(
-    sizeof(CopyNoDefaultTuple) == 4,
+    sizeof(::tuples::CopyNoDefaultTuple) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(CopyNoDefaultTuple) == 1,
+    alignof(::tuples::CopyNoDefaultTuple) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CopyNoDefaultTuple>);
+static_assert(::std::is_trivially_destructible_v<::tuples::CopyNoDefaultTuple>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::CopyNoDefaultTuple>);
 static_assert(
@@ -2610,22 +2616,23 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint8_t,
                                    ::tuples::CopyNoDefaultTuple* __ret_ptr);
 }
-inline ::tuples::CopyNoDefaultTuple CopyNoDefaultTuple::new_(
+inline ::tuples::CopyNoDefaultTuple(CopyNoDefaultTuple::new_)(
     ::std::uint8_t val) {
   crubit::Slot<::tuples::CopyNoDefaultTuple> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void CopyNoDefaultTuple::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(CopyNoDefaultTuple, in_tuple1));
-  static_assert(2 == offsetof(CopyNoDefaultTuple, in_tuple2));
+inline void ::tuples::CopyNoDefaultTuple::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::CopyNoDefaultTuple;
+  static_assert(0 == offsetof(__crubit_assert_type, in_tuple1));
+  static_assert(2 == offsetof(__crubit_assert_type, in_tuple2));
 }
 static_assert(
-    sizeof(GetsTuple) == 8,
+    sizeof(::tuples::GetsTuple) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(GetsTuple) == 4,
+    alignof(::tuples::GetsTuple) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<GetsTuple>);
 static_assert(::std::is_trivially_move_constructible_v<::tuples::GetsTuple>);
@@ -2634,27 +2641,28 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint32_t,
                                    ::tuples::GetsTuple* __ret_ptr);
 }
-inline ::tuples::GetsTuple GetsTuple::new_(::std::uint32_t val) {
+inline ::tuples::GetsTuple(GetsTuple::new_)(::std::uint32_t val) {
   crubit::Slot<::tuples::GetsTuple> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void GetsTuple::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(GetsTuple, value));
+inline void ::tuples::GetsTuple::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::GetsTuple;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 static_assert(
-    sizeof(HasDefault) == 24,
+    sizeof(::tuples::HasDefault) == 24,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasDefault) == 8,
+    alignof(::tuples::HasDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::tuples::HasDefault* __ret_ptr);
 }
-inline ::tuples::HasDefault HasDefault::new_(rs_std::StrRef val) {
+inline ::tuples::HasDefault(HasDefault::new_)(rs_std::StrRef val) {
   crubit::Slot<::tuples::HasDefault> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
@@ -2665,7 +2673,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_val(::tuples::HasDefault const&,
                                    rs_std::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef HasDefault::val() const& $(__anon1)
+inline rs_std::StrRef(HasDefault::val)() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
@@ -2673,21 +2681,22 @@ inline rs_std::StrRef HasDefault::val() const& $(__anon1)
   __crubit_internal::__crubit_thunk_val(self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void HasDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(HasDefault, val_));
+inline void ::tuples::HasDefault::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::HasDefault;
+  static_assert(0 == offsetof(__crubit_assert_type, val_));
 }
 static_assert(
-    sizeof(HasDefaultTuple) == 64,
+    sizeof(::tuples::HasDefaultTuple) == 64,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasDefaultTuple) == 8,
+    alignof(::tuples::HasDefaultTuple) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasDefaultTuple(
     ::tuples::HasDefaultTuple&);
 }
-inline HasDefaultTuple::~HasDefaultTuple() {
+inline ::tuples::HasDefaultTuple::~HasDefaultTuple() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasDefaultTuple(
           *this);
@@ -2701,28 +2710,29 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::tuples::HasDefaultTuple* __ret_ptr);
 }
-inline ::tuples::HasDefaultTuple HasDefaultTuple::new_(rs_std::StrRef val) {
+inline ::tuples::HasDefaultTuple(HasDefaultTuple::new_)(rs_std::StrRef val) {
   crubit::Slot<::tuples::HasDefaultTuple> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void HasDefaultTuple::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(HasDefaultTuple, in_tuple1));
-  static_assert(32 == offsetof(HasDefaultTuple, in_tuple2));
+inline void ::tuples::HasDefaultTuple::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::HasDefaultTuple;
+  static_assert(0 == offsetof(__crubit_assert_type, in_tuple1));
+  static_assert(32 == offsetof(__crubit_assert_type, in_tuple2));
 }
 static_assert(
-    sizeof(HasNoDefault) == 24,
+    sizeof(::tuples::HasNoDefault) == 24,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasNoDefault) == 8,
+    alignof(::tuples::HasNoDefault) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_val(::tuples::HasNoDefault const&,
                                    rs_std::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef HasNoDefault::val() const& $(__anon1)
+inline rs_std::StrRef(HasNoDefault::val)() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
@@ -2730,21 +2740,22 @@ inline rs_std::StrRef HasNoDefault::val() const& $(__anon1)
   __crubit_internal::__crubit_thunk_val(self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void HasNoDefault::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(HasNoDefault, val_));
+inline void ::tuples::HasNoDefault::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::HasNoDefault;
+  static_assert(0 == offsetof(__crubit_assert_type, val_));
 }
 static_assert(
-    sizeof(HasNoDefaultTuple) == 64,
+    sizeof(::tuples::HasNoDefaultTuple) == 64,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(HasNoDefaultTuple) == 8,
+    alignof(::tuples::HasNoDefaultTuple) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasNoDefaultTuple(
     ::tuples::HasNoDefaultTuple&);
 }
-inline HasNoDefaultTuple::~HasNoDefaultTuple() {
+inline ::tuples::HasNoDefaultTuple::~HasNoDefaultTuple() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasNoDefaultTuple(
           *this);
@@ -2758,51 +2769,57 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(rs_std::StrRef*,
                                    ::tuples::HasNoDefaultTuple* __ret_ptr);
 }
-inline ::tuples::HasNoDefaultTuple HasNoDefaultTuple::new_(rs_std::StrRef val) {
+inline ::tuples::HasNoDefaultTuple(HasNoDefaultTuple::new_)(
+    rs_std::StrRef val) {
   crubit::Slot<::tuples::HasNoDefaultTuple> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(&val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void HasNoDefaultTuple::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(HasNoDefaultTuple, in_tuple1));
-  static_assert(32 == offsetof(HasNoDefaultTuple, in_tuple2));
+inline void ::tuples::HasNoDefaultTuple::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::HasNoDefaultTuple;
+  static_assert(0 == offsetof(__crubit_assert_type, in_tuple1));
+  static_assert(32 == offsetof(__crubit_assert_type, in_tuple2));
 }
 static_assert(
-    sizeof(NestedTupleIntermediate1) == 24,
+    sizeof(::tuples::NestedTupleIntermediate1) == 24,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NestedTupleIntermediate1) == 4,
+    alignof(::tuples::NestedTupleIntermediate1) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<NestedTupleIntermediate1>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuples::NestedTupleIntermediate1>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::tuples::NestedTupleIntermediate1>);
-inline void NestedTupleIntermediate1::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NestedTupleIntermediate1, v1));
-  static_assert(12 == offsetof(NestedTupleIntermediate1, v2));
+inline void ::tuples::NestedTupleIntermediate1::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::NestedTupleIntermediate1;
+  static_assert(0 == offsetof(__crubit_assert_type, v1));
+  static_assert(12 == offsetof(__crubit_assert_type, v2));
 }
 static_assert(
-    sizeof(NestedTupleIntermediate2) == 32,
+    sizeof(::tuples::NestedTupleIntermediate2) == 32,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NestedTupleIntermediate2) == 4,
+    alignof(::tuples::NestedTupleIntermediate2) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<NestedTupleIntermediate2>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuples::NestedTupleIntermediate2>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::tuples::NestedTupleIntermediate2>);
-inline void NestedTupleIntermediate2::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NestedTupleIntermediate2, v1));
-  static_assert(16 == offsetof(NestedTupleIntermediate2, v2));
+inline void ::tuples::NestedTupleIntermediate2::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::NestedTupleIntermediate2;
+  static_assert(0 == offsetof(__crubit_assert_type, v1));
+  static_assert(16 == offsetof(__crubit_assert_type, v2));
 }
 static_assert(
-    sizeof(NestedTupleStruct) == 32,
+    sizeof(::tuples::NestedTupleStruct) == 32,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NestedTupleStruct) == 4,
+    alignof(::tuples::NestedTupleStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<NestedTupleStruct>);
 static_assert(
@@ -2813,29 +2830,30 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::uint32_t,
                                    ::tuples::NestedTupleStruct* __ret_ptr);
 }
-inline ::tuples::NestedTupleStruct NestedTupleStruct::new_(
+inline ::tuples::NestedTupleStruct(NestedTupleStruct::new_)(
     ::std::uint32_t val) {
   crubit::Slot<::tuples::NestedTupleStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void NestedTupleStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NestedTupleStruct, in_tuple1));
-  static_assert(16 == offsetof(NestedTupleStruct, in_tuple2));
+inline void ::tuples::NestedTupleStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::NestedTupleStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, in_tuple1));
+  static_assert(16 == offsetof(__crubit_assert_type, in_tuple2));
 }
 static_assert(
-    sizeof(NonCppMovable) == 1,
+    sizeof(::tuples::NonCppMovable) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NonCppMovable) == 1,
+    alignof(::tuples::NonCppMovable) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aNonCppMovable(
     ::tuples::NonCppMovable&);
 }
-inline NonCppMovable::~NonCppMovable() {
+inline ::tuples::NonCppMovable::~NonCppMovable() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aNonCppMovable(
           *this);
@@ -2844,14 +2862,15 @@ inline ::tuples::NonCppMovable::NonCppMovable(::crubit::UnsafeRelocateTag,
                                               NonCppMovable&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void NonCppMovable::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NonCppMovable, value));
+inline void ::tuples::NonCppMovable::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::NonCppMovable;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 static_assert(
-    sizeof(NontrivialDrop) == 1,
+    sizeof(::tuples::NontrivialDrop) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NontrivialDrop) == 1,
+    alignof(::tuples::NontrivialDrop) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -2868,7 +2887,7 @@ extern "C" void
 __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aNontrivialDrop(
     ::tuples::NontrivialDrop&);
 }
-inline NontrivialDrop::~NontrivialDrop() {
+inline ::tuples::NontrivialDrop::~NontrivialDrop() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aNontrivialDrop(
           *this);
@@ -2886,21 +2905,22 @@ inline ::tuples::NontrivialDrop::NontrivialDrop(::crubit::UnsafeRelocateTag,
                                                 NontrivialDrop&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void NontrivialDrop::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NontrivialDrop, __field0));
+inline void ::tuples::NontrivialDrop::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::NontrivialDrop;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 static_assert(
-    sizeof(StructWithOptionTuple) == 32,
+    sizeof(::tuples::StructWithOptionTuple) == 32,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(StructWithOptionTuple) == 8,
+    alignof(::tuples::StructWithOptionTuple) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aStructWithOptionTuple(
     ::tuples::StructWithOptionTuple&);
 }
-inline StructWithOptionTuple::~StructWithOptionTuple() {
+inline ::tuples::StructWithOptionTuple::~StructWithOptionTuple() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aStructWithOptionTuple(
           *this);
@@ -2914,61 +2934,66 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::tuples::StructWithOptionTuple* __ret_ptr);
 }
-inline ::tuples::StructWithOptionTuple StructWithOptionTuple::new_(
+inline ::tuples::StructWithOptionTuple(StructWithOptionTuple::new_)(
     ::std::int32_t val) {
   crubit::Slot<::tuples::StructWithOptionTuple> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(val, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void StructWithOptionTuple::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(StructWithOptionTuple, opt_tuple));
+inline void ::tuples::StructWithOptionTuple::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::StructWithOptionTuple;
+  static_assert(0 == offsetof(__crubit_assert_type, opt_tuple));
 }
 static_assert(
-    sizeof(TupleStruct) == 4,
+    sizeof(::tuples::TupleStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStruct) == 4,
+    alignof(::tuples::TupleStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TupleStruct>);
+static_assert(::std::is_trivially_destructible_v<::tuples::TupleStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::tuples::TupleStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::tuples::TupleStruct>);
 inline ::tuples::TupleStruct::TupleStruct(::crubit::UnsafeRelocateTag,
                                           TupleStruct&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void TupleStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStruct, tuple_field));
+inline void ::tuples::TupleStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::TupleStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, tuple_field));
 }
 static_assert(
-    sizeof(TupleWithSizeTypes) == 64,
+    sizeof(::tuples::TupleWithSizeTypes) == 64,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleWithSizeTypes) == 8,
+    alignof(::tuples::TupleWithSizeTypes) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<TupleWithSizeTypes>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::TupleWithSizeTypes>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::tuples::TupleWithSizeTypes>);
-inline void TupleWithSizeTypes::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleWithSizeTypes, uval_in_tuple1));
-  static_assert(16 == offsetof(TupleWithSizeTypes, uval_in_tuple2));
-  static_assert(32 == offsetof(TupleWithSizeTypes, ival_in_tuple1));
-  static_assert(48 == offsetof(TupleWithSizeTypes, ival_in_tuple2));
+inline void ::tuples::TupleWithSizeTypes::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::TupleWithSizeTypes;
+  static_assert(0 == offsetof(__crubit_assert_type, uval_in_tuple1));
+  static_assert(16 == offsetof(__crubit_assert_type, uval_in_tuple2));
+  static_assert(32 == offsetof(__crubit_assert_type, ival_in_tuple1));
+  static_assert(48 == offsetof(__crubit_assert_type, ival_in_tuple2));
 }
 static_assert(
-    sizeof(TuplesWithU64) == 16,
+    sizeof(::tuples::TuplesWithU64) == 16,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TuplesWithU64) == 8,
+    alignof(::tuples::TuplesWithU64) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<TuplesWithU64>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::TuplesWithU64>);
 static_assert(::std::is_trivially_move_assignable_v<::tuples::TuplesWithU64>);
-inline void TuplesWithU64::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TuplesWithU64, u64_in_tuple1));
+inline void ::tuples::TuplesWithU64::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::tuples::TuplesWithU64;
+  static_assert(0 == offsetof(__crubit_assert_type, u64_in_tuple1));
 }
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_assert_unon_ucpp_umovable_udrop_ucount(
@@ -3531,7 +3556,7 @@ inline ::rs_std::Tuple<
     rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                   ::std::uint32_t>,
     ::std::uint32_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028_x00000028_x00000028u32_x0000002c_x00000020u32_x00000029_x0000002c_x00000020u32_x00000029_x0000002c_x00000020u32_x00000029(
           this);
 }
@@ -3586,8 +3611,12 @@ inline void ::rs_std::Tuple<
     rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                   ::std::uint32_t>,
     ::std::uint32_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(12 == offsetof(Tuple, __field1));
+  using __crubit_assert_type = ::rs_std::Tuple<
+      rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
+                    ::std::uint32_t>,
+      ::std::uint32_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(12 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -3601,7 +3630,7 @@ __crubit_thunk_Default_udefault_u_x00000028_x00000028u32_x0000002c_x00000020u32_
 }
 inline ::rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                        ::std::uint32_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028_x00000028u32_x0000002c_x00000020u32_x00000029_x0000002c_x00000020u32_x00000029(
           this);
 }
@@ -3641,8 +3670,11 @@ operator std::tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
 inline void ::rs_std::Tuple<
     rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
     ::std::uint32_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(8 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
+                      ::std::uint32_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(8 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -3654,7 +3686,7 @@ __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000029(
     rs_std::Tuple<::std::int32_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::int32_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000029(this);
 }
 static_assert(
@@ -3680,7 +3712,8 @@ inline rs_std::Tuple<::std::int32_t>::operator std::tuple<
 
 inline void ::rs_std::Tuple<
     ::std::int32_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
+  using __crubit_assert_type = ::rs_std::Tuple<::std::int32_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 #endif
 
@@ -3692,7 +3725,7 @@ __crubit_thunk_Default_udefault_u_x00000028i8_x0000002c_x00000020isize_x00000029
     rs_std::Tuple<::std::int8_t, ::std::int64_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::int8_t, ::std::int64_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028i8_x0000002c_x00000020isize_x00000029(
           this);
 }
@@ -3721,8 +3754,9 @@ inline rs_std::Tuple<::std::int8_t, ::std::int64_t>::operator std::tuple<
 
 inline void ::rs_std::Tuple<
     ::std::int8_t, ::std::int64_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(8 == offsetof(Tuple, __field1));
+  using __crubit_assert_type = ::rs_std::Tuple<::std::int8_t, ::std::int64_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(8 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -3734,7 +3768,7 @@ __crubit_thunk_Default_udefault_u_x00000028isize_x0000002c_x00000020i8_x00000029
     rs_std::Tuple<::std::int64_t, ::std::int8_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::int64_t, ::std::int8_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028isize_x0000002c_x00000020i8_x00000029(
           this);
 }
@@ -3763,8 +3797,9 @@ inline rs_std::Tuple<::std::int64_t, ::std::int8_t>::operator std::tuple<
 
 inline void ::rs_std::Tuple<::std::int64_t,
                             ::std::int8_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(8 == offsetof(Tuple, __field1));
+  using __crubit_assert_type = ::rs_std::Tuple<::std::int64_t, ::std::int8_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(8 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -3793,7 +3828,7 @@ inline ::rs_std::Tuple<
     rs_std::Option<::std::int32_t>,
     rs_std::Result<::std::int32_t,
                    ::rs::alloc::string::String>>::Tuple(const Tuple& other) {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Clone_uclone_u_x00000028std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x00000029(
           other, this);
 }
@@ -3804,7 +3839,7 @@ rs_std::Tuple<rs_std::Option<::std::int32_t>,
               rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
 operator=(const Tuple& other) {
   if (this != &other) {
-    __crubit_internal::
+    ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_u_x00000028std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x00000029(
             *this, other);
   }
@@ -3846,8 +3881,11 @@ inline void ::rs_std::Tuple<
     rs_std::Option<::std::int32_t>,
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
     __crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(8 == offsetof(Tuple, __field1));
+  using __crubit_assert_type = ::rs_std::Tuple<
+      rs_std::Option<::std::int32_t>,
+      rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(8 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -3859,7 +3897,7 @@ __crubit_thunk_Default_udefault_u_x00000028std_x0000003a_x0000003aoption_x000000
     rs_std::Tuple<rs_std::Option<::std::int32_t>>* __ret_ptr);
 }
 inline ::rs_std::Tuple<rs_std::Option<::std::int32_t>>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000029(
           this);
 }
@@ -3886,7 +3924,8 @@ inline rs_std::Tuple<rs_std::Option<::std::int32_t>>::operator std::tuple<
 
 inline void ::rs_std::Tuple<
     rs_std::Option<::std::int32_t>>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
+  using __crubit_assert_type = ::rs_std::Tuple<rs_std::Option<::std::int32_t>>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 #endif
 
@@ -3906,7 +3945,7 @@ __crubit_thunk_Clone_uclone_ufrom_u_x00000028tuples_ugolden_x0000003a_x0000003aC
 }
 inline ::rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::Tuple(
     const Tuple& other) {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Clone_uclone_u_x00000028tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x00000029(
           other, this);
 }
@@ -3914,7 +3953,7 @@ inline ::rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>& ::rs_std::
     Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::operator=(
         const Tuple& other) {
   if (this != &other) {
-    __crubit_internal::
+    ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_u_x00000028tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x00000029(
             *this, other);
   }
@@ -3941,8 +3980,10 @@ inline rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::operator std::
 
 inline void ::rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::
     __crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(1 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(1 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -3973,8 +4014,10 @@ inline rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t>::operator std::
 
 inline void ::rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t>::
     __crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(1 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(1 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -3986,7 +4029,7 @@ __crubit_thunk_Default_udefault_u_x00000028tuples_ugolden_x0000003a_x0000003aHas
     rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028tuples_ugolden_x0000003a_x0000003aHasDefault_x0000002c_x00000020u8_x00000029(
           this);
 }
@@ -4019,8 +4062,10 @@ inline rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::~Tuple() {
 }
 inline void ::rs_std::Tuple<
     ::tuples::HasDefault, ::std::uint8_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(24 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(24 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -4036,8 +4081,10 @@ inline rs_std::Tuple<::tuples::HasNoDefault, ::std::uint8_t>::~Tuple() {
 }
 inline void ::rs_std::Tuple<::tuples::HasNoDefault, ::std::uint8_t>::
     __crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(24 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<::tuples::HasNoDefault, ::std::uint8_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(24 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -4056,7 +4103,7 @@ inline ::rs_std::Tuple<
     ::std::uint32_t,
     rs_std::Tuple<::std::uint32_t,
                   rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x00000020_x00000028u32_x0000002c_x00000020_x00000028u32_x0000002c_x00000020u32_x00000029_x00000029_x00000029(
           this);
 }
@@ -4120,8 +4167,12 @@ inline void ::rs_std::Tuple<
     rs_std::Tuple<::std::uint32_t,
                   rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>::
     __crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(4 == offsetof(Tuple, __field1));
+  using __crubit_assert_type = ::rs_std::Tuple<
+      ::std::uint32_t,
+      rs_std::Tuple<::std::uint32_t,
+                    rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -4135,7 +4186,7 @@ __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x00000020_x00000028u32_
 }
 inline ::rs_std::Tuple<
     ::std::uint32_t, rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x00000020_x00000028u32_x0000002c_x00000020u32_x00000029_x00000029(
           this);
 }
@@ -4177,8 +4228,11 @@ operator std::tuple<
 inline void ::rs_std::Tuple<::std::uint32_t,
                             rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>::
     __crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(4 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<::std::uint32_t,
+                      rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -4190,7 +4244,7 @@ __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x00000020u32_x00000029(
     rs_std::Tuple<::std::uint32_t, ::std::uint32_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::uint32_t, ::std::uint32_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028u32_x0000002c_x00000020u32_x00000029(
           this);
 }
@@ -4219,8 +4273,10 @@ inline rs_std::Tuple<::std::uint32_t, ::std::uint32_t>::operator std::tuple<
 
 inline void ::rs_std::Tuple<
     ::std::uint32_t, ::std::uint32_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(4 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<::std::uint32_t, ::std::uint32_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -4232,7 +4288,7 @@ __crubit_thunk_Default_udefault_u_x00000028u64_x0000002c_x00000020u64_x00000029(
     rs_std::Tuple<::std::uint64_t, ::std::uint64_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::uint64_t, ::std::uint64_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028u64_x0000002c_x00000020u64_x00000029(
           this);
 }
@@ -4261,8 +4317,10 @@ inline rs_std::Tuple<::std::uint64_t, ::std::uint64_t>::operator std::tuple<
 
 inline void ::rs_std::Tuple<
     ::std::uint64_t, ::std::uint64_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(8 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<::std::uint64_t, ::std::uint64_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(8 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -4282,7 +4340,7 @@ __crubit_thunk_Clone_uclone_ufrom_u_x00000028u8_x0000002c_x00000020tuples_ugolde
 }
 inline ::rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::Tuple(
     const Tuple& other) {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Clone_uclone_u_x00000028u8_x0000002c_x00000020tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x00000029(
           other, this);
 }
@@ -4290,7 +4348,7 @@ inline ::rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>& ::rs_std::
     Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::operator=(
         const Tuple& other) {
   if (this != &other) {
-    __crubit_internal::
+    ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_u_x00000028u8_x0000002c_x00000020tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x00000029(
             *this, other);
   }
@@ -4317,8 +4375,10 @@ inline rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::operator std::
 
 inline void ::rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::
     __crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(1 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(1 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -4349,8 +4409,10 @@ inline rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault>::operator std::
 
 inline void ::rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault>::
     __crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(1 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(1 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -4362,7 +4424,7 @@ __crubit_thunk_Default_udefault_u_x00000028u8_x0000002c_x00000020tuples_ugolden_
     rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028u8_x0000002c_x00000020tuples_ugolden_x0000003a_x0000003aHasDefault_x00000029(
           this);
 }
@@ -4395,8 +4457,10 @@ inline rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>::~Tuple() {
 }
 inline void ::rs_std::Tuple<
     ::std::uint8_t, ::tuples::HasDefault>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(8 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(8 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -4412,8 +4476,10 @@ inline rs_std::Tuple<::std::uint8_t, ::tuples::HasNoDefault>::~Tuple() {
 }
 inline void ::rs_std::Tuple<::std::uint8_t, ::tuples::HasNoDefault>::
     __crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(8 == offsetof(Tuple, __field1));
+  using __crubit_assert_type =
+      ::rs_std::Tuple<::std::uint8_t, ::tuples::HasNoDefault>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(8 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -4425,7 +4491,7 @@ __crubit_thunk_Default_udefault_u_x00000028u8_x0000002c_x00000020usize_x00000029
     rs_std::Tuple<::std::uint8_t, ::std::uint64_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::uint8_t, ::std::uint64_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028u8_x0000002c_x00000020usize_x00000029(
           this);
 }
@@ -4454,8 +4520,9 @@ inline rs_std::Tuple<::std::uint8_t, ::std::uint64_t>::operator std::tuple<
 
 inline void ::rs_std::Tuple<
     ::std::uint8_t, ::std::uint64_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(8 == offsetof(Tuple, __field1));
+  using __crubit_assert_type = ::rs_std::Tuple<::std::uint8_t, ::std::uint64_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(8 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -4467,7 +4534,7 @@ __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020u8_x00000029
     rs_std::Tuple<::std::uint64_t, ::std::uint8_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::uint64_t, ::std::uint8_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_x00000020u8_x00000029(
           this);
 }
@@ -4496,8 +4563,9 @@ inline rs_std::Tuple<::std::uint64_t, ::std::uint8_t>::operator std::tuple<
 
 inline void ::rs_std::Tuple<
     ::std::uint64_t, ::std::uint8_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(8 == offsetof(Tuple, __field1));
+  using __crubit_assert_type = ::rs_std::Tuple<::std::uint64_t, ::std::uint8_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(8 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 
@@ -4590,7 +4658,7 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000
 }
 inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
     const Result& other) {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
           other, this);
 }
@@ -4598,7 +4666,7 @@ inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&
 rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
     const Result& other) {
   if (this != &other) {
-    __crubit_internal::
+    ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
             *this, other);
   }

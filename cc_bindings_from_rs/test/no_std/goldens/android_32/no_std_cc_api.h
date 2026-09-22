@@ -41,17 +41,17 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: no_std_golden :: NoStdStruct") alignas(4)
 };
 
 static_assert(
-    sizeof(NoStdStruct) == 12,
+    sizeof(::no_std::NoStdStruct) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NoStdStruct) == 4,
+    alignof(::no_std::NoStdStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, float,
                                    ::no_std::NoStdStruct* __ret_ptr);
 }
-inline ::no_std::NoStdStruct NoStdStruct::new_(::std::int32_t x, float y) {
+inline ::no_std::NoStdStruct(NoStdStruct::new_)(::std::int32_t x, float y) {
   crubit::Slot<::no_std::NoStdStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, y, __return_value_storage);
@@ -62,7 +62,7 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_display(::no_std::NoStdStruct const&,
                                        rs_std::StrRef* __ret_ptr);
 }
-inline rs_std::StrRef NoStdStruct::display() const& $(__anon1)
+inline rs_std::StrRef(NoStdStruct::display)() const& $(__anon1)
     CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
@@ -70,8 +70,9 @@ inline rs_std::StrRef NoStdStruct::display() const& $(__anon1)
   __crubit_internal::__crubit_thunk_display(self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void NoStdStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NoStdStruct, test));
+inline void ::no_std::NoStdStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::no_std::NoStdStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, test));
 }
 }  // namespace no_std
 

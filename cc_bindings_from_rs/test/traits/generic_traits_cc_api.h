@@ -101,24 +101,26 @@ struct rs_std::impl<
 namespace generic_traits {
 
 static_assert(
-    sizeof(AnotherStruct) == 4,
+    sizeof(::generic_traits::AnotherStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(AnotherStruct) == 4,
+    alignof(::generic_traits::AnotherStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<AnotherStruct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::generic_traits::AnotherStruct>);
 static_assert(
     ::std::is_trivially_move_assignable_v<::generic_traits::AnotherStruct>);
-inline void AnotherStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(AnotherStruct, y));
+inline void ::generic_traits::AnotherStruct::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::generic_traits::AnotherStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, y));
 }
 static_assert(
-    sizeof(StructGeneric) == 4,
+    sizeof(::generic_traits::StructGeneric) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(StructGeneric) == 4,
+    alignof(::generic_traits::StructGeneric) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<StructGeneric>);
 static_assert(
@@ -129,14 +131,16 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::generic_traits::StructGeneric* __ret_ptr);
 }
-inline ::generic_traits::StructGeneric StructGeneric::new_(::std::int32_t x) {
+inline ::generic_traits::StructGeneric(StructGeneric::new_)(::std::int32_t x) {
   crubit::Slot<::generic_traits::StructGeneric> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void StructGeneric::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(StructGeneric, x));
+inline void ::generic_traits::StructGeneric::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::generic_traits::StructGeneric;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 
 // Error generating bindings for trait `generic_traits_golden::TraitWithGeneric`

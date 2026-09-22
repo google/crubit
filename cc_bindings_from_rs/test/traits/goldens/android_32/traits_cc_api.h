@@ -380,10 +380,10 @@ struct rs_std::impl<::traits::StructWithAssociatedConst,
 namespace traits {
 
 static_assert(
-    sizeof(AssociatedTypeStruct) == 16,
+    sizeof(::traits::AssociatedTypeStruct) == 16,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(AssociatedTypeStruct) == 4,
+    alignof(::traits::AssociatedTypeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -400,7 +400,7 @@ extern "C" void
 __crubit_thunk_Drop_udrop_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
     ::traits::AssociatedTypeStruct&);
 }
-inline AssociatedTypeStruct::~AssociatedTypeStruct() {
+inline ::traits::AssociatedTypeStruct::~AssociatedTypeStruct() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
           *this);
@@ -445,15 +445,16 @@ inline ::traits::AssociatedTypeStruct::AssociatedTypeStruct(
     ::crubit::UnsafeRelocateTag, AssociatedTypeStruct&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void AssociatedTypeStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(AssociatedTypeStruct, a));
-  static_assert(12 == offsetof(AssociatedTypeStruct, b));
+inline void ::traits::AssociatedTypeStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::traits::AssociatedTypeStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, a));
+  static_assert(12 == offsetof(__crubit_assert_type, b));
 }
 static_assert(
-    sizeof(Foo) == 8,
+    sizeof(::traits::Foo) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Foo) == 4,
+    alignof(::traits::Foo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -465,7 +466,7 @@ inline ::traits::Foo::Foo() {
       __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aFoo(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<Foo>);
+static_assert(::std::is_trivially_destructible_v<::traits::Foo>);
 static_assert(::std::is_trivially_move_constructible_v<::traits::Foo>);
 static_assert(::std::is_trivially_move_assignable_v<::traits::Foo>);
 static_assert(::std::is_trivially_copy_constructible_v<::traits::Foo>);
@@ -478,22 +479,23 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t, ::std::int32_t,
                                    ::traits::Foo* __ret_ptr);
 }
-inline ::traits::Foo Foo::new_(::std::int32_t x, ::std::int32_t y) {
+inline ::traits::Foo(Foo::new_)(::std::int32_t x, ::std::int32_t y) {
   crubit::Slot<::traits::Foo> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, y, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void Foo::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Foo, a));
+inline void ::traits::Foo::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::traits::Foo;
+  static_assert(0 == offsetof(__crubit_assert_type, a));
 }
 static_assert(
-    sizeof(LifetimeStruct) == 4,
+    sizeof(::traits::LifetimeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(LifetimeStruct) == 4,
+    alignof(::traits::LifetimeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<LifetimeStruct>);
+static_assert(::std::is_trivially_destructible_v<::traits::LifetimeStruct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::traits::LifetimeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::traits::LifetimeStruct>);
@@ -501,14 +503,15 @@ inline ::traits::LifetimeStruct::LifetimeStruct(::crubit::UnsafeRelocateTag,
                                                 LifetimeStruct&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void LifetimeStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(LifetimeStruct, x));
+inline void ::traits::LifetimeStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::traits::LifetimeStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 static_assert(
-    sizeof(MyStruct) == 4,
+    sizeof(::traits::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyStruct) == 4,
+    alignof(::traits::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -520,7 +523,7 @@ inline ::traits::MyStruct::MyStruct() {
       __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aMyStruct(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<MyStruct>);
+static_assert(::std::is_trivially_destructible_v<::traits::MyStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::traits::MyStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::traits::MyStruct>);
 static_assert(::std::is_trivially_copy_constructible_v<::traits::MyStruct>);
@@ -534,20 +537,21 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::traits::MyStruct* __ret_ptr);
 }
-inline ::traits::MyStruct MyStruct::new_(::std::int32_t x) {
+inline ::traits::MyStruct(MyStruct::new_)(::std::int32_t x) {
   crubit::Slot<::traits::MyStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void MyStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyStruct, x));
+inline void ::traits::MyStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::traits::MyStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 static_assert(
-    sizeof(MyStruct2) == 4,
+    sizeof(::traits::MyStruct2) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyStruct2) == 4,
+    alignof(::traits::MyStruct2) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -559,7 +563,7 @@ inline ::traits::MyStruct2::MyStruct2() {
       __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aMyStruct2(
           this);
 }
-static_assert(::std::is_trivially_destructible_v<MyStruct2>);
+static_assert(::std::is_trivially_destructible_v<::traits::MyStruct2>);
 static_assert(::std::is_trivially_move_constructible_v<::traits::MyStruct2>);
 static_assert(::std::is_trivially_move_assignable_v<::traits::MyStruct2>);
 static_assert(::std::is_trivially_copy_constructible_v<::traits::MyStruct2>);
@@ -568,8 +572,9 @@ inline ::traits::MyStruct2::MyStruct2(::crubit::UnsafeRelocateTag,
                                       MyStruct2&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void MyStruct2::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyStruct2, y));
+inline void ::traits::MyStruct2::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::traits::MyStruct2;
+  static_assert(0 == offsetof(__crubit_assert_type, y));
 }
 }  // namespace traits
 
@@ -581,10 +586,10 @@ using RenamedTrait = ::traits::MyTrait;
 namespace traits {
 
 static_assert(
-    sizeof(StructWithAssociatedConst) == 4,
+    sizeof(::traits::StructWithAssociatedConst) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(StructWithAssociatedConst) == 4,
+    alignof(::traits::StructWithAssociatedConst) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<StructWithAssociatedConst>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -595,8 +600,10 @@ static_assert(::std::is_trivially_copy_constructible_v<
               ::traits::StructWithAssociatedConst>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::traits::StructWithAssociatedConst>);
-inline void StructWithAssociatedConst::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(StructWithAssociatedConst, x));
+inline void ::traits::StructWithAssociatedConst::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::traits::StructWithAssociatedConst;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 }  // namespace traits
 
@@ -608,7 +615,7 @@ __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
     rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
 }
 inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
-  __crubit_internal::
+  ::__crubit_internal::
       __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
           this);
 }
@@ -637,8 +644,9 @@ inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::operator std::tuple<
 
 inline void ::rs_std::Tuple<
     ::std::int32_t, ::std::int32_t>::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Tuple, __field0));
-  static_assert(4 == offsetof(Tuple, __field1));
+  using __crubit_assert_type = ::rs_std::Tuple<::std::int32_t, ::std::int32_t>;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 #endif
 

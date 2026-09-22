@@ -251,10 +251,10 @@ struct rs_std::impl<::consts::TupleStruct, ::rs::core::fmt::Debug> {
 namespace consts {
 
 static_assert(
-    sizeof(NestedStruct) == 16,
+    sizeof(::consts::NestedStruct) == 16,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NestedStruct) == 4,
+    alignof(::consts::NestedStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<NestedStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::consts::NestedStruct>);
@@ -266,22 +266,23 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aNestedStruct_uconsts_ugolden_x0000003a_x0000003aNestedStruct(
     ::consts::NestedStruct const&, ::consts::NestedStruct const&);
 }
-inline bool NestedStruct::operator==(
+inline bool(NestedStruct::operator==)(
     ::consts::NestedStruct const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aNestedStruct_uconsts_ugolden_x0000003a_x0000003aNestedStruct(
           self, other);
 }
-inline void NestedStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NestedStruct, point));
-  static_assert(8 == offsetof(NestedStruct, tuple));
+inline void ::consts::NestedStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::consts::NestedStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, point));
+  static_assert(8 == offsetof(__crubit_assert_type, tuple));
 }
 static_assert(
-    sizeof(Point) == 8,
+    sizeof(::consts::Point) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Point) == 4,
+    alignof(::consts::Point) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<Point>);
 static_assert(::std::is_trivially_move_constructible_v<::consts::Point>);
@@ -295,21 +296,22 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aPoint_uconsts_ugolden_x0000003a_x0000003aPoint(
     ::consts::Point const&, ::consts::Point const&);
 }
-inline bool Point::operator==(::consts::Point const& other) const {
+inline bool(Point::operator==)(::consts::Point const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aPoint_uconsts_ugolden_x0000003a_x0000003aPoint(
           self, other);
 }
-inline void Point::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Point, x));
-  static_assert(4 == offsetof(Point, y));
+inline void ::consts::Point::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::consts::Point;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
+  static_assert(4 == offsetof(__crubit_assert_type, y));
 }
 static_assert(
-    sizeof(StructWithArray) == 8,
+    sizeof(::consts::StructWithArray) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(StructWithArray) == 4,
+    alignof(::consts::StructWithArray) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<StructWithArray>);
 static_assert(
@@ -323,21 +325,22 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithArray_uconsts_ugolden_x0000003a_x0000003aStructWithArray(
     ::consts::StructWithArray const&, ::consts::StructWithArray const&);
 }
-inline bool StructWithArray::operator==(
+inline bool(StructWithArray::operator==)(
     ::consts::StructWithArray const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithArray_uconsts_ugolden_x0000003a_x0000003aStructWithArray(
           self, other);
 }
-inline void StructWithArray::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(StructWithArray, values));
+inline void ::consts::StructWithArray::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::consts::StructWithArray;
+  static_assert(0 == offsetof(__crubit_assert_type, values));
 }
 static_assert(
-    sizeof(StructWithStr) == 12,
+    sizeof(::consts::StructWithStr) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(StructWithStr) == 4,
+    alignof(::consts::StructWithStr) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<StructWithStr>);
 static_assert(
@@ -351,22 +354,23 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e(
     ::consts::StructWithStr const&, ::consts::StructWithStr const&);
 }
-inline bool StructWithStr::operator==(
+inline bool(StructWithStr::operator==)(
     ::consts::StructWithStr const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e(
           self, other);
 }
-inline void StructWithStr::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(StructWithStr, msg));
-  static_assert(8 == offsetof(StructWithStr, count));
+inline void ::consts::StructWithStr::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::consts::StructWithStr;
+  static_assert(0 == offsetof(__crubit_assert_type, msg));
+  static_assert(8 == offsetof(__crubit_assert_type, count));
 }
 static_assert(
-    sizeof(TupleStruct) == 8,
+    sizeof(::consts::TupleStruct) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TupleStruct) == 4,
+    alignof(::consts::TupleStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<TupleStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::consts::TupleStruct>);
@@ -378,23 +382,24 @@ extern "C" bool
 __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aTupleStruct_uconsts_ugolden_x0000003a_x0000003aTupleStruct(
     ::consts::TupleStruct const&, ::consts::TupleStruct const&);
 }
-inline bool TupleStruct::operator==(::consts::TupleStruct const& other) const {
+inline bool(TupleStruct::operator==)(::consts::TupleStruct const& other) const {
   auto&& self = *this;
   return __crubit_internal::
       __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aTupleStruct_uconsts_ugolden_x0000003a_x0000003aTupleStruct(
           self, other);
 }
-inline void TupleStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TupleStruct, __field0));
-  static_assert(4 == offsetof(TupleStruct, __field1));
+inline void ::consts::TupleStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::consts::TupleStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
+  static_assert(4 == offsetof(__crubit_assert_type, __field1));
 }
 static_assert(
-    sizeof(TyWithAssocConsts) == 1,
+    sizeof(::consts::TyWithAssocConsts) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(TyWithAssocConsts) == 1,
+    alignof(::consts::TyWithAssocConsts) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TyWithAssocConsts>);
+static_assert(::std::is_trivially_destructible_v<::consts::TyWithAssocConsts>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::consts::TyWithAssocConsts>);
 static_assert(
@@ -403,8 +408,9 @@ inline ::consts::TyWithAssocConsts::TyWithAssocConsts(
     ::crubit::UnsafeRelocateTag, TyWithAssocConsts&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void TyWithAssocConsts::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(TyWithAssocConsts, __field0));
+inline void ::consts::TyWithAssocConsts::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::consts::TyWithAssocConsts;
+  static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 }  // namespace consts
 

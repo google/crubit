@@ -62,10 +62,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: Color") alignas(1)
 };
 
 static_assert(
-    sizeof(Color) == 1,
+    sizeof(::example_crate::Color) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(Color) == 1,
+    alignof(::example_crate::Color) == 1,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -78,20 +78,20 @@ inline ::example_crate::Color::Color() {
           this);
 }
 // `static` constructor
-inline constexpr Color Color::MakeRed() {
+inline constexpr ::example_crate::Color(::example_crate::Color::MakeRed)() {
   return Color(PrivateBytesTag{}, {0});
 }
 
 // `static` constructor
-inline constexpr Color Color::MakeBlue() {
+inline constexpr ::example_crate::Color(::example_crate::Color::MakeBlue)() {
   return Color(PrivateBytesTag{}, {1});
 }
 
 // `static` constructor
-inline constexpr Color Color::MakeGreen() {
+inline constexpr ::example_crate::Color(::example_crate::Color::MakeGreen)() {
   return Color(PrivateBytesTag{}, {2});
 }
-static_assert(::std::is_trivially_destructible_v<Color>);
+static_assert(::std::is_trivially_destructible_v<::example_crate::Color>);
 static_assert(::std::is_trivially_move_constructible_v<::example_crate::Color>);
 static_assert(::std::is_trivially_move_assignable_v<::example_crate::Color>);
 static_assert(::std::is_trivially_copy_constructible_v<::example_crate::Color>);
@@ -100,8 +100,11 @@ inline ::example_crate::Color::Color(::crubit::UnsafeRelocateTag,
                                      Color&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
-inline void Color::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(Color, __opaque_blob_of_bytes));
+inline void ::example_crate::Color::__crubit_field_offset_assertions() {
+  {
+    using __crubit_assert_type = ::example_crate::Color;
+    static_assert(0 == offsetof(__crubit_assert_type, __opaque_blob_of_bytes));
+  }
 }
 }  // namespace example_crate
 

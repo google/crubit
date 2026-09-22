@@ -61,10 +61,10 @@ struct rs_std::impl<::trait_impl::MyStruct, ::trait_definition::MyTrait> {
 namespace trait_impl {
 
 static_assert(
-    sizeof(MyStruct) == 4,
+    sizeof(::trait_impl::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(MyStruct) == 4,
+    alignof(::trait_impl::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<MyStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::trait_impl::MyStruct>);
@@ -73,23 +73,25 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::std::int32_t,
                                    ::trait_impl::MyStruct* __ret_ptr);
 }
-inline ::trait_impl::MyStruct MyStruct::new_(::std::int32_t x) {
+inline ::trait_impl::MyStruct(MyStruct::new_)(::std::int32_t x) {
   crubit::Slot<::trait_impl::MyStruct> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_new(x, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
-inline void MyStruct::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(MyStruct, x));
+inline void ::trait_impl::MyStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::trait_impl::MyStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 static_assert(
-    sizeof(NotImplemented) == 12,
+    sizeof(::trait_impl::NotImplemented) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(NotImplemented) == 4,
+    alignof(::trait_impl::NotImplemented) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-inline void NotImplemented::__crubit_field_offset_assertions() {
-  static_assert(0 == offsetof(NotImplemented, foo));
+inline void ::trait_impl::NotImplemented::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::trait_impl::NotImplemented;
+  static_assert(0 == offsetof(__crubit_assert_type, foo));
 }
 }  // namespace trait_impl
 
