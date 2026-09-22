@@ -5,9 +5,11 @@
 #include "cc_bindings_from_rs/test/enums/result.h"
 
 #include <cstdint>
+#include <tuple>
 #include <utility>
 
 #include "gtest/gtest.h"
+#include "support/movable.h"
 
 namespace {
 
@@ -161,6 +163,48 @@ TEST(ResultTest, ResultUnitErr) {
   rs_std::Result<uint8_t, rs_std::unit_t> res_unexpect(rs_std::unexpect,
                                                        rs_std::unit);
   EXPECT_FALSE(res_unexpect.has_value());
+}
+
+TEST(ResultTest, PassUnmovableResultByValue) {
+  rs::Movable<rs_std::Result<rs_std::unit_t, result::DropNoDefault>> res_ok(
+      std::in_place, std::in_place, rs_std::unit);
+  EXPECT_TRUE(result::take_result_drop_no_default_unit(std::move(res_ok)));
+
+  rs::Movable<rs_std::Result<rs_std::unit_t, result::DropNoDefault>> res_err(
+      std::in_place, rs_std::unexpect, uint8_t{42});
+  EXPECT_FALSE(result::take_result_drop_no_default_unit(std::move(res_err)));
+
+  rs::Movable<rs_std::Result<result::DropNoDefault, uint8_t>> ok_val(
+      std::in_place, std::in_place, uint8_t{100});
+  EXPECT_EQ(result::take_result_drop_no_default_ok(std::move(ok_val)), 100);
+
+  rs::Movable<rs_std::Result<result::DropNoDefault, uint8_t>> err_val(
+      std::in_place, rs_std::unexpect, uint8_t{42});
+  EXPECT_EQ(result::take_result_drop_no_default_ok(std::move(err_val)), 42);
+}
+
+TEST(ResultTest, PassUnmovableResultInTupleByValue) {
+  rs::Movable<rs_std::Result<rs_std::unit_t, result::DropNoDefault>> res_ok(
+      std::in_place, std::in_place, rs_std::unit);
+  EXPECT_TRUE(result::take_result_drop_no_default_tuple(
+      std::make_tuple(std::move(res_ok))));
+
+  rs::Movable<rs_std::Result<rs_std::unit_t, result::DropNoDefault>> res_err(
+      std::in_place, rs_std::unexpect, uint8_t{42});
+  EXPECT_FALSE(result::take_result_drop_no_default_tuple(
+      std::make_tuple(std::move(res_err))));
+}
+
+TEST(ResultTest, ReturnUnmovableResultInTupleByValue) {
+  auto res_ok = result::return_result_drop_no_default_tuple(true);
+  auto res_ok_inner = std::move(std::get<0>(res_ok));
+  ASSERT_TRUE(res_ok_inner->has_value());
+  EXPECT_EQ(res_ok_inner->value(), 42);
+
+  auto res_err = result::return_result_drop_no_default_tuple(false);
+  auto res_err_inner = std::move(std::get<0>(res_err));
+  ASSERT_FALSE(res_err_inner->has_value());
+  EXPECT_EQ(res_err_inner->error().__field0, 100);
 }
 
 }  // namespace

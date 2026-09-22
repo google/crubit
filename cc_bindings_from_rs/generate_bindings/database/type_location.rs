@@ -81,4 +81,40 @@ impl TypeLocation {
     pub fn is_bridgeable(self) -> bool {
         self.check_bridgeable().is_ok()
     }
+
+    /// Returns whether a type in this location can be wrapped in `::rs::Movable`.
+    pub fn admits_movable(self) -> bool {
+        match self {
+            TypeLocation::FnParam { .. } | TypeLocation::NestedBridgeable => true,
+            TypeLocation::FnReturn { .. }
+            | TypeLocation::Const
+            | TypeLocation::TemplateArg
+            | TypeLocation::ClosureReturn
+            | TypeLocation::Other
+            | TypeLocation::Field => false,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_admits_movable() {
+        assert!(TypeLocation::FnParam { is_self_param: false, elided_is_output: false }
+            .admits_movable());
+        assert!(
+            TypeLocation::FnParam { is_self_param: true, elided_is_output: true }.admits_movable()
+        );
+        assert!(TypeLocation::NestedBridgeable.admits_movable());
+
+        assert!(!TypeLocation::FnReturn { is_constructor: false }.admits_movable());
+        assert!(!TypeLocation::FnReturn { is_constructor: true }.admits_movable());
+        assert!(!TypeLocation::Const.admits_movable());
+        assert!(!TypeLocation::TemplateArg.admits_movable());
+        assert!(!TypeLocation::ClosureReturn.admits_movable());
+        assert!(!TypeLocation::Other.admits_movable());
+        assert!(!TypeLocation::Field.admits_movable());
+    }
 }

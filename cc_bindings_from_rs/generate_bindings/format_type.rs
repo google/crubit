@@ -30,7 +30,7 @@ use database::{
     rename_c_stdlib_functions, rename_clang_builtin_macros, FineGrainedFeature, TypeLocation,
 };
 use error_report::{anyhow, bail, ensure};
-use proc_macro2::{Ident, Literal, Span, TokenStream};
+use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::is_c_abi_compatible_by_value;
 use quote::{format_ident, quote, ToTokens};
 use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
@@ -857,12 +857,7 @@ pub fn format_ty_for_cc<'tcx>(
                 let adt_spec = specialization.unwrap()?;
                 let mut tokens = adt_spec.self_ty_cc.clone().into_tokens(&mut prereqs);
                 prereqs.depend_on_spec(db, location, adt_spec);
-                if !db.is_cpp_move_constructible(ty)
-                    && matches!(
-                        location,
-                        TypeLocation::FnParam { .. } | TypeLocation::NestedBridgeable
-                    )
-                {
+                if !db.is_cpp_move_constructible(ty) && location.admits_movable() {
                     prereqs.includes.insert(db.support_header("movable.h"));
                     tokens = quote! { ::rs::Movable< #tokens > };
                 }
@@ -981,12 +976,7 @@ pub fn format_ty_for_cc<'tcx>(
             }
 
             // Wrap in rs::Movable if the type is not C++ movable.
-            if !db.is_cpp_move_constructible(ty)
-                && matches!(
-                    location,
-                    TypeLocation::FnParam { .. } | TypeLocation::NestedBridgeable
-                )
-            {
+            if !db.is_cpp_move_constructible(ty) && location.admits_movable() {
                 prereqs.includes.insert(db.support_header("movable.h"));
                 tokens = quote! { ::rs::Movable< #tokens > };
             }
