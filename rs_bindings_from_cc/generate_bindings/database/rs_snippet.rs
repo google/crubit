@@ -1171,6 +1171,32 @@ impl<'a> BridgeRsTypeKind<'a> {
 
         Ok(Some(bridge_rs_type_kind))
     }
+
+    /// Returns true if a C++ type alias to this bridge type can be bound as a Rust type alias to
+    /// the bridged type.
+    ///
+    /// Bridge types are "seen through" by [`RsTypeKind::new_type_alias`], so such an alias never
+    /// appears in a generated signature: it exists purely so that a name for the bridged type is
+    /// available to hand-written Rust. The cases below are the ones where introducing that name is
+    /// both possible and unambiguous.
+    pub fn is_aliasable(&self) -> bool {
+        match self {
+            // `Box<dyn Fn...>` is anonymous, so the alias is the only way to name the type.
+            BridgeRsTypeKind::Callable(_)
+            // These spell out either to a path in another crate, or to a structural type. Neither
+            // can collide with the name of the alias itself.
+            | BridgeRsTypeKind::Bridge { .. }
+            | BridgeRsTypeKind::ProtoMessageBridge { .. }
+            | BridgeRsTypeKind::StdOptional(_)
+            | BridgeRsTypeKind::StdPair(..) => true,
+            // `std::string` bridges to `cc_std::std::string`, which is named after the C++ alias
+            // itself. Binding the alias would define `string` twice in `cc_std`'s `std` module.
+            BridgeRsTypeKind::StdString { .. } => false,
+            // `c9::Co<'a, T>` carries a lifetime that the alias would have to declare. From an
+            // alias, `have_reference_param` is always false, so we would silently pick `'static`.
+            BridgeRsTypeKind::C9Co { .. } => false,
+        }
+    }
 }
 
 fn new_c9_co_record<'a>(
@@ -1620,7 +1646,15 @@ impl<'a> RsTypeKind<'a> {
     }
 
     pub fn is_bridge_type(&self) -> bool {
-        matches!(self.unalias(), RsTypeKind::BridgeType { .. })
+        self.as_bridge_type().is_some()
+    }
+
+    /// Returns the [`BridgeRsTypeKind`] this type bridges to, looking through any type aliases.
+    pub fn as_bridge_type(&self) -> Option<&BridgeRsTypeKind<'a>> {
+        match self.unalias() {
+            RsTypeKind::BridgeType { bridge_type, .. } => Some(bridge_type),
+            _ => None,
+        }
     }
 
     pub fn is_layout_compatible(&self) -> bool {

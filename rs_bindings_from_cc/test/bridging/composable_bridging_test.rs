@@ -37,6 +37,17 @@ fn test_stuff() {
 }
 
 #[gtest]
+fn test_aliases_to_bridge_types() {
+    // The C++ aliases are bound as Rust aliases to the bridged types.
+    let present: OptionalInt = MakeOptionalInt(true);
+    expect_eq!(present, Some(42));
+    expect_eq!(MakeOptionalInt(false), None);
+
+    let pair: IntFloatPair = MakeIntFloatPair(1, 2.0);
+    expect_eq!(pair, (1, 2.0));
+}
+
+#[gtest]
 fn test_vec3_of_structs() {
     expect_eq!(
         MakeVec3OfStructs(Stuff { i: 1, f: 2.0 }, Stuff { i: 3, f: 4.0 }, Stuff { i: 5, f: 6.0 }),

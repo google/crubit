@@ -144,6 +144,15 @@ fn test_call_type_alias_mapper() {
 }
 
 #[gtest]
+fn test_alias_to_any_invocable() {
+    // `IntMapper` is a C++ alias to `absl::AnyInvocable<int(int) const>`, and
+    // is bound as a Rust alias to the bridged type.
+    let f: IntMapper = ReturnIntMapperAlias();
+    expect_eq!(f(41), 42);
+    expect_eq!(CallIntMapperAlias(Box::new(|x: i32| -> i32 { x + 1 }), 41), 42);
+}
+
+#[gtest]
 fn test_return_record_mapper() {
     let f: Box<dyn Fn(MyStruct) -> MyStruct + Send + Sync> = ReturnRecordMapper();
     let s = MyStruct { value: 41 };

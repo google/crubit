@@ -53,6 +53,15 @@ MakeStuff() {
   return {std::nullopt, {{3.14f, {1.0f, 2.0f, 3.0f}}}};
 }
 
+OptionalInt MakeOptionalInt(bool is_present) {
+  if (is_present) {
+    return 42;
+  }
+  return std::nullopt;
+}
+
+IntFloatPair MakeIntFloatPair(int a, float b) { return {a, b}; }
+
 Vec3<Stuff> MakeVec3OfStructs(Stuff x, Stuff y, Stuff z) { return {x, y, z}; }
 
 std::string ReturnProperGreeting() { return "Hello, world!"; }

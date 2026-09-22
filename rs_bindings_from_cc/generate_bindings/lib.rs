@@ -141,7 +141,7 @@ fn generate_type_alias<'a>(
         raw_type_alias.as_ref()
     };
     db.errors().add_category(error_report::Category::Alias);
-    // Skip the type alias if it maps to a bridge type.
+    // Skip the type alias if it maps to a bridge type that cannot be aliased.
     // NOTE: rs_type_kind() gives a poor error message ("no bindings for <Alias>") if the underlying
     // type is unsupported, so that most users of rs_type_kind (e.g. function definitions, structs)
     // will fail with an error message about the _alias_ being unsupported, not the alias-ee.

@@ -31,6 +31,19 @@ absl::AnyInvocable<MyOption<int>(MyOption<int>) const> MyOptionIntMapper();
 // Fn in Rust.
 absl::AnyInvocable<int(int)> ReturnNonConstIntMapper();
 
+// A type alias to an AnyInvocable becomes a type alias to the bridged Rust
+// type.
+using IntMapper = absl::AnyInvocable<int(int) const>;
+
+// Type aliases are transparent: the parameter is spelled as the bridged Rust
+// type, not as `IntMapper`.
+int CallIntMapper(IntMapper f, int i);
+
+// Member type aliases to an AnyInvocable also receive bindings.
+struct Widget {
+  using DoneCallback = absl::AnyInvocable<void() &&>;
+};
+
 // IncompleteRecord
 struct Incomplete;
 

@@ -100,6 +100,11 @@ MyAlias CallTypeAliasMapper(absl::AnyInvocable<MyAlias(MyAlias) const> f,
   return f(i);
 }
 
+IntMapper ReturnIntMapperAlias() {
+  return [](int x) -> int { return x + 1; };
+}
+int CallIntMapperAlias(IntMapper f, int i) { return f(i); }
+
 absl::AnyInvocable<Incomplete*(Incomplete*) const>
 ReturnIncompletePointerMapper() {
   return [](Incomplete* x) -> Incomplete* { return x; };

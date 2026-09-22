@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/consume_absl:absl_functional
 
 #![rustfmt::skip]
-#![feature(custom_inner_attributes)]
+#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -70,6 +70,65 @@ pub fn ReturnNonConstIntMapper() -> ::alloc::boxed::Box<
     unsafe {
         ::bridge_rust::unstable_return!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: ::ffi_11::c_int|->::ffi_11::c_int{ ::core::panic!("moved-from value") }),|raw_any_invocable: ::cc_std::std::unique_ptr<::any_invocable::RawAnyInvocable>|->::alloc::boxed::Box<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>{ ::alloc::boxed::Box::new(move|param_0: ::ffi_11::c_int|->::ffi_11::c_int{ unsafe{ crate::detail::__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(::cc_std::std::unique_ptr::as_ptr(&raw_any_invocable)as*mut _,param_0) } }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___Z23ReturnNonConstIntMapperv(__crubit_return_abi_buffer,); })
     }
+}
+
+/// A type alias to an AnyInvocable becomes a type alias to the bridged Rust
+/// type.
+pub type IntMapper = ::alloc::boxed::Box<
+    dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+        + ::core::marker::Send
+        + ::core::marker::Sync
+        + 'static,
+>;
+
+/// Type aliases are transparent: the parameter is spelled as the bridged Rust
+/// type, not as `IntMapper`.
+#[inline(always)]
+pub fn CallIntMapper(
+    f: ::alloc::boxed::Box<
+        dyn ::core::ops::Fn(::ffi_11::c_int) -> ::ffi_11::c_int
+            + ::core::marker::Send
+            + ::core::marker::Sync
+            + 'static,
+    >,
+    i: ::ffi_11::c_int,
+) -> ::ffi_11::c_int {
+    unsafe {
+        crate::detail::__rust_thunk___Z13CallIntMapperN4absl12AnyInvocableIKFiiEEEi(::bridge_rust::unstable_encode!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: ::ffi_11::c_int|->::ffi_11::c_int{ ::core::panic!("moved-from value") }),|raw_any_invocable: ::cc_std::std::unique_ptr<::any_invocable::RawAnyInvocable>|->::alloc::boxed::Box<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>{ ::alloc::boxed::Box::new(move|param_0: ::ffi_11::c_int|->::ffi_11::c_int{ unsafe{ crate::detail::__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(::cc_std::std::unique_ptr::as_ptr(&raw_any_invocable)as*mut _,param_0) } }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::Fn(::ffi_11::c_int)->::ffi_11::c_int+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8,i)
+    }
+}
+
+/// Member type aliases to an AnyInvocable also receive bindings.
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "6Widget"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=Widget
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct Widget {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for Widget {}
+impl !Sync for Widget {}
+unsafe impl ::cxx::ExternType for Widget {
+    type Id = ::cxx::type_id!("Widget");
+    type Kind = ::cxx::kind::Trivial;
+}
+
+impl Default for Widget {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN6WidgetC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+pub mod widget {
+    pub type DoneCallback = ::alloc::boxed::Box<
+        dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
+    >;
 }
 
 // error: struct `Incomplete` could not be bound
@@ -196,6 +255,11 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z23ReturnNonConstIntMapperv(
             __return_abi_buffer: *mut ::core::ffi::c_uchar,
         );
+        pub(crate) unsafe fn __rust_thunk___Z13CallIntMapperN4absl12AnyInvocableIKFiiEEEi(
+            f: *const ::core::ffi::c_uchar,
+            i: ::ffi_11::c_int,
+        ) -> ::ffi_11::c_int;
+        pub(crate) unsafe fn __rust_thunk___ZN6WidgetC1Ev(__this: *mut ::core::ffi::c_void);
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
@@ -366,3 +430,10 @@ mod detail {
         ) -> ::ffi_11::c_int;
     }
 }
+
+const _: () = {
+    assert!(::core::mem::size_of::<crate::Widget>() == 1);
+    assert!(::core::mem::align_of::<crate::Widget>() == 1);
+    static_assertions::assert_impl_all!(crate::Widget: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::Widget: Drop);
+};

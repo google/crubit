@@ -216,7 +216,10 @@ pub fn has_bindings<'a>(
                 /*lifetimes=*/ &[],
             ) {
                 Ok(rs_type_kind) => {
-                    if matches!(item, Item::TypeAlias(_)) && rs_type_kind.unalias().is_bridge_type()
+                    // A few bridge types cannot be aliased: see `BridgeRsTypeKind::is_aliasable`.
+                    if matches!(item, Item::TypeAlias(_))
+                        && let Some(bridge_type) = rs_type_kind.as_bridge_type()
+                        && !bridge_type.is_aliasable()
                     {
                         return Err(NoBindingsReason::Unsupported(anyhow!(
                             "Type alias for {cpp_type} suppressed due to being a bridge type",

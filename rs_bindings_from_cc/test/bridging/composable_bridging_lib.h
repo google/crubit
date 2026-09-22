@@ -72,6 +72,14 @@ std::pair<std::pair<int, float>, bool> MakePair(int a, float b, bool c);
 std::pair<std::optional<int>, std::optional<std::pair<float, Vec3<float>>>>
 MakeStuff();
 
+// Aliases to bridge types are bound as aliases to the bridged Rust types
+// (`Option<i32>` and `(i32, f32)` respectively).
+using OptionalInt = std::optional<int>;
+using IntFloatPair = std::pair<int, float>;
+
+OptionalInt MakeOptionalInt(bool is_present);
+IntFloatPair MakeIntFloatPair(int a, float b);
+
 // Not a bridge type!
 struct [[clang::annotate("crubit_internal_trait_derive", "PartialEq")]] Stuff {
   int i;

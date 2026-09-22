@@ -63,6 +63,9 @@ pub fn TakeCppStruct(__param_0: crate::RustStruct) {
     }
 }
 
+/// An alias to a bridge type is bound as an alias to the bridged Rust type.
+pub type CppStructAlias = crate::RustStruct;
+
 // error: class `MyOption` could not be bound
 //   Class templates are not yet supported
 

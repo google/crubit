@@ -27,6 +27,9 @@ CppStruct ReturnCppStruct();
 
 void TakeCppStruct(CppStruct);
 
+// An alias to a bridge type is bound as an alias to the bridged Rust type.
+using CppStructAlias = CppStruct;
+
 template <typename T>
 // clang-format off
 struct

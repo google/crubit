@@ -177,4 +177,31 @@ extern "C" void __rust_thunk___Z23ReturnNonConstIntMapperv(
 static_assert((class absl::AnyInvocable<int(int)> (*)()) &
               ::ReturnNonConstIntMapper);
 
+extern "C" int __rust_thunk___Z13CallIntMapperN4absl12AnyInvocableIKFiiEEEi(
+    const unsigned char* f, int i) {
+  ::crubit::Decoder __f_decoder(
+      ::crubit::AnyInvocableAbi<int(int) const>::kSize, f);
+  return CallIntMapper(
+      ::crubit::AnyInvocableAbi<int(int) const>(
+          __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional,
+          [](::absl::internal_any_invocable::TypeErasedState* state,
+             ::absl::internal_any_invocable::ForwardedParameterType<int>
+                 param_0) noexcept -> int {
+            return __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+                state, param_0);
+          })
+          .Decode(__f_decoder),
+      i);
+}
+
+static_assert((int (*)(class absl::AnyInvocable<int(int) const>, int)) &
+              ::CallIntMapper);
+
+static_assert(sizeof(struct Widget) == 1);
+static_assert(alignof(struct Widget) == 1);
+
+extern "C" void __rust_thunk___ZN6WidgetC1Ev(struct Widget* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop

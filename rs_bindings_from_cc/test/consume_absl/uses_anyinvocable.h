@@ -69,6 +69,12 @@ absl::AnyInvocable<MyAlias(MyAlias) const> ReturnTypeAliasMapper();
 MyAlias CallTypeAliasMapper(absl::AnyInvocable<MyAlias(MyAlias) const> f,
                             MyAlias i);
 
+// TypeAlias to an AnyInvocable: the alias itself receives bindings, as an
+// alias to the bridged Rust type.
+using IntMapper = absl::AnyInvocable<int(int) const>;
+IntMapper ReturnIntMapperAlias();
+int CallIntMapperAlias(IntMapper f, int i);
+
 // IncompleteRecord
 struct Incomplete;
 absl::AnyInvocable<Incomplete*(Incomplete*) const>
