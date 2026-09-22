@@ -3146,6 +3146,169 @@ fn test_mangled_cc_name_does_not_depend_on_target_cxx_abi() -> Result<()> {
     Ok(())
 }
 
+/// A record is "Rust-movable" when Rust may move it with `memcpy`, without
+/// running the C++ destructor on the old location.  `is_trivial_abi` carries
+/// this property, and it decides whether a record is `Unpin`, whether it
+/// derives `Copy`, whether it is `cxx::kind::Trivial`, and whether it is
+/// passed as `&mut T` rather than `Pin<&mut T>`.
+///
+/// Crubit clients such as Chromium build the same Rust code for several target
+/// platforms, so this property must not depend on the target.  The rows below
+/// where the two expectations differ document where Crubit does not meet that
+/// goal yet - see b/564616479.
+#[gtest]
+fn test_is_trivial_abi_across_target_platforms() -> Result<()> {
+    struct TestCase {
+        record_name: &'static str,
+        input_cpp: &'static str,
+        expected_rust_movable_on_linux: bool,
+        expected_rust_movable_on_windows: bool,
+    }
+    const CASES: &[TestCase] = &[
+        TestCase {
+            record_name: "Trivial",
+            input_cpp: "struct Trivial { char c; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        // Crubit does not analyze destructor bodies, and a destructor may
+        // observe `this`, so a non-trivial destructor forces the conservative
+        // answer.
+        //
+        // TODO(b/564616479): The Microsoft x64 ABI passes a small class with a
+        // trivial copy constructor in registers even when its destructor is
+        // non-trivial.
+        TestCase {
+            record_name: "SmallWithNontrivialDtor",
+            input_cpp: "struct SmallWithNontrivialDtor { char c; ~SmallWithNontrivialDtor(); };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: true,
+        },
+        // `[[clang::trivial_abi]]` is how the author opts back in - on every
+        // target platform.
+        TestCase {
+            record_name: "SmallWithTrivialAbiAttr",
+            input_cpp: "struct [[clang::trivial_abi]] SmallWithTrivialAbiAttr { \
+                          char c; ~SmallWithTrivialAbiAttr(); };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        // TODO(b/564616479): The Microsoft C++ ABI ignores the move
+        // constructor when it decides whether a class can be passed in
+        // registers.
+        TestCase {
+            record_name: "TrivialCopyNontrivialMove",
+            input_cpp: "struct TrivialCopyNontrivialMove { \
+                          TrivialCopyNontrivialMove(const TrivialCopyNontrivialMove&) = default; \
+                          TrivialCopyNontrivialMove(TrivialCopyNontrivialMove&&) {} int i; };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: true,
+        },
+        // TODO(b/564616479): ...and it requires a non-deleted copy
+        // constructor, so it rejects move-only classes.
+        TestCase {
+            record_name: "MoveOnly",
+            input_cpp: "struct MoveOnly { MoveOnly(MoveOnly&&) = default; \
+                          MoveOnly(const MoveOnly&) = delete; int i; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: false,
+        },
+        // A class that can be neither copied nor moved is usually
+        // address-sensitive by design, even when it is trivially destructible.
+        TestCase {
+            record_name: "NeitherCopyableNorMovable",
+            input_cpp: "struct NeitherCopyableNorMovable { \
+                          NeitherCopyableNorMovable(const NeitherCopyableNorMovable&) = delete; \
+                          NeitherCopyableNorMovable(NeitherCopyableNorMovable&&) = delete; \
+                          int i; };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
+        },
+        // A *deleted* special member does not disqualify a class - only a
+        // *non-trivial* one does.  Here the union's destructor is deleted
+        // (because the member's destructor is non-trivial), so the union is
+        // still movable by `memcpy`.
+        TestCase {
+            record_name: "UnionWithDeletedDtor",
+            input_cpp: "struct SmallWithNontrivialDtor { char c; ~SmallWithNontrivialDtor(); }; \
+                        union UnionWithDeletedDtor { \
+                          int trivial_member; SmallWithNontrivialDtor nontrivial_dtor_member; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: true,
+        },
+        // Same idea for a deleted copy constructor: `MoveOnlyWrapper` is
+        // movable by `memcpy` even though the copy constructor it would
+        // inherit from its field is non-trivial.
+        //
+        // TODO(b/564616479): Fix the Windows expectation.
+        TestCase {
+            record_name: "MoveOnlyWrapper",
+            input_cpp: "struct NontrivialCopyButTrivialMove { \
+                          NontrivialCopyButTrivialMove(const NontrivialCopyButTrivialMove&); \
+                          NontrivialCopyButTrivialMove(NontrivialCopyButTrivialMove&&) = default; \
+                        }; \
+                        struct MoveOnlyWrapper { \
+                          MoveOnlyWrapper(const MoveOnlyWrapper&) = delete; \
+                          MoveOnlyWrapper(MoveOnlyWrapper&&) = default; \
+                          NontrivialCopyButTrivialMove field; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: false,
+        },
+        TestCase {
+            record_name: "NontrivialCopyButTrivialMove",
+            input_cpp: "struct NontrivialCopyButTrivialMove { \
+                          NontrivialCopyButTrivialMove(const NontrivialCopyButTrivialMove&); \
+                          NontrivialCopyButTrivialMove(NontrivialCopyButTrivialMove&&) = default; \
+                        };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: false,
+        },
+        // *Every* non-deleted copy constructor must be trivial - it is not
+        // enough that one of the overloads is.
+        //
+        // TODO(b/564616479): Fix the Windows expectation.
+        TestCase {
+            record_name: "OverloadedCopyCtor",
+            input_cpp: "struct OverloadedCopyCtor { \
+                          OverloadedCopyCtor(const OverloadedCopyCtor&) = default; \
+                          OverloadedCopyCtor(OverloadedCopyCtor&); };",
+            expected_rust_movable_on_linux: false,
+            expected_rust_movable_on_windows: true,
+        },
+        // TODO(b/564616479): Clang drops `[[clang::trivial_abi]]` when a field
+        // cannot be passed in registers on the target ABI, so the attribute
+        // itself is target-dependent.  Crubit cannot fix this on its own.
+        TestCase {
+            record_name: "TrivialAbiWithMoveOnlyField",
+            input_cpp: "struct [[clang::trivial_abi]] MoveOnly { \
+                          MoveOnly(MoveOnly&&) = default; \
+                          MoveOnly(const MoveOnly&) = delete; int i; }; \
+                        struct [[clang::trivial_abi]] TrivialAbiWithMoveOnlyField { \
+                          TrivialAbiWithMoveOnlyField(TrivialAbiWithMoveOnlyField&&) = default; \
+                          ~TrivialAbiWithMoveOnlyField(); MoveOnly field; };",
+            expected_rust_movable_on_linux: true,
+            expected_rust_movable_on_windows: false,
+        },
+    ];
+    for case in CASES {
+        for (platform, expected) in [
+            (multiplatform_testing::Platform::X86Linux, case.expected_rust_movable_on_linux),
+            (multiplatform_testing::Platform::X86Windows, case.expected_rust_movable_on_windows),
+        ] {
+            let proto = ir_testing::ir_proto_from_cc(platform, case.input_cpp)?;
+            let ir = ir_testing::make_test_ir(&proto)?;
+            let record = retrieve_record(&ir, case.record_name);
+            expect_eq!(
+                record.is_trivial_abi(),
+                expected,
+                "{}, platform = {platform:?}",
+                case.record_name
+            );
+        }
+    }
+    Ok(())
+}
+
 #[gtest]
 fn test_class() {
     // This test verifies that `record_type` correectly captures whether the C++
