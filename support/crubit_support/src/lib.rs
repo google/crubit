@@ -10,3 +10,6 @@ pub mod bridge;
 pub mod dyn_erased_future;
 pub mod erased_future;
 pub mod hash;
+
+#[cfg(feature = "inline_cpp")]
+pub use inline_cpp_macro::{global_cpp, inline_cpp};

@@ -630,8 +630,36 @@ pub fn generate_cc_thunk_parts<'a>(
                 PassingConvention::AbiCompatible
                 | PassingConvention::Void
                 | PassingConvention::OwnedPtr => {
-                    param_idents.push(ident);
-                    param_types.push(cpp_type);
+                    // The `inline_cpp!` body is the original C++ source text, which refers to
+                    // reference parameters using reference syntax (e.g. `p.x`). References are
+                    // lowered to pointers for the C ABI, so bind a reference with the original
+                    // parameter name to keep the body compiling.
+                    match p.type_().variant() {
+                        CcTypeVariant::Pointer(pointer)
+                            if pointer.kind() == PointerTypeKind::RValueRef =>
+                        {
+                            let ffi_ident = format_ident!("__{ident}");
+                            conversion_stmts.extend(quote! {
+                                auto&& #ident = std::move(*#ffi_ident);
+                            });
+                            param_idents.push(ffi_ident);
+                            param_types.push(cpp_type);
+                        }
+                        CcTypeVariant::Pointer(pointer)
+                            if pointer.kind() == PointerTypeKind::LValueRef =>
+                        {
+                            let ffi_ident = format_ident!("__{ident}");
+                            conversion_stmts.extend(quote! {
+                                auto&& #ident = *#ffi_ident;
+                            });
+                            param_idents.push(ffi_ident);
+                            param_types.push(cpp_type);
+                        }
+                        _ => {
+                            param_idents.push(ident);
+                            param_types.push(cpp_type);
+                        }
+                    }
                 }
             }
         } else {
