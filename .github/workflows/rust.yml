@@ -9,8 +9,34 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# Supersede in-flight runs for the same PR instead of running both to
+# completion. Pushes to main are left alone: a cancelled run reports as a
+# failed check, which would confuse the Copybara export gating on it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   CARGO_TERM_COLOR: always
+  # Incremental compilation only pays off across repeated builds in one
+  # checkout; on ephemeral runners it is pure overhead.
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUSTUP_MAX_RETRIES: 10
+  # Single source of truth for the crates Cargo cannot yet build or test
+  # directly. Expand these with ${{ env.NAME }} rather than $NAME so that the
+  # quoting around the globs is interpreted by the shell rather than passed
+  # through to Cargo literally.
+  CARGO_SKIP_ALL: >-
+    --exclude '*_sys'
+  CARGO_SKIP_UNTESTABLE: >-
+    --exclude=rs_bindings_from_cc
+    --exclude=rs_bindings_from_cc_cc_api
+    --exclude=rs_bindings_from_cc_cc_api_ffi
+    --exclude=rs_bindings_from_cc_ir_matchers
+    --exclude=rs_bindings_from_cc_ir_testing
+    --exclude=rs_bindings_from_cc_multiplatform_ir_testing
+    --exclude=rs_bindings_from_cc_test_generators
 
 permissions:
   contents: read
@@ -20,6 +46,7 @@ jobs:
   test:
 
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -45,24 +72,23 @@ jobs:
     - name: Test Cargo project
       run: >
         cargo test --verbose --locked --workspace --no-fail-fast
-        --exclude '*_sys'
+        ${{ env.CARGO_SKIP_ALL }}
         --exclude 'rs_bindings_from_cc*'
+    # Shares target/ with the step above, so these must stay in one job.
     - name: Build not-yet-testable Cargo crates
       run: >
         cargo build --verbose --locked --workspace
-        --exclude '*_sys'
-        --exclude=rs_bindings_from_cc
-        --exclude=rs_bindings_from_cc_cc_api
-        --exclude=rs_bindings_from_cc_cc_api_ffi
-        --exclude=rs_bindings_from_cc_ir_matchers
-        --exclude=rs_bindings_from_cc_ir_testing
-        --exclude=rs_bindings_from_cc_multiplatform_ir_testing
-        --exclude=rs_bindings_from_cc_test_generators
+        ${{ env.CARGO_SKIP_ALL }}
+        ${{ env.CARGO_SKIP_UNTESTABLE }}
 
   test_cmake:
 
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
+      # Report both legs independently; one failing example should not mask
+      # the state of the other.
+      fail-fast: false
       matrix:
         project: [cmake, cmake_demo]
 
@@ -75,7 +101,11 @@ jobs:
       uses: ./.github/actions/setup_sccache
       with:
         gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
-        gcs_key_prefix: sccache/${{ matrix.project }}
+        # One prefix for both matrix legs. sccache keys are content hashes of
+        # (compiler, flags, preprocessed source), so a shared prefix cannot
+        # cause collisions -- it only lets the two examples reuse the objects
+        # they have in common.
+        gcs_key_prefix: sccache/cmake
     - name: Test CMake project
       run: |
         cd examples/build_systems/${{ matrix.project }}
@@ -90,6 +120,7 @@ jobs:
   test_bazel:
 
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
