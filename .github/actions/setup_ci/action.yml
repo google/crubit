@@ -1,0 +1,200 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: 'Setup Crubit CI'
+description: >
+  Shared CI setup for every Crubit workflow: a single Google Cloud
+  authentication, plus opt-in Bazel remote caching, sccache (for C++ and/or
+  Rust) and protoc. Replaces the former setup_bazel and setup_sccache actions,
+  which each authenticated separately and each carried their own copy of the
+  unauthenticated-fork fallback logic.
+
+inputs:
+  gcp_sa_key:
+    description: >
+      Google Cloud service account key JSON used for cache authentication.
+      Empty for pull requests from forks, which have no access to secrets; all
+      caches then degrade to read-only or off.
+    required: false
+    default: ''
+  bazel:
+    description: 'Install Bazel and point it at the GCS remote cache.'
+    required: false
+    default: 'false'
+  llvm_head:
+    description: >
+      Resolve the current llvm-project main commit and export
+      CRUBIT_LLVM_COMMIT, overriding the pin in MODULE.bazel. Opt-in rather
+      than implied by `bazel`, because only the workflows that deliberately
+      track LLVM head want it.
+    required: false
+    default: 'false'
+  sccache:
+    description: >
+      Install sccache and route both C/C++ and Rust compilation through it, by
+      exporting the CMake compiler-launcher variables and RUSTC_WRAPPER.
+      Requires CARGO_INCREMENTAL=0, which rust.yml sets workflow-wide.
+
+      Both are exported together rather than separately because the two are not
+      cleanly separable in practice: the CMake examples use Corrosion, so a
+      "C/C++ only" job compiles Rust too. Splitting the toggle would mean a job
+      silently caching one language and not the other.
+    required: false
+    default: 'false'
+  protoc:
+    description: 'Install a prebuilt protoc and add it to PATH.'
+    required: false
+    default: 'false'
+  protoc_version:
+    description: 'protoc release to install when protoc is enabled.'
+    required: false
+    default: '36.1'
+
+outputs:
+  authenticated:
+    description: "'true' if Google Cloud credentials were available."
+    value: ${{ steps.creds.outputs.authenticated }}
+  sccache_enabled:
+    description: "'true' if sccache was installed and configured."
+    value: ${{ steps.sccache_config.outputs.enabled }}
+
+runs:
+  using: 'composite'
+  steps:
+    # A single authentication shared by every cache below.
+    - name: Authenticate to Google Cloud
+      id: auth
+      if: ${{ inputs.gcp_sa_key != '' }}
+      uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
+      with:
+        credentials_json: ${{ inputs.gcp_sa_key }}
+
+    - name: Record credential state
+      id: creds
+      shell: bash
+      env:
+        GCP_SA_KEY: ${{ inputs.gcp_sa_key }}
+      run: |
+        if [[ -n "$GCP_SA_KEY" ]]; then
+          echo "authenticated=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "authenticated=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Setup Bazel
+      if: ${{ inputs.bazel == 'true' }}
+      uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+      with:
+        bazelisk-cache: true
+        repository-cache: true
+        external-cache: true
+        disk-cache: false
+
+    # Written to the *home* bazelrc rather than passed per-invocation. Bazel
+    # reads $HOME/.bazelrc for every workspace, which matters because
+    # examples/build_systems/bazel is a second workspace with its own .bazelrc
+    # that would otherwise need a duplicate copy of these flags.
+    - name: Configure Bazel remote cache
+      if: ${{ inputs.bazel == 'true' }}
+      shell: bash
+      env:
+        AUTHENTICATED: ${{ steps.creds.outputs.authenticated }}
+      run: |
+        {
+          echo "build --remote_cache=https://storage.googleapis.com/crubit-ci-bazel"
+          echo "build --color=yes"
+          echo "build --show_timestamps"
+        } >> "$HOME/.bazelrc"
+
+        if [[ "$AUTHENTICATED" == "true" ]]; then
+          echo "build --google_default_credentials" >> "$HOME/.bazelrc"
+          echo "Bazel GCS remote cache: read-write"
+        else
+          # The bucket is world-readable, so unauthenticated fork PRs can still
+          # read from it; they just must not try to upload.
+          echo "build --remote_upload_local_results=false" >> "$HOME/.bazelrc"
+          echo "Bazel GCS remote cache: read-only"
+        fi
+
+    - name: Discover and report latest LLVM commit
+      if: ${{ inputs.llvm_head == 'true' }}
+      shell: bash
+      run: |
+        LLVM_COMMIT=$(git ls-remote https://github.com/llvm/llvm-project.git refs/heads/main | cut -f1)
+        if [[ -z "$LLVM_COMMIT" ]]; then
+          echo "::error::Failed to discover latest LLVM commit"
+          exit 1
+        fi
+        echo "Latest LLVM commit: $LLVM_COMMIT"
+        echo "CRUBIT_LLVM_COMMIT=$LLVM_COMMIT" >> "$GITHUB_ENV"
+        echo "### LLVM Dependency" >> "$GITHUB_STEP_SUMMARY"
+        echo "Building against LLVM \`main\` commit [\`$LLVM_COMMIT\`](https://github.com/llvm/llvm-project/commit/$LLVM_COMMIT)" >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Install sccache
+      if: >
+        inputs.sccache == 'true'
+        && steps.creds.outputs.authenticated == 'true'
+      uses: mozilla-actions/sccache-action@65101d47ea8028ed0c98a1cdea8dd9182e9b5133 # v0.0.8
+
+    - name: Configure sccache
+      id: sccache_config
+      if: ${{ inputs.sccache == 'true' }}
+      shell: bash
+      env:
+        AUTHENTICATED: ${{ steps.creds.outputs.authenticated }}
+        CREDS_PATH: ${{ steps.auth.outputs.credentials_file_path }}
+      run: |
+        if [[ "$AUTHENTICATED" != "true" ]]; then
+          # Still define LAUNCHER_FLAGS so the cmake invocation has something to
+          # expand to. Note nothing else is exported here: pointing CMake or
+          # Cargo at an sccache binary that was never installed would break the
+          # build rather than merely skip the cache.
+          echo "LAUNCHER_FLAGS=" >> "$GITHUB_ENV"
+          echo "enabled=false" >> "$GITHUB_OUTPUT"
+          echo "sccache disabled (no credentials)"
+          exit 0
+        fi
+
+        {
+          echo "SCCACHE_GCS_BUCKET=crubit-ci-cmake"
+          echo "SCCACHE_GCS_RW_MODE=READ_WRITE"
+          echo "SCCACHE_GCS_KEY_PATH=${CREDS_PATH}"
+          # One prefix for every consumer. sccache keys are content hashes of
+          # (compiler, flags, preprocessed input), so distinct compilers and
+          # distinct RUSTFLAGS already occupy distinct key spaces; splitting the
+          # prefix would only prevent legitimate sharing.
+          echo "SCCACHE_GCS_KEY_PREFIX=sccache/crubit"
+
+          # Both languages, unconditionally. A job that compiles neither is
+          # unaffected, since these are only read by cmake and cargo.
+          echo "CMAKE_C_COMPILER_LAUNCHER=sccache"
+          echo "CMAKE_CXX_COMPILER_LAUNCHER=sccache"
+          echo "LAUNCHER_FLAGS=-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+          echo "RUSTC_WRAPPER=sccache"
+        } >> "$GITHUB_ENV"
+
+        echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+    - name: Cache protoc
+      if: ${{ inputs.protoc == 'true' }}
+      id: cache_protoc
+      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      with:
+        path: ${{ runner.temp }}/proto
+        key: ${{ runner.os }}-protoc-${{ inputs.protoc_version }}
+
+    - name: Install protoc
+      if: ${{ inputs.protoc == 'true' }}
+      shell: bash
+      env:
+        CACHE_HIT: ${{ steps.cache_protoc.outputs.cache-hit }}
+        PROTOC_VER: ${{ inputs.protoc_version }}
+        DEST: ${{ runner.temp }}/proto
+      run: |
+        if [[ "$CACHE_HIT" != "true" ]]; then
+          curl -sSLO "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-x86_64.zip"
+          unzip -o "protoc-${PROTOC_VER}-linux-x86_64.zip" -d "${DEST}"
+          rm "protoc-${PROTOC_VER}-linux-x86_64.zip"
+        fi
+        echo "${DEST}/bin" >> "$GITHUB_PATH"

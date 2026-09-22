@@ -52,23 +52,13 @@ jobs:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
         persist-credentials: false
-    - name: Cache protoc
-      id: cache-protoc
-      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+    - name: Setup CI
+      id: setup
+      uses: ./.github/actions/setup_ci
       with:
-        path: ${{ runner.temp }}/proto
-        key: ${{ runner.os }}-protoc-36.1
-    - name: Install protoc
-      env:
-        CACHE_HIT: ${{ steps.cache-protoc.outputs.cache-hit }}
-      run: |
-        if [ "$CACHE_HIT" != "true" ]; then
-          PROTOC_VER=36.1
-          curl -sSLO "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-x86_64.zip"
-          unzip -o "protoc-${PROTOC_VER}-linux-x86_64.zip" -d "${{ runner.temp }}/proto"
-          rm "protoc-${PROTOC_VER}-linux-x86_64.zip"
-        fi
-        echo "${{ runner.temp }}/proto/bin" >> $GITHUB_PATH
+        gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+        sccache: 'true'
+        protoc: 'true'
     - name: Test Cargo project
       run: >
         cargo test --verbose --locked --workspace --no-fail-fast
@@ -80,6 +70,9 @@ jobs:
         cargo build --verbose --locked --workspace
         ${{ env.CARGO_SKIP_ALL }}
         ${{ env.CARGO_SKIP_UNTESTABLE }}
+    - name: Show sccache stats
+      if: steps.setup.outputs.sccache_enabled == 'true' && always()
+      run: sccache --show-stats
 
   test_cmake:
 
@@ -96,16 +89,14 @@ jobs:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
         persist-credentials: false
-    - name: Setup sccache
-      id: sccache
-      uses: ./.github/actions/setup_sccache
+    - name: Setup CI
+      id: setup
+      uses: ./.github/actions/setup_ci
       with:
         gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
-        # One prefix for both matrix legs. sccache keys are content hashes of
-        # (compiler, flags, preprocessed source), so a shared prefix cannot
-        # cause collisions -- it only lets the two examples reuse the objects
-        # they have in common.
-        gcs_key_prefix: sccache/cmake
+        # Covers both the C++ compiled directly by CMake and the Rust that
+        # Corrosion builds through Cargo.
+        sccache: 'true'
     - name: Test CMake project
       run: |
         cd examples/build_systems/${{ matrix.project }}
@@ -114,7 +105,7 @@ jobs:
         cd build
         ctest --output-on-failure --parallel 2
     - name: Show sccache stats
-      if: steps.sccache.outputs.enabled == 'true' && always()
+      if: steps.setup.outputs.sccache_enabled == 'true' && always()
       run: sccache --show-stats
 
   test_bazel:
@@ -126,34 +117,26 @@ jobs:
     - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       with:
         persist-credentials: false
-    - name: Setup Bazel
-      uses: ./.github/actions/setup_bazel
+    - name: Setup CI
+      uses: ./.github/actions/setup_ci
       with:
         gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
-    - name: "Discover and report latest LLVM commit"
-      run: |
-        LLVM_COMMIT=$(git ls-remote https://github.com/llvm/llvm-project.git refs/heads/main | cut -f1)
-        if [[ -z "$LLVM_COMMIT" ]]; then
-          echo "::error::Failed to discover latest LLVM commit"
-          exit 1
-        fi
-        echo "Latest LLVM commit: $LLVM_COMMIT"
-        echo "CRUBIT_LLVM_COMMIT=$LLVM_COMMIT" >> $GITHUB_ENV
-        echo "### LLVM Dependency" >> $GITHUB_STEP_SUMMARY
-        echo "Building against LLVM \`main\` commit [\`$LLVM_COMMIT\`](https://github.com/llvm/llvm-project/commit/$LLVM_COMMIT)" >> $GITHUB_STEP_SUMMARY
+        bazel: 'true'
+        llvm_head: 'true'
     - name: Build Bazel test project (example)
       run: |
         cd examples/build_systems/bazel
-        bazelisk build ${RCACHE_FLAGS} //:main
+        bazelisk build --remote_download_outputs=minimal //:main
 
     # TODO(b/564966909): Re-enable once rs_bindings_from_cc build is fixed up.
+    # --remote_download_outputs=all is load-bearing: setup_bazel_env.py's
+    # merge_archives() globs the resulting *.a files off local disk.
     - name: "Build rs_bindings_from_cc using Bazel"
       if: false
       run: >
         bazelisk build
         --lockfile_mode=error
         --remote_download_outputs=all
-        ${RCACHE_FLAGS}
         rs_bindings_from_cc:rs_bindings_from_cc_main
         @protobuf//:protoc
     - name: "Set up Bazel environment for Cargo"

@@ -35,15 +35,16 @@ jobs:
         key: ${{ runner.os }}-npm-${{ hashFiles('crubit_explorer/frontend/package.json') }}
         restore-keys: |
           ${{ runner.os }}-npm-
-    - name: Setup Bazel
-      uses: ./.github/actions/setup_bazel
+    - name: Setup CI
+      uses: ./.github/actions/setup_ci
       with:
         gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+        bazel: 'true'
     - name: Build and test Crubit Explorer
       run: |
         cd crubit_explorer/frontend
         npm i --package-lock-only
         npx pnpm import
         cd ..
-        bazelisk build ${RCACHE_FLAGS} //:server
-        bazelisk test ${RCACHE_FLAGS} //:server_test
+        bazelisk build --remote_download_outputs=minimal //:server
+        bazelisk test //:server_test
