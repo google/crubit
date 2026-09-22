@@ -262,3 +262,23 @@ fn test_allow_unbindable_type_invalid_on_fn() {
         );
     });
 }
+
+#[test]
+fn test_unsafe_relocate_tag_constructible_if_type_params_are_rust_movable() {
+    let test_src = r#"
+            #[doc="CRUBIT_ANNOTATE: cpp_type=CppWrapper<{T}>"]
+            #[doc="CRUBIT_ANNOTATE: unsafe_relocate_tag_constructible_if_type_params_are_rust_movable="]
+            pub struct RustMovableWrapper<T>(core::marker::PhantomData<T>);
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let attrs = attrs_for_named_def(tcx, "RustMovableWrapper").unwrap();
+        assert_eq!(
+            attrs,
+            CrubitAttrs {
+                cpp_type: Some(Symbol::intern("CppWrapper<{T}>")),
+                unsafe_relocate_tag_constructible_if_type_params_are_rust_movable: true,
+                ..Default::default()
+            }
+        );
+    });
+}
