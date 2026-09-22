@@ -14,9 +14,11 @@ def get_static_libraries_from_cc_info(cc_info):
       A list containing all of the static library `File`s found in `cc_info`.
     """
 
-    return [
-        library_to_link.static_library
-        for linker_input in cc_info.linking_context.linker_inputs.to_list()
-        for library_to_link in linker_input.libraries
-        if library_to_link.static_library != None
-    ]
+    result = []
+    for linker_input in cc_info.linking_context.linker_inputs.to_list():
+        for library_to_link in linker_input.libraries:
+            if library_to_link.static_library != None:
+                result.append(library_to_link.static_library)
+            elif library_to_link.pic_static_library != None:
+                result.append(library_to_link.pic_static_library)
+    return result
