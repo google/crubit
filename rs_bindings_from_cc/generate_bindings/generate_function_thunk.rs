@@ -240,14 +240,14 @@ pub fn generate_function_thunk<'a>(
     })
 }
 
-// Converts `mangled_name` into a string that can be used within an identifier.
-// All characters in the result are guaranteed to be from the XID_Continue class (though not
-// necessarily XID_Start, so the fragment can't be used at the start of an identifier).
-//
-// The escaping scheme is not collision-free, i.e. two different inputs may map to the same output.
-// In practice, though, collisions are extremely unlikely, and other aspects of the way we create
-// thunk names may also cause (very unlikely) collisions.
-fn ident_fragment_from_mangled_name(mangled_name: &str) -> Cow<'_, str> {
+/// Converts `mangled_name` into a string that can be used within an identifier.
+/// All characters in the result are guaranteed to be from the XID_Continue class (though not
+/// necessarily XID_Start, so the fragment can't be used at the start of an identifier).
+///
+/// The escaping scheme is not collision-free, i.e. two different inputs may map to the same output.
+/// In practice, though, collisions are extremely unlikely, and other aspects of the way we create
+/// thunk names may also cause (very unlikely) collisions.
+pub fn ident_fragment_from_mangled_name(mangled_name: &str) -> Cow<'_, str> {
     // LLVM identifiers use the `\01` prefix to suppress mangling:
     // https://llvm.org/docs/LangRef.html#identifiers
     // We won't be passing the name to LLVM anyway, so we simply strip the prefix if present.
