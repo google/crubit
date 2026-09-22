@@ -5,7 +5,7 @@
 use crate::{liberate_and_deanonymize_late_bound_regions, matches_qualified_name};
 use arc_anyhow::{anyhow, bail, ensure, Result};
 use database::BindingsGenerator;
-use rustc_infer::infer::{InferCtxt, RegionVariableOrigin};
+use rustc_infer::infer::InferCtxt;
 use rustc_infer::traits::{Obligation, ObligationCause};
 #[cfg_accessible(rustc_middle::ty::TraitClause)]
 use rustc_middle::ty::TraitClause;
@@ -82,6 +82,17 @@ pub fn get_generic_args<'tcx>(
         finder.generic_param_indices
     };
 
+    let mut new_anon_lifetime = {
+        let mut anon_count = 0u32;
+        move || {
+            anon_count += 1;
+            let curr_id = anon_count;
+            // Some rustc versions only offer `new_late_param` through `RegionExt`.
+            #[cfg_accessible(rustc_middle::ty::RegionExt)]
+            use rustc_middle::ty::RegionExt;
+            ty::Region::new_late_param(tcx, fn_def_id, ty::LateParamRegionKind::Anon(curr_id))
+        }
+    };
     let replacements: HashMap<usize, ty::GenericArg<'tcx>> = (0..generics.count())
         .map(|idx| {
             let param_def = generics.param_at(idx, tcx);
@@ -102,6 +113,7 @@ pub fn get_generic_args<'tcx>(
                         predicates,
                         param_def,
                         params_used_in_return_type.contains(&param_def.index),
+                        &mut new_anon_lifetime,
                     )
                     .map(|ty| ty.into())
                     .ok_or_else(|| {
@@ -181,7 +193,7 @@ fn get_replacements_for_fn_trait<'tcx>(
     closure_kind: ty::ClosureKind,
     bound_vars: &'tcx ty::List<ty::BoundVariableKind<'tcx>>,
     predicates: GenericClauses<'tcx>,
-    new_anon_lifetime: &dyn Fn() -> ty::Region<'tcx>,
+    new_anon_lifetime: &mut dyn FnMut() -> ty::Region<'tcx>,
     is_used_in_return_type: bool,
 ) -> Vec<Ty<'tcx>> {
     if is_used_in_return_type {
@@ -283,15 +295,12 @@ fn get_replacements_for_fn_trait<'tcx>(
 
 /// Given a generic constraint of the form `T: Trait`, returns the types that can potentially
 /// replace `T` in the generated bindings.
-///
-/// If the returned type needs to use a new anonymous lifetime, then it will be generated
-/// using the given `def_id` as its scope.
 fn get_replacements_for_trait_predicate<'tcx>(
     db: &BindingsGenerator<'tcx>,
     trait_predicate: TraitClause<'tcx>,
     bound_vars: &'tcx ty::List<ty::BoundVariableKind<'tcx>>,
     predicates: GenericClauses<'tcx>,
-    new_anon_lifetime: impl Fn() -> ty::Region<'tcx>,
+    new_anon_lifetime: &mut dyn FnMut() -> ty::Region<'tcx>,
     is_used_in_return_type: bool,
 ) -> Vec<Ty<'tcx>> {
     let tcx = db.tcx();
@@ -307,7 +316,7 @@ fn get_replacements_for_trait_predicate<'tcx>(
             closure_kind,
             bound_vars,
             predicates,
-            &new_anon_lifetime,
+            new_anon_lifetime,
             is_used_in_return_type,
         );
     }
@@ -341,7 +350,7 @@ fn get_replacements_for_trait_predicate<'tcx>(
             db,
             trait_ref,
             predicates,
-            &new_anon_lifetime,
+            new_anon_lifetime,
             is_used_in_return_type,
         )
         .into_iter()
@@ -356,7 +365,7 @@ fn get_replacement_for_ctor_trait<'tcx>(
     db: &BindingsGenerator<'tcx>,
     trait_ref: ty::TraitRef<'tcx>,
     predicates: GenericClauses<'tcx>,
-    new_anon_lifetime: &dyn Fn() -> ty::Region<'tcx>,
+    new_anon_lifetime: &mut dyn FnMut() -> ty::Region<'tcx>,
     is_used_in_return_type: bool,
 ) -> Option<Ty<'tcx>> {
     let tcx = db.tcx();
@@ -447,6 +456,7 @@ fn get_replacement_for_generic_type_param<'tcx>(
     predicates: GenericClauses<'tcx>,
     generic_type_param: &ty::GenericParamDef,
     is_used_in_return_type: bool,
+    new_anon_lifetime: &mut dyn FnMut() -> ty::Region<'tcx>,
 ) -> Option<Ty<'tcx>> {
     let tcx = db.tcx();
     // Look only at trait predicates involving this param (e.g. `T: SomeTrait`).
@@ -465,8 +475,6 @@ fn get_replacement_for_generic_type_param<'tcx>(
         });
 
     let infcx = tcx.infer_ctxt().build(TypingMode::non_body_analysis());
-    let new_anon_lifetime =
-        || infcx.next_region_var(RegionVariableOrigin::Coercion(tcx.def_span(def_id)));
 
     // Find the first replacement that fits all the constraints.
     trait_predicates_for_this_generic_param
@@ -476,7 +484,7 @@ fn get_replacement_for_generic_type_param<'tcx>(
                 trait_predicate,
                 bound_vars,
                 predicates,
-                new_anon_lifetime,
+                &mut *new_anon_lifetime,
                 is_used_in_return_type,
             )
         })

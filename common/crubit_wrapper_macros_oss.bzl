@@ -47,3 +47,8 @@ crubit_golden_flavor_transition = transition(
     outputs = ["//common/bazel_support:is_golden_test"],
 )
 crubit_make_analysis_test = analysistest.make
+
+# Placeholder for an internal attribute that asks Crubit's own tests to be
+# built with debug assertions.  OSS builds neither enable nor test for debug
+# assertions, so here it adds no attributes.
+ENABLE_CRUBIT_ASSERTIONS_ATTR = {}
