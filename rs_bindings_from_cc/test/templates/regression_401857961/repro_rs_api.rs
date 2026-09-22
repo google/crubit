@@ -55,7 +55,7 @@ pub mod repro {
     //   Class templates are not yet supported
 
     // error: function `repro::crash` could not be bound
-    //   Unsupported parameter type `repro::Nullable<repro::Interval> __param_0`:
+    //   Unsupported parameter type `repro::Nullable<struct repro::Interval> __param_0`:
     //     template instantiation is not yet supported
 }
 
@@ -63,7 +63,7 @@ pub mod repro {
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_REGRESSION_401857961_REPRO_H_
 
-// error: struct `repro::Nullable<repro::Interval>` could not be bound
+// error: struct `repro::Nullable<struct repro::Interval>` could not be bound
 //   template instantiation is not yet supported
 
 mod detail {

@@ -161,16 +161,16 @@ pub mod private_classes {
 
 // namespace private_classes
 
-// error: class `test_namespace_bindings::MyTemplate<DifferentScope>` could not be bound
+// error: class `test_namespace_bindings::MyTemplate<struct DifferentScope>` could not be bound
 //   template instantiation is not yet supported
 
-// error: class `test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam>` could not be bound
+// error: class `test_namespace_bindings::MyTemplate<struct test_namespace_bindings::TemplateParam>` could not be bound
 //   template instantiation is not yet supported
 
 // error: class `test_namespace_bindings::MyTemplate<int>` could not be bound
 //   template instantiation is not yet supported
 
-// error: struct `test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>` could not be bound
+// error: struct `test_namespace_bindings::TemplateWithTwoParams<struct test_namespace_bindings::TemplateWithTwoParams<int, int>, int>` could not be bound
 //   template instantiation is not yet supported
 
 // error: struct `test_namespace_bindings::TemplateWithTwoParams<int, float>` could not be bound
@@ -182,7 +182,7 @@ pub mod private_classes {
 // error: struct `test_namespace_bindings::MyStruct<char>` could not be bound
 //   template instantiation is not yet supported
 
-// error: struct `MyTopLevelTemplate<test_namespace_bindings::TemplateParam>` could not be bound
+// error: struct `MyTopLevelTemplate<struct test_namespace_bindings::TemplateParam>` could not be bound
 //   template instantiation is not yet supported
 
 // error: struct `MyTopLevelTemplate<int>` could not be bound

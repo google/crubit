@@ -18,4 +18,8 @@ fn test_template_instantiation_in_return_value_and_parameter_type() {
     let s = MyStruct { public_field: 123.into() };
     // SAFETY: s is alive while s.public_field.value() is alive, and no other references to s exist.
     assert_eq!(123, *unsafe { CRef::unchanging(s.public_field.value()) });
+
+    let action =
+        outer_with_shadowed_type::Action::from(outer_with_shadowed_type::Shadowed { x: 42 });
+    assert_eq!(42, unsafe { CRef::unchanging(action.value()) }.x);
 }

@@ -1739,7 +1739,7 @@ fn test_std_optional_with_incomplete_type_fails() -> Result<()> {
         RsTypeKind::Error { error, .. } => {
             expect_that!(
                 error.to_string(),
-                contains_substring("Type `std::optional<Incomplete>` uses forward-declared type `crate::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.")
+                contains_substring("Type `std::optional<struct Incomplete>` uses forward-declared type `crate::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.")
             );
         }
         other => panic!("Expected RsTypeKind::Error, got {other:?}"),
@@ -1768,7 +1768,7 @@ fn test_std_pair_with_incomplete_type_fails() -> Result<()> {
         RsTypeKind::Error { error, .. } => {
             expect_that!(
                 error.to_string(),
-                contains_substring("Type `std::pair<Incomplete, int>` uses forward-declared type `crate::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.")
+                contains_substring("Type `std::pair<struct Incomplete, int>` uses forward-declared type `crate::Incomplete` as an argument to a layout-compatible generic type. This is not supported. For more on why, see crubit.rs/types#incomplete_types.")
             );
         }
         other => panic!("Expected RsTypeKind::Error, got {other:?}"),

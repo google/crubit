@@ -330,8 +330,9 @@ __rust_thunk___Z11map_bridgedN6rs_std11DynCallableIKF7BridgedS1_EEES1_(
 }
 
 static_assert(
-    (struct Bridged (*)(class rs_std::DynCallable<Bridged(Bridged) const>,
-                        struct Bridged)) &
+    (struct Bridged (*)(
+        class rs_std::DynCallable<struct Bridged(struct Bridged) const>,
+        struct Bridged)) &
     ::map_bridged);
 
 static_assert(CRUBIT_SIZEOF(struct ABICompatible) == 4);
@@ -370,10 +371,11 @@ __rust_thunk___Z18map_abi_compatibleN6rs_std11DynCallableIKF13ABICompatibleS1_EE
       std::move(*arg)));
 }
 
-static_assert((struct ABICompatible (*)(
-                  class rs_std::DynCallable<ABICompatible(ABICompatible) const>,
-                  struct ABICompatible)) &
-              ::map_abi_compatible);
+static_assert(
+    (struct ABICompatible (*)(class rs_std::DynCallable<struct ABICompatible(
+                                  struct ABICompatible) const>,
+                              struct ABICompatible)) &
+    ::map_abi_compatible);
 
 static_assert(CRUBIT_SIZEOF(class LayoutCompatible) == 4);
 static_assert(alignof(class LayoutCompatible) == 4);
@@ -419,11 +421,11 @@ __rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibl
       std::move(*arg)));
 }
 
-static_assert(
-    (class LayoutCompatible (*)(
-        class rs_std::DynCallable<LayoutCompatible(LayoutCompatible) const>,
-        class LayoutCompatible)) &
-    ::map_layout_compatible);
+static_assert((class LayoutCompatible (*)(
+                  class rs_std::DynCallable<
+                      class LayoutCompatible(class LayoutCompatible) const>,
+                  class LayoutCompatible)) &
+              ::map_layout_compatible);
 
 extern "C" int
 __rust_thunk___Z25callable_taking_referenceN6rs_std11DynCallableIFvRiEEEi(

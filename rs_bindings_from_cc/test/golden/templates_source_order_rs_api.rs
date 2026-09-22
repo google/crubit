@@ -102,16 +102,16 @@ pub mod test_namespace_bindings {
 
 // namespace test_namespace_bindings
 
-// error: class `MyTemplate<TopLevel>` could not be bound
+// error: class `MyTemplate<struct TopLevel>` could not be bound
 //   template instantiation is not yet supported
 
-// error: class `MyTemplate<test_namespace_bindings::Inner>` could not be bound
+// error: class `MyTemplate<struct test_namespace_bindings::Inner>` could not be bound
 //   template instantiation is not yet supported
 
-// error: class `MyTemplate<MyTemplate<TopLevel>>` could not be bound
+// error: class `MyTemplate<class MyTemplate<struct TopLevel>>` could not be bound
 //   template instantiation is not yet supported
 
-// error: class `MyTemplate<MyTemplate<test_namespace_bindings::Inner>>` could not be bound
+// error: class `MyTemplate<class MyTemplate<struct test_namespace_bindings::Inner>>` could not be bound
 //   template instantiation is not yet supported
 
 // error: class `MyTemplate<bool>` could not be bound

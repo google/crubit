@@ -155,9 +155,9 @@ extern "C" void __rust_thunk___Z17MyOptionIntMapperv(
       .Encode(MyOptionIntMapper(), __return_encoder);
 }
 
-static_assert(
-    (class absl::AnyInvocable<MyOption<int>(MyOption<int>) const> (*)()) &
-    ::MyOptionIntMapper);
+static_assert((class absl::AnyInvocable<
+                  struct MyOption<int>(struct MyOption<int>) const> (*)()) &
+              ::MyOptionIntMapper);
 
 extern "C" void __rust_thunk___Z23ReturnNonConstIntMapperv(
     unsigned char* __return_abi_buffer) {

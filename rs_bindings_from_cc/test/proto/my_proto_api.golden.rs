@@ -108,28 +108,28 @@ pub mod test {
 
 // namespace test
 
-// error: class `std::basic_filebuf<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_filebuf<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_filebuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_filebuf<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ifstream<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_ifstream<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ifstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_ifstream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ofstream<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_ofstream<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ofstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_ofstream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_fstream<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_fstream<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_fstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_fstream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
 // error: class `absl::container_internal::HashtableInlineDataImpl<absl::container_internal::kCapacityByLog>` could not be bound

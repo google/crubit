@@ -131,30 +131,30 @@ pub mod crubit {
 
 // namespace crubit::test
 
-// error: class `absl::flat_hash_map<crubit::test::Incomplete, int, 42>` could not be bound
+// error: class `absl::flat_hash_map<class crubit::test::Incomplete, int, 42>` could not be bound
 //   incomplete type
 
-// error: class `absl::flat_hash_map<crubit::test::NoDestructor, int, 42>` could not be bound
+// error: class `absl::flat_hash_map<class crubit::test::NoDestructor, int, 42>` could not be bound
 //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public destructor
 
-// error: class `absl::flat_hash_map<crubit::test::Bridged, int, 42>` could not be bound
+// error: class `absl::flat_hash_map<struct crubit::test::Bridged, int, 42>` could not be bound
 //   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
 //   See crubit.rs/types.
 
-// error: class `absl::flat_hash_map<crubit::test::NoDelete, int, 42>` could not be bound
+// error: class `absl::flat_hash_map<class crubit::test::NoDelete, int, 42>` could not be bound
 //   `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<K, _> because it has a deleted or non-public operator delete
 
-// error: class `absl::flat_hash_map<int, crubit::test::Incomplete, 42>` could not be bound
+// error: class `absl::flat_hash_map<int, class crubit::test::Incomplete, 42>` could not be bound
 //   incomplete type
 
-// error: class `absl::flat_hash_map<int, crubit::test::NoDestructor, 42>` could not be bound
+// error: class `absl::flat_hash_map<int, class crubit::test::NoDestructor, 42>` could not be bound
 //   `crate::crubit::test::NoDestructor` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public destructor
 
-// error: class `absl::flat_hash_map<int, crubit::test::Bridged, 42>` could not be bound
+// error: class `absl::flat_hash_map<int, struct crubit::test::Bridged, 42>` could not be bound
 //   `crate::Bridged` cannot be used as a template argument because it is a non-layout-compatible bridged type
 //   See crubit.rs/types.
 
-// error: class `absl::flat_hash_map<int, crubit::test::NoDelete, 42>` could not be bound
+// error: class `absl::flat_hash_map<int, class crubit::test::NoDelete, 42>` could not be bound
 //   `crate::crubit::test::NoDelete` can't be used in a Rust absl::flat_hash_map<_, V> because it has a deleted or non-public operator delete
 
 /// An empty implementation of absl::flat_hash_map to test code generation

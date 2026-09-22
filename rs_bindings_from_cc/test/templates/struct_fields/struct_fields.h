@@ -21,4 +21,16 @@ struct MyStruct {
   MyTemplate<int> public_field;
 };
 
+class OuterWithShadowedType {
+ public:
+  struct Shadowed {
+    int x;
+  };
+  using Action = MyTemplate<Shadowed>;
+
+  static OuterWithShadowedType Shadowed(int x) {
+    return OuterWithShadowedType();
+  }
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_TEMPLATES_STRUCT_FIELDS_STRUCT_FIELDS_H_

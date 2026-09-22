@@ -1862,7 +1862,7 @@ fn test_forward_declared_class_template_specialization_symbol() -> Result<()> {
         rs_api,
         quote! {
             ...
-            forward_declare::forward_declare!(pub __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_5ParamEEE = forward_declare::symbol!("test_namespace_bindings :: MyTemplate < test_namespace_bindings :: Param >"));
+            forward_declare::forward_declare!(pub __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_5ParamEEE = forward_declare::symbol!("test_namespace_bindings :: MyTemplate < struct test_namespace_bindings :: Param >"));
             ...
         }
     );

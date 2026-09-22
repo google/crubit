@@ -30,7 +30,7 @@ extern "C" void __rust_thunk___Z12ReturnsValuev(
       .Encode(ReturnsValue(), __return_encoder);
 }
 
-static_assert((struct MyOption<Value<int>> (*)()) & ::ReturnsValue);
+static_assert((struct MyOption<struct Value<int>> (*)()) & ::ReturnsValue);
 
 static_assert(CRUBIT_SIZEOF(struct Value<int>) == 4);
 static_assert(alignof(struct Value<int>) == 4);

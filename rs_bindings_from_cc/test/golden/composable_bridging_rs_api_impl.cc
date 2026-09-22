@@ -69,7 +69,7 @@ extern "C" void __rust_thunk___Z16MakeOptionalVec3fffb(
       .Encode(MakeOptionalVec3(x, y, z, is_present), __return_encoder);
 }
 
-static_assert((struct MyOption<Vec3> (*)(float, float, float, bool)) &
+static_assert((struct MyOption<struct Vec3> (*)(float, float, float, bool)) &
               ::MakeOptionalVec3);
 
 extern "C" void __rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
@@ -88,7 +88,8 @@ extern "C" void __rust_thunk___Z11MapMultiply8MyOptionI4Vec3Ef(
               __return_encoder);
 }
 
-static_assert((struct MyOption<Vec3> (*)(struct MyOption<Vec3>, float)) &
+static_assert((struct MyOption<struct Vec3> (*)(struct MyOption<struct Vec3>,
+                                                float)) &
               ::MapMultiply);
 
 extern "C" void __rust_thunk___Z14MakeMyI8Structv(
@@ -101,7 +102,7 @@ extern "C" void __rust_thunk___Z14MakeMyI8Structv(
       .Encode(MakeMyI8Struct(), __return_encoder);
 }
 
-static_assert((struct MyOption<MyI8Struct> (*)()) & ::MakeMyI8Struct);
+static_assert((struct MyOption<struct MyI8Struct> (*)()) & ::MakeMyI8Struct);
 
 static_assert((void (*)(::rs_std::SliceRef<::std::__u::string_view>)) &
               ::InspectStringViews);
@@ -131,7 +132,7 @@ __rust_thunk___Z40AcceptsSliceAndReturnsStatusErrorIfEmptyN6rs_std8SliceRefIKiEE
               __return_encoder);
 }
 
-static_assert((struct MyOption<rs_std::SliceRef<const int>> (*)(
+static_assert((struct MyOption<class rs_std::SliceRef<const int>> (*)(
                   ::rs_std::SliceRef<const int>)) &
               ::AcceptsSliceAndReturnsStatusErrorIfEmpty);
 
@@ -157,7 +158,7 @@ extern "C" void __rust_thunk___Z40ReturnsDefaultEnumInComposableBridgeTypev(
       .Encode(ReturnsDefaultEnumInComposableBridgeType(), __return_encoder);
 }
 
-static_assert((struct MyOption<DefaultEnum> (*)()) &
+static_assert((struct MyOption<enum DefaultEnum> (*)()) &
               ::ReturnsDefaultEnumInComposableBridgeType);
 
 extern "C" void __rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(
@@ -170,7 +171,7 @@ extern "C" void __rust_thunk___Z36ReturnsI64EnumInComposableBridgeTypev(
       .Encode(ReturnsI64EnumInComposableBridgeType(), __return_encoder);
 }
 
-static_assert((struct MyOption<I64Enum> (*)()) &
+static_assert((struct MyOption<enum I64Enum> (*)()) &
               ::ReturnsI64EnumInComposableBridgeType);
 
 extern "C" void __rust_thunk___Z44ReturnsEnumInNamespaceInComposableBridgeTypev(
@@ -185,7 +186,7 @@ extern "C" void __rust_thunk___Z44ReturnsEnumInNamespaceInComposableBridgeTypev(
       .Encode(ReturnsEnumInNamespaceInComposableBridgeType(), __return_encoder);
 }
 
-static_assert((struct MyOption<some_namespace::EnumInNamespace> (*)()) &
+static_assert((struct MyOption<enum some_namespace::EnumInNamespace> (*)()) &
               ::ReturnsEnumInNamespaceInComposableBridgeType);
 
 #pragma clang diagnostic pop

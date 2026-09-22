@@ -93,100 +93,100 @@ impl ::ctor::PinnedDrop for TypeAliasCtor {
     }
 }
 
-// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>` could not be bound
+// error: class `std::basic_string<char32_t, struct std::char_traits<char32_t>, class std::pmr::polymorphic_allocator<char32_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>` could not be bound
+// error: class `std::basic_string<char32_t, struct std::char_traits<char32_t>, class std::allocator<char32_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>` could not be bound
+// error: class `std::basic_string<char16_t, struct std::char_traits<char16_t>, class std::pmr::polymorphic_allocator<char16_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>` could not be bound
+// error: class `std::basic_string<char16_t, struct std::char_traits<char16_t>, class std::allocator<char16_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>` could not be bound
+// error: class `std::basic_string<char, struct std::char_traits<char>, class std::pmr::polymorphic_allocator<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_string<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+// error: class `std::basic_string<char, struct std::char_traits<char>, class std::allocator<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ostream<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_ostream<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_ostream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_filebuf<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_filebuf<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_filebuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_filebuf<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ifstream<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_ifstream<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ifstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_ifstream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ofstream<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_ofstream<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ofstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_ofstream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_fstream<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_fstream<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_fstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_fstream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ios<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_ios<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ios<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_ios<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_istream<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_istream<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_istream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_istream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_iostream<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_iostream<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_iostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_iostream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+// error: class `std::basic_stringbuf<char, struct std::char_traits<char>, class std::allocator<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_stringbuf<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+// error: class `std::basic_stringbuf<wchar_t, struct std::char_traits<wchar_t>, class std::allocator<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_istringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+// error: class `std::basic_istringstream<char, struct std::char_traits<char>, class std::allocator<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+// error: class `std::basic_istringstream<wchar_t, struct std::char_traits<wchar_t>, class std::allocator<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ostringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+// error: class `std::basic_ostringstream<char, struct std::char_traits<char>, class std::allocator<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+// error: class `std::basic_ostringstream<wchar_t, struct std::char_traits<wchar_t>, class std::allocator<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_stringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+// error: class `std::basic_stringstream<char, struct std::char_traits<char>, class std::allocator<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+// error: class `std::basic_stringstream<wchar_t, struct std::char_traits<wchar_t>, class std::allocator<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_streambuf<char, std::char_traits<char>>` could not be bound
+// error: class `std::basic_streambuf<char, struct std::char_traits<char>>` could not be bound
 //   incomplete type
 
-// error: class `std::basic_streambuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
+// error: class `std::basic_streambuf<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
 // error: class `std::fpos<__mbstate_t>` could not be bound

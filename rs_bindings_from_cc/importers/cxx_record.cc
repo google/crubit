@@ -29,6 +29,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/strings/strip.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -204,12 +205,20 @@ absl::StatusOr<std::string> CcName(
   // down.
   policy.PrintAsCanonical = true;
   policy.UsePreferredNames = false;
+  // Include tag keywords (e.g. `struct`, `class`, `union`, `enum`) for template
+  // arguments so that tag types shadowed by functions or variables with the
+  // same name in the same scope can still be spelled in C++.
+  policy.SuppressTagKeyword = false;
   // Use type suffix (e.g. `123u` rather than just `123`) to avoid the
   // `-Wimplicitly-unsigned-literal` warning.  See also b/244616557.
   policy.AlwaysIncludeTypeForTemplateArgument = true;
 
-  return clang::QualType(ast_context.getCanonicalTagType(specialization_decl))
-      .getAsString(policy);
+  std::string type_string =
+      clang::QualType(ast_context.getCanonicalTagType(specialization_decl))
+          .getAsString(policy);
+  return std::string(absl::StripPrefix(
+      type_string,
+      absl::StrCat(std::string_view(specialization_decl->getKindName()), " ")));
 }
 
 ir_proto::AccessSpecifier TranslateAccessSpecifier(
