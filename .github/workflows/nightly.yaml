@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      commit: ${{ steps.llvm.outputs.commit }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -40,13 +41,25 @@ jobs:
           
           # Set output for the next job
           echo "matrix=$VERSIONS" >> $GITHUB_OUTPUT
+      - name: Resolve llvm-project head
+        id: llvm
+        run: |
+          COMMIT=$(git ls-remote https://github.com/llvm/llvm-project.git refs/heads/main | cut -f1)
+          if [[ ! "$COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Could not resolve llvm-project head (got '${COMMIT}')"
+            exit 1
+          fi
+          printf '%s %s\n' \
+            "${{ steps.llvm.outputs.commit }}" \
+            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > llvm_commit.txt
+          echo "commit=${COMMIT}" >> "$GITHUB_OUTPUT"
 
       - name: Commit and Push Updates
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add crubit matrix.json
+          git add crubit matrix.json llvm_commit.txt
           if git diff --staged --quiet; then
             echo "No changes detected."
           else
@@ -134,46 +147,6 @@ jobs:
             git commit -m "chore: update status badges"
             git push origin test-matrix
           fi
-  select-llvm-commit:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: write
-    outputs:
-      commit: ${{ steps.llvm.outputs.commit }}
-    steps:
-      - name: Checkout test-matrix
-        uses: actions/checkout@v6
-        with:
-          ref: test-matrix
-          # No submodules: nothing here needs the crubit tree.
-          persist-credentials: true
-      - name: Resolve llvm-project head
-        id: llvm
-        run: |
-          COMMIT=$(git ls-remote https://github.com/llvm/llvm-project.git refs/heads/main | cut -f1)
-          if [[ ! "$COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "::error::Could not resolve llvm-project head (got '${COMMIT}')"
-            exit 1
-          fi
-          echo "commit=${COMMIT}" >> "$GITHUB_OUTPUT"
-      - name: Publish commit
-        run: |
-          # Format: "<40-hex-sha> <iso8601-utc>", single line.
-          # The timestamp attests that the nightly ran, which is what lets
-          # consumers detect a dark nightly. It is therefore refreshed and
-          # pushed unconditionally, even when the SHA is unchanged -- a pin
-          # that stopped moving because upstream was quiet must not look the
-          # same as a pin that stopped moving because this job stopped
-          # running. Costs one no-op commit per day on test-matrix.
-          printf '%s %s\n' \
-            "${{ steps.llvm.outputs.commit }}" \
-            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > llvm_commit.txt
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add llvm_commit.txt
-          git commit -m "chore: pin LLVM to ${{ steps.llvm.outputs.commit }}"
-          git push origin test-matrix
 
   notify-failures:
     needs: build
@@ -201,7 +174,7 @@ jobs:
             --label "p2,bug,automated-report"
 
   warm-llvm-cache:
-    needs: select-llvm-commit
+    needs: update-and-generate
     runs-on: ubuntu-latest
     # The first build after LLVM moves is expensive by design; this is the one
     # place per day that pays it.
