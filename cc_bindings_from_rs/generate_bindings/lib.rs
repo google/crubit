@@ -922,6 +922,25 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<Fu
         // Our paths are kept in sorted order, so the canonical path will be the first one.
         let canonical_path = paths.canonical();
 
+        // `DefiningCrate` outranks everything, so a `TransitiveReexport` winner proves the stdlib
+        // withheld a path for this item on purpose: the walk above drops everything under
+        // `std::os` (to avoid colliding with the C++ standard library) and everything unstable.
+        // Letting an arbitrary re-exporter claim the vacated name instead is worse than having no
+        // name, because each crate that re-exports the item defines its own incompatible C++ type
+        // for it.
+        //
+        // Non-stdlib crates rely on re-exporter naming to surface types from dependencies that are
+        // not directly visible here, so they are left alone.
+        if matches!(tcx.crate_name(def_id.krate).as_str(), "std" | "core" | "alloc")
+            && CrateOwnershipRank::new(tcx, def_id, canonical_path.krate)
+                == CrateOwnershipRank::TransitiveReexport
+        {
+            bail!(
+                "Only reachable through a transitive re-export of the standard library \
+                 (b/262052635)."
+            );
+        }
+
         // If the use is in the same scope as the canonical path, we want to use the original
         // name of the symbol, not the alias.
         (
