@@ -258,5 +258,29 @@ TEST(GenericFnTest, RvalueRefReturnArray) {
   EXPECT_EQ(array_ret[0]->value, 42);
 }
 
+TEST(FunctionsTest, NonNull) {
+  namespace tests = functions::non_null_tests;
+
+  int value = 42;
+  tests::set_non_null_value(&value, 123);
+  EXPECT_EQ(123, value);
+  EXPECT_EQ(123, tests::get_non_null_value(&value));
+
+  int* returned_ptr = tests::return_non_null(&value);
+  EXPECT_EQ(&value, returned_ptr);
+
+  void* void_ptr = &value;
+  void* returned_void_ptr = tests::return_non_null_c_void(void_ptr);
+  EXPECT_EQ(void_ptr, returned_void_ptr);
+
+  int* returned_maybe_uninit = tests::return_non_null_maybe_uninit(&value);
+  EXPECT_EQ(&value, returned_maybe_uninit);
+
+  tests::SomeStruct s{.value = 55};
+  tests::SomeStruct* returned_struct = tests::return_non_null_struct(&s);
+  EXPECT_EQ(&s, returned_struct);
+  EXPECT_EQ(55, returned_struct->value);
+}
+
 }  // namespace
 }  // namespace crubit

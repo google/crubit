@@ -31,7 +31,7 @@ use database::{
 };
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::is_c_abi_compatible_by_value;
+use query_compiler::{is_c_abi_compatible_by_value, is_std_ptr_non_null};
 use quote::{format_ident, quote, ToTokens};
 use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
 #[rustversion::since(2026-08-09)]
@@ -235,7 +235,10 @@ fn format_pointer_or_reference_ty_for_cc<'tcx>(
         Mutability::Not => quote! { const },
     };
     if pointee.is_c_void(tcx) {
-        return Ok(CcSnippet { tokens: quote! { #const_qualifier void* }, ..Default::default() });
+        return Ok(CcSnippet {
+            tokens: quote! { #const_qualifier void #pointer_sigil },
+            ..Default::default()
+        });
     }
     let CcSnippet { tokens, mut prereqs } = db.format_ty_for_cc(pointee, TypeLocation::Other)?;
     prereqs.move_defs_to_fwd_decls();
@@ -824,6 +827,39 @@ pub fn format_ty_for_cc<'tcx>(
             let mut snippet =
                 format_pointer_or_reference_ty_for_cc(db, referent, Mutability::Mut, sigil)?;
             snippet.prereqs += prereqs;
+            return Ok(snippet);
+        }
+
+        ty::TyKind::Adt(adt, substs) if is_std_ptr_non_null(tcx, adt.did()) => {
+            let pointee_ty = substs[0].expect_ty();
+            if !pointee_ty.is_sized(tcx, ty::TypingEnv::fully_monomorphized())
+                && !pointee_ty.is_c_void(tcx)
+            {
+                bail!(
+                    "NonNull with unsized pointee `{pointee_ty}` is not supported"
+                );
+            }
+            let mut snippet = if let Some(snippet) =
+                format_transparent_pointee_or_reference_for_cc(
+                    db,
+                    pointee_ty,
+                    Mutability::Mut,
+                    quote! { * crubit_nonnull },
+                )
+            {
+                snippet
+            } else {
+                format_pointer_or_reference_ty_for_cc(
+                    db,
+                    pointee_ty,
+                    Mutability::Mut,
+                    quote! { * crubit_nonnull },
+                )
+                .with_context(|| {
+                    format!("Failed to format the pointee of the pointer type `{ty}`")
+                })?
+            };
+            snippet.prereqs.includes.insert(db.support_header("annotations_internal.h"));
             return Ok(snippet);
         }
 
@@ -1555,6 +1591,16 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
             quote! { [ #rs_element_type; #unsuffixed_length ] }
         }
         ty::TyKind::Adt(adt, substs) => {
+            if is_std_ptr_non_null(db.tcx(), adt.did()) {
+                let pointee_ty = substs[0].expect_ty();
+                let t_param = match format_transparent_pointee(db, pointee_ty) {
+                    Ok(generic_ty) => generic_ty,
+                    Err(_) => db.format_ty_for_rs(pointee_ty).with_context(|| {
+                        format!("Failed to format the pointee of the NonNull type `{ty}`")
+                    })?,
+                };
+                return Ok(quote! { ::core::ptr::NonNull<#t_param> });
+            }
             if let Some(bridged_builtin) = BridgedBuiltin::new(db, adt) {
                 match bridged_builtin {
                     BridgedBuiltin::Vec => {
@@ -1842,6 +1888,16 @@ pub fn crubit_abi_type_from_ty<'tcx>(
                     ),
                 }
             } else {
+                if is_std_ptr_non_null(db.tcx(), adt.did()) {
+                    let rust_type = db.format_ty_for_rs(ty)?;
+                    let CcSnippet { tokens: cpp_type, prereqs } =
+                        db.format_ty_for_cc(ty, TypeLocation::Other)?;
+                    return Ok(CrubitAbiTypeWithCcPrereqs {
+                        crubit_abi_type: CrubitAbiType::Transmute { rust_type, cpp_type },
+                        prereqs,
+                    });
+                }
+
                 // if it doesn't, try seeing if it's a builtin.
                 if let Some(bridged_builtin @ BridgedBuiltin::Option) =
                     BridgedBuiltin::new(db, *adt)
@@ -2186,6 +2242,21 @@ pub fn is_bridged_type<'tcx>(
             Ok(None)
         }
         ty::TyKind::Adt(adt, substs) => {
+            if is_std_ptr_non_null(db.tcx(), adt.did()) {
+                let pointee = substs[0].expect_ty();
+                if let Some(bridged) = is_bridged_type(db, pointee)?
+                    && !bridged.is_layout_compatible()
+                {
+                    if db.is_proto_message(pointee) {
+                        return Ok(None);
+                    }
+                    bail!(
+                        "Bridged type `{pointee}` cannot be passed by pointer because it is not layout-compatible; pass it by value instead."
+                    );
+                }
+                return Ok(None);
+            }
+
             if let Some(bridged_type) = is_manually_annotated_bridged_adt(db, ty)? {
                 return Ok(Some(bridged_type));
             }

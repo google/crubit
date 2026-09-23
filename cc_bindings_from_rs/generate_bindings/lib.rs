@@ -60,8 +60,8 @@ use itertools::Itertools;
 use proc_macro2::TokenStream;
 use query_compiler::{
     does_type_implement_trait, get_layout, get_scalar_int_type, get_tag_size_with_padding,
-    is_c_abi_compatible_by_value, is_copy, liberate_and_deanonymize_late_bound_regions,
-    post_analysis_typing_env, repr_attrs,
+    is_c_abi_compatible_by_value, is_copy, is_std_ptr_non_null,
+    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, repr_attrs,
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
@@ -1896,6 +1896,9 @@ fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -
 
         // ADT: check CrubitAttrs if C++-originated, else check move_ctor_and_assignment_operator_codegen_style.
         ty::Adt(adt_def, _) => {
+            if is_std_ptr_non_null(db.tcx(), adt_def.did()) {
+                return true;
+            }
             if db.is_proto_message(ty) {
                 return false;
             }

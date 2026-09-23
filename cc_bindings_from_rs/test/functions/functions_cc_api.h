@@ -280,6 +280,36 @@ namespace functions::generic_fn_tests::into_trait_tests {
 
 }  // namespace functions::generic_fn_tests::into_trait_tests
 
+namespace functions::non_null_tests {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: functions_golden :: non_null_tests :: SomeStruct") alignas(4)
+    [[clang::trivial_abi]] SomeStruct final {
+ public:
+  ::std::int32_t value{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+::std::int32_t get_non_null_value(::std::int32_t* crubit_nonnull ptr);
+
+::std::int32_t* crubit_nonnull
+return_non_null(::std::int32_t* crubit_nonnull ptr);
+
+void* crubit_nonnull return_non_null_c_void(void* crubit_nonnull ptr);
+
+::std::int32_t* crubit_nonnull
+return_non_null_maybe_uninit(::std::int32_t* crubit_nonnull ptr);
+
+::functions::non_null_tests::SomeStruct* crubit_nonnull return_non_null_struct(
+    ::functions::non_null_tests::SomeStruct* crubit_nonnull ptr);
+
+void set_non_null_value(::std::int32_t* crubit_nonnull ptr,
+                        ::std::int32_t value);
+
+}  // namespace functions::non_null_tests
+
 namespace functions::other_fn_param_tests {
 
 ::std::int32_t add_i32_via_rust_abi_with_duplicated_param_names(
@@ -856,6 +886,81 @@ inline ::std::int32_t where_clause(::std::int32_t x) {
 }
 
 }  // namespace functions::generic_fn_tests::into_trait_tests
+
+namespace functions::non_null_tests {
+
+static_assert(
+    sizeof(::functions::non_null_tests::SomeStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::functions::non_null_tests::SomeStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<SomeStruct>);
+static_assert(::std::is_trivially_move_constructible_v<
+              ::functions::non_null_tests::SomeStruct>);
+static_assert(::std::is_trivially_move_assignable_v<
+              ::functions::non_null_tests::SomeStruct>);
+inline void ::functions::non_null_tests::SomeStruct::
+    __crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::functions::non_null_tests::SomeStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, value));
+}
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_get_unon_unull_uvalue(
+    ::std::int32_t* crubit_nonnull);
+}
+inline ::std::int32_t get_non_null_value(::std::int32_t* crubit_nonnull ptr) {
+  return __crubit_internal::__crubit_thunk_get_unon_unull_uvalue(ptr);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t* crubit_nonnull
+__crubit_thunk_return_unon_unull(::std::int32_t* crubit_nonnull);
+}
+inline ::std::int32_t* crubit_nonnull
+return_non_null(::std::int32_t* crubit_nonnull ptr) {
+  return __crubit_internal::__crubit_thunk_return_unon_unull(ptr);
+}
+
+namespace __crubit_internal {
+extern "C" void* crubit_nonnull
+__crubit_thunk_return_unon_unull_uc_uvoid(void* crubit_nonnull);
+}
+inline void* crubit_nonnull return_non_null_c_void(void* crubit_nonnull ptr) {
+  return __crubit_internal::__crubit_thunk_return_unon_unull_uc_uvoid(ptr);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t* crubit_nonnull
+__crubit_thunk_return_unon_unull_umaybe_uuninit(::std::int32_t* crubit_nonnull);
+}
+inline ::std::int32_t* crubit_nonnull
+return_non_null_maybe_uninit(::std::int32_t* crubit_nonnull ptr) {
+  return __crubit_internal::__crubit_thunk_return_unon_unull_umaybe_uuninit(
+      ptr);
+}
+
+namespace __crubit_internal {
+extern "C" ::functions::non_null_tests::SomeStruct* crubit_nonnull
+__crubit_thunk_return_unon_unull_ustruct(
+    ::functions::non_null_tests::SomeStruct* crubit_nonnull);
+}
+inline ::functions::non_null_tests::SomeStruct* crubit_nonnull
+return_non_null_struct(
+    ::functions::non_null_tests::SomeStruct* crubit_nonnull ptr) {
+  return __crubit_internal::__crubit_thunk_return_unon_unull_ustruct(ptr);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_set_unon_unull_uvalue(
+    ::std::int32_t* crubit_nonnull, ::std::int32_t);
+}
+inline void set_non_null_value(::std::int32_t* crubit_nonnull ptr,
+                               ::std::int32_t value) {
+  return __crubit_internal::__crubit_thunk_set_unon_unull_uvalue(ptr, value);
+}
+
+}  // namespace functions::non_null_tests
 
 namespace functions::other_fn_param_tests {
 

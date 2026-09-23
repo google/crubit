@@ -25,7 +25,11 @@ use rustc_abi::FieldsShape;
 use rustc_abi::IntegerType;
 use rustc_abi::{FieldIdx, Integer, Layout, Primitive, Scalar, Variants};
 use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
+#[rustversion::since(2026-08-09)]
+use rustc_hir::attrs::lang_items::LangItem;
 use rustc_hir::attrs::IntType;
+#[rustversion::before(2026-08-09)]
+use rustc_hir::lang_items::LangItem;
 use rustc_infer::infer::TyCtxtInferExt;
 use rustc_middle::ty::layout::IntegerExt;
 use rustc_middle::ty::solve::NoSolution;
@@ -66,6 +70,19 @@ impl<'tcx> ty::TypeFolder<TyCtxt<'tcx>> for ConcreteWidthFolder<'tcx> {
     }
 }
 
+/// Returns true if `did` is `core::ptr::NonNull`.
+pub fn is_std_ptr_non_null(tcx: TyCtxt<'_>, did: DefId) -> bool {
+    tcx.is_lang_item(did, LangItem::NonNull)
+}
+
+/// Returns true if pointers to `pointee` are ABI-compatible.
+///
+/// Only thin pointers are ABI-compatible, not e.g. `&str` or `&[T]`.
+fn is_abi_compatible_pointee<'tcx>(db: &BindingsGenerator<'tcx>, pointee: Ty<'tcx>) -> bool {
+    !db.portable_abi_compatible()
+        || pointee.is_sized(db.tcx(), ty::TypingEnv::fully_monomorphized())
+}
+
 /// Whether functions using `extern "C"` ABI can safely handle values of type
 /// `ty` (e.g. when passing by value arguments or return values of such type).
 pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
@@ -80,9 +97,7 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
         | ty::TyKind::FnPtr { .. } => true,
 
         ty::TyKind::RawPtr(pointee, ..) | ty::TyKind::Ref(_, pointee, ..) => {
-            // Only thin references/pointers are ABI-compatible. (Not e.g. &str.)
-            !db.portable_abi_compatible()
-                || pointee.is_sized(tcx, ty::TypingEnv::fully_monomorphized())
+            is_abi_compatible_pointee(db, *pointee)
         }
         ty::TyKind::Tuple(types) if types.is_empty() => true,
         ty::TyKind::Char => !db.portable_abi_compatible(),
@@ -103,6 +118,10 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
         // - Discriminant-only enums (b/259984090).
         ty::TyKind::Tuple { .. } => false, // An empty tuple (`()` - the unit type) is handled above.
         ty::TyKind::Adt(adt, substs) => {
+            if is_std_ptr_non_null(tcx, adt.did()) {
+                let pointee = substs[0].expect_ty();
+                return is_abi_compatible_pointee(db, pointee);
+            }
             if !db.is_cpp_move_constructible(ty) {
                 return false;
             }

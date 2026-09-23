@@ -373,3 +373,40 @@ pub mod thread_safety_tests {
         x
     }
 }
+
+pub mod non_null_tests {
+    use std::ptr::NonNull;
+
+    pub fn get_non_null_value(ptr: NonNull<i32>) -> i32 {
+        unsafe { *ptr.as_ptr() }
+    }
+
+    pub fn set_non_null_value(mut ptr: NonNull<i32>, value: i32) {
+        unsafe {
+            *ptr.as_mut() = value;
+        }
+    }
+
+    pub fn return_non_null(ptr: NonNull<i32>) -> NonNull<i32> {
+        ptr
+    }
+
+    pub fn return_non_null_c_void(ptr: NonNull<core::ffi::c_void>) -> NonNull<core::ffi::c_void> {
+        ptr
+    }
+
+    pub fn return_non_null_maybe_uninit(
+        ptr: NonNull<core::mem::MaybeUninit<i32>>,
+    ) -> NonNull<core::mem::MaybeUninit<i32>> {
+        ptr
+    }
+
+    #[repr(C)]
+    pub struct SomeStruct {
+        pub value: i32,
+    }
+
+    pub fn return_non_null_struct(ptr: NonNull<SomeStruct>) -> NonNull<SomeStruct> {
+        ptr
+    }
+}

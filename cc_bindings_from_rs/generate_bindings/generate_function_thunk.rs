@@ -19,7 +19,7 @@ use database::BindingsGenerator;
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
-use query_compiler::{post_analysis_typing_env, try_normalize};
+use query_compiler::{is_std_ptr_non_null, post_analysis_typing_env, try_normalize};
 use quote::format_ident;
 use quote::quote;
 #[rustversion::since(2026-04-22)]
@@ -368,6 +368,11 @@ fn format_ty_for_closure_param_rs<'tcx>(
         return Ok(quote! { #mutability #formatted_ty });
     }
     if let ty::TyKind::Adt(adt, substs) = ty.kind() {
+        if is_std_ptr_non_null(db.tcx(), adt.did()) {
+            let t_param = substs[0].expect_ty();
+            let t_param = format_ty_for_closure_param_rs(db, t_param, is_return_ty)?;
+            return Ok(quote! { ::core::ptr::NonNull<#t_param> });
+        }
         if let Some(bridged_builtin) = BridgedBuiltin::new(db, *adt) {
             match bridged_builtin {
                 BridgedBuiltin::Vec => {

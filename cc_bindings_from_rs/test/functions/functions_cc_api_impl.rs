@@ -351,6 +351,46 @@ unsafe extern "C" fn __crubit_thunk_reused_ugeneric_uparam(x: i32, y: i32) -> i3
 unsafe extern "C" fn __crubit_thunk_where_uclause(x: i32) -> i32 {
     unsafe { ::functions_golden::generic_fn_tests::into_trait_tests::where_clause(x) }
 }
+const _: () = assert!(::std::mem::size_of::<::functions_golden::non_null_tests::SomeStruct>() == 4);
+const _: () =
+    assert!(::std::mem::align_of::<::functions_golden::non_null_tests::SomeStruct>() == 4);
+const _: () =
+    assert!(::core::mem::offset_of!(::functions_golden::non_null_tests::SomeStruct, value) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_get_unon_unull_uvalue(ptr: ::core::ptr::NonNull<i32>) -> i32 {
+    unsafe { ::functions_golden::non_null_tests::get_non_null_value(ptr) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_unon_unull(
+    ptr: ::core::ptr::NonNull<i32>,
+) -> ::core::ptr::NonNull<i32> {
+    unsafe { ::functions_golden::non_null_tests::return_non_null(ptr) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_unon_unull_uc_uvoid(
+    ptr: ::core::ptr::NonNull<::core::ffi::c_void>,
+) -> ::core::ptr::NonNull<::core::ffi::c_void> {
+    unsafe { ::functions_golden::non_null_tests::return_non_null_c_void(ptr) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_unon_unull_umaybe_uuninit(
+    ptr: ::core::ptr::NonNull<std::mem::MaybeUninit<i32>>,
+) -> ::core::ptr::NonNull<std::mem::MaybeUninit<i32>> {
+    unsafe { ::functions_golden::non_null_tests::return_non_null_maybe_uninit(ptr) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_unon_unull_ustruct(
+    ptr: ::core::ptr::NonNull<::functions_golden::non_null_tests::SomeStruct>,
+) -> ::core::ptr::NonNull<::functions_golden::non_null_tests::SomeStruct> {
+    unsafe { ::functions_golden::non_null_tests::return_non_null_struct(ptr) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_set_unon_unull_uvalue(
+    ptr: ::core::ptr::NonNull<i32>,
+    value: i32,
+) -> () {
+    unsafe { ::functions_golden::non_null_tests::set_non_null_value(ptr, value) }
+}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_add_ui32_uvia_urust_uabi_uwith_uduplicated_uparam_unames(
     x: i32,

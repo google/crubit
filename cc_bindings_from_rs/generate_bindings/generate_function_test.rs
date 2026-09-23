@@ -2491,3 +2491,81 @@ fn test_callable_param_borrowed_in_return_struct_error() {
         );
     });
 }
+
+#[test]
+fn test_format_item_non_null() {
+    let test_src = r#"
+            pub fn foo(ptr: std::ptr::NonNull<i32>) -> std::ptr::NonNull<i32> {
+                ptr
+            }
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ::std::int32_t* crubit_nonnull foo(::std::int32_t* crubit_nonnull ptr);
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                namespace __crubit_internal {
+                extern "C" ::std::int32_t* crubit_nonnull ...(::std::int32_t* crubit_nonnull);
+                }
+                inline ::std::int32_t* crubit_nonnull foo(::std::int32_t* crubit_nonnull ptr) {
+                    return __crubit_internal::...(ptr);
+                }
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                #[unsafe(no_mangle)]
+                unsafe extern "C" fn ...(ptr: ::core::ptr::NonNull<i32>) -> ::core::ptr::NonNull<i32> {
+                    unsafe { ::rust_out::foo(ptr) }
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_non_null_c_void() {
+    let test_src = r#"
+            pub fn foo(ptr: std::ptr::NonNull<core::ffi::c_void>) -> std::ptr::NonNull<core::ffi::c_void> {
+                ptr
+            }
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                void* crubit_nonnull foo(void* crubit_nonnull ptr);
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                namespace __crubit_internal {
+                extern "C" void* crubit_nonnull ...(void* crubit_nonnull);
+                }
+                inline void* crubit_nonnull foo(void* crubit_nonnull ptr) {
+                    return __crubit_internal::...(ptr);
+                }
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                #[unsafe(no_mangle)]
+                unsafe extern "C" fn ...(ptr: ::core::ptr::NonNull<::core::ffi::c_void>) -> ::core::ptr::NonNull<::core::ffi::c_void> {
+                    unsafe { ::rust_out::foo(ptr) }
+                }
+            }
+        );
+    });
+}

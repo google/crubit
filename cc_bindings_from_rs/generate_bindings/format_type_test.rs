@@ -191,6 +191,27 @@ fn test_format_ty_for_cc_successes() {
             cc: "::std :: int32_t const * $ static crubit_nonnull const * $ static crubit_nonnull",
             includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
         ),
+        case!(
+            rs: "::std::ptr::NonNull<i32>",
+            cc: "::std :: int32_t * crubit_nonnull",
+            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]
+        ),
+        case!(
+            rs: "::std::ptr::NonNull<core::ffi::c_void>",
+            cc: "void * crubit_nonnull",
+            includes: ["<crubit/support/for/tests/annotations_internal.h>"]
+        ),
+        case!(
+            rs: "::std::ptr::NonNull<SomeStruct>",
+            cc: "::rust_out::SomeStruct * crubit_nonnull",
+            includes: ["<crubit/support/for/tests/annotations_internal.h>"],
+            prereq_fwd_decl: "SomeStruct"
+        ),
+        case!(
+            rs: "::std::ptr::NonNull<core::mem::MaybeUninit<i32>>",
+            cc: "::std :: int32_t * crubit_nonnull",
+            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]
+        ),
         // Slice pointers:
         case!(
             rs: "*const [i8]",
@@ -546,6 +567,10 @@ fn test_format_ty_for_cc_failures() {
             "Failed to format type for the definition of `std::alloc::LayoutError`: \
              Zero-sized types (ZSTs) are not supported (b/258259459)",
         ),
+        (
+            "::std::ptr::NonNull<[i32]>",
+            "NonNull with unsized pointee `[i32]` is not supported",
+        ),
     ];
     let preamble = quote! {
         #![feature(never_type)]
@@ -635,6 +660,12 @@ fn test_format_ty_for_rs_successes() {
         ),
         ("*const std::mem::MaybeUninit<i32>", "*const std::mem::MaybeUninit<i32>"),
         ("*mut std::mem::MaybeUninit<i32>", "*mut std::mem::MaybeUninit<i32>"),
+        ("std::ptr::NonNull<i32>", "::core::ptr::NonNull<i32>"),
+        ("std::ptr::NonNull<SomeStruct>", "::core::ptr::NonNull< ::rust_out::SomeStruct >"),
+        (
+            "std::ptr::NonNull<std::mem::MaybeUninit<i32>>",
+            "::core::ptr::NonNull< std::mem::MaybeUninit<i32> >",
+        ),
         ("LifetimeGenericStruct<'static>", "::rust_out::LifetimeGenericStruct< 'static >"),
     ];
     let preamble = quote! {
