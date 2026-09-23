@@ -21,10 +21,12 @@
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/vec.h"
 
-#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <memory>
+#include <new>
+#include <type_traits>
 #include <utility>
 
 #include "cc_bindings_from_rs/test/bridging/protobuf/foo.pb.h"
@@ -137,10 +139,11 @@ rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>> create_proto_vec(
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
     ":: alloc :: vec :: Vec < :: foo_proto :: FooRequestStats >")
-    rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>> {
+    rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>
+    : public rs_std::VecBase<::proto::Rust<::foo_service::FooRequestStats>> {
  public:
   // Default::default
-  Vec();
+  Vec() noexcept;
 
   // Clone::clone
   Vec(const Vec&);
@@ -149,24 +152,18 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>& operator=(
       const Vec&);
 
-  Vec(Vec&&);
-  rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>& operator=(Vec&&);
+  Vec(Vec&&) noexcept;
+  rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>& operator=(
+      Vec&&) noexcept;
   Vec(::crubit::UnsafeRelocateTag, Vec&& value);
 
   ~Vec() noexcept;
-  ::proto::Rust<::foo_service::FooRequestStats>* data() noexcept;
-  ::proto::Rust<::foo_service::FooRequestStats> const* data() const noexcept;
-  std::size_t size() const noexcept;
-  ::proto::Rust<::foo_service::FooRequestStats>& operator[](
-      std::size_t index) noexcept;
-  ::proto::Rust<::foo_service::FooRequestStats> const& operator[](
-      std::size_t index) const noexcept;
-  ::proto::Rust<::foo_service::FooRequestStats>* begin() noexcept;
-  ::proto::Rust<::foo_service::FooRequestStats> const* begin() const noexcept;
-  ::proto::Rust<::foo_service::FooRequestStats>* end() noexcept;
-  ::proto::Rust<::foo_service::FooRequestStats> const* end() const noexcept;
 
  private:
+  friend class rs_std::VecBase<::proto::Rust<::foo_service::FooRequestStats>>;
+  static constexpr std::size_t kPtrOffset = 4;
+  static constexpr std::size_t kCapOffset = 0;
+  static constexpr std::size_t kLenOffset = 8;
   unsigned char storage_[12];
 };
 #endif
@@ -372,16 +369,6 @@ inline ::std::int32_t read_proto_ref(
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
-    rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>* __ret_ptr);
-}
-inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec() {
-  ::__crubit_internal::
-      __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
-          this);
-}
-namespace __crubit_internal {
-extern "C" void
 __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
     rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>> const&,
     rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>* __ret_ptr);
@@ -409,13 +396,18 @@ rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator=(
   return *this;
 }
 inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
-    Vec&& other)
-    : Vec() {
-  *this = ::std::move(other);
+    Vec&& other) noexcept
+    : storage_{} {
+  ::std::memcpy(storage_, other.storage_, sizeof(storage_));
+  other.init_empty();
 }
-inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>& rs_std::Vec<
-    ::proto::Rust<::foo_service::FooRequestStats>>::operator=(Vec&& other) {
-  crubit::MemSwap(*this, other);
+inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>&
+rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator=(
+    Vec&& other) noexcept {
+  if (this != &other) {
+    destroy();
+    crubit::MemSwap(*this, other);
+  }
   return *this;
 }
 inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
@@ -423,56 +415,14 @@ inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
   ::std::memcpy(this, &value, sizeof(value));
 }
 
-extern "C" void
-__crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
-    void* vec) noexcept;
+inline rs_std::Vec<
+    ::proto::Rust<::foo_service::FooRequestStats>>::Vec() noexcept
+    : storage_{} {
+  init_empty();
+}
 inline rs_std::Vec<
     ::proto::Rust<::foo_service::FooRequestStats>>::~Vec() noexcept {
-  __crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
-      this);
-}
-inline ::proto::Rust<::foo_service::FooRequestStats>*
-rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::data() noexcept {
-  return std::bit_cast<::proto::Rust<::foo_service::FooRequestStats>*>(
-      *reinterpret_cast<const std::uintptr_t*>(&storage_[4]));
-}
-inline ::proto::Rust<::foo_service::FooRequestStats> const* rs_std::Vec<
-    ::proto::Rust<::foo_service::FooRequestStats>>::data() const noexcept {
-  return std::bit_cast<::proto::Rust<::foo_service::FooRequestStats>*>(
-      *reinterpret_cast<const std::uintptr_t*>(&storage_[4]));
-}
-inline std::size_t rs_std::Vec<
-    ::proto::Rust<::foo_service::FooRequestStats>>::size() const noexcept {
-  return std::bit_cast<std::size_t>(
-      *reinterpret_cast<const std::size_t*>(&storage_[8]));
-}
-inline ::proto::Rust<::foo_service::FooRequestStats>&
-rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator[](
-    std::size_t index) noexcept {
-  CRUBIT_CHECK(index < size());
-  return data()[index];
-}
-inline ::proto::Rust<::foo_service::FooRequestStats> const&
-rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator[](
-    std::size_t index) const noexcept {
-  CRUBIT_CHECK(index < size());
-  return data()[index];
-}
-inline ::proto::Rust<::foo_service::FooRequestStats>*
-rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::begin() noexcept {
-  return data();
-}
-inline ::proto::Rust<::foo_service::FooRequestStats> const* rs_std::Vec<
-    ::proto::Rust<::foo_service::FooRequestStats>>::begin() const noexcept {
-  return data();
-}
-inline ::proto::Rust<::foo_service::FooRequestStats>*
-rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::end() noexcept {
-  return data() + size();
-}
-inline ::proto::Rust<::foo_service::FooRequestStats> const* rs_std::Vec<
-    ::proto::Rust<::foo_service::FooRequestStats>>::end() const noexcept {
-  return data() + size();
+  destroy();
 }
 #endif
 

@@ -11,3 +11,4 @@ repository = "https://github.com/google/crubit"
 
 [dependencies]
 base64 = "0.22"
+crubit_support = { path = "../../../../support/crubit_support" }

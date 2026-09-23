@@ -4,6 +4,8 @@
 
 //! Unified runtime support library for Crubit generated bindings.
 
+extern crate alloc;
+
 pub mod bridge;
 pub mod dyn_erased_future;
 pub mod erased_future;

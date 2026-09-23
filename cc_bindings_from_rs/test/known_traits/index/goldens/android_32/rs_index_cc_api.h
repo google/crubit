@@ -22,10 +22,11 @@
 #include "support/rs_std/str_ref.h"
 #include "support/rs_std/vec.h"
 
-#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <memory>
+#include <new>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -99,10 +100,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
     ":: alloc :: vec :: Vec < :: alloc :: string :: String >")
-    rs_std::Vec<::rs::alloc::string::String> {
+    rs_std::Vec<::rs::alloc::string::String>
+    : public rs_std::VecBase<::rs::alloc::string::String> {
  public:
   // Default::default
-  Vec();
+  Vec() noexcept;
 
   // Clone::clone
   Vec(const Vec&);
@@ -110,23 +112,17 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   // Clone::clone_from
   rs_std::Vec<::rs::alloc::string::String>& operator=(const Vec&);
 
-  Vec(Vec&&);
-  rs_std::Vec<::rs::alloc::string::String>& operator=(Vec&&);
+  Vec(Vec&&) noexcept;
+  rs_std::Vec<::rs::alloc::string::String>& operator=(Vec&&) noexcept;
   Vec(::crubit::UnsafeRelocateTag, Vec&& value);
 
   ~Vec() noexcept;
-  ::rs::alloc::string::String* data() noexcept;
-  ::rs::alloc::string::String const* data() const noexcept;
-  std::size_t size() const noexcept;
-  ::rs::alloc::string::String& operator[](std::size_t index) noexcept;
-  ::rs::alloc::string::String const& operator[](
-      std::size_t index) const noexcept;
-  ::rs::alloc::string::String* begin() noexcept;
-  ::rs::alloc::string::String const* begin() const noexcept;
-  ::rs::alloc::string::String* end() noexcept;
-  ::rs::alloc::string::String const* end() const noexcept;
 
  private:
+  friend class rs_std::VecBase<::rs::alloc::string::String>;
+  static constexpr std::size_t kPtrOffset = 4;
+  static constexpr std::size_t kCapOffset = 0;
+  static constexpr std::size_t kLenOffset = 8;
   unsigned char storage_[12];
 };
 #endif
@@ -388,16 +384,6 @@ inline void ::rs_index::Map::__crubit_field_offset_assertions() {
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-    rs_std::Vec<::rs::alloc::string::String>* __ret_ptr);
-}
-inline rs_std::Vec<::rs::alloc::string::String>::Vec() {
-  ::__crubit_internal::
-      __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-          this);
-}
-namespace __crubit_internal {
-extern "C" void
 __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
     rs_std::Vec<::rs::alloc::string::String> const&,
     rs_std::Vec<::rs::alloc::string::String>* __ret_ptr);
@@ -422,12 +408,17 @@ rs_std::Vec<::rs::alloc::string::String>::operator=(const Vec& other) {
   }
   return *this;
 }
-inline rs_std::Vec<::rs::alloc::string::String>::Vec(Vec&& other) : Vec() {
-  *this = ::std::move(other);
+inline rs_std::Vec<::rs::alloc::string::String>::Vec(Vec&& other) noexcept
+    : storage_{} {
+  ::std::memcpy(storage_, other.storage_, sizeof(storage_));
+  other.init_empty();
 }
 inline rs_std::Vec<::rs::alloc::string::String>&
-rs_std::Vec<::rs::alloc::string::String>::operator=(Vec&& other) {
-  crubit::MemSwap(*this, other);
+rs_std::Vec<::rs::alloc::string::String>::operator=(Vec&& other) noexcept {
+  if (this != &other) {
+    destroy();
+    crubit::MemSwap(*this, other);
+  }
   return *this;
 }
 inline rs_std::Vec<::rs::alloc::string::String>::Vec(
@@ -435,54 +426,10 @@ inline rs_std::Vec<::rs::alloc::string::String>::Vec(
   ::std::memcpy(this, &value, sizeof(value));
 }
 
-extern "C" void
-__crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-    void* vec) noexcept;
-inline rs_std::Vec<::rs::alloc::string::String>::~Vec() noexcept {
-  __crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-      this);
+inline rs_std::Vec<::rs::alloc::string::String>::Vec() noexcept : storage_{} {
+  init_empty();
 }
-inline ::rs::alloc::string::String*
-rs_std::Vec<::rs::alloc::string::String>::data() noexcept {
-  return std::bit_cast<::rs::alloc::string::String*>(
-      *reinterpret_cast<const std::uintptr_t*>(&storage_[4]));
-}
-inline ::rs::alloc::string::String const*
-rs_std::Vec<::rs::alloc::string::String>::data() const noexcept {
-  return std::bit_cast<::rs::alloc::string::String*>(
-      *reinterpret_cast<const std::uintptr_t*>(&storage_[4]));
-}
-inline std::size_t rs_std::Vec<::rs::alloc::string::String>::size()
-    const noexcept {
-  return std::bit_cast<std::size_t>(
-      *reinterpret_cast<const std::size_t*>(&storage_[8]));
-}
-inline ::rs::alloc::string::String& rs_std::Vec<
-    ::rs::alloc::string::String>::operator[](std::size_t index) noexcept {
-  CRUBIT_CHECK(index < size());
-  return data()[index];
-}
-inline ::rs::alloc::string::String const& rs_std::Vec<
-    ::rs::alloc::string::String>::operator[](std::size_t index) const noexcept {
-  CRUBIT_CHECK(index < size());
-  return data()[index];
-}
-inline ::rs::alloc::string::String*
-rs_std::Vec<::rs::alloc::string::String>::begin() noexcept {
-  return data();
-}
-inline ::rs::alloc::string::String const*
-rs_std::Vec<::rs::alloc::string::String>::begin() const noexcept {
-  return data();
-}
-inline ::rs::alloc::string::String*
-rs_std::Vec<::rs::alloc::string::String>::end() noexcept {
-  return data() + size();
-}
-inline ::rs::alloc::string::String const*
-rs_std::Vec<::rs::alloc::string::String>::end() const noexcept {
-  return data() + size();
-}
+inline rs_std::Vec<::rs::alloc::string::String>::~Vec() noexcept { destroy(); }
 #endif
 
 #pragma clang diagnostic pop

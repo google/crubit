@@ -11,6 +11,51 @@
 
 extern crate alloc;
 extern crate core;
+const _: () = assert!(::std::mem::size_of::<::vec_golden::RustVecOwner>() == 12);
+const _: () = assert!(::std::mem::align_of::<::vec_golden::RustVecOwner>() == 4);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_Default_udefault_uvec_ugolden_x0000003a_x0000003aRustVecOwner(
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let __rs_return_value = <::vec_golden::RustVecOwner as ::core::default::Default>::default();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+extern "C" fn __crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aRustVecOwner(
+    __self: *mut ::vec_golden::RustVecOwner,
+) {
+    unsafe { ::core::ptr::drop_in_place(__self) };
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::vec_golden::RustVecOwner::new();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_vec_umut(
+    __self: &'static mut ::vec_golden::RustVecOwner,
+) -> &'static mut ::alloc::vec::Vec<i32> {
+    unsafe { ::vec_golden::RustVecOwner::vec_mut(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_len(__self: &'static ::vec_golden::RustVecOwner) -> usize {
+    unsafe { ::vec_golden::RustVecOwner::len(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_is_uempty(__self: &'static ::vec_golden::RustVecOwner) -> bool {
+    unsafe { ::vec_golden::RustVecOwner::is_empty(__self) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_element(
+    __self: &'static ::vec_golden::RustVecOwner,
+    index: usize,
+) -> i32 {
+    unsafe { ::vec_golden::RustVecOwner::element(__self, index) }
+}
 const _: () = assert!(::std::mem::size_of::<::vec_golden::StructWithVec>() == 12);
 const _: () = assert!(::std::mem::align_of::<::vec_golden::StructWithVec>() == 4);
 #[unsafe(no_mangle)]
@@ -21,6 +66,20 @@ unsafe extern "C" fn __crubit_thunk_new(val: i32, __ret_ptr: *mut core::ffi::c_v
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::vec_golden::StructWithVec, v) == 0);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_drop_uvec(_v: *mut ::alloc::vec::Vec<i32>) -> () {
+    unsafe {
+        let _v = _v.read();
+        ::vec_golden::drop_vec(_v)
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_return_ugrown_uvec(__ret_ptr: *mut core::ffi::c_void) -> () {
+    unsafe {
+        let __rs_return_value = ::vec_golden::return_grown_vec();
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uu8_uvec(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -36,19 +95,16 @@ unsafe extern "C" fn __crubit_thunk_return_uvec(__ret_ptr: *mut core::ffi::c_voi
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_rust_uadd_uelements(
+    v: &'static mut ::alloc::vec::Vec<i32>,
+) -> () {
+    unsafe { ::vec_golden::rust_add_elements(v) }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_take_uvec(v: *mut ::alloc::vec::Vec<i32>) -> i32 {
     unsafe {
         let v = v.read();
         ::vec_golden::take_vec(v)
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value = <::alloc::vec::Vec<i32> as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -69,21 +125,6 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003av
     unsafe { <::alloc::vec::Vec<i32> as ::core::clone::Clone>::clone_from(__self, source) }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
-    vec: *mut ::alloc::vec::Vec<i32>,
-) {
-    unsafe { ::core::ptr::drop_in_place(vec) };
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value = <::alloc::vec::Vec<u8> as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
     __self: &'static ::alloc::vec::Vec<u8>,
     __ret_ptr: *mut core::ffi::c_void,
@@ -99,10 +140,4 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003av
     source: &'static ::alloc::vec::Vec<u8>,
 ) -> () {
     unsafe { <::alloc::vec::Vec<u8> as ::core::clone::Clone>::clone_from(__self, source) }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Drop_udrop_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
-    vec: *mut ::alloc::vec::Vec<u8>,
-) {
-    unsafe { ::core::ptr::drop_in_place(vec) };
 }

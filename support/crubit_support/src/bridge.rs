@@ -570,6 +570,67 @@ impl Drop for FnPayload {
     }
 }
 
+/// Allocates memory with the global allocator.
+///
+/// # Safety
+///
+/// - `size` must be non-zero.
+/// - `align` must be a power of two.
+#[cfg_attr(not(test), unsafe(no_mangle))]
+pub unsafe extern "C" fn crubit_alloc(size: usize, align: usize) -> *mut u8 {
+    let layout = match ::core::alloc::Layout::from_size_align(size, align) {
+        Ok(l) => l,
+        Err(_) => return ::core::ptr::null_mut(),
+    };
+    // SAFETY: `layout` has non-zero size as required by the precondition that `size` is non-zero.
+    let ptr = unsafe { ::alloc::alloc::alloc(layout) };
+    if ptr.is_null() {
+        ::alloc::alloc::handle_alloc_error(layout);
+    }
+    ptr
+}
+
+/// Deallocates memory previously allocated by `crubit_alloc`.
+///
+/// # Safety
+///
+/// - `ptr` must denote a block of memory currently allocated via `crubit_alloc` (or `crubit_realloc`).
+/// - `size` and `align` must match the size and alignment used to allocate `ptr`.
+#[cfg_attr(not(test), unsafe(no_mangle))]
+pub unsafe extern "C" fn crubit_dealloc(ptr: *mut u8, size: usize, align: usize) {
+    if let Ok(layout) = ::core::alloc::Layout::from_size_align(size, align) {
+        // SAFETY: `ptr` was allocated with layout matching `layout`, and is not used after this call.
+        unsafe { ::alloc::alloc::dealloc(ptr, layout) };
+    }
+}
+
+/// Reallocates memory previously allocated by `crubit_alloc`.
+///
+/// # Safety
+///
+/// - `ptr` must denote a block of memory currently allocated via `crubit_alloc` (or `crubit_realloc`).
+/// - `old_size` and `old_align` must match the size and alignment used to allocate `ptr`.
+/// - `new_size` must be non-zero.
+#[cfg_attr(not(test), unsafe(no_mangle))]
+pub unsafe extern "C" fn crubit_realloc(
+    ptr: *mut u8,
+    old_size: usize,
+    old_align: usize,
+    new_size: usize,
+) -> *mut u8 {
+    let old_layout = match ::core::alloc::Layout::from_size_align(old_size, old_align) {
+        Ok(l) => l,
+        Err(_) => return ::core::ptr::null_mut(),
+    };
+    // SAFETY: `ptr` was allocated with `old_layout`, and `new_size` is non-zero as guaranteed by preconditions.
+    let new_ptr = unsafe { ::alloc::alloc::realloc(ptr, old_layout, new_size) };
+    if new_ptr.is_null() {
+        let new_layout = ::core::alloc::Layout::from_size_align(new_size, old_align).unwrap();
+        ::alloc::alloc::handle_alloc_error(new_layout);
+    }
+    new_ptr
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
