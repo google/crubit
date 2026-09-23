@@ -15,6 +15,7 @@ generated Rust bindings of this C++ target.
         "deps": "List of DepVariantInfo of other libraries to be linked to this library target. " +
                 "These can be either other `rust_library` targets or `cc_library` targets if " +
                 "linking a native library.",
+        "link_deps": "List of DepVariantInfo of native libraries to be linked to this library target.",
         "cc_deps": "List of DepVariantInfo of cc_library targets whose crubit-generated bindings " +
                    "will be linked to this library target.",
         "generated_cpp_support_deps": "List of CcInfo of support libraries for generated C++ code.",

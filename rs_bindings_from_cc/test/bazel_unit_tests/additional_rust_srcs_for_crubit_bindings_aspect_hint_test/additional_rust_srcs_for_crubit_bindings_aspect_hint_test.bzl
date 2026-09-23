@@ -105,6 +105,7 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_
         ],
         tags = ["manual"],
         deps = [":a_rust_lib_dep"],
+        link_deps = [":a_cc_link_dep"],
         cc_deps = [":aspect_for_cc_dep_lib_with_crubit"],
     )
     cc_library(
@@ -118,6 +119,11 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_
     attach_aspect(
         name = "aspect_for_my_cc_lib_target",
         dep = ":my_cc_lib_target",
+    )
+
+    cc_library(
+        name = "a_cc_link_dep",
+        hdrs = ["empty.h"],
     )
 
     additional_rust_srcs_for_crubit_bindings(
@@ -158,6 +164,7 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_
 
     expected_flag_prefix_deps = "--extern=a_rust_lib_dep="
     expected_flag_prefix_cc_deps = "--extern=cc_dep_lib_with_crubit="
+    not_expected_flag_prefix_link_deps = "--extern=a_cc_link_dep="
     asserts.true(
         env,
         True in [flag.startswith(expected_flag_prefix_deps) for flag in analysis_action.argv],
@@ -167,6 +174,11 @@ def _test_additional_rust_srcs_for_crubit_bindings_aspect_hint_deps_and_cc_deps_
         env,
         True in [flag.startswith(expected_flag_prefix_cc_deps) for flag in analysis_action.argv],
         "Flag starting with '%s' failed to be passed to rs_bindings_from_cc_driver. Actual flags: %s" % (expected_flag_prefix_cc_deps, analysis_action.argv),
+    )
+    asserts.false(
+        env,
+        True in [flag.startswith(not_expected_flag_prefix_link_deps) for flag in analysis_action.argv],
+        "Flag starting with '%s' should not be passed to rs_bindings_from_cc_driver. Actual flags: %s" % (not_expected_flag_prefix_link_deps, analysis_action.argv),
     )
     return analysistest.end(env)
 

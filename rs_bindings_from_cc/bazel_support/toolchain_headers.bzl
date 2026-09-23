@@ -83,6 +83,8 @@ def _bindings_for_toolchain_headers_impl(ctx):
             for src in target[AdditionalRustSrcsProviderInfo].srcs:
                 extra_rs_srcs.extend([(f, target[AdditionalRustSrcsProviderInfo].namespace_path) for f in src.files.to_list()])
             extra_rs_deps.extend(target[AdditionalRustSrcsProviderInfo].deps)
+            if hasattr(target[AdditionalRustSrcsProviderInfo], "link_deps"):
+                extra_rs_deps.extend(target[AdditionalRustSrcsProviderInfo].link_deps)
             if target[AdditionalRustSrcsProviderInfo].cc_deps:
                 fail("toolchain_headers do not accept additional Rust cc_deps")
         else:

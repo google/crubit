@@ -95,11 +95,13 @@ def make_additional_rust_srcs_provider(
         cc_support_deps = [],
         unstable_rust_features = [],
         root_namespaces = [],
-        aliases = {}):
+        aliases = {},
+        link_deps = []):
     return AdditionalRustSrcsProviderInfo(
         srcs = srcs,
         namespace_path = namespace_path,
         deps = _get_additional_rust_deps_variant_info(deps),
+        link_deps = _get_additional_rust_link_deps_variant_info(link_deps),
         cc_deps = _get_additional_cc_deps_variant_info(cc_deps),
         generated_cpp_support_deps = [
             dep[CcInfo]
@@ -138,7 +140,8 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
                 print(
                     ("WARNING: in {target}: direct dependency '{dep}' is a raw C++ library. " +
                      "Rust sources cannot directly use Crubit bindings of raw C++ libraries in 'deps'. " +
-                     "Please wrap '{dep}' in a 'rust_api_from_cpp' target and depend on that instead.").format(
+                     "Please wrap '{dep}' in a 'rust_api_from_cpp' target and depend on that instead, " +
+                     "or use 'link_deps' if it is a link-only dependency.").format(
                         target = rule_label,
                         dep = dep.label,
                     ),
@@ -155,6 +158,7 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         ctx.attr.unstable_rust_features,
         ctx.attr.root_namespaces,
         aliases = aliases,
+        link_deps = ctx.attr.link_deps,
     )]
     if ctx.attr.crubit_features:
         providers.append(CrubitFeaturesInfo(crubit_features = ctx.attr.crubit_features))
@@ -176,6 +180,12 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
             default = "",
         ),
         "deps": attr.label_list(
+            mandatory = False,
+            default = [],
+        ),
+        "link_deps": attr.label_list(
+            doc = "List of other native libraries to be linked to this library target.",
+            providers = [CcInfo],
             mandatory = False,
             default = [],
         ),
@@ -225,6 +235,7 @@ def additional_rust_srcs_for_crubit_bindings(
         cpp_srcs = [],
         namespace_path = "",
         deps = [],
+        link_deps = [],
         cc_deps = [],
         generated_cpp_support_deps = [],
         cc_support_deps = [],
@@ -262,6 +273,7 @@ def additional_rust_srcs_for_crubit_bindings(
             existing namespace names, use `pub mod` statement in the Rust source file instead.
         deps: List of other libraries to be linked to this library target. This accepts the same
             deps as rust_library.
+        link_deps: List of other native libraries to be linked to this library target.
         cc_deps: List of cc_library targets whose crubit-generated bindings will be made available
             to this library target.
         generated_cpp_support_deps: List of cc_library targets of support libraries for generated C++ code.
@@ -285,6 +297,7 @@ def additional_rust_srcs_for_crubit_bindings(
         cpp_srcs = cpp_srcs,
         namespace_path = namespace_path,
         deps = deps,
+        link_deps = link_deps,
         cc_deps = cc_deps,
         generated_cpp_support_deps = generated_cpp_support_deps,
         cc_support_deps = cc_support_deps,
@@ -304,6 +317,14 @@ def _create_dep_variant_info(dep):
         cc_info = dep[CcInfo] if CcInfo in dep else None,
     )
 
+def _create_link_dep_variant_info(dep):
+    return DepVariantInfo(
+        crate_info = None,
+        dep_info = None,
+        build_info = None,
+        cc_info = dep[CcInfo] if CcInfo in dep else None,
+    )
+
 def _get_additional_rust_deps_variant_info(deps_list):
     """Returns DepVariantInfo of `deps` associated with the `_target`.
 
@@ -316,6 +337,20 @@ def _get_additional_rust_deps_variant_info(deps_list):
     return [
         _create_dep_variant_info(dep)
         for dep in deps_list
+    ]
+
+def _get_additional_rust_link_deps_variant_info(link_deps_list):
+    """Returns DepVariantInfo of `link_deps` associated with the `_target`.
+
+    Args:
+        link_deps_list: label list of link_deps.
+
+    Returns:
+        A list of `DepVariantInfo` of the given `link_deps`.
+    """
+    return [
+        _create_link_dep_variant_info(dep)
+        for dep in link_deps_list
     ]
 
 def _get_additional_cc_deps_variant_info(cc_deps_list):

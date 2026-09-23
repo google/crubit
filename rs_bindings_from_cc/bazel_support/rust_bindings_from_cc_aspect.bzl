@@ -139,9 +139,9 @@ def _get_root_namespaces(aspect_ctx):
     return collections.uniq(root_namespaces)
 
 def _get_additional_rust_deps_from_provider(provider):
-    """Returns `deps` and `cc_deps` associated with the `provider`.
+    """Returns `deps`, `link_deps`, and `cc_deps` associated with the `provider`.
     """
-    return provider.deps + provider.cc_deps
+    return provider.deps + getattr(provider, "link_deps", []) + provider.cc_deps
 
 def _get_additional_rust_deps(aspect_ctx):
     """Returns DepVariantInfo of `deps` and `cc_deps` associated with the `_target`.
