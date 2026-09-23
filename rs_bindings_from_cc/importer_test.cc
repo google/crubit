@@ -389,8 +389,8 @@ auto Destructor(const Args&... matchers) {
 
 MATCHER(ImplDebug, "") { return arg.impl_debug(); }
 
-// Matches a Record which is trivial for calls.
-MATCHER(IsTrivialAbi, "") { return arg.is_trivial_abi(); }
+// Matches a Record which Rust may move with `memcpy`.
+MATCHER(IsRustMovable, "") { return arg.is_rust_movable(); }
 
 // Matches a Field that has the given offset.
 MATCHER_P(OffsetIs, offset, "") {
@@ -1273,7 +1273,7 @@ TEST(ImporterTest, PrivateDestructor) {
               Each(Pointee(Destructor(SpecialMemberFunc::kUnavailable))));
 }
 
-TEST(ImporterTest, TrivialAbi) {
+TEST(ImporterTest, RustMovable) {
   absl::string_view file = R"cc(
     struct Empty {};
     struct Defaulted {
@@ -1287,10 +1287,10 @@ TEST(ImporterTest, TrivialAbi) {
 
   std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(3));
-  EXPECT_THAT(records, Each(Pointee(IsTrivialAbi())));
+  EXPECT_THAT(records, Each(Pointee(IsRustMovable())));
 }
 
-TEST(ImporterTest, NotTrivialAbi) {
+TEST(ImporterTest, NotRustMovable) {
   absl::string_view file = R"cc(
     struct Nontrivial {
       Nontrivial(const Nontrivial&) {}
@@ -1300,7 +1300,7 @@ TEST(ImporterTest, NotTrivialAbi) {
 
   std::vector<const Record*> records = get_items_if<Record>(ir);
   EXPECT_THAT(records, SizeIs(1));
-  EXPECT_THAT(records, Each(Pointee(Not(IsTrivialAbi()))));
+  EXPECT_THAT(records, Each(Pointee(Not(IsRustMovable()))));
 }
 
 TEST(ImporterTest, TopLevelItemIds) {

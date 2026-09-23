@@ -3147,7 +3147,7 @@ fn test_mangled_cc_name_does_not_depend_on_target_cxx_abi() -> Result<()> {
 }
 
 /// A record is "Rust-movable" when Rust may move it with `memcpy`, without
-/// running the C++ destructor on the old location.  `is_trivial_abi` carries
+/// running the C++ destructor on the old location.  `is_rust_movable` carries
 /// this property, and it decides whether a record is `Unpin`, whether it
 /// derives `Copy`, whether it is `cxx::kind::Trivial`, and whether it is
 /// passed as `&mut T` rather than `Pin<&mut T>`.
@@ -3157,7 +3157,7 @@ fn test_mangled_cc_name_does_not_depend_on_target_cxx_abi() -> Result<()> {
 /// where the two expectations differ document where Crubit does not meet that
 /// goal yet - see b/564616479.
 #[gtest]
-fn test_is_trivial_abi_across_target_platforms() -> Result<()> {
+fn test_is_rust_movable_across_target_platforms() -> Result<()> {
     struct TestCase {
         record_name: &'static str,
         input_cpp: &'static str,
@@ -3289,7 +3289,7 @@ fn test_is_trivial_abi_across_target_platforms() -> Result<()> {
             let ir = ir_testing::make_test_ir(&proto)?;
             let record = retrieve_record(&ir, case.record_name);
             expect_eq!(
-                record.is_trivial_abi(),
+                record.is_rust_movable(),
                 expected,
                 "{}, platform = {platform:?}",
                 case.record_name
@@ -3754,7 +3754,7 @@ fn test_elided_lifetimes() {
 fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     let r = ir.records().next().expect("IR should contain `struct S`");
     assert_eq!(r.rs_name().as_str(), "S");
-    assert!(r.is_trivial_abi());
+    assert!(r.is_rust_movable());
 
     let f = ir
         .functions()

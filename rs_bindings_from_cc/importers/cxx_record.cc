@@ -1547,7 +1547,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   record->set_move_constructor(
       GetMoveCtorSpecialMemberFunc(ictx_, *record_decl));
   record->set_destructor(GetDestructorSpecialMemberFunc(*record_decl));
-  record->set_is_trivial_abi(IsRustMovable(*record_decl));
+  record->set_is_rust_movable(IsRustMovable(*record_decl));
   record->set_is_inheritable(!is_effectively_final);
   record->set_is_abstract(record_decl->isAbstract());
   if (nodiscard.has_value()) {

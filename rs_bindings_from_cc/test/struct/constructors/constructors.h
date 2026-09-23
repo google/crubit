@@ -7,7 +7,7 @@
 
 #include <memory>
 
-// `[[clang::trivial_abi]]` is used so that `is_trivial_abi` doesn't prevent
+// `[[clang::trivial_abi]]` is used so that `is_rust_movable` doesn't prevent
 // generating bindings for constructors, even though the presence of a
 // user-defined copy constructor technically means that the struct below
 // is non-trivial.

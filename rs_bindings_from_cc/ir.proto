@@ -532,15 +532,19 @@ message Record {
   // the C++ destructor on the old location.  See `Record::is_unpin` and the
   // "Unpin for C++ Types" design doc: `docs/design/unpin.md`.
   //
-  // TODO(b/564616479): Consider renaming this to `is_rust_movable`.  The
-  // current name suggests `[[clang::trivial_abi]]`, or a calling convention,
-  // and it is neither.  Avoid "trivially relocatable": no published C++
-  // standard defines that term, and the competing proposals disagree on what
-  // it should mean (P1144 defines it as byte-copy equivalence, P2786 as an
-  // object-model operation).  Clang's
-  // `__builtin_is_cpp_trivially_relocatable` follows P2786, and that
-  // predicate neither implies nor is implied by this one.
-  bool is_trivial_abi = 24;
+  // The name deliberately avoids `is_trivial_abi`.  `[[clang::trivial_abi]]`
+  // is related - it is one way for a record to get this property - but it is
+  // not the only way, because a trivially copyable record needs no attribute.
+  // And the property itself is not about the ABI: it says nothing about
+  // whether a value is passed in registers or in memory, and the answer
+  // should be the same on every target platform.
+  //
+  // Avoid calling this "trivially relocatable": no published C++ standard
+  // defines that term, and the competing proposals disagree on what it should
+  // mean (P1144 defines it as byte-copy equivalence, P2786 as an object-model
+  // operation).  Clang's `__builtin_is_cpp_trivially_relocatable` follows
+  // P2786, and that predicate neither implies nor is implied by this one.
+  bool is_rust_movable = 24;
   // Whether this type can be inherited from.
   bool is_inheritable = 25;
   // Whether this type is abstract.

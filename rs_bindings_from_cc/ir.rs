@@ -2357,8 +2357,8 @@ derive_debug_partialeq_eq_hash! {
             self.proto.destructor().to_ir()
         }
 
-        pub fn is_trivial_abi(&self) -> bool {
-            self.proto.is_trivial_abi()
+        pub fn is_rust_movable(&self) -> bool {
+            self.proto.is_rust_movable()
         }
 
         pub fn is_inheritable(&self) -> bool {
@@ -2492,13 +2492,16 @@ impl<'pb> Record<'pb> {
     /// If a type `T` is mut reference safe, it can be possed as a `&mut T`
     /// safely. Otherwise, mutable references must use `Pin<&mut T>`.
     ///
-    /// In C++, this is called "trivially relocatable". Such types can be passed
-    /// by value and have their memory directly mutated by Rust using
-    /// memcpy-like assignment/swap.
+    /// Such types are Rust-movable: Rust can move them with a `memcpy`,
+    /// without running a C++ move constructor and without running the C++
+    /// destructor at the old location. This is what lets Rust pass them by
+    /// value and mutate their memory directly with memcpy-like
+    /// assignment/swap.
     ///
-    /// Described in more detail at: docs/design/unpin.md
+    /// See the `is_rust_movable` field in `ir.proto`, and
+    /// docs/design/unpin.md for more details.
     pub fn is_unpin(&self) -> bool {
-        self.is_trivial_abi()
+        self.is_rust_movable()
     }
 
     // TODO(b/498977848): The record with cc_name

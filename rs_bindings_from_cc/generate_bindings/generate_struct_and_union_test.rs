@@ -637,7 +637,7 @@ fn test_copy_derives() {
 }
 
 #[gtest]
-fn test_copy_derives_not_is_trivial_abi() {
+fn test_copy_derives_not_rust_movable() {
     let proto = ir_proto_from_cc("struct S final { ~S() {} };").unwrap();
     let ir = make_test_ir(&proto).unwrap();
     let record = retrieve_record(&ir, "S");
