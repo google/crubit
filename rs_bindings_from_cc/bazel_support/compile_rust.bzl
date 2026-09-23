@@ -8,7 +8,7 @@
 load("@rules_rust//:version.bzl", RUST_VERSION = "VERSION")
 
 # buildifier: disable=bzl-visibility
-load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
+load("@rules_rust//rust/private:providers.bzl", "CrateInfo", "DepVariantInfo")
 
 # buildifier: disable=bzl-visibility
 load(
@@ -165,8 +165,56 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
         # LINT.ThenChange(//docs/overview/unstable_features.md)
     )
 
+    crate_info = _get_crate_info(providers)
+    extra_named_deps_list = extra_named_deps.to_list() if extra_named_deps else []
+    if extra_named_deps_list:
+        deps_list = deps.to_list()
+        existing_dep_owners = {
+            dep.crate_info.owner: True
+            for dep in deps_list
+            if dep.crate_info
+        }
+        existing_dep_names = {
+            dep.crate_info.name: True
+            for dep in deps_list
+            if dep.crate_info
+        }
+        merged_aliases = dict(aliases)
+        existing_alias_labels = {
+            k.label: True
+            for k in merged_aliases
+        }
+        extra_dep_variants = []
+        for item in extra_named_deps_list:
+            if not item.dep or not item.dep.owner:
+                continue
+            was_existing_dep = item.dep.owner in existing_dep_owners
+            if not was_existing_dep:
+                existing_dep_owners[item.dep.owner] = True
+                extra_dep_variants.append(
+                    DepVariantInfo(
+                        crate_info = item.dep,
+                        dep_info = None,
+                        cc_info = None,
+                        build_info = None,
+                    ),
+                )
+            if item.dep.owner not in existing_alias_labels and not (
+                was_existing_dep and item.name in existing_dep_names
+            ):
+                existing_alias_labels[item.dep.owner] = True
+                merged_aliases[struct(label = item.dep.owner)] = item.name
+
+        updated_crate_info = structs.to_dict(crate_info)
+        updated_crate_info["deps"] = depset(
+            direct = extra_dep_variants,
+            transitive = [crate_info.deps],
+        )
+        updated_crate_info["aliases"] = merged_aliases
+        crate_info = CrateInfo(**updated_crate_info)
+
     return DepVariantInfo(
-        crate_info = _get_crate_info(providers),
+        crate_info = crate_info,
         dep_info = _get_dep_info(providers),
         cc_info = _get_cc_info(providers),
         build_info = None,
