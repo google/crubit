@@ -224,6 +224,13 @@ struct CcType {
   // An ordered list of lifetime variable names applied to this type. It is
   // valid for the same name to appear multiple times.
   std::vector<std::string> explicit_lifetimes;
+  // The template arguments of this type as written at this use site, or empty
+  // if this use adds nothing over the arguments attached to the referenced
+  // decl. Only meaningful when `variant` holds an `ItemId`. Like `is_const`,
+  // this describes one use of the type rather than the type itself. See
+  // `ir.proto` and `Importer::WithAsWrittenTemplateArgs` for when this is
+  // populated.
+  std::vector<CcType> template_args;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const CcType& type) {

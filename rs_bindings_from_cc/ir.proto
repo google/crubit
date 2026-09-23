@@ -130,6 +130,25 @@ message CcType {
   // `std::unique_ptr` and `std::shared_ptr`. Only the smart pointer cases are
   // acted on today; see `RsTypeKind`.
   bool is_nonnull = 9;
+
+  // The template arguments of this type *as written at this use site*, or
+  // empty if this use adds nothing over the arguments already attached to the
+  // referenced decl.
+  //
+  // Only meaningful when `variant` is `decl`. Clang creates one
+  // `ClassTemplateSpecializationDecl` per *canonical* argument list, so `decl`
+  // alone cannot tell `W<int* $a>` apart from `W<int* $b>`: the sugar carrying
+  // the lifetime survives only on the use-site `TemplateSpecializationType`.
+  // Recording the as-written arguments here keeps them attached to the one use
+  // that wrote them, while `decl` keeps naming the single shared record.
+  //
+  // Like `is_const`, this describes one use of the type rather than the type
+  // itself, which is why it sits here rather than on the decl.
+  //
+  // Populated only under the `assume_lifetimes` feature, and only for a
+  // specialization with exactly one type argument that carries an explicit
+  // lifetime; see `Importer::WithAsWrittenTemplateArgs`.
+  repeated CcType template_args = 10;
 }
 
 // An identifier involved in bindings.

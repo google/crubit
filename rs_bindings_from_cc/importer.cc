@@ -1887,7 +1887,7 @@ std::string Importer::ConvertSourceLocation(
 }
 
 CcType Importer::ConvertTemplateSpecializationType(
-    const clang::TemplateSpecializationType& type) {
+    const clang::TemplateSpecializationType& type, bool assume_lifetimes) {
   // Qualifiers are handled separately in TypeMapper::ConvertQualType().
   std::string type_string = clang::QualType(&type, 0).getAsString();
 
@@ -1923,7 +1923,8 @@ CcType Importer::ConvertTemplateSpecializationType(
   }
 
   if (HasBeenAlreadySuccessfullyImported(*specialization_decl))
-    return ConvertTypeDecl(specialization_decl);
+    return WithAsWrittenTemplateArgs(ConvertTypeDecl(specialization_decl), type,
+                                     assume_lifetimes);
 
   // `Sema::isCompleteType` will try to instantiate the class template as a
   // side-effect and we rely on this here. `decl->getDefinition()` can
@@ -1962,7 +1963,52 @@ CcType Importer::ConvertTemplateSpecializationType(
         type_string, import_status.message()));
   }
 
-  return ConvertTypeDecl(specialization_decl);
+  return WithAsWrittenTemplateArgs(ConvertTypeDecl(specialization_decl), type,
+                                   assume_lifetimes);
+}
+
+CcType Importer::WithAsWrittenTemplateArgs(
+    CcType converted, const clang::TemplateSpecializationType& type,
+    bool assume_lifetimes) {
+  // The gate below is deliberately narrow, and each conjunct is load-bearing:
+  //
+  //  * `assume_lifetimes`: outside that feature nothing reads lifetimes, so
+  //    recording the arguments would only churn the IR.
+  //  * exactly one argument, written as a type: every consumer of
+  //    `template_args` today assumes a single type argument (see
+  //    `choose_one_type` in `rs_snippet.rs`, and the arity check in
+  //    `BridgeRsTypeKind::new`, which errors on a mismatch). Supporting
+  //    higher arities means generalizing those first.
+  //  * an explicit lifetime on that argument: this is the only information
+  //    that the shared specialization decl cannot already carry, and testing
+  //    for it before converting keeps the conversion -- and the imports it
+  //    triggers as a side effect -- out of the picture entirely when the gate
+  //    is closed.
+  //
+  // TODO(zarko): broaden to arity > 1 once the consumers above no longer
+  // assume a single argument.
+  if (!assume_lifetimes) return converted;
+  if (!std::holds_alternative<ItemId>(converted.variant)) return converted;
+
+  llvm::ArrayRef<clang::TemplateArgument> args = type.template_arguments();
+  if (args.size() != 1) return converted;
+  if (args[0].getKind() != clang::TemplateArgument::Type) return converted;
+  clang::QualType arg_type = args[0].getAsType();
+
+  absl::StatusOr<std::vector<absl::string_view>> arg_lifetimes =
+      CollectExplicitLifetimes(ctx_, *arg_type);
+  if (!arg_lifetimes.ok() || arg_lifetimes->empty()) return converted;
+
+  CcType converted_arg = ConvertQualType(arg_type, /*lifetimes=*/nullptr,
+                                         /*nullable=*/true, assume_lifetimes);
+  if (const auto* error = std::get_if<FormattedError>(&converted_arg.variant)) {
+    return CcType(FormattedError::Substitute(
+        "Failed to convert the template argument of '$0', which carries an "
+        "explicit lifetime: $1",
+        clang::QualType(&type, 0).getAsString(), error->message()));
+  }
+  converted.template_args.push_back(std::move(converted_arg));
+  return converted;
 }
 
 CcType Importer::ConvertTypeDecl(clang::NamedDecl* absl_nonnull decl) {
@@ -2212,7 +2258,7 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
     return ConvertTypeDecl(using_type->getDecl());
   } else if (const auto* tst_type =
                  type.getAs<clang::TemplateSpecializationType>()) {
-    return ConvertTemplateSpecializationType(*tst_type);
+    return ConvertTemplateSpecializationType(*tst_type, assume_lifetimes);
   } else if (const auto* subst_type =
                  type.getAs<clang::SubstTemplateTypeParmType>()) {
     return ConvertQualType(subst_type->getReplacementType(), lifetimes,

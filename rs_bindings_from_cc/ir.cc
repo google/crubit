@@ -39,6 +39,9 @@ void CcType::WriteToProto(ir_proto::CcType& proto) const {
   proto.set_unknown_attr(unknown_attr);
   proto.mutable_explicit_lifetimes()->Add(explicit_lifetimes.begin(),
                                           explicit_lifetimes.end());
+  for (const CcType& template_arg : template_args) {
+    template_arg.WriteToProto(*proto.add_template_args());
+  }
 
   std::visit(
       visitor{

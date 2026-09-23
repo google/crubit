@@ -5170,6 +5170,47 @@ fn test_assumed_lifetimes_function_with_explicit_bindings() {
     );
 }
 
+// A lifetime written on a class template argument reaches the Rust IR on the
+// use site. It cannot be carried by the record itself: Clang creates one
+// `ClassTemplateSpecializationDecl` per canonical argument list, so
+// `Wrapper<int* $a>` and `Wrapper<int* $b>` share one record.
+#[gtest]
+fn test_assumed_lifetimes_on_class_template_argument() {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        "template <class T> struct Wrapper { T value; }; void f(Wrapper<int* $a> x);",
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("assume_lifetimes")).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                cc_name: "f",
+                ...
+                params: [
+                    FuncParam {
+                        type_: CcType {
+                            variant: Decl {
+                                ...
+                                template_args: Some([
+                                    CcType {
+                                        ...
+                                        explicit_lifetimes: ["a"],
+                                    }
+                                ]),
+                            },
+                            ...
+                        },
+                        ...
+                    }
+                ],
+                ...
+            }
+        }
+    );
+}
+
 #[gtest]
 fn test_assumed_lifetimes_lifetimebound_free_function() {
     let proto =

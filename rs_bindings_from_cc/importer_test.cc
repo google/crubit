@@ -220,6 +220,13 @@ auto ExplicitLifetimesAre(const Args&... matchers) {
   return ExplicitLifetimesAreMatcher(ElementsAre(matchers...));
 }
 
+// Matches a CcType whose as-written template arguments match `matchers`.
+template <typename... Args>
+auto TemplateArgsAre(const Args&... matchers) {
+  return Property("template_args", &ir_proto::CcType::template_args,
+                  ElementsAre(matchers...));
+}
+
 // Matches a Func that has parameters matching `matchers`.
 template <typename... Args>
 auto ParamsAre(const Args&... matchers) {
@@ -1703,18 +1710,32 @@ TEST(ImporterTest, OverrideDisplayWrongArgType) {
                                         HasErrorMessage(HasSubstr("bool"))))));
 }
 
-absl::StatusOr<IR> IrFromCcWithAssumedLifetimes(absl::string_view program) {
-  auto full_program = absl::StrCat(R"cc(
+// Prefixes `program` with the lifetime annotation macros used by the tests
+// below.
+std::string WithLifetimeMacros(absl::string_view program) {
+  return absl::StrCat(R"cc(
 #define $(l) [[clang::annotate_type("lifetime", #l)]]
 #define $a $(a)
 #define $b $(b)
 #define LIFETIME_PARAMS(...) [[clang::annotate("lifetime_params", __VA_ARGS__)]]
-                                   )cc",
-                                   program);
+                      )cc",
+                      program);
+}
+
+absl::StatusOr<IR> IrFromCcWithAssumedLifetimes(absl::string_view program) {
+  std::string full_program = WithLifetimeMacros(program);
   BazelLabel test_target{"//test:testing_target"};
   return IrFromCc(IrFromCcOptions{
       .extra_source_code_for_testing = full_program,
       .crubit_features = {{test_target, {"assume_lifetimes"}}}});
+}
+
+// Imports the same source as `IrFromCcWithAssumedLifetimes`, but without the
+// `assume_lifetimes` feature, so that lifetime annotations are ignored.
+absl::StatusOr<IR> IrFromCcWithoutAssumedLifetimes(absl::string_view program) {
+  std::string full_program = WithLifetimeMacros(program);
+  return IrFromCc(
+      IrFromCcOptions{.extra_source_code_for_testing = full_program});
 }
 
 TEST(ImporterTest, AssumedLifetimesCapturesRawFunctionParameterLifetime) {
@@ -1977,6 +1998,135 @@ TEST(ImporterTest, TypeAliasTruncatesAndHashesRustNameWhenOver160Chars) {
               "LongAliasName_123456789_123456789_123456789_123456789_123456789_"
               "123456789_123456789_123456789_123456789_123456789_123456789_"
               "123456789_123456789_b5317e69b85ef233")))));
+}
+
+// ===========================================================================
+// Lifetimes written on class template arguments.
+//
+// Clang creates one `ClassTemplateSpecializationDecl` per *canonical*
+// argument list, so the record behind `Wrapper<int* $a>` is the same record as
+// the one behind `Wrapper<int* $b>`, and the lifetime is not reachable from
+// it. The sugar that carries it survives only on the use-site
+// `TemplateSpecializationType`, which is why the importer records the
+// as-written arguments on the `CcType` for that use.
+// ===========================================================================
+
+TEST(ImporterTest, AssumedLifetimesRecordedOnClassTemplateArgument) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct Wrapper {
+      T value;
+    };
+    void f(Wrapper<int* $a> w, int* $b y);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      Contains(VariantWith<Func>(AllOf(
+          IdentifierIs("f"),
+          ParamsAre(
+              // The parameter type itself carries no lifetime: `$a` was
+              // written on the argument, not on `Wrapper<...>`.
+              ParamType(ExplicitLifetimesAre(),
+                        TemplateArgsAre(ExplicitLifetimesAre("a"))),
+              ParamType(ExplicitLifetimesAre("b"), TemplateArgsAre()))))));
+}
+
+// The two parameters share one `ClassTemplateSpecializationDecl`, and hence
+// one `ItemId`: that is correct, since there is one C++ class and there must
+// be one Rust type. The lifetimes are what tell the two uses apart.
+TEST(ImporterTest, AssumedLifetimesDistinguishTemplateInstantiations) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct Wrapper {
+      T value;
+    };
+    void f(Wrapper<int* $a> x, Wrapper<int* $b> y);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  const Func* func = nullptr;
+  for (const Func* candidate : get_items_if<Func>(ir)) {
+    if (GetName(*candidate) == "f") func = candidate;
+  }
+  ASSERT_NE(func, nullptr);
+  ASSERT_EQ(func->params_size(), 2);
+  ASSERT_TRUE(func->params(0).type().has_decl());
+  EXPECT_EQ(func->params(0).type().decl(), func->params(1).type().decl());
+  EXPECT_THAT(func->params(0).type(),
+              TemplateArgsAre(ExplicitLifetimesAre("a")));
+  EXPECT_THAT(func->params(1).type(),
+              TemplateArgsAre(ExplicitLifetimesAre("b")));
+}
+
+// Without `assume_lifetimes` nothing reads lifetimes, so the arguments are not
+// recorded and the IR is unchanged.
+TEST(ImporterTest, TemplateArgsNotRecordedWithoutAssumedLifetimes) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct Wrapper {
+      T value;
+    };
+    void f(Wrapper<int* $a> w);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithoutAssumedLifetimes(file));
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      Contains(VariantWith<Func>(
+          AllOf(IdentifierIs("f"), ParamsAre(ParamType(TemplateArgsAre()))))));
+}
+
+// No lifetime was written, so the as-written arguments add nothing over the
+// arguments already attached to the decl.
+TEST(ImporterTest, TemplateArgsNotRecordedWithoutAnnotation) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct Wrapper {
+      T value;
+    };
+    void f(Wrapper<int*> w);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      Contains(VariantWith<Func>(
+          AllOf(IdentifierIs("f"), ParamsAre(ParamType(TemplateArgsAre()))))));
+}
+
+// TODO(zarko): arity > 1 is deliberately out of scope for now, because the
+// consumers of `template_args` assume a single argument. The gate must decline
+// rather than record a partial argument list.
+TEST(ImporterTest, TemplateArgsNotRecordedForArityGreaterThanOne) {
+  absl::string_view file = R"cc(
+    template <class T, class U>
+    struct Pair {
+      T first;
+      U second;
+    };
+    void f(Pair<int* $a, int* $b> p);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      Contains(VariantWith<Func>(
+          AllOf(IdentifierIs("f"), ParamsAre(ParamType(TemplateArgsAre()))))));
+}
+
+// A non-type template argument cannot carry a lifetime, and the gate declines
+// before looking at it.
+TEST(ImporterTest, TemplateArgsNotRecordedForNonTypeArgument) {
+  absl::string_view file = R"cc(
+    template <int N>
+    struct Sized {
+      int values[N];
+    };
+    void f(Sized<3> $a s);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      Contains(VariantWith<Func>(AllOf(
+          IdentifierIs("f"), ParamsAre(ParamType(ExplicitLifetimesAre("a"),
+                                                 TemplateArgsAre()))))));
 }
 }  // namespace
 }  // namespace crubit

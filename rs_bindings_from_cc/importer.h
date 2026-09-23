@@ -199,7 +199,19 @@ class Importer final : public ImportContext {
   // Converts `type` into a CcType, after first importing the Record behind
   // the template instantiation.
   CcType ConvertTemplateSpecializationType(
-      const clang::TemplateSpecializationType& type);
+      const clang::TemplateSpecializationType& type, bool assume_lifetimes);
+
+  // Attaches the template arguments of `type` as written at this use site to
+  // `converted`, if they carry a lifetime that the specialization decl cannot.
+  //
+  // Returns `converted` unchanged unless `assume_lifetimes` is enabled and
+  // `type` has exactly one argument, written as a type, carrying an explicit
+  // lifetime annotation. Returns an error type if such an argument fails to
+  // convert: the lifetime was written down in the source, so dropping it
+  // silently would produce bindings that disagree with the header.
+  CcType WithAsWrittenTemplateArgs(
+      CcType converted, const clang::TemplateSpecializationType& type,
+      bool assume_lifetimes);
 
   bool RefersToOwnedDefinitionImpl(
       const clang::CXXRecordDecl& decl,
