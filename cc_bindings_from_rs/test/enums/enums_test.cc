@@ -22,6 +22,10 @@ using enums::repr_c_clone_active_variant::is_b;
 using enums::repr_c_clone_active_variant::is_c;
 using enums::repr_c_clone_counter::CloneCount;
 using enums::repr_c_drop::DropMe;
+using enums::repr_c_variant_alignment::OverAlignedNarrowPayload;
+using enums::repr_c_variant_alignment::OverAlignedWidePayload;
+using enums::repr_c_variant_alignment::UnbindableFieldPayload;
+using enums::repr_c_variant_alignment::WideTagNarrowAlignment;
 using enums::repr_int::IntReprEnumWithNoPayload;
 using enums::repr_int::IntReprWithSingleNoPayloadVariant;
 using enums::repr_int::NegReprIntEnum;
@@ -252,6 +256,64 @@ TEST(EnumsTest, TestParamNameCollisions) {
   auto other = KeywordEnum::Makeother();
   EXPECT_TRUE(is_match(match));
   EXPECT_FALSE(is_match(other));
+}
+
+// The `alignas` on the generated `__crubit_<Variant>_struct`s is what makes
+// the payload union land at the offset Rust uses. The generated header already
+// carries `static_assert(<offset> == offsetof(...))` plus `sizeof`/`alignof`
+// assertions; the tests below additionally write through the union from C++ and
+// read the value back from Rust, which fails at runtime if the union is
+// misplaced.
+TEST(EnumsVariantAlignmentTest, WideTagNarrowAlignment) {
+  // `#[repr(C, i64)]`: on x86-32 the tag is 8 bytes but only 4-byte aligned, so
+  // the payload offset (8) is larger than the enum's alignment (4).
+  auto e = WideTagNarrowAlignment::MakeA(1, 2);
+  EXPECT_EQ(e.tag, WideTagNarrowAlignment::Tag::A);
+  EXPECT_EQ(e.A.__field0, 1);
+  EXPECT_EQ(e.A.__field1, 2);
+
+  e.A.__field0 = 10;
+  e.A.__field1 = 20;
+  EXPECT_EQ(e.sum(), 30);
+
+  e.tag = WideTagNarrowAlignment::Tag::B;
+  e.B.__field0 = 7;
+  EXPECT_EQ(e.sum(), 7);
+}
+
+TEST(EnumsVariantAlignmentTest, UnbindableFieldPayload) {
+  // `A(AtomicU64)` has no C++ binding, so its field becomes an opaque byte
+  // array of alignment 1. The payload struct's `alignas` is the only thing
+  // keeping the union at Rust's offset of 8 rather than 4.
+  auto e = UnbindableFieldPayload::make_a(42);
+  EXPECT_EQ(e.value(), 42u);
+
+  e.tag = UnbindableFieldPayload::Tag::B;
+  e.B.__field0 = 200;
+  EXPECT_EQ(e.value(), 200u);
+}
+
+TEST(EnumsVariantAlignmentTest, OverAlignedNarrowPayload) {
+  // `#[repr(C, align(16))]` with a 4-byte payload offset. `alignas` must not
+  // inherit the enum's alignment of 16, or the union is pushed to offset 16.
+  auto e = OverAlignedNarrowPayload::MakeA(0);
+  e.A.__field0 = 123;
+  EXPECT_EQ(e.value(), 123);
+
+  e.tag = OverAlignedNarrowPayload::Tag::B;
+  e.B.__field0 = 45;
+  EXPECT_EQ(e.value(), 45);
+}
+
+TEST(EnumsVariantAlignmentTest, OverAlignedWidePayload) {
+  // As above, but the payload offset is 8.
+  auto e = OverAlignedWidePayload::MakeA(0);
+  e.A.__field0 = 1234567890123;
+  EXPECT_EQ(e.value(), 1234567890123u);
+
+  e.tag = OverAlignedWidePayload::Tag::B;
+  e.B.__field0 = 99;
+  EXPECT_EQ(e.value(), 99u);
 }
 
 }  // namespace

@@ -3548,14 +3548,37 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             let layout = &self.layout;
             let variant_alignments = match layout_variants {
                 Variants::Multiple { variants: layout_vars, .. } => {
+                    // The alignment of a variant struct decides where the union of the
+                    // variants lands inside the generated C++ struct, because the union
+                    // follows the tag at `round_up(sizeof(tag), alignof(union))`. It must
+                    // therefore never exceed the largest power of two that divides the Rust
+                    // payload offset (`tag_size_with_padding`), or else the payload would be
+                    // pushed past the offset that Rust uses.
+                    //
+                    // The alignment of the *variant layout* can be larger than that, because
+                    // it also accounts for the tag and for an enum-wide `repr(align(N))`
+                    // (which raises the alignment of the enum as a whole without moving any
+                    // of its fields). Using it unmodified would e.g. place the payload of
+                    // `#[repr(C, align(16))] enum E { A(i32) }` at offset 16 instead of 4.
+                    //
+                    // Capping it, rather than using the alignment of the payload fields,
+                    // keeps the payload correctly aligned even when a field type had to be
+                    // replaced with a less-aligned blob of bytes.
+                    let max_alignment = if tag_size_with_padding == 0 {
+                        // We use a value that is guaranteed to be larger than any possible
+                        // alignment value in the min below.
+                        u64::MAX
+                    } else {
+                        1u64 << tag_size_with_padding.trailing_zeros()
+                    };
                     #[rustversion::before(2026-05-18)]
                     let get_align =
                         |(_, layout): (VariantIdx, &LayoutData<FieldIdx, VariantIdx>)| {
-                            layout.align.abi.bytes() - tag_size_with_padding
+                            layout.align.abi.bytes().min(max_alignment)
                         };
                     #[rustversion::since(2026-05-18)]
                     let get_align = |(i, _): (VariantIdx, &VariantLayout<FieldIdx>)| {
-                        LayoutData::for_variant(layout, i).align.abi.bytes() - tag_size_with_padding
+                        LayoutData::for_variant(layout, i).align.abi.bytes().min(max_alignment)
                     };
                     layout_vars.iter_enumerated().map(get_align).collect_vec()
                 }

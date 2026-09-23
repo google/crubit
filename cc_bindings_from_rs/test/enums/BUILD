@@ -39,11 +39,6 @@ golden_test(
         "ios",
     ],
     rust_library = "enums",
-    # TODO(b/537283300): Re-enable x86 Android platforms once x86 ABI assertion failures are resolved.
-    tags = [
-        "no_test_android_arm",
-        "no_test_android_x86",
-    ],
 )
 
 cc_bindings_from_rust(
@@ -58,11 +53,6 @@ crubit_cc_test(
     platforms = [
         "android",
         "ios",
-    ],
-    # TODO(b/537283300): Re-enable x86 Android platforms once x86 ABI assertion failures are resolved.
-    tags = [
-        "no_test_android_arm",
-        "no_test_android_x86",
     ],
     deps = [
         ":enums_cc_api",

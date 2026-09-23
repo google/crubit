@@ -470,3 +470,97 @@ pub mod param_name_collisions {
         matches!(r#match, KeywordEnum::r#match)
     }
 }
+
+/// For a `#[repr(C)]` enum, `cc_bindings_from_rs` emits one
+/// `struct alignas(N) __crubit_<Variant>_struct` per variant and puts them in a
+/// union that has to land at exactly the offset Rust puts the payload at. The
+/// shapes below are the ones where getting `N` wrong is observable; each of them
+/// is caught by the generated
+/// `static_assert(<offset> == offsetof(<Enum>, <Variant>))`, `sizeof` and
+/// `alignof` assertions.
+pub mod repr_c_variant_alignment {
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    /// On x86-32 `i64` has size 8 but alignment 4, so the payload offset (8)
+    /// exceeds the enum's own alignment (4). Deriving the payload struct's
+    /// alignment as `enum_alignment - payload_offset` underflowed `u64` here and
+    /// panicked while generating bindings.
+    #[repr(C, i64)]
+    pub enum WideTagNarrowAlignment {
+        A(i32, i64),
+        B(u8),
+    }
+
+    impl WideTagNarrowAlignment {
+        pub fn sum(&self) -> i64 {
+            match self {
+                Self::A(x, y) => i64::from(*x) + *y,
+                Self::B(b) => i64::from(*b),
+            }
+        }
+    }
+
+    /// `AtomicU64` has no C++ binding, so the field is replaced by an opaque
+    /// `std::array<unsigned char, 8>`, which has alignment 1 and therefore
+    /// throws away the Rust field's alignment. Without a correct `alignas` on the
+    /// payload struct the union lands at offset 4 instead of Rust's 8.
+    #[repr(C)]
+    pub enum UnbindableFieldPayload {
+        A(AtomicU64),
+        B(u8),
+    }
+
+    impl UnbindableFieldPayload {
+        pub fn make_a(value: u64) -> Self {
+            Self::A(AtomicU64::new(value))
+        }
+
+        pub fn value(&self) -> u64 {
+            match self {
+                Self::A(a) => a.load(Ordering::Relaxed),
+                Self::B(b) => u64::from(*b),
+            }
+        }
+    }
+
+    /// `#[repr(align(16))]` raises the enum's alignment to 16 while the payload
+    /// still sits at offset 4. `enum_alignment - payload_offset` yields 12 here,
+    /// and `alignas(12)` is a hard "requested alignment is not a positive power
+    /// of 2" C++ error.
+    #[repr(C, align(16))]
+    pub enum OverAlignedNarrowPayload {
+        A(i32),
+        B(u8),
+    }
+
+    impl OverAlignedNarrowPayload {
+        pub fn value(&self) -> i32 {
+            match self {
+                Self::A(a) => *a,
+                Self::B(b) => i32::from(*b),
+            }
+        }
+    }
+
+    /// Same shape as above, but with a payload wide enough that its offset
+    /// changes per target: 8 where `u64` is 8-byte aligned, 4 on x86-32. Either
+    /// way the enum's alignment stays 16, so using that alignment for the
+    /// payload struct would push the union past Rust's payload offset. Unlike
+    /// the three shapes above this one is a "don't regress" case: the old
+    /// `enum_alignment - payload_offset` happened to produce a correct value
+    /// for it.
+    #[repr(C, align(16))]
+    pub enum OverAlignedWidePayload {
+        A(u64),
+        B(u8),
+    }
+
+    impl OverAlignedWidePayload {
+        pub fn value(&self) -> u64 {
+            match self {
+                Self::A(a) => *a,
+                Self::B(b) => u64::from(*b),
+            }
+        }
+    }
+}

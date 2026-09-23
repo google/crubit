@@ -174,7 +174,7 @@ bool is_some(::enums::param_name_collisions::OptionLike some);
 namespace enums::qr_error {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: qr_error :: QrError") alignas(8) [[clang::trivial_abi]]
+    ":: enums_golden :: qr_error :: QrError") alignas(4) [[clang::trivial_abi]]
 QrError final {
  public:
   // `enums_golden::qr_error::QrError` doesn't implement the `Default` trait
@@ -211,11 +211,11 @@ QrError final {
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 24> __opaque_blob_of_bytes;
+  ::std::array<unsigned char, 12> __opaque_blob_of_bytes;
 
  private:
   struct PrivateBytesTag {};
-  constexpr QrError(PrivateBytesTag, ::std::array<unsigned char, 24> bytes)
+  constexpr QrError(PrivateBytesTag, ::std::array<unsigned char, 12> bytes)
       : __opaque_blob_of_bytes(bytes) {}
 
  private:
@@ -223,7 +223,7 @@ QrError final {
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: qr_error :: StructuredQrError") alignas(8)
+    ":: enums_golden :: qr_error :: StructuredQrError") alignas(4)
     [[clang::trivial_abi]] StructuredQrError final {
  public:
   // `enums_golden::qr_error::StructuredQrError` doesn't implement the `Default`
@@ -273,12 +273,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
  private:
   // Field type has been replaced with a blob of bytes: No support for bindings
   // of individual non-repr(C) `enum`s
-  ::std::array<unsigned char, 24> __opaque_blob_of_bytes;
+  ::std::array<unsigned char, 12> __opaque_blob_of_bytes;
 
  private:
   struct PrivateBytesTag {};
   constexpr StructuredQrError(PrivateBytesTag,
-                              ::std::array<unsigned char, 24> bytes)
+                              ::std::array<unsigned char, 12> bytes)
       : __opaque_blob_of_bytes(bytes) {}
 
  private:
@@ -372,7 +372,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace enums::repr_c {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
-    8) [[clang::trivial_abi]] MyEnum final {
+    4) [[clang::trivial_abi]] MyEnum final {
  public:
   // Default::default
   MyEnum();
@@ -417,12 +417,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   MyEnum& operator=(const MyEnum&) = delete;
   MyEnum(::crubit::UnsafeRelocateTag, MyEnum&& value);
 
-  struct alignas(8) __crubit_E_struct {
+  struct alignas(4) __crubit_E_struct {
    public:
     ::rs::alloc::string::String __field0;
     ::std::int32_t __field1;
   };
-  struct alignas(8) __crubit_A_struct {
+  struct alignas(4) __crubit_A_struct {
     ::std::int32_t __field0;
     ::std::int64_t __field1;
   };
@@ -432,11 +432,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
 
   // Variant G has no size, so no struct is generated.
 
-  struct alignas(8) __crubit_B_struct {
+  struct alignas(4) __crubit_B_struct {
     bool h;
     bool i;
   };
-  struct alignas(8) __crubit_C_struct {
+  struct alignas(4) __crubit_C_struct {
     ::std::int32_t a;
     ::std::int32_t b;
     ::std::int32_t c;
@@ -690,7 +690,7 @@ bool is_c(::enums::repr_c_clone_active_variant::CloneActiveVariant const& e);
 namespace enums::repr_c_clone_counter {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_c_clone_counter :: CloneCount") alignas(8)
+    ":: enums_golden :: repr_c_clone_counter :: CloneCount") alignas(4)
     [[clang::trivial_abi]] CloneCount final {
  public:
   // Default::default
@@ -715,7 +715,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   CloneCount(::crubit::UnsafeRelocateTag, CloneCount&& value);
 
-  struct alignas(8) __crubit_A_struct {
+  struct alignas(4) __crubit_A_struct {
    public:
     ::std::int32_t* p;
   };
@@ -745,7 +745,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 namespace enums::repr_c_drop {
 
 struct CRUBIT_INTERNAL_RUST_TYPE(
-    ":: enums_golden :: repr_c_drop :: DropMe") alignas(8)
+    ":: enums_golden :: repr_c_drop :: DropMe") alignas(4)
     [[clang::trivial_abi]] DropMe final {
  public:
   // Default::default
@@ -774,16 +774,16 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   DropMe& operator=(const DropMe&) = delete;
   DropMe(::crubit::UnsafeRelocateTag, DropMe&& value);
 
-  struct alignas(8) __crubit_A_struct {
+  struct alignas(4) __crubit_A_struct {
    public:
     ::std::int32_t __field0;
   };
-  struct alignas(8) __crubit_B_struct {
+  struct alignas(4) __crubit_B_struct {
     ::std::int64_t __field0;
   };
   // Variant Q has no size, so no struct is generated.
 
-  struct alignas(8) __crubit_C_struct {
+  struct alignas(4) __crubit_C_struct {
     ::std::int32_t* p;
   };
 
@@ -915,11 +915,11 @@ OverAlignedWidePayload final {
 
   ::std::uint64_t value() const;
 
-  struct alignas(8) __crubit_A_struct {
+  struct alignas(4) __crubit_A_struct {
    public:
     ::std::uint64_t __field0;
   };
-  struct alignas(8) __crubit_B_struct {
+  struct alignas(4) __crubit_B_struct {
     ::std::uint8_t __field0;
   };
 
@@ -1023,7 +1023,7 @@ UnbindableFieldPayload final {
 //  panicked while generating bindings.
 struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: enums_golden :: repr_c_variant_alignment :: "
-    "WideTagNarrowAlignment") alignas(8) [[clang::trivial_abi]]
+    "WideTagNarrowAlignment") alignas(4) [[clang::trivial_abi]]
 WideTagNarrowAlignment final {
  public:
   // `enums_golden::repr_c_variant_alignment::WideTagNarrowAlignment` doesn't
@@ -1050,12 +1050,12 @@ WideTagNarrowAlignment final {
 
   ::std::int64_t sum() const;
 
-  struct alignas(8) __crubit_A_struct {
+  struct alignas(4) __crubit_A_struct {
    public:
     ::std::int32_t __field0;
     ::std::int64_t __field1;
   };
-  struct alignas(8) __crubit_B_struct {
+  struct alignas(4) __crubit_B_struct {
     ::std::uint8_t __field0;
   };
 
@@ -1691,45 +1691,40 @@ inline bool is_some(::enums::param_name_collisions::OptionLike some) {
 namespace enums::qr_error {
 
 static_assert(
-    sizeof(::enums::qr_error::QrError) == 24,
+    sizeof(::enums::qr_error::QrError) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(::enums::qr_error::QrError) == 8,
+    alignof(::enums::qr_error::QrError) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 
 // `static` constructor
 inline constexpr ::enums::qr_error::QrError(
     ::enums::qr_error::QrError::MakeDataTooLong)() {
-  return QrError(PrivateBytesTag{}, {11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                     0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+  return QrError(PrivateBytesTag{}, {11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }
 
 // `static` constructor
 inline constexpr ::enums::qr_error::QrError(
     ::enums::qr_error::QrError::MakeInvalidVersion)() {
-  return QrError(PrivateBytesTag{}, {12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                     0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+  return QrError(PrivateBytesTag{}, {12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }
 
 // `static` constructor
 inline constexpr ::enums::qr_error::QrError(
     ::enums::qr_error::QrError::MakeUnsupportedCharacterSet)() {
-  return QrError(PrivateBytesTag{}, {13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                     0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+  return QrError(PrivateBytesTag{}, {13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }
 
 // `static` constructor
 inline constexpr ::enums::qr_error::QrError(
     ::enums::qr_error::QrError::MakeInvalidEciDesignator)() {
-  return QrError(PrivateBytesTag{}, {14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                     0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+  return QrError(PrivateBytesTag{}, {14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }
 
 // `static` constructor
 inline constexpr ::enums::qr_error::QrError(
     ::enums::qr_error::QrError::MakeInvalidCharacter)() {
-  return QrError(PrivateBytesTag{}, {15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                     0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+  return QrError(PrivateBytesTag{}, {15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }
 
 namespace __crubit_internal {
@@ -1787,18 +1782,17 @@ inline void ::enums::qr_error::QrError::__crubit_field_offset_assertions() {
   }
 }
 static_assert(
-    sizeof(::enums::qr_error::StructuredQrError) == 24,
+    sizeof(::enums::qr_error::StructuredQrError) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(::enums::qr_error::StructuredQrError) == 8,
+    alignof(::enums::qr_error::StructuredQrError) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 
 // `static` constructor
 inline constexpr ::enums::qr_error::StructuredQrError(
     ::enums::qr_error::StructuredQrError::MakeAtLeast2Pieces)() {
-  return StructuredQrError(
-      PrivateBytesTag{},
-      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+  return StructuredQrError(PrivateBytesTag{},
+                           {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }
 
 namespace __crubit_internal {
@@ -1818,41 +1812,36 @@ inline ::enums::qr_error::StructuredQrError(
 // `static` constructor
 inline constexpr ::enums::qr_error::StructuredQrError(
     ::enums::qr_error::StructuredQrError::MakeMissingParts)() {
-  return StructuredQrError(
-      PrivateBytesTag{},
-      {2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+  return StructuredQrError(PrivateBytesTag{},
+                           {2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }
 
 // `static` constructor
 inline constexpr ::enums::qr_error::StructuredQrError(
     ::enums::qr_error::StructuredQrError::MakeParity)() {
-  return StructuredQrError(
-      PrivateBytesTag{},
-      {3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+  return StructuredQrError(PrivateBytesTag{},
+                           {3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }
 
 // `static` constructor
 inline constexpr ::enums::qr_error::StructuredQrError(
     ::enums::qr_error::StructuredQrError::MakeTooShort)() {
-  return StructuredQrError(
-      PrivateBytesTag{},
-      {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+  return StructuredQrError(PrivateBytesTag{},
+                           {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }
 
 // `static` constructor
 inline constexpr ::enums::qr_error::StructuredQrError(
     ::enums::qr_error::StructuredQrError::MakeStructuredWrongMode)() {
-  return StructuredQrError(
-      PrivateBytesTag{},
-      {5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+  return StructuredQrError(PrivateBytesTag{},
+                           {5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }
 
 // `static` constructor
 inline constexpr ::enums::qr_error::StructuredQrError(
     ::enums::qr_error::StructuredQrError::MakeStructuredWrongEnc)() {
-  return StructuredQrError(
-      PrivateBytesTag{},
-      {6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+  return StructuredQrError(PrivateBytesTag{},
+                           {6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }
 
 namespace __crubit_internal {
@@ -2062,10 +2051,10 @@ inline void ::enums::repr_128::ReprU128::__crubit_field_offset_assertions() {
 namespace enums::repr_c {
 
 static_assert(
-    sizeof(::enums::repr_c::MyEnum) == 40,
+    sizeof(::enums::repr_c::MyEnum) == 24,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(::enums::repr_c::MyEnum) == 8,
+    alignof(::enums::repr_c::MyEnum) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -2165,7 +2154,7 @@ inline void ::enums::repr_c::MyEnum::__crubit_field_offset_assertions() {
   {
     using __crubit_assert_variant_type =
         ::enums::repr_c::MyEnum::__crubit_E_struct;
-    static_assert(24 == offsetof(__crubit_assert_variant_type, __field1));
+    static_assert(12 == offsetof(__crubit_assert_variant_type, __field1));
   }
   {
     using __crubit_assert_variant_type =
@@ -2175,7 +2164,7 @@ inline void ::enums::repr_c::MyEnum::__crubit_field_offset_assertions() {
   {
     using __crubit_assert_variant_type =
         ::enums::repr_c::MyEnum::__crubit_A_struct;
-    static_assert(8 == offsetof(__crubit_assert_variant_type, __field1));
+    static_assert(4 == offsetof(__crubit_assert_variant_type, __field1));
   }
   {
     using __crubit_assert_variant_type =
@@ -2484,10 +2473,10 @@ inline bool is_c(
 namespace enums::repr_c_clone_counter {
 
 static_assert(
-    sizeof(::enums::repr_c_clone_counter::CloneCount) == 16,
+    sizeof(::enums::repr_c_clone_counter::CloneCount) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(::enums::repr_c_clone_counter::CloneCount) == 8,
+    alignof(::enums::repr_c_clone_counter::CloneCount) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -2540,7 +2529,7 @@ inline void ::enums::repr_c_clone_counter::CloneCount::
     __crubit_field_offset_assertions() {
   {
     using __crubit_assert_type = ::enums::repr_c_clone_counter::CloneCount;
-    static_assert(8 == offsetof(__crubit_assert_type, A));
+    static_assert(4 == offsetof(__crubit_assert_type, A));
   }
   {
     using __crubit_assert_variant_type =
@@ -2553,10 +2542,10 @@ inline void ::enums::repr_c_clone_counter::CloneCount::
 namespace enums::repr_c_drop {
 
 static_assert(
-    sizeof(::enums::repr_c_drop::DropMe) == 16,
+    sizeof(::enums::repr_c_drop::DropMe) == 12,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(::enums::repr_c_drop::DropMe) == 8,
+    alignof(::enums::repr_c_drop::DropMe) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 namespace __crubit_internal {
 extern "C" void
@@ -2619,15 +2608,15 @@ inline ::enums::repr_c_drop::DropMe::DropMe(::crubit::UnsafeRelocateTag,
 inline void ::enums::repr_c_drop::DropMe::__crubit_field_offset_assertions() {
   {
     using __crubit_assert_type = ::enums::repr_c_drop::DropMe;
-    static_assert(8 == offsetof(__crubit_assert_type, A));
+    static_assert(4 == offsetof(__crubit_assert_type, A));
   }
   {
     using __crubit_assert_type = ::enums::repr_c_drop::DropMe;
-    static_assert(8 == offsetof(__crubit_assert_type, B));
+    static_assert(4 == offsetof(__crubit_assert_type, B));
   }
   {
     using __crubit_assert_type = ::enums::repr_c_drop::DropMe;
-    static_assert(8 == offsetof(__crubit_assert_type, C));
+    static_assert(4 == offsetof(__crubit_assert_type, C));
   }
   {
     using __crubit_assert_variant_type =
@@ -2785,12 +2774,12 @@ inline void ::enums::repr_c_variant_alignment::OverAlignedWidePayload::
   {
     using __crubit_assert_type =
         ::enums::repr_c_variant_alignment::OverAlignedWidePayload;
-    static_assert(8 == offsetof(__crubit_assert_type, A));
+    static_assert(4 == offsetof(__crubit_assert_type, A));
   }
   {
     using __crubit_assert_type =
         ::enums::repr_c_variant_alignment::OverAlignedWidePayload;
-    static_assert(8 == offsetof(__crubit_assert_type, B));
+    static_assert(4 == offsetof(__crubit_assert_type, B));
   }
   {
     using __crubit_assert_variant_type = ::enums::repr_c_variant_alignment::
@@ -2876,10 +2865,10 @@ inline void ::enums::repr_c_variant_alignment::UnbindableFieldPayload::
   }
 }
 static_assert(
-    sizeof(::enums::repr_c_variant_alignment::WideTagNarrowAlignment) == 24,
+    sizeof(::enums::repr_c_variant_alignment::WideTagNarrowAlignment) == 20,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(::enums::repr_c_variant_alignment::WideTagNarrowAlignment) == 8,
+    alignof(::enums::repr_c_variant_alignment::WideTagNarrowAlignment) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 
 namespace __crubit_internal {
@@ -2951,7 +2940,7 @@ inline void ::enums::repr_c_variant_alignment::WideTagNarrowAlignment::
   {
     using __crubit_assert_variant_type = ::enums::repr_c_variant_alignment::
         WideTagNarrowAlignment::__crubit_A_struct;
-    static_assert(8 == offsetof(__crubit_assert_variant_type, __field1));
+    static_assert(4 == offsetof(__crubit_assert_variant_type, __field1));
   }
   {
     using __crubit_assert_variant_type = ::enums::repr_c_variant_alignment::
