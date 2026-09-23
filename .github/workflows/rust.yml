@@ -1,7 +1,7 @@
 # Part of the Crubit project, under the Apache License v2.0 with LLVM
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-name: Cargo
+name: CI
 
 on:
   push:
@@ -43,7 +43,7 @@ permissions:
 
 # LINT.IfChange
 jobs:
-  test:
+  cargo_test:
 
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -74,7 +74,7 @@ jobs:
       if: steps.setup.outputs.sccache_enabled == 'true' && always()
       run: sccache --show-stats
 
-  test_cmake:
+  cmake:
 
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -108,7 +108,33 @@ jobs:
       if: steps.setup.outputs.sccache_enabled == 'true' && always()
       run: sccache --show-stats
 
-  test_bazel:
+  # examples/build_systems/bazel is a second Bazel workspace: its own
+  # MODULE.bazel, its own .bazelrc, its own external dependency fetch and its
+  # own Bazel server. It shares no state with bazel_bridge, so the two run
+  # concurrently rather than one after the other in a single job.
+  bazel_example:
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+    - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      with:
+        persist-credentials: false
+    - name: Setup CI
+      uses: ./.github/actions/setup_ci
+      with:
+        gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+        bazel: 'true'
+        # The example resolves rules_crubit through local_path_override, so it
+        # builds against the same LLVM as the main workspace.
+        llvm_head: 'true'
+    - name: Build Bazel test project (example)
+      run: |
+        cd examples/build_systems/bazel
+        bazelisk build --remote_download_outputs=minimal //:main
+
+  bazel_bridge:
 
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -123,10 +149,6 @@ jobs:
         gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
         bazel: 'true'
         llvm_head: 'true'
-    - name: Build Bazel test project (example)
-      run: |
-        cd examples/build_systems/bazel
-        bazelisk build --remote_download_outputs=minimal //:main
 
     # TODO(b/564966909): Re-enable once rs_bindings_from_cc build is fixed up.
     # --remote_download_outputs=all is load-bearing: setup_bazel_env.py's
@@ -145,4 +167,19 @@ jobs:
     - name: "Build rs_bindings_from_cc using Cargo"
       if: false
       run: cargo build --verbose --locked -p rs_bindings_from_cc
+
+  # Single aggregate check for branch protection and for the Copybara export.
+  # Gating on this rather than on each job individually means jobs above can be
+  # renamed, split, or given new matrix dimensions without another synchronized
+  # copy.bara.sky edit.
+  ci-status:
+
+    if: always()
+    needs: [cargo_test, cmake, bazel_example, bazel_bridge]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Fail if any job did not succeed
+      if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+      run: exit 1
 # LINT.ThenChange(//depot/copy.bara.sky)
