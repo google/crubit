@@ -12,6 +12,20 @@
 #[crubit_annotate::cpp_layout_equivalent(cpp_type = "some_str", include_path = "some/path.h")]
 struct LayoutEquivalent {}
 
+#[crubit_annotate::cpp_layout_equivalent(
+    cpp_type = "some_template<{T}>",
+    include_path = "some/path.h"
+)]
+struct GenericLayoutEquivalent<T> {
+    val: T,
+}
+
+#[crubit_annotate::cpp_specialization(
+    cpp_type = "some_specialization",
+    include_path = "some/path.h"
+)]
+type SpecializationAlias = GenericLayoutEquivalent<()>;
+
 #[crubit_annotate::cpp_convertible(
     cpp_type = "some_str",
     include_path = "some/path.h",

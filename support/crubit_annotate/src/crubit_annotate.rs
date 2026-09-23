@@ -160,10 +160,11 @@ fn make_prefix_for(body: TokenStream, make_prefix_fn: impl FnOnce() -> TokenStre
 /// This annotation prevents Crubit from generating a C++ type for the Rust type,
 /// instead binding it directly to the C++ type.
 ///
-/// The annotation accepts two string arguments:
+/// The annotation accepts the following string arguments:
 ///
 /// * `cpp_type`: The fully-qualified name of the C++ type to which the Rust type is equivalent.
-/// * `include_path`: The path to the header file that defines the C++ type.
+/// * `include_path`: The path to the header file that defines the C++ type. Can be specified
+///   multiple times if multiple headers are needed.
 ///
 /// Example:
 ///
@@ -176,6 +177,56 @@ fn make_prefix_for(body: TokenStream, make_prefix_fn: impl FnOnce() -> TokenStre
 ///     ...
 /// }
 /// ```
+///
+/// ## Generic Types
+///
+/// Generic types can be annotated with `cpp_layout_equivalent` by referencing generic type
+/// parameters using `{...}` placeholders in `cpp_type`.
+///
+/// Each placeholder must match the name of a generic type parameter on the annotated Rust type.
+/// When Crubit generates bindings for a concrete instantiation of the type, each placeholder is
+/// substituted with the layout-compatible C++ type corresponding to that generic type argument.
+///
+/// Example:
+///
+/// ```rs
+/// #[crubit_annotate::cpp_layout_equivalent(
+///     cpp_type = "crubit::test::MyOptional<{T}>",
+///     include_path = "path/to/my_optional.h",
+/// )]
+/// #[repr(C)]
+/// pub struct MyOptional<T> {
+///     pub has_value: bool,
+///     pub value: T,
+/// }
+/// ```
+///
+/// Types with multiple generic parameters can reference each parameter by name:
+///
+/// ```rs
+/// #[crubit_annotate::cpp_layout_equivalent(
+///     cpp_type = "crubit::test::MyPair<{T1}, {T2}>",
+///     include_path = "path/to/my_pair.h",
+/// )]
+/// #[repr(C)]
+/// pub struct MyPair<T1, T2> {
+///     pub first: T1,
+///     pub second: T2,
+/// }
+/// ```
+///
+/// Note that:
+/// * Every `{...}` placeholder in `cpp_type` must correspond to a generic parameter on the
+///   annotated type.
+/// * Substituted type arguments must themselves have layout-compatible C++ types.
+/// * If the generic type is passed by value across the C++/Rust boundary, substituted type
+///   arguments must be C++ move-constructible unless the wrapper type itself is marked with
+///   `cpp_move_constructible`. `cpp_move_constructible` should only be added when the generic type
+///   is C++-movable independently of whether or not the inner type is. Most commonly this is the
+///   case if the type is a pointer-like type such as `unique_ptr`, `shared_ptr`, or `vector` which
+///   has only an indirect reference to its generic parameter rather than containing it inline.
+/// * Concrete specializations can be mapped to specific C++ types using
+///   `#[crubit_annotate::cpp_specialization]` on a type alias.
 #[proc_macro_attribute]
 pub fn cpp_layout_equivalent(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
