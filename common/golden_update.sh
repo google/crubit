@@ -6,20 +6,52 @@
 set -euo pipefail
 
 if [ $# -ne 0 ]; then
-  TESTS_TO_RUN=$@
+  TESTS_TO_RUN=("$@")
 else
   TESTS_TO_RUN=(//...)
 fi
 
-bazel test \
-  --test_tag_filters=crubit_golden_test,-manual \
-  --build_tag_filters=crubit_golden_test,-manual \
-  --config=llvm-unstable \
-  --test_strategy=local \
-  --test_env=WRITE_GOLDENS=1 \
-  --cache_test_results=no \
-  -k \
-  $TESTS_TO_RUN
+TEST_FLAGS=(
+  --test_tag_filters=crubit_golden_test,-manual
+  --build_tag_filters=crubit_golden_test,-manual
+  --config=llvm-unstable
+  --test_strategy=local
+  --test_env=WRITE_GOLDENS=1
+  --cache_test_results=no
+  --test_summary=none
+  --test_output=errors
+  -k
+)
+
+if [ -t 1 ]; then
+  TEST_FLAGS+=(--color=yes)
+fi
+
+# Filter out cascading "failed to build" output and redundant test summaries
+# when targets fail to compile, leaving only the root compiler diagnostics.
+bazel test "${TEST_FLAGS[@]}" "${TESTS_TO_RUN[@]}" 2>&1 | awk '
+  BEGIN {
+    esc = sprintf("%c", 27)
+    esc_pat = "(" esc "\\[[0-9;]*m)*"
+  }
+  /Target .* failed to build/ { next }
+  /^[[:space:]]*due to action in / { next }
+  /FAILED TO BUILD/ { next }
+  /\(Skipping other failed to build tests\)/ { next }
+  $0 ~ "^[[:space:]]*" esc_pat "FAILED:" esc_pat "[[:space:]]*$" { next }
+  /^[[:space:]]*$/ {
+    if (blank) next
+    blank = 1
+    print
+    fflush()
+    next
+  }
+  {
+    blank = 0
+    print
+    fflush()
+  }
+'
 
 # Helper function to remove files in src_dir that are byte-for-byte identical to files in base_dir.
 prune_matching_files() {
