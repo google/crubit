@@ -41,4 +41,18 @@ ForwardDeclared do_not_generate_bindings_for_me();
 
 enum { kAnonRed, kAnonBlue, kAnonGreen };
 
+enum EnumWithUnbindableEnumerator {
+  kBindable,
+
+  // `[[deprecated]]` is the only enumerator attribute that Crubit understands
+  // (see `EnumConstantDeclImporter::Import`), so any other attribute makes an
+  // enumerator unbindable.  `maybe_unused` is arbitrarily selected for being
+  // accepted by our toolchain on an enumerator and unknown to Crubit.
+  //
+  // Keep in sync with `test_supported_unknown_attr_enumerator` in
+  // `generate_bindings_test.rs`: that test fails loudly if Crubit ever starts
+  // to recognize `maybe_unused` - the signal to pick another attribute here.
+  kUnbindable [[maybe_unused]],
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ENUMS_H_

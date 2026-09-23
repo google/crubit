@@ -340,3 +340,24 @@ pub const kAnonRed: ::ffi_11::c_uint = ::ffi_11::new_c_uint(0);
 pub const kAnonBlue: ::ffi_11::c_uint = ::ffi_11::new_c_uint(1);
 
 pub const kAnonGreen: ::ffi_11::c_uint = ::ffi_11::new_c_uint(2);
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+#[cfi_encoding = "28EnumWithUnbindableEnumerator"]
+///CRUBIT_ANNOTATE: cpp_type=EnumWithUnbindableEnumerator
+pub struct EnumWithUnbindableEnumerator(::ffi_11::c_uint);
+impl EnumWithUnbindableEnumerator {
+    pub const kBindable: EnumWithUnbindableEnumerator =
+        EnumWithUnbindableEnumerator(::ffi_11::new_c_uint(0)); // Omitting bindings for kUnbindable
+                                                               // reason: unknown attribute(s): maybe_unused
+}
+impl From<::ffi_11::c_uint> for EnumWithUnbindableEnumerator {
+    fn from(value: ::ffi_11::c_uint) -> EnumWithUnbindableEnumerator {
+        EnumWithUnbindableEnumerator(value)
+    }
+}
+impl From<EnumWithUnbindableEnumerator> for ::ffi_11::c_uint {
+    fn from(value: EnumWithUnbindableEnumerator) -> ::ffi_11::c_uint {
+        value.0
+    }
+}
