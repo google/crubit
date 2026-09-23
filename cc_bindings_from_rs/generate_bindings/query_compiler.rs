@@ -71,8 +71,14 @@ impl<'tcx> ty::TypeFolder<TyCtxt<'tcx>> for ConcreteWidthFolder<'tcx> {
 }
 
 /// Returns true if `did` is `core::ptr::NonNull`.
+#[rustversion::since(2026-08-18)]
 pub fn is_std_ptr_non_null(tcx: TyCtxt<'_>, did: DefId) -> bool {
     tcx.is_lang_item(did, LangItem::NonNull)
+}
+
+#[rustversion::before(2026-08-18)]
+pub fn is_std_ptr_non_null(tcx: TyCtxt<'_>, did: DefId) -> bool {
+    tcx.get_diagnostic_item(rustc_span::symbol::sym::NonNull) == Some(did)
 }
 
 /// Returns true if pointers to `pointee` are ABI-compatible.
