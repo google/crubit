@@ -939,8 +939,7 @@ fn format_trait_ref_for_cc<'tcx>(
 ) -> Result<CcSnippet<'tcx>> {
     let trait_name = db
         .symbol_canonical_name(trait_ref.def_id)
-        .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db))
-        .expect("Generated trait method for a trait with an invalid cc name");
+        .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db))?;
     let mut trait_args = trait_ref.args[1..].iter().filter_map(|arg| arg.as_type()).peekable();
     let mut prereqs = CcPrerequisites::default();
     let tokens = if trait_args.peek().is_none() {
@@ -1177,10 +1176,13 @@ pub fn generate_function<'tcx>(
         is_generic,
     );
 
-    let struct_name = self_ty.and_then(|ty| match ty.kind() {
-        ty::TyKind::Adt(adt, _) => db.symbol_canonical_name(adt.did()).ok(),
-        _ => panic!("Non-ADT `impl`s should be filtered by caller"),
-    });
+    let struct_name = self_ty
+        .and_then(|ty| match ty.kind() {
+            ty::TyKind::Adt(adt, _) => Some(adt.did()),
+            _ => None,
+        })
+        .ok_or_else(|| anyhow!("Non-ADT `impl`s should be filtered by caller"))
+        .and_then(|def_id| db.symbol_canonical_name(def_id));
     let needs_definition = unqualified_rust_fn_name.as_str() != thunk_name;
     let constrain_bool_param = method_name_override.is_some()
         && params.iter().skip(if thunk_self.is_inherent_self_method() { 1 } else { 0 }).any(
@@ -1330,9 +1332,8 @@ pub fn generate_function<'tcx>(
                     .as_ref()
                     .ok_or_else(|| anyhow!("ForceStaticMethod requires a trait method"))?;
                 let struct_name = struct_name
-                    .as_ref()
-                    .ok_or_else(|| anyhow!("Expected struct_name for trait method on ADT"))?
-                    .format_for_cc(db)?;
+                    .clone()
+                    .and_then(|fully_qualified_name| fully_qualified_name.format_for_cc(db))?;
                 let trait_name_with_args =
                     format_trait_ref_for_cc(db, trait_ref)?.into_tokens(&mut prereqs);
                 quote! { rs_std :: impl <#struct_name, #trait_name_with_args> :: #bracketed_decl_name }
@@ -1345,7 +1346,7 @@ pub fn generate_function<'tcx>(
                     let qualifier = snippet.into_tokens(&mut prereqs);
                     quote! { (#qualifier :: #bracketed_decl_name) }
                 } else {
-                    if let Some(fully_qualified_name) = struct_name.as_ref() {
+                    if let Ok(fully_qualified_name) = struct_name.as_ref() {
                         let name = fully_qualified_name.unqualified.cpp_name;
                         let name = format_cc_ident(db, name.as_str())?;
                         quote! { (#name :: #bracketed_decl_name) }
@@ -1377,9 +1378,8 @@ pub fn generate_function<'tcx>(
         // Trait method
         let fully_qualified_fn_name = if let Some(trait_ref) = trait_ref.as_ref() {
             let struct_name = struct_name
-                .as_ref()
-                .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
-                .expect("Generated trait method for an ADT with an invalid rust name");
+                .clone()
+                .map(|fully_qualified_name| fully_qualified_name.format_for_rs())?;
             // `struct_name` names the ADT, which is what the C++ class is generated for. But for
             // an `impl Trait for &T` block the trait is implemented on the reference type, so
             // that is what the qualified call has to name. Regions are `'static` here because
@@ -1392,7 +1392,7 @@ pub fn generate_function<'tcx>(
             let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
             let trait_name_with_args = format_trait_ref_for_rs(db, trait_ref)?;
             quote! { <#rs_self_ty as #trait_name_with_args>::#fn_name }
-        } else if let Some(struct_name) = struct_name.as_ref() {
+        } else if let Ok(struct_name) = struct_name.as_ref() {
             let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
             let struct_name = struct_name.format_for_rs();
             quote! { #struct_name :: #fn_name }

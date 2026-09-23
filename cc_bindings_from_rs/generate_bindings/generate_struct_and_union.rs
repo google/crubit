@@ -3951,13 +3951,11 @@ fn generate_begin_and_end_for_type<'tcx>(
     let Some(trait_impl_def_id) = impls.next() else {
         return Ok(None);
     };
-    let generics = tcx.generics_of(trait_impl_def_id);
-    let has_type_or_const_params = generics.own_params.iter().any(|param| {
-        matches!(
-            param.kind,
-            ty::GenericParamDefKind::Type { .. } | ty::GenericParamDefKind::Const { .. }
-        )
-    });
+    let has_type_or_const_params =
+        query_compiler::has_non_lifetime_generics(tcx, trait_impl_def_id)
+            || into_iter_ty
+                .ty_adt_def()
+                .is_some_and(|adt| query_compiler::has_non_lifetime_generics(tcx, adt.did()));
     if has_type_or_const_params {
         bail!("IntoIterator/Iterator impls with generic type or const parameters are not supported yet.");
     }
