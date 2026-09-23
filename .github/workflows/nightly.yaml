@@ -50,7 +50,7 @@ jobs:
             exit 1
           fi
           printf '%s %s\n' \
-            "${{ steps.llvm.outputs.commit }}" \
+            "$COMMIT" \
             "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > llvm_commit.txt
           echo "commit=${COMMIT}" >> "$GITHUB_OUTPUT"
 
