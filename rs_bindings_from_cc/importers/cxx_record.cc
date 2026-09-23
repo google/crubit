@@ -908,6 +908,83 @@ std::optional<absl::StatusOr<BridgeType>> ExtractCallable(
   });
 }
 
+// Returns whether Rust may move `record_decl` with `memcpy`, without running
+// the C++ destructor on the old location.
+//
+// Crubit defines such a type as one that is "trivial for calls" in Clang -
+// either actually trivial, or made trivial for calls with
+// `[[clang::trivial_abi]]`.  This is deliberately conservative: some types
+// that could be moved by Rust are not trivial for calls.  See the "Unpin for
+// C++ Types" design doc: `docs/design/unpin.md`.
+//
+// The implementation below mirrors the Itanium C++ ABI branch of Clang's
+// `canPassInRegisters` (in `clang/lib/Sema/SemaDeclCXX.cpp`), which implements
+// C++ [class.temporary]p3: each copy constructor, move constructor, and
+// destructor of the class is either trivial (for calls) or deleted, and the
+// class has at least one non-deleted copy or move constructor.  See
+// https://github.com/llvm/llvm-project/blob/5dfe8605911e3f0f43fe2b5c08b4ffc23f2af37a/clang/lib/Sema/SemaDeclCXX.cpp#L7043-L7081
+//
+// Note that `[[clang::trivial_abi]]` remains target-dependent inside Clang:
+// `Sema` drops the attribute when a base class or a field cannot be passed in
+// registers on the target ABI.  See b/564616479.
+bool IsRustMovable(const clang::CXXRecordDecl& record_decl) {
+  // Clang marks classes whose value depends on their address - for example
+  // classes with an Objective-C `__weak` field (registered in a runtime side
+  // table keyed by the address) or with an address-discriminated `__ptrauth`
+  // field (signed with its own address).  Such classes cannot be relocated
+  // with `memcpy`.  (This mark does not depend on the target's C++ ABI.)
+  if (record_decl.getArgPassingRestrictions() ==
+      clang::RecordArgPassingKind::CanNeverPassInRegs) {
+    return false;
+  }
+
+  // A destructor that has to run at the old location rules out a `memcpy`
+  // move.  A *deleted* destructor never runs, so it is not disqualifying.
+  // Destructors (and copy/move below) are also not disqualifying if the type
+  // is marked as [[clang::trivial_abi]], as this will result in
+  // `hasTrivialDestructorForCall()` returning true.
+  if (record_decl.needsImplicitDestructor() &&
+      !record_decl.defaultedDestructorIsDeleted() &&
+      !record_decl.hasTrivialDestructorForCall()) {
+    return false;
+  }
+
+  // Similarly, an implicit copy or move constructor only matters when it is
+  // needed and not deleted.
+  bool has_non_deleted_copy_or_move = false;
+  if (record_decl.needsImplicitCopyConstructor() &&
+      !record_decl.defaultedCopyConstructorIsDeleted()) {
+    if (!record_decl.hasTrivialCopyConstructorForCall()) return false;
+    has_non_deleted_copy_or_move = true;
+  }
+  if (record_decl.needsImplicitMoveConstructor() &&
+      !record_decl.defaultedMoveConstructorIsDeleted()) {
+    if (!record_decl.hasTrivialMoveConstructorForCall()) return false;
+    has_non_deleted_copy_or_move = true;
+  }
+
+  // The checks above only cover the *implicit* special members.  The
+  // user-declared ones are checked one by one below, because a class may
+  // declare several copy or move constructors (e.g. both `S(const S&)` and
+  // `S(S&)`) and the `hasTrivial...ForCall` checks above only report whether
+  // *some* of them are trivial for calls.
+  for (const clang::CXXMethodDecl* method : record_decl.methods()) {
+    if (method->isDeleted() || method->isIneligibleOrNotSelected()) continue;
+
+    if (const auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(method);
+        ctor != nullptr && ctor->isCopyOrMoveConstructor()) {
+      if (!method->isTrivialForCall()) return false;
+      has_non_deleted_copy_or_move = true;
+    } else if (clang::isa<clang::CXXDestructorDecl>(method)) {
+      if (!method->isTrivialForCall()) return false;
+    }
+  }
+
+  // A class that can be neither copied nor moved is usually address-sensitive
+  // by design, even when it is trivially destructible.
+  return has_non_deleted_copy_or_move;
+}
+
 }  // namespace
 
 absl::StatusOr<SafetyAnnotation> CXXRecordDeclImporter::GetSafetyAnnotation(
@@ -1470,7 +1547,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   record->set_move_constructor(
       GetMoveCtorSpecialMemberFunc(ictx_, *record_decl));
   record->set_destructor(GetDestructorSpecialMemberFunc(*record_decl));
-  record->set_is_trivial_abi(record_decl->canPassInRegisters());
+  record->set_is_trivial_abi(IsRustMovable(*record_decl));
   record->set_is_inheritable(!is_effectively_final);
   record->set_is_abstract(record_decl->isAbstract());
   if (nodiscard.has_value()) {

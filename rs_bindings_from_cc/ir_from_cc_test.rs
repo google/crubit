@@ -3174,15 +3174,11 @@ fn test_is_trivial_abi_across_target_platforms() -> Result<()> {
         // Crubit does not analyze destructor bodies, and a destructor may
         // observe `this`, so a non-trivial destructor forces the conservative
         // answer.
-        //
-        // TODO(b/564616479): The Microsoft x64 ABI passes a small class with a
-        // trivial copy constructor in registers even when its destructor is
-        // non-trivial.
         TestCase {
             record_name: "SmallWithNontrivialDtor",
             input_cpp: "struct SmallWithNontrivialDtor { char c; ~SmallWithNontrivialDtor(); };",
             expected_rust_movable_on_linux: false,
-            expected_rust_movable_on_windows: true,
+            expected_rust_movable_on_windows: false,
         },
         // `[[clang::trivial_abi]]` is how the author opts back in - on every
         // target platform.
@@ -3193,25 +3189,23 @@ fn test_is_trivial_abi_across_target_platforms() -> Result<()> {
             expected_rust_movable_on_linux: true,
             expected_rust_movable_on_windows: true,
         },
-        // TODO(b/564616479): The Microsoft C++ ABI ignores the move
-        // constructor when it decides whether a class can be passed in
-        // registers.
+        // A non-trivial move constructor also forces the conservative answer.
         TestCase {
             record_name: "TrivialCopyNontrivialMove",
             input_cpp: "struct TrivialCopyNontrivialMove { \
                           TrivialCopyNontrivialMove(const TrivialCopyNontrivialMove&) = default; \
                           TrivialCopyNontrivialMove(TrivialCopyNontrivialMove&&) {} int i; };",
             expected_rust_movable_on_linux: false,
-            expected_rust_movable_on_windows: true,
+            expected_rust_movable_on_windows: false,
         },
-        // TODO(b/564616479): ...and it requires a non-deleted copy
-        // constructor, so it rejects move-only classes.
+        // A move-only class is movable by `memcpy` when its move constructor
+        // is trivial.
         TestCase {
             record_name: "MoveOnly",
             input_cpp: "struct MoveOnly { MoveOnly(MoveOnly&&) = default; \
                           MoveOnly(const MoveOnly&) = delete; int i; };",
             expected_rust_movable_on_linux: true,
-            expected_rust_movable_on_windows: false,
+            expected_rust_movable_on_windows: true,
         },
         // A class that can be neither copied nor moved is usually
         // address-sensitive by design, even when it is trivially destructible.
@@ -3239,8 +3233,6 @@ fn test_is_trivial_abi_across_target_platforms() -> Result<()> {
         // Same idea for a deleted copy constructor: `MoveOnlyWrapper` is
         // movable by `memcpy` even though the copy constructor it would
         // inherit from its field is non-trivial.
-        //
-        // TODO(b/564616479): Fix the Windows expectation.
         TestCase {
             record_name: "MoveOnlyWrapper",
             input_cpp: "struct NontrivialCopyButTrivialMove { \
@@ -3252,7 +3244,7 @@ fn test_is_trivial_abi_across_target_platforms() -> Result<()> {
                           MoveOnlyWrapper(MoveOnlyWrapper&&) = default; \
                           NontrivialCopyButTrivialMove field; };",
             expected_rust_movable_on_linux: true,
-            expected_rust_movable_on_windows: false,
+            expected_rust_movable_on_windows: true,
         },
         TestCase {
             record_name: "NontrivialCopyButTrivialMove",
@@ -3265,15 +3257,13 @@ fn test_is_trivial_abi_across_target_platforms() -> Result<()> {
         },
         // *Every* non-deleted copy constructor must be trivial - it is not
         // enough that one of the overloads is.
-        //
-        // TODO(b/564616479): Fix the Windows expectation.
         TestCase {
             record_name: "OverloadedCopyCtor",
             input_cpp: "struct OverloadedCopyCtor { \
                           OverloadedCopyCtor(const OverloadedCopyCtor&) = default; \
                           OverloadedCopyCtor(OverloadedCopyCtor&); };",
             expected_rust_movable_on_linux: false,
-            expected_rust_movable_on_windows: true,
+            expected_rust_movable_on_windows: false,
         },
         // TODO(b/564616479): Clang drops `[[clang::trivial_abi]]` when a field
         // cannot be passed in registers on the target ABI, so the attribute
