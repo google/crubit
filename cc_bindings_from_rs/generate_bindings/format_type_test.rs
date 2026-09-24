@@ -6,6 +6,7 @@
 
 use code_gen_utils::format_cc_includes;
 use database::{BindingsGenerator, TypeLocation};
+use generate_bindings::format_type::is_bridged_type;
 use proc_macro2::TokenStream;
 use query_compiler::liberate_and_deanonymize_late_bound_regions;
 use quote::quote;
@@ -1017,4 +1018,45 @@ fn test_format_ty_for_cc_ignored_symbols_fails() {
             assert_eq!(&actual_err, *expected_err, "{desc}");
         },
     );
+}
+
+/// `Vec` and `Result` are never bridged types: they are rendered as `rs_std::Vec` and
+/// `rs_std::Result` template specializations. `is_bridged_type` must therefore report them as
+/// non-bridged regardless of `always_specialize_generics_in_cpp_api_from_rust`. Otherwise a type
+/// such as `Vec<SomeProto>`, whose element type is a bridged type that is not layout-compatible,
+/// would be rejected before the specialization gets a chance to be formed.
+// TODO(b/523234159): Delete this test as it will no longer be needed.
+#[test]
+fn test_is_bridged_type_never_bridges_vec_or_result() {
+    let preamble = quote! {
+        #[doc="CRUBIT_ANNOTATE: cpp_type = cpp_ns::CppType"]
+        #[doc="CRUBIT_ANNOTATE: include_path = cpp_ns/cpp_type.h"]
+        #[doc="CRUBIT_ANNOTATE: rust_to_cpp_converter = convert_rust_to_cpp_type"]
+        #[doc="CRUBIT_ANNOTATE: cpp_to_rust_converter = convert_cpp_to_rust_type"]
+        pub struct BridgedRustType {
+            pub x: i32,
+        }
+    };
+    let supported =
+        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported;
+    for features in [
+        supported,
+        supported | crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust,
+    ] {
+        test_ty(
+            TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+            &[("Vec<BridgedRustType>", ()), ("Result<BridgedRustType, ()>", ())],
+            preamble.clone(),
+            |desc, tcx, ty, ()| {
+                let db = bindings_db_for_tests_with_features(
+                    tcx, features, /* with_kythe_annotations= */ false, None,
+                );
+                match is_bridged_type(&db, ty) {
+                    Ok(None) => {}
+                    Ok(Some(_)) => panic!("Expecting a non-bridged type for: {desc}"),
+                    Err(err) => panic!("Unexpected error for: {desc}: {err:#}"),
+                }
+            },
+        );
+    }
 }

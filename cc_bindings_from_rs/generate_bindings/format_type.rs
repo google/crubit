@@ -2265,26 +2265,34 @@ pub fn is_bridged_type<'tcx>(
                 .crate_features(db.source_crate_num())
                 .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
 
-            if !always_specialize_generics
-                && let Some(bridged_builtin) = BridgedBuiltin::new(db, adt)
-            {
+            if let Some(bridged_builtin) = BridgedBuiltin::new(db, adt) {
                 if let BridgedBuiltin::Result | BridgedBuiltin::Vec = bridged_builtin {
                     // We can't ask for the CrubitAbiType of a Result/Vec, because it will return an Err,
                     // so we check for it here and return Ok.
+                    //
+                    // This is deliberately checked regardless of `always_specialize_generics`:
+                    // `Result`/`Vec` are never composable bridged types, they are rendered as
+                    // `rs_std` template specializations instead. Falling through to the
+                    // bridged-substs check below would incorrectly reject types such as
+                    // `Vec<SomeProto>`, whose element type is a (non-layout-compatible) bridged
+                    // type but is still representable inside the specialization.
                     return Ok(None);
                 }
-                // The ADT is either a Result or an Option, which are composable bridged types.
-                let crubit_abi_type_with_cc_prereqs =
-                    bridged_builtin.crubit_abi_type(db, substs)?;
+                if !always_specialize_generics {
+                    // The ADT is an Option, which is a composable bridged type.
+                    let crubit_abi_type_with_cc_prereqs =
+                        bridged_builtin.crubit_abi_type(db, substs)?;
 
-                let mut prereqs = bridged_builtin.prereqs();
-                let crubit_abi_type = crubit_abi_type_with_cc_prereqs.crubit_abi_type(&mut prereqs);
+                    let mut prereqs = bridged_builtin.prereqs();
+                    let crubit_abi_type =
+                        crubit_abi_type_with_cc_prereqs.crubit_abi_type(&mut prereqs);
 
-                return Ok(Some(BridgedType::Composable(Box::new(BridgedTypeComposable {
-                    cpp_type: bridged_builtin.cpp_name(),
-                    prereqs,
-                    crubit_abi_type,
-                }))));
+                    return Ok(Some(BridgedType::Composable(Box::new(BridgedTypeComposable {
+                        cpp_type: bridged_builtin.cpp_name(),
+                        prereqs,
+                        crubit_abi_type,
+                    }))));
+                }
             }
 
             // It's neither of the above, so check that it doesn't have any bridged substs.
