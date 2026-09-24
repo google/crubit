@@ -2802,6 +2802,277 @@ fn test_thunkless_accessors_disabled() -> Result<()> {
 }
 
 #[gtest]
+fn test_thunkless_accessors_pointer_types() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class S {
+         public:
+          int* p() const { return p_; }
+          void set_p(int* p) { p_ = p; }
+         private:
+          int* p_;
+        };
+        class T {
+         public:
+          const S* s() const { return s_; }
+          void set_s(const S* s) { s_ = s; }
+         private:
+          const S* s_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // Note the absence of an `as` cast: the field type is required to be exactly the type used in
+    // the API, so the pointer is copied verbatim.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (*((&*__this as *const _ as *const u8).add(0) as *const *mut ::ffi_11::c_int))
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                *((__this as *mut _ as *mut u8).add(0) as *mut *mut ::ffi_11::c_int) = p
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (*((&*__this as *const _ as *const u8).add(0) as *const *const crate::S))
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                *((__this as *mut _ as *mut u8).add(0) as *mut *const crate::S) = s
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZNK1S1pEv });
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZN1S5set_pEPi });
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZNK1T1sEv });
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZN1T5set_sEPK1S });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_unpin_type() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        #pragma clang lifetime_elision
+        class NonTrivial {
+         public:
+          ~NonTrivial() {}
+          NonTrivial* p() const { return p_; }
+          NonTrivial* mut_p() { return p_; }
+          void set_p(NonTrivial* p) { p_ = p; }
+         private:
+          NonTrivial* p_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub(crate) fn p<'a>(__this: &'a crate::NonTrivial) -> *mut crate::NonTrivial {
+                unsafe {
+                    (*((&*__this as *const _ as *const u8).add(0) as *const *mut crate::NonTrivial))
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub(crate) fn mut_p<'a>(
+                __this: ::core::pin::Pin<&'a mut crate::NonTrivial>
+            ) -> *mut crate::NonTrivial {
+                unsafe {
+                    (*((&*__this as *const _ as *const u8).add(0) as *const *mut crate::NonTrivial))
+                }
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub(crate) unsafe fn set_p<'a>(
+                __this: ::core::pin::Pin<&'a mut crate::NonTrivial>,
+                p: *mut crate::NonTrivial
+            ) {
+                unsafe {
+                    *((::core::pin::Pin::into_inner_unchecked(__this) as *mut _ as *mut u8).add(0)
+                        as *mut *mut crate::NonTrivial) = p
+                }
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZNK10NonTrivial1pEv });
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZN10NonTrivial5mut_pEv });
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZN10NonTrivial5set_pEPS_ });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_void_pointer() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class S {
+         public:
+          void* p() const { return p_; }
+          void set_p(void* p) { p_ = p; }
+         private:
+          void* p_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (*((&*__this as *const _ as *const u8).add(0) as *const *mut ::ffi_11::c_void))
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                *((__this as *mut _ as *mut u8).add(0) as *mut *mut ::ffi_11::c_void) = p
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZNK1S1pEv });
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZN1S5set_pEPv });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_incomplete_pointee() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class Incomplete;
+        class S {
+         public:
+          Incomplete* p() const { return p_; }
+          void set_p(Incomplete* p) { p_ = p; }
+         private:
+          Incomplete* p_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // The pointee is an incomplete type, which is still a thin pointer, so it can be copied out
+    // of the field like any other pointer.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            (*((&*__this as *const _ as *const u8).add(0) as *const *mut crate::Incomplete))
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe {
+                *((__this as *mut _ as *mut u8).add(0) as *mut *mut crate::Incomplete) = p
+            }
+        }
+    );
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZNK1S1pEv });
+    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZN1S5set_pEP10Incomplete });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_function_pointer() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        class S {
+         public:
+          void (*fp() const)() { return fp_; }
+         private:
+          void (*fp_)();
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // Function pointers are `RsTypeKind::FuncPtr`, not `RsTypeKind::Pointer`, so they keep using
+    // a thunk. (The first assertion guards against the accessor not being bound at all, which
+    // would make the rest of this test vacuous.)
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn fp(__this: *const Self) -> Option<extern "C" fn()>
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { as *const u8 });
+    assert_cc_matches!(rs_api_impl, quote! { __rust_thunk___ZNK1S2fpEv });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_reference_field() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        #pragma clang lifetime_elision
+        class S {
+         public:
+          int& r() const { return r_; }
+         private:
+          int& r_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // A C++ reference is not a raw pointer: reading it as one would produce a Rust reference
+    // without upholding its aliasing requirements, so it keeps using a thunk.
+    assert_rs_matches!(rs_api, quote! { pub fn r });
+    assert_rs_not_matches!(rs_api, quote! { as *const u8 });
+    assert_cc_matches!(rs_api_impl, quote! { __rust_thunk___ZNK1S1rEv });
+    Ok(())
+}
+
+#[gtest]
+fn test_thunkless_accessors_owned_pointer() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_owned_pointee", "OwnedThing")]] Thing {
+          int value;
+        };
+        class S {
+         public:
+          Thing* [[clang::annotate_type("crubit_owned_pointer")]] p() const { return p_; }
+         private:
+          Thing* [[clang::annotate_type("crubit_owned_pointer")]] p_;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("thunkless_accessors"))?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    // Owned pointers transfer ownership: the getter returns the owning wrapper type rather than
+    // the raw pointer stored in the field, so it cannot be a plain field read.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn p(__this: *const Self) -> crate::OwnedThing
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { as *const u8 });
+    assert_cc_matches!(rs_api_impl, quote! { __rust_thunk___ZNK1S1pEv });
+    Ok(())
+}
+
+#[gtest]
 fn test_variadic_requiring_cc_thunk_skipped() -> Result<()> {
     let proto = ir_proto_from_cc("inline void variadic_fn(const char* s, ...) {}")?;
     let ir = make_test_ir(&proto)?;

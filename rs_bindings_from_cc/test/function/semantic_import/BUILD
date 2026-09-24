@@ -16,6 +16,7 @@ cc_library(
         "//features:oo_casting",  # for oops::Upcast
         "//features:thunkless_accessors",
     ],
+    deps = ["//support/rs_std:slice_ref"],
 )
 
 cc_library(
@@ -23,8 +24,11 @@ cc_library(
     hdrs = ["semantic_import.h"],
     aspect_hints = [
         "//features:supported",
+        # for `Incomplete*`, which is otherwise not bound at all.
+        "//features:forward_declare",
         "//features:thunkless_accessors",
     ],
+    deps = ["//support/rs_std:slice_ref"],
 )
 
 golden_test(
