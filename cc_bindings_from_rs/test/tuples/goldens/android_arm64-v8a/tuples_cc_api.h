@@ -167,8 +167,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
   // Drop::drop
   ~NontrivialDrop();
 
-  NontrivialDrop(NontrivialDrop&&);
-  ::tuples::NontrivialDrop& operator=(NontrivialDrop&&);
+  NontrivialDrop(NontrivialDrop&&) noexcept;
+  ::tuples::NontrivialDrop& operator=(NontrivialDrop&&) noexcept;
 
   // `tuples_golden::NontrivialDrop` doesn't implement the `Clone` trait
   NontrivialDrop(const NontrivialDrop&) = delete;
@@ -623,11 +623,11 @@ struct alignas(1)
   Tuple() = delete;
 
   // Clone::clone
-  Tuple(const Tuple&);
+  Tuple(const Tuple&) noexcept;
 
   // Clone::clone_from
   ::rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>& operator=(
-      const Tuple&);
+      const Tuple&) noexcept;
 
   Tuple(Tuple&&) = default;
   Tuple& operator=(Tuple&&) = default;
@@ -782,8 +782,9 @@ struct alignas(8)
   // `(tuples_golden::HasDefault, u8)` doesn't implement the `Clone` trait
   Tuple(const Tuple&) = delete;
   Tuple& operator=(const Tuple&) = delete;
-  Tuple(Tuple&&);
-  ::rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>& operator=(Tuple&&);
+  Tuple(Tuple&&) noexcept;
+  ::rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>& operator=(
+      Tuple&&) noexcept;
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
   Tuple(std::tuple<::tuples::HasDefault, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple();
@@ -1520,11 +1521,11 @@ struct alignas(1)
   Tuple() = delete;
 
   // Clone::clone
-  Tuple(const Tuple&);
+  Tuple(const Tuple&) noexcept;
 
   // Clone::clone_from
   ::rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>& operator=(
-      const Tuple&);
+      const Tuple&) noexcept;
 
   Tuple(Tuple&&) = default;
   Tuple& operator=(Tuple&&) = default;
@@ -1757,8 +1758,9 @@ struct alignas(8)
   // `(u8, tuples_golden::HasDefault)` doesn't implement the `Clone` trait
   Tuple(const Tuple&) = delete;
   Tuple& operator=(const Tuple&) = delete;
-  Tuple(Tuple&&);
-  ::rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>& operator=(Tuple&&);
+  Tuple(Tuple&&) noexcept;
+  ::rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>& operator=(
+      Tuple&&) noexcept;
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
   Tuple(std::tuple<::std::uint8_t, ::tuples::HasDefault>&& tuple) noexcept;
   ~Tuple();
@@ -2304,11 +2306,11 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
           ::std::int32_t, ::rs::alloc::string::String> {
  public:
   // Clone::clone
-  Result(const Result&);
+  Result(const Result&) noexcept;
 
   // Clone::clone_from
   rs_std::Result<::std::int32_t, ::rs::alloc::string::String>& operator=(
-      const Result&);
+      const Result&) noexcept;
 
   Result(::crubit::UnsafeRelocateTag, Result&& value);
 
@@ -2377,12 +2379,12 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple() = delete;
 
   // Clone::clone
-  Tuple(const Tuple&);
+  Tuple(const Tuple&) noexcept;
 
   // Clone::clone_from
   ::rs_std::Tuple<rs_std::Option<::std::int32_t>,
                   rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
-  operator=(const Tuple&);
+  operator=(const Tuple&) noexcept;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
   Tuple(
@@ -2892,12 +2894,12 @@ inline ::tuples::NontrivialDrop::~NontrivialDrop() {
       __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aNontrivialDrop(
           *this);
 }
-inline ::tuples::NontrivialDrop::NontrivialDrop(NontrivialDrop&& other)
+inline ::tuples::NontrivialDrop::NontrivialDrop(NontrivialDrop&& other) noexcept
     : NontrivialDrop() {
   *this = ::std::move(other);
 }
 inline ::tuples::NontrivialDrop& ::tuples::NontrivialDrop::operator=(
-    NontrivialDrop&& other) {
+    NontrivialDrop&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -3826,8 +3828,8 @@ __crubit_thunk_Clone_uclone_ufrom_u_x00000028std_x0000003a_x0000003aoption_x0000
 }
 inline ::rs_std::Tuple<
     rs_std::Option<::std::int32_t>,
-    rs_std::Result<::std::int32_t,
-                   ::rs::alloc::string::String>>::Tuple(const Tuple& other) {
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
+    Tuple(const Tuple& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_u_x00000028std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x00000029(
           other, this);
@@ -3837,7 +3839,7 @@ inline ::rs_std::Tuple<
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>& ::
 rs_std::Tuple<rs_std::Option<::std::int32_t>,
               rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
-operator=(const Tuple& other) {
+operator=(const Tuple& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_u_x00000028std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x00000029(
@@ -3944,14 +3946,14 @@ __crubit_thunk_Clone_uclone_ufrom_u_x00000028tuples_ugolden_x0000003a_x0000003aC
     rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t> const&);
 }
 inline ::rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::Tuple(
-    const Tuple& other) {
+    const Tuple& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_u_x00000028tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x00000029(
           other, this);
 }
 inline ::rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>& ::rs_std::
     Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::operator=(
-        const Tuple& other) {
+        const Tuple& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_u_x00000028tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x00000029(
@@ -4034,12 +4036,12 @@ inline ::rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::Tuple() {
           this);
 }
 inline ::rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::Tuple(
-    Tuple&& other)
+    Tuple&& other) noexcept
     : Tuple() {
   *this = ::std::move(other);
 }
 inline ::rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>& ::rs_std::Tuple<
-    ::tuples::HasDefault, ::std::uint8_t>::operator=(Tuple&& other) {
+    ::tuples::HasDefault, ::std::uint8_t>::operator=(Tuple&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -4339,14 +4341,14 @@ __crubit_thunk_Clone_uclone_ufrom_u_x00000028u8_x0000002c_x00000020tuples_ugolde
     rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault> const&);
 }
 inline ::rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::Tuple(
-    const Tuple& other) {
+    const Tuple& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_u_x00000028u8_x0000002c_x00000020tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x00000029(
           other, this);
 }
 inline ::rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>& ::rs_std::
     Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::operator=(
-        const Tuple& other) {
+        const Tuple& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_u_x00000028u8_x0000002c_x00000020tuples_ugolden_x0000003a_x0000003aCloneNoDefault_x00000029(
@@ -4429,12 +4431,12 @@ inline ::rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>::Tuple() {
           this);
 }
 inline ::rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>::Tuple(
-    Tuple&& other)
+    Tuple&& other) noexcept
     : Tuple() {
   *this = ::std::move(other);
 }
 inline ::rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>& ::rs_std::Tuple<
-    ::std::uint8_t, ::tuples::HasDefault>::operator=(Tuple&& other) {
+    ::std::uint8_t, ::tuples::HasDefault>::operator=(Tuple&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -4657,14 +4659,14 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String> const&);
 }
 inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
-    const Result& other) {
+    const Result& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
           other, this);
 }
 inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&
 rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
-    const Result& other) {
+    const Result& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(

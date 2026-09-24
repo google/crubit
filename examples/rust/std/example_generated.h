@@ -106,11 +106,11 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
                                 ::rs::alloc::string::String> {
  public:
   // Clone::clone
-  Result(const Result&);
+  Result(const Result&) noexcept;
 
   // Clone::clone_from
   rs_std::Result<rs_std::Option<rs_std::StrRef>, ::rs::alloc::string::String>&
-  operator=(const Result&);
+  operator=(const Result&) noexcept;
 
   Result(::crubit::UnsafeRelocateTag, Result&& value);
 
@@ -285,15 +285,15 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000
 }
 inline rs_std::Result<rs_std::Option<rs_std::StrRef>,
                       ::rs::alloc::string::String>::Result(const Result&
-                                                               other) {
+                                                               other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003c_x00000026_x00000027static_x00000020str_x0000003e_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
           other, this);
 }
 inline rs_std::Result<rs_std::Option<rs_std::StrRef>,
                       ::rs::alloc::string::String>&
-rs_std::Result<rs_std::Option<rs_std::StrRef>,
-               ::rs::alloc::string::String>::operator=(const Result& other) {
+rs_std::Result<rs_std::Option<rs_std::StrRef>, ::rs::alloc::string::String>::
+operator=(const Result& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003c_x00000026_x00000027static_x00000020str_x0000003e_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(

@@ -699,11 +699,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructFloat& operator=(StructFloat&&) = default;
 
   // Clone::clone
-  StructFloat(const StructFloat&);
+  StructFloat(const StructFloat&) noexcept;
 
   // Clone::clone_from
   ::structs::struct_by_float_passing_with_no_thunk::StructFloat& operator=(
-      const StructFloat&);
+      const StructFloat&) noexcept;
 
   StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value);
 
@@ -1607,14 +1607,14 @@ __crubit_thunk_Clone_uclone_ufrom_ustructs_ugolden_x0000003a_x0000003astruct_uby
     ::structs::struct_by_float_passing_with_no_thunk::StructFloat const&);
 }
 inline ::structs::struct_by_float_passing_with_no_thunk::StructFloat::
-    StructFloat(const StructFloat& other) {
+    StructFloat(const StructFloat& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
           other, this);
 }
 inline ::structs::struct_by_float_passing_with_no_thunk::StructFloat& ::
 structs::struct_by_float_passing_with_no_thunk::StructFloat::operator=(
-    const StructFloat& other) {
+    const StructFloat& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(

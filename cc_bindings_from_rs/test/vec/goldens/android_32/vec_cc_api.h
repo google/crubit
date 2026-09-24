@@ -55,10 +55,10 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(":: alloc :: vec :: Vec < i32 >")
   Vec() noexcept;
 
   // Clone::clone
-  Vec(const Vec&);
+  Vec(const Vec&) noexcept;
 
   // Clone::clone_from
-  rs_std::Vec<::std::int32_t>& operator=(const Vec&);
+  rs_std::Vec<::std::int32_t>& operator=(const Vec&) noexcept;
 
   Vec(Vec&&) noexcept;
   rs_std::Vec<::std::int32_t>& operator=(Vec&&) noexcept;
@@ -86,8 +86,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: RustVecOwner") alignas(4)
   // Drop::drop
   ~RustVecOwner();
 
-  RustVecOwner(RustVecOwner&&);
-  ::vec::RustVecOwner& operator=(RustVecOwner&&);
+  RustVecOwner(RustVecOwner&&) noexcept;
+  ::vec::RustVecOwner& operator=(RustVecOwner&&) noexcept;
 
   // `vec_golden::RustVecOwner` doesn't implement the `Clone` trait
   RustVecOwner(const RustVecOwner&) = delete;
@@ -137,10 +137,10 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(":: alloc :: vec :: Vec < u8 >")
   Vec() noexcept;
 
   // Clone::clone
-  Vec(const Vec&);
+  Vec(const Vec&) noexcept;
 
   // Clone::clone_from
-  rs_std::Vec<::std::uint8_t>& operator=(const Vec&);
+  rs_std::Vec<::std::uint8_t>& operator=(const Vec&) noexcept;
 
   Vec(Vec&&) noexcept;
   rs_std::Vec<::std::uint8_t>& operator=(Vec&&) noexcept;
@@ -185,12 +185,12 @@ inline ::vec::RustVecOwner::~RustVecOwner() {
       __crubit_thunk_Drop_udrop_uvec_ugolden_x0000003a_x0000003aRustVecOwner(
           *this);
 }
-inline ::vec::RustVecOwner::RustVecOwner(RustVecOwner&& other)
+inline ::vec::RustVecOwner::RustVecOwner(RustVecOwner&& other) noexcept
     : RustVecOwner() {
   *this = ::std::move(other);
 }
 inline ::vec::RustVecOwner& ::vec::RustVecOwner::operator=(
-    RustVecOwner&& other) {
+    RustVecOwner&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -340,13 +340,13 @@ extern "C" void
 __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
     rs_std::Vec<::std::int32_t>&, rs_std::Vec<::std::int32_t> const&);
 }
-inline rs_std::Vec<::std::int32_t>::Vec(const Vec& other) {
+inline rs_std::Vec<::std::int32_t>::Vec(const Vec& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
           other, this);
 }
 inline rs_std::Vec<::std::int32_t>& rs_std::Vec<::std::int32_t>::operator=(
-    const Vec& other) {
+    const Vec& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
@@ -389,13 +389,13 @@ extern "C" void
 __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
     rs_std::Vec<::std::uint8_t>&, rs_std::Vec<::std::uint8_t> const&);
 }
-inline rs_std::Vec<::std::uint8_t>::Vec(const Vec& other) {
+inline rs_std::Vec<::std::uint8_t>::Vec(const Vec& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
           other, this);
 }
 inline rs_std::Vec<::std::uint8_t>& rs_std::Vec<::std::uint8_t>::operator=(
-    const Vec& other) {
+    const Vec& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(

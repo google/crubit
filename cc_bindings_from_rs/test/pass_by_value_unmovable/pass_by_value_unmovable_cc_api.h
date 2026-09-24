@@ -42,8 +42,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Drop::drop
   ~CppMovable();
 
-  CppMovable(CppMovable&&);
-  ::pass_by_value_unmovable::CppMovable& operator=(CppMovable&&);
+  CppMovable(CppMovable&&) noexcept;
+  ::pass_by_value_unmovable::CppMovable& operator=(CppMovable&&) noexcept;
 
   // `pass_by_value_unmovable_golden::CppMovable` doesn't implement the `Clone`
   // trait
@@ -126,12 +126,13 @@ inline ::pass_by_value_unmovable::CppMovable::~CppMovable() {
       __crubit_thunk_Drop_udrop_upass_uby_uvalue_uunmovable_ugolden_x0000003a_x0000003aCppMovable(
           *this);
 }
-inline ::pass_by_value_unmovable::CppMovable::CppMovable(CppMovable&& other)
+inline ::pass_by_value_unmovable::CppMovable::CppMovable(
+    CppMovable&& other) noexcept
     : CppMovable() {
   *this = ::std::move(other);
 }
 inline ::pass_by_value_unmovable::CppMovable& ::pass_by_value_unmovable::
-    CppMovable::operator=(CppMovable&& other) {
+    CppMovable::operator=(CppMovable&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }

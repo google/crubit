@@ -49,10 +49,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   Color& operator=(Color&&) = default;
 
   // Clone::clone
-  Color(const Color&);
+  Color(const Color&) noexcept;
 
   // Clone::clone_from
-  ::rs_hash::derived_enum::Color& operator=(const Color&);
+  ::rs_hash::derived_enum::Color& operator=(const Color&) noexcept;
 
   Color(::crubit::UnsafeRelocateTag, Color&& value);
 
@@ -294,13 +294,13 @@ extern "C" void
 __crubit_thunk_Clone_uclone_ufrom_urs_uhash_ugolden_x0000003a_x0000003aderived_uenum_x0000003a_x0000003aColor(
     ::rs_hash::derived_enum::Color&, ::rs_hash::derived_enum::Color const&);
 }
-inline ::rs_hash::derived_enum::Color::Color(const Color& other) {
+inline ::rs_hash::derived_enum::Color::Color(const Color& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_urs_uhash_ugolden_x0000003a_x0000003aderived_uenum_x0000003a_x0000003aColor(
           other, this);
 }
 inline ::rs_hash::derived_enum::Color& ::rs_hash::derived_enum::Color::
-operator=(const Color& other) {
+operator=(const Color& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_urs_uhash_ugolden_x0000003a_x0000003aderived_uenum_x0000003a_x0000003aColor(

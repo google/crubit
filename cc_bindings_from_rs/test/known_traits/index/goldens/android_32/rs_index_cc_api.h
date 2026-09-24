@@ -107,10 +107,10 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Vec() noexcept;
 
   // Clone::clone
-  Vec(const Vec&);
+  Vec(const Vec&) noexcept;
 
   // Clone::clone_from
-  rs_std::Vec<::rs::alloc::string::String>& operator=(const Vec&);
+  rs_std::Vec<::rs::alloc::string::String>& operator=(const Vec&) noexcept;
 
   Vec(Vec&&) noexcept;
   rs_std::Vec<::rs::alloc::string::String>& operator=(Vec&&) noexcept;
@@ -394,13 +394,14 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003
     rs_std::Vec<::rs::alloc::string::String>&,
     rs_std::Vec<::rs::alloc::string::String> const&);
 }
-inline rs_std::Vec<::rs::alloc::string::String>::Vec(const Vec& other) {
+inline rs_std::Vec<::rs::alloc::string::String>::Vec(
+    const Vec& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
           other, this);
 }
 inline rs_std::Vec<::rs::alloc::string::String>&
-rs_std::Vec<::rs::alloc::string::String>::operator=(const Vec& other) {
+rs_std::Vec<::rs::alloc::string::String>::operator=(const Vec& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(

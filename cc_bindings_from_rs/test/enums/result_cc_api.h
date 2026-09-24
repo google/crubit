@@ -430,11 +430,11 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
           ::result::CloneNoDefault, ::std::uint8_t> {
  public:
   // Clone::clone
-  Result(const Result&);
+  Result(const Result&) noexcept;
 
   // Clone::clone_from
   rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>& operator=(
-      const Result&);
+      const Result&) noexcept;
 
   Result(Result&&) = default;
   Result& operator=(Result&&) = default;
@@ -1135,11 +1135,11 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
           ::std::uint8_t, ::result::CloneNoDefault> {
  public:
   // Clone::clone
-  Result(const Result&);
+  Result(const Result&) noexcept;
 
   // Clone::clone_from
   rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>& operator=(
-      const Result&);
+      const Result&) noexcept;
 
   Result(Result&&) = default;
   Result& operator=(Result&&) = default;
@@ -2788,13 +2788,14 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000
     rs_std::Result<::result::CloneNoDefault, ::std::uint8_t> const&);
 }
 inline rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::Result(
-    const Result& other) {
+    const Result& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cresult_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x0000003e(
           other, this);
 }
-inline rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>& rs_std::Result<
-    ::result::CloneNoDefault, ::std::uint8_t>::operator=(const Result& other) {
+inline rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>&
+rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator=(
+    const Result& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cresult_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x0000003e(
@@ -3503,13 +3504,14 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000
     rs_std::Result<::std::uint8_t, ::result::CloneNoDefault> const&);
 }
 inline rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::Result(
-    const Result& other) {
+    const Result& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cu8_x0000002c_x00000020result_ugolden_x0000003a_x0000003aCloneNoDefault_x0000003e(
           other, this);
 }
-inline rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>& rs_std::Result<
-    ::std::uint8_t, ::result::CloneNoDefault>::operator=(const Result& other) {
+inline rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>&
+rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator=(
+    const Result& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cu8_x0000002c_x00000020result_ugolden_x0000003a_x0000003aCloneNoDefault_x0000003e(

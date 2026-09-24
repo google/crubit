@@ -52,8 +52,8 @@ CallbackHolder final {
   // Drop::drop
   ~CallbackHolder();
 
-  CallbackHolder(CallbackHolder&&);
-  ::callables::CallbackHolder& operator=(CallbackHolder&&);
+  CallbackHolder(CallbackHolder&&) noexcept;
+  ::callables::CallbackHolder& operator=(CallbackHolder&&) noexcept;
 
   // `callables_golden::CallbackHolder` doesn't implement the `Clone` trait
   CallbackHolder(const CallbackHolder&) = delete;
@@ -98,8 +98,8 @@ CppMovableDrop final {
   // Drop::drop
   ~CppMovableDrop();
 
-  CppMovableDrop(CppMovableDrop&&);
-  ::callables::CppMovableDrop& operator=(CppMovableDrop&&);
+  CppMovableDrop(CppMovableDrop&&) noexcept;
+  ::callables::CppMovableDrop& operator=(CppMovableDrop&&) noexcept;
 
   // `callables_golden::CppMovableDrop` doesn't implement the `Clone` trait
   CppMovableDrop(const CppMovableDrop&) = delete;
@@ -513,12 +513,13 @@ inline ::callables::CallbackHolder::~CallbackHolder() {
       __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCallbackHolder(
           *this);
 }
-inline ::callables::CallbackHolder::CallbackHolder(CallbackHolder&& other)
+inline ::callables::CallbackHolder::CallbackHolder(
+    CallbackHolder&& other) noexcept
     : CallbackHolder() {
   *this = ::std::move(other);
 }
 inline ::callables::CallbackHolder& ::callables::CallbackHolder::operator=(
-    CallbackHolder&& other) {
+    CallbackHolder&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -592,12 +593,13 @@ inline ::callables::CppMovableDrop::~CppMovableDrop() {
       __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCppMovableDrop(
           *this);
 }
-inline ::callables::CppMovableDrop::CppMovableDrop(CppMovableDrop&& other)
+inline ::callables::CppMovableDrop::CppMovableDrop(
+    CppMovableDrop&& other) noexcept
     : CppMovableDrop() {
   *this = ::std::move(other);
 }
 inline ::callables::CppMovableDrop& ::callables::CppMovableDrop::operator=(
-    CppMovableDrop&& other) {
+    CppMovableDrop&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }

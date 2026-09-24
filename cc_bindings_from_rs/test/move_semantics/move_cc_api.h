@@ -52,8 +52,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
   // Drop::drop
   ~Foo();
 
-  Foo(Foo&&);
-  ::move::Foo& operator=(Foo&&);
+  Foo(Foo&&) noexcept;
+  ::move::Foo& operator=(Foo&&) noexcept;
 
   // `move_golden::Foo` doesn't implement the `Clone` trait
   Foo(const Foo&) = delete;
@@ -178,8 +178,10 @@ inline ::move::Foo::~Foo() {
   __crubit_internal::
       __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aFoo(*this);
 }
-inline ::move::Foo::Foo(Foo&& other) : Foo() { *this = ::std::move(other); }
-inline ::move::Foo& ::move::Foo::operator=(Foo&& other) {
+inline ::move::Foo::Foo(Foo&& other) noexcept : Foo() {
+  *this = ::std::move(other);
+}
+inline ::move::Foo& ::move::Foo::operator=(Foo&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }

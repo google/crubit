@@ -43,14 +43,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Drop::drop
   ~AssociatedTypeStruct();
 
-  AssociatedTypeStruct(AssociatedTypeStruct&&);
-  ::traits::AssociatedTypeStruct& operator=(AssociatedTypeStruct&&);
+  AssociatedTypeStruct(AssociatedTypeStruct&&) noexcept;
+  ::traits::AssociatedTypeStruct& operator=(AssociatedTypeStruct&&) noexcept;
 
   // Clone::clone
-  AssociatedTypeStruct(const AssociatedTypeStruct&);
+  AssociatedTypeStruct(const AssociatedTypeStruct&) noexcept;
 
   // Clone::clone_from
-  ::traits::AssociatedTypeStruct& operator=(const AssociatedTypeStruct&);
+  ::traits::AssociatedTypeStruct& operator=(
+      const AssociatedTypeStruct&) noexcept;
 
   AssociatedTypeStruct(::crubit::UnsafeRelocateTag,
                        AssociatedTypeStruct&& value);
@@ -406,12 +407,12 @@ inline ::traits::AssociatedTypeStruct::~AssociatedTypeStruct() {
           *this);
 }
 inline ::traits::AssociatedTypeStruct::AssociatedTypeStruct(
-    AssociatedTypeStruct&& other)
+    AssociatedTypeStruct&& other) noexcept
     : AssociatedTypeStruct() {
   *this = ::std::move(other);
 }
 inline ::traits::AssociatedTypeStruct& ::traits::AssociatedTypeStruct::
-operator=(AssociatedTypeStruct&& other) {
+operator=(AssociatedTypeStruct&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -427,13 +428,13 @@ __crubit_thunk_Clone_uclone_ufrom_utraits_ugolden_x0000003a_x0000003aAssociatedT
     ::traits::AssociatedTypeStruct&, ::traits::AssociatedTypeStruct const&);
 }
 inline ::traits::AssociatedTypeStruct::AssociatedTypeStruct(
-    const AssociatedTypeStruct& other) {
+    const AssociatedTypeStruct& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
           other, this);
 }
 inline ::traits::AssociatedTypeStruct& ::traits::AssociatedTypeStruct::
-operator=(const AssociatedTypeStruct& other) {
+operator=(const AssociatedTypeStruct& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(

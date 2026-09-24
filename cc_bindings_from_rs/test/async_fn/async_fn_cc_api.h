@@ -88,8 +88,8 @@ StructWithDrop final {
   // Drop::drop
   ~StructWithDrop();
 
-  StructWithDrop(StructWithDrop&&);
-  ::async_fn::StructWithDrop& operator=(StructWithDrop&&);
+  StructWithDrop(StructWithDrop&&) noexcept;
+  ::async_fn::StructWithDrop& operator=(StructWithDrop&&) noexcept;
 
   // `async_fn_golden::StructWithDrop` doesn't implement the `Clone` trait
   StructWithDrop(const StructWithDrop&) = delete;
@@ -214,12 +214,13 @@ inline ::async_fn::StructWithDrop::~StructWithDrop() {
       __crubit_thunk_Drop_udrop_uasync_ufn_ugolden_x0000003a_x0000003aStructWithDrop(
           *this);
 }
-inline ::async_fn::StructWithDrop::StructWithDrop(StructWithDrop&& other)
+inline ::async_fn::StructWithDrop::StructWithDrop(
+    StructWithDrop&& other) noexcept
     : StructWithDrop() {
   *this = ::std::move(other);
 }
 inline ::async_fn::StructWithDrop& ::async_fn::StructWithDrop::operator=(
-    StructWithDrop&& other) {
+    StructWithDrop&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }

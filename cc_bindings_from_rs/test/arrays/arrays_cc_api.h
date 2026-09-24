@@ -82,8 +82,8 @@ HasDropAndDefault final {
   // Drop::drop
   ~HasDropAndDefault();
 
-  HasDropAndDefault(HasDropAndDefault&&);
-  ::arrays::HasDropAndDefault& operator=(HasDropAndDefault&&);
+  HasDropAndDefault(HasDropAndDefault&&) noexcept;
+  ::arrays::HasDropAndDefault& operator=(HasDropAndDefault&&) noexcept;
 
   // `arrays_golden::HasDropAndDefault` doesn't implement the `Clone` trait
   HasDropAndDefault(const HasDropAndDefault&) = delete;
@@ -318,12 +318,13 @@ inline ::arrays::HasDropAndDefault::~HasDropAndDefault() {
       __crubit_thunk_Drop_udrop_uarrays_ugolden_x0000003a_x0000003aHasDropAndDefault(
           *this);
 }
-inline ::arrays::HasDropAndDefault::HasDropAndDefault(HasDropAndDefault&& other)
+inline ::arrays::HasDropAndDefault::HasDropAndDefault(
+    HasDropAndDefault&& other) noexcept
     : HasDropAndDefault() {
   *this = ::std::move(other);
 }
 inline ::arrays::HasDropAndDefault& ::arrays::HasDropAndDefault::operator=(
-    HasDropAndDefault&& other) {
+    HasDropAndDefault&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }

@@ -43,8 +43,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(4)
   // Drop::drop
   ~FooService();
 
-  FooService(FooService&&);
-  ::rust_lib::FooService& operator=(FooService&&);
+  FooService(FooService&&) noexcept;
+  ::rust_lib::FooService& operator=(FooService&&) noexcept;
 
   // `rust_lib_golden::FooService` doesn't implement the `Clone` trait
   FooService(const FooService&) = delete;
@@ -91,8 +91,8 @@ StructWithProto final {
   // Drop::drop
   ~StructWithProto();
 
-  StructWithProto(StructWithProto&&);
-  ::rust_lib::StructWithProto& operator=(StructWithProto&&);
+  StructWithProto(StructWithProto&&) noexcept;
+  ::rust_lib::StructWithProto& operator=(StructWithProto&&) noexcept;
 
   // `rust_lib_golden::StructWithProto` doesn't implement the `Clone` trait
   StructWithProto(const StructWithProto&) = delete;
@@ -146,11 +146,11 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Vec() noexcept;
 
   // Clone::clone
-  Vec(const Vec&);
+  Vec(const Vec&) noexcept;
 
   // Clone::clone_from
   rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>& operator=(
-      const Vec&);
+      const Vec&) noexcept;
 
   Vec(Vec&&) noexcept;
   rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>& operator=(
@@ -196,11 +196,12 @@ inline ::rust_lib::FooService::~FooService() {
       __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aFooService(
           *this);
 }
-inline ::rust_lib::FooService::FooService(FooService&& other) : FooService() {
+inline ::rust_lib::FooService::FooService(FooService&& other) noexcept
+    : FooService() {
   *this = ::std::move(other);
 }
 inline ::rust_lib::FooService& ::rust_lib::FooService::operator=(
-    FooService&& other) {
+    FooService&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -300,12 +301,13 @@ inline ::rust_lib::StructWithProto::~StructWithProto() {
       __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aStructWithProto(
           *this);
 }
-inline ::rust_lib::StructWithProto::StructWithProto(StructWithProto&& other)
+inline ::rust_lib::StructWithProto::StructWithProto(
+    StructWithProto&& other) noexcept
     : StructWithProto() {
   *this = ::std::move(other);
 }
 inline ::rust_lib::StructWithProto& ::rust_lib::StructWithProto::operator=(
-    StructWithProto&& other) {
+    StructWithProto&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -380,14 +382,14 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003
     rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>> const&);
 }
 inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
-    const Vec& other) {
+    const Vec& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
           other, this);
 }
 inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>&
 rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator=(
-    const Vec& other) {
+    const Vec& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(

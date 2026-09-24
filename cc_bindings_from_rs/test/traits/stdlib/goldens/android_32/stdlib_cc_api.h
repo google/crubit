@@ -46,14 +46,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: stdlib_golden :: MyStruct") alignas(4)
   // Drop::drop
   ~MyStruct();
 
-  MyStruct(MyStruct&&);
-  ::stdlib::MyStruct& operator=(MyStruct&&);
+  MyStruct(MyStruct&&) noexcept;
+  ::stdlib::MyStruct& operator=(MyStruct&&) noexcept;
 
   // Clone::clone
-  MyStruct(const MyStruct&);
+  MyStruct(const MyStruct&) noexcept;
 
   // Clone::clone_from
-  ::stdlib::MyStruct& operator=(const MyStruct&);
+  ::stdlib::MyStruct& operator=(const MyStruct&) noexcept;
 
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
 
@@ -206,10 +206,11 @@ inline ::stdlib::MyStruct::~MyStruct() {
       __crubit_thunk_Drop_udrop_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
           *this);
 }
-inline ::stdlib::MyStruct::MyStruct(MyStruct&& other) : MyStruct() {
+inline ::stdlib::MyStruct::MyStruct(MyStruct&& other) noexcept : MyStruct() {
   *this = ::std::move(other);
 }
-inline ::stdlib::MyStruct& ::stdlib::MyStruct::operator=(MyStruct&& other) {
+inline ::stdlib::MyStruct& ::stdlib::MyStruct::operator=(
+    MyStruct&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -223,13 +224,13 @@ extern "C" void
 __crubit_thunk_Clone_uclone_ufrom_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
     ::stdlib::MyStruct&, ::stdlib::MyStruct const&);
 }
-inline ::stdlib::MyStruct::MyStruct(const MyStruct& other) {
+inline ::stdlib::MyStruct::MyStruct(const MyStruct& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
           other, this);
 }
 inline ::stdlib::MyStruct& ::stdlib::MyStruct::operator=(
-    const MyStruct& other) {
+    const MyStruct& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustdlib_ugolden_x0000003a_x0000003aMyStruct(

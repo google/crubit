@@ -47,10 +47,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ~CloneNoDefault();
 
   // Clone::clone
-  CloneNoDefault(const CloneNoDefault&);
+  CloneNoDefault(const CloneNoDefault&) noexcept;
 
   // Clone::clone_from
-  ::tuple_structs::CloneNoDefault& operator=(const CloneNoDefault&);
+  ::tuple_structs::CloneNoDefault& operator=(const CloneNoDefault&) noexcept;
 
   CloneNoDefault(::crubit::UnsafeRelocateTag, CloneNoDefault&& value);
 
@@ -93,11 +93,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   DefaultAndCloneNoUnpin& operator=(DefaultAndCloneNoUnpin&&) = default;
 
   // Clone::clone
-  DefaultAndCloneNoUnpin(const DefaultAndCloneNoUnpin&);
+  DefaultAndCloneNoUnpin(const DefaultAndCloneNoUnpin&) noexcept;
 
   // Clone::clone_from
   ::tuple_structs::DefaultAndCloneNoUnpin& operator=(
-      const DefaultAndCloneNoUnpin&);
+      const DefaultAndCloneNoUnpin&) noexcept;
 
   DefaultAndCloneNoUnpin(::crubit::UnsafeRelocateTag,
                          DefaultAndCloneNoUnpin&& value);
@@ -643,13 +643,13 @@ __crubit_thunk_Clone_uclone_ufrom_utuple_ustructs_ugolden_x0000003a_x0000003aClo
     ::tuple_structs::CloneNoDefault&, ::tuple_structs::CloneNoDefault const&);
 }
 inline ::tuple_structs::CloneNoDefault::CloneNoDefault(
-    const CloneNoDefault& other) {
+    const CloneNoDefault& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
           other, this);
 }
 inline ::tuple_structs::CloneNoDefault& ::tuple_structs::CloneNoDefault::
-operator=(const CloneNoDefault& other) {
+operator=(const CloneNoDefault& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_utuple_ustructs_ugolden_x0000003a_x0000003aCloneNoDefault(
@@ -731,13 +731,14 @@ __crubit_thunk_Clone_uclone_ufrom_utuple_ustructs_ugolden_x0000003a_x0000003aDef
     ::tuple_structs::DefaultAndCloneNoUnpin const&);
 }
 inline ::tuple_structs::DefaultAndCloneNoUnpin::DefaultAndCloneNoUnpin(
-    const DefaultAndCloneNoUnpin& other) {
+    const DefaultAndCloneNoUnpin& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(
           other, this);
 }
 inline ::tuple_structs::DefaultAndCloneNoUnpin& ::tuple_structs::
-    DefaultAndCloneNoUnpin::operator=(const DefaultAndCloneNoUnpin& other) {
+    DefaultAndCloneNoUnpin::operator=(
+        const DefaultAndCloneNoUnpin& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_utuple_ustructs_ugolden_x0000003a_x0000003aDefaultAndCloneNoUnpin(

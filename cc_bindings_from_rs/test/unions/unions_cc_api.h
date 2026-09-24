@@ -68,10 +68,10 @@ U final {
   U& operator=(U&&) = default;
 
   // Clone::clone
-  U(const U&);
+  U(const U&) noexcept;
 
   // Clone::clone_from
-  ::unions::repr_c_clone::U& operator=(const U&);
+  ::unions::repr_c_clone::U& operator=(const U&) noexcept;
 
   U(::crubit::UnsafeRelocateTag, U&& value);
 
@@ -96,8 +96,8 @@ union CRUBIT_INTERNAL_RUST_TYPE(":: unions_golden :: repr_c_drop :: U") alignas(
   // Drop::drop
   ~U();
 
-  U(U&&);
-  ::unions::repr_c_drop::U& operator=(U&&);
+  U(U&&) noexcept;
+  ::unions::repr_c_drop::U& operator=(U&&) noexcept;
 
   // `unions_golden::repr_c_drop::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
@@ -198,10 +198,10 @@ union CRUBIT_INTERNAL_RUST_TYPE(
   U& operator=(U&&) = default;
 
   // Clone::clone
-  U(const U&);
+  U(const U&) noexcept;
 
   // Clone::clone_from
-  ::unions::repr_rust_clone::U& operator=(const U&);
+  ::unions::repr_rust_clone::U& operator=(const U&) noexcept;
 
   U(::crubit::UnsafeRelocateTag, U&& value);
 
@@ -233,8 +233,8 @@ U final {
   // Drop::drop
   ~U();
 
-  U(U&&);
-  ::unions::repr_rust_drop::U& operator=(U&&);
+  U(U&&) noexcept;
+  ::unions::repr_rust_drop::U& operator=(U&&) noexcept;
 
   // `unions_golden::repr_rust_drop::U` doesn't implement the `Clone` trait
   U(const U&) = delete;
@@ -342,13 +342,13 @@ extern "C" void
 __crubit_thunk_Clone_uclone_ufrom_uunions_ugolden_x0000003a_x0000003arepr_uc_uclone_x0000003a_x0000003aU(
     ::unions::repr_c_clone::U&, ::unions::repr_c_clone::U const&);
 }
-inline ::unions::repr_c_clone::U::U(const U& other) {
+inline ::unions::repr_c_clone::U::U(const U& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_uunions_ugolden_x0000003a_x0000003arepr_uc_uclone_x0000003a_x0000003aU(
           other, this);
 }
 inline ::unions::repr_c_clone::U& ::unions::repr_c_clone::U::operator=(
-    const U& other) {
+    const U& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_uunions_ugolden_x0000003a_x0000003arepr_uc_uclone_x0000003a_x0000003aU(
@@ -403,11 +403,11 @@ inline ::unions::repr_c_drop::U::~U() {
       __crubit_thunk_Drop_udrop_uunions_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aU(
           *this);
 }
-inline ::unions::repr_c_drop::U::U(U&& other) : U() {
+inline ::unions::repr_c_drop::U::U(U&& other) noexcept : U() {
   *this = ::std::move(other);
 }
 inline ::unions::repr_c_drop::U& ::unions::repr_c_drop::U::operator=(
-    U&& other) {
+    U&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -540,13 +540,13 @@ extern "C" void
 __crubit_thunk_Clone_uclone_ufrom_uunions_ugolden_x0000003a_x0000003arepr_urust_uclone_x0000003a_x0000003aU(
     ::unions::repr_rust_clone::U&, ::unions::repr_rust_clone::U const&);
 }
-inline ::unions::repr_rust_clone::U::U(const U& other) {
+inline ::unions::repr_rust_clone::U::U(const U& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_uunions_ugolden_x0000003a_x0000003arepr_urust_uclone_x0000003a_x0000003aU(
           other, this);
 }
 inline ::unions::repr_rust_clone::U& ::unions::repr_rust_clone::U::operator=(
-    const U& other) {
+    const U& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_uunions_ugolden_x0000003a_x0000003arepr_urust_uclone_x0000003a_x0000003aU(
@@ -619,11 +619,11 @@ inline ::unions::repr_rust_drop::U::~U() {
       __crubit_thunk_Drop_udrop_uunions_ugolden_x0000003a_x0000003arepr_urust_udrop_x0000003a_x0000003aU(
           *this);
 }
-inline ::unions::repr_rust_drop::U::U(U&& other) : U() {
+inline ::unions::repr_rust_drop::U::U(U&& other) noexcept : U() {
   *this = ::std::move(other);
 }
 inline ::unions::repr_rust_drop::U& ::unions::repr_rust_drop::U::operator=(
-    U&& other) {
+    U&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }

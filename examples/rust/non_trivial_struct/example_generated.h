@@ -37,8 +37,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Drop::drop
   ~NonTrivialStruct();
 
-  NonTrivialStruct(NonTrivialStruct&&);
-  ::example_crate::NonTrivialStruct& operator=(NonTrivialStruct&&);
+  NonTrivialStruct(NonTrivialStruct&&) noexcept;
+  ::example_crate::NonTrivialStruct& operator=(NonTrivialStruct&&) noexcept;
 
   // `example_crate_golden::NonTrivialStruct` doesn't implement the `Clone`
   // trait
@@ -81,12 +81,12 @@ inline ::example_crate::NonTrivialStruct::~NonTrivialStruct() {
           *this);
 }
 inline ::example_crate::NonTrivialStruct::NonTrivialStruct(
-    NonTrivialStruct&& other)
+    NonTrivialStruct&& other) noexcept
     : NonTrivialStruct() {
   *this = ::std::move(other);
 }
 inline ::example_crate::NonTrivialStruct& ::example_crate::NonTrivialStruct::
-operator=(NonTrivialStruct&& other) {
+operator=(NonTrivialStruct&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }

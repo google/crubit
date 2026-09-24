@@ -520,10 +520,10 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
                                 ::option::CloneNoDefault> {
  public:
   // Clone::clone
-  Option(const Option&);
+  Option(const Option&) noexcept;
 
   // Clone::clone_from
-  rs_std::Option<::option::CloneNoDefault>& operator=(const Option&);
+  rs_std::Option<::option::CloneNoDefault>& operator=(const Option&) noexcept;
 
   Option(Option&&) = default;
   Option& operator=(Option&&) = default;
@@ -682,8 +682,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   // `core::option::Option` doesn't implement the `Clone` trait
   Option(const Option&) = delete;
   Option& operator=(const Option&) = delete;
-  Option(Option&&);
-  rs_std::Option<::option::HasDefault>& operator=(Option&&);
+  Option(Option&&) noexcept;
+  rs_std::Option<::option::HasDefault>& operator=(Option&&) noexcept;
   Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<rs_std::Option<::option::HasDefault>,
                                        ::option::HasDefault>;
@@ -759,8 +759,8 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   // `core::option::Option` doesn't implement the `Clone` trait
   Option(const Option&) = delete;
   Option& operator=(const Option&) = delete;
-  Option(Option&&);
-  rs_std::Option<::option::HasNoDefault>& operator=(Option&&);
+  Option(Option&&) noexcept;
+  rs_std::Option<::option::HasNoDefault>& operator=(Option&&) noexcept;
   Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<rs_std::Option<::option::HasNoDefault>,
                                        ::option::HasNoDefault>;
@@ -1047,15 +1047,15 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
           rs_std::Result<::std::int32_t, ::rs::alloc::string::String>> {
  public:
   // Clone::clone
-  Option(const Option&);
+  Option(const Option&) noexcept;
 
   // Clone::clone_from
   rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
-  operator=(const Option&);
+  operator=(const Option&) noexcept;
 
-  Option(Option&&);
+  Option(Option&&) noexcept;
   rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
-  operator=(Option&&);
+  operator=(Option&&) noexcept;
   Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<
       rs_std::Option<
@@ -1127,10 +1127,10 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   // `core::option::Option` doesn't implement the `Clone` trait
   Option(const Option&) = delete;
   Option& operator=(const Option&) = delete;
-  Option(Option&&);
+  Option(Option&&) noexcept;
   rs_std::Option<
       rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>&
-  operator=(Option&&);
+  operator=(Option&&) noexcept;
   Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<
       rs_std::Option<
@@ -1220,7 +1220,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
                                         rs_std::Option<::std::int32_t>>>> {
  public:
   // Clone::clone
-  Option(const Option&);
+  Option(const Option&) noexcept;
 
   // Clone::clone_from
   rs_std::Option<
@@ -1228,15 +1228,15 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
                          ::std::int32_t, ::rs::alloc::string::String>>,
                      rs_std::Result<rs_std::Option<::std::int32_t>,
                                     rs_std::Option<::std::int32_t>>>>&
-  operator=(const Option&);
+  operator=(const Option&) noexcept;
 
-  Option(Option&&);
+  Option(Option&&) noexcept;
   rs_std::Option<
       rs_std::Result<rs_std::Option<rs_std::Result<
                          ::std::int32_t, ::rs::alloc::string::String>>,
                      rs_std::Result<rs_std::Option<::std::int32_t>,
                                     rs_std::Option<::std::int32_t>>>>&
-  operator=(Option&&);
+  operator=(Option&&) noexcept;
   Option(::crubit::UnsafeRelocateTag, Option&& value);
   using base_type = rs_std::OptionBase<
       rs_std::Option<
@@ -1643,11 +1643,11 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
           ::std::int32_t, ::rs::alloc::string::String> {
  public:
   // Clone::clone
-  Result(const Result&);
+  Result(const Result&) noexcept;
 
   // Clone::clone_from
   rs_std::Result<::std::int32_t, ::rs::alloc::string::String>& operator=(
-      const Result&);
+      const Result&) noexcept;
 
   Result(::crubit::UnsafeRelocateTag, Result&& value);
 
@@ -1873,14 +1873,14 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
                          rs_std::Option<::std::int32_t>>> {
  public:
   // Clone::clone
-  Result(const Result&);
+  Result(const Result&) noexcept;
 
   // Clone::clone_from
   rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
                                                ::rs::alloc::string::String>>,
                  rs_std::Result<rs_std::Option<::std::int32_t>,
                                 rs_std::Option<::std::int32_t>>>&
-  operator=(const Result&);
+  operator=(const Result&) noexcept;
 
   Result(::crubit::UnsafeRelocateTag, Result&& value);
 
@@ -2907,13 +2907,14 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000
     rs_std::Option<::option::CloneNoDefault>&,
     rs_std::Option<::option::CloneNoDefault> const&);
 }
-inline rs_std::Option<::option::CloneNoDefault>::Option(const Option& other) {
+inline rs_std::Option<::option::CloneNoDefault>::Option(
+    const Option& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003coption_ugolden_x0000003a_x0000003aCloneNoDefault_x0000003e(
           other, this);
 }
-inline rs_std::Option<::option::CloneNoDefault>&
-rs_std::Option<::option::CloneNoDefault>::operator=(const Option& other) {
+inline rs_std::Option<::option::CloneNoDefault>& rs_std::Option<
+    ::option::CloneNoDefault>::operator=(const Option& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003coption_ugolden_x0000003a_x0000003aCloneNoDefault_x0000003e(
@@ -3063,11 +3064,12 @@ inline rs_std::Option<::option::CopyNoDefault>::Option(::std::in_place_t ip,
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000003e
-inline rs_std::Option<::option::HasDefault>::Option(Option&& other) : Option() {
+inline rs_std::Option<::option::HasDefault>::Option(Option&& other) noexcept
+    : Option() {
   *this = ::std::move(other);
 }
 inline rs_std::Option<::option::HasDefault>&
-rs_std::Option<::option::HasDefault>::operator=(Option&& other) {
+rs_std::Option<::option::HasDefault>::operator=(Option&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -3137,12 +3139,12 @@ inline rs_std::Option<::option::HasDefault>::Option(::std::in_place_t ip,
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000003e
-inline rs_std::Option<::option::HasNoDefault>::Option(Option&& other)
+inline rs_std::Option<::option::HasNoDefault>::Option(Option&& other) noexcept
     : Option() {
   *this = ::std::move(other);
 }
 inline rs_std::Option<::option::HasNoDefault>&
-rs_std::Option<::option::HasNoDefault>::operator=(Option&& other) {
+rs_std::Option<::option::HasNoDefault>::operator=(Option&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -3450,8 +3452,9 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000
     rs_std::Option<
         rs_std::Result<::std::int32_t, ::rs::alloc::string::String>> const&);
 }
-inline rs_std::Option<rs_std::Result<
-    ::std::int32_t, ::rs::alloc::string::String>>::Option(const Option& other) {
+inline rs_std::
+    Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::Option(
+        const Option& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x0000003e(
           other, this);
@@ -3459,7 +3462,7 @@ inline rs_std::Option<rs_std::Result<
 inline rs_std::Option<
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
 rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
-operator=(const Option& other) {
+operator=(const Option& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x0000003e(
@@ -3467,15 +3470,16 @@ operator=(const Option& other) {
   }
   return *this;
 }
-inline rs_std::Option<rs_std::Result<
-    ::std::int32_t, ::rs::alloc::string::String>>::Option(Option&& other)
+inline rs_std::
+    Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::Option(
+        Option&& other) noexcept
     : Option() {
   *this = ::std::move(other);
 }
 inline rs_std::Option<
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&
 rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
-operator=(Option&& other) {
+operator=(Option&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -3565,17 +3569,17 @@ inline rs_std::
 
 #ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
-inline rs_std::Option<rs_std::Result<
-    ::option::HasNoDefault, ::rs::alloc::string::String>>::Option(Option&&
-                                                                      other)
+inline rs_std::Option<
+    rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>::
+    Option(Option&& other) noexcept
     : Option() {
   *this = ::std::move(other);
 }
 inline rs_std::Option<
     rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>&
 rs_std::Option<
-    rs_std::Result<::option::HasNoDefault,
-                   ::rs::alloc::string::String>>::operator=(Option&& other) {
+    rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>::
+operator=(Option&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -3705,8 +3709,8 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000
 inline rs_std::Option<rs_std::Result<
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
     rs_std::Result<rs_std::Option<::std::int32_t>,
-                   rs_std::Option<::std::int32_t>>>>::Option(const Option&
-                                                                 other) {
+                   rs_std::Option<::std::int32_t>>>>::
+    Option(const Option& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000003e_x0000003e_x0000003e(
           other, this);
@@ -3718,8 +3722,8 @@ inline rs_std::Option<rs_std::Result<
 rs_std::Option<rs_std::Result<
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
     rs_std::Result<rs_std::Option<::std::int32_t>,
-                   rs_std::Option<::std::int32_t>>>>::operator=(const Option&
-                                                                    other) {
+                   rs_std::Option<::std::int32_t>>>>::
+operator=(const Option& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000003e_x0000003e_x0000003e(
@@ -3730,7 +3734,8 @@ rs_std::Option<rs_std::Result<
 inline rs_std::Option<rs_std::Result<
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
     rs_std::Result<rs_std::Option<::std::int32_t>,
-                   rs_std::Option<::std::int32_t>>>>::Option(Option&& other)
+                   rs_std::Option<::std::int32_t>>>>::Option(Option&&
+                                                                 other) noexcept
     : Option() {
   *this = ::std::move(other);
 }
@@ -3741,8 +3746,8 @@ inline rs_std::Option<rs_std::Result<
 rs_std::Option<rs_std::Result<
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
     rs_std::Result<rs_std::Option<::std::int32_t>,
-                   rs_std::Option<::std::int32_t>>>>::operator=(Option&&
-                                                                    other) {
+                   rs_std::Option<::std::int32_t>>>>::
+operator=(Option&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -4199,14 +4204,14 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String> const&);
 }
 inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::Result(
-    const Result& other) {
+    const Result& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
           other, this);
 }
 inline rs_std::Result<::std::int32_t, ::rs::alloc::string::String>&
 rs_std::Result<::std::int32_t, ::rs::alloc::string::String>::operator=(
-    const Result& other) {
+    const Result& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
@@ -4485,8 +4490,8 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000
 inline rs_std::Result<
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
     rs_std::Result<rs_std::Option<::std::int32_t>,
-                   rs_std::Option<::std::int32_t>>>::Result(const Result&
-                                                                other) {
+                   rs_std::Option<::std::int32_t>>>::
+    Result(const Result& other) noexcept {
   ::__crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000003e_x0000003e(
           other, this);
@@ -4498,8 +4503,8 @@ inline rs_std::Result<
 rs_std::Result<
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>,
     rs_std::Result<rs_std::Option<::std::int32_t>,
-                   rs_std::Option<::std::int32_t>>>::operator=(const Result&
-                                                                   other) {
+                   rs_std::Option<::std::int32_t>>>::
+operator=(const Result& other) noexcept {
   if (this != &other) {
     ::__crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003cstd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003ci32_x0000002c_x00000020std_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cstd_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x0000003e_x0000003e(

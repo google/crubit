@@ -409,8 +409,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: enums_golden :: repr_c :: MyEnum") alignas(
   // Drop::drop
   ~MyEnum();
 
-  MyEnum(MyEnum&&);
-  ::enums::repr_c::MyEnum& operator=(MyEnum&&);
+  MyEnum(MyEnum&&) noexcept;
+  ::enums::repr_c::MyEnum& operator=(MyEnum&&) noexcept;
 
   // `enums_golden::repr_c::MyEnum` doesn't implement the `Clone` trait
   MyEnum(const MyEnum&) = delete;
@@ -636,11 +636,11 @@ CloneActiveVariant final {
   CloneActiveVariant& operator=(CloneActiveVariant&&) = default;
 
   // Clone::clone
-  CloneActiveVariant(const CloneActiveVariant&);
+  CloneActiveVariant(const CloneActiveVariant&) noexcept;
 
   // Clone::clone_from
   ::enums::repr_c_clone_active_variant::CloneActiveVariant& operator=(
-      const CloneActiveVariant&);
+      const CloneActiveVariant&) noexcept;
 
   CloneActiveVariant(::crubit::UnsafeRelocateTag, CloneActiveVariant&& value);
 
@@ -708,10 +708,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   CloneCount& operator=(CloneCount&&) = default;
 
   // Clone::clone
-  CloneCount(const CloneCount&);
+  CloneCount(const CloneCount&) noexcept;
 
   // Clone::clone_from
-  ::enums::repr_c_clone_counter::CloneCount& operator=(const CloneCount&);
+  ::enums::repr_c_clone_counter::CloneCount& operator=(
+      const CloneCount&) noexcept;
 
   CloneCount(::crubit::UnsafeRelocateTag, CloneCount&& value);
 
@@ -766,8 +767,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Drop::drop
   ~DropMe();
 
-  DropMe(DropMe&&);
-  ::enums::repr_c_drop::DropMe& operator=(DropMe&&);
+  DropMe(DropMe&&) noexcept;
+  ::enums::repr_c_drop::DropMe& operator=(DropMe&&) noexcept;
 
   // `enums_golden::repr_c_drop::DropMe` doesn't implement the `Clone` trait
   DropMe(const DropMe&) = delete;
@@ -2128,11 +2129,11 @@ inline ::enums::repr_c::MyEnum::~MyEnum() {
       __crubit_thunk_Drop_udrop_uenums_ugolden_x0000003a_x0000003arepr_uc_x0000003a_x0000003aMyEnum(
           *this);
 }
-inline ::enums::repr_c::MyEnum::MyEnum(MyEnum&& other) : MyEnum() {
+inline ::enums::repr_c::MyEnum::MyEnum(MyEnum&& other) noexcept : MyEnum() {
   *this = ::std::move(other);
 }
 inline ::enums::repr_c::MyEnum& ::enums::repr_c::MyEnum::operator=(
-    MyEnum&& other) {
+    MyEnum&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -2399,14 +2400,14 @@ __crubit_thunk_Clone_uclone_ufrom_uenums_ugolden_x0000003a_x0000003arepr_uc_uclo
     ::enums::repr_c_clone_active_variant::CloneActiveVariant const&);
 }
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant::
-    CloneActiveVariant(const CloneActiveVariant& other) {
+    CloneActiveVariant(const CloneActiveVariant& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
           other, this);
 }
 inline ::enums::repr_c_clone_active_variant::CloneActiveVariant& ::enums::
     repr_c_clone_active_variant::CloneActiveVariant::operator=(
-        const CloneActiveVariant& other) {
+        const CloneActiveVariant& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_uactive_uvariant_x0000003a_x0000003aCloneActiveVariant(
@@ -2518,13 +2519,14 @@ __crubit_thunk_Clone_uclone_ufrom_uenums_ugolden_x0000003a_x0000003arepr_uc_uclo
     ::enums::repr_c_clone_counter::CloneCount const&);
 }
 inline ::enums::repr_c_clone_counter::CloneCount::CloneCount(
-    const CloneCount& other) {
+    const CloneCount& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
           other, this);
 }
 inline ::enums::repr_c_clone_counter::CloneCount& ::enums::
-    repr_c_clone_counter::CloneCount::operator=(const CloneCount& other) {
+    repr_c_clone_counter::CloneCount::operator=(
+        const CloneCount& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_uenums_ugolden_x0000003a_x0000003arepr_uc_uclone_ucounter_x0000003a_x0000003aCloneCount(
@@ -2604,11 +2606,12 @@ inline ::enums::repr_c_drop::DropMe::~DropMe() {
       __crubit_thunk_Drop_udrop_uenums_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aDropMe(
           *this);
 }
-inline ::enums::repr_c_drop::DropMe::DropMe(DropMe&& other) : DropMe() {
+inline ::enums::repr_c_drop::DropMe::DropMe(DropMe&& other) noexcept
+    : DropMe() {
   *this = ::std::move(other);
 }
 inline ::enums::repr_c_drop::DropMe& ::enums::repr_c_drop::DropMe::operator=(
-    DropMe&& other) {
+    DropMe&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }

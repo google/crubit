@@ -36,14 +36,15 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Drop::drop
   ~ArcWrapper();
 
-  ArcWrapper(ArcWrapper&&);
-  ::return_position_impl_trait::ArcWrapper& operator=(ArcWrapper&&);
+  ArcWrapper(ArcWrapper&&) noexcept;
+  ::return_position_impl_trait::ArcWrapper& operator=(ArcWrapper&&) noexcept;
 
   // Clone::clone
-  ArcWrapper(const ArcWrapper&);
+  ArcWrapper(const ArcWrapper&) noexcept;
 
   // Clone::clone_from
-  ::return_position_impl_trait::ArcWrapper& operator=(const ArcWrapper&);
+  ::return_position_impl_trait::ArcWrapper& operator=(
+      const ArcWrapper&) noexcept;
 
   ArcWrapper(::crubit::UnsafeRelocateTag, ArcWrapper&& value);
 
@@ -115,12 +116,13 @@ inline ::return_position_impl_trait::ArcWrapper::~ArcWrapper() {
       __crubit_thunk_Drop_udrop_ureturn_uposition_uimpl_utrait_ugolden_x0000003a_x0000003aArcWrapper(
           *this);
 }
-inline ::return_position_impl_trait::ArcWrapper::ArcWrapper(ArcWrapper&& other)
+inline ::return_position_impl_trait::ArcWrapper::ArcWrapper(
+    ArcWrapper&& other) noexcept
     : ArcWrapper() {
   *this = ::std::move(other);
 }
 inline ::return_position_impl_trait::ArcWrapper& ::return_position_impl_trait::
-    ArcWrapper::operator=(ArcWrapper&& other) {
+    ArcWrapper::operator=(ArcWrapper&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -137,13 +139,13 @@ __crubit_thunk_Clone_uclone_ufrom_ureturn_uposition_uimpl_utrait_ugolden_x000000
     ::return_position_impl_trait::ArcWrapper const&);
 }
 inline ::return_position_impl_trait::ArcWrapper::ArcWrapper(
-    const ArcWrapper& other) {
+    const ArcWrapper& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_ureturn_uposition_uimpl_utrait_ugolden_x0000003a_x0000003aArcWrapper(
           other, this);
 }
 inline ::return_position_impl_trait::ArcWrapper& ::return_position_impl_trait::
-    ArcWrapper::operator=(const ArcWrapper& other) {
+    ArcWrapper::operator=(const ArcWrapper& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ureturn_uposition_uimpl_utrait_ugolden_x0000003a_x0000003aArcWrapper(

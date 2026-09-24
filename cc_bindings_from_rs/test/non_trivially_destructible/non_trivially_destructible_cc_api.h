@@ -39,16 +39,16 @@ struct
   // Drop::drop
   ~NonTriviallyDestructable();
 
-  NonTriviallyDestructable(NonTriviallyDestructable&&);
+  NonTriviallyDestructable(NonTriviallyDestructable&&) noexcept;
   ::non_trivially_destructible::NonTriviallyDestructable& operator=(
-      NonTriviallyDestructable&&);
+      NonTriviallyDestructable&&) noexcept;
 
   // Clone::clone
-  NonTriviallyDestructable(const NonTriviallyDestructable&);
+  NonTriviallyDestructable(const NonTriviallyDestructable&) noexcept;
 
   // Clone::clone_from
   ::non_trivially_destructible::NonTriviallyDestructable& operator=(
-      const NonTriviallyDestructable&);
+      const NonTriviallyDestructable&) noexcept;
 
   NonTriviallyDestructable(::crubit::UnsafeRelocateTag,
                            NonTriviallyDestructable&& value);
@@ -94,13 +94,13 @@ inline ::non_trivially_destructible::NonTriviallyDestructable::
           *this);
 }
 inline ::non_trivially_destructible::NonTriviallyDestructable::
-    NonTriviallyDestructable(NonTriviallyDestructable&& other)
+    NonTriviallyDestructable(NonTriviallyDestructable&& other) noexcept
     : NonTriviallyDestructable() {
   *this = ::std::move(other);
 }
 inline ::non_trivially_destructible::NonTriviallyDestructable& ::
 non_trivially_destructible::NonTriviallyDestructable::operator=(
-    NonTriviallyDestructable&& other) {
+    NonTriviallyDestructable&& other) noexcept {
   crubit::MemSwap(*this, other);
   return *this;
 }
@@ -117,14 +117,14 @@ __crubit_thunk_Clone_uclone_ufrom_unon_utrivially_udestructible_ugolden_x0000003
     ::non_trivially_destructible::NonTriviallyDestructable const&);
 }
 inline ::non_trivially_destructible::NonTriviallyDestructable::
-    NonTriviallyDestructable(const NonTriviallyDestructable& other) {
+    NonTriviallyDestructable(const NonTriviallyDestructable& other) noexcept {
   __crubit_internal::
       __crubit_thunk_Clone_uclone_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(
           other, this);
 }
 inline ::non_trivially_destructible::NonTriviallyDestructable& ::
 non_trivially_destructible::NonTriviallyDestructable::operator=(
-    const NonTriviallyDestructable& other) {
+    const NonTriviallyDestructable& other) noexcept {
   if (this != &other) {
     __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(

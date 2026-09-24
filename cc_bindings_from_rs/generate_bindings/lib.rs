@@ -1769,9 +1769,9 @@ fn copy_codegen_style_to_snippets<'tcx>(
                 )?;
                 let main_api = CcSnippet::new(quote! {
                     __NEWLINE__ __COMMENT__ "Clone::clone"
-                    #cc_struct_name(const #cc_struct_name&); __NEWLINE__
+                    #cc_struct_name(const #cc_struct_name&) noexcept; __NEWLINE__
                     __NEWLINE__ __COMMENT__ "Clone::clone_from"
-                    #qualified_adt_name& operator=(const #cc_struct_name&); __NEWLINE__ __NEWLINE__
+                    #qualified_adt_name& operator=(const #cc_struct_name&) noexcept; __NEWLINE__ __NEWLINE__
                 });
                 let cc_details = {
                     // `unwrap` calls are okay because `Clone` trait always has these methods.
@@ -1800,10 +1800,10 @@ fn copy_codegen_style_to_snippets<'tcx>(
                     };
                     let tokens = quote! {
                         #cc_thunk_decls
-                        inline #qualified_adt_name::#cc_struct_name(const #cc_struct_name& other) {
+                        inline #qualified_adt_name::#cc_struct_name(const #cc_struct_name& other) noexcept {
                             #ctor_body
                         }
-                        inline #qualified_adt_name& #qualified_adt_name::operator=(const #cc_struct_name& other) {
+                        inline #qualified_adt_name& #qualified_adt_name::operator=(const #cc_struct_name& other) noexcept {
                             if (this != &other) {
                                 #thunk_qualifier::#clone_from_thunk_name(*this, other);
                             }
@@ -1959,18 +1959,18 @@ fn move_codegen_style_to_snippets<'tcx>(
             }
             Some(MoveCodegenStyle::MemSwap) => {
                 let main_api = CcSnippet::new(quote! {
-                    #adt_cc_name(#adt_cc_name&&); __NEWLINE__
-                    #qualified_adt_name& operator=(#adt_cc_name&&); __NEWLINE__
+                    #adt_cc_name(#adt_cc_name&&) noexcept; __NEWLINE__
+                    #qualified_adt_name& operator=(#adt_cc_name&&) noexcept; __NEWLINE__
                 });
                 let mut prereqs = CcPrerequisites::default();
                 prereqs.includes.insert(db.support_header("internal/memswap.h"));
                 prereqs.includes.insert(CcInclude::utility()); // for `std::move`
                 let tokens = quote! {
-                    inline #qualified_adt_name::#adt_cc_name(#adt_cc_name&& other)
+                    inline #qualified_adt_name::#adt_cc_name(#adt_cc_name&& other) noexcept
                             : #adt_cc_name() {
                         *this = ::std::move(other);
                     }
-                    inline #qualified_adt_name& #qualified_adt_name::operator=(#adt_cc_name&& other) {
+                    inline #qualified_adt_name& #qualified_adt_name::operator=(#adt_cc_name&& other) noexcept {
                         crubit::MemSwap(*this, other);
                         return *this;
                     }
