@@ -27,6 +27,40 @@ namespace crubit {
 // move it into a return value without performing a C++ move operation.
 struct UnsafeRelocateTag {};
 
+// Destructively takes the value pointed to by `src`, leaving `*src`
+// uninitialized.
+//
+// This is the counterpart of `rs::internal::Relocate` for callers which need a
+// value rather than a destination to construct into: because the result is a
+// prvalue, C++17 guaranteed copy elision initializes the caller's target
+// directly, so no move constructor is required for relocatable types.
+//
+// Both branches leave `*src` uninitialized, so the caller's obligation does not
+// depend on which one is taken:
+//   * a type with an `(UnsafeRelocateTag, T&&)` constructor is relocated, and
+//     never had a moved-from state to destroy;
+//   * any other type is C++-moved, and the moved-from husk is destroyed here.
+//
+// SAFETY REQUIREMENTS:
+// - `*src` is initialized.
+// - The caller must not use or destroy `*src` afterwards without first
+//   reinitializing it.
+template <typename T>
+T UnsafeTakeValue(T* src) {
+  if constexpr (requires(T x) { T(UnsafeRelocateTag{}, std::move(x)); }) {
+    return T(UnsafeRelocateTag{}, std::move(*src));
+  } else {
+    // The husk must be destroyed *after* the return object has been
+    // initialized, so the destruction is deferred to a scope guard rather than
+    // written as a statement (which would force an extra move).
+    struct Destroyer {
+      T* src;
+      ~Destroyer() { std::destroy_at(src); }
+    } destroyer{src};
+    return std::move(*src);
+  }
+}
+
 // `Slot<T>` provides a slot that can store a relocatable return value.
 // This class is used to return non-`#[repr(C)]` structs from Rust
 // into C++ in a way that is compatible with the ABI of `extern "C"` Rust

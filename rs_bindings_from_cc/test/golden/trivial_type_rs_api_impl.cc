@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -43,7 +44,7 @@ static_assert((void (::ns::Trivial::*)()
 
 extern "C" void __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
     struct ns::Trivial* __return, struct ns::Trivial* trivial) {
-  new (__return) auto(ns::TakesByValue(std::move(*trivial)));
+  new (__return) auto(ns::TakesByValue(crubit::UnsafeTakeValue(trivial)));
 }
 
 static_assert((struct ns::Trivial (*)(struct ns::Trivial)) &

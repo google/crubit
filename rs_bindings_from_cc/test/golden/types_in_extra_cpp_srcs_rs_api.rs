@@ -54,8 +54,9 @@ impl Default for MyStruct {
 }
 
 #[inline(always)]
-pub fn MyStructAdder(mut x: crate::MyStruct) -> ::ffi_11::c_int {
-    unsafe { crate::detail::__rust_thunk___Z13MyStructAdder8MyStruct(&mut x) }
+pub fn MyStructAdder(x: crate::MyStruct) -> ::ffi_11::c_int {
+    let mut x = ::core::mem::MaybeUninit::new(x);
+    unsafe { crate::detail::__rust_thunk___Z13MyStructAdder8MyStruct(x.as_mut_ptr()) }
 }
 
 #[path = "rs_bindings_from_cc/test/golden/types_in_extra_cpp_srcs_extra.rs"]
@@ -69,7 +70,7 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN8MyStructC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z13MyStructAdder8MyStruct(
-            x: &mut crate::MyStruct,
+            x: *mut crate::MyStruct,
         ) -> ::ffi_11::c_int;
     }
 }

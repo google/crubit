@@ -968,7 +968,7 @@ fn test_qualified_identifiers_in_impl_file() -> Result<()> {
             }
             ...
             extern "C" void ...(struct test_namespace_bindings::S* s) {
-                useS(std::move(*s));
+                useS(crubit::UnsafeTakeValue(s));
             }
             ...
         }
@@ -1009,15 +1009,15 @@ fn test_inline_namespace() -> Result<()> {
                 pub use inner::*;
                 ...
                 pub fn processMyStruct(
-                    mut s: crate::test_namespace_bindings::inner::MyStruct)
+                    s: crate::test_namespace_bindings::inner::MyStruct)
                 ...
             }
             ...
             pub fn processMyStructOutsideNamespace(
-                mut s: crate::test_namespace_bindings::inner::MyStruct)
+                s: crate::test_namespace_bindings::inner::MyStruct)
             ...
             pub fn processMyStructSkipInlineNamespaceQualifier(
-                mut s: crate::test_namespace_bindings::inner::MyStruct)
+                s: crate::test_namespace_bindings::inner::MyStruct)
             ...
         }
     );
@@ -1973,7 +1973,7 @@ fn test_std_optional_with_layout_compat_feature() -> Result<()> {
         rs_api,
         quote! {
             pub fn takes_optional_by_value(
-                mut o: ::cc_std::std::trivial_optional::<::ffi_11::c_int>
+                o: ::cc_std::std::trivial_optional::<::ffi_11::c_int>
             )
         }
     );
@@ -2136,7 +2136,7 @@ fn test_existing_rust_type_with_label_hint() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub fn Func(mut x: ::mangled_my_crate::MyType)
+            pub fn Func(x: ::mangled_my_crate::MyType)
         }
     );
     Ok(())
@@ -2159,7 +2159,7 @@ fn test_existing_rust_type_auto_infer_owning_target() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub fn Func(mut x: ::mangled_dependency::MyType)
+            pub fn Func(x: ::mangled_dependency::MyType)
         }
     );
     Ok(())
@@ -2188,7 +2188,7 @@ fn test_existing_rust_type_relative_path_matching_target_name_does_not_infer_hin
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub fn Func(mut x: ::mangled_dependency::dependency::MyType)
+            pub fn Func(x: ::mangled_dependency::dependency::MyType)
         }
     );
     Ok(())
@@ -2214,7 +2214,7 @@ fn test_existing_rust_type_crate_relative_path() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub fn Func(mut x: ::mangled_dependency::MyType)
+            pub fn Func(x: ::mangled_dependency::MyType)
         }
     );
     Ok(())

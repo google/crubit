@@ -24,13 +24,15 @@
 //   Class templates are not yet supported
 
 #[inline(always)]
-pub fn IntFloatCaller(mut i: crate::__CcTemplateInst13AlwaysBoundTsIifE) {
-    unsafe { crate::detail::__rust_thunk___Z14IntFloatCaller13AlwaysBoundTsIifE(&mut i) }
+pub fn IntFloatCaller(i: crate::__CcTemplateInst13AlwaysBoundTsIifE) {
+    let mut i = ::core::mem::MaybeUninit::new(i);
+    unsafe { crate::detail::__rust_thunk___Z14IntFloatCaller13AlwaysBoundTsIifE(i.as_mut_ptr()) }
 }
 
 #[inline(always)]
-pub fn NotBoundCaller(mut i: crate::__CcTemplateInst10NotBoundTsIifE) {
-    unsafe { crate::detail::__rust_thunk___Z14NotBoundCaller10NotBoundTsIifE(&mut i) }
+pub fn NotBoundCaller(i: crate::__CcTemplateInst10NotBoundTsIifE) {
+    let mut i = ::core::mem::MaybeUninit::new(i);
+    unsafe { crate::detail::__rust_thunk___Z14NotBoundCaller10NotBoundTsIifE(i.as_mut_ptr()) }
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -129,10 +131,10 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z14IntFloatCaller13AlwaysBoundTsIifE(
-            i: &mut crate::__CcTemplateInst13AlwaysBoundTsIifE,
+            i: *mut crate::__CcTemplateInst13AlwaysBoundTsIifE,
         );
         pub(crate) unsafe fn __rust_thunk___Z14NotBoundCaller10NotBoundTsIifE(
-            i: &mut crate::__CcTemplateInst10NotBoundTsIifE,
+            i: *mut crate::__CcTemplateInst10NotBoundTsIifE,
         );
         pub(crate) unsafe fn __rust_thunk__23bcdcc7__ZN13AlwaysBoundTsIifEC1Eif(
             __this: *mut ::core::ffi::c_void,

@@ -36,9 +36,9 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
-        let mut x = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut x = args;
                 crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     x,
@@ -62,9 +62,9 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,

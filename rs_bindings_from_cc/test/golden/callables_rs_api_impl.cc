@@ -368,7 +368,7 @@ __rust_thunk___Z18map_abi_compatibleN6rs_std11DynCallableIKF13ABICompatibleS1_EE
             return std::move(out).AssumeInitAndTakeValue();
           })
           .Decode(__f_decoder),
-      std::move(*arg)));
+      crubit::UnsafeTakeValue(arg)));
 }
 
 static_assert(
@@ -418,7 +418,7 @@ __rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibl
             return std::move(out).AssumeInitAndTakeValue();
           })
           .Decode(__f_decoder),
-      std::move(*arg)));
+      crubit::UnsafeTakeValue(arg)));
 }
 
 static_assert((class LayoutCompatible (*)(

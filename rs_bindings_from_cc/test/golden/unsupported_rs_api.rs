@@ -66,9 +66,9 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,

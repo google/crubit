@@ -13,7 +13,7 @@ use crubit_abi_type::{
 };
 use database::code_snippet::{
     self, integer_constant_to_token_stream, ApiSnippets, Bindings, BindingsTokens, CppDetails,
-    CppIncludes, DeprecatedAttr, Feature, GeneratedItem,
+    CppIncludes, DeprecatedAttr, Feature, GeneratedItem, ThunkImpl,
 };
 use database::db::{BindingsGenerator, CodegenFunctions, Interner};
 use database::intern;
@@ -593,6 +593,7 @@ pub fn generate_bindings_tokens(
             crubit_support_path_format,
             crubit_support_versioned_path_format,
             internal_includes,
+            &cc_details,
         ),
         dyn_callable_cpp_decls: callables_rs_api_impl,
         thunks: cc_details,
@@ -926,6 +927,7 @@ fn generate_rs_api_impl_includes(
     crubit_support_path_format: Format<1>,
     crubit_support_versioned_path_format: Format<1>,
     mut internal_includes: BTreeSet<CcInclude>,
+    cc_details: &[ThunkImpl],
 ) -> CppIncludes {
     let ir = db.ir();
 
@@ -971,6 +973,12 @@ fn generate_rs_api_impl_includes(
                         internal_includes.insert(CcInclude::SupportLibHeader(
                             crubit_support_path_format.clone(),
                             intern!(db.interner(), "bridge.h"),
+                        ));
+                        // Shares `generate_invoker_function_pointer` with the
+                        // `_` arm below, which can emit `crubit::Slot`.
+                        internal_includes.insert(CcInclude::SupportLibHeader(
+                            crubit_support_versioned_path_format.clone(),
+                            intern!(db.interner(), "slot.h"),
                         ));
                         internal_includes.insert(CcInclude::user_header(Rc::clone(
                             crubit_any_invocable_support_header,
@@ -1032,6 +1040,16 @@ fn generate_rs_api_impl_includes(
                 intern!(db.interner(), "slot.h"),
             ));
         }
+    }
+
+    // `slot.h` is only needed by thunks that hand a by-value parameter over to
+    // C++ via `crubit::UnsafeTakeValue`, so it is added per-thunk rather than
+    // unconditionally.
+    if cc_details.iter().any(ThunkImpl::needs_slot_header) {
+        internal_includes.insert(CcInclude::SupportLibHeader(
+            crubit_support_versioned_path_format.clone(),
+            intern!(db.interner(), "slot.h"),
+        ));
     }
 
     for crubit_header in ["cxx20_backports.h", "offsetof.h"] {

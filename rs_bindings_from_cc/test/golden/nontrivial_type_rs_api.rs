@@ -66,9 +66,9 @@ impl ::ctor::CtorNew<()> for Nontrivial {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
                 crate::detail::__rust_thunk___ZN10NontrivialC1Ev(
                     __crubit_dest as *mut ::core::ffi::c_void,
                 );
@@ -82,9 +82,9 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
-        let mut field = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut field = args;
                 crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     field,
@@ -108,9 +108,9 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for Nontrivial {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
-        let (mut field, mut unused) = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let (mut field, mut unused) = args;
                 crate::detail::__rust_thunk___ZN10NontrivialC1Eii(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     field,
@@ -126,9 +126,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for Nontrivial {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN10NontrivialC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -152,9 +152,9 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -334,9 +334,9 @@ impl ::ctor::CtorNew<()> for NontrivialInline {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ev(
                     __crubit_dest as *mut ::core::ffi::c_void,
                 );
@@ -350,9 +350,9 @@ impl ::ctor::CtorNew<::ffi_11::c_int> for NontrivialInline {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ffi_11::c_int) -> Self::CtorType {
-        let mut field = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut field = args;
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ei(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     field,
@@ -376,9 +376,9 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_int)> for NontrivialInline {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_int)) -> Self::CtorType {
-        let (mut field, mut unused) = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let (mut field, mut unused) = args;
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Eii(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     field,
@@ -394,9 +394,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NontrivialInline {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -420,9 +420,9 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1EOS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -514,9 +514,9 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
                 crate::detail::__rust_thunk___ZN17NontrivialMembersC1Ev(
                     __crubit_dest as *mut ::core::ffi::c_void,
                 );
@@ -530,9 +530,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NontrivialMembers {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN17NontrivialMembersC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -558,9 +558,9 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN17NontrivialMembersC1EOS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -810,12 +810,13 @@ pub fn TakesByValueInline(
 }
 
 #[inline(always)]
-pub fn TakesByValueUnpin(mut nontrivial: crate::NontrivialUnpin) -> crate::NontrivialUnpin {
+pub fn TakesByValueUnpin(nontrivial: crate::NontrivialUnpin) -> crate::NontrivialUnpin {
+    let mut nontrivial = ::core::mem::MaybeUninit::new(nontrivial);
     unsafe {
         let mut __crubit_return = ::core::mem::MaybeUninit::<crate::NontrivialUnpin>::uninit();
         crate::detail::__rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
             &raw mut __crubit_return as *mut ::core::ffi::c_void,
-            &mut nontrivial,
+            nontrivial.as_mut_ptr(),
         );
         __crubit_return.assume_init()
     }
@@ -966,9 +967,9 @@ impl ::ctor::CtorNew<()> for Nonmovable {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
                 crate::detail::__rust_thunk___ZN10NonmovableC1Ev(
                     __crubit_dest as *mut ::core::ffi::c_void,
                 );
@@ -1230,7 +1231,7 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
             __return: *mut ::core::ffi::c_void,
-            nontrivial: &mut crate::NontrivialUnpin,
+            nontrivial: *mut crate::NontrivialUnpin,
         );
         #[link_name = "_Z16TakesByReferenceR10Nontrivial"]
         pub(crate) unsafe fn __rust_thunk___Z16TakesByReferenceR10Nontrivial<'nontrivial>(

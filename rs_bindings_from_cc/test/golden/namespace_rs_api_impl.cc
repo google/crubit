@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -29,7 +30,7 @@ extern "C" void __rust_thunk___ZN23test_namespace_bindings1SC1Ev(
 
 extern "C" int __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
     struct test_namespace_bindings::S* s) {
-  return test_namespace_bindings::f(std::move(*s));
+  return test_namespace_bindings::f(crubit::UnsafeTakeValue(s));
 }
 
 static_assert((int (*)(struct test_namespace_bindings::S)) &
@@ -47,7 +48,7 @@ static_assert((void (*)()) & ::test_namespace_bindings::inner::i);
 extern "C" void __rust_thunk___Z8identityN23test_namespace_bindings1SE(
     struct test_namespace_bindings::S* __return,
     struct test_namespace_bindings::S* s) {
-  new (__return) auto(identity(std::move(*s)));
+  new (__return) auto(identity(crubit::UnsafeTakeValue(s)));
 }
 
 static_assert(
@@ -69,7 +70,7 @@ static_assert((void (*)()) & ::test_namespace_bindings_reopened::y);
 extern "C" void
 __rust_thunk___ZN32test_namespace_bindings_reopened5inner1zENS0_1SE(
     struct test_namespace_bindings_reopened::inner::S* s) {
-  test_namespace_bindings_reopened::inner::z(std::move(*s));
+  test_namespace_bindings_reopened::inner::z(crubit::UnsafeTakeValue(s));
 }
 
 static_assert((void (*)(struct test_namespace_bindings_reopened::inner::S)) &
@@ -90,7 +91,7 @@ __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespace
 extern "C" void
 __rust_thunk___Z43useStructInInlineNamespaceWithFullQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
     struct test_namespace_bindings_inline::inner::StructInInlineNamespace* s) {
-  useStructInInlineNamespaceWithFullQualifier(std::move(*s));
+  useStructInInlineNamespaceWithFullQualifier(crubit::UnsafeTakeValue(s));
 }
 
 static_assert((void (*)(struct test_namespace_bindings_inline::inner::
@@ -100,7 +101,7 @@ static_assert((void (*)(struct test_namespace_bindings_inline::inner::
 extern "C" void
 __rust_thunk___Z45useStructInInlineNamespaceSkipInlineQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
     struct test_namespace_bindings_inline::inner::StructInInlineNamespace* s) {
-  useStructInInlineNamespaceSkipInlineQualifier(std::move(*s));
+  useStructInInlineNamespaceSkipInlineQualifier(crubit::UnsafeTakeValue(s));
 }
 
 static_assert((void (*)(struct test_namespace_bindings_inline::inner::

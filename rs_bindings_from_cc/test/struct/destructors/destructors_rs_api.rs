@@ -218,9 +218,12 @@ impl
         ),
     ) -> Self {
         let (mut field1, mut field2, mut field3) = args;
+        let mut field1 = ::core::mem::MaybeUninit::new(field1);
+        let mut field2 = ::core::mem::MaybeUninit::new(field2);
+        let mut field3 = ::core::mem::MaybeUninit::new(field3);
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0_(&raw mut tmp as*mut _,&mut field1,&mut field2,&mut field3);
+            crate::detail::__rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0_(&raw mut tmp as*mut _,field1.as_mut_ptr(),field2.as_mut_ptr(),field3.as_mut_ptr());
             tmp.assume_init()
         }
     }
@@ -362,9 +365,9 @@ mod detail {
         ) -> &'__this mut crate::FieldDestructionOrderTester;
         pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0_(
             __this: *mut ::core::ffi::c_void,
-            field1: &mut crate::DestructionOrderRecorder,
-            field2: &mut crate::DestructionOrderRecorder,
-            field3: &mut crate::DestructionOrderRecorder,
+            field1: *mut crate::DestructionOrderRecorder,
+            field2: *mut crate::DestructionOrderRecorder,
+            field3: *mut crate::DestructionOrderRecorder,
         );
         pub(crate) unsafe fn __rust_thunk___ZN27FieldDestructionOrderTester15DestructFromCppEiii(
             field1: ::ffi_11::c_int,

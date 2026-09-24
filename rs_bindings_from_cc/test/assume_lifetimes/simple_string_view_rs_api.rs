@@ -60,12 +60,13 @@ impl<'a> Default for SV<'a> {
 
 /// TODO(zarko): We should mark 'unknowns (or equivalent) as unsafe.
 #[inline(always)]
-pub fn sv_ident<'s>(mut s: crate::SV<'s>) -> crate::SV<'s> {
+pub fn sv_ident<'s>(s: crate::SV<'s>) -> crate::SV<'s> {
+    let mut s = ::core::mem::MaybeUninit::new(s);
     unsafe {
         let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SV<'s>>::uninit();
         crate::detail::__rust_thunk___Z8sv_ident2SV(
             &raw mut __crubit_return as *mut ::core::ffi::c_void,
-            &mut s,
+            s.as_mut_ptr(),
         );
         __crubit_return.assume_init()
     }
@@ -76,12 +77,13 @@ pub fn sv_ident<'s>(mut s: crate::SV<'s>) -> crate::SV<'s> {
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `s`: type SV has 1 lifetime parameter, but 0 were provided; callers must ensure that arguments have the appropriate lifetime
 #[inline(always)]
-pub unsafe fn sv_ident_unknown(mut s: crate::SV<'static>) -> crate::SV<'static> {
+pub unsafe fn sv_ident_unknown(s: crate::SV<'static>) -> crate::SV<'static> {
+    let mut s = ::core::mem::MaybeUninit::new(s);
     unsafe {
         let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
         crate::detail::__rust_thunk___Z16sv_ident_unknown2SV(
             &raw mut __crubit_return as *mut ::core::ffi::c_void,
-            &mut s,
+            s.as_mut_ptr(),
         );
         __crubit_return.assume_init()
     }
@@ -92,12 +94,13 @@ pub unsafe fn sv_ident_unknown(mut s: crate::SV<'static>) -> crate::SV<'static> 
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `s`: type SV has 1 lifetime parameter, but 0 were provided; callers must ensure that arguments have the appropriate lifetime
 #[inline(always)]
-pub unsafe fn sv_ident_unknown_elided(mut s: crate::SV<'static>) -> crate::SV<'static> {
+pub unsafe fn sv_ident_unknown_elided(s: crate::SV<'static>) -> crate::SV<'static> {
+    let mut s = ::core::mem::MaybeUninit::new(s);
     unsafe {
         let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SV<'static>>::uninit();
         crate::detail::__rust_thunk___Z23sv_ident_unknown_elided2SV(
             &raw mut __crubit_return as *mut ::core::ffi::c_void,
-            &mut s,
+            s.as_mut_ptr(),
         );
         __crubit_return.assume_init()
     }
@@ -117,12 +120,13 @@ pub fn sv_make_raw<'lt>() -> crate::SV<'lt> {
 pub type SVA<'__alias0> = crate::SV<'__alias0>;
 
 #[inline(always)]
-pub fn sva_lb<'__rv>(mut s: crate::SVA<'__rv>) -> crate::SVA<'__rv> {
+pub fn sva_lb<'__rv>(s: crate::SVA<'__rv>) -> crate::SVA<'__rv> {
+    let mut s = ::core::mem::MaybeUninit::new(s);
     unsafe {
         let mut __crubit_return = ::core::mem::MaybeUninit::<crate::SVA<'__rv>>::uninit();
         crate::detail::__rust_thunk___Z6sva_lb2SV(
             &raw mut __crubit_return as *mut ::core::ffi::c_void,
-            &mut s,
+            s.as_mut_ptr(),
         );
         __crubit_return.assume_init()
     }
@@ -139,22 +143,22 @@ mod detail {
         ) -> bool;
         pub(crate) unsafe fn __rust_thunk___Z8sv_ident2SV<'s>(
             __return: *mut ::core::ffi::c_void,
-            s: &mut crate::SV<'s>,
+            s: *mut crate::SV<'s>,
         );
         pub(crate) unsafe fn __rust_thunk___Z16sv_ident_unknown2SV(
             __return: *mut ::core::ffi::c_void,
-            s: &mut crate::SV<'static>,
+            s: *mut crate::SV<'static>,
         );
         pub(crate) unsafe fn __rust_thunk___Z23sv_ident_unknown_elided2SV(
             __return: *mut ::core::ffi::c_void,
-            s: &mut crate::SV<'static>,
+            s: *mut crate::SV<'static>,
         );
         pub(crate) unsafe fn __rust_thunk___Z11sv_make_rawv<'lt>(
             __return: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___Z6sva_lb2SV<'__rv>(
             __return: *mut ::core::ffi::c_void,
-            s: &mut crate::SVA<'__rv>,
+            s: *mut crate::SVA<'__rv>,
         );
     }
 }

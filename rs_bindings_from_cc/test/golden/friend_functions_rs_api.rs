@@ -42,8 +42,9 @@ impl Default for SomeClass {
 
 /// Friend functions that are visible via ADL.
 #[inline(always)]
-pub fn visible_val(mut __param_0: crate::SomeClass) {
-    unsafe { crate::detail::__rust_thunk___Z11visible_val9SomeClass(&mut __param_0) }
+pub fn visible_val(__param_0: crate::SomeClass) {
+    let mut __param_0 = ::core::mem::MaybeUninit::new(__param_0);
+    unsafe { crate::detail::__rust_thunk___Z11visible_val9SomeClass(__param_0.as_mut_ptr()) }
 }
 
 #[inline(always)]
@@ -74,7 +75,7 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z11visible_val9SomeClass(
-            __param_0: &mut crate::SomeClass,
+            __param_0: *mut crate::SomeClass,
         );
         #[link_name = "_Z11visible_refR9SomeClass"]
         pub(crate) unsafe fn __rust_thunk___Z11visible_refR9SomeClass<'__param_0>(

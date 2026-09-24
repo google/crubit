@@ -33,9 +33,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for TypeAliasCtor {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN13TypeAliasCtorC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -68,10 +68,11 @@ impl<'a> ::ctor::CtorNew<::cc_std::std::string_view<'a>> for TypeAliasCtor {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::cc_std::std::string_view<'a>) -> Self::CtorType {
-        let mut a = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN13TypeAliasCtorC1ENSt3__u17basic_string_viewIcNS0_11char_traitsIcEEEE(__crubit_dest as*mut::core::ffi::c_void,&mut a);
+                let mut a = args;
+                let mut a = ::core::mem::MaybeUninit::new(a);
+                crate::detail::__rust_thunk___ZN13TypeAliasCtorC1ENSt3__u17basic_string_viewIcNS0_11char_traitsIcEEEE(__crubit_dest as*mut::core::ffi::c_void,a.as_mut_ptr());
             })
         }
     }
@@ -208,7 +209,7 @@ mod detail {
             'a,
         >(
             __this: *mut ::core::ffi::c_void,
-            a: &mut ::cc_std::std::string_view<'a>,
+            a: *mut ::cc_std::std::string_view<'a>,
         );
         #[link_name = "_ZN13TypeAliasCtorD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN13TypeAliasCtorD1Ev<'__this>(

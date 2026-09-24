@@ -1422,7 +1422,7 @@ fn generate_func_body<'a>(
     param_types: &[RsTypeKind<'a>],
     param_value_adjustments: &ParamValueAdjustments,
     thunk_ident: Ident,
-    thunk_prepare: TokenStream,
+    mut thunk_prepare: TokenStream,
     thunk_args: Vec<TokenStream>,
 ) -> Result<TokenStream> {
     let ParamValueAdjustments { clone_prefixes, clone_suffixes } = param_value_adjustments;
@@ -1560,9 +1560,22 @@ fn generate_func_body<'a>(
                     }
                 }
                 PassingConvention::Ctor => {
+                    // The thunk call is deferred into the closure, so the
+                    // parameter preparation has to be deferred with it.
+                    //
+                    // `thunk_prepare` moves each by-value parameter into a
+                    // `MaybeUninit`, whose drop is a no-op because C++ is
+                    // expected to take the value. Running it eagerly would make
+                    // the closure capture the `MaybeUninit` rather than the
+                    // value itself, so dropping the returned `Ctor` without ever
+                    // running it would leak the parameter instead of destroying
+                    // it. Preparing inside the closure keeps the value owned
+                    // (and therefore dropped) until the thunk actually runs.
+                    let deferred_thunk_prepare = std::mem::take(&mut thunk_prepare);
                     quote! {
                         ::ctor::FnCtor::new(
                             move |__crubit_dest: *mut #return_type_or_self| {
+                                #deferred_thunk_prepare
                                 #crate_root_path::detail::#thunk_ident(
                                     __crubit_dest as *mut ::core::ffi::c_void
                                     #( , #thunk_args )*
@@ -2966,8 +2979,28 @@ fn function_signature<'a>(
                 thunk_args.push(quote! {#ident});
             }
             PassingConvention::LayoutCompatible => {
-                api_params.push(quote! {mut #ident: #quoted_type_or_self});
-                thunk_args.push(quote! {&mut #ident});
+                // Hand the value over to C++ without dropping it here: the thunk
+                // relocates or moves-and-destroys it via `crubit::UnsafeTakeValue`,
+                // so `*#ident` is dead once the call returns.
+                //
+                // If this parameter is going to be rewritten into a by-value
+                // `self` receiver below, then `#ident` will not be in scope in
+                // the generated body, so read the value out of `self` instead.
+                let value_expr = if i == 0
+                    && impl_kind.format_first_param_as_self()
+                    && matches!(
+                        impl_kind,
+                        ImplKind::Struct { .. } | ImplKind::Trait { impl_for: ImplFor::T, .. }
+                    ) {
+                    quote! {self}
+                } else {
+                    quote! {#ident}
+                };
+                api_params.push(quote! {#ident: #quoted_type_or_self});
+                thunk_prepare.extend(quote! {
+                    let mut #ident = ::core::mem::MaybeUninit::new(#value_expr);
+                });
+                thunk_args.push(quote! {#ident.as_mut_ptr()});
             }
             PassingConvention::ComposablyBridged => {
                 let crubit_abi_type = db
@@ -3235,9 +3268,48 @@ fn function_signature<'a>(
                         };
                         api_params[0] = rs_snippet.tokens;
                         features |= rs_snippet.features;
+                    } else if first_api_param.passing_convention()
+                        == PassingConvention::LayoutCompatible
+                    {
+                        // `thunk_prepare` already moved `self` into a
+                        // `MaybeUninit` and `thunk_args[0]` already passes a
+                        // pointer to it, handing the value over to C++, so
+                        // `thunk_args[0]` needs no fixup here.
+                        api_params[0] = quote! { self };
+                        // Unlike the sibling branches, this one needs no
+                        // derived-class upcast, because it cannot be reached
+                        // with a derived record:
+                        //  * `derived_record` is only `Some` for functions from
+                        //    `collect_unqualified_member_functions`, which keeps
+                        //    only `UnqualifiedIdentifier::Identifier` children.
+                        //  * An identifier-named function only gets
+                        //    `format_first_param_as_self` from
+                        //    `api_func_shape_for_identifier`, which requires
+                        //    `is_instance_method() && first_param.is_ref_to(record)`.
+                        //  * `is_ref_to` only matches `Reference` /
+                        //    `RvalueReference`, and both are
+                        //    `is_c_abi_compatible_by_value()`, so such a
+                        //    receiver is handled by the first branch above and
+                        //    never reaches `LayoutCompatible`.
+                        // A by-value self receiver therefore only arises from
+                        // operators (`UnqualifiedIdentifier::Operator`), which
+                        // are never inherited. If that ever changes, this needs
+                        // the same `oops::Upcast` treatment as the branches
+                        // above.
+                        debug_assert!(
+                            derived_record.is_none(),
+                            "a by-value self receiver cannot be inherited; \
+                             see the comment above: {func:?}"
+                        );
                     } else {
                         api_params[0] = quote! { mut self };
                         if derived_record.is_some() {
+                            // NOTE: the round-trip through a raw pointer is
+                            // load-bearing, not redundant. `oops::Upcast` is
+                            // only implemented for `*const T`, `*mut T`, and
+                            // `&T` -- there is no `&mut T` impl -- so `&mut
+                            // self` has to be laundered through `*mut _` to
+                            // find an applicable impl, then reborrowed.
                             thunk_args[0] = quote! {
                                 // SAFETY: Calling `upcast` on &mut self is safe, as self is a valid reference to `Derived`, and dereferenced to
                                 // a `Derived` object.
@@ -3281,6 +3353,9 @@ fn function_signature<'a>(
     } else if matches!(func.cc_name(), ir::UnqualifiedIdentifier::ConversionOperator)
         && !thunk_args.is_empty()
         && matches!(param_types.first(), Some(RsTypeKind::Record { .. }))
+        // `LayoutCompatible` by-value params are already handed over to C++ as a pointer into
+        // a `MaybeUninit`; see the parameter loop above.
+        && param_types[0].passing_convention() != PassingConvention::LayoutCompatible
     {
         thunk_args[0] = quote! { &mut __this };
     }

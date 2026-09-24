@@ -151,13 +151,15 @@ pub unsafe fn DerefPointer(p: *mut ::ffi_11::c_int) -> ::ffi_11::c_int {
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `p`: unsafe struct or union
 #[inline(always)]
-pub unsafe fn DerefPublicPointer(mut p: crate::PublicPointer) -> ::ffi_11::c_int {
-    unsafe { crate::detail::__rust_thunk___Z18DerefPublicPointer13PublicPointer(&mut p) }
+pub unsafe fn DerefPublicPointer(p: crate::PublicPointer) -> ::ffi_11::c_int {
+    let mut p = ::core::mem::MaybeUninit::new(p);
+    unsafe { crate::detail::__rust_thunk___Z18DerefPublicPointer13PublicPointer(p.as_mut_ptr()) }
 }
 
 #[inline(always)]
-pub fn DerefPrivatePointer(mut p: crate::PrivatePointer) -> ::ffi_11::c_int {
-    unsafe { crate::detail::__rust_thunk___Z19DerefPrivatePointer14PrivatePointer(&mut p) }
+pub fn DerefPrivatePointer(p: crate::PrivatePointer) -> ::ffi_11::c_int {
+    let mut p = ::core::mem::MaybeUninit::new(p);
+    unsafe { crate::detail::__rust_thunk___Z19DerefPrivatePointer14PrivatePointer(p.as_mut_ptr()) }
 }
 
 /// # Safety
@@ -165,12 +167,11 @@ pub fn DerefPrivatePointer(mut p: crate::PrivatePointer) -> ::ffi_11::c_int {
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `p`: unsafe struct or union
 #[inline(always)]
-pub unsafe fn DerefTransitivePublicPointer(
-    mut p: crate::TransitivePublicPointer,
-) -> ::ffi_11::c_int {
+pub unsafe fn DerefTransitivePublicPointer(p: crate::TransitivePublicPointer) -> ::ffi_11::c_int {
+    let mut p = ::core::mem::MaybeUninit::new(p);
     unsafe {
         crate::detail::__rust_thunk___Z28DerefTransitivePublicPointer23TransitivePublicPointer(
-            &mut p,
+            p.as_mut_ptr(),
         )
     }
 }
@@ -180,8 +181,9 @@ pub unsafe fn DerefTransitivePublicPointer(
 /// The caller must ensure that the following unsafe arguments are not misused by the function:
 /// * `u`: unsafe struct or union
 #[inline(always)]
-pub unsafe fn ReadUnion(mut u: crate::Union) -> ::ffi_11::c_int {
-    unsafe { crate::detail::__rust_thunk___Z9ReadUnion5Union(&mut u) }
+pub unsafe fn ReadUnion(u: crate::Union) -> ::ffi_11::c_int {
+    let mut u = ::core::mem::MaybeUninit::new(u);
+    unsafe { crate::detail::__rust_thunk___Z9ReadUnion5Union(u.as_mut_ptr()) }
 }
 
 mod detail {
@@ -201,16 +203,16 @@ mod detail {
             p: *mut ::ffi_11::c_int,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z18DerefPublicPointer13PublicPointer(
-            p: &mut crate::PublicPointer,
+            p: *mut crate::PublicPointer,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z19DerefPrivatePointer14PrivatePointer(
-            p: &mut crate::PrivatePointer,
+            p: *mut crate::PrivatePointer,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z28DerefTransitivePublicPointer23TransitivePublicPointer(
-            p: &mut crate::TransitivePublicPointer,
+            p: *mut crate::TransitivePublicPointer,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z9ReadUnion5Union(
-            u: &mut crate::Union,
+            u: *mut crate::Union,
         ) -> ::ffi_11::c_int;
     }
 }

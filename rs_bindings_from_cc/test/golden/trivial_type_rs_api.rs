@@ -101,12 +101,13 @@ pub mod ns {
     }
 
     #[inline(always)]
-    pub fn TakesByValue(mut trivial: crate::ns::Trivial) -> crate::ns::Trivial {
+    pub fn TakesByValue(trivial: crate::ns::Trivial) -> crate::ns::Trivial {
+        let mut trivial = ::core::mem::MaybeUninit::new(trivial);
         unsafe {
             let mut __crubit_return = ::core::mem::MaybeUninit::<crate::ns::Trivial>::uninit();
             crate::detail::__rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
                 &raw mut __crubit_return as *mut ::core::ffi::c_void,
-                &mut trivial,
+                trivial.as_mut_ptr(),
             );
             __crubit_return.assume_init()
         }
@@ -180,7 +181,7 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
             __return: *mut ::core::ffi::c_void,
-            trivial: &mut crate::ns::Trivial,
+            trivial: *mut crate::ns::Trivial,
         );
         #[link_name = "_ZN2ns16TakesByReferenceERNS_7TrivialE"]
         pub(crate) unsafe fn __rust_thunk___ZN2ns16TakesByReferenceERNS_7TrivialE<'trivial>(

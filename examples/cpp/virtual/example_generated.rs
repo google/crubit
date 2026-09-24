@@ -47,9 +47,9 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN11RustDerivedC1EOS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -92,12 +92,13 @@ impl ::ctor::CtorNew<::definition::RustDerived> for RustDerived {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::definition::RustDerived) -> Self::CtorType {
-        let mut rust = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut rust = args;
+                let mut rust = ::core::mem::MaybeUninit::new(rust);
                 crate::detail::__rust_thunk___ZN11RustDerivedC1EN10definition11RustDerivedE(
                     __crubit_dest as *mut ::core::ffi::c_void,
-                    &mut rust,
+                    rust.as_mut_ptr(),
                 );
             })
         }
@@ -176,7 +177,7 @@ mod detail {
         ) -> ::core::pin::Pin<&'__this mut crate::RustDerived>;
         pub(crate) unsafe fn __rust_thunk___ZN11RustDerivedC1EN10definition11RustDerivedE(
             __this: *mut ::core::ffi::c_void,
-            rust: &mut ::definition::RustDerived,
+            rust: *mut ::definition::RustDerived,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK11RustDerived7Method1Ev<'__this>(
             __this: &'__this crate::RustDerived,

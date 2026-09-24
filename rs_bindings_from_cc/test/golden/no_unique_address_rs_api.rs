@@ -161,9 +161,9 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
                 crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
                     __crubit_dest as *mut ::core::ffi::c_void,
                 );
@@ -177,9 +177,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for FieldInTailPadding_InnerS
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -251,9 +251,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for FieldInTailPadding {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -279,9 +279,9 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1EOS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -335,9 +335,9 @@ impl ::ctor::CtorNew<(::ffi_11::c_int, ::ffi_11::c_char, ::ffi_11::c_char)> for 
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: (::ffi_11::c_int, ::ffi_11::c_char, ::ffi_11::c_char)) -> Self::CtorType {
-        let (mut inner_int, mut inner_char, mut outer_char) = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let (mut inner_int, mut inner_char, mut outer_char) = args;
                 crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1Eicc(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     inner_int,

@@ -45,8 +45,11 @@ pub mod test_namespace_bindings {
 
     /// Free comment inside namespace
     #[inline(always)]
-    pub fn f(mut s: crate::test_namespace_bindings::S) -> ::ffi_11::c_int {
-        unsafe { crate::detail::__rust_thunk___ZN23test_namespace_bindings1fENS_1SE(&mut s) }
+    pub fn f(s: crate::test_namespace_bindings::S) -> ::ffi_11::c_int {
+        let mut s = ::core::mem::MaybeUninit::new(s);
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings1fENS_1SE(s.as_mut_ptr())
+        }
     }
 
     #[inline(always)]
@@ -67,13 +70,14 @@ pub mod test_namespace_bindings {
 // namespace test_namespace_bindings
 
 #[inline(always)]
-pub fn identity(mut s: crate::test_namespace_bindings::S) -> crate::test_namespace_bindings::S {
+pub fn identity(s: crate::test_namespace_bindings::S) -> crate::test_namespace_bindings::S {
+    let mut s = ::core::mem::MaybeUninit::new(s);
     unsafe {
         let mut __crubit_return =
             ::core::mem::MaybeUninit::<crate::test_namespace_bindings::S>::uninit();
         crate::detail::__rust_thunk___Z8identityN23test_namespace_bindings1SE(
             &raw mut __crubit_return as *mut ::core::ffi::c_void,
-            &mut s,
+            s.as_mut_ptr(),
         );
         __crubit_return.assume_init()
     }
@@ -124,10 +128,11 @@ pub mod test_namespace_bindings_reopened {
         }
 
         #[inline(always)]
-        pub fn z(mut s: crate::test_namespace_bindings_reopened::inner::S) {
+        pub fn z(s: crate::test_namespace_bindings_reopened::inner::S) {
+            let mut s = ::core::mem::MaybeUninit::new(s);
             unsafe {
                 crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1zENS0_1SE(
-                    &mut s,
+                    s.as_mut_ptr(),
                 )
             }
         }
@@ -178,19 +183,21 @@ pub mod test_namespace_bindings_inline {
 
 #[inline(always)]
 pub fn useStructInInlineNamespaceWithFullQualifier(
-    mut s: crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+    s: crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
 ) {
+    let mut s = ::core::mem::MaybeUninit::new(s);
     unsafe {
-        crate::detail::__rust_thunk___Z43useStructInInlineNamespaceWithFullQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(&mut s)
+        crate::detail::__rust_thunk___Z43useStructInInlineNamespaceWithFullQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(s.as_mut_ptr())
     }
 }
 
 #[inline(always)]
 pub fn useStructInInlineNamespaceSkipInlineQualifier(
-    mut s: crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+    s: crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
 ) {
+    let mut s = ::core::mem::MaybeUninit::new(s);
     unsafe {
-        crate::detail::__rust_thunk___Z45useStructInInlineNamespaceSkipInlineQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(&mut s)
+        crate::detail::__rust_thunk___Z45useStructInInlineNamespaceSkipInlineQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(s.as_mut_ptr())
     }
 }
 
@@ -213,14 +220,14 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
-            s: &mut crate::test_namespace_bindings::S,
+            s: *mut crate::test_namespace_bindings::S,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings15inline_functionEv();
         #[link_name = "_ZN23test_namespace_bindings5inner1iEv"]
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings5inner1iEv();
         pub(crate) unsafe fn __rust_thunk___Z8identityN23test_namespace_bindings1SE(
             __return: *mut ::core::ffi::c_void,
-            s: &mut crate::test_namespace_bindings::S,
+            s: *mut crate::test_namespace_bindings::S,
         );
         #[link_name = "_ZN32test_namespace_bindings_reopened1xEv"]
         pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened1xEv();
@@ -230,16 +237,16 @@ mod detail {
         #[link_name = "_ZN32test_namespace_bindings_reopened1yEv"]
         pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened1yEv();
         pub(crate) unsafe fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1zENS0_1SE(
-            s: &mut crate::test_namespace_bindings_reopened::inner::S,
+            s: *mut crate::test_namespace_bindings_reopened::inner::S,
         );
         pub(crate) unsafe fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___Z43useStructInInlineNamespaceWithFullQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
-            s: &mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            s: *mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
         );
         pub(crate) unsafe fn __rust_thunk___Z45useStructInInlineNamespaceSkipInlineQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
-            s: &mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            s: *mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
         );
         pub(crate) unsafe fn __rust_thunk___ZN4impl3fooEv();
     }

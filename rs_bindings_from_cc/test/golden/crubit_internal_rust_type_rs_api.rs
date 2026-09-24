@@ -85,8 +85,9 @@ impl Default for ExistingRustTypeFieldTypes {
 //   Class templates are not yet supported
 
 #[inline(always)]
-pub fn AcceptPtrInt(mut ptr: crate::RustPtr<::ffi_11::c_int>) {
-    unsafe { crate::detail::__rust_thunk___Z12AcceptPtrInt3PtrIiE(&mut ptr) }
+pub fn AcceptPtrInt(ptr: crate::RustPtr<::ffi_11::c_int>) {
+    let mut ptr = ::core::mem::MaybeUninit::new(ptr);
+    unsafe { crate::detail::__rust_thunk___Z12AcceptPtrInt3PtrIiE(ptr.as_mut_ptr()) }
 }
 
 // error: class `CppTypeWithTemplateArgs` could not be bound
@@ -94,10 +95,11 @@ pub fn AcceptPtrInt(mut ptr: crate::RustPtr<::ffi_11::c_int>) {
 
 #[inline(always)]
 pub fn AcceptCppTypeWithTemplateArgs(
-    mut cpp_type: crate::RustTypeWithReorderedGenerics<::ffi_11::c_int, f32, true>,
+    cpp_type: crate::RustTypeWithReorderedGenerics<::ffi_11::c_int, f32, true>,
 ) {
+    let mut cpp_type = ::core::mem::MaybeUninit::new(cpp_type);
     unsafe {
-        crate::detail::__rust_thunk___Z29AcceptCppTypeWithTemplateArgs23CppTypeWithTemplateArgsIifLb1EE(&mut cpp_type)
+        crate::detail::__rust_thunk___Z29AcceptCppTypeWithTemplateArgs23CppTypeWithTemplateArgsIifLb1EE(cpp_type.as_mut_ptr())
     }
 }
 
@@ -105,16 +107,18 @@ pub fn AcceptCppTypeWithTemplateArgs(
 //   Class templates are not yet supported
 
 #[inline(always)]
-pub fn AcceptReordered(mut x: crate::RustTypeReordered<f32, ::ffi_11::c_int>) {
-    unsafe { crate::detail::__rust_thunk___Z15AcceptReordered11ConvertPtrsIfiE(&mut x) }
+pub fn AcceptReordered(x: crate::RustTypeReordered<f32, ::ffi_11::c_int>) {
+    let mut x = ::core::mem::MaybeUninit::new(x);
+    unsafe { crate::detail::__rust_thunk___Z15AcceptReordered11ConvertPtrsIfiE(x.as_mut_ptr()) }
 }
 
 // error: class `WithDefault` could not be bound
 //   Class templates are not yet supported
 
 #[inline(always)]
-pub fn AcceptWithDefault(mut x: crate::RustTypeWithDefault<f32, ::ffi_11::c_int>) {
-    unsafe { crate::detail::__rust_thunk___Z17AcceptWithDefault11WithDefaultIfiE(&mut x) }
+pub fn AcceptWithDefault(x: crate::RustTypeWithDefault<f32, ::ffi_11::c_int>) {
+    let mut x = ::core::mem::MaybeUninit::new(x);
+    unsafe { crate::detail::__rust_thunk___Z17AcceptWithDefault11WithDefaultIfiE(x.as_mut_ptr()) }
 }
 
 // error: class `MyContainer` could not be bound
@@ -122,11 +126,16 @@ pub fn AcceptWithDefault(mut x: crate::RustTypeWithDefault<f32, ::ffi_11::c_int>
 
 #[inline(always)]
 pub fn AcceptSpecialized(
-    mut a: crate::MyRustContainer<::ffi_11::c_int>,
-    mut b: crate::MyRustContainerVoid,
+    a: crate::MyRustContainer<::ffi_11::c_int>,
+    b: crate::MyRustContainerVoid,
 ) {
+    let mut a = ::core::mem::MaybeUninit::new(a);
+    let mut b = ::core::mem::MaybeUninit::new(b);
     unsafe {
-        crate::detail::__rust_thunk___Z17AcceptSpecialized11MyContainerIiES_IvE(&mut a, &mut b)
+        crate::detail::__rust_thunk___Z17AcceptSpecialized11MyContainerIiES_IvE(
+            a.as_mut_ptr(),
+            b.as_mut_ptr(),
+        )
     }
 }
 
@@ -151,9 +160,9 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> fo
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN14NonRustMovableC1EOS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -221,20 +230,20 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___Z12AcceptPtrInt3PtrIiE(
-            ptr: &mut crate::RustPtr<::ffi_11::c_int>,
+            ptr: *mut crate::RustPtr<::ffi_11::c_int>,
         );
         pub(crate) unsafe fn __rust_thunk___Z29AcceptCppTypeWithTemplateArgs23CppTypeWithTemplateArgsIifLb1EE(
-            cpp_type: &mut crate::RustTypeWithReorderedGenerics<::ffi_11::c_int, f32, true>,
+            cpp_type: *mut crate::RustTypeWithReorderedGenerics<::ffi_11::c_int, f32, true>,
         );
         pub(crate) unsafe fn __rust_thunk___Z15AcceptReordered11ConvertPtrsIfiE(
-            x: &mut crate::RustTypeReordered<f32, ::ffi_11::c_int>,
+            x: *mut crate::RustTypeReordered<f32, ::ffi_11::c_int>,
         );
         pub(crate) unsafe fn __rust_thunk___Z17AcceptWithDefault11WithDefaultIfiE(
-            x: &mut crate::RustTypeWithDefault<f32, ::ffi_11::c_int>,
+            x: *mut crate::RustTypeWithDefault<f32, ::ffi_11::c_int>,
         );
         pub(crate) unsafe fn __rust_thunk___Z17AcceptSpecialized11MyContainerIiES_IvE(
-            a: &mut crate::MyRustContainer<::ffi_11::c_int>,
-            b: &mut crate::MyRustContainerVoid,
+            a: *mut crate::MyRustContainer<::ffi_11::c_int>,
+            b: *mut crate::MyRustContainerVoid,
         );
         #[link_name = "_ZN14NonRustMovableC1EOS_"]
         pub(crate) unsafe fn __rust_thunk___ZN14NonRustMovableC1EOS_<'__unelided>(

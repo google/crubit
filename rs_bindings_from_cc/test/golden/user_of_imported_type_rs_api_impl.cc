@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -20,7 +21,7 @@
 
 extern "C" void __rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
     struct ns::Trivial* __return, struct ns::Trivial* t) {
-  new (__return) auto(UsesImportedType(std::move(*t)));
+  new (__return) auto(UsesImportedType(crubit::UnsafeTakeValue(t)));
 }
 
 static_assert((struct ns::Trivial (*)(struct ns::Trivial)) &

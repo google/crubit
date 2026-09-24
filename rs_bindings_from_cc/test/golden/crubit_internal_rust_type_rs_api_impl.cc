@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -36,7 +37,7 @@ extern "C" void __rust_thunk___ZN26ExistingRustTypeFieldTypesC1Ev(
 }
 
 extern "C" void __rust_thunk___Z12AcceptPtrInt3PtrIiE(Ptr<int>* ptr) {
-  AcceptPtrInt(std::move(*ptr));
+  AcceptPtrInt(crubit::UnsafeTakeValue(ptr));
 }
 
 static_assert((void (*)(Ptr<int>)) & ::AcceptPtrInt);
@@ -44,7 +45,7 @@ static_assert((void (*)(Ptr<int>)) & ::AcceptPtrInt);
 extern "C" void
 __rust_thunk___Z29AcceptCppTypeWithTemplateArgs23CppTypeWithTemplateArgsIifLb1EE(
     CppTypeWithTemplateArgs<int, float, true>* cpp_type) {
-  AcceptCppTypeWithTemplateArgs(std::move(*cpp_type));
+  AcceptCppTypeWithTemplateArgs(crubit::UnsafeTakeValue(cpp_type));
 }
 
 static_assert((void (*)(CppTypeWithTemplateArgs<int, float, true>)) &
@@ -52,21 +53,21 @@ static_assert((void (*)(CppTypeWithTemplateArgs<int, float, true>)) &
 
 extern "C" void __rust_thunk___Z15AcceptReordered11ConvertPtrsIfiE(
     ConvertPtrs<float, int>* x) {
-  AcceptReordered(std::move(*x));
+  AcceptReordered(crubit::UnsafeTakeValue(x));
 }
 
 static_assert((void (*)(ConvertPtrs<float, int>)) & ::AcceptReordered);
 
 extern "C" void __rust_thunk___Z17AcceptWithDefault11WithDefaultIfiE(
     WithDefault<float>* x) {
-  AcceptWithDefault(std::move(*x));
+  AcceptWithDefault(crubit::UnsafeTakeValue(x));
 }
 
 static_assert((void (*)(WithDefault<float>)) & ::AcceptWithDefault);
 
 extern "C" void __rust_thunk___Z17AcceptSpecialized11MyContainerIiES_IvE(
     MyContainer<int>* a, MyContainer<void>* b) {
-  AcceptSpecialized(std::move(*a), std::move(*b));
+  AcceptSpecialized(crubit::UnsafeTakeValue(a), crubit::UnsafeTakeValue(b));
 }
 
 static_assert((void (*)(MyContainer<int>, MyContainer<void>)) &

@@ -172,9 +172,9 @@ impl ::ctor::CtorNew<()> for DropClassWithLifetimeboundMemberFunction {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
                 crate::detail::__rust_thunk___ZN40DropClassWithLifetimeboundMemberFunctionC1Ev(
                     __crubit_dest as *mut ::core::ffi::c_void,
                 );
@@ -188,9 +188,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropClassWithLifetimeboun
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN40DropClassWithLifetimeboundMemberFunctionC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -276,9 +276,9 @@ impl<'__implicit> ::ctor::CtorNew<()> for DropClassWithLifetimeboundRefMemberFun
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
                 crate::detail::__rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionC1Ev(
                     __crubit_dest as *mut ::core::ffi::c_void,
                 );
@@ -298,9 +298,9 @@ impl<'__implicit, '__param_0, '__param_0_0>
     fn ctor_new(
         args: &'__param_0_0 crate::DropClassWithLifetimeboundRefMemberFunction<'__param_0>,
     ) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN43DropClassWithLifetimeboundRefMemberFunctionC1ERKS_(__crubit_dest as*mut::core::ffi::c_void,__param_0);
             })
         }
@@ -385,11 +385,12 @@ impl From<crate::PlainStruct> for StructWithLifetimeboundCtor {
     #[inline(always)]
     fn from(args: crate::PlainStruct) -> Self {
         let mut s = args;
+        let mut s = ::core::mem::MaybeUninit::new(s);
         let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN27StructWithLifetimeboundCtorC1E11PlainStruct(
                 &raw mut tmp as *mut _,
-                &mut s,
+                s.as_mut_ptr(),
             );
             tmp.assume_init()
         }
@@ -474,9 +475,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithLifetimebou
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN31DropStructWithLifetimeboundCtorC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -511,12 +512,13 @@ impl ::ctor::CtorNew<crate::PlainStruct> for DropStructWithLifetimeboundCtor {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: crate::PlainStruct) -> Self::CtorType {
-        let mut s = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut s = args;
+                let mut s = ::core::mem::MaybeUninit::new(s);
                 crate::detail::__rust_thunk___ZN31DropStructWithLifetimeboundCtorC1E11PlainStruct(
                     __crubit_dest as *mut ::core::ffi::c_void,
-                    &mut s,
+                    s.as_mut_ptr(),
                 );
             })
         }
@@ -568,9 +570,9 @@ impl<'__implicit, '__param_0, '__param_0_0>
     fn ctor_new(
         args: &'__param_0_0 crate::DropStructWithLifetimeboundRefCtor<'__param_0>,
     ) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN34DropStructWithLifetimeboundRefCtorC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -621,12 +623,12 @@ impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__implicit crate::PlainStruct) -> Self::CtorType {
-        let mut s = args;
         unsafe {
             ::ctor::FnCtor::new(
                 move |__crubit_dest: *mut crate::DropStructWithLifetimeboundRefCtor<
                     '__implicit,
                 >| {
+                    let mut s = args;
                     crate::detail::__rust_thunk___ZN34DropStructWithLifetimeboundRefCtorC1ERK11PlainStruct(__crubit_dest as*mut::core::ffi::c_void,s);
                 },
             )
@@ -689,9 +691,9 @@ impl<'__implicit, '__param_0, '__param_0_0>
     fn ctor_new(
         args: &'__param_0_0 crate::DropStructWithRefCtorAndRefMemberFunction<'__param_0>,
     ) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -742,12 +744,12 @@ impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__implicit crate::PlainStruct) -> Self::CtorType {
-        let mut s = args;
         unsafe {
             ::ctor::FnCtor::new(
                 move |__crubit_dest: *mut crate::DropStructWithRefCtorAndRefMemberFunction<
                     '__implicit,
                 >| {
+                    let mut s = args;
                     crate::detail::__rust_thunk___ZN41DropStructWithRefCtorAndRefMemberFunctionC1ERK11PlainStruct(__crubit_dest as*mut::core::ffi::c_void,s);
                 },
             )
@@ -814,9 +816,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithCtorAndMemb
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN35DropStructWithCtorAndMemberFunctionC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -851,10 +853,11 @@ impl ::ctor::CtorNew<crate::PlainStruct> for DropStructWithCtorAndMemberFunction
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: crate::PlainStruct) -> Self::CtorType {
-        let mut s = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN35DropStructWithCtorAndMemberFunctionC1E11PlainStruct(__crubit_dest as*mut::core::ffi::c_void,&mut s);
+                let mut s = args;
+                let mut s = ::core::mem::MaybeUninit::new(s);
+                crate::detail::__rust_thunk___ZN35DropStructWithCtorAndMemberFunctionC1E11PlainStruct(__crubit_dest as*mut::core::ffi::c_void,s.as_mut_ptr());
             })
         }
     }
@@ -920,9 +923,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithCtorAndRefM
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -957,10 +960,11 @@ impl ::ctor::CtorNew<crate::PlainStruct> for DropStructWithCtorAndRefMemberFunct
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: crate::PlainStruct) -> Self::CtorType {
-        let mut s = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
-                crate::detail::__rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionC1E11PlainStruct(__crubit_dest as*mut::core::ffi::c_void,&mut s);
+                let mut s = args;
+                let mut s = ::core::mem::MaybeUninit::new(s);
+                crate::detail::__rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionC1E11PlainStruct(__crubit_dest as*mut::core::ffi::c_void,s.as_mut_ptr());
             })
         }
     }
@@ -1031,9 +1035,9 @@ impl<'__implicit, '__param_0, '__param_0_0>
     fn ctor_new(
         args: &'__param_0_0 crate::DropStructWithRefCtorAndMemberFunction<'__param_0>,
     ) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -1084,12 +1088,12 @@ impl<'__implicit> ::ctor::CtorNew<&'__implicit crate::PlainStruct>
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__implicit crate::PlainStruct) -> Self::CtorType {
-        let mut s = args;
         unsafe {
             ::ctor::FnCtor::new(
                 move |__crubit_dest: *mut crate::DropStructWithRefCtorAndMemberFunction<
                     '__implicit,
                 >| {
+                    let mut s = args;
                     crate::detail::__rust_thunk___ZN38DropStructWithRefCtorAndMemberFunctionC1ERK11PlainStruct(__crubit_dest as*mut::core::ffi::c_void,s);
                 },
             )
@@ -1230,7 +1234,7 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZN27StructWithLifetimeboundCtorC1E11PlainStruct(
             __this: *mut ::core::ffi::c_void,
-            s: &mut crate::PlainStruct,
+            s: *mut crate::PlainStruct,
         );
         pub(crate) unsafe fn __rust_thunk___ZN30StructWithLifetimeboundRefCtorC1ERK11PlainStruct<
             '__implicit,
@@ -1251,7 +1255,7 @@ mod detail {
         ) -> ::core::pin::Pin<&'__this mut crate::DropStructWithLifetimeboundCtor>;
         pub(crate) unsafe fn __rust_thunk___ZN31DropStructWithLifetimeboundCtorC1E11PlainStruct(
             __this: *mut ::core::ffi::c_void,
-            s: &mut crate::PlainStruct,
+            s: *mut crate::PlainStruct,
         );
         #[link_name = "_ZN31DropStructWithLifetimeboundCtorD1Ev"]
         pub(crate) unsafe fn __rust_thunk___ZN31DropStructWithLifetimeboundCtorD1Ev<'__this>(
@@ -1345,7 +1349,7 @@ mod detail {
         ) -> ::core::pin::Pin<&'__this mut crate::DropStructWithCtorAndMemberFunction>;
         pub(crate) unsafe fn __rust_thunk___ZN35DropStructWithCtorAndMemberFunctionC1E11PlainStruct(
             __this: *mut ::core::ffi::c_void,
-            s: &mut crate::PlainStruct,
+            s: *mut crate::PlainStruct,
         );
         pub(crate) unsafe fn __rust_thunk___ZNK35DropStructWithCtorAndMemberFunction1fEv<'__this>(
             __return: *mut ::core::ffi::c_void,
@@ -1370,7 +1374,7 @@ mod detail {
         ) -> ::core::pin::Pin<&'__this mut crate::DropStructWithCtorAndRefMemberFunction>;
         pub(crate) unsafe fn __rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionC1E11PlainStruct(
             __this: *mut ::core::ffi::c_void,
-            s: &mut crate::PlainStruct,
+            s: *mut crate::PlainStruct,
         );
         #[link_name = "_ZNK38DropStructWithCtorAndRefMemberFunction1fEv"]
         pub(crate) unsafe fn __rust_thunk___ZNK38DropStructWithCtorAndRefMemberFunction1fEv<

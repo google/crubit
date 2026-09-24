@@ -15,13 +15,14 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 #[inline(always)]
-pub fn UsesImportedType(mut t: ::trivial_type_cc::ns::Trivial) -> ::trivial_type_cc::ns::Trivial {
+pub fn UsesImportedType(t: ::trivial_type_cc::ns::Trivial) -> ::trivial_type_cc::ns::Trivial {
+    let mut t = ::core::mem::MaybeUninit::new(t);
     unsafe {
         let mut __crubit_return =
             ::core::mem::MaybeUninit::<::trivial_type_cc::ns::Trivial>::uninit();
         crate::detail::__rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
             &raw mut __crubit_return as *mut ::core::ffi::c_void,
-            &mut t,
+            t.as_mut_ptr(),
         );
         __crubit_return.assume_init()
     }
@@ -64,7 +65,7 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(
             __return: *mut ::core::ffi::c_void,
-            t: &mut ::trivial_type_cc::ns::Trivial,
+            t: *mut ::trivial_type_cc::ns::Trivial,
         );
         pub(crate) unsafe fn __rust_thunk___ZN18UserOfImportedTypeC1Ev(
             __this: *mut ::core::ffi::c_void,

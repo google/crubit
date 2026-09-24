@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -125,7 +126,8 @@ static_assert((class AddableFreeByMutRef (*)(class AddableFreeByMutRef&,
 extern "C" void __rust_thunk___Zpl18AddableFreeByValueS_(
     class AddableFreeByValue* __return, class AddableFreeByValue* lhs,
     class AddableFreeByValue* rhs) {
-  new (__return) auto(operator+(std::move(*lhs), std::move(*rhs)));
+  new (__return) auto(operator+(crubit::UnsafeTakeValue(lhs),
+                                crubit::UnsafeTakeValue(rhs)));
 }
 
 static_assert((class AddableFreeByValue (*)(class AddableFreeByValue,
@@ -254,7 +256,7 @@ extern "C" void __rust_thunk___ZN20AddAssignFreeByValueC1Ev(
 extern "C" struct AddAssignFreeByValue*
 __rust_thunk___ZpLR20AddAssignFreeByValueS_(struct AddAssignFreeByValue* lhs,
                                             struct AddAssignFreeByValue* rhs) {
-  return std::addressof(operator+=(*lhs, std::move(*rhs)));
+  return std::addressof(operator+=(*lhs, crubit::UnsafeTakeValue(rhs)));
 }
 
 static_assert((struct AddAssignFreeByValue &
@@ -280,7 +282,7 @@ extern "C" void __rust_thunk___ZN22AddAssignFriendByValueC1Ev(
 extern "C" struct AddAssignFriendByValue*
 __rust_thunk___ZpLR22AddAssignFriendByValueS_(
     struct AddAssignFriendByValue* lhs, struct AddAssignFriendByValue* rhs) {
-  return std::addressof(operator+=(*lhs, std::move(*rhs)));
+  return std::addressof(operator+=(*lhs, crubit::UnsafeTakeValue(rhs)));
 }
 
 static_assert(sizeof(struct AddAssignProhibitedConstMember) == 1);

@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -21,7 +22,7 @@
 extern "C" void
 __rust_thunk___Z16string_view_sinkNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(
     ::std::__u::string_view* s) {
-  string_view_sink(std::move(*s));
+  string_view_sink(crubit::UnsafeTakeValue(s));
 }
 
 static_assert((void (*)(::std::__u::string_view)) & ::string_view_sink);
@@ -29,7 +30,7 @@ static_assert((void (*)(::std::__u::string_view)) & ::string_view_sink);
 extern "C" void
 __rust_thunk___Z18string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(
     ::std::__u::string_view* __return, ::std::__u::string_view* s) {
-  new (__return) auto(string_view_return(std::move(*s)));
+  new (__return) auto(string_view_return(crubit::UnsafeTakeValue(s)));
 }
 
 static_assert((::std::__u::string_view (*)(::std::__u::string_view)) &
@@ -39,8 +40,8 @@ extern "C" void
 __rust_thunk___Z28ambiguous_string_view_returnNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(
     ::std::__u::string_view* __return, ::std::__u::string_view* a,
     ::std::__u::string_view* b) {
-  new (__return) auto(
-      ambiguous_string_view_return(std::move(*a), std::move(*b)));
+  new (__return) auto(ambiguous_string_view_return(crubit::UnsafeTakeValue(a),
+                                                   crubit::UnsafeTakeValue(b)));
 }
 
 static_assert((::std::__u::string_view (*)(::std::__u::string_view,
@@ -50,7 +51,7 @@ static_assert((::std::__u::string_view (*)(::std::__u::string_view,
 extern "C" void
 __rust_thunk___Z29explicit_lifetime_string_viewNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEE(
     ::std::__u::string_view* x) {
-  explicit_lifetime_string_view(std::move(*x));
+  explicit_lifetime_string_view(crubit::UnsafeTakeValue(x));
 }
 
 static_assert((void (*)(::std::__u::string_view)) &
@@ -60,8 +61,8 @@ extern "C" void
 __rust_thunk___Z40unambiguous_string_view_return_annotatedNSt3__u17basic_string_viewIcNS_11char_traitsIcEEEES3_(
     ::std::__u::string_view* __return, ::std::__u::string_view* x,
     ::std::__u::string_view* y) {
-  new (__return) auto(
-      unambiguous_string_view_return_annotated(std::move(*x), std::move(*y)));
+  new (__return) auto(unambiguous_string_view_return_annotated(
+      crubit::UnsafeTakeValue(x), crubit::UnsafeTakeValue(y)));
 }
 
 static_assert((::std::__u::string_view (*)(::std::__u::string_view,

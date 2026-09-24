@@ -9,6 +9,7 @@
 #include "support/internal/fmt.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 #include "support/rs_std/lossy_formatter_for_bindings.h"
 
 #include <cstddef>
@@ -35,21 +36,21 @@ __crubit_fmt__2SV___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2fte
 
 extern "C" void __rust_thunk___Z8sv_ident2SV(struct ::SV* __return,
                                              struct ::SV* s) {
-  new (__return) auto(::sv_ident(std::move(*s)));
+  new (__return) auto(::sv_ident(crubit::UnsafeTakeValue(s)));
 }
 
 static_assert((struct ::SV (*)(struct ::SV)) & ::sv_ident);
 
 extern "C" void __rust_thunk___Z16sv_ident_unknown2SV(struct ::SV* __return,
                                                       struct ::SV* s) {
-  new (__return) auto(::sv_ident_unknown(std::move(*s)));
+  new (__return) auto(::sv_ident_unknown(crubit::UnsafeTakeValue(s)));
 }
 
 static_assert((struct ::SV (*)(struct ::SV)) & ::sv_ident_unknown);
 
 extern "C" void __rust_thunk___Z23sv_ident_unknown_elided2SV(
     struct ::SV* __return, struct ::SV* s) {
-  new (__return) auto(::sv_ident_unknown_elided(std::move(*s)));
+  new (__return) auto(::sv_ident_unknown_elided(crubit::UnsafeTakeValue(s)));
 }
 
 static_assert((struct ::SV (*)(struct ::SV)) & ::sv_ident_unknown_elided);
@@ -61,7 +62,7 @@ extern "C" void __rust_thunk___Z11sv_make_rawv(struct ::SV* __return) {
 static_assert((struct ::SV (*)()) & ::sv_make_raw);
 
 extern "C" void __rust_thunk___Z6sva_lb2SV(::SVA* __return, ::SVA* s) {
-  new (__return) auto(::sva_lb(std::move(*s)));
+  new (__return) auto(::sva_lb(crubit::UnsafeTakeValue(s)));
 }
 
 static_assert((::SVA (*)(::SVA)) & ::sva_lb);

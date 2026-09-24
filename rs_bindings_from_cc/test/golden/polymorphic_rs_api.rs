@@ -33,9 +33,9 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
                 crate::detail::__rust_thunk___ZN15PolymorphicBaseC1Ev(
                     __crubit_dest as *mut ::core::ffi::c_void,
                 );
@@ -49,9 +49,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for PolymorphicBase {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN15PolymorphicBaseC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -120,9 +120,9 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
                 crate::detail::__rust_thunk___ZN16PolymorphicBase2C1Ev(
                     __crubit_dest as *mut ::core::ffi::c_void,
                 );
@@ -136,9 +136,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for PolymorphicBase2 {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN16PolymorphicBase2C1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -209,9 +209,9 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
                 crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1Ev(
                     __crubit_dest as *mut ::core::ffi::c_void,
                 );
@@ -225,9 +225,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for PolymorphicDerived {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -253,9 +253,9 @@ impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>>
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1EOS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,

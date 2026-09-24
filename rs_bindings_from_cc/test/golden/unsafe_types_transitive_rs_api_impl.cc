@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -58,14 +59,14 @@ static_assert((int (*)(int*)) & ::DerefPointer);
 
 extern "C" int __rust_thunk___Z18DerefPublicPointer13PublicPointer(
     struct PublicPointer* p) {
-  return DerefPublicPointer(std::move(*p));
+  return DerefPublicPointer(crubit::UnsafeTakeValue(p));
 }
 
 static_assert((int (*)(struct PublicPointer)) & ::DerefPublicPointer);
 
 extern "C" int __rust_thunk___Z19DerefPrivatePointer14PrivatePointer(
     class PrivatePointer* p) {
-  return DerefPrivatePointer(std::move(*p));
+  return DerefPrivatePointer(crubit::UnsafeTakeValue(p));
 }
 
 static_assert((int (*)(class PrivatePointer)) & ::DerefPrivatePointer);
@@ -73,14 +74,14 @@ static_assert((int (*)(class PrivatePointer)) & ::DerefPrivatePointer);
 extern "C" int
 __rust_thunk___Z28DerefTransitivePublicPointer23TransitivePublicPointer(
     struct TransitivePublicPointer* p) {
-  return DerefTransitivePublicPointer(std::move(*p));
+  return DerefTransitivePublicPointer(crubit::UnsafeTakeValue(p));
 }
 
 static_assert((int (*)(struct TransitivePublicPointer)) &
               ::DerefTransitivePublicPointer);
 
 extern "C" int __rust_thunk___Z9ReadUnion5Union(union Union* u) {
-  return ReadUnion(std::move(*u));
+  return ReadUnion(crubit::UnsafeTakeValue(u));
 }
 
 static_assert((int (*)(union Union)) & ::ReadUnion);

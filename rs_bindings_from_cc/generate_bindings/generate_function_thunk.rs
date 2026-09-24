@@ -220,7 +220,13 @@ pub fn generate_function_thunk<'a>(
         .into_iter()
         .chain(param_types.map(|param_type| match param_type.passing_convention() {
             PassingConvention::ComposablyBridged => quote! { *const ::core::ffi::c_uchar },
-            PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+            // The callee takes ownership of a `LayoutCompatible` parameter, so it
+            // is passed as a pointer to a `MaybeUninit` which Rust will not drop.
+            PassingConvention::LayoutCompatible => {
+                let param_type_tokens = param_type.to_token_stream(db);
+                quote! {*mut #param_type_tokens}
+            }
+            PassingConvention::Ctor => {
                 let param_type_tokens = param_type.to_token_stream(db);
                 quote! {&mut #param_type_tokens}
             }
@@ -508,8 +514,14 @@ pub fn generate_function_thunk_impl<'a>(
         }
     };
 
-    let CcThunkParts { return_type_name, param_types, param_idents, conversion_stmts, return_stmt } =
-        generate_cc_thunk_parts(db, func, ThunkCallKind::Normal(implementation_function))?;
+    let CcThunkParts {
+        return_type_name,
+        param_types,
+        param_idents,
+        conversion_stmts,
+        return_stmt,
+        needs_slot_header,
+    } = generate_cc_thunk_parts(db, func, ThunkCallKind::Normal(implementation_function))?;
 
     Ok(Some(ThunkImpl::Function {
         return_type_name,
@@ -518,6 +530,7 @@ pub fn generate_function_thunk_impl<'a>(
         param_idents,
         conversion_stmts,
         return_stmt,
+        needs_slot_header,
     }))
 }
 
@@ -529,6 +542,9 @@ pub struct CcThunkParts {
     pub param_idents: Vec<Ident>,
     pub conversion_stmts: TokenStream,
     pub return_stmt: TokenStream,
+    /// Whether the emitted C++ references `crubit::UnsafeTakeValue`, and so
+    /// requires `support/internal/slot.h` to be included.
+    pub needs_slot_header: bool,
 }
 
 /// Specifies the type of C++ thunk invocation being lowered: a normal named C++
@@ -549,6 +565,9 @@ pub fn generate_cc_thunk_parts<'a>(
     let mut param_idents = Vec::new();
     let mut param_types = Vec::new();
     let mut conversion_stmts = quote! {};
+    // Set at each site that emits `crubit::UnsafeTakeValue`, so that the
+    // include is added exactly when it is used.
+    let mut needs_slot_header = false;
     for p in func.params().iter() {
         let ident = format_nonportable_cc_ident(p.identifier().as_str())?;
         let arg_type = db.rs_type_kind(p.type_().clone())?;
@@ -572,7 +591,18 @@ pub fn generate_cc_thunk_parts<'a>(
                     param_idents.push(ffi_ident);
                     param_types.push(quote! { const unsigned char* });
                 }
-                PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+                PassingConvention::LayoutCompatible => {
+                    let ffi_ident = format_ident!("__{ident}");
+                    // Rust has given up ownership of `*__ident`, so this
+                    // side takes the value and owns the resulting local.
+                    needs_slot_header = true;
+                    conversion_stmts.extend(quote! {
+                        auto #ident = crubit::UnsafeTakeValue(#ffi_ident);
+                    });
+                    param_idents.push(ffi_ident);
+                    param_types.push(quote! { #cpp_type * });
+                }
+                PassingConvention::Ctor => {
                     if arg_type.is_c_abi_compatible_by_value() {
                         param_idents.push(ident);
                         param_types.push(cpp_type);
@@ -656,7 +686,15 @@ pub fn generate_cc_thunk_parts<'a>(
                                 #crubit_abi_type_expr_tokens.Decode(#decoder)
                             })
                         }
-                        PassingConvention::LayoutCompatible | PassingConvention::Ctor => {
+                        PassingConvention::LayoutCompatible => {
+                            // Rust has given up ownership of `*#ident`, so the
+                            // husk must be destroyed on this side. Passing a
+                            // prvalue also means no move constructor is needed
+                            // for types which are only Rust-movable.
+                            needs_slot_header = true;
+                            Ok(quote! { crubit::UnsafeTakeValue( #ident) })
+                        }
+                        PassingConvention::Ctor => {
                             if rs_type_kind.is_c_abi_compatible_by_value() {
                                 Ok(quote! { std::move( #ident) })
                             } else {
@@ -807,7 +845,14 @@ pub fn generate_cc_thunk_parts<'a>(
         }
     };
 
-    Ok(CcThunkParts { return_type_name, param_types, param_idents, conversion_stmts, return_stmt })
+    Ok(CcThunkParts {
+        return_type_name,
+        param_types,
+        param_idents,
+        conversion_stmts,
+        return_stmt,
+        needs_slot_header,
+    })
 }
 
 /// Generates an `inline_cpp!` macro invocation expression in Rust for `func`,
@@ -825,8 +870,17 @@ pub fn generate_inline_cpp_call<'a>(
         return Ok(None);
     }
 
-    let CcThunkParts { return_type_name, param_types, param_idents, conversion_stmts, return_stmt } =
-        generate_cc_thunk_parts(db, func, ThunkCallKind::InlineCpp(body_tokens))?;
+    let CcThunkParts {
+        return_type_name,
+        param_types,
+        param_idents,
+        conversion_stmts,
+        return_stmt,
+        // The C++ here is emitted into an `inline_cpp!` macro in the Rust
+        // output, not into the `_rs_api_impl.cc` translation unit, so it does
+        // not affect that file's includes.
+        needs_slot_header: _,
+    } = generate_cc_thunk_parts(db, func, ThunkCallKind::InlineCpp(body_tokens))?;
 
     let adjusted_thunk_args = thunk_args
         .iter()

@@ -117,9 +117,9 @@ impl<'__this> ::ctor::CtorNew<&'__this crate::Src> for crate::DstLocalNonMovable
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__this crate::Src) -> Self::CtorType {
-        let mut __this = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::DstLocalNonMovable| {
+                let mut __this = args;
                 crate::detail::__rust_thunk___ZNK3Srccv18DstLocalNonMovableEv(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __this,

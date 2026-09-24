@@ -28,13 +28,15 @@ pub type TsIntFloat = crate::__CcTemplateInst2TsIifE;
 pub type TsShortDouble = crate::__CcTemplateInst2TsIsdE;
 
 #[inline(always)]
-pub fn IntFloatCaller(mut i: crate::__CcTemplateInst2TsIifE) {
-    unsafe { crate::detail::__rust_thunk___Z14IntFloatCaller2TsIifE(&mut i) }
+pub fn IntFloatCaller(i: crate::__CcTemplateInst2TsIifE) {
+    let mut i = ::core::mem::MaybeUninit::new(i);
+    unsafe { crate::detail::__rust_thunk___Z14IntFloatCaller2TsIifE(i.as_mut_ptr()) }
 }
 
 #[inline(always)]
-pub fn ShortDoubleCaller(mut i: crate::__CcTemplateInst2TsIsdE) {
-    unsafe { crate::detail::__rust_thunk___Z17ShortDoubleCaller2TsIsdE(&mut i) }
+pub fn ShortDoubleCaller(i: crate::__CcTemplateInst2TsIsdE) {
+    let mut i = ::core::mem::MaybeUninit::new(i);
+    unsafe { crate::detail::__rust_thunk___Z17ShortDoubleCaller2TsIsdE(i.as_mut_ptr()) }
 }
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -125,10 +127,10 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z14IntFloatCaller2TsIifE(
-            i: &mut crate::__CcTemplateInst2TsIifE,
+            i: *mut crate::__CcTemplateInst2TsIifE,
         );
         pub(crate) unsafe fn __rust_thunk___Z17ShortDoubleCaller2TsIsdE(
-            i: &mut crate::__CcTemplateInst2TsIsdE,
+            i: *mut crate::__CcTemplateInst2TsIsdE,
         );
         pub(crate) unsafe fn __rust_thunk__ca694370__ZN2TsIifEC1Eif(
             __this: *mut ::core::ffi::c_void,

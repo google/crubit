@@ -50,9 +50,9 @@ pub mod crubit {
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: ()) -> Self::CtorType {
-                let () = args;
                 unsafe {
                     ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        let () = args;
                         crate::detail::__rust_thunk___ZN6crubit4test16ThreadSafeStructC1Ev(
                             __crubit_dest as *mut ::core::ffi::c_void,
                         );
@@ -280,9 +280,9 @@ pub mod crubit {
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: ()) -> Self::CtorType {
-                let () = args;
                 unsafe {
                     ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        let () = args;
                         crate::detail::__rust_thunk___ZN6crubit4test16ThreadSafePinnedC1Ev(
                             __crubit_dest as *mut ::core::ffi::c_void,
                         );
@@ -297,9 +297,9 @@ pub mod crubit {
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: &'__unelided Self) -> Self::CtorType {
-                let mut __param_0 = args;
                 unsafe {
                     ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        let mut __param_0 = args;
                         crate::detail::__rust_thunk___ZN6crubit4test16ThreadSafePinnedC1ERKS1_(
                             __crubit_dest as *mut ::core::ffi::c_void,
                             __param_0,
@@ -325,9 +325,9 @@ pub mod crubit {
             type Error = ::ctor::Infallible;
             #[inline(always)]
             fn ctor_new(args: ::ctor::RvalueReference<'__unelided, Self>) -> Self::CtorType {
-                let mut __param_0 = args;
                 unsafe {
                     ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                        let mut __param_0 = args;
                         crate::detail::__rust_thunk___ZN6crubit4test16ThreadSafePinnedC1EOS1_(
                             __crubit_dest as *mut ::core::ffi::c_void,
                             __param_0,

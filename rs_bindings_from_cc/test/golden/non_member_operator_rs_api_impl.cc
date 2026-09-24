@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -27,7 +28,7 @@ extern "C" void __rust_thunk___ZN2ns1XC1Ev(struct ns::X* __this) {
 }
 
 extern "C" bool __rust_thunk___ZeqN2ns1XES0_(struct ns::X* a, struct ns::X* b) {
-  return operator==(std::move(*a), std::move(*b));
+  return operator==(crubit::UnsafeTakeValue(a), crubit::UnsafeTakeValue(b));
 }
 
 static_assert((bool (*)(struct ns::X, struct ns::X)) & ::operator==);

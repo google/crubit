@@ -73,9 +73,10 @@ pub mod crubit {
         }
 
         #[inline(always)]
-        pub fn DoNotBindFn(mut __param_0: crate::crubit::test::ArgumentToBoundOverload) {
+        pub fn DoNotBindFn(__param_0: crate::crubit::test::ArgumentToBoundOverload) {
+            let mut __param_0 = ::core::mem::MaybeUninit::new(__param_0);
             unsafe {
-                crate::detail::__rust_thunk___ZN6crubit4test11DoNotBindFnENS0_23ArgumentToBoundOverloadE(&mut __param_0)
+                crate::detail::__rust_thunk___ZN6crubit4test11DoNotBindFnENS0_23ArgumentToBoundOverloadE(__param_0.as_mut_ptr())
             }
         }
 
@@ -101,9 +102,10 @@ pub mod crubit {
             #[inline(always)]
             fn from(args: crate::crubit::test::ArgumentToBoundOverload) -> Self {
                 let mut __param_0 = args;
+                let mut __param_0 = ::core::mem::MaybeUninit::new(__param_0);
                 let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
-                    crate::detail::__rust_thunk___ZN6crubit4test30StructWithDoNotBindConstructorC1ENS0_23ArgumentToBoundOverloadE(&raw mut tmp as*mut _,&mut __param_0);
+                    crate::detail::__rust_thunk___ZN6crubit4test30StructWithDoNotBindConstructorC1ENS0_23ArgumentToBoundOverloadE(&raw mut tmp as*mut _,__param_0.as_mut_ptr());
                     tmp.assume_init()
                 }
             }
@@ -141,7 +143,7 @@ pub mod crubit {
             #[inline(always)]
             pub unsafe fn DoNotBindMethod(
                 __this: *mut Self,
-                mut __param_0: crate::crubit::test::ArgumentToBoundOverload,
+                __param_0: crate::crubit::test::ArgumentToBoundOverload,
             ) {
                 unsafe { self::struct_with_do_not_bind_method::DoNotBindMethod(__this, __param_0) }
             }
@@ -168,10 +170,11 @@ pub mod crubit {
             #[inline(always)]
             pub(crate) unsafe fn DoNotBindMethod(
                 __this: *mut crate::crubit::test::StructWithDoNotBindMethod,
-                mut __param_0: crate::crubit::test::ArgumentToBoundOverload,
+                __param_0: crate::crubit::test::ArgumentToBoundOverload,
             ) {
+                let mut __param_0 = ::core::mem::MaybeUninit::new(__param_0);
                 unsafe {
-                    crate::detail::__rust_thunk___ZN6crubit4test25StructWithDoNotBindMethod15DoNotBindMethodENS0_23ArgumentToBoundOverloadE(__this,&mut __param_0)
+                    crate::detail::__rust_thunk___ZN6crubit4test25StructWithDoNotBindMethod15DoNotBindMethodENS0_23ArgumentToBoundOverloadE(__this,__param_0.as_mut_ptr())
                 }
             }
         }
@@ -191,18 +194,18 @@ mod detail {
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test11DoNotBindFnENS0_23ArgumentToBoundOverloadE(
-            __param_0: &mut crate::crubit::test::ArgumentToBoundOverload,
+            __param_0: *mut crate::crubit::test::ArgumentToBoundOverload,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test30StructWithDoNotBindConstructorC1ENS0_23ArgumentToBoundOverloadE(
             __this: *mut ::core::ffi::c_void,
-            __param_0: &mut crate::crubit::test::ArgumentToBoundOverload,
+            __param_0: *mut crate::crubit::test::ArgumentToBoundOverload,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test25StructWithDoNotBindMethodC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
         pub(crate) unsafe fn __rust_thunk___ZN6crubit4test25StructWithDoNotBindMethod15DoNotBindMethodENS0_23ArgumentToBoundOverloadE(
             __this: *mut crate::crubit::test::StructWithDoNotBindMethod,
-            __param_0: &mut crate::crubit::test::ArgumentToBoundOverload,
+            __param_0: *mut crate::crubit::test::ArgumentToBoundOverload,
         );
     }
 }

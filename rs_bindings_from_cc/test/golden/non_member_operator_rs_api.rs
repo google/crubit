@@ -57,8 +57,8 @@ mod detail {
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN2ns1XC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZeqN2ns1XES0_(
-            a: &mut crate::ns::X,
-            b: &mut crate::ns::X,
+            a: *mut crate::ns::X,
+            b: *mut crate::ns::X,
         ) -> bool;
     }
 }

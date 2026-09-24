@@ -33,9 +33,9 @@ impl ::ctor::CtorNew<()> for Nonmovable {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
                 crate::detail::__rust_thunk___ZN10NonmovableC1Ev(
                     __crubit_dest as *mut ::core::ffi::c_void,
                 );
@@ -100,7 +100,7 @@ impl Base {
         unsafe { self::base::static_ref_param(a) }
     }
     #[inline(always)]
-    pub fn static_value_param(mut a: Self) {
+    pub fn static_value_param(a: Self) {
         unsafe { self::base::static_value_param(a) }
     }
     /// # Safety
@@ -175,8 +175,9 @@ pub mod base {
         unsafe { crate::detail::__rust_thunk___ZN4Base16static_ref_paramERKS_(a) }
     }
     #[inline(always)]
-    pub(crate) fn static_value_param(mut a: crate::Base) {
-        unsafe { crate::detail::__rust_thunk___ZN4Base18static_value_paramES_(&mut a) }
+    pub(crate) fn static_value_param(a: crate::Base) {
+        let mut a = ::core::mem::MaybeUninit::new(a);
+        unsafe { crate::detail::__rust_thunk___ZN4Base18static_value_paramES_(a.as_mut_ptr()) }
     }
     /// # Safety
     ///
@@ -252,7 +253,7 @@ impl Derived {
         unsafe { self::derived::static_two_ptr_params(a, b) }
     }
     #[inline(always)]
-    pub fn static_value_param(mut a: crate::Base) {
+    pub fn static_value_param(a: crate::Base) {
         unsafe { self::derived::static_value_param(a) }
     }
 }
@@ -333,8 +334,9 @@ pub mod derived {
         unsafe { crate::detail::__rust_thunk___ZN4Base21static_two_ptr_paramsEPS_S0_(a, b) }
     }
     #[inline(always)]
-    pub(crate) fn static_value_param(mut a: crate::Base) {
-        unsafe { crate::detail::__rust_thunk___ZN4Base18static_value_paramES_(&mut a) }
+    pub(crate) fn static_value_param(a: crate::Base) {
+        let mut a = ::core::mem::MaybeUninit::new(a);
+        unsafe { crate::detail::__rust_thunk___ZN4Base18static_value_paramES_(a.as_mut_ptr()) }
     }
 }
 
@@ -354,7 +356,7 @@ mod detail {
             b: *mut crate::Base,
         );
         pub(crate) unsafe fn __rust_thunk___ZN4Base16static_ref_paramERKS_<'a>(a: &'a crate::Base);
-        pub(crate) unsafe fn __rust_thunk___ZN4Base18static_value_paramES_(a: &mut crate::Base);
+        pub(crate) unsafe fn __rust_thunk___ZN4Base18static_value_paramES_(a: *mut crate::Base);
         pub(crate) unsafe fn __rust_thunk___ZN4Base17static_ptr_returnEPS_(
             a: *mut crate::Base,
         ) -> *mut crate::Base;

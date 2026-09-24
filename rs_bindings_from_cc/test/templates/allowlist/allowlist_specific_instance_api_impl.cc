@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -20,14 +21,14 @@
 
 extern "C" void __rust_thunk___Z14IntFloatCaller2TsIifE(
     struct Ts<int, float>* i) {
-  IntFloatCaller(std::move(*i));
+  IntFloatCaller(crubit::UnsafeTakeValue(i));
 }
 
 static_assert((void (*)(struct Ts<int, float>)) & ::IntFloatCaller);
 
 extern "C" void __rust_thunk___Z17ShortDoubleCaller2TsIsdE(
     struct Ts<short, double>* i) {
-  ShortDoubleCaller(std::move(*i));
+  ShortDoubleCaller(crubit::UnsafeTakeValue(i));
 }
 
 static_assert((void (*)(struct Ts<short, double>)) & ::ShortDoubleCaller);

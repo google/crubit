@@ -300,13 +300,15 @@ impl<'lhs, 'rhs> ::core::ops::Add<&'rhs mut crate::AddableFreeByMutRef>
 impl ::core::ops::Add<Self> for crate::AddableFreeByValue {
     type Output = crate::AddableFreeByValue;
     #[inline(always)]
-    fn add(mut self, mut rhs: Self) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut lhs = ::core::mem::MaybeUninit::new(self);
+        let mut rhs = ::core::mem::MaybeUninit::new(rhs);
         unsafe {
             let mut __crubit_return = ::core::mem::MaybeUninit::<Self>::uninit();
             crate::detail::__rust_thunk___Zpl18AddableFreeByValueS_(
                 &raw mut __crubit_return as *mut ::core::ffi::c_void,
-                &mut self,
-                &mut rhs,
+                lhs.as_mut_ptr(),
+                rhs.as_mut_ptr(),
             );
             __crubit_return.assume_init()
         }
@@ -451,9 +453,9 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let () = args;
                 crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
                     __crubit_dest as *mut ::core::ffi::c_void,
                 );
@@ -467,9 +469,9 @@ impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for AddableConstMemberNonunpi
     type Error = ::ctor::Infallible;
     #[inline(always)]
     fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
-        let mut __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                let mut __param_0 = args;
                 crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_(
                     __crubit_dest as *mut ::core::ffi::c_void,
                     __param_0,
@@ -656,9 +658,10 @@ impl Default for AddAssignFreeByValue {
 
 impl ::core::ops::AddAssign<Self> for crate::AddAssignFreeByValue {
     #[inline(always)]
-    fn add_assign<'lhs>(&'lhs mut self, mut rhs: Self) {
+    fn add_assign<'lhs>(&'lhs mut self, rhs: Self) {
+        let mut rhs = ::core::mem::MaybeUninit::new(rhs);
         unsafe {
-            crate::detail::__rust_thunk___ZpLR20AddAssignFreeByValueS_(self, &mut rhs);
+            crate::detail::__rust_thunk___ZpLR20AddAssignFreeByValueS_(self, rhs.as_mut_ptr());
         }
     }
 }
@@ -726,9 +729,10 @@ impl Default for AddAssignFriendByValue {
 
 impl ::core::ops::AddAssign<Self> for crate::AddAssignFriendByValue {
     #[inline(always)]
-    fn add_assign<'lhs>(&'lhs mut self, mut rhs: Self) {
+    fn add_assign<'lhs>(&'lhs mut self, rhs: Self) {
+        let mut rhs = ::core::mem::MaybeUninit::new(rhs);
         unsafe {
-            crate::detail::__rust_thunk___ZpLR22AddAssignFriendByValueS_(self, &mut rhs);
+            crate::detail::__rust_thunk___ZpLR22AddAssignFriendByValueS_(self, rhs.as_mut_ptr());
         }
     }
 }
@@ -1212,8 +1216,8 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___Zpl18AddableFreeByValueS_(
             __return: *mut ::core::ffi::c_void,
-            lhs: &mut crate::AddableFreeByValue,
-            rhs: &mut crate::AddableFreeByValue,
+            lhs: *mut crate::AddableFreeByValue,
+            rhs: *mut crate::AddableFreeByValue,
         );
         pub(crate) unsafe fn __rust_thunk___ZN10OverloadedC1Ev(__this: *mut ::core::ffi::c_void);
         #[link_name = "_ZplRK10Overloadedi"]
@@ -1288,7 +1292,7 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZpLR20AddAssignFreeByValueS_<'lhs>(
             lhs: &'lhs mut crate::AddAssignFreeByValue,
-            rhs: &mut crate::AddAssignFreeByValue,
+            rhs: *mut crate::AddAssignFreeByValue,
         ) -> &'lhs mut crate::AddAssignFreeByValue;
         pub(crate) unsafe fn __rust_thunk___ZN25AddAssignFriendByConstRefC1Ev(
             __this: *mut ::core::ffi::c_void,
@@ -1303,7 +1307,7 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZpLR22AddAssignFriendByValueS_<'lhs>(
             lhs: &'lhs mut crate::AddAssignFriendByValue,
-            rhs: &mut crate::AddAssignFriendByValue,
+            rhs: *mut crate::AddAssignFriendByValue,
         ) -> &'lhs mut crate::AddAssignFriendByValue;
         pub(crate) unsafe fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev(
             __this: *mut ::core::ffi::c_void,

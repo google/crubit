@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -215,7 +216,7 @@ static_assert((struct NontrivialInline (*)(struct NontrivialInline)) &
 
 extern "C" void __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
     struct NontrivialUnpin* __return, struct NontrivialUnpin* nontrivial) {
-  new (__return) auto(TakesByValueUnpin(std::move(*nontrivial)));
+  new (__return) auto(TakesByValueUnpin(crubit::UnsafeTakeValue(nontrivial)));
 }
 
 static_assert((struct NontrivialUnpin (*)(struct NontrivialUnpin)) &

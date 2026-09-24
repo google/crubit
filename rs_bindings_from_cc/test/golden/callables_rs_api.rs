@@ -113,11 +113,12 @@ pub fn map_abi_compatible(
             + ::core::marker::Sync
             + 'static,
     >,
-    mut arg: crate::ABICompatible,
+    arg: crate::ABICompatible,
 ) -> crate::ABICompatible {
+    let mut arg = ::core::mem::MaybeUninit::new(arg);
     unsafe {
         let mut __crubit_return = ::core::mem::MaybeUninit::<crate::ABICompatible>::uninit();
-        crate::detail::__rust_thunk___Z18map_abi_compatibleN6rs_std11DynCallableIKF13ABICompatibleS1_EEES1_(&raw mut __crubit_return as*mut::core::ffi::c_void,::bridge_rust::unstable_encode!(@::dyn_callable_rs::DynCallableAbi::<dyn::core::ops::Fn(crate::ABICompatible)->crate::ABICompatible+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: crate::ABICompatible|->crate::ABICompatible{ ::core::panic!("moved-from value") }),),::dyn_callable_rs::DynCallableAbi<dyn::core::ops::Fn(crate::ABICompatible)->crate::ABICompatible+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8,&mut arg);
+        crate::detail::__rust_thunk___Z18map_abi_compatibleN6rs_std11DynCallableIKF13ABICompatibleS1_EEES1_(&raw mut __crubit_return as*mut::core::ffi::c_void,::bridge_rust::unstable_encode!(@::dyn_callable_rs::DynCallableAbi::<dyn::core::ops::Fn(crate::ABICompatible)->crate::ABICompatible+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: crate::ABICompatible|->crate::ABICompatible{ ::core::panic!("moved-from value") }),),::dyn_callable_rs::DynCallableAbi<dyn::core::ops::Fn(crate::ABICompatible)->crate::ABICompatible+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8,arg.as_mut_ptr());
         __crubit_return.assume_init()
     }
 }
@@ -176,11 +177,12 @@ pub fn map_layout_compatible(
             + ::core::marker::Sync
             + 'static,
     >,
-    mut arg: crate::LayoutCompatible,
+    arg: crate::LayoutCompatible,
 ) -> crate::LayoutCompatible {
+    let mut arg = ::core::mem::MaybeUninit::new(arg);
     unsafe {
         let mut __crubit_return = ::core::mem::MaybeUninit::<crate::LayoutCompatible>::uninit();
-        crate::detail::__rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEES1_(&raw mut __crubit_return as*mut::core::ffi::c_void,::bridge_rust::unstable_encode!(@::dyn_callable_rs::DynCallableAbi::<dyn::core::ops::Fn(crate::LayoutCompatible)->crate::LayoutCompatible+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: crate::LayoutCompatible|->crate::LayoutCompatible{ ::core::panic!("moved-from value") }),),::dyn_callable_rs::DynCallableAbi<dyn::core::ops::Fn(crate::LayoutCompatible)->crate::LayoutCompatible+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8,&mut arg);
+        crate::detail::__rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEES1_(&raw mut __crubit_return as*mut::core::ffi::c_void,::bridge_rust::unstable_encode!(@::dyn_callable_rs::DynCallableAbi::<dyn::core::ops::Fn(crate::LayoutCompatible)->crate::LayoutCompatible+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(|_: crate::LayoutCompatible|->crate::LayoutCompatible{ ::core::panic!("moved-from value") }),),::dyn_callable_rs::DynCallableAbi<dyn::core::ops::Fn(crate::LayoutCompatible)->crate::LayoutCompatible+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8,arg.as_mut_ptr());
         __crubit_return.assume_init()
     }
 }
@@ -341,7 +343,7 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z18map_abi_compatibleN6rs_std11DynCallableIKF13ABICompatibleS1_EEES1_(
             __return: *mut ::core::ffi::c_void,
             f: *const ::core::ffi::c_uchar,
-            arg: &mut crate::ABICompatible,
+            arg: *mut crate::ABICompatible,
         );
         pub(crate) unsafe fn __rust_thunk___ZN16LayoutCompatible6CreateEi(
             __return: *mut ::core::ffi::c_void,
@@ -353,7 +355,7 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z21map_layout_compatibleN6rs_std11DynCallableIKF16LayoutCompatibleS1_EEES1_(
             __return: *mut ::core::ffi::c_void,
             f: *const ::core::ffi::c_uchar,
-            arg: &mut crate::LayoutCompatible,
+            arg: *mut crate::LayoutCompatible,
         );
         pub(crate) unsafe fn __rust_thunk___Z25callable_taking_referenceN6rs_std11DynCallableIFvRiEEEi(
             f: *const ::core::ffi::c_uchar,

@@ -66,9 +66,12 @@ unsafe extern "C" {
 }
 
 #[inline(always)]
-pub fn ConsumeCompoundDataType(mut container: crate::CompoundDataType) -> ::ffi_11::c_int {
+pub fn ConsumeCompoundDataType(container: crate::CompoundDataType) -> ::ffi_11::c_int {
+    let mut container = ::core::mem::MaybeUninit::new(container);
     unsafe {
-        crate::detail::__rust_thunk___Z23ConsumeCompoundDataType16CompoundDataType(&mut container)
+        crate::detail::__rust_thunk___Z23ConsumeCompoundDataType16CompoundDataType(
+            container.as_mut_ptr(),
+        )
     }
 }
 
@@ -183,7 +186,7 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___Z14GetTemplateIntv(__return: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___Z23ConsumeCompoundDataType16CompoundDataType(
-            container: &mut crate::CompoundDataType,
+            container: *mut crate::CompoundDataType,
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___Z18OtherPubCrateTypesP16ForwardDeclared2(
             __param_0: *mut ::other_pub_crate_types::ForwardDeclared2,

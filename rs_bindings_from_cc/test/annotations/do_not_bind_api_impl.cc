@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -37,7 +38,7 @@ extern "C" void __rust_thunk___ZN6crubit4test25ArgumentToUnboundOverloadC1Ev(
 extern "C" void
 __rust_thunk___ZN6crubit4test11DoNotBindFnENS0_23ArgumentToBoundOverloadE(
     struct crubit::test::ArgumentToBoundOverload* __param_0) {
-  crubit::test::DoNotBindFn(std::move(*__param_0));
+  crubit::test::DoNotBindFn(crubit::UnsafeTakeValue(__param_0));
 }
 
 static_assert((void (*)(struct crubit::test::ArgumentToBoundOverload)) &
@@ -51,7 +52,7 @@ extern "C" void
 __rust_thunk___ZN6crubit4test30StructWithDoNotBindConstructorC1ENS0_23ArgumentToBoundOverloadE(
     struct crubit::test::StructWithDoNotBindConstructor* __this,
     struct crubit::test::ArgumentToBoundOverload* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
+  crubit::construct_at(__this, crubit::UnsafeTakeValue(__param_0));
 }
 
 static_assert(sizeof(struct crubit::test::StructWithDoNotBindMethod) == 1);
@@ -66,7 +67,7 @@ extern "C" void
 __rust_thunk___ZN6crubit4test25StructWithDoNotBindMethod15DoNotBindMethodENS0_23ArgumentToBoundOverloadE(
     struct crubit::test::StructWithDoNotBindMethod* __this,
     struct crubit::test::ArgumentToBoundOverload* __param_0) {
-  __this->DoNotBindMethod(std::move(*__param_0));
+  __this->DoNotBindMethod(crubit::UnsafeTakeValue(__param_0));
 }
 
 static_assert((void (::crubit::test::StructWithDoNotBindMethod::*)(

@@ -33,6 +33,7 @@ int MyStructAdder(MyStruct x) { return x.a + x.b; }
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -53,7 +54,7 @@ extern "C" void __rust_thunk___ZN8MyStructC1Ev(struct MyStruct* __this) {
 }
 
 extern "C" int __rust_thunk___Z13MyStructAdder8MyStruct(struct MyStruct* x) {
-  return MyStructAdder(std::move(*x));
+  return MyStructAdder(crubit::UnsafeTakeValue(x));
 }
 
 static_assert((int (*)(struct MyStruct)) & ::MyStructAdder);

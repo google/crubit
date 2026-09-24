@@ -43,8 +43,9 @@ impl Default for X {
 }
 
 #[inline(always)]
-pub fn ffi(a: i8, mut b: crate::X) -> i8 {
-    unsafe { crate::detail::__rust_thunk___Z3ffi4MyI81X(a, &mut b) }
+pub fn ffi(a: i8, b: crate::X) -> i8 {
+    let mut b = ::core::mem::MaybeUninit::new(b);
+    unsafe { crate::detail::__rust_thunk___Z3ffi4MyI81X(a, b.as_mut_ptr()) }
 }
 
 pub type MyTypedefDecl = ::ffi_11::c_int;
@@ -63,7 +64,7 @@ mod detail {
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___ZN1XC1Ev(__this: *mut ::core::ffi::c_void);
-        pub(crate) unsafe fn __rust_thunk___Z3ffi4MyI81X(a: i8, b: &mut crate::X) -> i8;
+        pub(crate) unsafe fn __rust_thunk___Z3ffi4MyI81X(a: i8, b: *mut crate::X) -> i8;
         pub(crate) unsafe fn __rust_thunk___Z1fiPvi(
             a: crate::MyTypedefDecl,
             b: *mut ::ffi_11::c_void,

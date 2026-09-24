@@ -1666,6 +1666,9 @@ pub enum ThunkImpl {
         param_idents: Vec<Ident>,
         conversion_stmts: TokenStream,
         return_stmt: TokenStream,
+        /// Whether the emitted C++ references `crubit::UnsafeTakeValue`, and so
+        /// requires `support/internal/slot.h` to be included.
+        needs_slot_header: bool,
     },
     /// A set of `static_assert`s that check the layout of a record.
     LayoutAssertion {
@@ -1681,6 +1684,20 @@ pub enum ThunkImpl {
         implementation_function: TokenStream,
         cc_function_type: TokenStream,
     },
+}
+
+impl ThunkImpl {
+    /// Whether the C++ emitted by this thunk requires
+    /// `support/internal/slot.h`.
+    pub fn needs_slot_header(&self) -> bool {
+        match self {
+            ThunkImpl::Function { needs_slot_header, .. } => *needs_slot_header,
+            ThunkImpl::Upcast { .. }
+            | ThunkImpl::Fmt { .. }
+            | ThunkImpl::LayoutAssertion { .. }
+            | ThunkImpl::FunctionTypeAssertion { .. } => false,
+        }
+    }
 }
 
 impl ToTokens for ThunkImpl {
@@ -1710,6 +1727,8 @@ impl ToTokens for ThunkImpl {
                 param_idents,
                 conversion_stmts,
                 return_stmt,
+                // Only affects the include set, not the emitted tokens.
+                needs_slot_header: _,
             } => {
                 quote! {
                     extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {

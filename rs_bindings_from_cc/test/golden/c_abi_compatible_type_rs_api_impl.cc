@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -27,7 +28,7 @@ extern "C" void __rust_thunk___ZN1XC1Ev(struct X* __this) {
 }
 
 extern "C" MyI8 __rust_thunk___Z3ffi4MyI81X(MyI8 a, struct X* b) {
-  return ffi(a, std::move(*b));
+  return ffi(a, crubit::UnsafeTakeValue(b));
 }
 
 static_assert((MyI8 (*)(MyI8, struct X)) & ::ffi);

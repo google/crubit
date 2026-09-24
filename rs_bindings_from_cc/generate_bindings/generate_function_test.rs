@@ -277,12 +277,13 @@ fn test_simple_function_with_types_from_other_target() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub fn DoSomething(mut param: ::dependency::ParamStruct) -> ::dependency::ReturnStruct {
+            pub fn DoSomething(param: ::dependency::ParamStruct) -> ::dependency::ReturnStruct {
+                let mut param = ::core::mem::MaybeUninit::new(param);
                 unsafe {
                     let mut __crubit_return = ::core::mem::MaybeUninit::<::dependency::ReturnStruct>::uninit();
                     crate::detail::...(
                        &raw mut __crubit_return as *mut ::core::ffi::c_void,
-                       &mut param
+                       param.as_mut_ptr()
                     );
                     __crubit_return.assume_init()
                 }
@@ -298,7 +299,7 @@ fn test_simple_function_with_types_from_other_target() -> Result<()> {
             unsafe extern "C" {
                 pub(crate) unsafe fn ...(
                     __return: *mut ::core::ffi::c_void,
-                    param: &mut ::dependency::ParamStruct
+                    param: *mut ::dependency::ParamStruct
                 );
             }
         }}
@@ -308,7 +309,7 @@ fn test_simple_function_with_types_from_other_target() -> Result<()> {
         rs_api_impl,
         quote! {
             extern "C" void ...(struct ReturnStruct* __return, struct ParamStruct* param) {
-                new (__return) auto(DoSomething(std::move(*param)));
+                new (__return) auto(DoSomething(crubit::UnsafeTakeValue(param)));
             }
         }
     );
@@ -1959,9 +1960,9 @@ fn test_nonunpin_0_arg_constructor() -> Result<()> {
 
                 #[inline(always)]
                 fn ctor_new(args: ()) -> Self::CtorType {
-                    let () = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                            let () = args;
                             crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void);
                         })
                     }
@@ -1995,9 +1996,9 @@ fn test_nonunpin_1_arg_constructor() -> Result<()> {
 
                 #[inline (always)]
                 fn ctor_new(args: ::ffi_11::c_uchar) -> Self::CtorType {
-                    let mut input = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                            let mut input = args;
                             crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, input);
                         })
                     }
@@ -2031,9 +2032,9 @@ fn test_nonunpin_2_arg_constructor() -> Result<()> {
 
                 #[inline (always)]
                 fn ctor_new(args: (::ffi_11::c_uchar, ::ffi_11::c_schar)) -> Self::CtorType {
-                    let (mut input1, mut input2) = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                            let (mut input1, mut input2) = args;
                             crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, input1, input2);
                         })
                     }
@@ -2085,9 +2086,9 @@ fn test_nonunpin_by_value_params() -> Result<()> {
                     ::ctor::RvalueReference<'y, Self>,
                     ::ctor::RvalueReference<'b_2, Self>)
                 ) -> Self::CtorType {
-                    let (mut x, mut y, mut b) = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                            let (mut x, mut y, mut b) = args;
                             crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, x, y, b);
                         })
                     }
@@ -2194,22 +2195,23 @@ fn test_unpin_by_value_param() -> Result<()> {
         rs_api,
         quote! {
             #[inline(always)]
-            pub fn foo(mut param: crate::Trivial) {
-                unsafe { crate::detail::...(&mut param) }
+            pub fn foo(param: crate::Trivial) {
+                let mut param = ::core::mem::MaybeUninit::new(param);
+                unsafe { crate::detail::...(param.as_mut_ptr()) }
             }
         }
     );
     assert_rs_matches!(
         rs_api,
         quote! {
-            pub(crate) unsafe fn ...(param: &mut crate::Trivial);
+            pub(crate) unsafe fn ...(param: *mut crate::Trivial);
         }
     );
     assert_cc_matches!(
         rs_api_impl,
         quote! {
             extern "C" void ...(struct Trivial* param) {
-                foo(std::move(*param));
+                foo(crubit::UnsafeTakeValue(param));
             }
         }
     );
@@ -2685,9 +2687,9 @@ fn test_unsafe_constructor_nonunpin() -> Result<()> {
                 type Error = ::ctor::Infallible;
                 #[inline(always)]
                 unsafe fn ctor_new(args: *mut ::ffi_11::c_int) -> Self::CtorType {
-                    let mut p = args;
                     unsafe {
                         ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                            let mut p = args;
                             crate::detail::...(__crubit_dest as *mut ::core::ffi::c_void, p);
                         })
                     }
