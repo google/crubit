@@ -454,25 +454,16 @@ pub fn get_tag_size_with_padding(layout: Layout<'_>) -> u64 {
         Variants::Single { .. } | Variants::Empty => 0,
         Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
             #[rustversion::before(2026-05-18)]
-            let mut variant_offsets = variants.iter().map(|variant| match &variant.fields {
+            let mut variant_offsets = variants.iter().filter_map(|variant| match &variant.fields {
                 FieldsShape::Arbitrary { offsets, .. } => {
-                    if offsets.is_empty() {
-                        variant.size.bytes() // No fields => variant is just the
-                                             // tag.
-                    } else {
-                        offsets[FieldIdx::from_usize(0)].bytes()
-                    }
+                    offsets.get(FieldIdx::from_usize(0)).map(|offset| offset.bytes())
                 }
                 _ => panic!("Internal Error - Detected an enum with non-arbitrary field"),
             });
 
             #[rustversion::since(2026-05-18)]
-            let mut variant_offsets = variants.iter().map(|variant| {
-                if variant.field_offsets.is_empty() {
-                    variant.size.bytes()
-                } else {
-                    variant.field_offsets[FieldIdx::from_usize(0)].bytes()
-                }
+            let mut variant_offsets = variants.iter().filter_map(|variant| {
+                variant.field_offsets.get(FieldIdx::from_usize(0)).map(|offset| offset.bytes())
             });
 
             // There are two equivalent ways to express a rust enum:
@@ -485,7 +476,9 @@ pub fn get_tag_size_with_padding(layout: Layout<'_>) -> u64 {
             //
             // See https://doc.rust-lang.org/beta/nightly-rustc/rustc_abi/enum.FieldsShape.html#variant.Arbitrary
             // and https://doc.rust-lang.org/reference/type-layout.html#reprc-enums-with-fields
-            let expected_offset = variant_offsets.next().expect("At least one variant is required");
+            let Some(expected_offset) = variant_offsets.next() else {
+                return 0;
+            };
             for variant_offset in variant_offsets {
                 if variant_offset != expected_offset {
                     panic!("Internal Error - Detected an enum with different tag offsets.")

@@ -531,6 +531,7 @@ pub mod repr_c_variant_alignment {
     pub enum OverAlignedNarrowPayload {
         A(i32),
         B(u8),
+        C,
     }
 
     impl OverAlignedNarrowPayload {
@@ -538,6 +539,7 @@ pub mod repr_c_variant_alignment {
             match self {
                 Self::A(a) => *a,
                 Self::B(b) => i32::from(*b),
+                Self::C => -1,
             }
         }
     }
@@ -553,6 +555,7 @@ pub mod repr_c_variant_alignment {
     pub enum OverAlignedWidePayload {
         A(u64),
         B(u8),
+        C,
     }
 
     impl OverAlignedWidePayload {
@@ -560,6 +563,7 @@ pub mod repr_c_variant_alignment {
             match self {
                 Self::A(a) => *a,
                 Self::B(b) => u64::from(*b),
+                Self::C => 0,
             }
         }
     }

@@ -836,6 +836,8 @@ OverAlignedNarrowPayload final {
   static ::enums::repr_c_variant_alignment::OverAlignedNarrowPayload MakeB(
       ::std::uint8_t __param_0);
 
+  static constexpr OverAlignedNarrowPayload MakeC();
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~OverAlignedNarrowPayload() = default;
   OverAlignedNarrowPayload(OverAlignedNarrowPayload&&) = default;
@@ -857,10 +859,12 @@ OverAlignedNarrowPayload final {
   struct alignas(4) __crubit_B_struct {
     ::std::uint8_t __field0;
   };
+  // Variant C has no size, so no struct is generated.
 
   enum class Tag : ::std::uint32_t {
     A = 0,
     B = 1,
+    C = 2,
   };
 
  public:
@@ -902,6 +906,8 @@ OverAlignedWidePayload final {
   static ::enums::repr_c_variant_alignment::OverAlignedWidePayload MakeB(
       ::std::uint8_t __param_0);
 
+  static constexpr OverAlignedWidePayload MakeC();
+
   // No custom `Drop` impl and no custom "drop glue" required
   ~OverAlignedWidePayload() = default;
   OverAlignedWidePayload(OverAlignedWidePayload&&) = default;
@@ -923,10 +929,12 @@ OverAlignedWidePayload final {
   struct alignas(8) __crubit_B_struct {
     ::std::uint8_t __field0;
   };
+  // Variant C has no size, so no struct is generated.
 
   enum class Tag : ::std::uint32_t {
     A = 0,
     B = 1,
+    C = 2,
   };
 
  public:
@@ -2675,6 +2683,12 @@ inline ::enums::repr_c_variant_alignment::OverAlignedNarrowPayload(
   __crubit_internal::__crubit_thunk_B(__param_0, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
+
+// `static` constructor
+inline constexpr ::enums::repr_c_variant_alignment::OverAlignedNarrowPayload(
+    ::enums::repr_c_variant_alignment::OverAlignedNarrowPayload::MakeC)() {
+  return OverAlignedNarrowPayload(PrivateTagCtorTag{}, Tag{INT64_C(2)});
+}
 static_assert(::std::is_trivially_destructible_v<
               ::enums::repr_c_variant_alignment::OverAlignedNarrowPayload>);
 static_assert(::std::is_trivially_move_constructible_v<
@@ -2751,6 +2765,12 @@ inline ::enums::repr_c_variant_alignment::OverAlignedWidePayload(
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_B(__param_0, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+// `static` constructor
+inline constexpr ::enums::repr_c_variant_alignment::OverAlignedWidePayload(
+    ::enums::repr_c_variant_alignment::OverAlignedWidePayload::MakeC)() {
+  return OverAlignedWidePayload(PrivateTagCtorTag{}, Tag{INT64_C(2)});
 }
 static_assert(::std::is_trivially_destructible_v<
               ::enums::repr_c_variant_alignment::OverAlignedWidePayload>);

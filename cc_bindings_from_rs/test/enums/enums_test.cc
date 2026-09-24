@@ -303,6 +303,10 @@ TEST(EnumsVariantAlignmentTest, OverAlignedNarrowPayload) {
   e.tag = OverAlignedNarrowPayload::Tag::B;
   e.B.__field0 = 45;
   EXPECT_EQ(e.value(), 45);
+
+  e = OverAlignedNarrowPayload::MakeC();
+  EXPECT_EQ(e.tag, OverAlignedNarrowPayload::Tag::C);
+  EXPECT_EQ(e.value(), -1);
 }
 
 TEST(EnumsVariantAlignmentTest, OverAlignedWidePayload) {
@@ -314,6 +318,10 @@ TEST(EnumsVariantAlignmentTest, OverAlignedWidePayload) {
   e.tag = OverAlignedWidePayload::Tag::B;
   e.B.__field0 = 99;
   EXPECT_EQ(e.value(), 99u);
+
+  e = OverAlignedWidePayload::MakeC();
+  EXPECT_EQ(e.tag, OverAlignedWidePayload::Tag::C);
+  EXPECT_EQ(e.value(), 0u);
 }
 
 }  // namespace

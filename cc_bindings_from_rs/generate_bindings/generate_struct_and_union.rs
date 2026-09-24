@@ -2861,10 +2861,13 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                 Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => variants
                     .iter_enumerated()
                     .map(|(variant_index, variant)| {
-                        (
-                            get_fields((variant_index, variant)),
-                            variant.size.bytes() - tag_size_with_padding,
-                        )
+                        let size =
+                            if self.variant_has_non_zst_fields(adt_def.variant(variant_index)) {
+                                variant.size.bytes() - tag_size_with_padding
+                            } else {
+                                0
+                            };
+                        (get_fields((variant_index, variant)), size)
                     })
                     .collect_vec(),
             };
@@ -2919,6 +2922,16 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         } else {
             panic!("Expected ADT or Tuple type: {:?}", self.self_ty);
         }
+    }
+
+    fn variant_has_non_zst_fields(&self, variant_def: &ty::VariantDef) -> bool {
+        let tcx = self.db.tcx();
+        let generic_args = self.adt_generic_args.expect("generic args present for ADT field");
+        variant_def.fields.iter().any(|field_def| {
+            let ty = field_def.ty(tcx, generic_args);
+            let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
+            get_layout(tcx, ty).is_ok_and(|layout| layout.size().bytes() > 0)
+        })
     }
 
     fn assign_next_offsets(
@@ -2976,11 +2989,18 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                 Ok(CppLayout::Union { fields })
             }
             ty::AdtKind::Enum => {
+                let adt_def = self.adt_def.expect("Enum should have adt_def");
                 let variant_sizes = match layout_variants {
                     Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
                         variants
-                            .iter()
-                            .map(|layout| layout.size.bytes() - tag_size_with_padding)
+                            .iter_enumerated()
+                            .map(|(variant_index, layout)| {
+                                if self.variant_has_non_zst_fields(adt_def.variant(variant_index)) {
+                                    layout.size.bytes() - tag_size_with_padding
+                                } else {
+                                    0
+                                }
+                            })
                             .collect_vec()
                     }
                     Variants::Single { .. } | Variants::Empty => vec![self.layout.size.bytes()],
