@@ -6,45 +6,50 @@ use bridge_rust::{transmute_abi, CrubitAbi, Decoder, Encoder};
 use cc_std::std::raw_string_view;
 use std::mem;
 
-pub fn maybe_int() -> Option<i32> {
-    Some(4)
+pub fn maybe_int() -> MyOptionRust<i32> {
+    MyOptionRust(Some(4))
 }
 
-pub fn maybe_string_view() -> Option<raw_string_view> {
-    None
+pub fn maybe_string_view() -> MyOptionRust<raw_string_view> {
+    MyOptionRust(None)
 }
 
-pub fn maybe_int_slice() -> Option<*const [i32]> {
-    Some(&[1, 2, 3][..] as *const [_])
+pub fn maybe_int_slice() -> MyOptionRust<*const [i32]> {
+    MyOptionRust(Some(&[1, 2, 3][..] as *const [_]))
 }
 
-pub fn assert_none(x: Option<i32>) {
-    assert_eq!(x, None);
+pub fn assert_none(x: MyOptionRust<i32>) {
+    assert_eq!(x.0, None);
 }
 
-pub fn assert_some_5(x: Option<i32>) {
-    assert_eq!(x, Some(5));
+pub fn assert_some_5(x: MyOptionRust<i32>) {
+    assert_eq!(x.0, Some(5));
 }
 
-pub fn assert_some_some_5(x: Option<Option<i32>>) {
-    assert_eq!(x, Some(Some(5)));
+pub fn assert_some_some_5(x: MyOptionRust<MyOptionRust<i32>>) {
+    assert_eq!(x.0.and_then(|x| x.0), Some(5));
 }
 
-pub fn option_slice_without_first(x: Option<&[i32]>) -> Option<&[i32]> {
-    let (_first, rest) = x?.split_first()?;
-    Some(rest)
+pub fn option_slice_without_first(x: MyOptionRust<&[i32]>) -> MyOptionRust<&[i32]> {
+    let Some(slice) = x.0 else {
+        return MyOptionRust(None);
+    };
+    let Some((_first, rest)) = slice.split_first() else {
+        return MyOptionRust(None);
+    };
+    MyOptionRust(Some(rest))
 }
 
-pub fn option_adds_one_to_ref(x: Option<&mut i32>) -> Option<&mut i32> {
-    x.map(|x| {
+pub fn option_adds_one_to_ref(x: MyOptionRust<&mut i32>) -> MyOptionRust<&mut i32> {
+    MyOptionRust(x.0.map(|x| {
         *x += 1;
         x
-    })
+    }))
 }
 
 #[crubit_annotate::cpp_bridge(
     cpp_type = "std::optional",
-    bridge_abi_cpp = "crubit::OptionalAbi",
+    bridge_abi_cpp = "crubit::OptionAbi",
     bridge_abi_rust = "MyOptionRustAbi"
 )]
 pub struct MyOptionRust<T>(Option<T>);

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
+#include <optional>
 #include <ranges>
 #include <type_traits>
 #include <vector>
@@ -30,10 +31,10 @@ TEST(StdlibTraitTest, Default) {
 TEST(StdlibTraitTest, IteratorNext) {
   using impl = rs::core::iter::Iterator::impl<stdlib::MyStruct>;
   auto s = stdlib::MyStruct::new_(3);
-  EXPECT_EQ(std::optional(impl::next(s)), std::make_optional(2));
-  EXPECT_EQ(std::optional(impl::next(s)), std::make_optional(1));
-  EXPECT_EQ(std::optional(impl::next(s)), std::make_optional(0));
-  EXPECT_EQ(std::optional(impl::next(s)), std::nullopt);
+  EXPECT_EQ(std::optional<int32_t>(impl::next(s)), std::make_optional(2));
+  EXPECT_EQ(std::optional<int32_t>(impl::next(s)), std::make_optional(1));
+  EXPECT_EQ(std::optional<int32_t>(impl::next(s)), std::make_optional(0));
+  EXPECT_EQ(std::optional<int32_t>(impl::next(s)), std::nullopt);
 }
 
 TEST(StdlibTraitTest, IteratorAdapter_ModernRangesApi) {
