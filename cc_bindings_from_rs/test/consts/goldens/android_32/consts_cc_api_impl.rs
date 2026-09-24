@@ -58,12 +58,12 @@ const _: () = assert!(::core::mem::offset_of!(::consts_golden::StructWithArray, 
 const _: () = assert!(::std::mem::size_of::<::consts_golden::StructWithStr>() == 12);
 const _: () = assert!(::std::mem::align_of::<::consts_golden::StructWithStr>() == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e(
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_u_x00000027_u(
     __self: &'static ::consts_golden::StructWithStr<'static>,
     other: &'static ::consts_golden::StructWithStr<'static>,
 ) -> bool {
     unsafe {
-        <::consts_golden::StructWithStr as ::core::cmp::PartialEq<
+        <::consts_golden::StructWithStr<'static> as ::core::cmp::PartialEq<
             ::consts_golden::StructWithStr<'static>,
         >>::eq(__self, other)
     }

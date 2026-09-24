@@ -569,10 +569,14 @@ inline ::std::uint32_t sum_bytes(rs_std::SliceRef<const ::std::uint8_t> bytes) {
 namespace functions::generic_fn_tests::as_mut_trait_tests {
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_prefix_usums(rs_std::SliceRef<::std::int32_t>*);
+extern "C" void
+__crubit_thunk_prefix_usums_u_x00000026mut_x00000020_x0000005bi32_x0000005d(
+    rs_std::SliceRef<::std::int32_t>*);
 }
 inline void prefix_sums(rs_std::SliceRef<::std::int32_t> arg) {
-  return __crubit_internal::__crubit_thunk_prefix_usums(&arg);
+  return __crubit_internal::
+      __crubit_thunk_prefix_usums_u_x00000026mut_x00000020_x0000005bi32_x0000005d(
+          &arg);
 }
 
 }  // namespace functions::generic_fn_tests::as_mut_trait_tests
@@ -616,7 +620,8 @@ inline void ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct::
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_diverse_ulifetimes(
+extern "C" void
+__crubit_thunk_diverse_ulifetimes_u_x00000026_x0000005bi32_x0000005d(
     rs_std::SliceRef<const ::std::int32_t>*,
     rs_std::SliceRef<const ::std::int32_t>*,
     rs_std::SliceRef<const ::std::int32_t>*, rs_std::SliceRef<::std::int32_t>*);
@@ -631,45 +636,57 @@ inline void diverse_lifetimes(rs_std::SliceRef<const ::std::int32_t> arg1,
                                    rs_std::SliceRef<const ::std::int32_t>,
                                    rs_std::SliceRef<const ::std::int32_t>>(
           arg1, arg2, arg3));
-  return __crubit_internal::__crubit_thunk_diverse_ulifetimes(&arg1, &arg2,
-                                                              &arg3, &result);
+  return __crubit_internal::
+      __crubit_thunk_diverse_ulifetimes_u_x00000026_x0000005bi32_x0000005d(
+          &arg1, &arg2, &arg3, &result);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_slice_uref_usum(
+extern "C" ::std::int32_t
+__crubit_thunk_slice_uref_usum_u_x00000026_x0000005bi32_x0000005d(
     rs_std::SliceRef<const ::std::int32_t>*);
 }
 inline ::std::int32_t slice_ref_sum(
     rs_std::SliceRef<const ::std::int32_t> arg) {
-  return __crubit_internal::__crubit_thunk_slice_uref_usum(&arg);
+  return __crubit_internal::
+      __crubit_thunk_slice_uref_usum_u_x00000026_x0000005bi32_x0000005d(&arg);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_static_ulifetime_urequirement(
+extern "C" ::std::int32_t
+__crubit_thunk_static_ulifetime_urequirement_u_x00000026_x0000005bi32_x0000005d(
     rs_std::SliceRef<const ::std::int32_t>*);
 }
 inline ::std::int32_t static_lifetime_requirement(
     rs_std::SliceRef<const ::std::int32_t> arg) {
-  return __crubit_internal::__crubit_thunk_static_ulifetime_urequirement(&arg);
+  return __crubit_internal::
+      __crubit_thunk_static_ulifetime_urequirement_u_x00000026_x0000005bi32_x0000005d(
+          &arg);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_struct_uref(
+extern "C" ::std::int32_t
+__crubit_thunk_struct_uref_u_x00000026functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
     ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const&);
 }
 inline ::std::int32_t struct_ref(
     ::functions::generic_fn_tests::as_ref_trait_tests::MyStruct const& arg) {
-  return __crubit_internal::__crubit_thunk_struct_uref(arg);
+  return __crubit_internal::
+      __crubit_thunk_struct_uref_u_x00000026functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003aas_uref_utrait_utests_x0000003a_x0000003aMyStruct(
+          arg);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_two_uargs(
+extern "C" ::std::int32_t
+__crubit_thunk_two_uargs_u_x00000026_x0000005bi32_x0000005d_u_x00000026_x0000005bi32_x0000005d(
     rs_std::SliceRef<const ::std::int32_t>*,
     rs_std::SliceRef<const ::std::int32_t>*);
 }
 inline ::std::int32_t two_args(rs_std::SliceRef<const ::std::int32_t> x,
                                rs_std::SliceRef<const ::std::int32_t> y) {
-  return __crubit_internal::__crubit_thunk_two_uargs(&x, &y);
+  return __crubit_internal::
+      __crubit_thunk_two_uargs_u_x00000026_x0000005bi32_x0000005d_u_x00000026_x0000005bi32_x0000005d(
+          &x, &y);
 }
 
 }  // namespace functions::generic_fn_tests::as_ref_trait_tests
@@ -707,30 +724,38 @@ inline void ::functions::generic_fn_tests::ctor_trait_tests::CppMovable::
   static_assert(0 == offsetof(__crubit_assert_type, value));
 }
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_accept_uctor(
+extern "C" ::std::int32_t
+__crubit_thunk_accept_uctor_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
     ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&,
     ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&);
 }
 inline ::std::int32_t accept_ctor(
     ::functions::generic_fn_tests::ctor_trait_tests::CppMovable c1,
     ::functions::generic_fn_tests::ctor_trait_tests::CppMovable c2) {
-  return __crubit_internal::__crubit_thunk_accept_uctor(::std::move(c1),
-                                                        ::std::move(c2));
+  return __crubit_internal::
+      __crubit_thunk_accept_uctor_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
+          ::std::move(c1), ::std::move(c2));
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_accept_uctor_uarray(void*);
+extern "C" ::std::int32_t
+__crubit_thunk_accept_uctor_uarray_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
+    void*);
 }
 inline ::std::int32_t accept_ctor_array(
     ::std::array<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
                      crubit_nonnull,
                  3>
         a) {
-  return __crubit_internal::__crubit_thunk_accept_uctor_uarray(&a);
+  return __crubit_internal::
+      __crubit_thunk_accept_uctor_uarray_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
+          &a);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_accept_uctor_utuple(void**);
+extern "C" ::std::int32_t
+__crubit_thunk_accept_uctor_utuple_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
+    void**);
 }
 inline ::std::int32_t accept_ctor_tuple(
     ::std::tuple<::functions::generic_fn_tests::ctor_trait_tests::CppMovable *
@@ -739,7 +764,9 @@ inline ::std::int32_t accept_ctor_tuple(
   auto&& c_0 = ::std::get<0>(c);
   auto&& c_cabi_0 = ::std::move(c_0);
   void* c_cabi[] = {&c_cabi_0};
-  return __crubit_internal::__crubit_thunk_accept_uctor_utuple(c_cabi);
+  return __crubit_internal::
+      __crubit_thunk_accept_uctor_utuple_uctor_x0000003a_x0000003aByValue_x0000003c_x00000027_u_x0000002c_x00000020functions_ugolden_x0000003a_x0000003ageneric_ufn_utests_x0000003a_x0000003actor_utrait_utests_x0000003a_x0000003aCppMovable_x0000003e(
+          c_cabi);
 }
 
 namespace __crubit_internal {
@@ -838,51 +865,52 @@ return_rvalue_reference_tuple(
 namespace functions::generic_fn_tests::into_trait_tests {
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_basic_utest(::std::int32_t);
+extern "C" ::std::int32_t __crubit_thunk_basic_utest_ui32(::std::int32_t);
 }
 inline ::std::int32_t basic_test(::std::int32_t arg) {
-  return __crubit_internal::__crubit_thunk_basic_utest(arg);
+  return __crubit_internal::__crubit_thunk_basic_utest_ui32(arg);
 }
 
 namespace __crubit_internal {
 extern "C" ::std::int32_t
-__crubit_thunk_generic_uparam_unested_udeeper_uin_uparam_uty(void*);
+__crubit_thunk_generic_uparam_unested_udeeper_uin_uparam_uty_ui32(void*);
 }
 inline ::std::int32_t generic_param_nested_deeper_in_param_ty(
     ::std::array<::std::int32_t, 3> xs) {
   return __crubit_internal::
-      __crubit_thunk_generic_uparam_unested_udeeper_uin_uparam_uty(&xs);
+      __crubit_thunk_generic_uparam_unested_udeeper_uin_uparam_uty_ui32(&xs);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_multiple_ugeneric_uparams(
+extern "C" ::std::int32_t __crubit_thunk_multiple_ugeneric_uparams_ui32_ui32(
     ::std::int32_t, ::std::int32_t);
 }
 inline ::std::int32_t multiple_generic_params(::std::int32_t x,
                                               ::std::int32_t y) {
-  return __crubit_internal::__crubit_thunk_multiple_ugeneric_uparams(x, y);
+  return __crubit_internal::__crubit_thunk_multiple_ugeneric_uparams_ui32_ui32(
+      x, y);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_return_utype();
+extern "C" ::std::int32_t __crubit_thunk_return_utype_ui32();
 }
 inline ::std::int32_t return_type() {
-  return __crubit_internal::__crubit_thunk_return_utype();
+  return __crubit_internal::__crubit_thunk_return_utype_ui32();
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_reused_ugeneric_uparam(::std::int32_t,
-                                                                ::std::int32_t);
+extern "C" ::std::int32_t __crubit_thunk_reused_ugeneric_uparam_ui32(
+    ::std::int32_t, ::std::int32_t);
 }
 inline ::std::int32_t reused_generic_param(::std::int32_t x, ::std::int32_t y) {
-  return __crubit_internal::__crubit_thunk_reused_ugeneric_uparam(x, y);
+  return __crubit_internal::__crubit_thunk_reused_ugeneric_uparam_ui32(x, y);
 }
 
 namespace __crubit_internal {
-extern "C" ::std::int32_t __crubit_thunk_where_uclause(::std::int32_t);
+extern "C" ::std::int32_t __crubit_thunk_where_uclause_ui32(::std::int32_t);
 }
 inline ::std::int32_t where_clause(::std::int32_t x) {
-  return __crubit_internal::__crubit_thunk_where_uclause(x);
+  return __crubit_internal::__crubit_thunk_where_uclause_ui32(x);
 }
 
 }  // namespace functions::generic_fn_tests::into_trait_tests

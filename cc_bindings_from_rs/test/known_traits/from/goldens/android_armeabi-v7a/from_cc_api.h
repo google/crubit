@@ -826,25 +826,27 @@ inline ::from::OpaqueRef::OpaqueRef(::crubit::UnsafeRelocateTag,
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_create(rs_std::StrRef*,
-                                      ::from::OpaqueRef* __ret_ptr);
+extern "C" void __crubit_thunk_create_u_x00000027a(
+    rs_std::StrRef*, ::from::OpaqueRef* __ret_ptr);
 }
 inline ::from::OpaqueRef(OpaqueRef::create)(rs_std::StrRef s) {
   crubit::Slot<::from::OpaqueRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_create(&s, __return_value_storage);
+  __crubit_internal::__crubit_thunk_create_u_x00000027a(&s,
+                                                        __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
-extern "C" void __crubit_thunk_get_uarg(::from::OpaqueRef const&,
-                                        rs_std::StrRef* __ret_ptr);
+extern "C" void __crubit_thunk_get_uarg_u_x00000027a(::from::OpaqueRef const&,
+                                                     rs_std::StrRef* __ret_ptr);
 }
 inline rs_std::StrRef(OpaqueRef::get_arg)() const {
   auto&& self = *this;
   crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
-  __crubit_internal::__crubit_thunk_get_uarg(self, __return_value_storage);
+  __crubit_internal::__crubit_thunk_get_uarg_u_x00000027a(
+      self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 namespace __crubit_internal {

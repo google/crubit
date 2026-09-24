@@ -131,23 +131,19 @@ unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_uunsupported_uassoc
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_LifetimeTrait_utrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a(
+unsafe extern "C" fn __crubit_thunk_LifetimeTrait_utrait_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a_u_x00000027a(
     __self: &'static ::traits_golden::LifetimeStruct<'static>,
 ) -> &'static i32 {
     unsafe {
-        <::traits_golden::LifetimeStruct as ::traits_golden::LifetimeTrait>::trait_do_something(
-            __self,
-        )
+        <::traits_golden::LifetimeStruct<'static>as::traits_golden::LifetimeTrait>::trait_do_something(__self)
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_LifetimeTrait_ufunction_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a(
+unsafe extern "C" fn __crubit_thunk_LifetimeTrait_ufunction_udo_usomething_utraits_ugolden_x0000003a_x0000003aLifetimeStruct_x0000003c_x00000027a_x0000003e_u_x00000027a_u_x00000027a(
     __self: &'static ::traits_golden::LifetimeStruct<'static>,
 ) -> &'static i32 {
     unsafe {
-        <::traits_golden::LifetimeStruct as ::traits_golden::LifetimeTrait>::function_do_something(
-            __self,
-        )
+        <::traits_golden::LifetimeStruct<'static>as::traits_golden::LifetimeTrait>::function_do_something(__self)
     }
 }
 #[unsafe(no_mangle)]

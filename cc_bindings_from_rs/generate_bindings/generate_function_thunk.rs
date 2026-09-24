@@ -1144,9 +1144,9 @@ pub fn generate_trait_thunks<'tcx>(
                         ),
                         "Generic types are not supported in trait impls yet."
                     );
-                    db.format_ty_for_rs(static_ty).expect("We've replaced all types with static")
+                    db.format_ty_for_rs(static_ty)
                 })
-                .collect_vec();
+                .collect::<Result<Vec<_>>>()?;
             let generics = if args.is_empty() {
                 quote! {}
             } else {
@@ -1173,7 +1173,7 @@ pub fn generate_trait_thunks<'tcx>(
 }
 
 pub(crate) enum ThunkKind<'tcx> {
-    Function { def_id: DefId, export_name: Option<Symbol> },
+    Function { def_id: DefId, export_name: Option<Symbol>, substs: ty::GenericArgsRef<'tcx> },
     TraitMethod { method: &'tcx ty::AssocItem, substs: ty::GenericArgsRef<'tcx> },
 }
 
@@ -1187,8 +1187,8 @@ pub(crate) fn make_thunk_name<'tcx>(db: &BindingsGenerator<'tcx>, kind: ThunkKin
     };
 
     let details = match kind {
-        ThunkKind::Function { def_id, export_name } => {
-            crate::generate_function::function_symbol_name(db, def_id, export_name)
+        ThunkKind::Function { def_id, export_name, substs } => {
+            crate::generate_function::function_symbol_name(db, def_id, export_name, substs)
         }
         ThunkKind::TraitMethod { method, substs } => {
             if is_golden_test {
