@@ -22,14 +22,15 @@ inputs:
     description: 'Install Bazel and point it at the GCS remote cache.'
     required: false
     default: 'false'
-  llvm_head:
+  llvm:
     description: >
-      Resolve the current llvm-project main commit and export
-      CRUBIT_LLVM_COMMIT, overriding the pin in MODULE.bazel. Opt-in rather
-      than implied by `bazel`, because only the workflows that deliberately
-      track LLVM head want it.
+      Which LLVM revision to build against, by exporting CRUBIT_LLVM_COMMIT to
+      override the pin in MODULE.bazel.
+        'none'   - do not override; use the MODULE.bazel pin.
+        'pinned' - use the commit published once a day by the
+                   nightly test matrix job.
     required: false
-    default: 'false'
+    default: 'none'
   sccache:
     description: >
       Install sccache and route both C/C++ and Rust compilation through it, by
@@ -117,19 +118,68 @@ runs:
           echo "Bazel GCS remote cache: read-only"
         fi
 
-    - name: Discover and report latest LLVM commit
-      if: ${{ inputs.llvm_head == 'true' }}
+    - name: Resolve LLVM commit
+      if: ${{ inputs.llvm == 'pinned' }}
       shell: bash
+      env:
+        # Past this age, a pin that has stopped moving means the nightly
+        # select-llvm-commit job stopped running, not that llvm-project went
+        # quiet. Three days spans a long weekend without crying wolf. The age
+        # is truncating integer division, so this first warns at 4 days.
+        STALE_AFTER_DAYS: '3'
       run: |
-        LLVM_COMMIT=$(git ls-remote https://github.com/llvm/llvm-project.git refs/heads/main | cut -f1)
-        if [[ -z "$LLVM_COMMIT" ]]; then
-          echo "::error::Failed to discover latest LLVM commit"
-          exit 1
+        # Published by the nightly test matrix.
+        # The repo is hardcoded rather than derived from github.repository on
+        # purpose: forks then build the same commit as upstream and get hits
+        # from the world-readable Bazel cache.
+        RAW=$(curl -fsSL --max-time 30 --retry 3 \
+          "https://raw.githubusercontent.com/google/crubit/test-matrix/llvm_commit.txt" || true)
+
+        # Format is "<sha> <iso8601>". Plain `read` splits on whitespace and
+        # absorbs the trailing newline, and leaves PIN_DATE empty if the file
+        # is still single-field.
+        read -r LLVM_COMMIT PIN_DATE <<< "$RAW"
+
+        # This value is interpolated into a download URL by
+        # bazel/llvm_extension.bzl, so anything that is not a bare 40-hex-digit
+        # SHA is rejected rather than passed through. Falling back to the
+        # MODULE.bazel pin (rather than to llvm-project main) keeps a network
+        # blip from turning into an unbudgeted from-source LLVM build.
+        if [[ ! "$LLVM_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+          echo "::warning::No valid LLVM commit published at test-matrix/llvm_commit.txt; using the MODULE.bazel pin."
+          exit 0
         fi
-        echo "Latest LLVM commit: $LLVM_COMMIT"
+
         echo "CRUBIT_LLVM_COMMIT=$LLVM_COMMIT" >> "$GITHUB_ENV"
-        echo "### LLVM Dependency" >> "$GITHUB_STEP_SUMMARY"
-        echo "Building against LLVM \`main\` commit [\`$LLVM_COMMIT\`](https://github.com/llvm/llvm-project/commit/$LLVM_COMMIT)" >> "$GITHUB_STEP_SUMMARY"
+
+        # Check for a stale LLVM commit pin.
+        # Nothing breaks with a stale commit, so without this check we would not know it wasn't
+        # getting updated. Our test matrix would silently not update the llvm_commit.txt file.
+        AGE_NOTE="published $PIN_DATE"
+        STALE=""
+        if [[ -z "$PIN_DATE" ]]; then
+          STALE="the pin carries no timestamp"
+          AGE_NOTE="publication date unknown"
+        elif ! PIN_EPOCH=$(date -u -d "$PIN_DATE" +%s 2>/dev/null); then
+          STALE="unparseable pin timestamp '$PIN_DATE'"
+          AGE_NOTE="publication date unparseable"
+        else
+          AGE_DAYS=$(( ( $(date -u +%s) - PIN_EPOCH ) / 86400 ))
+          AGE_NOTE="published $PIN_DATE (${AGE_DAYS}d ago)"
+          if (( AGE_DAYS > STALE_AFTER_DAYS )); then
+            STALE="the pin is ${AGE_DAYS} days old"
+          fi
+        fi
+
+        if [[ -n "$STALE" ]]; then
+          echo "::warning::LLVM pin looks stale: ${STALE}. The select-llvm-commit job on the test-matrix branch may have stopped running, so CI is not exercising recent LLVM."
+        fi
+
+        echo "Building against LLVM commit $LLVM_COMMIT ($AGE_NOTE)"
+        {
+          echo "### LLVM Dependency"
+          echo "Building against LLVM commit [\`$LLVM_COMMIT\`](https://github.com/llvm/llvm-project/commit/$LLVM_COMMIT), $AGE_NOTE"
+        } >> "$GITHUB_STEP_SUMMARY"
 
     - name: Install sccache
       if: >

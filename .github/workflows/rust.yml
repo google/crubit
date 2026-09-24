@@ -128,7 +128,7 @@ jobs:
         bazel: 'true'
         # The example resolves rules_crubit through local_path_override, so it
         # builds against the same LLVM as the main workspace.
-        llvm_head: 'true'
+        llvm: 'pinned'
     - name: Build Bazel test project (example)
       run: |
         cd examples/build_systems/bazel
@@ -148,13 +148,11 @@ jobs:
       with:
         gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
         bazel: 'true'
-        llvm_head: 'true'
+        llvm: 'pinned'
 
-    # TODO(b/564966909): Re-enable once rs_bindings_from_cc build is fixed up.
     # --remote_download_outputs=all is load-bearing: setup_bazel_env.py's
     # merge_archives() globs the resulting *.a files off local disk.
     - name: "Build rs_bindings_from_cc using Bazel"
-      if: false
       run: >
         bazelisk build
         --lockfile_mode=error
@@ -162,10 +160,8 @@ jobs:
         rs_bindings_from_cc:rs_bindings_from_cc_main
         @protobuf//:protoc
     - name: "Set up Bazel environment for Cargo"
-      if: false
       run: python3 cargo/build/setup_bazel_env.py 
     - name: "Build rs_bindings_from_cc using Cargo"
-      if: false
       run: cargo build --verbose --locked -p rs_bindings_from_cc
 
   # Single aggregate check for branch protection and for the Copybara export.
