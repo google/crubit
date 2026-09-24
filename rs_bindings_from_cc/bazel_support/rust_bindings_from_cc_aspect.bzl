@@ -356,14 +356,19 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # Headers for which we will produce bindings.
     public_hdrs = []
 
-    features = find_crubit_features(target, ctx)
+    crubit_features = find_crubit_features(target, ctx)
 
     extra_cpp_srcs = _get_additional_cpp_srcs(ctx)
 
     if hasattr(ctx.rule.attr, "hdrs"):
-        public_hdrs = _collect_hdrs(ctx, features)
+        public_hdrs = _collect_hdrs(ctx, crubit_features)
 
-    elif ctx.rule.kind == "cc_embed_data" or ctx.rule.kind == "upb_proto_library":
+    elif ctx.rule.kind == "cc_embed_data":
+        # Only add to the list of headers we need to generate bindings for if Crubit is enabled for
+        # the target.
+        if crubit_features:
+            public_hdrs = target[CcInfo].compilation_context.direct_public_headers
+    elif ctx.rule.kind == "upb_proto_library":
         public_hdrs = target[CcInfo].compilation_context.direct_public_headers
 
     has_public_headers = len(public_hdrs) > 0
@@ -389,8 +394,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     direct_target_args = {}
     if public_hdrs:
         direct_target_args["h"] = [h.path for h in public_hdrs]
-    if features:
-        direct_target_args["f"] = features
+    if crubit_features:
+        direct_target_args["f"] = crubit_features
     if use_label_encoded_names_for_deps:
         direct_target_args["c"] = crubit_encode_raw_string_as_crate_name(str(ctx.label))
 
@@ -537,7 +542,18 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         use_label_encoded_names_for_deps = use_label_encoded_names_for_deps,
     )
 
-def _attr_predicate(_ctx):
+def _attr_predicate(ctx):
+    if ctx.rule.qualified_kind.rule_name == "cc_library":
+        # Implementation-only cc_library targets (with srcs, no hdrs or textual_hdrs,
+        # and no Crubit aspect_hints) cannot expose headers or Crubit types to
+        # dependents, so do not propagate Crubit aspects into their private deps.
+        if (
+            not ctx.rule.attr.aspect_hints.value and
+            not ctx.rule.attr.hdrs.value and
+            not ctx.rule.attr.textual_hdrs.value and
+            ctx.rule.attr.srcs.value
+        ):
+            return []
     return [
         "deps",
         "implicit_cc_deps",
