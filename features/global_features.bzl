@@ -9,7 +9,6 @@ visibility(["//..."])
 SUPPORTED_FEATURES = [
     "supported",
     "assume_lifetimes",
-    "async_fn_send_modulo_regions",
     "cpp_move_constructible_annotation",
 ]
 

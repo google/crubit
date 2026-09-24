@@ -89,9 +89,6 @@ flagset::flags! {
         /// Enable object-oriented casting between base and derived classes.
         OoCasting,
 
-        /// Check if async fn return type implements Send modulo regions.
-        AsyncFnSendModuloRegions,
-
         /// Emit `CRUBIT_ANNOTATE: cpp_move_constructible=` annotations on records.
         ///
         /// See b/553644030.
@@ -141,7 +138,6 @@ impl CrubitFeature {
             Self::ReserveStandardMacros => "reserve_standard_macros",
             Self::ThunklessAccessors => "thunkless_accessors",
             Self::OoCasting => "oo_casting",
-            Self::AsyncFnSendModuloRegions => "async_fn_send_modulo_regions",
             Self::CppMoveConstructibleAnnotation => "cpp_move_constructible_annotation",
             Self::ProtoReferences => "proto_references",
             Self::Generics => "generics",
@@ -184,9 +180,6 @@ impl CrubitFeature {
             Self::ReserveStandardMacros => "//features:reserve_standard_macros",
             Self::ThunklessAccessors => "//features:thunkless_accessors",
             Self::OoCasting => "//features:oo_casting",
-            Self::AsyncFnSendModuloRegions => {
-                "//features:async_fn_send_modulo_regions"
-            }
             Self::CppMoveConstructibleAnnotation => {
                 "//features:cpp_move_constructible_annotation"
             }
@@ -241,7 +234,6 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"reserve_standard_macros" => CrubitFeature::ReserveStandardMacros.into(),
         b"thunkless_accessors" => CrubitFeature::ThunklessAccessors.into(),
         b"oo_casting" => CrubitFeature::OoCasting.into(),
-        b"async_fn_send_modulo_regions" => CrubitFeature::AsyncFnSendModuloRegions.into(),
         b"cpp_move_constructible_annotation" => {
             CrubitFeature::CppMoveConstructibleAnnotation.into()
         }
@@ -385,7 +377,6 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
-                | CrubitFeature::AsyncFnSendModuloRegions
         );
     }
 
@@ -424,7 +415,6 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
-                | CrubitFeature::AsyncFnSendModuloRegions
         );
     }
 
@@ -448,7 +438,6 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
-                | CrubitFeature::AsyncFnSendModuloRegions
         );
     }
 
@@ -473,7 +462,6 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
-                | CrubitFeature::AsyncFnSendModuloRegions
         );
     }
 
@@ -498,7 +486,6 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
-                | CrubitFeature::AsyncFnSendModuloRegions
         );
     }
 }
