@@ -52,7 +52,7 @@ extern "C" void
 __rust_thunk___ZN6crubit4test30StructWithDoNotBindConstructorC1ENS0_23ArgumentToBoundOverloadE(
     struct crubit::test::StructWithDoNotBindConstructor* __this,
     struct crubit::test::ArgumentToBoundOverload* __param_0) {
-  crubit::construct_at(__this, crubit::UnsafeTakeValue(__param_0));
+  crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(__param_0));
 }
 
 static_assert(sizeof(struct crubit::test::StructWithDoNotBindMethod) == 1);

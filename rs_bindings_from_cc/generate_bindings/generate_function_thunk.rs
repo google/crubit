@@ -704,7 +704,15 @@ pub fn generate_cc_thunk_parts<'a>(
                             // prvalue also means no move constructor is needed
                             // for types which are only Rust-movable.
                             needs_slot_header = true;
-                            Ok(quote! { crubit::UnsafeTakeValue( #ident) })
+                            if matches!(func.cc_name(), UnqualifiedIdentifier::Constructor) {
+                                // Constructors are called through
+                                // `construct_at`, which would forward the
+                                // prvalue by reference, and so need a move
+                                // constructor. Forward a deferred take instead.
+                                Ok(quote! { crubit::UnsafeTakeValueOnConversion( #ident) })
+                            } else {
+                                Ok(quote! { crubit::UnsafeTakeValue( #ident) })
+                            }
                         }
                         PassingConvention::Ctor => {
                             if rs_type_kind.is_c_abi_compatible_by_value() {
