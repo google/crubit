@@ -119,3 +119,13 @@ pub fn fn_with_unreturnable_const<T>() {
         panic!("diverging const");
     };
 }
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct StructWithRef<'a> {
+    pub r: &'a i32,
+}
+
+// Cannot be generated because StructWithRef has a sized reference field and is not a C++ aggregate.
+pub const STRUCT_WITH_REF_CONST: StructWithRef<'static> = StructWithRef {
+    r: &42,
+};

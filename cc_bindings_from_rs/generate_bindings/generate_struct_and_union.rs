@@ -39,8 +39,8 @@ use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
-    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions,
-    post_analysis_typing_env, try_normalize,
+    as_ref_or_pinned_ref, is_c_abi_compatible_by_value, is_std_ptr_non_null,
+    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, try_normalize,
 };
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
@@ -1618,14 +1618,29 @@ impl std::fmt::Display for NotAggregateReason {
 
 fn is_type_default_constructible_in_cpp<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
     let tcx = db.tcx();
+    if let Some((_, referent, mutability)) = as_ref_or_pinned_ref(ty) {
+        return match *referent.kind() {
+            // `&str` references are formatted as `rs_std::StrRef`, which is default-constructible
+            // in C++ (representing an empty string with a non-null dangling pointer).
+            // Mutable references to `str` are unsupported.
+            TyKind::Str => mutability.is_not(),
+            // `&[T]` and `&mut [T]` slice references are formatted as `rs_std::SliceRef`, which is
+            // default-constructible in C++ (representing an empty slice with a non-null
+            // dangling pointer).
+            TyKind::Slice(..) => true,
+            // Sized references have no "empty" default in C++, and default-initializing them
+            // to nullptr would cause undefined behavior.
+            _ => false,
+        };
+    }
     match *ty.kind() {
         TyKind::Bool
         | TyKind::Char
         | TyKind::Int(_)
         | TyKind::Uint(_)
         | TyKind::Float(_)
-        | TyKind::RawPtr(..)
-        | TyKind::Ref(..) => true,
+        | TyKind::RawPtr(..) => true,
+        TyKind::Ref(..) => false,
         TyKind::Array(..) | TyKind::Tuple(..) => {
             if let Some(default_trait_id) = tcx.get_diagnostic_item(sym::Default) {
                 does_type_implement_trait(tcx, ty, default_trait_id, [])
@@ -1634,6 +1649,9 @@ fn is_type_default_constructible_in_cpp<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
             }
         }
         TyKind::Adt(adt_def, _) => {
+            if is_std_ptr_non_null(tcx, adt_def.did()) {
+                return false;
+            }
             if let Some(bridged_builtin) = BridgedBuiltin::new(db, adt_def) {
                 return match bridged_builtin {
                     BridgedBuiltin::Option | BridgedBuiltin::Vec => true,

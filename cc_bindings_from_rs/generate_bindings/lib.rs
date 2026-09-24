@@ -1881,6 +1881,9 @@ fn move_ctor_and_assignment_operator_codegen_style<'tcx>(
 /// For Rust types, this checks if Crubit can generate move operations for it via
 /// `move_ctor_and_assignment_operator_codegen_style`.
 fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+    if query_compiler::as_ref_or_pinned_ref(ty).is_some() {
+        return true;
+    }
     match *ty.kind() {
         // Primitives, references, and raw pointers are trivially movable in C++.
         ty::Bool

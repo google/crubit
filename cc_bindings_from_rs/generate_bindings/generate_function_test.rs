@@ -370,6 +370,197 @@ fn test_format_item_fn_mut_reference_ensures_no_alias() {
 }
 
 #[test]
+fn test_format_item_fn_pinned_mut_reference() {
+    let test_src = r#"
+            use core::pin::Pin;
+            #[unsafe(no_mangle)]
+            pub fn foo(_x: Pin<&mut i32>) {}
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void foo(::std::int32_t& _x);
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                #[unsafe(no_mangle)]
+                unsafe extern "C" fn ...(
+                    _x: ::core::pin::Pin<&'static mut i32>
+                ) -> () {
+                    unsafe { ::rust_out::foo(_x) }
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_fn_pinned_mut_reference_explicit_lifetime() {
+    let test_src = r#"
+            use core::pin::Pin;
+            #[unsafe(no_mangle)]
+            pub fn foo<'a>(_x: Pin<&'a mut i32>) {}
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void foo(::std::int32_t* $a crubit_nonnull _x);
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_fn_pinned_mut_reference_static_lifetime() {
+    let test_src = r#"
+            use core::pin::Pin;
+            #[unsafe(no_mangle)]
+            pub fn foo(_x: Pin<&'static mut i32>) {}
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void foo(::std::int32_t* $static crubit_nonnull _x);
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_fn_pinned_mut_reference_lifetime_bound() {
+    let test_src = r#"
+            use core::pin::Pin;
+            #[unsafe(no_mangle)]
+            pub fn foo(_x: Pin<&mut i32>) -> &mut i32 {
+                _x.get_mut()
+            }
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                ::std::int32_t& $(__anon1)
+                foo(::std::int32_t* $(__anon1) crubit_nonnull _x CRUBIT_LIFETIME_BOUND);
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_fn_pinned_reference() {
+    let test_src = r#"
+            use core::pin::Pin;
+            #[unsafe(no_mangle)]
+            pub fn foo(_x: Pin<&i32>) {}
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void foo(::std::int32_t const& _x);
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                #[unsafe(no_mangle)]
+                unsafe extern "C" fn ...(
+                    _x: ::core::pin::Pin<&'static i32>
+                ) -> () {
+                    unsafe { ::rust_out::foo(_x) }
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_fn_returning_pinned_reference() {
+    let test_src = r#"
+            use core::pin::Pin;
+            #[unsafe(no_mangle)]
+            pub fn foo<'a>(x: Pin<&'a i32>) -> Pin<&'a i32> {
+                x
+            }
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                ::std::int32_t const& $a foo(::std::int32_t const* $a crubit_nonnull x);
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                #[unsafe(no_mangle)]
+                unsafe extern "C" fn ...(
+                    x: ::core::pin::Pin<&'static i32>
+                ) -> ::core::pin::Pin<&'static i32> {
+                    unsafe { ::rust_out::foo(x) }
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_fn_returning_pinned_mut_reference() {
+    let test_src = r#"
+            use core::pin::Pin;
+            #[unsafe(no_mangle)]
+            pub fn foo<'a>(x: Pin<&'a mut i32>) -> Pin<&'a mut i32> {
+                x
+            }
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                ::std::int32_t& $a foo(::std::int32_t* $a crubit_nonnull x);
+            }
+        );
+        assert_rs_matches!(
+            result.rs_details.tokens,
+            quote! {
+                #[unsafe(no_mangle)]
+                unsafe extern "C" fn ...(
+                    x: ::core::pin::Pin<&'static mut i32>
+                ) -> ::core::pin::Pin<&'static mut i32> {
+                    unsafe { ::rust_out::foo(x) }
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_fn_pinned_mut_reference_ensures_no_alias() {
+    let test_src = r#"
+            use core::pin::Pin;
+            #[unsafe(no_mangle)]
+            pub fn foo(_x: Pin<&mut i32>, _y: Pin<&i32>) {}
+        "#;
+    test_format_item(test_src, "foo", |result| {
+        let result = result.unwrap().unwrap();
+        let cc_details = &result.cc_details.tokens;
+        assert_cc_matches!(cc_details, quote! { CheckNoMutableAliasing });
+    });
+}
+
+#[test]
 fn test_format_item_fn_static_reference() {
     let test_src = r#"
             #[unsafe(no_mangle)]

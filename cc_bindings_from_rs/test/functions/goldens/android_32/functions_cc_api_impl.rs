@@ -35,10 +35,10 @@ unsafe extern "C" fn __crubit_thunk_no_umsg_uadd(x: i32, y: i32) -> i32 {
     unsafe { ::functions_golden::fn_must_use_tests::no_msg_add(x, y) }
 }
 const _: () = assert!(
-    ::std::mem::size_of::<::functions_golden::fn_param_ty_tests::StructWithPinnedRefs>() == 16
+    ::std::mem::size_of::<::functions_golden::fn_param_ty_tests::StructWithPinnedRefs>() == 8
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::functions_golden::fn_param_ty_tests::StructWithPinnedRefs>() == 8
+    ::std::mem::align_of::<::functions_golden::fn_param_ty_tests::StructWithPinnedRefs>() == 4
 );
 const _: () = assert!(
     ::core::mem::offset_of!(
@@ -50,7 +50,7 @@ const _: () = assert!(
     ::core::mem::offset_of!(
         ::functions_golden::fn_param_ty_tests::StructWithPinnedRefs,
         pinned_mut_ref
-    ) == 8
+    ) == 4
 );
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_add_uf64(x: f64, y: f64) -> f64 {

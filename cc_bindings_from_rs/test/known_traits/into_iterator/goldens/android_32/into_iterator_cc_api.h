@@ -58,13 +58,34 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_iterator_rust_golden :: ContainerWithRefIntoIter") alignas(4)
     [[clang::trivial_abi]] ContainerWithRefIntoIter final {
  public:
+  // Type is not a C++ aggregate: Field `iter` is not default-constructible in
+  // C++
+
+  // `into_iterator_rust_golden::ContainerWithRefIntoIter` doesn't implement the
+  // `Default` trait
+  ContainerWithRefIntoIter() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~ContainerWithRefIntoIter() = default;
+  ContainerWithRefIntoIter(ContainerWithRefIntoIter&&) = default;
+  ContainerWithRefIntoIter& operator=(ContainerWithRefIntoIter&&) = default;
+
+  // `into_iterator_rust_golden::ContainerWithRefIntoIter` doesn't implement the
+  // `Clone` trait
+  ContainerWithRefIntoIter(const ContainerWithRefIntoIter&) = delete;
+  ContainerWithRefIntoIter& operator=(const ContainerWithRefIntoIter&) = delete;
+  ContainerWithRefIntoIter(::crubit::UnsafeRelocateTag,
+                           ContainerWithRefIntoIter&& value);
+
   // Error generating bindings for struct
   // `into_iterator_rust_golden::ContainerWithRefIntoIter` defined at
   // cc_bindings_from_rs/test/known_traits/into_iterator/into_iterator.rs;l=88:
   // IntoIterator/Iterator impls with generic type or const parameters are not
   // supported yet.
 
-  ::into_iterator_rust::MyIterator* crubit_nonnull iter{};
+  union {
+    ::into_iterator_rust::MyIterator* crubit_nonnull iter;
+  };
 
  private:
   static void __crubit_field_offset_assertions();
@@ -420,11 +441,16 @@ static_assert(
 static_assert(
     alignof(::into_iterator_rust::ContainerWithRefIntoIter) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<ContainerWithRefIntoIter>);
+static_assert(::std::is_trivially_destructible_v<
+              ::into_iterator_rust::ContainerWithRefIntoIter>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::ContainerWithRefIntoIter>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::into_iterator_rust::ContainerWithRefIntoIter>);
+inline ::into_iterator_rust::ContainerWithRefIntoIter::ContainerWithRefIntoIter(
+    ::crubit::UnsafeRelocateTag, ContainerWithRefIntoIter&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 inline void ::into_iterator_rust::ContainerWithRefIntoIter::
     __crubit_field_offset_assertions() {
   using __crubit_assert_type = ::into_iterator_rust::ContainerWithRefIntoIter;

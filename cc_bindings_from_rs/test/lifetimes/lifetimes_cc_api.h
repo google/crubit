@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <utility>
 
@@ -33,6 +34,24 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: lifetimes_golden :: StructWithLifetime") alignas(8)
     [[clang::trivial_abi]] StructWithLifetime final {
  public:
+  // Type is not a C++ aggregate: Field `field_with_lifetime` is not
+  // default-constructible in C++
+
+  // `lifetimes_golden::StructWithLifetime` doesn't implement the `Default`
+  // trait
+  StructWithLifetime() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~StructWithLifetime() = default;
+  StructWithLifetime(StructWithLifetime&&) = default;
+  StructWithLifetime& operator=(StructWithLifetime&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  StructWithLifetime(const StructWithLifetime&) = default;
+  StructWithLifetime& operator=(const StructWithLifetime&) = default;
+  StructWithLifetime(::crubit::UnsafeRelocateTag, StructWithLifetime&& value);
+
   static ::lifetimes::StructWithLifetime from_ref(
       ::std::int32_t const* $a crubit_nonnull field_with_lifetime);
 
@@ -57,7 +76,11 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   explicit operator ::std::int32_t() const;
 
-  ::std::int32_t const* crubit_nonnull field_with_lifetime{};
+  explicit StructWithLifetime(::std::int32_t const* $a crubit_nonnull value);
+
+  union {
+    ::std::int32_t const* crubit_nonnull field_with_lifetime;
+  };
 
  private:
   static void __crubit_field_offset_assertions();
@@ -67,10 +90,38 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: lifetimes_golden :: StructWithLifetimeAndDropGlue") alignas(8)
     [[clang::trivial_abi]] StructWithLifetimeAndDropGlue final {
  public:
+  // Type is not a C++ aggregate: Field `field_with_lifetime` is not
+  // default-constructible in C++
+
+  // `lifetimes_golden::StructWithLifetimeAndDropGlue` doesn't implement the
+  // `Default` trait
+  StructWithLifetimeAndDropGlue() = delete;
+
+  // Drop::drop
+  ~StructWithLifetimeAndDropGlue();
+
+  // C++ move operations are unavailable for this type. See
+  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
+  // are C++ movable.
+  StructWithLifetimeAndDropGlue(StructWithLifetimeAndDropGlue&&) = delete;
+  ::lifetimes::StructWithLifetimeAndDropGlue& operator=(
+      StructWithLifetimeAndDropGlue&&) = delete;
+  // `lifetimes_golden::StructWithLifetimeAndDropGlue` doesn't implement the
+  // `Clone` trait
+  StructWithLifetimeAndDropGlue(const StructWithLifetimeAndDropGlue&) = delete;
+  StructWithLifetimeAndDropGlue& operator=(
+      const StructWithLifetimeAndDropGlue&) = delete;
+  StructWithLifetimeAndDropGlue(::crubit::UnsafeRelocateTag,
+                                StructWithLifetimeAndDropGlue&& value);
+
   static ::lifetimes::StructWithLifetimeAndDropGlue make_static_42();
 
-  ::rs::alloc::string::String field_with_drop_glue{};
-  ::std::int32_t const* crubit_nonnull field_with_lifetime{};
+  union {
+    ::rs::alloc::string::String field_with_drop_glue;
+  };
+  union {
+    ::std::int32_t const* crubit_nonnull field_with_lifetime;
+  };
 
  private:
   static void __crubit_field_offset_assertions();
@@ -101,7 +152,8 @@ static_assert(
 static_assert(
     alignof(::lifetimes::StructWithLifetime) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<StructWithLifetime>);
+static_assert(
+    ::std::is_trivially_destructible_v<::lifetimes::StructWithLifetime>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::lifetimes::StructWithLifetime>);
 static_assert(
@@ -110,6 +162,11 @@ static_assert(
     ::std::is_trivially_copy_constructible_v<::lifetimes::StructWithLifetime>);
 static_assert(
     ::std::is_trivially_copy_assignable_v<::lifetimes::StructWithLifetime>);
+inline ::lifetimes::StructWithLifetime::StructWithLifetime(
+    ::crubit::UnsafeRelocateTag, StructWithLifetime&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_from_uref(
     ::std::int32_t const* $a crubit_nonnull,
@@ -225,6 +282,18 @@ inline ::lifetimes::StructWithLifetime::operator ::std::int32_t() const {
       __crubit_thunk_Into_uinto_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_ui32(
           &self);
 }
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_From_ufrom_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
+    ::std::int32_t const* $a crubit_nonnull,
+    ::lifetimes::StructWithLifetime* __ret_ptr);
+}
+inline ::lifetimes::StructWithLifetime::StructWithLifetime(
+    ::std::int32_t const* $a crubit_nonnull value) {
+  __crubit_internal::
+      __crubit_thunk_From_ufrom_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetime_x0000003c_x00000027_u_x0000003e_u_x00000026_x00000027a_x00000020i32(
+          value, this);
+}
 inline void ::lifetimes::StructWithLifetime::
     __crubit_field_offset_assertions() {
   using __crubit_assert_type = ::lifetimes::StructWithLifetime;
@@ -236,6 +305,22 @@ static_assert(
 static_assert(
     alignof(::lifetimes::StructWithLifetimeAndDropGlue) == 8,
     "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetimeAndDropGlue_x0000003c_x00000027_u_x0000003e(
+    ::lifetimes::StructWithLifetimeAndDropGlue&);
+}
+inline ::lifetimes::StructWithLifetimeAndDropGlue::
+    ~StructWithLifetimeAndDropGlue() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetimeAndDropGlue_x0000003c_x00000027_u_x0000003e(
+          *this);
+}
+inline ::lifetimes::StructWithLifetimeAndDropGlue::
+    StructWithLifetimeAndDropGlue(::crubit::UnsafeRelocateTag,
+                                  StructWithLifetimeAndDropGlue&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_make_ustatic_u42(
