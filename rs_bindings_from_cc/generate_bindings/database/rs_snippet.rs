@@ -2088,7 +2088,9 @@ impl<'a> RsTypeKind<'a> {
                 }
                 BridgeRsTypeKind::C9Co { .. } => false,
             },
-            RsTypeKind::ExistingRustType { .. } => true,
+            RsTypeKind::ExistingRustType { existing_rust_type, .. } => {
+                existing_rust_type.is_trivially_copyable()
+            }
         }
     }
 

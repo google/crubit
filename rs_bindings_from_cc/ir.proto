@@ -728,6 +728,7 @@ message ExistingRustType {
   bool must_bind = 9;
   bool impl_debug = 10;
   string label_hint = 11;
+  bool is_trivially_copyable = 12 [default = true];
 }
 
 message Item {

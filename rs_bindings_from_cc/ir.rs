@@ -3848,6 +3848,10 @@ derive_debug_partialeq_eq_hash! {
         pub fn label_hint(&self) -> Option<&'pb str> {
             self.label_hint
         }
+
+        pub fn is_trivially_copyable(&self) -> bool {
+            self.proto.is_trivially_copyable()
+        }
     }
 }
 

@@ -561,11 +561,18 @@ pub fn generate_bindings_tokens(
         (cpp_api, rust_api)
     };
 
-    // Callables use `Box<dyn F>`.
+    // Callables use `Box<dyn F>`, and bindings that depend on `rs_alloc` (either directly or
+    // transitively via `rs_std`) can refer to `::alloc::...` types (e.g. `::alloc::string::String`).
     let extern_crate_alloc = {
         let has_callables = !callables_rs_api.is_empty();
+        let has_rs_alloc = !ir
+            .target_crubit_features(&BazelLabel::from(
+                "//support/rs_std:rs_alloc",
+            ))
+            .is_empty();
 
-        has_callables.then(|| quote! { extern crate alloc; __NEWLINE__ __NEWLINE__  })
+        (has_callables || has_rs_alloc)
+            .then(|| quote! { extern crate alloc; __NEWLINE__ __NEWLINE__  })
     };
 
     // when we go through the main_api, we want to go through one at a time.

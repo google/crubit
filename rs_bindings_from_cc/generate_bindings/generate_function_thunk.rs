@@ -608,8 +608,20 @@ pub fn generate_cc_thunk_parts<'a>(
                         param_types.push(cpp_type);
                     } else {
                         let ffi_ident = format_ident!("__{ident}");
+                        let move_expr = if matches!(
+                            arg_type.unalias(),
+                            RsTypeKind::ExistingRustType { existing_rust_type, .. }
+                                if !existing_rust_type.is_trivially_copyable()
+                        ) {
+                            quote! {
+                                std::move(*reinterpret_cast<::crubit::Slot<#cpp_type>*>(#ffi_ident))
+                                    .AssumeInitAndTakeValue()
+                            }
+                        } else {
+                            quote! { std::move(*#ffi_ident) }
+                        };
                         conversion_stmts.extend(quote! {
-                            auto&& #ident = std::move(*#ffi_ident);
+                            auto&& #ident = #move_expr;
                         });
                         param_idents.push(ffi_ident);
                         param_types.push(quote! { #cpp_type * });
@@ -697,6 +709,16 @@ pub fn generate_cc_thunk_parts<'a>(
                         PassingConvention::Ctor => {
                             if rs_type_kind.is_c_abi_compatible_by_value() {
                                 Ok(quote! { std::move( #ident) })
+                            } else if matches!(
+                                rs_type_kind.unalias(),
+                                RsTypeKind::ExistingRustType { existing_rust_type, .. }
+                                    if !existing_rust_type.is_trivially_copyable()
+                            ) {
+                                let cpp_type = cpp_type_name::format_cpp_type(&rs_type_kind, db)?;
+                                Ok(quote! {
+                                    std::move(*reinterpret_cast<::crubit::Slot<#cpp_type>*>(#ident))
+                                        .AssumeInitAndTakeValue()
+                                })
                             } else {
                                 Ok(quote! { std::move(* #ident) })
                             }

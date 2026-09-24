@@ -295,6 +295,7 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
   // `Foo` instead of `struct Foo`.
   clang::PrintingPolicy policy(context.getLangOpts());
   policy.SuppressTagKeyword = true;
+  policy.FullyQualifiedName = true;
   std::string cc_name = cc_qualtype.getAsString(policy);
 
   ictx_.MarkAsSuccessfullyImported(*type_decl);
@@ -313,6 +314,8 @@ std::unique_ptr<ir_proto::Item> ExistingRustTypeImporter::Import(
     size_align->set_size(context.getTypeSizeInChars(cpp_type).getQuantity());
     size_align->set_alignment(
         context.getTypeAlignInChars(cpp_type).getQuantity());
+    existing->set_is_trivially_copyable(
+        cc_qualtype.isTriviallyCopyableType(context));
   }
   existing->set_is_same_abi(*is_same_abi);
   existing->set_id(ictx_.GenerateItemId(*type_decl).value());
