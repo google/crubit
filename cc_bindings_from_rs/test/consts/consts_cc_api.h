@@ -166,6 +166,12 @@ TyWithAssocConsts final {
   static void __crubit_field_offset_assertions();
 };
 static constexpr ::std::uint32_t UNSIGNED_INT = UINT32_C(4294967295);
+
+// Error generating bindings for function
+// `consts_golden::fn_with_unreturnable_const` defined at
+// cc_bindings_from_rs/test/consts/consts.rs;l=117:
+// Function contains a const block that cannot return
+
 }  // namespace consts
 
 template <>

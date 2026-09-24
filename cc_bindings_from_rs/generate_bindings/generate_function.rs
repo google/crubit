@@ -28,7 +28,7 @@ use query_compiler::{does_type_implement_trait, is_copy, post_analysis_typing_en
 use quote::quote;
 use rustc_hir::attrs::AttributeKind;
 use rustc_hir::{self as hir, def::DefKind};
-use rustc_middle::mir::Mutability;
+use rustc_middle::mir::{self, Mutability};
 use rustc_middle::ty::{self, TraitRef, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::{sym, Symbol};
@@ -998,6 +998,10 @@ pub fn generate_function<'tcx>(
 ) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
 
+    if fn_has_unreturnable_const(tcx, def_id) {
+        bail!("Function contains a const block that cannot return");
+    }
+
     let sig_mid = {
         let generic_args = db.get_generic_args(def_id)?;
         let early_bound_fn_sig = tcx.fn_sig(def_id).instantiate(tcx, generic_args);
@@ -1493,4 +1497,54 @@ pub fn get_async_future_output_ty<'tcx>(
     crate::format_type::get_associated_type(tcx, rs_return_type, sym::Output).ok_or_else(|| {
         anyhow!("Failed to find Future::Output associated type in bounds of {:?}", rs_return_type)
     })
+}
+
+#[rustversion::before(2026-09-20)]
+fn opt_def_id<'tcx>(const_kind: &ty::AliasConstKind<'tcx>) -> Option<DefId> {
+    const_kind.opt_def_id()
+}
+
+#[rustversion::since(2026-09-20)]
+fn opt_def_id<'tcx>(const_kind: &ty::AliasConstKind<'tcx>) -> Option<DefId> {
+    let def_id = match const_kind {
+        ty::AliasConstKind::Projection { def_id } => def_id,
+        ty::AliasConstKind::InherentSelf { def_id } => def_id,
+        ty::AliasConstKind::InherentImpl { def_id } => def_id,
+        ty::AliasConstKind::Free { def_id } => def_id,
+        ty::AliasConstKind::Anon { def_id } => def_id,
+    };
+    Some(*def_id)
+}
+
+fn fn_has_unreturnable_const<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool {
+    if !tcx.is_mir_available(def_id) {
+        return false;
+    }
+    let body = tcx.optimized_mir(def_id);
+
+    let Some(req_consts) = &body.required_consts else {
+        return false;
+    };
+    req_consts
+        .iter()
+        .filter_map(|req_const| match req_const.const_ {
+            mir::Const::Unevaluated(uneval, _) => Some(uneval.def),
+            mir::Const::Ty(_, ct) => match ct.kind() {
+                ty::ConstKind::Alias(_, alias_const) => opt_def_id(&alias_const.kind(tcx)),
+                _ => None,
+            },
+            _ => None,
+        })
+        .filter(|const_def_id| {
+            matches!(tcx.def_kind(*const_def_id), DefKind::AnonConst)
+                && tcx.anon_const_kind(*const_def_id) == ty::AnonConstKind::NonTypeSystemInline
+                && !tcx.is_trivial_const(*const_def_id)
+        })
+        .any(|const_def_id| {
+            let const_mir = tcx.mir_for_ctfe(const_def_id);
+            !const_mir
+                .basic_blocks
+                .iter()
+                .any(|bb| matches!(bb.terminator().kind, mir::TerminatorKind::Return))
+        })
 }

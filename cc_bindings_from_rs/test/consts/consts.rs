@@ -110,3 +110,12 @@ pub const STRUCT_WITH_STR_CONST: StructWithStr<'static> = StructWithStr {
     msg: "hello world",
     count: 42,
 };
+
+// Test that const expressions that diverge do not receive bindings.
+// It's important that it's a generic function otherwise the compiler will eagerly evaluate the
+// const and fail to compile.
+pub fn fn_with_unreturnable_const<T>() {
+    const {
+        panic!("diverging const");
+    };
+}
