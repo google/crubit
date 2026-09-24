@@ -84,7 +84,7 @@ rust_library(
         ":dyn_format",
         "@crate_index//:flagset",  # v0_4
         "@crate_index//:heck",  # v0_5
-        "@crate_index//:phf",  # v0_11
+        "@crate_index//:phf",  # v0_14
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1
         "@crate_index//:syn",  # v1
