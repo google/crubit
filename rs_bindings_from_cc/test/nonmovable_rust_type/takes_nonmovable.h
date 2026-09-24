@@ -9,12 +9,31 @@
 
 #include "rs_bindings_from_cc/test/nonmovable_rust_type/nonmovable.h"
 
+// C++ functions which take a Rust-native type by value.
+//
+// `::nonmovable::NonMovable` has no C++ move constructor, only a relocating
+// `(crubit::UnsafeRelocateTag, NonMovable&&)` constructor. So the thunks that
+// Crubit generates for these functions can't initialize the parameter with
+// `std::move(*x)`. Instead they call `crubit::UnsafeTakeValue(x)` (see
+// `support/internal/slot.h`), which relocates the Rust value into the
+// parameter.
+
 namespace crubit_test {
 
-// Takes a Rust-native, non-C++-movable type by value.
 inline std::uint8_t TakesByValue(::nonmovable::NonMovable x) {
   return x.read_byte();
 }
+
+inline std::uint8_t TakesTwoByValue(::nonmovable::NonMovable a,
+                                    ::nonmovable::NonMovable b) {
+  return a.read_byte() + b.read_byte();
+}
+
+struct Receiver final {
+  std::uint8_t TakesByValue(::nonmovable::NonMovable x) const {
+    return x.read_byte();
+  }
+};
 
 }  // namespace crubit_test
 

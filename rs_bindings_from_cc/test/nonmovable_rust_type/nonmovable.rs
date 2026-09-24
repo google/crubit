@@ -8,16 +8,20 @@
 //! deletes its C++ move constructor (there is no valid moved-from value to leave
 //! behind) and gives it a relocating constructor instead.
 
+use std::sync::Arc;
+
 pub struct NonMovable {
-    buf: Box<u8>,
+    /// Shared, so that the creator can observe whether this value is still
+    /// alive through `Arc::strong_count`.
+    byte: Arc<u8>,
 }
 
 impl NonMovable {
-    pub fn from_byte(byte: u8) -> Self {
-        Self { buf: Box::new(byte) }
+    pub fn new(byte: Arc<u8>) -> Self {
+        Self { byte }
     }
 
     pub fn read_byte(&self) -> u8 {
-        *self.buf
+        *self.byte
     }
 }
