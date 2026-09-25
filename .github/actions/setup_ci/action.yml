@@ -164,6 +164,7 @@ runs:
           STALE="unparseable pin timestamp '$PIN_DATE'"
           AGE_NOTE="publication date unparseable"
         else
+          echo "CRUBIT_LLVM_DEV_DATE=$(date -u -d "@$PIN_EPOCH" +%Y%m%d)" >> "$GITHUB_ENV"
           AGE_DAYS=$(( ( $(date -u +%s) - PIN_EPOCH ) / 86400 ))
           AGE_NOTE="published $PIN_DATE (${AGE_DAYS}d ago)"
           if (( AGE_DAYS > STALE_AFTER_DAYS )); then
