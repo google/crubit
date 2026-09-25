@@ -220,6 +220,7 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
             .map(|opt| opt.name())
             .chain(rustc_session::config::Z_OPTIONS.iter().map(|opt| opt.name()))
             .filter(|name| OptionsTargetModifiers::is_target_modifier(name))
+            .map(|name| name.replace("_", "-"))
             .join(",")
     ));
 
@@ -251,7 +252,8 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
             return Ok(());
         };
         // Direct TyCtxt query fallback handles cases where macro-based attribute checks
-        // evaluate to false during bootstrapping phases (such as compiling standard library standard-prelude).
+        // evaluate to false during bootstrapping phases (such as compiling standard library
+        // standard-prelude).
         #[rustversion::before(2026-05-24)]
         let has_no_std = rustc_hir::find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoStd { .. } => ()).is_some();
         #[rustversion::since(2026-05-24)]
@@ -292,11 +294,10 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
         let italic = "\x1B[3m";
         let reset = "\x1B[0m";
         let red = "\x1B[31m";
-        eprintln!(
+        bail!(
             "{bold}Crubit {italic}{red}failed{reset} to generate C++ bindings for Rust crate \
-            {bold}`{crate_name}`{reset} due to the following errors:\n{e}"
+            {bold}`{crate_name}`{reset} due to the following errors:\n{e:#}"
         );
-        std::process::exit(1);
     }
     Ok(())
 }
@@ -312,10 +313,13 @@ pub fn run_with_cmdline_args(cmdline: &Cmdline) -> Result<()> {
     }
 }
 
-pub fn run_rustc(args: &[String]) {
+pub fn run_rustc(args: &[String]) -> Result<()> {
     struct Callbacks;
     impl rustc_driver::Callbacks for Callbacks {}
-    rustc_driver::run_compiler(args, &mut Callbacks)
+    match rustc_driver::catch_fatal_errors(|| rustc_driver::run_compiler(args, &mut Callbacks)) {
+        Ok(()) => Ok(()),
+        Err(_) => bail!("Errors reported by Rust compiler."),
+    }
 }
 
 #[cfg(test)]
@@ -346,6 +350,7 @@ mod tests {
 
         tempdir: TempDir,
         include_guard: Option<String>,
+        target: Option<String>,
     }
 
     /// Result of `TestArgs::run` that helps tests access test outputs (e.g. the
@@ -368,6 +373,7 @@ mod tests {
                 extra_rustc_args: vec![],
                 tempdir: tempdir()?,
                 include_guard: None,
+                target: None,
             })
         }
 
@@ -416,6 +422,11 @@ mod tests {
             self
         }
 
+        fn with_target(mut self, target: &str) -> Self {
+            self.target = Some(target.to_string());
+            self
+        }
+
         /// Invokes `super::run_with_cmdline_args` with default `test_crate.rs`
         /// input (and with other default args + args gathered by
         /// `self`).
@@ -452,7 +463,6 @@ mod tests {
                 "--crubit-support-path-format=<crubit/support/{header}>".to_string(),
                 format!("--clang-format-exe-path={CLANG_FORMAT_EXE_PATH}"),
                 format!("--rustfmt-exe-path={RUSTFMT_EXE_PATH}"),
-                "--enable-rmeta-interface=false".to_string(),
             ];
 
             let mut error_report_out_path = None;
@@ -469,22 +479,93 @@ mod tests {
             }
 
             args.extend(self.extra_crubit_args.iter().cloned());
-            args.extend([
-                "--".to_string(),
+
+            let target =
+                self.target.clone().or_else(|| setup_rustc_target_for_testing(self.tempdir.path()));
+
+            let mut extern_args = vec![];
+            if self.target.is_some() {
+                let std_rs_path = self.tempdir.path().join("std.rs");
+                std::fs::write(
+                    &std_rs_path,
+                    r#"
+                    #![allow(internal_features)]
+                    #![feature(no_core, lang_items, compiler_builtins)]
+                    #![no_core]
+                    #![compiler_builtins]
+
+                    #[lang = "pointee_sized"]
+                    pub trait PointeeSized {}
+
+                    #[lang = "meta_sized"]
+                    pub trait MetaSized: PointeeSized {}
+
+                    #[lang = "sized"]
+                    pub trait Sized: MetaSized {}
+
+                    #[lang = "copy"]
+                    pub trait Copy {}
+
+                    pub mod prelude {
+                        pub mod rust_2015 {}
+                        pub mod rust_2018 {}
+                        pub mod rust_2021 {}
+                        pub mod rust_2024 {}
+                        pub mod v1 {}
+                    }
+                    "#,
+                )?;
+                let std_rmeta_path = self.tempdir.path().join("libstd.rmeta");
+                let mut std_rustc_args = vec![
+                    "rustc".to_string(),
+                    format!("--codegen=panic={}", &self.panic_mechanism),
+                    "--crate-name=std".to_string(),
+                    "--crate-type=lib".to_string(),
+                    "--emit=metadata".to_string(),
+                    "-o".to_string(),
+                    std_rmeta_path.display().to_string(),
+                    "-Zunstable-options".to_string(),
+                    std_rs_path.display().to_string(),
+                ];
+                if let Some(target) = &target {
+                    std_rustc_args.push(format!("--target={}", target));
+                }
+                std_rustc_args.extend(self.extra_rustc_args.iter().cloned());
+                run_rustc(&std_rustc_args)?;
+                extern_args.push(format!("--extern=std={}", std_rmeta_path.display()));
+                extern_args.push(format!("-L{}", self.tempdir.path().display()));
+            }
+
+            let rmeta_path = self.tempdir.path().join("libtest_crate.rmeta");
+            let mut rustc_args = vec![
+                "rustc".to_string(),
                 format!("--codegen=panic={}", &self.panic_mechanism),
                 "--crate-type=lib".to_string(),
+                "--emit=metadata".to_string(),
+                "-o".to_string(),
+                rmeta_path.display().to_string(),
+                "-Zunstable-options".to_string(),
                 rs_input_path.display().to_string(),
-            ]);
+            ];
+            if let Some(sysroot) = sysroot_path() {
+                rustc_args.push(format!("--sysroot={}", sysroot.display()));
+            }
+            if let Some(target) = &target {
+                rustc_args.push(format!("--target={}", target));
+            }
+            rustc_args.extend(extern_args.iter().cloned());
+            rustc_args.extend(self.extra_rustc_args.iter().cloned());
+            run_rustc(&rustc_args)?;
 
+            args.push("--source-crate-name=test_crate".to_string());
+            args.extend(extern_args);
+            args.push(format!("--extern=test_crate={}", rmeta_path.display()));
             if let Some(sysroot) = sysroot_path() {
                 args.push(format!("--sysroot={}", sysroot.display()));
             }
-
-            if let Some(target) = &setup_rustc_target_for_testing(self.tempdir.path()) {
+            if let Some(target) = &target {
                 args.push(format!("--target={}", target));
             }
-
-            args.extend(self.extra_rustc_args.iter().cloned());
 
             let cmdline = Cmdline::new(&args)?;
             run_with_cmdline_args(&cmdline)?;
@@ -792,7 +873,7 @@ unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
             .expect_err("Unwriteable --h-out should trigger an error");
 
         let msg = format!("{err:#}");
-        assert_eq!("Error when writing to ../..: Is a directory (os error 21)", msg);
+        assert!(msg.contains("Error when writing to ../..: Is a directory (os error 21)"));
         Ok(())
     }
 
@@ -859,6 +940,19 @@ unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
         let test_result = test_args.run()?;
         let rs_body = std::fs::read_to_string(&test_result.rs_path)?;
         assert!(rs_body.contains("extern crate some_proto_crate as r#type;"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_rustc_with_unstable_target_modifier_flags() -> Result<()> {
+        let test_args = TestArgs::default_args()?
+            .with_target("aarch64-unknown-linux-gnu")
+            .with_extra_rustc_args(&["-Zbranch-protection=bti", "-Zfixed-x18"]);
+        let test_result = test_args
+            .run()
+            .expect("Unstable target modifier flags with '-' should not cause an error");
+        let cc_api = std::fs::read_to_string(&test_result.h_path)?;
+        assert!(cc_api.contains("public_function"));
         Ok(())
     }
 }

@@ -565,9 +565,9 @@ fn public_paths_by_def_id(
     db: &BindingsGenerator<'_>,
     crate_num: CrateNum,
 ) -> HashMap<DefId, PublicPaths> {
-    /// This is retooled logic from rustc's `visible_parent_map` function. Except where that only
-    /// selects the shortest visible path, we track all paths and defer selecting the correct one
-    /// to callers.
+    /// This is retooled logic from rustc's `visible_parent_map` function. Except where that
+    /// only selects the shortest visible path, we track all paths and defer selecting the
+    /// correct one to callers.
     use rustc_span::kw;
     use std::collections::vec_deque::VecDeque;
 
@@ -679,7 +679,7 @@ fn public_paths_by_def_id(
                 .def_path(def_id)
                 .data
                 .iter()
-                .map(|seg| seg.as_sym(/*verbose=*/ false))
+                .map(|seg| seg.as_sym(/* verbose= */ false))
                 .collect::<Vec<_>>();
             if path.first().is_some_and(|p| p.as_str() == "os") {
                 return;
@@ -771,9 +771,9 @@ fn all_public_paths_by_def_id(db: &BindingsGenerator<'_>) -> HashMap<DefId, Publ
     let tcx = db.tcx();
     let mut out = HashMap::new();
 
-    // TODO(b/458768435): LOCAL_CRATE is not included in list of `used_crates`, so while we still have
-    // `--enable-rmeta-interface` (and some users that are not on the rmeta interface) we need to
-    // manually add it to the list of considered crates.
+    // TODO(b/458768435): LOCAL_CRATE is not included in list of `used_crates`, so while we still
+    // have `--enable-rmeta-interface` (and some users that are not on the rmeta interface) we
+    // need to manually add it to the list of considered crates.
     for krate in
         std::iter::once(LOCAL_CRATE).chain(tcx.used_crates(()).iter().cloned()).filter(|&krate|
         // Check if our krate can be imported (and so should provide public paths for DefIds).
@@ -902,9 +902,9 @@ fn renamed_crate_original_name(db: &BindingsGenerator<'_>, krate_id: CrateNum) -
 fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<FullyQualifiedName> {
     let tcx = db.tcx();
 
-    // TODO: b/433286909 - We shouldn't pass DefKind::Use to this method and instead should keep what our use
-    // is pointing at alongside the use as we generate_items and pass that when we want to determine
-    // canonical name.
+    // TODO: b/433286909 - We shouldn't pass DefKind::Use to this method and instead should keep
+    // what our use is pointing at alongside the use as we generate_items and pass that when we
+    // want to determine canonical name.
     let def_id = resolve_if_use(db, def_id).unwrap_or(def_id);
 
     // Symbols that should not receive bindings should not have a canonical name, so that we do not
@@ -966,10 +966,10 @@ fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<Fu
         })?;
 
     // `crate_name` gets the crate name written out in the rmeta file, which is not always the name
-    // we want to spell out in our generated bindings. Proto targets, for example, rename their crate
-    // to include the `_rust_proto` suffix, but the rmeta file contains the unsuffixed crate name.
-    // If we're naming a symbol from our source crate, use the source crate name as the krate name
-    // to resolve any renaming issues.
+    // we want to spell out in our generated bindings. Proto targets, for example, rename their
+    // crate to include the `_rust_proto` suffix, but the rmeta file contains the unsuffixed
+    // crate name. If we're naming a symbol from our source crate, use the source crate name as
+    // the krate name to resolve any renaming issues.
     let krate = (krate_num == db.source_crate_num())
         .then_some(())
         .and_then(|_| db.source_crate_name())
@@ -1024,7 +1024,7 @@ fn matches_qualified_name(db: &BindingsGenerator<'_>, item_did: DefId, name: &[&
     // this function will only be called to check for non-anonymous paths.
     [tcx.crate_name(path.krate)]
         .into_iter()
-        .chain(path.data.into_iter().map(|seg| seg.as_sym(/*verbose=*/ false)))
+        .chain(path.data.into_iter().map(|seg| seg.as_sym(/* verbose= */ false)))
         .zip(name.iter().map(|s| Symbol::intern(s)))
         .all(|(sym, expected)| sym == expected)
 }
@@ -1631,8 +1631,8 @@ fn generate_default_ctor<'tcx>(
             core.common.self_ty,
             core.def_id,
             core.rs_fully_qualified_name.clone(),
-            /*is_constructor=*/ true,
-            /*within_template=*/ false,
+            /* is_constructor= */ true,
+            /* within_template= */ false,
         )?;
 
         let cc_struct_name = &core.common.cc_short_name;
@@ -1764,8 +1764,8 @@ fn copy_codegen_style_to_snippets<'tcx>(
                     core.common.self_ty,
                     core.def_id,
                     core.rs_fully_qualified_name.clone(),
-                    /*is_constructor=*/ true,
-                    /*within_template=*/ false,
+                    /* is_constructor= */ true,
+                    /* within_template= */ false,
                 )?;
                 let main_api = CcSnippet::new(quote! {
                     __NEWLINE__ __COMMENT__ "Clone::clone"
@@ -1782,8 +1782,9 @@ fn copy_codegen_style_to_snippets<'tcx>(
                     let mut prereqs = CcPrerequisites::default();
                     let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
 
-                    // TODO: b/459482188 - This is ultimately dependent on the return ABI of the thunk and
-                    // should be centralized with the other callsites that depend on return type ABI.
+                    // TODO: b/459482188 - This is ultimately dependent on the return ABI of the
+                    // thunk and should be centralized with the other callsites
+                    // that depend on return type ABI.
                     let is_specialization = core
                         .def_id
                         .is_none_or(|id| query_compiler::has_non_lifetime_generics(db.tcx(), id));
@@ -1894,7 +1895,8 @@ fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -
         | ty::Ref(..)
         | ty::FnPtr(..) => true,
 
-        // ADT: check CrubitAttrs if C++-originated, else check move_ctor_and_assignment_operator_codegen_style.
+        // ADT: check CrubitAttrs if C++-originated, else check
+        // move_ctor_and_assignment_operator_codegen_style.
         ty::Adt(adt_def, _) => {
             if is_std_ptr_non_null(db.tcx(), adt_def.did()) {
                 return true;
@@ -2176,7 +2178,11 @@ fn generate_doc_comment(db: &BindingsGenerator, def_id: DefId) -> TokenStream {
 
 fn item_name_for_error_report(db: &BindingsGenerator<'_>, def_id: DefId) -> error_report::ItemName {
     let crate_name = db.tcx().crate_name(def_id.krate);
-    let name = format!("{crate_name}::{}", db.tcx().def_path_str(def_id)).into();
+    let name = if def_id.is_local() {
+        format!("{crate_name}::{}", db.tcx().def_path_str(def_id)).into()
+    } else {
+        db.tcx().def_path_str(def_id).into()
+    };
     let id = ((def_id.index.as_u32() as u64) << 32) | def_id.krate.as_u32() as u64;
     let defining_target = if def_id.krate == db.source_crate_num() {
         None
