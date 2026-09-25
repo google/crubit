@@ -32,7 +32,7 @@ Given the following C++ header:
 ```
 {{ #include ../../examples/cpp/unsafe_attributes/example.h }}
 ```
-<!--  symbol:SafeSignatureButAnnotatedUnsafe -->
+<!--  content:SafeSignatureButAnnotatedUnsafe -->
 
 
 Crubit will generate the following bindings:
