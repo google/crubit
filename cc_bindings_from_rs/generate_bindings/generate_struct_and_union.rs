@@ -29,8 +29,8 @@ use crate::{
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_nonportable_cc_type_name, make_rs_ident, CcInclude};
 use database::code_snippet::{
-    ApiSnippets, CcPrerequisites, CcSnippet, StdHashTemplateSpecialization, TemplateSpecialization,
-    TraitImplTemplateSpecialization,
+    ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, StdHashTemplateSpecialization,
+    TemplateSpecialization, TraitImplTemplateSpecialization,
 };
 use database::{
     AdtCoreBindings, BindingsGenerator, CoreBindingsCommon, StaticMethodMode, TypeLocation,
@@ -238,9 +238,6 @@ fn generate_cpp_enum<'tcx>(
     let tcx = db.tcx();
     let enumeration_cc_name = &core.common.cc_short_name;
 
-    let mut main_api_prereqs = CcPrerequisites::default();
-    main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
-
     // Generate relevant attributes.
     let rs_type = core.rs_fully_qualified_name.to_string();
     let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
@@ -298,23 +295,22 @@ fn generate_cpp_enum<'tcx>(
     let doc_comment = generate_doc_comment(db, def_id);
     let keyword = &core.common.keyword;
     let underlying_cc_type_snippet = cpp_enum_cpp_underlying_type(db, def_id).unwrap();
-    let underlying_cc_type = underlying_cc_type_snippet.tokens;
     let bracketed_enumeration_cc_name = if db.kythe_annotations() {
         quote! { __CAPTURE_BEGIN__ #enumeration_cc_name __CAPTURE_END__ }
     } else {
         quote! { #enumeration_cc_name }
     };
 
-    let main_api = CcSnippet {
-        tokens: quote! {
+    let mut main_api = underlying_cc_type_snippet.map_snippets(|underlying_cc_type| {
+        quote! {
             __NEWLINE__ #doc_comment
             #keyword #(#attributes)* #bracketed_enumeration_cc_name : #underlying_cc_type {
                 #( __NEWLINE__ #enumerator_lines)*
             };
             __NEWLINE__
-        },
-        prereqs: main_api_prereqs + underlying_cc_type_snippet.prereqs,
-    };
+        }
+    });
+    main_api.prereqs.includes.insert(db.support_header("annotations_internal.h"));
 
     let cc_details = CcSnippet::default();
     let rs_details = RsSnippet::new(quote! {});
@@ -1292,22 +1288,18 @@ fn generate_ord_impls<'tcx>(
         __NEWLINE__
     });
 
-    let mut cc_details_prereqs = CcPrerequisites::default();
-    cc_details_prereqs.includes.insert(CcInclude::compare());
-
     let ref_self_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, core.common.self_ty);
     let ref_self_cc_ty = db.format_ty_for_cc(
         ref_self_ty,
         TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
     )?;
-    let ref_self_cc_tokens = ref_self_cc_ty.into_tokens(&mut cc_details_prereqs);
 
     let is_specialization =
         core.def_id.is_none_or(|id| query_compiler::has_non_lifetime_generics(tcx, id));
     let thunk_qualifier = crate::thunk_qualifier(is_specialization);
 
-    let cc_details = CcSnippet {
-        tokens: quote! {
+    let mut cc_details = ref_self_cc_ty.map_snippets(|ref_self_cc_tokens| {
+        quote! {
             namespace __crubit_internal {
                 extern "C" ::std::int8_t #thunk_name(#ref_self_cc_tokens, #ref_self_cc_tokens);
             }
@@ -1320,9 +1312,9 @@ fn generate_ord_impls<'tcx>(
                     default: CRUBIT_UNREACHABLE();
                 }
             }
-        },
-        prereqs: cc_details_prereqs,
-    };
+        }
+    });
+    cc_details.prereqs.includes.insert(CcInclude::compare());
 
     let rs_details = RsSnippet::new(quote! {
         #[unsafe(no_mangle)]
@@ -1370,10 +1362,6 @@ fn generate_partial_ord_impls<'tcx>(
 
     let rhs_rs_ty = db.format_ty_for_rs(rhs_ty)?;
 
-    let mut main_api_prereqs = CcPrerequisites::default();
-    main_api_prereqs.includes.insert(CcInclude::compare());
-    let rhs_cc_tokens_for_main = rhs_cc_ty_for_main.into_tokens(&mut main_api_prereqs);
-
     let partial_ord_trait_id = tcx
         .get_diagnostic_item(sym::PartialOrd)
         .ok_or_else(|| anyhow!("Could not find PartialOrd trait"))?;
@@ -1386,63 +1374,73 @@ fn generate_partial_ord_impls<'tcx>(
     )?;
     let thunk_name = format_ident!("{}", thunk_name_str);
 
-    let mut cc_details_prereqs = CcPrerequisites::default();
-    let rhs_cc_tokens_for_impl = rhs_cc_ty_for_impl.into_tokens(&mut cc_details_prereqs);
-
     let ref_self_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, core.common.self_ty);
     let ref_self_cc_ty = db.format_ty_for_cc(
         ref_self_ty,
         TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
     )?;
-    let ref_self_cc_tokens = ref_self_cc_ty.into_tokens(&mut cc_details_prereqs);
 
     let ref_rhs_cc_ty = db.format_ty_for_cc(
         ref_rhs_ty,
         TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
     )?;
-    let ref_rhs_cc_tokens = ref_rhs_cc_ty.into_tokens(&mut cc_details_prereqs);
 
     let is_specialization =
         core.def_id.is_none_or(|id| query_compiler::has_non_lifetime_generics(tcx, id));
     let thunk_qualifier = crate::thunk_qualifier(is_specialization);
 
-    let (template_prefix, rhs_cc_tokens_for_main, rhs_cc_tokens_for_impl) = if rhs_ty.is_bool() {
-        main_api_prereqs.includes.insert(CcInclude::type_traits());
-        cc_details_prereqs.includes.insert(CcInclude::type_traits());
-        let param_ty = quote! { __CrubitBoolT const& };
-        (bool_constraint_template_prefix(), param_ty.clone(), param_ty)
+    let template_prefix = if rhs_ty.is_bool() {
+        bool_constraint_template_prefix()
     } else {
-        (quote! {}, rhs_cc_tokens_for_main, rhs_cc_tokens_for_impl)
+        quote! {}
     };
 
-    let main_api = CcSnippet {
-        tokens: quote! {
+    let mut main_api = rhs_cc_ty_for_main.map_snippets(|rhs_cc_tokens_for_main| {
+        let rhs_cc_tokens_for_main = if rhs_ty.is_bool() {
+            quote! { __CrubitBoolT const& }
+        } else {
+            rhs_cc_tokens_for_main
+        };
+        quote! {
             __NEWLINE__
             #template_prefix
             ::std::partial_ordering operator<=>(#rhs_cc_tokens_for_main other) const;
             __NEWLINE__
-        },
-        prereqs: main_api_prereqs,
-    };
-    let cc_details = CcSnippet {
-        tokens: quote! {
-            namespace __crubit_internal {
-                extern "C" ::std::int8_t #thunk_name(#ref_self_cc_tokens, #ref_rhs_cc_tokens);
-            }
-            #template_prefix
-            inline ::std::partial_ordering (#cc_fully_qualified_name::operator<=>)(#rhs_cc_tokens_for_impl other) const {
-                auto val = #thunk_qualifier::#thunk_name(*this, other);
-                switch (val) {
-                    case -1: return ::std::partial_ordering::less;
-                    case 0: return ::std::partial_ordering::equivalent;
-                    case 1: return ::std::partial_ordering::greater;
-                    case 2: return ::std::partial_ordering::unordered;
-                    default: CRUBIT_UNREACHABLE();
+        }
+    });
+    main_api.prereqs.includes.insert(CcInclude::compare());
+    if rhs_ty.is_bool() {
+        main_api.prereqs.includes.insert(CcInclude::type_traits());
+    }
+
+    let mut cc_details = [rhs_cc_ty_for_impl, ref_self_cc_ty, ref_rhs_cc_ty].map_snippets(
+        |[rhs_cc_tokens_for_impl, ref_self_cc_tokens, ref_rhs_cc_tokens]| {
+            let rhs_cc_tokens_for_impl = if rhs_ty.is_bool() {
+                quote! { __CrubitBoolT const& }
+            } else {
+                rhs_cc_tokens_for_impl
+            };
+            quote! {
+                namespace __crubit_internal {
+                    extern "C" ::std::int8_t #thunk_name(#ref_self_cc_tokens, #ref_rhs_cc_tokens);
+                }
+                #template_prefix
+                inline ::std::partial_ordering (#cc_fully_qualified_name::operator<=>)(#rhs_cc_tokens_for_impl other) const {
+                    auto val = #thunk_qualifier::#thunk_name(*this, other);
+                    switch (val) {
+                        case -1: return ::std::partial_ordering::less;
+                        case 0: return ::std::partial_ordering::equivalent;
+                        case 1: return ::std::partial_ordering::greater;
+                        case 2: return ::std::partial_ordering::unordered;
+                        default: CRUBIT_UNREACHABLE();
+                    }
                 }
             }
         },
-        prereqs: cc_details_prereqs,
-    };
+    );
+    if rhs_ty.is_bool() {
+        cc_details.prereqs.includes.insert(CcInclude::type_traits());
+    }
 
     let rs_details = RsSnippet::new(quote! {
         #[unsafe(no_mangle)]
@@ -1493,20 +1491,23 @@ fn generate_display_impl<'tcx>(
         return err_snippets(anyhow!("Internal Crubit Error: `ToString` trait not found."));
     };
 
-    let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls: rs_details } =
-        match generate_trait_thunks(
-            db,
-            to_string_trait_id,
-            &[],
-            core.common.self_ty,
-            core.def_id,
-            core.rs_fully_qualified_name.clone(),
-            /* is_constructor= */ false,
-            /* within_template= */ true,
-        ) {
-            Ok(thunks) => thunks,
-            Err(err) => return err_snippets(err),
-        };
+    let TraitThunks {
+        method_name_to_cc_thunk_name,
+        mut cc_thunk_decls,
+        rs_thunk_impls: rs_details,
+    } = match generate_trait_thunks(
+        db,
+        to_string_trait_id,
+        &[],
+        core.common.self_ty,
+        core.def_id,
+        core.rs_fully_qualified_name.clone(),
+        /* is_constructor= */ false,
+        /* within_template= */ true,
+    ) {
+        Ok(thunks) => thunks,
+        Err(err) => return err_snippets(err),
+    };
 
     let to_string_thunk_name = method_name_to_cc_thunk_name
         .into_values()
@@ -1532,20 +1533,15 @@ fn generate_display_impl<'tcx>(
         __NEWLINE__
     });
 
-    let cc_details = {
-        let mut prereqs = CcPrerequisites::default();
-        if let Some(includes) = db.crate_name_to_include_paths().get("alloc") {
-            prereqs.includes.extend(includes.iter().cloned());
-        }
-        prereqs.includes.insert(CcInclude::SystemHeader("string_view".into()));
-        prereqs.includes.insert(db.support_header("internal/slot.h"));
-        prereqs.includes.insert(CcInclude::SystemHeader("utility".into()));
-        prereqs.includes.insert(CcInclude::SystemHeader("ostream".into()));
-        let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
-        CcSnippet { tokens: cc_thunk_decls, prereqs }
-    };
+    if let Some(includes) = db.crate_name_to_include_paths().get("alloc") {
+        cc_thunk_decls.prereqs.includes.extend(includes.iter().cloned());
+    }
+    cc_thunk_decls.prereqs.includes.insert(CcInclude::SystemHeader("string_view".into()));
+    cc_thunk_decls.prereqs.includes.insert(db.support_header("internal/slot.h"));
+    cc_thunk_decls.prereqs.includes.insert(CcInclude::SystemHeader("utility".into()));
+    cc_thunk_decls.prereqs.includes.insert(CcInclude::SystemHeader("ostream".into()));
 
-    ApiSnippets { main_api, cc_details, rs_details }
+    ApiSnippets { main_api, cc_details: cc_thunk_decls, rs_details }
 }
 
 /// Returns whether the given type has a manual `Default` implementation.
@@ -1822,10 +1818,6 @@ fn generate_hash_impl<'tcx>(
         prereqs: main_api_prereqs,
     };
 
-    let mut cc_details_prereqs = CcPrerequisites::default();
-    cc_details_prereqs.includes.insert(CcInclude::cstdint());
-    cc_details_prereqs.includes.insert(CcInclude::utility());
-
     let ref_self_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, core.common.self_ty);
     let ref_self_cc_ty = match db.format_ty_for_cc(
         ref_self_ty,
@@ -1834,10 +1826,9 @@ fn generate_hash_impl<'tcx>(
         Ok(ty) => ty,
         Err(err) => return err_snippets(err),
     };
-    let ref_self_cc_tokens = ref_self_cc_ty.into_tokens(&mut cc_details_prereqs);
 
-    let cc_details = CcSnippet {
-        tokens: quote! {
+    let mut cc_details = ref_self_cc_ty.map_snippets(|ref_self_cc_tokens| {
+        quote! {
             namespace __crubit_internal {
                 extern "C" ::std::uint64_t #thunk_name(#ref_self_cc_tokens);
             }
@@ -1845,9 +1836,10 @@ fn generate_hash_impl<'tcx>(
             inline H AbslHashValue(H h, const #adt_cc_fully_qualified_name& self) {
                 return H::combine(::std::move(h), __crubit_internal::#thunk_name(self));
             }
-        },
-        prereqs: cc_details_prereqs,
-    };
+        }
+    });
+    cc_details.prereqs.includes.insert(CcInclude::cstdint());
+    cc_details.prereqs.includes.insert(CcInclude::utility());
 
     let rs_details = RsSnippet::new(quote! {
         #[unsafe(no_mangle)]
@@ -1928,19 +1920,15 @@ pub fn generate_adt<'tcx>(
             ~#adt_cc_name(); __NEWLINE__
             __NEWLINE__
         });
-        let cc_details = {
-            let mut prereqs = CcPrerequisites::default();
-            let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
-            let thunk_qualifier = crate::thunk_qualifier(is_specialization);
-
-            let tokens = quote! {
+        let thunk_qualifier = crate::thunk_qualifier(is_specialization);
+        let cc_details = cc_thunk_decls.map_snippets(|cc_thunk_decls| {
+            quote! {
                 #cc_thunk_decls
                 inline #cc_fully_qualified_name::~#adt_cc_name() {
                     #thunk_qualifier::#drop_thunk_name(*this);
                 }
-            };
-            CcSnippet { tokens, prereqs }
-        };
+            }
+        });
         ApiSnippets { main_api, cc_details, rs_details }
     } else {
         let main_api = CcSnippet::new(quote! {
@@ -2156,14 +2144,6 @@ pub fn generate_adt<'tcx>(
         let doc_comment = core.def_id.map(|id| generate_doc_comment(db, id)).unwrap_or_default();
         let keyword = &core.common.keyword;
 
-        let mut prereqs = CcPrerequisites::default();
-        prereqs.includes.insert(db.support_header("annotations_internal.h"));
-        let public_functions_main_api = public_functions_main_api.into_tokens(&mut prereqs);
-        let fields_main_api = fields_main_api.into_tokens(&mut prereqs);
-        if let Some(def_id) = core.def_id {
-            prereqs.fwd_decls.remove(&def_id);
-        }
-
         let (full_cc_name, template) = if is_specialization {
             (&core.common.cc_fully_qualified_name, quote! { __NEWLINE__ template <> })
         } else {
@@ -2175,44 +2155,49 @@ pub fn generate_adt<'tcx>(
             quote! { #full_cc_name }
         };
 
-        CcSnippet {
-            prereqs,
-            tokens: quote! {
-                __NEWLINE__ #doc_comment
-                #template
-                #keyword #(#attributes)* #bracketed_adt_cc_name final {
-                    public: __NEWLINE__
-                        #not_aggregate_comment
-                        #public_functions_main_api
-                    #fields_main_api
-                };
-                __NEWLINE__
+        let mut snippet = [public_functions_main_api, fields_main_api].map_snippets(
+            |[public_functions_main_api, fields_main_api]| {
+                quote! {
+                    __NEWLINE__ #doc_comment
+                    #template
+                    #keyword #(#attributes)* #bracketed_adt_cc_name final {
+                        public: __NEWLINE__
+                            #not_aggregate_comment
+                            #public_functions_main_api
+                        #fields_main_api
+                    };
+                    __NEWLINE__
+                }
             },
+        );
+        snippet.prereqs.includes.insert(db.support_header("annotations_internal.h"));
+        if let Some(def_id) = core.def_id {
+            snippet.prereqs.fwd_decls.remove(&def_id);
         }
+        snippet
     };
     let cc_details = {
-        let mut prereqs = CcPrerequisites::default();
-        let public_functions_cc_details = public_functions_cc_details.into_tokens(&mut prereqs);
-        let fields_cc_details = fields_cc_details.into_tokens(&mut prereqs);
-        if let Some(def_id) = core.def_id {
-            prereqs.defs.insert(def_id);
-        }
         let full_cc_name = &core.common.cc_fully_qualified_name;
-        CcSnippet {
-            prereqs,
-            tokens: quote! {
-                __NEWLINE__
-                static_assert(
-                    sizeof(#full_cc_name) == #size,
-                    "Verify that ADT layout didn't change since this header got generated");
-                static_assert(
-                    alignof(#full_cc_name) == #alignment,
-                    "Verify that ADT layout didn't change since this header got generated");
-                __NEWLINE__
-                #public_functions_cc_details
-                #fields_cc_details
+        let mut snippet = [public_functions_cc_details, fields_cc_details].map_snippets(
+            |[public_functions_cc_details, fields_cc_details]| {
+                quote! {
+                    __NEWLINE__
+                    static_assert(
+                        sizeof(#full_cc_name) == #size,
+                        "Verify that ADT layout didn't change since this header got generated");
+                    static_assert(
+                        alignof(#full_cc_name) == #alignment,
+                        "Verify that ADT layout didn't change since this header got generated");
+                    __NEWLINE__
+                    #public_functions_cc_details
+                    #fields_cc_details
+                }
             },
+        );
+        if let Some(def_id) = core.def_id {
+            snippet.prereqs.defs.insert(def_id);
         }
+        snippet
     };
     let rs_details = {
         let adt_rs_name = &core.rs_fully_qualified_name;
@@ -3170,27 +3155,6 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         ApiSnippets { main_api: CcSnippet::new(method_decl), cc_details, rs_details }
     }
 
-    fn assemble_snippets(
-        &self,
-        fields_tokens: TokenStream,
-        mut prereqs: CcPrerequisites<'tcx>,
-        assertions: ApiSnippets<'tcx>,
-    ) -> ApiSnippets<'tcx> {
-        let method_decl = assertions.main_api.into_tokens(&mut prereqs);
-        let main_api = CcSnippet {
-            prereqs,
-            tokens: quote! {
-                #fields_tokens
-                #method_decl
-            },
-        };
-        ApiSnippets {
-            main_api,
-            cc_details: assertions.cc_details,
-            rs_details: assertions.rs_details,
-        }
-    }
-
     fn emit_field_err(
         &self,
         field: &Field<'tcx>,
@@ -3238,19 +3202,18 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         let padding = field.offset_of_next_field - field.offset - size;
 
         let visibility = current_visibility.set_is_public(field.is_public);
-        let mut prereqs = CcPrerequisites::default();
-        let cpp_type = cpp_type.into_tokens(&mut prereqs);
         let doc_comment = field.doc_comment;
         let attributes = field.attributes;
 
         if is_aggregate {
-            let tokens = quote! {
-                #visibility __NEWLINE__
-                #doc_comment
-                #(#attributes)*
-                #cpp_type #bracketed_cc_name {};
-            };
-            CcSnippet { tokens, prereqs }
+            cpp_type.map_snippets(|cpp_type| {
+                quote! {
+                    #visibility __NEWLINE__
+                    #doc_comment
+                    #(#attributes)*
+                    #cpp_type #bracketed_cc_name {};
+                }
+            })
         } else {
             let padding = if always_omit_padding || padding == 0 {
                 quote! {}
@@ -3260,22 +3223,23 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                 let padding_visibility = current_visibility.set_is_public(false);
                 quote! { #padding_visibility unsigned char #ident[#padding]; }
             };
-            let tokens = quote! {
-                #visibility __NEWLINE__
-                    // The anonymous union gives more control over when exactly
-                    // the field constructors and destructors run. For example,
-                    // this lets us initialize the fields for the first time via
-                    // memcpy, in the move or UnsafeRelocateTag constructor, and lets
-                    // us destroy them only by calling into Rust.
-                    // See also b/288138612.
-                    union { __NEWLINE__
-                        #doc_comment
-                        #(#attributes)*
-                        #cpp_type #bracketed_cc_name;
-                    };
-                #padding
-            };
-            CcSnippet { tokens, prereqs }
+            cpp_type.map_snippets(|cpp_type| {
+                quote! {
+                    #visibility __NEWLINE__
+                        // The anonymous union gives more control over when exactly
+                        // the field constructors and destructors run. For example,
+                        // this lets us initialize the fields for the first time via
+                        // memcpy, in the move or UnsafeRelocateTag constructor, and lets
+                        // us destroy them only by calling into Rust.
+                        // See also b/288138612.
+                        union { __NEWLINE__
+                            #doc_comment
+                            #(#attributes)*
+                            #cpp_type #bracketed_cc_name;
+                        };
+                    #padding
+                }
+            })
         }
     }
 
@@ -3298,33 +3262,32 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         };
 
         let visibility = current_visibility.set_is_public(field.is_public);
-        let mut prereqs = CcPrerequisites::default();
-        let cpp_type = cpp_type.into_tokens(&mut prereqs);
         let doc_comment = field.doc_comment;
 
-        let tokens = if is_repr_c {
-            quote! {
-                #visibility __NEWLINE__
-                #doc_comment
-                #cpp_type #bracketed_cc_name;
-            }
-        } else {
-            let internal_padding = if field.offset == 0 {
-                quote! {}
+        cpp_type.map_snippets(|cpp_type| {
+            if is_repr_c {
+                quote! {
+                    #visibility __NEWLINE__
+                    #doc_comment
+                    #cpp_type #bracketed_cc_name;
+                }
             } else {
-                let internal_padding_size = Literal::u64_unsuffixed(field.offset);
-                quote! {char __crubit_internal_padding[#internal_padding_size]}
-            };
-            quote! {
-                #visibility __NEWLINE__
-                #doc_comment
-                struct {
-                    #internal_padding
-                    #cpp_type value;
-                } #bracketed_cc_name;
+                let internal_padding = if field.offset == 0 {
+                    quote! {}
+                } else {
+                    let internal_padding_size = Literal::u64_unsuffixed(field.offset);
+                    quote! {char __crubit_internal_padding[#internal_padding_size]}
+                };
+                quote! {
+                    #visibility __NEWLINE__
+                    #doc_comment
+                    struct {
+                        #internal_padding
+                        #cpp_type value;
+                    } #bracketed_cc_name;
+                }
             }
-        };
-        CcSnippet { tokens, prereqs }
+        })
     }
 
     fn emit_enum_field(
@@ -3340,13 +3303,11 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         };
 
         let visibility = current_visibility.set_is_public(field.is_public);
-        let mut prereqs = CcPrerequisites::default();
-        let cpp_type = cpp_type.clone().into_tokens(&mut prereqs);
-
-        let tokens = quote! {
-            #visibility __NEWLINE__ #cpp_type #cc_name;
-        };
-        CcSnippet { tokens, prereqs }
+        cpp_type.clone().map_snippets(|cpp_type| {
+            quote! {
+                #visibility __NEWLINE__ #cpp_type #cc_name;
+            }
+        })
     }
 
     fn generate_struct(
@@ -3357,9 +3318,8 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
     ) -> ApiSnippets<'tcx> {
         let assertions = self.generate_common_assertions(&fields);
 
-        let mut prereqs = CcPrerequisites::default();
         let mut current_visibility = CcFieldVisState::public();
-        let fields_tokens: TokenStream = fields
+        let fields: CcSnippet<'tcx> = fields
             .into_iter()
             .map(|field| {
                 self.emit_struct_field(
@@ -3368,28 +3328,23 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                     always_omit_padding,
                     is_aggregate,
                 )
-                .into_tokens(&mut prereqs)
             })
             .collect();
 
-        self.assemble_snippets(fields_tokens, prereqs, assertions)
+        assertions.prepend_main_api(fields)
     }
 
     fn generate_union(&self, fields: Vec<Field<'tcx>>) -> ApiSnippets<'tcx> {
         let assertions = self.generate_common_assertions(&fields);
 
         let is_repr_c = self.repr_attrs.contains(&rustc_hir::attrs::ReprC);
-        let mut prereqs = CcPrerequisites::default();
         let mut current_visibility = CcFieldVisState::public();
-        let fields_tokens: TokenStream = fields
+        let fields: CcSnippet<'tcx> = fields
             .into_iter()
-            .map(|field| {
-                self.emit_union_field(field, &mut current_visibility, is_repr_c)
-                    .into_tokens(&mut prereqs)
-            })
+            .map(|field| self.emit_union_field(field, &mut current_visibility, is_repr_c))
             .collect();
 
-        self.assemble_snippets(fields_tokens, prereqs, assertions)
+        assertions.prepend_main_api(fields)
     }
 
     fn generate_enum(
@@ -3499,27 +3454,23 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         };
 
         let adt_size = Literal::u64_unsuffixed(self.layout.size.bytes());
-        let mut prereqs = CcPrerequisites::default();
 
         let fields = if enum_kind != EnumKind::ReprC {
             variants
                 .iter()
                 .flat_map(|v| &v.fields)
-                .map(|field| {
-                    self.emit_enum_field(field, &mut Default::default()).into_tokens(&mut prereqs)
-                })
-                .collect()
+                .map(|field| self.emit_enum_field(field, &mut Default::default()))
+                .collect::<CcSnippet<'tcx>>()
         } else {
             let tag_enum = match layout_variants {
-                Variants::Single { .. } | Variants::Empty => quote! {},
+                Variants::Single { .. } | Variants::Empty => CcSnippet::default(),
                 Variants::Multiple { tag, .. } => {
                     let tag_ty = get_scalar_int_type(self.db.tcx(), *tag);
 
-                    let tag_tokens = self
+                    let tag_snippet = self
                         .db
                         .format_ty_for_cc(tag_ty, TypeLocation::Other)
-                        .expect("discriminant should be a integer type.")
-                        .into_tokens(&mut prereqs);
+                        .expect("discriminant should be a integer type.");
 
                     let variant_enum_fields: TokenStream = adt_def
                         .variants()
@@ -3546,25 +3497,24 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                             }
                         })
                         .collect();
-                    quote! {
-                        __NEWLINE__ enum class Tag : #tag_tokens {
-                            #variant_enum_fields
-                        }; __NEWLINE__
-                    }
+                    tag_snippet.map_snippets(|tag_tokens| {
+                        quote! {
+                            __NEWLINE__ enum class Tag : #tag_tokens {
+                                #variant_enum_fields
+                            }; __NEWLINE__
+                        }
+                    })
                 }
             };
 
             let mut current_visibility = CcFieldVisState::default();
-            let tokens_per_variant: Vec<TokenStream> = variants
+            let snippets_per_variant: Vec<CcSnippet<'tcx>> = variants
                 .iter()
                 .map(|variant_layout| {
                     variant_layout
                         .fields
                         .iter()
-                        .map(|field| {
-                            self.emit_enum_field(field, &mut current_visibility)
-                                .into_tokens(&mut prereqs)
-                        })
+                        .map(|field| self.emit_enum_field(field, &mut current_visibility))
                         .collect()
                 })
                 .collect();
@@ -3611,17 +3561,16 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                 }
             };
 
-            let variant_structs: TokenStream = adt_def
+            let variant_structs: CcSnippet<'tcx> = adt_def
                 .variants()
                 .iter_enumerated()
-                .map(|(variant_index, variant_def)| {
+                .zip(snippets_per_variant)
+                .map(|((variant_index, variant_def), fields_for_variant)| {
                     let cc_variant_struct_name = format_cc_ident(
                         self.db,
                         format!("__crubit_{}_struct", variant_def.ident(tcx).as_str()).as_ref(),
                     )
                     .unwrap_or_else(|_err| format_ident!("err_struct"));
-
-                    let fields_for_variant = &tokens_per_variant[variant_index.index()];
 
                     let variant_alignment =
                         Literal::u64_unsuffixed(variant_alignments[variant_index.index()]);
@@ -3633,15 +3582,17 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                             "Variant {} has no size, so no struct is generated.",
                             cc_variant_name
                         );
-                        quote! {__NEWLINE__
-                        __COMMENT__ #msg}
+                        CcSnippet::new(quote! {__NEWLINE__
+                        __COMMENT__ #msg})
                     } else {
-                        quote! {
-                            __NEWLINE__
-                            struct alignas(#variant_alignment) #cc_variant_struct_name {
-                                #fields_for_variant
-                            };
-                        }
+                        fields_for_variant.map_snippets(|fields_for_variant| {
+                            quote! {
+                                __NEWLINE__
+                                struct alignas(#variant_alignment) #cc_variant_struct_name {
+                                    #fields_for_variant
+                                };
+                            }
+                        })
                     }
                 })
                 .collect();
@@ -3682,12 +3633,14 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                 }
             };
 
-            quote! {
-                #variant_structs __NEWLINE__
-                #tag_enum __NEWLINE__
-                public: Tag tag; __NEWLINE__
-                #variants_union
-            }
+            [variant_structs, tag_enum].map_snippets(|[variant_structs, tag_enum]| {
+                quote! {
+                    #variant_structs __NEWLINE__
+                    #tag_enum __NEWLINE__
+                    public: Tag tag; __NEWLINE__
+                    #variants_union
+                }
+            })
         };
 
         let cc_short_name = self.cc_short_name;
@@ -3707,14 +3660,13 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             },
         };
 
-        let main_api = CcSnippet {
-            prereqs,
-            tokens: quote! {
+        let main_api = fields.map_snippets(|fields| {
+            quote! {
                 #fields
                 #enum_opaque_bytes_ctor
                 #assertions_method_decl
-            },
-        };
+            }
+        });
 
         ApiSnippets { main_api, cc_details, rs_details }
     }
@@ -3986,11 +3938,6 @@ fn generate_begin_and_end_for_type<'tcx>(
         /* is_async= */ false,
     )?;
 
-    let mut main_api_prereqs = CcPrerequisites::default();
-    let into_iter_cc_ty_tokens_main = into_iter_cc_ty.clone().into_tokens(&mut main_api_prereqs);
-    main_api_prereqs.includes.insert(db.support_header("rs_std/iterator_adapter.h"));
-    main_api_prereqs.move_defs_to_fwd_decls();
-
     let iterator_trait_id = tcx
         .get_diagnostic_item(sym::Iterator)
         .ok_or_else(|| anyhow!("Iterator trait not found"))?;
@@ -4007,18 +3954,9 @@ fn generate_begin_and_end_for_type<'tcx>(
         bail!("IntoIterator/Iterator impls with generic type or const parameters are not supported yet.");
     }
     let specialization = TemplateSpecialization::TraitImpl(TraitImplTemplateSpecialization {
-        self_ty_cc_name: into_iter_cc_ty_tokens_main.clone(),
+        self_ty_cc_name: into_iter_cc_ty.tokens.clone(),
         trait_impl: trait_impl_def_id,
     });
-    main_api_prereqs.template_specializations.insert(specialization);
-
-    let mut cc_details_prereqs = CcPrerequisites::default();
-    let into_iter_cc_ty_tokens_details = into_iter_cc_ty.into_tokens(&mut cc_details_prereqs);
-    cc_details_prereqs.includes.insert(db.support_header("rs_std/iterator_adapter.h"));
-
-    let cc_thunk_decls_tokens = cc_thunk_decls.into_tokens(&mut cc_details_prereqs);
-    let impl_body_tokens = impl_body.into_tokens(&mut cc_details_prereqs);
-    cc_details_prereqs.move_defs_to_fwd_decls();
 
     let call_expr = if matches!(into_iter_ty.kind(), ty::Ref(..)) {
         quote! { &call_into_iter() }
@@ -4026,66 +3964,80 @@ fn generate_begin_and_end_for_type<'tcx>(
         quote! { call_into_iter() }
     };
 
-    let (main_api_tokens, cc_details_tokens) = match passing_mode {
-        PassingMode::Value => {
-            let self_binding = quote! { #adt_cc_name&& self_ = ::std::move(*this); };
-            (
-                quote! {
-                    template <typename TAdaptedSelf_ = #adt_cc_name>
-                    inline #into_iter_cc_ty_tokens_main into_iter() &&;
-                },
-                quote! {
-                    #cc_thunk_decls_tokens
-
-                    template <typename TAdaptedSelf_>
-                    inline #into_iter_cc_ty_tokens_details (#cc_fully_qualified_name :: into_iter) () && {
-                        #self_binding
-                        auto call_into_iter = [&]() -> decltype(auto) {
-                            #impl_body_tokens
-                        };
-                        return #call_expr;
-                    }
-                },
-            )
-        }
-        PassingMode::SharedRef | PassingMode::MutRef => {
-            let (ref_qualifiers, self_binding) = match passing_mode {
-                PassingMode::SharedRef => {
-                    (quote! { const & }, quote! { const #adt_cc_name& self_ = *this; })
-                }
-                PassingMode::MutRef => (quote! { & }, quote! { #adt_cc_name& self_ = *this; }),
-                PassingMode::Value => unreachable!(),
-            };
-            (
+    let mut main_api =
+        into_iter_cc_ty.clone().map_snippets(|into_iter_cc_ty_tokens_main| match passing_mode {
+            PassingMode::Value => quote! {
+                template <typename TAdaptedSelf_ = #adt_cc_name>
+                inline #into_iter_cc_ty_tokens_main into_iter() &&;
+            },
+            PassingMode::SharedRef | PassingMode::MutRef => {
+                let ref_qualifiers = match passing_mode {
+                    PassingMode::SharedRef => quote! { const & },
+                    PassingMode::MutRef => quote! { & },
+                    PassingMode::Value => unreachable!(),
+                };
                 quote! {
                     template <typename TAdaptedSelf_ = #adt_cc_name>
                     rs::IteratorAdapter< #into_iter_cc_ty_tokens_main > begin() #ref_qualifiers;
                     template <typename TAdaptedSelf_ = #adt_cc_name>
                     rs::IteratorEnd end() #ref_qualifiers;
-                },
-                quote! {
-                    #cc_thunk_decls_tokens
+                }
+            }
+        });
+    main_api.prereqs.includes.insert(db.support_header("rs_std/iterator_adapter.h"));
+    main_api.prereqs.move_defs_to_fwd_decls();
+    main_api.prereqs.template_specializations.insert(specialization);
 
-                    template <typename TAdaptedSelf_>
-                    inline rs::IteratorAdapter< #into_iter_cc_ty_tokens_details > (#cc_fully_qualified_name :: begin) () #ref_qualifiers {
-                        #self_binding
-                        auto call_into_iter = [&]() -> decltype(auto) {
-                            #impl_body_tokens
-                        };
-                        return rs::IteratorAdapter< #into_iter_cc_ty_tokens_details >(#call_expr);
+    let mut cc_details = [into_iter_cc_ty, cc_thunk_decls, impl_body].map_snippets(
+        |[into_iter_cc_ty_tokens_details, cc_thunk_decls_tokens, impl_body_tokens]| {
+            match passing_mode {
+                PassingMode::Value => {
+                    let self_binding = quote! { #adt_cc_name&& self_ = ::std::move(*this); };
+                    quote! {
+                        #cc_thunk_decls_tokens
+
+                        template <typename TAdaptedSelf_>
+                        inline #into_iter_cc_ty_tokens_details (#cc_fully_qualified_name :: into_iter) () && {
+                            #self_binding
+                            auto call_into_iter = [&]() -> decltype(auto) {
+                                #impl_body_tokens
+                            };
+                            return #call_expr;
+                        }
                     }
-                    template <typename TAdaptedSelf_>
-                    inline rs::IteratorEnd (#cc_fully_qualified_name :: end) () #ref_qualifiers {
-                        return rs::IteratorEnd();
+                }
+                PassingMode::SharedRef | PassingMode::MutRef => {
+                    let (ref_qualifiers, self_binding) = match passing_mode {
+                        PassingMode::SharedRef => {
+                            (quote! { const & }, quote! { const #adt_cc_name& self_ = *this; })
+                        }
+                        PassingMode::MutRef => {
+                            (quote! { & }, quote! { #adt_cc_name& self_ = *this; })
+                        }
+                        PassingMode::Value => unreachable!(),
+                    };
+                    quote! {
+                        #cc_thunk_decls_tokens
+
+                        template <typename TAdaptedSelf_>
+                        inline rs::IteratorAdapter< #into_iter_cc_ty_tokens_details > (#cc_fully_qualified_name :: begin) () #ref_qualifiers {
+                            #self_binding
+                            auto call_into_iter = [&]() -> decltype(auto) {
+                                #impl_body_tokens
+                            };
+                            return rs::IteratorAdapter< #into_iter_cc_ty_tokens_details >(#call_expr);
+                        }
+                        template <typename TAdaptedSelf_>
+                        inline rs::IteratorEnd (#cc_fully_qualified_name :: end) () #ref_qualifiers {
+                            return rs::IteratorEnd();
+                        }
                     }
-                },
-            )
-        }
-    };
-
-    let main_api = CcSnippet { tokens: main_api_tokens, prereqs: main_api_prereqs };
-
-    let cc_details = CcSnippet { tokens: cc_details_tokens, prereqs: cc_details_prereqs };
+                }
+            }
+        },
+    );
+    cc_details.prereqs.includes.insert(db.support_header("rs_std/iterator_adapter.h"));
+    cc_details.prereqs.move_defs_to_fwd_decls();
 
     Ok(Some(ApiSnippets { main_api, cc_details, rs_details: rs_thunk_impls }))
 }

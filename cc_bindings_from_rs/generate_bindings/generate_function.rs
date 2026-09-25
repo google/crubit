@@ -464,17 +464,6 @@ struct ReturnConversion {
     unpack_expr: TokenStream,
 }
 
-fn format_ty_for_cc_amending_prereqs<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    ty: Ty<'tcx>,
-    prereqs: &mut CcPrerequisites<'tcx>,
-) -> Result<TokenStream> {
-    let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =
-        db.format_ty_for_cc(ty, TypeLocation::Other)?;
-    *prereqs += ty_prereqs;
-    Ok(cc_type)
-}
-
 fn cc_return_value_from_c_abi<'tcx>(
     db: &BindingsGenerator<'tcx>,
     post_analysis_typing_env: ty::TypingEnv<'tcx>,
@@ -557,7 +546,7 @@ fn cc_return_value_from_c_abi<'tcx>(
             }
         }
     } else if is_c_abi_compatible_by_value(db, ty) {
-        let cc_type = &format_ty_for_cc_amending_prereqs(db, ty, prereqs)?;
+        let cc_type = &db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(prereqs);
         let local_name = &expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
         storage_statements.extend(quote! {
             #cc_type #local_name;
@@ -601,7 +590,7 @@ fn cc_return_value_from_c_abi<'tcx>(
         })
     } else {
         let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
-        let cc_type = format_ty_for_cc_amending_prereqs(db, ty, prereqs)?;
+        let cc_type = db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(prereqs);
         storage_statements.extend(quote! {
             crubit::Slot<#cc_type> #local_name;
             auto* #storage_name = #local_name.Get();
@@ -886,9 +875,9 @@ pub(crate) fn generate_thunk_call<'tcx>(
     };
 
     let return_body = if is_async {
-        let CcSnippet { tokens: cc_ret_ty, prereqs: ret_prereqs } =
-            db.format_ty_for_cc(rs_return_type, TypeLocation::FnReturn { is_constructor: false })?;
-        prereqs += ret_prereqs;
+        let cc_ret_ty = db
+            .format_ty_for_cc(rs_return_type, TypeLocation::FnReturn { is_constructor: false })?
+            .into_tokens(&mut prereqs);
         let local_name = expect_format_cc_ident("__return_value_ret_val_holder");
         prereqs.includes.insert(CcInclude::utility()); // for `std::move`
         prereqs.includes.insert(db.support_header("internal/slot.h"));
@@ -1117,11 +1106,12 @@ pub fn generate_function<'tcx>(
 
     let mut main_api_prereqs = CcPrerequisites::default();
     let main_api_ret_type = if is_async {
-        let CcSnippet { tokens: cc_ret_ty, prereqs: ret_prereqs } = db.format_ty_for_cc(
-            actual_rs_return_type,
-            TypeLocation::FnReturn { is_constructor: false },
-        )?;
-        main_api_prereqs += ret_prereqs;
+        let cc_ret_ty = db
+            .format_ty_for_cc(
+                actual_rs_return_type,
+                TypeLocation::FnReturn { is_constructor: false },
+            )?
+            .into_tokens(&mut main_api_prereqs);
         main_api_prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
         quote! { ::crubit::DynErasedFuture<#cc_ret_ty> }
     } else {

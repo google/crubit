@@ -119,9 +119,9 @@ pub fn generate_thunk_decl<'tcx>(
         sig_mid.output()
     };
     let main_api_ret_type = if is_async {
-        let CcSnippet { tokens: cc_ret_ty, prereqs: ret_prereqs } =
-            db.format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })?;
-        prereqs += ret_prereqs;
+        let cc_ret_ty = db
+            .format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })?
+            .into_tokens(&mut prereqs);
         prereqs.includes.insert(db.support_header("rs_std/dyn_erased_future.h"));
         quote! { ::crubit::DynErasedFuture<#cc_ret_ty> }
     } else {

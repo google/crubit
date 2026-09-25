@@ -45,7 +45,8 @@ use code_gen_utils::{
     format_cc_includes, make_rs_ident, CcConstQualifier, CcInclude, NamespaceQualifier,
 };
 use database::code_snippet::{
-    ApiSnippets, CcPrerequisites, CcSnippet, ExternCDecl, RsSnippet, TemplateSpecialization,
+    ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, ExternCDecl, RsSnippet,
+    TemplateSpecialization,
 };
 use database::{
     rename_clang_builtin_macros, AdtCoreBindings, CoreBindingsCommon, ExportedPath,
@@ -1358,12 +1359,11 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
     }
     let ty = normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity());
     let rust_type = ty;
-    let mut prereqs = CcPrerequisites::default();
-    let cc_type = db.format_ty_for_cc(rust_type, TypeLocation::Const)?.into_tokens(&mut prereqs);
+    let cc_type = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
     let cc_name = format_cc_ident(db, tcx.item_name(def_id).as_str())?;
 
     let const_value: ConstValue = tcx.const_eval_poly(def_id).unwrap();
-    let cc_value = format_const_value(db, const_value, ty)?.into_tokens(&mut prereqs);
+    let cc_value = format_const_value(db, const_value, ty)?;
 
     let is_self_referential = tcx.inherent_impl_of_assoc(def_id).is_some_and(|impl_id| {
         let impl_ty =
@@ -1371,28 +1371,31 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
         impl_ty == ty
     });
 
+    let cc_type_tokens = cc_type.tokens.clone();
+    let cc_value_tokens = cc_value.tokens.clone();
+    let main_api = [cc_type, cc_value].map_snippets(|[cc_type, cc_value]| {
+        if is_self_referential {
+            quote! {
+                static const #cc_type #cc_name;
+            }
+        } else {
+            quote! {
+                static constexpr #cc_type #cc_name = #cc_value;
+            }
+        }
+    });
+
     Ok(if is_self_referential {
         ApiSnippets {
-            main_api: CcSnippet {
-                tokens: quote! {
-                    static const #cc_type #cc_name;
-                },
-                prereqs,
-            },
+            main_api,
             // We know this works because cc_type is Self when is_self_referential is true.
             cc_details: CcSnippet::new(quote! {
-                constexpr #cc_type (#cc_type :: #cc_name) = #cc_value;
+                constexpr #cc_type_tokens (#cc_type_tokens :: #cc_name) = #cc_value_tokens;
             }),
             rs_details: RsSnippet::default(),
         }
     } else {
-        CcSnippet {
-            tokens: quote! {
-                static constexpr #cc_type #cc_name = #cc_value;
-            },
-            prereqs,
-        }
-        .into_main_api()
+        main_api.into_main_api()
     })
 }
 
@@ -1576,13 +1579,8 @@ pub(crate) fn create_type_alias_with_rs_type<'tcx>(
 ) -> Result<CcSnippet<'tcx>> {
     let doc_comment = generate_doc_comment(db, def_id);
     let cc_bindings = db.format_ty_for_cc(alias_type, TypeLocation::Other)?;
-    let mut main_api_prereqs = CcPrerequisites::default();
-    let actual_type_name = cc_bindings.into_tokens(&mut main_api_prereqs);
-    main_api_prereqs.move_defs_to_fwd_decls();
-
     let alias_name = format_cc_ident(db, alias_name).context("Error formatting type alias name")?;
 
-    main_api_prereqs.includes.insert(db.support_header("annotations_internal.h"));
     let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
     if let Some(cc_deprecated_tag) = generate_deprecated_tag(db.tcx(), def_id) {
         attributes.push(cc_deprecated_tag);
@@ -1594,9 +1592,13 @@ pub(crate) fn create_type_alias_with_rs_type<'tcx>(
         quote! { #alias_name }
     };
 
-    let tokens = quote! { __NEWLINE__ #doc_comment using #bracketed_alias_name #(#attributes)* = #actual_type_name; };
+    let mut snippet = cc_bindings.map_snippets(|actual_type_name| {
+        quote! { __NEWLINE__ #doc_comment using #bracketed_alias_name #(#attributes)* = #actual_type_name; }
+    });
+    snippet.prereqs.move_defs_to_fwd_decls();
+    snippet.prereqs.includes.insert(db.support_header("annotations_internal.h"));
 
-    Ok(CcSnippet { prereqs: main_api_prereqs, tokens })
+    Ok(snippet)
 }
 
 fn has_default_ctor<'tcx>(db: &BindingsGenerator<'tcx>, self_ty: Ty<'tcx>) -> bool {
@@ -1646,9 +1648,6 @@ fn generate_default_ctor<'tcx>(
                 .exactly_one()
                 .expect("Expecting a single `default` method");
 
-            let mut prereqs = CcPrerequisites::default();
-            let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
-
             let is_specialization = core
                 .def_id
                 .is_none_or(|id| query_compiler::has_non_lifetime_generics(db.tcx(), id));
@@ -1671,11 +1670,12 @@ fn generate_default_ctor<'tcx>(
                     }
                 }
             };
-            let tokens = quote! {
-                #cc_thunk_decls
-                #ctor_impl
-            };
-            CcSnippet { tokens, prereqs }
+            cc_thunk_decls.map_snippets(|cc_thunk_decls| {
+                quote! {
+                    #cc_thunk_decls
+                    #ctor_impl
+                }
+            })
         };
         Ok(ApiSnippets { main_api, cc_details, rs_details })
     }
@@ -1779,9 +1779,6 @@ fn copy_codegen_style_to_snippets<'tcx>(
                     let clone_from_thunk_name =
                         method_name_to_cc_thunk_name.get(&sym::clone_from).unwrap();
 
-                    let mut prereqs = CcPrerequisites::default();
-                    let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
-
                     // TODO: b/459482188 - This is ultimately dependent on the return ABI of the
                     // thunk and should be centralized with the other callsites
                     // that depend on return type ABI.
@@ -1799,19 +1796,20 @@ fn copy_codegen_style_to_snippets<'tcx>(
                             #thunk_qualifier::#clone_thunk_name(other, this);
                         }
                     };
-                    let tokens = quote! {
-                        #cc_thunk_decls
-                        inline #qualified_adt_name::#cc_struct_name(const #cc_struct_name& other) noexcept {
-                            #ctor_body
-                        }
-                        inline #qualified_adt_name& #qualified_adt_name::operator=(const #cc_struct_name& other) noexcept {
-                            if (this != &other) {
-                                #thunk_qualifier::#clone_from_thunk_name(*this, other);
+                    cc_thunk_decls.map_snippets(|cc_thunk_decls| {
+                        quote! {
+                            #cc_thunk_decls
+                            inline #qualified_adt_name::#cc_struct_name(const #cc_struct_name& other) noexcept {
+                                #ctor_body
                             }
-                            return *this;
+                            inline #qualified_adt_name& #qualified_adt_name::operator=(const #cc_struct_name& other) noexcept {
+                                if (this != &other) {
+                                    #thunk_qualifier::#clone_from_thunk_name(*this, other);
+                                }
+                                return *this;
+                            }
                         }
-                    };
-                    CcSnippet { tokens, prereqs }
+                    })
                 };
                 Ok(ApiSnippets { main_api, cc_details, rs_details })
             }

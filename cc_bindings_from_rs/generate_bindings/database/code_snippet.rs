@@ -77,7 +77,8 @@ pub struct CcPrerequisites<'tcx> {
     // Set of template specializations our snippet requires to be complete.
     pub template_specializations: HashSet<TemplateSpecialization<'tcx>>,
 
-    // Set of template specializations our snippet requires to be generated, but not necessarily complete.
+    // Set of template specializations our snippet requires to be generated, but not necessarily
+    // complete.
     pub lazy_template_specializations: HashSet<TemplateSpecialization<'tcx>>,
 }
 
@@ -308,10 +309,9 @@ impl<'tcx> CcPrerequisites<'tcx> {
 
     /// Weakens all dependencies to only require a forward declaration. Example
     /// usage scenarios:
-    /// - Computing prerequisites of pointer types (the pointee type can just be
-    ///   forward-declared),
-    /// - Computing prerequisites of function declarations (parameter types and
-    ///   return type can just be forward-declared).
+    /// - Computing prerequisites of pointer types (the pointee type can just be forward-declared),
+    /// - Computing prerequisites of function declarations (parameter types and return type can just
+    ///   be forward-declared).
     pub fn move_defs_to_fwd_decls(&mut self) {
         self.fwd_decls.extend(std::mem::take(&mut self.defs));
         self.lazy_template_specializations
@@ -337,8 +337,8 @@ impl<'tcx> CcPrerequisites<'tcx> {
     }
 
     /// Include the definition as a prerequisite. For a local definition, this is adding it to the
-    ///`defs` set. For a foreign definition, an include path for the foreign crate must be available
-    /// or this will fail.
+    ///`defs` set. For a foreign definition, an include path for the foreign crate must be
+    /// available or this will fail.
     pub fn depend_on_def(&mut self, db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<()> {
         let tcx = db.tcx();
         let canonical_name = db.symbol_canonical_name(def_id)?;
@@ -435,6 +435,38 @@ impl<'tcx> fmt::Debug for CcSnippet<'tcx> {
     }
 }
 
+pub trait CcSnippets<'tcx>: Sized {
+    type Tokens;
+
+    /// Consumes `self` and returns its `tokens`, while preserving
+    /// its `prereqs` into `prereqs_accumulator`.
+    fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> Self::Tokens;
+
+    /// Consumes `self`, accumulates its `prereqs`, and applies `f` to its `tokens`
+    /// to produce a new `CcSnippet` with the combined `prereqs`.
+    fn map_snippets(self, f: impl FnOnce(Self::Tokens) -> TokenStream) -> CcSnippet<'tcx> {
+        let mut prereqs = CcPrerequisites::default();
+        let tokens = f(self.into_tokens(&mut prereqs));
+        CcSnippet { tokens, prereqs }
+    }
+}
+
+impl<'tcx> CcSnippets<'tcx> for CcSnippet<'tcx> {
+    type Tokens = TokenStream;
+
+    fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> TokenStream {
+        self.into_tokens(prereqs_accumulator)
+    }
+}
+
+impl<'tcx, const N: usize> CcSnippets<'tcx> for [CcSnippet<'tcx>; N] {
+    type Tokens = [TokenStream; N];
+
+    fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites<'tcx>) -> [TokenStream; N] {
+        self.map(|snippet| snippet.into_tokens(prereqs_accumulator))
+    }
+}
+
 impl<'tcx> CcSnippet<'tcx> {
     /// Consumes `self` and returns its `tokens`, while preserving
     /// its `prereqs` into `prereqs_accumulator`.
@@ -484,6 +516,16 @@ impl<'tcx> CcSnippet<'tcx> {
 
     pub fn into_main_api(self) -> ApiSnippets<'tcx> {
         ApiSnippets { main_api: self, ..Default::default() }
+    }
+}
+
+impl<'tcx> FromIterator<CcSnippet<'tcx>> for CcSnippet<'tcx> {
+    fn from_iter<I: IntoIterator<Item = CcSnippet<'tcx>>>(iter: I) -> Self {
+        let mut result = CcSnippet::default();
+        for item in iter.into_iter() {
+            result += item;
+        }
+        result
     }
 }
 
@@ -632,12 +674,12 @@ impl<'tcx> ApiSnippets<'tcx> {
     }
 
     pub fn prepend_main_api(mut self, main_api: CcSnippet<'tcx>) -> Self {
-        let preamble = main_api.into_tokens(&mut self.main_api.prereqs);
-        let main = self.main_api.tokens;
-        self.main_api.tokens = quote::quote! {
-            #preamble
-            #main
-        };
+        self.main_api = [main_api, self.main_api].map_snippets(|[preamble, main]| {
+            quote::quote! {
+                #preamble
+                #main
+            }
+        });
         self
     }
 }
