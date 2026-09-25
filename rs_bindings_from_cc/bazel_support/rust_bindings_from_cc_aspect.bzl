@@ -544,14 +544,17 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
 
 def _attr_predicate(ctx):
     if ctx.rule.qualified_kind.rule_name == "cc_library":
-        # Implementation-only cc_library targets (with srcs, no hdrs or textual_hdrs,
-        # and no Crubit aspect_hints) cannot expose headers or Crubit types to
-        # dependents, so do not propagate Crubit aspects into their private deps.
+        # A cc_library only generates Crubit bindings if it has Crubit aspect_hints. Only propagate
+        # through non-Crubit cc_library targets if they have no compiled source files in `srcs`
+        # (e.g. header-only forwarding/umbrella targets) or if they delegate header ownership to a
+        # dependency via `public_headers_to_remove`.
         if (
             not ctx.rule.attr.aspect_hints.value and
-            not ctx.rule.attr.hdrs.value and
-            not ctx.rule.attr.textual_hdrs.value and
-            ctx.rule.attr.srcs.value
+            str(ctx.rule.label) not in public_headers_to_remove and
+            any([
+                not src.name.endswith((".h", ".hh", ".hpp", ".hxx", ".inc"))
+                for src in ctx.rule.attr.srcs.value
+            ])
         ):
             return []
     return [
