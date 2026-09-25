@@ -120,6 +120,7 @@ crubit_rust_test(
     ],
 )
 
+# Deprecated: Forwarding wrapper for backwards compatibility. Use //support:crubit_support instead.
 rust_library(
     name = "dyn_erased_future",
     srcs = ["dyn_erased_future.rs"],

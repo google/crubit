@@ -70,6 +70,7 @@ deps_for_bindings(
         "//support/ffi_11",
         "//support:forward_declare",
         "//support:oops",
+        # Deprecated: Kept for backwards compatibility with handwritten bridge types (e.g. absl::AnyInvocable).
         "//support:bridge_rust",
         "//support:crubit_support",
         "//support:cref",
