@@ -10,7 +10,6 @@ use crate::lossy_utf8::{debug_bytes, LossyUtf8Display};
 use crate::std::string_view;
 use alloc::string::String;
 use alloc::vec::Vec;
-use bridge_rust::{transmute_abi, CrubitAbi, Decoder, Encoder};
 use core::clone::Clone;
 use core::cmp::Eq;
 use core::cmp::PartialEq;
@@ -18,6 +17,7 @@ use core::ffi::c_void;
 use core::mem::{ManuallyDrop, MaybeUninit};
 use core::ops::Deref;
 use core::ptr::NonNull;
+use crubit_support::bridge::{transmute_abi, CrubitAbi, Decoder, Encoder};
 use ctor::{Ctor, CtorNew, FnCtor, Infallible, PinnedDrop, RvalueReference};
 use std::fmt::Display;
 
@@ -206,17 +206,15 @@ impl Deref for string_wrapper {
         let ptr = self.owned_cpp_string.as_ptr();
         // SAFETY:
         //
-        // * `owned_cpp_string` is guaranteed to be a non-null C++ allocated pointer to
-        //   std::string so `ptr` is non-null.
+        // * `owned_cpp_string` is guaranteed to be a non-null C++ allocated pointer to std::string
+        //   so `ptr` is non-null.
         // * `StringGetData` returns the pointer of the C++ `std::string::data()`, which
         //   is guaranteed to be non-null and point to a continuous memory region. Every
         //   byte in [ptr, ptr + len)) is initialized. (See https://en.cppreference.com/w/cpp/string/basic_string/data)
-        // * The data is guaranteed to be not mutated because we don't ever mutate
-        //   data() except when accessed via &mut self, which is blocked by Rust borrow
-        //   checker.
-        // * `len` is guaranteed to be less than `isize::MAX` because C++
-        //   implementations guarantee in practice that the object won't go past the end
-        //   of the address space.
+        // * The data is guaranteed to be not mutated because we don't ever mutate data() except
+        //   when accessed via &mut self, which is blocked by Rust borrow checker.
+        // * `len` is guaranteed to be less than `isize::MAX` because C++ implementations guarantee
+        //   in practice that the object won't go past the end of the address space.
         unsafe {
             let len = conversion_function_helpers::StringGetSize(ptr);
             core::slice::from_raw_parts(conversion_function_helpers::StringGetData(ptr) as _, len)
@@ -320,8 +318,8 @@ unsafe impl CrubitAbi for BoxedCppStringAbi {
 pub unsafe extern "C" fn rust_string_to_cpp_string(input: *const c_void, output: *mut c_void) {
     // SAFETY:
     // * `input` is a valid `string_wrapper`.
-    // * `input.owned_cpp_string` is guaranteed to be a non-null C++ allocated
-    //   pointer to std::string.
+    // * `input.owned_cpp_string` is guaranteed to be a non-null C++ allocated pointer to
+    //   std::string.
     // * `output` is a valid C++ `std::string`.
     unsafe {
         let input = &*(input as *const string_wrapper);
@@ -350,19 +348,19 @@ pub unsafe extern "C" fn cpp_string_to_rust_string(input: *mut c_void, output: *
 ///
 /// * **Rust `String`**:
 ///   - **Movability**: Rust's `String` is trivially relocatable (can be moved with `memcpy`).
-///     `string` (wrapping C++ `std::string`) is **not** trivially relocatable. On some
-///     platforms (e.g., `libstdc++` with Short String Optimization), `std::string` may contain
-///     self-references (pointers pointing to its own internal buffer). Moving it in memory
-///     without running its C++ move constructor would invalidate these pointers. Thus, in Rust,
-///     it is `!Unpin` and must be pinned.
+///     `string` (wrapping C++ `std::string`) is **not** trivially relocatable. On some platforms
+///     (e.g., `libstdc++` with Short String Optimization), `std::string` may contain
+///     self-references (pointers pointing to its own internal buffer). Moving it in memory without
+///     running its C++ move constructor would invalidate these pointers. Thus, in Rust, it is
+///     `!Unpin` and must be pinned.
 ///   - **Layout**: Rust's `String` has a fixed layout of 3 fields (pointer, capacity, length).
 ///     `string` has a platform-dependent layout that matches C++ `std::string`.
 ///
 /// * **Rust `Vec<u8>`**:
-///   - **Movability and Layout**: Like `String`, `Vec<u8>` is trivially relocatable and has a
-///     fixed Rust layout, unlike `string`.
-///   - **Intent**: `Vec<u8>` is a general-purpose byte container, whereas `string` represents
-///     a C++ string, typically used for textual data (though C++ `std::string` can contain arbitrary
+///   - **Movability and Layout**: Like `String`, `Vec<u8>` is trivially relocatable and has a fixed
+///     Rust layout, unlike `string`.
+///   - **Intent**: `Vec<u8>` is a general-purpose byte container, whereas `string` represents a C++
+///     string, typically used for textual data (though C++ `std::string` can contain arbitrary
 ///     bytes including nulls).
 ///
 /// * **Byte String types (e.g., `bstr::BStr`)**:
