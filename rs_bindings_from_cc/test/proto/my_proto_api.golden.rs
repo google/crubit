@@ -132,11 +132,6 @@ pub mod test {
 // error: class `std::basic_fstream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
 //   incomplete type
 
-// error: class `absl::container_internal::HashtableInlineDataImpl<absl::container_internal::kCapacityByLog>` could not be bound
-//   Crubit is not enabled on defining target:
-//     third_party/absl/container/internal/raw_hash_set.h
-//   template instantiation is not yet supported
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;
