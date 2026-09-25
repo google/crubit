@@ -5,7 +5,7 @@
 build --enable_bzlmod
 
 # generic_clang from @llvm-raw//utils/bazel, but c++20 to match Google
-build:generic_clang --repo_env=CC=clang
+build:generic_clang --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
 build:generic_clang --cxxopt=-std=c++20 --host_cxxopt=-std=c++20 --repo_env=BAZEL_CXXOPTS=-std=c++20
 build:generic_clang --copt=-Wall --host_copt=-Wall # not -Werror due to spurious warnings differences in Clang <16
 build:generic_clang --cxxopt=-Wno-range-loop-analysis --host_cxxopt=-Wno-range-loop-analysis
