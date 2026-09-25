@@ -1043,6 +1043,30 @@ static void modelCheckNE(const CallExpr& CE, Environment& Env) {
     Env.assume(Env.arena().makeEquals(Val->formula(), *IsNull));
 }
 
+// Models the shared, analyzer-only `absl::analyzer_internal::AnalyzerAssume`
+// primitive emitted by the `ABSL_ANALYZER_ASSUME(cond)` macro (see
+// `third_party/absl/base/optimization.h`). Error-checking macros such as
+// `CHECK_NE`/`CAR_CHECK_NE` emit `ABSL_ANALYZER_ASSUME((a) op (b))` on their
+// success path; this is the single place the analysis consumes that fact.
+//
+// The macro's operand is passed as the (evaluated) `bool` argument, so by the
+// time we transfer over this call the framework has already produced a
+// `BoolValue` for it -- and the nullability model has already turned an input
+// comparison like `p != nullptr` into the corresponding pointer-nullness
+// formula (see `transferNullCheckComparison`). Our only job is to force that
+// formula to hold. This is the shared vocabulary that error-checking macros
+// emit going forward; it complements -- but does not yet replace -- the
+// bespoke `Check_*Impl` / `GetReferenceableValue` modeling above, which is
+// still required for pre-expanded inference corpora (see the dispatch comment
+// in `transferCallExpr`).
+static void modelAnalyzerAssume(const CallExpr& CE, Environment& Env) {
+  if (CE.getNumArgs() != 1 || CE.getArg(0) == nullptr) return;
+  const Expr* Cond = CE.getArg(0)->IgnoreParenImpCasts();
+  auto* BV = Env.get<BoolValue>(*Cond);
+  if (BV == nullptr) return;
+  Env.assume(BV->formula());
+}
+
 static bool isMethodOfAbslStatusOr(const FunctionDecl* F) {
   const auto* Method = dyn_cast<CXXMethodDecl>(F);
   if (!Method) return false;
@@ -1066,7 +1090,21 @@ static void transferCallExpr(const CallExpr* absl_nonnull CE,
     if ((FunII = FuncDecl->getDeclName().getAsIdentifierInfo())) {
       if (FunII->isStr("__assert_nullability")) return;
 
-      // This is part of the implementation of `CHECK_NE`.
+      // Model the pre-expanded Abseil/util `CHECK_NE` implementation
+      // (`GetReferenceableValue` + `Check_NEImpl`). This bespoke modeling is
+      // intentionally RETAINED even though error-checking macros now also emit
+      // `ABSL_ANALYZER_ASSUME` (handled below). Rationale: crubit's inference
+      // and clang-tidy paths never define `__clang_analyzer__` /
+      // `RUNNING_IN_TRICORDER`, and for real code they learn `x != nullptr`
+      // from `CHECK_NE` via their own unconditional macro-replacement layer
+      // (`inference/clang_tidy_nullability_replacement_macros.h` ->
+      // `abortIfEqual`, handled by `modelArgCaptureAbortIfPassThrough`), so
+      // they never consume the assume for real code. These cases exist only to
+      // model *already pre-expanded* `*.pic.ii` inference corpora, which the
+      // replace-macros layer cannot rewrite and which therefore still contain
+      // `Check_NEImpl`/`GetReferenceableValue` (never `ABSL_ANALYZER_ASSUME`).
+      // TODO(b/510827180): remove once those corpora are regenerated through
+      // the replace-macros layer so they carry `abortIfEqual` instead.
       if (FunII->isStr("GetReferenceableValue") &&
           isDeclaredInAbseilOrUtil(*FuncDecl)) {
         modelGetReferenceableValue(*CE, State.Env);
@@ -1076,6 +1114,18 @@ static void transferCallExpr(const CallExpr* absl_nonnull CE,
         modelCheckNE(*CE, State.Env);
         return;
       }
+
+      // The shared analyzer-only assumption primitive
+      // (`ABSL_ANALYZER_ASSUME`). This is the preferred path for teaching the
+      // analysis facts from error-checking macros; see `modelAnalyzerAssume`.
+      if (FunII->isStr("AnalyzerAssume") &&
+          FuncDecl->getQualifiedNameAsString() ==
+              "absl::analyzer_internal::AnalyzerAssume") {
+        modelAnalyzerAssume(*CE, State.Env);
+        return;
+      }
+
+      // Macro-replacement argument-capture functions (e.g. used by `CHECK_NE`).
       if (FunII->isStr(ArgCaptureAbortIfFalse) ||
           FunII->isStr(ArgCaptureAbortIfEqual)) {
         modelArgCaptureAbortIfPassThrough(*CE, State.Env);
