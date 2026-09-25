@@ -40,3 +40,22 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+cc_library(
+    name = "ctor_takes_nonmovable",
+    hdrs = ["ctor_takes_nonmovable.h"],
+    aspect_hints = ["//features:supported"],
+    deps = [":nonmovable_cc"],
+)
+
+crubit_rust_test(
+    name = "ctor_takes_nonmovable_test",
+    srcs = ["ctor_takes_nonmovable_test.rs"],
+    cc_deps = [":ctor_takes_nonmovable"],
+    deps = [
+        ":nonmovable",
+        "//support:ctor",
+        "@crate_index//:googletest",
+        "@crate_index//:static_assertions",  # v1
+    ],
+)

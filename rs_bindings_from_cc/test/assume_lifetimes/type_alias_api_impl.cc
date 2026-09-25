@@ -39,7 +39,7 @@ static_assert((struct TypeAliasCtor &
 extern "C" void
 __rust_thunk___ZN13TypeAliasCtorC1ENSt3__u17basic_string_viewIcNS0_11char_traitsIcEEEE(
     struct TypeAliasCtor* __this, ::std::__u::string_view* a) {
-  crubit::construct_at(__this, crubit::UnsafeTakeValue(a));
+  crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(a));
 }
 
 #pragma clang diagnostic pop
