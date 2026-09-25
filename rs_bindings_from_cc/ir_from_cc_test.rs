@@ -2475,7 +2475,7 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
                 struct StructInDependency {}; "#;
     let current_target_src = r#"
                 /* no references to MyTemplate or MyAliasOfTemplate */
-                struct StructInCurrentTarget {}; "#;
+                struct StructInCurrentTarget { StructInDependency d; }; "#;
     let proto = ir_proto_from_cc_dependency(current_target_src, dependency_src)?;
     let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
 
@@ -2501,8 +2501,8 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
         }
     );
 
-    // Type alias is only defined in `dependency`.
-    assert_ir_matches!(
+    // Unreferenced type alias in `dependency` is not imported.
+    assert_ir_not_matches!(
         ir,
         quote! {
             TypeAlias { ...
@@ -2521,10 +2521,7 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
         }
     );
 
-    // The template should be instantiated in `dependency`, rather than in
-    // `current_target`.
-    // TODO(b/222001243): Fix which target contains the instantiations and then flip
-    // the test assertions below.  Tentative fix: cl/438580040.
+    // Unreferenced template in `dependency` is not instantiated in either target.
     assert_ir_not_matches!(
         ir,
         quote! {
@@ -2534,7 +2531,7 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
             }
         }
     );
-    assert_ir_matches!(
+    assert_ir_not_matches!(
         ir,
         quote! {
             Record { ...
@@ -2544,9 +2541,6 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
         }
     );
 
-    // The template instantiations in the `dependency` should only produce type
-    // information (e.g. TypeAlias, Record) and don't need to produce Func
-    // items.
     assert_ir_not_matches!(
         ir,
         quote! {
@@ -2556,10 +2550,7 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
             }
         }
     );
-    // There should be nothing template-instantiation-related in the main test
-    // target. TODO(b/222001243): Fix which target contains the instantiations
-    // and then flip the test assertions below to `assert_ir_not_matches`.
-    assert_ir_matches!(
+    assert_ir_not_matches!(
         ir,
         quote! {
             Func { ...
@@ -2584,7 +2575,7 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
                 struct StructInDependency{}; "#;
     let current_target_src = r#"
                 using MyAliasOfTemplate = MyTemplate<int>;
-                struct StructInCurrentTarget{}; "#;
+                struct StructInCurrentTarget{ StructInDependency d; }; "#;
     let proto = ir_proto_from_cc_dependency(current_target_src, dependency_src)?;
     let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
 
@@ -3008,7 +2999,7 @@ fn test_do_not_import_static_member_functions_when_record_not_supported_yet() {
                 BazelLabel("//test:testing_target"),
                 [UnsupportedItem(UnsupportedItem { name: "SomeStruct" ... })]
                 ...
-            ),
+            )
             ...
           ]
         }
@@ -3036,7 +3027,7 @@ fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet()
                 BazelLabel("//test:testing_target"),
                 [UnsupportedItem(UnsupportedItem { name: "SomeStruct" ... })]
                 ...
-            ),
+            )
             ...
           ]
         }
@@ -3364,7 +3355,7 @@ fn test_struct_forward_declaration_in_namespace() -> Result<()> {
                         enclosing_item_id: Some(ItemId(#ns_id)) ...
                     })],
                 })],
-            ),
+            )
             ...
           ]
         }
@@ -4389,7 +4380,7 @@ fn test_reopened_namespaces() {
                         })],
                     }),
                 ],
-            ),
+            )
             ...
           ]
         }
@@ -4535,7 +4526,7 @@ fn test_inline_namespace() {
                         ...
                     })],
                 })],
-            ),
+            )
             ...
           ]
         }
@@ -4596,7 +4587,7 @@ fn test_function_redeclared_as_friend() {
                     }),
                 ]
                 ...
-            ),
+            )
             ...
           ]
         }
@@ -4671,7 +4662,7 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
                     }),
                 ]
                 ...
-            ),
+            )
             ...
           ]
         }
@@ -5013,7 +5004,7 @@ fn test_source_location_class_template_specialization() {
 #[gtest]
 fn test_top_level_items_from_multiple_targets() {
     let dependency_header = r#"struct FromDependency {};"#;
-    let header = "struct FromHeader {};";
+    let header = "struct FromHeader { FromDependency dep; __int128_t builtin; };";
     let proto = ir_proto_from_cc_dependency(header, dependency_header).unwrap();
 
     let ir = ir_testing::make_test_ir_dependency(&proto, None).unwrap();
