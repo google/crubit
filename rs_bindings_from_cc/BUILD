@@ -33,6 +33,13 @@ package(
     default_visibility = ["//:__subpackages__"],
 )
 
+# `supported_platforms` can be used as a select condition to distinguish
+# platforms where rs_bindings_from_cc (aka rust_api_from_cpp) is supported from
+# those where it is not.
+#
+# See `//:supported_platforms` for platforms where both
+# directions of Crubit are supported, and for guidance on which to use.
+
 config_setting(
     name = "enable_heap_profiling",
     define_values = {"enable_heap_profiling": "1"},

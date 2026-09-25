@@ -15,14 +15,12 @@ licenses(["notice"])
 
 exports_files(["LICENSE"])
 
-# LINT.IfChange
 # `crubit_supported` (and `supported_platforms`) can be used as a select condition
-# to distinguish platforms where Crubit (and rs_bindings_from_cc in particular) is
-# supported from those where it is not.
+# to distinguish platforms where Crubit is supported in *both* directions
+# (rs_bindings_from_cc and cc_bindings_from_rs) from those where it is not.
 
 alias(
     name = "crubit_supported",
     actual = ":supported_platforms",
     visibility = ["//visibility:public"],
 )
-# LINT.ThenChange(//depot/common/bazel_support/toolchains/BUILD)

@@ -18,6 +18,13 @@ package(
     default_visibility = ["//:__subpackages__"],
 )
 
+# `supported_platforms` can be used as a select condition to distinguish
+# platforms where cc_bindings_from_rs (aka cpp_api_from_rust) is supported from
+# those where it is not.
+#
+# See `//:supported_platforms` for platforms where both
+# directions of Crubit are supported, and for guidance on which to use.
+
 rust_library(
     name = "cpp_api_from_rust_lib",
     srcs = ["lib.rs"],
