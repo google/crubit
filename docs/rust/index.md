@@ -110,28 +110,42 @@ name you provided:
 
 ### Look at the generated bindings {#examine}
 
-There are two ways to look at the generated header file:
+The generated C++ API for a `rust_library` is a header named after the
+`rust_library` target, in the build output directory.
 
-*   Click through the `#include` in Cider. Given the following C++ code:
+#### When something is missing {#missing}
 
-    ```c++
-    #include "path/to/example_crate.h"
-    ```
+If Crubit can't generate bindings for a Rust item, the build doesn't fail by
+default. Crubit leaves the item out of the generated header and writes a comment
+in its place explaining why:
 
-    If you right click the file path, and select "Go to Definition", you will be
-    taken to a file starting with `// Automatically @generated C++ bindings`.
+```c++
+// Error generating bindings for function `tuples_golden::param_option_in_tuple`
+// defined at
+// path/to/tuples.rs;l=370:
+// Error handling parameter #0 of type `(std::option::Option<i32>,)`:
+// crubit.rs/errors/bridge_compound_type: Tuples containing bridged type
+```
 
-*   Run `bazel build //path/to:example_crate --config=crubit-genfiles`, and open
-    `bazel-bin/path/to/example_crate.h` in your text editor of choice.
+The first error you see is usually in the C++ code that calls the missing item,
+which doesn't say why it's missing. Search the generated header for the item's
+name to find the reason. The reason often names a type rather than the function
+itself; fix or wrap that type, and the function gets bindings too.
+
+To make a missing item fail the build instead, annotate it with
+`#[crubit_annotate::must_bind]`. `crubit_annotate` is a procedural macro crate,
+so add `//support:crubit_annotate` to your `rust_library`'s
+`proc_macro_deps` (see [Attributes to fine-tune generated bindings](customizing.md)).
 
 ## Common Errors {#errors}
 
 ### Unsupported features
 
 Some features are either unsupported, or else only supported with experimental
-feature flags (crubit.rs-features). In order to get bindings for a Rust
-interface, that interface must only use the subset of features currently
-supported.
+feature flags
+. In
+order to get bindings for a Rust interface, that interface must only use the
+subset of features currently supported.
 
 For a particularly notable example, references are only supported as function
 parameters, and only in a subset of cases that we can prove does not add
