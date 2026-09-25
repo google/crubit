@@ -35,3 +35,7 @@ impl Gymnastics {
 pub fn add_assign(dest: &mut u64, src: &u64) {
     *dest += *src;
 }
+
+pub async fn async_add(left: u64, right: u64) -> u64 {
+    left + right
+}
