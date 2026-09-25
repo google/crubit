@@ -407,6 +407,11 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
         result_str = result_str.replace(&placeholder, &tokens.to_string());
     }
 
+    ensure!(
+        !result_str.contains('{') && !result_str.contains('}'),
+        "Failed to expand all placeholders in `cpp_type` `{cpp_type_str}`: `{result_str}`"
+    );
+
     Ok(result_str.parse::<TokenStream>().unwrap_or_else(|err| {
         db.fatal_errors().report(&format!(
             "Failed to parse `cpp_type` `{}` after placeholder expansion: {err}",

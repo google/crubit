@@ -5,7 +5,7 @@
 extern crate rustc_span;
 
 use crate::db::BindingsGenerator;
-use arc_anyhow::Result;
+use arc_anyhow::{bail, Result};
 use code_gen_utils::{format_cc_type_name, make_rs_ident, NamespaceQualifier};
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
@@ -80,6 +80,11 @@ impl FullyQualifiedName {
     pub fn format_for_cc(&self, db: &BindingsGenerator<'_>) -> Result<TokenStream> {
         let features = db.crate_features(self.krate_num);
         if let Some(path) = self.unqualified.cpp_type {
+            if path.as_str().contains('{') {
+                bail!(
+                    "Cannot format generic `cpp_type` `{path}` with unexpanded template placeholders as C++ type"
+                );
+            }
             // TODO(b/502939407): Until this bug is fixed and cpp_type comes pre-prefixed with `::`,
             // we use this hack here to add the prefix on to generated code manually. This should
             // typically be applied to all types, but because ffi_11 is special and maps to builtin
@@ -155,7 +160,8 @@ impl FullyQualifiedName {
 pub struct ExportedPath {
     /// Segments of the path.
     pub path: Vec<Symbol>,
-    /// If this path aliases a definition, this will be the alias. Otherwise, it will be the definition name.
+    /// If this path aliases a definition, this will be the alias. Otherwise, it will be the
+    /// definition name.
     pub name: Symbol,
     /// If this path points as a type alias, rather than a use statement, this will be the DefId of
     /// the type alias.

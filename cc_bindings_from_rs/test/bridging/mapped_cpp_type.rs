@@ -24,3 +24,22 @@ impl core::fmt::Debug for MappedCppType {
         write!(f, "MappedCppType({})", self.0)
     }
 }
+
+#[cpp_layout_equivalent(
+    cpp_type = "mapped_cpp_type::GenericMappedCppType<{T}>",
+    include_path = "cc_bindings_from_rs/test/bridging/mapped_cpp_type_def.h"
+)]
+#[repr(C)]
+pub struct GenericMappedCppType<T>(pub T);
+
+impl<T: PartialEq> core::cmp::PartialEq for GenericMappedCppType<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<T: Eq> core::cmp::Eq for GenericMappedCppType<T> {}
+
+pub fn create_generic_mapped_cpp_type(x: i32) -> GenericMappedCppType<i32> {
+    GenericMappedCppType(x)
+}

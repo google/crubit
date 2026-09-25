@@ -16,5 +16,10 @@ TEST(MappedCppTypeTest, EqTraitGenerated) {
   EXPECT_TRUE((rs_std::impl<MappedCppType, rs::core::cmp::Eq>::kIsImplemented));
 }
 
+TEST(MappedCppTypeTest, GenericMappedCppType) {
+  GenericMappedCppType<int32_t> val = create_generic_mapped_cpp_type(42);
+  EXPECT_EQ(val.value, 42);
+}
+
 }  // namespace
 }  // namespace mapped_cpp_type

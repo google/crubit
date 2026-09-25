@@ -11,6 +11,11 @@ namespace mapped_cpp_type {
 struct MappedCppType {
   int32_t value;
 };
+
+template <typename T>
+struct GenericMappedCppType {
+  T value;
+};
 }  // namespace mapped_cpp_type
 
 #endif  // CRUBIT_TEST_BRIDGING_MAPPED_CPP_TYPE_DEF_H

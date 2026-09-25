@@ -2027,7 +2027,8 @@ fn test_generate_bindings_c_stdlib_conflict_top_level_submod() {
     "#;
     test_generated_bindings_with_namespace(test_src, "my_crate::remove", |bindings| {
         let cc_api = &bindings.unwrap().cc_api;
-        // `my_crate` is top-level (not colliding), `remove` is nested, so it stays `my_crate::remove`.
+        // `my_crate` is top-level (not colliding), `remove` is nested, so it stays
+        // `my_crate::remove`.
         assert_cc_matches!(
             cc_api,
             quote! {
@@ -2172,6 +2173,51 @@ fn test_into_iterator_with_generic_into_iter_does_not_panic() {
             }
         );
         assert!(!bindings.cc_api.to_string().contains("rs_std::impl"));
+    });
+}
+
+#[test]
+fn test_generic_mapped_cpp_type_with_derived_trait() {
+    let test_src = r#"
+            #![allow(unused)]
+            #[derive(Debug, PartialEq, Eq)]
+            #[doc = "CRUBIT_ANNOTATE: cpp_type=::some_ns::SomeCppStruct<{T}>"]
+            #[doc = "CRUBIT_ANNOTATE: include_path=some_ns/some_cpp_struct.h"]
+            pub struct SomeCppStruct<T>(i32, std::marker::PhantomData<T>);
+
+            impl<T> std::iter::Iterator for SomeCppStruct<T> {
+                type Item = i32;
+                fn next(&mut self) -> Option<Self::Item> {
+                    None
+                }
+            }
+
+            pub fn make_it() -> SomeCppStruct<i32> {
+                SomeCppStruct(42, std::marker::PhantomData)
+            }
+        "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        let cc_api_str = bindings.cc_api.to_string();
+        // Trait impl specializations (rs_std::impl) should not be emitted for generic types.
+        assert!(
+            !cc_api_str.contains("rs_std :: impl"),
+            "Unexpected trait impl specialization:\n{cc_api_str}"
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                __HASH_TOKEN__ include "some_ns/some_cpp_struct.h"
+                ...
+                namespace rust_out {
+                    ...
+                    ::some_ns::SomeCppStruct<::std::int32_t> make_it();
+                    ...
+                }
+                ...
+            }
+        );
     });
 }
 
@@ -2571,7 +2617,8 @@ fn test_is_cpp_move_constructible() {
         // Pure Rust struct with custom Drop and no Default/Clone
         assert!(!db.is_cpp_move_constructible(find_ty("PureRustNonMovable")));
 
-        // Imported C++ type with cpp_move_constructible attribute (even with custom Drop and no Default/Clone)
+        // Imported C++ type with cpp_move_constructible attribute (even with custom Drop and no
+        // Default/Clone)
         assert!(db.is_cpp_move_constructible(find_ty("CppMovable")));
 
         // Imported C++ type without cpp_move_constructible attribute
@@ -2583,7 +2630,8 @@ fn test_is_cpp_move_constructible() {
         // Tuple containing non-movable type
         assert!(!db.is_cpp_move_constructible(find_ty("NonMovableTuple")));
 
-        // Option of a non-movable type is movable because Option implements Default (None) unconditionally
+        // Option of a non-movable type is movable because Option implements Default (None)
+        // unconditionally
         assert!(db.is_cpp_move_constructible(find_ty("MovableOption")));
 
         // Result containing a non-movable type is not movable (Result doesn't implement Default)
@@ -2591,9 +2639,9 @@ fn test_is_cpp_move_constructible() {
     });
 }
 
-/// Verifies that generating bindings for types implementing operator traits (like `#[derive(PartialEq)]`
-/// or `bitflags!` on `Source` in `libs/input/rust`) when `--crate-header` for `core` is not provided
-/// gracefully emits an unsupported comment instead of panicking.
+/// Verifies that generating bindings for types implementing operator traits (like
+/// `#[derive(PartialEq)]` or `bitflags!` on `Source` in `libs/input/rust`) when `--crate-header`
+/// for `core` is not provided gracefully emits an unsupported comment instead of panicking.
 #[test]
 fn test_trait_operator_without_core_crate_header_returns_error() {
     let test_src = r#"
