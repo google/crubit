@@ -26,23 +26,40 @@ pub fn Bar() -> StatusOr<i32> { ... }
 To enable `absl::Status` and `absl::StatusOr` bindings for C++ libraries, enable
 `local_defines = ["CRUBIT_NEW_STATUS"]` on the `cc_library` (TODO(b/490215742): clean
 this up when the old API is removed; note that `local_defines` is preferred over
-`defines` to prevent leaking the macro transitively to downstream dependencies):
+`defines` to prevent leaking the macro transitively to downstream dependencies).
+Rust code that uses the status types depends on
+`@abseil-cpp//absl/status:status_rust`:
 
 ```python
 cc_library(
     name = "cpp_api",
     srcs = ["cpp_api.cc"],
     hdrs = ["cpp_api.h"],
-    aspect_hints = [
-        "//features:supported",
-    ],
+    aspect_hints = [":cpp_api_rust.hint"],
     local_defines = ["CRUBIT_NEW_STATUS"],
     deps = [
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
     ],
 )
+
+rust_api_from_cpp(
+    name = "cpp_api_rust",
+    cpp_target = ":cpp_api",
+)
+
+rust_library(
+    name = "user_of_cpp_api",
+    srcs = ["user_of_cpp_api.rs"],
+    deps = [
+        ":cpp_api_rust",
+        "@abseil-cpp//absl/status:status_rust",
+    ],
+)
 ```
+
+The complete, tested version is
+[`examples/types/absl_status/BUILD`](/examples/types/absl_status/BUILD).
 
 C++ functions returning `Status`/`StatusOr` can be defined as normal:
 
