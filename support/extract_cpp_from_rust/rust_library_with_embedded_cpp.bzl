@@ -24,11 +24,13 @@ def rust_library_with_embedded_cpp(name, srcs, deps = [], deps_of_cc_library = [
         target = target,
     )
 
+    aspect_hints = kwargs.pop("aspect_hints", ["//features:supported"])
+
     cc_library(
         name = cc_lib_name,
         hdrs = [extracted_header],
         deps = deps_of_cc_library,
-        aspect_hints = ["//features:supported"],
+        aspect_hints = aspect_hints,
     )
 
     rust_bindings_name = name + "_rust_bindings"
@@ -56,7 +58,7 @@ def rust_library_with_embedded_cpp(name, srcs, deps = [], deps_of_cc_library = [
         name = name,
         srcs = srcs,
         deps = deps + [":" + rust_bindings_name],
-        aspect_hints = kwargs.pop("aspect_hints", ["//features:supported"]) + [
+        aspect_hints = aspect_hints + [
             ":" + name + "_cc_bindings_from_rust_config",
         ],
         aliases = merged_aliases,
