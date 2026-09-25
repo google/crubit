@@ -1529,21 +1529,36 @@ pub fn get_async_future_output_ty<'tcx>(
     })
 }
 
-#[rustversion::before(2026-09-20)]
-fn opt_def_id<'tcx>(const_kind: &ty::AliasConstKind<'tcx>) -> Option<DefId> {
-    const_kind.opt_def_id()
+#[rustversion::before(2026-07-03)]
+fn def_id_from_const_alias<'tcx>(_: TyCtxt<'tcx>, con: ty::Const<'tcx>) -> Option<DefId> {
+    match con.kind() {
+        ty::ConstKind::Unevaluated(uneval) => Some(uneval.def),
+        _ => None,
+    }
 }
 
-#[rustversion::since(2026-09-20)]
-fn opt_def_id<'tcx>(const_kind: &ty::AliasConstKind<'tcx>) -> Option<DefId> {
-    let def_id = match const_kind {
+#[rustversion::before(2026-09-19)]
+#[rustversion::since(2026-07-03)]
+fn def_id_from_const_alias<'tcx>(_: TyCtxt<'tcx>, con: ty::Const<'tcx>) -> Option<DefId> {
+    match con.kind() {
+        ty::ConstKind::Alias(_, anon_const) => anon_const.kind.opt_def_id(),
+        _ => None,
+    }
+}
+
+#[rustversion::since(2026-09-19)]
+fn def_id_from_const_alias<'tcx>(_: TyCtxt<'tcx>, con: ty::Const<'tcx>) -> Option<DefId> {
+    let ty::ConstKind::Alias(_, alias_const) = con.kind() else {
+        return None;
+    };
+    let def_id = match alias_const.kind {
         ty::AliasConstKind::Projection { def_id } => def_id,
         ty::AliasConstKind::InherentSelf { def_id } => def_id,
         ty::AliasConstKind::InherentImpl { def_id } => def_id,
         ty::AliasConstKind::Free { def_id } => def_id,
         ty::AliasConstKind::Anon { def_id } => def_id,
     };
-    Some(*def_id)
+    Some(def_id)
 }
 
 fn fn_has_unreturnable_const<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool {
@@ -1555,19 +1570,20 @@ fn fn_has_unreturnable_const<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool {
     let Some(req_consts) = &body.required_consts else {
         return false;
     };
+    #[rustversion::before(2026-07-03)]
+    use ty::AnonConstKind::NonTypeSystem as NonTypeSystemInline;
+    #[rustversion::since(2026-07-03)]
+    use ty::AnonConstKind::NonTypeSystemInline;
     req_consts
         .iter()
         .filter_map(|req_const| match req_const.const_ {
             mir::Const::Unevaluated(uneval, _) => Some(uneval.def),
-            mir::Const::Ty(_, ct) => match ct.kind() {
-                ty::ConstKind::Alias(_, alias_const) => opt_def_id(&alias_const.kind(tcx)),
-                _ => None,
-            },
+            mir::Const::Ty(_, ct) => def_id_from_const_alias(tcx, ct),
             _ => None,
         })
         .filter(|const_def_id| {
             matches!(tcx.def_kind(*const_def_id), DefKind::AnonConst)
-                && tcx.anon_const_kind(*const_def_id) == ty::AnonConstKind::NonTypeSystemInline
+                && tcx.anon_const_kind(*const_def_id) == NonTypeSystemInline
                 && !tcx.is_trivial_const(*const_def_id)
         })
         .any(|const_def_id| {
