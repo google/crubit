@@ -129,7 +129,8 @@ fn stream_cargo_build(
     let reader = std::io::BufReader::new(
         command.stdout.take().ok_or_else(|| anyhow!("Failed to open cargo stdout"))?,
     );
-    // Print out any compiler diagnostics when we walk the iterator leaving only the compiler artifacts.
+    // Print out any compiler diagnostics when we walk the iterator leaving only the compiler
+    // artifacts.
     Ok((
         command,
         cargo_metadata::Message::parse_stream(reader).filter_map(|message| match message {
@@ -221,7 +222,8 @@ struct Directories {
     /// Contains target-arch specific headers, e.g.
     /// "/path/to/target/x86_64-unknown-linux-gnu/release/include".
     headers_dir: Utf8PathBuf,
-    /// Contains host-arch specific dependencies (proc macros), e.g. "/path/to/target/release/deps".
+    /// Contains host-arch specific dependencies (proc macros), e.g.
+    /// "/path/to/target/release/deps".
     host_deps_dir: Utf8PathBuf,
 }
 impl Directories {
@@ -310,8 +312,8 @@ impl BindingGenerationContext {
         out_dir: Option<&Utf8Path>,
         target_libdir: Utf8PathBuf,
     ) -> Result<Self> {
-        // It's important we check the path of root (and not one of our dependencies) or else we'll get
-        // the wrong path.
+        // It's important we check the path of root (and not one of our dependencies) or else we'll
+        // get the wrong path.
         let profile_dir =
             determine_profile_dir(&build_artifacts.pkg_to_artifact, &root, target_dir)?;
         let dirs = Directories::new(target_dir.to_owned(), profile_dir, out_dir)?;
@@ -456,7 +458,8 @@ impl BindingGenerationContext {
 
         let cmdline = Cmdline::new(&current_args).map_err(|err| {
             match err.downcast_ref::<clap::Error>() {
-                // Explicitly call `clap::Error::exit`, because 1) it results in *colored* output and
+                // Explicitly call `clap::Error::exit`, because 1) it results in *colored* output
+                // and
                 // 2) it uses a zero exit code for specific "errors" (e.g. for `--help` output).
                 Some(clap_err) => {
                     let _: std::convert::Infallible = clap_err.exit();
@@ -605,17 +608,11 @@ extern crate proc_macro;
             }
         };
 
-        let bridge_rust_dep = get_support_dep(
-            "CRUBIT_BRIDGE_RUST_PATH",
-            "bridge_rust",
-            "crubit_bridge_rust",
-            "../../../support/crubit_bridge_rust",
-        );
-        let hash_rust_dep = get_support_dep(
-            "CRUBIT_HASH_RUST_PATH",
-            "hash_rust",
-            "crubit_hash_rust",
-            "../../../support/crubit_hash_rust",
+        let crubit_support_dep = get_support_dep(
+            "CRUBIT_SUPPORT_RUST_PATH",
+            "crubit_support",
+            "crubit_support",
+            "../../../support/crubit_support",
         );
 
         let mut cargo_toml_content = format!(
@@ -631,12 +628,11 @@ path = "{lib_rs_filename}"
 crate-type = ["staticlib"]
 
 [dependencies]
-{bridge_rust_dep}{hash_rust_dep}    "#,
+{crubit_support_dep}    "#,
             root_name = root_name,
             edition = self.root.edition,
             lib_rs_filename = lib_rs_path.file_name().unwrap(),
-            bridge_rust_dep = bridge_rust_dep,
-            hash_rust_dep = hash_rust_dep,
+            crubit_support_dep = crubit_support_dep,
         );
 
         let pkg_id_to_package: HashMap<_, _> =
@@ -651,6 +647,7 @@ crate-type = ["staticlib"]
                     .is_some_and(|art| art.path.starts_with(&profile_dir))
             })
             .filter_map(|pkg_id| pkg_id_to_package.get(pkg_id))
+            .filter(|pkg| pkg.name.as_str() != "crubit_support")
         {
             if pkg.source.as_ref().is_some_and(|source| source.is_crates_io()) {
                 cargo_toml_content.push_str(&format!("{} = \"{}\"\n", pkg.name, pkg.version));

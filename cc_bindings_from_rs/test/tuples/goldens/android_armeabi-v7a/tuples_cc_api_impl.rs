@@ -649,8 +649,10 @@ unsafe extern "C" fn __crubit_thunk_return_uoption_uin_utuple_uref(
     unsafe {
         let __rs_return_value = ::tuples_golden::return_option_in_tuple_ref(opt);
         unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+            ::crubit_support::bridge::internal::encode(
+                ::crubit_support::bridge::OptionAbi(
+                    ::crubit_support::bridge::transmute_abi::<i32>(),
+                ),
                 __ret_ptr as *mut core::ffi::c_uchar,
                 __rs_return_value,
             );

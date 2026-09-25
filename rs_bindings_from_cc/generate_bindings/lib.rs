@@ -507,17 +507,18 @@ pub fn generate_bindings_tokens(
                 };
 
                 // The parameters shall be named `param_0`, `param_1`, etc.
-                // These names can be reused across different callables, so we reuse the same vec and
-                // just grow it when we need more Idents than it currently contains.
+                // These names can be reused across different callables, so we reuse the same vec
+                // and just grow it when we need more Idents than it currently
+                // contains.
                 while callable.param_types.len() > param_idents_buffer.len() {
                     param_idents_buffer.push(format_ident!("param_{}", param_idents_buffer.len()));
                 }
                 // Only take as many filled in names as we need.
                 let param_idents = &param_idents_buffer[..callable.param_types.len()];
 
-                // If generate_dyn_callable_invoker_and_manager_decls fails, skip. We don't need to generate a nice
-                // error because whoever uses this will also fail and generate an error at the relevant
-                // site.
+                // If generate_dyn_callable_invoker_and_manager_decls fails, skip. We don't need to
+                // generate a nice error because whoever uses this will also fail
+                // and generate an error at the relevant site.
                 let cpp_api = generate_dyn_callable_invoker_and_manager_decls(
                     &db,
                     &callable,
@@ -562,7 +563,8 @@ pub fn generate_bindings_tokens(
     };
 
     // Callables use `Box<dyn F>`, and bindings that depend on `rs_alloc` (either directly or
-    // transitively via `rs_std`) can refer to `::alloc::...` types (e.g. `::alloc::string::String`).
+    // transitively via `rs_std`) can refer to `::alloc::...` types (e.g.
+    // `::alloc::string::String`).
     let extern_crate_alloc = {
         let has_callables = !callables_rs_api.is_empty();
         let has_rs_alloc = !ir
@@ -1204,7 +1206,8 @@ fn crubit_abi_type<'a>(
 
                 let cpp_namespace_qualifier = db.namespace_qualifier(original_type.as_ref());
 
-                // Rust message types are exported to crate root, but we need the full namespace for the C++ ABI.
+                // Rust message types are exported to crate root, but we need the full namespace for
+                // the C++ ABI.
                 let merged_cpp_abi_path = cpp_namespace_qualifier.parts().join("::")
                     + "::"
                     + original_type.cc_name().as_str();
@@ -1302,7 +1305,7 @@ fn crubit_abi_type<'a>(
                             quote! {
                                 |consume_result_into_buffer: #co_crate::internal_crubit::ConsumeResultIntoBufferFn,
                                  context: *mut ::core::ffi::c_void| -> #result_type_tokens {
-                                    ::bridge_rust::unstable_return!(@
+                                    ::crubit_support::bridge::unstable_return!(@
                                         // Crubit ABI details
                                         #result_type_crubit_abi_expr_tokens,
                                         #result_type_crubit_abi_type_tokens,
@@ -1312,7 +1315,7 @@ fn crubit_abi_type<'a>(
                                             (consume_result_into_buffer.unwrap())(
                                                 context,
                                                 buffer,
-                                                <#result_type_crubit_abi_type_tokens as ::bridge_rust::CrubitAbi>::SIZE,
+                                                <#result_type_crubit_abi_type_tokens as ::crubit_support::bridge::CrubitAbi>::SIZE,
                                             );
                                         }
                                         // unstable_return! handles decoding the result into Rust
@@ -1380,8 +1383,8 @@ fn crubit_abi_type<'a>(
                 record.cc_name()
             );
 
-            // This inlines the logic of code_gen_utils::format_cc_ident and joins the namespace parts,
-            // except that it creates an Ident instead of a TokenStream.
+            // This inlines the logic of code_gen_utils::format_cc_ident and joins the namespace
+            // parts, except that it creates an Ident instead of a TokenStream.
             code_gen_utils::check_valid_cc_name(record.cc_name().as_str())
                 .expect("IR should only contain valid C++ types");
 
@@ -1531,7 +1534,7 @@ fn generate_dyn_callable_invoker_and_manager_defs<'a>(
                     let crubit_abi_type = db.crubit_abi_type(ty.clone()).ok()?;
                     let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
                     ffi_to_rust_transforms.extend(quote! {
-                        let #ident = unsafe { ::bridge_rust::internal::decode(#crubit_abi_type_expr_tokens, #ident) };
+                        let #ident = unsafe { ::crubit_support::bridge::internal::decode(#crubit_abi_type_expr_tokens, #ident) };
                     });
                     Some(quote! { , #ident: *mut ::core::ffi::c_uchar })
                 }
@@ -1593,7 +1596,7 @@ fn generate_dyn_callable_invoker_and_manager_defs<'a>(
             let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
             invoke_rust_and_return_to_ffi = quote! {
                 unsafe {
-                    ::bridge_rust::internal::encode(
+                    ::crubit_support::bridge::internal::encode(
                         #crubit_abi_type_expr_tokens,
                         bridge_buffer,
                         #invoke_rust_and_return_to_ffi

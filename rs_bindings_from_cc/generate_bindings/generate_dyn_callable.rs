@@ -303,7 +303,7 @@ fn generate_make_cpp_invoker_tokens<'a>(
                 // For arguments that are bridge types, we encode the
                 // Rust value into a buffer and then the argument is a pointer to that buffer.
                 arg_exprs.push(quote! {
-                    ::bridge_rust::unstable_encode!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, #param_ident)
+                    ::crubit_support::bridge::unstable_encode!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, #param_ident)
                         .as_ptr() as *const u8
                 });
             }
@@ -359,7 +359,7 @@ fn generate_make_cpp_invoker_tokens<'a>(
             let crubit_abi_type_tokens = CrubitAbiTypeToRustTokens(&crubit_abi_type);
             let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
             invoke_ffi_and_transform_to_rust = quote! {
-                ::bridge_rust::unstable_return!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, |out| {
+                ::crubit_support::bridge::unstable_return!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, |out| {
                     #invoke_ffi_and_transform_to_rust
                 })
             };

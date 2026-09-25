@@ -16,9 +16,8 @@ use token_stream_matchers::{
 ///
 /// We don't want to duplicate coverage already provided by
 /// `test_format_item_struct_with_fields`, but we do want to verify that
-/// * `format_crate` will actually find and process the struct
-///   (`test_format_item_...` doesn't cover this aspect - it uses a
-///   test-only `find_def_id_by_name` instead)
+/// * `format_crate` will actually find and process the struct (`test_format_item_...` doesn't cover
+///   this aspect - it uses a test-only `find_def_id_by_name` instead)
 /// * The actual shape of the bindings still looks okay at this level.
 #[test]
 fn test_generated_bindings_struct() {
@@ -1219,7 +1218,8 @@ fn test_format_item_struct_not_aggregate_with_two_drop_fields() {
     test_format_item(test_src, "TwoDrops", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        // Two drop fields without annotation -> not an aggregate -> has comment, unions and destructor
+        // Two drop fields without annotation -> not an aggregate -> has comment, unions and
+        // destructor
         let comment = "Type is not a C++ aggregate: Multiple fields require drop glue (annotate with `#[crubit_annotate::field_drop_order_does_not_matter]` if field drop order does not matter)";
         assert_cc_matches!(
             main_api.tokens,
@@ -1380,7 +1380,8 @@ fn test_format_item_struct_aggregate_with_derived_default() {
     test_format_item(test_src, "DerivedDefault", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        // Derived default -> IS an aggregate -> direct members, no user-declared default constructor
+        // Derived default -> IS an aggregate -> direct members, no user-declared default
+        // constructor
         assert_cc_matches!(
             main_api.tokens,
             quote! {
@@ -1412,7 +1413,8 @@ fn test_format_item_struct_not_aggregate_with_manual_default() {
     test_format_item(test_src, "ManualDefault", |result| {
         let result = result.unwrap().unwrap();
         let main_api = &result.main_api;
-        // Manual default -> NOT an aggregate -> has comment, default constructor ManualDefault() calling Rust default
+        // Manual default -> NOT an aggregate -> has comment, default constructor ManualDefault()
+        // calling Rust default
         let comment = "Type is not a C++ aggregate: Type has a manual `Default` implementation";
         assert_cc_matches!(
             main_api.tokens,
@@ -1545,7 +1547,7 @@ fn test_hash_trait_support() {
             quote! {
                 #[unsafe(no_mangle)]
                 extern "C" fn __crubit_thunk_Hash_uhash_uPoint (self_: &::rust_out::Point) -> u64 {
-                    ::hash_rust::hash_u64(self_)
+                    ::crubit_support::hash::hash_u64(self_)
                 }
             }
         );

@@ -220,8 +220,9 @@ static OPERATOR_METADATA: LazyLock<OperatorMetadata> = LazyLock::new(|| {
         OperatorMetadataEntry::assign("^=", "BitXorAssign", "bitxor_assign"),
         OperatorMetadataEntry::assign("<<=", "ShlAssign", "shl_assign"),
         OperatorMetadataEntry::assign(">>=", "ShrAssign", "shr_assign"),
-        // NOTE: if adding an entry here, consider whether `func_should_infer_lifetimes_of_references`
-        // is appropriate. If not, amend this structure to include an `infer_lifetimes` field.
+        // NOTE: if adding an entry here, consider whether
+        // `func_should_infer_lifetimes_of_references` is appropriate. If not, amend this
+        // structure to include an `infer_lifetimes` field.
     ];
     OperatorMetadata {
         by_cc_name_and_params: ENTRIES.iter().map(|e| ((e.cc_name, e.cc_params), *e)).collect(),
@@ -1203,8 +1204,8 @@ fn api_func_shape_for_conversion_operator<'a>(
 /// become a `RvalueReference<'_, T>`.
 ///
 /// Returns:
-///  * `None`: the function imported as "nothing". (For example, a defaulted
-///    destructor might be mapped to no `Drop` impl at all.)
+///  * `None`: the function imported as "nothing". (For example, a defaulted destructor might be
+///    mapped to no `Drop` impl at all.)
 ///  * `(func_name, impl_kind)`: The function name and ImplKind.
 fn api_func_shape<'a>(
     db: &BindingsGenerator<'a>,
@@ -1346,7 +1347,9 @@ fn materialize_ctor_in_caller(func: &Func<'_>, params: &mut [RsTypeKind<'_>]) {
         if param.is_unpin() {
             continue;
         }
-        let value = std::mem::replace(param, RsTypeKind::Primitive(Primitive::Void)); // Temporarily swap in a garbage value.
+        let value = std::mem::replace(param, RsTypeKind::Primitive(Primitive::Void)); // Temporarily
+                                                                                      // swap in a garbage
+                                                                                      // value.
         *param = RsTypeKind::RvalueReference {
             referent: Rc::new(value),
             mutability: Mutability::Mut,
@@ -1551,7 +1554,7 @@ fn generate_func_body<'a>(
                     let crubit_abi_type_expr_tokens =
                         CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
                     quote! {
-                        ::bridge_rust::unstable_return!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, |__crubit_return_abi_buffer| {
+                        ::crubit_support::bridge::unstable_return!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, |__crubit_return_abi_buffer| {
                             #crate_root_path::detail::#thunk_ident(
                                 __crubit_return_abi_buffer,
                                 #(#clone_prefixes #thunk_args #clone_suffixes ),*
@@ -1965,7 +1968,8 @@ pub fn generate_function<'a>(
         };
     let skip_thunk_generation: bool = is_direct_access || {
         || {
-            // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
+            // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when
+            // `carcinize` is enabled.
             if func.source_text_as_token_stream().is_some() {
                 return true;
             }
@@ -2038,8 +2042,8 @@ pub fn generate_function<'a>(
             impl_kind,
             ImplKind::Trait { trait_name: TraitName::CtorNew(_) | TraitName::UnsafeCtorNew(_), .. }
         ) {
-            // Generated CtorNew and UnsafeCtorNew functions return an `impl Trait` type which can't use
-            // the `errors_as_unsatisfied_trait_bound` reporting system because
+            // Generated CtorNew and UnsafeCtorNew functions return an `impl Trait` type which can't
+            // use the `errors_as_unsatisfied_trait_bound` reporting system because
             // the `'error` lifetime causes an error when combined with `impl Trait due to
             // https://github.com/rust-lang/rust/issues/134804
             errors.consolidate()?;
@@ -2072,7 +2076,8 @@ pub fn generate_function<'a>(
 
     let create_func_body = || -> Result<TokenStream> {
         if reportable_status.is_ok() {
-            // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
+            // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when
+            // `carcinize` is enabled.
             if let Some(body_tokens) = func.source_text_as_token_stream()
                 && let Some(inline_cpp_body) =
                     generate_inline_cpp_call(db, &func, &thunk_args, body_tokens)?
@@ -2246,7 +2251,8 @@ pub fn generate_function<'a>(
             features |= free_features;
 
             let free_func_body = if reportable_status.is_ok() {
-                // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when `carcinize` is enabled.
+                // Note: `func.inline_cpp_source_text()` is populated by the C++ importer when
+                // `carcinize` is enabled.
                 if let Some(body_tokens) = func.source_text_as_token_stream()
                     && let Some(inline_cpp_body) =
                         generate_inline_cpp_call(db, &func, &free_thunk_args, body_tokens)?
@@ -2479,8 +2485,9 @@ pub fn generate_function<'a>(
                 quote! { #record_name }
             } else {
                 // If the trait is being implemented for a different record than its enclosing one
-                // (e.g. for conversion operators) retrieve the fully qualified path without lifetime
-                // arguments, since `#trait_record_param_tokens` will be appended when generating the trait impl.
+                // (e.g. for conversion operators) retrieve the fully qualified path without
+                // lifetime arguments, since `#trait_record_param_tokens` will be
+                // appended when generating the trait impl.
                 let t = db.rs_type_kind(trait_record.into())?;
                 t.to_token_stream_without_lifetimes(db)
             };
@@ -2533,7 +2540,8 @@ pub fn generate_function<'a>(
                     }
 
                     // Ascertain whether the returned value maps to an opaque proxy like CRef.
-                    // This determines whether the output type uses native Rust references vs CRef wrapped ones.
+                    // This determines whether the output type uses native Rust references vs CRef
+                    // wrapped ones.
                     let is_cref = match &return_type {
                         RsTypeKind::Reference { is_cref, .. } => *is_cref,
                         _ => false,
@@ -2885,11 +2893,10 @@ fn collect_parent_lifetime_bindings(
 ///
 /// For example:
 ///
-/// * Use the `self` keyword for the this pointer. Upcast to base classed as
-///   needed.
+/// * Use the `self` keyword for the this pointer. Upcast to base classed as needed.
 /// * Use `Self` for the return value of constructor traits.
-/// * For C++ constructors, remove `self` from the Rust side (as it becomes the
-///   return value), retaining it on the C++ side / thunk args.
+/// * For C++ constructors, remove `self` from the Rust side (as it becomes the return value),
+///   retaining it on the C++ side / thunk args.
 /// * serialize a `()` as the empty string.
 #[allow(clippy::too_many_arguments)]
 fn function_signature<'a>(
@@ -3010,7 +3017,7 @@ fn function_signature<'a>(
                 let crubit_abi_type_expr_tokens = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
 
                 api_params.push(quote! {#ident: #quoted_type_or_self});
-                thunk_args.push(quote! {::bridge_rust::unstable_encode!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, #ident).as_ptr() as *const u8});
+                thunk_args.push(quote! {::crubit_support::bridge::unstable_encode!(@ #crubit_abi_type_expr_tokens, #crubit_abi_type_tokens, #ident).as_ptr() as *const u8});
             }
             PassingConvention::Ctor => {
                 // `impl Ctor` will fail to compile in a trait.
@@ -3280,17 +3287,14 @@ fn function_signature<'a>(
                         // derived-class upcast, because it cannot be reached
                         // with a derived record:
                         //  * `derived_record` is only `Some` for functions from
-                        //    `collect_unqualified_member_functions`, which keeps
-                        //    only `UnqualifiedIdentifier::Identifier` children.
-                        //  * An identifier-named function only gets
-                        //    `format_first_param_as_self` from
-                        //    `api_func_shape_for_identifier`, which requires
+                        //    `collect_unqualified_member_functions`, which keeps only
+                        //    `UnqualifiedIdentifier::Identifier` children.
+                        //  * An identifier-named function only gets `format_first_param_as_self`
+                        //    from `api_func_shape_for_identifier`, which requires
                         //    `is_instance_method() && first_param.is_ref_to(record)`.
-                        //  * `is_ref_to` only matches `Reference` /
-                        //    `RvalueReference`, and both are
-                        //    `is_c_abi_compatible_by_value()`, so such a
-                        //    receiver is handled by the first branch above and
-                        //    never reaches `LayoutCompatible`.
+                        //  * `is_ref_to` only matches `Reference` / `RvalueReference`, and both are
+                        //    `is_c_abi_compatible_by_value()`, so such a receiver is handled by the
+                        //    first branch above and never reaches `LayoutCompatible`.
                         // A by-value self receiver therefore only arises from
                         // operators (`UnqualifiedIdentifier::Operator`), which
                         // are never inherited. If that ever changes, this needs

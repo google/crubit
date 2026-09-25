@@ -19,8 +19,8 @@ unsafe extern "C" fn __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalu
         let __rs_return_value =
             ::const_field_golden::return_struct_with_const_field_by_value_in_option();
         unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<
+            ::crubit_support::bridge::internal::encode(
+                ::crubit_support::bridge::OptionAbi(::crubit_support::bridge::transmute_abi::<
                     ::cc_struct::struct_with_const_field,
                 >()),
                 __ret_ptr as *mut core::ffi::c_uchar,

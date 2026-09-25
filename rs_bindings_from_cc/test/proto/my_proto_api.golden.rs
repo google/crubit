@@ -18,21 +18,21 @@ pub mod test {
     #[inline(always)]
     pub fn MakeRequest(num: i64) -> ::my_proto::my_message::Request {
         unsafe {
-            ::bridge_rust::unstable_return!(@::my_proto::ProtoMessageRustBridge(::core::marker::PhantomData),::my_proto::ProtoMessageRustBridge<::my_proto::my_message::Request>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___ZN4test11MakeRequestEl(__crubit_return_abi_buffer,num); })
+            ::crubit_support::bridge::unstable_return!(@::my_proto::ProtoMessageRustBridge(::core::marker::PhantomData),::my_proto::ProtoMessageRustBridge<::my_proto::my_message::Request>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___ZN4test11MakeRequestEl(__crubit_return_abi_buffer,num); })
         }
     }
 
     #[inline(always)]
     pub fn ReturnValue() -> ::my_proto::MyMessage {
         unsafe {
-            ::bridge_rust::unstable_return!(@::my_proto::ProtoMessageRustBridge(::core::marker::PhantomData),::my_proto::ProtoMessageRustBridge<::my_proto::MyMessage>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___ZN4test11ReturnValueEv(__crubit_return_abi_buffer,); })
+            ::crubit_support::bridge::unstable_return!(@::my_proto::ProtoMessageRustBridge(::core::marker::PhantomData),::my_proto::ProtoMessageRustBridge<::my_proto::MyMessage>,|__crubit_return_abi_buffer|{ crate::detail::__rust_thunk___ZN4test11ReturnValueEv(__crubit_return_abi_buffer,); })
         }
     }
 
     #[inline(always)]
     pub fn ExtractFromValue(msg: ::my_proto::MyMessage) -> i64 {
         unsafe {
-            crate::detail::__rust_thunk___ZN4test16ExtractFromValueEN10my_package9MyMessageE(::bridge_rust::unstable_encode!(@::my_proto::ProtoMessageRustBridge(::core::marker::PhantomData),::my_proto::ProtoMessageRustBridge<::my_proto::MyMessage>,msg).as_ptr()as*const u8)
+            crate::detail::__rust_thunk___ZN4test16ExtractFromValueEN10my_package9MyMessageE(::crubit_support::bridge::unstable_encode!(@::my_proto::ProtoMessageRustBridge(::core::marker::PhantomData),::my_proto::ProtoMessageRustBridge<::my_proto::MyMessage>,msg).as_ptr()as*const u8)
         }
     }
 

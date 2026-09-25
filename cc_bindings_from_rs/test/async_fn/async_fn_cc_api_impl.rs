@@ -43,46 +43,50 @@ const _: () = assert!(::core::mem::offset_of!(::async_fn_golden::StructWithDrop,
 unsafe extern "C" fn __crubit_thunk_add(
     x: i32,
     y: i32,
-    __ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>,
+    __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
         ::core::ptr::write(
             __ret_ptr,
-            ::dyn_erased_future::DynErasedFuture::new(::async_fn_golden::add(x, y)),
+            ::crubit_support::dyn_erased_future::DynErasedFuture::new(::async_fn_golden::add(x, y)),
         );
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_do_unothing(
-    __ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>,
+    __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
         ::core::ptr::write(
             __ret_ptr,
-            ::dyn_erased_future::DynErasedFuture::new(::async_fn_golden::do_nothing()),
+            ::crubit_support::dyn_erased_future::DynErasedFuture::new(
+                ::async_fn_golden::do_nothing(),
+            ),
         );
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_pend_u5_utimes(
-    __ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>,
+    __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
         ::core::ptr::write(
             __ret_ptr,
-            ::dyn_erased_future::DynErasedFuture::new(::async_fn_golden::pend_5_times()),
+            ::crubit_support::dyn_erased_future::DynErasedFuture::new(
+                ::async_fn_golden::pend_5_times(),
+            ),
         );
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_ucpp_ulayout_uequivalent(
     x: i32,
-    __ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>,
+    __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
         ::core::ptr::write(
             __ret_ptr,
-            ::dyn_erased_future::DynErasedFuture::new(
+            ::crubit_support::dyn_erased_future::DynErasedFuture::new(
                 ::async_fn_golden::return_cpp_layout_equivalent(x),
             ),
         );
@@ -91,39 +95,43 @@ unsafe extern "C" fn __crubit_thunk_return_ucpp_ulayout_uequivalent(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_ustruct_uwith_udrop(
     x: i32,
-    __ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>,
+    __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
         ::core::ptr::write(
             __ret_ptr,
-            ::dyn_erased_future::DynErasedFuture::new(::async_fn_golden::return_struct_with_drop(
-                x,
-            )),
+            ::crubit_support::dyn_erased_future::DynErasedFuture::new(
+                ::async_fn_golden::return_struct_with_drop(x),
+            ),
         );
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uunmovable(
     x: i32,
-    __ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>,
+    __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
         ::core::ptr::write(
             __ret_ptr,
-            ::dyn_erased_future::DynErasedFuture::new(::async_fn_golden::return_unmovable(x)),
+            ::crubit_support::dyn_erased_future::DynErasedFuture::new(
+                ::async_fn_golden::return_unmovable(x),
+            ),
         );
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_sum_uslice(
     slice: *mut &'static [i32],
-    __ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>,
+    __ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>,
 ) -> () {
     unsafe {
         let slice = slice.read();
         ::core::ptr::write(
             __ret_ptr,
-            ::dyn_erased_future::DynErasedFuture::new(::async_fn_golden::sum_slice(slice)),
+            ::crubit_support::dyn_erased_future::DynErasedFuture::new(
+                ::async_fn_golden::sum_slice(slice),
+            ),
         );
     }
 }

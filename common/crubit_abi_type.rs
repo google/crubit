@@ -71,8 +71,8 @@ pub enum CrubitAbiType {
     ///
     /// Importantly, constructing instances of these types is notably different from other
     /// CrubitAbiType::Types, since ::crubit::BoxedAbi<T> doesn't take a T argument, it's just an
-    /// empty record. On the other hand, CrubitAbiType::Type will always take an Abi object for each
-    /// type argument.
+    /// empty record. On the other hand, CrubitAbiType::Type will always take an Abi object for
+    /// each type argument.
     ProtoMessage {
         /// `ProtoMessageRustBridge`, with the correct module path.
         /// rust ::foo_proto::ProtoMessageRustBridge
@@ -112,7 +112,7 @@ impl CrubitAbiType {
 
     pub fn option(inner: Self) -> Self {
         CrubitAbiType::Type {
-            rust_abi_path: FullyQualifiedPath::new("::bridge_rust::OptionAbi"),
+            rust_abi_path: FullyQualifiedPath::new("::crubit_support::bridge::OptionAbi"),
             cpp_abi_path: FullyQualifiedPath::new("::crubit::OptionAbi"),
             type_args: Rc::from([inner]),
         }
@@ -161,7 +161,7 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
                     (true, false) => quote! { *const #ty },
                     (false, false) => quote! { *mut #ty },
                 };
-                quote! { ::bridge_rust::TransmuteAbi<#ty> }.to_tokens(tokens);
+                quote! { ::crubit_support::bridge::TransmuteAbi<#ty> }.to_tokens(tokens);
             }
             CrubitAbiType::Pair(first, second) => {
                 let first_tokens = Self(first);
@@ -177,7 +177,7 @@ impl ToTokens for CrubitAbiTypeToRustTokens<'_> {
                 quote! { #root::std::BoxedCppStringAbi }.to_tokens(tokens)
             }
             CrubitAbiType::Transmute { rust_type, .. } => {
-                quote! { ::bridge_rust::TransmuteAbi<#rust_type> }.to_tokens(tokens);
+                quote! { ::crubit_support::bridge::TransmuteAbi<#rust_type> }.to_tokens(tokens);
             }
             CrubitAbiType::ProtoMessage { proto_message_rust_bridge, rust_proto_path, .. } => {
                 quote! { #proto_message_rust_bridge<#rust_proto_path> }.to_tokens(tokens);
@@ -214,7 +214,7 @@ impl ToTokens for CrubitAbiTypeToRustExprTokens<'_> {
                     (true, false) => quote! { *const #ty },
                     (false, false) => quote! { *mut #ty },
                 };
-                quote! { ::bridge_rust::transmute_abi::<#ty>() }.to_tokens(tokens);
+                quote! { ::crubit_support::bridge::transmute_abi::<#ty>() }.to_tokens(tokens);
             }
             CrubitAbiType::Pair(first, second) => {
                 let first_tokens = Self(first);
@@ -230,7 +230,8 @@ impl ToTokens for CrubitAbiTypeToRustExprTokens<'_> {
                 quote! { #root::std::BoxedCppStringAbi }.to_tokens(tokens)
             }
             CrubitAbiType::Transmute { rust_type, .. } => {
-                quote! { ::bridge_rust::transmute_abi::<#rust_type>() }.to_tokens(tokens);
+                quote! { ::crubit_support::bridge::transmute_abi::<#rust_type>() }
+                    .to_tokens(tokens);
             }
             CrubitAbiType::ProtoMessage { proto_message_rust_bridge, .. } => {
                 quote! { #proto_message_rust_bridge(::core::marker::PhantomData) }
@@ -388,7 +389,7 @@ mod tests {
         let abi = CrubitAbiType::transmute("i32", "int32_t");
 
         let rust_tokens = CrubitAbiTypeToRustTokens(&abi).to_token_stream().to_string();
-        expect_eq!(rust_tokens, quote! { ::bridge_rust::TransmuteAbi<i32> }.to_string());
+        expect_eq!(rust_tokens, quote! { ::crubit_support::bridge::TransmuteAbi<i32> }.to_string());
 
         let cpp_tokens = CrubitAbiTypeToCppTokens(&abi).to_token_stream().to_string();
         expect_eq!(cpp_tokens, quote! { ::crubit::TransmuteAbi<int32_t> }.to_string());
@@ -408,7 +409,7 @@ mod tests {
         let rust_tokens = CrubitAbiTypeToRustTokens(&abi).to_token_stream().to_string();
         expect_eq!(
             rust_tokens,
-            quote! { (::bridge_rust::TransmuteAbi<i32>, crate::StatusAbi) }.to_string()
+            quote! { (::crubit_support::bridge::TransmuteAbi<i32>, crate::StatusAbi) }.to_string()
         );
 
         let cpp_tokens = CrubitAbiTypeToCppTokens(&abi).to_token_stream().to_string();

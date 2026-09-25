@@ -824,13 +824,11 @@ fn test_format_item_lifetime_generic_fn_with_inferred_lifetimes() {
 /// This test verifies handling of various explicit (i.e. non-inferred)
 /// lifetimes.
 ///
-/// * Note that the two `'_` specify two distinct lifetimes (i.e. two
-///   distinct names need to be used in the generated bindings and thunk
-///   impl).
-/// * Note that `'static` doesn't need to be listed in the generic
-///   parameters of the thunk impl
-/// * Note that even though `'foo` is used in 2 parameter types, it should
-///   only appear once in the list of generic parameters of the thunk impl
+/// * Note that the two `'_` specify two distinct lifetimes (i.e. two distinct names need to be used
+///   in the generated bindings and thunk impl).
+/// * Note that `'static` doesn't need to be listed in the generic parameters of the thunk impl
+/// * Note that even though `'foo` is used in 2 parameter types, it should only appear once in the
+///   list of generic parameters of the thunk impl
 /// * Note that in the future the following translation may be preferable:
 ///     * `'a` => `$a` (no parens)
 ///     * `'foo` => `$(foo)` (note the extra parens)
@@ -978,7 +976,7 @@ fn test_format_item_generic_fn_impl_fn_trait() {
             result.rs_details.tokens,
             quote! {
                 unsafe extern "C" fn __crubit_thunk_call_ufn(
-                    f: ::bridge_rust::FnRefPayload
+                    f: ::crubit_support::bridge::FnRefPayload
                 ) -> i32 {
                     unsafe {
                         ::rust_out::call_fn(move |__arg_0: i32| {
@@ -1011,7 +1009,7 @@ fn test_format_item_generic_fn_impl_fn_once_static() {
             result.rs_details.tokens,
             quote! {
                 unsafe extern "C" fn __crubit_thunk_call_ufn_uonce_ustatic(
-                    f: ::bridge_rust::FnPayload
+                    f: ::crubit_support::bridge::FnPayload
                 ) -> i32 {
                     unsafe {
                         ::rust_out::call_fn_once_static(move |__arg_0: i32| {
@@ -1081,7 +1079,7 @@ fn test_format_item_fn_abi_compatible_types() {
             result.rs_details.tokens,
             quote! {
                 unsafe extern "C" fn __crubit_thunk_call_uabi_ucompat(
-                    f: ::bridge_rust::FnRefPayload
+                    f: ::crubit_support::bridge::FnRefPayload
                 ) -> f64 {
                     unsafe {
                         ::rust_out::call_abi_compat(move |__arg_0: i32, __arg_1: bool, __arg_2: *const i32| {
@@ -1125,7 +1123,7 @@ fn test_format_item_fn_layout_compatible_not_abi_compatible_type() {
             result.rs_details.tokens,
             quote! {
                 unsafe extern "C" fn __crubit_thunk_call_upoint(
-                    f: ::bridge_rust::FnRefPayload,
+                    f: ::crubit_support::bridge::FnRefPayload,
                     __ret_ptr: *mut core::ffi::c_void
                 ) -> () {
                     unsafe {
@@ -1174,7 +1172,7 @@ fn test_format_item_fn_bridged_type() {
             result.rs_details.tokens,
             quote! {
                 unsafe extern "C" fn __crubit_thunk_call_ustr(
-                    f: ::bridge_rust::FnRefPayload
+                    f: ::crubit_support::bridge::FnRefPayload
                 ) -> () {
                     unsafe {
                         ::rust_out::call_str(move |__arg_0: &str| {
@@ -1211,7 +1209,7 @@ fn test_format_item_fn_with_bridgeable_types() {
             result.rs_details.tokens,
             quote! {
                 unsafe extern "C" fn __crubit_thunk_take_ufn_uwith_ubridgeable_utypes(
-                    f: ::bridge_rust::FnPayload
+                    f: ::crubit_support::bridge::FnPayload
                 ) -> () {
                     unsafe {
                         ::rust_out::take_fn_with_bridgeable_types(::alloc::boxed::Box::new(
@@ -1326,9 +1324,9 @@ fn test_format_item_fn_async() {
             result.rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...(__ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>) -> () {
+                unsafe extern "C" fn ...(__ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>) -> () {
                     unsafe {
-                        ::core::ptr::write(__ret_ptr, ::dyn_erased_future::DynErasedFuture::new(::rust_out::async_function()));
+                        ::core::ptr::write(__ret_ptr, ::crubit_support::dyn_erased_future::DynErasedFuture::new(::rust_out::async_function()));
                     }
                 }
             }
@@ -1368,9 +1366,9 @@ fn test_format_item_fn_async_returning_type() {
             result.rs_details.tokens,
             quote! {
                 #[unsafe(no_mangle)]
-                unsafe extern "C" fn ...(__ret_ptr: *mut ::dyn_erased_future::DynErasedFuture<'_>) -> () {
+                unsafe extern "C" fn ...(__ret_ptr: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>) -> () {
                     unsafe {
-                        ::core::ptr::write(__ret_ptr, ::dyn_erased_future::DynErasedFuture::new(::rust_out::async_function()));
+                        ::core::ptr::write(__ret_ptr, ::crubit_support::dyn_erased_future::DynErasedFuture::new(::rust_out::async_function()));
                     }
                 }
             }

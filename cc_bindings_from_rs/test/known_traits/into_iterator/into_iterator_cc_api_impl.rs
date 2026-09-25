@@ -182,8 +182,8 @@ unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden
         let __rs_return_value =
             <::into_iterator_rust_golden::MoveOnlyIterator as ::core::iter::Iterator>::next(__self);
         unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<
+            ::crubit_support::bridge::internal::encode(
+                ::crubit_support::bridge::OptionAbi(::crubit_support::bridge::transmute_abi::<
                     ::into_iterator_rust_golden::MoveOnlyPayload,
                 >()),
                 __ret_ptr as *mut core::ffi::c_uchar,
@@ -217,8 +217,10 @@ unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden
                 __self,
             );
         unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+            ::crubit_support::bridge::internal::encode(
+                ::crubit_support::bridge::OptionAbi(
+                    ::crubit_support::bridge::transmute_abi::<i32>(),
+                ),
                 __ret_ptr as *mut core::ffi::c_uchar,
                 __rs_return_value,
             );
@@ -234,8 +236,10 @@ unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden
         let __rs_return_value =
             <::into_iterator_rust_golden::MyContainerIter as ::core::iter::Iterator>::next(__self);
         unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<&'static i32>()),
+            ::crubit_support::bridge::internal::encode(
+                ::crubit_support::bridge::OptionAbi(::crubit_support::bridge::transmute_abi::<
+                    &'static i32,
+                >()),
                 __ret_ptr as *mut core::ffi::c_uchar,
                 __rs_return_value,
             );
@@ -253,8 +257,10 @@ unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden
                 __self,
             );
         unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<&'static mut i32>()),
+            ::crubit_support::bridge::internal::encode(
+                ::crubit_support::bridge::OptionAbi(::crubit_support::bridge::transmute_abi::<
+                    &'static mut i32,
+                >()),
                 __ret_ptr as *mut core::ffi::c_uchar,
                 __rs_return_value,
             );
@@ -270,8 +276,10 @@ unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden
         let __rs_return_value =
             <::into_iterator_rust_golden::MyIterator as ::core::iter::Iterator>::next(__self);
         unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+            ::crubit_support::bridge::internal::encode(
+                ::crubit_support::bridge::OptionAbi(
+                    ::crubit_support::bridge::transmute_abi::<i32>(),
+                ),
                 __ret_ptr as *mut core::ffi::c_uchar,
                 __rs_return_value,
             );
@@ -287,8 +295,10 @@ unsafe extern "C" fn __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden
         let __rs_return_value =
             <::into_iterator_rust_golden::SimpleIntoIter as ::core::iter::Iterator>::next(__self);
         unsafe {
-            ::bridge_rust::internal::encode(
-                ::bridge_rust::OptionAbi(::bridge_rust::transmute_abi::<i32>()),
+            ::crubit_support::bridge::internal::encode(
+                ::crubit_support::bridge::OptionAbi(
+                    ::crubit_support::bridge::transmute_abi::<i32>(),
+                ),
                 __ret_ptr as *mut core::ffi::c_uchar,
                 __rs_return_value,
             );

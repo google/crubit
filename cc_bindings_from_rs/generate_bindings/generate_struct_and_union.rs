@@ -81,8 +81,9 @@ pub(crate) fn adt_core_bindings_needs_drop<'tcx>(
     bindings.common.self_ty.needs_drop(tcx, typing_env)
 }
 
-/// Similar to the method `TyCtxt::non_blanket_impls_for_ty` but checks for precise self_ty matching of the impl rather than SimplifiedType.
-/// This is important for generics, so we don't return impls from other instantiations when we query for something like `impl From<T> for NonZero<u32>`.
+/// Similar to the method `TyCtxt::non_blanket_impls_for_ty` but checks for precise self_ty matching
+/// of the impl rather than SimplifiedType. This is important for generics, so we don't return impls
+/// from other instantiations when we query for something like `impl From<T> for NonZero<u32>`.
 pub(crate) fn non_blanket_impls_for_ty<'tcx>(
     tcx: TyCtxt<'tcx>,
     trait_def_id: DefId,
@@ -616,7 +617,8 @@ fn generate_into_impls<'tcx>(
             let cc_ty = cc_ty.into_tokens(&mut prereqs);
 
             // Delay converting this type until we've successfully generated the thunks.
-            // We generate thunks for `into` here. This relies on the blanket impls of for `Into` in the stdlib to work.
+            // We generate thunks for `into` here. This relies on the blanket impls of for `Into` in
+            // the stdlib to work.
             let TraitThunks {
                 method_name_to_cc_thunk_name,
                 cc_thunk_decls,
@@ -628,8 +630,8 @@ fn generate_into_impls<'tcx>(
                 core.common.self_ty,
                 core.def_id,
                 core.rs_fully_qualified_name.clone(),
-                /*is_constructor=*/ false,
-                /*within_template=*/ false,
+                /* is_constructor= */ false,
+                /* within_template= */ false,
             )
             .ok()?;
 
@@ -663,7 +665,8 @@ fn generate_into_impls<'tcx>(
                 thunk_name.clone(),
                 middle_ty,
                 ThunkSelfParameter::new(
-                    /*has_self=*/ true, is_copy, /*is_trait_method =*/ false, is_generic,
+                    /* has_self= */ true, is_copy, /* is_trait_method = */ false,
+                    is_generic,
                 ),
                 &[Param {
                     cc_name: format_ident!("self"),
@@ -673,7 +676,7 @@ fn generate_into_impls<'tcx>(
                     },
                     ty: core.common.self_ty,
                 }],
-                /*is_async=*/ false,
+                /* is_async= */ false,
             )
             .expect("Self type of `Into` impl should be bridgeable");
 
@@ -770,7 +773,7 @@ fn generate_constructor_impls<'tcx>(
                 )
                 .ok()?;
 
-            Some((src_ty, cc_ty, impl_id, /*is_from=*/ true))
+            Some((src_ty, cc_ty, impl_id, /* is_from= */ true))
         });
 
     // Find Into impls to the selected ADT
@@ -798,7 +801,7 @@ fn generate_constructor_impls<'tcx>(
                     )
                     .ok()?;
 
-                Some((src_ty, cc_ty, *impl_id, /*is_from=*/ false))
+                Some((src_ty, cc_ty, *impl_id, /* is_from= */ false))
             },
         );
 
@@ -1498,8 +1501,8 @@ fn generate_display_impl<'tcx>(
             core.common.self_ty,
             core.def_id,
             core.rs_fully_qualified_name.clone(),
-            /*is_constructor=*/ false,
-            /*within_template=*/ true,
+            /* is_constructor= */ false,
+            /* within_template= */ true,
         ) {
             Ok(thunks) => thunks,
             Err(err) => return err_snippets(err),
@@ -1655,15 +1658,16 @@ fn is_type_default_constructible_in_cpp<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
     }
 }
 
-/// Returns whether `ty` is a bridged type that is not layout-compatible with its C++ representation.
+/// Returns whether `ty` is a bridged type that is not layout-compatible with its C++
+/// representation.
 ///
 /// Non-layout-compatible bridged types generally cannot be stored in C++ structs (b/400633609)
 /// because their Rust memory layout does not match their C++ layout.
 /// The exceptions are:
 /// - `Option<T>`, which uses Crubit's special `rs_std::Option` representation.
 /// - Protobuf messages (which use `proto::Rust<CppType>`), where the Rust type is an owned pointer
-///   represented in C++ as `proto::Rust<CppType>` rather than an inline value.
-///   Note: This only works for types like Protos where the Rust type is equivalent to a single pointer handle;
+///   represented in C++ as `proto::Rust<CppType>` rather than an inline value. Note: This only
+///   works for types like Protos where the Rust type is equivalent to a single pointer handle;
 ///   arbitrary non-proto bridged types with different layouts cannot be represented this way.
 fn is_layout_incompatible_bridged_type<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
     let is_incompatible = is_bridged_type(db, ty).is_ok_and(|bridged_type| {
@@ -1760,9 +1764,9 @@ pub(crate) fn is_struct_aggregate<'tcx>(
 /// specialization) for ADTs that implement `core::hash::Hash`.
 ///
 /// Hashing is bridged across FFI via a single `extern "C"` Rust thunk that computes
-/// a 64-bit hash using `hash_rust::hash_u64` (Rapidhash).
-/// - `AbslHashValue`: calls `H::combine(std::move(h), thunk(self))`, integrating
-///   with Abseil's per-process randomized seed for hash flooding protection.
+/// a 64-bit hash using `crubit_support::hash::hash_u64` (Rapidhash).
+/// - `AbslHashValue`: calls `H::combine(std::move(h), thunk(self))`, integrating with Abseil's
+///   per-process randomized seed for hash flooding protection.
 /// - `std::hash<T>`: returns `static_cast<std::size_t>(thunk(self))`.
 fn generate_hash_impl<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -1848,7 +1852,7 @@ fn generate_hash_impl<'tcx>(
     let rs_details = RsSnippet::new(quote! {
         #[unsafe(no_mangle)]
         extern "C" fn #thunk_name(self_: &#self_rs_ty) -> u64 {
-            ::hash_rust::hash_u64(self_)
+            ::crubit_support::hash::hash_u64(self_)
         }
     });
 
@@ -1908,8 +1912,8 @@ pub fn generate_adt<'tcx>(
             core.common.self_ty,
             core.def_id,
             core.rs_fully_qualified_name.clone(),
-            /*is_constructor=*/ false,
-            /*within_template=*/ false,
+            /* is_constructor= */ false,
+            /* within_template= */ false,
         )
         .expect("`generate_adt_core` should have already validated `Drop` support");
         // Don't introduce additional feature prerequisites for the `Drop` trait impl, as this
@@ -2472,9 +2476,8 @@ pub(crate) fn anonymous_field_ident(index: usize) -> Ident {
 ///
 /// For example:
 /// * `MyTupleStruct(1,2,3)` is exposed as a C++ constructor that takes field values as arguments.
-/// * crubit.rs-enum-ctor-name-and-shape discusses provoding bindings for
-///   `MyEnum::NoPayloadVariant` (b/487399481) and
-///   `MyEnum::TuplePayloadVariant(1, 2, 3)` (b/487356976)
+/// * crubit.rs-enum-ctor-name-and-shape discusses provoding bindings for `MyEnum::NoPayloadVariant`
+///   (b/487399481) and `MyEnum::TuplePayloadVariant(1, 2, 3)` (b/487356976)
 fn generate_adt_based_ctors<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: Rc<AdtCoreBindings<'tcx>>,
@@ -2816,7 +2819,8 @@ struct CppFieldGenerator<'a, 'tcx> {
 }
 
 impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
-    /// Returns the fields of each variant of an ADT or tuple. For structs and tuples, there will be only one variant.
+    /// Returns the fields of each variant of an ADT or tuple. For structs and tuples, there will be
+    /// only one variant.
     ///
     /// If a valid C++ representation is not possible, returns a single error field for the ADT.
     fn variant_fields(
@@ -3936,8 +3940,8 @@ fn generate_begin_and_end_for_type<'tcx>(
             check_ty,
             core.def_id,
             rs_fully_qualified_name,
-            /*is_constructor=*/ false,
-            /*within_template=*/ false,
+            /* is_constructor= */ false,
+            /* within_template= */ false,
         )?;
 
     let into_iter_thunk_name = method_name_to_cc_thunk_name
@@ -3975,11 +3979,11 @@ fn generate_begin_and_end_for_type<'tcx>(
         into_iter_thunk_name.clone(),
         into_iter_ty,
         ThunkSelfParameter::new(
-            /*has_self=*/ false, /*by_copy=*/ false, /*is_trait_method=*/ false,
-            is_generic,
+            /* has_self= */ false, /* by_copy= */ false,
+            /* is_trait_method= */ false, is_generic,
         ),
         &[param],
-        /*is_async=*/ false,
+        /* is_async= */ false,
     )?;
 
     let mut main_api_prereqs = CcPrerequisites::default();

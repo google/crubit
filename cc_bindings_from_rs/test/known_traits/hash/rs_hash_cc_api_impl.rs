@@ -48,7 +48,7 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_urs_uhash_ugolden_x0000003a_x0
 extern "C" fn __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aderived_uenum_x0000003a_x0000003aColor(
     self_: &::rs_hash_golden::derived_enum::Color,
 ) -> u64 {
-    ::hash_rust::hash_u64(self_)
+    ::crubit_support::hash::hash_u64(self_)
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create_ublue(__ret_ptr: *mut core::ffi::c_void) -> () {
@@ -88,7 +88,7 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_urs_uhash_ugolden_x0000003a_x0
 extern "C" fn __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aderived_ustruct_x0000003a_x0000003aPoint(
     self_: &::rs_hash_golden::derived_struct::Point,
 ) -> u64 {
-    ::hash_rust::hash_u64(self_)
+    ::crubit_support::hash::hash_u64(self_)
 }
 const _: () = assert!(::core::mem::offset_of!(::rs_hash_golden::derived_struct::Point, x) == 0);
 const _: () = assert!(::core::mem::offset_of!(::rs_hash_golden::derived_struct::Point, y) == 4);
@@ -122,7 +122,7 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_urs_uhash_ugolden_x0000003a_x0
 extern "C" fn __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aderived_utuple_ustruct_x0000003a_x0000003aTupleStruct(
     self_: &::rs_hash_golden::derived_tuple_struct::TupleStruct,
 ) -> u64 {
-    ::hash_rust::hash_u64(self_)
+    ::crubit_support::hash::hash_u64(self_)
 }
 const _: () =
     assert!(::core::mem::offset_of!(::rs_hash_golden::derived_tuple_struct::TupleStruct, 0) == 0);
@@ -158,7 +158,7 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_urs_uhash_ugolden_x0000003a_x0
 extern "C" fn __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aexplicit_ustruct_x0000003a_x0000003aCustomHashStruct(
     self_: &::rs_hash_golden::explicit_struct::CustomHashStruct,
 ) -> u64 {
-    ::hash_rust::hash_u64(self_)
+    ::crubit_support::hash::hash_u64(self_)
 }
 const _: () = assert!(
     ::core::mem::offset_of!(::rs_hash_golden::explicit_struct::CustomHashStruct, value) == 0

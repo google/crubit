@@ -178,9 +178,9 @@ pub fn generate_thunk_decl<'tcx>(
     };
 
     // Types which are not C-ABI compatible by-value are returned via out-pointer parameters.
-    // TODO: b/ 459482188 - The order of this check must align with the order in `cc_return_value_from_c_abi`.
-    // We should centralize this logic so that the order exists in a singular location used by both
-    // places.
+    // TODO: b/ 459482188 - The order of this check must align with the order in
+    // `cc_return_value_from_c_abi`. We should centralize this logic so that the order exists in
+    // a singular location used by both places.
     let thunk_ret_type = if is_async {
         let cc_ret_ty = db
             .format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })?
@@ -293,7 +293,7 @@ fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
             // SAFETY: The buffer is the correct size, as determined by Crubit.
             Ok(quote! {
                 let #local_name = unsafe {
-                    ::bridge_rust::internal::decode(#crubit_abi_type_expr, #local_name)
+                    ::crubit_support::bridge::internal::decode(#crubit_abi_type_expr, #local_name)
                 };
             })
         }
@@ -468,9 +468,9 @@ fn convert_value_from_c_abi_to_rust<'tcx>(
 fn c_abi_for_param_type<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
     if let Some(info) = crate::format_type::get_callable_info(db.tcx(), ty)? {
         return Ok(if info.kind.is_owning() {
-            quote! { ::bridge_rust::FnPayload }
+            quote! { ::crubit_support::bridge::FnPayload }
         } else {
-            quote! { ::bridge_rust::FnRefPayload }
+            quote! { ::crubit_support::bridge::FnRefPayload }
         });
     }
     if let Some(bridged) = is_bridged_type(db, ty)? {
@@ -577,7 +577,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
                 quote! {
                     // SAFETY: TODO(okabayashi)
                     unsafe {
-                        ::bridge_rust::internal::encode(
+                        ::crubit_support::bridge::internal::encode(
                             #crubit_abi_type_expr,
                             // TODO(okabayashi): This ptr case can be removed once tuple bridging is supported,
                             // as it only is required in the tuple recursive case.
@@ -613,7 +613,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
                     &ptr_member_names[i],
                     tuple_tys[i],
                     extern_c_decls,
-                    /*is_constructor=*/ false,
+                    /* is_constructor= */ false,
                 )
             })
             .collect::<Result<TokenStream>>()?;
@@ -666,8 +666,7 @@ where
 /// to call. Examples of valid arguments:
 /// - `::crate_name::some_module::free_function`
 /// - `::crate_name::some_module::SomeStruct::method`
-/// - `<::crate_name::some_module::SomeStruct as
-///   ::core::default::Default>::default`
+/// - `<::crate_name::some_module::SomeStruct as ::core::default::Default>::default`
 pub fn generate_thunk_impl<'tcx>(
     db: &BindingsGenerator<'tcx>,
     fn_def_id: DefId,
@@ -757,13 +756,13 @@ pub fn generate_thunk_impl<'tcx>(
         let return_ptr_ident = format_ident!("__ret_ptr");
         thunk_return_type = quote! { () };
         thunk_params.push(quote! {
-            #return_ptr_ident: *mut ::dyn_erased_future::DynErasedFuture<'_>
+            #return_ptr_ident: *mut ::crubit_support::dyn_erased_future::DynErasedFuture<'_>
         });
         thunk_return_expression = quote! {
             // SAFETY: `__ret_ptr` points to a valid, uninitialized crubit::Slot.
             ::core::ptr::write(
                 #return_ptr_ident,
-                ::dyn_erased_future::DynErasedFuture::new(#fully_qualified_fn_name( #( #fn_args ),* ))
+                ::crubit_support::dyn_erased_future::DynErasedFuture::new(#fully_qualified_fn_name( #( #fn_args ),* ))
             );
         };
     } else if output_is_bridged.is_none() && is_c_abi_compatible_by_value(db, sig.output()) {
@@ -1046,7 +1045,8 @@ pub fn generate_trait_thunks<'tcx>(
     }
 
     fn is_supported_trait_method<'tcx>(tcx: TyCtxt<'tcx>, method_def_id: DefId) -> bool {
-        // We want to check the `self` type of the method (and not the enclosing impl) so that we see Pin<Self>/Box<Self>.
+        // We want to check the `self` type of the method (and not the enclosing impl) so that we
+        // see Pin<Self>/Box<Self>.
         let fn_sig = crate::normalize_ty(
             tcx,
             tcx.param_env(method_def_id),
@@ -1109,7 +1109,7 @@ pub fn generate_trait_thunks<'tcx>(
             db,
             &sig_mid,
             &thunk_name_cc_ident,
-            /*has_self_param=*/ method.is_method(),
+            /* has_self_param= */ method.is_method(),
             is_constructor,
             within_template,
             is_async,
