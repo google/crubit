@@ -70,7 +70,10 @@ def _bindings_for_toolchain_headers_impl(ctx):
     )
 
     public_libcxx_files = _filter_headers_with_suffixes(std_files, prefixed_libcxx_hdrs)
-    public_libc_files = _filter_headers_with_suffixes(std_files, _add_prefix(ctx.attr.public_libc_hdrs, "v5/include/"))
+
+    prefixed_libc_hdrs += _add_prefix(ctx.attr.public_libc_hdrs, "usr/include/")
+    prefixed_libc_hdrs += _add_prefix(ctx.attr.public_libc_hdrs, "include/")
+    public_libc_files = _filter_headers_with_suffixes(std_files, prefixed_libc_hdrs)
 
     header_includes = []
     for hdr in ctx.attr.public_libcxx_hdrs + ctx.attr.public_libc_hdrs:
