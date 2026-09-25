@@ -151,6 +151,25 @@ fn ident_for_each(prefix: &str, n: usize) -> Vec<Ident> {
     (0..n).map(|i| expect_format_cc_ident(&format!("{prefix}_{i}"))).collect()
 }
 
+/// Returns a `static_assert` verifying that a layout-equivalent legacy bridged type has the same
+/// size and alignment in C++ as in Rust.
+fn check_legacy_bridged_type_layout<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+) -> Result<CcSnippet<'tcx>> {
+    let layout = get_layout(db.tcx(), ty)?;
+    let size = Literal::u64_unsuffixed(layout.size().bytes());
+    let align = Literal::u64_unsuffixed(layout.align().bytes());
+    let mut prereqs = CcPrerequisites::default();
+    let cpp_type_tokens = db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(&mut prereqs);
+    let tokens = quote! {
+        static_assert(
+            sizeof(#cpp_type_tokens) == #size && alignof(#cpp_type_tokens) == #align,
+            "Verify that C++ layout-equivalent type has the same size and alignment as the Rust type");
+    };
+    Ok(CcSnippet { tokens, prereqs })
+}
+
 /// Converts a C++ value to a C-ABI-compatible type.
 ///
 /// * `db` - the bindings generator
@@ -180,18 +199,9 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
                 if let BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer: false } =
                     conversion_info
                 {
-                    let layout = get_layout(db.tcx(), ty)?;
-                    let size = Literal::u64_unsuffixed(layout.size().bytes());
-                    let align = Literal::u64_unsuffixed(layout.align().bytes());
-                    let mut prereqs = CcPrerequisites::default();
-                    let cpp_type_tokens =
-                        db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(&mut prereqs);
-                    includes.extend(prereqs.includes);
-                    statements.extend(quote! {
-                        static_assert(
-                            sizeof(#cpp_type_tokens) == #size && alignof(#cpp_type_tokens) == #align,
-                            "Verify that C++ layout-equivalent type has the same size and alignment as the Rust type");
-                    });
+                    let snippet = check_legacy_bridged_type_layout(db, ty)?;
+                    includes.extend(snippet.prereqs.includes);
+                    statements.extend(snippet.tokens);
                 }
                 if let CcType::Pointer { .. } = cpp_type {
                     quote! { #cc_ident }
@@ -481,21 +491,15 @@ fn cc_return_value_from_c_abi<'tcx>(
     if let Some(bridged_type) = is_bridged_type(db, ty)? {
         match bridged_type {
             BridgedType::Legacy { conversion_info, .. } => {
-                let cpp_type = db
-                    .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })?
-                    .into_tokens(prereqs);
                 if let BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer: false } =
                     conversion_info
                 {
-                    let layout = get_layout(db.tcx(), ty)?;
-                    let size = Literal::u64_unsuffixed(layout.size().bytes());
-                    let align = Literal::u64_unsuffixed(layout.align().bytes());
-                    storage_statements.extend(quote! {
-                        static_assert(
-                            sizeof(#cpp_type) == #size && alignof(#cpp_type) == #align,
-                            "Verify that C++ layout-equivalent type has the same size and alignment as the Rust type");
-                    });
+                    let snippet = check_legacy_bridged_type_layout(db, ty)?;
+                    storage_statements.extend(snippet.into_tokens(prereqs));
                 }
+                let cpp_type = db
+                    .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })?
+                    .into_tokens(prereqs);
                 if ty.needs_drop(db.tcx(), post_analysis_typing_env) {
                     prereqs.includes.insert(db.support_header("internal/slot.h"));
                     let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
