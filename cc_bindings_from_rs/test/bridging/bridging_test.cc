@@ -92,9 +92,10 @@ TEST(TypeBridging, GenericSpecializationWithMultipleParamsTest) {
 }
 
 TEST(TypeBridging, GenericSpecializationWithPubUseTest) {
-  crubit::test::MyStatus status =
+  crubit::test::MyStatusOr<int32_t> status =
       ::layout_equivalent_generics::create_status_with_secret_alias();
-  EXPECT_TRUE(status.ok);
+  EXPECT_TRUE(status.has_value);
+  EXPECT_EQ(status.value, 42);
   EXPECT_TRUE(::layout_equivalent_generics::is_ok_secret(status));
 }
 

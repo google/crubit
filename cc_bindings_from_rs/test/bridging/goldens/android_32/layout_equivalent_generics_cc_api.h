@@ -165,8 +165,8 @@ extern "C" ::std::intptr_t __crubit_thunk_accept_uoptional_uisize(
 }
 inline ::std::intptr_t accept_optional_isize(
     crubit::test::MyOptional<::std::intptr_t> opt) {
-  static_assert(sizeof(crubit::test::MyOptional<::std::intptr_t>) == 16 &&
-                    alignof(crubit::test::MyOptional<::std::intptr_t>) == 8,
+  static_assert(sizeof(crubit::test::MyOptional<::std::intptr_t>) == 8 &&
+                    alignof(crubit::test::MyOptional<::std::intptr_t>) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
   return __crubit_internal::__crubit_thunk_accept_uoptional_uisize(&opt);
@@ -178,8 +178,8 @@ extern "C" ::std::uintptr_t __crubit_thunk_accept_uoptional_uusize(
 }
 inline ::std::uintptr_t accept_optional_usize(
     crubit::test::MyOptional<::std::uintptr_t> opt) {
-  static_assert(sizeof(crubit::test::MyOptional<::std::uintptr_t>) == 16 &&
-                    alignof(crubit::test::MyOptional<::std::uintptr_t>) == 8,
+  static_assert(sizeof(crubit::test::MyOptional<::std::uintptr_t>) == 8 &&
+                    alignof(crubit::test::MyOptional<::std::uintptr_t>) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
   return __crubit_internal::__crubit_thunk_accept_uoptional_uusize(&opt);
@@ -347,8 +347,8 @@ extern "C" void __crubit_thunk_return_uoptional_uisize(
 }
 inline crubit::test::MyOptional<::std::intptr_t> return_optional_isize(
     ::std::intptr_t x) {
-  static_assert(sizeof(crubit::test::MyOptional<::std::intptr_t>) == 16 &&
-                    alignof(crubit::test::MyOptional<::std::intptr_t>) == 8,
+  static_assert(sizeof(crubit::test::MyOptional<::std::intptr_t>) == 8 &&
+                    alignof(crubit::test::MyOptional<::std::intptr_t>) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
   union __return_value_crubit_return_union {
@@ -368,8 +368,8 @@ extern "C" void __crubit_thunk_return_uoptional_uusize(
 }
 inline crubit::test::MyOptional<::std::uintptr_t> return_optional_usize(
     ::std::uintptr_t x) {
-  static_assert(sizeof(crubit::test::MyOptional<::std::uintptr_t>) == 16 &&
-                    alignof(crubit::test::MyOptional<::std::uintptr_t>) == 8,
+  static_assert(sizeof(crubit::test::MyOptional<::std::uintptr_t>) == 8 &&
+                    alignof(crubit::test::MyOptional<::std::uintptr_t>) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
   union __return_value_crubit_return_union {
@@ -433,8 +433,8 @@ inline crubit::test::MyStatusOr<::std::uint64_t> return_status_non_unit(
                     alignof(crubit::test::MyStatusOr<::std::uint32_t>) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  static_assert(sizeof(crubit::test::MyStatusOr<::std::uint64_t>) == 16 &&
-                    alignof(crubit::test::MyStatusOr<::std::uint64_t>) == 8,
+  static_assert(sizeof(crubit::test::MyStatusOr<::std::uint64_t>) == 12 &&
+                    alignof(crubit::test::MyStatusOr<::std::uint64_t>) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
   union __return_value_crubit_return_union {

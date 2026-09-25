@@ -13,8 +13,8 @@ use crate::generate_function_thunk::{
 use crate::{
     format_param_types_for_cc_api, format_region_as_cc_lifetime, format_ret_ty_for_cc,
     format_top_level_ns_for_crate, generate_deprecated_tag, is_bridged_type,
-    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedType, CcType,
-    RsSnippet,
+    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedType,
+    BridgedTypeConversionInfo, CcType, RsSnippet,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{expect_format_cc_ident, make_rs_ident, CcInclude};
@@ -24,7 +24,7 @@ use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::{does_type_implement_trait, is_copy, post_analysis_typing_env};
+use query_compiler::{does_type_implement_trait, get_layout, is_copy, post_analysis_typing_env};
 use quote::quote;
 use rustc_hir::attrs::AttributeKind;
 use rustc_hir::{self as hir, def::DefKind};
@@ -176,7 +176,23 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
     }
     Ok(if let Some(bridged_type) = is_bridged_type(db, ty)? {
         match bridged_type {
-            BridgedType::Legacy { cpp_type, .. } => {
+            BridgedType::Legacy { cpp_type, conversion_info, .. } => {
+                if let BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer: false } =
+                    conversion_info
+                {
+                    let layout = get_layout(db.tcx(), ty)?;
+                    let size = Literal::u64_unsuffixed(layout.size().bytes());
+                    let align = Literal::u64_unsuffixed(layout.align().bytes());
+                    let mut prereqs = CcPrerequisites::default();
+                    let cpp_type_tokens =
+                        db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(&mut prereqs);
+                    includes.extend(prereqs.includes);
+                    statements.extend(quote! {
+                        static_assert(
+                            sizeof(#cpp_type_tokens) == #size && alignof(#cpp_type_tokens) == #align,
+                            "Verify that C++ layout-equivalent type has the same size and alignment as the Rust type");
+                    });
+                }
                 if let CcType::Pointer { .. } = cpp_type {
                     quote! { #cc_ident }
                 } else if !ty.needs_drop(db.tcx(), post_analysis_typing_env) {
@@ -459,15 +475,27 @@ fn cc_return_value_from_c_abi<'tcx>(
     recursive: bool,
 ) -> Result<ReturnConversion> {
     let storage_name = &expect_format_cc_ident(&format!("__{ident}_storage"));
-    // TODO: b/459482188 - The order of this check must align with the order in `generate_thunk_decl`.
-    // We should centralize this logic so that the order exists in a singular location used by both
-    // places.
+    // TODO: b/459482188 - The order of this check must align with the order in
+    // `generate_thunk_decl`. We should centralize this logic so that the order exists in a
+    // singular location used by both places.
     if let Some(bridged_type) = is_bridged_type(db, ty)? {
         match bridged_type {
-            BridgedType::Legacy { .. } => {
+            BridgedType::Legacy { conversion_info, .. } => {
                 let cpp_type = db
                     .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })?
                     .into_tokens(prereqs);
+                if let BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer: false } =
+                    conversion_info
+                {
+                    let layout = get_layout(db.tcx(), ty)?;
+                    let size = Literal::u64_unsuffixed(layout.size().bytes());
+                    let align = Literal::u64_unsuffixed(layout.align().bytes());
+                    storage_statements.extend(quote! {
+                        static_assert(
+                            sizeof(#cpp_type) == #size && alignof(#cpp_type) == #align,
+                            "Verify that C++ layout-equivalent type has the same size and alignment as the Rust type");
+                    });
+                }
                 if ty.needs_drop(db.tcx(), post_analysis_typing_env) {
                     prereqs.includes.insert(db.support_header("internal/slot.h"));
                     let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
@@ -555,7 +583,7 @@ fn cc_return_value_from_c_abi<'tcx>(
                 tuple_tys[i],
                 prereqs,
                 storage_statements,
-                /*recursive=*/ true,
+                /* recursive= */ true,
             )?;
             storage_names.push(element_storage_name);
             unpack_exprs.push(element_unpack_expr);
@@ -888,7 +916,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
             rs_return_type,
             &mut prereqs,
             &mut tokens,
-            /*recursive=*/ false,
+            /* recursive= */ false,
         )?;
         thunk_args.push(quote! { #storage_name });
         // We don't have to worry about the [[noreturn]] situation described above because all
@@ -1015,8 +1043,9 @@ pub fn generate_function<'tcx>(
                 },
             )
             .map_err(|_| anyhow!("Failed to normalize fn sig for {}", tcx.def_path_str(def_id)))?;
-            // We need this to line up the types going into `liberate_and_deanonymize_late_bound_regions`
-            // which expects a `ty::Unnormalized` input.
+            // We need this to line up the types going into
+            // `liberate_and_deanonymize_late_bound_regions` which expects a
+            // `ty::Unnormalized` input.
             #[rustversion::since(2026-04-19)]
             let fn_sig = ty::Unnormalized::new(fn_sig);
             fn_sig
@@ -1313,8 +1342,8 @@ pub fn generate_function<'tcx>(
             &sig_mid,
             &thunk_name_cc,
             has_self_param,
-            /*is_constructor=*/ false,
-            /*within_template=*/ false,
+            /* is_constructor= */ false,
+            /* within_template= */ false,
             is_async,
         )?
         .into_tokens(&mut prereqs);
@@ -1414,7 +1443,7 @@ pub fn generate_function<'tcx>(
             &sig_mid,
             &thunk_name,
             fully_qualified_fn_name,
-            /*is_constructor=*/ false,
+            /* is_constructor= */ false,
             is_async,
         )?
     };
@@ -1479,7 +1508,8 @@ fn check_callable_params_not_borrowed_in_return<'tcx>(
     Ok(())
 }
 
-/// If `rs_return_type` represents an async future desugared type, extracts and returns its `Output` type.
+/// If `rs_return_type` represents an async future desugared type, extracts and returns its `Output`
+/// type.
 pub fn get_async_future_output_ty<'tcx>(
     tcx: TyCtxt<'tcx>,
     rs_return_type: Ty<'tcx>,

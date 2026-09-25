@@ -46,6 +46,10 @@ extern "C" void __crubit_thunk_clone_ushared_uptr(
 }
 inline ::std::shared_ptr<::std::int32_t> clone_shared_ptr(
     ::std::shared_ptr<::std::int32_t> const& val) {
+  static_assert(sizeof(::std::shared_ptr<::std::int32_t>) == 16 &&
+                    alignof(::std::shared_ptr<::std::int32_t>) == 8,
+                "Verify that C++ layout-equivalent type has the same size and "
+                "alignment as the Rust type");
   crubit::Slot<::std::shared_ptr<::std::int32_t>> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_clone_ushared_uptr(val,
@@ -58,6 +62,10 @@ extern "C" void __crubit_thunk_consume_ushared_uptr(
     ::std::shared_ptr<::std::int32_t>*);
 }
 inline void consume_shared_ptr(::std::shared_ptr<::std::int32_t> _val) {
+  static_assert(sizeof(::std::shared_ptr<::std::int32_t>) == 16 &&
+                    alignof(::std::shared_ptr<::std::int32_t>) == 8,
+                "Verify that C++ layout-equivalent type has the same size and "
+                "alignment as the Rust type");
   crubit::Slot _val_slot((::std::move(_val)));
   return __crubit_internal::__crubit_thunk_consume_ushared_uptr(
       _val_slot.Get());
@@ -71,7 +79,17 @@ extern "C" void __crubit_thunk_roundtrip_unonnull_ushared_uptr(
 inline ::std::shared_ptr<::std::int32_t> crubit_nonnull
 roundtrip_nonnull_shared_ptr(
     ::std::shared_ptr<::std::int32_t> crubit_nonnull val) {
+  static_assert(
+      sizeof(::std::shared_ptr<::std::int32_t> crubit_nonnull) == 16 &&
+          alignof(::std::shared_ptr<::std::int32_t> crubit_nonnull) == 8,
+      "Verify that C++ layout-equivalent type has the same size and alignment "
+      "as the Rust type");
   crubit::Slot val_slot((::std::move(val)));
+  static_assert(
+      sizeof(::std::shared_ptr<::std::int32_t> crubit_nonnull) == 16 &&
+          alignof(::std::shared_ptr<::std::int32_t> crubit_nonnull) == 8,
+      "Verify that C++ layout-equivalent type has the same size and alignment "
+      "as the Rust type");
   crubit::Slot<::std::shared_ptr<::std::int32_t> crubit_nonnull>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -87,7 +105,15 @@ extern "C" void __crubit_thunk_roundtrip_ushared_uptr(
 }
 inline ::std::shared_ptr<::std::int32_t> roundtrip_shared_ptr(
     ::std::shared_ptr<::std::int32_t> val) {
+  static_assert(sizeof(::std::shared_ptr<::std::int32_t>) == 16 &&
+                    alignof(::std::shared_ptr<::std::int32_t>) == 8,
+                "Verify that C++ layout-equivalent type has the same size and "
+                "alignment as the Rust type");
   crubit::Slot val_slot((::std::move(val)));
+  static_assert(sizeof(::std::shared_ptr<::std::int32_t>) == 16 &&
+                    alignof(::std::shared_ptr<::std::int32_t>) == 8,
+                "Verify that C++ layout-equivalent type has the same size and "
+                "alignment as the Rust type");
   crubit::Slot<::std::shared_ptr<::std::int32_t>> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_roundtrip_ushared_uptr(

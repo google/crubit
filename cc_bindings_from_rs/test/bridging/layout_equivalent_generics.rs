@@ -161,7 +161,7 @@ pub mod private_mod_with_specialization {
 
     // Test specialization with parameter named several ways, including via a non-public alias.
     #[crubit_annotate::cpp_specialization(
-        cpp_type = "crubit::test::MyStatus",
+        cpp_type = "crubit::test::MyStatusOr<int32_t>",
         include_path = "cc_bindings_from_rs/test/bridging/cc_generics.h"
     )]
     pub type MyStatusOrSecretInt = MyStatusOr<SecretInt>;

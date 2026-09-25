@@ -269,6 +269,10 @@ namespace __crubit_internal {
 extern "C" void __crubit_thunk_enum_uin_usignature(::foo_service::FooEnum*);
 }
 inline void(FooService::enum_in_signature)(::foo_service::FooEnum _e) {
+  static_assert(sizeof(::foo_service::FooEnum) == 4 &&
+                    alignof(::foo_service::FooEnum) == 4,
+                "Verify that C++ layout-equivalent type has the same size and "
+                "alignment as the Rust type");
   return __crubit_internal::__crubit_thunk_enum_uin_usignature(&_e);
 }
 inline void ::rust_lib::FooService::__crubit_field_offset_assertions() {
