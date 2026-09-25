@@ -61,6 +61,32 @@ T UnsafeTakeValue(T* src) {
   }
 }
 
+// A deferred `UnsafeTakeValue(src)`, for passing a value through a forwarding
+// function such as `std::construct_at`.
+//
+// Forwarding the prvalue returned by `UnsafeTakeValue` would bind it to a
+// reference, so the eventual parameter would be initialized from an xvalue,
+// which requires a move constructor. When this wrapper is forwarded instead,
+// the parameter is initialized from the result of the conversion function,
+// which is a prvalue, so no move constructor is required.
+//
+// SAFETY REQUIREMENTS: as for `UnsafeTakeValue`. Additionally, the conversion
+// must happen exactly once.
+template <typename T>
+class UnsafeTakeValueOnConversion {
+ public:
+  explicit UnsafeTakeValueOnConversion(T* src) : src_(src) {}
+
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  operator T() && { return UnsafeTakeValue(src_); }
+
+ private:
+  T* src_;
+};
+
+template <typename T>
+UnsafeTakeValueOnConversion(T*) -> UnsafeTakeValueOnConversion<T>;
+
 // `Slot<T>` provides a slot that can store a relocatable return value.
 // This class is used to return non-`#[repr(C)]` structs from Rust
 // into C++ in a way that is compatible with the ABI of `extern "C"` Rust
