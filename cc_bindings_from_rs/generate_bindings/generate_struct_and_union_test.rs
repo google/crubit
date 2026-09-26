@@ -1505,6 +1505,52 @@ fn test_format_item_struct_not_aggregate_with_result_field() {
 }
 
 #[test]
+fn test_format_item_struct_aggregate_suppressed_constructors() {
+    let test_src = r#"
+        pub struct Source(pub i32);
+        pub struct OtherSource(pub i32);
+        pub struct Target {
+            pub x: i32,
+            pub y: i32,
+        }
+        impl From<Source> for Target {
+            fn from(s: Source) -> Self {
+                Self { x: s.0, y: 0 }
+            }
+        }
+        impl Into<Target> for OtherSource {
+            fn into(self) -> Target {
+                Target { x: 0, y: self.0 }
+            }
+        }
+    "#;
+    test_format_item(test_src, "Target", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        let from_comment = "Constructor from `<Target as std::convert::From<Source>>` is suppressed because `Target` is a C++ aggregate.";
+        let into_comment = "Constructor from `<OtherSource as std::convert::Into<Target>>` is suppressed because `Target` is a C++ aggregate.";
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                struct ... Target final {
+                    public:
+                    __COMMENT__ #from_comment
+                    __COMMENT__ #into_comment
+                    ::std::int32_t x {};
+                    ::std::int32_t y {};
+                    private:
+                    static void __crubit_field_offset_assertions();
+                };
+            }
+        );
+        assert_cc_not_matches!(result.cc_details.tokens, quote! { __crubit_thunk_From });
+        assert_cc_not_matches!(result.cc_details.tokens, quote! { __crubit_thunk_Into });
+        assert_rs_not_matches!(result.rs_details.tokens, quote! { __crubit_thunk_From });
+        assert_rs_not_matches!(result.rs_details.tokens, quote! { __crubit_thunk_Into });
+    });
+}
+
+#[test]
 fn test_hash_trait_support() {
     let test_src = r#"
     #[derive(Hash)]

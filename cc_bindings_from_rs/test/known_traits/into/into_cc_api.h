@@ -37,6 +37,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocTarget") alignas(
   // CRUBIT_ANNOTATE: must_bind=
   rs_std::StrRef get_value() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
+  // Constructor from `<into_golden::CloneAllocType as
+  // std::convert::Into<into_golden::CloneAllocTarget>>` is suppressed because
+  // `CloneAllocTarget` is a C++ aggregate.
+
   ::rs::alloc::string::String value{};
 
  private:
@@ -65,6 +69,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneAllocType") alignas(8)
 struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: CloneCopyTarget") alignas(4)
     [[clang::trivial_abi]] CloneCopyTarget final {
  public:
+  // Constructor from `<into_golden::CloneCopyType as
+  // std::convert::Into<into_golden::CloneCopyTarget>>` is suppressed because
+  // `CloneCopyTarget` is a C++ aggregate.
+
   ::std::int32_t __field0{};
 
  private:
@@ -113,6 +121,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: Convert") alignas(4)
   explicit operator rs_std::StrRef();
 
   explicit operator ::std::int16_t();
+
+  // Constructor from `<into_golden::ConvertRef<'_> as
+  // std::convert::Into<into_golden::Convert>>` is suppressed because `Convert`
+  // is a C++ aggregate.
 
   ::std::int32_t __field0{};
 
@@ -176,6 +188,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: LoopA") alignas(4)
  public:
   explicit operator ::into::LoopB();
 
+  // Constructor from `<into_golden::LoopB as
+  // std::convert::Into<into_golden::LoopA>>` is suppressed because `LoopA` is a
+  // C++ aggregate.
+
   ::std::int32_t __field0{};
 
  private:
@@ -188,6 +204,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: LoopB") alignas(4)
  public:
   explicit operator ::into::LoopA();
 
+  // Constructor from `<into_golden::LoopA as
+  // std::convert::Into<into_golden::LoopB>>` is suppressed because `LoopB` is a
+  // C++ aggregate.
+
   ::std::int32_t __field0{};
 
  private:
@@ -199,6 +219,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_golden :: NoCloneCopyDropTarget") alignas(4) [[clang::trivial_abi]]
 NoCloneCopyDropTarget final {
  public:
+  // Constructor from `<into_golden::NoCloneCopyDropType as
+  // std::convert::Into<into_golden::NoCloneCopyDropTarget>>` is suppressed
+  // because `NoCloneCopyDropTarget` is a C++ aggregate.
+
   ::std::int32_t __field0{};
 
  private:
@@ -223,6 +247,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: into_golden :: NoCloneDefaultTarget") alignas(4) [[clang::trivial_abi]]
 NoCloneDefaultTarget final {
  public:
+  // Constructor from `<into_golden::NoCloneDefaultType as
+  // std::convert::Into<into_golden::NoCloneDefaultTarget>>` is suppressed
+  // because `NoCloneDefaultTarget` is a C++ aggregate.
+
   ::std::int32_t __field0{};
 
  private:

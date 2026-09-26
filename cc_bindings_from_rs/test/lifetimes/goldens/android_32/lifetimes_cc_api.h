@@ -57,6 +57,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   explicit operator ::std::int32_t() const;
 
+  // Constructor from `<lifetimes_golden::StructWithLifetime<'a> as
+  // std::convert::From<&'a i32>>` is suppressed because `StructWithLifetime` is
+  // a C++ aggregate.
+
   ::std::int32_t const* crubit_nonnull field_with_lifetime{};
 
  private:

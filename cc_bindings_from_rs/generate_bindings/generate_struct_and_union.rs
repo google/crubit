@@ -730,6 +730,7 @@ fn is_newtype_relationship<'tcx>(tcx: TyCtxt<'tcx>, tgt_ty: Ty<'tcx>, src_ty: Ty
 fn generate_constructor_impls<'tcx>(
     db: &BindingsGenerator<'tcx>,
     core: &AdtCoreBindings<'tcx>,
+    is_aggregate: bool,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
     let cc_struct_name = &core.common.cc_short_name;
@@ -751,7 +752,7 @@ fn generate_constructor_impls<'tcx>(
             // newtype with a public field of the same type. In this case, we already
             // synthesize a tuple constructor with the same signature, and generating
             // another one would cause duplicate definition conflicts in C++.
-            if is_newtype_relationship(tcx, core.common.self_ty, src_ty) {
+            if !is_aggregate && is_newtype_relationship(tcx, core.common.self_ty, src_ty) {
                 return None;
             }
             // Skip if source type is Self or a reference to Self (e.g. &Self)
@@ -809,6 +810,7 @@ fn generate_constructor_impls<'tcx>(
         .filter_map(|res| {
             let (src_ty, cc_ty, impl_id, is_from) = match res {
                 Ok(item) => item,
+                Err(TypeCollisionRisk { item, .. }) if is_aggregate => item,
                 Err(TypeCollisionRisk {
                     item: (_, _, impl_id, is_from),
                     key_type,
@@ -932,6 +934,19 @@ fn generate_constructor_impls<'tcx>(
                 &mut statements,
             )
             .ok()?;
+
+            if is_aggregate {
+                let impl_name = tcx.def_path_str(impl_id);
+                let msg = format!(
+                    "Constructor from `{impl_name}` is suppressed because `{cc_struct_name}` is a C++ aggregate."
+                );
+                return Some(ApiSnippets {
+                    main_api: CcSnippet::new(quote! {
+                        __NEWLINE__ __COMMENT__ #msg __NEWLINE__
+                    }),
+                    ..Default::default()
+                });
+            }
 
             let is_specialization = core.def_id.is_none_or(|id| query_compiler::has_non_lifetime_generics(tcx, id));
             let thunk_qualifier = crate::thunk_qualifier(is_specialization);
@@ -2030,11 +2045,7 @@ pub fn generate_adt<'tcx>(
     };
     let into_operator_snippets = generate_into_impls(db, core.as_ref());
     let trait_operator_snippets = generate_trait_operator_impls(db, core.as_ref());
-    let constructor_operator_snippets = if is_aggregate {
-        ApiSnippets::default()
-    } else {
-        generate_constructor_impls(db, core.as_ref())
-    };
+    let constructor_operator_snippets = generate_constructor_impls(db, core.as_ref(), is_aggregate);
     let compare_snippets = generate_ord_and_partialord_impls(db, core.as_ref());
     let display_snippets = generate_display_impl(db, core.as_ref());
     let hash_snippets = generate_hash_impl(db, core.as_ref());
