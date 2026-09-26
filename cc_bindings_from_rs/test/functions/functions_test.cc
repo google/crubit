@@ -86,6 +86,44 @@ TEST(FnParamTyTest, Int32MutRef) {
   EXPECT_EQ(sum, 456 + 789);
 }
 
+TEST(FnParamTyTest, Int32PinnedMutRef) {
+  std::int32_t sum = -123;
+  fn_param_ty_tests::set_pinned_mut_ref_to_sum_of_ints(sum, 456, 789);
+  EXPECT_EQ(sum, 456 + 789);
+}
+
+TEST(FnParamTyTest, Int32PinnedConstRef) {
+  std::int32_t x = 42;
+  EXPECT_EQ(fn_param_ty_tests::deref_pinned_int(x), 42);
+}
+
+TEST(FnParamTyTest, GetIdenticalPinnedRef) {
+  std::int32_t x = 42;
+  const std::int32_t& result =
+      fn_param_ty_tests::get_identical_pinned_int_ref(&x);
+  EXPECT_EQ(&result, &x);
+}
+
+TEST(FnParamTyTest, GetIdenticalPinnedMutRef) {
+  std::int32_t x = 42;
+  std::int32_t& result =
+      fn_param_ty_tests::get_identical_pinned_mut_int_ref(&x);
+  EXPECT_EQ(&result, &x);
+  result = 100;
+  EXPECT_EQ(x, 100);
+}
+
+TEST(FnParamTyTest, StructWithPinnedRefs) {
+  std::int32_t x = 42;
+  std::int32_t y = 84;
+  fn_param_ty_tests::StructWithPinnedRefs s =
+      fn_param_ty_tests::create_struct_with_pinned_refs(&x, &y);
+  EXPECT_EQ(*s.pinned_ref, 42);
+  EXPECT_EQ(*s.pinned_mut_ref, 84);
+  *s.pinned_mut_ref = 123;
+  EXPECT_EQ(y, 123);
+}
+
 std::int32_t AddInt32(std::int32_t x, std::int32_t y) { return x + y; }
 
 std::int32_t MultiplyInt32(std::int32_t x, std::int32_t y) { return x * y; }

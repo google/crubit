@@ -603,6 +603,65 @@ pub fn get_callable_info<'tcx>(
     Ok(Some(CallableInfo { kind, param_tys: param_tys.to_vec(), return_ty }))
 }
 
+fn format_ref_for_cc<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+    region: ty::Region<'tcx>,
+    referent: Ty<'tcx>,
+    mutability: Mutability,
+    location: TypeLocation,
+) -> Result<CcSnippet<'tcx>> {
+    let tcx = db.tcx();
+    if let ty::TyKind::Slice(element_ty) = *referent.kind() {
+        check_slice_layout(db.tcx(), ty);
+        return format_slice_ref_for_cc(db, element_ty, mutability);
+    }
+
+    if matches!(referent.kind(), ty::TyKind::Str) {
+        check_slice_layout(db.tcx(), ty);
+        if mutability.is_mut() {
+            bail!("Mutable references to `str` are not yet supported.")
+        }
+        return Ok(format_str_ref_for_cc(db));
+    }
+
+    let mutability = if mutability.is_mut() || is_cpp_thread_safe(db, referent)? {
+        Mutability::Mut
+    } else {
+        mutability
+    };
+
+    let treat_ref_as_ptr = treat_ref_as_ptr(tcx, ty, location);
+
+    let mut prereqs = CcPrerequisites::default();
+    let ptr_or_ref_prefix = if let RefConvert::ToPtr { .. } = treat_ref_as_ptr {
+        format_non_owning_pointer_prefix(db, region, referent, &mut prereqs)
+    } else if matches!(location, TypeLocation::FnParam { .. }) {
+        // Omit the lifetime of parameter-location references whose lifetime is trivial.
+        // References with non-trivial lifetimes will be converted to pointers above.
+        quote! { & }
+    } else {
+        let lifetime = format_region_as_cc_lifetime(db, region, &mut prereqs);
+        quote! { & #lifetime }
+    };
+
+    // Early return in case we handle a transparent reference type.
+    if let Some(mut snippet) = format_transparent_pointee_or_reference_for_cc(
+        db,
+        referent,
+        mutability,
+        ptr_or_ref_prefix.clone(),
+    ) {
+        snippet.prereqs += prereqs;
+        return Ok(snippet);
+    }
+
+    let tokens = format_pointer_or_reference_ty_for_cc(db, referent, mutability, ptr_or_ref_prefix)
+        .with_context(|| format!("Failed to format the referent of the reference type `{ty}`"))?
+        .into_tokens(&mut prereqs);
+    Ok(CcSnippet { tokens, prereqs })
+}
+
 /// Implementation of `BindingsGenerator::format_ty_for_cc`.
 pub fn format_ty_for_cc<'tcx>(
     db: &BindingsGenerator<'tcx>,
@@ -868,6 +927,13 @@ pub fn format_ty_for_cc<'tcx>(
         }
 
         ty::TyKind::Adt(adt, substs) => {
+            if adt.is_pin()
+                && let Some((region, referent, mutability)) =
+                    query_compiler::as_ref_or_pinned_ref(ty)
+            {
+                return format_ref_for_cc(db, ty, region, referent, mutability, location);
+            }
+
             let def_id = adt.did();
             let mut prereqs = CcPrerequisites::default();
 
@@ -1043,61 +1109,7 @@ pub fn format_ty_for_cc<'tcx>(
         }
 
         ty::TyKind::Ref(region, referent, mutability) => {
-            if let ty::TyKind::Slice(element_ty) = *referent.kind() {
-                check_slice_layout(db.tcx(), ty);
-                return format_slice_ref_for_cc(db, element_ty, mutability);
-            }
-
-            if matches!(referent.kind(), ty::TyKind::Str) {
-                check_slice_layout(db.tcx(), ty);
-                if mutability.is_mut() {
-                    bail!("Mutable references to `str` are not yet supported.")
-                }
-                return Ok(format_str_ref_for_cc(db));
-            }
-
-            let mutability = if matches!(
-                location,
-                TypeLocation::FnParam { .. } | TypeLocation::FnReturn { .. }
-            ) && is_cpp_thread_safe(db, referent)?
-            {
-                Mutability::Mut
-            } else {
-                mutability
-            };
-
-            let treat_ref_as_ptr = treat_ref_as_ptr(tcx, ty, location);
-
-            let mut prereqs = CcPrerequisites::default();
-            let ptr_or_ref_prefix = if let RefConvert::ToPtr { .. } = treat_ref_as_ptr {
-                format_non_owning_pointer_prefix(db, region, referent, &mut prereqs)
-            } else if matches!(location, TypeLocation::FnParam { .. }) {
-                // Omit the lifetime of parameter-location references whose lifetime is trivial.
-                // References with non-trivial lifetimes will be converted to pointers above.
-                quote! { & }
-            } else {
-                let lifetime = format_region_as_cc_lifetime(db, region, &mut prereqs);
-                quote! { & #lifetime }
-            };
-
-            // Early return in case we handle a transparent reference type.
-            if let Some(mut snippet) = format_transparent_pointee_or_reference_for_cc(
-                db,
-                referent,
-                mutability,
-                ptr_or_ref_prefix.clone(),
-            ) {
-                snippet.prereqs += prereqs;
-                return Ok(snippet);
-            }
-
-            let mut snippet =
-                format_pointer_or_reference_ty_for_cc(db, referent, mutability, ptr_or_ref_prefix)
-                    .with_context(|| {
-                        format!("Failed to format the referent of the reference type `{ty}`")
-                    })?;
-            snippet.prereqs += prereqs;
-            snippet
+            format_ref_for_cc(db, ty, region, referent, mutability, location)?
         }
         ty::TyKind::FnPtr(sig_tys, fn_header) => {
             let sig = {
@@ -1323,11 +1335,11 @@ fn treat_ref_as_ptr<'tcx>(
                 return RefConvert::ToRef;
             }
             // If this is not a reference don't convert to a pointer.
-            let ty::TyKind::Ref(region, _, _) = ty.kind() else {
+            let Some((region, _, _)) = query_compiler::as_ref_or_pinned_ref(ty) else {
                 return RefConvert::ToRef;
             };
             // Explicit lifetimes are always converted to pointers.
-            if !region_is_elided(tcx, *region) {
+            if !region_is_elided(tcx, region) {
                 return RefConvert::ToPtr { is_lifetime_bound: false };
             }
             // Elided lifetimes are converted to pointers if the elided lifetime is captured by
@@ -1606,13 +1618,15 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
                 };
                 return Ok(quote! { ::core::ptr::NonNull<#t_param> });
             }
+            if adt.is_pin() {
+                let inner_ty = substs[0].expect_ty();
+                let inner_rs = db.format_ty_for_rs(inner_ty)?;
+                return Ok(quote! { ::core::pin::Pin<#inner_rs> });
+            }
             if let Some(bridged_builtin) = BridgedBuiltin::new(db, adt) {
                 match bridged_builtin {
                     BridgedBuiltin::Vec => {
-                        let t_param = match substs[0].kind() {
-                            ty::GenericArgKind::Type(ty) => db.format_ty_for_rs(ty)?,
-                            _ => panic!("First generic argument of Vec must be a type"),
-                        };
+                        let t_param = db.format_ty_for_rs(substs[0].expect_ty())?;
                         return Ok(quote! { ::alloc::vec::Vec<#t_param> });
                     }
                     BridgedBuiltin::Option
@@ -1620,10 +1634,7 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
                             crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust,
                         ) =>
                     {
-                        let t_param = match substs[0].kind() {
-                            ty::GenericArgKind::Type(ty) => db.format_ty_for_rs(ty)?,
-                            _ => panic!("First generic argument of Option must be a type"),
-                        };
+                        let t_param = db.format_ty_for_rs(substs[0].expect_ty())?;
                         return Ok(quote! { ::core::option::Option<#t_param> });
                     }
                     _ => {}
@@ -2200,6 +2211,43 @@ fn is_manually_annotated_bridged_adt<'tcx>(
     }
 }
 
+/// Returns whether a type can be made layout-compatible.
+///
+/// Layout-compatible types include:
+/// - Non-bridged types.
+/// - Bridged types with layout-compatible alternatives (e.g. `rs_std::Option<T>`).
+/// - Proto messages.
+fn can_be_made_layout_compatible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<bool> {
+    let Some(bridged) = is_bridged_type(db, ty)? else {
+        return Ok(true);
+    };
+    if bridged.is_layout_compatible() {
+        return Ok(true);
+    }
+    if db.is_proto_message(ty) {
+        return Ok(true);
+    }
+    if let ty::TyKind::Adt(adt, substs) = ty.kind()
+        && let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt)
+    {
+        // Option can be made layout-compatible if its only type parameter is.
+        return can_be_made_layout_compatible(db, substs[0].expect_ty());
+    }
+    Ok(false)
+}
+
+fn ensure_layout_compatible_pointee<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    pointee: Ty<'tcx>,
+) -> Result<()> {
+    if !can_be_made_layout_compatible(db, pointee)? {
+        bail!(
+            "crubit.rs/errors/unsupported_type: `{pointee}` cannot be passed by-pointer because it is not layout-compatible"
+        )
+    }
+    Ok(())
+}
+
 /// Returns the contents of the `__crubit_annotate` attribute if type bridging
 /// is configured. An error is returned if the type is a pointer or reference or
 /// the attribute could not be parsed or is in an invalid state.
@@ -2213,53 +2261,25 @@ pub fn is_bridged_type<'tcx>(
 
     match *ty.kind() {
         ty::TyKind::Ref(_, referent, _) => {
-            if let Some(bridged) = is_bridged_type(db, referent)?
-                && !bridged.is_layout_compatible()
-            {
-                // Bridge types behind a reference are not allowed. But Option and Proto messages
-                // are exceptions because they have a layout-compatible C++ representation
-                // (rs_std::Option<T>& and proto::Rust<T>& are valid).
-                if db.is_proto_message(referent) {
-                    return Ok(None);
-                }
-                if let ty::TyKind::Adt(adt, _) = referent.kind()
-                    && let Some(BridgedBuiltin::Option) = BridgedBuiltin::new(db, *adt)
-                {
-                    return Ok(None);
-                }
-                bail!(
-                    "crubit.rs/errors/unsupported_type: Bridged type `{referent}` cannot be passed by reference; pass it by value instead."
-                )
-            }
+            ensure_layout_compatible_pointee(db, referent)?;
             Ok(None)
         }
         ty::TyKind::RawPtr(pointee, _) => {
-            if let Some(bridged) = is_bridged_type(db, pointee)?
-                && !bridged.is_layout_compatible()
-            {
-                if db.is_proto_message(pointee) {
-                    return Ok(None);
-                }
-                bail!(
-                    "crubit.rs/errors/unsupported_type: Bridged type `{pointee}` cannot be passed by pointer; pass it by value instead."
-                )
-            }
+            ensure_layout_compatible_pointee(db, pointee)?;
             Ok(None)
         }
         ty::TyKind::Adt(adt, substs) => {
             if is_std_ptr_non_null(db.tcx(), adt.did()) {
                 let pointee = substs[0].expect_ty();
-                if let Some(bridged) = is_bridged_type(db, pointee)?
-                    && !bridged.is_layout_compatible()
-                {
-                    if db.is_proto_message(pointee) {
-                        return Ok(None);
-                    }
-                    bail!(
-                        "Bridged type `{pointee}` cannot be passed by pointer because it is not layout-compatible; pass it by value instead."
-                    );
-                }
+                ensure_layout_compatible_pointee(db, pointee)?;
                 return Ok(None);
+            }
+            if adt.is_pin() {
+                let inner_pointer = substs[0].expect_ty();
+                // Unlike the other pointer or reference-like types, `Pin` is a repr(transparent)
+                // wrapper around its inner pointer, so we check if the inner type is bridged
+                // instead.
+                return is_bridged_type(db, inner_pointer);
             }
 
             if let Some(bridged_type) = is_manually_annotated_bridged_adt(db, ty)? {
@@ -2307,11 +2327,10 @@ pub fn is_bridged_type<'tcx>(
             // the moment. If we encounter a type like this we return an error.
             for subst in substs {
                 if let Some(ty) = subst.as_type()
-                    && let Some(bridged) = is_bridged_type(db, ty)?
-                    && !bridged.is_layout_compatible()
+                    && !can_be_made_layout_compatible(db, ty)?
                 {
                     bail!(
-                        "crubit.rs/errors/unsupported_type: Types containing generic parameter `{ty}` (which is a bridged type) are not supported."
+                        "crubit.rs/errors/unsupported_type: non-layout-compatible type `{ty}` cannot be used as a generic parameter."
                     );
                 }
             }

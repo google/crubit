@@ -373,6 +373,11 @@ fn format_ty_for_closure_param_rs<'tcx>(
             let t_param = format_ty_for_closure_param_rs(db, t_param, is_return_ty)?;
             return Ok(quote! { ::core::ptr::NonNull<#t_param> });
         }
+        if adt.is_pin() {
+            let t_param = substs[0].expect_ty();
+            let t_param = format_ty_for_closure_param_rs(db, t_param, is_return_ty)?;
+            return Ok(quote! { ::core::pin::Pin<#t_param> });
+        }
         if let Some(bridged_builtin) = BridgedBuiltin::new(db, *adt) {
             match bridged_builtin {
                 BridgedBuiltin::Vec => {

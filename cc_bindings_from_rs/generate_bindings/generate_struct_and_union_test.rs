@@ -1612,3 +1612,161 @@ fn test_hash_trait_support_for_enum() {
         );
     });
 }
+
+#[test]
+fn test_format_item_struct_with_pinned_reference_fields() {
+    let test_src = r#"
+            use core::pin::Pin;
+            pub struct StructWithPinnedRefs<'a> {
+                pub pinned_ref: Pin<&'a i32>,
+                pub pinned_mut_ref: Pin<&'a mut i32>,
+            }
+        "#;
+    test_format_item(test_src, "StructWithPinnedRefs", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithPinnedRefs") alignas(8)
+                [[clang::trivial_abi]] StructWithPinnedRefs final {
+                 public:
+                  ...
+                  StructWithPinnedRefs() = delete;
+                  ...
+                  union {
+                    ::std::int32_t const* crubit_nonnull pinned_ref;
+                  };
+                  union {
+                    ::std::int32_t* crubit_nonnull pinned_mut_ref;
+                  };
+                  ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_with_reference_field_not_default_constructible() {
+    let test_src = r#"
+        pub struct StructWithRef<'a> {
+            pub r: &'a i32,
+        }
+    "#;
+    test_format_item(test_src, "StructWithRef", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithRef") alignas(8)
+                [[clang::trivial_abi]] StructWithRef final {
+                 public:
+                  ...
+                  StructWithRef() = delete;
+                  ...
+                  union {
+                    ::std::int32_t const* crubit_nonnull r;
+                  };
+                  ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_with_non_null_field_not_default_constructible() {
+    let test_src = r#"
+        pub struct StructWithNonNull {
+            pub ptr: core::ptr::NonNull<i32>,
+        }
+    "#;
+    test_format_item(test_src, "StructWithNonNull", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithNonNull") alignas(8)
+                [[clang::trivial_abi]] StructWithNonNull final {
+                 public:
+                  ...
+                  StructWithNonNull() = delete;
+                  ...
+                  union {
+                    ::std::int32_t* crubit_nonnull ptr;
+                  };
+                  ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_with_str_reference_is_default_constructible() {
+    let test_src = r#"
+        pub struct StructWithStr<'a> {
+            pub s: &'a str,
+        }
+    "#;
+    test_format_item(test_src, "StructWithStr", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithStr") alignas(8)
+                [[clang::trivial_abi]] StructWithStr final {
+                  ...
+                  rs_std::StrRef s{};
+                  ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_with_slice_reference_is_default_constructible() {
+    let test_src = r#"
+        pub struct StructWithSlice<'a> {
+            pub s: &'a [i32],
+        }
+    "#;
+    test_format_item(test_src, "StructWithSlice", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithSlice") alignas(8)
+                [[clang::trivial_abi]] StructWithSlice final {
+                  ...
+                  rs_std::SliceRef<const ::std::int32_t> s{};
+                  ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_struct_with_mut_slice_reference_is_default_constructible() {
+    let test_src = r#"
+        pub struct StructWithMutSlice<'a> {
+            pub s: &'a mut [i32],
+        }
+    "#;
+    test_format_item(test_src, "StructWithMutSlice", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_out :: StructWithMutSlice") alignas(8)
+                [[clang::trivial_abi]] StructWithMutSlice final {
+                  ...
+                  rs_std::SliceRef<::std::int32_t> s{};
+                  ...
+                };
+            }
+        );
+    });
+}

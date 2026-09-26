@@ -87,6 +87,8 @@ fn test_format_ret_ty_for_cc_successes() {
             "extern \"C\" fn (f32, f32) -> f32",
             "crubit :: type_identity_t < float (float , float) > &",
         ),
+        ("core::pin::Pin<&'static i32>", "::std::int32_t const & $static"),
+        ("core::pin::Pin<&'static mut i32>", "::std::int32_t & $static"),
     ];
     test_ty(
         TypeLocation::FnReturn { is_constructor: false },
@@ -196,6 +198,27 @@ fn test_format_ty_for_cc_successes() {
             rs: "::std::ptr::NonNull<i32>",
             cc: "::std :: int32_t * crubit_nonnull",
             includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]
+        ),
+        // Pin<&T> and Pin<&mut T>:
+        case!(
+            rs: "core::pin::Pin<&i32>",
+            cc: "::std :: int32_t const &",
+            includes: ["<cstdint>"]
+        ),
+        case!(
+            rs: "core::pin::Pin<&'static i32>",
+            cc: "::std :: int32_t const * $static crubit_nonnull",
+            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
+        ),
+        case!(
+            rs: "core::pin::Pin<&mut i32>",
+            cc: "::std :: int32_t &",
+            includes: ["<cstdint>"]
+        ),
+        case!(
+            rs: "core::pin::Pin<&'static mut i32>",
+            cc: "::std :: int32_t * $static crubit_nonnull",
+            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
         ),
         case!(
             rs: "::std::ptr::NonNull<core::ffi::c_void>",
@@ -667,6 +690,10 @@ fn test_format_ty_for_rs_successes() {
             "std::ptr::NonNull<std::mem::MaybeUninit<i32>>",
             "::core::ptr::NonNull< std::mem::MaybeUninit<i32> >",
         ),
+        ("core::pin::Pin<&i32>", "::core::pin::Pin< & '__anon1 i32 >"),
+        ("core::pin::Pin<&'static i32>", "::core::pin::Pin< & 'static i32 >"),
+        ("core::pin::Pin<&mut i32>", "::core::pin::Pin< & '__anon1 mut i32 >"),
+        ("core::pin::Pin<&'static mut i32>", "::core::pin::Pin< & 'static mut i32 >"),
         ("LifetimeGenericStruct<'static>", "::rust_out::LifetimeGenericStruct< 'static >"),
     ];
     let preamble = quote! {

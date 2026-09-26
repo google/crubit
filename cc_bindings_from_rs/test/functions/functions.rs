@@ -14,8 +14,8 @@ pub mod fn_abi_tests {
 
     /// Testing one of simpler function bindings:
     /// - `extern "C"` means that no thunk is required
-    /// - `#[unsafe(no_mangle)]` means that the function is already exposed with
-    ///   the desired, public name (and just needs to be redeclared in C++).
+    /// - `#[unsafe(no_mangle)]` means that the function is already exposed with the desired, public
+    ///   name (and just needs to be redeclared in C++).
     #[unsafe(no_mangle)]
     pub extern "C" fn get_42_as_f64_via_no_mangle_extern_c() -> f64 {
         42.0
@@ -30,11 +30,9 @@ pub mod fn_abi_tests {
 
     /// Testing bindings for an `extern "C"` function (no thunk required) with a
     /// mangled name. This test verifies that:
-    /// * `cc_bindings_from_rs` can correctly discover mangled names that
-    ///   `rustc` produces
-    /// * Bazel support for `cc_bindings_from_rs` invokes it with the same
-    ///   command line flags as the ones used when invoking `rustc` when
-    ///   building the `functions` crate.
+    /// * `cc_bindings_from_rs` can correctly discover mangled names that `rustc` produces
+    /// * Bazel support for `cc_bindings_from_rs` invokes it with the same command line flags as the
+    ///   ones used when invoking `rustc` when building the `functions` crate.
     ///
     /// TODO(b/262904507): Bazel integration is currently broken and the
     /// coresponding test is commented out in `functions_test.cc`.
@@ -95,6 +93,37 @@ pub mod fn_param_ty_tests {
 
     pub fn set_mut_ref_to_sum_of_ints(sum: &mut i32, x: i32, y: i32) {
         *sum = x + y;
+    }
+
+    pub fn set_pinned_mut_ref_to_sum_of_ints(mut sum: core::pin::Pin<&mut i32>, x: i32, y: i32) {
+        *sum = x + y;
+    }
+
+    pub fn deref_pinned_int(x: core::pin::Pin<&i32>) -> i32 {
+        *x
+    }
+
+    pub fn get_identical_pinned_int_ref<'a>(x: core::pin::Pin<&'a i32>) -> core::pin::Pin<&'a i32> {
+        x
+    }
+
+    pub fn get_identical_pinned_mut_int_ref<'a>(
+        x: core::pin::Pin<&'a mut i32>,
+    ) -> core::pin::Pin<&'a mut i32> {
+        x
+    }
+
+    #[repr(C)]
+    pub struct StructWithPinnedRefs<'a> {
+        pub pinned_ref: core::pin::Pin<&'a i32>,
+        pub pinned_mut_ref: core::pin::Pin<&'a mut i32>,
+    }
+
+    pub fn create_struct_with_pinned_refs<'a>(
+        pinned_ref: core::pin::Pin<&'a i32>,
+        pinned_mut_ref: core::pin::Pin<&'a mut i32>,
+    ) -> StructWithPinnedRefs<'a> {
+        StructWithPinnedRefs { pinned_ref, pinned_mut_ref }
     }
 
     pub fn sum_bytes(bytes: &[u8]) -> u32 {

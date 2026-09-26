@@ -86,7 +86,7 @@ namespace functions::fn_param_ty_tests {
 struct
     CRUBIT_INTERNAL_RUST_TYPE(
         ":: functions_golden :: fn_param_ty_tests :: "
-        "StructWithPinnedRefs") alignas(8) [[clang::trivial_abi]]
+        "StructWithPinnedRefs") alignas(4) [[clang::trivial_abi]]
     StructWithPinnedRefs final {
  public:
   // Type is not a C++ aggregate: Field `pinned_ref` is not
@@ -526,10 +526,10 @@ inline ::std::int32_t no_msg_add(::std::int32_t x, ::std::int32_t y) {
 namespace functions::fn_param_ty_tests {
 
 static_assert(
-    sizeof(::functions::fn_param_ty_tests::StructWithPinnedRefs) == 16,
+    sizeof(::functions::fn_param_ty_tests::StructWithPinnedRefs) == 8,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(
-    alignof(::functions::fn_param_ty_tests::StructWithPinnedRefs) == 8,
+    alignof(::functions::fn_param_ty_tests::StructWithPinnedRefs) == 4,
     "Verify that ADT layout didn't change since this header got generated");
 static_assert(::std::is_trivially_destructible_v<
               ::functions::fn_param_ty_tests::StructWithPinnedRefs>);
@@ -547,7 +547,7 @@ inline void ::functions::fn_param_ty_tests::StructWithPinnedRefs::
   using __crubit_assert_type =
       ::functions::fn_param_ty_tests::StructWithPinnedRefs;
   static_assert(0 == offsetof(__crubit_assert_type, pinned_ref));
-  static_assert(8 == offsetof(__crubit_assert_type, pinned_mut_ref));
+  static_assert(4 == offsetof(__crubit_assert_type, pinned_mut_ref));
 }
 namespace __crubit_internal {
 extern "C" double __crubit_thunk_add_uf64(double, double);

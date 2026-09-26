@@ -55,6 +55,20 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x000
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::StructWithArray, values) == 0);
+const _: () = assert!(::std::mem::size_of::<::consts_golden::StructWithRef>() == 8);
+const _: () = assert!(::std::mem::align_of::<::consts_golden::StructWithRef>() == 8);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e(
+    __self: &'static ::consts_golden::StructWithRef<'static>,
+    other: &'static ::consts_golden::StructWithRef<'static>,
+) -> bool {
+    unsafe {
+        <::consts_golden::StructWithRef as ::core::cmp::PartialEq<
+            ::consts_golden::StructWithRef<'static>,
+        >>::eq(__self, other)
+    }
+}
+const _: () = assert!(::core::mem::offset_of!(::consts_golden::StructWithRef, r) == 0);
 const _: () = assert!(::std::mem::size_of::<::consts_golden::StructWithStr>() == 24);
 const _: () = assert!(::std::mem::align_of::<::consts_golden::StructWithStr>() == 8);
 #[unsafe(no_mangle)]
