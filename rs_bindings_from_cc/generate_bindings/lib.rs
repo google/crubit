@@ -32,12 +32,14 @@ use kythe_metadata::rs_embed_provenance_map;
 use lifetime_defaults_transform::lifetime_defaults_transform_type_alias;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
+use regex::Regex;
 use rs_type_kind::rs_type_kind_with_lifetime_elision;
 use std::collections::{BTreeSet, HashMap};
 use std::ffi::OsStr;
 use std::fmt::Write;
 use std::path::Path;
 use std::rc::Rc;
+use std::sync::OnceLock;
 use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string,
     rs_tokens_to_formatted_string_with_provenance, RustfmtConfig,
@@ -60,6 +62,29 @@ pub fn generate_bindings(
     kythe_annotations: bool,
     kythe_default_corpus: &str,
 ) -> Result<Bindings> {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    let re =
+        RE.get_or_init(|| Regex::new(r"(?m)^\s*#\s*!\s*\[\s*feature\s*\((.*?)\)\s*\]").unwrap());
+
+    for item in ir.items() {
+        if let Item::UseMod(use_mod) = item {
+            let path_str = use_mod.path();
+            let path = Path::new(path_str);
+            let content = std::fs::read_to_string(path)
+                .with_context(|| format!("Failed to read extra source file: {}", path_str))?;
+
+            if let Some(captures) = re.captures(&content) {
+                let features = captures.get(1).map(|m| m.as_str()).unwrap_or("");
+                bail!(
+                    "Error in {}:\n  Found crate-level features: {}\n  Please remove '#![feature(...)]' from this file and add them to the 'unstable_rust_features' attribute of the 'rust_api_from_cpp' target associated with '{}' instead.",
+                    path_str,
+                    features,
+                    ir.current_target()
+                );
+            }
+        }
+    }
+
     let crubit_support_path_format =
         Format::parse_with_metavars(crubit_support_path_format, &["header"])?;
     let owned_support_format;
