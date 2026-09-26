@@ -47,15 +47,7 @@ convert from the C++ message type to the Rust message type.)
 Protocol buffers are supported by value, and using the `View` and `Mut` view
 types, where they are mapped to C++ pointers.
 
-See
-cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs
-for an example definition, and
-cc_bindings_from_rs/test/bridging/protobuf/user_of_rust_lib.cc
-for how to call it from Rust.
-
 ## Calling C++ APIs using Protobuf message types {#cpp}
-
-Calling C++ APIs which use protobuf is slightly more difficult.
 
 ### Passing by value
 
@@ -68,30 +60,74 @@ to the Rust message type, as you would expect.
 
 ### Passing by reference
 
-| C++                                | Rust                                         |
-| :--------------------------------- | :------------------------------------------- |
-| `const Message*`, `const Message&` | `*const Incomplete<symbol!("Message"), ...>` |
-| `Message*`, `Message&`             | `*mut Incomplete<symbol!("Message"), ...>`   |
+| C++              | Rust          |
+| :--------------- | :------------ |
+| `const Message&` | `MessageView` |
+| `Message&`       | `MessageMut`  |
 
-When a C++ proto is passed by pointer or by reference, the Rust type is a
-pointer to a forward declaration of the C++ protocol buffer type.
+When `//features:proto_references` is enabled on a C++
+`cc_library` target (along with lifetime annotations / `assume_lifetimes`, which
+is enabled by default in `supported`), C++ protobuf references map directly to
+safe Rust `MessageView` and `MessageMut` types.
 
-In particular, C++ APIs are **not** exposed using the `View` or `Mut` types.
+NOTE: `//features:proto_references` will soon be enabled by
+default. Until then, add it explicitly to your C++ target's `aspect_hints`:
 
-These are pointers because C++ APIs do not annotate ownership, lifetime, or
-aliasing properties, and so these cannot be mapped to the distinct owned,
-`View`, or `Mut` types of the Rust protobuf API. And these are forward-declared
-because the C++ types do not have direct Rust bindings: the generated `.proto.h`
-file does not get piped through Crubit.
+```starlark
+cc_library(
+    name = "my_cpp_lib",
+    hdrs = ["my_cpp_lib.h"],
+    aspect_hints = [
+        "//features:supported",
+        "//features:proto_references",
+    ],
+    deps = [":my_cc_proto"],
+)
+```
 
-*   **To convert a Rust `Proto` to a C++ `const Proto*`**: use
-    `my_proto.as_view().cpp_cast()`
+With `proto_references` enabled, no `cpp_coerce()` (or deprecated `cpp_cast()`)
+or `unsafe` block is required when calling C++ functions that take or return
+protobuf references:
 
-*   **To convert a Rust `Proto` to a C++ `Proto*`**: use
-    `my_proto.as_mut().cpp_cast()`
+```rust
+// Pass an owned Rust proto using .as_view() / .as_mut(),
+// or pass an existing MessageView / MessageMut directly:
+my_cpp_lib::ProcessConstRef(my_proto.as_view());
+my_cpp_lib::ProcessMutRef(my_proto.as_mut());
+```
 
-*   **To convert a C++ `(const) Proto*` to a Rust `View`/`Mut`**: use `unsafe
-    {my_ptr.unsafe_cpp_cast()}`.
+*(If `proto_references` is not enabled on a target with `assume_lifetimes`, C++
+`const Message&` maps to `&Incomplete<symbol!("Message"), ...>` and `Message&`
+maps to `Pin<&mut Incomplete<symbol!("Message"), ...>>`. In that case, you
+should enable `proto_references` on the target.)*
+
+### Passing by pointer
+
+| C++              | Rust                                         |
+| :--------------- | :------------------------------------------- |
+| `const Message*` | `*const Incomplete<symbol!("Message"), ...>` |
+| `Message*`       | `*mut Incomplete<symbol!("Message"), ...>`   |
+
+When a C++ proto is passed or returned by raw pointer (or by reference on legacy
+`no_assume_lifetimes` targets), the Rust type is a raw pointer to a forward
+declaration (`Incomplete<...>`) of the C++ protocol buffer type. Raw pointers
+cannot be mapped to `MessageView` or `MessageMut` because C++ pointers may be
+null or lack lifetime guarantees, and the generated `.proto.h` header is not
+processed directly by Crubit.
+
+To convert between Rust protobuf view types and C++ `Incomplete` pointers, use
+the `CppCoerce` (`cpp_coerce()`) and `UnsafeCppCoerce` (`unsafe_cpp_coerce()`)
+traits from `forward_declare` (which replace the deprecated `cpp_cast()` and
+`unsafe_cpp_cast()` methods):
+
+*   **To convert a Rust `Proto` (or `ProtoView`) to a C++ `const Proto*`**: use
+    `my_proto.as_view().cpp_coerce()` (or `my_view.cpp_coerce()`)
+
+*   **To convert a Rust `Proto` (or `ProtoMut`) to a C++ `Proto*`**: use
+    `my_proto.as_mut().cpp_coerce()` (or `my_mut.cpp_coerce()`)
+
+*   **To convert a C++ `(const) Proto*` to a Rust `View`/`Mut`**: bind the
+    pointer to a local variable and use `unsafe { my_ptr.unsafe_cpp_coerce() }`.
 
 See support/forward_declare.rs for the definition of
-`Incomplete`, `CppCast`, and `UnsafeCppCast`.
+`Incomplete`, `CppCoerce`, and `UnsafeCppCoerce`.
