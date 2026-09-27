@@ -216,6 +216,11 @@ def _toolchain_headers_in_header_analysis_action_test_impl(ctx):
         "inttypes: %s" % inttypes,
     )
 
+    asserts.true(
+        env,
+        any([i.path.endswith("rs_bindings_from_cc/test/bazel_unit_tests/target_args/someheader.h") for i in inputs]),
+    )
+
     return analysistest.end(env)
 
 toolchain_headers_in_header_analysis_action_test = crubit_make_analysis_test(
@@ -244,6 +249,7 @@ def _test_toolchain_headers_in_header_analysis_action():
     cc_library(
         name = "somelib",
         hdrs = ["someheader.h"],
+        deps = [":mylib"],
         aspect_hints = ["//features/internal:testonly_experimental"],
     )
     attach_aspect(name = "somelib_with_aspect", dep = ":somelib")

@@ -208,9 +208,11 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
   }
 
   std::string virtual_input_file_content;
+  absl::flat_hash_set<absl::string_view> included_files;
   auto add_header = [&](absl::string_view header_path) {
     absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
                               header_path);
+    included_files.insert(header_path);
   };
   for (const HeaderName& header_name : augmented_public_headers) {
     add_header(header_name.IncludePath());
@@ -237,8 +239,18 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
   std::vector<std::string> args_as_strings = {
       // Parse non-doc comments that are used as documentation
       "-fparse-all-comments"};
-  args_as_strings.insert(args_as_strings.end(), options.clang_args.begin(),
-                         options.clang_args.end());
+  for (size_t i = 0; i < options.clang_args.size(); ++i) {
+    if (options.clang_args[i] == "-include" &&
+        i + 1 < options.clang_args.size() &&
+        included_files.contains(options.clang_args[i + 1])) {
+      // Skip `-include <file>` flags that duplicate files already included in
+      // `virtual_input_file_content` (passed on the command line for Bazel
+      // include scanning).
+      ++i;
+      continue;
+    }
+    args_as_strings.emplace_back(options.clang_args[i]);
+  }
 
   Invocation invocation(
       options.current_target, augmented_public_headers,

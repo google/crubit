@@ -474,9 +474,15 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
                         aliases[struct(label = label)] = name
 
     compilation_context = target[CcInfo].compilation_context
-    if generated_cpp_support_deps:
+    if generated_cpp_support_deps or extra_cpp_srcs:
         compilation_context = cc_common.merge_cc_infos(
-            cc_infos = [target[CcInfo]] + generated_cpp_support_deps,
+            cc_infos = [target[CcInfo]] + generated_cpp_support_deps + [
+                CcInfo(
+                    compilation_context = cc_common.create_compilation_context(
+                        headers = depset(extra_cpp_srcs),
+                    ),
+                ),
+            ],
         ).compilation_context
 
     extra_named_deps = depset(
@@ -502,8 +508,13 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             direct = public_hdrs + (toolchain.builtin_headers if toolchain != None else []),
             transitive = [
                 ctx.attr._std[RustToolchainHeadersInfo].headers,
-                compilation_context.headers,
-            ],
+            ] + (
+                # TODO(b/566567021): Once the IrFromCc deduplication of `-include`d
+                # files is released into the prebuilt Crosstool binary, pass
+                # `extra_cpp_srcs` via `header_includes` instead of including all
+                # `compilation_context.headers` in `action_inputs`.
+                [compilation_context.headers] if extra_cpp_srcs else []
+            ),
         ),
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
