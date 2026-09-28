@@ -238,10 +238,10 @@ class CRUBIT_THREAD_SAFE ThreadSafeCounter {
 This annotation tells Crubit to:
 
 1.  **Implement `Send` and `Sync`** for the type in Rust.
-2.  **Wrap the Rust representation in `UnsafeCell`**, which permits shared mutation
-    without undefined behavior in Rust.
-3.  **Expose non-const C++ methods as taking `&self`** (shared reference) instead of
-    `&mut self` or raw pointers.
+2.  **Wrap the Rust representation in `UnsafeCell`**, which permits shared
+    mutation without undefined behavior in Rust.
+3.  **Expose non-const C++ methods as taking `&self`** (shared reference)
+    instead of `&mut self` or raw pointers.
 
 This allows Rust callers to use the type concurrently across threads using
 standard shared references.
@@ -265,8 +265,8 @@ might internally mutate them through a shared reference.
 <section class="zippy" markdown="1">
 
 Before `CRUBIT_THREAD_SAFE` was available, or if you cannot annotate the class
-directly, making a mutating C++ method safe to call concurrently in Rust required
-a manual workaround:
+directly, making a mutating C++ method safe to call concurrently in Rust
+required a manual workaround:
 
 1.  The class must be documented as thread-safe.
 2.  The field being mutated must be marked as `mutable`, even if it is only
@@ -301,9 +301,9 @@ class FakeClock {
 };
 ```
 
-You can also use the `CRUBIT_THREAD_SAFE` annotation, but this is more dangerous, as
-there is no enforcement that every method only modifies `mutable` fields, and
-requires more extensive review:
+You can also use the `CRUBIT_THREAD_SAFE` annotation, but this is more
+dangerous, as there is no enforcement that every method only modifies `mutable`
+fields, and requires more extensive review:
 
 ```c++
 class CRUBIT_THREAD_SAFE FakeClock {

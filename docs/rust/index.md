@@ -135,7 +135,8 @@ itself; fix or wrap that type, and the function gets bindings too.
 To make a missing item fail the build instead, annotate it with
 `#[crubit_annotate::must_bind]`. `crubit_annotate` is a procedural macro crate,
 so add `//support:crubit_annotate` to your `rust_library`'s
-`proc_macro_deps` (see [Attributes to fine-tune generated bindings](customizing.md)).
+`proc_macro_deps` (see
+[Attributes to fine-tune generated bindings](customizing.md)).
 
 ## Common Errors {#errors}
 

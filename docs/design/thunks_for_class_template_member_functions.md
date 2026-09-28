@@ -34,13 +34,13 @@ int const& __rust_thunk___ZNK10MyTemplateIiE8GetValueEv(
 
 There are other (non-`template`-related) scenarios that require generating
 thunks (e.g. `inline` functions, or functions that use a custom calling
-convention), but templates bring one extra requirement: a class template can
-be defined in one header (say `my_template.h`) and used in *multiple* other
-headers (e.g. `library_foo/template_user1.h` and
-`library_bar/template_user2.h`). Because of this, the same thunk might need to
-be present in *multiple* generated `..._rs_api_impl.cc` files (e.g. in
-`library_foo_rs_api_impl.cc` and `library_bar_rs_api_impl.cc`). This may lead to
-duplicate symbol errors from the linker:
+convention), but templates bring one extra requirement: a class template can be
+defined in one header (say `my_template.h`) and used in *multiple* other headers
+(e.g. `library_foo/template_user1.h` and `library_bar/template_user2.h`).
+Because of this, the same thunk might need to be present in *multiple* generated
+`..._rs_api_impl.cc` files (e.g. in `library_foo_rs_api_impl.cc` and
+`library_bar_rs_api_impl.cc`). This may lead to duplicate symbol errors from the
+linker:
 
 ```stderr
 ld: error: duplicate symbol: __rust_thunk___ZNK10MyTemplateIiE8GetValueEv
@@ -108,11 +108,10 @@ Pros:
 Cons:
 
 -   **Assumes a particular ABI** - a function template specialization uses the
-    calling convention prescribed by the platform C++ ABI.  We know that
-    [the Itanium ABI maps C++ signatures to the C
-    ABI](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#functions) and
-    therefore will be compatible with the calling convention expected by the
-    generated `..._rs_api.rs`.  Further research is needed to investigate the
+    calling convention prescribed by the platform C++ ABI. We know that
+    [the Itanium ABI maps C++ signatures to the C ABI](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#functions)
+    and therefore will be compatible with the calling convention expected by the
+    generated `..._rs_api.rs`. Further research is needed to investigate the
     guarantees offered by other platforms (e.g., the MSVC ABI).
 -   **Requires extra complexity** to calculate the mangled name of the function
     template specialization.
@@ -127,10 +126,9 @@ Cons:
         [mangling compression](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling-compression)
         was missing). Another risk is having to implement not just
         `ItaniumMangleContext`, but also `MicrosoftMangleContext`.
-    -   One idea to avoid reimpliementing mangling is to explicitly specify
-        the name for the function template instantiation using
-        `__asm__("abc")` (sadly this doesn't seem to work - it may be a
-        Clang bug).
+    -   One idea to avoid reimpliementing mangling is to explicitly specify the
+        name for the function template instantiation using `__asm__("abc")`
+        (sadly this doesn't seem to work - it may be a Clang bug).
 
 An abandoned prototype of this approach can be found in a (Google-internal)
 cl/450495903.
@@ -159,8 +157,8 @@ Cons:
 
 -   Requires changing Clang to support the new attribute (e.g. requires
     convincing the Clang community that this is a language extension that is
-    worth supporting).
-    **TODO(b/234889162)**: Send out a short RFC to gauge interest?
+    worth supporting). **TODO(b/234889162)**: Send out a short RFC to gauge
+    interest?
 
 ## Rejected solutions
 
