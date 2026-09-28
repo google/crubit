@@ -28,7 +28,10 @@ use quote::{format_ident, quote};
 #[rustversion::since(2026-04-22)]
 use rustc_abi::LayoutData;
 use rustc_abi::{Layout, VariantIdx};
+#[rustversion::since(2026-09-27)]
+use rustc_attr_ir::lang_items::LangItem;
 #[rustversion::since(2026-08-09)]
+#[rustversion::before(2026-09-27)]
 use rustc_hir::attrs::lang_items::LangItem;
 use rustc_hir::def::DefKind;
 #[rustversion::before(2026-08-09)]

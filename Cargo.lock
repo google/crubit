@@ -224,6 +224,7 @@ version = "0.0.0"
 dependencies = [
  "arc_anyhow",
  "cc_bindings_from_rs_crubit_attr",
+ "cc_bindings_from_rs_rustversion",
  "code_gen_utils",
  "crubit_abi_type",
  "crubit_feature",

@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 extern crate rustc_abi;
+#[rustversion::since(2026-09-27)]
+extern crate rustc_attr_ir;
 extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;
@@ -46,6 +48,10 @@ use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
 use rustc_abi::VariantLayout;
 use rustc_abi::{Endian, FieldIdx, FieldsShape, LayoutData, VariantIdx, Variants};
+#[rustversion::since(2026-09-27)]
+use rustc_attr_ir::{ReprAttr, ReprC, ReprPacked};
+#[rustversion::before(2026-09-27)]
+use rustc_hir::attrs::{ReprAttr, ReprC, ReprPacked};
 
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
@@ -2117,7 +2123,7 @@ pub fn generate_adt<'tcx>(
             .map(|id| db.repr_attrs(id).to_vec())
             .unwrap_or_default()
             .iter()
-            .any(|repr| matches!(repr, rustc_hir::attrs::ReprPacked { .. }))
+            .any(|repr| matches!(repr, ReprPacked { .. }))
         {
             attributes.push(quote! { __attribute__((packed)) })
         }
@@ -2521,7 +2527,7 @@ fn get_enum_kind<'tcx>(
         return None;
     }
     let repr_attrs = db.repr_attrs(adt_def.did());
-    if repr_attrs.contains(&rustc_hir::attrs::ReprC) {
+    if repr_attrs.contains(&ReprC) {
         Some(EnumKind::ReprC)
     } else {
         Some(EnumKind::OpaqueBlobOfBytes)
@@ -2810,7 +2816,7 @@ struct CppFieldGenerator<'a, 'tcx> {
     cc_short_name: &'a TokenStream,
     cc_fully_qualified_name: &'a TokenStream,
     rs_fully_qualified_name: &'a TokenStream,
-    repr_attrs: &'a [rustc_hir::attrs::ReprAttr],
+    repr_attrs: &'a [ReprAttr],
     member_function_names: &'a HashSet<String>,
 }
 
@@ -2979,7 +2985,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         let adt_kind = self.adt_def.map(|d| d.adt_kind()).unwrap_or(ty::AdtKind::Struct);
         match adt_kind {
             ty::AdtKind::Struct => {
-                let always_omit_padding = self.repr_attrs.contains(&rustc_hir::attrs::ReprC)
+                let always_omit_padding = self.repr_attrs.contains(&ReprC)
                     && variants_fields.iter().flatten().all(|field| field.type_info.is_ok());
                 let fields = variants_fields.into_iter().next().unwrap_or_default();
                 Ok(CppLayout::Struct { fields, always_omit_padding })
@@ -3348,7 +3354,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
     fn generate_union(&self, fields: Vec<Field<'tcx>>) -> ApiSnippets<'tcx> {
         let assertions = self.generate_common_assertions(&fields);
 
-        let is_repr_c = self.repr_attrs.contains(&rustc_hir::attrs::ReprC);
+        let is_repr_c = self.repr_attrs.contains(&ReprC);
         let mut current_visibility = CcFieldVisState::public();
         let fields: CcSnippet<'tcx> = fields
             .into_iter()

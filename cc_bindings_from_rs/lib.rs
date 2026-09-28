@@ -5,6 +5,8 @@
 #![feature(rustc_private)]
 #![feature(proc_macro_hygiene)]
 
+#[rustversion::since(2026-09-27)]
+extern crate rustc_attr_ir;
 extern crate rustc_driver;
 extern crate rustc_errors;
 extern crate rustc_hir;
@@ -14,7 +16,10 @@ extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_target;
 
-use rustc_hir::attrs::AttributeKind;
+#[rustversion::since(2026-09-27)]
+use rustc_attr_ir::{find_attr, AttributeKind};
+#[rustversion::before(2026-09-27)]
+use rustc_hir::{attrs::AttributeKind, find_attr};
 use rustc_middle::ty::TyCtxt;
 use rustc_session::config::OptionsTargetModifiers;
 
@@ -255,15 +260,18 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
         // evaluate to false during bootstrapping phases (such as compiling standard library
         // standard-prelude).
         #[rustversion::before(2026-05-24)]
-        let has_no_std = rustc_hir::find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoStd { .. } => ()).is_some();
+        let has_no_std =
+            find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoStd { .. } => ())
+                .is_some();
         #[rustversion::since(2026-05-24)]
-        let has_no_std = rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd { .. });
+        let has_no_std = find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd { .. });
 
         #[rustversion::before(2026-05-24)]
-        let has_no_core = rustc_hir::find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoCore { .. } => ()).is_some();
-        #[rustversion::since(2026-05-24)]
         let has_no_core =
-            rustc_hir::find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore { .. });
+            find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoCore { .. } => ())
+                .is_some();
+        #[rustversion::since(2026-05-24)]
+        let has_no_core = find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore { .. });
         // core and compiler_builtins are special cases that don't literally contain `#![no_core]`
         // but should be considered `#![no_core]` crates.
         let has_no_core = crate_name == "core" || crate_name == "compiler_builtins" || has_no_core;

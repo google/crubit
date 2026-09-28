@@ -26,8 +26,11 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{does_type_implement_trait, get_layout, is_copy, post_analysis_typing_env};
 use quote::quote;
-use rustc_hir::attrs::AttributeKind;
-use rustc_hir::{self as hir, def::DefKind};
+#[rustversion::since(2026-09-27)]
+use rustc_attr_ir::{find_attr, Attribute, AttributeKind};
+use rustc_hir::def::DefKind;
+#[rustversion::before(2026-09-27)]
+use rustc_hir::{attrs::AttributeKind, find_attr, Attribute};
 use rustc_middle::mir::{self, Mutability};
 use rustc_middle::ty::{self, TraitRef, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
@@ -662,10 +665,10 @@ fn export_name_and_no_mangle_attrs_of<'tcx>(
     #[allow(deprecated)]
     for attr in tcx.get_all_attrs(def_id) {
         match attr {
-            hir::Attribute::Parsed(AttributeKind::ExportName { name, .. }) => {
+            Attribute::Parsed(AttributeKind::ExportName { name, .. }) => {
                 export_name = Some(*name);
             }
-            hir::Attribute::Parsed(AttributeKind::NoMangle(..)) => {
+            Attribute::Parsed(AttributeKind::NoMangle(..)) => {
                 no_mangle = true;
             }
             _ => {}
@@ -682,7 +685,7 @@ pub(crate) fn must_use_attr_of<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Option
     if !crubit_attr::supports_attrs(tcx.def_kind(def_id)) {
         return None;
     }
-    rustc_hir::find_attr!(
+    find_attr!(
         tcx,
         def_id,
         AttributeKind::MustUse { reason, .. } => MustUseAttr { reason: *reason }

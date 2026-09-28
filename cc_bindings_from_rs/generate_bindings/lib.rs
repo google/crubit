@@ -8,6 +8,8 @@
 
 extern crate rustc_abi;
 extern crate rustc_ast;
+#[rustversion::since(2026-09-27)]
+extern crate rustc_attr_ir;
 extern crate rustc_attr_parsing;
 extern crate rustc_data_structures;
 extern crate rustc_hir;
@@ -66,6 +68,10 @@ use query_compiler::{
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
+#[rustversion::since(2026-09-27)]
+use rustc_attr_ir::ReprAttr;
+#[rustversion::before(2026-09-27)]
+use rustc_hir::attrs::ReprAttr;
 use rustc_hir::def::{DefKind, Res};
 #[cfg_accessible(rustc_middle::metadata)] // Before nightly-2026-09-06
 use rustc_middle::metadata::{ModChild, Reexport};
@@ -222,10 +228,7 @@ fn add_include_guard(db: &BindingsGenerator<'_>, cc_api: TokenStream) -> Result<
 }
 
 /// Wrap `repr_attrs` for use as a database function.
-fn repr_attrs_from_db(
-    db: &BindingsGenerator<'_>,
-    def_id: DefId,
-) -> Rc<[rustc_hir::attrs::ReprAttr]> {
+fn repr_attrs_from_db(db: &BindingsGenerator<'_>, def_id: DefId) -> Rc<[ReprAttr]> {
     repr_attrs(db.tcx(), def_id)
 }
 
@@ -1111,8 +1114,10 @@ fn generate_must_use_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
 /// Returns the C++ deprecated tag for the item identified by `def_id`, if it is
 /// deprecated. Otherwise, returns None.
 fn generate_deprecated_tag(tcx: TyCtxt, def_id: DefId) -> Option<TokenStream> {
-    use rustc_hir::attrs::AttributeKind;
-    use rustc_hir::find_attr;
+    #[rustversion::since(2026-09-27)]
+    use rustc_attr_ir::{find_attr, AttributeKind};
+    #[rustversion::before(2026-09-27)]
+    use rustc_hir::{attrs::AttributeKind, find_attr};
 
     // If our definition does not support attributes, get_all_attrs will panic, so we check
     // beforehand and return None.

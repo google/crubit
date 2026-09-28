@@ -10,6 +10,8 @@
 
 extern crate rustc_abi;
 extern crate rustc_ast;
+#[rustversion::since(2026-09-27)]
+extern crate rustc_attr_ir;
 extern crate rustc_driver;
 extern crate rustc_hir;
 extern crate rustc_infer;
@@ -25,9 +27,13 @@ use rustc_abi::FieldsShape;
 use rustc_abi::IntegerType;
 use rustc_abi::{FieldIdx, Integer, Layout, Primitive, Scalar, Variants};
 use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
+#[rustversion::since(2026-09-27)]
+use rustc_attr_ir::{lang_items::LangItem, IntType, ReprAttr};
 #[rustversion::since(2026-08-09)]
+#[rustversion::before(2026-09-27)]
 use rustc_hir::attrs::lang_items::LangItem;
-use rustc_hir::attrs::IntType;
+#[rustversion::before(2026-09-27)]
+use rustc_hir::attrs::{IntType, ReprAttr};
 #[rustversion::before(2026-08-09)]
 use rustc_hir::lang_items::LangItem;
 use rustc_infer::infer::TyCtxtInferExt;
@@ -59,11 +65,11 @@ impl<'tcx> ty::TypeFolder<TyCtxt<'tcx>> for ConcreteWidthFolder<'tcx> {
         match ty.kind() {
             ty::TyKind::Int(ty::IntTy::Isize) => {
                 let ptr_int = self.cx().data_layout.ptr_sized_integer();
-                ptr_int.to_ty(self.cx(), /*signed=*/ true)
+                ptr_int.to_ty(self.cx(), /* signed= */ true)
             }
             ty::TyKind::Uint(ty::UintTy::Usize) => {
                 let ptr_int = self.cx().data_layout.ptr_sized_integer();
-                ptr_int.to_ty(self.cx(), /*signed=*/ false)
+                ptr_int.to_ty(self.cx(), /* signed= */ false)
             }
             _ => ty.super_fold_with(self),
         }
@@ -383,7 +389,7 @@ fn convert_interger_type_to_int_type(input: IntegerType) -> IntType {
 }
 
 /// Implementation of `BindingsGenerator::repr_attrs`.
-pub fn repr_attrs(tcx: TyCtxt, def_id: DefId) -> Rc<[rustc_hir::attrs::ReprAttr]> {
+pub fn repr_attrs(tcx: TyCtxt, def_id: DefId) -> Rc<[ReprAttr]> {
     let mut result = Vec::new();
     #[rustversion::before(2026-04-19)]
     let ty = tcx.type_of(def_id).instantiate_identity();
@@ -393,27 +399,25 @@ pub fn repr_attrs(tcx: TyCtxt, def_id: DefId) -> Rc<[rustc_hir::attrs::ReprAttr]
         ty::TyKind::Adt(adt_def, _) => {
             let repr = adt_def.repr();
             if repr.transparent() {
-                result.push(rustc_hir::attrs::ReprAttr::ReprTransparent);
+                result.push(ReprAttr::ReprTransparent);
             }
             if repr.c() {
-                result.push(rustc_hir::attrs::ReprAttr::ReprC);
+                result.push(ReprAttr::ReprC);
             }
             if repr.simd() {
-                result.push(rustc_hir::attrs::ReprAttr::ReprSimd);
+                result.push(ReprAttr::ReprSimd);
             }
             if let Some(alignment) = repr.align {
-                result.push(rustc_hir::attrs::ReprAttr::ReprAlign(alignment));
+                result.push(ReprAttr::ReprAlign(alignment));
             }
             if let Some(alignment) = repr.pack {
-                result.push(rustc_hir::attrs::ReprAttr::ReprPacked(alignment));
+                result.push(ReprAttr::ReprPacked(alignment));
             }
             if let Some(integer) = repr.int {
-                result.push(rustc_hir::attrs::ReprAttr::ReprInt(
-                    convert_interger_type_to_int_type(integer),
-                ));
+                result.push(ReprAttr::ReprInt(convert_interger_type_to_int_type(integer)));
             }
             if result.is_empty() {
-                result.push(rustc_hir::attrs::ReprAttr::ReprRust);
+                result.push(ReprAttr::ReprRust);
             }
             result.into()
         }

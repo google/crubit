@@ -5,6 +5,8 @@
 //! Create the right string reprensentation of a type or an identifier.
 
 extern crate rustc_abi;
+#[rustversion::since(2026-09-27)]
+extern crate rustc_attr_ir;
 extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;
@@ -34,7 +36,10 @@ use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{is_c_abi_compatible_by_value, is_std_ptr_non_null};
 use quote::{format_ident, quote, ToTokens};
 use rustc_abi::{BackendRepr, HasDataLayout, Integer, Layout, Primitive, Scalar, TargetDataLayout};
+#[rustversion::since(2026-09-27)]
+use rustc_attr_ir::lang_items::LangItem;
 #[rustversion::since(2026-08-09)]
+#[rustversion::before(2026-09-27)]
 use rustc_hir::attrs::lang_items::LangItem;
 #[rustversion::before(2026-08-09)]
 use rustc_hir::lang_items::LangItem;

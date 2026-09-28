@@ -27,6 +27,7 @@ rust_library(
     ],
     deps = [
         "//cc_bindings_from_rs:crubit_attr",
+        "//cc_bindings_from_rs:rustversion",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
         "//common:crubit_abi_type",
