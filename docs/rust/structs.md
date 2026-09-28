@@ -125,8 +125,8 @@ initializes primitive fields to zero/false, matching C++ value initialization.
 *   **No User-Declared Constructors**: C++ aggregates do not have user-declared
     constructors (such as converting constructors or tuple constructors).
 *   **Value Initialization vs `Default::default()`**: In C++, value-initializing
-    an aggregate (`MyStruct s{};`) zero-initializes primitive fields according to
-    C++ rules. If a struct derives `Default` or does not implement `Default`,
+    an aggregate (`MyStruct s{};`) zero-initializes primitive fields according
+    to C++ rules. If a struct derives `Default` or does not implement `Default`,
     zero-initialization in C++ matches Rust derived default semantics.
 
 ## C++ movable {#cpp_movable}

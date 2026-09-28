@@ -22,9 +22,9 @@ attribute, which changes type layout.
 Simply ignoring these attributes would result in code which failed to compile,
 or worse, which had undefined behavior at runtime.
 
-Because Crubit does not know whether an attribute is like this in advance,
-it conservatively must assume that an unknown attribute might impact
-correctness, and will not generate bindings.
+Because Crubit does not know whether an attribute is like this in advance, it
+conservatively must assume that an unknown attribute might impact correctness,
+and will not generate bindings.
 
 ## Compatibility
 

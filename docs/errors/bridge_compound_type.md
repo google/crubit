@@ -7,8 +7,8 @@
 Crubit does not support compound data types containing bridge types, unless the
 compound data type itself can be bridged.
 
-Bridge types are types that are converted at runtime between C++ and Rust
-(e.g. `std::optional` mapping to `Option`), but have different underlying
+Bridge types are types that are converted at runtime between C++ and Rust (e.g.
+`std::optional` mapping to `Option`), but have different underlying
 representations. (See crubit.rs/types.)
 
 This conversion is only possible when the bridge type is used by value. It is

@@ -20,8 +20,8 @@ references out of C++ references or C++ pointers:
     accept, store, or return Rust references. TODO: In the future Crubit should
     use `CppRef<T>` in the generated bindings (and this should mitigate some of
     the memory safety concerns).
--   Using Crubit-generated C++ bindings for Rust APIs if the
-    bindings wrap Rust APIs that accept, store, or return Rust references.
+-   Using Crubit-generated C++ bindings for Rust APIs if the bindings wrap Rust
+    APIs that accept, store, or return Rust references.
 
 ## Incorrect C++ lifetime annotations
 
@@ -60,8 +60,8 @@ references to and from C++ pointers.
 Spans/slices are particularly error-prone: a Rust empty slice (`&[]`) is
 represented using a dangling pointer with length zero, while a C++ empty span
 typically uses nullptr. Using a nullptr with a Rust empty slice would result in
-UB, as would using a dangling pointer in C++. In order to address this,
-Crubit provides non-native types with conversion operators:
+UB, as would using a dangling pointer in C++. In order to address this, Crubit
+provides non-native types with conversion operators:
 
 *   Rust has `absl::{string_view, span<T>}` types which provide `From`-based
     conversions to `&str` and `&[T]`.

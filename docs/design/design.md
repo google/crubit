@@ -581,15 +581,14 @@ resolution. Wrapping additional Rust APIs would require extra effort.
 **Take-aways for Crubit design**
 
 Notes and observations about `cbindgen` can guide some design aspects of
-Crubit's [`cc_bindings_from_rs`](../cc_bindings_from_rs/README.md) tool
-(that similarly to `cbindgen` generates C++ bindings for Rust crates).
-Using internal compiler knowledge (e.g. memory layout of structs, name and type
-resolution) requires that `cc_bindings_from_rs` depends on
-`rustc_driver` and other internal crates of `rustc`. The API of these crates is
-unstable which might increase the risk and maintenance cost of Crubit.
-Nevertheless, our experience with maintaining tools based on (also unstable)
-Clang APIs suggests that this extra risk and cost is likely going to be
-acceptable.
+Crubit's [`cc_bindings_from_rs`](../cc_bindings_from_rs/README.md) tool (that
+similarly to `cbindgen` generates C++ bindings for Rust crates). Using internal
+compiler knowledge (e.g. memory layout of structs, name and type resolution)
+requires that `cc_bindings_from_rs` depends on `rustc_driver` and other internal
+crates of `rustc`. The API of these crates is unstable which might increase the
+risk and maintenance cost of Crubit. Nevertheless, our experience with
+maintaining tools based on (also unstable) Clang APIs suggests that this extra
+risk and cost is likely going to be acceptable.
 
 Build determinism requires that the Rust compiler produces the same output for
 the same set of inputs (the same compiler version, the same command-line flags,
