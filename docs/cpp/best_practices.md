@@ -122,7 +122,8 @@ that depend on this `rust_api_from_cpp` target.
 
 <section class="zippy" markdown="1">
 
-Read on only if you're curious about *why* Rust bindings targets are structured this way.
+Read on only if you're curious about *why* Rust bindings targets are structured
+this way.
 
 #### Technical Justification
 

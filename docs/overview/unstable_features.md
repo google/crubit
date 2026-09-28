@@ -296,4 +296,3 @@ re-declare the tool caused us to migrate away to using `#[doc]` attributes.
 We use custom attributes so that Crubit can round-trip a type correctly, or to
 implement automated bridging so that a C++ `Status` becomes a Rust `Result<(),
 StatusError>`, or what have you.
-

@@ -29,13 +29,22 @@ crubit.rs/cpp/cookbook and crubit.rs/errors.
 
 ### Functions
 
-**Feature**                                                               | % functions | Expected Interop Effort (2027)    | Will Crubit automate this (eventually)?
-:------------------------------------------------------------------------ | ----------- | --------------------------------- | ---------------------------------------
-Call into a non-templated C++ function from Rust, if annotated correctly. | x           | [Light](#light){.😊}               | [**Planned: 2027**](#ga){.ga}
-Call into a templated C++ function                                        | x           |                                   | Depends, see [Generics and Templates](#generics).
-<!-- blank separator -->                                                  |             |                                   |
-Call into a non-generic Rust function from C++.                           | x           | [Fully automatic](#automatic){.😊} | [**Confidence: Very High**](#veryhigh){.😊}
-Call into a generic Rust function                                         | x           |                                   | Depends, see [Generics and Templates](#generics).
+| **Feature**              | %         | Expected Interop Effort    | Will Crubit automate   |
+:                          : functions : (2027)                     : this (eventually)?     :
+| :----------------------- | --------- | -------------------------- | ---------------------- |
+| Call into a              | x         | [Light](#light){.😊}        | [**Planned:            |
+: non-templated C++        :           :                            : 2027**](#ga){.ga}      :
+: function from Rust, if   :           :                            :                        :
+: annotated correctly.     :           :                            :                        :
+| Call into a templated    | x         |                            | Depends, see [Generics |
+: C++ function             :           :                            : and                    :
+:                          :           :                            : Templates](#generics). :
+| <!-- blank separator --> |           |                            |                        |
+| Call into a non-generic  | x         | [Fully                     | [**Confidence: Very    |
+: Rust function from C++.  :           : automatic](#automatic){.😊} : High**](#veryhigh){.😊} :
+| Call into a generic Rust | x         |                            | Depends, see [Generics |
+: function                 :           :                            : and                    :
+:                          :           :                            : Templates](#generics). :
 
 Most functions will be callable if Crubit is enabled, but it may require more or
 different code in the other language. A notable example is functions which
@@ -86,12 +95,34 @@ A similar strategy can be employed for Rust.
 
 ### Non-templated C++ Types
 
-**Feature**                                                                           | % functions | % classes | Expected Interop Effort (2027)    | Will Crubit automate this (eventually)?
-:------------------------------------------------------------------------------------ | ----------- | --------- | --------------------------------- | ---------------------------------------
-Pass any Rust-movable C++ type by pointer or by value, including inside Rust structs. | x           | x         | [Fully automatic](#automatic){.😊} | [**Planned: 2027**](#ga){.ga}
-Pass any non-Rust-movable C++ type by pointer, including inside Rust structs.         | x           | x         | [Fully automatic](#automatic){.😊} | [**Planned: 2027**](#ga){.ga}
-Pass any non-Rust-movable C++ type by value, including inside Rust structs.           | x           | x         | [Fully automatic](#automatic){.😊} | [**Planned: 2027**](#ga){.ga}
-A lightweight syntax can be used to perform C++ move construction or assignment       | N/A         | N/A       | [Fully automatic](#automatic){.😊} | [**Planned: 2027**](#ga){.ga}
+| **Feature**      | %         | %       | Expected Interop Effort    | Will Crubit       |
+:                  : functions : classes : (2027)                     : automate this     :
+:                  :           :         :                            : (eventually)?     :
+| :--------------- | --------- | ------- | -------------------------- | ----------------- |
+| Pass any         | x         | x       | [Fully                     | [**Planned:       |
+: Rust-movable C++ :           :         : automatic](#automatic){.😊} : 2027**](#ga){.ga} :
+: type by pointer  :           :         :                            :                   :
+: or by value,     :           :         :                            :                   :
+: including inside :           :         :                            :                   :
+: Rust structs.    :           :         :                            :                   :
+| Pass any         | x         | x       | [Fully                     | [**Planned:       |
+: non-Rust-movable :           :         : automatic](#automatic){.😊} : 2027**](#ga){.ga} :
+: C++ type by      :           :         :                            :                   :
+: pointer,         :           :         :                            :                   :
+: including inside :           :         :                            :                   :
+: Rust structs.    :           :         :                            :                   :
+| Pass any         | x         | x       | [Fully                     | [**Planned:       |
+: non-Rust-movable :           :         : automatic](#automatic){.😊} : 2027**](#ga){.ga} :
+: C++ type by      :           :         :                            :                   :
+: value, including :           :         :                            :                   :
+: inside Rust      :           :         :                            :                   :
+: structs.         :           :         :                            :                   :
+| A lightweight    | N/A       | N/A     | [Fully                     | [**Planned:       |
+: syntax can be    :           :         : automatic](#automatic){.😊} : 2027**](#ga){.ga} :
+: used to perform  :           :         :                            :                   :
+: C++ move         :           :         :                            :                   :
+: construction or  :           :         :                            :                   :
+: assignment       :           :         :                            :                   :
 
 C++ types are more complicated than Rust types, and can maintain invariants Rust
 does not. For example, they can enforce non-destructibility (via a deleted
@@ -181,12 +212,40 @@ both languages, especially on multiplatform codebases.
 : template     :             :                            :                   :
 : parameters.  :             :                            :                   :
 
-**Feature**                                                                                                                                          | %   | Expected Interop Effort (2027) | Will Crubit automate this (eventually)?
-:--------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ------------------------------ | ---------------------------------------
-Instantiate C++ function templates from Rust with **concrete** types and constants as template parameters.                                           | x   | [Medium](#medium){.😑}          | [**Confidence: Speculative**](#speculative){.🙁}
-Instantiate C++ function and class templates using types defined in the current crate.                                                               | x   | [Heavy](#heavy){.🙁}            | [**Confidence: Uncertain**](#uncertain){.🙁}
-Instantiate C++ function and class templates with **generic** type parameters. Checking of function calls will be deferred to monomorphization time. | x   | [Heavy](#heavy){.🙁}            | [**Confidence: Speculative**](#speculative){.🙁}
-Instantiate generic Rust types and functions from C++.                                                                                               | x   | [Medium](#mediun){.😑}          | [**Confidence: Uncertain**](#uncertain){.🙁}
+| **Feature**      | %   | Expected Interop      | Will Crubit automate this        |
+:                  :     : Effort (2027)         : (eventually)?                    :
+| :--------------- | --- | --------------------- | -------------------------------- |
+| Instantiate C++  | x   | [Medium](#medium){.😑} | [**Confidence:                   |
+: function         :     :                       : Speculative**](#speculative){.🙁} :
+: templates from   :     :                       :                                  :
+: Rust with        :     :                       :                                  :
+: **concrete**     :     :                       :                                  :
+: types and        :     :                       :                                  :
+: constants as     :     :                       :                                  :
+: template         :     :                       :                                  :
+: parameters.      :     :                       :                                  :
+| Instantiate C++  | x   | [Heavy](#heavy){.🙁}   | [**Confidence:                   |
+: function and     :     :                       : Uncertain**](#uncertain){.🙁}     :
+: class templates  :     :                       :                                  :
+: using types      :     :                       :                                  :
+: defined in the   :     :                       :                                  :
+: current crate.   :     :                       :                                  :
+| Instantiate C++  | x   | [Heavy](#heavy){.🙁}   | [**Confidence:                   |
+: function and     :     :                       : Speculative**](#speculative){.🙁} :
+: class templates  :     :                       :                                  :
+: with **generic** :     :                       :                                  :
+: type parameters. :     :                       :                                  :
+: Checking of      :     :                       :                                  :
+: function calls   :     :                       :                                  :
+: will be deferred :     :                       :                                  :
+: to               :     :                       :                                  :
+: monomorphization :     :                       :                                  :
+: time.            :     :                       :                                  :
+| Instantiate      | x   | [Medium](#mediun){.😑} | [**Confidence:                   |
+: generic Rust     :     :                       : Uncertain**](#uncertain){.🙁}     :
+: types and        :     :                       :                                  :
+: functions from   :     :                       :                                  :
+: C++.             :     :                       :                                  :
 
 Templates (and generics) are instantiated lazily on use, while Crubit is
 designed as an ahead-of-time interface/type transpiler. Ultimately, this
@@ -202,11 +261,29 @@ other language (as we do with types like `Span`).
 
 ### Abstraction and interfaces
 
-**Feature**                                                                                                | %             | Expected Interop Effort (2027) | Will Crubit automate this (eventually)?
-:--------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------ | ---------------------------------------
-Implement an interface defined by a C++ base class from Rust code.                                         | x% of classes | [Heavy](#heavy){.🙁}            | [**Confidence: High**](#high){.😊}
-Implement a trait defined in Rust from C++ statically.                                                     | N/A           | [Heavy](#heavy){.🙁}            | [**Confidence: High**](#high){.😊}
-Implement a dyn-compatible trait defined in Rust using an abstract base class and virtual dispatch in C++. | N/A           | [Heavy](#heavy){.🙁}            | [**Confidence: Uncertain**](#uncertain){.🙁}
+| **Feature**    | %       | Expected Interop    | Will Crubit automate this    |
+:                :         : Effort (2027)       : (eventually)?                :
+| :------------- | ------- | ------------------- | ---------------------------- |
+| Implement an   | x% of   | [Heavy](#heavy){.🙁} | [**Confidence:               |
+: interface      : classes :                     : High**](#high){.😊}           :
+: defined by a   :         :                     :                              :
+: C++ base class :         :                     :                              :
+: from Rust      :         :                     :                              :
+: code.          :         :                     :                              :
+| Implement a    | N/A     | [Heavy](#heavy){.🙁} | [**Confidence:               |
+: trait defined  :         :                     : High**](#high){.😊}           :
+: in Rust from   :         :                     :                              :
+: C++            :         :                     :                              :
+: statically.    :         :                     :                              :
+| Implement a    | N/A     | [Heavy](#heavy){.🙁} | [**Confidence:               |
+: dyn-compatible :         :                     : Uncertain**](#uncertain){.🙁} :
+: trait defined  :         :                     :                              :
+: in Rust using  :         :                     :                              :
+: an abstract    :         :                     :                              :
+: base class and :         :                     :                              :
+: virtual        :         :                     :                              :
+: dispatch in    :         :                     :                              :
+: C++.           :         :                     :                              :
 
 Rust and C++ have many features that are not just "a function can be called", or
 "a type can be used". The way in which you define or dispatch to functions can
@@ -223,10 +300,24 @@ There is an example of this in
 
 ### Safety
 
-**Feature**                                                                                         | %functions | Expected Interop Effort (2027)                     | Will Crubit automate this (eventually)?
-:-------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------- | ---------------------------------------
-Safely call C++ functions from Rust, with lifetime preconditions checked by the Rust borrow checker | x          | [Light](#light){.😊} (where possible)               | Crubit gives x% of functions safe bindings
-Check lifetime constraints on Rust APIs used from C++.                                              | x          | [Fully automatic](#automatic){.😊} (where possible) | [**Confidence: Speculative**](#speculative){.🙁}
+| **Feature**   | %functions | Expected Interop Effort    | Will Crubit automate this        |
+:               :            : (2027)                     : (eventually)?                    :
+| :------------ | ---------- | -------------------------- | -------------------------------- |
+| Safely call   | x          | [Light](#light){.😊} (where | Crubit gives x% of functions     |
+: C++ functions :            : possible)                  : safe bindings                    :
+: from Rust,    :            :                            :                                  :
+: with lifetime :            :                            :                                  :
+: preconditions :            :                            :                                  :
+: checked by    :            :                            :                                  :
+: the Rust      :            :                            :                                  :
+: borrow        :            :                            :                                  :
+: checker       :            :                            :                                  :
+| Check         | x          | [Fully                     | [**Confidence:                   |
+: lifetime      :            : automatic](#automatic){.😊} : Speculative**](#speculative){.🙁} :
+: constraints   :            : (where possible)           :                                  :
+: on Rust APIs  :            :                            :                                  :
+: used from     :            :                            :                                  :
+: C++.          :            :                            :                                  :
 
 Rust and C++ have very different stances on memory safety, but both languages do
 share a goal to, when reasonable in that language, make it safe to call given

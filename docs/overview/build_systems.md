@@ -20,8 +20,8 @@ built with Cargo through Crubit generated bindings. This support builds on
 between Rust and CMake. To set up a CMake project using Crubit you'll need two
 pieces:
 
-  * A CMake Project
-  * A Cargo Project (embedded within the CMake project)
+*   A CMake Project
+*   A Cargo Project (embedded within the CMake project)
 
 You can find an example setup project at
 [`examples/build_systems/cmake`](https://github.com/google/crubit/tree/main/examples/build_systems/cmake).
@@ -41,9 +41,9 @@ docs](https://corrosion-rs.github.io/corrosion/usage.html) for details. These
 are threaded through to the underlying cargo build as expected, with some
 notable exceptions:
 
-  * `CRATES` will not work. **We do not support Cargo Workspaces yet.**
-  * `CRATE_TYPES` -- We always import a lib/rlib with Crubit
-  * `OVERRIDE_CRATE_TYPE` -- We must use `--crate-type=lib`
+*   `CRATES` will not work. **We do not support Cargo Workspaces yet.**
+*   `CRATE_TYPES` -- We always import a lib/rlib with Crubit
+*   `OVERRIDE_CRATE_TYPE` -- We must use `--crate-type=lib`
 
 The Corrosion-generated CMake target is an interface library containing the
 generated header and a static library containing the Rust code and generated FFI
