@@ -1567,9 +1567,9 @@ fn fn_has_unreturnable_const<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> bool {
     let Some(req_consts) = &body.required_consts else {
         return false;
     };
-    #[rustversion::before(2026-07-03)]
+    #[rustversion::before(2026-07-04)]
     use ty::AnonConstKind::NonTypeSystem as NonTypeSystemInline;
-    #[rustversion::since(2026-07-03)]
+    #[rustversion::since(2026-07-04)]
     use ty::AnonConstKind::NonTypeSystemInline;
     req_consts
         .iter()
