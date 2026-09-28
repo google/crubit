@@ -49,6 +49,10 @@
 -   [Enums](./cpp/enums.md)
 -   [Inline C++](./cpp/inline_cpp.md)
 
+## Errors
+
+-   [Overview](./errors/index.md)
+
 ## Integration notes
 
 -   [Cargo build](./overview/cargo_build.md)

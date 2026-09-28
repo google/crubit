@@ -77,7 +77,7 @@ If you need a type to be accessible from both C++ and Rust, you can either:
     `rust_api_from_cpp` so that Crubit generates Rust bindings for it, or
 *   **Define the type in a separate `rust_library`**: Define the type in a
     separate `rust_library` target that is then used as a dependency in both
-    Rust and (via `cc_bindings_from_rs`) in C++.
+    Rust and (via a `cc_bindings_from_rust` target) in C++.
 
 If the type is purely for internal use within Rust and is never intended to be
 used from C++, you can silence the warning on the type definition using the
