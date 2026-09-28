@@ -950,8 +950,13 @@ fn test_format_item_generic_fn_as_ref_trait_basic_replacement() {
         assert_rs_matches!(
             result.rs_details.tokens,
             quote! {
-                unsafe extern "C" fn __crubit_thunk_generic_ufunction(arg: &'static [u8]) -> () {
-                    unsafe { ::rust_out::generic_function(arg) }
+                unsafe extern "C" fn __crubit_thunk_generic_ufunction(
+                    arg: *mut &'static [u8]
+                ) -> () {
+                    unsafe {
+                        let arg = arg.read();
+                        ::rust_out::generic_function(arg)
+                    }
                 }
             }
         );
@@ -1176,9 +1181,12 @@ fn test_format_item_fn_bridged_type() {
                 ) -> () {
                     unsafe {
                         ::rust_out::call_str(move |__arg_0: &str| {
-                            let __invoker: unsafe extern "C" fn(*mut core::ffi::c_void, &str) -> () =
-                                unsafe { ::core::mem::transmute(f.invoker()) };
-                            unsafe { __invoker(f.data(), __arg_0); }
+                            let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
+                            let __invoker: unsafe extern "C" fn(
+                                *mut core::ffi::c_void,
+                                *mut &str
+                            ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                            unsafe { __invoker(f.data(), &mut *__arg_0 as *mut _); }
                         })
                     }
                 }
