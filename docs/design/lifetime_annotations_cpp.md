@@ -1041,8 +1041,8 @@ definition or alias declaration.
 This attribute may be applied to the following:
 
 *   **Types and pointer operators in a function declaration, member function
-    declaration, non-static member variable declaration, or alias declaration**
-    \
+    declaration, non-static member variable declaration, or alias
+    declaration** \
     More formally, within the return type, the
     [trailing-return-type](https://eel.is/c++draft/dcl.dcl#nt:trailing-return-type)
     or the
@@ -1200,7 +1200,7 @@ private:
     return value.”
 [^9]: Note that this automatically disallows the special lifetime name `static`,
     which is allowed in `lifetime` attributes. We make no other constraints on
-    identifiers, but codebases that want to use the lifetime annotations for
-    C++ / Rust interop may want to enforce a rule that prohibits invalid Rust
+    identifiers, but codebases that want to use the lifetime annotations for C++
+    / Rust interop may want to enforce a rule that prohibits invalid Rust
     identifiers (e.g. Rust keywords) in the `lifetime_param` and `lifetime`
     attributes..

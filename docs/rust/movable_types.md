@@ -83,6 +83,5 @@ is why `unique_ptr` **must** be nullable in the C++ type system: otherwise, it
 could not be moved!
 
 [^semiregular]: The combination of default-constructible and copyable is so
-    important for making types useful in C++ that it even has a
-    name:
+    important for making types useful in C++ that it even has a name:
     ["semiregular"](https://en.cppreference.com/w/cpp/concepts/semiregular)

@@ -14,7 +14,8 @@ Rust's `String` becomes `rs::std::string::String` in C++ (also spelled
 rs::std::string::String s("hello, world!")
 ```
 
-An existing `std::string_view` (or `absl::string_view`) can be converted to a Rust `String` using `rs_std::StrRef::FromUtf8`:
+An existing `std::string_view` (or `absl::string_view`) can be converted to a
+Rust `String` using `rs_std::StrRef::FromUtf8`:
 
 ```c++
 void AcceptsStringView(std::string_view view) {
@@ -27,14 +28,17 @@ void AcceptsStringView(std::string_view view) {
 }
 ```
 
-An instance of `String` can be converted back to a `std::string` by calling `.as_str()` and using the resulting `rs_str::StrRef` to construct a `std::string`:
+An instance of `String` can be converted back to a `std::string` by calling
+`.as_str()` and using the resulting `rs_str::StrRef` to construct a
+`std::string`:
 
 ```c++
 std::string s2(s.as_str());
 EXPECT_EQUAL(s2, "hello, world");
 ```
 
-`rs_std::StrRef` supports implicit conversion to `std::string_view` to make this work.
+`rs_std::StrRef` supports implicit conversion to `std::string_view` to make this
+work.
 
 A Rust method that takes an `&mut String` such as:
 

@@ -90,15 +90,14 @@ Bindings for the following types are not supported at this point:
 *   b/254507801: `!` has not yet been implemented except for return types.
 
 [^terminology]: Rust calls these types
-    [primitive types](https://doc.rust-lang.org/reference/types.html),
-    while C++ calls them
-    [fundamental types](https://en.cppreference.com/w/cpp/language/types).
-    Since the Rust terminology is probably well understood by
-    everybody, we use it here.
+    [primitive types](https://doc.rust-lang.org/reference/types.html), while C++
+    calls them
+    [fundamental types](https://en.cppreference.com/w/cpp/language/types). Since
+    the Rust terminology is probably well understood by everybody, we use it
+    here.
 [^char32_t]: Unlike Rust `char`, `char16_t` and `char32_t` may contain invalid
     Unicode characters.
 [^char]: Note that Rust `c_char` and C++ `char` have different signedness in
-    Google, or any other codebase with widespread use of unsigned `char` in
-    x86.
+    Google, or any other codebase with widespread use of unsigned `char` in x86.
 
     TODO(jeanpierreda): document this in more detail.

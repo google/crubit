@@ -71,11 +71,10 @@ of shared libraries at runtime), the developer is responsible for managing the
 lifetime of the function pointer.
 
 [^function_types]: C++ has plain
-    [function types](https://en.cppreference.com/w/cpp/types/is_function):
-    the type pointed to by function pointers. There is no Rust
-    equivalent. However, since C++ functions implicitly coerce to
-    function pointers, this only comes up in template classes
-    like
+    [function types](https://en.cppreference.com/w/cpp/types/is_function): the
+    type pointed to by function pointers. There is no Rust equivalent. However,
+    since C++ functions implicitly coerce to function pointers, this only comes
+    up in template classes like
     [`std::function`](https://en.cppreference.com/w/cpp/utility/functional/function)
     or
     [`absl::AnyInvocable`](https://github.com/abseil/abseil-cpp/blob/master/absl/functional/any_invocable.h).

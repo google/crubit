@@ -51,18 +51,17 @@ To receive C++ bindings, the `enum` must be movable in C++. See
 ## Enums with payload
 
 Each variant of a Rust `enum` may contain an additional payload (a tuple or a
-struct).  C++ bindings for Rust `enum`s provide the following ways of working
+struct). C++ bindings for Rust `enum`s provide the following ways of working
 with an `enum` payload:
 
-* Constructing an `enum` variant with the given payload
-  by calling a `static` `Make<variant name>` method
-  (one such method is injected for each of `enum` variants).
-  The following bugs track future work in this area:
+*   Constructing an `enum` variant with the given payload by calling a `static`
+    `Make<variant name>` method (one such method is injected for each of `enum`
+    variants). The following bugs track future work in this area:
 
     *   b/487357254: Constructing variants with a struct payload
     *   b/489085607: Bindings for constructing enums should be `constexpr`
 
-* TODO(b/262737383): Matching `enum` variants and inspecting their payload.
+*   TODO(b/262737383): Matching `enum` variants and inspecting their payload.
 
 ### Example
 

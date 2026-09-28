@@ -177,9 +177,9 @@ unsafe extern "C" {
 }
 ```
 
-This defines a `PointeeSized` type `Foo` -- analogous to C++'s "incomplete type",
-a `PointeeSized` type has no known size/alignment and cannot be held by value,
-only behind a pointer.
+This defines a `PointeeSized` type `Foo` -- analogous to C++'s "incomplete
+type", a `PointeeSized` type has no known size/alignment and cannot be held by
+value, only behind a pointer.
 
 This does not, by itself, present a solution to the design problem above. Two
 different crates which define an extern type `Foo` are not, from Rust's point of
@@ -286,9 +286,9 @@ unsafe impl CppType for Foo {
 }
 ```
 
-(I mentioned above that traits also are structural -- but please do not do `trait
-C<I: usize, C: const char> {} type Name = dyn C<0, 'F'> + C<1, 'o'> + C<2,
-'o'>;`)
+(I mentioned above that traits also are structural -- but please do not do
+`trait C<I: usize, C: const char> {} type Name = dyn C<0, 'F'> + C<1, 'o'> +
+C<2, 'o'>;`)
 
 ##### Alternative: constant unification
 
@@ -349,9 +349,9 @@ alternative of explicitly defining a new type:
 3.  Extends easily to "comprehensive fallbacks": if a function is private, it
     can use `Incomplete<Name, ()>`. For understandable architectural reasons, it
     is simpler to *use* a type from deep within our bindings generation logic,
-    than to compel Crubit to define a new type, and so "comprehensive fallbacks"
-    -- where we substitute in a forward declaration any time we see an
-    unsupported type -- is much easier to support if we can reuse an existing
+    than to compel Crubit to define a new type, and so "comprehensive
+    fallbacks" -- where we substitute in a forward declaration any time we see
+    an unsupported type -- is much easier to support if we can reuse an existing
     type.
 
 As well as the following downsides:
@@ -417,8 +417,8 @@ therefore Rust-movable and behind only a `&mut T`), then the calls stop working,
 as `&mut T` doesn't have a `.as_mut()` method.
 
 Changing the *destination* to be complete can be made to work: if `.cpp_cast()`
-also can wrap in a `Pin`, then `cpp_cast`-conversion of `&mut T` to `Pin<&mut T>`
-is the same syntax as `cpp_cast`-conversion of `&mut T` to itself.
+also can wrap in a `Pin`, then `cpp_cast`-conversion of `&mut T` to `Pin<&mut
+T>` is the same syntax as `cpp_cast`-conversion of `&mut T` to itself.
 
 Full matrix, in the presence of a reborrow:
 

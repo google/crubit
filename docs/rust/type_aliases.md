@@ -1,7 +1,7 @@
 # C++ bindings for Rust type aliases.
 
-A rust Rust type aliases, such as `pub type X = ...;`, is mapped to the equivalent
-C++ type alias, such as `using X = ...;`.
+A rust Rust type aliases, such as `pub type X = ...;`, is mapped to the
+equivalent C++ type alias, such as `using X = ...;`.
 
 **Limitations:**
 
