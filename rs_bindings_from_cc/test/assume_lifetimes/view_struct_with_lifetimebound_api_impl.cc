@@ -134,7 +134,7 @@ static_assert(alignof(struct StructWithLifetimeboundCtor) == 8);
 
 extern "C" void __rust_thunk___ZN27StructWithLifetimeboundCtorC1E11PlainStruct(
     struct StructWithLifetimeboundCtor* __this, struct PlainStruct* s) {
-  crubit::construct_at(__this, crubit::UnsafeTakeValue(s));
+  crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(s));
 }
 
 static_assert(CRUBIT_SIZEOF(struct StructWithLifetimeboundRefCtor) == 8);
@@ -171,7 +171,7 @@ static_assert((struct DropStructWithLifetimeboundCtor &
 extern "C" void
 __rust_thunk___ZN31DropStructWithLifetimeboundCtorC1E11PlainStruct(
     struct DropStructWithLifetimeboundCtor* __this, struct PlainStruct* s) {
-  crubit::construct_at(__this, crubit::UnsafeTakeValue(s));
+  crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(s));
 }
 
 static_assert(CRUBIT_SIZEOF(struct DropStructWithLifetimeboundRefCtor) == 8);
@@ -260,7 +260,7 @@ static_assert((struct DropStructWithCtorAndMemberFunction &
 extern "C" void
 __rust_thunk___ZN35DropStructWithCtorAndMemberFunctionC1E11PlainStruct(
     struct DropStructWithCtorAndMemberFunction* __this, struct PlainStruct* s) {
-  crubit::construct_at(__this, crubit::UnsafeTakeValue(s));
+  crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(s));
 }
 
 extern "C" void __rust_thunk___ZNK35DropStructWithCtorAndMemberFunction1fEv(
@@ -300,7 +300,7 @@ extern "C" void
 __rust_thunk___ZN38DropStructWithCtorAndRefMemberFunctionC1E11PlainStruct(
     struct DropStructWithCtorAndRefMemberFunction* __this,
     struct PlainStruct* s) {
-  crubit::construct_at(__this, crubit::UnsafeTakeValue(s));
+  crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(s));
 }
 
 static_assert((struct PlainStruct const& (

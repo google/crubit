@@ -89,9 +89,9 @@ __rust_thunk___ZN27FieldDestructionOrderTesterC1E24DestructionOrderRecorderS0_S0
     class DestructionOrderRecorder* field1,
     class DestructionOrderRecorder* field2,
     class DestructionOrderRecorder* field3) {
-  crubit::construct_at(__this, crubit::UnsafeTakeValue(field1),
-                       crubit::UnsafeTakeValue(field2),
-                       crubit::UnsafeTakeValue(field3));
+  crubit::construct_at(__this, crubit::UnsafeTakeValueOnConversion(field1),
+                       crubit::UnsafeTakeValueOnConversion(field2),
+                       crubit::UnsafeTakeValueOnConversion(field3));
 }
 
 extern "C" void
