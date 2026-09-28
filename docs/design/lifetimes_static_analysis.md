@@ -82,11 +82,11 @@ the analysis precise enough.
 
 We perform a data-flow analysis using the
 [Clang dataflow framework](https://github.com/llvm/llvm-project/tree/main/clang/include/clang/Analysis/FlowSensitive)
-([documentation](https://clang.llvm.org/docs/DataFlowAnalysisIntro.html))
-to propagate points-to sets through the function. After the analysis is
-complete, we produce lifetime annotations from the points-to sets; if these
-lifetime annotations are different from existing annotations (ignoring pure
-renamings), we output the new annotations as suggested edits.
+([documentation](https://clang.llvm.org/docs/DataFlowAnalysisIntro.html)) to
+propagate points-to sets through the function. After the analysis is complete,
+we produce lifetime annotations from the points-to sets; if these lifetime
+annotations are different from existing annotations (ignoring pure renamings),
+we output the new annotations as suggested edits.
 
 The data-flow analysis tracks the following state:
 
@@ -164,7 +164,8 @@ int* target(int* p1, int* p2) {
 }
 ```
 
-TODO: Explain. Also mention how this is an example where we have two pointees on the left hand side, so we can't eliminate existing pointees from `p1` and `p2`.
+TODO: Explain. Also mention how this is an example where we have two pointees on
+the left hand side, so we can't eliminate existing pointees from `p1` and `p2`.
 
 ### Function calls
 
@@ -218,8 +219,8 @@ TODO: Continue exposition
 
 Inferring lifetimes for virtual member functions is complicated by two factors:
 
-*   The lifetimes of the base class member function
-    are constrained by the lifetimes of all of its overrides.
+*   The lifetimes of the base class member function are constrained by the
+    lifetimes of all of its overrides.
 *   The definitions of the overrides and the base class function (if it is not
     pure virtual) are typically contained in different translation units, and we
     plan to analyze each translation unit individually.

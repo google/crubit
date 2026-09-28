@@ -19,21 +19,20 @@ In brief, Crubit supports:
 
 ## ABI-Compatibility
 
-Certain references to C++ or Rust types will not receive Crubit bindings.
-Some types may only be usable in certain locations due to current Crubit
-limitations, inherent properties of the type, or both. Supported types fall into
-one of three categories ranging from "most widely supported" to
-"most restricted":
+Certain references to C++ or Rust types will not receive Crubit bindings. Some
+types may only be usable in certain locations due to current Crubit limitations,
+inherent properties of the type, or both. Supported types fall into one of three
+categories ranging from "most widely supported" to "most restricted":
 
-* **ABI-compatible**: these types have a C-ABI-equivalent representation which
+*   **ABI-compatible**: these types have a C-ABI-equivalent representation which
     can be used anywhere a value of this type is expected from both C++ and
     Rust.
-* **Layout-compatible**: these types have equivalent in-memory representations
+*   **Layout-compatible**: these types have equivalent in-memory representations
     in C++ and Rust but cannot be represented using standard C ABI. These types
     will only be usable as by-value function arguments if they are C++-movable.
     For example, `Box<i32>` is not C++-movable because it has no `nullptr` /
     moved-from representation.
-* **Bridged**: these types may have different in-memory representations in C++
+*   **Bridged**: these types may have different in-memory representations in C++
     and Rust, and so can only be passed by-value between the two languages.
     Examples include Rust tuples, which are bridged by-value into C++
     `std::tuple`.

@@ -17,11 +17,11 @@ convenience, and less than ideal Rust interoperability.
 ### Optimization opportunity
 
 Consider the difference between `(u16, u8, u8)` and `((u16, u8), u8)`. The first
-can fit in 4 bytes, while the second requires 6. A `(u16, u8)` is a 4 byte value
-with 1 byte of tail padding. And a `(T, u8)` can't just stuff the `u8` inside
-the tail padding for `T`! If, instead, we declared that `(u16, u8)` were a **3**
-byte value with alignment 2, then `((u16, u8), u8)` could be 4 bytes instead of
-6. This is not possible today.
+can fit in 4 bytes, while the second requires 6 bytes. A `(u16, u8)` is a 4 byte
+value with 1 byte of tail padding. And a `(T, u8)` can't just stuff the `u8`
+inside the tail padding for `T`! If, instead, we declared that `(u16, u8)` were
+a **3** byte value with alignment 2, then `((u16, u8), u8)` could be 4 bytes
+instead of 6 bytes. This is not possible today.
 
 (For backwards compatibility reasons described later, we can't literally do this
 for tuples, but only for user-defined types. But this gives the gist of the

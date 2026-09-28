@@ -5,36 +5,36 @@
 [Home](./index.md)
 [Are We Crubit Yet?](./overview/status.md) <!-- mdformat-on -->
 
-# Types
+## Types
 
-- [Overview](./types/index.md)
-- [Primitive Types](./types/primitive.md)
-- [Pointer Types](./types/pointer.md)
-- [`absl::Status`](./types/absl_status.md)
-- [Protobuf](./types/protobuf.md)
+-   [Overview](./types/index.md)
+-   [Primitive Types](./types/primitive.md)
+-   [Pointer Types](./types/pointer.md)
+-   [`absl::Status`](./types/absl_status.md)
+-   [Protobuf](./types/protobuf.md)
 
----
+--------------------------------------------------------------------------------
 
-- [Visibility](./types/visibility.md)
+-   [Visibility](./types/visibility.md)
 
-# C++ Bindings for Rust Libraries
+## C++ Bindings for Rust Libraries
 
-- [Overview](./rust/index.md)
+-   [Overview](./rust/index.md)
 -   [Building](./rust/building.md)
-- [Functions](./rust/functions.md)
-- [Structs](./rust/structs.md)
-- [Enums](./rust/enums.md)
-- [Cpp Enums](./rust/cpp_enums.md)
-- [Traits](./rust/traits.md)
-- [Type Aliases](./rust/type_aliases.md)
-- [`use` Declarations](./rust/use_declarations.md)
-- [Standard Library Types](./rust/std.md)
+-   [Functions](./rust/functions.md)
+-   [Structs](./rust/structs.md)
+-   [Enums](./rust/enums.md)
+-   [Cpp Enums](./rust/cpp_enums.md)
+-   [Traits](./rust/traits.md)
+-   [Type Aliases](./rust/type_aliases.md)
+-   [`use` Declarations](./rust/use_declarations.md)
+-   [Standard Library Types](./rust/std.md)
 
----
+--------------------------------------------------------------------------------
 
-- [Movable Types](./rust/movable_types.md)
+-   [Movable Types](./rust/movable_types.md)
 
-# Rust Bindings for C++ Libraries
+## Rust Bindings for C++ Libraries
 
 -   [Overview](./cpp/index.md)
 -   [Building the tool](./cpp/building.md)
@@ -49,19 +49,18 @@
 -   [Enums](./cpp/enums.md)
 -   [Inline C++](./cpp/inline_cpp.md)
 
-# Integration notes
+## Integration notes
 
-- [Cargo build](./overview/cargo_build.md)
-- [Build System Integrations](./overview/build_systems.md)
-- [Required unstable features of Rust](./overview/unstable_features.md)
+-   [Cargo build](./overview/cargo_build.md)
+-   [Build System Integrations](./overview/build_systems.md)
+-   [Required unstable features of Rust](./overview/unstable_features.md)
 
-# Design
+## Design
 
-- [High-level design of C++/Rust interop](./design/design.md)
-- [Lifetime Annotations for C++](./design/lifetime_annotations_cpp.md)
-- [Static Analysis for C++ Lifetimes](./design/lifetimes_static_analysis.md)
-- [Struct Layout](./design/struct_layout.md)
-- [Thunks for class template member functions](./design/thunks_for_class_template_member_functions.md)
-- [`Unpin` for C++ Types](./design/unpin.md)
-- [Problem Description: forward-declared types](./design/forward_declarations.md)
-
+-   [High-level design of C++/Rust interop](./design/design.md)
+-   [Lifetime Annotations for C++](./design/lifetime_annotations_cpp.md)
+-   [Static Analysis for C++ Lifetimes](./design/lifetimes_static_analysis.md)
+-   [Struct Layout](./design/struct_layout.md)
+-   [Thunks for class template member functions](./design/thunks_for_class_template_member_functions.md)
+-   [`Unpin` for C++ Types](./design/unpin.md)
+-   [Problem Description: forward-declared types](./design/forward_declarations.md)
