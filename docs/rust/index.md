@@ -33,8 +33,8 @@ called from C++, and how to actually use it from C++. The quick summary is:
 
     NOTE: In some cases the generated file in Cider may be out of date. If it
     isn't refreshing, you can manually inspect the bindings using `bazel build
-    //path/to:my_cc_bindings_from_rust_target --config=crubit-genfiles`. This
-    will generate bindings and print the paths of generated files to stdout.
+    //path/to:example_crate --config=crubit-genfiles`. See
+    [Look at the generated bindings](#examine).
 
 ### Write a `rust_library` target {#rust_library}
 
