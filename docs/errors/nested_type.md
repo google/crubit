@@ -1,5 +1,3 @@
-<!-- <internal link> -->
-
 # Nested type errors
 
 [Rust does not offer a way to model nested C++

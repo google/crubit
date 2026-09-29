@@ -1,5 +1,3 @@
-<!-- <internal link> -->
-
 # Quick guide: Non-Rust-Movable Types
 
 This is a short introduction to Crubit's handling of non-Rust-movable types, and

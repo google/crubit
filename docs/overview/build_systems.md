@@ -1,5 +1,3 @@
-<!-- <internal link> -->
-
 # Build System Integrations
 
 crubit.rs/overview/build_systems

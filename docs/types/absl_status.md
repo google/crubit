@@ -1,5 +1,3 @@
-<!-- <internal link> -->
-
 # `absl::Status` in Rust
 
 In Google C++, the standard types for communicating an error are `absl::Status`

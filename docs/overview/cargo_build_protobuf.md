@@ -1,5 +1,3 @@
-<!-- <internal link> -->
-
 # Protobuf Code Generation in Crubit's Cargo Build
 
 crubit.rs/overview/cargo_build_protobuf

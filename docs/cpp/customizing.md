@@ -1,5 +1,3 @@
-<!-- <internal link> -->
-
 # Customizing bindings using annotations
 
 The Rust bindings for a C++ declaration can be customized using an attribute

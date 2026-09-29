@@ -1,5 +1,3 @@
-<!-- <internal link> -->
-
 # Unknown attribute errors
 
 C++ and Rust allow the use of attributes to customize the behavior and semantics

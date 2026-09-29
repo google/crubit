@@ -1,5 +1,3 @@
-<!-- <internal link> -->
-
 # Cargo Build of Crubit
 
 crubit.rs/overview/cargo_build

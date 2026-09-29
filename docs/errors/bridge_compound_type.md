@@ -1,5 +1,3 @@
-<!-- <internal link> -->
-
 # Bridge types as struct fields
 
 ## Overview

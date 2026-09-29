@@ -1,5 +1,3 @@
-<!-- <internal link> -->
-
 # Errors
 
 When Crubit can't generate bindings for an item, it usually leaves a comment in

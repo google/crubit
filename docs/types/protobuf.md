@@ -1,5 +1,3 @@
-<!-- <internal link> -->
-
 # C++/Rust Protobuf interop
 
 WARNING: This page documents functionality that is currently internal to the
