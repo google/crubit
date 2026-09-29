@@ -2886,45 +2886,23 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                     let enum_adjustment =
                         if enum_kind == Some(EnumKind::ReprC) { tag_size_with_padding } else { 0 };
 
-                    let offsets = match field_shape {
-                        FieldsShape::Arbitrary { ref offsets, .. } => {
-                            offsets.iter().map(|size| size.bytes() - enum_adjustment).collect_vec()
-                        }
-                        FieldsShape::Union { .. } => (0..variant.fields.len())
-                            .map(|i| layout.fields().offset(i).bytes())
-                            .collect_vec(),
-                        unexpected => panic!("Unexpected FieldsShape: {unexpected:?}"),
-                    };
-
-                    let fields = variant
-                        .fields
-                        .iter()
-                        .zip(offsets)
-                        .enumerate()
-                        .map(|(index, (field_def, offset))| {
-                            self.analyze_field(index, field_def, offset)
+                    Self::field_offsets(&field_shape, enum_adjustment, size)
+                        .map(|(index, offset, offset_of_next_field)| {
+                            let field_def = &variant.fields[FieldIdx::from_usize(index)];
+                            self.analyze_field(index, field_def, offset, offset_of_next_field)
                         })
-                        .collect_vec();
-
-                    if let FieldsShape::Arbitrary { .. } = field_shape {
-                        self.sort_and_assign_next_offsets(fields, size)
-                    } else {
-                        self.assign_next_offsets(fields, size)
-                    }
+                        .collect_vec()
                 })
                 .collect_vec()
         } else if let ty::TyKind::Tuple(types) = self.self_ty.kind() {
             let layout = &self.layout;
-            let offsets = (0..types.len()).map(|i| layout.fields().offset(i).bytes()).collect_vec();
-
-            let fields = types
-                .iter()
-                .zip(offsets)
-                .enumerate()
-                .map(|(index, (ty, offset))| self.analyze_tuple_field(index, ty, offset))
+            let fields = Self::field_offsets(layout.fields(), 0, layout.size.bytes())
+                .map(|(index, offset, offset_of_next_field)| {
+                    self.analyze_tuple_field(index, types[index], offset, offset_of_next_field)
+                })
                 .collect_vec();
 
-            vec![self.sort_and_assign_next_offsets(fields, layout.size.bytes())]
+            vec![fields]
         } else {
             panic!("Expected ADT or Tuple type: {:?}", self.self_ty);
         }
@@ -2940,34 +2918,19 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         })
     }
 
-    fn assign_next_offsets(
-        &self,
-        mut fields: Vec<Field<'tcx>>,
+    /// Returns `(index, offset, offset_of_next_field)` for each field in memory order.
+    fn field_offsets(
+        field_shape: &FieldsShape<FieldIdx>,
+        enum_adjustment: u64,
         total_size: u64,
-    ) -> Vec<Field<'tcx>> {
-        let next_offsets = fields
-            .iter()
-            .map(|Field { offset, .. }| offset)
-            .skip(1)
-            .copied()
+    ) -> impl Iterator<Item = (usize, u64, u64)> + '_ {
+        field_shape
+            .index_by_increasing_offset()
+            .map(move |index| field_shape.offset(index).bytes() - enum_adjustment)
             .chain(once(total_size))
-            .collect_vec();
-        for (field, next_offset) in fields.iter_mut().zip(next_offsets) {
-            field.offset_of_next_field = next_offset;
-        }
-        fields
-    }
-
-    fn sort_and_assign_next_offsets(
-        &self,
-        mut fields: Vec<Field<'tcx>>,
-        total_size: u64,
-    ) -> Vec<Field<'tcx>> {
-        fields.sort_by_key(|field| {
-            let field_size = field.type_info.as_ref().map(|info| info.size).unwrap_or(0);
-            (field.offset, field_size, field.index)
-        });
-        self.assign_next_offsets(fields, total_size)
+            .tuple_windows()
+            .zip(field_shape.index_by_increasing_offset())
+            .map(|((offset, offset_of_next_field), index)| (index, offset, offset_of_next_field))
     }
 
     fn analyze_layout(&self) -> Result<CppLayout<'tcx>> {
@@ -3051,7 +3014,13 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         self.prepare_field_type_for_ty(ty)
     }
 
-    fn analyze_tuple_field(&self, index: usize, ty: Ty<'tcx>, offset: u64) -> Field<'tcx> {
+    fn analyze_tuple_field(
+        &self,
+        index: usize,
+        ty: Ty<'tcx>,
+        offset: u64,
+        offset_of_next_field: u64,
+    ) -> Field<'tcx> {
         let type_info = self.prepare_field_type_for_ty(ty);
         let cc_name = anonymous_field_ident(index);
         let cc_name = if self.member_function_names.contains(&cc_name.to_string()) {
@@ -3061,7 +3030,6 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         };
         let rs_index = Literal::usize_unsuffixed(index);
         let rs_name = quote! { #rs_index };
-        let offset_of_next_field = 0;
 
         Field {
             type_info,
@@ -3076,7 +3044,13 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         }
     }
 
-    fn analyze_field(&self, index: usize, field_def: &ty::FieldDef, offset: u64) -> Field<'tcx> {
+    fn analyze_field(
+        &self,
+        index: usize,
+        field_def: &ty::FieldDef,
+        offset: u64,
+        offset_of_next_field: u64,
+    ) -> Field<'tcx> {
         let tcx = self.db.tcx();
         let type_info = self.prepare_field_type(field_def);
         let name = field_def.ident(tcx).to_string();
@@ -3109,7 +3083,6 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         if let Some(cc_deprecated_tag) = generate_deprecated_tag(tcx, field_def.did) {
             attributes.push(cc_deprecated_tag);
         }
-        let offset_of_next_field = 0;
 
         Field {
             type_info,

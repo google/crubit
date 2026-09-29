@@ -1658,3 +1658,32 @@ fn test_hash_trait_support_for_enum() {
         );
     });
 }
+
+#[test]
+fn test_format_item_zst_and_unsupported_field_at_same_offset() {
+    let test_src = r#"
+    #[repr(align(4))]
+    pub struct Zst;
+
+    pub struct WithZst {
+        pub unsupported_field: std::mem::ManuallyDrop<u8>,
+        pub zst: Zst,
+    }
+    "#;
+
+    test_format_item(test_src, "WithZst", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                __COMMENT__ "Field `zst` omitted: C++ does not support zero-sized types."
+                private:
+                    __COMMENT__ "Field type has been replaced with a blob of bytes: Generic types are not supported yet (b/259749095)"
+                    ::std::array<unsigned char, 4> unsupported_field;
+                ...
+            }
+        );
+    });
+}
