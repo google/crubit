@@ -144,25 +144,32 @@ jobs:
       with:
         persist-credentials: false
     - name: Setup CI
+      id: setup
       uses: ./.github/actions/setup_ci
       with:
         gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
         bazel: 'true'
         llvm: 'pinned'
+        sccache: 'true'
 
-    # --remote_download_outputs=all is load-bearing: setup_bazel_env.py's
-    # merge_archives() globs the resulting *.a files off local disk.
+    # setup_bazel_env.py's merge_archives() globs *.a files, generated C++
+    # headers (*.h, *.inc, *.def), and protoc off local disk, so download only
+    # those artifacts rather than every intermediate .o and .rlib.
     - name: "Build rs_bindings_from_cc using Bazel"
       run: >
         bazelisk build
         --lockfile_mode=error
-        --remote_download_outputs=all
+        --remote_download_outputs=minimal
+        --remote_download_regex='.*\.(a|h|inc|def)$|.*/protoc$'
         rs_bindings_from_cc:rs_bindings_from_cc_main
         @protobuf//:protoc
     - name: "Set up Bazel environment for Cargo"
       run: python3 cargo/build/setup_bazel_env.py 
     - name: "Build rs_bindings_from_cc using Cargo"
       run: cargo build --verbose --locked -p rs_bindings_from_cc
+    - name: Show sccache stats
+      if: steps.setup.outputs.sccache_enabled == 'true' && always()
+      run: sccache --show-stats
 
   # Single aggregate check for branch protection and for the Copybara export.
   # Gating on this rather than on each job individually means jobs above can be

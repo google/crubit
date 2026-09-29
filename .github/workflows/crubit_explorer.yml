@@ -40,6 +40,7 @@ jobs:
       with:
         gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
         bazel: 'true'
+        llvm: 'pinned'
     - name: Build and test Crubit Explorer
       run: |
         cd crubit_explorer/frontend

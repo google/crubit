@@ -5,21 +5,21 @@
 name: 'Setup Crubit CI'
 description: >
   Shared CI setup for every Crubit workflow: a single Google Cloud
-  authentication, plus opt-in Bazel remote caching, sccache (for C++ and/or
-  Rust) and protoc. Replaces the former setup_bazel and setup_sccache actions,
-  which each authenticated separately and each carried their own copy of the
-  unauthenticated-fork fallback logic.
+  authentication, plus opt-in Bazel Remote Build Execution (RBE), sccache (for
+  C++ and/or Rust) and protoc. Replaces the former setup_bazel and
+  setup_sccache actions, which each authenticated separately and each carried
+  their own copy of the unauthenticated-fork fallback logic.
 
 inputs:
   gcp_sa_key:
     description: >
-      Google Cloud service account key JSON used for cache authentication.
-      Empty for pull requests from forks, which have no access to secrets; all
-      caches then degrade to read-only or off.
+      Google Cloud service account key JSON used for RBE and cache
+      authentication. Empty for pull requests from forks, which have no access
+      to secrets; RBE and sccache then degrade to off.
     required: false
     default: ''
   bazel:
-    description: 'Install Bazel and point it at the GCS remote cache.'
+    description: 'Install Bazel and configure Remote Build Execution (RBE).'
     required: false
     default: 'false'
   llvm:
@@ -83,41 +83,6 @@ runs:
           echo "authenticated=false" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Setup Bazel
-      if: ${{ inputs.bazel == 'true' }}
-      uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
-      with:
-        bazelisk-cache: true
-        repository-cache: true
-        external-cache: true
-        disk-cache: false
-
-    # Written to the *home* bazelrc rather than passed per-invocation. Bazel
-    # reads $HOME/.bazelrc for every workspace, which matters because
-    # examples/build_systems/bazel is a second workspace with its own .bazelrc
-    # that would otherwise need a duplicate copy of these flags.
-    - name: Configure Bazel remote cache
-      if: ${{ inputs.bazel == 'true' }}
-      shell: bash
-      env:
-        AUTHENTICATED: ${{ steps.creds.outputs.authenticated }}
-      run: |
-        {
-          echo "build --remote_cache=https://storage.googleapis.com/crubit-ci-bazel"
-          echo "build --color=yes"
-          echo "build --show_timestamps"
-        } >> "$HOME/.bazelrc"
-
-        if [[ "$AUTHENTICATED" == "true" ]]; then
-          echo "build --google_default_credentials" >> "$HOME/.bazelrc"
-          echo "Bazel GCS remote cache: read-write"
-        else
-          # The bucket is world-readable, so unauthenticated fork PRs can still
-          # read from it; they just must not try to upload.
-          echo "build --remote_upload_local_results=false" >> "$HOME/.bazelrc"
-          echo "Bazel GCS remote cache: read-only"
-        fi
-
     - name: Resolve LLVM commit
       if: ${{ inputs.llvm == 'pinned' }}
       shell: bash
@@ -130,8 +95,7 @@ runs:
       run: |
         # Published by the nightly test matrix.
         # The repo is hardcoded rather than derived from github.repository on
-        # purpose: forks then build the same commit as upstream and get hits
-        # from the world-readable Bazel cache.
+        # purpose so all workflows and branches build the same LLVM revision.
         RAW=$(curl -fsSL --max-time 30 --retry 3 \
           "https://raw.githubusercontent.com/google/crubit/test-matrix/llvm_commit.txt" || true)
 
@@ -181,6 +145,56 @@ runs:
           echo "### LLVM Dependency"
           echo "Building against LLVM commit [\`$LLVM_COMMIT\`](https://github.com/llvm/llvm-project/commit/$LLVM_COMMIT), $AGE_NOTE"
         } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Setup Bazel
+      if: ${{ inputs.bazel == 'true' }}
+      uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+      with:
+        bazelisk-cache: true
+        repository-cache: false
+        # Cache extracted toolchains (>10MB), but skip llvm-raw because its
+        # revision is overridden dynamically via CRUBIT_LLVM_COMMIT and
+        # setup-bazel's prefix restoreKey would otherwise restore a stale
+        # 160,000-file tree whenever test-matrix/llvm_commit.txt advances.
+        external-cache: |
+          manifest:
+            +llvm_extension+llvm-raw: false
+            rules_crubit++llvm_extension+llvm-raw: false
+        disk-cache: false
+
+    # Written to the *home* bazelrc rather than passed per-invocation. Bazel
+    # reads $HOME/.bazelrc for every workspace, which matters because
+    # examples/build_systems/bazel is a second workspace with its own .bazelrc
+    # that would otherwise need a duplicate copy of these flags.
+    - name: Configure Bazel RBE
+      if: ${{ inputs.bazel == 'true' }}
+      shell: bash
+      env:
+        AUTHENTICATED: ${{ steps.creds.outputs.authenticated }}
+      # TODO: Once https://github.com/bazelbuild/bazel/pull/30000 lands in a Bazel release, turn
+      # remote compression back on. Without that fix, it causes build failures.
+      # echo "build --remote_cache_compression=true"
+      run: |
+        {
+          echo "build --color=yes"
+          echo "build --show_timestamps"
+        } >> "$HOME/.bazelrc"
+
+        if [[ "$AUTHENTICATED" == "true" ]]; then
+          {
+            echo "build --remote_executor=grpcs://remotebuildexecution.googleapis.com"
+            echo "build --remote_instance_name=projects/crubit-oss-ci-268835/instances/default_instance"
+            echo "build --google_default_credentials"
+            echo "build --remote_default_exec_properties=OSFamily=Linux"
+            echo "build --remote_default_exec_properties=container-image=docker://us-docker.pkg.dev/crubit-oss-ci-268835/ci/rbe-ubuntu2404@sha256:d4b8ad90249585bc240a5db39f68f9b843471737d33c26ae02223568051fae2d"
+            echo "build --jobs=50"
+          } >> "$HOME/.bazelrc"
+          echo "Bazel RBE: enabled"
+        else
+          # RBE does not support unauthenticated access, so fork PRs build
+          # locally on the runner.
+          echo "Bazel RBE: disabled (no credentials)"
+        fi
 
     - name: Install sccache
       if: >
