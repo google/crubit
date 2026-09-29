@@ -178,8 +178,8 @@ pub struct Cmdline {
     #[clap(long = "sysroot", value_parser, value_name = "STRING")]
     pub sysroot: Option<String>,
 
-    /// Explicitly specified dependencies of binding generation. This should include the crate to be
-    /// generated alongside its dependencies.
+    /// Explicitly specified dependencies of binding generation. This should include the crate to
+    /// be generated alongside its dependencies.
     #[clap(long = "extern", value_parser = parse_key_value_pair, value_name = "CRATE_NAME=FILE")]
     pub r#extern: Vec<(String, String)>,
 

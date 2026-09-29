@@ -21,7 +21,7 @@ pub fn generate_bindings_tokens_for_test(ir: IR<'_>) -> Result<BindingsTokens> {
         &error_report::IgnoreErrors,
         &fatal_errors,
         false,
-        /*kythe_annotations=*/ false,
+        /* kythe_annotations= */ false,
     )?;
     let fatal = fatal_errors.take_string();
     if !fatal.is_empty() {
@@ -40,7 +40,7 @@ pub fn generate_bindings_tokens_for_test_with_annotations(ir: IR<'_>) -> Result<
         &error_report::IgnoreErrors,
         &fatal_errors,
         false,
-        /*kythe_annotations=*/ true,
+        /* kythe_annotations= */ true,
     )?;
     let fatal = fatal_errors.take_string();
     if !fatal.is_empty() {
@@ -71,7 +71,7 @@ impl<'pb> TestDbFactory<'pb> {
             &self.errors,
             &self.fatal_errors,
             false,
-            /*kythe_annotations=*/ false,
+            /* kythe_annotations= */ false,
             &self.interner,
         )
     }

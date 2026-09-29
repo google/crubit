@@ -13,13 +13,13 @@ use protobuf::{Parse, Serialize};
 /// # Safety
 ///
 /// Expectations:
-///    * `serialized_request` should be a FfiU8Slice for a valid array of bytes
-///      representing a serialized `GenerateBindingsRequest` protobuf message.
+///    * `serialized_request` should be a FfiU8Slice for a valid array of bytes representing a
+///      serialized `GenerateBindingsRequest` protobuf message.
 ///
 /// Ownership:
 ///    * function doesn't take ownership of the input param: `serialized_request`
-///    * function passes ownership of the returned value (a serialized
-///      `GenerateBindingsResponse` protobuf message) to the caller
+///    * function passes ownership of the returned value (a serialized `GenerateBindingsResponse`
+///      protobuf message) to the caller
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn GenerateBindingsImplFromSerializedProto(
     serialized_request: FfiU8Slice,

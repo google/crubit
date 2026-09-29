@@ -123,7 +123,7 @@ impl<'scope, 'formatter> LossyFormatter<'scope, 'formatter> {
     #[must_use = "returning a count less than the input count indicates a write error"]
     pub fn write_fill(&mut self, count: usize, data: u8) -> usize {
         if !data.is_ascii() {
-            return iter::repeat_n(/*element=*/ data, /*count=*/ count)
+            return iter::repeat_n(/* element= */ data, /* count= */ count)
                 .take_while(|byte| self.write_byte(*byte).is_ok())
                 .count();
         }
@@ -143,7 +143,7 @@ impl<'scope, 'formatter> LossyFormatter<'scope, 'formatter> {
         }
         // `data` is ASCII, so it is safe to cast to `char`.
         let data = data as char;
-        iter::repeat_n(/*element=*/ data, /*count=*/ count)
+        iter::repeat_n(/* element= */ data, /* count= */ count)
             .take_while(|c| self.writer.write_char(*c).is_ok())
             .count()
     }
@@ -382,7 +382,7 @@ mod tests {
     fn write_fill_ascii_ok() {
         expect_eq!(
             display_with_lossy_formatter(|f| verify_eq!(
-                f.write_fill(/*count=*/ 4, /*data=*/ b'a'),
+                f.write_fill(/* count= */ 4, /* data= */ b'a'),
                 4
             ))
             .to_string(),
@@ -394,7 +394,7 @@ mod tests {
     fn write_fill_ascii_empty_ok() {
         expect_eq!(
             display_with_lossy_formatter(|f| verify_eq!(
-                f.write_fill(/*count=*/ 0, /*data=*/ b'a'),
+                f.write_fill(/* count= */ 0, /* data= */ b'a'),
                 0
             ))
             .to_string(),
@@ -417,7 +417,7 @@ mod tests {
     fn write_fill_invalid_empty_ok() {
         expect_eq!(
             display_with_lossy_formatter(|f| verify_eq!(
-                f.write_fill(/*count=*/ 0, /*data=*/ 240),
+                f.write_fill(/* count= */ 0, /* data= */ 240),
                 0
             ))
             .to_string(),
@@ -432,7 +432,7 @@ mod tests {
                 // Incomplete sequence.
                 verify_true!(f.write_byte(240).is_ok())?;
                 // Complete one invalid sequence, then 4 valid ASCII characters.
-                verify_eq!(f.write_fill(/*count=*/ 4, /*data=*/ b'a'), 4)?;
+                verify_eq!(f.write_fill(/* count= */ 4, /* data= */ b'a'), 4)?;
                 Ok(())
             })
             .to_string(),
@@ -447,7 +447,7 @@ mod tests {
                 // Incomplete sequence.
                 verify_true!(f.write_byte(240).is_ok())?;
                 // Still writes nothing.
-                verify_eq!(f.write_fill(/*count=*/ 0, /*data=*/ b'a'), 0)?;
+                verify_eq!(f.write_fill(/* count= */ 0, /* data= */ b'a'), 0)?;
                 Ok(())
             })
             .to_string(),
@@ -461,7 +461,7 @@ mod tests {
             &mut [0u8; 3][..],
             "{}",
             display_with_lossy_formatter(|f| verify_eq!(
-                f.write_fill(/*count=*/ 4, /*data=*/ b'a'),
+                f.write_fill(/* count= */ 4, /* data= */ b'a'),
                 3
             ))
         )?;
@@ -474,7 +474,7 @@ mod tests {
             &mut [] as &mut [u8],
             "{}",
             display_with_lossy_formatter(|f| verify_eq!(
-                f.write_fill(/*count=*/ 0, /*data=*/ b'a'),
+                f.write_fill(/* count= */ 0, /* data= */ b'a'),
                 0
             ))
         )?;
@@ -487,7 +487,7 @@ mod tests {
             &mut [0u8; 6][..],
             "{}",
             display_with_lossy_formatter(|f| verify_eq!(
-                f.write_fill(/*count=*/ 3, /*data=*/ 255),
+                f.write_fill(/* count= */ 3, /* data= */ 255),
                 2
             ))
         )?;
@@ -500,7 +500,7 @@ mod tests {
             &mut [] as &mut [u8],
             "{}",
             display_with_lossy_formatter(|f| verify_eq!(
-                f.write_fill(/*count=*/ 0, /*data=*/ 255),
+                f.write_fill(/* count= */ 0, /* data= */ 255),
                 0
             ))
         )?;

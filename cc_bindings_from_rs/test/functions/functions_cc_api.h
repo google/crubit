@@ -43,11 +43,11 @@ namespace functions::fn_abi_tests {
 
 //  Testing bindings for an `extern "C"` function (no thunk required) with a
 //  mangled name. This test verifies that:
-//  * `cc_bindings_from_rs` can correctly discover mangled names that
-//    `rustc` produces
-//  * Bazel support for `cc_bindings_from_rs` invokes it with the same
-//    command line flags as the ones used when invoking `rustc` when
-//    building the `functions` crate.
+//  * `cc_bindings_from_rs` can correctly discover mangled names that `rustc`
+//  produces
+//  * Bazel support for `cc_bindings_from_rs` invokes it with the same command
+//  line flags as the
+//    ones used when invoking `rustc` when building the `functions` crate.
 //
 //  TODO(b/262904507): Bazel integration is currently broken and the
 //  coresponding test is commented out in `functions_test.cc`.
@@ -59,8 +59,9 @@ namespace functions::fn_abi_tests {
 
 //  Testing one of simpler function bindings:
 //  - `extern "C"` means that no thunk is required
-//  - `#[unsafe(no_mangle)]` means that the function is already exposed with
-//    the desired, public name (and just needs to be redeclared in C++).
+//  - `#[unsafe(no_mangle)]` means that the function is already exposed with the
+//  desired, public
+//    name (and just needs to be redeclared in C++).
 extern "C" double get_42_as_f64_via_no_mangle_extern_c();
 
 }  // namespace functions::fn_abi_tests
@@ -234,7 +235,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // Error generating bindings for function
 // `functions_golden::generic_fn_tests::ctor_trait_tests::return_ctor` defined
 // at
-// cc_bindings_from_rs/test/functions/functions.rs;l=338:
+// cc_bindings_from_rs/test/functions/functions.rs;l=336:
 // Attempted to write out unknown type from Rust to C
 
 ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&
@@ -273,7 +274,7 @@ namespace functions::generic_fn_tests::into_trait_tests {
 // Error generating bindings for function
 // `functions_golden::generic_fn_tests::into_trait_tests::unused_generic_param`
 // defined at
-// cc_bindings_from_rs/test/functions/functions.rs;l=208:
+// cc_bindings_from_rs/test/functions/functions.rs;l=206:
 // No support for replacing an _unused_ generic type param: `T`
 
 ::std::int32_t where_clause(::std::int32_t x);
@@ -385,7 +386,7 @@ struct rs_std::impl<
   // ctor::CtorNew<ctor::RvalueReference<'a,
   // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::CtorType`
   // defined at
-  // cc_bindings_from_rs/test/functions/functions.rs;l=305:
+  // cc_bindings_from_rs/test/functions/functions.rs;l=303:
   // Generic types are not supported yet (b/259749095)
 
   // Error generating bindings for associated type
@@ -393,7 +394,7 @@ struct rs_std::impl<
   // ctor::CtorNew<ctor::RvalueReference<'a,
   // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::Error`
   // defined at
-  // cc_bindings_from_rs/test/functions/functions.rs;l=306:
+  // cc_bindings_from_rs/test/functions/functions.rs;l=304:
   // The never type `!` is only supported as a return type (b/254507801)
 
   // Error generating bindings for associated function
@@ -401,7 +402,7 @@ struct rs_std::impl<
   // ctor::CtorNew<ctor::RvalueReference<'a,
   // functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>>>::ctor_new`
   // defined at
-  // cc_bindings_from_rs/test/functions/functions.rs;l=307:
+  // cc_bindings_from_rs/test/functions/functions.rs;l=305:
   // Error formatting function return type
   // `ctor::RustMoveCtor<functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>`:
   // Generic types are not supported yet (b/259749095)

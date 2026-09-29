@@ -24,10 +24,10 @@ fn is_protobuf_lib(name: &str) -> bool {
 /// This is an allowlist rather than "everything in the directory", because a protobuf
 /// install tree holds several archives that must not be linked together:
 ///
-/// * `protobuf` is the library Crubit uses, and it has undefined references into
-///   `utf8_validity`, so the two belong together.
-/// * `utf8_range` is compiled from the same `utf8_range.c` as `utf8_validity` and
-///   defines the same symbols, so linking both is a duplicate symbol error.
+/// * `protobuf` is the library Crubit uses, and it has undefined references into `utf8_validity`,
+///   so the two belong together.
+/// * `utf8_range` is compiled from the same `utf8_range.c` as `utf8_validity` and defines the same
+///   symbols, so linking both is a duplicate symbol error.
 /// * `protobuf-lite` is a subset of `protobuf`, and would collide with it likewise.
 /// * `protoc` and `upb` are not used by Crubit.
 pub fn collect_protobuf_libs() -> (Vec<PathBuf>, Vec<OsString>) {

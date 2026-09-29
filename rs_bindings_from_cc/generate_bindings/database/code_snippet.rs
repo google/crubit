@@ -243,8 +243,8 @@ pub fn missing_feature_descriptions<'a>(
                 db,
                 item.clone(),
                 &LifetimeOptions { is_return_type: true, ..LifetimeOptions::default() },
-                /*template_args=*/ &None,
-                /*lifetimes=*/ &[],
+                /* template_args= */ &None,
+                /* lifetimes= */ &[],
             )?) {
                 missing_features.extend(missing);
             }
@@ -319,17 +319,18 @@ pub enum NoBindingsReason {
     Visibility(Error),
     /// This is directly unsupported.
     Unsupported(Error),
-    /// This item's parent was a record, but no nested items module could be generated because there
-    /// were other records with nested items whose nested items module mapped to the same name.
+    /// This item's parent was a record, but no nested items module could be generated because
+    /// there were other records with nested items whose nested items module mapped to the same
+    /// name.
     ParentModuleNameNotUnique {
         conflicting_name: String,
         /// Invariant: more than 1 element.
         parent_names_that_map_to_same_name: Vec<String>,
     },
-    /// This item's parent was a record, but no nested items module could be generated because there
-    /// were other items that occupied the name in that parent's namespace. For example, a struct
-    /// called `foo` would not be able to receive nested items because its nested module name would
-    /// also be `foo`. `Foo` would be fine though, because it gets `foo`.
+    /// This item's parent was a record, but no nested items module could be generated because
+    /// there were other items that occupied the name in that parent's namespace. For example,
+    /// a struct called `foo` would not be able to receive nested items because its nested
+    /// module name would also be `foo`. `Foo` would be fine though, because it gets `foo`.
     ParentModuleNameOverwritten {
         conflicting_name: Rc<str>,
     },
@@ -796,16 +797,18 @@ pub fn generated_items_to_tokens<'db>(
             }
             GeneratedItem::NonCanonicalNamespace | GeneratedItem::CanonicalNamespace { .. } => {
                 // For a given namespace, canonical_namespace_id is not necessarily in this target,
-                // meaning it may never be visited if we branch down just from the top level items in
-                // this target. To mitigate this issue, we instead agree to pick the last reopened
-                // namespace _in this target_ as the representative that gets to generate all the items
+                // meaning it may never be visited if we branch down just from the top level items
+                // in this target. To mitigate this issue, we instead agree to pick
+                // the last reopened namespace _in this target_ as the
+                // representative that gets to generate all the items
                 // in the canonical namespace.
                 // The reason this occurs is because although Crubit only generates items for this
                 // target, Clang looks at all the includes, meaning it can see the same namespace in
-                // headers from different targets. The canonical namespace is picked by Clang, resulting
-                // in sometimes getting a canonical namespace that's not in our target.
-                // We do not have to worry about getting items from other targets though because Crubit
-                // only generates items for this target.
+                // headers from different targets. The canonical namespace is picked by Clang,
+                // resulting in sometimes getting a canonical namespace that's not
+                // in our target. We do not have to worry about getting items from
+                // other targets though because Crubit only generates items for this
+                // target.
                 let current_namespace: &Rc<ir::Namespace> =
                     db.find_decl::<Rc<Namespace>>(id).expect("should always be a namespace");
                 let is_last_reopened_namespace_in_this_target = db
@@ -1068,7 +1071,8 @@ pub struct Record {
     /// Functions that get attached either by a trait or from a base class.
     pub indirect_functions: Vec<TokenStream>,
     pub delete: Option<DeleteImpl>,
-    /// The owning wrapper type configuration when the type was annotated with CRUBIT_OWNED_POINTEE.
+    /// The owning wrapper type configuration when the type was annotated with
+    /// CRUBIT_OWNED_POINTEE.
     pub owned_ptr_config: Option<OwnedPtrConfig>,
     pub member_methods: Vec<TokenStream>,
     pub free_functions: Vec<TokenStream>,
@@ -1496,8 +1500,8 @@ pub enum Assertion {
         /// Assert that none of these traits are implemented.
         none_of: FlagSet<AssertableTrait>,
     },
-    /// Asserts that a list of fields have their expected offsets using the [`core::mem::offset_of`]
-    /// macro.
+    /// Asserts that a list of fields have their expected offsets using the
+    /// [`core::mem::offset_of`] macro.
     FieldOffsets { qualified_ident: TokenStream, fields_and_expected_offsets: Vec<(Ident, usize)> },
 }
 

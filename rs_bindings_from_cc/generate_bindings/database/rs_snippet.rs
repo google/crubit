@@ -1458,10 +1458,10 @@ impl<'a> RsTypeKind<'a> {
         // when crate name mangling is enabled (e.g. `use_label_encoded_names_for_deps`).
         //
         // 1. Explicit hint: Specified via `CRUBIT_INTERNAL_RUST_TYPE_LABEL_HINT` (or
-        //    `CRUBIT_INTERNAL_RUST_TYPE_WITH_HINT`). This is required when the C++ type's
-        //    owning target differs from the target providing its Rust bindings (e.g.
-        //    `absl::StatusOr` in `@abseil-cpp//absl/status:statusor` whose Rust type
-        //    `NewStatusOr` is provided by `@abseil-cpp//absl/status:status`).
+        //    `CRUBIT_INTERNAL_RUST_TYPE_WITH_HINT`). This is required when the C++ type's owning
+        //    target differs from the target providing its Rust bindings (e.g. `absl::StatusOr` in
+        //    `@abseil-cpp//absl/status:statusor` whose Rust type `NewStatusOr` is provided by
+        //    `@abseil-cpp//absl/status:status`).
         // 2. Fallback heuristic: When no explicit hint is provided, infer the target from
         //    `existing_rust_type.owning_target()` if the crate prefix of `rs_name` matches
         //    `owning_target.target_name()` (e.g. `absl::Status` in
@@ -1471,13 +1471,13 @@ impl<'a> RsTypeKind<'a> {
         //    `::the_crate::...`), because only those begin with a crate name. See
         //    `CRUBIT_INTERNAL_RUST_TYPE` in `support/annotations_internal.h` for how a path is
         //    spelled and `fully_qualify_type` below for how each spelling is resolved:
-        //      * A path beginning with `crate::` is resolved against the crate root of the
-        //        defining target, which `fully_qualify_type` already spells with that target's
-        //        (possibly mangled) crate name, so no hint is needed.
+        //      * A path beginning with `crate::` is resolved against the crate root of the defining
+        //        target, which `fully_qualify_type` already spells with that target's (possibly
+        //        mangled) crate name, so no hint is needed.
         //      * Any other path is relative to that same crate root, so its first segment is a
         //        module. Rewriting it into a crate name would both drop the module and make
-        //        `fully_qualify_type` prepend the crate a second time. For example, proto enums
-        //        are imported as `ExistingRustType`s whose `rs_name` is a relative
+        //        `fully_qualify_type` prepend the crate a second time. For example, proto enums are
+        //        imported as `ExistingRustType`s whose `rs_name` is a relative
         //        `my_message::MyEnum`, and `my_message` can coincidentally equal the
         //        `proto_library` target name.
         let label_hint = if let Some(hint_str) = existing_rust_type.label_hint() {
@@ -3099,16 +3099,14 @@ impl<'a> RsTypeKind<'a> {
 /// Paths are spelled from the point of view of the crate defining the item, and
 /// are resolved as follows:
 ///
-/// *   A path beginning with `::` is already crate-absolute: its first segment
-///     names a crate, and the path is used as it is spelled (`::bar::Baz` stays
-///     `::bar::Baz`).
-/// *   A path beginning with the `crate` keyword is resolved against the root
-///     of the crate defining the item: `crate::foo::Bar` becomes
-///     `crate::foo::Bar` if that crate is the one currently being generated,
-///     and `::defining_crate::foo::Bar` otherwise.
-/// *   Any other path is relative to the root of the crate defining the item,
-///     so `foo::Bar` becomes `crate::foo::Bar` or `::defining_crate::foo::Bar`.
-///     Its first segment therefore names a module, not a crate.
+/// * A path beginning with `::` is already crate-absolute: its first segment names a crate, and the
+///   path is used as it is spelled (`::bar::Baz` stays `::bar::Baz`).
+/// * A path beginning with the `crate` keyword is resolved against the root of the crate defining
+///   the item: `crate::foo::Bar` becomes `crate::foo::Bar` if that crate is the one currently being
+///   generated, and `::defining_crate::foo::Bar` otherwise.
+/// * Any other path is relative to the root of the crate defining the item, so `foo::Bar` becomes
+///   `crate::foo::Bar` or `::defining_crate::foo::Bar`. Its first segment therefore names a module,
+///   not a crate.
 ///
 /// This has _very_ limited support for other type expressions, like `&T`,
 /// and special-cases well known builtin types like `char`.

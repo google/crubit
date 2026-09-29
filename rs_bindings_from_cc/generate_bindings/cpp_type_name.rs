@@ -15,8 +15,8 @@ use std::rc::Rc;
 pub fn format_cpp_type(ty: &RsTypeKind, db: &BindingsGenerator<'_>) -> Result<TokenStream> {
     // Formatting *both* pointers *and* references as pointers, because:
     // - Pointers and references have the same representation in the ABI.
-    // - Clang's `-Wreturn-type-c-linkage` warns when using references in C++
-    //   function thunks declared as `extern "C"` (see b/238681766).
+    // - Clang's `-Wreturn-type-c-linkage` warns when using references in C++ function thunks
+    //   declared as `extern "C"` (see b/238681766).
     format_cpp_type_inner(ty, db, /* references_ok= */ false)
 }
 

@@ -25,7 +25,8 @@ struct Args {
     #[arg(long, value_name = "FILE", required = true)]
     out: PathBuf,
 
-    /// Optional custom macro name to extract (defaults to global_cpp, DO_NOT_SUBMIT_CPP_DECL, cpp_decl) // NOLINT
+    /// Optional custom macro name to extract
+    /// (defaults to global_cpp, DO_NOT_SUBMIT_CPP_DECL, cpp_decl) // NOLINT
     #[arg(long, default_value = "")]
     macro_name: String,
 
@@ -142,7 +143,8 @@ fn validate_inline_cpp_syntax(body_text: &str) -> Result<(), String> {
         return Err("Mismatched body braces inside inline_cpp!".to_string());
     }
 
-    // Extract and validate return type (expected to match `-> ReturnType` between parenthesis and body brace)
+    // Extract and validate return type (expected to match `-> ReturnType` between parenthesis and
+    // body brace)
     let ret_type_raw: String =
         tokens[(close_paren_idx + 1)..open_brace_idx].iter().map(|t| t.text).collect();
     let return_type = ret_type_raw.trim();

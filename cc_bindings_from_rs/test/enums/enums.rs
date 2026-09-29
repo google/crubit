@@ -56,15 +56,13 @@ pub mod repr_c {
         MinusOne = -1,
         MinusTwo = -2,
         /// Based on https://github.com/rust-lang/rust/issues/124403:
-        /// * Historically, Rust allowed `#[repr(C)]` enums to have
-        ///   discriminants of arbitrary size.  However, in C, the default enum
-        ///   size is typically `int` (32-bit signed). This mismatch creates
-        ///   non-portable layout differences between Rust and C/C++.
-        /// * Rust has introduced the `repr_c_enums_larger_than_int` lint (which
-        ///   is part of the `future_incompatible` lint group). It warns when a
-        ///   `#[repr(C)]` enum's discriminant does not fit into a C `int` or
-        ///   `unsigned int` (essentially limiting portably supported values to
-        ///   the signed 32-bit range: `[i32::MIN, i32::MAX]`). This warning is
+        /// * Historically, Rust allowed `#[repr(C)]` enums to have discriminants of arbitrary
+        ///   size.  However, in C, the default enum size is typically `int` (32-bit signed). This
+        ///   mismatch creates non-portable layout differences between Rust and C/C++.
+        /// * Rust has introduced the `repr_c_enums_larger_than_int` lint (which is part of the
+        ///   `future_incompatible` lint group). It warns when a `#[repr(C)]` enum's discriminant
+        ///   does not fit into a C `int` or `unsigned int` (essentially limiting portably
+        ///   supported values to the signed 32-bit range: `[i32::MIN, i32::MAX]`). This warning is
         ///   planned to become a hard compiler error in a future Rust release.
         MinI32 = -2147483648,
         MaxI32 = 2147483647,

@@ -37,10 +37,10 @@ use core::pin::Pin;
 ///
 /// 2. Non-thread-safe C++ types `T` can still be mutated safely from C++ as long as synchronization
 ///    is handled externally, but due to Rust's aliasing rules, it is undefined behavior for a Rust
-///    user to hold a `&T` during the mutation (modulo anything within `UnsafeCell`, of course).
-///    If the Rust user expects externally synchronized mutation from C++, they must also
-///    participate in the synchronization to ensure that they never hold an active `&T` during the
-///    C++ mutation window, otherwise they are subject to undefined behavior.
+///    user to hold a `&T` during the mutation (modulo anything within `UnsafeCell`, of course). If
+///    the Rust user expects externally synchronized mutation from C++, they must also participate
+///    in the synchronization to ensure that they never hold an active `&T` during the C++ mutation
+///    window, otherwise they are subject to undefined behavior.
 ///
 /// See crubit.rs/cpp/cookbook#thread_safety for more details.
 #[crubit_annotate::cpp_layout_equivalent(
@@ -463,8 +463,8 @@ impl<T> SharedInner<T> {
     /// # Safety
     ///
     /// ## Preconditions
-    /// - `cntrl` must point to a live `DynControlBlock` embedded as the first field of an
-    ///   active `SharedInner<T>` allocated via `SharedInner::new`.
+    /// - `cntrl` must point to a live `DynControlBlock` embedded as the first field of an active
+    ///   `SharedInner<T>` allocated via `SharedInner::new`.
     /// - `function_to_call` must correspond to the exact lifecycle transition:
     ///   - `FunctionToCall::kDestroyValue`: called exactly once when the strong reference count
     ///     reaches 0, while `value` is still initialized and live.
@@ -472,10 +472,10 @@ impl<T> SharedInner<T> {
     ///     reference counts reach 0, after `kDestroyValue` has already run.
     ///
     /// ## Postconditions
-    /// - If `kDestroyValue`: `value` is dropped in place; the control block and
-    ///   containing allocation remain live.
-    /// - If `kDeleteControlBlock`: `cntrl` is dropped in place and the entire
-    ///   `SharedInner<T>` allocation is freed via `Box::from_raw`.
+    /// - If `kDestroyValue`: `value` is dropped in place; the control block and containing
+    ///   allocation remain live.
+    /// - If `kDeleteControlBlock`: `cntrl` is dropped in place and the entire `SharedInner<T>`
+    ///   allocation is freed via `Box::from_raw`.
     unsafe extern "C" fn deleter(function_to_call: FunctionToCall, cntrl: *mut DynControlBlock) {
         // `SharedInner<T>` is `#[repr(C)]` with `MaybeUninit<DynControlBlock>` as
         // its first field at byte offset 0. Since `cntrl` was allocated as part of a

@@ -370,7 +370,8 @@ fn get_replacement_for_ctor_trait<'tcx>(
 ) -> Option<Ty<'tcx>> {
     let tcx = db.tcx();
     if is_used_in_return_type {
-        // TODO(b/489315162): Support Ctor in return types. We should be able to turn `fn foo() -> impl Ctor<Output = T>` into `T foo();` by using C++ guaranteed copy elision.
+        // TODO(b/489315162): Support Ctor in return types. We should be able to turn `fn foo() ->
+        // impl Ctor<Output = T>` into `T foo();` by using C++ guaranteed copy elision.
         return None;
     }
     // 1. Find the `DefId` of the `Output` associated type in the `Ctor` trait.

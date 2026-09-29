@@ -292,8 +292,7 @@ fn test_recursively_pinned_actually_pinned() {
 // TODO(jeanpierreda): negative compilation tests for Drop / PinnedDrop failures:
 // * implemented Drop
 // * forgot to implement PinnedDrop
-// * implemented PinnedDrop, but forgot to pass in PinnedDrop to
-//   `::ctor::recursively_pinned`.
+// * implemented PinnedDrop, but forgot to pass in PinnedDrop to `::ctor::recursively_pinned`.
 
 #[gtest]
 fn test_pinned_drop() {

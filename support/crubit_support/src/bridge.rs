@@ -306,8 +306,8 @@ macro_rules! unsafe_impl_crubit_abi_for_tuple {
 }
 
 // Every tuple can be passed by bridge. Add more impls here if needed.
-// SAFETY: The ABI contract for `(A1, A2, ..., An)` is that the elements of the tuple are encoded in order
-// with the corresponding `CrubitAbi`s.
+// SAFETY: The ABI contract for `(A1, A2, ..., An)` is that the elements of the tuple are encoded in
+// order with the corresponding `CrubitAbi`s.
 unsafe_impl_crubit_abi_for_tuple! {
     unsafe impl CrubitAbi for ();
     unsafe impl CrubitAbi for (a1: A1,);
@@ -381,10 +381,11 @@ pub mod internal {
     ///
     /// # Safety
     ///
-    /// `buf` must point to a buffer that is at least `<T as CrubitAbi<S>>::SIZE` bytes large, and must
-    /// contain a `T` that was encoded with the same schema `S`.
+    /// `buf` must point to a buffer that is at least `<T as CrubitAbi<S>>::SIZE` bytes large, and
+    /// must contain a `T` that was encoded with the same schema `S`.
     pub unsafe fn decode<A: CrubitAbi>(crubit_abi: A, buf: *const u8) -> A::Value {
-        // SAFETY: The caller guarantees that the buffer contains a `T` that was encoded with schema `S`.
+        // SAFETY: The caller guarantees that the buffer contains a `T` that was encoded with schema
+        // `S`.
         unsafe { crubit_abi.decode(&mut Decoder { remaining_bytes: A::SIZE, buf }) }
     }
 
@@ -504,8 +505,8 @@ impl FnRefPayload {
 ///
 /// 1. C++ passes `FnPayload` across the `extern "C"` thunk boundary by value.
 /// 2. The generated Rust thunk wraps `FnPayload` in a Rust closure.
-/// 3. When called, the closure invokes `invoker(data, args...)`, where `invoker` is a
-///    trampoline with the C ABI matching the closure's signature.
+/// 3. When called, the closure invokes `invoker(data, args...)`, where `invoker` is a trampoline
+///    with the C ABI matching the closure's signature.
 /// 4. When the Rust closure is eventually dropped, `FnPayload::drop` is invoked, which calls
 ///    `destroyer(data)` to clean up the C++ callable stored on the C++ side.
 #[repr(C)]
@@ -538,7 +539,8 @@ impl FnPayload {
     /// # Safety
     ///
     /// The caller must ensure that `data` and `invoker` are valid, and that `destroyer`,
-    /// when called with `data`, safely cleans up the underlying callable. [ai_genererated_and_unmodified]
+    /// when called with `data`, safely cleans up the underlying callable.
+    /// [ai_genererated_and_unmodified]
     pub const unsafe fn new(
         data: *mut core::ffi::c_void,
         invoker: *mut core::ffi::c_void,
@@ -594,12 +596,14 @@ pub unsafe extern "C" fn crubit_alloc(size: usize, align: usize) -> *mut u8 {
 ///
 /// # Safety
 ///
-/// - `ptr` must denote a block of memory currently allocated via `crubit_alloc` (or `crubit_realloc`).
+/// - `ptr` must denote a block of memory currently allocated via `crubit_alloc` (or
+///   `crubit_realloc`).
 /// - `size` and `align` must match the size and alignment used to allocate `ptr`.
 #[cfg_attr(not(test), unsafe(no_mangle))]
 pub unsafe extern "C" fn crubit_dealloc(ptr: *mut u8, size: usize, align: usize) {
     if let Ok(layout) = ::core::alloc::Layout::from_size_align(size, align) {
-        // SAFETY: `ptr` was allocated with layout matching `layout`, and is not used after this call.
+        // SAFETY: `ptr` was allocated with layout matching `layout`, and is not used after this
+        // call.
         unsafe { ::alloc::alloc::dealloc(ptr, layout) };
     }
 }
@@ -608,7 +612,8 @@ pub unsafe extern "C" fn crubit_dealloc(ptr: *mut u8, size: usize, align: usize)
 ///
 /// # Safety
 ///
-/// - `ptr` must denote a block of memory currently allocated via `crubit_alloc` (or `crubit_realloc`).
+/// - `ptr` must denote a block of memory currently allocated via `crubit_alloc` (or
+///   `crubit_realloc`).
 /// - `old_size` and `old_align` must match the size and alignment used to allocate `ptr`.
 /// - `new_size` must be non-zero.
 #[cfg_attr(not(test), unsafe(no_mangle))]
@@ -622,7 +627,8 @@ pub unsafe extern "C" fn crubit_realloc(
         Ok(l) => l,
         Err(_) => return ::core::ptr::null_mut(),
     };
-    // SAFETY: `ptr` was allocated with `old_layout`, and `new_size` is non-zero as guaranteed by preconditions.
+    // SAFETY: `ptr` was allocated with `old_layout`, and `new_size` is non-zero as guaranteed by
+    // preconditions.
     let new_ptr = unsafe { ::alloc::alloc::realloc(ptr, old_layout, new_size) };
     if new_ptr.is_null() {
         let new_layout = ::core::alloc::Layout::from_size_align(new_size, old_align).unwrap();

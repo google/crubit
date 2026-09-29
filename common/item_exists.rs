@@ -69,8 +69,7 @@ pub fn type_exists(path: TokenStream) -> TokenStream {
 ///
 /// * Does not support names that are already in scope (e.g. `i32`).
 /// * Does not support generics (e.g. `std::vec::Vec::<i32>`).
-/// * Does not support methods or associated constants (e.g.
-///   `Option<i32>::default`).
+/// * Does not support methods or associated constants (e.g. `Option<i32>::default`).
 #[proc_macro]
 pub fn value_exists(path: TokenStream) -> TokenStream {
     let (path, name) = match extract_last(syn::parse_macro_input!(path as syn::Path)) {

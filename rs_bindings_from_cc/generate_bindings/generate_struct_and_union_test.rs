@@ -119,13 +119,11 @@ fn test_template_with_out_of_line_definition() -> Result<()> {
     // them (to force/guarantee that the class template and its members get
     // instantiated).  This is also covered in the following end-to-end
     // tests:
-    // - test/templates/out_of_line_definition/ - without a thunk, the template
-    //   won't be instantiated and Rust bindings won't be able to call the member
-    //   function (there will be no instantiation of the member function in the C++
-    //   object files)
-    // - test/templates/definition_in_cc/ - the instantiation happens in the .cc
-    //   file and therefore the thunk is not *required* (but it doesn't hurt to have
-    //   the thunk)
+    // - test/templates/out_of_line_definition/ - without a thunk, the template won't be
+    //   instantiated and Rust bindings won't be able to call the member function (there will be no
+    //   instantiation of the member function in the C++ object files)
+    // - test/templates/definition_in_cc/ - the instantiation happens in the .cc file and therefore
+    //   the thunk is not *required* (but it doesn't hurt to have the thunk)
     assert_cc_matches!(
         rs_api_impl,
         quote! {
@@ -562,9 +560,8 @@ fn test_nontrivial_abstract_by_value() -> Result<()> {
 fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
     // This test input causes `field_decl->getName()` to return an empty string.
     // See also:
-    // - https://en.cppreference.com/w/c/language/struct: "[...] an unnamed member
-    //   of a struct whose type is a struct without name is known as anonymous
-    //   struct."
+    // - https://en.cppreference.com/w/c/language/struct: "[...] an unnamed member of a struct whose
+    //   type is a struct without name is known as anonymous struct."
     // - https://rust-lang.github.io/rfcs/2102-unnamed-fields.html
     let proto = ir_proto_from_cc(
         r#"

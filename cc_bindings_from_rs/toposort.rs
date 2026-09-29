@@ -15,8 +15,7 @@ use std::hash::Hash;
 ///
 /// If `deps` form a cycle, then the result is split into:
 /// - topologically `ordered` nodes,
-/// - `failed` nodes (which either form dependency cycles, or depend on a
-///   cycle).
+/// - `failed` nodes (which either form dependency cycles, or depend on a cycle).
 ///
 /// If there are multiple possible topological orders, then best effort is made
 /// to return the `ordered` nodes in the `preferred_order` (this is not always
@@ -48,12 +47,10 @@ use std::hash::Hash;
 /// ```
 ///
 /// In the example above:
-/// - Nodes 101-104 are returned in the preferred order, because the 102 -> 103
-///   dependency edge is compatible with the preferred order.
-/// - Nodes 201-204 have to be reordered slightly because of the 203 -> 202
-///   dependency edge.
-/// - Nodes 901 and 902 form a cycle.  Node 903 depends on the a node from the
-///   cycle.
+/// - Nodes 101-104 are returned in the preferred order, because the 102 -> 103 dependency edge is
+///   compatible with the preferred order.
+/// - Nodes 201-204 have to be reordered slightly because of the 203 -> 202 dependency edge.
+/// - Nodes 901 and 902 form a cycle.  Node 903 depends on the a node from the cycle.
 ///
 /// # Implementation details
 ///
@@ -291,10 +288,9 @@ mod tests {
     /// - `NodeId`s are integers
     /// - The `preferred_order` is the natural order of integers
     /// - `nodes` and `deps` are slices (rather than `IntoIterator<...>`).
-    /// - To avoid boilerplate and improve readability of tests `Dependency` and
-    ///   `TopoSortResult` are replaced with tuples:
-    ///     - `Dependency{ predecessor, successor }` => `(predecessor,
-    ///       successor)`
+    /// - To avoid boilerplate and improve readability of tests `Dependency` and `TopoSortResult`
+    ///   are replaced with tuples:
+    ///     - `Dependency{ predecessor, successor }` => `(predecessor, successor)`
     ///     - `TopoSortResult{ ordered, failed }` => (ordered, failed)`
     fn toposort(nodes: &[i32], deps: &[(i32, i32)]) -> (Vec<i32>, Vec<i32>) {
         let nodes = nodes.iter().copied();

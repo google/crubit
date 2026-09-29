@@ -29,7 +29,8 @@ impl MacroKind {
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParsedMacro<'a> {
     pub kind: MacroKind,
-    /// Byte offset where the macro identifier or path starts (e.g. `::crubit_support::inline_cpp!`).
+    /// Byte offset where the macro identifier or path starts (e.g.
+    /// `::crubit_support::inline_cpp!`).
     pub macro_start_offset: usize,
     /// Line (1-indexed) where the outer macro token starts.
     pub macro_line: usize,

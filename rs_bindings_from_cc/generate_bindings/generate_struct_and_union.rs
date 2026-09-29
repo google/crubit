@@ -459,10 +459,8 @@ pub fn generate_record<'a>(
     let mut fields_that_must_be_copy = vec![];
 
     // Pair up fields with the preceding and following fields (if any):
-    // - the end offset of the previous field determines if we need to insert
-    //   padding.
-    // - the start offset of the next field may be need to grow the current field to
-    //   there.
+    // - the end offset of the previous field determines if we need to insert padding.
+    // - the start offset of the next field may be need to grow the current field to there.
     // This uses two separate `map` invocations on purpose to limit available state.
     let field_definitions = iter::once(None)
         .chain(fields_with_bounds.iter().map(Some))

@@ -45,7 +45,8 @@ pub mod deprecated_enum {
 
 pub mod forward_declared_enum {
     #![allow(non_snake_case)]
-    //! We sort types by declaration path. We use that ordering here to cause B to be forward declared and test the behavior we want to exercise.
+    //! We sort types by declaration path. We use that ordering here to cause B to be forward
+    //! declared and test the behavior we want to exercise.
 
     pub fn AFunction() -> B {
         B::ONE

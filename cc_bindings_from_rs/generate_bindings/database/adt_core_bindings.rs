@@ -153,7 +153,8 @@ impl MoveCodegenStyle {
         is_unpin: bool,
         has_copy_codegen_style: bool,
     ) -> Option<Self> {
-        // If our type has no drop glue we can use the default move constructor and assignment operator.
+        // If our type has no drop glue we can use the default move constructor and assignment
+        // operator.
         if does_not_need_drop {
             Some(MoveCodegenStyle::Default)
         } else if has_default_ctor && is_unpin {

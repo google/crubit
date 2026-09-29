@@ -14,16 +14,14 @@
 //!
 //! This is needed because:
 //!
-//! * In C++ one can interchangably use references to a forward-declared
-//!   `struct` and references to the complete definition of the `struct`, but
-//!   Rust bindings represent them using separate types (see `Incomplete<Name,
-//!   Declarer>`).
+//! * In C++ one can interchangably use references to a forward-declared `struct` and references to
+//!   the complete definition of the `struct`, but Rust bindings represent them using separate types
+//!   (see `Incomplete<Name, Declarer>`).
 //!
-//! * In C++ one can interchangably use multiple independent C++ class template
-//!   instantiations, but Rust bindings may represent them using separate types.
-//!   This happens when the same class template is instantiated with the same
-//!   template arguments in 2 different Crubit-generated crates with C++
-//!   bindings.
+//! * In C++ one can interchangably use multiple independent C++ class template instantiations, but
+//!   Rust bindings may represent them using separate types. This happens when the same class
+//!   template is instantiated with the same template arguments in 2 different Crubit-generated
+//!   crates with C++ bindings.
 //!
 //! ## Forward declarations
 //!
@@ -112,8 +110,8 @@
 //!
 //!   * Two forward-declarations of the same C++ type,
 //!   * A forward-declaration and a complete definition of the same C++ type,
-//!   * Two complete definitions of the same C++ type (e.g. two identical class
-//!     template instantiations).
+//!   * Two complete definitions of the same C++ type (e.g. two identical class template
+//!     instantiations).
 //!
 //! ### Pointers and references
 //!
@@ -147,8 +145,7 @@
 //!   * Slices - `&[T]`
 //!   * Arrays - `[T; N]`
 //!   * `Vec<T>`
-//!   * TODO: Add support for more containers as needed (HashSet?  bindings for
-//!     std::vector?)
+//!   * TODO: Add support for more containers as needed (HashSet?  bindings for std::vector?)
 //!
 //! ## Passing around values
 //!
@@ -256,8 +253,8 @@ pub mod internal {
     /// only be provided by Crubit itself:
     ///
     /// - Via `forward_declare!` and `unsafe_define!` macros
-    /// - Via blanket `impl`s provided for references, pointers (e.g. see `mod
-    ///   ref_transmutability` below).
+    /// - Via blanket `impl`s provided for references, pointers (e.g. see `mod ref_transmutability`
+    ///   below).
     ///
     /// # Safety
     ///
@@ -339,14 +336,12 @@ impl<T: Unpin> Complete for T {}
 /// We alias references to arbitrary `T` using references to `Incomplete`. This
 /// is OK, because of the design of `Incomplete`:
 ///
-/// - layout: `Incomplete` has no fields of size > 0, so it does not alias `T`
-///   incompatibly.
+/// - layout: `Incomplete` has no fields of size > 0, so it does not alias `T` incompatibly.
 ///
-/// - provenance: while in general it is not valid to access memory
-///   **neighboring** that of a type    (e.g. one can't use &vec[0] to access
-///   vec[1]), in this case, we are using    `feature(extern_types)`, which is a
-///   DST which must grant access to the following memory or    else it would be
-///   useless. (This type of access is the reason the feature exists).
+/// - provenance: while in general it is not valid to access memory **neighboring** that of a type
+///   (e.g. one can't use &vec[0] to access vec[1]), in this case, we are using
+///   `feature(extern_types)`, which is a DST which must grant access to the following memory or
+///   else it would be useless. (This type of access is the reason the feature exists).
 unsafe impl<Name, Declarer> CppType for Incomplete<Name, Declarer> {
     type Name = Name;
 }
@@ -553,8 +548,7 @@ mod ref_transmutability {
 /// transmutable.  This is    safe for "thin" pointers (e.g. `&i32`) as well as
 /// for "fat" pointers (e.g. `&[i32]` also    stores the size of the slice).
 ///
-/// 2. `&mut T` => `Pin<&mut T>`: `Pin` is `repr(transparent)` and `Pin::new`
-///    is safe.
+/// 2. `&mut T` => `Pin<&mut T>`: `Pin` is `repr(transparent)` and `Pin::new` is safe.
 ///
 /// 3. `Pin<&mut T>` => `&mut T`: `Pin` is `repr(transparent)` and
 /// `Pin::into_inner` is safe    and allowed for `T: Unpin`.

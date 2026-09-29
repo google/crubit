@@ -11,8 +11,8 @@ use protobuf::{MessageMutInterop, OwnedMessageInterop};
 ///
 /// * `raw_request` must be a valid pointer to a heap-allocated C++ `GenerateBindingsRequest` proto
 ///   message. The function takes ownership of this message and is responsible for destroying it.
-/// * `raw_response` must be a valid pointer to an initialized C++ `GenerateBindingsResponse`
-///   proto message.
+/// * `raw_response` must be a valid pointer to an initialized C++ `GenerateBindingsResponse` proto
+///   message.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn GenerateBindingsImplFromNativeProto(
     raw_request: *mut std::ffi::c_void,

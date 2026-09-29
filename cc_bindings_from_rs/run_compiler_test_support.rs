@@ -90,8 +90,8 @@ pub fn setup_rustc_target_for_testing(target_dir: &Path) -> Option<String> {
 /// `rustc_args` it:
 ///
 /// * Invokes the Rust compiler on the given Rust `source`
-/// * Hardcodes other compiler flags (e.g. picks Rust 2021 edition, and opts
-///   into treating all warnings as errors).
+/// * Hardcodes other compiler flags (e.g. picks Rust 2021 edition, and opts into treating all
+///   warnings as errors).
 pub fn run_compiler_for_testing<F, T>(source: impl Into<String>, callback: F) -> T
 where
     F: for<'tcx> FnOnce(TyCtxt<'tcx>) -> T + Send,
@@ -168,7 +168,9 @@ fn run_compiler_for_testing_impl(
     };
 
     // Needed for using target.json; avoids:
-    // error loading target specification: custom targets are unstable and require `-Zunstable-options`
+    // error loading target specification: custom targets are unstable and require
+    // `-Zunstable-options`
+    //
     // TODO: use `Session::unstable_options` instead of
     // `unstable_opts.unstable_options` and remove the function #[allow(rustc::internal)].
     opts.unstable_opts.unstable_options = true;

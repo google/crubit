@@ -325,7 +325,8 @@ pub enum BridgingAttrs {
 }
 
 // Ideally we could call https://github.com/rust-lang/rust/blob/2aaa62b89d22b570e560731b03e3d2d6f5c3bbce/compiler/rustc_metadata/src/rmeta/encoder.rs#L937 directly, but that method is not publicly available.
-// It does not suffice to call `tcx.has_attrs` on our DefId because that will call `get_all_attrs` under the hood and panic if given an unsupported DefId.
+// It does not suffice to call `tcx.has_attrs` on our DefId because that will call `get_all_attrs`
+// under the hood and panic if given an unsupported DefId.
 //
 // Const and AssocConst switch between unit variant and struct variant in nightly 2026-03-01. We
 // use a struct variant to cover both cases and supress the warning on versions where it's a

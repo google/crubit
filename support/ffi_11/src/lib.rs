@@ -21,11 +21,10 @@
 //!
 //! `ffi_11` offers the following guarantees:
 //!
-//! * Every unique C/C++ type is given a unique Rust type: the Rust->C/C++ type
-//!   mapping is one-to-one.
-//! * A given type `c_<X>` is the same type as a builtin `iN` or `uN` type if,
-//!   and only if, the corresponding C++ type is the same type as the standard
-//!   library `(u)intN_t` on this platform.
+//! * Every unique C/C++ type is given a unique Rust type: the Rust->C/C++ type mapping is
+//!   one-to-one.
+//! * A given type `c_<X>` is the same type as a builtin `iN` or `uN` type if, and only if, the
+//!   corresponding C++ type is the same type as the standard library `(u)intN_t` on this platform.
 //!
 //!   For example, `c_int` is `i32` if `int32_t` is a type alias to `int`.
 //!   Otherwise, `c_int` will be a different type. (Either a newtype, or a
@@ -46,25 +45,22 @@
 //!
 //! The following operations are supported:
 //!
-//! * `From`: any `ffi_11` type can be converted to or from a builtin or
-//!   `ffi_11` type if the conversion is lossless. For example, `c_int` can
-//!   always be converted to `c_long`, but not to `c_ulong`. And `i32` can
-//!   always be converted to `c_int`, but `i64` can only on some platforms.
+//! * `From`: any `ffi_11` type can be converted to or from a builtin or `ffi_11` type if the
+//!   conversion is lossless. For example, `c_int` can always be converted to `c_long`, but not to
+//!   `c_ulong`. And `i32` can always be converted to `c_int`, but `i64` can only on some platforms.
 //!
-//! * Separately from the above, `c_char` can be converted to and from both
-//!   `i8` and `u8` using `From` and `Into`. It is considered an
-//!   ambiguously-signed type for portability.
+//! * Separately from the above, `c_char` can be converted to and from both `i8` and `u8` using
+//!   `From` and `Into`. It is considered an ambiguously-signed type for portability.
 //!
 //! ## Supported platforms
 //!
 //! For now, the only supported platforms are:
 //!
 //! * LP64:
-//!     * Any LP64 platform which uses the smallest suitable fundamental type
-//!       for `intN_t` (i.e., `int64_t` is `long`). For example, Linux on
-//!       x86_64 or Aarch64, but not iOS or OpenBSD.
-//!     * Listed LP64 platforms where `int64_t` is `long long`: iOS and OpenBSD.
-//!       (other platforms in this category but not on this list will be broken)
+//!     * Any LP64 platform which uses the smallest suitable fundamental type for `intN_t` (i.e.,
+//!       `int64_t` is `long`). For example, Linux on x86_64 or Aarch64, but not iOS or OpenBSD.
+//!     * Listed LP64 platforms where `int64_t` is `long long`: iOS and OpenBSD. (other platforms in
+//!       this category but not on this list will be broken)
 //! * LLP64: 64-bit Windows.
 //!
 //! We will add support over time to other commonly used platforms.
@@ -76,8 +72,8 @@
 //!
 //! This module is still embryonic, and is missing the following:
 //!
-//! * Support for `long long` on Linux. This depends on a decision about what
-//!   the type should be. For example, it could be `isize`, or a newtype.
+//! * Support for `long long` on Linux. This depends on a decision about what the type should be.
+//!   For example, it could be `isize`, or a newtype.
 //!
 //! * `TryFrom` impls for lossy conversions.
 //!
@@ -163,17 +159,17 @@ pub trait AsFfi11Ptr: Sealed {
 pub trait CStrExt: Sealed {
     /// # Safety
     ///
-    /// * The memory pointed to by `ptr` must contain a valid nul terminator at the
-    ///   end of the string.
+    /// * The memory pointed to by `ptr` must contain a valid nul terminator at the end of the
+    ///   string.
     ///
-    /// * `ptr` must be [valid] for reads of bytes up to and including the nul terminator.
-    ///   This means in particular:
+    /// * `ptr` must be [valid] for reads of bytes up to and including the nul terminator. This
+    ///   means in particular:
     ///
     ///     * The entire memory range of this `CStr` must be contained within a single allocation!
     ///     * `ptr` must be non-null even for a zero-length cstr.
     ///
-    /// * The memory referenced by the returned `CStr` must not be mutated for
-    ///   the duration of lifetime `'a`.
+    /// * The memory referenced by the returned `CStr` must not be mutated for the duration of
+    ///   lifetime `'a`.
     ///
     /// * The nul terminator must be within `isize::MAX` from `ptr`
     unsafe fn from_ffi_11_ptr<'a>(ptr: *const c_char) -> &'a Self;
@@ -192,8 +188,9 @@ impl CStrExt for core::ffi::CStr {
     }
 }
 
-/// Casts between `ffi_11` pointers and their `std::ffi` equivalents. Equivalent to a `pointer::cast`
-/// call, but the trait implementation documents that this is an intended and well-behaved cast.
+/// Casts between `ffi_11` pointers and their `std::ffi` equivalents. Equivalent to a
+/// `pointer::cast` call, but the trait implementation documents that this is an intended and
+/// well-behaved cast.
 pub trait CastFfi11: Sealed {
     type Target;
     fn cast_ffi_11(self) -> Self::Target;

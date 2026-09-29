@@ -162,7 +162,8 @@ pub mod internal {
         if token_stream_matchers_fastpath::match_tokens_fast(input, pattern).is_ok() {
             return Ok(());
         }
-        // The error messages are still better than the ones from the fastpath, so we use them below.
+        // The error messages are still better than the ones from the fastpath, so we use them
+        // below.
 
         let iter = input.clone().into_iter();
         let mut best_mismatch = Mismatch::for_no_partial_match();

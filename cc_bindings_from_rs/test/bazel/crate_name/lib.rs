@@ -18,11 +18,9 @@
 //! This test verifies that `cc_bindings_from_rs` is invoked with
 //! `--crate_name=custom_crate_name` - without the cmdline argument
 //! `cc_bindings_from_rs` would think that the crate name is `lib`.
-//! - `lib::get_the_answer()` wouldn't compile if used in the generated
-//!   `...cc_api_impl.rs`.
-//! - `namespace lib` is also undesirable in the generated `...cc_api.h` (this
-//!   is slightly less important because in the long-term the C++ namespace
-//!   might not depend on the crate name - see
+//! - `lib::get_the_answer()` wouldn't compile if used in the generated `...cc_api_impl.rs`.
+//! - `namespace lib` is also undesirable in the generated `...cc_api.h` (this is slightly less
+//!   important because in the long-term the C++ namespace might not depend on the crate name - see
 //!   <internal link>).
 
 pub fn get_the_answer() -> i32 {

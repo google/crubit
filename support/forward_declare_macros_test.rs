@@ -245,6 +245,6 @@ fn test_vector_alike() {
     expects_complete(complete.cpp_cast());
 
     assert!(complete.back().is_none()); // works fine
-                                        // incomplete.back() // compilation error due to unsatisfied trait bounds
-                                        // (`!Complete`)
+
+    // incomplete.back() // compilation error due to unsatisfied trait bounds (`!Complete`)
 }

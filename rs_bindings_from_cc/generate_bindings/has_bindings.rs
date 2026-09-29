@@ -212,8 +212,8 @@ pub fn has_bindings<'a>(
                 db,
                 item.clone(),
                 &LifetimeOptions { is_return_type: true, ..Default::default() },
-                /*template_args=*/ &None,
-                /*lifetimes=*/ &[],
+                /* template_args= */ &None,
+                /* lifetimes= */ &[],
             ) {
                 Ok(rs_type_kind) => {
                     // A few bridge types cannot be aliased: see `BridgeRsTypeKind::is_aliasable`.

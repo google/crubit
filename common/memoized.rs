@@ -20,12 +20,10 @@
 //! * Supports non-`'static` types.
 //! * Syntactic differences when initially setting up the trait and database.
 //! * Immutable input and no support for recomputation given mutated inputs.
-//! * Correspondingly, no requirement that the *return* types implement `Eq` or
-//!   `Hash`.
-//! * Supports `#[break_cycles_with = <default-value>]`, which generates a
-//!   function that returns <default-value> if a cycle is detected.
-//! * Uses function pointers in the interior of a concrete type, instead of
-//!   `dyn Trait`.
+//! * Correspondingly, no requirement that the *return* types implement `Eq` or `Hash`.
+//! * Supports `#[break_cycles_with = <default-value>]`, which generates a function that returns
+//!   <default-value> if a cycle is detected.
+//! * Uses function pointers in the interior of a concrete type, instead of `dyn Trait`.
 //!
 //! There are more substantial differences with Salsa 2022 - this was written
 //! based on Salsa 0.16. We don't need to match exactly the API, but the
@@ -126,13 +124,11 @@
 ///
 /// Important notes:
 ///
-/// * In the trait definition, all `#[input]` functions must be declared before
-///   all (non-`#[input]`) memoized functions. The order of the input functions
-///   is the order of their parameters in `new()`.
-/// * Every (non-`#[input]`) trait method _must_ have a matching function passed
-///   to `new()`.
-/// * Since all trait methods are memoized, their arguments must be `Clone`,
-///   `Eq`, and `Hash`.
+/// * In the trait definition, all `#[input]` functions must be declared before all (non-`#[input]`)
+///   memoized functions. The order of the input functions is the order of their parameters in
+///   `new()`.
+/// * Every (non-`#[input]`) trait method _must_ have a matching function passed to `new()`.
+/// * Since all trait methods are memoized, their arguments must be `Clone`, `Eq`, and `Hash`.
 ///
 /// # Non-`'static` types
 ///

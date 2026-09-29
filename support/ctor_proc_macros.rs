@@ -250,11 +250,10 @@ fn project_type_impl(name: TokenStream, project_ident: fn(&Ident) -> Ident) -> T
 ///
 /// Args:
 ///   * input: the input type to project.
-///   * method_name: the name of the method to define (`project_pin` or
-///     `project_ref`).
+///   * method_name: the name of the method to define (`project_pin` or `project_ref`).
 ///   * mut_: Mutability qualifier: `mut` for `project_pin`, empty for `project_ref`.
-///   * project_ident: a function that takes an identifier for the type and returns the
-///     identifier to use for the projection type.
+///   * project_ident: a function that takes an identifier for the type and returns the identifier
+///     to use for the projection type.
 fn project_method_impl(
     input: &syn::DeriveInput,
     method_name: proc_macro2::TokenStream,

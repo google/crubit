@@ -14,8 +14,8 @@ pub mod fn_abi_tests {
 
     /// Testing one of simpler function bindings:
     /// - `extern "C"` means that no thunk is required
-    /// - `#[unsafe(no_mangle)]` means that the function is already exposed with
-    ///   the desired, public name (and just needs to be redeclared in C++).
+    /// - `#[unsafe(no_mangle)]` means that the function is already exposed with the desired, public
+    ///   name (and just needs to be redeclared in C++).
     #[unsafe(no_mangle)]
     pub extern "C" fn get_42_as_f64_via_no_mangle_extern_c() -> f64 {
         42.0
@@ -30,11 +30,9 @@ pub mod fn_abi_tests {
 
     /// Testing bindings for an `extern "C"` function (no thunk required) with a
     /// mangled name. This test verifies that:
-    /// * `cc_bindings_from_rs` can correctly discover mangled names that
-    ///   `rustc` produces
-    /// * Bazel support for `cc_bindings_from_rs` invokes it with the same
-    ///   command line flags as the ones used when invoking `rustc` when
-    ///   building the `functions` crate.
+    /// * `cc_bindings_from_rs` can correctly discover mangled names that `rustc` produces
+    /// * Bazel support for `cc_bindings_from_rs` invokes it with the same command line flags as the
+    ///   ones used when invoking `rustc` when building the `functions` crate.
     ///
     /// TODO(b/262904507): Bazel integration is currently broken and the
     /// coresponding test is commented out in `functions_test.cc`.

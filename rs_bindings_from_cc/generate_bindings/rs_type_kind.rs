@@ -275,7 +275,8 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                         {
                             return Ok(ty);
                         } else {
-                            // TODO(b/481368622): this fails if we fall through to comprehensive fallbacks.
+                            // TODO(b/481368622): this fails if we fall through to comprehensive
+                            // fallbacks.
                             return Err(unsupported_alias_error());
                         }
                     }

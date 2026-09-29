@@ -37,8 +37,7 @@ pub mod outer {
 /// This is a regression test that verifies that thunk impls use the right
 /// fully-qualified name when referring to methods:
 ///
-/// * Incorrect:
-///   `::modules::impl_in_separate_private_module::impl_mod::Foo::into_i32`
+/// * Incorrect: `::modules::impl_in_separate_private_module::impl_mod::Foo::into_i32`
 /// * Correct: `::modules::impl_in_separate_private_module::Foo::into_i32`
 ///
 /// To some extent this test tries to mimic that arrangement in

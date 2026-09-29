@@ -24,13 +24,11 @@ use rustc_session::EarlyDiagCtxt;
 
 /// Wrapper around `rustc_driver::RunCompiler::run` that exposes a
 /// simplified API:
-/// - Takes a `callback` that will be invoked from within Rust compiler, after
-///   parsing and analysis are done,
-/// - Compilation will stop after parsing, analysis, and the `callback` are
-///   done,
+/// - Takes a `callback` that will be invoked from within Rust compiler, after parsing and analysis
+///   are done,
+/// - Compilation will stop after parsing, analysis, and the `callback` are done,
 /// - Returns the combined results from the Rust compiler *and* the `callback`.
-/// - Is safe to run from unit tests (which may run in parallel / on multiple
-///   threads).
+/// - Is safe to run from unit tests (which may run in parallel / on multiple threads).
 pub fn run_compiler<F, R>(rustc_args: &[String], callback: F) -> Result<R>
 where
     F: FnOnce(TyCtxt) -> Result<R> + Send,
@@ -151,7 +149,9 @@ where
         // via `cc_bindings_from_rs` (the `config` here affects the latter one).
         config.opts.lint_opts.push(("warnings".to_string(), rustc_lint_defs::Level::Allow));
         // Needed for when using a target.json; avoids:
-        // error loading target specification: custom targets are unstable and require `-Zunstable-options`
+        // error loading target specification: custom targets are unstable and require
+        // `-Zunstable-options`
+        //
         // TODO: use `Session::unstable_options` instead of
         // `unstable_opts.unstable_options` and remove the function #[allow(rustc::internal)].
         config.opts.unstable_opts.unstable_options = true;

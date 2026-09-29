@@ -23,17 +23,17 @@ const K2: u64 = 0x4b33a62ed433d4a3;
 ///
 /// # Design & Guarantees
 /// - **Algorithm**: Rapidhash is the modern successor to Wyhash. It uses 64-to-128-bit
-///   multiplication and XOR mixing (`rapid_mix`), processing 8 bytes per chunk
-///   in little-endian byte order.
-/// - **Hash Quality**: Passes all SMHasher and SMHasher3 tests with 0 collisions
-///   and full avalanche effect across all 64 output bits. This ensures good bucket
-///   distribution even when cast to `size_t` for `std::hash`.
-/// - **Scope & Stability**: This is an in-memory non-cryptographic hash intended
-///   strictly for in-process hash table lookups (e.g. `AbslHashValue` and `std::hash`).
-///   It is NOT intended for cryptographic use or persistent on-disk fingerprinting.
+///   multiplication and XOR mixing (`rapid_mix`), processing 8 bytes per chunk in little-endian
+///   byte order.
+/// - **Hash Quality**: Passes all SMHasher and SMHasher3 tests with 0 collisions and full avalanche
+///   effect across all 64 output bits. This ensures good bucket distribution even when cast to
+///   `size_t` for `std::hash`.
+/// - **Scope & Stability**: This is an in-memory non-cryptographic hash intended strictly for
+///   in-process hash table lookups (e.g. `AbslHashValue` and `std::hash`). It is NOT intended for
+///   cryptographic use or persistent on-disk fingerprinting.
 /// - **HashDoS Defense**: When used with Abseil containers (`absl::flat_hash_set`/`map`),
-///   `AbslHashValue` combines the 64-bit value into `absl::Hash`'s per-process
-///   randomized seed state, protecting against algorithmic complexity (hash flooding) attacks.
+///   `AbslHashValue` combines the 64-bit value into `absl::Hash`'s per-process randomized seed
+///   state, protecting against algorithmic complexity (hash flooding) attacks.
 #[derive(Clone, Copy)]
 pub struct RapidHasher {
     seed: u64,

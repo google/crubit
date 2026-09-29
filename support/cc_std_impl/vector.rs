@@ -155,15 +155,12 @@ impl<T> vector<T> {
     /// # Safety
     ///
     /// - `len` must be less than or equal to `capacity`.
-    /// - The first `len` values must be properly initialized values of type
-    ///   `T`.
-    /// - The size of `T `times the `capacity` (i.e. the allocated size in
-    ///   bytes) needs to be the same size as the pointer was allocated with.
-    /// - `T` needs to have the same alignment as what `begin` was allocated
-    ///   with.
-    /// - nothing else believes to have ownership over the memory of `begin`,
-    ///   and that no outstanding references to this memory are still present by
-    ///   the time `self` is next used.
+    /// - The first `len` values must be properly initialized values of type `T`.
+    /// - The size of `T `times the `capacity` (i.e. the allocated size in bytes) needs to be the
+    ///   same size as the pointer was allocated with.
+    /// - `T` needs to have the same alignment as what `begin` was allocated with.
+    /// - nothing else believes to have ownership over the memory of `begin`, and that no
+    ///   outstanding references to this memory are still present by the time `self` is next used.
     ///
     /// These requirements are always upheld by any `begin` that has been
     /// allocated via Vec<T, cc_std::std::Allocator> and the corresponding Vec is
@@ -647,12 +644,12 @@ impl<T: Ord + Unpin> Ord for vector<T> {
 ///
 /// # Safety
 ///
-/// - `begin` must be a null or  `begin` must be a valid pointer and the memory
-///   pointed by `begin` must be allocated with `StdAllocator`.
+/// - `begin` must be a null or  `begin` must be a valid pointer and the memory pointed by `begin`
+///   must be allocated with `StdAllocator`.
 /// - `len` must be less than or equal to `capacity`.
 /// - The first `len` values must be properly initialized values of type `T`.
-/// - The size of `T `times the `capacity` (i.e. the allocated size in bytes)
-///   needs to be the same size as the pointer was allocated with.
+/// - The size of `T `times the `capacity` (i.e. the allocated size in bytes) needs to be the same
+///   size as the pointer was allocated with.
 /// - `T` needs to have the same alignment as what `begin` was allocated with.
 ///
 /// These requirements are always upheld by any `begin` that has been

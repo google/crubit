@@ -88,8 +88,8 @@ macro_rules! must_use_ctor_assign {
 /// * `ctor!{MyStruct{a: b})` is analogous to `MyStruct {a: b}`, but constructs the field and the
 ///   struct itself in-place. `b` is a `Ctor`, and the expression evaluates to a `Ctor`.
 /// * `CtorNew<T>` is analogous to `From<T>`, except it returns a `Ctor![Self]`.
-/// * `emplace!(ctor)` is analogous to `pin!(value)`, but it evaluates the `ctor` to construct
-///   the value in-place.
+/// * `emplace!(ctor)` is analogous to `pin!(value)`, but it evaluates the `ctor` to construct the
+///   value in-place.
 /// * The `Emplace` trait is analogous to methods like `Box::pin`, but accepts a `Ctor![T]`.
 ///
 /// # Safety
@@ -480,8 +480,8 @@ where
 /// This exists for two reasons:
 ///
 /// 1. To allow for changing the implementation over time.
-/// 2. To make the spelling less overly verbose. Instead of `impl Ctor<Output = T, Error = E>`,
-///    you can write `Ctor![T]`.
+/// 2. To make the spelling less overly verbose. Instead of `impl Ctor<Output = T, Error = E>`, you
+///    can write `Ctor![T]`.
 ///
 /// In codebases not yet migrated to the 2024 edition, if you need a `use<'a>` bound, you must
 /// write the full `impl` syntax: `impl Ctor<Output=T, Error=Infallible> + use<'a, 'b>`.
@@ -1302,9 +1302,8 @@ pub mod macro_internal {
 /// ## Safety
 ///
 /// * All fields of the struct are pinned in all code paths that access them.
-/// * The `CtorInitializedFields` type has the same fields as `Self`, except
-///   for any fields that do not need initialization. (For instance, ZST fields
-///   or fields of type `MaybeUninit`.)
+/// * The `CtorInitializedFields` type has the same fields as `Self`, except for any fields that do
+///   not need initialization. (For instance, ZST fields or fields of type `MaybeUninit`.)
 pub unsafe trait RecursivelyPinned {
     /// An associated type with the same fields as `Self`, minus any ZST
     /// fields hich are not initialized by the `ctor!()` macro.

@@ -40,9 +40,8 @@ fn get_instantiation_struct_name(
     // In theory `TokenStream` -> `instantiation_name` translation could go through
     // `token_stream_printer::tokens_to_string`.  This route is not used because:
     // - The dependencies it would bring would run into b/216638047
-    // - Extra functionality from that route is not needed (e.g. no need for
-    //   `__COMMENT__`-aware or `__SPACE__`-aware processing, nor for special
-    //   handling of `TokenTree::Group`).
+    // - Extra functionality from that route is not needed (e.g. no need for `__COMMENT__`-aware or
+    //   `__SPACE__`-aware processing, nor for special handling of `TokenTree::Group`).
     //
     // TODO(lukasza, hlopko): In the future, extra canonicalization might be
     // considered, so that `std::vector<int>`, and `std::vector<(int)>`, and

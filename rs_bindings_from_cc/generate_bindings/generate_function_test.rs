@@ -847,8 +847,8 @@ fn test_impl_index_mut_requires_matching_cc_index() -> Result<()> {
 }
 
 /// Verifies that when the indexing parameter contains lifetime parameters (such as `&IndexKey`),
-/// generic lifetime parameters are properly added to the `impl` blocks (`impl<'key> core::ops::Index...`)
-/// when implementing `Index` and `IndexMut` for unpinned (`Unpin`) types.
+/// generic lifetime parameters are properly added to the `impl` blocks (`impl<'key>
+/// core::ops::Index...`) when implementing `Index` and `IndexMut` for unpinned (`Unpin`) types.
 #[gtest]
 fn test_impl_index_and_index_mut_with_lifetimes_unpin() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc(
@@ -894,8 +894,8 @@ fn test_impl_index_and_index_mut_with_lifetimes_unpin() -> Result<()> {
 }
 
 /// Verifies that generic lifetime parameters from the index parameter type as well as the container
-/// lifetime `'ctnr` are properly generated (`impl<'key, 'ctnr> core::ops::Index... for Pin<&'ctnr mut SomeStruct>`)
-/// when implementing `Index` and `IndexMut` for pinned (`!Unpin`) types.
+/// lifetime `'ctnr` are properly generated (`impl<'key, 'ctnr> core::ops::Index... for Pin<&'ctnr
+/// mut SomeStruct>`) when implementing `Index` and `IndexMut` for pinned (`!Unpin`) types.
 #[gtest]
 fn test_impl_index_and_index_mut_with_lifetimes_pin() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc(

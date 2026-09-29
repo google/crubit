@@ -55,11 +55,9 @@ pub mod counters {
 }
 
 /// Test for `Drop` support when:
-/// * `Drop` is provided by `impl` (rather than requiring "drop glue" for
-///   fields).
+/// * `Drop` is provided by `impl` (rather than requiring "drop glue" for fields).
 /// * The type implements the `Default` trait.
-/// * The type cannot be copied via `Clone` (although this aspect is not
-///   load-bearing in this test.)
+/// * The type cannot be copied via `Clone` (although this aspect is not load-bearing in this test.)
 pub mod drop_impl_with_default {
     pub struct DropImplWithDefault {
         pub field: i32,
@@ -94,12 +92,10 @@ pub mod drop_impl_with_default {
 }
 
 /// Test for `Drop` support when:
-/// * There is no `Drop` `impl`, but the type under test requires "drop glue"
-///   for its fields (i.e. the field implements `Drop`, but the type containing
-///   the field doesn't).
+/// * There is no `Drop` `impl`, but the type under test requires "drop glue" for its fields (i.e.
+///   the field implements `Drop`, but the type containing the field doesn't).
 /// * The type implements the `Default` trait.
-/// * The type cannot be copied via `Clone` (although this aspect is not
-///   load-bearing in this test.)
+/// * The type cannot be copied via `Clone` (although this aspect is not load-bearing in this test.)
 pub mod drop_glue_with_default {
     use super::drop_impl_with_default::DropImplWithDefault;
 
@@ -123,8 +119,7 @@ pub mod drop_glue_with_default {
 }
 
 /// Test for `Drop` support when:
-/// * `Drop` is provided by `impl` (rather than requiring "drop glue" for
-///   fields).
+/// * `Drop` is provided by `impl` (rather than requiring "drop glue" for fields).
 /// * The type does *not* implement the `Default` trait.
 /// * The type can be copied via `Clone`
 pub mod drop_impl_with_clone {
@@ -172,8 +167,7 @@ pub mod drop_impl_with_clone {
 }
 
 /// Test for `Drop` support when:
-/// * `Drop` is provided by `impl` (rather than requiring "drop glue" for
-///   fields).
+/// * `Drop` is provided by `impl` (rather than requiring "drop glue" for fields).
 /// * The type does *not* implement the `Default` trait.
 /// * The type cannot be copied via `Clone`
 pub mod drop_impl_with_nothing_else {

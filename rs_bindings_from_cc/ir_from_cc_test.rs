@@ -64,8 +64,8 @@ fn ir_proto_from_cc_dependency(header: &str, dep_header: &str) -> Result<IRProto
         header,
         dep_header,
         None,
-        /*kythe_annotations=*/ false,
-        /*carcinize=*/ false,
+        /* kythe_annotations= */ false,
+        /* carcinize= */ false,
     )
 }
 
@@ -75,8 +75,8 @@ fn ir_proto_from_record_impl_debug_cc(header: &str) -> Result<IRProto> {
         header,
         "// empty header",
         Some("record_impl_debug"),
-        /*kythe_annotations=*/ false,
-        /*carcinize=*/ false,
+        /* kythe_annotations= */ false,
+        /* carcinize= */ false,
     )
 }
 
@@ -88,8 +88,8 @@ fn ir_proto_from_assumed_lifetimes_cc(program: &str) -> Result<IRProto> {
         &full_program,
         "// empty header",
         Some("assume_lifetimes"),
-        /*kythe_annotations=*/ false,
-        /*carcinize=*/ false,
+        /* kythe_annotations= */ false,
+        /* carcinize= */ false,
     )
 }
 
@@ -1030,9 +1030,8 @@ fn test_struct_without_thread_safe_annotation() {
 fn test_struct_with_unnamed_struct_and_union_members() {
     // This test input causes `field_decl->getName()` to return an empty string.
     // See also:
-    // - https://en.cppreference.com/w/c/language/struct: "[...] an unnamed member
-    //   of a struct whose type is a struct without name is known as anonymous
-    //   struct."
+    // - https://en.cppreference.com/w/c/language/struct: "[...] an unnamed member of a struct whose
+    //   type is a struct without name is known as anonymous struct."
     // - https://rust-lang.github.io/rfcs/2102-unnamed-fields.html
     let proto = ir_proto_from_cc(
         r#"

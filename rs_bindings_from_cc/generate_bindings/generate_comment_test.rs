@@ -137,7 +137,7 @@ impl<'pb> TestDbFactory<'pb> {
             &self.errors,
             &self.fatal_errors,
             is_golden_test,
-            /*kythe_annotations=*/ false,
+            /* kythe_annotations= */ false,
             &self.interner,
         )
     }
@@ -343,7 +343,10 @@ fn test_generate_unsupported_function_template_with_global_cpp() -> Result<()> {
     let expected = quote! {
         __COMMENT__ #expected_comment
         ::crubit_support::global_cpp! {
-            template <typename T> T Add(T a, T b) { return a + b; }
+            template <typename T>
+            T Add(T a, T b) {
+              return a + b;
+            }
         }
     };
     assert_rs_matches!(quote! { #actual }, expected);

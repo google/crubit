@@ -141,8 +141,8 @@ pub enum ImplKind<'a> {
         /// Whether to format the first parameter as "self" (e.g. `__this:
         /// &mut T` -> `&mut self`)
         format_first_param_as_self: bool,
-        /// Whether this function wraps a C++ constructor for an `Unpin` type, so it has an implicit
-        /// `out: *mut Self` parameter.
+        /// Whether this function wraps a C++ constructor for an `Unpin` type, so it has an
+        /// implicit `out: *mut Self` parameter.
         is_renamed_unpin_constructor: bool,
     },
     /// Used for trait methods for which we need an `impl TraitName for
@@ -185,8 +185,8 @@ pub enum ImplKind<'a> {
         ///   `:wrapper` library owner.
         ///
         /// For example, `Drop` and `PinnedDrop` are perfect instances of this: there is only one
-        /// logical implementation, which won't change over time, and it's not permitted for library
-        /// owners to change it to something else.
+        /// logical implementation, which won't change over time, and it's not permitted for
+        /// library owners to change it to something else.
         always_public: bool,
     },
 }

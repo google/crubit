@@ -63,7 +63,8 @@ impl<'a> DynErasedFuture<'a> {
 /// enough to hold a `DynErasedFuture` (16 bytes).
 #[cfg_attr(not(test), unsafe(no_mangle))]
 unsafe extern "C" fn rs_std_dyn_erased_future_init(dyn_erased_future: *mut DynErasedFuture<'_>) {
-    // SAFETY: `dyn_erased_future` is valid, aligned, and uninitialized by the function's preconditions.
+    // SAFETY: `dyn_erased_future` is valid, aligned, and uninitialized by the function's
+    // preconditions.
     unsafe { ptr::write(dyn_erased_future, DynErasedFuture(Box::pin(future::pending::<()>()))) };
 }
 
@@ -79,7 +80,8 @@ unsafe extern "C" fn rs_std_dyn_erased_future_init(dyn_erased_future: *mut DynEr
 /// `dyn_erased_future` must be a valid mutable reference that won't be used again.
 #[cfg_attr(not(test), unsafe(no_mangle))]
 unsafe extern "C" fn rs_std_dyn_erased_future_drop(dyn_erased_future: *mut DynErasedFuture<'_>) {
-    // SAFETY: `dyn_erased_future` is valid, aligned, and initialized by the function's preconditions.
+    // SAFETY: `dyn_erased_future` is valid, aligned, and initialized by the function's
+    // preconditions.
     unsafe { ptr::drop_in_place(dyn_erased_future) };
 }
 

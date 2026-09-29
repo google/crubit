@@ -186,10 +186,11 @@ where
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct NonNull<Ptr: StableNullness> {
-    // Invariant: this field was checked to be non-null at construction time, and `StableNullness`'s
-    // contract keeps that check valid. No accessor hands out a `&mut Ptr`, so the only way to
-    // reach a null `NonNull` is for C++ to move out of a shared reference to it, which is a bug
-    // in that C++ code. `debug_assert_non_null` guards against both possibilities.
+    // Invariant: this field was checked to be non-null at construction time, and
+    // `StableNullness`'s contract keeps that check valid. No accessor hands out a `&mut Ptr`,
+    // so the only way to reach a null `NonNull` is for C++ to move out of a shared reference
+    // to it, which is a bug in that C++ code. `debug_assert_non_null` guards against both
+    // possibilities.
     ptr: Ptr,
 }
 

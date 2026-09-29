@@ -13,8 +13,8 @@ pub enum TypeLocation {
     /// - The top-level return type `*const T` is in the `FnReturn` location
     /// - The nested pointee type `T` is in the `Other` location
     FnReturn {
-        /// Whether the function is used in a constructor and our return type will be `this` in C++.
-        /// In such cases, we do not want the type to be bridged.
+        /// Whether the function is used in a constructor and our return type will be `this` in
+        /// C++. In such cases, we do not want the type to be bridged.
         is_constructor: bool,
     },
 
@@ -45,7 +45,8 @@ pub enum TypeLocation {
     /// itself is in a function parameter or return value.
     NestedBridgeable,
 
-    /// The type of a template argument when specializing a generic class template or trait (e.g., inside `rs_std::Option<T>`).
+    /// The type of a template argument when specializing a generic class template or trait (e.g.,
+    /// inside `rs_std::Option<T>`).
     TemplateArg,
 
     /// Other location (e.g. pointee type, etc.).
@@ -53,8 +54,8 @@ pub enum TypeLocation {
 
     /// The return type of a closure / callable argument.
     ///
-    /// In this context, unit `()` and never `!` are formatted as `void`, but bridging is not supported
-    /// (types must be layout-compatible or unbridged).
+    /// In this context, unit `()` and never `!` are formatted as `void`, but bridging is not
+    /// supported (types must be layout-compatible or unbridged).
     ClosureReturn,
 
     /// The type of a field of a struct or union.

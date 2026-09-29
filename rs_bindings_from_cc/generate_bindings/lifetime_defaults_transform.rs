@@ -92,13 +92,13 @@ pub fn record_lifetime_arity(
         if let Item::Func(f) = child {
             // There are three cases for [[lifetimebound]] on a member function f. (We're loose
             // here in that "the arity of X" means "the lifetime arity of the type of X".)
-            // - If f is a constructor, the arity of a [[lifetimebound]] parameter must match
-            //   the arity of *this.
-            // - If the implicit parameter of f is marked [[lifetimebound]], then the arity
-            //   of the return type must match the arity of *this.
-            // - If an arbitrary parameter is marked with [[lifetimebound]], then the arity of
-            //   the return type must match the arity of that parameter. For the moment we
-            //   ignore this case.
+            // - If f is a constructor, the arity of a [[lifetimebound]] parameter must match the
+            //   arity of *this.
+            // - If the implicit parameter of f is marked [[lifetimebound]], then the arity of the
+            //   return type must match the arity of *this.
+            // - If an arbitrary parameter is marked with [[lifetimebound]], then the arity of the
+            //   return type must match the arity of that parameter. For the moment we ignore this
+            //   case.
             //
             // We'll pick the first [[lifetimebound]] we can find an arity for. (Even if we
             // chose the type with the highest arity, we wouldn't be able to find a suitable

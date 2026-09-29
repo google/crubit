@@ -135,13 +135,12 @@ fn test_func_ptr_where_params_are_raw_ptrs() -> Result<()> {
     // type) are references with lifetimes.  Something like this:
     //     #pragma clang lifetime_elision
     //     const int& (*get_ptr_to_func())(const int&, const int&); "#)?;
-    // 1) Need to investigate why this fails - seeing raw pointers in Rust seems to
-    //    indicate that no lifetimes are present at the `importer.cc` level. Maybe
-    //    lifetime elision doesn't support this scenario? Unclear how to explicitly
-    //    apply [[clang::annotate("lifetimes", "a, b -> a")]] to the _inner_
-    //    function.
-    // 2) It is important to have 2 reference parameters, so see if the problem of
-    //    passing `lifetimes` by value would have been caught - see:
+    // 1) Need to investigate why this fails - seeing raw pointers in Rust seems to indicate that no
+    //    lifetimes are present at the `importer.cc` level. Maybe lifetime elision doesn't support
+    //    this scenario? Unclear how to explicitly apply [[clang::annotate("lifetimes", "a, b ->
+    //    a")]] to the _inner_ function.
+    // 2) It is important to have 2 reference parameters, so see if the problem of passing
+    //    `lifetimes` by value would have been caught - see:
     //    cl/428079010/depot/rs_bindings_from_cc/
     // importer.cc?version=s6#823
 
@@ -1229,7 +1228,7 @@ fn test_default_crubit_features_disabled_wrapper() -> Result<()> {
 fn test_default_crubit_features_disabled_dependency_supported_function_parameter() -> Result<()> {
     let proto = ir_proto_from_cc_dependency(
         "void Func(NotPresent);",
-        /*dependency=*/ "struct NotPresent {};",
+        /* dependency= */ "struct NotPresent {};",
     )?;
 
     let mut ir = make_test_ir_dependency(&proto, None)?;
@@ -1785,8 +1784,8 @@ fn test_nested_ir_end_to_end() -> Result<()> {
         header_source,
         "// no dependencies",
         None,
-        /*kythe_annotations=*/ false,
-        /*carcinize=*/ false,
+        /* kythe_annotations= */ false,
+        /* carcinize= */ false,
     )?;
 
     let ir = ir_testing::make_test_ir_dependency(&proto, None)?;

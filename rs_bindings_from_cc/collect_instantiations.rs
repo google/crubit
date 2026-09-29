@@ -21,13 +21,12 @@ use std::process;
 /// # Safety
 ///
 /// Expectations:
-///    * function expects that param `json` is a FfiU8Slice for a valid array of
-///      bytes with the given size.
+///    * function expects that param `json` is a FfiU8Slice for a valid array of bytes with the
+///      given size.
 ///    * function expects that param `json` doesn't change during the call.
 ///
 /// Ownership:
-///    * function doesn't take ownership of (in other words it borrows) the
-///      param `json`
+///    * function doesn't take ownership of (in other words it borrows) the param `json`
 ///    * function passes ownership of the returned value to the caller
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn CollectInstantiationsImpl(json: FfiU8Slice) -> FfiU8SliceBox {
@@ -72,8 +71,8 @@ fn find_cc_template_calls(input: TokenStream, results: &mut HashSet<String>) {
             // `token_stream_printer::tokens_to_string`.  This route is not used because:
             // - The dependencies it would bring would run into b/216638047
             // - Extra functionality from that route is not needed (e.g. no need for
-            //   `__COMMENT__`-aware or `__SPACE__`-aware processing, nor for special
-            //   handling of `TokenTree::Group`).
+            //   `__COMMENT__`-aware or `__SPACE__`-aware processing, nor for special handling of
+            //   `TokenTree::Group`).
             //
             // TODO(lukasza, hlopko): In the future, extra canonicalization might be
             // considered, so that `std::vector<int>`, and `std::vector<(int)>`, and

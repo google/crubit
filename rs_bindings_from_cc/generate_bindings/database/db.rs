@@ -255,7 +255,7 @@ memoized::query_group! {
 impl<'db> BindingsGenerator<'db> {
     /// Returns the generated bindings for the given enum.
     ///
-    /// Implementation: rs_bindings_from_cc/generate_bindings/generate_enum.rs?q=function:generate_enum
+    /// Implementation: <http://rs_bindings_from_cc/generate_bindings/generate_enum.rs?q=function:generate_enum>
     pub fn generate_enum(&self, enum_: Rc<Enum<'db>>) -> Result<ApiSnippets> {
         (self.codegen_functions().generate_enum)(self, enum_)
     }
@@ -263,7 +263,7 @@ impl<'db> BindingsGenerator<'db> {
     /// Returns the generated bindings for an item, or `Err` if bindings generation
     /// failed in such a way as to make the generated bindings as a whole invalid.
     ///
-    /// Implementation: rs_bindings_from_cc/generate_bindings/lib.rs?q=function:generate_item
+    /// Implementation: <http://rs_bindings_from_cc/generate_bindings/lib.rs?q=function:generate_item>
     pub fn generate_item(&self, item: ir::Item<'db>) -> Result<ApiSnippets> {
         (self.codegen_functions().generate_item)(self, item)
     }
@@ -271,7 +271,7 @@ impl<'db> BindingsGenerator<'db> {
     /// Returns the generated bindings for the given record, along with associated safety
     /// assertions.
     ///
-    /// Implementation: rs_bindings_from_cc/generate_bindings/generate_struct_and_union.rs?q=function:generate_record
+    /// Implementation: <http://rs_bindings_from_cc/generate_bindings/generate_struct_and_union.rs?q=function:generate_record>
     pub fn generate_record(&self, record: Rc<Record<'db>>) -> Result<ApiSnippets> {
         (self.codegen_functions().generate_record)(self, record)
     }
@@ -376,8 +376,9 @@ impl<'db> BindingsGenerator<'db> {
                         Ok(type_kind) => type_kind,
                         Err(_) => {
                             // If the field cannot be represented for layout, it will be erased into
-                            // padding bytes. If it needs destruction, Rust cannot run its destructor,
-                            // so the record must implement Drop to invoke the C++ destructor.
+                            // padding bytes. If it needs destruction, Rust cannot run its
+                            // destructor, so the record must implement
+                            // Drop to invoke the C++ destructor.
                             if self
                                 .rs_type_kind(field.type_().clone())
                                 .is_ok_and(|t| !t.needs_destruction())
@@ -797,8 +798,9 @@ impl<'db> BindingsGenerator<'db> {
     ) -> Result<proc_macro2::Ident> {
         let record_name: &str = record.rs_name().as_str();
         let snake_case_name = record_name.to_snake_case();
-        // Add an `_items` suffix to distinguish the module name if the record name is already snake-case,
-        // then distinguish by adding `_` suffixes until we find a name that is not in use.
+        // Add an `_items` suffix to distinguish the module name if the record name is already
+        // snake-case, then distinguish by adding `_` suffixes until we find a name that is
+        // not in use.
         let mut name = if snake_case_name == record_name {
             format!("{}_items", snake_case_name)
         } else {

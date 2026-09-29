@@ -5,7 +5,8 @@
 extern crate rustc_middle;
 
 use rustc_middle::mir::Mutability;
-use rustc_middle::ty::{self, Ty, TyCtxt, TypeFoldable, TypeSuperFoldable}; // See also <internal link>/ty.html#import-convention
+// See also <internal link>/ty.html#import-convention
+use rustc_middle::ty::{self, Ty, TyCtxt, TypeFoldable, TypeSuperFoldable};
 use std::collections::HashSet;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -110,13 +111,13 @@ fn peel_shared_refs<'tcx>(mut ty: Ty<'tcx>) -> Ty<'tcx> {
 /// to `avoid_colliding_types`).
 ///
 /// Implementation covers 3 kinds of types:
-/// * Types that may map to the same C++ type (e.g. `usize` and `u64`) are grouped into
-///   equivalence classes (e.g. `usize`, `u32`, and `u64`) and one of the types is chosen
-///   as the preferred type (e.g. `usize`, because it is common in `Index<T>`).
-/// * Structured types that need to be recursively handled (e.g. tuples, refs, slices, etc.,
-///   but not ADTs/structs)
-/// * Types that don't risk a C++ collision (e.g. `char` and `u8`) are returned as their
-///   own preferred type (i.e. their equivalence class contains only 1 type - themselves).
+/// * Types that may map to the same C++ type (e.g. `usize` and `u64`) are grouped into equivalence
+///   classes (e.g. `usize`, `u32`, and `u64`) and one of the types is chosen as the preferred type
+///   (e.g. `usize`, because it is common in `Index<T>`).
+/// * Structured types that need to be recursively handled (e.g. tuples, refs, slices, etc., but not
+///   ADTs/structs)
+/// * Types that don't risk a C++ collision (e.g. `char` and `u8`) are returned as their own
+///   preferred type (i.e. their equivalence class contains only 1 type - themselves).
 fn get_preferred_type<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
     struct PreferredTypeFolder<'tcx> {
         tcx: TyCtxt<'tcx>,

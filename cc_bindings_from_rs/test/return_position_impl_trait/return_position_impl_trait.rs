@@ -26,7 +26,8 @@ pub fn return_impl_drop(wrapper: &ArcWrapper) -> impl Drop + 'static {
     wrapper.clone()
 }
 
-// 3. Function returning `impl Future` whose underlying future captures an `ArcWrapper` (and thus implements `Drop`).
+// 3. Function returning `impl Future` whose underlying future captures an `ArcWrapper` (and thus
+//    implements `Drop`).
 pub fn return_impl_future_with_drop(
     wrapper: &ArcWrapper,
 ) -> impl core::future::Future<Output = ()> + 'static {

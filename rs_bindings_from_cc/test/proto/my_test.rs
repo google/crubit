@@ -53,7 +53,8 @@ fn test_extract_from_mutable_ptr_or_ref() {
 #[gtest]
 fn test_get_const_msg_ptr() {
     let ptr = my_proto_api::test::GetConstMsgPtr();
-    // SAFETY: Underlying C++ pointer is statically allocated and valid for the lifetime of this method.
+    // SAFETY: Underlying C++ pointer is statically allocated and valid for the lifetime of this
+    // method.
     let view: my_rust_proto::MyMessageView = unsafe { (&ptr).unsafe_cpp_cast() };
     expect_that!(view.my_num(), eq(345));
 }
@@ -61,7 +62,8 @@ fn test_get_const_msg_ptr() {
 #[gtest]
 fn test_get_mut_msg_ptr() {
     let mut ptr = my_proto_api::test::GetMutMsgPtr();
-    // SAFETY: Underlying C++ pointer is statically allocated and valid for the lifetime of this method.
+    // SAFETY: Underlying C++ pointer is statically allocated and valid for the lifetime of this
+    // method.
     let view: my_rust_proto::MyMessageMut = unsafe { (&mut ptr).unsafe_cpp_cast() };
     expect_that!(view.my_num(), eq(234));
 }

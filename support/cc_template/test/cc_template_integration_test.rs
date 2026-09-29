@@ -8,10 +8,9 @@ use cc_template::cc_template;
 use googletest::gtest;
 
 /// Test the `cc_template!` macro with:
-/// * the JSON file `__cc_template_instantiations.json` (the environment
-///   variable is configured in the BUILD file)
-/// * `__cc_template_instantiations_rs_api.rs` as the "generated" Rust bindings
-///   file
+/// * the JSON file `__cc_template_instantiations.json` (the environment variable is configured in
+///   the BUILD file)
+/// * `__cc_template_instantiations_rs_api.rs` as the "generated" Rust bindings file
 
 #[allow(non_camel_case_types)]
 mod __cc_template_instantiations_rs_api;

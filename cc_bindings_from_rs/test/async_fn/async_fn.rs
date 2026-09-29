@@ -47,7 +47,8 @@ pub async fn pend_5_times() -> i32 {
 }
 
 // 4. Bridged return types (cpp_convertible)
-// Crubit currently does not support async functions returning bridged types that require conversion thunks.
+// Crubit currently does not support async functions returning bridged types that require conversion
+// thunks.
 #[crubit_annotate::cpp_convertible(
     cpp_type = "crubit::test::AsyncFnCppConvertible",
     include_path = "cc_bindings_from_rs/test/async_fn/async_fn_existing_cpp_types.h",

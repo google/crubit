@@ -194,7 +194,8 @@ pub fn format_rust_source(
     let rust_formatted =
         match run_rustfmt(source, rustfmt_path, rustfmt_config_path, rustfmt_extra_args) {
             Ok(fmt) => fmt,
-            Err(_) if cfg!(test) => source.to_string(), // Fallback for unit testing if binaries are omitted
+            // Fallback for unit testing if binaries are omitted
+            Err(_) if cfg!(test) => source.to_string(),
             Err(e) => return Err(e),
         };
 
@@ -204,7 +205,8 @@ pub fn format_rust_source(
         return Ok(rust_formatted);
     }
 
-    // TODO(b/544997630): Run clang-format subprocesses in parallel (e.g. via rayon) for files with multiple macro blocks.
+    // TODO(b/544997630): Run clang-format subprocesses in parallel (e.g. via rayon) for files with
+    // multiple macro blocks.
     let mut replacements = Vec::new();
     for m in macros {
         let line_start =

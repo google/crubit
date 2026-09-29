@@ -499,16 +499,18 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static constexpr ReprCWithExtremeDiscriminants MakeMinusTwo();
 
   //  Based on https://github.com/rust-lang/rust/issues/124403:
-  //  * Historically, Rust allowed `#[repr(C)]` enums to have
-  //    discriminants of arbitrary size.  However, in C, the default enum
-  //    size is typically `int` (32-bit signed). This mismatch creates
-  //    non-portable layout differences between Rust and C/C++.
-  //  * Rust has introduced the `repr_c_enums_larger_than_int` lint (which
-  //    is part of the `future_incompatible` lint group). It warns when a
-  //    `#[repr(C)]` enum's discriminant does not fit into a C `int` or
-  //    `unsigned int` (essentially limiting portably supported values to
-  //    the signed 32-bit range: `[i32::MIN, i32::MAX]`). This warning is
-  //    planned to become a hard compiler error in a future Rust release.
+  //  * Historically, Rust allowed `#[repr(C)]` enums to have discriminants of
+  //  arbitrary
+  //    size.  However, in C, the default enum size is typically `int` (32-bit
+  //    signed). This mismatch creates non-portable layout differences between
+  //    Rust and C/C++.
+  //  * Rust has introduced the `repr_c_enums_larger_than_int` lint (which is
+  //  part of the
+  //    `future_incompatible` lint group). It warns when a `#[repr(C)]` enum's
+  //    discriminant does not fit into a C `int` or `unsigned int` (essentially
+  //    limiting portably supported values to the signed 32-bit range:
+  //    `[i32::MIN, i32::MAX]`). This warning is planned to become a hard
+  //    compiler error in a future Rust release.
   static constexpr ReprCWithExtremeDiscriminants MakeMinI32();
 
   static constexpr ReprCWithExtremeDiscriminants MakeMaxI32();
@@ -698,7 +700,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   // Error generating bindings for variant
   // `enums_golden::repr_c_clone_counter::CloneCount::A` defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=116:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=114:
   // Constructing non-tuple, struct-like enum variants is not supported:
   // b/487357254
 
@@ -760,7 +762,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   // Error generating bindings for variant
   // `enums_golden::repr_c_drop::DropMe::C` defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=95:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=93:
   // Constructing non-tuple, struct-like enum variants is not supported:
   // b/487357254
 
@@ -970,7 +972,7 @@ UnbindableFieldPayload final {
   // Error generating bindings for variant
   // `enums_golden::repr_c_variant_alignment::UnbindableFieldPayload::A` defined
   // at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=509:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=507:
   // Generic types are not supported yet (b/259749095)
 
   static ::enums::repr_c_variant_alignment::UnbindableFieldPayload MakeB(
@@ -1255,7 +1257,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
   // Error generating bindings for variant
   // `enums_golden::repr_rust::RustReprEnum::StructPayloadVariant` defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=182:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=180:
   // Constructing non-tuple, struct-like enum variants is not supported:
   // b/487357254
 
@@ -1302,19 +1304,19 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // Error generating bindings for variant
   // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::NoPayloadVariant`
   // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=232:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=230:
   // Conflicting member function name: MakeNoPayloadVariant
 
   // Error generating bindings for variant
   // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::TuplePayloadVariant`
   // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=233:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=231:
   // Conflicting member function name: MakeTuplePayloadVariant
 
   // Error generating bindings for variant
   // `enums_golden::repr_rust::RustReprWithNamingConflictBetweenCtorsAndMethods::StructPayloadVariant`
   // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=234:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=232:
   // Constructing non-tuple, struct-like enum variants is not supported:
   // b/487357254
 
@@ -1369,7 +1371,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 
 // Error generating bindings for enum
 // `enums_golden::repr_rust::RustReprWithSingleNoPayloadVariant` defined at
-// cc_bindings_from_rs/test/enums/enums.rs;l=213:
+// cc_bindings_from_rs/test/enums/enums.rs;l=211:
 // Zero-sized types (ZSTs) are not supported (b/258259459)
 
 //  This enum is not a "ZST" (Zero-Sized Type), because of the payload.
@@ -1451,7 +1453,7 @@ struct rs_std::impl<::enums::qr_error::QrError, ::rs::core::fmt::Debug> {
 
   // Error generating bindings for associated function
   // `<enums_golden::qr_error::QrError as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=349:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=347:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
 };
@@ -1469,7 +1471,7 @@ struct rs_std::impl<::enums::qr_error::StructuredQrError,
   // Error generating bindings for associated function
   // `<enums_golden::qr_error::StructuredQrError as std::fmt::Debug>::fmt`
   // defined at
-  // cc_bindings_from_rs/test/enums/enums.rs;l=365:
+  // cc_bindings_from_rs/test/enums/enums.rs;l=363:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
 };

@@ -305,7 +305,6 @@ pub fn cpp_specialization(attribute: TokenStream, input: TokenStream) -> TokenSt
 ///     todo!()
 /// }
 /// ```
-///
 #[proc_macro_attribute]
 pub fn cpp_convertible(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {
@@ -511,7 +510,8 @@ pub fn field_drop_order_does_not_matter(attribute: TokenStream, input: TokenStre
 }
 
 /// The `#[crubit_annotate::allow_unbindable_type]` attribute suppresses the warning
-/// on types defined in the `srcs` of a `rust_api_from_cpp` target that will not receive C++ bindings.
+/// on types defined in the `srcs` of a `rust_api_from_cpp` target that will not receive C++
+/// bindings.
 #[proc_macro_attribute]
 pub fn allow_unbindable_type(attribute: TokenStream, input: TokenStream) -> TokenStream {
     make_prefix_for(input, || {

@@ -354,19 +354,16 @@ impl<'a, T: std::fmt::Write> TokenOutputState<'a, T> {
 /// Produces source code out of the token stream.
 ///
 /// Notable features:
-/// * quote! cannot produce a single `#` token (that is not immediately followed
-///   by `(`, `[`, `{`, or variable interpolation). For cases when we need `#`
-///   to be produced in the C++ source code use the placeholder
-///   `__HASH_TOKEN__`.
-/// * The Rust tokenizer ignores newlines as they are not significant for Rust.
-///   For C++ they are (for example there needs to be a newline after `#include
-///   "foo/bar.h"`). We are also using explict newlines for making the generated
-///   Rust/C++ source code more readable. Use the placeholder `__NEWLINE__` to
-///   insert a newline character.
-/// * `TokenStream` cannot encode formatting whitespace, so we use the
-///   placeholder `__SPACE__`.
-/// * `TokenStream` cannot encode comments, so we use the placeholder
-///   `__COMMENT__`, followed by a string literal.
+/// * quote! cannot produce a single `#` token (that is not immediately followed by `(`, `[`, `{`,
+///   or variable interpolation). For cases when we need `#` to be produced in the C++ source code
+///   use the placeholder `__HASH_TOKEN__`.
+/// * The Rust tokenizer ignores newlines as they are not significant for Rust. For C++ they are
+///   (for example there needs to be a newline after `#include "foo/bar.h"`). We are also using
+///   explict newlines for making the generated Rust/C++ source code more readable. Use the
+///   placeholder `__NEWLINE__` to insert a newline character.
+/// * `TokenStream` cannot encode formatting whitespace, so we use the placeholder `__SPACE__`.
+/// * `TokenStream` cannot encode comments, so we use the placeholder `__COMMENT__`, followed by a
+///   string literal.
 /// * Generates a `ProvenanceMap`: for each `__CAPTURE_TAG__ "path" "start" "end"`, counting from 1,
 ///   stores the offsets of the last (single) token seen bracketed by __CAPTURE_BEGIN__ and
 ///   __CAPTURE_END__ before the next __CAPTURE_TAG__. This requires a `cur_len` that returns the

@@ -69,7 +69,8 @@ impl UnmovableFoo {
 /// * `out` must be properly aligned.
 /// * `out` must point to uninitialized memory (otherwise the previous value will be leaked).
 pub unsafe fn initialize_unmovable_foo(out: *mut UnmovableFoo, byte: u8) {
-    // SAFETY: `out` is valid for writes, properly aligned, and uninitialized per function safety contract.
+    // SAFETY: `out` is valid for writes, properly aligned, and uninitialized per function safety
+    // contract.
     unsafe {
         out.write(UnmovableFoo::from_byte(byte));
     }

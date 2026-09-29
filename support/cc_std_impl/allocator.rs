@@ -69,8 +69,8 @@ unsafe impl GlobalAlloc for Allocator {
 /// - Must only be called at the valid lifecycle transition points of `std::shared_ptr`:
 ///   - `FunctionToCall::kDestroyValue` must be called when the strong reference count drops to 0
 ///     (to destroy the managed payload).
-///   - `FunctionToCall::kDeleteControlBlock` must be called when the weak reference count drops to 0
-///     (to deallocate the control block and its allocation).
+///   - `FunctionToCall::kDeleteControlBlock` must be called when the weak reference count drops to
+///     0 (to deallocate the control block and its allocation).
 ///   Calling them out of order, multiple times, or at inappropriate lifecycle states violates the
 ///   `deleter`'s preconditions and causes undefined behavior.
 ///

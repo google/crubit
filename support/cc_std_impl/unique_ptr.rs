@@ -85,8 +85,8 @@ impl<T: Sized> unique_ptr<T> {
 
     /// Returns a raw pointer to the contents.
     ///
-    /// Note that `unique_ptr` has "shallow const" semantics: see the [type documentation](Self#shallow-const)
-    /// for details.
+    /// Note that `unique_ptr` has "shallow const" semantics: see the [type
+    /// documentation](Self#shallow-const) for details.
     pub fn as_ptr(this: &Self) -> *const T {
         this.ptr
     }

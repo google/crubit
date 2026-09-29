@@ -242,7 +242,10 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"nonnull_smart_pointers" => CrubitFeature::NonnullSmartPointers.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
-        // LINT.ThenChange(//depot/rs_bindings_from_cc/importer.cc, //depot/features/BUILD)
+        // LINT.ThenChange(
+        //     //depot/rs_bindings_from_cc/importer.cc,
+        //     //depot/features/BUILD
+        // )
     };
     Some(features)
 }
