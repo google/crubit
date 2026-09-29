@@ -11,6 +11,10 @@ load(
     "golden_test",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+load(
+    "//google_internal/build_flavors:crubit_build_flavors_ios_device.bzl",
+    "crubit_ios_device_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -50,6 +54,19 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    deps = [
+        ":vec_cc_api",
+        "//support/rs_std:rs_alloc",
+        "//support/rs_std:slice_ref",
+        "//support/rs_std:vec",
+        "//testing/base/public:gunit_main",
+        "@abseil-cpp//absl/types:span",
+    ],
+)
+
+crubit_ios_device_test(
+    name = "vec_test_on_ios_device",
+    srcs = ["vec_test.cc"],
     deps = [
         ":vec_cc_api",
         "//support/rs_std:rs_alloc",

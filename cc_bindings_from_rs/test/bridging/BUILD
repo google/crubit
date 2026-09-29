@@ -14,6 +14,10 @@ load(
     "golden_test",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+load(
+    "//google_internal/build_flavors:crubit_build_flavors_ios_device.bzl",
+    "crubit_ios_device_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -96,6 +100,17 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    deps = [
+        ":layout_equivalent_generics_cc_api",
+        ":rust_pointer_types_cc_api",
+        ":rust_type_cc_api",
+        "//testing/base/public:gunit_main",
+    ],
+)
+
+crubit_ios_device_test(
+    name = "bridging_test_on_ios_device",
+    srcs = ["bridging_test.cc"],
     deps = [
         ":layout_equivalent_generics_cc_api",
         ":rust_pointer_types_cc_api",

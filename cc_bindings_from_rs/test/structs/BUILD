@@ -14,6 +14,10 @@ load(
     "golden_test",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+load(
+    "//google_internal/build_flavors:crubit_build_flavors_ios_device.bzl",
+    "crubit_ios_device_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -49,6 +53,16 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    deps = [
+        ":structs_cc_api",
+        "//testing/base/public:gunit_main",
+        "@abseil-cpp//absl/strings",
+    ],
+)
+
+crubit_ios_device_test(
+    name = "structs_test_on_ios_device",
+    srcs = ["structs_test.cc"],
     deps = [
         ":structs_cc_api",
         "//testing/base/public:gunit_main",

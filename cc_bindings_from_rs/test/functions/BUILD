@@ -14,6 +14,10 @@ load(
     "golden_test",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+load(
+    "//google_internal/build_flavors:crubit_build_flavors_ios_device.bzl",
+    "crubit_ios_device_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -57,6 +61,16 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    deps = [
+        ":functions_cc_api",
+        "//support/rs_std:char",
+        "//testing/base/public:gunit_main",
+    ],
+)
+
+crubit_ios_device_test(
+    name = "functions_test_on_ios_device",
+    srcs = ["functions_test.cc"],
     deps = [
         ":functions_cc_api",
         "//support/rs_std:char",
