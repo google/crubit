@@ -58,8 +58,15 @@ TEST(ConstsTest, AllAreExpected) {
   static_assert(consts::STRUCT_WITH_ARRAY_CONST.values[0] == 100);
   static_assert(consts::STRUCT_WITH_ARRAY_CONST.values[1] == 200);
 
-  static_assert(consts::STRUCT_WITH_STR_CONST.msg == "hello world");
-  static_assert(consts::STRUCT_WITH_STR_CONST.count == 42);
+  static_assert(std::is_default_constructible_v<consts::StructWithStr>);
+  consts::StructWithStr default_str{};
+  EXPECT_EQ(default_str.msg, "");
+  EXPECT_EQ(default_str.count, 0);
+
+  EXPECT_EQ(consts::STRUCT_WITH_STR_CONST.msg, "hello world");
+  EXPECT_EQ(consts::STRUCT_WITH_STR_CONST.count, 42);
+
+  static_assert(!std::is_default_constructible_v<consts::StructWithRef>);
 }
 
 }  // namespace

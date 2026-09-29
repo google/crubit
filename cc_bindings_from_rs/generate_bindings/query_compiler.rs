@@ -95,10 +95,29 @@ fn is_abi_compatible_pointee<'tcx>(db: &BindingsGenerator<'tcx>, pointee: Ty<'tc
         || pointee.is_sized(db.tcx(), ty::TypingEnv::fully_monomorphized())
 }
 
+/// If `ty` is a reference `&T` or `&mut T`, or `Pin<&T>` or `Pin<&mut T>`, returns the region,
+/// referent type, and mutability.
+pub fn as_ref_or_pinned_ref<'tcx>(
+    ty: Ty<'tcx>,
+) -> Option<(ty::Region<'tcx>, Ty<'tcx>, ty::Mutability)> {
+    match ty.kind() {
+        ty::TyKind::Ref(region, referent, mutability) => Some((*region, *referent, *mutability)),
+        _ if let Some(inner) = ty.pinned_ty()
+            && let ty::TyKind::Ref(region, referent, mutability) = inner.kind() =>
+        {
+            Some((*region, *referent, *mutability))
+        }
+        _ => None,
+    }
+}
+
 /// Whether functions using `extern "C"` ABI can safely handle values of type
 /// `ty` (e.g. when passing by value arguments or return values of such type).
 pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
     let tcx = db.tcx();
+    if let Some((_, pointee, _)) = as_ref_or_pinned_ref(ty) {
+        return is_abi_compatible_pointee(db, pointee);
+    }
     match ty.kind() {
         // `improper_ctypes_definitions` warning doesn't complain about the following types:
         ty::TyKind::Bool
@@ -108,9 +127,7 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
         | ty::TyKind::Never
         | ty::TyKind::FnPtr { .. } => true,
 
-        ty::TyKind::RawPtr(pointee, ..) | ty::TyKind::Ref(_, pointee, ..) => {
-            is_abi_compatible_pointee(db, *pointee)
-        }
+        ty::TyKind::RawPtr(pointee, ..) => is_abi_compatible_pointee(db, *pointee),
         ty::TyKind::Tuple(types) if types.is_empty() => true,
         ty::TyKind::Char => !db.portable_abi_compatible(),
 

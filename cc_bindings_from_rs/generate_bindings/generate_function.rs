@@ -24,7 +24,9 @@ use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::{does_type_implement_trait, get_layout, is_copy, post_analysis_typing_env};
+use query_compiler::{
+    as_ref_or_pinned_ref, does_type_implement_trait, get_layout, is_copy, post_analysis_typing_env,
+};
 use quote::quote;
 #[rustversion::since(2026-09-27)]
 use rustc_attr_ir::{find_attr, Attribute, AttributeKind};
@@ -739,10 +741,10 @@ fn refs_to_check_for_aliasing<'tcx, 'a>(
         if matches!(crate::format_type::get_callable_info(tcx, param.ty), Ok(Some(_))) {
             continue;
         }
-        if let ty::TyKind::Ref(_region, target_ty, mutability) = param.ty.kind() {
+        if let Some((_region, target_ty, mutability)) = as_ref_or_pinned_ref(param.ty) {
             if mutability.is_mut() {
                 refs.mutable.push(param);
-            } else if !can_shared_refs_to_ty_alias_mut_refs(tcx, *target_ty) {
+            } else if !can_shared_refs_to_ty_alias_mut_refs(tcx, target_ty) {
                 refs.shared.push(param);
             }
         }

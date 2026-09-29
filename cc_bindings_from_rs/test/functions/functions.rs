@@ -95,6 +95,37 @@ pub mod fn_param_ty_tests {
         *sum = x + y;
     }
 
+    pub fn set_pinned_mut_ref_to_sum_of_ints(mut sum: core::pin::Pin<&mut i32>, x: i32, y: i32) {
+        *sum = x + y;
+    }
+
+    pub fn deref_pinned_int(x: core::pin::Pin<&i32>) -> i32 {
+        *x
+    }
+
+    pub fn get_identical_pinned_int_ref<'a>(x: core::pin::Pin<&'a i32>) -> core::pin::Pin<&'a i32> {
+        x
+    }
+
+    pub fn get_identical_pinned_mut_int_ref<'a>(
+        x: core::pin::Pin<&'a mut i32>,
+    ) -> core::pin::Pin<&'a mut i32> {
+        x
+    }
+
+    #[repr(C)]
+    pub struct StructWithPinnedRefs<'a> {
+        pub pinned_ref: core::pin::Pin<&'a i32>,
+        pub pinned_mut_ref: core::pin::Pin<&'a mut i32>,
+    }
+
+    pub fn create_struct_with_pinned_refs<'a>(
+        pinned_ref: core::pin::Pin<&'a i32>,
+        pinned_mut_ref: core::pin::Pin<&'a mut i32>,
+    ) -> StructWithPinnedRefs<'a> {
+        StructWithPinnedRefs { pinned_ref, pinned_mut_ref }
+    }
+
     pub fn sum_bytes(bytes: &[u8]) -> u32 {
         bytes.iter().map(|&b| b as u32).sum()
     }

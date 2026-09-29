@@ -81,6 +81,13 @@ static constexpr ::std::uint8_t RUST_UINT8_MIN = 0;
 static constexpr ::std::intptr_t RUST_USIZE_MAX = INT64_C(2147483647);
 static constexpr ::std::intptr_t RUST_USIZE_MIN = INT64_C(-2147483648);
 static constexpr ::std::uintptr_t SLICE_LENGTH = 11;
+
+// Error generating bindings for constant `consts_golden::STRUCT_WITH_REF_CONST`
+// defined at
+// cc_bindings_from_rs/test/consts/consts.rs;l=129:
+// const of type `consts_golden::StructWithRef<'static>` cannot be generated as
+// it is not a C++ aggregate: Field `r` is not default-constructible in C++
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithArray") alignas(
     4) [[clang::trivial_abi]] StructWithArray final {
  public:
@@ -94,6 +101,35 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithArray") alignas(
 static constexpr ::consts::StructWithArray STRUCT_WITH_ARRAY_CONST =
     ::consts::StructWithArray{
         .values = ::std::array<::std::int32_t, 2>{INT32_C(100), INT32_C(200)}};
+struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithRef") alignas(4)
+    [[clang::trivial_abi]] StructWithRef final {
+ public:
+  // Type is not a C++ aggregate: Field `r` is not default-constructible in C++
+
+  // `consts_golden::StructWithRef` doesn't implement the `Default` trait
+  StructWithRef() = delete;
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~StructWithRef() = default;
+  StructWithRef(StructWithRef&&) = default;
+  StructWithRef& operator=(StructWithRef&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  StructWithRef(const StructWithRef&) = default;
+  StructWithRef& operator=(const StructWithRef&) = default;
+  StructWithRef(::crubit::UnsafeRelocateTag, StructWithRef&& value);
+
+  bool operator==(::consts::StructWithRef const& other) const;
+
+  union {
+    ::std::int32_t const* crubit_nonnull r;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
 struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: StructWithStr") alignas(4)
     [[clang::trivial_abi]] StructWithStr final {
  public:
@@ -223,6 +259,22 @@ struct rs_std::impl<::consts::StructWithArray, ::rs::core::fmt::Debug> {
 };
 
 template <>
+struct rs_std::impl<::consts::StructWithRef, ::rs::core::cmp::Eq> {
+  static constexpr bool kIsImplemented = true;
+};
+
+template <>
+struct rs_std::impl<::consts::StructWithRef, ::rs::core::fmt::Debug> {
+  static constexpr bool kIsImplemented = true;
+
+  // Error generating bindings for associated function
+  // `<consts_golden::StructWithRef<'a> as std::fmt::Debug>::fmt` defined at
+  // cc_bindings_from_rs/test/consts/consts.rs;l=123:
+  // Error formatting function return type `std::result::Result<(),
+  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+};
+
+template <>
 struct rs_std::impl<::consts::StructWithStr, ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
@@ -341,6 +393,40 @@ inline bool(StructWithArray::operator==)(
 inline void ::consts::StructWithArray::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::consts::StructWithArray;
   static_assert(0 == offsetof(__crubit_assert_type, values));
+}
+static_assert(
+    sizeof(::consts::StructWithRef) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::consts::StructWithRef) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<::consts::StructWithRef>);
+static_assert(
+    ::std::is_trivially_move_constructible_v<::consts::StructWithRef>);
+static_assert(::std::is_trivially_move_assignable_v<::consts::StructWithRef>);
+static_assert(
+    ::std::is_trivially_copy_constructible_v<::consts::StructWithRef>);
+static_assert(::std::is_trivially_copy_assignable_v<::consts::StructWithRef>);
+inline ::consts::StructWithRef::StructWithRef(::crubit::UnsafeRelocateTag,
+                                              StructWithRef&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" bool
+__crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e(
+    ::consts::StructWithRef const&, ::consts::StructWithRef const&);
+}
+inline bool(StructWithRef::operator==)(
+    ::consts::StructWithRef const& other) const {
+  auto&& self = *this;
+  return __crubit_internal::
+      __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e(
+          self, other);
+}
+inline void ::consts::StructWithRef::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::consts::StructWithRef;
+  static_assert(0 == offsetof(__crubit_assert_type, r));
 }
 static_assert(
     sizeof(::consts::StructWithStr) == 12,
