@@ -100,7 +100,7 @@ jobs:
     - name: Test CMake project
       run: |
         cd examples/build_systems/${{ matrix.project }}
-        cmake -B build -S . $LAUNCHER_FLAGS
+        cmake -B build -S . -G Ninja $LAUNCHER_FLAGS
         cmake --build build --parallel
         cd build
         ctest --output-on-failure --parallel 2
