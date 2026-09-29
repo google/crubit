@@ -24,6 +24,15 @@ use core::ptr::NonNull;
 ///
 /// Additionally, this reference behaves similarly to `Pin<&T>`: the target
 /// value must be pinned in memory unless `T: Unpin`.
+///
+/// # Layout
+///
+/// `CRef<'a, T>` is `#[repr(transparent)]` over `NonNull<T>`, and this is part
+/// of its API: it has the same size, alignment, and function-call ABI as
+/// `NonNull<T>`. When `T: Sized`, it can cross an `extern "C"` boundary as a
+/// `const T*` or `const T&`, and by the `std::option` representation guarantee,
+/// `Option<CRef<'a, T>>` has the same size, alignment, and ABI as `*const T`,
+/// with `None` as null.
 #[repr(transparent)]
 pub struct CRef<'a, T: ?Sized> {
     // Invariant: `ptr` is non-null, non-dangling, and points to a valid value of type `T`.
@@ -110,6 +119,15 @@ impl<'a, T: ?Sized> CRef<'a, T> {
 ///
 /// Additionally, this reference behaves similarly to `Pin<&mut T>`: the target
 /// value must be pinned in memory unless `T: Unpin`.
+///
+/// # Layout
+///
+/// `CMut<'a, T>` is `#[repr(transparent)]` over `NonNull<T>`, and this is part
+/// of its API: it has the same size, alignment, and function-call ABI as
+/// `NonNull<T>`. When `T: Sized`, it can cross an `extern "C"` boundary as a
+/// `T*` or `T&`, and by the `std::option` representation guarantee,
+/// `Option<CMut<'a, T>>` has the same size, alignment, and ABI as `*mut T`,
+/// with `None` as null.
 #[repr(transparent)]
 pub struct CMut<'a, T: ?Sized> {
     // Invariant: `ptr` is non-null, non-dangling, and points to a valid value of type `T`.
@@ -155,8 +173,8 @@ impl<'a, T: ?Sized> CMut<'a, T> {
     ///
     /// This conversion is "free" and does not impose any additional safety requirements.
     pub const fn into_const(this: Self) -> CRef<'a, T> {
-        // Safety: `this` is a valid pointer to a `T`, so it is non-null, non-dangling, and points to
-        // a valid value of type `T`.
+        // Safety: `this` is a valid pointer to a `T`, so it is non-null, non-dangling, and points
+        // to a valid value of type `T`.
         unsafe { CRef::from_ptr(this.ptr.as_ptr()) }
     }
 
