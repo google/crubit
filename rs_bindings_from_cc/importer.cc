@@ -2002,6 +2002,13 @@ absl::StatusOr<CcType> Importer::ConvertType(
     clang::NullabilityKindOrNone nullability = type.getNullability();
     cpp_type->is_nonnull = nullability.has_value() &&
                            *nullability == clang::NullabilityKind::NonNull;
+    // Raw pointers record non-nullness in their kind. Both kinds still map to
+    // a Rust raw pointer; this only makes the information available to codegen.
+    if (auto* pointer = std::get_if<CcType::PointerType>(&cpp_type->variant);
+        pointer != nullptr && pointer->kind == PointerTypeKind::NULLABLE &&
+        cpp_type->is_nonnull) {
+      pointer->kind = PointerTypeKind::NON_NULL;
+    }
 
     std::optional<std::string> unknown_attr =
         CollectUnknownTypeAttrs(type, [](clang::attr::Kind kind) {
@@ -2015,8 +2022,6 @@ absl::StatusOr<CcType> Importer::ConvertType(
             // cases only mark the attributes as recognized, so that they are
             // not reported as unknown; removing them would cost every
             // annotated type its bindings.
-            // TODO(mboehme): `_Nonnull` currently only changes the bindings we
-            // produce for smart pointers. Extend this to raw pointers.
             case TypeNullable:
             case TypeNonNull:
             case TypeNullUnspecified:

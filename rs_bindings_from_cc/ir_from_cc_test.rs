@@ -1244,6 +1244,32 @@ fn test_nonnull_annotation_is_recorded() {
 }
 
 #[gtest]
+fn test_nonnull_raw_pointer_kind() {
+    let proto = ir_proto_from_cc("void f(int* _Nonnull annotated, int* plain);").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            params: [
+                FuncParam {
+                    type_: CcType {
+                        variant: Pointer(PointerType { kind: NonNull, ... }), ...
+                    },
+                    identifier: "annotated", ...
+                },
+                FuncParam {
+                    type_: CcType {
+                        variant: Pointer(PointerType { kind: Nullable, ... }), ...
+                    },
+                    identifier: "plain", ...
+                },
+            ]
+        }
+    );
+}
+
+#[gtest]
 fn test_doc_comment() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"

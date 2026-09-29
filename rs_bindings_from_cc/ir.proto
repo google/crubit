@@ -44,7 +44,12 @@ enum PointerTypeKind {
   POINTER_TYPE_KIND_UNSPECIFIED = 0;
   L_VALUE_REF = 1;
   R_VALUE_REF = 2;
+
+  // A raw pointer that may be null, i.e. one not annotated `_Nonnull`.
   NULLABLE = 3;
+
+  // A raw pointer that may not be null, because it was annotated `_Nonnull`
+  // (e.g. via `absl_nonnull`).
   NON_NULL = 4;
   OWNED = 5;
 }
