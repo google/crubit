@@ -13,23 +13,9 @@ package(
     default_visibility = ["//rs_bindings_from_cc/test/bazel/deps_with_same_names/bridge_types:__subpackages__"],
 )
 
-_compatible_with_flag = select({
-    "//rs_bindings_from_cc/test/bazel/deps_with_same_names:use_label_encoded_names_for_deps_enabled": [],
-    "//conditions:default": ["//third_party/bazel_platforms:incompatible"],
-})
-
-_tags = [
-    "notap",
-    "noguitar",
-    "manual",
-    "nobuilder",
-]
-
 additional_rust_srcs_for_crubit_bindings(
     name = "a_extra_srcs",
     srcs = ["a_extra.rs"],
-    tags = _tags,
-    target_compatible_with = _compatible_with_flag,
     deps = [
         "//support:bridge_rust",
     ],
@@ -42,6 +28,4 @@ cc_library(
         ":a_extra_srcs",
         "//features:supported",
     ],
-    tags = _tags,
-    target_compatible_with = _compatible_with_flag,
 )

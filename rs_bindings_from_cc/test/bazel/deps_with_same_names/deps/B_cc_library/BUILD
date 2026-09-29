@@ -11,16 +11,8 @@ package(
     ],
 )
 
-_tags = [
-    "notap",
-    "noguitar",
-    "manual",
-    "nobuilder",
-]
-
 cc_library(
     name = "a",
     hdrs = ["a.h"],
     aspect_hints = ["//features:supported"],
-    tags = _tags,
 )

@@ -18,33 +18,12 @@ package(
     default_visibility = ["//rs_bindings_from_cc/test/bazel/deps_with_same_names:__subpackages__"],
 )
 
-_tags = [
-    "notap",
-    "noguitar",
-    "manual",
-    "nobuilder",
-]
-
-config_setting(
-    name = "use_label_encoded_names_for_deps_enabled",
-    flag_values = {
-        "//common/bazel_support:use_label_encoded_names_for_deps": "True",
-    },
-)
-
-_compatible_with_flag = select({
-    ":use_label_encoded_names_for_deps_enabled": [],
-    "//conditions:default": ["//third_party/bazel_platforms:incompatible"],
-})
-
 # Test case 1: rust_api_from_cpp with aliases
 cc_library(
     name = "key_cc",
     srcs = ["key.cc"],
     hdrs = ["key.h"],
     aspect_hints = [":key_rust.hint"],
-    tags = _tags,
-    target_compatible_with = _compatible_with_flag,
     deps = [
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/aliases/deps/cc_bar:bar",  # buildcleaner: keep
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/aliases/deps/cc_foo:foo",  # buildcleaner: keep
@@ -61,8 +40,6 @@ rust_api_from_cpp(
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/aliases/deps/foo:foo": "aliased_rust_foo_sub",
     },
     cpp_target = ":key_cc",
-    tags = _tags,
-    target_compatible_with = _compatible_with_flag,
     deps = [
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/aliases/deps/foo",
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/aliases/deps/rust_foo:foo",
@@ -75,8 +52,6 @@ cc_library(
     srcs = ["key2.cc"],
     hdrs = ["key2.h"],
     aspect_hints = [":key2_hint"],
-    tags = _tags,
-    target_compatible_with = _compatible_with_flag,
     deps = [
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/aliases/deps/cc_bar:bar",  # buildcleaner: keep
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/aliases/deps/cc_foo:foo",  # buildcleaner: keep
@@ -90,8 +65,6 @@ additional_rust_srcs_for_crubit_bindings(
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/aliases/deps/cc_bar:bar_rust": "aliased_bar",
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/aliases/deps/cc_foo:foo": "aliased_foo",
     },
-    tags = _tags,
-    target_compatible_with = _compatible_with_flag,
     deps = [
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/aliases/deps/rust_foo:foo",
     ],
@@ -104,14 +77,10 @@ rust_library(
         ":key2_cc": "key2_cc_rust",
     },
     cc_deps = [":key2_cc"],
-    tags = _tags,
-    target_compatible_with = _compatible_with_flag,
 )
 
 build_test(
     name = "build_test",
-    tags = _tags,
-    target_compatible_with = _compatible_with_flag,
     targets = [
         ":key_rust",
         ":key2_client",

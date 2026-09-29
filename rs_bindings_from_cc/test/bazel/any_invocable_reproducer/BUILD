@@ -27,18 +27,8 @@ package(
     default_testonly = 1,
 )
 
-config_setting(
-    name = "use_label_encoded_names_for_deps_enabled",
-    flag_values = {
-        "//common/bazel_support:use_label_encoded_names_for_deps": "True",
-    },
-)
-
-_compatible_with_flag = select({
-    ":use_label_encoded_names_for_deps_enabled": [],
-    "//conditions:default": ["//third_party/bazel_platforms:incompatible"],
-})
-
+# TODO(b/541216309): Remove when @abseil-cpp//absl/functional:any_invocable is removed
+# from legacy_mangling_allowlist.
 _tags = [
     "notap",
     "noguitar",
@@ -66,7 +56,6 @@ cc_library(
         "//features:supported",
     ],
     tags = _tags,
-    target_compatible_with = _compatible_with_flag,
     deps = [
         "@abseil-cpp//absl/functional:any_invocable",
     ],
@@ -77,13 +66,11 @@ rust_library(
     srcs = ["any_invocable_usage.rs"],
     cc_deps = [":any_invocable_usage_cc"],
     tags = _tags,
-    target_compatible_with = _compatible_with_flag,
 )
 
 build_test(
     name = "build_test",
     tags = _tags,
-    target_compatible_with = _compatible_with_flag,
     targets = [
         ":any_invocable_usage_rust",
     ],

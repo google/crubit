@@ -11,22 +11,10 @@ package(
     ],
 )
 
-_tags = [
-    "notap",
-    "noguitar",
-    "manual",
-    "nobuilder",
-]
-
 cc_library(
     name = "a",
     hdrs = ["a.h"],
     aspect_hints = ["//features:supported"],
-    tags = _tags,
-    target_compatible_with = select({
-        "//rs_bindings_from_cc/test/bazel/deps_with_same_names:use_label_encoded_names_for_deps_enabled": [],
-        "//conditions:default": ["//third_party/bazel_platforms:incompatible"],
-    }),
     deps = [
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/deps/G_cc_public_library:a",
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/deps/H_cc_public_library:a",

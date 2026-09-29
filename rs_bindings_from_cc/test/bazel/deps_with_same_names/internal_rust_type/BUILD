@@ -13,11 +13,7 @@ package(
     default_testonly = 1,
 )
 
-_compatible_with_flag = select({
-    "//rs_bindings_from_cc/test/bazel/deps_with_same_names:use_label_encoded_names_for_deps_enabled": [],
-    "//conditions:default": ["//third_party/bazel_platforms:incompatible"],
-})
-
+# TODO(b/541216309): Remove when CL 983136933 reaches stable crosstool.
 _tags = [
     "notap",
     "noguitar",
@@ -32,7 +28,6 @@ cc_library(
         "//features:supported",
     ],
     tags = _tags,
-    target_compatible_with = _compatible_with_flag,
     deps = [
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/internal_rust_type/deps/A_cc_library:a",
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/internal_rust_type/deps/B_cc_library:a",
@@ -45,7 +40,6 @@ cc_library(
     hdrs = ["client.h"],
     aspect_hints = ["//features:supported"],
     tags = _tags,
-    target_compatible_with = _compatible_with_flag,
     deps = [
         ":key_lib",
         "//rs_bindings_from_cc/test/bazel/deps_with_same_names/internal_rust_type/deps/A_cc_library:a",
@@ -58,13 +52,11 @@ rust_library(
     srcs = ["client.rs"],
     cc_deps = [":client_cc"],
     tags = _tags,
-    target_compatible_with = _compatible_with_flag,
 )
 
 build_test(
     name = "build_test",
     tags = _tags,
-    target_compatible_with = _compatible_with_flag,
     targets = [
         ":client_rust",
     ],
