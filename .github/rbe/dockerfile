@@ -1,0 +1,19 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    git \
+    libxml2-dev \
+    libzstd-dev \
+    lld \
+    python3 \
+    zlib1g-dev \
+  && update-alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 100 \
+  && rm -rf /var/lib/apt/lists/*
+
