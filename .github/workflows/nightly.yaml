@@ -197,7 +197,7 @@ jobs:
           llvm: 'none'    # the commit comes from the job output, below
       - name: Build against today's LLVM
         env:
-          CRUBIT_LLVM_COMMIT: ${{ needs.select-llvm-commit.outputs.commit }}
+          CRUBIT_LLVM_COMMIT: ${{ needs.update-and-generate.outputs.commit }}
         run: |
           cd crubit
           bazelisk build --lockfile_mode=error \
