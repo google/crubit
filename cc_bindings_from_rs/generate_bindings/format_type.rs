@@ -2222,7 +2222,17 @@ fn is_manually_annotated_bridged_adt<'tcx>(
 /// - Non-bridged types.
 /// - Bridged types with layout-compatible alternatives (e.g. `rs_std::Option<T>`).
 /// - Proto messages.
-fn can_be_made_layout_compatible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<bool> {
+///
+/// Types that are not layout-compatible can only be passed by value (via conversion) in bridgeable
+/// locations such as function parameters and return values. They cannot be used behind references
+/// or pointers, as struct fields (b/400633609), or as generic arguments of non-bridged types.
+///
+/// This is the single source of truth for which types are layout-compatible; prefer it over
+/// checking `BridgedType::is_layout_compatible` directly.
+pub fn can_be_made_layout_compatible<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+) -> Result<bool> {
     let Some(bridged) = is_bridged_type(db, ty)? else {
         return Ok(true);
     };

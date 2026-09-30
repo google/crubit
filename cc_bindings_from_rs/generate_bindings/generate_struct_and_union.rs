@@ -22,10 +22,10 @@ use crate::generate_function_thunk::{
     trait_method_thunk_name, ThunkKind,
 };
 use crate::{
-    does_type_implement_trait, generate_const, generate_deprecated_tag, generate_must_use_tag,
-    generate_trait_thunks, generate_unsupported_def, get_layout, get_scalar_int_type,
-    get_tag_size_with_padding, is_bridged_type, is_copy, BridgedBuiltin, RsSnippet, SortedByDef,
-    TraitThunks,
+    can_be_made_layout_compatible, does_type_implement_trait, generate_const,
+    generate_deprecated_tag, generate_must_use_tag, generate_trait_thunks,
+    generate_unsupported_def, get_layout, get_scalar_int_type, get_tag_size_with_padding, is_copy,
+    BridgedBuiltin, RsSnippet, SortedByDef, TraitThunks,
 };
 
 use arc_anyhow::{Context, Result};
@@ -1709,7 +1709,9 @@ fn is_type_default_constructible_in_cpp<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
                     BridgedBuiltin::Result => false,
                 };
             }
-            if is_layout_incompatible_bridged_type(db, ty) {
+            // Errors are treated as layout-compatible here; they will be reported when the
+            // type is actually formatted.
+            if !can_be_made_layout_compatible(db, ty).unwrap_or(true) {
                 return false;
             }
             if let Some(default_trait_id) = tcx.get_diagnostic_item(sym::Default)
@@ -1721,30 +1723,6 @@ fn is_type_default_constructible_in_cpp<'tcx>(db: &BindingsGenerator<'tcx>, ty: 
         }
         _ => false,
     }
-}
-
-/// Returns whether `ty` is a bridged type that is not layout-compatible with its C++
-/// representation.
-///
-/// Non-layout-compatible bridged types generally cannot be stored in C++ structs (b/400633609)
-/// because their Rust memory layout does not match their C++ layout.
-/// The exceptions are:
-/// - `Option<T>`, which uses Crubit's special `rs_std::Option` representation.
-/// - Protobuf messages (which use `proto::Rust<CppType>`), where the Rust type is an owned pointer
-///   represented in C++ as `proto::Rust<CppType>` rather than an inline value. Note: This only
-///   works for types like Protos where the Rust type is equivalent to a single pointer handle;
-///   arbitrary non-proto bridged types with different layouts cannot be represented this way.
-fn is_layout_incompatible_bridged_type<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
-    let is_incompatible = is_bridged_type(db, ty).is_ok_and(|bridged_type| {
-        bridged_type
-            .is_some_and(|bridged| !bridged.is_layout_compatible() && !db.is_proto_message(ty))
-    });
-    let is_option = ty
-        .ty_adt_def()
-        .and_then(|adt_def| BridgedBuiltin::new(db, adt_def))
-        .is_some_and(|builtin| matches!(builtin, BridgedBuiltin::Option));
-
-    is_incompatible && !is_option
 }
 
 /// Returns whether the given ADT should be generated as a C++ aggregate, or the reason why not.
@@ -1794,7 +1772,7 @@ pub(crate) fn is_struct_aggregate<'tcx>(
         if get_layout(tcx, ty).is_err() {
             return Err(NotAggregateReason::FieldLayoutError(field_def.name));
         }
-        if is_layout_incompatible_bridged_type(db, ty) {
+        if !can_be_made_layout_compatible(db, ty).unwrap_or(true) {
             return Err(NotAggregateReason::IncompatibleBridgedField(field_def.name));
         }
         if db.format_ty_for_cc(ty, TypeLocation::Field).is_err() {
@@ -3045,7 +3023,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         let tcx = self.db.tcx();
         let size = get_layout(tcx, ty).map(|layout| layout.size().bytes())?;
 
-        if is_layout_incompatible_bridged_type(self.db, ty) {
+        if !can_be_made_layout_compatible(self.db, ty).unwrap_or(true) {
             bail!(
                 "Field is a bridged type and might not be layout-compatible
                 with the C++ type (b/400633609)"
