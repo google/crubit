@@ -504,6 +504,52 @@ fn does_impl_apply<'tcx>(
         .filter(|resolved| !resolved.has_non_region_infer())
         .map(|resolved| replace_all_regions_with_static(tcx, resolved))
 }
+
+#[must_use]
+pub(crate) fn is_recursive_specialization<'tcx>(self_ty: Ty<'tcx>, target_ty: Ty<'tcx>) -> bool {
+    // Coarse grain calculation of type depth for preventing infinite type expansion.
+    fn type_depth<'tcx>(ty: Ty<'tcx>) -> usize {
+        match ty.kind() {
+            TyKind::Adt(_, args) => 1 + args.types().map(type_depth).max().unwrap_or(0),
+            TyKind::Tuple(tys) => 1 + tys.iter().map(type_depth).max().unwrap_or(0),
+            TyKind::Ref(_, referent, _) => 1 + type_depth(*referent),
+            TyKind::RawPtr(pointee, _) => 1 + type_depth(*pointee),
+            TyKind::Slice(elem) | ty::TyKind::Array(elem, _) => 1 + type_depth(*elem),
+            _ => 1,
+        }
+    }
+    // We don't want to exclude methods that list the self type as a parameter (such as inherent
+    // methods).
+    if self_ty == target_ty {
+        return false;
+    }
+
+    // 1. Self-containment: if target_ty contains self_ty anywhere as a subterm (e.g. Self ->
+    //    Wrapper<Self>)
+    if target_ty.walk().any(|arg| arg.as_type() == Some(self_ty)) {
+        return true;
+    }
+    let ty::TyKind::Adt(self_adt, _) = self_ty.kind() else {
+        return false;
+    };
+    let self_ty_depth = type_depth(self_ty);
+
+    // 2. Same-template inductive growth: Foo<T> -> Foo<Ref<T> in any nested ADT inside target_ty
+    //    (or target_ty itself) has the same DefId as self_ty and is deeper (e.g.
+    //    Result<Date<Ref<T>>, Error>)
+    for sub_ty in target_ty.walk().filter_map(|arg| arg.as_type()) {
+        let Some(sub_adt) = sub_ty.ty_adt_def() else {
+            continue;
+        };
+        if sub_adt.did() == self_adt.did() && type_depth(sub_ty) > self_ty_depth {
+            return true;
+        }
+    }
+
+    // 3. Arbitrary depth limit to avoid infinite recursion.
+    type_depth(target_ty) >= 6
+}
+
 pub fn from_trait_impls_by_argument<'tcx>(
     db: &BindingsGenerator<'tcx>,
     crate_num: CrateNum,
@@ -2067,14 +2113,46 @@ pub fn generate_adt<'tcx>(
             tcx.associated_items(impl_id).in_definition_order().map(move |item| (item, impl_args))
         })
         .filter_map(|(assoc_item, impl_args)| {
-            generate_associated_item(
+            let snippets = generate_associated_item(
                 db,
                 assoc_item,
                 &mut member_function_names,
                 impl_args,
                 None,
                 StaticMethodMode::Infer,
-            )
+            )?;
+
+            if !self_is_not_generic {
+                let self_ty = core.common.self_ty;
+                let introduces_recursive_spec = snippets
+                    .main_api
+                    .prereqs
+                    .template_specializations
+                    .iter()
+                    .chain(snippets.main_api.prereqs.lazy_template_specializations.iter())
+                    .chain(snippets.cc_details.prereqs.template_specializations.iter())
+                    .chain(snippets.cc_details.prereqs.lazy_template_specializations.iter())
+                    .any(|spec| match spec {
+                        TemplateSpecialization::Adt(adt_spec) => {
+                            // Because we eagerly instantiate all template specializations, we need
+                            // to guard against infinite recursion. This
+                            // can arise from inherent methods that use
+                            // Self as template argument of another
+                            // specialization among other things.
+                            is_recursive_specialization(self_ty, adt_spec.self_ty_rs)
+                        }
+                        _ => false,
+                    });
+
+                if introduces_recursive_spec {
+                    if let Some(unqualified_name) = db.symbol_unqualified_name(assoc_item.def_id) {
+                        member_function_names.remove(unqualified_name.cpp_name.as_str());
+                    }
+                    return None;
+                }
+            }
+
+            Some(snippets)
         })
         .collect();
 
