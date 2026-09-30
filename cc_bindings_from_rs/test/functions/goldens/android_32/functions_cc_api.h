@@ -198,9 +198,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
       ::std::int32_t x);
 
  private:
-  union {
-    ::std::int32_t __field0;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> __field0;
 
  private:
   static void __crubit_field_offset_assertions();

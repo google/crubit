@@ -83,9 +83,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: leaf_rs_lib_golden :: LeafRsType") alignas(
   LeafRsType(::crubit::UnsafeRelocateTag, LeafRsType&& value);
 
  private:
-  union {
-    ::std::uint8_t field;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 1> field;
 
  private:
   static void __crubit_field_offset_assertions();

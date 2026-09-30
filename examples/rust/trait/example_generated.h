@@ -19,6 +19,7 @@
 #include "support/rs_std/str_ref.h"
 #include "support/rs_std/traits.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -47,9 +48,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: example_crate_golden :: MyStruct") alignas(
   static ::example_crate::MyStruct new_(::std::int32_t x);
 
  private:
-  union {
-    ::std::int32_t x;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> x;
 
  private:
   static void __crubit_field_offset_assertions();

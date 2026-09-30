@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -54,12 +55,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   };
 
  private:
-  union {
-    ::std::int32_t b_;
-  };
-  union {
-    ::std::int32_t c;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> b_;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> c;
 
  private:
   static void __crubit_field_offset_assertions();

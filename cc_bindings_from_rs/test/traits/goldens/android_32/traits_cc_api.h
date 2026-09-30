@@ -19,12 +19,11 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/traits.h"
-#include "support/rs_std/tuple.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <memory>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -57,12 +56,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                        AssociatedTypeStruct&& value);
 
  private:
-  union {
-    ::rs::alloc::string::String a;
-  };
-  union {
-    ::std::int32_t b;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 12> a;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> b;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -78,6 +75,33 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: DifferentTraitSameName")
     DifferentTraitSameName {
   template <typename T>
   using impl = rs_std::impl<T, DifferentTraitSameName>;
+};
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
+    [[clang::trivial_abi]] Foo final {
+ public:
+  // Default::default
+  Foo();
+
+  // No custom `Drop` impl and no custom "drop glue" required
+  ~Foo() = default;
+  Foo(Foo&&) = default;
+  Foo& operator=(Foo&&) = default;
+
+  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
+  // assignment operator.
+  Foo(const Foo&) = default;
+  Foo& operator=(const Foo&) = default;
+  Foo(::crubit::UnsafeRelocateTag, Foo&& value);
+
+  static ::traits::Foo new_(::std::int32_t x, ::std::int32_t y);
+
+ private:
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 8> a;
+
+ private:
+  static void __crubit_field_offset_assertions();
 };
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
@@ -97,9 +121,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: LifetimeStruct") alignas(
   LifetimeStruct(::crubit::UnsafeRelocateTag, LifetimeStruct&& value);
 
  private:
-  union {
-    ::std::int32_t const* crubit_nonnull x;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> x;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -131,9 +154,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct") alignas(4)
   static ::traits::MyStruct new_(::std::int32_t x);
 
  private:
-  union {
-    ::std::int32_t x;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> x;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -157,9 +179,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: MyStruct2") alignas(4)
   MyStruct2(::crubit::UnsafeRelocateTag, MyStruct2&& value);
 
  private:
-  union {
-    ::std::int32_t y;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> y;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -185,114 +206,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: TraitWithAssociatedConst")
     TraitWithAssociatedConst {
   template <typename T>
   using impl = rs_std::impl<T, TraitWithAssociatedConst>;
-};
-
-}  // namespace traits
-
-#ifndef _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-template <>
-struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "(i32 , i32 ,)") rs_std::Tuple<::std::int32_t, ::std::int32_t> {
- public:
-  // Default::default
-  Tuple();
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  Tuple(const Tuple&) = default;
-  Tuple& operator=(const Tuple&) = default;
-  Tuple(Tuple&&) = default;
-  Tuple& operator=(Tuple&&) = default;
-
-  Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
-  Tuple(std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept;
-  ~Tuple() = default;
-  operator std::tuple<::std::int32_t, ::std::int32_t>() && noexcept;
-  template <std::size_t I>
-  constexpr decltype(auto) get() & noexcept {
-    static_assert(I < 2, "Tuple index out of bounds");
-    if constexpr (I == 0) {
-      return (this->__field0);
-    } else if constexpr (I == 1) {
-      return (this->__field1);
-    } else {
-      CRUBIT_UNREACHABLE();
-    }
-  }
-  template <std::size_t I>
-  constexpr decltype(auto) get() const& noexcept {
-    static_assert(I < 2, "Tuple index out of bounds");
-    if constexpr (I == 0) {
-      return (this->__field0);
-    } else if constexpr (I == 1) {
-      return (this->__field1);
-    } else {
-      CRUBIT_UNREACHABLE();
-    }
-  }
-  template <std::size_t I>
-  constexpr decltype(auto) get() && noexcept {
-    static_assert(I < 2, "Tuple index out of bounds");
-    if constexpr (I == 0) {
-      return std::move(this->__field0);
-    } else if constexpr (I == 1) {
-      return std::move(this->__field1);
-    } else {
-      CRUBIT_UNREACHABLE();
-    }
-  }
-  template <std::size_t I>
-  constexpr decltype(auto) get() const&& noexcept {
-    static_assert(I < 2, "Tuple index out of bounds");
-    if constexpr (I == 0) {
-      return std::move(this->__field0);
-    } else if constexpr (I == 1) {
-      return std::move(this->__field1);
-    } else {
-      CRUBIT_UNREACHABLE();
-    }
-  }
-  union {
-    ::std::int32_t __field0;
-  };
-  union {
-    ::std::int32_t __field1;
-  };
-
- private:
-  static void __crubit_field_offset_assertions();
-};
-#endif
-
-namespace traits {
-
-struct CRUBIT_INTERNAL_RUST_TYPE(":: traits_golden :: Foo") alignas(4)
-    [[clang::trivial_abi]] Foo final {
- public:
-  // Default::default
-  Foo();
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~Foo() = default;
-  Foo(Foo&&) = default;
-  Foo& operator=(Foo&&) = default;
-
-  // Rust types that are `Copy` get trivial, `default` C++ copy constructor and
-  // assignment operator.
-  Foo(const Foo&) = default;
-  Foo& operator=(const Foo&) = default;
-  Foo(::crubit::UnsafeRelocateTag, Foo&& value);
-
-  static ::traits::Foo new_(::std::int32_t x, ::std::int32_t y);
-
- private:
-  union {
-    rs_std::Tuple<::std::int32_t, ::std::int32_t> a;
-  };
-
- private:
-  static void __crubit_field_offset_assertions();
 };
 
 }  // namespace traits
@@ -607,49 +520,6 @@ inline void ::traits::StructWithAssociatedConst::
   static_assert(0 == offsetof(__crubit_assert_type, x));
 }
 }  // namespace traits
-
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL__x0000003a_x0000003a_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Tuple_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
-    rs_std::Tuple<::std::int32_t, ::std::int32_t>* __ret_ptr);
-}
-inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple() {
-  ::__crubit_internal::
-      __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
-          this);
-}
-static_assert(::std::is_trivially_copy_constructible_v<
-              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
-static_assert(::std::is_trivially_copy_assignable_v<
-              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
-static_assert(::std::is_trivially_move_constructible_v<
-              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
-static_assert(::std::is_trivially_move_assignable_v<
-              ::rs_std::Tuple<::std::int32_t, ::std::int32_t>>);
-inline ::rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
-    ::crubit::UnsafeRelocateTag, Tuple&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::Tuple(
-    std::tuple<::std::int32_t, ::std::int32_t>&& tuple) noexcept {
-  std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
-  std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
-}
-inline rs_std::Tuple<::std::int32_t, ::std::int32_t>::operator std::tuple<
-    ::std::int32_t, ::std::int32_t>() && noexcept {
-  return std::tuple<::std::int32_t, ::std::int32_t>(std::move(this->__field0),
-                                                    std::move(this->__field1));
-}
-
-inline void ::rs_std::Tuple<
-    ::std::int32_t, ::std::int32_t>::__crubit_field_offset_assertions() {
-  using __crubit_assert_type = ::rs_std::Tuple<::std::int32_t, ::std::int32_t>;
-  static_assert(0 == offsetof(__crubit_assert_type, __field0));
-  static_assert(4 == offsetof(__crubit_assert_type, __field1));
-}
-#endif
 
 namespace traits {
 namespace __crubit_internal {

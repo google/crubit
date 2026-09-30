@@ -262,8 +262,8 @@ pub mod struct_by_float_passing_with_no_thunk {
     #[repr(C)]
     #[crubit_annotate::must_bind]
     pub struct StructFloat(
-        f64,
-        f32,
+        pub f64,
+        pub f32,
         // Note that this has 32 bits of tail padding here.
         // The tail padding _must_ be implicit, or else the struct cannot be passed by value over
         // FFI.

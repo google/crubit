@@ -25,6 +25,7 @@
 #include "support/rs_std/str_ref.h"
 #include "support/rs_std/tuple.h"
 
+#include <array>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -59,12 +60,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
                        AdtHoldingFiveAndSix&& value);
 
  private:
-  union {
-    ::std::int32_t five;
-  };
-  union {
-    ::std::int32_t six;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> five;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> six;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -176,9 +175,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: tuples_golden :: NontrivialDrop") alignas(
   NontrivialDrop(::crubit::UnsafeRelocateTag, NontrivialDrop&& value);
 
  private:
-  union {
-    ::std::uint8_t __field0;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 1> __field0;
 
  private:
   static void __crubit_field_offset_assertions();

@@ -10,7 +10,7 @@ extern crate alloc as foo;
 use foo::string::String;
 
 pub struct Test {
-    s: String,
+    pub s: String,
 }
 
 impl Test {

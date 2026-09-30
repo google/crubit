@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -42,9 +43,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Bar") alignas(4)
   Bar(::crubit::UnsafeRelocateTag, Bar&& value);
 
  private:
-  union {
-    ::std::int32_t i;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> i;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -73,9 +73,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: Foo") alignas(4)
   static ::uses_reexport::Bar bar();
 
  private:
-  union {
-    ::std::int32_t i;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> i;
 
  public:
   union {
@@ -133,9 +132,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: uses_reexport_golden :: X1") alignas(4)
   X1(::crubit::UnsafeRelocateTag, X1&& value);
 
  private:
-  union {
-    ::std::int32_t x;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> x;
 
  private:
   static void __crubit_field_offset_assertions();

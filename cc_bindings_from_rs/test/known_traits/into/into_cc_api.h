@@ -174,9 +174,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: ConvertRef") alignas(8)
   explicit operator ::into::Convert();
 
  private:
-  union {
-    rs_std::StrRef __field0;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 16> __field0;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -288,9 +287,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: into_golden :: NotFfiSafe") alignas(8)
   NotFfiSafe(::crubit::UnsafeRelocateTag, NotFfiSafe&& value);
 
  private:
-  // Field type has been replaced with a blob of bytes: Function pointers can't
-  // have a thunk: Any calling convention other than `extern "C"` requires a
-  // thunk
+  // Field type has been replaced with a blob of bytes: Field is private
   ::std::array<unsigned char, 8> __field0;
 
  private:

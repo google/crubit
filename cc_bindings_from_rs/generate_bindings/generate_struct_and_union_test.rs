@@ -831,13 +831,13 @@ fn test_format_item_rename_field_with_conflicting_name() {
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                ::std::int32_t b_;
+                ::std::array<unsigned char, 4> b_;
             }
         );
         assert_cc_matches!(
             main_api.tokens,
             quote! {
-                ::std::int32_t c;
+                ::std::array<unsigned char, 4> c;
             }
         );
         // Check that the fields are not renamed in the Rust side.
@@ -1687,7 +1687,6 @@ fn test_format_item_zst_and_unsupported_field_at_same_offset() {
         );
     });
 }
-
 #[test]
 fn test_format_item_struct_with_pinned_reference_fields() {
     let test_src = r#"
@@ -1840,6 +1839,133 @@ fn test_format_item_struct_with_mut_slice_reference_is_default_constructible() {
                   ...
                   rs_std::SliceRef<::std::int32_t> s{};
                   ...
+                };
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_private_struct_fields_elided() {
+    let test_src = r#"
+    pub struct Inner(pub i32);
+
+    pub struct Outer {
+        pub public_field: i32,
+        #[allow(dead_code)]
+        private_field: Inner,
+    }
+    "#;
+
+    test_format_item(test_src, "Outer", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert!(main_api.prereqs.defs.is_empty());
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                public:
+                    ...
+                    union {
+                        ::std::int32_t public_field;
+                    };
+                private:
+                    __COMMENT__ "Field type has been replaced with a blob of bytes: Field is private"
+                    ::std::array<unsigned char, 4> private_field;
+                ...
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_zst_and_private_field_at_same_offset() {
+    let test_src = r#"
+    pub struct WithZst {
+        #[allow(dead_code)]
+        private_field: u8,
+        #[allow(dead_code)]
+        zst: [u32; 0],
+    }
+    "#;
+
+    test_format_item(test_src, "WithZst", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                __COMMENT__ "Field `zst` omitted: C++ does not support zero-sized types."
+                private:
+                    __COMMENT__ "Field type has been replaced with a blob of bytes: Field is private"
+                    ::std::array<unsigned char, 4> private_field;
+                ...
+            }
+        );
+    });
+}
+
+#[test]
+fn test_format_item_repr_c_union_private_fields() {
+    let test_src = r#"
+    #[repr(C)]
+    pub union SomeUnion {
+        pub public_field: u8,
+        private_field: u64,
+    }
+    "#;
+
+    test_format_item(test_src, "SomeUnion", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(8) [[clang::trivial_abi]] SomeUnion final {
+                    public:
+                        ...
+                        ::std::uint8_t public_field;
+                    private:
+                        __COMMENT__ "Field type has been replaced with a blob of bytes: Field is private"
+                        ::std::array<unsigned char, 8> private_field;
+                    ...
+                };
+            }
+        );
+    });
+}
+
+/// Non-final union fields end at offset 0 (the next field's offset), so their size must come from
+/// the field's own layout.
+#[test]
+fn test_format_item_repr_c_union_non_final_private_field() {
+    let test_src = r#"
+    #[repr(C)]
+    pub union SomeUnion {
+        private_field: u64,
+        pub public_field: u8,
+    }
+    "#;
+
+    test_format_item(test_src, "SomeUnion", |result| {
+        let result = result.unwrap().unwrap();
+        let main_api = &result.main_api;
+        assert_cc_matches!(
+            main_api.tokens,
+            quote! {
+                ...
+                union CRUBIT_INTERNAL_RUST_TYPE(...) alignas(8) [[clang::trivial_abi]] SomeUnion final {
+                    ...
+                    private:
+                        __COMMENT__ "Field type has been replaced with a blob of bytes: Field is private"
+                        ::std::array<unsigned char, 8> private_field;
+                    public:
+                        ...
+                        ::std::uint8_t public_field;
+                    ...
                 };
             }
         );

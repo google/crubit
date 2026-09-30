@@ -18,6 +18,7 @@
 #include "support/internal/slot.h"
 #include "support/rs_std/traits.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -43,9 +44,8 @@ MyStruct final {
   MyStruct(::crubit::UnsafeRelocateTag, MyStruct&& value);
 
  private:
-  union {
-    ::std::int32_t y;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> y;
 
  private:
   static void __crubit_field_offset_assertions();

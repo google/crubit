@@ -134,25 +134,3 @@ unsafe extern "C" fn __crubit_thunk_Index_uindex_urs_uindex_ugolden_x0000003a_x0
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-    __self: &'static ::alloc::vec::Vec<::alloc::string::String>,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value =
-            <::alloc::vec::Vec<::alloc::string::String> as ::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-    __self: &'static mut ::alloc::vec::Vec<::alloc::string::String>,
-    source: &'static ::alloc::vec::Vec<::alloc::string::String>,
-) -> () {
-    unsafe {
-        <::alloc::vec::Vec<::alloc::string::String> as ::core::clone::Clone>::clone_from(
-            __self, source,
-        )
-    }
-}

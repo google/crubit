@@ -21,6 +21,7 @@
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/vec.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -30,6 +31,42 @@
 #include <utility>
 
 namespace vec {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: RustVecOwner") alignas(4)
+    [[clang::trivial_abi]] RustVecOwner final {
+ public:
+  // Default::default
+  RustVecOwner();
+
+  // Drop::drop
+  ~RustVecOwner();
+
+  RustVecOwner(RustVecOwner&&) noexcept;
+  ::vec::RustVecOwner& operator=(RustVecOwner&&) noexcept;
+
+  // `vec_golden::RustVecOwner` doesn't implement the `Clone` trait
+  RustVecOwner(const RustVecOwner&) = delete;
+  RustVecOwner& operator=(const RustVecOwner&) = delete;
+  RustVecOwner(::crubit::UnsafeRelocateTag, RustVecOwner&& value);
+
+  static ::vec::RustVecOwner new_();
+
+  rs_std::Vec<::std::int32_t>& $(__anon1) vec_mut() &
+      $(__anon1) CRUBIT_LIFETIME_BOUND;
+
+  ::std::uintptr_t len() const;
+
+  bool is_empty() const;
+
+  ::std::int32_t element(::std::uintptr_t index) const;
+
+ private:
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 12> v;
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
 
 void drop_vec(rs_std::Vec<::std::int32_t> _v);
 
@@ -76,43 +113,6 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(":: alloc :: vec :: Vec < i32 >")
 #endif
 
 namespace vec {
-
-struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: RustVecOwner") alignas(4)
-    [[clang::trivial_abi]] RustVecOwner final {
- public:
-  // Default::default
-  RustVecOwner();
-
-  // Drop::drop
-  ~RustVecOwner();
-
-  RustVecOwner(RustVecOwner&&) noexcept;
-  ::vec::RustVecOwner& operator=(RustVecOwner&&) noexcept;
-
-  // `vec_golden::RustVecOwner` doesn't implement the `Clone` trait
-  RustVecOwner(const RustVecOwner&) = delete;
-  RustVecOwner& operator=(const RustVecOwner&) = delete;
-  RustVecOwner(::crubit::UnsafeRelocateTag, RustVecOwner&& value);
-
-  static ::vec::RustVecOwner new_();
-
-  rs_std::Vec<::std::int32_t>& $(__anon1) vec_mut() &
-      $(__anon1) CRUBIT_LIFETIME_BOUND;
-
-  ::std::uintptr_t len() const;
-
-  bool is_empty() const;
-
-  ::std::int32_t element(::std::uintptr_t index) const;
-
- private:
-  union {
-    rs_std::Vec<::std::int32_t> v;
-  };
-
- private:
-  static void __crubit_field_offset_assertions();
-};
 
 struct CRUBIT_INTERNAL_RUST_TYPE(":: vec_golden :: StructWithVec") alignas(4)
     [[clang::trivial_abi]] StructWithVec final {

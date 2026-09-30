@@ -453,25 +453,18 @@ const _: () = assert!(
     ::std::mem::align_of::<::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat>()
         == 8
 );
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
-    __self: &'static ::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat,
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value=<::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat as::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
-#[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
-    __self: &'static mut ::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat,
-    source: &'static ::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat,
-) -> () {
-    unsafe {
-        <::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat as::core::clone::Clone>::clone_from(__self,source)
-    }
-}
+const _: () = assert!(
+    ::core::mem::offset_of!(
+        ::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat,
+        0
+    ) == 0
+);
+const _: () = assert!(
+    ::core::mem::offset_of!(
+        ::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat,
+        1
+    ) == 8
+);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_struct_uby_ufloat_upassing_uwith_uno_uthunk_u_uthunkless_ucreate(
     f: f32,

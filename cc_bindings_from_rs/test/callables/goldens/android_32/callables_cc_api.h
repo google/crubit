@@ -73,8 +73,7 @@ CallbackHolder final {
   void drop_callback();
 
  private:
-  // Field type has been replaced with a blob of bytes: Callable types are only
-  // supported in function parameter position
+  // Field type has been replaced with a blob of bytes: Field is private
   ::std::array<unsigned char, 8> cb;
 
  private:

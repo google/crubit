@@ -67,8 +67,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: Foo") alignas(8)
   ::std::uint8_t into_byte() &&;
 
  private:
-  // Field type has been replaced with a blob of bytes: Generic types are not
-  // supported yet (b/259749095)
+  // Field type has been replaced with a blob of bytes: Field is private
   ::std::array<unsigned char, 8> buf;
 
  private:
@@ -99,8 +98,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: move_golden :: UnmovableFoo") alignas(8)
   ::std::uint8_t read_byte() const;
 
  private:
-  // Field type has been replaced with a blob of bytes: Generic types are not
-  // supported yet (b/259749095)
+  // Field type has been replaced with a blob of bytes: Field is private
   ::std::array<unsigned char, 8> buf;
 
  private:

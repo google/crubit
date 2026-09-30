@@ -17,6 +17,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -117,9 +118,8 @@ StructWithoutDefault final {
                        StructWithoutDefault&& value);
 
  private:
-  union {
-    ::std::int32_t __field0;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> __field0;
 
  private:
   static void __crubit_field_offset_assertions();

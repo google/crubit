@@ -56,8 +56,8 @@ fn test_generated_bindings_prereq_defs_field_deps_require_reordering() {
             #![allow(dead_code)]
 
             // In the generated bindings `Outer` needs to come *after* `Inner`.
-            pub struct Outer(Inner);
-            pub struct Inner(bool);
+            pub struct Outer(pub Inner);
+            pub struct Inner(pub bool);
         "#;
     test_generated_bindings(test_src, |bindings| {
         let bindings = bindings.unwrap();
@@ -67,11 +67,11 @@ fn test_generated_bindings_prereq_defs_field_deps_require_reordering() {
                 namespace rust_out {
                 ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) [[clang::trivial_abi]] Inner final {
-                      ... union { ... bool __field0; }; ...
+                      ... bool __field0{}; ...
                     };
                 ...
                     struct CRUBIT_INTERNAL_RUST_TYPE(...) alignas(1) [[clang::trivial_abi]] Outer final {
-                      ... union { ... ::rust_out::Inner __field0; }; ...
+                      ... ::rust_out::Inner __field0{}; ...
                     };
                 ...
                 }  // namespace rust_out
@@ -322,7 +322,7 @@ fn test_generated_bindings_prereq_fwd_decls_not_needed_inside_struct_definition(
 
             pub struct S {
                 // This shouldn't require a fwd decl of S.
-                field: *const S,
+                pub field: *const S,
             }
 
             impl S {
@@ -337,7 +337,7 @@ fn test_generated_bindings_prereq_fwd_decls_not_needed_inside_struct_definition(
             bindings.cc_api,
             quote! {
                 static ::rust_out::S create(); ...
-                union { ... ::rust_out::S const* field; }; ...
+                ::rust_out::S const* field{}; ...
             }
         );
     });

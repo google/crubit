@@ -2778,13 +2778,9 @@ fn generate_variant_ctor<'tcx>(
     }
 }
 
-struct FieldTypeInfo<'tcx> {
-    size: u64,
-    cpp_type: CcSnippet<'tcx>,
-}
-
 struct Field<'tcx> {
-    type_info: Result<FieldTypeInfo<'tcx>>,
+    cpp_type: Result<CcSnippet<'tcx>>,
+    size: u64,
     cc_name: Ident,
     rs_name: TokenStream,
     is_public: bool,
@@ -2793,15 +2789,6 @@ struct Field<'tcx> {
     offset_of_next_field: u64,
     doc_comment: TokenStream,
     attributes: Vec<TokenStream>,
-}
-
-impl<'tcx> Field<'tcx> {
-    fn size(&self) -> u64 {
-        match self.type_info {
-            Err(_) => self.offset_of_next_field - self.offset,
-            Ok(FieldTypeInfo { size, .. }) => size,
-        }
-    }
 }
 
 #[derive(Debug, Default)]
@@ -2869,9 +2856,10 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                 && enum_kind != Some(EnumKind::ReprC)
             {
                 return vec![vec![Field {
-                    type_info: Err(anyhow!(
+                    cpp_type: Err(anyhow!(
                         "No support for bindings of individual non-repr(C) `enum`s"
                     )),
+                    size: self.layout.size.bytes(),
                     cc_name: format_ident!("__opaque_blob_of_bytes"),
                     rs_name: quote! { __opaque_blob_of_bytes },
                     is_public: false,
@@ -2983,7 +2971,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         match adt_kind {
             ty::AdtKind::Struct => {
                 let always_omit_padding = self.repr_attrs.contains(&ReprC)
-                    && variants_fields.iter().flatten().all(|field| field.type_info.is_ok());
+                    && variants_fields.iter().flatten().all(|field| field.cpp_type.is_ok());
                 let fields = variants_fields.into_iter().next().unwrap_or_default();
                 Ok(CppLayout::Struct { fields, always_omit_padding })
             }
@@ -3019,10 +3007,9 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         }
     }
 
-    fn prepare_field_type_for_ty(&self, ty: Ty<'tcx>) -> Result<FieldTypeInfo<'tcx>> {
-        let tcx = self.db.tcx();
-        let size = get_layout(tcx, ty).map(|layout| layout.size().bytes())?;
-
+    /// Ensures that a field of type `ty` has a valid C++ type and returns it, if so.
+    fn prepare_field_type(&self, ty: Ty<'tcx>) -> Result<CcSnippet<'tcx>> {
+        get_layout(self.db.tcx(), ty)?;
         if !can_be_made_layout_compatible(self.db, ty).unwrap_or(true) {
             bail!(
                 "Field is a bridged type and might not be layout-compatible
@@ -3030,22 +3017,23 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             );
         }
 
-        let cpp_type = self
-            .db
+        self.db
             .format_ty_for_cc(ty, TypeLocation::Field)?
-            .resolve_feature_requirements(self.db.crate_features(self.db.source_crate_num()))?;
-
-        Ok(FieldTypeInfo { size, cpp_type })
+            .resolve_feature_requirements(self.db.crate_features(self.db.source_crate_num()))
     }
 
-    /// Ensures that a given field has a valid C++ type and returns its size and C++ type, if so.
-    fn prepare_field_type(&self, field_def: &ty::FieldDef) -> Result<FieldTypeInfo<'tcx>> {
-        let tcx = self.db.tcx();
-        let ty =
-            field_def.ty(tcx, self.adt_generic_args.expect("generic args present for ADT field"));
-        #[rustversion::since(2026-05-13)]
-        let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
-        self.prepare_field_type_for_ty(ty)
+    fn field_size(
+        &self,
+        ty: Ty<'tcx>,
+        has_cpp_type: bool,
+        offset: u64,
+        offset_of_next_field: u64,
+    ) -> u64 {
+        if !has_cpp_type && !self.adt_def.is_some_and(|adt| adt.is_union()) {
+            offset_of_next_field - offset
+        } else {
+            get_layout(self.db.tcx(), ty).map_or(0, |layout| layout.size().bytes())
+        }
     }
 
     fn analyze_tuple_field(
@@ -3055,7 +3043,8 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         offset: u64,
         offset_of_next_field: u64,
     ) -> Field<'tcx> {
-        let type_info = self.prepare_field_type_for_ty(ty);
+        let cpp_type = self.prepare_field_type(ty);
+        let size = self.field_size(ty, cpp_type.is_ok(), offset, offset_of_next_field);
         let cc_name = anonymous_field_ident(index);
         let cc_name = if self.member_function_names.contains(&cc_name.to_string()) {
             format_ident!("{cc_name}_")
@@ -3066,7 +3055,8 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         let rs_name = quote! { #rs_index };
 
         Field {
-            type_info,
+            cpp_type,
+            size,
             cc_name,
             rs_name,
             is_public: true,
@@ -3086,7 +3076,23 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         offset_of_next_field: u64,
     ) -> Field<'tcx> {
         let tcx = self.db.tcx();
-        let type_info = self.prepare_field_type(field_def);
+        let ty =
+            field_def.ty(tcx, self.adt_generic_args.expect("generic args present for ADT field"));
+        #[rustversion::since(2026-05-13)]
+        let ty = crate::normalize_ty(tcx, tcx.param_env(field_def.did), ty);
+        let pub_and_stable = crate::field_def_is_pub_and_stable(tcx, field_def);
+        // Without `--portable-abi-compatible`, `#[repr(transparent)]` types may be passed by
+        // value across `extern "C"` thunks, where replacing e.g. `double` with a byte array
+        // changes register classification.
+        let is_legacy_transparent_abi = !self.db.portable_abi_compatible()
+            && self.adt_def.is_some_and(|adt| adt.repr().transparent());
+        let cpp_type = match &pub_and_stable {
+            Err(private_or_unstable) if !is_legacy_transparent_abi => {
+                Err(anyhow!("Field is {private_or_unstable}"))
+            }
+            _ => self.prepare_field_type(ty),
+        };
+        let size = self.field_size(ty, cpp_type.is_ok(), offset, offset_of_next_field);
         let name = field_def.ident(tcx).to_string();
         let features = self.db.crate_features(self.db.source_crate_num());
         let cc_name = code_gen_utils::unkeyword_cpp_ident(&name, features).to_string();
@@ -3119,10 +3125,11 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         }
 
         Field {
-            type_info,
+            cpp_type,
+            size,
             cc_name,
             rs_name,
-            is_public: crate::field_def_is_pub_and_stable(tcx, field_def).is_ok(),
+            is_public: pub_and_stable.is_ok(),
             index,
             offset,
             offset_of_next_field,
@@ -3140,7 +3147,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         } else {
             let cc_assertions: TokenStream = fields
                 .iter()
-                .filter(|field| field.size() != 0)
+                .filter(|field| field.size != 0)
                 .map(|Field { cc_name, offset, .. }| {
                     let offset = Literal::u64_unsuffixed(*offset);
                     quote! { static_assert(#offset == offsetof(__crubit_assert_type, #cc_name)); }
@@ -3186,7 +3193,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         current_visibility: &mut CcFieldVisState,
     ) -> CcSnippet<'tcx> {
         let cc_name = &field.cc_name;
-        let size = field.size();
+        let size = field.size;
         let msg = format!("Field type has been replaced with a blob of bytes: {err:#}");
 
         if size == 0 {
@@ -3217,9 +3224,10 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             quote! { #cc_name }
         };
 
-        let (cpp_type, size) = match field.type_info {
+        let size = field.size;
+        let cpp_type = match field.cpp_type {
             Err(ref err) => return self.emit_field_err(&field, err, current_visibility),
-            Ok(FieldTypeInfo { cpp_type, size }) => (cpp_type, size),
+            Ok(cpp_type) => cpp_type,
         };
 
         assert!((field.offset + size) <= field.offset_of_next_field);
@@ -3280,9 +3288,9 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             quote! { #cc_name }
         };
 
-        let cpp_type = match field.type_info {
+        let cpp_type = match field.cpp_type {
             Err(ref err) => return self.emit_field_err(&field, err, current_visibility),
-            Ok(FieldTypeInfo { cpp_type, .. }) => cpp_type,
+            Ok(cpp_type) => cpp_type,
         };
 
         let visibility = current_visibility.set_is_public(field.is_public);
@@ -3321,9 +3329,9 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
     ) -> CcSnippet<'tcx> {
         let cc_name = &field.cc_name;
 
-        let cpp_type = match &field.type_info {
+        let cpp_type = match &field.cpp_type {
             Err(err) => return self.emit_field_err(field, err, current_visibility),
-            Ok(FieldTypeInfo { cpp_type, .. }) => cpp_type,
+            Ok(cpp_type) => cpp_type,
         };
 
         let visibility = current_visibility.set_is_public(field.is_public);
@@ -3390,7 +3398,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                 EnumKind::OpaqueBlobOfBytes => variants
                     .iter()
                     .flat_map(|v| &v.fields)
-                    .filter(|field| field.size() != 0)
+                    .filter(|field| field.size != 0)
                     .map(|Field { cc_name, offset, .. }| {
                         let offset = Literal::u64_unsuffixed(*offset);
                         quote! {
@@ -3429,7 +3437,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                             if variant_def.fields.is_empty() {
                                 quote! {}
                             } else {
-                                variant_layout.fields.iter().filter(|field| field.type_info.is_ok() && field.size() != 0 ).flat_map(move |Field { cc_name, offset, .. }| {
+                                variant_layout.fields.iter().filter(|field| field.cpp_type.is_ok() && field.size != 0 ).flat_map(move |Field { cc_name, offset, .. }| {
                                     let offset = Literal::u64_unsuffixed(*offset);
                                     quote! {
                                         {

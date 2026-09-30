@@ -102,17 +102,6 @@ const _: () = assert!(::std::mem::size_of::<::traits_golden::StructWithAssociate
 const _: () = assert!(::std::mem::align_of::<::traits_golden::StructWithAssociatedConst>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::traits_golden::StructWithAssociatedConst, x) == 0);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(
-    __ret_ptr: *mut core::ffi::c_void,
-) -> () {
-    unsafe {
-        let __rs_return_value = <(i32, i32) as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
-    }
-}
-const _: () = assert!(::core::mem::offset_of!((i32, i32,), 0) == 0);
-const _: () = assert!(::core::mem::offset_of!((i32, i32,), 1) == 4);
-#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
     __self: &'static ::traits_golden::AssociatedTypeStruct,
 ) -> i32 {

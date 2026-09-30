@@ -19,6 +19,7 @@
 #include "support/rs_std/str_ref.h"
 #include "support/rs_std/tuple.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -53,9 +54,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   bool operator==(::partial_eq::basic_test::MyStruct const& other) const;
 
  private:
-  union {
-    ::std::uintptr_t __field0;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> __field0;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -97,16 +97,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   bool operator==(::std::intptr_t const& other) const;
 
  private:
-  union {
-    ::std::uintptr_t str_len;
-  };
-  union {
-    ::std::intptr_t int_val;
-  };
-  union {
-    bool bool_val;
-  };
-  unsigned char __padding0[3];
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> str_len;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> int_val;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> bool_val;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -148,9 +144,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   // is implemented as it may overlap.
 
  private:
-  union {
-    ::std::uintptr_t __field0;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> __field0;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -191,9 +186,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   bool operator==(rs_std::Tuple<::std::uint32_t, bool> const& _other) const;
 
  private:
-  union {
-    ::std::uintptr_t __field0;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> __field0;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -227,9 +221,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   bool operator==(::std::uintptr_t const& other) const;
 
  private:
-  union {
-    ::std::uintptr_t __field0;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> __field0;
 
  private:
   static void __crubit_field_offset_assertions();

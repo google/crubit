@@ -70,16 +70,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: BoolAndStr") alignas(4)
   explicit BoolAndStr(::std::intptr_t value);
 
  private:
-  union {
-    ::std::uintptr_t str_len_;
-  };
-  union {
-    ::std::intptr_t int_val_;
-  };
-  union {
-    bool is_bool_;
-  };
-  unsigned char __padding0[3];
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> str_len_;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> int_val_;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> is_bool_;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -174,9 +170,8 @@ CollidingConstructor final {
   explicit CollidingConstructor(::std::uintptr_t value);
 
  private:
-  union {
-    ::std::uint64_t value;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 8> value;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -293,9 +288,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: NotFfiSafe") alignas(4)
   explicit operator ::std::int32_t();
 
  private:
-  // Field type has been replaced with a blob of bytes: Function pointers can't
-  // have a thunk: Any calling convention other than `extern "C"` requires a
-  // thunk
+  // Field type has been replaced with a blob of bytes: Field is private
   ::std::array<unsigned char, 4> __field0;
 
  private:
@@ -350,9 +343,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: from_golden :: OpaqueRef") alignas(4)
   explicit OpaqueRef(::from::Opaque value);
 
  private:
-  union {
-    rs_std::StrRef __field0;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 8> __field0;
 
  private:
   static void __crubit_field_offset_assertions();

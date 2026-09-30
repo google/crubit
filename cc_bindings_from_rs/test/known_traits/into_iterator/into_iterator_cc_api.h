@@ -19,7 +19,6 @@
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/iterator_adapter.h"
-#include "support/rs_std/slice_ref.h"
 #include "support/rs_std/traits.h"
 
 #include <array>
@@ -144,13 +143,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
 
  private:
-  union {
-    ::std::uintptr_t index;
-  };
-  union {
-    ::std::array<::std::int32_t, 3> data;
-  };
-  unsigned char __padding0[4];
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 8> index;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 16> data;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -181,9 +177,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
 
  private:
-  union {
-    rs_std::SliceRef<const ::std::int32_t> data;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 16> data;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -214,9 +209,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   inline rs::IteratorEnd end() & { return rs::IteratorEnd(); }
 
  private:
-  union {
-    rs_std::SliceRef<::std::int32_t> data;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 16> data;
 
  private:
   static void __crubit_field_offset_assertions();

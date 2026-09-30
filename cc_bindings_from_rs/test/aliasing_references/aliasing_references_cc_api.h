@@ -57,8 +57,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   void shared_self_mut_ref_allows_alias(::std::int32_t& __param_1) const;
 
  private:
-  // Field type has been replaced with a blob of bytes: Generic types are not
-  // supported yet (b/259749095)
+  // Field type has been replaced with a blob of bytes: Field is private
   ::std::array<unsigned char, 4> __field0;
 
  private:

@@ -15,23 +15,17 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
-#include "support/internal/check.h"
-#include "support/internal/memswap.h"
 #include "support/internal/slot.h"
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/str_ref.h"
-#include "support/rs_std/vec.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <memory>
-#include <new>
 #include <tuple>
 #include <type_traits>
 #include <utility>
-
-#include "support/rs_std/rs_alloc.h"
 
 namespace rs_index {
 
@@ -93,42 +87,6 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: IntPair") alignas(4)
   static void __crubit_field_offset_assertions();
 };
 
-}  // namespace rs_index
-
-#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
-template <>
-struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    ":: alloc :: vec :: Vec < :: alloc :: string :: String >")
-    rs_std::Vec<::rs::alloc::string::String>
-    : public rs_std::VecBase<::rs::alloc::string::String> {
- public:
-  // Default::default
-  Vec() noexcept;
-
-  // Clone::clone
-  Vec(const Vec&) noexcept;
-
-  // Clone::clone_from
-  rs_std::Vec<::rs::alloc::string::String>& operator=(const Vec&) noexcept;
-
-  Vec(Vec&&) noexcept;
-  rs_std::Vec<::rs::alloc::string::String>& operator=(Vec&&) noexcept;
-  Vec(::crubit::UnsafeRelocateTag, Vec&& value);
-
-  ~Vec() noexcept;
-
- private:
-  friend class rs_std::VecBase<::rs::alloc::string::String>;
-  static constexpr std::size_t kPtrOffset = 4;
-  static constexpr std::size_t kCapOffset = 0;
-  static constexpr std::size_t kLenOffset = 8;
-  unsigned char storage_[12];
-};
-#endif
-
-namespace rs_index {
-
 struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(4)
     [[clang::trivial_abi]] Map final {
  public:
@@ -165,12 +123,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_index_golden :: Map") alignas(4)
   // references to `str` are not yet supported.
 
  private:
-  union {
-    rs_std::Vec<::rs::alloc::string::String> data;
-  };
-  union {
-    ::std::uintptr_t row_size;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 12> data;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> row_size;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -379,59 +335,6 @@ inline void ::rs_index::Map::__crubit_field_offset_assertions() {
   static_assert(12 == offsetof(__crubit_assert_type, row_size));
 }
 }  // namespace rs_index
-
-#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
-#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-    rs_std::Vec<::rs::alloc::string::String> const&,
-    rs_std::Vec<::rs::alloc::string::String>* __ret_ptr);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-    rs_std::Vec<::rs::alloc::string::String>&,
-    rs_std::Vec<::rs::alloc::string::String> const&);
-}
-inline rs_std::Vec<::rs::alloc::string::String>::Vec(
-    const Vec& other) noexcept {
-  ::__crubit_internal::
-      __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-          other, this);
-}
-inline rs_std::Vec<::rs::alloc::string::String>&
-rs_std::Vec<::rs::alloc::string::String>::operator=(const Vec& other) noexcept {
-  if (this != &other) {
-    ::__crubit_internal::
-        __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cstd_x0000003a_x0000003astring_x0000003a_x0000003aString_x0000003e(
-            *this, other);
-  }
-  return *this;
-}
-inline rs_std::Vec<::rs::alloc::string::String>::Vec(Vec&& other) noexcept
-    : storage_{} {
-  ::std::memcpy(storage_, other.storage_, sizeof(storage_));
-  other.init_empty();
-}
-inline rs_std::Vec<::rs::alloc::string::String>&
-rs_std::Vec<::rs::alloc::string::String>::operator=(Vec&& other) noexcept {
-  if (this != &other) {
-    destroy();
-    crubit::MemSwap(*this, other);
-  }
-  return *this;
-}
-inline rs_std::Vec<::rs::alloc::string::String>::Vec(
-    ::crubit::UnsafeRelocateTag, Vec&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
-
-inline rs_std::Vec<::rs::alloc::string::String>::Vec() noexcept : storage_{} {
-  init_empty();
-}
-inline rs_std::Vec<::rs::alloc::string::String>::~Vec() noexcept { destroy(); }
-#endif
 
 #pragma clang diagnostic pop
 #endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_KNOWN_TRAITS_INDEX_RS_INDEX_GOLDEN

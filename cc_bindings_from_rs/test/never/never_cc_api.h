@@ -17,8 +17,8 @@
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
 
+#include <array>
 #include <cstddef>
-#include <cstdint>
 #include <cstring>
 #include <type_traits>
 
@@ -45,9 +45,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: never_golden :: NeverStruct") alignas(4)
   [[noreturn]] void method_never_return() const;
 
  private:
-  union {
-    ::std::int32_t _non_zst_field;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> _non_zst_field;
 
  private:
   static void __crubit_field_offset_assertions();

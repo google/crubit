@@ -21,6 +21,7 @@
 #include "support/lifetime_annotations.h"
 #include "support/rs_std/vec.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -64,9 +65,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(8)
   static void enum_in_signature(::foo_service::FooEnum _e);
 
  private:
-  union {
-    ::proto::Rust<::foo_service::FooRequestStats> stats;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 8> stats;
 
  private:
   static void __crubit_field_offset_assertions();

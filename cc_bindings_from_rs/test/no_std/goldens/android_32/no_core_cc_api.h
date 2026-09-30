@@ -20,7 +20,6 @@
 #include "support/rs_std/str_ref.h"
 
 #include <cstddef>
-#include <cstring>
 #include <utility>
 
 #include "support/rs_std/rs_alloc.h"
@@ -30,30 +29,11 @@ namespace no_core {
 struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test") alignas(4)
     [[clang::trivial_abi]] Test final {
  public:
-  // `no_core_golden::Test` doesn't implement the `Default` trait
-  Test() = delete;
-
-  // Drop::drop
-  ~Test();
-
-  // C++ move operations are unavailable for this type. See
-  // http://crubit.rs/rust/movable_types for an explanation of Rust types that
-  // are C++ movable.
-  Test(Test&&) = delete;
-  ::no_core::Test& operator=(Test&&) = delete;
-  // `no_core_golden::Test` doesn't implement the `Clone` trait
-  Test(const Test&) = delete;
-  Test& operator=(const Test&) = delete;
-  Test(::crubit::UnsafeRelocateTag, Test&& value);
-
   static ::no_core::Test new_();
 
   rs_std::StrRef s() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
 
- private:
-  union {
-    ::rs::alloc::string::String s_;
-  };
+  ::rs::alloc::string::String s_{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -65,19 +45,6 @@ static_assert(
 static_assert(
     alignof(::no_core::Test) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Drop_udrop_uno_ucore_ugolden_x0000003a_x0000003aTest(
-    ::no_core::Test&);
-}
-inline ::no_core::Test::~Test() {
-  __crubit_internal::
-      __crubit_thunk_Drop_udrop_uno_ucore_ugolden_x0000003a_x0000003aTest(
-          *this);
-}
-inline ::no_core::Test::Test(::crubit::UnsafeRelocateTag, Test&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 
 namespace __crubit_internal {
 extern "C" void __crubit_thunk_new(::no_core::Test* __ret_ptr);

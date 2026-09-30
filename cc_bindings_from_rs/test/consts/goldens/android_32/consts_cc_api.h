@@ -194,9 +194,8 @@ TyWithAssocConsts final {
       ::consts::Point{.x = INT32_C(5), .y = INT32_C(6)};
 
  private:
-  union {
-    ::std::uint8_t __field0;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 1> __field0;
 
  private:
   static void __crubit_field_offset_assertions();

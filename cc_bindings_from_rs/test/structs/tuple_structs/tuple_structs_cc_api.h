@@ -180,9 +180,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ::std::int32_t get_arg() const;
 
  private:
-  union {
-    ::std::int32_t __field0;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> __field0;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -247,9 +246,8 @@ struct
   };
 
  private:
-  union {
-    ::std::int32_t __field1;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> __field1;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -288,12 +286,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   ::std::int32_t get_second_arg() const;
 
  private:
-  union {
-    ::std::int32_t __field0;
-  };
-  union {
-    ::std::int32_t __field1;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> __field0;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> __field1;
 
  private:
   static void __crubit_field_offset_assertions();

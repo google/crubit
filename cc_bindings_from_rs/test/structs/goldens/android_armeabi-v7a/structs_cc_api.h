@@ -67,13 +67,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static float inspect(::structs::abi_classification::StructFloat s);
 
  private:
-  union {
-    double __field0;
-  };
-  union {
-    float __field1;
-  };
-  unsigned char __padding1[4];
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 8> __field0;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 8> __field1;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -113,9 +110,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static ::std::int32_t inspect(::structs::abi_classification::StructInteger s);
 
  private:
-  union {
-    ::std::int32_t __field0;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> __field0;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -155,12 +151,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   static ::std::int32_t inspect(::structs::abi_classification::StructMemory s);
 
  private:
-  union {
-    ::std::uint8_t _padding;
-  };
-  union {
-    ::std::int32_t i;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 1> _padding;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> i;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -321,9 +315,8 @@ StructWithPrivateField final {
   };
 
  private:
-  union {
-    ::std::int32_t y;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> y;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -518,9 +511,8 @@ struct
   ::std::int32_t operator_() const;
 
  private:
-  union {
-    ::std::int32_t operator__;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> operator__;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -655,12 +647,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
   StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value);
 
  private:
-  union {
-    double __field0;
-  };
-  union {
-    float __field1;
-  };
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 8> __field0;
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 8> __field1;
 
  private:
   static void __crubit_field_offset_assertions();
@@ -689,31 +679,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
     ":: structs_golden :: struct_by_float_passing_with_no_thunk :: "
     "StructFloat") alignas(8) [[clang::trivial_abi]] StructFloat final {
  public:
-  // `structs_golden::struct_by_float_passing_with_no_thunk::StructFloat`
-  // doesn't implement the `Default` trait
-  StructFloat() = delete;
-
-  // No custom `Drop` impl and no custom "drop glue" required
-  ~StructFloat() = default;
-  StructFloat(StructFloat&&) = default;
-  StructFloat& operator=(StructFloat&&) = default;
-
-  // Clone::clone
-  StructFloat(const StructFloat&) noexcept;
-
-  // Clone::clone_from
-  ::structs::struct_by_float_passing_with_no_thunk::StructFloat& operator=(
-      const StructFloat&) noexcept;
-
-  StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value);
-
- private:
-  union {
-    double __field0;
-  };
-  union {
-    float __field1;
-  };
+  double __field0{};
+  float __field1{};
 
  private:
   static void __crubit_field_offset_assertions();
@@ -1588,44 +1555,11 @@ static_assert(
 static_assert(
     alignof(::structs::struct_by_float_passing_with_no_thunk::StructFloat) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<
-              ::structs::struct_by_float_passing_with_no_thunk::StructFloat>);
+static_assert(::std::is_trivially_destructible_v<StructFloat>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::structs::struct_by_float_passing_with_no_thunk::StructFloat>);
 static_assert(::std::is_trivially_move_assignable_v<
               ::structs::struct_by_float_passing_with_no_thunk::StructFloat>);
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
-    ::structs::struct_by_float_passing_with_no_thunk::StructFloat const&,
-    ::structs::struct_by_float_passing_with_no_thunk::StructFloat* __ret_ptr);
-}
-namespace __crubit_internal {
-extern "C" void
-__crubit_thunk_Clone_uclone_ufrom_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
-    ::structs::struct_by_float_passing_with_no_thunk::StructFloat&,
-    ::structs::struct_by_float_passing_with_no_thunk::StructFloat const&);
-}
-inline ::structs::struct_by_float_passing_with_no_thunk::StructFloat::
-    StructFloat(const StructFloat& other) noexcept {
-  __crubit_internal::
-      __crubit_thunk_Clone_uclone_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
-          other, this);
-}
-inline ::structs::struct_by_float_passing_with_no_thunk::StructFloat& ::
-structs::struct_by_float_passing_with_no_thunk::StructFloat::operator=(
-    const StructFloat& other) noexcept {
-  if (this != &other) {
-    __crubit_internal::
-        __crubit_thunk_Clone_uclone_ufrom_ustructs_ugolden_x0000003a_x0000003astruct_uby_ufloat_upassing_uwith_uno_uthunk_x0000003a_x0000003aStructFloat(
-            *this, other);
-  }
-  return *this;
-}
-inline ::structs::struct_by_float_passing_with_no_thunk::StructFloat::
-    StructFloat(::crubit::UnsafeRelocateTag, StructFloat&& value) {
-  ::std::memcpy(this, &value, sizeof(value));
-}
 inline void ::structs::struct_by_float_passing_with_no_thunk::StructFloat::
     __crubit_field_offset_assertions() {
   using __crubit_assert_type =
