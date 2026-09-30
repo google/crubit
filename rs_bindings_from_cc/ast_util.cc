@@ -327,6 +327,31 @@ absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
   return lifetimes;
 }
 
+bool ContainsExplicitLifetimes(clang::QualType type) {
+  // `RecursiveASTVisitor` walks the type as written: it descends into
+  // pointees, template arguments, function parameter and return types, and the
+  // modified type of each `AttributedType`, but not into the underlying type of
+  // a typedef.
+  struct LifetimeFinder : public clang::RecursiveASTVisitor<LifetimeFinder> {
+    bool found = false;
+    bool VisitAttributedType(clang::AttributedType* attributed_type) {
+      const auto* annotate_type_attr =
+          clang::dyn_cast_or_null<clang::AnnotateTypeAttr>(
+              attributed_type->getAttr());
+      if (annotate_type_attr != nullptr &&
+          annotate_type_attr->getAnnotation() == "lifetime") {
+        found = true;
+        // Returning false stops the traversal.
+        return false;
+      }
+      return true;
+    }
+  };
+  LifetimeFinder finder;
+  finder.TraverseType(type);
+  return finder.found;
+}
+
 bool IsProto2Message(const clang::Decl& decl) {
   const auto* cxx_record_decl = clang::dyn_cast<clang::CXXRecordDecl>(&decl);
   if (cxx_record_decl == nullptr) {

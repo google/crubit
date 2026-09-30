@@ -359,9 +359,9 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         this_lifetimebound_names: Option<&[Rc<str>]>,
     ) -> Result<LifetimeResult> {
         match ty.variant() {
-            CcTypeVariant::Decl { id, .. } if self.decl_binds_lifetimes(id)? => {
+            CcTypeVariant::Decl { id, template_args } if self.decl_binds_lifetimes(id)? => {
                 let mut new_ty = ty.clone();
-                if let Some(type_arg) = self.type_arg_from_decl_id(*id) {
+                if let Some(type_arg) = self.type_arg_for_use(*id, template_args.as_deref()) {
                     let LifetimeResult { ty: type_arg, .. } = self.add_lifetime_to_input_type(
                         false,
                         name_hint,
@@ -461,6 +461,21 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         }
     }
 
+    /// Returns the type argument to rewrite for one use of the decl `id`, whose as-written
+    /// template arguments (if the importer recorded any) are `template_args`.
+    ///
+    /// Returns `None` if `id` is not a specialization whose type argument this transform rewrites
+    /// (see `type_arg_from_decl_id`). Otherwise prefers the argument as written at the use site,
+    /// because the decl is shared by every use with the same canonical arguments: its argument has
+    /// lost any lifetime written on the argument, as in `absl::Span<View $a>`.
+    fn type_arg_for_use(&mut self, id: ItemId, template_args: Option<&[CcType]>) -> Option<CcType> {
+        let decl_arg = self.type_arg_from_decl_id(id)?;
+        match template_args {
+            Some([as_written]) => Some(as_written.clone()),
+            _ => Some(decl_arg),
+        }
+    }
+
     /// Adds lifetimes to a type in output position. `lifetime_hint` is used to assign a lifetime
     /// when one is not otherwise available. If `lifetime_hint` is empty, no new lifetimes will be
     /// assigned.
@@ -472,7 +487,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         ty: &CcType,
     ) -> Result<CcType> {
         match ty.variant() {
-            CcTypeVariant::Decl { id, .. } => {
+            CcTypeVariant::Decl { id, template_args } => {
                 let mut new_ty = ty.clone();
                 if self.decl_binds_lifetimes(id)? {
                     // If there's a previously-annotated lifetime, use that.
@@ -497,7 +512,7 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
                         *new_ty.explicit_lifetimes_mut() = vec![lifetime];
                     }
                 }
-                if let Some(elt) = self.type_arg_from_decl_id(*id) {
+                if let Some(elt) = self.type_arg_for_use(*id, template_args.as_deref()) {
                     let elt_lowered = self.add_lifetime_to_output_type(
                         lifetime_hint,
                         generate_fresh_if_empty,

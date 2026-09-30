@@ -1698,3 +1698,89 @@ fn test_unknown_lifetime_generates_non_null_pointer_input() -> Result<()> {
     );
     Ok(())
 }
+
+/// Declares a type `View` that binds one lifetime, and a stand-in for `absl::Span` (recognized by
+/// name), whose element type the transform rewrites.
+const SPAN_OF_VIEW_PRELUDE: &str = r#"
+      struct LIFETIME_PARAMS("a") View { int* $a p; };
+      namespace absl {
+      template <typename T> class Span { public: T* ptr; unsigned long len; };
+      }  // namespace absl
+      "#;
+
+/// A lifetime written on the element type of a span must survive the transform. The
+/// `absl::Span<View>` record is shared by every use, so its element type has lost the `$a`; only
+/// the use site's `template_args` still carry it.
+#[gtest]
+fn test_as_written_template_arg_lifetime_kept_for_input() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(&format!(
+        "{}{SPAN_OF_VIEW_PRELUDE}\nvoid f(absl::Span<View $a> s);\n",
+        with_full_lifetime_macros()
+    ))?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                params: [
+                    FuncParam {
+                        type_: CcType {
+                            variant: Decl {
+                                ...
+                                template_args: Some([
+                                    CcType { ... explicit_lifetimes: ["a"], ... }
+                                ]),
+                            },
+                            ...
+                            explicit_lifetimes: ["s"], ...
+                        },
+                        identifier: "s", ...
+                    }
+                ],
+                ...
+                // `a` comes from the element type as written; `s` is fresh, for the span itself.
+                lifetime_inputs: ["a", "s"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
+
+/// As above, but in output position.
+#[gtest]
+fn test_as_written_template_arg_lifetime_kept_for_output() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(&format!(
+        "{}{SPAN_OF_VIEW_PRELUDE}\nabsl::Span<View $a> f(absl::Span<View $a> s);\n",
+        with_full_lifetime_macros()
+    ))?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType {
+                    variant: Decl {
+                        ...
+                        template_args: Some([
+                            CcType { ... explicit_lifetimes: ["a"], ... }
+                        ]),
+                    },
+                    ...
+                    explicit_lifetimes: ["s"], ...
+                }, ...
+            }
+        }
+    );
+    Ok(())
+}

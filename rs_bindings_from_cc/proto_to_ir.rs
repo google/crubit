@@ -104,7 +104,16 @@ impl TryFrom<::ir_rust_proto::CcTypeView<'_>> for CcType {
                 }
             }
             ::ir_rust_proto::cc_type::VariantOneof::Decl(id) => {
-                CcTypeVariant::Decl { id: ItemId(id as usize), template_args: None }
+                // `template_args` is a sibling of the `decl` oneof member in the proto
+                // (it is only meaningful for this variant), but belongs inside the
+                // variant here. Absent is spelled `None` rather than an empty slice, so
+                // that consumers keep falling back to the decl's own arguments.
+                let args: Vec<CcType> =
+                    proto.template_args().iter().map(CcType::try_from).try_collect()?;
+                CcTypeVariant::Decl {
+                    id: ItemId(id as usize),
+                    template_args: if args.is_empty() { None } else { Some(Rc::from(args)) },
+                }
             }
             ::ir_rust_proto::cc_type::VariantOneof::Error(err) => {
                 CcTypeVariant::Error(FormattedError::try_from(err)?)

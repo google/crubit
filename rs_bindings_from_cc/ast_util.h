@@ -99,6 +99,16 @@ CollectClangLifetimeAnnotationsForMemberFunctionType(
 absl::StatusOr<std::vector<absl::string_view>> CollectExplicitLifetimes(
     const clang::ASTContext& ast_context, const clang::Type& t);
 
+// Returns true if an explicit lifetime annotation appears anywhere in `type`
+// as written: on `type` itself, or on any type nested within it, such as a
+// pointee, a template argument, or a function parameter or return type.
+//
+// Unlike `CollectExplicitLifetimes`, which only reads the annotations on the
+// outermost type, this also finds e.g. the `$a` in `W<int* $a>*` or in
+// `W<W<int* $a>>`. It does not look through typedefs: a lifetime written on
+// the underlying type of a typedef belongs to the typedef, not to this use.
+bool ContainsExplicitLifetimes(clang::QualType type);
+
 // Reduces a clang::CallingConv into a crubit::CallingConv, which is a subset.
 // If the variant isn't in the subset, returns an error.
 absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
