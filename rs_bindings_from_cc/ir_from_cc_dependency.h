@@ -23,7 +23,9 @@ inline constexpr absl::string_view kDependencyHeaderName =
 absl::StatusOr<IR> IrFromCcDependency(
     FfiU8Slice target_triple, FfiU8Slice header_source,
     FfiU8Slice dependency_header_source, FfiU8Slice extra_feature,
-    bool kythe_annotations, CarcinizeMode carcinize_mode = CarcinizeMode::kOff);
+    bool kythe_annotations, CarcinizeMode carcinize_mode = CarcinizeMode::kOff,
+    bool lazy_import_alien_decls = false,
+    bool check_importer_invariants = false);
 
 }  // namespace crubit
 

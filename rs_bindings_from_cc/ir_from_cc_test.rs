@@ -69,6 +69,14 @@ fn ir_proto_from_cc_dependency(header: &str, dep_header: &str) -> Result<IRProto
     )
 }
 
+fn ir_proto_from_cc_dependency_with_lazy_import(header: &str, dep_header: &str) -> Result<IRProto> {
+    ir_testing::ir_proto_from_cc_dependency_with_lazy_import(
+        multiplatform_testing::test_platform(),
+        header,
+        dep_header,
+    )
+}
+
 fn ir_proto_from_record_impl_debug_cc(header: &str) -> Result<IRProto> {
     ir_testing::ir_proto_from_cc_dependency(
         multiplatform_testing::test_platform(),
@@ -2594,6 +2602,338 @@ fn test_template_and_alias_are_both_in_dependency() -> Result<()> {
         }
     );
 
+    Ok(())
+}
+
+#[gtest]
+fn test_template_and_alias_are_both_in_dependency_with_lazy_import() -> Result<()> {
+    // Like `test_template_and_alias_are_both_in_dependency`, but with lazy
+    // import of alien declarations enabled.
+    let dependency_src = r#"
+                template <typename T>
+                struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
+                    T GetValue();
+                    T field;
+                };
+                using MyAliasOfTemplate = MyTemplate<int>;
+                struct StructInDependency {}; "#;
+    let current_target_src = r#"
+                /* no references to MyTemplate or MyAliasOfTemplate */
+                struct StructInCurrentTarget { StructInDependency d; }; "#;
+    let proto = ir_proto_from_cc_dependency_with_lazy_import(current_target_src, dependency_src)?;
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
+
+    // Just double-checking the test inputs VS target names.
+    let current_target = ir_testing::TESTING_TARGET;
+    let dependency = ir_testing::DEPENDENCY_TARGET;
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "StructInCurrentTarget", ...
+                owning_target: BazelLabel(#current_target), ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "StructInDependency", ...
+                owning_target: BazelLabel(#dependency), ...
+            }
+        }
+    );
+
+    // Unreferenced type alias in `dependency` is not imported.
+    assert_ir_not_matches!(
+        ir,
+        quote! {
+            TypeAlias { ...
+                cc_name: "MyAliasOfTemplate", ...
+                owning_target: BazelLabel(#dependency), ...
+            }
+        }
+    );
+    assert_ir_not_matches!(
+        ir,
+        quote! {
+            TypeAlias { ...
+                cc_name: "MyAliasOfTemplate", ...
+                owning_target: BazelLabel(#current_target), ...
+            }
+        }
+    );
+
+    // Unreferenced template in `dependency` is not instantiated in either target.
+    assert_ir_not_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "MyTemplate<int>", ...
+                owning_target: BazelLabel(#dependency), ...
+            }
+        }
+    );
+    assert_ir_not_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "MyTemplate<int>", ...
+                owning_target: BazelLabel(#current_target), ...
+            }
+        }
+    );
+
+    assert_ir_not_matches!(
+        ir,
+        quote! {
+            Func { ...
+                rs_name: "GetValue", ...
+                owning_target: BazelLabel(#dependency), ...
+            }
+        }
+    );
+    assert_ir_not_matches!(
+        ir,
+        quote! {
+            Func { ...
+                rs_name: "GetValue", ...
+                owning_target: BazelLabel(#current_target), ...
+            }
+        }
+    );
+
+    Ok(())
+}
+
+#[gtest]
+fn test_referenced_alias_in_dependency_is_imported_lazily() -> Result<()> {
+    // With lazy import enabled, alien declarations are only imported when
+    // referenced from the current target. See also
+    // `test_template_and_alias_are_both_in_dependency_with_lazy_import`.
+    let dependency_src = r#"
+                template <typename T>
+                struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
+                    T field;
+                };
+                using MyAliasOfTemplate = MyTemplate<int>;
+                struct UnreferencedInDependency {}; "#;
+    let current_target_src = r#"
+                struct StructInCurrentTarget { MyAliasOfTemplate field; }; "#;
+    let proto = ir_proto_from_cc_dependency_with_lazy_import(current_target_src, dependency_src)?;
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
+
+    let dependency = ir_testing::DEPENDENCY_TARGET;
+    assert_ir_matches!(
+        ir,
+        quote! {
+            TypeAlias { ...
+                cc_name: "MyAliasOfTemplate", ...
+                owning_target: BazelLabel(#dependency), ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "MyTemplate<int>", ...
+            }
+        }
+    );
+    assert_ir_not_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "UnreferencedInDependency", ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_referenced_nested_record_in_dependency_namespace_is_imported_lazily() -> Result<()> {
+    // Lazily importing `dep_ns::Outer::Inner` must import its enclosing record
+    // top-down (so `Outer`'s own field of type `Inner` resolves and `Outer`'s
+    // nested items stay in source order) as well as its enclosing namespace,
+    // but not unrelated declarations in that namespace.
+    let dependency_src = r#"
+                namespace dep_ns {
+                struct Outer {
+                  struct Inner { int x; };
+                  struct Inner2 { int y; };
+                  Inner inner_field;
+                };
+                struct UnreferencedInDependency {};
+                }  // namespace dep_ns "#;
+    let current_target_src = r#"
+                struct StructInCurrentTarget { dep_ns::Outer::Inner field; }; "#;
+    let proto = ir_proto_from_cc_dependency_with_lazy_import(current_target_src, dependency_src)?;
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
+
+    let inner_id = retrieve_record(&ir, "Inner").id();
+    let dependency = ir_testing::DEPENDENCY_TARGET;
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "Inner", ...
+                owning_target: BazelLabel(#dependency), ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "Outer", ...
+                owning_target: BazelLabel(#dependency), ...
+                fields: [Field {
+                    rust_identifier: Some("inner_field"), ...
+                    type_: CcType {
+                        variant: Decl { id: ItemId(#inner_id), ... }, ...
+                    }, ...
+                }], ...
+                children: [
+                    Record(Record { ... cc_name: "Inner", ... }),
+                    Record(Record { ... cc_name: "Inner2", ... }),
+                ], ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Namespace { ...
+                cc_name: "dep_ns", ...
+            }
+        }
+    );
+    assert_ir_not_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "UnreferencedInDependency", ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_referenced_nested_enum_in_dependency_record_is_imported_lazily() -> Result<()> {
+    // Like `test_referenced_nested_record_in_dependency_namespace_is_imported_lazily`,
+    // but for a nested enum: `Outer`'s own field of type `E2` must resolve, and
+    // `Outer`'s nested enums must stay in source order.
+    let dependency_src = r#"
+                namespace dep_ns {
+                struct Outer {
+                  enum class E1 { kA };
+                  enum class E2 { kB };
+                  enum class E3 { kC };
+                  E2 e2_field;
+                };
+                }  // namespace dep_ns "#;
+    let current_target_src = r#"
+                struct StructInCurrentTarget { dep_ns::Outer::E2 field; }; "#;
+    let proto = ir_proto_from_cc_dependency_with_lazy_import(current_target_src, dependency_src)?;
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "Outer", ...
+                fields: [Field {
+                    rust_identifier: Some("e2_field"), ...
+                    type_: CcType {
+                        variant: Decl { ... }, ...
+                    }, ...
+                }], ...
+                children: [
+                    Enum(Enum { ... cc_name: "E1", ... }),
+                    Enum(Enum { ... cc_name: "E2", ... }),
+                    Enum(Enum { ... cc_name: "E3", ... }),
+                ], ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_referenced_forward_declared_nested_record_in_dependency_is_imported_lazily() -> Result<()> {
+    // Lazily importing a nested record that is forward-declared inside its
+    // enclosing record and used through a pointer there.
+    let dependency_src = r#"
+                namespace dep_ns {
+                struct Outer {
+                  struct Before { int w; };
+                  struct Inner;
+                  Inner* inner_ptr;
+                  struct Inner { int x; };
+                  struct After { int y; };
+                };
+                }  // namespace dep_ns "#;
+    let current_target_src = r#"
+                struct StructInCurrentTarget { dep_ns::Outer::Inner* field; }; "#;
+    let proto = ir_proto_from_cc_dependency_with_lazy_import(current_target_src, dependency_src)?;
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
+
+    let inner_id = retrieve_record(&ir, "Inner").id();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record { ...
+                cc_name: "Outer", ...
+                fields: [Field {
+                    rust_identifier: Some("inner_ptr"), ...
+                    type_: CcType {
+                        variant: Pointer(PointerType { ...
+                            pointee_type: CcType {
+                                variant: Decl { id: ItemId(#inner_id), ... }, ...
+                            }, ...
+                        }), ...
+                    }, ...
+                }], ...
+                children: [
+                    Record(Record { ... cc_name: "Before", ... }),
+                    Record(Record { ... cc_name: "Inner", ... }),
+                    Record(Record { ... cc_name: "After", ... }),
+                ], ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_unreferenced_decls_in_dependency_are_imported_eagerly_by_default() -> Result<()> {
+    // Lazy import of alien declarations is opt-in: by default, unreferenced
+    // declarations from dependencies are still imported.
+    let dependency_src = r#"
+                namespace dep_ns {
+                struct ReferencedInDependency {};
+                struct UnreferencedInDependency {};
+                }  // namespace dep_ns "#;
+    let current_target_src = r#"
+                struct StructInCurrentTarget { dep_ns::ReferencedInDependency field; }; "#;
+    let unreferenced = quote! {
+        Record { ...
+            cc_name: "UnreferencedInDependency", ...
+        }
+    };
+
+    let eager_proto = ir_proto_from_cc_dependency(current_target_src, dependency_src)?;
+    let eager_ir = ir_testing::make_test_ir_dependency(&eager_proto, None)?;
+    assert_ir_matches!(eager_ir, unreferenced);
+
+    let lazy_proto =
+        ir_proto_from_cc_dependency_with_lazy_import(current_target_src, dependency_src)?;
+    let lazy_ir = ir_testing::make_test_ir_dependency(&lazy_proto, None)?;
+    assert_ir_not_matches!(lazy_ir, unreferenced);
     Ok(())
 }
 

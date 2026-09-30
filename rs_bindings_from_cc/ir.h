@@ -51,6 +51,11 @@ namespace internal {
 inline constexpr int kJsonIndent = 2;
 }  // namespace internal
 
+// Name of the top-level namespace in which `IrFromCc` generates code that
+// triggers `cc_template!` class template instantiations.
+inline constexpr absl::string_view kInstantiationsNamespaceName =
+    "__cc_template_instantiations";
+
 // A name of a public header of the C++ library.
 class HeaderName {
  public:

@@ -108,30 +108,6 @@ pub mod test {
 
 // namespace test
 
-// error: class `std::basic_filebuf<char, struct std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_filebuf<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ifstream<char, struct std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ifstream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ofstream<char, struct std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_ofstream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_fstream<char, struct std::char_traits<char>>` could not be bound
-//   incomplete type
-
-// error: class `std::basic_fstream<wchar_t, struct std::char_traits<wchar_t>>` could not be bound
-//   incomplete type
-
 mod detail {
     #[allow(unused_imports)]
     use super::*;

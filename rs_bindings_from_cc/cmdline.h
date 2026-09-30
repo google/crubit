@@ -40,6 +40,8 @@ struct CmdlineArgs {
   bool is_golden_test = false;
   bool kythe_annotations = false;
   std::string kythe_default_corpus;
+  bool lazy_import_alien_decls = false;
+  bool check_importer_invariants = false;
 
   std::vector<HeaderName> public_headers;
   absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets;

@@ -16,11 +16,13 @@ namespace crubit {
 extern "C" FfiU8SliceBox proto_from_cc_dependency(
     FfiU8Slice target_triple, FfiU8Slice header_source,
     FfiU8Slice dependency_header_source, FfiU8Slice extra_feature,
-    bool kythe_annotations, bool carcinize) {
+    bool kythe_annotations, bool carcinize, bool lazy_import_alien_decls,
+    bool check_importer_invariants) {
   absl::StatusOr<IR> ir = IrFromCcDependency(
       target_triple, header_source, dependency_header_source, extra_feature,
       kythe_annotations,
-      carcinize ? CarcinizeMode::kStrict : CarcinizeMode::kOff);
+      carcinize ? CarcinizeMode::kStrict : CarcinizeMode::kOff,
+      lazy_import_alien_decls, check_importer_invariants);
 
   if (!ir.ok()) {
     llvm::report_fatal_error(llvm::formatv("IrFromCc reported an error: {0}",

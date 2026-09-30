@@ -289,6 +289,9 @@ bindings_attrs = {
     "_generate_error_report": attr.label(
         default = "@rules_crubit//rs_bindings_from_cc/bazel_support:generate_error_report",
     ),
+    "_lazy_import_alien_decls": attr.label(
+        default = "@rules_crubit//rs_bindings_from_cc/bazel_support:lazy_import_alien_decls",
+    ),
     "_is_golden_test": attr.label(
         default = "//common/bazel_support:is_golden_test",
     ),

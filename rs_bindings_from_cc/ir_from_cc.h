@@ -23,11 +23,6 @@
 
 namespace crubit {
 
-// Name of the namespace in which we generate code that triggers class template
-// instantiations.
-static constexpr absl::string_view kInstantiationsNamespaceName =
-    "__cc_template_instantiations";
-
 struct NonCopyable final {
   NonCopyable() = default;
   NonCopyable(const NonCopyable&) = delete;
@@ -67,6 +62,14 @@ struct IrFromCcOptions final {
       template_blocklist_path_regex = nullptr;
 
   CarcinizeMode carcinize_mode = CarcinizeMode::kOff;
+
+  // If true, declarations that are not from `current_target` are only imported
+  // when referenced (transitively) from `current_target`.
+  bool lazy_import_alien_decls = false;
+
+  // If true, run (potentially expensive) consistency checks on the importer's
+  // internal state, crashing if they fail.
+  bool check_importer_invariants = false;
 };
 
 static_assert(std::is_aggregate_v<IrFromCcOptions>);

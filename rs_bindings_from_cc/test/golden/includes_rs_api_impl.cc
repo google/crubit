@@ -7,9 +7,7 @@
 
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
-#include "support/internal/sizeof.h"
 
-#include <cstddef>
 #include <memory>
 
 // Public headers of the C++ library being wrapped.

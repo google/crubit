@@ -133,6 +133,14 @@ ABSL_FLAG(std::string, kythe_default_corpus, "corpus",
 ABSL_FLAG(std::string, template_blocklist_path_regex, "",
           "If nonempty, do not instantiate templates defined in files with "
           "paths matching this llvm::Regex.");
+ABSL_FLAG(bool, lazy_import_alien_decls, false,
+          "If true, declarations from targets other than the current target "
+          "are only imported when they are (transitively) referenced from "
+          "the current target, instead of importing all of them eagerly.");
+ABSL_FLAG(bool, check_importer_invariants, false,
+          "If true, run (potentially expensive) consistency checks on the "
+          "importer's internal state and crash if they fail. Intended for "
+          "debugging.");
 
 namespace crubit {
 bool AbslParseFlag(absl::string_view text, CarcinizeMode* mode,
@@ -276,6 +284,9 @@ absl::StatusOr<Cmdline> Cmdline::FromFlags() {
       .is_golden_test = absl::GetFlag(FLAGS_is_golden_test),
       .kythe_annotations = absl::GetFlag(FLAGS_kythe_annotations),
       .kythe_default_corpus = absl::GetFlag(FLAGS_kythe_default_corpus),
+      .lazy_import_alien_decls = absl::GetFlag(FLAGS_lazy_import_alien_decls),
+      .check_importer_invariants =
+          absl::GetFlag(FLAGS_check_importer_invariants),
       .public_headers = PublicHeaders(),
       .extra_rs_srcs = absl::GetFlag(FLAGS_extra_rs_srcs),
       .extra_cpp_srcs = absl::GetFlag(FLAGS_extra_cpp_srcs),

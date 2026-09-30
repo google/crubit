@@ -113,7 +113,9 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
                  .do_not_bind_allowlist = std::move(do_not_bind_allowlist),
                  .kythe_annotations = args.kythe_annotations,
                  .template_blocklist_path_regex = template_blocklist_path_regex,
-                 .carcinize_mode = args.carcinize_mode}));
+                 .carcinize_mode = args.carcinize_mode,
+                 .lazy_import_alien_decls = args.lazy_import_alien_decls,
+                 .check_importer_invariants = args.check_importer_invariants}));
 
   if (!args.instantiations_out.empty()) {
     ir.set_crate_root_path("__cc_template_instantiations_rs_api");

@@ -131,6 +131,49 @@ pub fn ir_proto_from_cc_dependency(
     kythe_annotations: bool,
     carcinize: bool,
 ) -> Result<IRProto> {
+    ir_proto_from_cc_dependency_impl(
+        platform,
+        header_source,
+        dependency_header_source,
+        extra_feature,
+        kythe_annotations,
+        carcinize,
+        /* lazy_import_alien_decls= */ false,
+        /* check_importer_invariants= */ false,
+    )
+}
+
+/// Like `ir_proto_from_cc_dependency`, but with `--lazy_import_alien_decls`
+/// enabled, i.e. declarations from `DEPENDENCY_TARGET` are only imported when
+/// referenced (transitively) from the current target. Also enables
+/// `--check_importer_invariants` to verify the lazy import bookkeeping.
+pub fn ir_proto_from_cc_dependency_with_lazy_import(
+    platform: multiplatform_testing::Platform,
+    header_source: &str,
+    dependency_header_source: &str,
+) -> Result<IRProto> {
+    ir_proto_from_cc_dependency_impl(
+        platform,
+        header_source,
+        dependency_header_source,
+        /* extra_feature= */ None,
+        /* kythe_annotations= */ false,
+        /* carcinize= */ false,
+        /* lazy_import_alien_decls= */ true,
+        /* check_importer_invariants= */ true,
+    )
+}
+
+fn ir_proto_from_cc_dependency_impl(
+    platform: multiplatform_testing::Platform,
+    header_source: &str,
+    dependency_header_source: &str,
+    extra_feature: Option<&str>,
+    kythe_annotations: bool,
+    carcinize: bool,
+    lazy_import_alien_decls: bool,
+    check_importer_invariants: bool,
+) -> Result<IRProto> {
     const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
 
     unsafe extern "C" {
@@ -141,6 +184,8 @@ pub fn ir_proto_from_cc_dependency(
             extra_feature: FfiU8Slice,
             kythe_annotations: bool,
             carcinize: bool,
+            lazy_import_alien_decls: bool,
+            check_importer_invariants: bool,
         ) -> FfiU8SliceBox;
     }
 
@@ -154,6 +199,8 @@ pub fn ir_proto_from_cc_dependency(
             FfiU8Slice::from_slice(extra_feature.unwrap_or_default().as_bytes()),
             kythe_annotations,
             carcinize,
+            lazy_import_alien_decls,
+            check_importer_invariants,
         )
         .into_boxed_slice()
     };

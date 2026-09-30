@@ -53,7 +53,9 @@ class Invocation {
       absl::flat_hash_map<BazelLabel, std::string> crate_names,
       bool kythe_annotations,
       std::shared_ptr<const llvm::Regex> template_blocklist_path_regex,
-      CarcinizeMode carcinize_mode = CarcinizeMode::kOff)
+      CarcinizeMode carcinize_mode = CarcinizeMode::kOff,
+      bool lazy_import_alien_decls = false,
+      bool check_importer_invariants = false)
       : target_(target),
         public_headers_(public_headers),
         lifetime_context_(std::make_shared<
@@ -63,7 +65,9 @@ class Invocation {
         kythe_annotations_(kythe_annotations),
         template_blocklist_path_regex_(
             std::move(template_blocklist_path_regex)),
-        carcinize_mode_(carcinize_mode) {
+        carcinize_mode_(carcinize_mode),
+        lazy_import_alien_decls_(lazy_import_alien_decls),
+        check_importer_invariants_(check_importer_invariants) {
     // Caller should verify that the inputs are non-empty.
     CHECK(!public_headers_.empty());
     CHECK(!header_targets_.empty());
@@ -116,6 +120,14 @@ class Invocation {
   // Returns whether to record extra location information for Kythe annotations.
   bool kythe_annotations() const { return kythe_annotations_; }
 
+  // Returns whether declarations that are not from `target_` are only imported
+  // when referenced (transitively) from `target_`.
+  bool lazy_import_alien_decls() const { return lazy_import_alien_decls_; }
+
+  // Returns whether to run (potentially expensive) consistency checks on the
+  // importer's internal state, crashing if they fail.
+  bool check_importer_invariants() const { return check_importer_invariants_; }
+
   CarcinizeMode carcinize_mode() const { return carcinize_mode_; }
   bool is_carcinize() const { return carcinize_mode_ != CarcinizeMode::kOff; }
   bool allow_incomplete_migration() const {
@@ -160,6 +172,13 @@ class Invocation {
   std::shared_ptr<const llvm::Regex> template_blocklist_path_regex_;
 
   CarcinizeMode carcinize_mode_;
+
+  // Whether declarations that are not from `target_` are only imported when
+  // referenced (transitively) from `target_`.
+  bool lazy_import_alien_decls_;
+
+  // Whether to run consistency checks on the importer's internal state.
+  bool check_importer_invariants_;
 };
 
 // Explicitly defined interface that defines how `DeclImporter`s are allowed to

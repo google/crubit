@@ -163,6 +163,13 @@ class Importer final : public ImportContext {
   // deterministic/reproducible order.
   std::vector<ItemId> GetOrderedItemIdsOfTemplateInstantiations() const;
 
+  // Checks the invariants relied upon by `Import` in lazy alien-import mode:
+  // every imported decl has all of its enclosing namespaces in the cache, and
+  // every imported namespace has its canonical namespace in the cache (the Rust
+  // side looks up `canonical_namespace_id`). This is expensive, so it is only
+  // called when `--check_importer_invariants` is set.
+  void CheckLazyImportInvariants() const;
+
   void FindAlwaysInstantiateSpecs(const clang::DeclContext& decl_context);
   bool IsAlwaysInstantiate(
       const clang::ClassTemplateSpecializationDecl& spec_decl) const;

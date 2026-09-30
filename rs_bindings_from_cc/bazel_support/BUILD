@@ -190,6 +190,15 @@ bool_flag(
     visibility = ["//visibility:public"],
 )
 
+# If true, `rs_bindings_from_cc` only imports declarations from dependencies
+# when they are (transitively) referenced from the current target, instead of
+# importing all of them eagerly.
+bool_flag(
+    name = "lazy_import_alien_decls",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
 toolchain_type(
     name = "toolchain_type",
     visibility = ["//visibility:public"],

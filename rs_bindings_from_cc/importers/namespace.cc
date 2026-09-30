@@ -70,6 +70,13 @@ std::unique_ptr<ir_proto::Item> NamespaceDeclImporter::Import(
   ItemId id = ictx_.GenerateItemId(*namespace_decl);
   ictx_.invocation_.child_item_ids_[id] = std::move(item_ids);
 
+  // In lazy mode, the canonical namespace decl might not have been imported
+  // yet, but the Rust side looks it up via `canonical_namespace_id`.
+  if (ictx_.invocation_.lazy_import_alien_decls() &&
+      namespace_decl->getCanonicalDecl() != namespace_decl) {
+    ictx_.EnsureSuccessfullyImported(namespace_decl->getCanonicalDecl());
+  }
+
   auto item = std::make_unique<ir_proto::Item>();
   auto* ns = item->mutable_namespace_decl();
   ns->mutable_cc_name()->set_identifier(identifier->cc_identifier.Ident());

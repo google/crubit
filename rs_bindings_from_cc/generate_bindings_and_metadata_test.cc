@@ -26,7 +26,9 @@ namespace crubit {
 namespace {
 
 using ::testing::ElementsAre;
+using ::testing::HasSubstr;
 using ::testing::IsEmpty;
+using ::testing::Not;
 using ::testing::Pair;
 using ::testing::StrEq;
 
@@ -197,6 +199,44 @@ TEST(GenerateBindingsAndMetadataTest,
       instantiations,
       ElementsAre(Pair(Identifier("ExpectedTemplate<bool>"),
                        Identifier("__CcTemplateInst16ExpectedTemplateIbE"))));
+}
+
+TEST(GenerateBindingsAndMetadataTest,
+     InstantiationsNamespaceIsNotEmittedAsRustModule) {
+  std::string a_rs_path =
+      WriteFileForCurrentTest("a.rs", "cc_template!{ExpectedTemplate<bool>}");
+  for (bool lazy_import_alien_decls : {false, true}) {
+    SCOPED_TRACE(lazy_import_alien_decls ? "lazy_import_alien_decls=true"
+                                         : "lazy_import_alien_decls=false");
+    CmdlineArgs args = MakeCmdline("a.h").args();
+    args.srcs_to_scan_for_instantiations = {a_rs_path};
+    args.instantiations_out = "instantiations_out";
+    args.lazy_import_alien_decls = lazy_import_alien_decls;
+    args.check_importer_invariants = true;
+    ASSERT_OK_AND_ASSIGN(Cmdline cmdline, Cmdline::Create(args));
+
+    ASSERT_OK_AND_ASSIGN(
+        BindingsAndMetadata result,
+        GenerateBindingsAndMetadata(cmdline, DefaultClangArgs(),
+                                    /*virtual_headers_contents_for_testing=*/
+                                    {{HeaderName("a.h"), R"cc(
+                                        template <typename T>
+                                        class ExpectedTemplate {};
+                                      )cc"}}));
+
+    // The instantiation itself is still collected...
+    EXPECT_THAT(
+        result.instantiations,
+        ElementsAre(Pair(Identifier("ExpectedTemplate<bool>"),
+                         Identifier("__CcTemplateInst16ExpectedTemplateIbE"))));
+    // ...but the synthetic namespace that holds the instantiation aliases is
+    // an implementation detail and must not show up as a public module or in
+    // the namespaces metadata.
+    EXPECT_THAT(result.rs_api,
+                Not(HasSubstr("mod __cc_template_instantiations")));
+    EXPECT_THAT(NamespacesAsJson(result.namespaces),
+                Not(HasSubstr("__cc_template_instantiations")));
+  }
 }
 
 TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {

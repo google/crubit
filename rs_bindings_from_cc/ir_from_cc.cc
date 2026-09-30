@@ -245,7 +245,8 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
       options.headers_to_targets, std::move(options.do_not_bind_allowlist),
       std::move(options.crubit_features), std::move(options.crate_names),
       options.kythe_annotations, options.template_blocklist_path_regex,
-      options.carcinize_mode);
+      options.carcinize_mode, options.lazy_import_alien_decls,
+      options.check_importer_invariants);
   if (!clang::tooling::runToolOnCodeWithArgs(
           std::make_unique<FrontendAction>(invocation),
           virtual_input_file_content, args_as_strings,
