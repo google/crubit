@@ -110,7 +110,7 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_ucallables_ugolden_x0000003a_x
 const _: () = assert!(::core::mem::offset_of!(::callables_golden::Point, x) == 0);
 const _: () = assert!(::core::mem::offset_of!(::callables_golden::Point, y) == 4);
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uand_ureturn_unon_umovable(
+unsafe extern "C" fn __crubit_thunk_call_uand_ureturn_unon_umovable_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable(
     f: ::crubit_support::bridge::FnRefPayload,
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
@@ -257,7 +257,7 @@ unsafe extern "C" fn __crubit_thunk_call_udyn_ufn_umut(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uimpl_ufn(
+unsafe extern "C" fn __crubit_thunk_call_uimpl_ufn_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
     f: ::crubit_support::bridge::FnRefPayload,
     x: i32,
 ) -> i32 {
@@ -273,7 +273,7 @@ unsafe extern "C" fn __crubit_thunk_call_uimpl_ufn(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uimpl_ufn_umut(
+unsafe extern "C" fn __crubit_thunk_call_uimpl_ufn_umut_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
     f: ::crubit_support::bridge::FnRefPayload,
     x: i32,
 ) -> i32 {
@@ -289,7 +289,7 @@ unsafe extern "C" fn __crubit_thunk_call_uimpl_ufn_umut(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uimpl_ufn_uonce(
+unsafe extern "C" fn __crubit_thunk_call_uimpl_ufn_uonce_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
     f: ::crubit_support::bridge::FnRefPayload,
     x: i32,
 ) -> i32 {
@@ -305,7 +305,7 @@ unsafe extern "C" fn __crubit_thunk_call_uimpl_ufn_uonce(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uimpl_ufn_uonce_ustatic(
+unsafe extern "C" fn __crubit_thunk_call_uimpl_ufn_uonce_ustatic_ustd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x00000028dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnOnce_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32_x00000020_x0000002b_x00000020_x00000027static_x00000029_x0000003e(
     f: ::crubit_support::bridge::FnPayload,
     x: i32,
 ) -> i32 {
@@ -321,7 +321,7 @@ unsafe extern "C" fn __crubit_thunk_call_uimpl_ufn_uonce_ustatic(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uimpl_uwith_utuple_uoption(
+unsafe extern "C" fn __crubit_thunk_call_uimpl_uwith_utuple_uoption_ustd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x00000028dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnOnce_x00000028_x00000028i32_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x00000029_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000028i32_x0000002c_x00000020std_x0000003a_x0000003aoption_x0000003a_x0000003aOption_x0000003ci32_x0000003e_x00000029_x00000020_x0000002b_x00000020_x00000027static_x00000029_x0000003e(
     f: ::crubit_support::bridge::FnPayload,
 ) -> i32 {
     unsafe {
@@ -348,7 +348,7 @@ unsafe extern "C" fn __crubit_thunk_call_uimpl_uwith_utuple_uoption(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uint_uto_upoint(
+unsafe extern "C" fn __crubit_thunk_call_uint_uto_upoint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
     f: ::crubit_support::bridge::FnRefPayload,
     x: i32,
     __ret_ptr: *mut core::ffi::c_void,
@@ -374,7 +374,7 @@ unsafe extern "C" fn __crubit_thunk_call_uint_uto_upoint(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_upoint_umut(
+unsafe extern "C" fn __crubit_thunk_call_upoint_umut_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
     f: ::crubit_support::bridge::FnRefPayload,
     pt: *mut ::callables_golden::Point,
     __ret_ptr: *mut core::ffi::c_void,
@@ -406,7 +406,7 @@ unsafe extern "C" fn __crubit_thunk_call_upoint_umut(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_upoint_uonce_ustatic(
+unsafe extern "C" fn __crubit_thunk_call_upoint_uonce_ustatic_ustd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x00000028dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnOnce_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint_x00000020_x0000002b_x00000020_x00000027static_x00000029_x0000003e(
     f: ::crubit_support::bridge::FnPayload,
     pt: *mut ::callables_golden::Point,
     __ret_ptr: *mut core::ffi::c_void,
@@ -438,7 +438,7 @@ unsafe extern "C" fn __crubit_thunk_call_upoint_uonce_ustatic(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_upoint_uto_uint(
+unsafe extern "C" fn __crubit_thunk_call_upoint_uto_uint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
     f: ::crubit_support::bridge::FnRefPayload,
     pt: *mut ::callables_golden::Point,
 ) -> i32 {
@@ -458,7 +458,7 @@ unsafe extern "C" fn __crubit_thunk_call_upoint_uto_uint(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_upoint_uvoid(
+unsafe extern "C" fn __crubit_thunk_call_upoint_uvoid_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029(
     f: ::crubit_support::bridge::FnRefPayload,
     pt: *mut ::callables_golden::Point,
 ) -> () {
@@ -480,7 +480,7 @@ unsafe extern "C" fn __crubit_thunk_call_upoint_uvoid(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_utwo_uargs(
+unsafe extern "C" fn __crubit_thunk_call_utwo_uargs_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x0000002c_x00000020i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
     f: ::crubit_support::bridge::FnRefPayload,
     a: i32,
     b: i32,
@@ -498,7 +498,7 @@ unsafe extern "C" fn __crubit_thunk_call_utwo_uargs(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_utwo_upoints(
+unsafe extern "C" fn __crubit_thunk_call_utwo_upoints_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x0000002c_x00000020callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
     f: ::crubit_support::bridge::FnRefPayload,
     a: *mut ::callables_golden::Point,
     b: *mut ::callables_golden::Point,
@@ -536,7 +536,7 @@ unsafe extern "C" fn __crubit_thunk_call_utwo_upoints(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uvoid(
+unsafe extern "C" fn __crubit_thunk_call_uvoid_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x00000029(
     f: ::crubit_support::bridge::FnRefPayload,
     x: i32,
 ) -> () {
@@ -554,7 +554,7 @@ unsafe extern "C" fn __crubit_thunk_call_uvoid(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uvoid_umut(
+unsafe extern "C" fn __crubit_thunk_call_uvoid_umut_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028i32_x00000029(
     f: ::crubit_support::bridge::FnRefPayload,
     x: i32,
 ) -> () {
@@ -572,7 +572,7 @@ unsafe extern "C" fn __crubit_thunk_call_uvoid_umut(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uvoid_uonce(
+unsafe extern "C" fn __crubit_thunk_call_uvoid_uonce_u_x00000026mut_x00000020dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnMut_x00000028i32_x00000029(
     f: ::crubit_support::bridge::FnRefPayload,
     x: i32,
 ) -> () {
@@ -590,7 +590,7 @@ unsafe extern "C" fn __crubit_thunk_call_uvoid_uonce(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uwith_uhrtb_ustr(
+unsafe extern "C" fn __crubit_thunk_call_uwith_uhrtb_ustr_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
     f: ::crubit_support::bridge::FnRefPayload,
     s: *mut &'static str,
 ) -> i32 {
@@ -608,7 +608,7 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_uhrtb_ustr(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uwith_uhrtb_ustr_uto_ustr(
+unsafe extern "C" fn __crubit_thunk_call_uwith_uhrtb_ustr_uto_ustr_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026str(
     f: ::crubit_support::bridge::FnRefPayload,
     s: *mut &'static str,
 ) -> usize {
@@ -637,7 +637,7 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_uhrtb_ustr_uto_ustr(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uwith_umovable_udrop(
+unsafe extern "C" fn __crubit_thunk_call_uwith_umovable_udrop_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aCppMovableDrop_x00000029(
     f: ::crubit_support::bridge::FnRefPayload,
     x: i32,
 ) -> () {
@@ -658,7 +658,7 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_umovable_udrop(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uwith_umut_uref_uto_umut_uref(
+unsafe extern "C" fn __crubit_thunk_call_uwith_umut_uref_uto_umut_uref_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020mut_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026mut_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable(
     f: ::crubit_support::bridge::FnRefPayload,
     x: &'static mut ::callables_golden::NonCppMovable,
 ) -> i32 {
@@ -678,7 +678,7 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_umut_uref_uto_umut_uref(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uwith_unon_umovable_uref(
+unsafe extern "C" fn __crubit_thunk_call_uwith_unon_umovable_uref_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable_x00000029(
     f: ::crubit_support::bridge::FnRefPayload,
     x: &'static ::callables_golden::NonCppMovable,
 ) -> i32 {
@@ -698,7 +698,7 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_unon_umovable_uref(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uwith_upoint(
+unsafe extern "C" fn __crubit_thunk_call_uwith_upoint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028callables_ugolden_x0000003a_x0000003aPoint_x00000029_x00000020_x0000002d_x0000003e_x00000020callables_ugolden_x0000003a_x0000003aPoint(
     f: ::crubit_support::bridge::FnRefPayload,
     pt: *mut ::callables_golden::Point,
     __ret_ptr: *mut core::ffi::c_void,
@@ -730,7 +730,7 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_upoint(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uwith_uref_uto_uref(
+unsafe extern "C" fn __crubit_thunk_call_uwith_uref_uto_uref_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020callables_ugolden_x0000003a_x0000003aNonCppMovable_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026callables_ugolden_x0000003a_x0000003aNonCppMovable(
     f: ::crubit_support::bridge::FnRefPayload,
     x: &'static ::callables_golden::NonCppMovable,
 ) -> i32 {
@@ -750,7 +750,7 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_uref_uto_uref(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uwith_ustr(
+unsafe extern "C" fn __crubit_thunk_call_uwith_ustr_u_x00000027a_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
     f: ::crubit_support::bridge::FnRefPayload,
     s: *mut &'static str,
 ) -> i32 {
@@ -768,7 +768,7 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_ustr(
     }
 }
 #[unsafe(no_mangle)]
-unsafe extern "C" fn __crubit_thunk_call_uwith_ustr_uto_ustr(
+unsafe extern "C" fn __crubit_thunk_call_uwith_ustr_uto_ustr_u_x00000027a_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029_x00000020_x0000002d_x0000003e_x00000020_x00000026_x00000027a_x00000020str(
     f: ::crubit_support::bridge::FnRefPayload,
     s: *mut &'static str,
     __ret_ptr: *mut core::ffi::c_void,

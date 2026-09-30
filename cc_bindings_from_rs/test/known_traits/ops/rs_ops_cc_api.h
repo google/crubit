@@ -16,6 +16,7 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #include "support/annotations_internal.h"
 #include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
 #include "support/rs_std/traits.h"
 
 #include <cstddef>
@@ -37,11 +38,12 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: rs_ops_golden :: MyBorrowedInt") alignas(4)
 
   bool operator==(::rs_ops::MyBorrowedInt const& other) const;
 
-  ::rs_ops::MyBorrowedInt operator+(::rs_ops::MyBorrowedInt const& rhs) const;
+  ::rs_ops::MyBorrowedInt operator+(
+      ::rs_ops::MyBorrowedInt const& rhs) const& $static;
 
-  ::rs_ops::MyBorrowedInt operator-() const;
+  ::rs_ops::MyBorrowedInt operator-() const& $static;
 
-  ::rs_ops::MyBorrowedInt operator<<(::std::int32_t rhs) const;
+  ::rs_ops::MyBorrowedInt operator<<(::std::int32_t rhs) const& $static;
 
   ::std::int32_t value{};
 
@@ -178,49 +180,49 @@ inline bool(MyBorrowedInt::operator==)(
 
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+__crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000027static_u_x00000027static(
     ::rs_ops::MyBorrowedInt const&, ::rs_ops::MyBorrowedInt const&,
     ::rs_ops::MyBorrowedInt* __ret_ptr);
 }
 inline ::rs_ops::MyBorrowedInt(MyBorrowedInt::operator+)(
-    ::rs_ops::MyBorrowedInt const& rhs) const {
+    ::rs_ops::MyBorrowedInt const& rhs) const& $static {
   auto&& self = *this;
   crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+      __crubit_thunk_Add_uadd_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000027static_u_x00000027static(
           self, rhs, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+__crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000027static(
     ::rs_ops::MyBorrowedInt const&, ::rs_ops::MyBorrowedInt* __ret_ptr);
 }
-inline ::rs_ops::MyBorrowedInt(MyBorrowedInt::operator-)() const {
+inline ::rs_ops::MyBorrowedInt(MyBorrowedInt::operator-)() const& $static {
   auto&& self = *this;
   crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt(
+      __crubit_thunk_Neg_uneg_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_u_x00000027static(
           self, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32(
+__crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32_u_x00000027static(
     ::rs_ops::MyBorrowedInt const&, ::std::int32_t,
     ::rs_ops::MyBorrowedInt* __ret_ptr);
 }
 inline ::rs_ops::MyBorrowedInt(MyBorrowedInt::operator<<)(
-    ::std::int32_t rhs) const {
+    ::std::int32_t rhs) const& $static {
   auto&& self = *this;
   crubit::Slot<::rs_ops::MyBorrowedInt> __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::
-      __crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32(
+      __crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003a_x0000003aMyBorrowedInt_ui32_u_x00000027static(
           self, rhs, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }

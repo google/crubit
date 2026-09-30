@@ -414,14 +414,14 @@ inline ::consts::StructWithRef::StructWithRef(::crubit::UnsafeRelocateTag,
 
 namespace __crubit_internal {
 extern "C" bool
-__crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e(
+__crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e_u_x00000027static(
     ::consts::StructWithRef const&, ::consts::StructWithRef const&);
 }
 inline bool(StructWithRef::operator==)(
     ::consts::StructWithRef const& other) const {
   auto&& self = *this;
   return __crubit_internal::
-      __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e(
+      __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e_u_x00000027static(
           self, other);
 }
 inline void ::consts::StructWithRef::__crubit_field_offset_assertions() {
@@ -443,14 +443,14 @@ static_assert(
 static_assert(::std::is_trivially_copy_assignable_v<::consts::StructWithStr>);
 namespace __crubit_internal {
 extern "C" bool
-__crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e(
+__crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_u_x00000027static(
     ::consts::StructWithStr const&, ::consts::StructWithStr const&);
 }
 inline bool(StructWithStr::operator==)(
     ::consts::StructWithStr const& other) const {
   auto&& self = *this;
   return __crubit_internal::
-      __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e(
+      __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_u_x00000027static(
           self, other);
 }
 inline void ::consts::StructWithStr::__crubit_field_offset_assertions() {

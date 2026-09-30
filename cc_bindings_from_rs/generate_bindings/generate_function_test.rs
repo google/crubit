@@ -1116,7 +1116,7 @@ fn test_format_item_generic_fn_into_trait_basic_replacement() {
         assert_rs_matches!(
             result.rs_details.tokens,
             quote! {
-                unsafe extern "C" fn __crubit_thunk_generic_ufunction(arg: i32) -> () {
+                unsafe extern "C" fn __crubit_thunk_generic_ufunction_ui32(arg: i32) -> () {
                     unsafe { ::rust_out::generic_function(arg) }
                 }
             }
@@ -1141,7 +1141,7 @@ fn test_format_item_generic_fn_as_ref_trait_basic_replacement() {
         assert_rs_matches!(
             result.rs_details.tokens,
             quote! {
-                unsafe extern "C" fn __crubit_thunk_generic_ufunction(
+                unsafe extern "C" fn __crubit_thunk_generic_ufunction_u_x00000026_x0000005bu8_x0000005d(
                     arg: *mut &'static [u8]
                 ) -> () {
                     unsafe {
@@ -1171,7 +1171,7 @@ fn test_format_item_generic_fn_impl_fn_trait() {
         assert_rs_matches!(
             result.rs_details.tokens,
             quote! {
-                unsafe extern "C" fn __crubit_thunk_call_ufn(
+                unsafe extern "C" fn __crubit_thunk_call_ufn_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32(
                     f: ::crubit_support::bridge::FnRefPayload
                 ) -> i32 {
                     unsafe {
@@ -1204,7 +1204,7 @@ fn test_format_item_generic_fn_impl_fn_once_static() {
         assert_rs_matches!(
             result.rs_details.tokens,
             quote! {
-                unsafe extern "C" fn __crubit_thunk_call_ufn_uonce_ustatic(
+                unsafe extern "C" fn __crubit_thunk_call_ufn_uonce_ustatic_ustd_x0000003a_x0000003aboxed_x0000003a_x0000003aBox_x0000003c_x00000028dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFnOnce_x00000028i32_x00000029_x00000020_x0000002d_x0000003e_x00000020i32_x00000020_x0000002b_x00000020_x00000027static_x00000029_x0000003e(
                     f: ::crubit_support::bridge::FnPayload
                 ) -> i32 {
                     unsafe {
@@ -1274,7 +1274,7 @@ fn test_format_item_fn_abi_compatible_types() {
         assert_rs_matches!(
             result.rs_details.tokens,
             quote! {
-                unsafe extern "C" fn __crubit_thunk_call_uabi_ucompat(
+                unsafe extern "C" fn __crubit_thunk_call_uabi_ucompat_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028i32_x0000002c_x00000020bool_x0000002c_x00000020_x0000002aconst_x00000020i32_x00000029_x00000020_x0000002d_x0000003e_x00000020f64(
                     f: ::crubit_support::bridge::FnRefPayload
                 ) -> f64 {
                     unsafe {
@@ -1318,7 +1318,7 @@ fn test_format_item_fn_layout_compatible_not_abi_compatible_type() {
         assert_rs_matches!(
             result.rs_details.tokens,
             quote! {
-                unsafe extern "C" fn __crubit_thunk_call_upoint(
+                unsafe extern "C" fn __crubit_thunk_call_upoint_u_x00000026dyn_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028Point_x00000029_x00000020_x0000002d_x0000003e_x00000020Point(
                     f: ::crubit_support::bridge::FnRefPayload,
                     __ret_ptr: *mut core::ffi::c_void
                 ) -> () {
@@ -1367,7 +1367,7 @@ fn test_format_item_fn_bridged_type() {
         assert_rs_matches!(
             result.rs_details.tokens,
             quote! {
-                unsafe extern "C" fn __crubit_thunk_call_ustr(
+                unsafe extern "C" fn __crubit_thunk_call_ustr_u_x00000026dyn_x00000020for_x0000003c_x00000027a_x0000003e_x00000020std_x0000003a_x0000003aops_x0000003a_x0000003aFn_x00000028_x00000026_x00000027a_x00000020str_x00000029(
                     f: ::crubit_support::bridge::FnRefPayload
                 ) -> () {
                     unsafe {

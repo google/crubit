@@ -779,7 +779,7 @@ rs_std::impl<::into_iterator_rust::ContainerWithInherentBegin,
 namespace into_iterator_rust {
 namespace __crubit_internal {
 extern "C" ::into_iterator_rust::MyIterator& $a
-__crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithRefIntoIter_x0000003c_x00000027a_x0000003e(
+__crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithRefIntoIter_x0000003c_x00000027a_x0000003e_u_x00000027a(
     ::into_iterator_rust::ContainerWithRefIntoIter*);
 }
 }  // namespace into_iterator_rust
@@ -788,7 +788,7 @@ rs_std::impl<::into_iterator_rust::ContainerWithRefIntoIter,
              ::rs::core::iter::IntoIterator>::
     into_iter(::into_iterator_rust::ContainerWithRefIntoIter self) {
   return into_iterator_rust::__crubit_internal::
-      __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithRefIntoIter_x0000003c_x00000027a_x0000003e(
+      __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aContainerWithRefIntoIter_x0000003c_x00000027a_x0000003e_u_x00000027a(
           &self);
 }
 
@@ -863,7 +863,7 @@ inline ::std::optional<::std::int32_t> rs_std::impl<
 namespace into_iterator_rust {
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIter_x0000003c_x00000027a_x0000003e(
+__crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIter_x0000003c_x00000027a_x0000003e_u_x00000027a(
     ::into_iterator_rust::MyContainerIter&, unsigned char* __ret_ptr);
 }
 }  // namespace into_iterator_rust
@@ -875,7 +875,7 @@ inline ::std::optional<::std::int32_t const * $a crubit_nonnull> rs_std::impl<
       __return_value_storage[::crubit::OptionAbi<::crubit::TransmuteAbi<
           ::std::int32_t const * $static crubit_nonnull>>::kSize];
   into_iterator_rust::__crubit_internal::
-      __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIter_x0000003c_x00000027a_x0000003e(
+      __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIter_x0000003c_x00000027a_x0000003e_u_x00000027a(
           self, __return_value_storage);
   return ::crubit::internal::Decode<::crubit::OptionAbi<
       ::crubit::TransmuteAbi<::std::int32_t const * $static crubit_nonnull>>>(
@@ -889,7 +889,7 @@ inline ::std::optional<::std::int32_t const * $a crubit_nonnull> rs_std::impl<
 namespace into_iterator_rust {
 namespace __crubit_internal {
 extern "C" void
-__crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIterMut_x0000003c_x00000027a_x0000003e(
+__crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIterMut_x0000003c_x00000027a_x0000003e_u_x00000027a(
     ::into_iterator_rust::MyContainerIterMut&, unsigned char* __ret_ptr);
 }
 }  // namespace into_iterator_rust
@@ -900,7 +900,7 @@ inline ::std::optional<::std::int32_t* $a crubit_nonnull> rs_std::impl<
   unsigned char __return_value_storage[::crubit::OptionAbi<
       ::crubit::TransmuteAbi<::std::int32_t* $static crubit_nonnull>>::kSize];
   into_iterator_rust::__crubit_internal::
-      __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIterMut_x0000003c_x00000027a_x0000003e(
+      __crubit_thunk_Iterator_unext_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainerIterMut_x0000003c_x00000027a_x0000003e_u_x00000027a(
           self, __return_value_storage);
   return ::crubit::internal::Decode<::crubit::OptionAbi<
       ::crubit::TransmuteAbi<::std::int32_t* $static crubit_nonnull>>>(

@@ -31,7 +31,7 @@ type GenericClauses<'tcx> = ty::GenericPredicates<'tcx>;
 #[cfg_accessible(rustc_middle::ty::GenericClauses)]
 type GenericClauses<'tcx> = ty::GenericClauses<'tcx>;
 
-trait GenericClausesExt<'tcx> {
+pub(crate) trait GenericClausesExt<'tcx> {
     fn clauses(&self) -> &[(ty::Clause<'tcx>, rustc_span::Span)];
 }
 
@@ -55,6 +55,7 @@ pub fn get_generic_args<'tcx>(
     fn_def_id: DefId,
 ) -> Result<ty::GenericArgsRef<'tcx>> {
     let tcx = db.tcx();
+
     let generics = tcx.generics_of(fn_def_id);
     #[cfg_accessible(rustc_middle::ty::GenericPredicates)]
     let predicates = tcx.predicates_of(fn_def_id);
