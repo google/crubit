@@ -2170,5 +2170,147 @@ TEST(ImporterTest, AssumedLifetimesRecordedBehindPointerInTemplateArgument) {
               ExplicitLifetimesAre(),
               CcPointsTo(TemplateArgsAre(ExplicitLifetimesAre("a")))))))))));
 }
+
+// ===========================================================================
+// Where else lifetime annotations do and do not survive.
+//
+// `CollectExplicitLifetimes` reads `[[clang::annotate_type("lifetime", ...)]]`
+// off the `QualType` via `getAs<AttributedType>()`, which desugars. As a
+// result annotations survive typedefs, alias templates, and class template
+// bodies. Annotations written on a class template argument are recorded on
+// the use-site `CcType` (see the section above).
+//
+// All tests in this section pin CORRECT behaviour except
+// `AssumedLifetimesIncorrectlyDroppedOnMemberTypedefOfSpecialization`. It pins
+// a known bug: an annotation written on the argument of a class template that
+// is only named as the qualifier of a member type, as in
+// `Holder<int* $a>::type`, is silently dropped.
+// ===========================================================================
+
+// Returns the single `Func` named `name`, or nullptr.
+const Func* absl_nullable FindFunc(const IR& ir, absl::string_view name) {
+  for (const Func* func : get_items_if<Func>(ir)) {
+    if (GetName(*func) == name) return func;
+  }
+  return nullptr;
+}
+
+TEST(ImporterTest, AssumedLifetimesSeeThroughTypedef) {
+  absl::string_view file = R"cc(
+    using PtrA = int* $a;
+    void f(PtrA x, int* $b y);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              Contains(VariantWith<Func>(
+                  AllOf(IdentifierIs("f"),
+                        ParamsAre(ParamType(ExplicitLifetimesAre("a")),
+                                  ParamType(ExplicitLifetimesAre("b")))))));
+}
+
+TEST(ImporterTest, AssumedLifetimesSeeThroughAliasTemplate) {
+  absl::string_view file = R"cc(
+    template <class T>
+    using Id = T;
+    void f(Id<int* $a> x, int* $b y);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              Contains(VariantWith<Func>(
+                  AllOf(IdentifierIs("f"),
+                        ParamsAre(ParamType(ExplicitLifetimesAre("a")),
+                                  ParamType(ExplicitLifetimesAre("b")))))));
+}
+
+TEST(ImporterTest, AssumedLifetimesSurviveInsideClassTemplateBody) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct AnnotatedWrapper {
+      T* $a ptr;
+    };
+    void f(AnnotatedWrapper<int>& w);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              Contains(VariantWith<Record>(
+                  AllOf(CcNameIs("AnnotatedWrapper<int>"),
+                        FieldsAre(FieldType(ExplicitLifetimesAre("a")))))));
+}
+
+// INCORRECT BEHAVIOR, pinned so that the fix trips this test.
+//
+// Expected: an error, because a hand-written `$a` cannot be honoured.
+// Actual: `x` is imported as a plain `int*` with no lifetime, and nothing is
+// reported.
+//
+// TODO(zarko): `$a` is written in the nested-name-specifier, but the importer
+// works from the `QualType`, where the member typedef has already been
+// resolved to `int*`.
+TEST(ImporterTest,
+     AssumedLifetimesIncorrectlyDroppedOnMemberTypedefOfSpecialization) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct Holder {
+      using type = T;
+    };
+    void f(Holder<int* $a>::type x, int* $b y);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  // WRONG: importing `f` should fail rather than drop "a" from `x`.
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              Contains(VariantWith<Func>(
+                  AllOf(IdentifierIs("f"),
+                        ParamsAre(ParamType(ExplicitLifetimesAre()),
+                                  ParamType(ExplicitLifetimesAre("b")))))));
+}
+
+// An annotation on the record type itself (rather than on a template
+// argument) is preserved, because it is ordinary type sugar on the use site.
+TEST(ImporterTest, AssumedLifetimesSurviveOnSpecializationItself) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct Span {
+      T* ptr;
+      unsigned long size;
+    };
+    void f(Span<int> $a s, int* $b y);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              Contains(VariantWith<Func>(
+                  AllOf(IdentifierIs("f"),
+                        ParamsAre(ParamType(ExplicitLifetimesAre("a")),
+                                  ParamType(ExplicitLifetimesAre("b")))))));
+}
+
+// Member functions of an implicit class template specialization ARE imported,
+// and lifetimes written on their signatures DO survive -- provided the
+// template is marked for instantiation (`CRUBIT_ALWAYS_INSTANTIATE` /
+// `CRUBIT_BIND_INSTANTIATION`, both of which lower to
+// `crubit_always_instantiate`) and the member is actually definable.
+//
+// This is the contrast case for
+// `AssumedLifetimesRecordedOnClassTemplateArgument`: an annotation written
+// *inside* the template survives instantiation on the specialization itself,
+// while one written on a template *argument* can only be recorded on the use
+// site.
+TEST(ImporterTest, AssumedLifetimesSurviveOnMemberFnOfSpecialization) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct [[clang::annotate("crubit_always_instantiate")]] Holder {
+      // Must have a definition: `EnsureFunctionDefined` (ast_util.cc:466)
+      // instantiates the body, and a declaration-only member cannot be
+      // imported.
+      T* $a get() const { return nullptr; }
+      T value;
+    };
+    void f(Holder<int> h);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  const Func* get = FindFunc(ir, "get");
+  ASSERT_NE(get, nullptr);
+  EXPECT_THAT(get->return_type().explicit_lifetimes(), ElementsAre("a"));
+}
+
 }  // namespace
 }  // namespace crubit
