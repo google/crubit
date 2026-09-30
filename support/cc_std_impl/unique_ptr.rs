@@ -262,6 +262,12 @@ impl<T: Debug> Debug for unique_ptr<T> {
     }
 }
 
+impl<T> From<NonNull<unique_ptr<T>>> for unique_ptr<T> {
+    fn from(value: NonNull<unique_ptr<T>>) -> Self {
+        NonNull::into_inner(value)
+    }
+}
+
 /// A smart pointer that owns and manages a polymorphic object with base class `T`.
 ///
 /// This type is ABI-compatible with C++'s `std::unique_ptr<T>`, where `T` is a base class with a
@@ -447,5 +453,11 @@ impl<T: Delete + Debug> Debug for virtual_unique_ptr<T> {
         } else {
             f.pad("null")
         }
+    }
+}
+
+impl<T: Delete> From<NonNull<virtual_unique_ptr<T>>> for virtual_unique_ptr<T> {
+    fn from(value: NonNull<virtual_unique_ptr<T>>) -> Self {
+        NonNull::into_inner(value)
     }
 }

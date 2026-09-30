@@ -7,7 +7,7 @@ extern crate alloc;
 use crate::crubit_cc_std_internal::std_allocator::{
     self, shared_weak_count, DynControlBlock, FunctionToCall,
 };
-use crate::std::{unique_ptr, virtual_unique_ptr, Delete, StableNullness, TryDeref};
+use crate::std::{unique_ptr, virtual_unique_ptr, Delete, NonNull, StableNullness, TryDeref};
 use alloc::boxed::Box;
 use alloc::sync::Arc;
 use core::ffi::c_void;
@@ -429,6 +429,12 @@ impl<T: Sized> Drop for shared_ptr<T> {
         unsafe {
             std_allocator::shared_ptr_unref(self.cntrl);
         }
+    }
+}
+
+impl<T> From<NonNull<shared_ptr<T>>> for shared_ptr<T> {
+    fn from(value: NonNull<shared_ptr<T>>) -> Self {
+        NonNull::into_inner(value)
     }
 }
 
