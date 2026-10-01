@@ -76,14 +76,16 @@ load(
     "rust_bindings_from_cc_aspect",
 )
 
-visibility([
+PUBLIC_VISIBILITY = [
     # <internal link> start
     "//examples/...",
     "//google_internal/carcinize/...",
     "//rs_bindings_from_cc/...",
     "//support/...",
     # <internal link> end
-])
+]
+
+visibility(PUBLIC_VISIBILITY)
 
 def make_additional_rust_srcs_provider(
         srcs,
