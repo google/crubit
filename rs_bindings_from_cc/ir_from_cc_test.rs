@@ -1278,6 +1278,99 @@ fn test_nonnull_raw_pointer_kind() {
 }
 
 #[gtest]
+fn test_nonnull_file_default_pragma() {
+    let proto = ir_proto_from_cc(
+        r#"
+        #pragma nullability file_default nonnull
+        void f(int* plain, int* _Nullable nullable);
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            params: [
+                FuncParam {
+                    type_: CcType {
+                        variant: Pointer(PointerType { kind: NonNull, ... }),
+                        ...
+                        is_nonnull: true, ...
+                    },
+                    identifier: "plain", ...
+                },
+                FuncParam {
+                    type_: CcType {
+                        variant: Pointer(PointerType { kind: Nullable, ... }),
+                        ...
+                        is_nonnull: false, ...
+                    },
+                    identifier: "nullable", ...
+                },
+            ]
+        }
+    );
+}
+
+#[gtest]
+fn test_nullable_file_default_pragma() {
+    let proto = ir_proto_from_cc(
+        r#"
+        #pragma nullability file_default nullable
+        void f(int* plain);
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            params: [
+                FuncParam {
+                    type_: CcType {
+                        variant: Pointer(PointerType { kind: Nullable, ... }),
+                        ...
+                        is_nonnull: false, ...
+                    },
+                    identifier: "plain", ...
+                }
+            ]
+        }
+    );
+}
+
+#[gtest]
+fn test_nonnull_file_default_pragma_through_typedef() {
+    let proto = ir_proto_from_cc(
+        r#"
+        #pragma nullability file_default nonnull
+        using IntPtr = int*;
+        void f(IntPtr plain);
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            params: [
+                FuncParam {
+                    type_: CcType {
+                        variant: Pointer(PointerType { kind: NonNull, ... }),
+                        ...
+                        is_nonnull: true, ...
+                    },
+                    identifier: "plain", ...
+                }
+            ]
+        }
+    );
+}
+
+#[gtest]
 fn test_doc_comment() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"

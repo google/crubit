@@ -22,6 +22,7 @@
 #include "absl/types/span.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "lifetime_annotations/type_lifetimes.h"
+#include "nullability/pragma.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -105,6 +106,11 @@ class Invocation {
 
   const std::shared_ptr<clang::tidy::lifetimes::LifetimeAnnotationContext>
       lifetime_context_;
+
+  // File-level nullability defaults set by `#pragma nullability file_default`
+  // (e.g. via `ABSL_POINTERS_DEFAULT_NONNULL`), keyed by the file containing
+  // the pragma. Populated by the preprocessor during parsing.
+  clang::tidy::nullability::NullabilityPragmas nullability_pragmas_;
 
   const std::optional<absl::flat_hash_set<std::string>> do_not_bind_allowlist_;
 

@@ -7,4 +7,5 @@
 extern crate cc_ir_sys;
 extern crate ir_cc_proto_sys;
 extern crate lifetime_annotations_sys;
+extern crate pragma_sys;
 extern crate type_lifetimes_sys;

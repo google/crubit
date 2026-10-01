@@ -257,6 +257,20 @@ class Importer final : public ImportContext {
 
   clang::QualType rs_core_fmt_debug_;
   const clang::ClassTemplateDecl* absl_nullable rs_std_impl_;
+
+  // Returns the nullability that `type` has in the absence of an explicit
+  // annotation: the `#pragma nullability file_default` of the file in which
+  // `type` was written, if any.
+  //
+  // This mirrors the "governing file" logic of the nullability library
+  // (`getGoverningFile` in nullability/type_nullability.cc).
+  clang::NullabilityKindOrNone GetDefaultNullability(
+      const clang::Type& type) const;
+
+  // The file whose `#pragma nullability file_default` governs types that are
+  // spelled directly in the decl currently being imported (i.e. not via a
+  // typedef). Set by `ImportDecl`.
+  clang::FileID governing_file_;
 };  // class Importer
 
 }  // namespace crubit

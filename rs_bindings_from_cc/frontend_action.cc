@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "lifetime_annotations/lifetime_annotations.h"
+#include "nullability/pragma.h"
 #include "rs_bindings_from_cc/ast_consumer.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -18,6 +19,8 @@ std::unique_ptr<clang::ASTConsumer> FrontendAction::CreateASTConsumer(
     clang::CompilerInstance& instance, llvm::StringRef) {
   AddLifetimeAnnotationHandlers(instance.getPreprocessor(),
                                 invocation_.lifetime_context_);
+  clang::tidy::nullability::registerPragmaHandler(
+      instance.getPreprocessor(), invocation_.nullability_pragmas_);
   return std::make_unique<AstConsumer>(instance, invocation_);
 }
 

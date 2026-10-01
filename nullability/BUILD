@@ -233,6 +233,7 @@ cc_library(
     visibility = [
         "//nullability/inference:__pkg__",
         "//nullability/test:__pkg__",
+        "//rs_bindings_from_cc:__pkg__",
     ],
     deps = [
         "@llvm-project//clang:basic",

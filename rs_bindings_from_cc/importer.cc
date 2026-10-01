@@ -37,6 +37,7 @@
 #include "common/status_macros.h"
 #include "common/string_view_conversion.h"
 #include "lifetime_annotations/type_lifetimes.h"
+#include "nullability/pragma.h"
 #include "rs_bindings_from_cc/annotations_consumer.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -85,6 +86,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/Regex.h"
+#include "llvm/Support/SaveAndRestore.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
@@ -1461,6 +1463,13 @@ absl_nullable std::unique_ptr<ir_proto::Item> Importer::ImportDecl(
         /*is_hard_error=*/*must_bind);
   }
 
+  // Types spelled in `decl` are governed by the file containing `decl`, for
+  // the purpose of `#pragma nullability file_default`. Nested imports (e.g. of
+  // members) set their own governing file and restore ours afterwards.
+  llvm::SaveAndRestore governing_file(
+      governing_file_, ctx_.getSourceManager()
+                           .getDecomposedExpansionLoc(decl->getLocation())
+                           .first);
   for (auto& importer : decl_importers_) {
     std::unique_ptr<ir_proto::Item> result =
         importer->ImportDecl(decl, *must_bind);
@@ -2228,6 +2237,39 @@ static bool IsSameCanonicalUnqualifiedType(clang::QualType type1,
   return type1 == type2;
 }
 
+clang::NullabilityKindOrNone Importer::GetDefaultNullability(
+    const clang::Type& type) const {
+  // By default, the type was spelled directly in the decl being imported.
+  clang::FileID file = governing_file_;
+  // But if it was spelled via a typedef, the type was written in the typedef's
+  // declaration, so that file governs. With nested typedefs, the innermost one
+  // is where the type was written.
+  //
+  // TODO(okabayashi): Handle substituted template arguments, e.g.
+  // `std::vector<std::unique_ptr<T>>`, which should be governed by the file
+  // in which the template argument was written.
+  const clang::Type* current = &type;
+  while (true) {
+    if (const auto* typedef_type =
+            clang::dyn_cast<clang::TypedefType>(current)) {
+      file =
+          ctx_.getSourceManager()
+              .getDecomposedExpansionLoc(typedef_type->getDecl()->getLocation())
+              .first;
+    }
+    const clang::Type* next =
+        current->getLocallyUnqualifiedSingleStepDesugaredType().getTypePtr();
+    if (next == current) break;
+    current = next;
+  }
+
+  const clang::tidy::nullability::NullabilityPragmas& pragmas =
+      invocation_.nullability_pragmas_;
+  auto it = pragmas.find(file);
+  if (it == pragmas.end()) return std::nullopt;
+  return it->second;
+}
+
 absl::StatusOr<CcType> Importer::ConvertType(
     const clang::Type& type,
     const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
@@ -2239,6 +2281,10 @@ absl::StatusOr<CcType> Importer::ConvertType(
     // and `ConvertUnattributedType` looks straight through that. `type` is
     // still sugared here, so this is the last point at which we can see it.
     clang::NullabilityKindOrNone nullability = type.getNullability();
+    if (!nullability.has_value() &&
+        type.canHaveNullability(/*ResultIfUnknown=*/false)) {
+      nullability = GetDefaultNullability(type);
+    }
     cpp_type->is_nonnull = nullability.has_value() &&
                            *nullability == clang::NullabilityKind::NonNull;
     // Raw pointers record non-nullness in their kind. Both kinds still map to

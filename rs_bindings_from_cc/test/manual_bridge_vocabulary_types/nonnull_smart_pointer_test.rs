@@ -6,8 +6,9 @@ use cc_std::std::TryDeref;
 use common::OverloadedDelete;
 use googletest::prelude::*;
 use nonnull_smart_pointer_lib::{
-    MakeNonnullSharedPtr, MakeNonnullUniquePtr, MakeNonnullVirtualUniquePtr, MakeUniquePtr,
-    UseNonnullSharedPtrByValue, UseNonnullUniquePtrByValue,
+    MakeDefaultNonnullUniquePtr, MakeExplicitlyNullableUniquePtr, MakeNonnullSharedPtr,
+    MakeNonnullUniquePtr, MakeNonnullVirtualUniquePtr, MakeUniquePtr, UseNonnullSharedPtrByValue,
+    UseNonnullUniquePtrByValue,
 };
 
 #[gtest]
@@ -39,4 +40,18 @@ fn test_nonnull_virtual_unique_ptr() {
 fn test_unannotated_unique_ptr_is_not_wrapped() {
     let p: cc_std::std::unique_ptr<i32> = MakeUniquePtr(3);
     expect_eq!(p.try_deref(), Some(&3));
+}
+
+/// Under `ABSL_POINTERS_DEFAULT_NONNULL`, unannotated smart pointers are non-null.
+#[gtest]
+fn test_default_nonnull_unique_ptr_is_wrapped() {
+    let p: cc_std::std::NonNull<cc_std::std::unique_ptr<i32>> = MakeDefaultNonnullUniquePtr(4);
+    expect_eq!(*p, 4);
+}
+
+/// An explicit `absl_nullable` overrides `ABSL_POINTERS_DEFAULT_NONNULL`.
+#[gtest]
+fn test_explicitly_nullable_unique_ptr_is_not_wrapped() {
+    let p: cc_std::std::unique_ptr<i32> = MakeExplicitlyNullableUniquePtr(5);
+    expect_eq!(p.try_deref(), Some(&5));
 }

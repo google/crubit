@@ -399,7 +399,8 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::LifetimeNameView<'pb> {
 pub struct CcType {
     pub(crate) variant: CcTypeVariant,
     pub(crate) is_const: bool,
-    // Whether this use of the type was annotated `_Nonnull` (e.g. via `absl_nonnull`).
+    // Whether this use of the type is promised to be non-null, via `_Nonnull` (e.g.
+    // `absl_nonnull`) or a `nonnull` file default.
     pub(crate) is_nonnull: bool,
     pub(crate) unknown_attr: Rc<str>,
     // An ordered list of lifetime variable names applied to this type. It is valid for the same
@@ -439,10 +440,12 @@ impl CcType {
         self.is_const = is_const;
     }
 
-    /// Whether this use of the type was annotated `_Nonnull` (e.g. via `absl_nonnull`).
+    /// Whether this use of the type is promised to be non-null: annotated `_Nonnull` (e.g. via
+    /// `absl_nonnull`), or unannotated under a `nonnull` file default (e.g.
+    /// `ABSL_POINTERS_DEFAULT_NONNULL`).
     ///
-    /// This is recorded for every type that can carry the annotation, but only smart pointers
-    /// currently act on it. See `RsTypeKind::into_nonnull_smart_pointer`.
+    /// This is recorded for every type that can carry a nullability annotation, but only smart
+    /// pointers currently act on it. See `RsTypeKind::into_nonnull_smart_pointer`.
     pub fn is_nonnull(&self) -> bool {
         self.is_nonnull
     }

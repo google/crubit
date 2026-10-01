@@ -167,7 +167,14 @@ crubit_rust_test(
 
 cc_library(
     name = "nonnull_smart_pointer_lib",
-    hdrs = ["nonnull_smart_pointer_lib.h"],
+    # Deliberately two headers in one library: `#pragma nullability file_default`
+    # (via `ABSL_POINTERS_DEFAULT_NONNULL`) applies per file, not per target.
+    # Only `default_nonnull_smart_pointer_lib.h` uses it, so unannotated smart
+    # pointers in `nonnull_smart_pointer_lib.h` must stay nullable.
+    hdrs = [
+        "default_nonnull_smart_pointer_lib.h",
+        "nonnull_smart_pointer_lib.h",
+    ],
     aspect_hints = [
         "//features:nonnull_smart_pointers",
     ],
