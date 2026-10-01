@@ -53,6 +53,7 @@ additional_rust_srcs_for_crubit_bindings(
     srcs = [
         "allocator.rs",
         "non_null.rs",
+        "nullable.rs",
         "optional.rs",
         "shared_ptr.rs",
         "string.rs",
