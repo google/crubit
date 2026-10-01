@@ -40,16 +40,30 @@ fn test_call_int_int() {
 
 #[gtest]
 fn test_return_optional_int_mapper() {
-    let f: Box<dyn Fn(Option<i32>) -> Option<i32> + Send + Sync> = ReturnOptionalIntMapper();
-    expect_eq!(f(Some(41)), Some(42));
-    expect_eq!(f(None), None);
+    let f = ReturnOptionalIntMapper();
+    expect_eq!(Option::<i32>::from(f(Some(41).into())), Some(42));
+    expect_eq!(Option::<i32>::from(f(None.into())), None);
 }
 
 #[gtest]
 fn test_call_optional_int_mapper() {
-    let f = |x: Option<i32>| -> Option<i32> { x.map(|x| x + 1) };
-    expect_eq!(CallOptionalIntMapper(Box::new(f), Some(41)), Some(42));
-    expect_eq!(CallOptionalIntMapper(Box::new(f), None), None);
+    fn add_one(x: Option<i32>) -> Option<i32> {
+        x.map(|x| x + 1)
+    }
+    expect_eq!(
+        Option::<i32>::from(CallOptionalIntMapper(
+            Box::new(|x| add_one(x.into()).into()),
+            Some(41).into()
+        )),
+        Some(42)
+    );
+    expect_eq!(
+        Option::<i32>::from(CallOptionalIntMapper(
+            Box::new(|x| add_one(x.into()).into()),
+            None.into()
+        )),
+        None
+    );
 }
 
 #[gtest]

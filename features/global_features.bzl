@@ -11,6 +11,7 @@ SUPPORTED_FEATURES = [
     "assume_lifetimes",
     "template_instantiation",
     "proto_references",
+    "layout_compat_optional",
 ]
 
 # A list of targets that should not be granted the `assume_lifetimes` feature by default.

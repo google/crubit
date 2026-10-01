@@ -1,9 +1,4 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
-load("@rules_rust//rust:defs.bzl", "rust_library")
-load(
-    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "cc_bindings_from_rust",
-)
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_test",
@@ -14,17 +9,6 @@ load(
 )
 
 licenses(["notice"])
-
-rust_library(
-    name = "rust_library",
-    srcs = ["rust_library.rs"],
-    edition = "2024",
-)
-
-cc_bindings_from_rust(
-    name = "rust_library_cc",
-    crate = ":rust_library",
-)
 
 cc_library(
     name = "string_test_lib",
@@ -87,7 +71,6 @@ cc_library(
         "//features:experimental",
     ],
     deps = [
-        ":rust_library_cc",
         "//support:annotations",
         "//support:bridge_cpp",
         "//support/rs_std:slice_ref",
