@@ -300,4 +300,38 @@ EOT
     "Verify #include paths are based on the argument of --crubit_support_path_format"
 }
 
+function test::clang_depfile_args() {
+  local rs_out="${TEST_TMPDIR}/rs_api.rs"
+  local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
+  local depfile="${TEST_TMPDIR}/rs_api.d"
+
+  local included_hdr="${TEST_TMPDIR}/included.h"
+  local hdr="${TEST_TMPDIR}/hello_world.h"
+  echo "int MyFunction();" > "${included_hdr}"
+  echo "#include \"included.h\"" > "${hdr}"
+
+  local json
+  json="$(cat <<-EOT
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+EOT
+)"
+
+  EXPECT_SUCCEED \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//foo/bar:baz \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
+      --rustfmt_exe_path=\"${CRUBIT_RUSTFMT_EXE_PATH}\" \
+      --public_headers=\"${hdr}\" \
+      --target_args=\"$(echo "${json}" | quote_escape)\" \
+      -- -MD -MF \"${depfile}\" -MT \"${rs_out}\""
+
+  EXPECT_SUCCEED "grep \"^${rs_out}: \" \"${depfile}\"" \
+    "Verify that the depfile target comes from the -MT argument"
+  EXPECT_SUCCEED "grep \"${included_hdr}\" \"${depfile}\"" \
+    "Verify that the depfile includes transitive dependencies"
+}
+
 gbash::unit::main "$@"

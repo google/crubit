@@ -24,13 +24,18 @@
 #include "absl/strings/substitute.h"
 #include "absl/types/span.h"
 #include "common/status_macros.h"
-#include "common/string_view_conversion.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "clang/Basic/FileManager.h"
+#include "clang/Basic/FileSystemOptions.h"
+#include "clang/Frontend/FrontendAction.h"
 #include "clang/Serialization/PCHContainerOperations.h"
 #include "clang/Tooling/Tooling.h"
+#include "llvm/ADT/IntrusiveRefCntPtr.h"
+#include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/VirtualFileSystem.h"
 
 namespace crubit {
 
@@ -177,6 +182,30 @@ absl::Status AddUseModToIr(IR& ir,
   }
   return absl::OkStatus();
 }
+
+// Like `clang::tooling::runToolOnCodeWithArgs`, but doesn't strip `-MD`, `-MF`,
+// and other dependency file flags from the `command_line`.
+bool RunToolWithInMemoryFiles(
+    std::unique_ptr<clang::FrontendAction> action,
+    std::vector<std::string> command_line,
+    const clang::tooling::FileContentMappings& in_memory_files) {
+  auto in_memory_fs =
+      llvm::makeIntrusiveRefCnt<llvm::vfs::InMemoryFileSystem>();
+  auto overlay_fs = llvm::makeIntrusiveRefCnt<llvm::vfs::OverlayFileSystem>(
+      llvm::vfs::getRealFileSystem());
+  overlay_fs->pushOverlay(in_memory_fs);
+  for (const auto& [path, content] : in_memory_files) {
+    in_memory_fs->addFile(path, /*ModificationTime=*/0,
+                          llvm::MemoryBuffer::getMemBuffer(content));
+  }
+  auto file_manager = llvm::makeIntrusiveRefCnt<clang::FileManager>(
+      clang::FileSystemOptions(), std::move(overlay_fs));
+  return clang::tooling::ToolInvocation(
+             std::move(command_line), std::move(action), file_manager.get(),
+             std::make_shared<clang::PCHContainerOperations>())
+      .run();
+}
+
 }  // namespace
 
 absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
@@ -236,7 +265,13 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
                               "}  // namespace $0\n",
                               kInstantiationsNamespaceName);
   }
-  std::vector<std::string> args_as_strings = {
+  file_contents.push_back(
+      {std::string(kVirtualInputPath), std::move(virtual_input_file_content)});
+
+  std::vector<std::string> command_line = {
+      // Passing the path to the driver script here allows Clang to find the
+      // resource directory relative to this path.
+      std::string(options.driver_path), "-fsyntax-only",
       // Parse non-doc comments that are used as documentation
       "-fparse-all-comments"};
   for (size_t i = 0; i < options.clang_args.size(); ++i) {
@@ -249,8 +284,9 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
       ++i;
       continue;
     }
-    args_as_strings.emplace_back(options.clang_args[i]);
+    command_line.emplace_back(options.clang_args[i]);
   }
+  command_line.push_back(std::string(kVirtualInputPath));
 
   Invocation invocation(
       options.current_target, augmented_public_headers,
@@ -259,14 +295,13 @@ absl::StatusOr<IR> IrFromCc(IrFromCcOptions options) {
       options.kythe_annotations, options.template_blocklist_path_regex,
       options.carcinize_mode, options.lazy_import_alien_decls,
       options.check_importer_invariants);
-  if (!clang::tooling::runToolOnCodeWithArgs(
-          std::make_unique<FrontendAction>(invocation),
-          virtual_input_file_content, args_as_strings,
-          StringRefFromStringView(kVirtualInputPath),
-          // Passing the path to the driver script here allows Clang to find the
-          // resource directory relative to this path.
-          StringRefFromStringView(options.driver_path),
-          std::make_shared<clang::PCHContainerOperations>(), file_contents)) {
+  absl::flat_hash_set<std::string> in_memory_files;
+  for (const auto& [path, _] : file_contents) {
+    in_memory_files.insert(path);
+  }
+  if (!RunToolWithInMemoryFiles(std::make_unique<FrontendAction>(
+                                    invocation, std::move(in_memory_files)),
+                                std::move(command_line), file_contents)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Could not compile header contents");
   }
