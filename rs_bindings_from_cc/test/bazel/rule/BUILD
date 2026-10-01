@@ -60,3 +60,35 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+cc_library(
+    name = "compile_data_lib",
+    hdrs = ["compile_data_lib.h"],
+    aspect_hints = [":compile_data_lib_rust.hint"],
+)
+
+genrule(
+    name = "generated_compile_data",
+    outs = ["generated_compile_data.txt"],
+    cmd = "echo 'Hello from generated compile_data!' > $@",
+)
+
+rust_api_from_cpp(
+    name = "compile_data_lib_rust",
+    srcs = ["compile_data_srcs.rs"],
+    compile_data = [
+        "testdata/compile_data.yaml",
+        ":generated_compile_data",
+    ],
+    cpp_target = ":compile_data_lib",
+    srcs_mod = "compile_data_ns",
+)
+
+crubit_rust_test(
+    name = "compile_data_test",
+    srcs = ["compile_data_test.rs"],
+    deps = [
+        ":compile_data_lib_rust",
+        "@crate_index//:googletest",
+    ],
+)

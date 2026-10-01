@@ -107,6 +107,33 @@ def _get_additional_rust_srcs(aspect_ctx):
             )
     return collections.uniq(additional_rust_srcs)
 
+def _get_additional_rust_compile_data_from_provider(provider):
+    """Returns `compile_data` associated with the `provider`, paired with its namespace path.
+
+    The namespace path is needed because the additional Rust sources are relocated into a
+    directory derived from it, and compile data must be relocated alongside them so that
+    relative paths (e.g. in `include_str!`) continue to resolve.
+    """
+    ns_path = provider.namespace_path
+    return [(f, ns_path) for f in getattr(provider, "compile_data", [])]
+
+def _get_additional_rust_compile_data(aspect_ctx):
+    """Returns `compile_data` associated with the `_target`.
+
+    Args:
+        aspect_ctx: The ctx from an aspect_hint.
+
+    Returns:
+        A list of `File` and the namespace path of the sources which may use it.
+    """
+    compile_data = []
+    for hint in aspect_ctx.rule.attr.aspect_hints:
+        if AdditionalRustSrcsProviderInfo in hint:
+            compile_data.extend(
+                _get_additional_rust_compile_data_from_provider(hint[AdditionalRustSrcsProviderInfo]),
+            )
+    return collections.uniq(compile_data)
+
 def _get_additional_cpp_srcs_from_provider(provider):
     """Returns `extra_cpp_srcs` associated with the `provider`."""
     srcs = []
@@ -348,6 +375,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     extra_rule_specific_deps = []
 
     extra_rs_srcs = []
+    extra_rs_compile_data = []
     extra_deps = []
     aliases = _get_additional_aliases(ctx)
 
@@ -415,6 +443,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         header_includes.append(hdr.path)
 
     extra_rs_srcs = collections.uniq(extra_rs_srcs + _get_additional_rust_srcs(ctx))
+    extra_rs_compile_data = collections.uniq(extra_rs_compile_data + _get_additional_rust_compile_data(ctx))
     unstable_rust_features = _get_unstable_rust_features(ctx)
     extra_deps = collections.uniq(extra_deps + _get_additional_rust_deps(ctx))
 
@@ -507,6 +536,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         ),
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
+        extra_rs_compile_data = extra_rs_compile_data,
         unstable_rust_features = unstable_rust_features,
         deps_for_cc_file = [target[CcInfo]] + [
             d.cc_info

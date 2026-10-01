@@ -63,7 +63,7 @@ def _filter_rustc_flags(flags):
         ])
     ]
 
-def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage, allow_lto = True, aliases = {}, remap_path_prefix = {}, extra_named_deps = depset()):
+def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage, allow_lto = True, aliases = {}, remap_path_prefix = {}, extra_named_deps = depset(), compile_data = []):
     """Compiles a Rust source file.
 
     Args:
@@ -78,6 +78,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
       aliases: (dict, optional) A dict of aliases to be passed to the rustc_compile_action.
       remap_path_prefix: (dict, optional) A dict of {symlink_path: source_path} to be remapped by rustc.
       extra_named_deps: (depset[AliasableDepInfo], optional) Extra dependencies with custom crate names used for the compilation of the generated bindings.
+      compile_data: (list[File], optional) Additional files needed at compile time (e.g. for `include_str!`).
 
     Returns:
       A DepVariantInfo provider.
@@ -142,7 +143,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
             edition = "2024",
             is_test = False,
             rustc_env = {},
-            compile_data = depset([remap_paths_file]),
+            compile_data = depset([remap_paths_file] + compile_data),
             compile_data_targets = depset([]),
             owner = ctx.label,
         ),

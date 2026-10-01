@@ -56,7 +56,8 @@ def generate_and_compile_bindings(
         additional_rust_srcs = depset(),
         extra_cpp_srcs = [],
         extra_named_deps = depset(),
-        use_label_encoded_names_for_deps = False):
+        use_label_encoded_names_for_deps = False,
+        extra_rs_compile_data = []):
     """Runs the bindings generator.
 
     Args:
@@ -82,6 +83,11 @@ def generate_and_compile_bindings(
       additional_rust_srcs: A depset of additional source files to be included in the generated
         Rust bindings.
       extra_cpp_srcs: list[File]: Additional C++ source files to concatenate to the generated C++ bindings.
+      extra_named_deps: depset[AliasableDepInfo]: Extra dependencies with custom crate names.
+      use_label_encoded_names_for_deps: Whether to use label-encoded crate names for deps.
+      extra_rs_compile_data: list[tuple[file, str]]: Files (and the module path of the
+        `extra_rs_srcs` which may use them) that must be available when compiling the Rust crate,
+        e.g. for `include_str!` or `include_bytes!`.
     Returns:
       A RustBindingsFromCcInfo containing the result of the compilation of the generated source
       files, as well a GeneratedBindingsInfo provider containing the generated source files.
@@ -127,6 +133,7 @@ def generate_and_compile_bindings(
     # Relocate the rs files so that they can be read by rustc using relative paths.
     extra_rs_srcs_relocated = []
     remap_paths = {}
+    relocated_paths = {}
     for (file, ns_path) in extra_rs_srcs:
         file_path = file.path
         if ns_path:
@@ -135,6 +142,27 @@ def generate_and_compile_bindings(
         ctx.actions.symlink(output = new_file, target_file = file)
         extra_rs_srcs_relocated.append(new_file)
         remap_paths[new_file.path] = file.path
+        relocated_paths[file_path] = new_file
+
+    # Create symlinks to the compile data alongside the symlinked rs files, so that paths relative
+    # to the rs files (e.g. in `include_str!("data.txt")`) resolve the same way they would in the
+    # source tree. The original files are not moved.
+    #
+    # The root-relative path is used (rather than `file.path`) so that symlinks to generated compile
+    # data (e.g. the output of a `genrule`) are placed next to the handwritten sources that use it.
+    compile_data_relocated = []
+    for (file, ns_path) in extra_rs_compile_data:
+        file_path = file.path
+        if file.root.path:
+            file_path = file_path.removeprefix(file.root.path + "/")
+        if ns_path:
+            file_path = ns_path.replace("::", "/") + "/" + file_path
+        new_file = relocated_paths.get(file_path)
+        if new_file == None:
+            new_file = ctx.actions.declare_file(file_path, sibling = rs_output)
+            ctx.actions.symlink(output = new_file, target_file = file)
+            relocated_paths[file_path] = new_file
+        compile_data_relocated.append(new_file)
 
     # We use a separate feature_configuration for the clang compile action as the feature
     # configuration for bindings generation needs to use a param file. The clang wrapper script
@@ -189,6 +217,7 @@ def generate_and_compile_bindings(
         aliases = aliases,
         remap_path_prefix = remap_paths,
         extra_named_deps = extra_named_deps,
+        compile_data = compile_data_relocated,
     )
 
     if use_label_encoded_names_for_deps:

@@ -96,9 +96,11 @@ def make_additional_rust_srcs_provider(
         unstable_rust_features = [],
         root_namespaces = [],
         aliases = {},
-        link_deps = []):
+        link_deps = [],
+        compile_data = []):
     return AdditionalRustSrcsProviderInfo(
         srcs = srcs,
+        compile_data = compile_data,
         namespace_path = namespace_path,
         deps = _get_additional_rust_deps_variant_info(deps),
         link_deps = _get_additional_rust_link_deps_variant_info(link_deps),
@@ -159,6 +161,7 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         ctx.attr.root_namespaces,
         aliases = aliases,
         link_deps = ctx.attr.link_deps,
+        compile_data = ctx.files.compile_data,
     )]
     if ctx.attr.crubit_features:
         providers.append(CrubitFeaturesInfo(crubit_features = ctx.attr.crubit_features))
@@ -167,6 +170,12 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
 _additional_rust_srcs_for_crubit_bindings_rule = rule(
     attrs = {
         "srcs": attr.label_list(
+            allow_files = True,
+            mandatory = False,
+            default = [],
+        ),
+        "compile_data": attr.label_list(
+            doc = "Files available to `srcs` at compile time (e.g. via `include_str!` or `include_bytes!`).",
             allow_files = True,
             mandatory = False,
             default = [],
@@ -232,6 +241,7 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
 def additional_rust_srcs_for_crubit_bindings(
         name,
         srcs = [],
+        compile_data = [],
         cpp_srcs = [],
         namespace_path = "",
         deps = [],
@@ -267,6 +277,9 @@ def additional_rust_srcs_for_crubit_bindings(
             Note: to allow Crubit bindings to be `#![no_std]` by default, these files do not
             include the regular `std` Rust prelude, meaning that types like `Box` have to be
             imported manually even after declaring `extern crate std;`.
+        compile_data: List of files used by `srcs` at compile time (e.g. via `include_str!` or
+            `include_bytes!`). These files can be referenced from `srcs` using paths relative to
+            the source file, just like the `compile_data` attribute of `rust_library`.
         cpp_srcs: The C++ source files whose contents are parsed by Clang to generate Rust bindings, and prepended to the generated C++ implementation (`rs_api_impl.cc`).
         namespace_path: This allows Rust source files define new entries inside of a specific
             existing C++ namespace instead of the top level namespace. For modules which are not
@@ -294,6 +307,7 @@ def additional_rust_srcs_for_crubit_bindings(
     _additional_rust_srcs_for_crubit_bindings_rule(
         name = name,
         srcs = srcs,
+        compile_data = compile_data,
         cpp_srcs = cpp_srcs,
         namespace_path = namespace_path,
         deps = deps,

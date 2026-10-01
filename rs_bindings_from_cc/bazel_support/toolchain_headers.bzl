@@ -80,11 +80,16 @@ def _bindings_for_toolchain_headers_impl(ctx):
         header_includes.append("-include")
         header_includes.append(hdr)
     extra_rs_srcs = []
+    extra_rs_compile_data = []
     extra_rs_deps = []
     for target in ctx.attr.extra_rs_srcs:
         if AdditionalRustSrcsProviderInfo in target:
             for src in target[AdditionalRustSrcsProviderInfo].srcs:
                 extra_rs_srcs.extend([(f, target[AdditionalRustSrcsProviderInfo].namespace_path) for f in src.files.to_list()])
+            extra_rs_compile_data.extend([
+                (f, target[AdditionalRustSrcsProviderInfo].namespace_path)
+                for f in getattr(target[AdditionalRustSrcsProviderInfo], "compile_data", [])
+            ])
             extra_rs_deps.extend(target[AdditionalRustSrcsProviderInfo].deps)
             if hasattr(target[AdditionalRustSrcsProviderInfo], "link_deps"):
                 extra_rs_deps.extend(target[AdditionalRustSrcsProviderInfo].link_deps)
@@ -101,6 +106,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
         action_inputs = std_and_builtin_files,
         target_args = target_args,
         extra_rs_srcs = extra_rs_srcs,
+        extra_rs_compile_data = extra_rs_compile_data,
         deps_for_cc_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
         deps_for_rs_file = depset(extra_rs_deps + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file),
     )

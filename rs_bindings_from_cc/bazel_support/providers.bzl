@@ -11,6 +11,8 @@ generated Rust bindings of this C++ target.
 """,
     fields = {
         "srcs": "The Rust source files to be included in addition to generated Rust bindings.",
+        "compile_data": "List of files available to the Rust source files at compile time " +
+                        "(e.g. via `include_str!` or `include_bytes!`).",
         "namespace_path": "The namespace path for the Rust source files.",
         "deps": "List of DepVariantInfo of other libraries to be linked to this library target. " +
                 "These can be either other `rust_library` targets or `cc_library` targets if " +
