@@ -6,6 +6,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -297,6 +298,27 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
                            {{HeaderName("a.h"), std::string(kHeaderContent)}}));
 
   ASSERT_THAT(NamespacesAsJson(result.namespaces), StrEq(kExpected));
+}
+
+TEST(GenerateBindingsAndMetadataTest,
+     ExtraCppSrcsNotIncludedTwiceWhenPassedViaMinusInclude) {
+  std::string extra_cc_path =
+      WriteFileForCurrentTest("extra.cc", "struct UnguardedStruct {};");
+  CmdlineArgs args = MakeCmdline("a.h").args();
+  args.extra_cpp_srcs = {extra_cc_path};
+  absl::StatusOr<Cmdline> cmdline = Cmdline::Create(args);
+  CHECK_OK(cmdline);
+
+  std::vector<std::string> clang_args = DefaultClangArgs();
+  clang_args.push_back("-include");
+  clang_args.push_back(extra_cc_path);
+
+  ASSERT_OK_AND_ASSIGN(
+      BindingsAndMetadata result,
+      GenerateBindingsAndMetadata(*cmdline, std::move(clang_args),
+                                  /*virtual_headers_contents_for_testing=*/
+                                  {{HeaderName("a.h"), "// empty header"}}));
+  ASSERT_EQ(result.error_report, "");
 }
 
 }  // namespace
