@@ -8,6 +8,7 @@
 #include <deque>
 #include <functional>
 #include <optional>
+#include <utility>
 
 #include "absl/base/nullability.h"
 #include "nullability/pointer_nullability.h"
@@ -374,27 +375,37 @@ static void transferCastExpr(const CastExpr* absl_nonnull CE,
         // arguments.
         const TypeNullability& ArgNullability =
             getNullabilityForChild(CE->getSubExpr(), State);
-        TypeNullability UnderPointersNullability;
+        const Type* CurrentType = UnderPointers;
+        TypeNullability CurrentNullability;
         for (int J = NumOuterRawPointers; J < ArgNullability.size(); ++J) {
-          UnderPointersNullability.push_back(ArgNullability[J]);
+          CurrentNullability.push_back(ArgNullability[J]);
         }
-        Resugarer Resugar(State.Lattice.defaults());
-        // Resugar from class template arguments, if any.
-        if (const auto* RT = UnderPointers->getAs<RecordType>()) {
-          if (auto* CTSpec =
-                  dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
-            Resugar.Enclosing.push_back({CTSpec, UnderPointersNullability});
+        // Resugar from class template arguments, if any, along the
+        // derived-to-base path.
+        for (const CXXBaseSpecifier* BaseSpec : CE->path()) {
+          if (!BaseSpec->getTypeSourceInfo()) {
+            llvm::errs() << "Missing type source info for base specifier.\n";
+            assert(false);
+            return V;
           }
+          Resugarer Resugar(State.Lattice.defaults());
+          if (const auto* RT = CurrentType->getAs<RecordType>()) {
+            if (auto* CTSpec =
+                    dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+              Resugar.Enclosing.push_back({CTSpec, CurrentNullability});
+            }
+          }
+          CurrentNullability =
+              getTypeNullability(BaseSpec->getTypeSourceInfo()->getTypeLoc(),
+                                 State.Lattice.defaults(), Resugar);
+          CurrentType = BaseSpec->getType().getTypePtr();
         }
-        auto CastNullability = getTypeNullability(
-            (*(CE->path_end() - 1))->getTypeSourceInfo()->getTypeLoc(),
-            State.Lattice.defaults(), Resugar);
+        auto CastNullability = std::move(CurrentNullability);
         if (CastNullability.size() + NumOuterRawPointers != V.size()) {
           llvm::errs()
               << "CastNullability.size() + NumOuterRawPointers != V.size(): "
               << (CastNullability.size() + NumOuterRawPointers) << " vs "
               << V.size() << "\n";
-          CE->dump();
           assert(false);
         }
         for (int I = 0;

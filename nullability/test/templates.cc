@@ -1438,5 +1438,36 @@ TEST(PointerNullabilityTest, BodyDependentOnTemplateArgs) {
   )cc"));
 }
 
+TEST(PointerNullabilityTest, MultiStepUncheckedDerivedToBaseResugaring) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T>
+    struct BaseOfBase {
+      T value() const { return val; }
+      T val;
+    };
+
+    template <typename T>
+    struct Base : public BaseOfBase<T> {};
+
+    template <typename T>
+    struct Derived : public Base<T> {};
+
+    void target(Derived<int* _Nullable> NullableD,
+                Derived<int* _Nonnull> NonnullD, Derived<int*> UnknownD,
+                Derived<int* _Nullable>* PtrToNullableD,
+                Derived<int* _Nullable>& RefToNullableD,
+                Derived<int* _Nonnull>* PtrToNonnullD,
+                Derived<int* _Nonnull>& RefToNonnullD) {
+      *NullableD.value();  // [[unsafe]]
+      *NonnullD.value();
+      *UnknownD.value();
+      *(PtrToNullableD->value());  // [[unsafe]]
+      *RefToNullableD.value();     // [[unsafe]]
+      *(PtrToNonnullD->value());
+      *RefToNonnullD.value();
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace clang::tidy::nullability
