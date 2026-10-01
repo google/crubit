@@ -303,6 +303,24 @@ rust_test(
 )
 
 rust_library(
+    name = "inline_cpp_utils",
+    srcs = ["//support/extract_cpp_from_rust:inline_cpp_utils.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = ["//support/extract_cpp_from_rust:__pkg__"],
+)
+
+rust_proc_macro(
+    name = "inline_cpp_macro",
+    srcs = ["//support/extract_cpp_from_rust:inline_cpp_macro.rs"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":inline_cpp_utils",
+        "@crate_index//:quote",  # v1
+    ],
+)
+
+rust_library(
     name = "crubit_support",
     srcs = [
         "crubit_support/src/bridge.rs",
@@ -312,8 +330,12 @@ rust_library(
         "crubit_support/src/lib.rs",
     ],
     compatible_with = ["//buildenv/target:non_prod"],
+    crate_features = ["inline_cpp"],
     link_deps = [
         "//support/rs_std:waker",
+    ],
+    proc_macro_deps = [
+        ":inline_cpp_macro",
     ],
     visibility = [
         "//visibility:public",

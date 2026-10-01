@@ -2,9 +2,9 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_binary",
     "rust_library",
-    "rust_proc_macro",
     "rust_test",
 )
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -47,20 +47,24 @@ rust_test(
     ],
 )
 
-rust_library(
+exports_files(
+    [
+        "inline_cpp_macro.rs",
+        "inline_cpp_utils.rs",
+    ],
+    visibility = ["//support:__pkg__"],
+)
+
+alias(
     name = "inline_cpp_utils",
-    srcs = ["inline_cpp_utils.rs"],
+    actual = "//support:inline_cpp_utils",
     visibility = ["//visibility:private"],
 )
 
-rust_proc_macro(
+alias(
     name = "inline_cpp_macro",
-    srcs = ["inline_cpp_macro.rs"],
+    actual = "//support:inline_cpp_macro",
     visibility = ["//visibility:public"],
-    deps = [
-        ":inline_cpp_utils",
-        "@crate_index//:quote",  # v1
-    ],
 )
 
 rust_binary(
