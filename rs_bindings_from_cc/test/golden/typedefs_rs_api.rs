@@ -28,6 +28,7 @@ unsafe impl ::cxx::ExternType for SomeStruct {
     type Id = ::cxx::type_id!("SomeStruct");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
 impl Default for SomeStruct {
     #[inline(always)]
@@ -58,6 +59,10 @@ unsafe impl ::cxx::ExternType for SomeOtherStruct {
     type Id = ::cxx::type_id!("SomeOtherStruct");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("SomeOtherStruct"),
+    crate::SomeOtherStruct
+);
 
 impl Default for SomeOtherStruct {
     #[inline(always)]
@@ -88,6 +93,7 @@ unsafe impl ::cxx::ExternType for SomeUnion {
     type Id = ::cxx::type_id!("SomeUnion");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("SomeUnion"), crate::SomeUnion);
 
 impl Default for SomeUnion {
     #[inline(always)]
@@ -118,6 +124,7 @@ unsafe impl ::cxx::ExternType for SomeOtherUnion {
     type Id = ::cxx::type_id!("SomeOtherUnion");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("SomeOtherUnion"), crate::SomeOtherUnion);
 
 impl Default for SomeOtherUnion {
     #[inline(always)]
@@ -135,8 +142,7 @@ pub fn FunctionUsingNestedType() -> crate::some_struct::nested_type {
     unsafe { crate::detail::__rust_thunk___Z23FunctionUsingNestedTypev() }
 }
 
-// error: struct `IncompleteExternC` could not be bound
-//   incomplete type
+forward_declare::forward_declare!(pub IncompleteExternC = forward_declare::symbol!("IncompleteExternC"));
 
 mod detail {
     #[allow(unused_imports)]

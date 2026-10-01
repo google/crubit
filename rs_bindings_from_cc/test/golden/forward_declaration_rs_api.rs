@@ -14,8 +14,7 @@
 #![allow(deprecated)]
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
-// error: struct `ForwardDeclaredStruct` could not be bound
-//   incomplete type
+forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
 
 // Intentionally forward declare this struct again, to ensure Crubit can handle
 // it.

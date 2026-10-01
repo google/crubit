@@ -35,6 +35,10 @@ pub mod foo {
             type Id = ::cxx::type_id!("foo :: inline1 :: MyStruct");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("foo :: inline1 :: MyStruct"),
+            crate::foo::inline1::MyStruct
+        );
 
         impl Default for MyStruct {
             #[inline(always)]

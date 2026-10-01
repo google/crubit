@@ -31,6 +31,7 @@ pub mod ns {
         type Id = ::cxx::type_id!("ns :: Trivial");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(forward_declare::symbol!("ns :: Trivial"), crate::ns::Trivial);
     impl Trivial {
         #[inline(always)]
         pub fn Unqualified<'__this>(&'__this mut self) {

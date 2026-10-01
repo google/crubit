@@ -31,6 +31,7 @@ unsafe impl ::cxx::ExternType for CompatibleType {
     type Id = ::cxx::type_id!("CompatibleType");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("CompatibleType"), crate::CompatibleType);
 impl CompatibleType {
     #[inline(always)]
     pub fn renamed_default_constructor(__this: *mut Self) {

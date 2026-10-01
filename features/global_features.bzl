@@ -10,6 +10,7 @@ SUPPORTED_FEATURES = [
     "supported",
     "assume_lifetimes",
     "proto_references",
+    "forward_declare",
 ]
 
 # A list of targets that should not be granted the `assume_lifetimes` feature by default.

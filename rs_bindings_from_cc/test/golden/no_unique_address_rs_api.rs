@@ -41,6 +41,7 @@ unsafe impl ::cxx::ExternType for Struct {
     type Id = ::cxx::type_id!("Struct");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Struct"), crate::Struct);
 impl Struct {
     #[inline(always)]
     pub fn Make(f1: ::ffi_11::c_int, f2: ::ffi_11::c_char) -> crate::Struct {
@@ -100,6 +101,10 @@ unsafe impl ::cxx::ExternType for PaddingBetweenFields {
     type Id = ::cxx::type_id!("PaddingBetweenFields");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("PaddingBetweenFields"),
+    crate::PaddingBetweenFields
+);
 impl PaddingBetweenFields {
     #[inline(always)]
     pub fn Make(f1: ::ffi_11::c_char, f2: ::ffi_11::c_int) -> crate::PaddingBetweenFields {
@@ -155,6 +160,10 @@ unsafe impl ::cxx::ExternType for FieldInTailPadding_InnerStruct {
     type Id = ::cxx::type_id!("FieldInTailPadding_InnerStruct");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("FieldInTailPadding_InnerStruct"),
+    crate::FieldInTailPadding_InnerStruct
+);
 
 impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
     type CtorType = ::ctor::Ctor![Self];
@@ -245,6 +254,10 @@ unsafe impl ::cxx::ExternType for FieldInTailPadding {
     type Id = ::cxx::type_id!("FieldInTailPadding");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("FieldInTailPadding"),
+    crate::FieldInTailPadding
+);
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for FieldInTailPadding {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;

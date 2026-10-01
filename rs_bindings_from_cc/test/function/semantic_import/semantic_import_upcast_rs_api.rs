@@ -31,6 +31,7 @@ unsafe impl ::cxx::ExternType for S {
     type Id = ::cxx::type_id!("S");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 impl S {
     #[inline(always)]
     pub fn x<'__this>(&'__this self) -> ::ffi_11::c_int {
@@ -106,6 +107,7 @@ unsafe impl ::cxx::ExternType for T {
     type Id = ::cxx::type_id!("T");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("T"), crate::T);
 impl T {
     #[inline(always)]
     pub fn y<'__this>(&'__this self) -> f32 {
@@ -201,6 +203,7 @@ unsafe impl ::cxx::ExternType for Chars {
     type Id = ::cxx::type_id!("Chars");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Chars"), crate::Chars);
 impl Chars {
     #[inline(always)]
     pub fn c<'__this>(&'__this mut self) -> ::ffi_11::c_char {
@@ -301,6 +304,7 @@ unsafe impl ::cxx::ExternType for Bools {
     type Id = ::cxx::type_id!("Bools");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Bools"), crate::Bools);
 impl Bools {
     #[inline(always)]
     pub fn b<'__this>(&'__this mut self) -> bool {
