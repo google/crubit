@@ -231,6 +231,7 @@ cc_library(
     srcs = ["pragma.cc"],
     hdrs = ["pragma.h"],
     visibility = [
+        "//cargo:__pkg__",
         "//nullability/inference:__pkg__",
         "//nullability/test:__pkg__",
         "//rs_bindings_from_cc:__pkg__",

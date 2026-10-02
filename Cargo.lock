@@ -846,6 +846,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "pragma_sys"
+version = "0.0.0"
+dependencies = [
+ "crubit_build",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1154,6 +1161,7 @@ version = "0.0.0"
 dependencies = [
  "crubit_build",
  "lifetime_annotations_sys",
+ "pragma_sys",
  "rs_bindings_from_cc_ast_consumer_sys",
 ]
 
@@ -1418,6 +1426,7 @@ version = "0.0.0"
 dependencies = [
  "annotation_reader_sys",
  "crubit_build",
+ "pragma_sys",
  "rs_bindings_from_cc_annotations_consumer_sys",
  "rs_bindings_from_cc_ast_util_sys",
  "rs_bindings_from_cc_cc_ir_sys",
