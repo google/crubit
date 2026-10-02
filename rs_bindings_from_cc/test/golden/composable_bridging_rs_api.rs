@@ -30,10 +30,6 @@ pub struct StructWithBridgeField {
 }
 impl !Send for StructWithBridgeField {}
 impl !Sync for StructWithBridgeField {}
-unsafe impl ::cxx::ExternType for StructWithBridgeField {
-    type Id = ::cxx::type_id!("StructWithBridgeField");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for StructWithBridgeField {
     #[inline(always)]
@@ -78,10 +74,6 @@ pub struct Vec3 {
 }
 impl !Send for Vec3 {}
 impl !Sync for Vec3 {}
-unsafe impl ::cxx::ExternType for Vec3 {
-    type Id = ::cxx::type_id!("Vec3");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Vec3 {
     #[inline(always)]

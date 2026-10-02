@@ -30,10 +30,6 @@ pub struct RawThing {
 }
 impl !Send for RawThing {}
 impl !Sync for RawThing {}
-unsafe impl ::cxx::ExternType for RawThing {
-    type Id = ::cxx::type_id!("Thing");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl RawThing {
     /// # Safety
     ///
@@ -106,10 +102,6 @@ pub struct CustomRawThing {
 }
 impl !Send for CustomRawThing {}
 impl !Sync for CustomRawThing {}
-unsafe impl ::cxx::ExternType for CustomRawThing {
-    type Id = ::cxx::type_id!("CustomThing");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl CustomRawThing {
     /// # Safety
     ///

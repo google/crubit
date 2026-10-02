@@ -25,10 +25,6 @@ pub struct NoDiscard {
 }
 impl !Send for NoDiscard {}
 impl !Sync for NoDiscard {}
-unsafe impl ::cxx::ExternType for NoDiscard {
-    type Id = ::cxx::type_id!("NoDiscard");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for NoDiscard {
     #[inline(always)]
@@ -52,10 +48,6 @@ pub struct NoDiscardWithMessage {
 }
 impl !Send for NoDiscardWithMessage {}
 impl !Sync for NoDiscardWithMessage {}
-unsafe impl ::cxx::ExternType for NoDiscardWithMessage {
-    type Id = ::cxx::type_id!("NoDiscardWithMessage");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for NoDiscardWithMessage {
     #[inline(always)]
@@ -131,10 +123,6 @@ pub struct NodiscardCtor {
 }
 impl !Send for NodiscardCtor {}
 impl !Sync for NodiscardCtor {}
-unsafe impl ::cxx::ExternType for NodiscardCtor {
-    type Id = ::cxx::type_id!("NodiscardCtor");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
     #[inline(always)]
@@ -166,10 +154,6 @@ pub struct NodiscardCtorWithMessage {
 }
 impl !Send for NodiscardCtorWithMessage {}
 impl !Sync for NodiscardCtorWithMessage {}
-unsafe impl ::cxx::ExternType for NodiscardCtorWithMessage {
-    type Id = ::cxx::type_id!("NodiscardCtorWithMessage");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtorWithMessage {
     #[inline(always)]

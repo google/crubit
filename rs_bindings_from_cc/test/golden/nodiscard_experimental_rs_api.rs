@@ -25,10 +25,6 @@ pub struct NoDiscard {
 }
 impl !Send for NoDiscard {}
 impl !Sync for NoDiscard {}
-unsafe impl ::cxx::ExternType for NoDiscard {
-    type Id = ::cxx::type_id!(":: NoDiscard");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl ::core::fmt::Debug for NoDiscard {
     fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         formatter.debug_struct("NoDiscard").finish()
@@ -57,10 +53,6 @@ pub struct NoDiscardWithMessage {
 }
 impl !Send for NoDiscardWithMessage {}
 impl !Sync for NoDiscardWithMessage {}
-unsafe impl ::cxx::ExternType for NoDiscardWithMessage {
-    type Id = ::cxx::type_id!(":: NoDiscardWithMessage");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl ::core::fmt::Debug for NoDiscardWithMessage {
     fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         formatter.debug_struct("NoDiscardWithMessage").finish()
@@ -141,10 +133,6 @@ pub struct NodiscardCtor {
 }
 impl !Send for NodiscardCtor {}
 impl !Sync for NodiscardCtor {}
-unsafe impl ::cxx::ExternType for NodiscardCtor {
-    type Id = ::cxx::type_id!(":: NodiscardCtor");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl ::core::fmt::Debug for NodiscardCtor {
     fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         formatter.debug_struct("NodiscardCtor").finish()
@@ -181,10 +169,6 @@ pub struct NodiscardCtorWithMessage {
 }
 impl !Send for NodiscardCtorWithMessage {}
 impl !Sync for NodiscardCtorWithMessage {}
-unsafe impl ::cxx::ExternType for NodiscardCtorWithMessage {
-    type Id = ::cxx::type_id!(":: NodiscardCtorWithMessage");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl ::core::fmt::Debug for NodiscardCtorWithMessage {
     fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         formatter.debug_struct("NodiscardCtorWithMessage").finish()

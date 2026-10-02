@@ -109,10 +109,6 @@ pub struct Widget {
 }
 impl !Send for Widget {}
 impl !Sync for Widget {}
-unsafe impl ::cxx::ExternType for Widget {
-    type Id = ::cxx::type_id!("Widget");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Widget {
     #[inline(always)]

@@ -89,10 +89,6 @@ pub struct ABICompatible {
 }
 impl !Send for ABICompatible {}
 impl !Sync for ABICompatible {}
-unsafe impl ::cxx::ExternType for ABICompatible {
-    type Id = ::cxx::type_id!("ABICompatible");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for ABICompatible {
     #[inline(always)]
@@ -136,10 +132,6 @@ pub struct LayoutCompatible {
 }
 impl !Send for LayoutCompatible {}
 impl !Sync for LayoutCompatible {}
-unsafe impl ::cxx::ExternType for LayoutCompatible {
-    type Id = ::cxx::type_id!("LayoutCompatible");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl LayoutCompatible {
     #[inline(always)]
     pub fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {

@@ -2363,3 +2363,73 @@ fn test_static_function() -> Result<()> {
     );
     Ok(())
 }
+
+#[gtest]
+fn test_impl_cxx_extern_type_disabled_by_default() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct TrivialStruct final {
+            int field;
+        };
+        struct NonTrivialStruct final {
+            ~NonTrivialStruct();
+            int field;
+        };
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_not_matches!(rs_api, quote! { ::cxx::ExternType });
+    Ok(())
+}
+
+#[gtest]
+fn test_impl_cxx_extern_type_enabled() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct TrivialStruct final {
+            int field;
+        };
+        struct NonTrivialStruct final {
+            ~NonTrivialStruct();
+            int field;
+        };
+        template <typename T>
+        struct [[clang::annotate("crubit_always_instantiate")]] MyTemplate {
+            T field;
+        };
+        using MyAlias = MyTemplate<int>;
+        "#,
+    )?;
+    let mut ir = make_test_ir(&proto)?;
+    *ir.target_crubit_features_mut(&ir.current_target().clone()) |=
+        crubit_feature::CrubitFeature::ImplCxxExternType;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe impl ::cxx::ExternType for TrivialStruct {
+                type Id = ::cxx::type_id!("TrivialStruct");
+                type Kind = ::cxx::kind::Trivial;
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            unsafe impl ::cxx::ExternType for NonTrivialStruct {
+                type Id = ::cxx::type_id!("NonTrivialStruct");
+                type Kind = ::cxx::kind::Opaque;
+            }
+        }
+    );
+    // Template specializations cannot implement ::cxx::ExternType because cxx::type_id!
+    // cannot parse '<' or '>'.
+    assert_rs_not_matches!(
+        rs_api,
+        quote! {
+            unsafe impl ::cxx::ExternType for __CcTemplateInst10MyTemplateIiE
+        }
+    );
+    Ok(())
+}

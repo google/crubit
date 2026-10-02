@@ -34,10 +34,6 @@ pub struct B {
 }
 impl !Send for B {}
 impl !Sync for B {}
-unsafe impl ::cxx::ExternType for B {
-    type Id = ::cxx::type_id!(":: B");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl ::core::fmt::Debug for B {
     fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         formatter.debug_struct("B").finish_non_exhaustive()

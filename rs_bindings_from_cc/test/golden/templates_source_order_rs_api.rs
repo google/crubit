@@ -27,10 +27,6 @@ pub struct TopLevel {
 }
 impl !Send for TopLevel {}
 impl !Sync for TopLevel {}
-unsafe impl ::cxx::ExternType for TopLevel {
-    type Id = ::cxx::type_id!("TopLevel");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for TopLevel {
     #[inline(always)]
@@ -72,10 +68,6 @@ pub mod test_namespace_bindings {
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
-    unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("test_namespace_bindings :: Inner");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Inner {
         #[inline(always)]

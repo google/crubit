@@ -27,10 +27,6 @@ pub mod ns {
     }
     impl !Send for Trivial {}
     impl !Sync for Trivial {}
-    unsafe impl ::cxx::ExternType for Trivial {
-        type Id = ::cxx::type_id!("ns :: Trivial");
-        type Kind = ::cxx::kind::Trivial;
-    }
     impl Trivial {
         #[inline(always)]
         pub fn Unqualified<'__this>(&'__this mut self) {

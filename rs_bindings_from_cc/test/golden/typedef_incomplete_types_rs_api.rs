@@ -35,10 +35,6 @@ pub struct HasPointerToIncompleteTypedefs {
 }
 impl !Send for HasPointerToIncompleteTypedefs {}
 impl !Sync for HasPointerToIncompleteTypedefs {}
-unsafe impl ::cxx::ExternType for HasPointerToIncompleteTypedefs {
-    type Id = ::cxx::type_id!("HasPointerToIncompleteTypedefs");
-    type Kind = ::cxx::kind::Trivial;
-}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasPointerToIncompleteTypedefs"),
     crate::HasPointerToIncompleteTypedefs

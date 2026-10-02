@@ -43,10 +43,6 @@ pub struct UserOfImportedType {
 }
 impl !Send for UserOfImportedType {}
 impl !Sync for UserOfImportedType {}
-unsafe impl ::cxx::ExternType for UserOfImportedType {
-    type Id = ::cxx::type_id!("UserOfImportedType");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for UserOfImportedType {
     #[inline(always)]

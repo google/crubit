@@ -23,10 +23,6 @@ pub struct Uncopyable {
 }
 impl !Send for Uncopyable {}
 impl !Sync for Uncopyable {}
-unsafe impl ::cxx::ExternType for Uncopyable {
-    type Id = ::cxx::type_id!("Uncopyable");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<()> for Uncopyable {
     type CtorType = ::ctor::Ctor![Self];
@@ -56,10 +52,6 @@ pub struct UncopyableDespiteDecl {
 }
 impl !Send for UncopyableDespiteDecl {}
 impl !Sync for UncopyableDespiteDecl {}
-unsafe impl ::cxx::ExternType for UncopyableDespiteDecl {
-    type Id = ::cxx::type_id!("UncopyableDespiteDecl");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::PinnedDrop for UncopyableDespiteDecl {
     #[inline(always)]

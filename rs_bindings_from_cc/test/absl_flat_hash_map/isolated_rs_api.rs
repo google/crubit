@@ -52,10 +52,6 @@ pub mod crubit {
         }
         impl !Send for NoDestructor {}
         impl !Sync for NoDestructor {}
-        unsafe impl ::cxx::ExternType for NoDestructor {
-            type Id = ::cxx::type_id!(":: crubit :: test :: NoDestructor");
-            type Kind = ::cxx::kind::Opaque;
-        }
         impl ::core::fmt::Debug for NoDestructor {
             fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 formatter.debug_struct("NoDestructor").finish()
@@ -98,10 +94,6 @@ pub mod crubit {
         }
         impl !Send for NoDelete {}
         impl !Sync for NoDelete {}
-        unsafe impl ::cxx::ExternType for NoDelete {
-            type Id = ::cxx::type_id!(":: crubit :: test :: NoDelete");
-            type Kind = ::cxx::kind::Trivial;
-        }
         impl ::core::fmt::Debug for NoDelete {
             fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 formatter.debug_struct("NoDelete").finish()

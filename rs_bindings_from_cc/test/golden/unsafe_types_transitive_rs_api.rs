@@ -29,10 +29,6 @@ pub struct PublicPointer {
 }
 impl !Send for PublicPointer {}
 impl !Sync for PublicPointer {}
-unsafe impl ::cxx::ExternType for PublicPointer {
-    type Id = ::cxx::type_id!("PublicPointer");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for PublicPointer {
     #[inline(always)]
@@ -58,10 +54,6 @@ pub struct PrivatePointer {
 }
 impl !Send for PrivatePointer {}
 impl !Sync for PrivatePointer {}
-unsafe impl ::cxx::ExternType for PrivatePointer {
-    type Id = ::cxx::type_id!("PrivatePointer");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for PrivatePointer {
     #[inline(always)]
@@ -90,10 +82,6 @@ pub struct TransitivePublicPointer {
 }
 impl !Send for TransitivePublicPointer {}
 impl !Sync for TransitivePublicPointer {}
-unsafe impl ::cxx::ExternType for TransitivePublicPointer {
-    type Id = ::cxx::type_id!("TransitivePublicPointer");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for TransitivePublicPointer {
     #[inline(always)]
@@ -121,10 +109,6 @@ pub union Union {
 }
 impl !Send for Union {}
 impl !Sync for Union {}
-unsafe impl ::cxx::ExternType for Union {
-    type Id = ::cxx::type_id!("Union");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Union {
     #[inline(always)]

@@ -24,10 +24,6 @@ pub struct DstLocalMovable {
 }
 impl !Send for DstLocalMovable {}
 impl !Sync for DstLocalMovable {}
-unsafe impl ::cxx::ExternType for DstLocalMovable {
-    type Id = ::cxx::type_id!("DstLocalMovable");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for DstLocalMovable {
     #[inline(always)]
@@ -50,10 +46,6 @@ pub struct DstLocalNonMovable {
 }
 impl !Send for DstLocalNonMovable {}
 impl !Sync for DstLocalNonMovable {}
-unsafe impl ::cxx::ExternType for DstLocalNonMovable {
-    type Id = ::cxx::type_id!("DstLocalNonMovable");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "3Src"]
@@ -65,10 +57,6 @@ pub struct Src {
 }
 impl !Send for Src {}
 impl !Sync for Src {}
-unsafe impl ::cxx::ExternType for Src {
-    type Id = ::cxx::type_id!("Src");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Src {
     #[inline(always)]

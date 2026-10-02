@@ -27,10 +27,6 @@ pub struct AddableConstMember {
 }
 impl !Send for AddableConstMember {}
 impl !Sync for AddableConstMember {}
-unsafe impl ::cxx::ExternType for AddableConstMember {
-    type Id = ::cxx::type_id!("AddableConstMember");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddableConstMember {
     #[inline(always)]
@@ -75,10 +71,6 @@ pub struct AddableNonConstMember {
 }
 impl !Send for AddableNonConstMember {}
 impl !Sync for AddableNonConstMember {}
-unsafe impl ::cxx::ExternType for AddableNonConstMember {
-    type Id = ::cxx::type_id!("AddableNonConstMember");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddableNonConstMember {
     #[inline(always)]
@@ -123,10 +115,6 @@ pub struct AddableFriend {
 }
 impl !Send for AddableFriend {}
 impl !Sync for AddableFriend {}
-unsafe impl ::cxx::ExternType for AddableFriend {
-    type Id = ::cxx::type_id!("AddableFriend");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddableFriend {
     #[inline(always)]
@@ -165,10 +153,6 @@ pub struct AddableFreeByConstRef {
 }
 impl !Send for AddableFreeByConstRef {}
 impl !Sync for AddableFreeByConstRef {}
-unsafe impl ::cxx::ExternType for AddableFreeByConstRef {
-    type Id = ::cxx::type_id!("AddableFreeByConstRef");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddableFreeByConstRef {
     #[inline(always)]
@@ -191,10 +175,6 @@ pub struct AddableFreeByMutRef {
 }
 impl !Send for AddableFreeByMutRef {}
 impl !Sync for AddableFreeByMutRef {}
-unsafe impl ::cxx::ExternType for AddableFreeByMutRef {
-    type Id = ::cxx::type_id!("AddableFreeByMutRef");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddableFreeByMutRef {
     #[inline(always)]
@@ -217,10 +197,6 @@ pub struct AddableFreeByValue {
 }
 impl !Send for AddableFreeByValue {}
 impl !Sync for AddableFreeByValue {}
-unsafe impl ::cxx::ExternType for AddableFreeByValue {
-    type Id = ::cxx::type_id!("AddableFreeByValue");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddableFreeByValue {
     #[inline(always)]
@@ -243,10 +219,6 @@ pub struct AddableFreeByRValueRef {
 }
 impl !Send for AddableFreeByRValueRef {}
 impl !Sync for AddableFreeByRValueRef {}
-unsafe impl ::cxx::ExternType for AddableFreeByRValueRef {
-    type Id = ::cxx::type_id!("AddableFreeByRValueRef");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddableFreeByRValueRef {
     #[inline(always)]
@@ -328,10 +300,6 @@ pub struct Overloaded {
 }
 impl !Send for Overloaded {}
 impl !Sync for Overloaded {}
-unsafe impl ::cxx::ExternType for Overloaded {
-    type Id = ::cxx::type_id!("Overloaded");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Overloaded {
     #[inline(always)]
@@ -370,10 +338,6 @@ pub struct IncompatibleLHS {
 }
 impl !Send for IncompatibleLHS {}
 impl !Sync for IncompatibleLHS {}
-unsafe impl ::cxx::ExternType for IncompatibleLHS {
-    type Id = ::cxx::type_id!("IncompatibleLHS");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for IncompatibleLHS {
     #[inline(always)]
@@ -405,10 +369,6 @@ pub struct AddableReturnsVoid {
 }
 impl !Send for AddableReturnsVoid {}
 impl !Sync for AddableReturnsVoid {}
-unsafe impl ::cxx::ExternType for AddableReturnsVoid {
-    type Id = ::cxx::type_id!("AddableReturnsVoid");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddableReturnsVoid {
     #[inline(always)]
@@ -443,10 +403,6 @@ pub struct AddableConstMemberNonunpin {
 }
 impl !Send for AddableConstMemberNonunpin {}
 impl !Sync for AddableConstMemberNonunpin {}
-unsafe impl ::cxx::ExternType for AddableConstMemberNonunpin {
-    type Id = ::cxx::type_id!("AddableConstMemberNonunpin");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
     type CtorType = ::ctor::Ctor![Self];
@@ -535,10 +491,6 @@ pub struct AddAssignMemberInt {
 }
 impl !Send for AddAssignMemberInt {}
 impl !Sync for AddAssignMemberInt {}
-unsafe impl ::cxx::ExternType for AddAssignMemberInt {
-    type Id = ::cxx::type_id!("AddAssignMemberInt");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddAssignMemberInt {
     #[inline(always)]
@@ -570,10 +522,6 @@ pub struct AddAssignMemberByConstRef {
 }
 impl !Send for AddAssignMemberByConstRef {}
 impl !Sync for AddAssignMemberByConstRef {}
-unsafe impl ::cxx::ExternType for AddAssignMemberByConstRef {
-    type Id = ::cxx::type_id!("AddAssignMemberByConstRef");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddAssignMemberByConstRef {
     #[inline(always)]
@@ -605,10 +553,6 @@ pub struct AddAssignFreeByConstRef {
 }
 impl !Send for AddAssignFreeByConstRef {}
 impl !Sync for AddAssignFreeByConstRef {}
-unsafe impl ::cxx::ExternType for AddAssignFreeByConstRef {
-    type Id = ::cxx::type_id!("AddAssignFreeByConstRef");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddAssignFreeByConstRef {
     #[inline(always)]
@@ -640,10 +584,6 @@ pub struct AddAssignFreeByValue {
 }
 impl !Send for AddAssignFreeByValue {}
 impl !Sync for AddAssignFreeByValue {}
-unsafe impl ::cxx::ExternType for AddAssignFreeByValue {
-    type Id = ::cxx::type_id!("AddAssignFreeByValue");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddAssignFreeByValue {
     #[inline(always)]
@@ -676,10 +616,6 @@ pub struct AddAssignFriendByConstRef {
 }
 impl !Send for AddAssignFriendByConstRef {}
 impl !Sync for AddAssignFriendByConstRef {}
-unsafe impl ::cxx::ExternType for AddAssignFriendByConstRef {
-    type Id = ::cxx::type_id!("AddAssignFriendByConstRef");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddAssignFriendByConstRef {
     #[inline(always)]
@@ -711,10 +647,6 @@ pub struct AddAssignFriendByValue {
 }
 impl !Send for AddAssignFriendByValue {}
 impl !Sync for AddAssignFriendByValue {}
-unsafe impl ::cxx::ExternType for AddAssignFriendByValue {
-    type Id = ::cxx::type_id!("AddAssignFriendByValue");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddAssignFriendByValue {
     #[inline(always)]
@@ -747,10 +679,6 @@ pub struct AddAssignProhibitedConstMember {
 }
 impl !Send for AddAssignProhibitedConstMember {}
 impl !Sync for AddAssignProhibitedConstMember {}
-unsafe impl ::cxx::ExternType for AddAssignProhibitedConstMember {
-    type Id = ::cxx::type_id!("AddAssignProhibitedConstMember");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddAssignProhibitedConstMember {
     #[inline(always)]
@@ -793,10 +721,6 @@ pub struct AddAssignProhibitedFriendConstLhs {
 }
 impl !Send for AddAssignProhibitedFriendConstLhs {}
 impl !Sync for AddAssignProhibitedFriendConstLhs {}
-unsafe impl ::cxx::ExternType for AddAssignProhibitedFriendConstLhs {
-    type Id = ::cxx::type_id!("AddAssignProhibitedFriendConstLhs");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AddAssignProhibitedFriendConstLhs {
     #[inline(always)]
@@ -839,10 +763,6 @@ pub struct ManyOperators {
 }
 impl !Send for ManyOperators {}
 impl !Sync for ManyOperators {}
-unsafe impl ::cxx::ExternType for ManyOperators {
-    type Id = ::cxx::type_id!("ManyOperators");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl ManyOperators {
     #[inline(always)]
     pub fn unary_plus<'__this>(&'__this self) -> crate::ManyOperators {

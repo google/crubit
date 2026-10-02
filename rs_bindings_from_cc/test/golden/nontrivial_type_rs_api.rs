@@ -30,10 +30,6 @@ pub struct Nontrivial {
 }
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
-unsafe impl ::cxx::ExternType for Nontrivial {
-    type Id = ::cxx::type_id!("Nontrivial");
-    type Kind = ::cxx::kind::Opaque;
-}
 impl Nontrivial {
     #[inline(always)]
     pub fn Unqualified<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
@@ -318,10 +314,6 @@ pub struct NontrivialInline {
 }
 impl !Send for NontrivialInline {}
 impl !Sync for NontrivialInline {}
-unsafe impl ::cxx::ExternType for NontrivialInline {
-    type Id = ::cxx::type_id!("NontrivialInline");
-    type Kind = ::cxx::kind::Opaque;
-}
 impl NontrivialInline {
     #[inline(always)]
     pub fn MemberFunction<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
@@ -504,10 +496,6 @@ pub struct NontrivialMembers {
 }
 impl !Send for NontrivialMembers {}
 impl !Sync for NontrivialMembers {}
-unsafe impl ::cxx::ExternType for NontrivialMembers {
-    type Id = ::cxx::type_id!("NontrivialMembers");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<()> for NontrivialMembers {
     type CtorType = ::ctor::Ctor![Self];
@@ -613,10 +601,6 @@ pub struct NontrivialUnpin {
 }
 impl !Send for NontrivialUnpin {}
 impl !Sync for NontrivialUnpin {}
-unsafe impl ::cxx::ExternType for NontrivialUnpin {
-    type Id = ::cxx::type_id!("NontrivialUnpin");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl NontrivialUnpin {
     #[inline(always)]
     pub fn MemberFunction<'__this>(&'__this mut self) {
@@ -899,10 +883,6 @@ pub struct NontrivialByValue {
 }
 impl !Send for NontrivialByValue {}
 impl !Sync for NontrivialByValue {}
-unsafe impl ::cxx::ExternType for NontrivialByValue {
-    type Id = ::cxx::type_id!("NontrivialByValue");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivial>>
     for NontrivialByValue
@@ -951,10 +931,6 @@ pub struct Nonmovable {
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}
-unsafe impl ::cxx::ExternType for Nonmovable {
-    type Id = ::cxx::type_id!("Nonmovable");
-    type Kind = ::cxx::kind::Opaque;
-}
 impl Nonmovable {
     #[inline(always)]
     pub fn MemberFunction<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {

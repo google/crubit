@@ -27,10 +27,6 @@ pub struct Outer {
 }
 impl !Send for Outer {}
 impl !Sync for Outer {}
-unsafe impl ::cxx::ExternType for Outer {
-    type Id = ::cxx::type_id!("Outer");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Outer {
     #[inline(always)]

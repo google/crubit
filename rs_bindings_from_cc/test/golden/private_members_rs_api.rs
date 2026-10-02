@@ -29,10 +29,6 @@ pub mod test_namespace_bindings {
     }
     impl !Send for SomeClass {}
     impl !Sync for SomeClass {}
-    unsafe impl ::cxx::ExternType for SomeClass {
-        type Id = ::cxx::type_id!("test_namespace_bindings :: SomeClass");
-        type Kind = ::cxx::kind::Trivial;
-    }
     impl SomeClass {
         #[inline(always)]
         pub fn public_method<'__this>(&'__this mut self) {

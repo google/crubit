@@ -28,10 +28,6 @@ pub union EmptyUnion {
 }
 impl !Send for EmptyUnion {}
 impl !Sync for EmptyUnion {}
-unsafe impl ::cxx::ExternType for EmptyUnion {
-    type Id = ::cxx::type_id!("EmptyUnion");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for EmptyUnion {
     #[inline(always)]
@@ -55,10 +51,6 @@ pub struct Nontrivial {
 }
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
-unsafe impl ::cxx::ExternType for Nontrivial {
-    type Id = ::cxx::type_id!("Nontrivial");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<()> for Nontrivial {
     type CtorType = ::ctor::Ctor![Self];
@@ -116,10 +108,6 @@ pub union RenamedUnion {
 }
 impl !Send for RenamedUnion {}
 impl !Sync for RenamedUnion {}
-unsafe impl ::cxx::ExternType for RenamedUnion {
-    type Id = ::cxx::type_id!("UnionToRename");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for RenamedUnion {
     #[inline(always)]
@@ -141,10 +129,6 @@ pub struct TriviallyCopyableButNontriviallyDestructible {
 }
 impl !Send for TriviallyCopyableButNontriviallyDestructible {}
 impl !Sync for TriviallyCopyableButNontriviallyDestructible {}
-unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
-    type Id = ::cxx::type_id!("TriviallyCopyableButNontriviallyDestructible");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
@@ -210,10 +194,6 @@ pub union NonEmptyUnion {
 }
 impl !Send for NonEmptyUnion {}
 impl !Sync for NonEmptyUnion {}
-unsafe impl ::cxx::ExternType for NonEmptyUnion {
-    type Id = ::cxx::type_id!("NonEmptyUnion");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for NonEmptyUnion {
     #[inline(always)]
@@ -240,10 +220,6 @@ pub union NonCopyUnion {
 }
 impl !Send for NonCopyUnion {}
 impl !Sync for NonCopyUnion {}
-unsafe impl ::cxx::ExternType for NonCopyUnion {
-    type Id = ::cxx::type_id!("NonCopyUnion");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 /// # Safety
 ///
@@ -260,10 +236,6 @@ pub union NonCopyUnion2 {
 }
 impl !Send for NonCopyUnion2 {}
 impl !Sync for NonCopyUnion2 {}
-unsafe impl ::cxx::ExternType for NonCopyUnion2 {
-    type Id = ::cxx::type_id!("NonCopyUnion2");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 #[diagnostic::on_unimplemented(
     message = "binding generation for function failed\n`NonCopyUnion2` can't be used by-value because it has a non-public or deleted destructor"
@@ -337,10 +309,6 @@ pub union UnionWithOpaqueField {
 }
 impl !Send for UnionWithOpaqueField {}
 impl !Sync for UnionWithOpaqueField {}
-unsafe impl ::cxx::ExternType for UnionWithOpaqueField {
-    type Id = ::cxx::type_id!("UnionWithOpaqueField");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for UnionWithOpaqueField {
     #[inline(always)]
@@ -363,10 +331,6 @@ pub struct TrivialButInheritable {
 }
 impl !Send for TrivialButInheritable {}
 impl !Sync for TrivialButInheritable {}
-unsafe impl ::cxx::ExternType for TrivialButInheritable {
-    type Id = ::cxx::type_id!("TrivialButInheritable");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for TrivialButInheritable {
     #[inline(always)]
@@ -393,10 +357,6 @@ pub union UnionWithInheritable {
 }
 impl !Send for UnionWithInheritable {}
 impl !Sync for UnionWithInheritable {}
-unsafe impl ::cxx::ExternType for UnionWithInheritable {
-    type Id = ::cxx::type_id!("UnionWithInheritable");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for UnionWithInheritable {
     #[inline(always)]
@@ -423,10 +383,6 @@ pub union TypedefUnion {
 }
 impl !Send for TypedefUnion {}
 impl !Sync for TypedefUnion {}
-unsafe impl ::cxx::ExternType for TypedefUnion {
-    type Id = ::cxx::type_id!("TypedefUnion");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for TypedefUnion {
     #[inline(always)]
@@ -453,10 +409,6 @@ pub union TypedefUnionWithInheritable {
 }
 impl !Send for TypedefUnionWithInheritable {}
 impl !Sync for TypedefUnionWithInheritable {}
-unsafe impl ::cxx::ExternType for TypedefUnionWithInheritable {
-    type Id = ::cxx::type_id!("TypedefUnionWithInheritable");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for TypedefUnionWithInheritable {
     #[inline(always)]

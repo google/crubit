@@ -30,10 +30,6 @@ pub struct SomeStruct {
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}
-unsafe impl ::cxx::ExternType for SomeStruct {
-    type Id = ::cxx::type_id!("SomeStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for SomeStruct {
     #[inline(always)]
@@ -121,10 +117,6 @@ pub struct FieldTypeTestStruct {
 }
 impl !Send for FieldTypeTestStruct {}
 impl !Sync for FieldTypeTestStruct {}
-unsafe impl ::cxx::ExternType for FieldTypeTestStruct {
-    type Id = ::cxx::type_id!("FieldTypeTestStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 /// # Safety
 ///

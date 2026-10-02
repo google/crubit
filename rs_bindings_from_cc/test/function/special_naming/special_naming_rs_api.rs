@@ -63,10 +63,6 @@ pub struct SimpleStruct {
 }
 impl !Send for SimpleStruct {}
 impl !Sync for SimpleStruct {}
-unsafe impl ::cxx::ExternType for SimpleStruct {
-    type Id = ::cxx::type_id!("SimpleStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for SimpleStruct {
     #[inline(always)]
@@ -89,10 +85,6 @@ pub struct OtherStruct {
 }
 impl !Send for OtherStruct {}
 impl !Sync for OtherStruct {}
-unsafe impl ::cxx::ExternType for OtherStruct {
-    type Id = ::cxx::type_id!("OtherStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for OtherStruct {
     #[inline(always)]

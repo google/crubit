@@ -98,6 +98,9 @@ flagset::flags! {
         /// Honor `absl_nonnull` (clang's `_Nonnull`) on `std::unique_ptr` and `std::shared_ptr` by
         /// wrapping the generated Rust type in `cc_std::std::NonNull`.
         NonnullSmartPointers,
+
+        /// Generate `::cxx::ExternType` implementations for records.
+        ImplCxxExternType,
     }
 }
 
@@ -136,6 +139,7 @@ impl CrubitFeature {
             Self::ProtoReferences => "proto_references",
             Self::Generics => "generics",
             Self::NonnullSmartPointers => "nonnull_smart_pointers",
+            Self::ImplCxxExternType => "impl_cxx_extern_type",
         }
     }
 
@@ -177,6 +181,7 @@ impl CrubitFeature {
             Self::ProtoReferences => "//features:proto_references",
             Self::Generics => "//features:generics",
             Self::NonnullSmartPointers => "//features:nonnull_smart_pointers",
+            Self::ImplCxxExternType => "//features:impl_cxx_extern_type",
         }
     }
 }
@@ -198,6 +203,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::ForwardDeclarations
                 - CrubitFeature::Generics
                 - CrubitFeature::NonnullSmartPointers
+                - CrubitFeature::ImplCxxExternType
         }
         // `supported` automatically implies `types`.
         b"supported" => CrubitFeature::Supported | CrubitFeature::Types,
@@ -227,6 +233,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"proto_references" => CrubitFeature::ProtoReferences.into(),
         b"generics" => CrubitFeature::Generics.into(),
         b"nonnull_smart_pointers" => CrubitFeature::NonnullSmartPointers.into(),
+        b"impl_cxx_extern_type" => CrubitFeature::ImplCxxExternType.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -346,6 +353,13 @@ mod tests {
     fn test_serialized_crubit_feature_generics() {
         let SerializedCrubitFeature(features) = serde_json::from_str("\"generics\"").unwrap();
         assert_eq!(features, CrubitFeature::Generics);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_feature_impl_cxx_extern_type() {
+        let SerializedCrubitFeature(features) =
+            serde_json::from_str("\"impl_cxx_extern_type\"").unwrap();
+        assert_eq!(features, CrubitFeature::ImplCxxExternType);
     }
 
     #[gtest]

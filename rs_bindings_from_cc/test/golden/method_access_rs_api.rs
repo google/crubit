@@ -24,10 +24,6 @@ pub struct Struct {
 }
 impl !Send for Struct {}
 impl !Sync for Struct {}
-unsafe impl ::cxx::ExternType for Struct {
-    type Id = ::cxx::type_id!("Struct");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl Struct {
     #[inline(always)]
     pub fn AccessNone<'__this>(&'__this mut self) {
@@ -71,10 +67,6 @@ pub struct Class {
 }
 impl !Send for Class {}
 impl !Sync for Class {}
-unsafe impl ::cxx::ExternType for Class {
-    type Id = ::cxx::type_id!("Class");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl Class {
     #[inline(always)]
     pub fn AccessPublic<'__this>(&'__this mut self) {

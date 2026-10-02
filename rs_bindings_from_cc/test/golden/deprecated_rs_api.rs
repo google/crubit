@@ -37,10 +37,6 @@ pub struct DeprecatedStruct {
 }
 impl !Send for DeprecatedStruct {}
 impl !Sync for DeprecatedStruct {}
-unsafe impl ::cxx::ExternType for DeprecatedStruct {
-    type Id = ::cxx::type_id!("DeprecatedStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for DeprecatedStruct {
     #[inline(always)]
@@ -64,10 +60,6 @@ pub struct DeprecatedStructWithMessage {
 }
 impl !Send for DeprecatedStructWithMessage {}
 impl !Sync for DeprecatedStructWithMessage {}
-unsafe impl ::cxx::ExternType for DeprecatedStructWithMessage {
-    type Id = ::cxx::type_id!("DeprecatedStructWithMessage");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for DeprecatedStructWithMessage {
     #[inline(always)]
@@ -181,10 +173,6 @@ pub struct DeprecatedFields {
 }
 impl !Send for DeprecatedFields {}
 impl !Sync for DeprecatedFields {}
-unsafe impl ::cxx::ExternType for DeprecatedFields {
-    type Id = ::cxx::type_id!("DeprecatedFields");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for DeprecatedFields {
     #[inline(always)]

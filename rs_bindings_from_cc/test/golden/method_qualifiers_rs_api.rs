@@ -24,10 +24,6 @@ pub struct Noninline {
 }
 impl !Send for Noninline {}
 impl !Sync for Noninline {}
-unsafe impl ::cxx::ExternType for Noninline {
-    type Id = ::cxx::type_id!("Noninline");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl Noninline {
     #[inline(always)]
     pub fn UnqualifiedMethod<'__this>(&'__this mut self) {
@@ -95,10 +91,6 @@ pub struct Inline {
 }
 impl !Send for Inline {}
 impl !Sync for Inline {}
-unsafe impl ::cxx::ExternType for Inline {
-    type Id = ::cxx::type_id!("Inline");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl Inline {
     #[inline(always)]
     pub fn UnqualifiedMethod<'__this>(&'__this mut self) {

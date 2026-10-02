@@ -29,10 +29,6 @@ pub struct CannotUpcastInCrubit {
 }
 impl !Send for CannotUpcastInCrubit {}
 impl !Sync for CannotUpcastInCrubit {}
-unsafe impl ::cxx::ExternType for CannotUpcastInCrubit {
-    type Id = ::cxx::type_id!("CannotUpcastInCrubit");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for CannotUpcastInCrubit {
     #[inline(always)]

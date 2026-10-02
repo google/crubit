@@ -24,10 +24,6 @@ pub struct SomeClass {
 }
 impl !Send for SomeClass {}
 impl !Sync for SomeClass {}
-unsafe impl ::cxx::ExternType for SomeClass {
-    type Id = ::cxx::type_id!("SomeClass");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl SomeClass {
     #[inline(always)]
     pub fn static_factory_method(int_var_initial_value: ::ffi_11::c_int) -> crate::SomeClass {
@@ -102,10 +98,6 @@ pub struct InstanceMethods {
 }
 impl !Send for InstanceMethods {}
 impl !Sync for InstanceMethods {}
-unsafe impl ::cxx::ExternType for InstanceMethods {
-    type Id = ::cxx::type_id!("InstanceMethods");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl InstanceMethods {
     #[inline(always)]
     pub fn get_int_field(&self) -> ::ffi_11::c_int {

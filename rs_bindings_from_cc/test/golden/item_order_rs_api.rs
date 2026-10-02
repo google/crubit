@@ -24,10 +24,6 @@ pub struct FirstStruct {
 }
 impl !Send for FirstStruct {}
 impl !Sync for FirstStruct {}
-unsafe impl ::cxx::ExternType for FirstStruct {
-    type Id = ::cxx::type_id!("FirstStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for FirstStruct {
     #[inline(always)]
@@ -55,10 +51,6 @@ pub struct SecondStruct {
 }
 impl !Send for SecondStruct {}
 impl !Sync for SecondStruct {}
-unsafe impl ::cxx::ExternType for SecondStruct {
-    type Id = ::cxx::type_id!("SecondStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for SecondStruct {
     #[inline(always)]

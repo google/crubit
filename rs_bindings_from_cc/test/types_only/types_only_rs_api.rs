@@ -29,10 +29,6 @@ pub struct Copyable {
 }
 impl !Send for Copyable {}
 impl !Sync for Copyable {}
-unsafe impl ::cxx::ExternType for Copyable {
-    type Id = ::cxx::type_id!("Copyable");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Copyable {
     #[inline(always)]
@@ -58,10 +54,6 @@ pub struct Cloneable {
 }
 impl !Send for Cloneable {}
 impl !Sync for Cloneable {}
-unsafe impl ::cxx::ExternType for Cloneable {
-    type Id = ::cxx::type_id!("Cloneable");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<::ffi_11::c_int> for Cloneable {
     type CtorType = ::ctor::Ctor![Self];
@@ -179,10 +171,6 @@ pub struct Movable {
 }
 impl !Send for Movable {}
 impl !Sync for Movable {}
-unsafe impl ::cxx::ExternType for Movable {
-    type Id = ::cxx::type_id!("Movable");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<::ffi_11::c_int> for Movable {
     type CtorType = ::ctor::Ctor![Self];

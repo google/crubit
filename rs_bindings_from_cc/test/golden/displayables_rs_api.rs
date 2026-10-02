@@ -24,10 +24,6 @@ pub struct DisplayableStruct {
 }
 impl !Send for DisplayableStruct {}
 impl !Sync for DisplayableStruct {}
-unsafe impl ::cxx::ExternType for DisplayableStruct {
-    type Id = ::cxx::type_id!("DisplayableStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl ::core::fmt::Display for DisplayableStruct {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         let mut f = ::lossy_formatter::LossyFormatter::new(f);

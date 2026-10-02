@@ -33,10 +33,6 @@ pub struct Same {
 }
 impl !Send for Same {}
 impl !Sync for Same {}
-unsafe impl ::cxx::ExternType for Same {
-    type Id = ::cxx::type_id!("Same");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl Same {
     #[inline(always)]
     pub fn Method<'__this>(&'__this mut self) -> ::ffi_11::c_int {
@@ -70,10 +66,6 @@ pub mod same_items {
     }
     impl !Send for NestedItem {}
     impl !Sync for NestedItem {}
-    unsafe impl ::cxx::ExternType for NestedItem {
-        type Id = ::cxx::type_id!("Same :: NestedItem");
-        type Kind = ::cxx::kind::Trivial;
-    }
     impl NestedItem {
         #[inline(always)]
         pub fn NestedItemFunction<'__this>(&'__this mut self) -> ::ffi_11::c_int {
@@ -135,10 +127,6 @@ pub mod foo {
     }
     impl !Send for Foo {}
     impl !Sync for Foo {}
-    unsafe impl ::cxx::ExternType for Foo {
-        type Id = ::cxx::type_id!("foo :: Foo");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Foo {
         #[inline(always)]
@@ -162,10 +150,6 @@ pub mod foo {
         }
         impl !Send for foo {}
         impl !Sync for foo {}
-        unsafe impl ::cxx::ExternType for foo {
-            type Id = ::cxx::type_id!("foo :: Foo :: foo");
-            type Kind = ::cxx::kind::Trivial;
-        }
         impl foo {
             #[inline(always)]
             pub fn BFunction() -> ::ffi_11::c_int {
@@ -199,10 +183,6 @@ pub mod foo {
             }
             impl !Send for Item {}
             impl !Sync for Item {}
-            unsafe impl ::cxx::ExternType for Item {
-                type Id = ::cxx::type_id!("foo :: Foo :: foo :: Item");
-                type Kind = ::cxx::kind::Trivial;
-            }
 
             impl Default for Item {
                 #[inline(always)]
@@ -232,10 +212,6 @@ pub struct OuterRustName {
 }
 impl !Send for OuterRustName {}
 impl !Sync for OuterRustName {}
-unsafe impl ::cxx::ExternType for OuterRustName {
-    type Id = ::cxx::type_id!("OuterCpp");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for OuterRustName {
     #[inline(always)]
@@ -259,10 +235,6 @@ pub mod outer_rust_name {
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
-    unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("OuterCpp :: Inner");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Inner {
         #[inline(always)]

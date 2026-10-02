@@ -25,10 +25,6 @@ pub struct SV<'a> {
 }
 impl<'a> !Send for SV<'a> {}
 impl<'a> !Sync for SV<'a> {}
-unsafe impl<'a> ::cxx::ExternType for SV<'a> {
-    type Id = ::cxx::type_id!(":: SV");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl ::core::fmt::Display for SV<'_> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         let mut f = ::lossy_formatter::LossyFormatter::new(f);

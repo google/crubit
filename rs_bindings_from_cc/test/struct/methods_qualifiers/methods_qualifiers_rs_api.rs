@@ -24,10 +24,6 @@ pub struct UnpinStructWithRefQualifiedMethods {
 }
 impl !Send for UnpinStructWithRefQualifiedMethods {}
 impl !Sync for UnpinStructWithRefQualifiedMethods {}
-unsafe impl ::cxx::ExternType for UnpinStructWithRefQualifiedMethods {
-    type Id = ::cxx::type_id!(":: UnpinStructWithRefQualifiedMethods");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl ::core::fmt::Debug for UnpinStructWithRefQualifiedMethods {
     fn fmt(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         formatter.debug_struct("UnpinStructWithRefQualifiedMethods").field("i", &self.i).finish()

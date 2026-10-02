@@ -33,10 +33,6 @@ pub mod ns {
     }
     impl !Send for Foo {}
     impl !Sync for Foo {}
-    unsafe impl ::cxx::ExternType for Foo {
-        type Id = ::cxx::type_id!("ns :: Foo");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Foo {
         #[inline(always)]
@@ -82,10 +78,6 @@ pub struct Bar {
 }
 impl !Send for Bar {}
 impl !Sync for Bar {}
-unsafe impl ::cxx::ExternType for Bar {
-    type Id = ::cxx::type_id!("Bar");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Bar {
     #[inline(always)]
@@ -109,10 +101,6 @@ pub struct HasNoComments {
 }
 impl !Send for HasNoComments {}
 impl !Sync for HasNoComments {}
-unsafe impl ::cxx::ExternType for HasNoComments {
-    type Id = ::cxx::type_id!("HasNoComments");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for HasNoComments {
     #[inline(always)]

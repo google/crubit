@@ -751,7 +751,9 @@ pub fn generate_record<'a>(
         None
     };
 
-    let cxx_impl = if fully_qualified_cc_name.contains('<') {
+    let cxx_impl = if !crubit_features.contains(crubit_feature::CrubitFeature::ImplCxxExternType)
+        || fully_qualified_cc_name.contains('<')
+    {
         // cxx can't parse templated type names.
         // In particular, it can only parse ::-delimited idents.
         None

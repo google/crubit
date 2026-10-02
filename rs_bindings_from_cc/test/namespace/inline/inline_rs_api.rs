@@ -31,10 +31,6 @@ pub mod foo {
         }
         impl !Send for MyStruct {}
         impl !Sync for MyStruct {}
-        unsafe impl ::cxx::ExternType for MyStruct {
-            type Id = ::cxx::type_id!("foo :: inline1 :: MyStruct");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for MyStruct {
             #[inline(always)]

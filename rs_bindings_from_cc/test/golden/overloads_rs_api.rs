@@ -62,10 +62,6 @@ pub struct Foo {
 }
 impl !Send for Foo {}
 impl !Sync for Foo {}
-unsafe impl ::cxx::ExternType for Foo {
-    type Id = ::cxx::type_id!("Foo");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl Foo {
     #[inline(always)]
     pub fn Bar<'__this>(&'__this mut self, __param_0: ::ffi_11::c_int) {

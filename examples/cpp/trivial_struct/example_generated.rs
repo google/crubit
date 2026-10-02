@@ -25,10 +25,6 @@ pub struct Position {
 }
 impl !Send for Position {}
 impl !Sync for Position {}
-unsafe impl ::cxx::ExternType for Position {
-    type Id = ::cxx::type_id!("Position");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Position {
     #[inline(always)]
