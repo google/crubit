@@ -2220,6 +2220,48 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
 }
 
 #[gtest]
+fn test_subst_template_type_parm_pack_type_behind_reference_and_pointer() -> Result<()> {
+    // Regression test: parameters expanded from a pack must get distinct names
+    // even when the pack element type is wrapped in a reference or a pointer.
+    let proto = ir_proto_from_cc(
+        r#"
+            template <typename... TArgs>
+            struct [[clang::annotate("crubit_always_instantiate")]] MyStruct {
+                static int SumRefs(const TArgs&... my_refs) { return (0 + ... + my_refs); }
+                static int SumPtrs(TArgs*... my_ptrs) { return (0 + ... + *my_ptrs); }
+            };
+            using MyTypeAlias = MyStruct<int, int>; "#,
+    )?;
+
+    let ir = ir_testing::make_test_ir(&proto)?;
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                cc_name: "SumRefs", ...
+                params: [
+                    FuncParam { type_: CcType { ... }, identifier: "__my_refs_0", ... },
+                    FuncParam { type_: CcType { ... }, identifier: "__my_refs_1", ... },
+                ], ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                cc_name: "SumPtrs", ...
+                params: [
+                    FuncParam { type_: CcType { ... }, identifier: "__my_ptrs_0", ... },
+                    FuncParam { type_: CcType { ... }, identifier: "__my_ptrs_1", ... },
+                ], ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"

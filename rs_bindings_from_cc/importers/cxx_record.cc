@@ -1090,7 +1090,7 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
             "Partially-specialized class templates are not supported")});
   }
 
-  if (record_decl->isInvalidDecl()) {
+  if (ictx_.IsInvalidTemplateSpecialization(*record_decl)) {
     return nullptr;
   }
 

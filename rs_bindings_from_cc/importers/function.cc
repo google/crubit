@@ -237,8 +237,12 @@ Identifier FunctionDeclImporter::GetTranslatedParamName(
   if (!name.ok()) {
     return {Identifier(absl::StrCat("__param_", param_pos))};
   }
-  if (auto* sttpt =
-          param_decl->getType()->getAs<clang::SubstTemplateTypeParmType>();
+  // Look through pointers, references and arrays: `const TArgs&... args` or
+  // `TArgs*... args` expand to one parameter per pack element just like
+  // `TArgs... args` does, and all of them would otherwise share a name.
+  clang::QualType type =
+      StripPointersReferencesAndArrays(ictx_.ctx_, param_decl->getType());
+  if (auto* sttpt = type->getAs<clang::SubstTemplateTypeParmType>();
       sttpt && sttpt->getReplacedParameter()->isParameterPack()) {
     // Avoid giving the same name to all parameters expanded from a pack.
     return {Identifier(
@@ -671,7 +675,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
       point_of_instantiation = function_decl->getLocation();
     }
     crubit::RecordingDiagnosticConsumer diagnostic_recorder =
-        crubit::RecordDiagnostics(ictx_.sema_.getDiagnostics(), [&] {
+        crubit::RecordDiagnosticsAndMarkFailedInstantiations(ictx_, [&] {
           // Generally, clang is able to instantiate templates like this even
           // after parsing completes. However, in rare cases it accesses
           // transient parsing state (Scope) which was already cleaned up.
@@ -933,7 +937,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     // is OK if this is a method of a class template, since Crubit
     // instantiates the members of the class templates eagerly.
     crubit::RecordingDiagnosticConsumer diagnostic_recorder =
-        crubit::RecordDiagnostics(ictx_.sema_.getDiagnostics(), [&] {
+        crubit::RecordDiagnosticsAndMarkFailedInstantiations(ictx_, [&] {
           undeduced_return_type = ictx_.sema_.DeduceReturnType(
               function_decl, function_decl->getLocation());
         });

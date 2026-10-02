@@ -2086,6 +2086,139 @@ std::string Importer::ConvertSourceLocation(
   return absl::StrCat(spelling_loc_str, "\n", expansion_loc_str);
 }
 
+std::optional<std::string> Importer::CheckTemplateArgInstantiable(
+    const clang::TemplateArgument& arg) {
+  switch (arg.getKind()) {
+    case clang::TemplateArgument::ArgKind::Pack:
+      for (const clang::TemplateArgument& pack_arg : arg.pack_elements()) {
+        if (std::optional<std::string> errors =
+                CheckTemplateArgInstantiable(pack_arg);
+            errors.has_value()) {
+          return errors;
+        }
+      }
+      return std::nullopt;
+    case clang::TemplateArgument::ArgKind::Type:
+      break;
+    case clang::TemplateArgument::ArgKind::Declaration:
+    case clang::TemplateArgument::ArgKind::Template:
+    case clang::TemplateArgument::ArgKind::Expression:
+    case clang::TemplateArgument::ArgKind::Integral:
+    case clang::TemplateArgument::ArgKind::NullPtr:
+    case clang::TemplateArgument::ArgKind::TemplateExpansion:
+    case clang::TemplateArgument::ArgKind::StructuralValue:
+    case clang::TemplateArgument::ArgKind::Null:
+      return std::nullopt;
+  }
+
+  // Look through pointers, references and arrays: `Foo<Bar*>` is instantiated
+  // by the generated code just like `Foo<Bar>` is, and instantiating it may
+  // well require `Bar` to be instantiated too (e.g. because `Foo` constrains
+  // its parameter with a concept).
+  clang::QualType type =
+      StripPointersReferencesAndArrays(ctx_, arg.getAsType());
+
+  clang::CXXRecordDecl* arg_record_decl = type->getAsCXXRecordDecl();
+  if (arg_record_decl == nullptr) {
+    return std::nullopt;
+  }
+  // Some failed instantiations (e.g. with a field of incomplete type) *are*
+  // marked invalid by Clang. Attempting them again reports nothing new, so
+  // this has to be checked explicitly.
+  if (arg_record_decl->isInvalidDecl()) {
+    return absl::StrCat("Template argument '", type.getAsString(),
+                        "' is an invalid declaration.");
+  }
+  auto* arg_specialization_decl =
+      clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(arg_record_decl);
+  if (arg_specialization_decl == nullptr) {
+    return std::nullopt;
+  }
+  return CheckSpecializationInstantiable(arg_specialization_decl);
+}
+
+std::optional<std::string> Importer::CheckSpecializationInstantiable(
+    clang::ClassTemplateSpecializationDecl* absl_nonnull specialization_decl) {
+  const clang::CXXRecordDecl* absl_nonnull key =
+      specialization_decl->getCanonicalDecl();
+  if (auto it = instantiation_attempts_.find(key);
+      it != instantiation_attempts_.end()) {
+    return it->second;
+  }
+
+  // The template arguments are checked first, and their failures are inherited.
+  //
+  // This is what makes the result independent of the order in which the
+  // translation unit is traversed. Clang reports the errors of a failed
+  // instantiation only once, and leaves behind a complete but ill-formed
+  // definition. So once `std::variant<Incomplete>` has been (unsuccessfully)
+  // instantiated, instantiating `std::reverse_iterator<const
+  // std::variant<Incomplete>*>` silently succeeds -- even though the generated
+  // bindings for it would not compile, because in the generated
+  // `..._rs_api_impl.cc` the `CRUBIT_SIZEOF` assertion is what triggers the
+  // instantiation of the variant for the first time.
+  //
+  // TODO(zarko): This only looks at template arguments. A specialization whose
+  // instantiation already failed is still accepted when it is reached only
+  // through a field, a base, or a function body, e.g.
+  //
+  //   template <typename T>
+  //   struct UsesViaMember { NeedsComplete<typename T::type> f; };
+  //
+  // once `NeedsComplete<Incomplete>` has failed: completing
+  // `UsesViaMember<HasIncompleteType>` then emits no diagnostics. Follow-up
+  // plan, avoiding mutation of Clang's AST: factor out a
+  // `CheckTypeInstantiable` (looking through pointers, references and arrays),
+  // apply it to the fields and bases of successfully completed specializations
+  // (with a cycle guard for self-referential types), expose it via
+  // `ImportContext`, and apply it to the types referenced in the bodies
+  // walked by `GetInvalidCallTarget`. Even then, implicit destructor calls and
+  // virtual members instantiated along with the vtable are not visible to that
+  // walk.
+  std::optional<std::string> errors;
+  if (specialization_decl->isInvalidDecl()) {
+    // Already failed (and was marked invalid by Clang) before we got here.
+    // Attempting it again would report nothing.
+    errors = "The template specialization is an invalid declaration.";
+  }
+  for (const clang::TemplateArgument& arg :
+       specialization_decl->getTemplateArgs().asArray()) {
+    if (errors.has_value()) break;
+    errors = CheckTemplateArgInstantiable(arg);
+  }
+
+  if (!errors.has_value()) {
+    // `Sema::isCompleteType` will try to instantiate the class template as a
+    // side-effect and we rely on this here. `decl->getDefinition()` can
+    // return nullptr before the call to sema and return its definition
+    // afterwards.
+    // Note: Here we instantiate class template specialization eagerly: its
+    // usages in headers may not require the class template specialization to be
+    // instantiated (and hence it may not be instantiable), but we attempt
+    // instantiation here. So we may attempt non-instantiable template, which
+    // would cause the diagnostic stream to contain error, which would case
+    // clang::tooling::runToolOnCodeWithArgs to return an error status. To avoid
+    // erroring out, we temporarily use our own implementation of
+    // DiagnosticConsumer here.
+    crubit::RecordingDiagnosticConsumer diagnostic_recorder =
+        crubit::RecordDiagnosticsAndMarkFailedInstantiations(*this, [&] {
+          // Attempt to instantiate.
+          (void)sema_.isCompleteType(
+              specialization_decl->getLocation(),
+              ctx_.getCanonicalTagType(specialization_decl));
+        });
+    if (diagnostic_recorder.getNumErrors() != 0) {
+      errors = diagnostic_recorder.ConcatenatedDiagnostics();
+    }
+  }
+
+  // Note: no iterator from the lookup above can be reused here, because the
+  // recursive calls and the instantiation attempt may have inserted into
+  // `instantiation_attempts_`.
+  instantiation_attempts_.insert_or_assign(key, errors);
+  return errors;
+}
+
 CcType Importer::ConvertTemplateSpecializationType(
     const clang::TemplateSpecializationType& type, bool assume_lifetimes) {
   // Qualifiers are handled separately in TypeMapper::ConvertQualType().
@@ -2126,30 +2259,13 @@ CcType Importer::ConvertTemplateSpecializationType(
     return WithAsWrittenTemplateArgs(ConvertTypeDecl(specialization_decl), type,
                                      assume_lifetimes);
 
-  // `Sema::isCompleteType` will try to instantiate the class template as a
-  // side-effect and we rely on this here. `decl->getDefinition()` can
-  // return nullptr before the call to sema and return its definition
-  // afterwards.
-  // Note: Here we instantiate class template specialization eagerly: its
-  // usages in headers may not require the class template specialization to be
-  // instantiated (and hence it may not be instantiable), but we attempt
-  // instantiation here. So we may attempt non-instantiable template, which
-  // would cause the diagnostic stream to contain error, which would case
-  // clang::tooling::runToolOnCodeWithArgs to return an error status. To avoid
-  // erroring out, we temporarily use our own implementation of
-  // DiagnosticConsumer here.
-  crubit::RecordingDiagnosticConsumer diagnostic_recorder =
-      crubit::RecordDiagnostics(sema_.getDiagnostics(), [&] {
-        // Attempt to instantiate.
-        (void)sema_.isCompleteType(
-            specialization_decl->getLocation(),
-            ctx_.getCanonicalTagType(specialization_decl));
-      });
-  if (diagnostic_recorder.getNumErrors() != 0) {
+  if (std::optional<std::string> instantiation_errors =
+          CheckSpecializationInstantiable(specialization_decl);
+      instantiation_errors.has_value()) {
     return CcType(FormattedError::Substitute(
         "Failed to complete template specialization type $0: Diagnostics "
         "emitted:\n$1",
-        type_string, diagnostic_recorder.ConcatenatedDiagnostics()));
+        type_string, *instantiation_errors));
   }
 
   // TODO(lukasza): Limit specialization depth? (e.g. using
@@ -2831,6 +2947,21 @@ bool Importer::HasBeenAlreadySuccessfullyImported(
     const clang::NamedDecl& decl) const {
   return known_type_decls_.contains(
       clang::cast<clang::NamedDecl>(CanonicalizeDecl(decl)));
+}
+
+void Importer::MarkAsInvalidTemplateSpecialization(
+    const clang::ClassTemplateSpecializationDecl& decl, std::string reason) {
+  // Overwrites an earlier recorded success: that just means the failure was
+  // observed by someone other than `CheckSpecializationInstantiable`.
+  instantiation_attempts_.insert_or_assign(decl.getCanonicalDecl(),
+                                           std::move(reason));
+}
+
+bool Importer::IsInvalidTemplateSpecialization(
+    const clang::CXXRecordDecl& decl) const {
+  if (decl.isInvalidDecl()) return true;
+  auto it = instantiation_attempts_.find(decl.getCanonicalDecl());
+  return it != instantiation_attempts_.end() && it->second.has_value();
 }
 
 clang::TypedefNameDecl* absl_nullable Importer::GetTemplateSpecializationAlias(

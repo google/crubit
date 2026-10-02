@@ -423,6 +423,23 @@ class ImportContext {
   virtual bool HasBeenAlreadySuccessfullyImported(
       const clang::NamedDecl& decl) const = 0;
 
+  // Records that `decl` failed to instantiate, with `reason` describing why.
+  // Subsequent attempts to use `decl`, or any specialization that names it as
+  // a template argument, are rejected.
+  //
+  // This exists because Clang reports the errors of a failed instantiation only
+  // once, and afterwards leaves `decl` complete, and usually not marked
+  // invalid. Whoever observes the failure must therefore record it here.
+  virtual void MarkAsInvalidTemplateSpecialization(
+      const clang::ClassTemplateSpecializationDecl& decl,
+      std::string reason) = 0;
+
+  // Returns whether `decl` is invalid: either marked invalid by Clang, or
+  // recorded as having failed to instantiate. See
+  // MarkAsInvalidTemplateSpecialization.
+  virtual bool IsInvalidTemplateSpecialization(
+      const clang::CXXRecordDecl& decl) const = 0;
+
   // Returns whether the `decl` will be successfully imported. If it hasn't been
   // imported yet, attempts to import it now, calling
   // MarkAsSuccessfullyImported.
