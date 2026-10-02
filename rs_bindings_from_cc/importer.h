@@ -94,6 +94,8 @@ class Importer final : public ImportContext {
       const clang::TranslationUnitDecl& decl) override;
   std::vector<ItemId> GetItemIdsInSourceOrder(
       clang::Decl* absl_nonnull decl) override;
+  std::vector<ItemId> ImportInheritedFriendOperators(
+      clang::CXXRecordDecl* absl_nonnull record_decl) override;
   std::string GetMangledName(const clang::NamedDecl& named_decl) const override;
   std::optional<ir_proto::UnsupportedItem::Path>
   GetUnsupportedItemPathForTemplateDecl(
@@ -306,6 +308,12 @@ class Importer final : public ImportContext {
   // spelled directly in the decl currently being imported (i.e. not via a
   // typedef). Set by `ImportDecl`.
   clang::FileID governing_file_;
+
+  // The inherited friend operator that is currently being imported by
+  // `ImportInheritedFriendOperators`, if any. `GetOwningTarget` attributes it
+  // to the current target, because it is imported as if it were a hidden
+  // friend of a record from the current target.
+  const clang::FunctionDecl* absl_nullable inherited_friend_operator_ = nullptr;
 };  // class Importer
 
 }  // namespace crubit

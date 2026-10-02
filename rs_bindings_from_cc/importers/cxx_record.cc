@@ -1444,6 +1444,15 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
       record_decl->isEffectivelyFinal() || record_decl->isUnion();
 
   auto item_ids = ictx_.GetItemIdsInSourceOrder(record_decl);
+  // Hidden friends of base classes are found by ADL, too. Import operators
+  // defined this way (e.g. by CRTP mixins) as if they were hidden friends of
+  // this record.
+  if (owning_target == ictx_.invocation_.target_) {
+    std::vector<ItemId> inherited_operator_ids =
+        ictx_.ImportInheritedFriendOperators(record_decl);
+    item_ids.insert(item_ids.end(), inherited_operator_ids.begin(),
+                    inherited_operator_ids.end());
+  }
   const clang::TypedefNameDecl* anon_typedef =
       record_decl->getTypedefNameForAnonDecl();
 

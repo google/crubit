@@ -105,6 +105,10 @@ flagset::flags! {
 
         /// Disable ImplCxxExternType.
         NoImplCxxExternType,
+
+        /// Generate bindings for operators that are hidden friends of base classes (e.g. defined by
+        /// CRTP mixins), as if they were hidden friends of the derived class.
+        InheritedFriendOperators,
     }
 }
 
@@ -145,6 +149,7 @@ impl CrubitFeature {
             Self::NonnullSmartPointers => "nonnull_smart_pointers",
             Self::ImplCxxExternType => "impl_cxx_extern_type",
             Self::NoImplCxxExternType => "no_impl_cxx_extern_type",
+            Self::InheritedFriendOperators => "inherited_friend_operators",
         }
     }
 
@@ -188,6 +193,9 @@ impl CrubitFeature {
             Self::NonnullSmartPointers => "//features:nonnull_smart_pointers",
             Self::ImplCxxExternType => "//features:impl_cxx_extern_type",
             Self::NoImplCxxExternType => "//features:no_impl_cxx_extern_type",
+            Self::InheritedFriendOperators => {
+                "//features:inherited_friend_operators"
+            }
         }
     }
 }
@@ -243,6 +251,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"nonnull_smart_pointers" => CrubitFeature::NonnullSmartPointers.into(),
         b"impl_cxx_extern_type" => CrubitFeature::ImplCxxExternType.into(),
         b"no_impl_cxx_extern_type" => CrubitFeature::NoImplCxxExternType.into(),
+        b"inherited_friend_operators" => CrubitFeature::InheritedFriendOperators.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -411,6 +420,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
+                | CrubitFeature::InheritedFriendOperators
         );
     }
 
@@ -453,6 +463,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
+                | CrubitFeature::InheritedFriendOperators
         );
     }
 
@@ -477,6 +488,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
+                | CrubitFeature::InheritedFriendOperators
         );
     }
 
@@ -502,6 +514,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
+                | CrubitFeature::InheritedFriendOperators
         );
     }
 
@@ -527,6 +540,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
+                | CrubitFeature::InheritedFriendOperators
         );
     }
 
@@ -552,6 +566,7 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
+                | CrubitFeature::InheritedFriendOperators
         );
     }
 }

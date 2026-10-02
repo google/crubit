@@ -69,6 +69,31 @@ C++ API     | Rust bindings
 `operator-` | `Neg`
 `operator!` | `Not`
 
+### Operators inherited from base classes
+
+C++ operators are sometimes defined as "hidden friends" of a base class, for
+example by a CRTP mixin which implements comparison operators for the derived
+class:
+
+```c++
+template <typename T>
+struct EqualityMixin {
+  friend bool operator==(const T& lhs, const T& rhs) { ... }
+};
+
+struct S final : EqualityMixin<S> { ... };
+```
+
+Argument-dependent lookup finds such operators for `S`, even though `S` doesn't
+declare them itself. To map them into Rust traits as well (e.g. `PartialEq` for
+`S`), enable the `inherited_friend_operators` Crubit feature
+on
+the target that defines `S`. Only operators whose first parameter is (a
+reference to) `S` are mapped.
+
+This is opt-in, because the generated trait implementations conflict with any
+existing manual implementations of the same traits.
+
 ## One-way map into `Display`
 
 By default: for a C++ type `T`, Crubit maps one-way the following C++ signatures

@@ -4,7 +4,7 @@
 #![cfg(test)]
 
 use arc_anyhow::Result;
-use googletest::matchers::{eq, pat, some};
+use googletest::matchers::{contains, eq, is_empty, pat, some};
 use googletest::{expect_eq, expect_that, fail, gtest, OrFail};
 use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
@@ -83,6 +83,17 @@ fn ir_proto_from_record_impl_debug_cc(header: &str) -> Result<IRProto> {
         header,
         "// empty header",
         Some("record_impl_debug"),
+        /* kythe_annotations= */ false,
+        /* carcinize= */ false,
+    )
+}
+
+fn ir_proto_from_inherited_friend_operators_cc(header: &str, dep_header: &str) -> Result<IRProto> {
+    ir_testing::ir_proto_from_cc_dependency(
+        multiplatform_testing::test_platform(),
+        header,
+        dep_header,
+        Some("inherited_friend_operators"),
         /* kythe_annotations= */ false,
         /* carcinize= */ false,
     )
@@ -5427,6 +5438,56 @@ fn test_friend() {
             Func { ... rs_name: "VisibleByADL", ... adl_enclosing_record: Some(...) ... } ...
         }
     );
+}
+
+/// A CRTP mixin in `DEPENDENCY_TARGET` that defines `operator==` for the derived class as a hidden
+/// friend.
+const EQUALITY_MIXIN_SRC: &str = r#"
+    template <typename T>
+    struct EqualityMixin {
+      friend bool operator==(const T& lhs, const T& rhs) { return lhs.value == rhs.value; }
+    };"#;
+
+/// A record in `TESTING_TARGET` that inherits `operator==` from `EqualityMixin`.
+const INHERITS_EQUALITY_SRC: &str = r#"
+    namespace ns {
+    struct S final : EqualityMixin<S> { int value; };
+    }  // namespace ns"#;
+
+fn eq_operators<'a, 'pb>(ir: &'a IR<'pb>) -> Vec<&'a Rc<Func<'pb>>> {
+    ir.functions()
+        .filter(|f| matches!(f.rs_name(), UnqualifiedIdentifier::Operator(op) if op.name() == "=="))
+        .collect()
+}
+
+#[gtest]
+fn test_inherited_friend_operator() -> Result<()> {
+    let proto =
+        ir_proto_from_inherited_friend_operators_cc(INHERITS_EQUALITY_SRC, EQUALITY_MIXIN_SRC)?;
+    let ir = ir_testing::make_test_ir_dependency(&proto, Some("inherited_friend_operators"))?;
+    let record = retrieve_record(&ir, "S");
+
+    let operators = eq_operators(&ir);
+    assert_eq!(operators.len(), 1);
+    let operator = operators[0];
+    let operator_id = operator.id();
+    // The operator is imported as if it were a hidden friend of `S`.
+    expect_eq!(operator.owning_target(), Some(BazelLabel::from(TESTING_TARGET)));
+    expect_eq!(operator.adl_enclosing_record(), Some(record.id()));
+    expect_eq!(operator.enclosing_item_id(), record.enclosing_item_id());
+    expect_that!(
+        record.children().iter().map(|child| child.id()).collect_vec(),
+        contains(eq(&operator_id))
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_inherited_friend_operator_requires_feature() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(INHERITS_EQUALITY_SRC, EQUALITY_MIXIN_SRC)?;
+    let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
+    expect_that!(eq_operators(&ir), is_empty());
+    Ok(())
 }
 
 fn generate_member_func_with_visibility(record_type: &str, visibility: &str) -> String {
