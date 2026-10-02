@@ -64,5 +64,12 @@ TEST(ComposableBridging, NestedRefs) {
   EXPECT_EQ(x, 6);
 }
 
+TEST(ComposableBridging, OptionDecodeDoesNotLeakCloneOnlyType) {
+  std::optional<composable_bridging::CountLiveClones> opt =
+      composable_bridging::bridge_count_live_clones();
+  ASSERT_TRUE(opt.has_value());
+  EXPECT_EQ(opt->count_live_clones(), 1);
+}
+
 }  // namespace
 }  // namespace crubit
