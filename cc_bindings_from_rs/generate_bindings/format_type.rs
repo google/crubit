@@ -355,26 +355,9 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
     // it means its C++ move constructor is unconditionally available (e.g. pointer/heap
     // wrappers like `std::unique_ptr<T>` and `std::vector<T>` only transfer internal
     // pointers upon move and never invoke `{T}`'s move constructor).
-    //
-    // NOTE: We also check for standard pointer/heap wrappers (`unique_ptr`, `shared_ptr`,
-    // `vector`) as a temporary fallback until the compiler rollout containing
-    // `cpp_move_constructible` reaches stable Crosstool, at which point `support/cc_std_impl`
-    // can be annotated directly without breaking the stable compiler on targets using `cc_std`.
-    //
-    // TODO(b/545883191): When `cpp_move_constructible` is in crosstool stable clean these up and
-    // annotate the types in `support/cc_std_impl` directly.
     let is_unconditionally_cpp_movable = crubit_attr::get_attrs(tcx, adt.did())
         .map(|attrs| attrs.cpp_move_constructible)
-        .unwrap_or(false)
-        || cpp_type_str.contains("unique_ptr")
-        || cpp_type_str.contains("shared_ptr")
-        || cpp_type_str.contains("vector")
-        // Unlike the three above, `NonNull<Ptr>` is *not* unconditionally movable: in C++ it is
-        // spelled as `Ptr` plus an attribute, so its movability is exactly `Ptr`'s. Exempting it
-        // is only sound because the check it suppresses would itself wrongly fail, as `Ptr` is
-        // always a `cc_std_impl` smart pointer that cannot carry `cpp_move_constructible` yet.
-        // Both halves of that go away together.
-        || cpp_type_str.contains("crubit_nonnull");
+        .unwrap_or(false);
     let is_passed_by_value = matches!(
         location,
         TypeLocation::FnReturn { is_constructor: false }

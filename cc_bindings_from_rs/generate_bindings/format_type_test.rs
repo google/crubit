@@ -866,11 +866,13 @@ fn unique_ptr_preamble() -> TokenStream {
                 #[allow(non_camel_case_types)]
                 #[doc="CRUBIT_ANNOTATE: cpp_type = ::std::unique_ptr<{T}>"]
                 #[doc="CRUBIT_ANNOTATE: include_path = <memory>"]
+                #[doc="CRUBIT_ANNOTATE: cpp_move_constructible = "]
                 pub struct unique_ptr<T>(pub *mut T);
 
                 #[allow(non_camel_case_types)]
                 #[doc="CRUBIT_ANNOTATE: cpp_type = ::std::unique_ptr<{T}>"]
                 #[doc="CRUBIT_ANNOTATE: include_path = <memory>"]
+                #[doc="CRUBIT_ANNOTATE: cpp_move_constructible = "]
                 pub struct virtual_unique_ptr<T: crate::operator::Delete>(pub *mut T);
 
                 #[doc="CRUBIT_ANNOTATE: cpp_type = {Ptr} crubit_nonnull"]
