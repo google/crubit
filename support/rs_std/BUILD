@@ -82,15 +82,6 @@ crubit_cc_test(
 )
 
 cc_library(
-    name = "cpp_waker",
-    srcs = ["cpp_waker.cc"],
-    hdrs = ["cpp_waker.h"],
-    aspect_hints = ["//features:supported"],
-    compatible_with = ["//buildenv/target:non_prod"],
-    visibility = ["//visibility:public"],
-)
-
-cc_library(
     name = "waker",
     srcs = ["waker.cc"],
     hdrs = ["waker.h"],
