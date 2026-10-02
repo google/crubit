@@ -695,6 +695,53 @@ fn test_struct_with_packed_field() {
     );
 }
 
+/// This is a regression test for b/566312895: `#pragma pack(N)` attaches a
+/// `MaxFieldAlignmentAttr` rather than a `PackedAttr`.
+#[gtest]
+fn test_struct_with_pragma_pack() {
+    let proto = ir_proto_from_cc(
+        r#"
+        #pragma pack(push, 4)
+        struct PackedStruct {
+          int int_var;
+          long long long_long_var;
+        };
+        #pragma pack(pop)"#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "PackedStruct", ...
+            errors: [FormattedError {
+                ... message: "Records with packed layout are not supported", ...
+            }], ...
+        }}
+    );
+}
+
+/// A `#pragma pack(N)` that doesn't lower the alignment of any field doesn't
+/// affect the layout, so the record is still supported.
+#[gtest]
+fn test_struct_with_noop_pragma_pack() {
+    let proto = ir_proto_from_cc(
+        r#"
+        #pragma pack(push, 8)
+        struct MyStruct {
+          int int_var;
+        };
+        #pragma pack(pop)"#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
+}
+
 #[gtest]
 fn test_struct_with_unnamed_bitfield_member() {
     // This test input causes `field_decl->getName()` to return an empty string.
