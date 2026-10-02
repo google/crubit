@@ -63,10 +63,6 @@ pub struct ExistingRustTypeFieldTypes {
 }
 impl !Send for ExistingRustTypeFieldTypes {}
 impl !Sync for ExistingRustTypeFieldTypes {}
-unsafe impl ::cxx::ExternType for ExistingRustTypeFieldTypes {
-    type Id = ::cxx::type_id!("ExistingRustTypeFieldTypes");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for ExistingRustTypeFieldTypes {
     #[inline(always)]
@@ -150,10 +146,6 @@ pub struct NonRustMovable {
 }
 impl !Send for NonRustMovable {}
 impl !Sync for NonRustMovable {}
-unsafe impl ::cxx::ExternType for NonRustMovable {
-    type Id = ::cxx::type_id!("NonRustMovable");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for NonRustMovable {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;

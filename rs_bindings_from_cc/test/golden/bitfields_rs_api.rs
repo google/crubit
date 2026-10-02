@@ -38,10 +38,6 @@ pub struct WithBitfields {
 }
 impl !Send for WithBitfields {}
 impl !Sync for WithBitfields {}
-unsafe impl ::cxx::ExternType for WithBitfields {
-    type Id = ::cxx::type_id!("WithBitfields");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for WithBitfields {
     #[inline(always)]
@@ -74,10 +70,6 @@ pub struct AlignmentRegressionTest {
 }
 impl !Send for AlignmentRegressionTest {}
 impl !Sync for AlignmentRegressionTest {}
-unsafe impl ::cxx::ExternType for AlignmentRegressionTest {
-    type Id = ::cxx::type_id!("AlignmentRegressionTest");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for AlignmentRegressionTest {
     #[inline(always)]

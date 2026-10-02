@@ -27,10 +27,6 @@ pub struct Base0 {
 }
 impl !Send for Base0 {}
 impl !Sync for Base0 {}
-unsafe impl ::cxx::ExternType for Base0 {
-    type Id = ::cxx::type_id!("Base0");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Base0 {
     #[inline(always)]
@@ -59,10 +55,6 @@ pub struct Base1 {
 }
 impl !Send for Base1 {}
 impl !Sync for Base1 {}
-unsafe impl ::cxx::ExternType for Base1 {
-    type Id = ::cxx::type_id!("Base1");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Base1 {
     #[inline(always)]
@@ -88,10 +80,6 @@ pub struct Base2 {
 }
 impl !Send for Base2 {}
 impl !Sync for Base2 {}
-unsafe impl ::cxx::ExternType for Base2 {
-    type Id = ::cxx::type_id!("Base2");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Base2 {
     #[inline(always)]
@@ -115,10 +103,6 @@ pub struct Derived {
 }
 impl !Send for Derived {}
 impl !Sync for Derived {}
-unsafe impl ::cxx::ExternType for Derived {
-    type Id = ::cxx::type_id!("Derived");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Derived {
     #[inline(always)]
@@ -141,10 +125,6 @@ pub struct VirtualBase1 {
 }
 impl !Send for VirtualBase1 {}
 impl !Sync for VirtualBase1 {}
-unsafe impl ::cxx::ExternType for VirtualBase1 {
-    type Id = ::cxx::type_id!("VirtualBase1");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<()> for VirtualBase1 {
     type CtorType = ::ctor::Ctor![Self];
@@ -245,10 +225,6 @@ pub struct VirtualBase2 {
 }
 impl !Send for VirtualBase2 {}
 impl !Sync for VirtualBase2 {}
-unsafe impl ::cxx::ExternType for VirtualBase2 {
-    type Id = ::cxx::type_id!("VirtualBase2");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<()> for VirtualBase2 {
     type CtorType = ::ctor::Ctor![Self];
@@ -349,10 +325,6 @@ pub struct VirtualDerived {
 }
 impl !Send for VirtualDerived {}
 impl !Sync for VirtualDerived {}
-unsafe impl ::cxx::ExternType for VirtualDerived {
-    type Id = ::cxx::type_id!("VirtualDerived");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<()> for VirtualDerived {
     type CtorType = ::ctor::Ctor![Self];
@@ -454,10 +426,6 @@ pub struct MyAbstractClass {
 }
 impl !Send for MyAbstractClass {}
 impl !Sync for MyAbstractClass {}
-unsafe impl ::cxx::ExternType for MyAbstractClass {
-    type Id = ::cxx::type_id!("MyAbstractClass");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 // error: constructor `MyAbstractClass::MyAbstractClass` could not be bound
 //   `MyAbstractClass` can't be used by-value because it has a non-public or deleted destructor
@@ -485,10 +453,6 @@ pub struct MethodBase1 {
 }
 impl !Send for MethodBase1 {}
 impl !Sync for MethodBase1 {}
-unsafe impl ::cxx::ExternType for MethodBase1 {
-    type Id = ::cxx::type_id!("MethodBase1");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl MethodBase1 {
     #[inline(always)]
     pub fn Public<'__this>(&'__this mut self) {
@@ -559,10 +523,6 @@ pub struct MethodBase2 {
 }
 impl !Send for MethodBase2 {}
 impl !Sync for MethodBase2 {}
-unsafe impl ::cxx::ExternType for MethodBase2 {
-    type Id = ::cxx::type_id!("MethodBase2");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl MethodBase2 {
     #[inline(always)]
     pub fn Colliding1<'__this>(&'__this mut self) {
@@ -606,10 +566,6 @@ pub struct MethodDerived {
 }
 impl !Send for MethodDerived {}
 impl !Sync for MethodDerived {}
-unsafe impl ::cxx::ExternType for MethodDerived {
-    type Id = ::cxx::type_id!("MethodDerived");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for MethodDerived {
     #[inline(always)]

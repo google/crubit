@@ -26,10 +26,6 @@ pub mod crubit {
         }
         impl !Send for ItemUnpin {}
         impl !Sync for ItemUnpin {}
-        unsafe impl ::cxx::ExternType for ItemUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ItemUnpin");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for ItemUnpin {
             #[inline(always)]
@@ -53,10 +49,6 @@ pub mod crubit {
         }
         impl !Send for ItemNonUnpin {}
         impl !Sync for ItemNonUnpin {}
-        unsafe impl ::cxx::ExternType for ItemNonUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ItemNonUnpin");
-            type Kind = ::cxx::kind::Opaque;
-        }
 
         impl ::ctor::CtorNew<()> for ItemNonUnpin {
             type CtorType = ::ctor::Ctor![Self];
@@ -136,10 +128,6 @@ pub mod crubit {
         }
         impl !Send for ContainerUnpinItemUnpin {}
         impl !Sync for ContainerUnpinItemUnpin {}
-        unsafe impl ::cxx::ExternType for ContainerUnpinItemUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerUnpinItemUnpin");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for ContainerUnpinItemUnpin {
             #[inline(always)]
@@ -215,10 +203,6 @@ pub mod crubit {
         }
         impl !Send for ContainerUnpinItemNonUnpin {}
         impl !Sync for ContainerUnpinItemNonUnpin {}
-        unsafe impl ::cxx::ExternType for ContainerUnpinItemNonUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerUnpinItemNonUnpin");
-            type Kind = ::cxx::kind::Opaque;
-        }
 
         impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for ContainerUnpinItemNonUnpin {
             type CtorType =
@@ -400,10 +384,6 @@ pub mod crubit {
         }
         impl !Send for ContainerNonUnpinItemUnpin {}
         impl !Sync for ContainerNonUnpinItemUnpin {}
-        unsafe impl ::cxx::ExternType for ContainerNonUnpinItemUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerNonUnpinItemUnpin");
-            type Kind = ::cxx::kind::Opaque;
-        }
 
         impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for ContainerNonUnpinItemUnpin {
             type CtorType =
@@ -523,10 +503,6 @@ pub mod crubit {
         }
         impl !Send for ContainerNonUnpinItemNonUnpin {}
         impl !Sync for ContainerNonUnpinItemNonUnpin {}
-        unsafe impl ::cxx::ExternType for ContainerNonUnpinItemNonUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerNonUnpinItemNonUnpin");
-            type Kind = ::cxx::kind::Opaque;
-        }
 
         impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for ContainerNonUnpinItemNonUnpin {
             type CtorType =
@@ -636,10 +612,6 @@ pub mod crubit {
         }
         impl !Send for ContainerValue {}
         impl !Sync for ContainerValue {}
-        unsafe impl ::cxx::ExternType for ContainerValue {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerValue");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for ContainerValue {
             #[inline(always)]
@@ -668,10 +640,6 @@ pub mod crubit {
         }
         impl !Send for ContainerRvalue {}
         impl !Sync for ContainerRvalue {}
-        unsafe impl ::cxx::ExternType for ContainerRvalue {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerRvalue");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for ContainerRvalue {
             #[inline(always)]
@@ -703,10 +671,6 @@ pub mod crubit {
         }
         impl !Send for ContainerMutRefFromConst {}
         impl !Sync for ContainerMutRefFromConst {}
-        unsafe impl ::cxx::ExternType for ContainerMutRefFromConst {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerMutRefFromConst");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for ContainerMutRefFromConst {
             #[inline(always)]
@@ -737,10 +701,6 @@ pub mod crubit {
         }
         impl !Send for ContainerConstRefFromMut {}
         impl !Sync for ContainerConstRefFromMut {}
-        unsafe impl ::cxx::ExternType for ContainerConstRefFromMut {
-            type Id = ::cxx::type_id!("crubit :: test :: ContainerConstRefFromMut");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for ContainerConstRefFromMut {
             #[inline(always)]

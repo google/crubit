@@ -25,10 +25,6 @@ pub struct Nontrivial {
 }
 impl !Send for Nontrivial {}
 impl !Sync for Nontrivial {}
-unsafe impl ::cxx::ExternType for Nontrivial {
-    type Id = ::cxx::type_id!("Nontrivial");
-    type Kind = ::cxx::kind::Opaque;
-}
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
 impl ::ctor::CtorNew<::ffi_11::c_int> for Nontrivial {

@@ -23,10 +23,6 @@ pub struct PolymorphicBase {
 }
 impl !Send for PolymorphicBase {}
 impl !Sync for PolymorphicBase {}
-unsafe impl ::cxx::ExternType for PolymorphicBase {
-    type Id = ::cxx::type_id!("PolymorphicBase");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<()> for PolymorphicBase {
     type CtorType = ::ctor::Ctor![Self];
@@ -104,10 +100,6 @@ pub struct PolymorphicBase2 {
 }
 impl !Send for PolymorphicBase2 {}
 impl !Sync for PolymorphicBase2 {}
-unsafe impl ::cxx::ExternType for PolymorphicBase2 {
-    type Id = ::cxx::type_id!("PolymorphicBase2");
-    type Kind = ::cxx::kind::Opaque;
-}
 impl PolymorphicBase2 {
     #[inline(always)]
     pub fn Foo<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
@@ -199,10 +191,6 @@ pub struct PolymorphicDerived {
 }
 impl !Send for PolymorphicDerived {}
 impl !Sync for PolymorphicDerived {}
-unsafe impl ::cxx::ExternType for PolymorphicDerived {
-    type Id = ::cxx::type_id!("PolymorphicDerived");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<()> for PolymorphicDerived {
     type CtorType = ::ctor::Ctor![Self];

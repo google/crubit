@@ -37,10 +37,6 @@ pub struct NormalClass {
 }
 impl !Send for NormalClass {}
 impl !Sync for NormalClass {}
-unsafe impl ::cxx::ExternType for NormalClass {
-    type Id = ::cxx::type_id!("NormalClass");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for NormalClass {
     #[inline(always)]

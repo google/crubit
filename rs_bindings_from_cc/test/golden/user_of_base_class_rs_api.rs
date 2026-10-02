@@ -30,10 +30,6 @@ pub struct Derived2 {
 }
 impl !Send for Derived2 {}
 impl !Sync for Derived2 {}
-unsafe impl ::cxx::ExternType for Derived2 {
-    type Id = ::cxx::type_id!("Derived2");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<()> for Derived2 {
     type CtorType = ::ctor::Ctor![Self];
@@ -134,10 +130,6 @@ pub struct VirtualDerived2 {
 }
 impl !Send for VirtualDerived2 {}
 impl !Sync for VirtualDerived2 {}
-unsafe impl ::cxx::ExternType for VirtualDerived2 {
-    type Id = ::cxx::type_id!("VirtualDerived2");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<()> for VirtualDerived2 {
     type CtorType = ::ctor::Ctor![Self];

@@ -26,10 +26,6 @@ pub mod crubit {
         }
         impl !Send for ArgumentToBoundOverload {}
         impl !Sync for ArgumentToBoundOverload {}
-        unsafe impl ::cxx::ExternType for ArgumentToBoundOverload {
-            type Id = ::cxx::type_id!("crubit :: test :: ArgumentToBoundOverload");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for ArgumentToBoundOverload {
             #[inline(always)]
@@ -54,10 +50,6 @@ pub mod crubit {
         }
         impl !Send for ArgumentToUnboundOverload {}
         impl !Sync for ArgumentToUnboundOverload {}
-        unsafe impl ::cxx::ExternType for ArgumentToUnboundOverload {
-            type Id = ::cxx::type_id!("crubit :: test :: ArgumentToUnboundOverload");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for ArgumentToUnboundOverload {
             #[inline(always)]
@@ -93,10 +85,6 @@ pub mod crubit {
         }
         impl !Send for StructWithDoNotBindConstructor {}
         impl !Sync for StructWithDoNotBindConstructor {}
-        unsafe impl ::cxx::ExternType for StructWithDoNotBindConstructor {
-            type Id = ::cxx::type_id!("crubit :: test :: StructWithDoNotBindConstructor");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl From<crate::crubit::test::ArgumentToBoundOverload> for StructWithDoNotBindConstructor {
             #[inline(always)]
@@ -131,10 +119,6 @@ pub mod crubit {
         }
         impl !Send for StructWithDoNotBindMethod {}
         impl !Sync for StructWithDoNotBindMethod {}
-        unsafe impl ::cxx::ExternType for StructWithDoNotBindMethod {
-            type Id = ::cxx::type_id!("crubit :: test :: StructWithDoNotBindMethod");
-            type Kind = ::cxx::kind::Trivial;
-        }
         impl StructWithDoNotBindMethod {
             /// # Safety
             ///

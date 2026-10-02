@@ -25,10 +25,6 @@ pub mod foo {
     }
     impl !Send for Bar {}
     impl !Sync for Bar {}
-    unsafe impl ::cxx::ExternType for Bar {
-        type Id = ::cxx::type_id!("foo :: Bar");
-        type Kind = ::cxx::kind::Trivial;
-    }
     impl Bar {
         #[inline(always)]
         pub fn MyMethod<'__this>(&'__this mut self) {

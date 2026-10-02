@@ -24,10 +24,6 @@ pub struct SomeStruct {
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}
-unsafe impl ::cxx::ExternType for SomeStruct {
-    type Id = ::cxx::type_id!("SomeStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for SomeStruct {
     #[inline(always)]
@@ -54,10 +50,6 @@ pub struct SomeOtherStruct {
 }
 impl !Send for SomeOtherStruct {}
 impl !Sync for SomeOtherStruct {}
-unsafe impl ::cxx::ExternType for SomeOtherStruct {
-    type Id = ::cxx::type_id!("SomeOtherStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for SomeOtherStruct {
     #[inline(always)]
@@ -84,10 +76,6 @@ pub union SomeUnion {
 }
 impl !Send for SomeUnion {}
 impl !Sync for SomeUnion {}
-unsafe impl ::cxx::ExternType for SomeUnion {
-    type Id = ::cxx::type_id!("SomeUnion");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for SomeUnion {
     #[inline(always)]
@@ -114,10 +102,6 @@ pub union SomeOtherUnion {
 }
 impl !Send for SomeOtherUnion {}
 impl !Sync for SomeOtherUnion {}
-unsafe impl ::cxx::ExternType for SomeOtherUnion {
-    type Id = ::cxx::type_id!("SomeOtherUnion");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for SomeOtherUnion {
     #[inline(always)]

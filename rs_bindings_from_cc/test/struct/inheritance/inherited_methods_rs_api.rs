@@ -23,10 +23,6 @@ pub struct Nonmovable {
 }
 impl !Send for Nonmovable {}
 impl !Sync for Nonmovable {}
-unsafe impl ::cxx::ExternType for Nonmovable {
-    type Id = ::cxx::type_id!("Nonmovable");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl ::ctor::CtorNew<()> for Nonmovable {
     type CtorType = ::ctor::Ctor![Self];
@@ -54,10 +50,6 @@ pub struct Base {
 }
 impl !Send for Base {}
 impl !Sync for Base {}
-unsafe impl ::cxx::ExternType for Base {
-    type Id = ::cxx::type_id!("Base");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl Base {
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {
@@ -199,10 +191,6 @@ pub struct Derived {
 }
 impl !Send for Derived {}
 impl !Sync for Derived {}
-unsafe impl ::cxx::ExternType for Derived {
-    type Id = ::cxx::type_id!("Derived");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl Derived {
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {

@@ -24,10 +24,6 @@ pub struct r#type {
 }
 impl !Send for r#type {}
 impl !Sync for r#type {}
-unsafe impl ::cxx::ExternType for r#type {
-    type Id = ::cxx::type_id!("type");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for r#type {
     #[inline(always)]

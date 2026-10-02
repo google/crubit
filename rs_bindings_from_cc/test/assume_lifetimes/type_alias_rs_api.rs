@@ -23,10 +23,6 @@ pub struct TypeAliasCtor {
 }
 impl !Send for TypeAliasCtor {}
 impl !Sync for TypeAliasCtor {}
-unsafe impl ::cxx::ExternType for TypeAliasCtor {
-    type Id = ::cxx::type_id!("TypeAliasCtor");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for TypeAliasCtor {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;

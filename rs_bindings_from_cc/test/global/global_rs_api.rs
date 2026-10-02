@@ -97,10 +97,6 @@ pub struct StructWithAnonEnum {
 }
 impl !Send for StructWithAnonEnum {}
 impl !Sync for StructWithAnonEnum {}
-unsafe impl ::cxx::ExternType for StructWithAnonEnum {
-    type Id = ::cxx::type_id!("StructWithAnonEnum");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for StructWithAnonEnum {
     #[inline(always)]

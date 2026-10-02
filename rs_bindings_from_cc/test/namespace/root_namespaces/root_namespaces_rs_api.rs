@@ -26,10 +26,6 @@ pub mod test_namespace {
     }
     impl !Send for Foo {}
     impl !Sync for Foo {}
-    unsafe impl ::cxx::ExternType for Foo {
-        type Id = ::cxx::type_id!("test_namespace :: Foo");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Foo {
         #[inline(always)]

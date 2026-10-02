@@ -35,10 +35,6 @@ pub mod repro {
     }
     impl !Send for Interval {}
     impl !Sync for Interval {}
-    unsafe impl ::cxx::ExternType for Interval {
-        type Id = ::cxx::type_id!("repro :: Interval");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Interval {
         #[inline(always)]

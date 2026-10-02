@@ -24,10 +24,6 @@ pub struct Foo {
 }
 impl !Send for Foo {}
 impl !Sync for Foo {}
-unsafe impl ::cxx::ExternType for Foo {
-    type Id = ::cxx::type_id!("Foo");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for Foo {
     #[inline(always)]
@@ -51,10 +47,6 @@ pub mod foo {
     }
     impl !Send for Bar {}
     impl !Sync for Bar {}
-    unsafe impl ::cxx::ExternType for Bar {
-        type Id = ::cxx::type_id!("Foo :: Bar");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Bar {
         #[inline(always)]
@@ -78,10 +70,6 @@ pub mod foo {
         }
         impl !Send for Baz {}
         impl !Sync for Baz {}
-        unsafe impl ::cxx::ExternType for Baz {
-            type Id = ::cxx::type_id!("Foo :: Bar :: Baz");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for Baz {
             #[inline(always)]
@@ -106,10 +94,6 @@ pub struct already_snake_case {
 }
 impl !Send for already_snake_case {}
 impl !Sync for already_snake_case {}
-unsafe impl ::cxx::ExternType for already_snake_case {
-    type Id = ::cxx::type_id!("already_snake_case");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for already_snake_case {
     #[inline(always)]
@@ -133,10 +117,6 @@ pub mod already_snake_case_items {
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
-    unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("already_snake_case :: Inner");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Inner {
         #[inline(always)]
@@ -162,10 +142,6 @@ pub struct ConflictingSnakeCaseNames {
 }
 impl !Send for ConflictingSnakeCaseNames {}
 impl !Sync for ConflictingSnakeCaseNames {}
-unsafe impl ::cxx::ExternType for ConflictingSnakeCaseNames {
-    type Id = ::cxx::type_id!("ConflictingSnakeCaseNames");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for ConflictingSnakeCaseNames {
     #[inline(always)]
@@ -189,10 +165,6 @@ pub mod conflicting_snake_case_names {
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
-    unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("ConflictingSnakeCaseNames :: Inner");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Inner {
         #[inline(always)]
@@ -218,10 +190,6 @@ pub struct ConflictingSnakeCaseNames_ {
 }
 impl !Send for ConflictingSnakeCaseNames_ {}
 impl !Sync for ConflictingSnakeCaseNames_ {}
-unsafe impl ::cxx::ExternType for ConflictingSnakeCaseNames_ {
-    type Id = ::cxx::type_id!("ConflictingSnakeCaseNames_");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for ConflictingSnakeCaseNames_ {
     #[inline(always)]
@@ -247,10 +215,6 @@ pub mod conflicting_snake_case_names_items {
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
-    unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("ConflictingSnakeCaseNames_ :: Inner");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Inner {
         #[inline(always)]
@@ -276,10 +240,6 @@ pub struct OnlyOneHasNestedItems {
 }
 impl !Send for OnlyOneHasNestedItems {}
 impl !Sync for OnlyOneHasNestedItems {}
-unsafe impl ::cxx::ExternType for OnlyOneHasNestedItems {
-    type Id = ::cxx::type_id!("OnlyOneHasNestedItems");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for OnlyOneHasNestedItems {
     #[inline(always)]
@@ -303,10 +263,6 @@ pub mod only_one_has_nested_items {
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
-    unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("OnlyOneHasNestedItems :: Inner");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Inner {
         #[inline(always)]
@@ -332,10 +288,6 @@ pub struct OnlyOneHasNestedItems_ {
 }
 impl !Send for OnlyOneHasNestedItems_ {}
 impl !Sync for OnlyOneHasNestedItems_ {}
-unsafe impl ::cxx::ExternType for OnlyOneHasNestedItems_ {
-    type Id = ::cxx::type_id!("OnlyOneHasNestedItems_");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for OnlyOneHasNestedItems_ {
     #[inline(always)]
@@ -360,10 +312,6 @@ pub struct SameNameAsNamespace {
 }
 impl !Send for SameNameAsNamespace {}
 impl !Sync for SameNameAsNamespace {}
-unsafe impl ::cxx::ExternType for SameNameAsNamespace {
-    type Id = ::cxx::type_id!("SameNameAsNamespace");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for SameNameAsNamespace {
     #[inline(always)]
@@ -387,10 +335,6 @@ pub mod same_name_as_namespace_items {
     }
     impl !Send for Inner {}
     impl !Sync for Inner {}
-    unsafe impl ::cxx::ExternType for Inner {
-        type Id = ::cxx::type_id!("SameNameAsNamespace :: Inner");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Inner {
         #[inline(always)]
@@ -419,10 +363,6 @@ pub mod same_name_as_namespace {
     }
     impl !Send for Foo {}
     impl !Sync for Foo {}
-    unsafe impl ::cxx::ExternType for Foo {
-        type Id = ::cxx::type_id!("same_name_as_namespace :: Foo");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Foo {
         #[inline(always)]
@@ -447,10 +387,6 @@ pub mod same_name_as_namespace {
     }
     impl !Send for Bar {}
     impl !Sync for Bar {}
-    unsafe impl ::cxx::ExternType for Bar {
-        type Id = ::cxx::type_id!("same_name_as_namespace :: Bar");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Bar {
         #[inline(always)]
@@ -479,10 +415,6 @@ pub mod no_longer_top_level {
     }
     impl !Send for already_snake_case {}
     impl !Sync for already_snake_case {}
-    unsafe impl ::cxx::ExternType for already_snake_case {
-        type Id = ::cxx::type_id!("no_longer_top_level :: already_snake_case");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for already_snake_case {
         #[inline(always)]
@@ -508,10 +440,6 @@ pub mod no_longer_top_level {
         }
         impl !Send for Inner {}
         impl !Sync for Inner {}
-        unsafe impl ::cxx::ExternType for Inner {
-            type Id = ::cxx::type_id!("no_longer_top_level :: already_snake_case :: Inner");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for Inner {
             #[inline(always)]
@@ -535,10 +463,6 @@ pub mod no_longer_top_level {
     }
     impl !Send for ConflictingSnakeCaseNames {}
     impl !Sync for ConflictingSnakeCaseNames {}
-    unsafe impl ::cxx::ExternType for ConflictingSnakeCaseNames {
-        type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for ConflictingSnakeCaseNames {
         #[inline(always)]
@@ -562,10 +486,6 @@ pub mod no_longer_top_level {
         }
         impl !Send for Inner {}
         impl !Sync for Inner {}
-        unsafe impl ::cxx::ExternType for Inner {
-            type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames :: Inner");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for Inner {
             #[inline(always)]
@@ -589,10 +509,6 @@ pub mod no_longer_top_level {
     }
     impl !Send for ConflictingSnakeCaseNames_ {}
     impl !Sync for ConflictingSnakeCaseNames_ {}
-    unsafe impl ::cxx::ExternType for ConflictingSnakeCaseNames_ {
-        type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames_");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for ConflictingSnakeCaseNames_ {
         #[inline(always)]
@@ -616,10 +532,6 @@ pub mod no_longer_top_level {
         }
         impl !Send for Inner {}
         impl !Sync for Inner {}
-        unsafe impl ::cxx::ExternType for Inner {
-            type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames_ :: Inner");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for Inner {
             #[inline(always)]
@@ -643,10 +555,6 @@ pub mod no_longer_top_level {
     }
     impl !Send for OnlyOneHasNestedItems {}
     impl !Sync for OnlyOneHasNestedItems {}
-    unsafe impl ::cxx::ExternType for OnlyOneHasNestedItems {
-        type Id = ::cxx::type_id!("no_longer_top_level :: OnlyOneHasNestedItems");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for OnlyOneHasNestedItems {
         #[inline(always)]
@@ -672,10 +580,6 @@ pub mod no_longer_top_level {
         }
         impl !Send for Inner {}
         impl !Sync for Inner {}
-        unsafe impl ::cxx::ExternType for Inner {
-            type Id = ::cxx::type_id!("no_longer_top_level :: OnlyOneHasNestedItems :: Inner");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for Inner {
             #[inline(always)]
@@ -699,10 +603,6 @@ pub mod no_longer_top_level {
     }
     impl !Send for OnlyOneHasNestedItems_ {}
     impl !Sync for OnlyOneHasNestedItems_ {}
-    unsafe impl ::cxx::ExternType for OnlyOneHasNestedItems_ {
-        type Id = ::cxx::type_id!("no_longer_top_level :: OnlyOneHasNestedItems_");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for OnlyOneHasNestedItems_ {
         #[inline(always)]
@@ -729,10 +629,6 @@ pub mod no_longer_top_level {
     }
     impl !Send for SameNameAsNamespace {}
     impl !Sync for SameNameAsNamespace {}
-    unsafe impl ::cxx::ExternType for SameNameAsNamespace {
-        type Id = ::cxx::type_id!("no_longer_top_level :: SameNameAsNamespace");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for SameNameAsNamespace {
         #[inline(always)]
@@ -758,10 +654,6 @@ pub mod no_longer_top_level {
         }
         impl !Send for Inner {}
         impl !Sync for Inner {}
-        unsafe impl ::cxx::ExternType for Inner {
-            type Id = ::cxx::type_id!("no_longer_top_level :: SameNameAsNamespace :: Inner");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for Inner {
             #[inline(always)]
@@ -788,10 +680,6 @@ pub mod no_longer_top_level {
         }
         impl !Send for Foo {}
         impl !Sync for Foo {}
-        unsafe impl ::cxx::ExternType for Foo {
-            type Id = ::cxx::type_id!("no_longer_top_level :: same_name_as_namespace :: Foo");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for Foo {
             #[inline(always)]
@@ -814,10 +702,6 @@ pub mod no_longer_top_level {
         }
         impl !Send for Bar {}
         impl !Sync for Bar {}
-        unsafe impl ::cxx::ExternType for Bar {
-            type Id = ::cxx::type_id!("no_longer_top_level :: same_name_as_namespace :: Bar");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for Bar {
             #[inline(always)]
@@ -846,10 +730,6 @@ pub struct ContainsForwardDeclared {
 }
 impl !Send for ContainsForwardDeclared {}
 impl !Sync for ContainsForwardDeclared {}
-unsafe impl ::cxx::ExternType for ContainsForwardDeclared {
-    type Id = ::cxx::type_id!("ContainsForwardDeclared");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for ContainsForwardDeclared {
     #[inline(always)]
@@ -873,10 +753,6 @@ pub mod contains_forward_declared {
     }
     impl !Send for Nested {}
     impl !Sync for Nested {}
-    unsafe impl ::cxx::ExternType for Nested {
-        type Id = ::cxx::type_id!("ContainsForwardDeclared :: Nested");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for Nested {
         #[inline(always)]

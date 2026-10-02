@@ -27,10 +27,6 @@ pub struct S {
 }
 impl !Send for S {}
 impl !Sync for S {}
-unsafe impl ::cxx::ExternType for S {
-    type Id = ::cxx::type_id!("S");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl S {
     #[inline(always)]
     pub fn x<'__this>(&'__this self) -> ::ffi_11::c_int {
@@ -102,10 +98,6 @@ pub struct T {
 }
 impl !Send for T {}
 impl !Sync for T {}
-unsafe impl ::cxx::ExternType for T {
-    type Id = ::cxx::type_id!("T");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl T {
     #[inline(always)]
     pub fn y<'__this>(&'__this self) -> f32 {
@@ -197,10 +189,6 @@ pub struct Chars {
 }
 impl !Send for Chars {}
 impl !Sync for Chars {}
-unsafe impl ::cxx::ExternType for Chars {
-    type Id = ::cxx::type_id!("Chars");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl Chars {
     #[inline(always)]
     pub fn c<'__this>(&'__this mut self) -> ::ffi_11::c_char {
@@ -297,10 +285,6 @@ pub struct Bools {
 }
 impl !Send for Bools {}
 impl !Sync for Bools {}
-unsafe impl ::cxx::ExternType for Bools {
-    type Id = ::cxx::type_id!("Bools");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl Bools {
     #[inline(always)]
     pub fn b<'__this>(&'__this mut self) -> bool {

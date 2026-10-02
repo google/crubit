@@ -29,10 +29,6 @@ pub struct CompoundDataType {
 }
 impl !Send for CompoundDataType {}
 impl !Sync for CompoundDataType {}
-unsafe impl ::cxx::ExternType for CompoundDataType {
-    type Id = ::cxx::type_id!("CompoundDataType");
-    type Kind = ::cxx::kind::Trivial;
-}
 forward_declare::unsafe_define!(
     forward_declare::symbol!("CompoundDataType"),
     crate::CompoundDataType

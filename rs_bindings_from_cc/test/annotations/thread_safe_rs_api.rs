@@ -27,10 +27,6 @@ pub mod crubit {
         }
         unsafe impl Send for ThreadSafeStruct {}
         unsafe impl Sync for ThreadSafeStruct {}
-        unsafe impl ::cxx::ExternType for ThreadSafeStruct {
-            type Id = ::cxx::type_id!("crubit :: test :: ThreadSafeStruct");
-            type Kind = ::cxx::kind::Opaque;
-        }
         impl ThreadSafeStruct {
             #[inline(always)]
             pub fn ConstGet(&self) -> ::ffi_11::c_int {
@@ -101,10 +97,6 @@ pub mod crubit {
         }
         impl !Send for RegularStruct {}
         impl !Sync for RegularStruct {}
-        unsafe impl ::cxx::ExternType for RegularStruct {
-            type Id = ::cxx::type_id!("crubit :: test :: RegularStruct");
-            type Kind = ::cxx::kind::Trivial;
-        }
         impl RegularStruct {
             /// # Safety
             ///
@@ -177,10 +169,6 @@ pub mod crubit {
         }
         unsafe impl Send for ThreadSafeUnpin {}
         unsafe impl Sync for ThreadSafeUnpin {}
-        unsafe impl ::cxx::ExternType for ThreadSafeUnpin {
-            type Id = ::cxx::type_id!("crubit :: test :: ThreadSafeUnpin");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for ThreadSafeUnpin {
             #[inline(always)]
@@ -270,10 +258,6 @@ pub mod crubit {
         }
         unsafe impl Send for ThreadSafePinned {}
         unsafe impl Sync for ThreadSafePinned {}
-        unsafe impl ::cxx::ExternType for ThreadSafePinned {
-            type Id = ::cxx::type_id!("crubit :: test :: ThreadSafePinned");
-            type Kind = ::cxx::kind::Opaque;
-        }
 
         impl ::ctor::CtorNew<()> for ThreadSafePinned {
             type CtorType = ::ctor::Ctor![Self];

@@ -26,10 +26,6 @@ pub struct DestructionOrderRecorder {
 }
 impl !Send for DestructionOrderRecorder {}
 impl !Sync for DestructionOrderRecorder {}
-unsafe impl ::cxx::ExternType for DestructionOrderRecorder {
-    type Id = ::cxx::type_id!("DestructionOrderRecorder");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl DestructionOrderRecorder {
     #[inline(always)]
     pub fn RecordDestruction(int_field: ::ffi_11::c_int) {
@@ -148,10 +144,6 @@ pub struct FieldDestructionOrderTester {
 }
 impl !Send for FieldDestructionOrderTester {}
 impl !Sync for FieldDestructionOrderTester {}
-unsafe impl ::cxx::ExternType for FieldDestructionOrderTester {
-    type Id = ::cxx::type_id!("FieldDestructionOrderTester");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl FieldDestructionOrderTester {
     #[inline(always)]
     pub fn DestructFromCpp(
@@ -280,10 +272,6 @@ pub struct PrivateOperatorDelete {
 }
 impl !Send for PrivateOperatorDelete {}
 impl !Sync for PrivateOperatorDelete {}
-unsafe impl ::cxx::ExternType for PrivateOperatorDelete {
-    type Id = ::cxx::type_id!("PrivateOperatorDelete");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for PrivateOperatorDelete {
     #[inline(always)]

@@ -31,10 +31,6 @@ pub mod crubit {
         }
         impl !Send for StructNewName {}
         impl !Sync for StructNewName {}
-        unsafe impl ::cxx::ExternType for StructNewName {
-            type Id = ::cxx::type_id!("crubit :: test :: StructOldName");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for StructNewName {
             #[inline(always)]
@@ -60,10 +56,6 @@ pub mod crubit {
         }
         impl !Send for SomeStruct {}
         impl !Sync for SomeStruct {}
-        unsafe impl ::cxx::ExternType for SomeStruct {
-            type Id = ::cxx::type_id!("crubit :: test :: SomeStruct");
-            type Kind = ::cxx::kind::Trivial;
-        }
         impl SomeStruct {
             #[inline(always)]
             pub fn ConstructorNewName(

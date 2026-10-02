@@ -29,10 +29,6 @@ pub mod crubit {
         }
         impl !Send for MyStruct {}
         impl !Sync for MyStruct {}
-        unsafe impl ::cxx::ExternType for MyStruct {
-            type Id = ::cxx::type_id!("crubit :: test :: MyStruct");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for MyStruct {
             #[inline(always)]
@@ -58,10 +54,6 @@ pub mod crubit {
         }
         impl !Send for PackedStruct {}
         impl !Sync for PackedStruct {}
-        unsafe impl ::cxx::ExternType for PackedStruct {
-            type Id = ::cxx::type_id!("crubit :: test :: PackedStruct");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for PackedStruct {
             #[inline(always)]
@@ -86,10 +78,6 @@ pub mod crubit {
         }
         impl !Send for PointerStruct {}
         impl !Sync for PointerStruct {}
-        unsafe impl ::cxx::ExternType for PointerStruct {
-            type Id = ::cxx::type_id!("crubit :: test :: PointerStruct");
-            type Kind = ::cxx::kind::Trivial;
-        }
 
         impl Default for PointerStruct {
             #[inline(always)]

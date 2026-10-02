@@ -24,10 +24,6 @@ pub struct TypeWithPtrConstructor {
 }
 impl !Send for TypeWithPtrConstructor {}
 impl !Sync for TypeWithPtrConstructor {}
-unsafe impl ::cxx::ExternType for TypeWithPtrConstructor {
-    type Id = ::cxx::type_id!("TypeWithPtrConstructor");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
     #[inline(always)]
@@ -62,10 +58,6 @@ pub struct TypeWithNonNullPtrConstructor {
 }
 impl !Send for TypeWithNonNullPtrConstructor {}
 impl !Sync for TypeWithNonNullPtrConstructor {}
-unsafe impl ::cxx::ExternType for TypeWithNonNullPtrConstructor {
-    type Id = ::cxx::type_id!("TypeWithNonNullPtrConstructor");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstructor {
     #[inline(always)]
@@ -100,10 +92,6 @@ pub struct TypeWithReferenceConstructor {
 }
 impl !Send for TypeWithReferenceConstructor {}
 impl !Sync for TypeWithReferenceConstructor {}
-unsafe impl ::cxx::ExternType for TypeWithReferenceConstructor {
-    type Id = ::cxx::type_id!("TypeWithReferenceConstructor");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl<'r#ref> From<&'r#ref mut ::ffi_11::c_int> for TypeWithReferenceConstructor {
     #[inline(always)]

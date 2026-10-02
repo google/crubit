@@ -31,10 +31,6 @@ pub struct SomeStruct {
 }
 impl !Send for SomeStruct {}
 impl !Sync for SomeStruct {}
-unsafe impl ::cxx::ExternType for SomeStruct {
-    type Id = ::cxx::type_id!("SomeStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for SomeStruct {
     #[inline(always)]

@@ -29,10 +29,6 @@ pub struct S {
 }
 impl !Send for S {}
 impl !Sync for S {}
-unsafe impl ::cxx::ExternType for S {
-    type Id = ::cxx::type_id!("S");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl S {
     #[inline(always)]
     pub fn const_method<'__this, 'p1, 'p2>(
@@ -91,10 +87,6 @@ pub struct TriviallyCopyableButNontriviallyDestructible {
 }
 impl !Send for TriviallyCopyableButNontriviallyDestructible {}
 impl !Sync for TriviallyCopyableButNontriviallyDestructible {}
-unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
-    type Id = ::cxx::type_id!("TriviallyCopyableButNontriviallyDestructible");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
@@ -165,10 +157,6 @@ pub struct WrappedValue {
 }
 impl !Send for WrappedValue {}
 impl !Sync for WrappedValue {}
-unsafe impl ::cxx::ExternType for WrappedValue {
-    type Id = ::cxx::type_id!("WrappedValue");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl From<::ffi_11::c_int> for WrappedValue {
     #[inline(always)]

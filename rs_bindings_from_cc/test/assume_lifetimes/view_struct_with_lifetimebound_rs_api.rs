@@ -24,10 +24,6 @@ pub struct PlainStruct {
 }
 impl !Send for PlainStruct {}
 impl !Sync for PlainStruct {}
-unsafe impl ::cxx::ExternType for PlainStruct {
-    type Id = ::cxx::type_id!("PlainStruct");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for PlainStruct {
     #[inline(always)]
@@ -53,10 +49,6 @@ pub struct StructWithLifetimeboundMemberFunction {
 }
 impl !Send for StructWithLifetimeboundMemberFunction {}
 impl !Sync for StructWithLifetimeboundMemberFunction {}
-unsafe impl ::cxx::ExternType for StructWithLifetimeboundMemberFunction {
-    type Id = ::cxx::type_id!("StructWithLifetimeboundMemberFunction");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl StructWithLifetimeboundMemberFunction {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> crate::PlainStruct {
@@ -107,12 +99,6 @@ pub struct StructWithLifetimeboundRefMemberFunction<'__implicit> {
 }
 impl<'__implicit> !Send for StructWithLifetimeboundRefMemberFunction<'__implicit> {}
 impl<'__implicit> !Sync for StructWithLifetimeboundRefMemberFunction<'__implicit> {}
-unsafe impl<'__implicit> ::cxx::ExternType
-    for StructWithLifetimeboundRefMemberFunction<'__implicit>
-{
-    type Id = ::cxx::type_id!("StructWithLifetimeboundRefMemberFunction");
-    type Kind = ::cxx::kind::Trivial;
-}
 impl<'__implicit> StructWithLifetimeboundRefMemberFunction<'__implicit> {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> ::cref::CRef<'__implicit, crate::PlainStruct> {
@@ -156,10 +142,6 @@ pub struct DropClassWithLifetimeboundMemberFunction {
 }
 impl !Send for DropClassWithLifetimeboundMemberFunction {}
 impl !Sync for DropClassWithLifetimeboundMemberFunction {}
-unsafe impl ::cxx::ExternType for DropClassWithLifetimeboundMemberFunction {
-    type Id = ::cxx::type_id!("DropClassWithLifetimeboundMemberFunction");
-    type Kind = ::cxx::kind::Opaque;
-}
 impl DropClassWithLifetimeboundMemberFunction {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> crate::PlainStruct {
@@ -258,12 +240,6 @@ pub struct DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
 }
 impl<'__implicit> !Send for DropClassWithLifetimeboundRefMemberFunction<'__implicit> {}
 impl<'__implicit> !Sync for DropClassWithLifetimeboundRefMemberFunction<'__implicit> {}
-unsafe impl<'__implicit> ::cxx::ExternType
-    for DropClassWithLifetimeboundRefMemberFunction<'__implicit>
-{
-    type Id = ::cxx::type_id!("DropClassWithLifetimeboundRefMemberFunction");
-    type Kind = ::cxx::kind::Opaque;
-}
 impl<'__implicit> DropClassWithLifetimeboundRefMemberFunction<'__implicit> {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> ::cref::CRef<'__implicit, crate::PlainStruct> {
@@ -376,10 +352,6 @@ pub struct StructWithLifetimeboundCtor {
 }
 impl !Send for StructWithLifetimeboundCtor {}
 impl !Sync for StructWithLifetimeboundCtor {}
-unsafe impl ::cxx::ExternType for StructWithLifetimeboundCtor {
-    type Id = ::cxx::type_id!("StructWithLifetimeboundCtor");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl From<crate::PlainStruct> for StructWithLifetimeboundCtor {
     #[inline(always)]
@@ -419,10 +391,6 @@ pub struct StructWithLifetimeboundRefCtor<'__implicit> {
 }
 impl<'__implicit> !Send for StructWithLifetimeboundRefCtor<'__implicit> {}
 impl<'__implicit> !Sync for StructWithLifetimeboundRefCtor<'__implicit> {}
-unsafe impl<'__implicit> ::cxx::ExternType for StructWithLifetimeboundRefCtor<'__implicit> {
-    type Id = ::cxx::type_id!("StructWithLifetimeboundRefCtor");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl<'__implicit> From<&'__implicit crate::PlainStruct>
     for StructWithLifetimeboundRefCtor<'__implicit>
@@ -465,10 +433,6 @@ pub struct DropStructWithLifetimeboundCtor {
 }
 impl !Send for DropStructWithLifetimeboundCtor {}
 impl !Sync for DropStructWithLifetimeboundCtor {}
-unsafe impl ::cxx::ExternType for DropStructWithLifetimeboundCtor {
-    type Id = ::cxx::type_id!("DropStructWithLifetimeboundCtor");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithLifetimeboundCtor {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
@@ -554,10 +518,6 @@ pub struct DropStructWithLifetimeboundRefCtor<'__implicit> {
 }
 impl<'__implicit> !Send for DropStructWithLifetimeboundRefCtor<'__implicit> {}
 impl<'__implicit> !Sync for DropStructWithLifetimeboundRefCtor<'__implicit> {}
-unsafe impl<'__implicit> ::cxx::ExternType for DropStructWithLifetimeboundRefCtor<'__implicit> {
-    type Id = ::cxx::type_id!("DropStructWithLifetimeboundRefCtor");
-    type Kind = ::cxx::kind::Opaque;
-}
 
 impl<'__implicit, '__param_0, '__param_0_0>
     ::ctor::CtorNew<&'__param_0_0 crate::DropStructWithLifetimeboundRefCtor<'__param_0>>
@@ -667,12 +627,6 @@ pub struct DropStructWithRefCtorAndRefMemberFunction<'__implicit> {
 }
 impl<'__implicit> !Send for DropStructWithRefCtorAndRefMemberFunction<'__implicit> {}
 impl<'__implicit> !Sync for DropStructWithRefCtorAndRefMemberFunction<'__implicit> {}
-unsafe impl<'__implicit> ::cxx::ExternType
-    for DropStructWithRefCtorAndRefMemberFunction<'__implicit>
-{
-    type Id = ::cxx::type_id!("DropStructWithRefCtorAndRefMemberFunction");
-    type Kind = ::cxx::kind::Opaque;
-}
 impl<'__implicit> DropStructWithRefCtorAndRefMemberFunction<'__implicit> {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> ::cref::CRef<'__implicit, crate::PlainStruct> {
@@ -800,10 +754,6 @@ pub struct DropStructWithCtorAndMemberFunction {
 }
 impl !Send for DropStructWithCtorAndMemberFunction {}
 impl !Sync for DropStructWithCtorAndMemberFunction {}
-unsafe impl ::cxx::ExternType for DropStructWithCtorAndMemberFunction {
-    type Id = ::cxx::type_id!("DropStructWithCtorAndMemberFunction");
-    type Kind = ::cxx::kind::Opaque;
-}
 impl DropStructWithCtorAndMemberFunction {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> crate::PlainStruct {
@@ -907,10 +857,6 @@ pub struct DropStructWithCtorAndRefMemberFunction {
 }
 impl !Send for DropStructWithCtorAndRefMemberFunction {}
 impl !Sync for DropStructWithCtorAndRefMemberFunction {}
-unsafe impl ::cxx::ExternType for DropStructWithCtorAndRefMemberFunction {
-    type Id = ::cxx::type_id!("DropStructWithCtorAndRefMemberFunction");
-    type Kind = ::cxx::kind::Opaque;
-}
 impl DropStructWithCtorAndRefMemberFunction {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> ::cref::CRef<'__this, crate::PlainStruct> {
@@ -1012,10 +958,6 @@ pub struct DropStructWithRefCtorAndMemberFunction<'__implicit> {
 }
 impl<'__implicit> !Send for DropStructWithRefCtorAndMemberFunction<'__implicit> {}
 impl<'__implicit> !Sync for DropStructWithRefCtorAndMemberFunction<'__implicit> {}
-unsafe impl<'__implicit> ::cxx::ExternType for DropStructWithRefCtorAndMemberFunction<'__implicit> {
-    type Id = ::cxx::type_id!("DropStructWithRefCtorAndMemberFunction");
-    type Kind = ::cxx::kind::Opaque;
-}
 impl<'__implicit> DropStructWithRefCtorAndMemberFunction<'__implicit> {
     /// This is a degenerate case, since `PlainStruct` binds no lifetimes.
     #[inline(always)]

@@ -24,10 +24,6 @@ pub struct DifferentScope {
 }
 impl !Send for DifferentScope {}
 impl !Sync for DifferentScope {}
-unsafe impl ::cxx::ExternType for DifferentScope {
-    type Id = ::cxx::type_id!("DifferentScope");
-    type Kind = ::cxx::kind::Trivial;
-}
 
 impl Default for DifferentScope {
     #[inline(always)]
@@ -60,10 +56,6 @@ pub mod test_namespace_bindings {
     }
     impl !Send for TemplateParam {}
     impl !Sync for TemplateParam {}
-    unsafe impl ::cxx::ExternType for TemplateParam {
-        type Id = ::cxx::type_id!("test_namespace_bindings :: TemplateParam");
-        type Kind = ::cxx::kind::Trivial;
-    }
 
     impl Default for TemplateParam {
         #[inline(always)]
@@ -153,10 +145,6 @@ pub mod private_classes {
     }
     impl !Send for HasPrivateType {}
     impl !Sync for HasPrivateType {}
-    unsafe impl ::cxx::ExternType for HasPrivateType {
-        type Id = ::cxx::type_id!("private_classes :: HasPrivateType");
-        type Kind = ::cxx::kind::Trivial;
-    }
 }
 
 // namespace private_classes
