@@ -58,6 +58,41 @@ namespace crubit {
 
 namespace {
 
+// Returns true if `#pragma pack(N)` reduces the alignment of any field or base
+// of `record_decl` below its natural alignment.
+//
+// `#pragma pack(N)` does not attach a `PackedAttr`; instead, Sema attaches an
+// implicit `MaxFieldAlignmentAttr`. Like `packed`, this can produce layouts
+// (e.g. under-aligned fields) that cannot be expressed with `#[repr(C)]`, so
+// such records must be treated like packed records. A `#pragma pack(N)` that
+// does not actually lower any alignment does not affect the layout and is
+// ignored.
+bool HasLayoutReducedByPragmaPack(const clang::ASTContext& ctx,
+                                  const clang::RecordDecl& record_decl) {
+  const auto* max_field_alignment =
+      record_decl.getAttr<clang::MaxFieldAlignmentAttr>();
+  if (max_field_alignment == nullptr) {
+    return false;
+  }
+  // `MaxFieldAlignmentAttr::getAlignment()` is in bits.
+  const uint64_t max_alignment_in_bits = max_field_alignment->getAlignment();
+  for (const clang::FieldDecl* field_decl : record_decl.fields()) {
+    if (ctx.getTypeAlign(field_decl->getType()) > max_alignment_in_bits) {
+      return true;
+    }
+  }
+  if (const auto* cxx_record_decl =
+          clang::dyn_cast<clang::CXXRecordDecl>(&record_decl);
+      cxx_record_decl != nullptr && cxx_record_decl->hasDefinition()) {
+    for (const clang::CXXBaseSpecifier& base : cxx_record_decl->bases()) {
+      if (ctx.getTypeAlign(base.getType()) > max_alignment_in_bits) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 // Returns true if the given declaration is publicly accessible, i.e. if it and
 // all its enclosing records and namespaces are not private.
 bool IsDeclPubliclyAccessible(const clang::Decl* decl) {
@@ -1371,7 +1406,8 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
       std::any_of(record_decl->field_begin(), record_decl->field_end(),
                   [](const clang::FieldDecl* field_decl) {
                     return crubit::HasAttr<clang::PackedAttr>(field_decl);
-                  })) {
+                  }) ||
+      HasLayoutReducedByPragmaPack(ictx_.ctx_, *record_decl)) {
     return unsupported(
         FormattedError::Static("Records with packed layout are not supported"));
   }
