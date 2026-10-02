@@ -37,8 +37,8 @@ use_repo(npm, "npm")
 
 crubit_toolchains = use_extension("@rules_crubit//bazel:extensions.bzl", "crubit_toolchains")
 crubit_toolchains.configure(
-    llvm_version = "22.1.0",
-    rust_version = "nightly/2026-07-01",
+    llvm_version = "23.1.0",
+    rust_version = "nightly/2026-09-29",
 )
 
 register_toolchains("@rust_toolchains//:all", "@llvm_toolchain//:all")

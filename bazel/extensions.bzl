@@ -4,7 +4,16 @@
 
 """Module extension for configuring Crubit toolchains."""
 
-load("@toolchains_llvm//toolchain:rules.bzl", "llvm_toolchain")
+load("@toolchains_llvm//toolchain:rules.bzl", _llvm_toolchain_config = "toolchain")
+
+# buildifier: disable=bzl-visibility
+load(
+    "@toolchains_llvm//toolchain/internal:repo.bzl",
+    "common_attrs",
+    "llvm_config_attrs",
+    "llvm_repo_attrs",
+    "llvm_repo_impl",
+)
 load("//bazel:llvm_version_check.bzl", "llvm_version_check")
 
 # buildifier: disable=bzl-visibility
@@ -45,6 +54,76 @@ _LLVM_TAG_ATTRS = {
     "llvm_strip_prefix": attr.string(doc = "Strip prefix for LLVM distribution."),
 }
 
+# Upstream LLVM's Linux x86_64 release tarballs (e.g. LLVM 23.1.0) are built on
+# Ubuntu 22.04 with LLVM_USE_STATIC_LIBXML2=ON against the system libxml2.a,
+# which gives bin/ld.lld a dynamic DT_NEEDED dependency on Ubuntu 22.04's
+# libicu70 (libicui18n.so.70, libicuuc.so.70, libicudata.so.70).
+# Because bin/ld.lld has RUNPATH=$ORIGIN/../lib, unpacking libicu70 into lib/
+# and adding it to the :ld filegroup makes the linker hermetic on newer OS
+# images (such as the Ubuntu 24.04 RBE container).
+_UBUNTU_JAMMY_LIBICU70_URLS = [
+    "https://launchpad.net/ubuntu/+source/icu/70.1-2/+build/23145450/+files/libicu70_70.1-2_amd64.deb",
+    "http://archive.ubuntu.com/ubuntu/pool/main/i/icu/libicu70_70.1-2_amd64.deb",
+    "http://mirrors.kernel.org/ubuntu/pool/main/i/icu/libicu70_70.1-2_amd64.deb",
+]
+_UBUNTU_JAMMY_LIBICU70_SHA256 = "58a154f6307289813da2276f900498ef536ae7c0522d2cf31a3c3c5cf62dfd9a"
+
+def _crubit_llvm_repo_impl(rctx):
+    res = llvm_repo_impl(rctx)
+    if rctx.os.name == "linux" and rctx.os.arch in ("amd64", "x86_64"):
+        rctx.download_and_extract(
+            url = _UBUNTU_JAMMY_LIBICU70_URLS,
+            output = "_libicu70",
+            sha256 = _UBUNTU_JAMMY_LIBICU70_SHA256,
+        )
+        rctx.extract(
+            archive = "_libicu70/data.tar.zst",
+            output = "lib",
+            stripPrefix = "usr/lib/x86_64-linux-gnu",
+        )
+        rctx.delete("_libicu70")
+
+        build_content = rctx.read("BUILD.bazel")
+        if '["bin/wasm-ld"],' not in build_content:
+            fail("Expected '[\"bin/wasm-ld\"],' in @llvm_toolchain_llvm//:BUILD.bazel")
+        rctx.file(
+            "BUILD.bazel",
+            build_content.replace(
+                '["bin/wasm-ld"],',
+                '["bin/wasm-ld", "lib/libicu*.so*"],',
+            ),
+        )
+    return res
+
+_crubit_llvm_repo = repository_rule(
+    attrs = llvm_repo_attrs,
+    local = False,
+    implementation = _crubit_llvm_repo_impl,
+)
+
+def _crubit_llvm_toolchain(name, **kwargs):
+    if kwargs.get("llvm_version") and kwargs.get("llvm_versions"):
+        fail("Exactly one of llvm_version or llvm_versions must be set")
+    if not kwargs.get("llvm_versions"):
+        if not kwargs.get("llvm_version"):
+            fail("One of llvm_version or llvm_versions must be set")
+        kwargs.update(llvm_versions = {"": kwargs.get("llvm_version")})
+
+    if not kwargs.get("toolchain_roots"):
+        llvm_args = {
+            k: v
+            for k, v in kwargs.items()
+            if (k not in llvm_config_attrs.keys()) or (k in common_attrs.keys())
+        }
+        _crubit_llvm_repo(name = name + "_llvm", **llvm_args)
+
+    toolchain_args = {
+        k: v
+        for k, v in kwargs.items()
+        if (k not in llvm_repo_attrs.keys()) or (k in common_attrs.keys())
+    }
+    _llvm_toolchain_config(name = name, **toolchain_args)
+
 def _crubit_toolchains_impl(ctx):
     # Prefer configuration from the root module.
     config = None
@@ -78,7 +157,7 @@ def _crubit_toolchains_impl(ctx):
     if not final_urls and not final_llvm_version:
         fail("Please specify an LLVM version or a custom LLVM via llvm_urls, llvm_sha256, and llvm_strip_prefix.")
     elif final_urls:
-        llvm_toolchain(
+        _crubit_llvm_toolchain(
             name = "llvm_toolchain",
             llvm_version = final_llvm_version,
             urls = {"": final_urls},
@@ -86,7 +165,7 @@ def _crubit_toolchains_impl(ctx):
             strip_prefix = {"": final_strip_prefix},
         )
     else:
-        llvm_toolchain(
+        _crubit_llvm_toolchain(
             name = "llvm_toolchain",
             llvm_version = final_llvm_version,
         )
@@ -122,6 +201,8 @@ def _crubit_toolchains_impl(ctx):
         compact_windows_names = True,
         **rust_kwargs
     )
+
+    return ctx.extension_metadata(reproducible = True)
 
 crubit_toolchains = module_extension(
     implementation = _crubit_toolchains_impl,

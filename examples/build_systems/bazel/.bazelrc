@@ -17,3 +17,4 @@ build:generic_clang --copt=-fno-rtti --host_copt=-fno-rtti
 
 build --config=generic_clang
 build --@rules_rust//rust/toolchain/channel=nightly
+

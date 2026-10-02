@@ -64,8 +64,8 @@ use_repo(crate, "crate_index")
 
 crubit_toolchains = use_extension("//bazel:extensions.bzl", "crubit_toolchains")
 crubit_toolchains.configure(
-    llvm_version = "22.1.0",
-    rust_version = "nightly/2026-07-01",
+    llvm_version = "23.1.0",
+    rust_version = "nightly/2026-09-29",
 )
 use_repo(crubit_toolchains, "llvm_toolchain", "llvm_version_check", "rust_toolchains")
 

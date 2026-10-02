@@ -175,8 +175,9 @@ def merge_archives(llvm_ar_path, output_archive, input_dirs):
   if not input_archives:
     fail(
         f"No static archives (.a) found in input directories: {input_dirs}. "
-        "If using remote caching, ensure Bazel was run with"
-        " --remote_download_outputs=all."
+        "If using remote execution/caching, ensure Bazel was run with "
+        "--remote_download_outputs=all or "
+        "--remote_download_regex='.*\\.(a|h|inc|def)$|.*/protoc$'."
     )
 
   out_path = Path(output_archive)
