@@ -135,6 +135,11 @@ nullability_test(
 )
 
 nullability_test(
+    name = "analyzer_assume",
+    srcs = ["analyzer_assume.cc"],
+)
+
+nullability_test(
     name = "comparisons",
     srcs = ["comparisons.cc"],
 )
