@@ -1091,15 +1091,30 @@ impl<'a> BridgeRsTypeKind<'a> {
                 // the alternative is opaque padding bytes or no bindings at all. The feature
                 // additionally replaces the composable bridging to `Option<T>` which targets
                 // may already depend on, so it stays opt-in.
-                if options.requires_layout_compatible
-                    || db
-                        .ir()
-                        .target_crubit_features(db.ir().current_target())
-                        .contains(CrubitFeature::LayoutCompatOptional)
-                {
+                if options.requires_layout_compatible {
                     return Ok(None);
                 }
-                let inner = db.rs_type_kind(t)?;
+                let inner = db.rs_type_kind(t.clone());
+                if db
+                    .ir()
+                    .target_crubit_features(db.ir().current_target())
+                    .contains(CrubitFeature::LayoutCompatOptional)
+                {
+                    // `T` can only be a template argument if it is layout-compatible. If it is
+                    // a bridged type with no layout-compatible form (e.g. an owned protobuf
+                    // message, or a `CRUBIT_BRIDGE` type), the layout-compatible
+                    // `std::optional<T>` would have no bindings at all, so keep the composable
+                    // bridging to `Option<T>` instead.
+                    let keeps_bridging = inner.as_ref().is_ok_and(|inner| {
+                        let mut layout_compatible_inner = inner.clone();
+                        layout_compatible_inner.force_layout_compatible();
+                        layout_compatible_inner.pass_by_value_bridges()
+                    });
+                    if !keeps_bridging {
+                        return Ok(None);
+                    }
+                }
+                let inner = inner?;
                 inner.ensure_complete_type_arg(db, record.cc_name())?;
                 BridgeRsTypeKind::StdOptional(Rc::new(inner))
             }

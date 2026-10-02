@@ -2070,6 +2070,87 @@ fn test_std_optional_of_non_unpin_copy_type_is_not_trivial() -> Result<()> {
     Ok(())
 }
 
+/// A `CRUBIT_BRIDGE` type has no layout-compatible form, so `cc_std::std::optional<T>` cannot
+/// hold it. With `layout_compat_optional`, `std::optional<T>` of such a type keeps the composable
+/// bridging to `Option<T>` rather than losing its bindings entirely.
+#[gtest]
+fn test_std_optional_of_bridge_type_with_layout_compat_feature() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        void takes_optional_bridge(std::optional<CppStruct> o);
+        std::optional<CppStruct> returns_optional_bridge();
+        "#,
+        r#"
+        struct
+            [[clang::annotate("crubit_bridge_rust_name", "RustStruct")]]
+            [[clang::annotate("crubit_bridge_abi_rust", "RustStructAbi")]]
+            [[clang::annotate("crubit_bridge_abi_cpp", "::crubit::CppStructAbi")]]
+            CppStruct {};
+        namespace std {
+            template <typename T> class optional { T t; bool b; };
+        }
+        "#,
+    )?;
+    let mut ir = make_test_ir_dependency(&proto, None)?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::LayoutCompatOptional;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_optional_bridge(o: ::core::option::Option<::dependency::RustStruct>)
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn returns_optional_bridge() -> ::core::option::Option<::dependency::RustStruct>
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { cc_std::std::optional });
+    assert_rs_not_matches!(rs_api, quote! { trivial_optional });
+    Ok(())
+}
+
+/// An owned protobuf message is bridged by value and has no layout-compatible form, so with
+/// `layout_compat_optional`, `std::optional<Message>` keeps the composable bridging to
+/// `Option<Message>`.
+#[gtest]
+fn test_std_optional_of_owned_proto_with_layout_compat_feature() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc_dependency(
+        r#"
+        void takes_optional_message(std::optional<MyMessage> o);
+        "#,
+        r#"
+        namespace proto2 {
+        struct MessageLite {};
+        struct Message : public MessageLite {};
+        }
+        class MyMessage : public google::protobuf::Message {};
+        namespace std {
+            template <typename T> class optional { T t; bool b; };
+        }
+        "#,
+    )?;
+    let mut ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::LayoutCompatOptional;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_optional_message(o: ::core::option::Option<::dependency::MyMessage>)
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { cc_std::std::optional });
+    assert_rs_not_matches!(rs_api, quote! { trivial_optional });
+    Ok(())
+}
+
 #[gtest]
 fn test_proto_message_references() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc_dependency(
