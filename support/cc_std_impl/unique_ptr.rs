@@ -38,6 +38,7 @@ pub use operator::Delete;
     cpp_type = "::std::unique_ptr<{T}>",
     include_path = "<memory>"
 )]
+#[crubit_annotate::cpp_move_constructible]
 #[allow(non_snake_case)]
 #[repr(C)]
 pub struct unique_ptr<T: Sized> {
@@ -290,6 +291,7 @@ impl<T> From<NonNull<unique_ptr<T>>> for unique_ptr<T> {
     cpp_type = "::std::unique_ptr<{T}>",
     include_path = "<memory>"
 )]
+#[crubit_annotate::cpp_move_constructible]
 #[allow(non_snake_case)]
 #[repr(C)]
 pub struct virtual_unique_ptr<T: Sized + Delete> {

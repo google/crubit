@@ -221,10 +221,11 @@ fn make_prefix_for(body: TokenStream, make_prefix_fn: impl FnOnce() -> TokenStre
 /// * Substituted type arguments must themselves have layout-compatible C++ types.
 /// * If the generic type is passed by value across the C++/Rust boundary, substituted type
 ///   arguments must be C++ move-constructible unless the wrapper type itself is marked with
-///   `cpp_move_constructible`. `cpp_move_constructible` should only be added when the generic type
-///   is C++-movable independently of whether or not the inner type is. Most commonly this is the
-///   case if the type is a pointer-like type such as `unique_ptr`, `shared_ptr`, or `vector` which
-///   has only an indirect reference to its generic parameter rather than containing it inline.
+///   `#[crubit_annotate::cpp_move_constructible]`. `cpp_move_constructible` should only be added
+///   when the generic type is C++-movable independently of whether or not the inner type is. Most
+///   commonly this is the case if the type is a pointer-like type such as `unique_ptr`,
+///   `shared_ptr`, or `vector` which has only an indirect reference to its generic parameter rather
+///   than containing it inline.
 /// * Concrete specializations can be mapped to specific C++ types using
 ///   `#[crubit_annotate::cpp_specialization]` on a type alias.
 #[proc_macro_attribute]
@@ -464,6 +465,48 @@ pub fn cpp_thread_safe(attribute: TokenStream, input: TokenStream) -> TokenStrea
             );
         }
         key_value_to_doc_comment("cpp_thread_safe", "")
+    })
+}
+
+/// Marks a Rust type as being unconditionally move-constructible in C++.
+///
+/// This is intended for generic types annotated with
+/// `#[crubit_annotate::cpp_layout_equivalent]` whose C++ counterpart is move-constructible
+/// regardless of whether its template arguments are. Without this annotation, a bridged generic
+/// type can only be passed by value across the C++/Rust boundary if all of its substituted type
+/// arguments are themselves C++ move-constructible.
+///
+/// This should only be applied to types that are C++-movable independently of whether or not
+/// their generic parameters are. Most commonly this is the case for pointer-like types such as
+/// `unique_ptr`, `shared_ptr`, or `vector`, which have only an indirect reference to their generic
+/// parameter rather than containing it inline.
+///
+/// Example:
+///
+/// ```rs
+/// #[crubit_annotate::cpp_layout_equivalent(
+///     cpp_type = "::std::unique_ptr<{T}>",
+///     include_path = "<memory>"
+/// )]
+/// #[crubit_annotate::cpp_move_constructible]
+/// #[repr(C)]
+/// pub struct unique_ptr<T> {
+///     ...
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn cpp_move_constructible(attribute: TokenStream, input: TokenStream) -> TokenStream {
+    make_prefix_for(input, || {
+        if let Some(token) = attribute.into_iter().next() {
+            return TokenStream::from(
+                syn::Error::new(
+                    token.span().into(),
+                    "The `cpp_move_constructible` annotation does not accept any arguments.",
+                )
+                .into_compile_error(),
+            );
+        }
+        key_value_to_doc_comment("cpp_move_constructible", "")
     })
 }
 

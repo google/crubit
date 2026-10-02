@@ -55,6 +55,15 @@ struct EnumClass(i32);
 #[crubit_annotate::cpp_thread_safe]
 struct ThreadSafe {}
 
+#[crubit_annotate::cpp_layout_equivalent(
+    cpp_type = "some_pointer<{T}>",
+    include_path = "some/path.h"
+)]
+#[crubit_annotate::cpp_move_constructible]
+struct MoveConstructible<T> {
+    ptr: *const T,
+}
+
 #[crubit_annotate::field_drop_order_does_not_matter]
 struct FieldDropOrderDoesNotMatter {}
 
