@@ -28,6 +28,7 @@ unsafe impl ::cxx::ExternType for Noninline {
     type Id = ::cxx::type_id!("Noninline");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Noninline"), crate::Noninline);
 impl Noninline {
     #[inline(always)]
     pub fn UnqualifiedMethod<'__this>(&'__this mut self) {
@@ -99,6 +100,7 @@ unsafe impl ::cxx::ExternType for Inline {
     type Id = ::cxx::type_id!("Inline");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Inline"), crate::Inline);
 impl Inline {
     #[inline(always)]
     pub fn UnqualifiedMethod<'__this>(&'__this mut self) {

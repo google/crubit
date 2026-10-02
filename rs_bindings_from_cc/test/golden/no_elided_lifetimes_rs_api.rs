@@ -33,6 +33,7 @@ unsafe impl ::cxx::ExternType for S {
     type Id = ::cxx::type_id!("S");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 impl S {
     #[inline(always)]
     pub fn const_method<'__this, 'p1, 'p2>(
@@ -95,6 +96,10 @@ unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
     type Id = ::cxx::type_id!("TriviallyCopyableButNontriviallyDestructible");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TriviallyCopyableButNontriviallyDestructible"),
+    crate::TriviallyCopyableButNontriviallyDestructible
+);
 
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
@@ -169,6 +174,7 @@ unsafe impl ::cxx::ExternType for WrappedValue {
     type Id = ::cxx::type_id!("WrappedValue");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate::WrappedValue);
 
 impl From<::ffi_11::c_int> for WrappedValue {
     #[inline(always)]

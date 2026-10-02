@@ -28,6 +28,7 @@ unsafe impl ::cxx::ExternType for S {
     type Id = ::cxx::type_id!("S");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 impl S {
     #[inline(always)]
     pub fn int_accessor<'__this>(&'__this self) -> ::cref::CRef<'__this, ::ffi_11::c_int> {

@@ -28,6 +28,7 @@ unsafe impl ::cxx::ExternType for DifferentScope {
     type Id = ::cxx::type_id!("DifferentScope");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("DifferentScope"), crate::DifferentScope);
 
 impl Default for DifferentScope {
     #[inline(always)]
@@ -64,6 +65,10 @@ pub mod test_namespace_bindings {
         type Id = ::cxx::type_id!("test_namespace_bindings :: TemplateParam");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("test_namespace_bindings :: TemplateParam"),
+        crate::test_namespace_bindings::TemplateParam
+    );
 
     impl Default for TemplateParam {
         #[inline(always)]
@@ -117,9 +122,18 @@ pub mod test_namespace_bindings {
 // error: type alias `TopLevelTemplateWithNonTopLevelParam` could not be bound
 //   template instantiation is not yet supported
 
-// error: function `processForwardDeclaredSpecialization` could not be bound
-//   Unsupported parameter type `MyTopLevelTemplate<int>* i`:
-//     incomplete type
+/// # Safety
+///
+/// The caller must ensure that the following unsafe arguments are not misused by the function:
+/// * `i`: raw pointer
+#[inline(always)]
+pub unsafe fn processForwardDeclaredSpecialization(
+    i: *mut crate::__CcTemplateInst18MyTopLevelTemplateIiE,
+) {
+    unsafe {
+        crate::detail::__rust_thunk___Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE(i)
+    }
+}
 
 pub mod template_template_params { // error: class `template_template_params::Policy` could not be bound
                                    //   Class templates are not yet supported
@@ -133,11 +147,12 @@ pub mod template_template_params { // error: class `template_template_params::Po
 
 // namespace template_template_params
 
-pub mod forward_declared_template { // error: class `forward_declared_template::ForwardDeclaredTemplate` could not be bound
-                                    //   Class templates are not yet supported
+pub mod forward_declared_template {
+    // error: class `forward_declared_template::ForwardDeclaredTemplate` could not be bound
+    //   Class templates are not yet supported
 
-    // error: type alias `forward_declared_template::TypeAliasToForwardDeclaredTemplate` could not be bound
-    //   incomplete type
+    pub type TypeAliasToForwardDeclaredTemplate =
+        crate::__CcTemplateInstN25forward_declared_template23ForwardDeclaredTemplateIiEE;
 }
 
 // namespace forward_declared_template
@@ -157,6 +172,10 @@ pub mod private_classes {
         type Id = ::cxx::type_id!("private_classes :: HasPrivateType");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("private_classes :: HasPrivateType"),
+        crate::private_classes::HasPrivateType
+    );
 }
 
 // namespace private_classes
@@ -185,14 +204,12 @@ pub mod private_classes {
 // error: struct `MyTopLevelTemplate<struct test_namespace_bindings::TemplateParam>` could not be bound
 //   template instantiation is not yet supported
 
-// error: struct `MyTopLevelTemplate<int>` could not be bound
-//   incomplete type
+forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = forward_declare::symbol!("MyTopLevelTemplate < int >"));
 
 // error: class `template_template_params::MyTemplate<template_template_params::Policy>` could not be bound
 //   template instantiation is not yet supported
 
-// error: class `forward_declared_template::ForwardDeclaredTemplate<int>` could not be bound
-//   incomplete type
+forward_declare::forward_declare!(pub __CcTemplateInstN25forward_declared_template23ForwardDeclaredTemplateIiEE = forward_declare::symbol!("forward_declared_template :: ForwardDeclaredTemplate < int >"));
 
 mod detail {
     #[allow(unused_imports)]
@@ -203,6 +220,10 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev(
             __this: *mut ::core::ffi::c_void,
+        );
+        #[link_name = "_Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE"]
+        pub(crate) unsafe fn __rust_thunk___Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE(
+            i: *mut crate::__CcTemplateInst18MyTopLevelTemplateIiE,
         );
     }
 }

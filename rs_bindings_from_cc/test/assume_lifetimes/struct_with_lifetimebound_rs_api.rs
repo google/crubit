@@ -28,6 +28,7 @@ unsafe impl ::cxx::ExternType for PlainStruct {
     type Id = ::cxx::type_id!("PlainStruct");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("PlainStruct"), crate::PlainStruct);
 
 impl Default for PlainStruct {
     #[inline(always)]
@@ -54,6 +55,10 @@ unsafe impl ::cxx::ExternType for StructWithLifetimeboundMemberFunction {
     type Id = ::cxx::type_id!("StructWithLifetimeboundMemberFunction");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithLifetimeboundMemberFunction"),
+    crate::StructWithLifetimeboundMemberFunction
+);
 impl StructWithLifetimeboundMemberFunction {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> crate::PlainStruct {
@@ -104,6 +109,10 @@ unsafe impl ::cxx::ExternType for StructWithLifetimeboundRefMemberFunction {
     type Id = ::cxx::type_id!("StructWithLifetimeboundRefMemberFunction");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithLifetimeboundRefMemberFunction"),
+    crate::StructWithLifetimeboundRefMemberFunction
+);
 impl StructWithLifetimeboundRefMemberFunction {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> ::cref::CRef<'__this, crate::PlainStruct> {
@@ -148,6 +157,10 @@ unsafe impl ::cxx::ExternType for DropClassWithLifetimeboundMemberFunction {
     type Id = ::cxx::type_id!("DropClassWithLifetimeboundMemberFunction");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DropClassWithLifetimeboundMemberFunction"),
+    crate::DropClassWithLifetimeboundMemberFunction
+);
 impl DropClassWithLifetimeboundMemberFunction {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> crate::PlainStruct {
@@ -246,6 +259,10 @@ unsafe impl ::cxx::ExternType for DropClassWithLifetimeboundRefMemberFunction {
     type Id = ::cxx::type_id!("DropClassWithLifetimeboundRefMemberFunction");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DropClassWithLifetimeboundRefMemberFunction"),
+    crate::DropClassWithLifetimeboundRefMemberFunction
+);
 impl DropClassWithLifetimeboundRefMemberFunction {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> ::cref::CRef<'__this, crate::PlainStruct> {
@@ -341,6 +358,10 @@ unsafe impl ::cxx::ExternType for StructWithLifetimeboundCtor {
     type Id = ::cxx::type_id!("StructWithLifetimeboundCtor");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithLifetimeboundCtor"),
+    crate::StructWithLifetimeboundCtor
+);
 
 impl From<crate::PlainStruct> for StructWithLifetimeboundCtor {
     #[inline(always)]
@@ -380,6 +401,10 @@ unsafe impl ::cxx::ExternType for StructWithLifetimeboundRefCtor {
     type Id = ::cxx::type_id!("StructWithLifetimeboundRefCtor");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithLifetimeboundRefCtor"),
+    crate::StructWithLifetimeboundRefCtor
+);
 
 impl<'s> From<&'s crate::PlainStruct> for StructWithLifetimeboundRefCtor {
     #[inline(always)]
@@ -417,6 +442,10 @@ unsafe impl ::cxx::ExternType for DropStructWithLifetimeboundCtor {
     type Id = ::cxx::type_id!("DropStructWithLifetimeboundCtor");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DropStructWithLifetimeboundCtor"),
+    crate::DropStructWithLifetimeboundCtor
+);
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithLifetimeboundCtor {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
@@ -502,6 +531,10 @@ unsafe impl ::cxx::ExternType for DropStructWithLifetimeboundRefCtor {
     type Id = ::cxx::type_id!("DropStructWithLifetimeboundRefCtor");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DropStructWithLifetimeboundRefCtor"),
+    crate::DropStructWithLifetimeboundRefCtor
+);
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for DropStructWithLifetimeboundRefCtor {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
@@ -583,6 +616,10 @@ unsafe impl ::cxx::ExternType for DropStructWithRefCtorAndRefMemberFunction {
     type Id = ::cxx::type_id!("DropStructWithRefCtorAndRefMemberFunction");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DropStructWithRefCtorAndRefMemberFunction"),
+    crate::DropStructWithRefCtorAndRefMemberFunction
+);
 impl DropStructWithRefCtorAndRefMemberFunction {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> ::cref::CRef<'__this, crate::PlainStruct> {
@@ -685,6 +722,10 @@ unsafe impl ::cxx::ExternType for DropStructWithCtorAndMemberFunction {
     type Id = ::cxx::type_id!("DropStructWithCtorAndMemberFunction");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DropStructWithCtorAndMemberFunction"),
+    crate::DropStructWithCtorAndMemberFunction
+);
 impl DropStructWithCtorAndMemberFunction {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> crate::PlainStruct {
@@ -789,6 +830,10 @@ unsafe impl ::cxx::ExternType for DropStructWithCtorAndRefMemberFunction {
     type Id = ::cxx::type_id!("DropStructWithCtorAndRefMemberFunction");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DropStructWithCtorAndRefMemberFunction"),
+    crate::DropStructWithCtorAndRefMemberFunction
+);
 impl DropStructWithCtorAndRefMemberFunction {
     #[inline(always)]
     pub fn f<'__this>(&'__this self) -> ::cref::CRef<'__this, crate::PlainStruct> {
@@ -890,6 +935,10 @@ unsafe impl ::cxx::ExternType for DropStructWithRefCtorAndMemberFunction {
     type Id = ::cxx::type_id!("DropStructWithRefCtorAndMemberFunction");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DropStructWithRefCtorAndMemberFunction"),
+    crate::DropStructWithRefCtorAndMemberFunction
+);
 impl DropStructWithRefCtorAndMemberFunction {
     /// This is a degenerate case, since `PlainStruct` binds no lifetimes.
     #[inline(always)]
@@ -998,6 +1047,7 @@ unsafe impl ::cxx::ExternType for Impossible {
     type Id = ::cxx::type_id!("Impossible");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Impossible"), crate::Impossible);
 
 // error: function `Impossible::f` could not be bound
 //   `Impossible` can't be used by-value because it has a non-public or deleted destructor

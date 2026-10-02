@@ -29,6 +29,7 @@ unsafe impl ::cxx::ExternType for Position {
     type Id = ::cxx::type_id!("Position");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Position"), crate::Position);
 
 impl Default for Position {
     #[inline(always)]

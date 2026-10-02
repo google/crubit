@@ -34,6 +34,7 @@ unsafe impl ::cxx::ExternType for Nontrivial {
     type Id = ::cxx::type_id!("Nontrivial");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 impl Nontrivial {
     #[inline(always)]
     pub fn Unqualified<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
@@ -322,6 +323,10 @@ unsafe impl ::cxx::ExternType for NontrivialInline {
     type Id = ::cxx::type_id!("NontrivialInline");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NontrivialInline"),
+    crate::NontrivialInline
+);
 impl NontrivialInline {
     #[inline(always)]
     pub fn MemberFunction<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
@@ -508,6 +513,10 @@ unsafe impl ::cxx::ExternType for NontrivialMembers {
     type Id = ::cxx::type_id!("NontrivialMembers");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NontrivialMembers"),
+    crate::NontrivialMembers
+);
 
 impl ::ctor::CtorNew<()> for NontrivialMembers {
     type CtorType = ::ctor::Ctor![Self];
@@ -617,6 +626,10 @@ unsafe impl ::cxx::ExternType for NontrivialUnpin {
     type Id = ::cxx::type_id!("NontrivialUnpin");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NontrivialUnpin"),
+    crate::NontrivialUnpin
+);
 impl NontrivialUnpin {
     #[inline(always)]
     pub fn MemberFunction<'__this>(&'__this mut self) {
@@ -903,6 +916,10 @@ unsafe impl ::cxx::ExternType for NontrivialByValue {
     type Id = ::cxx::type_id!("NontrivialByValue");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NontrivialByValue"),
+    crate::NontrivialByValue
+);
 
 impl<'other> ::ctor::UnpinAssign<::ctor::RvalueReference<'other, crate::Nontrivial>>
     for NontrivialByValue
@@ -955,6 +972,7 @@ unsafe impl ::cxx::ExternType for Nonmovable {
     type Id = ::cxx::type_id!("Nonmovable");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Nonmovable"), crate::Nonmovable);
 impl Nonmovable {
     #[inline(always)]
     pub fn MemberFunction<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {

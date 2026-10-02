@@ -27,6 +27,7 @@ unsafe impl ::cxx::ExternType for Uncopyable {
     type Id = ::cxx::type_id!("Uncopyable");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Uncopyable"), crate::Uncopyable);
 
 impl ::ctor::CtorNew<()> for Uncopyable {
     type CtorType = ::ctor::Ctor![Self];
@@ -60,6 +61,10 @@ unsafe impl ::cxx::ExternType for UncopyableDespiteDecl {
     type Id = ::cxx::type_id!("UncopyableDespiteDecl");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("UncopyableDespiteDecl"),
+    crate::UncopyableDespiteDecl
+);
 
 impl ::ctor::PinnedDrop for UncopyableDespiteDecl {
     #[inline(always)]

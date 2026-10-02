@@ -31,6 +31,7 @@ unsafe impl ::cxx::ExternType for RustDerived {
     type Id = ::cxx::type_id!("RustDerived");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("RustDerived"), crate::RustDerived);
 impl RustDerived {
     #[inline(always)]
     pub fn Method1<'__this>(&'__this self) -> ::ffi_11::c_int {

@@ -45,6 +45,10 @@ pub struct __CcTemplateInst13AlwaysBoundTsIifE {
 }
 impl !Send for __CcTemplateInst13AlwaysBoundTsIifE {}
 impl !Sync for __CcTemplateInst13AlwaysBoundTsIifE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AlwaysBoundTs < int , float >"),
+    crate::__CcTemplateInst13AlwaysBoundTsIifE
+);
 impl __CcTemplateInst13AlwaysBoundTsIifE {
     /// # Safety
     ///
@@ -101,6 +105,10 @@ pub struct __CcTemplateInst10NotBoundTsIifE {
 }
 impl !Send for __CcTemplateInst10NotBoundTsIifE {}
 impl !Sync for __CcTemplateInst10NotBoundTsIifE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NotBoundTs < int , float >"),
+    crate::__CcTemplateInst10NotBoundTsIifE
+);
 
 impl From<(::ffi_11::c_int, f32)> for __CcTemplateInst10NotBoundTsIifE {
     #[inline(always)]

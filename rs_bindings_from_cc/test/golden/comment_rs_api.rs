@@ -37,6 +37,7 @@ pub mod ns {
         type Id = ::cxx::type_id!("ns :: Foo");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(forward_declare::symbol!("ns :: Foo"), crate::ns::Foo);
 
     impl Default for Foo {
         #[inline(always)]
@@ -86,6 +87,7 @@ unsafe impl ::cxx::ExternType for Bar {
     type Id = ::cxx::type_id!("Bar");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Bar"), crate::Bar);
 
 impl Default for Bar {
     #[inline(always)]
@@ -113,6 +115,7 @@ unsafe impl ::cxx::ExternType for HasNoComments {
     type Id = ::cxx::type_id!("HasNoComments");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("HasNoComments"), crate::HasNoComments);
 
 impl Default for HasNoComments {
     #[inline(always)]
