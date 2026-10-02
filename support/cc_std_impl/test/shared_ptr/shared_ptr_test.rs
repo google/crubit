@@ -49,6 +49,15 @@ fn test_deref() {
     expect_eq!(*shared_ptr::try_as_ref(&recovered).unwrap(), 1);
 }
 
+#[gtest]
+fn test_non_null_into() {
+    let nn = NonNull::new(test_helpers::shared_ptr_test::create_shared_ptr()).unwrap();
+    let r: &shared_ptr<i32> = (&nn).into();
+    expect_eq!(*shared_ptr::try_as_ref(r).unwrap(), 1);
+    let recovered: shared_ptr<i32> = nn.into();
+    expect_eq!(*shared_ptr::try_as_ref(&recovered).unwrap(), 1);
+}
+
 /// `shared_ptr` intentionally has no mutable accessor, but [`NonNull::from_mut`] requires only
 /// `StableNullness`, so a `&mut shared_ptr` can still be wrapped and then read through.
 #[gtest]

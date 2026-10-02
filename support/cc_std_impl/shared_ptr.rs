@@ -439,6 +439,12 @@ impl<T> From<NonNull<shared_ptr<T>>> for shared_ptr<T> {
     }
 }
 
+impl<'a, T> From<&'a NonNull<shared_ptr<T>>> for &'a shared_ptr<T> {
+    fn from(value: &'a NonNull<shared_ptr<T>>) -> Self {
+        NonNull::as_inner(value)
+    }
+}
+
 /// A control block for `shared_ptr` that embeds a `DynControlBlock` and a `T` value.
 ///
 /// # Layout

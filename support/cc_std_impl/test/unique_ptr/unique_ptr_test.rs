@@ -220,6 +220,24 @@ fn test_virtual_unique_ptr_deref() {
 }
 
 #[gtest]
+fn test_unique_ptr_non_null_into() {
+    let nn = NonNull::new(test_helpers::unique_ptr_test::create_unique_ptr()).unwrap();
+    let r: &unique_ptr<i32> = (&nn).into();
+    expect_eq!(*r.try_deref().unwrap(), 1);
+    let up: unique_ptr<i32> = nn.into();
+    expect_eq!(*up.try_deref().unwrap(), 1);
+}
+
+#[gtest]
+fn test_virtual_unique_ptr_non_null_into() {
+    let nn = NonNull::new(test_helpers::unique_ptr_test::create_virtual_base()).unwrap();
+    let r: &virtual_unique_ptr<test_helpers::unique_ptr_test::Base> = (&nn).into();
+    expect_true!(r.try_deref().unwrap().is_derived());
+    let vp: virtual_unique_ptr<test_helpers::unique_ptr_test::Base> = nn.into();
+    expect_true!(vp.try_deref().unwrap().is_derived());
+}
+
+#[gtest]
 fn test_virtual_unique_ptr_null_returns_none() {
     let mut vp = unsafe {
         virtual_unique_ptr::<test_helpers::unique_ptr_test::CustomDelete>::from_raw(
