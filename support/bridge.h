@@ -6,7 +6,7 @@
 #define THIRD_PARTY_CRUBIT_SUPPORT_BRIDGE_H_
 
 // Allow others to check #ifdef CRUBIT_BRIDGE_ENABLED
-#if !defined(SWIG) && defined(__clang__) && __cplusplus >= 202002L
+#if !defined(SWIG) && (defined(__clang__) || defined(__GNUC__)) && __cplusplus >= 202002L
 #define CRUBIT_BRIDGE_ENABLED
 
 #include <concepts>
