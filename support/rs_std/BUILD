@@ -95,9 +95,7 @@ rust_library(
     name = "erased_future",
     srcs = ["erased_future.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
-    visibility = [
-        "//:__subpackages__",
-    ],
+    visibility = ["//:__subpackages__"],
 )
 
 crubit_rust_test(
