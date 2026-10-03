@@ -260,6 +260,7 @@ rust_library(
     ],
 )
 
+# Deprecated: Forwarding wrapper for backwards compatibility. Use :crubit_support instead.
 rust_library(
     name = "bridge_rust",
     srcs = ["crubit_bridge_rust/src/bridge.rs"],
@@ -281,6 +282,7 @@ rust_test(
     ],
 )
 
+# Deprecated: Forwarding wrapper for backwards compatibility. Use :crubit_support instead.
 rust_library(
     name = "hash_rust",
     srcs = ["crubit_hash_rust/src/hash.rs"],
