@@ -51,8 +51,9 @@ The fields on the Rust struct type are the corresponding Rust types:
 Subobjects that do not receive bindings are made private, and replaced with an
 opaque blob of `[MaybeUninit<u8>; N]`, as well as a comment in the generated
 source code explaining why the subobject could not receive bindings. For
-example, since inheritance is not supported, the space of the object occupied by
-a base class will instead be this opaque blob of bytes.
+example, base class subobjects are not exposed as fields, so the space of the
+object occupied by a base class will instead be this opaque blob of bytes. (See
+[Base classes](#inheritance) for what you can do with base classes instead.)
 
 Specifically, the following subobjects are hidden and replaced with opaque
 blobs:
@@ -113,6 +114,69 @@ Some examples of types that are **not** Rust-movable:
 *   (For now) `absl::flat_hash_map`, `absl::AnyInvocable`, and other nontrivial
     types used throughout the C++ ecosystem, even outside the standard library.
 *   `absl::Mutex`, `absl::Notification`, and other non-movable types.
+
+## Base classes {#inheritance}
+
+Rust has no inheritance, so a derived class and its base classes become
+unrelated Rust structs. The base class subobject is an
+[opaque blob](#opaque_fields), so base class fields aren't accessible through
+the derived struct.
+
+### Inherited methods {#inherited_methods}
+
+By default, methods that a class inherits from its base classes are **not** part
+of the derived class's bindings, and no comment is emitted about them. They
+still exist on the base class's bindings.
+
+```c++
+struct Base {
+  bool IsValid() const;
+};
+struct Derived : Base {};
+```
+
+Here, `Base::IsValid()` has bindings, but `Derived` has no `IsValid()` method
+in Rust.
+
+To get inherited methods, add `//features:oo_casting` to the
+`aspect_hints` of the `cc_library` that defines the derived class. This is an
+[experimental](../overview/status.md) feature. With it:
+
+*   The derived struct gets the base classes' public methods, including static
+    methods, so `derived.IsValid()` works in Rust.
+*   The derived struct implements `oops::Upcast`, so Rust code can convert a
+    `&Derived` to a `&Base` with `unsafe { derived.upcast() }`. Classes with
+    `virtual` base classes use `oops::VirtualUpcast` on raw pointers instead.
+    Rust code that calls these depends on `//support:oops`.
+
+The tests in
+[`rs_bindings_from_cc/test/struct/inheritance/`](/rs_bindings_from_cc/test/struct/inheritance/)
+show both.
+
+Without `oo_casting`, add a method to the derived class in C++ that forwards to
+the base class method, or a function that returns the object as a pointer to
+its base class.
+
+`using Base::Method;` declarations in the derived class are not supported, and
+produce a "Function aliases are not yet supported" error comment.
+
+### Virtual methods {#virtual}
+
+Calling a C++ virtual method from Rust works like calling any other method, and
+dispatches virtually. This includes pure virtual methods. Because a class with
+virtual methods is not [Rust-movable](#rust_movable), non-`const` methods take
+`self: Pin<&mut Self>`.
+
+An abstract class (one with pure virtual methods that aren't overridden) gets
+bindings for its methods but no constructor, so Rust code works with it through
+references and pointers to objects created elsewhere. A subclass that overrides
+the methods gets bindings for its overrides and can be constructed. The methods
+it doesn't override are [inherited methods](#inherited_methods).
+
+Overriding a C++ virtual method in Rust, or otherwise implementing a C++
+interface in Rust, is not supported. The workaround is a C++ subclass that
+forwards to a Rust type; see
+[`examples/cpp/virtual/`](/examples/cpp/virtual/).
 
 ## Attributes {#attributes}
 
