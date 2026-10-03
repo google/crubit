@@ -1043,6 +1043,32 @@ static void modelCheckNE(const CallExpr& CE, Environment& Env) {
     Env.assume(Env.arena().makeEquals(Val->formula(), *IsNull));
 }
 
+// Models `absl::analyzer_internal::SimplifyForAnalysis()` as returning `true`.
+// In production, this inline function returns `false` — the compiler takes the
+// production branch of the ternary and DCE eliminates the dead branch.  The
+// analyzer, by modeling it as `true`, sees the simplified predicate that the
+// check macro smuggles into the dead branch.
+static void modelSimplifyForAnalysis(const CallExpr& CE, Environment& Env) {
+  assert(CE.getType()->isBooleanType());
+  Env.setValue(CE, Env.getBoolLiteralValue(true));
+}
+
+// Models `absl::analyzer_internal::IsOkForAnalysis(v)` by forwarding the
+// boolean value of the argument.  For types with `.ok()` this calls `.ok()`;
+// for bool-like types it returns the bool directly.  The analysis doesn't need
+// to inspect the overload — it just propagates the argument's truthiness.
+static void modelIsOkForAnalysis(const CallExpr& CE, Environment& Env) {
+  assert(CE.getNumArgs() == 1);
+  assert(CE.getType()->isBooleanType());
+  auto* ArgVal = Env.get<BoolValue>(*CE.getArg(0));
+  if (ArgVal != nullptr) {
+    Env.setValue(CE, *ArgVal);
+  } else {
+    // If we can't get the argument value, return top (unknown).
+    Env.setValue(CE, Env.makeTopBoolValue());
+  }
+}
+
 static bool isMethodOfAbslStatusOr(const FunctionDecl* F) {
   const auto* Method = dyn_cast<CXXMethodDecl>(F);
   if (!Method) return false;
@@ -1074,6 +1100,16 @@ static void transferCallExpr(const CallExpr* absl_nonnull CE,
       }
       if (FunII->isStr("Check_NEImpl") && isDeclaredInAbseilOrUtil(*FuncDecl)) {
         modelCheckNE(*CE, State.Env);
+        return;
+      }
+      if (FunII->isStr("SimplifyForAnalysis") &&
+          isDeclaredInAbseilOrUtil(*FuncDecl)) {
+        modelSimplifyForAnalysis(*CE, State.Env);
+        return;
+      }
+      if (FunII->isStr("IsOkForAnalysis") &&
+          isDeclaredInAbseilOrUtil(*FuncDecl)) {
+        modelIsOkForAnalysis(*CE, State.Env);
         return;
       }
       if (FunII->isStr(ArgCaptureAbortIfFalse) ||
