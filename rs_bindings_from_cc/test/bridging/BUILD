@@ -114,3 +114,28 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+cc_library(
+    name = "nonnull_status_or_lib",
+    hdrs = ["nonnull_status_or_lib.h"],
+    aspect_hints = [
+        "//features:nonnull_smart_pointers",
+    ],
+    deps = [
+        "@abseil-cpp//absl/base:nullability",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+crubit_rust_test(
+    name = "nonnull_status_or_test",
+    srcs = ["nonnull_status_or_test.rs"],
+    cc_deps = [
+        ":nonnull_status_or_lib",
+        "//support/cc_std",
+        "@abseil-cpp//absl/status",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)

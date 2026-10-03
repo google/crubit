@@ -1417,6 +1417,145 @@ fn test_nonnull_file_default_pragma_through_typedef() {
     );
 }
 
+/// Nullability written on a template argument is recorded on the use site's `template_args`: the
+/// specialization decl is shared by every use with the same canonical arguments, so it can't
+/// carry it. An argument without any known nullability says nothing more than the decl's, so it
+/// is not recorded.
+#[gtest]
+fn test_nonnull_template_argument() {
+    let proto = ir_proto_from_cc(
+        r#"
+        template <class T> struct W { T value; };
+        void f(W<int* _Nonnull> nonnull, W<int*> plain);
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            params: [
+                FuncParam {
+                    type_: CcType {
+                        variant: Decl {
+                            ...
+                            template_args: Some([
+                                CcType { ... is_nonnull: true, ... }
+                            ]),
+                        },
+                        ...
+                    },
+                    identifier: "nonnull", ...
+                },
+                FuncParam {
+                    type_: CcType {
+                        variant: Decl {
+                            ...
+                            template_args: None,
+                        },
+                        ...
+                    },
+                    identifier: "plain", ...
+                },
+            ]
+        }
+    );
+}
+
+/// The file default applies to template arguments written in that file.
+#[gtest]
+fn test_nonnull_file_default_pragma_template_argument() {
+    let proto = ir_proto_from_cc(
+        r#"
+        #pragma nullability file_default nonnull
+        template <class T> struct W { T value; };
+        void f(W<int*> plain);
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            FuncParam {
+                type_: CcType {
+                    variant: Decl {
+                        ...
+                        template_args: Some([
+                            CcType { ... is_nonnull: true, ... }
+                        ]),
+                    },
+                    ...
+                },
+                identifier: "plain", ...
+            }
+        }
+    );
+}
+
+/// Defaulted arguments are not written, so they don't count against the single-argument limit:
+/// e.g. `std::vector<T>` has one written argument.
+#[gtest]
+fn test_template_args_ignore_defaulted_arguments() {
+    let proto = ir_proto_from_cc(
+        r#"
+        template <class T, class U = int> struct W { T t; U u; };
+        void f(W<int* _Nonnull> x);
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            FuncParam {
+                type_: CcType {
+                    variant: Decl {
+                        ...
+                        template_args: Some([
+                            CcType { ... is_nonnull: true, ... }
+                        ]),
+                    },
+                    ...
+                },
+                identifier: "x", ...
+            }
+        }
+    );
+}
+
+/// Only a single written argument is recorded, because consumers of `template_args` assume one.
+#[gtest]
+fn test_template_args_not_recorded_for_multiple_arguments() {
+    let proto = ir_proto_from_cc(
+        r#"
+        template <class T, class U> struct W { T t; U u; };
+        void f(W<int* _Nonnull, int> x);
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            FuncParam {
+                type_: CcType {
+                    variant: Decl {
+                        ...
+                        template_args: None,
+                    },
+                    ...
+                },
+                identifier: "x", ...
+            }
+        }
+    );
+}
+
 #[gtest]
 fn test_doc_comment() -> Result<()> {
     let proto = ir_proto_from_cc(

@@ -68,6 +68,7 @@
 #include "clang/AST/Mangle.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RawCommentList.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeBase.h"
 #include "clang/Basic/ABI.h"
@@ -2286,44 +2287,66 @@ CcType Importer::ConvertTemplateSpecializationType(
 CcType Importer::WithAsWrittenTemplateArgs(
     CcType converted, const clang::TemplateSpecializationType& type,
     bool assume_lifetimes) {
-  // The gate below is deliberately narrow, and each conjunct is load-bearing:
+  // The specialization decl is shared by every use with the same canonical
+  // arguments, so it cannot carry anything that differs between uses: e.g.
+  // the nullability in `std::vector<absl_nonnull std::unique_ptr<T>>`, or the
+  // lifetime in `absl::Span<View $a>`. Record the argument as written here,
+  // and let consumers prefer it over the decl's.
   //
-  //  * `assume_lifetimes`: outside that feature nothing reads lifetimes, so
-  //    recording the arguments would only churn the IR.
-  //  * exactly one argument, written as a type: every consumer of
-  //    `template_args` today assumes a single type argument (see
-  //    `choose_one_type` in `rs_snippet.rs`, and the arity check in
-  //    `BridgeRsTypeKind::new`, which errors on a mismatch). Supporting
-  //    higher arities means generalizing those first.
-  //  * an explicit lifetime somewhere in that argument: this is the only
-  //    information that the shared specialization decl cannot already carry,
-  //    and testing for it before converting keeps the conversion -- and the
-  //    imports it triggers as a side effect -- out of the picture entirely
-  //    when the gate is closed. The lifetime need not be on the argument's
-  //    outermost type: in `W<W<int* $a>>` or `W<const V<int* $a>&>` it is
-  //    nested, and the conversion below records it on the inner use (via a
-  //    recursive call to this function, or on the pointee).
+  // Only a single argument, written as a type, is recorded: every consumer of
+  // `template_args` today assumes a single type argument (see
+  // `choose_one_type` in `rs_snippet.rs`). This still covers `std::vector<T>`
+  // and friends, because defaulted arguments (like the allocator) are not
+  // written, and so are not counted.
   //
   // TODO(zarko): broaden to arity > 1 once the consumers above no longer
   // assume a single argument.
-  if (!assume_lifetimes) return converted;
   if (!std::holds_alternative<ItemId>(converted.variant)) return converted;
 
-  llvm::ArrayRef<clang::TemplateArgument> args = type.template_arguments();
+  // An alias template specialization carries the arguments of the alias, not
+  // of the class template it names: e.g. `c9::CoStatusOr<T>` is written with
+  // `T`, but names `Co<absl::StatusOr<T>>`. Look through aliases to find the
+  // arguments of the class template specialization itself.
+  const clang::TemplateSpecializationType* specialization_type = &type;
+  while (specialization_type->isTypeAlias()) {
+    specialization_type = specialization_type->getAliasedType()
+                              ->getAs<clang::TemplateSpecializationType>();
+    if (specialization_type == nullptr) return converted;
+  }
+
+  llvm::ArrayRef<clang::TemplateArgument> args =
+      specialization_type->template_arguments();
   if (args.size() != 1) return converted;
   if (args[0].getKind() != clang::TemplateArgument::Type) return converted;
   clang::QualType arg_type = args[0].getAsType();
-  if (!ContainsExplicitLifetimes(arg_type)) return converted;
 
-  // A malformed lifetime annotation in the argument surfaces here as an error
-  // type, rather than being silently dropped.
+  // Only convert the argument if it can say something the decl's argument does
+  // not. Converting it is not free: it imports whatever the argument names into
+  // the current target, which can change that target's bindings (e.g. which
+  // support headers its generated code includes).
+  const bool has_explicit_lifetimes =
+      assume_lifetimes && ContainsExplicitLifetimes(arg_type);
+  if (!has_explicit_lifetimes && !ContainsKnownNullability(arg_type)) {
+    return converted;
+  }
+
   CcType converted_arg = ConvertQualType(arg_type, /*lifetimes=*/nullptr,
                                          /*nullable=*/true, assume_lifetimes);
   if (const auto* error = std::get_if<FormattedError>(&converted_arg.variant)) {
-    return CcType(FormattedError::Substitute(
-        "Failed to convert the template argument of '$0', which carries an "
-        "explicit lifetime: $1",
-        clang::QualType(&type, 0).getAsString(), error->message()));
+    // A malformed lifetime annotation surfaces here as an error type, rather
+    // than being silently dropped: the lifetime was written down in the
+    // source, so dropping it would produce bindings that disagree with the
+    // header.
+    if (has_explicit_lifetimes) {
+      return CcType(FormattedError::Substitute(
+          "Failed to convert the template argument of '$0', which carries an "
+          "explicit lifetime: $1",
+          clang::QualType(&type, 0).getAsString(), error->message()));
+    }
+    // Otherwise, fall back to the decl's argument. It was converted
+    // successfully when the specialization was imported, so this only loses
+    // information that is specific to this use.
+    return converted;
   }
   converted.template_args.push_back(std::move(converted_arg));
   return converted;
@@ -2384,6 +2407,32 @@ clang::NullabilityKindOrNone Importer::GetDefaultNullability(
   auto it = pragmas.find(file);
   if (it == pragmas.end()) return std::nullopt;
   return it->second;
+}
+
+bool Importer::ContainsKnownNullability(clang::QualType type) const {
+  // `RecursiveASTVisitor` walks the type as written: it descends into
+  // pointees, template arguments, and function parameter and return types,
+  // but not into the underlying type of a typedef. That is fine, because both
+  // `getNullability` and `GetDefaultNullability` see through typedefs.
+  struct NullabilityFinder
+      : public clang::RecursiveASTVisitor<NullabilityFinder> {
+    const Importer& importer;
+    bool found = false;
+    explicit NullabilityFinder(const Importer& importer) : importer(importer) {}
+    bool VisitType(clang::Type* type) {
+      if (type->getNullability().has_value() ||
+          (type->canHaveNullability(/*ResultIfUnknown=*/false) &&
+           importer.GetDefaultNullability(*type).has_value())) {
+        found = true;
+        // Returning false stops the traversal.
+        return false;
+      }
+      return true;
+    }
+  };
+  NullabilityFinder finder(*this);
+  finder.TraverseType(type);
+  return finder.found;
 }
 
 absl::StatusOr<CcType> Importer::ConvertType(
@@ -2612,6 +2661,14 @@ absl::StatusOr<CcType> Importer::ConvertUnattributedType(
         EnsureSuccessfullyImported(typedef_type->getDecl())) {
       return ConvertTypeDecl(typedef_type->getDecl());
     }
+    // The underlying type was written in the typedef's file, so that file's
+    // nullability default governs the types within it, such as its template
+    // arguments.
+    llvm::SaveAndRestore governing_file(
+        governing_file_,
+        ctx_.getSourceManager()
+            .getDecomposedExpansionLoc(typedef_type->getDecl()->getLocation())
+            .first);
     return ConvertQualType(typedef_type->getDecl()->getUnderlyingType(),
                            lifetimes, /*nullable=*/true, assume_lifetimes);
   } else if (const auto* using_type = type.getAs<clang::UsingType>()) {

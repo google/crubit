@@ -2075,8 +2075,8 @@ TEST(ImporterTest, TemplateArgsNotRecordedWithoutAssumedLifetimes) {
           AllOf(IdentifierIs("f"), ParamsAre(ParamType(TemplateArgsAre()))))));
 }
 
-// No lifetime was written, so the as-written arguments add nothing over the
-// arguments already attached to the decl.
+// No lifetime or nullability was written, so the as-written argument says
+// nothing that the specialization decl's does not, and is not recorded.
 TEST(ImporterTest, TemplateArgsNotRecordedWithoutAnnotation) {
   absl::string_view file = R"cc(
     template <class T>
@@ -2090,6 +2090,52 @@ TEST(ImporterTest, TemplateArgsNotRecordedWithoutAnnotation) {
       ItemsWithoutBuiltins(ir),
       Contains(VariantWith<Func>(
           AllOf(IdentifierIs("f"), ParamsAre(ParamType(TemplateArgsAre()))))));
+}
+
+// The nullability is per-use information that the shared specialization decl
+// cannot carry, so the as-written argument is recorded.
+TEST(ImporterTest, TemplateArgsRecordedWithNullabilityAnnotation) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct Wrapper {
+      T value;
+    };
+    void f(Wrapper<int* _Nonnull> w);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      Contains(VariantWith<Func>(AllOf(
+          IdentifierIs("f"),
+          ParamsAre(ParamType(TemplateArgsAre(AllOf(
+              IsIntPtr(), IsPointerWithKind(PointerTypeKind::kNonNull)))))))));
+}
+
+// An alias template is written with the alias's arguments, which need not be
+// the class template's: e.g. `c9::CoStatusOr<T>` names
+// `Co<absl::StatusOr<T>>`. The recorded argument must be the class template's.
+TEST(ImporterTest, TemplateArgsRecordedThroughAliasTemplate) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct Wrapper {
+      T value;
+    };
+    template <class T>
+    using WrapperOfPtr = Wrapper<T* _Nonnull>;
+    template <class T>
+    using WrapperOfPtrAgain = WrapperOfPtr<T>;
+    void f(WrapperOfPtr<int> w);
+    void g(WrapperOfPtrAgain<int> w);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              Contains(VariantWith<Func>(
+                  AllOf(IdentifierIs("f"),
+                        ParamsAre(ParamType(TemplateArgsAre(IsIntPtr())))))));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              Contains(VariantWith<Func>(
+                  AllOf(IdentifierIs("g"),
+                        ParamsAre(ParamType(TemplateArgsAre(IsIntPtr())))))));
 }
 
 // TODO(zarko): arity > 1 is deliberately out of scope for now, because the

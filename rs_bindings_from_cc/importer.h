@@ -214,14 +214,15 @@ class Importer final : public ImportContext {
       const clang::TemplateSpecializationType& type, bool assume_lifetimes);
 
   // Attaches the template arguments of `type` as written at this use site to
-  // `converted`, if they carry a lifetime that the specialization decl cannot.
+  // `converted`, so that per-use information the shared specialization decl
+  // cannot carry (e.g. nullability or lifetimes) reaches codegen.
   //
-  // Returns `converted` unchanged unless `assume_lifetimes` is enabled and
-  // `type` has exactly one argument, written as a type, with an explicit
-  // lifetime annotation somewhere within it (see `ContainsExplicitLifetimes`).
-  // Returns an error type if such an argument fails to convert: the lifetime
-  // was written down in the source, so dropping it silently would produce
-  // bindings that disagree with the header.
+  // Only a single written argument, which must be a type, is recorded, and
+  // only if it carries an explicit lifetime or a known nullability.
+  // Records nothing if it fails to convert, except that it returns an error
+  // type if the argument carries an explicit lifetime annotation, because the
+  // lifetime was written down in the source, so dropping it silently would
+  // produce bindings that disagree with the header.
   CcType WithAsWrittenTemplateArgs(
       CcType converted, const clang::TemplateSpecializationType& type,
       bool assume_lifetimes);
@@ -294,6 +295,12 @@ class Importer final : public ImportContext {
   // (`getGoverningFile` in nullability/type_nullability.cc).
   clang::NullabilityKindOrNone GetDefaultNullability(
       const clang::Type& type) const;
+
+  // Returns true if `type`, as written, contains a type whose nullability is
+  // known: either annotated explicitly, or covered by a
+  // `#pragma nullability file_default`. Without either, every nullability in
+  // `type` is unspecified, which is exactly what the canonical type says.
+  bool ContainsKnownNullability(clang::QualType type) const;
 
   // The file whose `#pragma nullability file_default` governs types that are
   // spelled directly in the decl currently being imported (i.e. not via a

@@ -422,7 +422,8 @@ impl<'a> UniformReprTemplateType<'a> {
         };
         match template_specialization_kind {
             Some(TemplateSpecializationKind::StdSharedPtr { raw_element_type }) => {
-                let element_type_kind = type_arg(raw_element_type)?;
+                let element_type = choose_one_type(raw_element_type, template_args)?;
+                let element_type_kind = type_arg(&element_type)?;
                 Ok(Some(Rc::new(UniformReprTemplateType::StdSharedPtr {
                     element_type: element_type_kind,
                     // Set from the use site, which this function does not see.
@@ -564,7 +565,7 @@ impl<'a> UniformReprTemplateType<'a> {
                 };
                 wrap_in_non_null(unique_ptr, *is_nonnull)
             }
-            Self::StdAtomic { in_cc_std: _, element_type } => match element_type {
+            Self::StdAtomic { in_cc_std: _, element_type } => match element_type.unalias() {
                 RsTypeKind::Primitive(p) => match p {
                     ir::Primitive::SizeT
                     | ir::Primitive::StdSizeT
@@ -1041,19 +1042,19 @@ impl<'a> BridgeRsTypeKind<'a> {
                 template_args: bridge_template_args,
                 label_hint,
             } => {
-                let template_args = match template_args {
-                    Some(a) => {
-                        if a.len() == bridge_template_args.len() {
-                            a.clone()
-                        } else {
-                            return Err(anyhow!(
-                            "Internal error: template argument arity mismatch for bridge type `{}`",
-                            record.rs_name().as_str(),
-                        ));
-                        }
-                    }
-                    None => bridge_template_args.clone(),
-                };
+                // Prefer each argument as written at the use site (which carries e.g. its
+                // nullability), falling back to the canonical one for trailing defaulted
+                // arguments that were not written.
+                let template_args: Vec<CcType> = bridge_template_args
+                    .iter()
+                    .enumerate()
+                    .map(|(i, canonical)| {
+                        template_args
+                            .as_ref()
+                            .and_then(|written| written.get(i).cloned())
+                            .unwrap_or_else(|| canonical.clone())
+                    })
+                    .collect();
                 let parsed_hint = if let Some(hint_str) = label_hint {
                     if hint_str.starts_with("//") {
                         let label = BazelLabel::from(hint_str);

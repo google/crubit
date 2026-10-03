@@ -7,8 +7,8 @@ use common::OverloadedDelete;
 use googletest::prelude::*;
 use nonnull_smart_pointer_lib::{
     MakeDefaultNonnullUniquePtr, MakeExplicitlyNullableUniquePtr, MakeNonnullSharedPtr,
-    MakeNonnullUniquePtr, MakeNonnullVirtualUniquePtr, MakeUniquePtr, UseNonnullSharedPtrByValue,
-    UseNonnullUniquePtrByValue,
+    MakeNonnullUniquePtr, MakeNonnullVirtualUniquePtr, MakeUniquePtr, MakeVectorOfNonnull,
+    UseNonnullSharedPtrByValue, UseNonnullUniquePtrByValue,
 };
 
 #[gtest]
@@ -54,4 +54,13 @@ fn test_default_nonnull_unique_ptr_is_wrapped() {
 fn test_explicitly_nullable_unique_ptr_is_not_wrapped() {
     let p: cc_std::std::unique_ptr<i32> = MakeExplicitlyNullableUniquePtr(5);
     expect_eq!(p.try_deref(), Some(&5));
+}
+
+/// Nullability written on a template argument applies to that argument.
+#[gtest]
+fn test_vector_of_nonnull_unique_ptr() {
+    let v: cc_std::std::vector<cc_std::std::NonNull<cc_std::std::unique_ptr<i32>>> =
+        MakeVectorOfNonnull(6);
+    expect_eq!(v.len(), 1);
+    expect_eq!(*v[0], 6);
 }
