@@ -176,6 +176,89 @@ rust_test(
     ],
 )
 
+# Aspect hint dep test (cc_deps in aspect hint matches one of client's deps)
+cc_library(
+    name = "lib_aspect_hint_dep",
+    hdrs = ["aspect_hint_dep.h"],
+    aspect_hints = [
+        ":aspect_hint_dep_extra_srcs",
+        "//features:supported",
+    ],
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+    deps = [
+        "//rs_bindings_from_cc/test/bazel/deps_with_same_names/deps/A_cc_library:a",
+        "//rs_bindings_from_cc/test/bazel/deps_with_same_names/deps/B_cc_library:a",
+    ],
+)
+
+additional_rust_srcs_for_crubit_bindings(
+    name = "aspect_hint_dep_extra_srcs",
+    srcs = ["aspect_hint_dep_extra.rs"],
+    cc_deps = [
+        "//rs_bindings_from_cc/test/bazel/deps_with_same_names/deps/A_cc_library:a",
+    ],
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+)
+
+rust_library(
+    name = "lib_with_aspect_hint_dep",
+    srcs = ["aspect_hint_dep.rs"],
+    cc_deps = [":lib_aspect_hint_dep"],
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+)
+
+# rust_api_from_cpp test: we have pair of a client and dep cc libraries,
+# together with corresponding rust_api_from_cpp that depend on each other.
+# The manual bindings of the client library refer to the bindings of the
+# dependency.
+cc_library(
+    name = "cc_deps_test_dep",
+    hdrs = ["cc_deps_test_dep.h"],
+    aspect_hints = [":cc_deps_test_dep_rust.hint"],
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+)
+
+rust_api_from_cpp(
+    name = "cc_deps_test_dep_rust",
+    cpp_target = ":cc_deps_test_dep",
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+)
+
+cc_library(
+    name = "cc_deps_test_lib",
+    hdrs = ["cc_deps_test_lib.h"],
+    aspect_hints = [":cc_deps_test_lib_rust.hint"],
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+)
+
+rust_api_from_cpp(
+    name = "cc_deps_test_lib_rust",
+    srcs = ["cc_deps_test_lib.rs"],
+    cpp_deps = [
+        ":cc_deps_test_dep_rust",
+    ],
+    cpp_target = ":cc_deps_test_lib",
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+)
+
+rust_test(
+    name = "cc_deps_test",
+    srcs = ["cc_deps_test.rs"],
+    tags = _tags,
+    target_compatible_with = _compatible_with_flag,
+    deps = [
+        ":cc_deps_test_lib_rust",
+        "@crate_index//:googletest",
+    ],
+)
+
 build_test(
     name = "build_test",
     targets = [
