@@ -96,6 +96,11 @@ where
         rustc_driver::RunCompiler::new(self.args, self).run()
     }
 
+    #[cfg_accessible(rustc_driver::compiler_entrypoint)]
+    fn run_internal(&mut self) -> () {
+        rustc_driver::compiler_entrypoint(self.args, self)
+    }
+
     /// Runs Rust compiler, and then invokes the stored callback (with
     /// `TyCtxt` of the parsed+analyzed Rust crate as the callback's
     /// argument), and then finally returns the combined results
