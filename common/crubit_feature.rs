@@ -98,6 +98,13 @@ flagset::flags! {
         /// Honor `absl_nonnull` (clang's `_Nonnull`) on `std::unique_ptr` and `std::shared_ptr` by
         /// wrapping the generated Rust type in `cc_std::std::NonNull`.
         NonnullSmartPointers,
+
+        /// Generate `::cxx::ExternType` implementations for records.
+        /// This is automatically enabled by `Supported` and `Types`.
+        ImplCxxExternType,
+
+        /// Disable ImplCxxExternType.
+        NoImplCxxExternType,
     }
 }
 
@@ -136,6 +143,8 @@ impl CrubitFeature {
             Self::ProtoReferences => "proto_references",
             Self::Generics => "generics",
             Self::NonnullSmartPointers => "nonnull_smart_pointers",
+            Self::ImplCxxExternType => "impl_cxx_extern_type",
+            Self::NoImplCxxExternType => "no_impl_cxx_extern_type",
         }
     }
 
@@ -177,6 +186,8 @@ impl CrubitFeature {
             Self::ProtoReferences => "//features:proto_references",
             Self::Generics => "//features:generics",
             Self::NonnullSmartPointers => "//features:nonnull_smart_pointers",
+            Self::ImplCxxExternType => "//features:impl_cxx_extern_type",
+            Self::NoImplCxxExternType => "//features:no_impl_cxx_extern_type",
         }
     }
 }
@@ -189,6 +200,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
             flagset::FlagSet::<CrubitFeature>::full()
                 - CrubitFeature::NoAssumeLifetimes
                 - CrubitFeature::NoTemplateInstantiation
+                - CrubitFeature::NoImplCxxExternType
                 - CrubitFeature::LayoutCompatTuple
                 - CrubitFeature::LayoutCompatString
                 - CrubitFeature::LayoutCompatOptional
@@ -199,11 +211,13 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::Generics
                 - CrubitFeature::NonnullSmartPointers
         }
-        // `supported` automatically implies `types`.
-        b"supported" => CrubitFeature::Supported | CrubitFeature::Types,
+        // `supported` automatically implies `types` and `impl_cxx_extern_type`.
+        b"supported" => {
+            CrubitFeature::Supported | CrubitFeature::Types | CrubitFeature::ImplCxxExternType
+        }
         b"wrapper" => CrubitFeature::Wrapper | CrubitFeature::ForwardDeclarations,
         b"forward_declare" => CrubitFeature::ForwardDeclarations.into(),
-        b"types" => CrubitFeature::Types.into(),
+        b"types" => CrubitFeature::Types | CrubitFeature::ImplCxxExternType,
         b"experimental" => CrubitFeature::Experimental.into(),
         b"assume_lifetimes" => CrubitFeature::AssumeLifetimes.into(),
         b"assume_this_lifetimes" => CrubitFeature::AssumeThisLifetimes.into(),
@@ -227,6 +241,8 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"proto_references" => CrubitFeature::ProtoReferences.into(),
         b"generics" => CrubitFeature::Generics.into(),
         b"nonnull_smart_pointers" => CrubitFeature::NonnullSmartPointers.into(),
+        b"impl_cxx_extern_type" => CrubitFeature::ImplCxxExternType.into(),
+        b"no_impl_cxx_extern_type" => CrubitFeature::NoImplCxxExternType.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -295,6 +311,10 @@ impl SerializedCrubitFeatures {
             features -= CrubitFeature::TemplateInstantiation;
         }
         features -= CrubitFeature::NoTemplateInstantiation;
+        if features.contains(CrubitFeature::NoImplCxxExternType) {
+            features -= CrubitFeature::ImplCxxExternType;
+        }
+        features -= CrubitFeature::NoImplCxxExternType;
         Self(features)
     }
 }
@@ -339,13 +359,36 @@ mod tests {
     #[gtest]
     fn test_serialized_crubit_feature() {
         let SerializedCrubitFeature(features) = serde_json::from_str("\"supported\"").unwrap();
-        assert_eq!(features, CrubitFeature::Supported | CrubitFeature::Types);
+        assert_eq!(
+            features,
+            CrubitFeature::Supported | CrubitFeature::Types | CrubitFeature::ImplCxxExternType
+        );
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_feature_types() {
+        let SerializedCrubitFeature(features) = serde_json::from_str("\"types\"").unwrap();
+        assert_eq!(features, CrubitFeature::Types | CrubitFeature::ImplCxxExternType);
     }
 
     #[gtest]
     fn test_serialized_crubit_feature_generics() {
         let SerializedCrubitFeature(features) = serde_json::from_str("\"generics\"").unwrap();
         assert_eq!(features, CrubitFeature::Generics);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_feature_impl_cxx_extern_type() {
+        let SerializedCrubitFeature(features) =
+            serde_json::from_str("\"impl_cxx_extern_type\"").unwrap();
+        assert_eq!(features, CrubitFeature::ImplCxxExternType);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_feature_no_impl_cxx_extern_type() {
+        let SerializedCrubitFeature(features) =
+            serde_json::from_str("\"no_impl_cxx_extern_type\"").unwrap();
+        assert_eq!(features, CrubitFeature::NoImplCxxExternType);
     }
 
     #[gtest]
@@ -367,6 +410,7 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
+                | CrubitFeature::ImplCxxExternType
         );
     }
 
@@ -382,7 +426,10 @@ mod tests {
             serde_json::from_str("[\"supported\", \"experimental\"]").unwrap();
         assert_eq!(
             features,
-            CrubitFeature::Supported | CrubitFeature::Types | CrubitFeature::Experimental
+            CrubitFeature::Supported
+                | CrubitFeature::Types
+                | CrubitFeature::Experimental
+                | CrubitFeature::ImplCxxExternType
         );
     }
 
@@ -405,6 +452,7 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
+                | CrubitFeature::ImplCxxExternType
         );
     }
 
@@ -428,6 +476,7 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
+                | CrubitFeature::ImplCxxExternType
         );
     }
 
@@ -452,6 +501,7 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
+                | CrubitFeature::ImplCxxExternType
         );
     }
 
@@ -472,6 +522,32 @@ mod tests {
                 | CrubitFeature::UnsafeView
                 | CrubitFeature::CheckDefaultInitialized
                 | CrubitFeature::LeadingColonsForCppType
+                | CrubitFeature::RecordImplDebug
+                | CrubitFeature::CtorPlainValues
+                | CrubitFeature::ReserveStandardMacros
+                | CrubitFeature::ThunklessAccessors
+                | CrubitFeature::ImplCxxExternType
+        );
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_features_all_overlapping_no_impl_cxx_extern_type() {
+        let SerializedCrubitFeatures(features) = serde_json::from_str(
+            "[\"all\", \"supported\", \"experimental\", \"no_impl_cxx_extern_type\"]",
+        )
+        .unwrap();
+        assert_eq!(
+            features,
+            CrubitFeature::Supported
+                | CrubitFeature::Wrapper
+                | CrubitFeature::Types
+                | CrubitFeature::Experimental
+                | CrubitFeature::AssumeLifetimes
+                | CrubitFeature::AssumeThisLifetimes
+                | CrubitFeature::UnsafeView
+                | CrubitFeature::CheckDefaultInitialized
+                | CrubitFeature::LeadingColonsForCppType
+                | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::RecordImplDebug
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros

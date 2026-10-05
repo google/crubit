@@ -74,6 +74,7 @@ static TESTING_FEATURES: LazyLock<flagset::FlagSet<crubit_feature::CrubitFeature
             | crubit_feature::CrubitFeature::Supported
             | crubit_feature::CrubitFeature::TemplateInstantiation
             | crubit_feature::CrubitFeature::OoCasting
+            | crubit_feature::CrubitFeature::ImplCxxExternType
     });
 
 /// Update the IR to have common test-only items.
@@ -85,8 +86,10 @@ fn update_test_ir(ir: &mut IR<'_>, extra_feature: Option<&str>) {
     *ir.target_crubit_features_mut(&ir::BazelLabel::from(DEPENDENCY_TARGET)) = *TESTING_FEATURES;
     if let Some(s) = extra_feature {
         let feature = crubit_feature::named_features(s.as_bytes()).unwrap();
-        *ir.target_crubit_features_mut(&ir.current_target().clone()) |= feature;
-        *ir.target_crubit_features_mut(&ir::BazelLabel::from(DEPENDENCY_TARGET)) |= feature;
+        for target in [ir.current_target().clone(), ir::BazelLabel::from(DEPENDENCY_TARGET)] {
+            let features = ir.target_crubit_features_mut(&target);
+            *features = crubit_feature::SerializedCrubitFeatures::resolved(*features | feature).0;
+        }
     }
 }
 
@@ -293,6 +296,7 @@ mod tests {
                 | CrubitFeature::Supported
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::OoCasting
+                | CrubitFeature::ImplCxxExternType
         );
         Ok(())
     }
@@ -309,6 +313,7 @@ mod tests {
                 | CrubitFeature::Supported
                 | CrubitFeature::TemplateInstantiation
                 | CrubitFeature::OoCasting
+                | CrubitFeature::ImplCxxExternType
         );
         Ok(())
     }

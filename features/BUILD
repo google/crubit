@@ -271,6 +271,22 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling `::cxx::ExternType` implementations for records.
+crubit_feature_hint(
+    name = "impl_cxx_extern_type",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["impl_cxx_extern_type"],
+    visibility = ["//visibility:public"],
+)
+
+# Explicitly disables `impl_cxx_extern_type` for a target.
+crubit_feature_hint(
+    name = "no_impl_cxx_extern_type",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["no_impl_cxx_extern_type"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

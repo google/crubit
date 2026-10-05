@@ -904,7 +904,7 @@ unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
             &cc_api,
             "// Automatically @generated C++ bindings for the following Rust crate:\n\
             // test_crate\n\
-            // Features: experimental, supported",
+            // Features: experimental, impl_cxx_extern_type, supported, types",
         );
         Ok(())
     }
@@ -921,7 +921,7 @@ unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
             &cc_api,
             "// Automatically @generated C++ bindings for the following Rust crate:\n\
             // test_crate\n\
-            // Features: supported",
+            // Features: impl_cxx_extern_type, supported, types",
         );
         Ok(())
     }
@@ -936,7 +936,7 @@ unsafe extern "C" fn __crubit_thunk_ANY_IDENTIFIER_CHARACTERS()
             &cc_api,
             "// Automatically @generated C++ bindings for the following Rust crate:\n\
             // test_crate\n\
-            // Features: supported",
+            // Features: impl_cxx_extern_type, supported, types",
         );
         Ok(())
     }

@@ -495,7 +495,9 @@ mod tests {
         assert_eq!(3, cmdline.crate_features.len());
         assert_eq!("dep1", cmdline.crate_features[0].0);
         assert_eq!(
-            crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Types,
+            crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::Types
+                | crubit_feature::CrubitFeature::ImplCxxExternType,
             cmdline.crate_features[0].1
         );
         assert_eq!("dep1", cmdline.crate_features[1].0);
@@ -520,7 +522,9 @@ mod tests {
             parse_crate_feature("foo=supported").unwrap(),
             (
                 "foo".into(),
-                crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Types,
+                crubit_feature::CrubitFeature::Supported
+                    | crubit_feature::CrubitFeature::Types
+                    | crubit_feature::CrubitFeature::ImplCxxExternType,
             ),
         );
         assert_eq!(
