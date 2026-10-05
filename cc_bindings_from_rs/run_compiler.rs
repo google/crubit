@@ -67,6 +67,33 @@ where
     AfterAnalysisCallback::new(rustc_args, callback, input).run()
 }
 
+/// Invokes the `rustc_driver` entrypoint, abstracting over its name across
+/// toolchain versions (`RunCompiler::run` -> `run_compiler` ->
+/// `compiler_entrypoint`).
+#[cfg_accessible(rustc_driver::compiler_entrypoint)]
+pub fn rustc_driver_entrypoint(
+    args: &[String],
+    callbacks: &mut (dyn rustc_driver::Callbacks + Send),
+) {
+    rustc_driver::compiler_entrypoint(args, callbacks)
+}
+
+#[cfg_accessible(rustc_driver::run_compiler)]
+pub fn rustc_driver_entrypoint(
+    args: &[String],
+    callbacks: &mut (dyn rustc_driver::Callbacks + Send),
+) {
+    rustc_driver::run_compiler(args, callbacks)
+}
+
+#[cfg_accessible(rustc_driver::RunCompiler)]
+pub fn rustc_driver_entrypoint(
+    args: &[String],
+    callbacks: &mut (dyn rustc_driver::Callbacks + Send),
+) {
+    rustc_driver::RunCompiler::new(args, callbacks).run()
+}
+
 struct AfterAnalysisCallback<'a, F, R>
 where
     F: FnOnce(TyCtxt) -> Result<R> + Send,
@@ -86,14 +113,9 @@ where
         Self { args, callback_or_result: Either::Left(callback), input }
     }
 
-    #[cfg_accessible(rustc_driver::run_compiler)]
     fn run_internal(&mut self) -> () {
-        rustc_driver::run_compiler(self.args, self)
-    }
-
-    #[cfg_accessible(rustc_driver::RunCompiler)]
-    fn run_internal(&mut self) -> () {
-        rustc_driver::RunCompiler::new(self.args, self).run()
+        let args = self.args;
+        rustc_driver_entrypoint(args, self)
     }
 
     /// Runs Rust compiler, and then invokes the stored callback (with

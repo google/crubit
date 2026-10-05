@@ -324,7 +324,9 @@ pub fn run_with_cmdline_args(cmdline: &Cmdline) -> Result<()> {
 pub fn run_rustc(args: &[String]) -> Result<()> {
     struct Callbacks;
     impl rustc_driver::Callbacks for Callbacks {}
-    match rustc_driver::catch_fatal_errors(|| rustc_driver::run_compiler(args, &mut Callbacks)) {
+    match rustc_driver::catch_fatal_errors(|| {
+        run_compiler::rustc_driver_entrypoint(args, &mut Callbacks)
+    }) {
         Ok(()) => Ok(()),
         Err(_) => bail!("Errors reported by Rust compiler."),
     }
