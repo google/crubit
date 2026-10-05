@@ -33,6 +33,10 @@ unsafe impl ::cxx::ExternType for DocCommentSlashes {
     type Id = ::cxx::type_id!("DocCommentSlashes");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DocCommentSlashes"),
+    crate::DocCommentSlashes
+);
 impl DocCommentSlashes {
     /// A non-static member function (`const` flavor).
     #[inline(always)]
@@ -134,6 +138,7 @@ unsafe impl ::cxx::ExternType for DocCommentBang {
     type Id = ::cxx::type_id!("DocCommentBang");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("DocCommentBang"), crate::DocCommentBang);
 
 impl Default for DocCommentBang {
     #[inline(always)]
@@ -164,6 +169,10 @@ unsafe impl ::cxx::ExternType for MultilineCommentTwoStars {
     type Id = ::cxx::type_id!("MultilineCommentTwoStars");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MultilineCommentTwoStars"),
+    crate::MultilineCommentTwoStars
+);
 
 impl Default for MultilineCommentTwoStars {
     #[inline(always)]
@@ -194,6 +203,7 @@ unsafe impl ::cxx::ExternType for LineComment {
     type Id = ::cxx::type_id!("LineComment");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("LineComment"), crate::LineComment);
 
 impl Default for LineComment {
     #[inline(always)]
@@ -224,6 +234,10 @@ unsafe impl ::cxx::ExternType for MultilineOneStar {
     type Id = ::cxx::type_id!("MultilineOneStar");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MultilineOneStar"),
+    crate::MultilineOneStar
+);
 
 impl Default for MultilineOneStar {
     #[inline(always)]
@@ -264,7 +278,7 @@ pub type MyTypeAlias = crate::DocCommentSlashes;
 //   Class templates are not yet supported
 
 // error: type alias `ConcreteNestedStruct` could not be bound
-//   incomplete type
+//   depends on `OuterTemplate<int>::NestedStruct` which cannot be bound because template instantiation is not yet supported
 
 /// Doc comment for an enum.
 #[repr(transparent)]

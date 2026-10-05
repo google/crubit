@@ -42,6 +42,7 @@ unsafe impl ::cxx::ExternType for WithBitfields {
     type Id = ::cxx::type_id!("WithBitfields");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("WithBitfields"), crate::WithBitfields);
 
 impl Default for WithBitfields {
     #[inline(always)]
@@ -78,6 +79,10 @@ unsafe impl ::cxx::ExternType for AlignmentRegressionTest {
     type Id = ::cxx::type_id!("AlignmentRegressionTest");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AlignmentRegressionTest"),
+    crate::AlignmentRegressionTest
+);
 
 impl Default for AlignmentRegressionTest {
     #[inline(always)]

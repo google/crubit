@@ -29,6 +29,7 @@ unsafe impl ::cxx::ExternType for NoDiscard {
     type Id = ::cxx::type_id!("NoDiscard");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("NoDiscard"), crate::NoDiscard);
 
 impl Default for NoDiscard {
     #[inline(always)]
@@ -56,6 +57,10 @@ unsafe impl ::cxx::ExternType for NoDiscardWithMessage {
     type Id = ::cxx::type_id!("NoDiscardWithMessage");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NoDiscardWithMessage"),
+    crate::NoDiscardWithMessage
+);
 
 impl Default for NoDiscardWithMessage {
     #[inline(always)]
@@ -135,6 +140,7 @@ unsafe impl ::cxx::ExternType for NodiscardCtor {
     type Id = ::cxx::type_id!("NodiscardCtor");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("NodiscardCtor"), crate::NodiscardCtor);
 
 impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtor {
     #[inline(always)]
@@ -170,6 +176,10 @@ unsafe impl ::cxx::ExternType for NodiscardCtorWithMessage {
     type Id = ::cxx::type_id!("NodiscardCtorWithMessage");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NodiscardCtorWithMessage"),
+    crate::NodiscardCtorWithMessage
+);
 
 impl From<(::ffi_11::c_int, ::ffi_11::c_int)> for NodiscardCtorWithMessage {
     #[inline(always)]

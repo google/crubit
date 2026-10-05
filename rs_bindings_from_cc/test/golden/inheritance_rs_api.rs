@@ -31,6 +31,7 @@ unsafe impl ::cxx::ExternType for Base0 {
     type Id = ::cxx::type_id!("Base0");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), crate::Base0);
 
 impl Default for Base0 {
     #[inline(always)]
@@ -63,6 +64,7 @@ unsafe impl ::cxx::ExternType for Base1 {
     type Id = ::cxx::type_id!("Base1");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), crate::Base1);
 
 impl Default for Base1 {
     #[inline(always)]
@@ -92,6 +94,7 @@ unsafe impl ::cxx::ExternType for Base2 {
     type Id = ::cxx::type_id!("Base2");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), crate::Base2);
 
 impl Default for Base2 {
     #[inline(always)]
@@ -119,6 +122,7 @@ unsafe impl ::cxx::ExternType for Derived {
     type Id = ::cxx::type_id!("Derived");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), crate::Derived);
 
 impl Default for Derived {
     #[inline(always)]
@@ -145,6 +149,7 @@ unsafe impl ::cxx::ExternType for VirtualBase1 {
     type Id = ::cxx::type_id!("VirtualBase1");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase1"), crate::VirtualBase1);
 
 impl ::ctor::CtorNew<()> for VirtualBase1 {
     type CtorType = ::ctor::Ctor![Self];
@@ -249,6 +254,7 @@ unsafe impl ::cxx::ExternType for VirtualBase2 {
     type Id = ::cxx::type_id!("VirtualBase2");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase2"), crate::VirtualBase2);
 
 impl ::ctor::CtorNew<()> for VirtualBase2 {
     type CtorType = ::ctor::Ctor![Self];
@@ -353,6 +359,7 @@ unsafe impl ::cxx::ExternType for VirtualDerived {
     type Id = ::cxx::type_id!("VirtualDerived");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived"), crate::VirtualDerived);
 
 impl ::ctor::CtorNew<()> for VirtualDerived {
     type CtorType = ::ctor::Ctor![Self];
@@ -458,6 +465,10 @@ unsafe impl ::cxx::ExternType for MyAbstractClass {
     type Id = ::cxx::type_id!("MyAbstractClass");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyAbstractClass"),
+    crate::MyAbstractClass
+);
 
 // error: constructor `MyAbstractClass::MyAbstractClass` could not be bound
 //   `MyAbstractClass` can't be used by-value because it has a non-public or deleted destructor
@@ -489,6 +500,7 @@ unsafe impl ::cxx::ExternType for MethodBase1 {
     type Id = ::cxx::type_id!("MethodBase1");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("MethodBase1"), crate::MethodBase1);
 impl MethodBase1 {
     #[inline(always)]
     pub fn Public<'__this>(&'__this mut self) {
@@ -563,6 +575,7 @@ unsafe impl ::cxx::ExternType for MethodBase2 {
     type Id = ::cxx::type_id!("MethodBase2");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("MethodBase2"), crate::MethodBase2);
 impl MethodBase2 {
     #[inline(always)]
     pub fn Colliding1<'__this>(&'__this mut self) {
@@ -610,6 +623,7 @@ unsafe impl ::cxx::ExternType for MethodDerived {
     type Id = ::cxx::type_id!("MethodDerived");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("MethodDerived"), crate::MethodDerived);
 
 impl Default for MethodDerived {
     #[inline(always)]

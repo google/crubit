@@ -34,6 +34,9 @@ extern "C" void __rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert((void (*)(MyTopLevelTemplate<int>*)) &
+              ::processForwardDeclaredSpecialization);
+
 static_assert(sizeof(class private_classes::HasPrivateType) == 1);
 static_assert(alignof(class private_classes::HasPrivateType) == 1);
 

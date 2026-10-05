@@ -101,6 +101,10 @@ unsafe impl ::cxx::ExternType for StructWithAnonEnum {
     type Id = ::cxx::type_id!("StructWithAnonEnum");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithAnonEnum"),
+    crate::StructWithAnonEnum
+);
 
 impl Default for StructWithAnonEnum {
     #[inline(always)]

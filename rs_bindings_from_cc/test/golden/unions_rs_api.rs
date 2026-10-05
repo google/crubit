@@ -32,6 +32,7 @@ unsafe impl ::cxx::ExternType for EmptyUnion {
     type Id = ::cxx::type_id!("EmptyUnion");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("EmptyUnion"), crate::EmptyUnion);
 
 impl Default for EmptyUnion {
     #[inline(always)]
@@ -59,6 +60,7 @@ unsafe impl ::cxx::ExternType for Nontrivial {
     type Id = ::cxx::type_id!("Nontrivial");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
 impl ::ctor::CtorNew<()> for Nontrivial {
     type CtorType = ::ctor::Ctor![Self];
@@ -120,6 +122,7 @@ unsafe impl ::cxx::ExternType for RenamedUnion {
     type Id = ::cxx::type_id!("UnionToRename");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("UnionToRename"), crate::RenamedUnion);
 
 impl Default for RenamedUnion {
     #[inline(always)]
@@ -145,6 +148,10 @@ unsafe impl ::cxx::ExternType for TriviallyCopyableButNontriviallyDestructible {
     type Id = ::cxx::type_id!("TriviallyCopyableButNontriviallyDestructible");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TriviallyCopyableButNontriviallyDestructible"),
+    crate::TriviallyCopyableButNontriviallyDestructible
+);
 
 impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
@@ -214,6 +221,7 @@ unsafe impl ::cxx::ExternType for NonEmptyUnion {
     type Id = ::cxx::type_id!("NonEmptyUnion");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), crate::NonEmptyUnion);
 
 impl Default for NonEmptyUnion {
     #[inline(always)]
@@ -244,6 +252,7 @@ unsafe impl ::cxx::ExternType for NonCopyUnion {
     type Id = ::cxx::type_id!("NonCopyUnion");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion"), crate::NonCopyUnion);
 
 /// # Safety
 ///
@@ -264,6 +273,7 @@ unsafe impl ::cxx::ExternType for NonCopyUnion2 {
     type Id = ::cxx::type_id!("NonCopyUnion2");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion2"), crate::NonCopyUnion2);
 
 #[diagnostic::on_unimplemented(
     message = "binding generation for function failed\n`NonCopyUnion2` can't be used by-value because it has a non-public or deleted destructor"
@@ -341,6 +351,10 @@ unsafe impl ::cxx::ExternType for UnionWithOpaqueField {
     type Id = ::cxx::type_id!("UnionWithOpaqueField");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("UnionWithOpaqueField"),
+    crate::UnionWithOpaqueField
+);
 
 impl Default for UnionWithOpaqueField {
     #[inline(always)]
@@ -367,6 +381,10 @@ unsafe impl ::cxx::ExternType for TrivialButInheritable {
     type Id = ::cxx::type_id!("TrivialButInheritable");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TrivialButInheritable"),
+    crate::TrivialButInheritable
+);
 
 impl Default for TrivialButInheritable {
     #[inline(always)]
@@ -397,6 +415,10 @@ unsafe impl ::cxx::ExternType for UnionWithInheritable {
     type Id = ::cxx::type_id!("UnionWithInheritable");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("UnionWithInheritable"),
+    crate::UnionWithInheritable
+);
 
 impl Default for UnionWithInheritable {
     #[inline(always)]
@@ -427,6 +449,7 @@ unsafe impl ::cxx::ExternType for TypedefUnion {
     type Id = ::cxx::type_id!("TypedefUnion");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("TypedefUnion"), crate::TypedefUnion);
 
 impl Default for TypedefUnion {
     #[inline(always)]
@@ -457,6 +480,10 @@ unsafe impl ::cxx::ExternType for TypedefUnionWithInheritable {
     type Id = ::cxx::type_id!("TypedefUnionWithInheritable");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TypedefUnionWithInheritable"),
+    crate::TypedefUnionWithInheritable
+);
 
 impl Default for TypedefUnionWithInheritable {
     #[inline(always)]

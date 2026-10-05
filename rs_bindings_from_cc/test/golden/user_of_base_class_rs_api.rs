@@ -34,6 +34,7 @@ unsafe impl ::cxx::ExternType for Derived2 {
     type Id = ::cxx::type_id!("Derived2");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Derived2"), crate::Derived2);
 
 impl ::ctor::CtorNew<()> for Derived2 {
     type CtorType = ::ctor::Ctor![Self];
@@ -138,6 +139,10 @@ unsafe impl ::cxx::ExternType for VirtualDerived2 {
     type Id = ::cxx::type_id!("VirtualDerived2");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("VirtualDerived2"),
+    crate::VirtualDerived2
+);
 
 impl ::ctor::CtorNew<()> for VirtualDerived2 {
     type CtorType = ::ctor::Ctor![Self];

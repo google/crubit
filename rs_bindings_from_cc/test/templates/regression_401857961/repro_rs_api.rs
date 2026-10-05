@@ -39,6 +39,10 @@ pub mod repro {
         type Id = ::cxx::type_id!("repro :: Interval");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("repro :: Interval"),
+        crate::repro::Interval
+    );
 
     impl Default for Interval {
         #[inline(always)]

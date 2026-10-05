@@ -113,6 +113,7 @@ unsafe impl ::cxx::ExternType for Widget {
     type Id = ::cxx::type_id!("Widget");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Widget"), crate::Widget);
 
 impl Default for Widget {
     #[inline(always)]
@@ -131,8 +132,7 @@ pub mod widget {
     >;
 }
 
-// error: struct `Incomplete` could not be bound
-//   incomplete type
+forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Incomplete"));
 
 // error: function `ReturnIncompleteMapper` could not be bound
 //   Return type is not supported: Unsupported type 'absl::AnyInvocable<Incomplete (Incomplete) const>': Failed to create bindings for template specialization type absl::AnyInvocable<Incomplete (Incomplete) const>: Return type of callable is incomplete: struct Incomplete

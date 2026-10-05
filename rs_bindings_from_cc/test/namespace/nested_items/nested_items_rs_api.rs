@@ -37,6 +37,7 @@ unsafe impl ::cxx::ExternType for Same {
     type Id = ::cxx::type_id!("Same");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Same"), crate::Same);
 impl Same {
     #[inline(always)]
     pub fn Method<'__this>(&'__this mut self) -> ::ffi_11::c_int {
@@ -74,6 +75,10 @@ pub mod same_items {
         type Id = ::cxx::type_id!("Same :: NestedItem");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("Same :: NestedItem"),
+        crate::same_items::NestedItem
+    );
     impl NestedItem {
         #[inline(always)]
         pub fn NestedItemFunction<'__this>(&'__this mut self) -> ::ffi_11::c_int {
@@ -139,6 +144,7 @@ pub mod foo {
         type Id = ::cxx::type_id!("foo :: Foo");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(forward_declare::symbol!("foo :: Foo"), crate::foo::Foo);
 
     impl Default for Foo {
         #[inline(always)]
@@ -166,6 +172,10 @@ pub mod foo {
             type Id = ::cxx::type_id!("foo :: Foo :: foo");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("foo :: Foo :: foo"),
+            crate::foo::foo::foo
+        );
         impl foo {
             #[inline(always)]
             pub fn BFunction() -> ::ffi_11::c_int {
@@ -203,6 +213,10 @@ pub mod foo {
                 type Id = ::cxx::type_id!("foo :: Foo :: foo :: Item");
                 type Kind = ::cxx::kind::Trivial;
             }
+            forward_declare::unsafe_define!(
+                forward_declare::symbol!("foo :: Foo :: foo :: Item"),
+                crate::foo::foo::foo_items::Item
+            );
 
             impl Default for Item {
                 #[inline(always)]
@@ -236,6 +250,7 @@ unsafe impl ::cxx::ExternType for OuterRustName {
     type Id = ::cxx::type_id!("OuterCpp");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("OuterCpp"), crate::OuterRustName);
 
 impl Default for OuterRustName {
     #[inline(always)]
@@ -263,6 +278,10 @@ pub mod outer_rust_name {
         type Id = ::cxx::type_id!("OuterCpp :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("OuterCpp :: Inner"),
+        crate::outer_rust_name::Inner
+    );
 
     impl Default for Inner {
         #[inline(always)]
