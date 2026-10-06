@@ -14,9 +14,13 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_replace.h"
+#include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "common/external_binaries.h"
 #include "common/ffi_types.h"
+#include "common/file_io.h"
 #include "common/status_macros.h"
 #include "common/test_utils.h"
 #include "rs_bindings_from_cc/cmdline.h"
@@ -27,6 +31,7 @@ namespace crubit {
 namespace {
 
 using ::testing::ElementsAre;
+using ::testing::EndsWith;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Not;
@@ -319,6 +324,35 @@ TEST(GenerateBindingsAndMetadataTest,
                                   /*virtual_headers_contents_for_testing=*/
                                   {{HeaderName("a.h"), "// empty header"}}));
   ASSERT_EQ(result.error_report, "");
+}
+
+TEST(GenerateBindingsAndMetadataTest, DepfileOmitsInMemoryFiles) {
+  WriteFileForCurrentTest("included.h", "struct Included {};");
+  std::string public_h =
+      WriteFileForCurrentTest("public.h", "#include \"included.h\"\n");
+  std::string depfile_path = absl::StrCat(testing::TempDir(), "/rs_api.d");
+  std::vector<std::string> clang_args = DefaultClangArgs();
+  clang_args.insert(clang_args.end(),
+                    {"-MD", "-MF", depfile_path, "-MT", "path/to/rs_api.rs"});
+
+  // Both `in_memory.h` and the main file synthesized by `IrFromCc` exist only
+  // in Clang's in-memory file system.
+  Cmdline cmdline = MakeCmdline("in_memory.h");
+  ASSERT_OK(GenerateBindingsAndMetadata(
+                cmdline, std::move(clang_args),
+                /*virtual_headers_contents_for_testing=*/
+                {{HeaderName("in_memory.h"),
+                  absl::StrCat("#include \"", public_h, "\"\n")}})
+                .status());
+
+  ASSERT_OK_AND_ASSIGN(std::string depfile, GetFileContents(depfile_path));
+  // Clang wraps long depfile lines using `\` + newline continuations.
+  std::vector<std::string> depfile_tokens =
+      absl::StrSplit(absl::StrReplaceAll(depfile, {{"\\\n", " "}}),
+                     absl::ByAnyChar(" \n"), absl::SkipEmpty());
+  EXPECT_THAT(depfile_tokens,
+              ElementsAre("path/to/rs_api.rs:", EndsWith("/public.h"),
+                          EndsWith("/included.h")));
 }
 
 }  // namespace
