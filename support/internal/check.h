@@ -29,4 +29,16 @@ struct CheckFail {
   if (!(condition)) [[unlikely]] \
   ::crubit::internal::CheckFail(__FILE__, __LINE__, #condition)
 
+// Like `CRUBIT_CHECK`, but only checked when `NDEBUG` is not defined. With
+// `NDEBUG`, the condition and any streamed message are still compiled (so they
+// can't silently rot), but never evaluated.
+#ifndef NDEBUG
+#define CRUBIT_DCHECK(condition) CRUBIT_CHECK(condition)
+#else
+#define CRUBIT_DCHECK(condition) \
+  if (true) {                    \
+  } else                         \
+    CRUBIT_CHECK(condition)
+#endif
+
 #endif  // THIRD_PARTY_CRUBIT_SUPPORT_INTERNAL_CHECK_H_
