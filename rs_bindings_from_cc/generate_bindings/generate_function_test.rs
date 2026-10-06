@@ -2956,3 +2956,111 @@ fn test_pub_crate_method() -> Result<()> {
     assert_rs_not_matches!(rs_api, quote! { pub unsafe fn Method });
     Ok(())
 }
+
+/// `View<int& $a>` and `View<int& $b>` share the specialization `View<int&>`, so it takes a
+/// lifetime parameter on behalf of its template argument, and each use binds it to the lifetime
+/// written on the argument. The bindings match those of a non-template record with
+/// `LIFETIME_PARAMS("a")`.
+#[gtest]
+fn test_template_argument_lifetime_is_bound() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        &(ir_testing::with_full_lifetime_macros()
+            + r#"
+        template <class T> struct View { View(); T value; };
+        // Contract: the returned `View` borrows from `x`, NOT from `y`.
+        View<int& $a> make(int& $a x, int& $b y);
+        void take(View<int& $a> v);
+        View<int&> make_elided(int& x);
+        "#),
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct __CcTemplateInst4ViewIRiE<'T> {
+                ...
+                __marker_T: ::core::marker::PhantomData<&'T ()>
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn make<'a, 'b>(
+                x: &'a mut ::ffi_11::c_int,
+                y: &'b mut ::ffi_11::c_int
+            ) -> crate::__CcTemplateInst4ViewIRiE<'a> { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn take<'a>(v: crate::__CcTemplateInst4ViewIRiE<'a>) { ... }
+        }
+    );
+    // An unannotated use gets the default lifetime rules, as `int&` itself would.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn make_elided<'x>(x: &'x mut ::ffi_11::c_int)
+                -> crate::__CcTemplateInst4ViewIRiE<'x> { ... }
+        }
+    );
+    Ok(())
+}
+
+/// The template argument can be any type with one lifetime, including a record with
+/// `LIFETIME_PARAMS` or another such specialization. Then the lifetime also reaches the field,
+/// which is spelled as the template parameter.
+#[gtest]
+fn test_template_argument_lifetime_reaches_record_field() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        &(ir_testing::with_full_lifetime_macros()
+            + r#"
+        struct LIFETIME_PARAMS("a") Obj { Obj(); int* $a p; };
+        template <class T> struct View { View(); T value; };
+        View<Obj $a> make_obj(Obj $a x, Obj $b y);
+        View<View<int& $a>> make_nested(int& $a x, int& $b y);
+        "#),
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct __CcTemplateInst4ViewI3ObjE<'T> {
+                ...
+                pub value: crate::Obj<'T>,
+                ...
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct __CcTemplateInst4ViewIS_IRiEE<'T> {
+                ...
+                pub value: crate::__CcTemplateInst4ViewIRiE<'T>,
+                ...
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn make_obj<'a, 'b>(x: crate::Obj<'a>, y: crate::Obj<'b>)
+                -> crate::__CcTemplateInst4ViewI3ObjE<'a> { ... }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn make_nested<'a, 'b>(
+                x: &'a mut ::ffi_11::c_int,
+                y: &'b mut ::ffi_11::c_int
+            ) -> crate::__CcTemplateInst4ViewIS_IRiEE<'a> { ... }
+        }
+    );
+    Ok(())
+}

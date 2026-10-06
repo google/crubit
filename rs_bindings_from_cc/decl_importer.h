@@ -318,6 +318,21 @@ class ImportContext {
   virtual bool AreAssumedLifetimesEnabledForTarget(
       const BazelLabel& label) const = 0;
 
+  // Returns the name of the lifetime parameter that `specialization_decl` takes
+  // on behalf of its template argument, or `std::nullopt` if it takes none.
+  //
+  // A specialization is shared by every use with the same canonical template
+  // arguments, so `View<int& $a>` and `View<int& $b>` are both `View<int&>`.
+  // To keep the lifetime that each use writes on the argument, a
+  // specialization whose only template argument has one lifetime (a reference,
+  // a pointer, or a record with one lifetime parameter) is given one lifetime
+  // parameter of its own. Each use binds it to the lifetime written on its
+  // argument, and members of the specialization whose type is the template
+  // parameter use it.
+  virtual std::optional<std::string> GetTemplateArgumentLifetimeParam(
+      const clang::ClassTemplateSpecializationDecl& specialization_decl)
+      const = 0;
+
   // Returns true iff `label` has opted in to marking classes with
   // `[[gsl::Pointer]]` as unsafe.
   virtual bool IsUnsafeViewEnabledForTarget(const BazelLabel& label) const = 0;
