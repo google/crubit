@@ -659,6 +659,11 @@ message Record {
   repeated Item children = 41;
   bool impl_debug = 42;
   bool has_private_pointer_or_reference_fields = 43;
+  // Whether the last entry of `lifetime_inputs` was added by Crubit for the
+  // lifetime of this class template specialization's template argument, rather
+  // than written by the user. Constructors of such records are not annotated
+  // with how they relate to that lifetime, so it has to be inferred.
+  bool has_template_argument_lifetime = 44;
 }
 
 // A forward-declared record (e.g. `struct Foo;`)
