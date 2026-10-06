@@ -86,6 +86,11 @@ where
         Self { args, callback_or_result: Either::Left(callback), input }
     }
 
+    #[cfg_accessible(rustc_driver::compiler_entrypoint)]
+    fn run_internal(&mut self) -> () {
+        rustc_driver::compiler_entrypoint(self.args, self)
+    }
+
     #[cfg_accessible(rustc_driver::run_compiler)]
     fn run_internal(&mut self) -> () {
         rustc_driver::run_compiler(self.args, self)

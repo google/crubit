@@ -47,9 +47,11 @@ static RELEASES: &[(Date, &str)] = &[
     (Date { year: 2026, month: 4, day: 10 }, "1.96"),
     (Date { year: 2026, month: 5, day: 22 }, "1.97"),
     (Date { year: 2026, month: 7, day: 3 }, "1.98"),
-    (Date { year: 2026, month: 9, day: 14 }, "1.99"),
+    (Date { year: 2026, month: 8, day: 14 }, "1.99"),
+    (Date { year: 2026, month: 9, day: 25 }, "1.100"),
+    (Date { year: 2026, month: 11, day: 6 }, "1.101"),
     // fallback
-    (Date { year: 9999, month: 99, day: 99 }, "1.100"),
+    (Date { year: 9999, month: 99, day: 99 }, "1.102"),
     // <internal link> end
 ];
 
