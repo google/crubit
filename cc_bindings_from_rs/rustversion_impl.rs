@@ -42,14 +42,27 @@ impl quote::ToTokens for Date {
     }
 }
 
+/// Maps the last nightly date included in each stable release to that release.
+///
+/// Each date is the latest nightly `commit-date` (as reported by `rustc -vV`, which is what
+/// `rustversion` compares against) included in the release, i.e. the date of the release's branch
+/// point from main. This is usually the day before the corresponding nightly's name:
+/// `nightly-2026-08-15` is `1.99.0-nightly (d453bdd8f 2026-08-14)`, and `nightly-2026-08-16` is the
+/// first `1.100.0-nightly`. When nightlies around the branch point were skipped (e.g. 2026-07-03
+/// and 2026-07-04), the branch point can be later than the last published nightly, so verify
+/// against the actual stable toolchain.
+///
+/// Note that a stable release's own `commit-date` is its release build date (~6 weeks after the
+/// branch point), so it cannot be used for this purpose.
 static RELEASES: &[(Date, &str)] = &[
     // <internal link> start numeric=yes
     (Date { year: 2026, month: 4, day: 10 }, "1.96"),
     (Date { year: 2026, month: 5, day: 22 }, "1.97"),
     (Date { year: 2026, month: 7, day: 3 }, "1.98"),
-    (Date { year: 2026, month: 9, day: 14 }, "1.99"),
+    (Date { year: 2026, month: 8, day: 14 }, "1.99"),
+    (Date { year: 2026, month: 9, day: 25 }, "1.100"),
     // fallback
-    (Date { year: 9999, month: 99, day: 99 }, "1.100"),
+    (Date { year: 9999, month: 99, day: 99 }, "1.101"),
     // <internal link> end
 ];
 
