@@ -806,6 +806,132 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
   return ordered_item_ids;
 }
 
+// Returns true if `function_decl` is a hidden friend, i.e. a non-member
+// function that is only ever declared by friend declarations within classes,
+// and can thus only be found by argument-dependent lookup.
+static bool IsHiddenFriend(const clang::FunctionDecl& function_decl) {
+  if (llvm::isa<clang::CXXMethodDecl>(function_decl)) return false;
+  return llvm::all_of(function_decl.redecls(),
+                      [](const clang::FunctionDecl* redecl) {
+                        return redecl->getLexicalDeclContext()->isRecord();
+                      });
+}
+
+// Appends to `operators` the hidden friend operators that are declared in the
+// (direct or indirect) bases of `record_decl`, and whose first parameter is of
+// type `derived_type` (or a reference to it).
+//
+// Bases that are already in `visited_bases` are skipped. Newly visited bases
+// are added to it.
+static void CollectInheritedFriendOperators(
+    const clang::CXXRecordDecl& record_decl, clang::QualType derived_type,
+    const clang::ASTContext& ctx,
+    absl::flat_hash_set<const clang::CXXRecordDecl*>& visited_bases,
+    std::vector<clang::FunctionDecl*>& operators) {
+  for (const clang::CXXBaseSpecifier& base : record_decl.bases()) {
+    const clang::CXXRecordDecl* base_decl =
+        base.getType()->getAsCXXRecordDecl();
+    if (base_decl == nullptr) continue;
+    base_decl = base_decl->getDefinition();
+    if (base_decl == nullptr || !visited_bases.insert(base_decl).second) {
+      continue;
+    }
+    for (clang::Decl* decl : base_decl->decls()) {
+      const auto* friend_decl = llvm::dyn_cast<clang::FriendDecl>(decl);
+      if (friend_decl == nullptr) continue;
+      auto* function_decl = llvm::dyn_cast_or_null<clang::FunctionDecl>(
+          friend_decl->getFriendDecl());
+      // Like `FriendDeclImporter`, skip non-canonical decls, and functions that
+      // are redeclared outside of a class (which are imported on their own).
+      if (function_decl == nullptr ||
+          function_decl->getOverloadedOperator() == clang::OO_None ||
+          function_decl->getNumParams() == 0 ||
+          function_decl != function_decl->getCanonicalDecl() ||
+          !IsHiddenFriend(*function_decl)) {
+        continue;
+      }
+      if (ctx.hasSameUnqualifiedType(
+              function_decl->getParamDecl(0)->getType().getNonReferenceType(),
+              derived_type)) {
+        operators.push_back(function_decl);
+      }
+    }
+    CollectInheritedFriendOperators(*base_decl, derived_type, ctx,
+                                    visited_bases, operators);
+  }
+}
+
+std::vector<ItemId> Importer::ImportInheritedFriendOperators(
+    clang::CXXRecordDecl* absl_nonnull record_decl) {
+  // Generating new trait impls can conflict with manual impls in user code, so
+  // this is opt-in.
+  //
+  // TODO(b/530193579): After expanding features earlier, just check the
+  // specific feature without manually checking for "all".
+  if (!IsFeatureEnabledForTarget(invocation_.target_,
+                                 "inherited_friend_operators") &&
+      !IsFeatureEnabledForTarget(invocation_.target_, "all")) {
+    return {};
+  }
+
+  // The members of class template specializations are only imported
+  // selectively (see `GetCanonicalChildren`). For simplicity, inherited
+  // operators are not imported for them, nor for records nested in them.
+  if (IsFullClassTemplateSpecializationOrChild(record_decl)) return {};
+
+  std::vector<clang::FunctionDecl*> operators;
+  absl::flat_hash_set<const clang::CXXRecordDecl*> visited_bases;
+  CollectInheritedFriendOperators(*record_decl,
+                                  ctx_.getCanonicalTagType(record_decl), ctx_,
+                                  visited_bases, operators);
+  if (operators.empty()) return {};
+
+  // A hidden friend is a member of the innermost namespace that encloses the
+  // class that declares it. Place inherited operators in the innermost
+  // namespace that encloses `record_decl` instead, as if they had been declared
+  // by `record_decl` itself.
+  std::optional<ItemId> enclosing_namespace_id;
+  for (const clang::DeclContext* dc = record_decl->getDeclContext();
+       !dc->isTranslationUnit() && !dc->isFunctionOrMethod();
+       dc = dc->getParent()) {
+    if (const auto* namespace_decl = llvm::dyn_cast<clang::NamespaceDecl>(dc)) {
+      enclosing_namespace_id = GenerateItemId(*namespace_decl);
+      break;
+    }
+  }
+  const ItemId record_id = GenerateItemId(*record_decl);
+
+  std::vector<ItemId> item_ids;
+  for (clang::FunctionDecl* function_decl : operators) {
+    // The first parameter of each operator refers to `record_decl`, so no other
+    // record can have imported it already.
+    if (import_cache_.contains(function_decl)) continue;
+    {
+      llvm::SaveAndRestore<const clang::FunctionDecl*>
+          inherited_friend_operator(inherited_friend_operator_, function_decl);
+      GetDeclItem(function_decl);
+    }
+    auto it = import_cache_.find(function_decl);
+    if (it == import_cache_.end()) continue;
+    ir_proto::Item* item = it->second.proto_item.get();
+    // Like `FriendDeclImporter`, silently drop operators that can't be
+    // imported.
+    if (item == nullptr || !item->has_func()) continue;
+
+    ir_proto::Func* func = item->mutable_func();
+    if (enclosing_namespace_id.has_value()) {
+      func->set_enclosing_item_id(enclosing_namespace_id->value());
+    } else {
+      func->clear_enclosing_item_id();
+    }
+    // The operator is only visible through ADL on arguments of type
+    // `record_decl`, rather than through the base class that declares it.
+    func->set_adl_enclosing_record(record_id.value());
+    item_ids.push_back(GenerateItemId(*function_decl));
+  }
+  return item_ids;
+}
+
 std::vector<ItemId> Importer::GetOrderedItemIdsOfTemplateInstantiations()
     const {
   std::vector<SourceLocationComparator::OrderedItemId> items;
@@ -1506,6 +1632,13 @@ const ir_proto::Item* absl_nullable Importer::GetImportedItem(
 }
 
 BazelLabel Importer::GetOwningTarget(const clang::Decl& decl) const {
+  // Inherited friend operators are imported as if they were hidden friends of
+  // the derived record, which belongs to the current target. See
+  // `ImportInheritedFriendOperators`.
+  if (&decl == inherited_friend_operator_) {
+    return invocation_.target_;
+  }
+
   // Template instantiations need to be generated in the target that triggered
   // the instantiation (not in the target where the template is defined).
   if (IsFullClassTemplateSpecializationOrChild(&decl)) {

@@ -287,6 +287,17 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling bindings for operators that are hidden friends of base classes (e.g.
+# defined by CRTP mixins), as if they were hidden friends of the derived class.
+#
+# See crubit.rs-features#other
+crubit_feature_hint(
+    name = "inherited_friend_operators",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["inherited_friend_operators"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(
