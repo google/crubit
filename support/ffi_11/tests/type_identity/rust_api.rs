@@ -64,3 +64,8 @@ pub fn c_char16_t() -> ffi_11::c_char16_t {
 pub fn c_char32_t() -> ffi_11::c_char32_t {
     Default::default()
 }
+
+// On some LP64 platforms (e.g. iOS), `c_long` and `c_ulong` are 64-bit newtypes rather than
+// aliases of `i64` and `u64`.
+pub const C_LONG_CONST: ffi_11::c_long = ffi_11::new_c_long(-42);
+pub const C_ULONG_CONST: ffi_11::c_ulong = ffi_11::new_c_ulong(42);

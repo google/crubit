@@ -34,6 +34,13 @@ static_assert(std::is_same_v<decltype(rust_api::c_nullptr_t()), nullptr_t>);
 static_assert(std::is_same_v<decltype(rust_api::c_char8_t()), char8_t>);
 static_assert(std::is_same_v<decltype(rust_api::c_char16_t()), char16_t>);
 static_assert(std::is_same_v<decltype(rust_api::c_char32_t()), char32_t>);
+
+static_assert(
+    std::is_same_v<std::remove_cv_t<decltype(rust_api::C_LONG_CONST)>, long>);
+static_assert(rust_api::C_LONG_CONST == -42);
+static_assert(std::is_same_v<std::remove_cv_t<decltype(rust_api::C_ULONG_CONST)>,
+                             unsigned long>);
+static_assert(rust_api::C_ULONG_CONST == 42);
 }  // namespace
 
 int main() {}

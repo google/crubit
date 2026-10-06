@@ -22,6 +22,8 @@
 #include "support/ffi_11/ffi_11.h"
 
 namespace rust_api {
+static constexpr ::std::int64_t C_LONG_CONST = INT64_C(-42);
+static constexpr ::std::uint64_t C_ULONG_CONST = 42;
 
 decltype(char(0)) c_char();
 

@@ -186,9 +186,14 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
             let name = tcx.item_name(adt.did());
             match name.as_str() {
                 "c_char" => scalar.to_u8().to_string(),
-                // If ffi_11::c_long is a wrapper type (and not a type alias) it will be 32 bit,
-                // same for c_ulong.
+                // If ffi_11::c_long is a wrapper type (and not a type alias) it is 32 bit on
+                // LLP64 and ILP32 platforms, but 64 bit on LP64 platforms where `int64_t` is
+                // `long long` (e.g. iOS). Same for c_ulong.
+                "c_long" if scalar.size().bytes() == 8 => format!("INT64_C({})", scalar.to_i64()),
                 "c_long" => format!("INT32_C({})", scalar.to_i32()),
+                "c_ulong" if scalar.size().bytes() == 8 => {
+                    format!("UINT64_C({})", scalar.to_u64())
+                }
                 "c_ulong" => format!("UINT32_C({})", scalar.to_u32()),
                 "c_longlong" => format!("INT64_C({})", scalar.to_i64()),
                 "c_ulonglong" => format!("UINT64_C({})", scalar.to_u64()),
