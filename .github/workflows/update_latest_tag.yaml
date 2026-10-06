@@ -19,20 +19,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Get latest passing commit and update tag
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Find the latest commit SHA on main where the primary CI workflow (rust.yml) succeeded
-          LATEST_SHA=$(gh run list \
-            --branch main \
-            --workflow rust.yml \
-            --status success \
-            --limit 1 \
-            --json headSha \
-            --jq '.[0].headSha')
+          # Find the latest commit SHA on main where the primary CI workflow (rust.yml) succeeded.
+          # Fetch the latest 100 runs without server-side branch/status query parameters and
+          # filter in jq: GitHub's server-side `branch=main&status=success` filter on this
+          # endpoint intermittently returns stale runs from weeks ago.
+          LATEST_SHA=$(gh api \
+            "/repos/${{ github.repository }}/actions/workflows/rust.yml/runs?per_page=100" \
+            --jq '[.workflow_runs[] | select(.head_branch == "main" and .event == "push" and .conclusion == "success")][0].head_sha // empty')
 
           if [ -z "$LATEST_SHA" ]; then
             echo "Error: No successful CI runs found for the main branch."
@@ -40,6 +40,15 @@ jobs:
           fi
 
           echo "Latest passing commit SHA: $LATEST_SHA"
+
+          # Ensure we never move the 'latest' tag backwards if the API returns a stale run.
+          git fetch origin tag latest --no-tags || true
+          if git rev-parse -q --verify refs/tags/latest >/dev/null; then
+            if ! git merge-base --is-ancestor refs/tags/latest "$LATEST_SHA"; then
+              echo "::warning::Refusing to move 'latest' backwards from $(git rev-parse refs/tags/latest) to $LATEST_SHA"
+              exit 0
+            fi
+          fi
 
           # Update the 'latest' tag to point to the passing commit SHA.
           # Try PATCH first (tag exists), fall back to POST (first run).
