@@ -4,6 +4,7 @@
 
 #![feature(rustc_private)]
 #![feature(proc_macro_hygiene)]
+#![feature(cfg_accessible)]
 
 #[rustversion::since(2026-09-27)]
 extern crate rustc_attr_ir;
@@ -324,7 +325,12 @@ pub fn run_with_cmdline_args(cmdline: &Cmdline) -> Result<()> {
 pub fn run_rustc(args: &[String]) -> Result<()> {
     struct Callbacks;
     impl rustc_driver::Callbacks for Callbacks {}
-    match rustc_driver::catch_fatal_errors(|| rustc_driver::run_compiler(args, &mut Callbacks)) {
+    match rustc_driver::catch_fatal_errors(|| {
+        #[cfg_accessible(rustc_driver::run_compiler)]
+        rustc_driver::run_compiler(args, &mut Callbacks);
+        #[cfg_accessible(rustc_driver::compiler_entrypoint)]
+        rustc_driver::compiler_entrypoint(args, &mut Callbacks);
+    }) {
         Ok(()) => Ok(()),
         Err(_) => bail!("Errors reported by Rust compiler."),
     }
