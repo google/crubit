@@ -380,5 +380,22 @@ TEST(TuplesTest, StructWithOptionTuple) {
   EXPECT_EQ(res.value(), 42);
 }
 
+TEST(TuplesTest, ElementConstructor) {
+  rs_std::Tuple<uint32_t, uint32_t> t(10u, 20u);
+  EXPECT_EQ(std::get<0>(t), 10u);
+  EXPECT_EQ(std::get<1>(t), 20u);
+
+  EXPECT_EQ(tuples::take_tuple_copy_no_default_1(
+                {tuples::CopyNoDefault::new_(42), std::uint8_t{10}}),
+            42);
+  EXPECT_EQ(tuples::take_tuple_clone_no_default_2(
+                {std::uint8_t{10}, tuples::CloneNoDefault::new_(42)}),
+            42);
+
+  rs_std::Tuple<rs_std::Option<std::int32_t>> opt_tuple(
+      rs_std::Option<std::int32_t>(42));
+  EXPECT_EQ(tuples::return_option_in_tuple_ref(opt_tuple), 42);
+}
+
 }  // namespace
 }  // namespace crubit

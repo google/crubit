@@ -363,6 +363,7 @@ struct alignas(4)
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  explicit Tuple(::std::int32_t __field0) noexcept;
   Tuple(std::tuple<::std::int32_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int32_t>() && noexcept;
@@ -467,6 +468,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::int8_t __field0, ::std::int32_t __field1) noexcept;
   Tuple(std::tuple<::std::int8_t, ::std::int32_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int8_t, ::std::int32_t>() && noexcept;
@@ -548,6 +550,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::int32_t __field0, ::std::int8_t __field1) noexcept;
   Tuple(std::tuple<::std::int32_t, ::std::int8_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::int32_t, ::std::int8_t>() && noexcept;
@@ -631,6 +634,7 @@ struct alignas(1)
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::tuples::CloneNoDefault __field0, ::std::uint8_t __field1) noexcept;
   Tuple(std::tuple<::tuples::CloneNoDefault, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::tuples::CloneNoDefault, ::std::uint8_t>() && noexcept;
@@ -708,6 +712,7 @@ struct alignas(1)
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::tuples::CopyNoDefault __field0, ::std::uint8_t __field1) noexcept;
   Tuple(std::tuple<::tuples::CopyNoDefault, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::tuples::CopyNoDefault, ::std::uint8_t>() && noexcept;
@@ -784,6 +789,7 @@ struct alignas(4)
   ::rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>& operator=(
       Tuple&&) noexcept;
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::tuples::HasDefault __field0, ::std::uint8_t __field1) noexcept;
   Tuple(std::tuple<::tuples::HasDefault, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple();
   operator std::tuple<::tuples::HasDefault, ::std::uint8_t>() && noexcept;
@@ -866,6 +872,7 @@ struct alignas(4)
   ::rs_std::Tuple<::tuples::HasNoDefault, ::std::uint8_t>& operator=(Tuple&&) =
       delete;
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::tuples::HasNoDefault __field0, ::std::uint8_t __field1) = delete;
   Tuple(std::tuple<::tuples::HasNoDefault, ::std::uint8_t>&& tuple) = delete;
   ~Tuple();
   operator std::tuple<::tuples::HasNoDefault, ::std::uint8_t>() && = delete;
@@ -945,6 +952,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::uint32_t __field0, ::std::uint32_t __field1) noexcept;
   Tuple(std::tuple<::std::uint32_t, ::std::uint32_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint32_t, ::std::uint32_t>() && noexcept;
@@ -1039,6 +1047,8 @@ struct alignas(4)
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(rs_std::Tuple<::std::uint32_t, ::std::uint32_t> __field0,
+        ::std::uint32_t __field1) noexcept;
   Tuple(std::tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                    ::std::uint32_t>&& tuple) noexcept;
   ~Tuple() = default;
@@ -1119,6 +1129,10 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE("(((u32 , u32 ,) , u32 ,) , u32 ,)")
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
+                      ::std::uint32_t>
+            __field0,
+        ::std::uint32_t __field1) noexcept;
   Tuple(
       std::tuple<rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                                ::std::uint32_t>,
@@ -1204,6 +1218,8 @@ struct alignas(4)
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::uint32_t __field0,
+        rs_std::Tuple<::std::uint32_t, ::std::uint32_t> __field1) noexcept;
   Tuple(std::tuple<::std::uint32_t,
                    rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>&&
             tuple) noexcept;
@@ -1307,6 +1323,10 @@ struct alignas(4)
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::uint32_t __field0,
+        rs_std::Tuple<::std::uint32_t,
+                      rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>
+            __field1) noexcept;
   Tuple(std::tuple<
         ::std::uint32_t,
         rs_std::Tuple<::std::uint32_t,
@@ -1436,6 +1456,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::uint64_t __field0, ::std::uint64_t __field1) noexcept;
   Tuple(std::tuple<::std::uint64_t, ::std::uint64_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint64_t, ::std::uint64_t>() && noexcept;
@@ -1529,6 +1550,7 @@ struct alignas(1)
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::uint8_t __field0, ::tuples::CloneNoDefault __field1) noexcept;
   Tuple(std::tuple<::std::uint8_t, ::tuples::CloneNoDefault>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint8_t, ::tuples::CloneNoDefault>() && noexcept;
@@ -1645,6 +1667,7 @@ struct alignas(1)
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::uint8_t __field0, ::tuples::CopyNoDefault __field1) noexcept;
   Tuple(std::tuple<::std::uint8_t, ::tuples::CopyNoDefault>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint8_t, ::tuples::CopyNoDefault>() && noexcept;
@@ -1760,6 +1783,7 @@ struct alignas(4)
   ::rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>& operator=(
       Tuple&&) noexcept;
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::uint8_t __field0, ::tuples::HasDefault __field1) noexcept;
   Tuple(std::tuple<::std::uint8_t, ::tuples::HasDefault>&& tuple) noexcept;
   ~Tuple();
   operator std::tuple<::std::uint8_t, ::tuples::HasDefault>() && noexcept;
@@ -1886,6 +1910,7 @@ struct alignas(4)
   ::rs_std::Tuple<::std::uint8_t, ::tuples::HasNoDefault>& operator=(Tuple&&) =
       delete;
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::uint8_t __field0, ::tuples::HasNoDefault __field1) = delete;
   Tuple(std::tuple<::std::uint8_t, ::tuples::HasNoDefault>&& tuple) = delete;
   ~Tuple();
   operator std::tuple<::std::uint8_t, ::tuples::HasNoDefault>() && = delete;
@@ -2009,6 +2034,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::uint8_t __field0, ::std::uint32_t __field1) noexcept;
   Tuple(std::tuple<::std::uint8_t, ::std::uint32_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint8_t, ::std::uint32_t>() && noexcept;
@@ -2090,6 +2116,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::uint32_t __field0, ::std::uint8_t __field1) noexcept;
   Tuple(std::tuple<::std::uint32_t, ::std::uint8_t>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint32_t, ::std::uint8_t>() && noexcept;
@@ -2245,6 +2272,7 @@ struct alignas(4)
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  explicit Tuple(rs_std::Option<::std::int32_t> __field0) noexcept;
   Tuple(std::tuple<rs_std::Option<::std::int32_t>>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<rs_std::Option<::std::int32_t>>() && noexcept;
@@ -2383,6 +2411,9 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
   operator=(const Tuple&) noexcept;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(rs_std::Option<::std::int32_t> __field0,
+        rs_std::Result<::std::int32_t, ::rs::alloc::string::String>
+            __field1) noexcept;
   Tuple(
       std::tuple<rs_std::Option<::std::int32_t>,
                  rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&&
@@ -3584,6 +3615,17 @@ inline rs_std::Tuple<
     rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                   ::std::uint32_t>,
     ::std::uint32_t>::
+    Tuple(rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
+                        ::std::uint32_t>
+              __field0,
+          ::std::uint32_t __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
+}
+inline rs_std::Tuple<
+    rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
+                  ::std::uint32_t>,
+    ::std::uint32_t>::
     Tuple(std::tuple<
           rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                         ::std::uint32_t>,
@@ -3651,6 +3693,13 @@ inline ::rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
 }
 inline rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                      ::std::uint32_t>::
+    Tuple(rs_std::Tuple<::std::uint32_t, ::std::uint32_t> __field0,
+          ::std::uint32_t __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
+}
+inline rs_std::Tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
+                     ::std::uint32_t>::
     Tuple(std::tuple<rs_std::Tuple<::std::uint32_t, ::std::uint32_t>,
                      ::std::uint32_t>&& tuple) noexcept {
   std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
@@ -3699,6 +3748,9 @@ inline ::rs_std::Tuple<::std::int32_t>::Tuple(::crubit::UnsafeRelocateTag,
                                               Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
 }
+inline rs_std::Tuple<::std::int32_t>::Tuple(::std::int32_t __field0) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+}
 inline rs_std::Tuple<::std::int32_t>::Tuple(
     std::tuple<::std::int32_t>&& tuple) noexcept {
   std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
@@ -3738,6 +3790,11 @@ static_assert(::std::is_trivially_move_assignable_v<
 inline ::rs_std::Tuple<::std::int8_t, ::std::int32_t>::Tuple(
     ::crubit::UnsafeRelocateTag, Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+inline rs_std::Tuple<::std::int8_t, ::std::int32_t>::Tuple(
+    ::std::int8_t __field0, ::std::int32_t __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
 }
 inline rs_std::Tuple<::std::int8_t, ::std::int32_t>::Tuple(
     std::tuple<::std::int8_t, ::std::int32_t>&& tuple) noexcept {
@@ -3781,6 +3838,11 @@ static_assert(::std::is_trivially_move_assignable_v<
 inline ::rs_std::Tuple<::std::int32_t, ::std::int8_t>::Tuple(
     ::crubit::UnsafeRelocateTag, Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+inline rs_std::Tuple<::std::int32_t, ::std::int8_t>::Tuple(
+    ::std::int32_t __field0, ::std::int8_t __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
 }
 inline rs_std::Tuple<::std::int32_t, ::std::int8_t>::Tuple(
     std::tuple<::std::int32_t, ::std::int8_t>&& tuple) noexcept {
@@ -3852,6 +3914,15 @@ inline ::rs_std::Tuple<
 inline rs_std::Tuple<
     rs_std::Option<::std::int32_t>,
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
+    Tuple(rs_std::Option<::std::int32_t> __field0,
+          rs_std::Result<::std::int32_t, ::rs::alloc::string::String>
+              __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
+}
+inline rs_std::Tuple<
+    rs_std::Option<::std::int32_t>,
+    rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>::
     Tuple(std::tuple<
           rs_std::Option<::std::int32_t>,
           rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>&&
@@ -3912,6 +3983,10 @@ inline ::rs_std::Tuple<rs_std::Option<::std::int32_t>>::Tuple(
   ::std::memcpy(this, &value, sizeof(value));
 }
 inline rs_std::Tuple<rs_std::Option<::std::int32_t>>::Tuple(
+    rs_std::Option<::std::int32_t> __field0) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+}
+inline rs_std::Tuple<rs_std::Option<::std::int32_t>>::Tuple(
     std::tuple<rs_std::Option<::std::int32_t>>&& tuple) noexcept {
   std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
 }
@@ -3966,6 +4041,11 @@ inline ::rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::Tuple(
   ::std::memcpy(this, &value, sizeof(value));
 }
 inline rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::Tuple(
+    ::tuples::CloneNoDefault __field0, ::std::uint8_t __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
+}
+inline rs_std::Tuple<::tuples::CloneNoDefault, ::std::uint8_t>::Tuple(
     std::tuple<::tuples::CloneNoDefault, ::std::uint8_t>&& tuple) noexcept {
   std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
   std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
@@ -3998,6 +4078,11 @@ static_assert(::std::is_trivially_move_assignable_v<
 inline ::rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t>::Tuple(
     ::crubit::UnsafeRelocateTag, Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+inline rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t>::Tuple(
+    ::tuples::CopyNoDefault __field0, ::std::uint8_t __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
 }
 inline rs_std::Tuple<::tuples::CopyNoDefault, ::std::uint8_t>::Tuple(
     std::tuple<::tuples::CopyNoDefault, ::std::uint8_t>&& tuple) noexcept {
@@ -4044,6 +4129,11 @@ inline ::rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>& ::rs_std::Tuple<
 inline ::rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::Tuple(
     ::crubit::UnsafeRelocateTag, Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+inline rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::Tuple(
+    ::tuples::HasDefault __field0, ::std::uint8_t __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
 }
 inline rs_std::Tuple<::tuples::HasDefault, ::std::uint8_t>::Tuple(
     std::tuple<::tuples::HasDefault, ::std::uint8_t>&& tuple) noexcept {
@@ -4136,6 +4226,17 @@ inline rs_std::Tuple<
     ::std::uint32_t,
     rs_std::Tuple<::std::uint32_t,
                   rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>::
+    Tuple(::std::uint32_t __field0,
+          rs_std::Tuple<::std::uint32_t,
+                        rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>
+              __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
+}
+inline rs_std::Tuple<
+    ::std::uint32_t,
+    rs_std::Tuple<::std::uint32_t,
+                  rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>>::
     Tuple(std::tuple<
           ::std::uint32_t,
           rs_std::Tuple<::std::uint32_t,
@@ -4207,6 +4308,13 @@ inline ::rs_std::Tuple<::std::uint32_t,
 }
 inline rs_std::Tuple<::std::uint32_t,
                      rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>::
+    Tuple(::std::uint32_t __field0,
+          rs_std::Tuple<::std::uint32_t, ::std::uint32_t> __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
+}
+inline rs_std::Tuple<::std::uint32_t,
+                     rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>::
     Tuple(std::tuple<::std::uint32_t,
                      rs_std::Tuple<::std::uint32_t, ::std::uint32_t>>&&
               tuple) noexcept {
@@ -4259,6 +4367,11 @@ inline ::rs_std::Tuple<::std::uint32_t, ::std::uint32_t>::Tuple(
   ::std::memcpy(this, &value, sizeof(value));
 }
 inline rs_std::Tuple<::std::uint32_t, ::std::uint32_t>::Tuple(
+    ::std::uint32_t __field0, ::std::uint32_t __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
+}
+inline rs_std::Tuple<::std::uint32_t, ::std::uint32_t>::Tuple(
     std::tuple<::std::uint32_t, ::std::uint32_t>&& tuple) noexcept {
   std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
   std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
@@ -4301,6 +4414,11 @@ static_assert(::std::is_trivially_move_assignable_v<
 inline ::rs_std::Tuple<::std::uint64_t, ::std::uint64_t>::Tuple(
     ::crubit::UnsafeRelocateTag, Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+inline rs_std::Tuple<::std::uint64_t, ::std::uint64_t>::Tuple(
+    ::std::uint64_t __field0, ::std::uint64_t __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
 }
 inline rs_std::Tuple<::std::uint64_t, ::std::uint64_t>::Tuple(
     std::tuple<::std::uint64_t, ::std::uint64_t>&& tuple) noexcept {
@@ -4361,6 +4479,11 @@ inline ::rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::Tuple(
   ::std::memcpy(this, &value, sizeof(value));
 }
 inline rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::Tuple(
+    ::std::uint8_t __field0, ::tuples::CloneNoDefault __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
+}
+inline rs_std::Tuple<::std::uint8_t, ::tuples::CloneNoDefault>::Tuple(
     std::tuple<::std::uint8_t, ::tuples::CloneNoDefault>&& tuple) noexcept {
   std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
   std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
@@ -4393,6 +4516,11 @@ static_assert(::std::is_trivially_move_assignable_v<
 inline ::rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault>::Tuple(
     ::crubit::UnsafeRelocateTag, Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+inline rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault>::Tuple(
+    ::std::uint8_t __field0, ::tuples::CopyNoDefault __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
 }
 inline rs_std::Tuple<::std::uint8_t, ::tuples::CopyNoDefault>::Tuple(
     std::tuple<::std::uint8_t, ::tuples::CopyNoDefault>&& tuple) noexcept {
@@ -4439,6 +4567,11 @@ inline ::rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>& ::rs_std::Tuple<
 inline ::rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>::Tuple(
     ::crubit::UnsafeRelocateTag, Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+inline rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>::Tuple(
+    ::std::uint8_t __field0, ::tuples::HasDefault __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
 }
 inline rs_std::Tuple<::std::uint8_t, ::tuples::HasDefault>::Tuple(
     std::tuple<::std::uint8_t, ::tuples::HasDefault>&& tuple) noexcept {
@@ -4506,6 +4639,11 @@ inline ::rs_std::Tuple<::std::uint8_t, ::std::uint32_t>::Tuple(
   ::std::memcpy(this, &value, sizeof(value));
 }
 inline rs_std::Tuple<::std::uint8_t, ::std::uint32_t>::Tuple(
+    ::std::uint8_t __field0, ::std::uint32_t __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
+}
+inline rs_std::Tuple<::std::uint8_t, ::std::uint32_t>::Tuple(
     std::tuple<::std::uint8_t, ::std::uint32_t>&& tuple) noexcept {
   std::construct_at(&this->__field0, std::move(std::get<0>(tuple)));
   std::construct_at(&this->__field1, std::move(std::get<1>(tuple)));
@@ -4547,6 +4685,11 @@ static_assert(::std::is_trivially_move_assignable_v<
 inline ::rs_std::Tuple<::std::uint32_t, ::std::uint8_t>::Tuple(
     ::crubit::UnsafeRelocateTag, Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+inline rs_std::Tuple<::std::uint32_t, ::std::uint8_t>::Tuple(
+    ::std::uint32_t __field0, ::std::uint8_t __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
 }
 inline rs_std::Tuple<::std::uint32_t, ::std::uint8_t>::Tuple(
     std::tuple<::std::uint32_t, ::std::uint8_t>&& tuple) noexcept {

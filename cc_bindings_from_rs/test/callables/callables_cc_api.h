@@ -423,6 +423,8 @@ struct alignas(4)
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::int32_t __field0,
+        rs_std::Option<::std::int32_t> __field1) noexcept;
   Tuple(std::tuple<::std::int32_t, rs_std::Option<::std::int32_t>>&&
             tuple) noexcept;
   ~Tuple() = default;
@@ -1341,6 +1343,11 @@ static_assert(::std::is_trivially_move_assignable_v<
 inline ::rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>::Tuple(
     ::crubit::UnsafeRelocateTag, Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+inline rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>::Tuple(
+    ::std::int32_t __field0, rs_std::Option<::std::int32_t> __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
 }
 inline rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>::Tuple(
     std::tuple<::std::int32_t, rs_std::Option<::std::int32_t>>&&

@@ -634,7 +634,7 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
         let mut get_lvalue_branches = quote! {};
         let mut get_rvalue_branches = quote! {};
 
-        let mut construct_elements = quote! {};
+        let mut ctor_params = Vec::new();
         let mut convert_elements = Vec::new();
         for (i, element_cc_ty) in element_cc_tys.iter().enumerate() {
             let field_ident = anonymous_field_ident(i);
@@ -642,9 +642,7 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
             let elem_size = element_sizes[i];
 
             if elem_size > 0 {
-                construct_elements.extend(quote! {
-                    std::construct_at(&this->#field_ident, std::move(std::get<#i_idx>(tuple)));
-                });
+                ctor_params.push(quote! { #element_cc_ty #field_ident });
                 convert_elements.push(quote! {
                     std::move(this->#field_ident)
                 });
@@ -659,6 +657,7 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
                     } else
                 });
             } else {
+                ctor_params.push(quote! { #element_cc_ty });
                 convert_elements.push(quote! {
                     #element_cc_ty{}
                 });
@@ -736,14 +735,43 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
         let all_elements_cpp_movable =
             self.element_tys.iter().all(|element| self.db.is_cpp_move_constructible(element.ty));
 
+        let explicit = (num_elements == 1).then_some(quote! { explicit });
         let (std_tuple_main_api_ctor, std_tuple_main_api_conv, std_tuple_cc_details) =
             if all_elements_cpp_movable {
+                let construct_elements =
+                    |val: fn(usize, &proc_macro2::Ident) -> TokenStream| -> TokenStream {
+                        element_sizes
+                            .iter()
+                            .enumerate()
+                            .filter_map(|(i, size)| {
+                                (*size > 0).then(|| {
+                                    let field_ident = anonymous_field_ident(i);
+                                    let expr = val(i, &field_ident);
+                                    quote! {
+                                        std::construct_at(&this->#field_ident, #expr);
+                                    }
+                                })
+                            })
+                            .collect()
+                    };
+                let construct_elements_from_args =
+                    construct_elements(|_, field_ident| quote! { std::move(#field_ident) });
+                let construct_elements_from_tuple = construct_elements(|i, _| {
+                    let i_idx = Literal::usize_unsuffixed(i);
+                    quote! { std::move(std::get<#i_idx>(tuple)) }
+                });
                 (
-                    quote! { Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) noexcept; },
+                    quote! {
+                        #explicit Tuple(#(#ctor_params),*) noexcept; __NEWLINE__
+                        Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) noexcept;
+                    },
                     quote! { operator std::tuple<#(#element_cc_tys),*>() && noexcept; },
                     quote! {
+                        inline #full_self_ty::Tuple(#(#ctor_params),*) noexcept {
+                            #construct_elements_from_args
+                        } __NEWLINE__
                         inline #full_self_ty::Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) noexcept {
-                            #construct_elements
+                            #construct_elements_from_tuple
                         } __NEWLINE__
                         inline #full_self_ty::operator std::tuple<#(#element_cc_tys),*>() && noexcept {
                             return std::tuple<#(#element_cc_tys),*>(#(#convert_elements),*);
@@ -752,7 +780,10 @@ impl<'tcx> TupleApiGenerator<'_, 'tcx> {
                 )
             } else {
                 (
-                    quote! { Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) = delete; },
+                    quote! {
+                        #explicit Tuple(#(#ctor_params),*) = delete; __NEWLINE__
+                        Tuple(std::tuple<#(#element_cc_tys),*>&& tuple) = delete;
+                    },
                     quote! { operator std::tuple<#(#element_cc_tys),*>() && = delete; },
                     quote! {},
                 )

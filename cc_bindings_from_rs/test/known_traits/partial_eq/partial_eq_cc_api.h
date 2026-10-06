@@ -247,6 +247,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
   Tuple& operator=(Tuple&&) = default;
 
   Tuple(::crubit::UnsafeRelocateTag, Tuple&& value);
+  Tuple(::std::uint64_t __field0, bool __field1) noexcept;
   Tuple(std::tuple<::std::uint64_t, bool>&& tuple) noexcept;
   ~Tuple() = default;
   operator std::tuple<::std::uint64_t, bool>() && noexcept;
@@ -614,6 +615,11 @@ static_assert(::std::is_trivially_move_assignable_v<
 inline ::rs_std::Tuple<::std::uint64_t, bool>::Tuple(
     ::crubit::UnsafeRelocateTag, Tuple&& value) {
   ::std::memcpy(this, &value, sizeof(value));
+}
+inline rs_std::Tuple<::std::uint64_t, bool>::Tuple(::std::uint64_t __field0,
+                                                   bool __field1) noexcept {
+  std::construct_at(&this->__field0, std::move(__field0));
+  std::construct_at(&this->__field1, std::move(__field1));
 }
 inline rs_std::Tuple<::std::uint64_t, bool>::Tuple(
     std::tuple<::std::uint64_t, bool>&& tuple) noexcept {
