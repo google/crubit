@@ -105,6 +105,10 @@ flagset::flags! {
 
         /// Disable ImplCxxExternType.
         NoImplCxxExternType,
+
+        /// Generate C++ bindings for Rust enums with one nested struct per variant, built on
+        /// `support/rs_std/enum.h` (crubit.rs-enum-api-v2). Only affects cpp_api_from_rust.
+        EnumApiV2,
     }
 }
 
@@ -145,6 +149,7 @@ impl CrubitFeature {
             Self::NonnullSmartPointers => "nonnull_smart_pointers",
             Self::ImplCxxExternType => "impl_cxx_extern_type",
             Self::NoImplCxxExternType => "no_impl_cxx_extern_type",
+            Self::EnumApiV2 => "enum_api_v2",
         }
     }
 
@@ -188,6 +193,7 @@ impl CrubitFeature {
             Self::NonnullSmartPointers => "//features:nonnull_smart_pointers",
             Self::ImplCxxExternType => "//features:impl_cxx_extern_type",
             Self::NoImplCxxExternType => "//features:no_impl_cxx_extern_type",
+            Self::EnumApiV2 => "//features:enum_api_v2",
         }
     }
 }
@@ -210,6 +216,8 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::ForwardDeclarations
                 - CrubitFeature::Generics
                 - CrubitFeature::NonnullSmartPointers
+                // Out of `all` until existing `E::MakeV` callers are migrated.
+                - CrubitFeature::EnumApiV2
         }
         // `supported` automatically implies `types` and `impl_cxx_extern_type`.
         b"supported" => {
@@ -243,6 +251,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"nonnull_smart_pointers" => CrubitFeature::NonnullSmartPointers.into(),
         b"impl_cxx_extern_type" => CrubitFeature::ImplCxxExternType.into(),
         b"no_impl_cxx_extern_type" => CrubitFeature::NoImplCxxExternType.into(),
+        b"enum_api_v2" => CrubitFeature::EnumApiV2.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -389,6 +398,12 @@ mod tests {
         let SerializedCrubitFeature(features) =
             serde_json::from_str("\"no_impl_cxx_extern_type\"").unwrap();
         assert_eq!(features, CrubitFeature::NoImplCxxExternType);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_feature_enum_api_v2() {
+        let SerializedCrubitFeature(features) = serde_json::from_str("\"enum_api_v2\"").unwrap();
+        assert_eq!(features, CrubitFeature::EnumApiV2);
     }
 
     #[gtest]

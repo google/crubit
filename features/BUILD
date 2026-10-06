@@ -287,6 +287,18 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling the v2 C++ API for Rust enums: one nested struct per variant, built with
+# `E::V::Make(...)` and inspected with `rs::get_if` and friends. This flag only impacts
+# cpp_api_from_rust users.
+#
+# See crubit.rs-enum-api-v2 and b/489126000
+crubit_feature_hint(
+    name = "enum_api_v2",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["enum_api_v2"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(
