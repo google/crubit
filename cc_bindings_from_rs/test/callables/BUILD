@@ -48,9 +48,12 @@ cc_bindings_from_rust(
 crubit_cc_test(
     name = "callables_test",
     srcs = ["callables_test.cc"],
+    platforms = [
+        "android",
+        "ios",
+    ],
     deps = [
         ":callables_cc_api",
-        "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "//testing/base/public:gunit_main",
     ],
 )

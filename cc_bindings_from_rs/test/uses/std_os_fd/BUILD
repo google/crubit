@@ -39,5 +39,9 @@ golden_test(
     basename = "std_os_fd",
     golden_h = "std_os_fd_cc_api.h",
     golden_rs = "std_os_fd_cc_api_impl.rs",
+    platforms = [
+        "android",
+        "ios",
+    ],
     rust_library = "std_os_fd",
 )
