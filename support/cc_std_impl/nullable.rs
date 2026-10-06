@@ -58,6 +58,10 @@ pub unsafe trait SupportsNullable: Sized {
 ///
 /// Avoid naming this type outside of generated bindings. Instead, convert it to an [`Option`] as
 /// soon as possible using [`OptionLike`]: see the [module documentation](self) for why.
+#[crubit_annotate::cpp_layout_equivalent(
+    cpp_type = "{Ptr} crubit_nullable",
+    include_path = "<crubit/support/annotations_internal.h>"
+)]
 #[repr(transparent)]
 pub struct Nullable<Ptr: SupportsNullable> {
     ptr: Ptr,

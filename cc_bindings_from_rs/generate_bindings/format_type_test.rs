@@ -878,6 +878,10 @@ fn unique_ptr_preamble() -> TokenStream {
                 #[doc="CRUBIT_ANNOTATE: cpp_type = {Ptr} crubit_nonnull"]
                 #[doc="CRUBIT_ANNOTATE: include_path = <crubit/support/annotations_internal.h>"]
                 pub struct NonNull<Ptr>(pub Ptr);
+
+                #[doc="CRUBIT_ANNOTATE: cpp_type = {Ptr} crubit_nullable"]
+                #[doc="CRUBIT_ANNOTATE: include_path = <crubit/support/annotations_internal.h>"]
+                pub struct Nullable<Ptr>(pub Ptr);
             }
         }
     }
@@ -1013,6 +1017,63 @@ fn test_format_ty_for_cc_nonnull_virtual_unique_ptr_with_delete_succeeds() {
                 .unwrap();
             let parsed_expected = expected.parse::<TokenStream>().unwrap().to_string();
             assert_eq!(cc_snippet.tokens.to_string(), parsed_expected, "{desc}");
+        },
+    );
+}
+
+/// Unlike `NonNull`, the `Nullable` bridge is not gated on `nonnull_smart_pointers`, so these use
+/// the default test feature set.
+#[test]
+fn test_format_ty_for_cc_nullable_unique_ptr_succeeds() {
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &[
+            (
+                "cc_std::std::Nullable<cc_std::std::unique_ptr<StructWithoutDelete>>",
+                "::std::unique_ptr<::rust_out::StructWithoutDelete> crubit_nullable",
+            ),
+            (
+                "cc_std::std::Nullable<cc_std::std::virtual_unique_ptr<StructWithDelete>>",
+                "::std::unique_ptr<::rust_out::StructWithDelete> crubit_nullable",
+            ),
+        ],
+        unique_ptr_preamble(),
+        |desc, tcx, ty, expected| {
+            let db = bindings_db_for_tests(tcx);
+            let cc_snippet = db
+                .format_ty_for_cc(
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .unwrap();
+            let parsed_expected = expected.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(cc_snippet.tokens.to_string(), parsed_expected, "{desc}");
+        },
+    );
+}
+
+#[test]
+fn test_format_ty_for_cc_nullable_unique_ptr_with_delete_fails() {
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &[(
+            "cc_std::std::Nullable<cc_std::std::unique_ptr<StructWithDelete>>",
+            "`cc_std::std::unique_ptr<StructWithDelete>` has no layout-compatible C++ type, \
+             but is used as a generic parameter\n  crubit.rs/errors/delete: \
+             `StructWithDelete` implements the `Delete` trait and cannot be used in a \
+             `unique_ptr`. Use `virtual_unique_ptr` instead.",
+        )],
+        unique_ptr_preamble(),
+        |desc, tcx, ty, expected_err| {
+            let db = bindings_db_for_tests(tcx);
+            let anyhow_err = db
+                .format_ty_for_cc(
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .expect_err(&format!("Expecting error for: {desc}"));
+            let actual_err = format!("{anyhow_err:#}");
+            assert_eq!(&actual_err, *expected_err, "{desc}");
         },
     );
 }

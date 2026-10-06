@@ -48,3 +48,33 @@ crubit_cc_test(
         "//testing/base/public:gunit_main",
     ],
 )
+
+# Deliberately does not enable `nonnull_smart_pointers`, to test that the `Nullable` bridge is not
+# gated on it.
+rust_library(
+    name = "nullable",
+    testonly = 1,
+    srcs = [
+        "nullable.rs",
+    ],
+    cc_deps = [":test_helpers"],
+    edition = "2024",
+    proc_macro_deps = ["//support:crubit_annotate"],
+    deps = ["//support/cc_std"],
+)
+
+cc_bindings_from_rust(
+    name = "nullable_cc_api",
+    testonly = 1,
+    crate = ":nullable",
+)
+
+crubit_cc_test(
+    name = "nullable_test",
+    srcs = ["nullable_test.cc"],
+    deps = [
+        ":nullable_cc_api",
+        ":test_helpers",
+        "//testing/base/public:gunit_main",
+    ],
+)

@@ -2102,10 +2102,14 @@ fn is_manually_annotated_bridged_adt<'tcx>(
     let attrs = crubit_attr::get_attrs(db.tcx(), adt.did())
         .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
 
-    // `NonNull<Ptr>` is spelled `Ptr crubit_nonnull`. Gate that on `nonnull_smart_pointers`, the
-    // same feature that lets `rs_bindings_from_cc` produce `NonNull` from an `_Nonnull`-annotated
-    // smart pointer, so a target opts into both directions of the bridge at once. Without the
-    // feature, treat `NonNull` as non-bridged, which is how it behaved before it was annotated.
+    // `cpp_std::NonNull<Ptr>` (**not** `core::ptr::NonNull<T>`) is spelled `Ptr crubit_nonnull`.
+    // Gate that on `nonnull_smart_pointers`, the same feature that lets `rs_bindings_from_cc`
+    // produce `NonNull` from an `_Nonnull`-annotated smart pointer, so a target opts into both
+    // directions of the bridge at once. Without the feature, treat `NonNull` as non-bridged,
+    // which is how it behaved before it was annotated.
+    //
+    // `Nullable<Ptr>` (spelled `Ptr crubit_nullable`) is not gated: it means the same thing as an
+    // unannotated C++ smart pointer, so bridging it is correct with or without the feature.
     if attrs.cpp_type.is_some_and(|cpp_type| cpp_type.as_str().contains("crubit_nonnull"))
         && !db
             .crate_features(db.source_crate_num())
