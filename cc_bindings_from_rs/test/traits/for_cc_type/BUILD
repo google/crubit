@@ -32,6 +32,7 @@ rust_library(
     testonly = 1,
     srcs = ["trait.rs"],
     cc_deps = [":cc_type"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

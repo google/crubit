@@ -28,6 +28,7 @@ rust_library(
     aspect_hints = [
         "//features:experimental",
     ],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
@@ -77,6 +78,7 @@ rust_library(
     name = "cpp_enums",
     testonly = 1,
     srcs = ["cpp_enums.rs"],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
@@ -117,6 +119,7 @@ rust_library(
     testonly = 1,
     srcs = ["option.rs"],
     aspect_hints = ["//features:always_specialize_generics_in_cpp_api_from_rust"],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
@@ -158,6 +161,7 @@ rust_library(
     name = "result",
     testonly = 1,
     srcs = ["result.rs"],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],

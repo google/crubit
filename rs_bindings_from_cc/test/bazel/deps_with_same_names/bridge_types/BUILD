@@ -42,6 +42,7 @@ rust_library(
     name = "client_rust",
     srcs = ["client.rs"],
     cc_deps = [":client_cc"],
+    edition = "2024",
 )
 
 build_test(

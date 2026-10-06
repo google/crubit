@@ -42,6 +42,7 @@ rust_binary(
         ":base",
         ":example_lib",
     ],
+    edition = "2024",
     deps = [
         ":definition",
         "//support:ctor",
@@ -61,6 +62,7 @@ rust_library(
     cc_deps = [
         ":base",
     ],
+    edition = "2024",
     deps = [
         "//support/ffi_11",
     ],

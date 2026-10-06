@@ -21,6 +21,7 @@ rust_library(
     name = "leaf_rs_lib",
     srcs = ["leaf_rs_lib.rs"],
     aspect_hints = ["//features:supported"],
+    edition = "2024",
 )
 
 rust_golden_test(
@@ -79,6 +80,7 @@ rust_library(
     srcs = ["middle_rs_lib.rs"],
     aspect_hints = ["//features:supported"],
     cc_deps = [":leaf_cc_lib"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

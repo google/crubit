@@ -16,6 +16,7 @@ cc_binary(
 rust_library(
     name = "lib",
     srcs = ["rust_lib/src/lib.rs"],
+    edition = "2024",
     deps = [
         "@crates//base64",
     ],

@@ -18,6 +18,7 @@ rust_library(
     name = "trait_definition",
     testonly = 1,
     srcs = ["trait_definition.rs"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(
@@ -30,6 +31,7 @@ rust_library(
     name = "trait_impl",
     testonly = 1,
     srcs = ["trait_impl.rs"],
+    edition = "2024",
     deps = [":trait_definition"],
 )
 

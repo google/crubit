@@ -28,6 +28,7 @@ rust_library(
         ":async_fn_bridged_type_hint",
         "//features:supported",
     ],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],

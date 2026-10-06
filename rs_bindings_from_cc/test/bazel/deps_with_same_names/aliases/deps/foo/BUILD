@@ -13,4 +13,5 @@ package(
 rust_library(
     name = "foo",
     srcs = ["foo.rs"],
+    edition = "2024",
 )

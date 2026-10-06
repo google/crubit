@@ -19,6 +19,7 @@ rust_library(
     testonly = 1,
     srcs = ["v1.rs"],
     crate_name = "my_crate",
+    edition = "2024",
 )
 
 rust_library(
@@ -26,6 +27,7 @@ rust_library(
     testonly = 1,
     srcs = ["v2.rs"],
     crate_name = "my_crate",
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

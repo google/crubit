@@ -9,6 +9,7 @@ rust_library(
     srcs = [
         "rust.rs",
     ],
+    edition = "2024",
 )
 
 crubit_test_cc_library(

@@ -29,6 +29,7 @@ rust_library(
     name = "example_crate",
     srcs = ["example.rs"],
     aspect_hints = [":custom_namespace"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

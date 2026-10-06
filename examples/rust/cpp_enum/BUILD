@@ -19,6 +19,7 @@ licenses(["notice"])
 rust_library(
     name = "example_crate",
     srcs = ["example.rs"],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],

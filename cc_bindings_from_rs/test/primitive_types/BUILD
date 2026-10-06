@@ -21,6 +21,7 @@ rust_library(
     aspect_hints = [
         "//features:experimental",
     ],
+    edition = "2024",
     deps = [
         "//support/ffi_11",
         "@crate_index//:libc",  # v0_2

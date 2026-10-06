@@ -24,6 +24,7 @@ rust_library(
         ":three",
         ":two",
     ],
+    edition = "2024",
     proc_macro_deps = [
         "//support/cc_import",
     ],

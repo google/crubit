@@ -25,6 +25,7 @@ rust_library(
     aspect_hints = [
         "//features:experimental",
     ],
+    edition = "2024",
     deps = [
         "//support:bridge_rust",
     ],

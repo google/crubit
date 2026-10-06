@@ -10,6 +10,7 @@ rust_library(
     srcs = ["//support:forward_declare.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     crate_features = [],
+    edition = "2024",
     proc_macro_deps = ["//support:forward_declare_proc_macros"],
 )
 

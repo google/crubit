@@ -27,6 +27,7 @@ rust_library(
         "vector.rs",
     ],
     cc_deps = [":test_helpers"],
+    edition = "2024",
     deps = ["//support/cc_std"],
 )
 

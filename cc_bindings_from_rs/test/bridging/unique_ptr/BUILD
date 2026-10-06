@@ -28,6 +28,7 @@ rust_library(
     ],
     aspect_hints = ["//features:nonnull_smart_pointers"],
     cc_deps = [":test_helpers"],
+    edition = "2024",
     proc_macro_deps = ["//support:crubit_annotate"],
     deps = ["//support/cc_std"],
 )

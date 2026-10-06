@@ -23,6 +23,7 @@ rust_library(
     aspect_hints = [
         "//features:experimental",
     ],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

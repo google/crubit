@@ -25,6 +25,7 @@ rust_library(
         "shared_ptr.rs",
     ],
     aspect_hints = ["//features:nonnull_smart_pointers"],
+    edition = "2024",
     proc_macro_deps = ["//support:crubit_annotate"],
     deps = ["//support/cc_std"],
 )

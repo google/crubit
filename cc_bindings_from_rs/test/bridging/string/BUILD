@@ -18,6 +18,7 @@ rust_library(
     cc_deps = [
         "//support/cc_std",
     ],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

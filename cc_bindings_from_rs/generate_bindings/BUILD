@@ -26,6 +26,7 @@ rust_library(
         "get_generic_args.rs",
         "lib.rs",
     ],
+    edition = "2024",
     deps = [
         ":query_compiler",
         "//cc_bindings_from_rs:crubit_attr",
@@ -121,6 +122,7 @@ rust_library(
     srcs = [
         "test_helpers.rs",
     ],
+    edition = "2024",
     deps = [
         ":generate_bindings",
         "//cc_bindings_from_rs:run_compiler_test_support",
@@ -139,6 +141,7 @@ rust_library(
     srcs = [
         "query_compiler.rs",
     ],
+    edition = "2024",
     deps = [
         "//cc_bindings_from_rs:crubit_attr",
         "//cc_bindings_from_rs:rustversion",

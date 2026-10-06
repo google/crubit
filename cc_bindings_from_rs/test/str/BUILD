@@ -17,6 +17,7 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "str",
     srcs = ["str.rs"],
+    edition = "2024",
 )
 
 golden_test(

@@ -39,6 +39,7 @@ _tags = [
 rust_library(
     name = "any_invocable",
     srcs = ["rust_any_invocable.rs"],
+    edition = "2024",
     tags = _tags,
 )
 
@@ -65,6 +66,7 @@ rust_library(
     name = "any_invocable_usage_rust",
     srcs = ["any_invocable_usage.rs"],
     cc_deps = [":any_invocable_usage_cc"],
+    edition = "2024",
     tags = _tags,
 )
 

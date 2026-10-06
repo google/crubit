@@ -17,6 +17,7 @@ rust_library(
     name = "pass_by_value_unmovable",
     testonly = 1,
     srcs = ["pass_by_value_unmovable.rs"],
+    edition = "2024",
 )
 
 golden_test(

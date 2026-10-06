@@ -51,6 +51,7 @@ cc_bindings_from_rust(
 rust_library(
     name = "point_refactored",
     srcs = ["point_refactored.rs"],
+    edition = "2024",
 )
 
 # Baseline C++ math utilities library before incomplete migration.
@@ -98,6 +99,7 @@ rust_test(
 rust_binary(
     name = "main_rs",
     srcs = ["main.rs"],
+    edition = "2024",
     deps = [
         ":math_utils_rs",
         ":point_refactored",

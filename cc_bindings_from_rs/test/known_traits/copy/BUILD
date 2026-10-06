@@ -18,6 +18,7 @@ rust_library(
     name = "copy",
     testonly = 1,
     srcs = ["copy.rs"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

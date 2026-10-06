@@ -30,6 +30,7 @@ package(
 rust_library(
     name = "co",
     srcs = ["rust_co.rs"],
+    edition = "2024",
 )
 
 additional_rust_srcs_for_crubit_bindings(
@@ -54,6 +55,7 @@ rust_library(
     name = "co_usage_rust",
     srcs = ["co_usage.rs"],
     cc_deps = [":co_usage_cc"],
+    edition = "2024",
 )
 
 build_test(

@@ -18,6 +18,7 @@ rust_library(
     name = "cpp_std",
     srcs = ["cpp_std.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     visibility = [
         "//visibility:public",
     ],
@@ -39,6 +40,7 @@ rust_library(
     name = "cref",
     srcs = ["cref.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     visibility = [
         "//visibility:public",
     ],
@@ -58,6 +60,7 @@ rust_library(
     srcs = ["ctor.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     crate_features = ["same_abi"],
+    edition = "2024",
     proc_macro_deps = [":ctor_proc_macros"],
     visibility = [
         "//visibility:public",
@@ -184,6 +187,7 @@ rust_library(
     name = "decltype_cast",
     srcs = ["decltype_cast.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     visibility = [
         "//visibility:public",
     ],
@@ -194,6 +198,7 @@ rust_library(
     srcs = ["forward_declare.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
     crate_features = ["unstable"],
+    edition = "2024",
     proc_macro_deps = [":forward_declare_proc_macros"],
     visibility = [
         "//visibility:public",
@@ -238,6 +243,7 @@ rust_library(
     name = "oops",
     srcs = ["oops.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     visibility = [
         "//visibility:public",
     ],
@@ -255,6 +261,7 @@ rust_library(
     name = "operator",
     srcs = ["operator.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     visibility = [
         "//visibility:public",
     ],
@@ -264,6 +271,7 @@ rust_library(
     name = "bridge_rust",
     srcs = ["crubit_bridge_rust/src/bridge.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     visibility = [
         "//visibility:public",
     ],
@@ -285,6 +293,7 @@ rust_library(
     name = "hash_rust",
     srcs = ["crubit_hash_rust/src/hash.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     visibility = [
         "//visibility:public",
     ],
@@ -312,6 +321,7 @@ rust_library(
         "crubit_support/src/lib.rs",
     ],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     link_deps = [
         "//support/rs_std:waker",
     ],

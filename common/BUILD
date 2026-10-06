@@ -25,6 +25,7 @@ exports_files([
 rust_library(
     name = "arc_anyhow",
     srcs = ["arc_anyhow.rs"],
+    edition = "2024",
     deps = [
         "@crate_index//:anyhow",  # v1
     ],
@@ -78,6 +79,7 @@ crubit_rust_test(
 rust_library(
     name = "code_gen_utils",
     srcs = ["code_gen_utils.rs"],
+    edition = "2024",
     deps = [
         ":arc_anyhow",
         ":crubit_feature",
@@ -110,6 +112,7 @@ crubit_rust_test(
 rust_library(
     name = "crubit_feature",
     srcs = ["crubit_feature.rs"],
+    edition = "2024",
     deps = [
         "@crate_index//:flagset",  # v0_4
         "@crate_index//:serde",  # v1
@@ -119,6 +122,7 @@ rust_library(
 rust_library(
     name = "dyn_format",
     srcs = ["dyn_format.rs"],
+    edition = "2024",
     deps = [
         "@crate_index//:anyhow",  # v1
     ],
@@ -175,12 +179,14 @@ cc_library(
 rust_library(
     name = "external_binaries",
     srcs = ["external_binaries.rs"],
+    edition = "2024",
     rustc_env = EXTERNAL_BINARIES,
 )
 
 rust_library(
     name = "interner",
     srcs = ["interner.rs"],
+    edition = "2024",
     deps = [
         "@crate_index//:bumpalo",  # v3
     ],
@@ -199,6 +205,7 @@ rust_test(
 rust_library(
     name = "memoized",
     srcs = ["memoized.rs"],
+    edition = "2024",
 )
 
 rust_test(
@@ -222,6 +229,7 @@ rust_library(
     name = "multiplatform_testing",
     testonly = 1,
     srcs = ["multiplatform_testing.rs"],
+    edition = "2024",
     visibility = [
         "//:__subpackages__",
     ],
@@ -230,6 +238,7 @@ rust_library(
 rust_library(
     name = "ffi_types",
     srcs = ["ffi_types.rs"],
+    edition = "2024",
     visibility = ["//:__subpackages__"],
 )
 
@@ -295,6 +304,7 @@ rust_library(
     name = "token_stream_matchers",
     testonly = 1,
     srcs = ["token_stream_matchers.rs"],
+    edition = "2024",
     visibility = [
         "//:__subpackages__",
     ],
@@ -325,6 +335,7 @@ rust_library(
     name = "token_stream_matchers_fastpath",
     testonly = 1,
     srcs = ["token_stream_matchers_fastpath.rs"],
+    edition = "2024",
     visibility = ["//cargo:__subpackages__"],
     deps = [
         ":token_stream_printer",
@@ -338,6 +349,7 @@ rust_library(
     srcs = ["token_stream_printer.rs"],
     data = [
     ],
+    edition = "2024",
     deps = [
         ":external_binaries",
         ":ffi_types",
@@ -363,6 +375,7 @@ crubit_rust_test(
 rust_library(
     name = "kythe_metadata",
     srcs = ["kythe_metadata.rs"],
+    edition = "2024",
     visibility = [
         "//:__subpackages__",
     ],
@@ -431,6 +444,7 @@ cc_library(
 rust_library(
     name = "errors",
     srcs = ["errors.rs"],
+    edition = "2024",
     deps = [
         ":arc_anyhow",
         ":error_report",
@@ -453,6 +467,7 @@ crubit_rust_test(
 rust_library(
     name = "error_report",
     srcs = ["error_report.rs"],
+    edition = "2024",
     visibility = [
         "//:__subpackages__",
     ],
@@ -477,6 +492,7 @@ crubit_rust_test(
 rust_library(
     name = "crubit_abi_type",
     srcs = ["crubit_abi_type.rs"],
+    edition = "2024",
     visibility = [
         "//:__subpackages__",
         "//cargo:__subpackages__",
@@ -498,4 +514,5 @@ crubit_rust_test(
 rust_static_library(
     name = "include_allocator_symbols",
     srcs = ["empty.rs"],
+    edition = "2024",
 )

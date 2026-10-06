@@ -17,6 +17,7 @@ rust_library(
     name = "send_sync_types",
     testonly = 1,
     srcs = ["send_sync_types.rs"],
+    edition = "2024",
 )
 
 golden_test(

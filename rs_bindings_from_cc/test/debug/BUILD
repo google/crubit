@@ -17,6 +17,7 @@ rust_library(
     name = "existing_rust_debuggable",
     srcs = ["existing_rust_debuggable.rs"],
     aspect_hints = ["//features:supported"],
+    edition = "2024",
     proc_macro_deps = ["//support:crubit_annotate"],
 )
 

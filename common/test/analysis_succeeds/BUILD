@@ -29,6 +29,7 @@ rust_library(
     name = "rust_lib",
     srcs = ["rust_lib.rs"],
     cc_deps = [":cc_lib"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

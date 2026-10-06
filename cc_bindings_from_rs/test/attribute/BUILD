@@ -20,6 +20,7 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "cpp_name",
     srcs = ["cpp_name.rs"],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
@@ -58,6 +59,7 @@ crubit_cc_test(
 rust_library(
     name = "must_bind",
     srcs = ["must_bind.rs"],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],

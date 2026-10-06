@@ -20,12 +20,14 @@ rust_library(
     name = "transitive",
     testonly = 1,
     srcs = ["transitive.rs"],
+    edition = "2024",
 )
 
 rust_library(
     name = "direct",
     testonly = 1,
     srcs = ["direct.rs"],
+    edition = "2024",
     deps = [":transitive"],
 )
 
@@ -33,6 +35,7 @@ rust_library(
     name = "transitive_reexports",
     testonly = 1,
     srcs = ["transitive_reexports.rs"],
+    edition = "2024",
     deps = [":direct"],
 )
 

@@ -26,6 +26,7 @@ rust_library(
     aspect_hints = [
         ":other_crate_hint",
     ],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
@@ -41,6 +42,7 @@ rust_library(
     name = "test_api",
     testonly = 1,
     srcs = ["test_api.rs"],
+    edition = "2024",
     deps = [":other_crate"],
 )
 

@@ -21,6 +21,7 @@ rust_library(
     name = "tuple_structs",
     testonly = 1,
     srcs = ["tuple_structs.rs"],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],

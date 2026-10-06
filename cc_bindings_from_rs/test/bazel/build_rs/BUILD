@@ -20,6 +20,7 @@ rust_library(
     name = "build_rs_user",
     testonly = 1,
     srcs = ["build_rs_user.rs"],
+    edition = "2024",
     deps = [":build_script"],
 )
 

@@ -22,6 +22,7 @@ rust_library(
     aspect_hints = [
         "//features:experimental",
     ],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],

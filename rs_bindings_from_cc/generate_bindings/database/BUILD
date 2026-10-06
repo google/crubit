@@ -18,6 +18,7 @@ rust_library(
         "lib.rs",
         "rs_snippet.rs",
     ],
+    edition = "2024",
     visibility = [
         "//rs_bindings_from_cc:__subpackages__",
     ],

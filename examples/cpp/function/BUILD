@@ -24,6 +24,7 @@ rust_api_from_cpp(
 rust_binary(
     name = "main",
     srcs = ["main.rs"],
+    edition = "2024",
 
     # Declare a dependency on Rust bindings for calling into the C++ `example_lib` library:
     deps = [":example_lib_rust"],

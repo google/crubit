@@ -28,6 +28,7 @@ package(
 rust_library(
     name = "cpp_api_from_rust_lib",
     srcs = ["lib.rs"],
+    edition = "2024",
     deps = [
         ":cmdline",
         ":run_compiler",
@@ -133,6 +134,7 @@ rust_library(
     srcs = [
         "cmdline.rs",
     ],
+    edition = "2024",
     deps = [
         "//common:crubit_feature",
         "//common:dyn_format",
@@ -157,6 +159,7 @@ crubit_rust_test(
 rust_library(
     name = "crubit_attr",
     srcs = ["crubit_attr.rs"],
+    edition = "2024",
     deps = [
         ":rustversion",
         "@crate_index//:anyhow",  # v1
@@ -180,6 +183,7 @@ rust_library(
     srcs = [
         "run_compiler.rs",
     ],
+    edition = "2024",
     deps = [
         ":rustversion",
         "//common:arc_anyhow",
@@ -207,6 +211,7 @@ rust_library(
     data = [
         "@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:rust_std-x86_64-unknown-linux-gnu",
     ],
+    edition = "2024",
     rustc_flags = [
         "--cfg=bazel",
         "--cfg=oss",
@@ -229,6 +234,7 @@ crubit_rust_test(
 rust_library(
     name = "toposort",
     srcs = ["toposort.rs"],
+    edition = "2024",
 )
 
 crubit_rust_test(
@@ -254,6 +260,7 @@ crubit_rust_test(
 rust_library(
     name = "rustversion",
     srcs = ["rustversion.rs"],
+    edition = "2024",
     proc_macro_deps = [
         ":rustversion_impl",
         "@crate_index//:rustversion",  # v1

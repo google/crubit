@@ -50,6 +50,7 @@ rust_library_with_embedded_cpp(
 rust_binary(
     name = "main",
     srcs = ["main.rs"],
+    edition = "2024",
     deps = [
         ":clamp_lib",
         ":greeting_lib",

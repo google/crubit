@@ -37,6 +37,7 @@ rust_library(
     name = "lib_with_two_direct_deps_with_same_name",
     srcs = ["direct.rs"],
     cc_deps = [":lib_direct"],
+    edition = "2024",
 )
 
 # Indirect dependency collision test
@@ -59,6 +60,7 @@ rust_library(
     name = "lib_with_indirect_deps_with_same_names",
     srcs = ["indirect.rs"],
     cc_deps = [":lib_indirect"],
+    edition = "2024",
 )
 
 # Proto dependency collision test
@@ -75,6 +77,7 @@ rust_library(
     name = "lib_with_proto_deps_with_same_names",
     srcs = ["proto_deps.rs"],
     cc_deps = [":lib_proto_deps"],
+    edition = "2024",
 )
 
 # cc_public_library dependency collision test
@@ -91,6 +94,7 @@ rust_library(
     name = "lib_with_public_deps_with_same_names",
     srcs = ["public_deps.rs"],
     cc_deps = [":lib_public_deps"],
+    edition = "2024",
 )
 
 # Mixed dependency collision test (additional_rust_srcs + regular C++ deps)
@@ -107,6 +111,7 @@ rust_library(
     name = "lib_with_mixed_deps",
     srcs = ["mixed_deps.rs"],
     cc_deps = [":lib_mixed_deps"],
+    edition = "2024",
 )
 
 # Aspect hint dep test (cc_deps in aspect hint matches one of client's deps)
@@ -135,6 +140,7 @@ rust_library(
     name = "lib_with_aspect_hint_dep",
     srcs = ["aspect_hint_dep.rs"],
     cc_deps = [":lib_aspect_hint_dep"],
+    edition = "2024",
 )
 
 # rust_api_from_cpp test: we have pair of a client and dep cc libraries,

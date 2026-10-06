@@ -19,6 +19,7 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "move",
     srcs = ["move.rs"],
+    edition = "2024",
 )
 
 golden_test(

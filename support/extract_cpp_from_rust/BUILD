@@ -11,6 +11,7 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "parse_inline_cpp_macros",
     srcs = ["parse_inline_cpp_macros.rs"],
+    edition = "2024",
     visibility = ["//visibility:public"],
     deps = [
         "@crate_index//:ra_ap_rustc_lexer",  # v0_165
@@ -28,6 +29,7 @@ rust_test(
 rust_binary(
     name = "extract_cpp_from_rust",
     srcs = ["extract_cpp_from_rust.rs"],
+    edition = "2024",
     visibility = [
         "//visibility:public",
     ],
@@ -50,6 +52,7 @@ rust_test(
 rust_library(
     name = "inline_cpp_utils",
     srcs = ["inline_cpp_utils.rs"],
+    edition = "2024",
     visibility = ["//visibility:private"],
 )
 
@@ -66,6 +69,7 @@ rust_proc_macro(
 rust_binary(
     name = "rust_with_cpp_fmt",
     srcs = ["rust_with_cpp_fmt.rs"],
+    edition = "2024",
     visibility = ["//visibility:public"],
     deps = [
         ":parse_inline_cpp_macros",

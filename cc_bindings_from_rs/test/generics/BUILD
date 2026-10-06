@@ -21,6 +21,7 @@ rust_library(
         "//features:generics",
         "//features:supported",
     ],
+    edition = "2024",
 )
 
 golden_test(

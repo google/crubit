@@ -45,6 +45,7 @@ rust_library(
     name = "rust_lib",
     testonly = True,
     srcs = ["rust_lib.rs"],
+    edition = "2024",
     deps = [":foo_rust_proto"],
 )
 

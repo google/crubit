@@ -25,6 +25,7 @@ rust_library(
         "static_method_mode.rs",
         "type_location.rs",
     ],
+    edition = "2024",
     deps = [
         "//cc_bindings_from_rs:crubit_attr",
         "//cc_bindings_from_rs:rustversion",

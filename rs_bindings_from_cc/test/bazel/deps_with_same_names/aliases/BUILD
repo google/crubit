@@ -77,6 +77,7 @@ rust_library(
         ":key2_cc": "key2_cc_rust",
     },
     cc_deps = [":key2_cc"],
+    edition = "2024",
 )
 
 build_test(

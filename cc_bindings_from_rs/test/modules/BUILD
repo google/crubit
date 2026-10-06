@@ -21,6 +21,7 @@ rust_library(
     name = "modules",
     testonly = 1,
     srcs = ["modules.rs"],
+    edition = "2024",
 )
 
 golden_test(

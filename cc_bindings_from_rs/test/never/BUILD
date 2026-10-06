@@ -17,6 +17,7 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "never",
     srcs = ["never.rs"],
+    edition = "2024",
 )
 
 golden_test(

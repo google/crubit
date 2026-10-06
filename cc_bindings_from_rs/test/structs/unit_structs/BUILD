@@ -21,6 +21,7 @@ rust_library(
     name = "unit_structs",
     testonly = 1,
     srcs = ["unit_structs.rs"],
+    edition = "2024",
 )
 
 golden_test(

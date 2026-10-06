@@ -17,6 +17,7 @@ rust_library(
     crate_features = [
         "required_feature",
     ],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

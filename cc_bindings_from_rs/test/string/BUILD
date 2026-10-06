@@ -15,6 +15,7 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "string",
     srcs = ["string.rs"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

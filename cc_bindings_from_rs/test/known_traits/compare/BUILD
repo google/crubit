@@ -24,6 +24,7 @@ rust_library(
     name = "compare",
     testonly = 1,
     srcs = ["compare.rs"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

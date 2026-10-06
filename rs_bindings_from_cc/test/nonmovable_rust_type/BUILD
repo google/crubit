@@ -17,6 +17,7 @@ rust_library(
     name = "nonmovable",
     srcs = ["nonmovable.rs"],
     aspect_hints = ["//features:supported"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

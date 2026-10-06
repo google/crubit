@@ -17,18 +17,21 @@ rust_library(
     name = "foo",
     testonly = 1,
     srcs = ["foo.rs"],
+    edition = "2024",
 )
 
 rust_library(
     name = "bar",
     testonly = 1,
     srcs = ["bar.rs"],
+    edition = "2024",
 )
 
 rust_library(
     name = "foobar",
     testonly = 1,
     srcs = ["foobar.rs"],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],

@@ -21,6 +21,7 @@ rust_library(
     name = "rs_default",
     testonly = 1,
     srcs = ["default.rs"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

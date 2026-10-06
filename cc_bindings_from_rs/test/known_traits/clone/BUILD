@@ -20,6 +20,7 @@ rust_library(
     name = "rs_clone",
     testonly = 1,
     srcs = ["clone.rs"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

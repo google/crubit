@@ -41,6 +41,7 @@ rust_library(
         "cc_api_ffi.rs",
         "cc_api_ffi_serialized_proto.rs",
     ],
+    edition = "2024",
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -58,6 +59,7 @@ rust_library(
     srcs = [
         "cc_api.rs",
     ],
+    edition = "2024",
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -80,6 +82,7 @@ rust_library(
         "generate_dyn_callable.rs",
         "lib.rs",
     ],
+    edition = "2024",
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -146,6 +149,7 @@ multiplatform_rust_test(
 rust_library(
     name = "cpp_type_name",
     srcs = ["cpp_type_name.rs"],
+    edition = "2024",
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -166,6 +170,7 @@ rust_library(
     srcs = [
         "generate_struct_and_union.rs",
     ],
+    edition = "2024",
     rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = [
         "//cargo:__subpackages__",
@@ -223,6 +228,7 @@ rust_library(
     name = "multiplatform_ir_testing",
     testonly = True,
     srcs = ["multiplatform_ir_testing.rs"],
+    edition = "2024",
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -240,6 +246,7 @@ rust_library(
     name = "test_generators",
     testonly = True,
     srcs = ["test_generators.rs"],
+    edition = "2024",
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -260,6 +267,7 @@ rust_library(
     srcs = [
         "generate_comment.rs",
     ],
+    edition = "2024",
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -306,6 +314,7 @@ rust_library(
     srcs = [
         "generate_enum.rs",
     ],
+    edition = "2024",
     rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = [
         "//cargo:__subpackages__",
@@ -351,6 +360,7 @@ rust_library(
     srcs = [
         "generate_function_thunk.rs",
     ],
+    edition = "2024",
     rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = [
         "//cargo:__subpackages__",
@@ -380,6 +390,7 @@ rust_library(
     srcs = [
         "generate_function.rs",
     ],
+    edition = "2024",
     rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = [
         "//cargo:__subpackages__",
@@ -444,6 +455,7 @@ rust_library(
     srcs = [
         "has_bindings.rs",
     ],
+    edition = "2024",
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",
@@ -464,6 +476,7 @@ rust_library(
     srcs = [
         "lifetime_defaults_transform.rs",
     ],
+    edition = "2024",
     rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = [
         "//cargo:__subpackages__",
@@ -519,6 +532,7 @@ rust_library(
     srcs = [
         "rs_type_kind.rs",
     ],
+    edition = "2024",
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc:__subpackages__",

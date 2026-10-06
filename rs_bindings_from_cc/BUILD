@@ -484,6 +484,7 @@ cc_library(
 rust_library(
     name = "bazel_label",
     srcs = ["bazel_label.rs"],
+    edition = "2024",
     visibility = ["//:__subpackages__"],
 )
 
@@ -493,6 +494,7 @@ rust_library(
         "ir.rs",
         "proto_to_ir.rs",
     ],
+    edition = "2024",
     rustc_flags = _PROFILING_RUSTC_FLAGS,
     visibility = ["//:__subpackages__"],
     deps = [
@@ -523,6 +525,7 @@ rust_library(
     name = "ir_testing",
     testonly = 1,
     srcs = ["ir_testing.rs"],
+    edition = "2024",
     visibility = [
         "//cargo:__subpackages__",
         "//rs_bindings_from_cc/generate_bindings:__subpackages__",
@@ -724,6 +727,7 @@ rust_library(
     name = "ir_matchers",
     testonly = 1,
     srcs = ["ir_matchers.rs"],
+    edition = "2024",
     visibility = ["//:__subpackages__"],
     deps = [
         ":ir",
@@ -789,6 +793,7 @@ crubit_cc_test(
 rust_library(
     name = "collect_instantiations",
     srcs = ["collect_instantiations.rs"],
+    edition = "2024",
     deps = [
         "//common:arc_anyhow",
         "//common:ffi_types",

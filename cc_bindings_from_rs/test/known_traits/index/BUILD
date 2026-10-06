@@ -22,6 +22,7 @@ rust_library(
     name = "rs_index",
     testonly = 1,
     srcs = ["rs_index.rs"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

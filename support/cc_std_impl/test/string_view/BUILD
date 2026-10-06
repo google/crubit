@@ -19,6 +19,7 @@ rust_library(
     name = "string_view_rs_apis",
     srcs = ["string_view_rs_apis.rs"],
     cc_deps = ["//support/cc_std"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

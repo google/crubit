@@ -19,6 +19,7 @@ rust_library(
     testonly = 1,
     srcs = ["include_str.rs"],
     data = ["the_answer.md"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

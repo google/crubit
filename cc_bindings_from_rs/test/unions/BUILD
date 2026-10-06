@@ -21,6 +21,7 @@ rust_library(
     name = "unions",
     testonly = 1,
     srcs = ["unions.rs"],
+    edition = "2024",
 )
 
 golden_test(

@@ -26,6 +26,7 @@ rust_library(
     name = "rs_hash",
     testonly = 1,
     srcs = ["hash.rs"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

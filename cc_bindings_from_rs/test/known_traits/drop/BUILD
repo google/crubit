@@ -18,6 +18,7 @@ rust_library(
     name = "drop",
     testonly = 1,
     srcs = ["drop.rs"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

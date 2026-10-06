@@ -20,6 +20,7 @@ rust_library(
     aspect_hints = [
         "//features:supported",
     ],
+    edition = "2024",
 )
 
 golden_test(

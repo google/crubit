@@ -18,6 +18,7 @@ rust_library(
     name = "rust_api",
     testonly = 1,
     srcs = ["rust_api.rs"],
+    edition = "2024",
     features = ["crubit"],
     deps = [
         "//support/ffi_11",

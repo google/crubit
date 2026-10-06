@@ -18,6 +18,7 @@ licenses(["notice"])
 rust_library(
     name = "rust_library",
     srcs = ["rust_library.rs"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

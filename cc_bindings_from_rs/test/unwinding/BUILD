@@ -14,6 +14,7 @@ rust_library(
     name = "panic_function",
     testonly = 1,
     srcs = ["panic_function.rs"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

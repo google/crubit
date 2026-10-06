@@ -29,6 +29,7 @@ rust_library(
         "cc_import_internal.rs",
     ],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     deps = [
         ":merged_namespaces",
         "@crate_index//:proc-macro2",
@@ -43,6 +44,7 @@ rust_library(
     name = "merged_namespaces",
     srcs = ["merged_namespaces.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     deps = [
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",  # v1

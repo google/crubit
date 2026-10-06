@@ -20,12 +20,14 @@ rust_library(
     name = "extern_crate",
     testonly = 1,
     srcs = ["extern_crate.rs"],
+    edition = "2024",
 )
 
 rust_library(
     name = "uses",
     testonly = 1,
     srcs = ["uses.rs"],
+    edition = "2024",
     proc_macro_deps = ["//support:crubit_annotate"],
     deps = [":extern_crate"],
 )

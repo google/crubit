@@ -95,6 +95,7 @@ rust_library(
     name = "erased_future",
     srcs = ["erased_future.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     visibility = [
         "//:__subpackages__",
     ],
@@ -114,6 +115,7 @@ rust_library(
     name = "dyn_erased_future",
     srcs = ["dyn_erased_future.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     visibility = [
         "//:__subpackages__",
     ],
@@ -205,6 +207,7 @@ rust_library(
     name = "dyn_callable_rs",
     srcs = ["dyn_callable.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     visibility = ["//visibility:public"],
     deps = [
         "//support:bridge_rust",
@@ -388,6 +391,7 @@ rust_library(
     name = "lossy_formatter",
     srcs = ["lossy_formatter.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     visibility = [
         "//visibility:public",
     ],
@@ -405,6 +409,7 @@ rust_library(
     name = "lossy_formatter_for_bindings_rs",
     srcs = ["lossy_formatter_for_bindings.rs"],
     compatible_with = ["//buildenv/target:non_prod"],
+    edition = "2024",
     visibility = [
         "//:__subpackages__",
     ],

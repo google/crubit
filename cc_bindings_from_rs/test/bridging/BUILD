@@ -29,6 +29,7 @@ rust_library(
     aspect_hints = [
         ":cc_type_hint",
     ],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
@@ -50,6 +51,7 @@ rust_library(
     aspect_hints = [
         ":cc_type_hint",
     ],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
@@ -66,6 +68,7 @@ rust_library(
     aspect_hints = [
         ":layout_equivalent_generics_hint",
     ],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
@@ -125,6 +128,7 @@ rust_library(
     aspect_hints = [
         "//features:experimental",
     ],
+    edition = "2024",
     deps = [
         "//support:bridge_rust",
     ],
@@ -148,6 +152,7 @@ rust_library(
     aspect_hints = [
         "//features:experimental",
     ],
+    edition = "2024",
     deps = [
         "//support:bridge_rust",
     ],
@@ -171,6 +176,7 @@ rust_library(
     aspect_hints = [
         ":mapped_cpp_type_hint",
     ],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],

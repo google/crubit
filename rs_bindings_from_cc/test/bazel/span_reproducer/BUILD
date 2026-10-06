@@ -30,6 +30,7 @@ package(
 rust_library(
     name = "span",
     srcs = ["rust_span.rs"],
+    edition = "2024",
 )
 
 additional_rust_srcs_for_crubit_bindings(
@@ -54,6 +55,7 @@ rust_library(
     name = "span_usage_rust",
     srcs = ["span_usage.rs"],
     cc_deps = [":span_usage_cc"],
+    edition = "2024",
 )
 
 build_test(

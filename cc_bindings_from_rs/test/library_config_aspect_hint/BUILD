@@ -23,6 +23,7 @@ rust_library(
     testonly = 1,
     srcs = ["namespace_crate1.rs"],
     aspect_hints = [":namespace_crate1_config"],
+    edition = "2024",
 )
 
 cc_bindings_from_rust_library_config(
@@ -34,6 +35,7 @@ rust_library(
     name = "namespace_crate3",
     testonly = 1,
     srcs = ["namespace_crate3.rs"],
+    edition = "2024",
 )
 
 rust_library(
@@ -41,6 +43,7 @@ rust_library(
     testonly = 1,
     srcs = ["namespace_crate2.rs"],
     aspect_hints = [":namespace_crate2_config"],
+    edition = "2024",
     deps = [
         ":namespace_crate1",
         ":namespace_crate3",

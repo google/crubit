@@ -18,6 +18,7 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "no_std",
     srcs = ["no_std.rs"],
+    edition = "2024",
 )
 
 golden_test(
@@ -60,6 +61,7 @@ crubit_cc_test(
 rust_library(
     name = "no_core",
     srcs = ["no_core.rs"],
+    edition = "2024",
 )
 
 golden_test(

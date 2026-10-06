@@ -21,6 +21,7 @@ rust_binary(
 
     # Declare a dependency on Rust bindings for calling into the C++ `example_lib` library:
     cc_deps = [":example_lib"],
+    edition = "2024",
 )
 
 # This test rule is just to make sure we don't forget to keep the `example_generated.rs` updated!

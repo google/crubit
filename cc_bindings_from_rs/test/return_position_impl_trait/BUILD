@@ -24,6 +24,7 @@ rust_library(
     aspect_hints = [
         "//features:supported",
     ],
+    edition = "2024",
 )
 
 cc_bindings_from_rust(

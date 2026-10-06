@@ -14,6 +14,7 @@ rust_library(
     name = "crate_flags",
     testonly = 1,
     srcs = ["crate_flags.rs"],
+    edition = "2024",
     rustc_flags = [
         # Features specified in rustc_flags should also propagate to Crubit,
         # not only the ones specified in `crate_features`.

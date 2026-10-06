@@ -25,6 +25,7 @@ rust_library(
     name = "structs",
     testonly = 1,
     srcs = ["structs.rs"],
+    edition = "2024",
     proc_macro_deps = ["//support:crubit_annotate"],
 )
 

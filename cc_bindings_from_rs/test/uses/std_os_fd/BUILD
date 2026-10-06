@@ -19,12 +19,14 @@ rust_library(
     name = "fd_reexporter",
     testonly = 1,
     srcs = ["fd_reexporter.rs"],
+    edition = "2024",
 )
 
 rust_library(
     name = "std_os_fd",
     testonly = 1,
     srcs = ["std_os_fd.rs"],
+    edition = "2024",
     deps = [":fd_reexporter"],
 )
 

@@ -32,6 +32,7 @@ rust_library(
     testonly = 1,
     srcs = ["lib.rs"],
     cc_deps = [":cc_struct"],
+    edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
