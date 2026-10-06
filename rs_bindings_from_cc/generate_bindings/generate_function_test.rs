@@ -18,6 +18,7 @@ use multiplatform_ir_testing::{
     ir_proto_from_assumed_lifetimes_cc, ir_proto_from_cc, ir_proto_from_cc_annotated,
     ir_proto_from_cc_dependency, ir_proto_from_cc_with_inline_cpp,
 };
+use multiplatform_testing::test_platform;
 use quote::quote;
 use test_generators::{
     generate_bindings_tokens_for_test, generate_bindings_tokens_for_test_with_annotations,
@@ -1673,7 +1674,14 @@ fn test_thunk_ident_function() -> Result<()> {
     let fatal_errors = FatalErrors::new();
     let interner = Interner::new();
     let db = new_database(&ir, &errors, &fatal_errors, false, false, &interner);
-    assert_eq!(thunk_ident(&db, func), make_rs_ident("__rust_thunk___Z3foov"));
+    // `thunk_ident` escapes the target's mangled name, so the expected value
+    // depends on the mangling scheme of the target's C++ ABI.
+    let expected = if test_platform().uses_msvc_cxx_abi() {
+        "__rust_thunk___u63_foo_u64__u64_YAHXZ" // `?foo@@YAHXZ`
+    } else {
+        "__rust_thunk___Z3foov"
+    };
+    assert_eq!(thunk_ident(&db, func), make_rs_ident(expected));
     Ok(())
 }
 
@@ -1687,14 +1695,28 @@ fn test_thunk_ident_special_names() -> Result<()> {
     let interner = Interner::new();
     let db = new_database(&ir, &errors, &fatal_errors, false, false, &interner);
 
+    // `thunk_ident` escapes the target's mangled name, so the expected values
+    // depend on the mangling scheme of the target's C++ ABI.
+    let uses_msvc_cxx_abi = test_platform().uses_msvc_cxx_abi();
+
     let destructor = ir.get_functions_by_name(&UnqualifiedIdentifier::Destructor).next().unwrap();
-    assert_eq!(thunk_ident(&db, destructor), make_rs_ident("__rust_thunk___ZN5ClassD1Ev"));
+    let expected = if uses_msvc_cxx_abi {
+        "__rust_thunk___u63__u63__DClass_u64__u64_QEAAXXZ" // `??_DClass@@QEAAXXZ`
+    } else {
+        "__rust_thunk___ZN5ClassD1Ev"
+    };
+    assert_eq!(thunk_ident(&db, destructor), make_rs_ident(expected));
 
     let default_constructor = ir
         .get_functions_by_name(&UnqualifiedIdentifier::Constructor)
         .find(|f| f.params().len() == 1)
         .unwrap();
-    assert_eq!(thunk_ident(&db, default_constructor), make_rs_ident("__rust_thunk___ZN5ClassC1Ev"));
+    let expected = if uses_msvc_cxx_abi {
+        "__rust_thunk___u63__u63_0Class_u64__u64_QEAA_u64_XZ" // `??0Class@@QEAA@XZ`
+    } else {
+        "__rust_thunk___ZN5ClassC1Ev"
+    };
+    assert_eq!(thunk_ident(&db, default_constructor), make_rs_ident(expected));
     Ok(())
 }
 
@@ -2718,7 +2740,7 @@ fn test_function_using_error_type_by_value() -> Result<()> {
             #[diagnostic::on_unimplemented(
                 message = "binding generation for function failed\nCannot use an error type `__DunderName` by value:\n  Skipping generating bindings for '__DunderName' because it has a leading `__`"
             )]
-            pub trait BindingFailedFor_Z3foo12__DunderName {}
+            pub trait ... {}
         }
     );
     Ok(())
@@ -2746,8 +2768,16 @@ fn test_thunkless_accessors_enabled() -> Result<()> {
                 as ::ffi_11::c_int
         }
     );
-    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZNK1S1xEv });
-    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZN1S5set_xEi });
+    // Match on the thunk bodies rather than on the thunk names, because the
+    // latter are derived from the target-specific mangled names.
+    assert_cc_not_matches!(
+        rs_api_impl,
+        quote! { extern "C" int ...(class S const* __this) { return __this->x(); } }
+    );
+    assert_cc_not_matches!(
+        rs_api_impl,
+        quote! { extern "C" void ...(class S* __this, int x) { __this->set_x(x); } }
+    );
     Ok(())
 }
 
@@ -2772,7 +2802,12 @@ fn test_thunkless_accessors_non_const_getter() -> Result<()> {
                 as ::ffi_11::c_int
         }
     );
-    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___ZN1S1xEv });
+    // Match on the thunk body rather than on the thunk name, because the
+    // latter is derived from the target-specific mangled name.
+    assert_cc_not_matches!(
+        rs_api_impl,
+        quote! { extern "C" int ...(class S* __this) { return __this->x(); } }
+    );
     Ok(())
 }
 
@@ -2798,8 +2833,16 @@ fn test_thunkless_accessors_disabled() -> Result<()> {
                 as ::ffi_11::c_int
         }
     );
-    assert_cc_matches!(rs_api_impl, quote! { __rust_thunk___ZNK1S1xEv });
-    assert_cc_matches!(rs_api_impl, quote! { __rust_thunk___ZN1S5set_xEi });
+    // Match on the thunk bodies rather than on the thunk names, because the
+    // latter are derived from the target-specific mangled names.
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! { extern "C" int ...(class S const* __this) { return __this->x(); } }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! { extern "C" void ...(class S* __this, int x) { __this->set_x(x); } }
+    );
     Ok(())
 }
 

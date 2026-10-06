@@ -348,6 +348,7 @@ multiplatform_rust_test(
         ":test_generators",
         "//common:arc_anyhow",
         "//common:crubit_feature",
+        "//common:multiplatform_testing",
         "//common:token_stream_matchers",
         "//rs_bindings_from_cc:ir_testing",
         "@crate_index//:googletest",

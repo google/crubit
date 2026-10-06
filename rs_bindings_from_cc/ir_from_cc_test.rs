@@ -114,7 +114,7 @@ fn test_function() {
                 rs_name: "f",
                 unique_name: "c:@F@f#I#I#",
                 owning_target: BazelLabel("//test:testing_target"),
-                mangled_name: "_Z1fii",
+                mangled_name: ...,
                 doc_comment: None,
                 return_type: CcType {
                     variant: Primitive(Int),
@@ -211,7 +211,7 @@ fn test_function_with_unnamed_parameters() {
             Func {
                 cc_name: "f",
                 rs_name: "f", ...
-                mangled_name: "_Z1fii", ...
+                mangled_name: ...,
                 params: [
                     FuncParam {
                         ... identifier: "__param_0", ...
@@ -2039,7 +2039,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
             rs_name: "GetValue",
             unique_name: "c:@N@test_namespace_bindings@S@MyStruct>#I@F@GetValue#1",
             owning_target: BazelLabel("//test:testing_target"),
-            mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv", ...
+            mangled_name: ...,
             doc_comment: Some("Doc comment of GetValue method."), ...
             is_inline: true, ...
             instance_method_metadata: Some(InstanceMethodMetadata { ... }), ...
@@ -2059,7 +2059,7 @@ fn test_typedef_of_full_template_specialization() -> Result<()> {
               rs_name: "operator=",
               unique_name: "c:@N@test_namespace_bindings@S@MyStruct>#I@F@operator=#&1$@N@test_namespace_bindings@S@MyStruct>#I#",
               owning_target: BazelLabel("//test:testing_target"),
-              mangled_name: "_ZN23test_namespace_bindings8MyStructIiEaSERKS1_", ...
+              mangled_name: ...,
               doc_comment: None, ...
           }
         }
@@ -2133,7 +2133,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
             rs_name: "GetValue",
             unique_name: "c:@N@test_namespace_bindings@S@MyStruct>#I@F@GetValue#1",
             owning_target: BazelLabel("//test:testing_target"),
-            mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv", ...
+            mangled_name: ...,
             doc_comment: Some("Doc comment of the GetValue method specialization for T=int." ...), ...
             is_inline: true, ...
             instance_method_metadata: Some(InstanceMethodMetadata { ... }), ...
@@ -2219,21 +2219,16 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
         class_template_specialization_names
     );
 
-    let method_mangled_names = ir
+    // The mangled names are target-specific, so check that the methods follow
+    // the order of their enclosing specializations instead of pinning them.
+    let method_record_names = ir
         .functions()
         .filter(|f| *f.rs_name() == "MyMethod")
-        .map(|f| f.mangled_name())
+        .map(|f| {
+            ir.find_decl::<Rc<Record>>(f.enclosing_item_id().unwrap()).unwrap().rs_name().as_str()
+        })
         .collect_vec();
-    assert_eq!(
-        vec![
-            "_ZN8MyStructI3StrE8MyMethodEv",
-            "_ZN8MyStructIS_IiEE8MyMethodEv",
-            "_ZN8MyStructIbE8MyMethodEv",
-            "_ZN8MyStructIiE8MyMethodEv",
-            "_ZN8MyStructIxE8MyMethodEv"
-        ],
-        method_mangled_names
-    );
+    assert_eq!(class_template_specialization_names, method_record_names);
 
     Ok(())
 }
@@ -2384,7 +2379,7 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
         quote! {
             Func {
                 cc_name: "GetSum", ...
-                mangled_name: "_ZN8MyStructIJiiEE6GetSumEii", ...
+                mangled_name: ...,
                 params: [
                     FuncParam {
                         type_: CcType { variant: Primitive(Int), ... },
@@ -4462,8 +4457,14 @@ fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
 fn test_operator_names() {
     let proto = ir_proto_from_cc(
         r#"
+        // `__SIZE_TYPE__` is a macro defined by Clang (and GCC) with
+        // target-specific definitions:
+        //
+        // * x86_64-pc-windows-msvc (LLP64): unsigned long long
+        // * x86_64-unknown-linux-gnu (LP64): unsigned long
+        //
         // TOOD(b/208377928): Use #include <stddef.h> instead of declaring `size_t` ourselves...
-        using size_t = unsigned long;
+        using size_t = __SIZE_TYPE__;
 
         struct SomeStruct {
           // There is an implicit/default `oparator=` hidden here as well.

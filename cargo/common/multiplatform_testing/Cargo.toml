@@ -18,3 +18,5 @@ path = "../../../common/multiplatform_testing.rs"
 doctest = false
 
 [dependencies]
+proc-macro2.workspace = true
+quote.workspace = true

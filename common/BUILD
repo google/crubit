@@ -233,6 +233,10 @@ rust_library(
     visibility = [
         "//:__subpackages__",
     ],
+    deps = [
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",  # v1
+    ],
 )
 
 rust_library(

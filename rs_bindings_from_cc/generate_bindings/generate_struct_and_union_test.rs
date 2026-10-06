@@ -12,6 +12,7 @@ use multiplatform_ir_testing::{
     ir_proto_from_assumed_lifetimes_cc, ir_proto_from_cc, ir_proto_from_cc_dependency,
     ir_proto_from_record_impl_debug_cc,
 };
+use multiplatform_testing::test_platform;
 use proc_macro2::TokenStream;
 use quote::quote;
 use test_generators::generate_bindings_tokens_for_test;
@@ -702,6 +703,13 @@ fn test_base_class_subobject_layout() -> Result<()> {
 
     let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    // The Microsoft C++ ABI does not reuse the tail padding of a base class
+    // subobject, so `Derived::z` lands after the padding of `Base`.
+    let base_subobject_size = if test_platform().uses_msvc_cxx_abi() {
+        quote! { 16 }
+    } else {
+        quote! { 10 }
+    };
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -709,7 +717,7 @@ fn test_base_class_subobject_layout() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
             #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Derived {
-                __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
+                __non_field_data: [::core::mem::MaybeUninit<u8>; #base_subobject_size],
                 pub z: ::ffi_11::c_short,
             }
         }
@@ -760,6 +768,13 @@ fn test_base_class_deep_inheritance_subobject_layout() -> Result<()> {
 
     let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    // The Microsoft C++ ABI does not reuse the tail padding of a base class
+    // subobject, so `Derived::z` lands after the padding of `Base2`.
+    let base_subobject_size = if test_platform().uses_msvc_cxx_abi() {
+        quote! { 16 }
+    } else {
+        quote! { 10 }
+    };
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -767,7 +782,7 @@ fn test_base_class_deep_inheritance_subobject_layout() -> Result<()> {
             #[doc="CRUBIT_ANNOTATE: cpp_type=Derived"]
             #[doc="CRUBIT_ANNOTATE: cpp_move_constructible="]
             pub struct Derived {
-                __non_field_data: [::core::mem::MaybeUninit<u8>; 10],
+                __non_field_data: [::core::mem::MaybeUninit<u8>; #base_subobject_size],
                 pub z: ::ffi_11::c_short,
             }
         }
@@ -886,17 +901,18 @@ fn test_non_aggregate_struct_private_field() -> Result<()> {
 /// next field.
 #[gtest]
 fn test_no_unique_address() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let no_unique_address_attr = test_platform().no_unique_address_attr();
+    let proto = ir_proto_from_cc(&format!(
         r#"
-        class Field1 {__INT64_TYPE__ x;};
-        class Field2 {char y;};
-        struct Struct final {
-            [[no_unique_address]] Field1 field1;
-            [[no_unique_address]] Field2 field2;
+        class Field1 {{__INT64_TYPE__ x;}};
+        class Field2 {{char y;}};
+        struct Struct final {{
+            {no_unique_address_attr} Field1 field1;
+            {no_unique_address_attr} Field2 field2;
             __INT16_TYPE__ z;
-        };
+        }};
     "#,
-    )?;
+    ))?;
 
     let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
@@ -941,16 +957,17 @@ fn test_no_unique_address() -> Result<()> {
 /// of the object.
 #[gtest]
 fn test_no_unique_address_last_field() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let no_unique_address_attr = test_platform().no_unique_address_attr();
+    let proto = ir_proto_from_cc(&format!(
         r#"
-        class Field1 {__INT64_TYPE__ x;};
-        class Field2 {char y;};
-        struct Struct final {
-            [[no_unique_address]] Field1 field1;
-            [[no_unique_address]] Field2 field2;
-        };
+        class Field1 {{__INT64_TYPE__ x;}};
+        class Field2 {{char y;}};
+        struct Struct final {{
+            {no_unique_address_attr} Field1 field1;
+            {no_unique_address_attr} Field2 field2;
+        }};
     "#,
-    )?;
+    ))?;
 
     let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
@@ -973,16 +990,17 @@ fn test_no_unique_address_last_field() -> Result<()> {
 
 #[gtest]
 fn test_no_unique_address_empty() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let no_unique_address_attr = test_platform().no_unique_address_attr();
+    let proto = ir_proto_from_cc(&format!(
         r#"
-        class Field {};
-        struct Struct final {
+        class Field {{}};
+        struct Struct final {{
             // Doc comment for no_unique_address empty class type field.
-            [[no_unique_address]] Field field;
+            {no_unique_address_attr} Field field;
             int x;
-        };
+        }};
     "#,
-    )?;
+    ))?;
 
     let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
@@ -1013,15 +1031,16 @@ fn test_no_unique_address_empty() -> Result<()> {
 
 #[gtest]
 fn test_base_class_subobject_empty_last_field() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let no_unique_address_attr = test_platform().no_unique_address_attr();
+    let proto = ir_proto_from_cc(&format!(
         r#"
-        class Field {};
-        struct Struct final {
+        class Field {{}};
+        struct Struct final {{
             // Doc comment for no_unique_address empty class type field.
-            [[no_unique_address]] Field field;
-        };
+            {no_unique_address_attr} Field field;
+        }};
     "#,
-    )?;
+    ))?;
 
     let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
@@ -1489,12 +1508,22 @@ fn test_unambiguous_public_bases() -> Result<()> {
             }
         }
     );
+    // The Microsoft C++ ABI places only the first empty base class at offset 0.
+    // Later empty base classes get distinct offsets.
+    let ambiguous_base_offset = if test_platform().uses_msvc_cxx_abi() {
+        quote! { 1 }
+    } else {
+        quote! { 0 }
+    };
     assert_rs_matches!(
         rs_api,
         quote! {
             unsafe impl oops::Inherits<crate::AmbiguousPublicBase> for crate::MultipleInheritance {
                 unsafe fn upcast_ptr(derived: *const Self) -> *const crate::AmbiguousPublicBase {
-                    unsafe { (derived as *const _ as *const u8).offset(0) as *const crate::AmbiguousPublicBase }
+                    unsafe {
+                        (derived as *const _ as *const u8).offset(#ambiguous_base_offset)
+                            as *const crate::AmbiguousPublicBase
+                    }
                 }
             }
         }
@@ -1882,7 +1911,7 @@ fn test_supported_suppressed_field_types() -> Result<()> {
     // type that is still returned successfully by db.rs_type_kind(), and so
     // results in a secondary failure when we check afterwards for the
     // required features for the type.
-    if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
+    if test_platform() != multiplatform_testing::Platform::X86Linux {
         return Ok(()); // vectorcall only exists on x86_64, not e.g. aarch64
     }
     let proto = ir_proto_from_cc(
@@ -1940,13 +1969,14 @@ fn test_supported_nontrivial_field() -> Result<()> {
 
 #[gtest]
 fn test_supported_no_unique_address_field() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let no_unique_address_attr = test_platform().no_unique_address_attr();
+    let proto = ir_proto_from_cc(&format!(
         r#"
-        struct Struct final {
-            [[no_unique_address]] char field;
-        };
+        struct Struct final {{
+            {no_unique_address_attr} char field;
+        }};
     "#,
-    )?;
+    ))?;
 
     let mut ir = make_test_ir(&proto)?;
     enable_supported(&mut ir);
@@ -1966,18 +1996,19 @@ fn test_supported_no_unique_address_field() -> Result<()> {
 
 #[gtest]
 fn test_supported_no_unique_address_nontrivial_field_does_not_bypass_drop() -> Result<()> {
-    let proto = ir_proto_from_cc(
+    let no_unique_address_attr = test_platform().no_unique_address_attr();
+    let proto = ir_proto_from_cc(&format!(
         r#"
-        struct [[clang::trivial_abi]] Inner {
+        struct [[clang::trivial_abi]] Inner {{
             char x;
             ~Inner();
-        };
-        struct [[clang::trivial_abi]] Outer {
-            [[no_unique_address]] Inner inner_field;
+        }};
+        struct [[clang::trivial_abi]] Outer {{
+            {no_unique_address_attr} Inner inner_field;
             int y;
-        };
+        }};
     "#,
-    )?;
+    ))?;
 
     let mut ir = make_test_ir(&proto)?;
     enable_supported(&mut ir);

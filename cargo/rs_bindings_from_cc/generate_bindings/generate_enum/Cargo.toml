@@ -34,6 +34,7 @@ multiplatform_ir_testing = { path = "../../../../cargo/rs_bindings_from_cc/gener
 test_generators = { path = "../../../../cargo/rs_bindings_from_cc/generate_bindings/test_generators", package = "rs_bindings_from_cc_test_generators"}
 arc_anyhow = { path = "../../../../cargo/common/arc_anyhow"}
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
+multiplatform_testing = { path = "../../../../cargo/common/multiplatform_testing"}
 token_stream_matchers = { path = "../../../../cargo/common/token_stream_matchers"}
 ir_testing = { path = "../../../../cargo/rs_bindings_from_cc/ir_testing", package = "rs_bindings_from_cc_ir_testing"}
 googletest.workspace = true

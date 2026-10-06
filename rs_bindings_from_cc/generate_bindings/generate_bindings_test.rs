@@ -352,8 +352,18 @@ fn test_item_order() -> Result<()> {
     let f2 = idx("fn second_func")?;
     let s1 = idx("struct FirstStruct")?;
     let s2 = idx("struct SecondStruct")?;
-    let t1 = idx("fn __rust_thunk___Z10first_funcv")?;
-    let t2 = idx("fn __rust_thunk___Z11second_funcv")?;
+
+    // A thunk name embeds the target-specific mangled name, so look for the
+    // function names inside the `detail` module instead.
+    let detail_idx = idx("mod detail")?;
+    let idx_in_detail = |s: &str| {
+        rs_api[detail_idx..]
+            .find(s)
+            .map(|i| detail_idx + i)
+            .ok_or_else(|| anyhow!("'{}' missing in `mod detail`", s))
+    };
+    let t1 = idx_in_detail("first_func")?;
+    let t2 = idx_in_detail("second_func")?;
 
     assert!(f1 < s1);
     assert!(s1 < f2);

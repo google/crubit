@@ -759,6 +759,10 @@ dependencies = [
 [[package]]
 name = "multiplatform_testing"
 version = "0.0.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
 
 [[package]]
 name = "num-traits"
@@ -1295,6 +1299,7 @@ dependencies = [
  "error_report",
  "flagset",
  "googletest",
+ "multiplatform_testing",
  "proc-macro2",
  "quote",
  "rs_bindings_from_cc_database",

@@ -4,6 +4,8 @@
 
 //! Vocabulary library for multi-platform tests which use cross-compilation.
 
+use proc_macro2::TokenStream;
+use quote::quote;
 use std::sync::LazyLock;
 
 #[non_exhaustive]
@@ -26,6 +28,38 @@ impl Platform {
             Platform::X86Windows => "x86_64-pc-windows-msvc",
         }
     }
+
+    /// Returns whether the platform uses the Microsoft C++ ABI rather than the
+    /// Itanium one.  The two disagree about name mangling, record layout, and
+    /// the underlying type of an unfixed `enum`, so some test expectations
+    /// have to differ.
+    pub fn uses_msvc_cxx_abi(self) -> bool {
+        matches!(self, Platform::X86Windows)
+    }
+
+    /// Returns the spelling of the `no_unique_address` attribute.
+    ///
+    /// Clang ignores `[[no_unique_address]]` when it targets the Microsoft C++
+    /// ABI, where the attribute is spelled `[[msvc::no_unique_address]]`.
+    pub fn no_unique_address_attr(self) -> &'static str {
+        if self.uses_msvc_cxx_abi() {
+            "[[msvc::no_unique_address]]"
+        } else {
+            "[[no_unique_address]]"
+        }
+    }
+
+    /// Returns the `::ffi_11` type and constructor that Crubit uses for an
+    /// unscoped C++ `enum` that has no fixed underlying type and only
+    /// non-negative enumerators.  Clang infers `unsigned int` for such an
+    /// `enum` under the Itanium C++ ABI, but `int` under the Microsoft C++ ABI.
+    pub fn unfixed_nonnegative_enum_ffi_type(self) -> (TokenStream, TokenStream) {
+        if self.uses_msvc_cxx_abi() {
+            (quote! { c_int }, quote! { new_c_int })
+        } else {
+            (quote! { c_uint }, quote! { new_c_uint })
+        }
+    }
 }
 
 /// Returns the platform the current test is running for with
@@ -42,6 +76,7 @@ static TEST_PLATFORM: LazyLock<Result<Platform, String>> = LazyLock::new(|| {
         "arm_linux" => Platform::ArmLinux,
         "darwin_x86_64" => Platform::X86MacOS,
         "darwin_arm64" => Platform::ArmMacOS,
+        "windows_x86_64" => Platform::X86Windows,
         _ => return Err(format!("Unknown platform: {env}")),
     };
     Ok(platform)

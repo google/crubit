@@ -6,6 +6,7 @@ use arc_anyhow::Result;
 use googletest::prelude::gtest;
 use ir_testing::make_test_ir;
 use multiplatform_ir_testing::{ir_proto_from_cc, ir_proto_from_cc_annotated};
+use multiplatform_testing::test_platform;
 use quote::quote;
 use test_generators::{
     generate_bindings_tokens_for_test, generate_bindings_tokens_for_test_with_annotations,
@@ -18,6 +19,7 @@ fn test_generate_enum_basic() -> Result<()> {
 
     let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    let (int_ty, new_int) = test_platform().unfixed_nonnegative_enum_ffi_type();
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -26,18 +28,18 @@ fn test_generate_enum_basic() -> Result<()> {
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "5Color"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
-            pub struct Color(::ffi_11::c_uint);
+            pub struct Color(::ffi_11::#int_ty);
             impl Color {
-                pub const kRed: Color = Color(::ffi_11::new_c_uint(5));
-                pub const kBlue: Color = Color(::ffi_11::new_c_uint(6));
+                pub const kRed: Color = Color(::ffi_11::#new_int(5));
+                pub const kBlue: Color = Color(::ffi_11::#new_int(6));
             }
-            impl From<::ffi_11::c_uint> for Color {
-                fn from(value: ::ffi_11::c_uint) -> Color {
+            impl From<::ffi_11::#int_ty> for Color {
+                fn from(value: ::ffi_11::#int_ty) -> Color {
                     Color(value)
                 }
             }
-            impl From<Color> for ::ffi_11::c_uint {
-                fn from(value: Color) -> ::ffi_11::c_uint {
+            impl From<Color> for ::ffi_11::#int_ty {
+                fn from(value: Color) -> ::ffi_11::#int_ty {
                     value.0
                 }
             }
@@ -52,6 +54,7 @@ fn test_generate_enum_basic_with_annotations() -> Result<()> {
 
     let ir = make_test_ir(&proto)?;
     let rs_api = generate_bindings_tokens_for_test_with_annotations(ir)?.rs_api;
+    let (int_ty, new_int) = test_platform().unfixed_nonnegative_enum_ffi_type();
     assert_rs_matches!(
         rs_api,
         quote! {
@@ -61,18 +64,18 @@ fn test_generate_enum_basic_with_annotations() -> Result<()> {
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "5Color"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
-            pub struct __CAPTURE_BEGIN__ Color __CAPTURE_END__ (::ffi_11::c_uint);
+            pub struct __CAPTURE_BEGIN__ Color __CAPTURE_END__ (::ffi_11::#int_ty);
             impl Color {
-                pub const kRed: Color = Color(::ffi_11::new_c_uint(5));
-                pub const kBlue: Color = Color(::ffi_11::new_c_uint(6));
+                pub const kRed: Color = Color(::ffi_11::#new_int(5));
+                pub const kBlue: Color = Color(::ffi_11::#new_int(6));
             }
-            impl From<::ffi_11::c_uint> for Color {
-                fn from(value: ::ffi_11::c_uint) -> Color {
+            impl From<::ffi_11::#int_ty> for Color {
+                fn from(value: ::ffi_11::#int_ty) -> Color {
                     Color(value)
                 }
             }
-            impl From<Color> for ::ffi_11::c_uint {
-                fn from(value: Color) -> ::ffi_11::c_uint {
+            impl From<Color> for ::ffi_11::#int_ty {
+                fn from(value: Color) -> ::ffi_11::#int_ty {
                     value.0
                 }
             }
@@ -128,7 +131,7 @@ fn test_generate_scoped_enum_basic() -> Result<()> {
 #[gtest]
 fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
     let proto = ir_proto_from_cc(
-        r#"enum Color : long {
+        r#"enum Color : long long {
                 kViolet = -9223372036854775807 - 1LL,
                 kRed = -5,
                 kBlue,
@@ -147,21 +150,21 @@ fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "5Color"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
-            pub struct Color(::ffi_11::c_long);
+            pub struct Color(::ffi_11::c_longlong);
             impl Color {
-                pub const kViolet: Color = Color(::ffi_11::new_c_long(-9223372036854775808));
-                pub const kRed: Color = Color(::ffi_11::new_c_long(-5));
-                pub const kBlue: Color = Color(::ffi_11::new_c_long(-4));
-                pub const kGreen: Color = Color(::ffi_11::new_c_long(3));
-                pub const kMagenta: Color = Color(::ffi_11::new_c_long(9223372036854775807));
+                pub const kViolet: Color = Color(::ffi_11::new_c_longlong(-9223372036854775808));
+                pub const kRed: Color = Color(::ffi_11::new_c_longlong(-5));
+                pub const kBlue: Color = Color(::ffi_11::new_c_longlong(-4));
+                pub const kGreen: Color = Color(::ffi_11::new_c_longlong(3));
+                pub const kMagenta: Color = Color(::ffi_11::new_c_longlong(9223372036854775807));
             }
-            impl From<::ffi_11::c_long> for Color {
-                fn from(value: ::ffi_11::c_long) -> Color {
+            impl From<::ffi_11::c_longlong> for Color {
+                fn from(value: ::ffi_11::c_longlong) -> Color {
                     Color(value)
                 }
             }
-            impl From<Color> for ::ffi_11::c_long {
-                fn from(value: Color) -> ::ffi_11::c_long {
+            impl From<Color> for ::ffi_11::c_longlong {
+                fn from(value: Color) -> ::ffi_11::c_longlong {
                     value.0
                 }
             }
@@ -173,7 +176,7 @@ fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
 #[gtest]
 fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
     let proto = ir_proto_from_cc(
-        r#" enum Color: unsigned long {
+        r#" enum Color: unsigned long long {
                 kRed,
                 kBlue,
                 kLimeGreen = 18446744073709551615
@@ -190,19 +193,19 @@ fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
             #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
             #[cfi_encoding = "5Color"]
             #[doc="CRUBIT_ANNOTATE: cpp_type=Color"]
-            pub struct Color(::ffi_11::c_ulong);
+            pub struct Color(::ffi_11::c_ulonglong);
             impl Color {
-                pub const kRed: Color = Color(::ffi_11::new_c_ulong(0));
-                pub const kBlue: Color = Color(::ffi_11::new_c_ulong(1));
-                pub const kLimeGreen: Color = Color(::ffi_11::new_c_ulong(18446744073709551615));
+                pub const kRed: Color = Color(::ffi_11::new_c_ulonglong(0));
+                pub const kBlue: Color = Color(::ffi_11::new_c_ulonglong(1));
+                pub const kLimeGreen: Color = Color(::ffi_11::new_c_ulonglong(18446744073709551615));
             }
-            impl From<::ffi_11::c_ulong> for Color {
-                fn from(value: ::ffi_11::c_ulong) -> Color {
+            impl From<::ffi_11::c_ulonglong> for Color {
+                fn from(value: ::ffi_11::c_ulonglong) -> Color {
                     Color(value)
                 }
             }
-            impl From<Color> for ::ffi_11::c_ulong {
-                fn from(value: Color) -> ::ffi_11::c_ulong {
+            impl From<Color> for ::ffi_11::c_ulonglong {
+                fn from(value: Color) -> ::ffi_11::c_ulonglong {
                     value.0
                 }
             }
@@ -399,7 +402,7 @@ fn test_enum_doc_comment() -> Result<()> {
         quote! {
             #[doc = " Doc comment for Color.\n \n Generated from: ir_from_cc_virtual_header.h;l=4"]
             ...
-            pub struct Color(::ffi_11::c_uint);
+            pub struct Color(...);
         }
     );
     Ok(())
@@ -421,7 +424,7 @@ fn test_enumerator_doc_comment() -> Result<()> {
         quote! {
             impl Color {
                 #[doc = " Red color variant."]
-                pub const kRed: Color = Color(::ffi_11::new_c_uint(0));
+                pub const kRed: Color = Color(...);
             }
         }
     );
