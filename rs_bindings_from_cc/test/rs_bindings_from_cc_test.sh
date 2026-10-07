@@ -138,6 +138,9 @@ EOT
   EXPECT_SUCCEED "cat \"${cc_out}\" | grep '// intentionally left empty because --do_nothing was passed.'"
 }
 
+# This test is a bit redundant with
+# `GenerateBindingsAndMetadataTest.FailsOnUnknownClangDriverArgument`,
+# but we need this test to also verify the non-zero exit code.
 function test::tool_returns_nonzero_on_invalid_input() {
   local rs_out="${TEST_TMPDIR}/rs_api.rs"
   local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
@@ -164,6 +167,37 @@ EOT
       --target_args=\"$(echo "${json}" | quote_escape)\" 2>&1"
 
   # No output files should be created if the C++ input was invalid.
+  CHECK_FILE_NOT_EXISTS "${rs_out}"
+  CHECK_FILE_NOT_EXISTS "${cc_out}"
+}
+
+function test::tool_returns_nonzero_on_clang_driver_error() {
+  local rs_out="${TEST_TMPDIR}/rs_api.rs"
+  local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
+  rm -rf "$rs_out"
+  rm -rf "$cc_out"
+
+  local hdr="${TEST_TMPDIR}/hello_world.h"
+  echo "int foo();" > "${hdr}"
+  local json
+  json="$(cat <<-EOT
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"], "f": ["experimental", "supported"]}]
+EOT
+)"
+
+  EXPECT_FAIL \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//foo/bar:baz \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" \
+      --crubit_support_path_format=\"<test/crubit/support/path/{header}>\" \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
+      --rustfmt_exe_path=\"${CRUBIT_RUSTFMT_EXE_PATH}\" \
+      --public_headers=\"${hdr}\" \
+      --target_args=\"$(echo "${json}" | quote_escape)\" \
+      -- -fthis-flag-does-not-exist 2>&1"
+
+  # No output files should be created if the clang driver reported errors.
   CHECK_FILE_NOT_EXISTS "${rs_out}"
   CHECK_FILE_NOT_EXISTS "${cc_out}"
 }

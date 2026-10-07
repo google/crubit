@@ -28,14 +28,19 @@
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "clang/Basic/DiagnosticOptions.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/FileSystemOptions.h"
+#include "clang/Frontend/CompilerInvocation.h"
 #include "clang/Frontend/FrontendAction.h"
+#include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "clang/Serialization/PCHContainerOperations.h"
 #include "clang/Tooling/Tooling.h"
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/VirtualFileSystem.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
 
@@ -183,8 +188,11 @@ absl::Status AddUseModToIr(IR& ir,
   return absl::OkStatus();
 }
 
-// Like `clang::tooling::runToolOnCodeWithArgs`, but doesn't strip `-MD`, `-MF`,
-// and other dependency file flags from the `command_line`.
+// Like `clang::tooling::runToolOnCodeWithArgs`, but:
+// - doesn't strip `-MD`, `-MF`, and other dependency file flags from the
+//   `command_line`;
+// - fails if the Clang driver reports errors (e.g. for unknown command-line
+//   arguments or missing input files), which `ToolInvocation::run` ignores.
 bool RunToolWithInMemoryFiles(
     std::unique_ptr<clang::FrontendAction> action,
     std::vector<std::string> command_line,
@@ -200,10 +208,21 @@ bool RunToolWithInMemoryFiles(
   }
   auto file_manager = llvm::makeIntrusiveRefCnt<clang::FileManager>(
       clang::FileSystemOptions(), std::move(overlay_fs));
-  return clang::tooling::ToolInvocation(
-             std::move(command_line), std::move(action), file_manager.get(),
-             std::make_shared<clang::PCHContainerOperations>())
-      .run();
+
+  llvm::SmallVector<const char*> argv;
+  for (const std::string& arg : command_line) {
+    argv.push_back(arg.c_str());
+  }
+  std::unique_ptr<clang::DiagnosticOptions> diag_opts =
+      clang::CreateAndPopulateDiagOpts(argv);
+  clang::TextDiagnosticPrinter diagnostic_printer(llvm::errs(), *diag_opts);
+
+  clang::tooling::ToolInvocation tool_invocation(
+      std::move(command_line), std::move(action), file_manager.get(),
+      std::make_shared<clang::PCHContainerOperations>());
+  tool_invocation.setDiagnosticOptions(diag_opts.get());
+  tool_invocation.setDiagnosticConsumer(&diagnostic_printer);
+  return tool_invocation.run() && diagnostic_printer.getNumErrors() == 0;
 }
 
 }  // namespace

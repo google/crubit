@@ -113,12 +113,18 @@ RecordingDiagnosticConsumer RecordDiagnostics(
   diagnostic_engine.Reset(/*soft=*/true);
   RecordingDiagnosticConsumer diagnostic_recorder;
   diagnostic_recorder.on_error_ = on_error;
-  std::unique_ptr<clang::DiagnosticConsumer> original_consumer =
+  // `takeClient` only transfers ownership (if any) - it returns null when
+  // `diagnostic_engine` doesn't own its client (e.g. a consumer from
+  // `ToolInvocation::setDiagnosticConsumer`), and `getClient` still returns
+  // the original client afterwards.
+  std::unique_ptr<clang::DiagnosticConsumer> owned_original_consumer =
       diagnostic_engine.takeClient();
+  clang::DiagnosticConsumer* original_consumer = diagnostic_engine.getClient();
   diagnostic_engine.setClient(&diagnostic_recorder, /*ShouldOwnClient=*/false);
   auto restore_consumer = absl::MakeCleanup([&] {
-    diagnostic_engine.setClient(original_consumer.release(),
-                                /*ShouldOwnClient=*/true);
+    diagnostic_engine.setClient(
+        original_consumer,
+        /*ShouldOwnClient=*/owned_original_consumer.release() != nullptr);
   });
   callback();
   // `on_error` refers to the caller's state; don't let it outlive this call.

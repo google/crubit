@@ -176,6 +176,7 @@ crubit_cc_test(
         "//common:external_binaries_cc",
         "//common:file_io",
         "//common:status_macros",
+        "//common:status_test_matchers",
         "//common:test_utils",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/log:check",

@@ -59,13 +59,12 @@ class RecordingDiagnosticConsumer final : public clang::DiagnosticConsumer {
 /// done.
 /// Why? `clang::Sema` methods may fail (e.g., `IsCompleteType`) and the
 /// emitted (fatal) diagnostic is sent to the original diagnostic consumer,
-/// which causes `clang::tooling::runToolOnCodeWithArgs` to return an error
-/// status, which then causes Crubit to exit with failure. In some cases,
-/// it's OK for these methods to fail (e.g., to find out if a template
-/// specialization can be instantiated and should thus be imported), so it
-/// would be helpful to temporarily avoid sending the diagnostics for these
-/// fallable attempts to the original diagnostic consumer, and this is where
-/// this 'trap' becomes useful.
+/// which causes `IrFromCc` to return an error status, which then causes Crubit
+/// to exit with failure. In some cases, it's OK for these methods to fail
+/// (e.g., to find out if a template specialization can be instantiated and
+/// should thus be imported), so it would be helpful to temporarily avoid
+/// sending the diagnostics for these fallable attempts to the original
+/// diagnostic consumer, and this is where this 'trap' becomes useful.
 ///
 /// If `on_error` is set, it is invoked synchronously while each error is being
 /// reported, i.e. while the compiler state that caused the error (such as

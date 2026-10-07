@@ -22,6 +22,7 @@
 #include "common/ffi_types.h"
 #include "common/file_io.h"
 #include "common/status_macros.h"
+#include "common/status_test_matchers.h"
 #include "common/test_utils.h"
 #include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/collect_namespaces.h"
@@ -353,6 +354,31 @@ TEST(GenerateBindingsAndMetadataTest, DepfileOmitsInMemoryFiles) {
   EXPECT_THAT(depfile_tokens,
               ElementsAre("path/to/rs_api.rs:", EndsWith("/public.h"),
                           EndsWith("/included.h")));
+}
+
+absl::StatusOr<BindingsAndMetadata> GenerateBindingsWithExtraClangArg(
+    absl::string_view extra_clang_arg) {
+  Cmdline cmdline = MakeCmdline("a.h");
+  std::vector<std::string> clang_args = DefaultClangArgs();
+  clang_args.push_back(std::string(extra_clang_arg));
+  return GenerateBindingsAndMetadata(cmdline, std::move(clang_args),
+                                     /*virtual_headers_contents_for_testing=*/
+                                     {{HeaderName("a.h"), "namespace ns {}"}});
+}
+
+TEST(GenerateBindingsAndMetadataTest, FailsOnUnknownClangDriverArgument) {
+  EXPECT_THAT(GenerateBindingsWithExtraClangArg("-fthis-flag-does-not-exist"),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(GenerateBindingsAndMetadataTest, FailsOnMissingInputFileInClangArgs) {
+  EXPECT_THAT(GenerateBindingsWithExtraClangArg("/nonexistent_file.h"),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(GenerateBindingsAndMetadataTest, SucceedsOnClangDriverWarning) {
+  // `-Wl,...` is unused by `-fsyntax-only`, so the driver reports a warning.
+  EXPECT_OK(GenerateBindingsWithExtraClangArg("-Wl,--foo"));
 }
 
 }  // namespace
