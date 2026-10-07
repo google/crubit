@@ -14,6 +14,7 @@
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wshadow"
 #include "support/bridge.h"
 #include "support/internal/slot.h"
 #include "support/rs_std/result.h"
