@@ -47,6 +47,7 @@ C++                  | Rust
 `unsigned long`      | `::core::ffi::c_ulong`
 `long long`          | `::core::ffi::c_longlong`
 `unsigned long long` | `::core::ffi::c_ulonglong`
+`rs_std::char_`      | `char`
 
 ## One-way type mapping {#one_way}
 
@@ -86,7 +87,6 @@ Bindings for the following types are not supported at this point:
 
 ### Rust
 
-*   `char` is currently unsupported, pending design review.
 *   b/254507801: `!` has not yet been implemented except for return types.
 *   b/254094650: `i128` and `u128` are not yet supported when calling Rust from
     C++.
