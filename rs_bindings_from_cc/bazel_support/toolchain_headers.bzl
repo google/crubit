@@ -55,11 +55,13 @@ def _bindings_for_toolchain_headers_impl(ctx):
         ctx.attr.public_libcxx_hdrs,
     )
 
+    extra_std_paths = []
+
     target_args = depset(
         direct = [
             json.encode({
                 "t": str(ctx.label),
-                "h": [hdr.path for hdr in std_files + builtin_libcxx_files],
+                "h": [hdr.path for hdr in std_files + builtin_libcxx_files] + extra_std_paths,
                 "f": ["all"],
             }),
             json.encode({
