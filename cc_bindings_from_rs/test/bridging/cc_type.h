@@ -5,6 +5,8 @@
 #ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_CC_TYPE_H_
 #define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_CC_TYPE_H_
 
+#include <new>
+
 namespace crubit {
 namespace test {
 
