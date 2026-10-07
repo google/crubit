@@ -725,6 +725,7 @@ r#"// Automatically @generated C++ bindings for the following Rust crate:
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wshadow"
 
 namespace test_crate::public_module {
 "#,
@@ -775,6 +776,7 @@ r#"// Automatically @generated C++ bindings for the following Rust crate:
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wshadow"
 
 namespace test_crate::public_module {
 "#,

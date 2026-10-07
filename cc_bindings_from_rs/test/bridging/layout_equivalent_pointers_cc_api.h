@@ -14,6 +14,7 @@
 #pragma clang diagnostic ignored "-Wunused-private-field"
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wshadow"
 #include "cpp_ns/cpp_type.h"
 
 namespace layout_equivalent_pointers::test_format_func_arg_pointer_like {
