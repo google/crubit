@@ -60,6 +60,27 @@ impl Platform {
             (quote! { c_uint }, quote! { new_c_uint })
         }
     }
+
+    /// Returns whether Clang supports the `vectorcall` calling convention on
+    /// the platform.  `vectorcall` is only available on x86 targets (at least
+    /// on ones currently supported by Crubit;  I hear that UEFI/x86 doesn't
+    /// support `vectorcall`).
+    pub fn supports_vectorcall(self) -> bool {
+        matches!(self, Platform::X86Linux | Platform::X86MacOS | Platform::X86Windows)
+    }
+
+    /// Returns the prefix that Clang adds to the mangled name of a function
+    /// declared with an asm label (e.g. `int f() asm("foo");`).
+    ///
+    /// On targets where symbol names get a global prefix (e.g. `_` on Mach-O),
+    /// Clang adds a `'\u{1}'` prefix to tell LLVM not to add the global prefix
+    /// to the asm label.
+    pub fn asm_label_mangled_name_prefix(self) -> &'static str {
+        match self {
+            Platform::X86MacOS | Platform::ArmMacOS => "\u{1}",
+            Platform::X86Linux | Platform::ArmLinux | Platform::X86Windows => "",
+        }
+    }
 }
 
 /// Returns the platform the current test is running for with

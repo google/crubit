@@ -1911,8 +1911,8 @@ fn test_supported_suppressed_field_types() -> Result<()> {
     // type that is still returned successfully by db.rs_type_kind(), and so
     // results in a secondary failure when we check afterwards for the
     // required features for the type.
-    if test_platform() != multiplatform_testing::Platform::X86Linux {
-        return Ok(()); // vectorcall only exists on x86_64, not e.g. aarch64
+    if !test_platform().supports_vectorcall() {
+        return Ok(());
     }
     let proto = ir_proto_from_cc(
         r#"

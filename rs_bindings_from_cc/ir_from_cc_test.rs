@@ -14,6 +14,7 @@ use ir_testing::{
     with_full_lifetime_macros, DEPENDENCY_TARGET, TESTING_TARGET,
 };
 use itertools::Itertools;
+use multiplatform_testing::test_platform;
 use quote::quote;
 use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
@@ -55,12 +56,12 @@ impl<'pb> IrTestingExt<'pb> for IR<'pb> {
 }
 
 fn ir_proto_from_cc(header: &str) -> Result<IRProto> {
-    ir_testing::ir_proto_from_cc(multiplatform_testing::test_platform(), header)
+    ir_testing::ir_proto_from_cc(test_platform(), header)
 }
 
 fn ir_proto_from_cc_dependency(header: &str, dep_header: &str) -> Result<IRProto> {
     ir_testing::ir_proto_from_cc_dependency(
-        multiplatform_testing::test_platform(),
+        test_platform(),
         header,
         dep_header,
         None,
@@ -70,16 +71,12 @@ fn ir_proto_from_cc_dependency(header: &str, dep_header: &str) -> Result<IRProto
 }
 
 fn ir_proto_from_cc_dependency_with_lazy_import(header: &str, dep_header: &str) -> Result<IRProto> {
-    ir_testing::ir_proto_from_cc_dependency_with_lazy_import(
-        multiplatform_testing::test_platform(),
-        header,
-        dep_header,
-    )
+    ir_testing::ir_proto_from_cc_dependency_with_lazy_import(test_platform(), header, dep_header)
 }
 
 fn ir_proto_from_record_impl_debug_cc(header: &str) -> Result<IRProto> {
     ir_testing::ir_proto_from_cc_dependency(
-        multiplatform_testing::test_platform(),
+        test_platform(),
         header,
         "// empty header",
         Some("record_impl_debug"),
@@ -92,7 +89,7 @@ fn ir_proto_from_assumed_lifetimes_cc(program: &str) -> Result<IRProto> {
     let mut full_program = with_full_lifetime_macros();
     full_program.push_str(program);
     ir_testing::ir_proto_from_cc_dependency(
-        multiplatform_testing::test_platform(),
+        test_platform(),
         &full_program,
         "// empty header",
         Some("assume_lifetimes"),
@@ -172,32 +169,17 @@ fn test_function_with_asm_label() {
     let proto = ir_proto_from_cc("int f(int a, int b) asm(\"foo\");").unwrap();
 
     let ir = make_test_ir(&proto).unwrap();
-    match multiplatform_testing::test_platform() {
-        // If a declaration uses an asm label, the Clang mangler adds a '\u{1}' prefix on some
-        // platforms to signify that LLVM should not perform any LLVM-level mangling on it.
-        multiplatform_testing::Platform::ArmMacOS | multiplatform_testing::Platform::X86MacOS => {
-            assert_ir_matches!(
-                ir,
-                quote! {
-                    Func {
-                        cc_name: "f",
-                        rs_name: "f", ...
-                        mangled_name: "\u{1}foo", ...
-                    }
-                }
-            )
-        }
-        _ => assert_ir_matches!(
-            ir,
-            quote! {
-                Func {
-                    cc_name: "f",
-                    rs_name: "f", ...
-                    mangled_name: "foo", ...
-                }
+    let mangled_name = format!("{}foo", test_platform().asm_label_mangled_name_prefix());
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                mangled_name: #mangled_name, ...
             }
-        ),
-    }
+        }
+    );
 }
 
 #[gtest]
@@ -378,8 +360,8 @@ fn test_unescapable_rust_keywords_in_type_alias_name() {
 
 #[gtest]
 fn test_function_with_custom_calling_convention() {
-    if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
-        return; // vectorcall only exists on x86_64, not e.g. aarch64
+    if !test_platform().supports_vectorcall() {
+        return;
     }
     let proto = ir_proto_from_cc("int f_vectorcall(int, int) [[clang::vectorcall]];").unwrap();
 
@@ -389,7 +371,6 @@ fn test_function_with_custom_calling_convention() {
         quote! {
             Func {
                 cc_name: "f_vectorcall", ...
-                mangled_name: "_Z12f_vectorcallii", ...
                 call_conv: Some(X86VectorCall), ...
             }
         }

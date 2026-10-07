@@ -14,6 +14,7 @@ use multiplatform_ir_testing::{
     ir_proto_from_assumed_lifetimes_cc, ir_proto_from_assumed_lifetimes_cc_dependency,
     ir_proto_from_cc, ir_proto_from_cc_dependency,
 };
+use multiplatform_testing::test_platform;
 use quote::quote;
 use static_assertions::{assert_impl_all, assert_not_impl_any};
 use test_generators::{generate_bindings_tokens_for_test, TestDbFactory};
@@ -156,7 +157,7 @@ mod custom_abi_tests {
     use ir_matchers::assert_ir_matches;
     #[gtest]
     fn test_func_ptr_with_custom_abi() -> Result<()> {
-        if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
+        if !test_platform().supports_vectorcall() {
             return Ok(());
         }
         let proto = ir_proto_from_cc(
@@ -219,7 +220,7 @@ mod custom_abi_tests {
 
     #[gtest]
     fn test_func_ptr_with_custom_abi_thunk() -> Result<()> {
-        if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
+        if !test_platform().supports_vectorcall() {
             return Ok(());
         }
         // Using an `inline` keyword forces generation of a C++ thunk in
@@ -272,7 +273,7 @@ mod custom_abi_tests {
 
     #[gtest]
     fn test_custom_abi_thunk() -> Result<()> {
-        if multiplatform_testing::test_platform() != multiplatform_testing::Platform::X86Linux {
+        if !test_platform().supports_vectorcall() {
             return Ok(());
         }
         let proto = ir_proto_from_cc(
@@ -1790,7 +1791,7 @@ fn test_nested_ir_end_to_end() -> Result<()> {
     let header_source = "namespace outer { struct Inner { int x; }; }";
 
     let proto = ir_testing::ir_proto_from_cc_dependency(
-        multiplatform_testing::test_platform(),
+        test_platform(),
         header_source,
         "// no dependencies",
         None,

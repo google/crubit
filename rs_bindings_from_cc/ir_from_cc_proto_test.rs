@@ -7,9 +7,10 @@ use googletest::gtest;
 use ir::MemberFuncSemantic;
 use ir_rust_proto::IRProto;
 use ir_testing::{ir_proto_from_cc, make_test_ir};
+use multiplatform_testing::test_platform;
 
 fn get_proto(header: &str) -> Result<IRProto> {
-    ir_proto_from_cc(multiplatform_testing::test_platform(), header)
+    ir_proto_from_cc(test_platform(), header)
 }
 
 #[gtest]
@@ -65,14 +66,8 @@ fn test_function_with_asm_label_proto() -> Result<()> {
     assert_eq!(func.cc_name().as_identifier().unwrap().as_str(), "f");
     assert_eq!(func.rs_name().as_identifier().unwrap().as_str(), "f");
 
-    match multiplatform_testing::test_platform() {
-        multiplatform_testing::Platform::ArmMacOS | multiplatform_testing::Platform::X86MacOS => {
-            assert_eq!(func.mangled_name(), "\u{1}foo");
-        }
-        _ => {
-            assert_eq!(func.mangled_name(), "foo");
-        }
-    }
+    let expected_mangled_name = format!("{}foo", test_platform().asm_label_mangled_name_prefix());
+    assert_eq!(func.mangled_name(), expected_mangled_name);
     Ok(())
 }
 
