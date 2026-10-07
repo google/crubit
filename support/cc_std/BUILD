@@ -25,7 +25,11 @@ bindings_for_toolchain_headers(
         "//support/cc_std_impl:extra_rs_srcs_for_cc_std",
         "//support/cc_std_impl:manually_bridged_types",
     ],
-    public_libc_hdrs = LIBC_HEADERS,
+    public_libc_hdrs = select({
+        # `LIBC_HEADERS` are POSIX headers, which are not available on Windows.
+        "@platforms//os:windows": [],
+        "//conditions:default": LIBC_HEADERS,
+    }),
     public_libcxx_hdrs = LIBCXX_HEADERS,
     visibility = [
         "//visibility:public",
