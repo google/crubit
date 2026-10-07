@@ -921,6 +921,87 @@ bool Importer::IsAlwaysInstantiate(
   return false;
 }
 
+bool Importer::HasSingleLifetime(clang::QualType type) const {
+  type = type.getCanonicalType();
+  if (type->isPointerType() || type->isReferenceType()) {
+    // Function pointers and references only ever have a `'static` lifetime.
+    return !type->getPointeeType()->isFunctionType();
+  }
+  const clang::CXXRecordDecl* record_decl = type->getAsCXXRecordDecl();
+  if (record_decl == nullptr) return false;
+  if (const clang::CXXRecordDecl* definition = record_decl->getDefinition()) {
+    record_decl = definition;
+  }
+  if (!AreAssumedLifetimesEnabledForTarget(GetOwningTarget(*record_decl))) {
+    return false;
+  }
+  if (const auto* specialization_decl =
+          clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(record_decl);
+      specialization_decl != nullptr &&
+      GetTemplateArgumentLifetimeParam(*specialization_decl).has_value()) {
+    return true;
+  }
+  absl::StatusOr<std::vector<absl::string_view>> lifetime_inputs =
+      CollectLifetimeInputs(ctx_, record_decl);
+  return lifetime_inputs.ok() && lifetime_inputs->size() == 1;
+}
+
+std::optional<std::string> Importer::GetTemplateArgumentLifetimeParam(
+    const clang::ClassTemplateSpecializationDecl& specialization_decl) const {
+  if (!AreAssumedLifetimesEnabledForTarget(
+          GetOwningTarget(specialization_decl))) {
+    return std::nullopt;
+  }
+  // Only specializations instantiated from the primary template: their members
+  // are instantiated from it, so a member whose type is the template parameter
+  // is still marked as such (by a `SubstTemplateTypeParmType`).
+  if (specialization_decl.getSpecializationKind() ==
+      clang::TSK_ExplicitSpecialization) {
+    return std::nullopt;
+  }
+  auto* template_decl = specialization_decl.getSpecializedTemplateOrPartial()
+                            .dyn_cast<clang::ClassTemplateDecl*>();
+  if (template_decl == nullptr) return std::nullopt;
+  // Templates from these namespaces get special support (e.g. `absl::Span`,
+  // `std::optional`), which already decides what their arguments' lifetimes
+  // mean.
+  std::optional<llvm::StringRef> top_level_ns =
+      AsTopLevelNamespace(template_decl->getTemplatedDecl()->getDeclContext());
+  if (top_level_ns == "std" || top_level_ns == "absl" || top_level_ns == "c9" ||
+      top_level_ns == "rs_std") {
+    return std::nullopt;
+  }
+  // Bridged types are not bound as records.
+  for (const auto* attr :
+       specialization_decl.specific_attrs<clang::AnnotateAttr>()) {
+    if (attr->getAnnotation() == "crubit_bridge_rust_name") {
+      return std::nullopt;
+    }
+  }
+  // A template that declares its own lifetime parameters (`LIFETIME_PARAMS`)
+  // names them itself.
+  absl::StatusOr<std::vector<absl::string_view>> lifetime_inputs =
+      CollectLifetimeInputs(ctx_, &specialization_decl);
+  if (!lifetime_inputs.ok() || !lifetime_inputs->empty()) return std::nullopt;
+
+  // TODO(zarko): Support more than one template argument.
+  const clang::TemplateArgumentList& args =
+      specialization_decl.getTemplateArgs();
+  if (args.size() != 1 || args[0].getKind() != clang::TemplateArgument::Type ||
+      !HasSingleLifetime(args[0].getAsType())) {
+    return std::nullopt;
+  }
+
+  // Name the lifetime after the template parameter, so that the generated
+  // struct reads as "the lifetime of `T`".
+  const clang::NamedDecl* param =
+      template_decl->getTemplateParameters()->getParam(0);
+  if (param->getIdentifier() == nullptr || param->getName() == "unknown") {
+    return "__arg";
+  }
+  return param->getName().str();
+}
+
 void SetMustBindItem(ir_proto::Item& item) {
   if (item.has_record()) {
     item.mutable_record()->set_must_bind(true);
@@ -2494,9 +2575,102 @@ absl::StatusOr<CcType> Importer::ConvertType(
                         [](absl::string_view lifetime_view) {
                           return std::string(lifetime_view);
                         });
+      CRUBIT_RETURN_IF_ERROR(AddTemplateArgumentLifetime(
+          type, /*has_written_lifetimes=*/!explicit_lifetime_views.empty(),
+          *cpp_type));
     }
   }
   return cpp_type;
+}
+
+// Returns the type that `type` spells, looking only through attributes (such
+// as a lifetime) and parentheses. Unlike `getAs<T>()`, this does not look
+// through typedefs: their underlying type is converted, and so handled,
+// separately.
+static const clang::Type& StripAttributes(const clang::Type& type) {
+  const clang::Type* current = &type;
+  while (true) {
+    if (const auto* attributed =
+            clang::dyn_cast<clang::AttributedType>(current)) {
+      current = attributed->getModifiedType().getTypePtr();
+    } else if (const auto* macro_qualified =
+                   clang::dyn_cast<clang::MacroQualifiedType>(current)) {
+      current = macro_qualified->getUnderlyingType().getTypePtr();
+    } else if (const auto* paren = clang::dyn_cast<clang::ParenType>(current)) {
+      current = paren->getInnerType().getTypePtr();
+    } else {
+      return *current;
+    }
+  }
+}
+
+absl::Status Importer::AddTemplateArgumentLifetime(const clang::Type& type,
+                                                   bool has_written_lifetimes,
+                                                   CcType& cpp_type) {
+  const clang::Type& spelled_type = StripAttributes(type);
+
+  // A use of a specialization that takes a lifetime parameter for its template
+  // argument, e.g. `View<int& $a>`: the specialization is shared with
+  // `View<int& $b>`, so bind its parameter to the lifetime written on this
+  // use's argument, which `WithAsWrittenTemplateArgs` recorded.
+  if (const auto* specialization_type =
+          clang::dyn_cast<clang::TemplateSpecializationType>(&spelled_type)) {
+    const auto* specialization_decl =
+        clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
+            specialization_type->getAsCXXRecordDecl());
+    if (specialization_decl == nullptr ||
+        !std::holds_alternative<ItemId>(cpp_type.variant) ||
+        cpp_type.template_args.size() != 1 ||
+        !GetTemplateArgumentLifetimeParam(*specialization_decl).has_value()) {
+      return absl::OkStatus();
+    }
+    const std::vector<std::string>& arg_lifetimes =
+        cpp_type.template_args[0].explicit_lifetimes;
+    if (arg_lifetimes.empty()) return absl::OkStatus();
+    std::string type_string = clang::QualType(&type, 0).getAsString();
+    if (has_written_lifetimes) {
+      // E.g. `View<int& $a> $b`. Both stand for the same lifetime parameter.
+      return absl::InvalidArgumentError(absl::StrCat(
+          "lifetimes are written both on the template argument of '",
+          type_string,
+          "' and on the type itself; write them only on the "
+          "template argument"));
+    }
+    if (arg_lifetimes.size() != 1) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "the template argument of '", type_string,
+          "' must have exactly one lifetime, but has ", arg_lifetimes.size()));
+    }
+    cpp_type.explicit_lifetimes = arg_lifetimes;
+    return absl::OkStatus();
+  }
+
+  // Inside such a specialization, a type spelled as its template parameter,
+  // e.g. `T value` in `View<int&>`: it has the specialization's lifetime
+  // parameter.
+  //
+  // Only the template parameter spelled directly counts. A member typedef of
+  // the specialization (`using type = T;`) also desugars to the parameter, but
+  // it can be named from outside, as `Holder<int* $a>::type`, where the
+  // specialization's lifetime parameter is not in scope.
+  //
+  // TODO(zarko): Also handle member typedefs used inside the specialization,
+  // and bind `Holder<int* $a>::type` to `$a`.
+  if (!cpp_type.explicit_lifetimes.empty()) return absl::OkStatus();
+  const auto* subst_type =
+      clang::dyn_cast<clang::SubstTemplateTypeParmType>(&spelled_type);
+  if (subst_type == nullptr || subst_type->getIndex() != 0) {
+    return absl::OkStatus();
+  }
+  const auto* specialization_decl =
+      clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
+          subst_type->getAssociatedDecl());
+  if (specialization_decl == nullptr) return absl::OkStatus();
+  if (std::optional<std::string> lifetime =
+          GetTemplateArgumentLifetimeParam(*specialization_decl)) {
+    cpp_type.explicit_lifetimes = {*std::move(lifetime)};
+  }
+  return absl::OkStatus();
 }
 
 absl::StatusOr<CcType> Importer::ConvertUnattributedType(

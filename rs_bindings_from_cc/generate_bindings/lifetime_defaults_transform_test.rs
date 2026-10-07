@@ -1785,8 +1785,7 @@ fn test_as_written_template_arg_lifetime_kept_for_output() -> Result<()> {
     Ok(())
 }
 
-/// Correct behaviour; control for
-/// `test_lifetime_on_class_template_argument_incorrectly_not_bound`. With the
+/// Correct behaviour; control for `test_lifetime_on_class_template_argument_is_bound`. With the
 /// borrow spelled out on a non-template record, the returned view is tied to
 /// `x` and the function binds `'a`.
 #[gtest]
@@ -1823,19 +1822,11 @@ fn test_lifetime_on_nontemplate_record_is_bound() -> Result<()> {
     Ok(())
 }
 
-/// INCORRECT BEHAVIOR, pinned so that the fix trips this test.
-///
-/// Expected: either `make` binds `'a` and ties the returned `View` to `x` (as
-/// the non-template control above does), or an error is reported because the
-/// hand-written `$a` cannot be honoured.
-/// Actual: `lifetime_inputs: []`. The returned `View` has no relationship to
-/// `x`, and nothing is reported.
-///
-/// TODO(zarko): `$a` is written on the template *argument* of `View<int* $a>`.
-/// The importer keeps it on the use site (`template_args`), but because `View`
-/// declares no lifetime parameters the transform never binds it.
+/// `$a` is written on the template *argument* of `View<int* $a>`. `View<int*>` takes a lifetime
+/// parameter on behalf of its argument, which this use binds to `$a`, so `make` behaves like the
+/// non-template control above.
 #[gtest]
-fn test_lifetime_on_class_template_argument_incorrectly_not_bound() -> Result<()> {
+fn test_lifetime_on_class_template_argument_is_bound() -> Result<()> {
     let proto = ir_proto_from_assumed_lifetimes_cc(
         &(with_full_lifetime_macros()
             + r#"
@@ -1866,10 +1857,18 @@ fn test_lifetime_on_class_template_argument_incorrectly_not_bound() -> Result<()
                         ]),
                     },
                     ...
-                    explicit_lifetimes: [],
+                    explicit_lifetimes: ["a"],
                 }, ...
-                // WRONG: should be `["a"]` (or an error).
-                lifetime_inputs: [], ...
+                lifetime_inputs: ["a"], ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Record {
+                rs_name: "__CcTemplateInst4ViewIPiE", ...
+                lifetime_inputs: ["T"], ...
             }
         }
     );

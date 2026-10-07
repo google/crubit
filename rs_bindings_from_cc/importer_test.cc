@@ -2025,9 +2025,11 @@ TEST(ImporterTest, AssumedLifetimesRecordedOnClassTemplateArgument) {
       Contains(VariantWith<Func>(AllOf(
           IdentifierIs("f"),
           ParamsAre(
-              // The parameter type itself carries no lifetime: `$a` was
-              // written on the argument, not on `Wrapper<...>`.
-              ParamType(ExplicitLifetimesAre(),
+              // `$a` was written on the argument. `Wrapper<int*>` takes a
+              // lifetime parameter for its argument (see
+              // `SpecializationTakesLifetimeForTemplateArgument`), which this
+              // use binds to `$a`.
+              ParamType(ExplicitLifetimesAre("a"),
                         TemplateArgsAre(ExplicitLifetimesAre("a"))),
               ParamType(ExplicitLifetimesAre("b"), TemplateArgsAre()))))));
 }
@@ -2178,7 +2180,8 @@ TEST(ImporterTest, TemplateArgsNotRecordedForNonTypeArgument) {
 // The lifetime need not be on the argument's outermost type. Here it sits on
 // the argument of the inner `Wrapper`, which records it; the outer `Wrapper`
 // records the inner use, so that the lifetime stays reachable from the
-// parameter.
+// parameter. Both specializations take a lifetime parameter for their
+// argument, and both uses bind it to `$a`.
 TEST(ImporterTest, AssumedLifetimesRecordedOnNestedClassTemplateArgument) {
   absl::string_view file = R"cc(
     template <class T>
@@ -2192,9 +2195,9 @@ TEST(ImporterTest, AssumedLifetimesRecordedOnNestedClassTemplateArgument) {
               Contains(VariantWith<Func>(AllOf(
                   IdentifierIs("f"),
                   ParamsAre(ParamType(
-                      ExplicitLifetimesAre(),
+                      ExplicitLifetimesAre("a"),
                       TemplateArgsAre(AllOf(
-                          ExplicitLifetimesAre(),
+                          ExplicitLifetimesAre("a"),
                           TemplateArgsAre(ExplicitLifetimesAre("a"))))))))));
 }
 
@@ -2356,6 +2359,183 @@ TEST(ImporterTest, AssumedLifetimesSurviveOnMemberFnOfSpecialization) {
   const Func* get = FindFunc(ir, "get");
   ASSERT_NE(get, nullptr);
   EXPECT_THAT(get->return_type().explicit_lifetimes(), ElementsAre("a"));
+}
+
+// ===========================================================================
+// Lifetime parameters for template arguments.
+//
+// `View<int& $a>` and `View<int& $b>` share the specialization `View<int&>`.
+// So that each use keeps its own lifetime, a specialization whose only
+// template argument has one lifetime takes a lifetime parameter, named after
+// the template parameter, on the argument's behalf. Members spelled as the
+// template parameter use it, and each use binds it to the lifetime written on
+// its argument.
+// ===========================================================================
+
+// Returns the single `Record` named `cc_name`, or nullptr (reporting the names
+// of the records that were imported).
+const Record* absl_nullable FindRecord(const IR& ir,
+                                       absl::string_view cc_name) {
+  std::vector<std::string> names;
+  for (const Record* record : get_items_if<Record>(ir)) {
+    if (record->cc_name().identifier() == cc_name) return record;
+    names.push_back(std::string(record->cc_name().identifier()));
+  }
+  ADD_FAILURE() << "no record named '" << cc_name
+                << "'; records are: " << absl::StrJoin(names, ", ");
+  return nullptr;
+}
+
+TEST(ImporterTest, SpecializationTakesLifetimeForTemplateArgument) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct [[clang::annotate("crubit_always_instantiate")]] View {
+      T value;
+      T get() const { return value; }
+    };
+    void f(View<int& $a> v);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  const Record* view = FindRecord(ir, "View<int &>");
+  ASSERT_NE(view, nullptr);
+  EXPECT_THAT(view->lifetime_inputs(), ElementsAre("T"));
+  ASSERT_EQ(view->fields_size(), 1);
+  EXPECT_THAT(view->fields(0).type().explicit_lifetimes(), ElementsAre("T"));
+  const Func* get = FindFunc(ir, "get");
+  ASSERT_NE(get, nullptr);
+  EXPECT_THAT(get->return_type().explicit_lifetimes(), ElementsAre("T"));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              Contains(VariantWith<Func>(
+                  AllOf(IdentifierIs("f"),
+                        ParamsAre(ParamType(ExplicitLifetimesAre("a")))))));
+}
+
+// A record with one lifetime parameter is an argument with one lifetime too.
+// The field becomes `Obj<'T>`.
+TEST(ImporterTest, SpecializationTakesLifetimeForRecordTemplateArgument) {
+  absl::string_view file = R"cc(
+    struct LIFETIME_PARAMS("a") Obj {
+      int* $a p;
+    };
+    template <class T>
+    struct View {
+      T value;
+    };
+    void f(View<Obj $a> v);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  const Record* view = FindRecord(ir, "View<struct Obj>");
+  ASSERT_NE(view, nullptr);
+  EXPECT_THAT(view->lifetime_inputs(), ElementsAre("T"));
+  ASSERT_EQ(view->fields_size(), 1);
+  EXPECT_THAT(view->fields(0).type().explicit_lifetimes(), ElementsAre("T"));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              Contains(VariantWith<Func>(
+                  AllOf(IdentifierIs("f"),
+                        ParamsAre(ParamType(ExplicitLifetimesAre("a")))))));
+}
+
+// The specialization's shape depends only on its canonical argument, so a use
+// that writes no lifetime still names a specialization with a lifetime
+// parameter. It is left for the generator's default rules to fill in, as for
+// a non-template record with `LIFETIME_PARAMS`.
+TEST(ImporterTest, UnannotatedUseOfSpecializationWithTemplateArgumentLifetime) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct View {
+      T value;
+    };
+    void f(View<int&> v);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  const Record* view = FindRecord(ir, "View<int &>");
+  ASSERT_NE(view, nullptr);
+  EXPECT_THAT(view->lifetime_inputs(), ElementsAre("T"));
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      Contains(VariantWith<Func>(AllOf(
+          IdentifierIs("f"), ParamsAre(ParamType(ExplicitLifetimesAre()))))));
+}
+
+TEST(ImporterTest, NoTemplateArgumentLifetimeWithoutAssumedLifetimes) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct View {
+      T value;
+    };
+    void f(View<int& $a> v);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithoutAssumedLifetimes(file));
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      Contains(VariantWith<Func>(AllOf(
+          IdentifierIs("f"),
+          ParamsAre(ParamType(ExplicitLifetimesAre(), TemplateArgsAre()))))));
+}
+
+TEST(ImporterTest, NoTemplateArgumentLifetimeForArgumentWithoutLifetime) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct View {
+      T value;
+    };
+    void f(View<int> v);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  const Record* view = FindRecord(ir, "View<int>");
+  ASSERT_NE(view, nullptr);
+  EXPECT_THAT(view->lifetime_inputs(), IsEmpty());
+}
+
+// TODO(zarko): Support templates with more than one argument.
+TEST(ImporterTest, NoTemplateArgumentLifetimeForTwoArguments) {
+  absl::string_view file = R"cc(
+    template <class T, class U>
+    struct Pair {
+      T first;
+      U second;
+    };
+    void f(Pair<int&, int&> p);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  const Record* pair = FindRecord(ir, "Pair<int &, int &>");
+  ASSERT_NE(pair, nullptr);
+  EXPECT_THAT(pair->lifetime_inputs(), IsEmpty());
+}
+
+// A template that declares its own lifetime parameters keeps exactly those.
+TEST(ImporterTest, NoTemplateArgumentLifetimeForTemplateWithLifetimeParams) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct LIFETIME_PARAMS("a") View {
+      T value;
+      int* $a other;
+    };
+    void f(View<int&> v);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  const Record* view = FindRecord(ir, "View<int &>");
+  ASSERT_NE(view, nullptr);
+  EXPECT_THAT(view->lifetime_inputs(), ElementsAre("a"));
+  EXPECT_THAT(view->fields(0).type().explicit_lifetimes(), IsEmpty());
+}
+
+// `$a` and `$b` would both bind the one lifetime parameter.
+TEST(ImporterTest, LifetimesOnTemplateArgumentAndSpecializationAreAnError) {
+  absl::string_view file = R"cc(
+    template <class T>
+    struct View {
+      T value;
+    };
+    void f(View<int& $a> $b v);
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCcWithAssumedLifetimes(file));
+  const Func* f = FindFunc(ir, "f");
+  ASSERT_NE(f, nullptr);
+  ASSERT_EQ(f->params_size(), 1);
+  ASSERT_TRUE(f->params(0).type().has_error());
+  EXPECT_THAT(f->params(0).type().error().message(),
+              HasSubstr("lifetimes are written both on the template argument"));
 }
 
 }  // namespace

@@ -1497,6 +1497,14 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
                           return std::string(lifetime_view);
                         });
     }
+    if (const auto* specialization_decl =
+            clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
+                record_decl)) {
+      if (std::optional<std::string> lifetime =
+              ictx_.GetTemplateArgumentLifetimeParam(*specialization_decl)) {
+        lifetime_inputs.push_back(*std::move(lifetime));
+      }
+    }
   }
 
   absl::StatusOr<bool> detected_formatter = ictx_.DetectFormatter(*record_decl);
