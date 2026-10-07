@@ -387,6 +387,57 @@ crubit_cc_test(
     ],
 )
 
+# Support for the C++ bindings of Rust enums: the `rs::` free functions
+# (`get_if`, `get`, `holds_alternative`, `discriminant`) and the
+# `crubit::internal` machinery generated enum classes are built from.
+cc_library(
+    name = "enum",
+    hdrs = ["enum.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [
+        "//support:annotations",
+        "//support/internal:bindings_support",
+        "//support/rs_std/internal:enum",
+    ],
+)
+
+crubit_cc_test(
+    name = "enum_tag_encoding_test",
+    srcs = ["enum_tag_encoding_test.cc"],
+    deps = [
+        ":enum",
+        "@fuzztest//:fuzztest_gtest_main",
+        "@googletest//:gmock",
+    ],
+)
+
+crubit_cc_test(
+    name = "enum_storage_test",
+    srcs = ["enum_storage_test.cc"],
+    deps = [
+        ":enum",
+        "@fuzztest//:fuzztest_gtest_main",
+        "@googletest//:gmock",
+    ],
+)
+
+crubit_cc_test(
+    name = "enum_test",
+    srcs = [
+        "enum_test.cc",
+        "enum_test_option_i32.h",
+    ],
+    deps = [
+        ":enum",
+        "@abseil-cpp//absl/base:core_headers",
+        "@fuzztest//:fuzztest_gtest_main",
+        "@googletest//:gmock",
+    ],
+)
+
 rust_library(
     name = "lossy_formatter",
     srcs = ["lossy_formatter.rs"],

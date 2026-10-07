@@ -66,6 +66,25 @@ source_set("dyn_erased_future_cc") {
   ]
 }
 
+source_set("enum") {
+  public_configs = [ "$crubit_src_dir:config" ]
+  if (defined(crubit_gn_configs_to_remove)) {
+    configs -= crubit_gn_configs_to_remove
+  }
+  if (defined(crubit_gn_support_configs_to_add)) {
+    configs += crubit_gn_support_configs_to_add
+  }
+
+  public = [
+    "enum.h",
+  ]
+  deps = [
+    "$crubit_src_dir/support:annotations",
+    "$crubit_src_dir/support/internal:bindings_support",
+    "$crubit_src_dir/support/rs_std/internal:enum",
+  ]
+}
+
 source_set("int") {
   public_configs = [ "$crubit_src_dir:config" ]
   if (defined(crubit_gn_configs_to_remove)) {
@@ -347,6 +366,7 @@ group("rs_std_cpp") {
     ":char",
     ":dyn_callable",
     ":dyn_erased_future_cc",
+    ":enum",
     ":int",
     ":iterator_adapter",
     ":lossy_formatter_for_bindings",
