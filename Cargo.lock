@@ -481,6 +481,7 @@ dependencies = [
 name = "crubit_support"
 version = "0.1.0"
 dependencies = [
+ "ffi_11",
  "googletest",
 ]
 

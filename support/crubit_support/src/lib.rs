@@ -6,6 +6,7 @@
 
 extern crate alloc;
 
+pub mod array;
 pub mod bridge;
 pub mod dyn_erased_future;
 pub mod erased_future;

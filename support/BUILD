@@ -314,6 +314,7 @@ rust_test(
 rust_library(
     name = "crubit_support",
     srcs = [
+        "crubit_support/src/array.rs",
         "crubit_support/src/bridge.rs",
         "crubit_support/src/dyn_erased_future.rs",
         "crubit_support/src/erased_future.rs",
@@ -328,6 +329,7 @@ rust_library(
     visibility = [
         "//visibility:public",
     ],
+    deps = ["//support/ffi_11"],
 )
 
 rust_test(
