@@ -56,7 +56,9 @@ fn test_simple_function() -> Result<()> {
         }
     );
 
-    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___Z3Addii});
+    // Verify that no C++ thunk got generated.  Matching on the call that a
+    // thunk would contain avoids depending on the target-specific mangling.
+    assert_cc_not_matches!(rs_api_impl, quote! {return Add(a, b);});
 
     Ok(())
 }
@@ -129,7 +131,9 @@ fn test_inline_function_with_inline_cpp() -> Result<()> {
             }
         }
     );
-    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___Z3Addii});
+    // Verify that no C++ thunk got generated.  Matching on the call that a
+    // thunk would contain avoids depending on the target-specific mangling.
+    assert_cc_not_matches!(rs_api_impl, quote! {return Add(a, b);});
     Ok(())
 }
 
@@ -150,7 +154,9 @@ fn test_non_inline_function_with_inline_cpp() -> Result<()> {
             }
         }
     );
-    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___Z3Addii});
+    // Verify that no C++ thunk got generated.  Matching on the call that a
+    // thunk would contain avoids depending on the target-specific mangling.
+    assert_cc_not_matches!(rs_api_impl, quote! {return Add(a, b);});
     Ok(())
 }
 
@@ -174,7 +180,9 @@ fn test_member_function_with_inline_cpp() -> Result<()> {
             }
         }
     );
-    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___ZNK10SomeStruct9some_funcEi});
+    // Verify that no C++ thunk got generated.  Matching on the call that a
+    // thunk would contain avoids depending on the target-specific mangling.
+    assert_cc_not_matches!(rs_api_impl, quote! {__this->some_func(arg)});
     Ok(())
 }
 
@@ -2620,7 +2628,9 @@ fn test_simple_explicit_lifetime() -> Result<()> {
         }
     );
 
-    assert_cc_not_matches!(rs_api_impl, quote! {__rust_thunk___Z3AddRi});
+    // Verify that no C++ thunk got generated.  Matching on the call that a
+    // thunk would contain avoids depending on the target-specific mangling.
+    assert_cc_not_matches!(rs_api_impl, quote! {return Add(x);});
     Ok(())
 }
 

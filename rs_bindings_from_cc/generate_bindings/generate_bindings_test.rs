@@ -72,7 +72,7 @@ fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
         }
     );
     // Verify that no C++ thunk got generated.
-    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___Z15get_ptr_to_funcv });
+    assert_cc_not_matches!(rs_api_impl, quote! { return get_ptr_to_func(); });
 
     // TODO(b/217419782): Add another test for more exotic calling conventions /
     // abis.
@@ -130,7 +130,7 @@ fn test_func_ptr_where_params_are_raw_ptrs() -> Result<()> {
         }
     );
     // Verify that no C++ thunk got generated.
-    assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___Z15get_ptr_to_funcv });
+    assert_cc_not_matches!(rs_api_impl, quote! { return get_ptr_to_func(); });
 
     // TODO(b/217419782): Add another test where params (and the return
     // type) are references with lifetimes.  Something like this:
@@ -214,7 +214,7 @@ mod custom_abi_tests {
         );
 
         // Verify that no C++ thunk got generated.
-        assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___Z15get_ptr_to_funcv });
+        assert_cc_not_matches!(rs_api_impl, quote! { return get_ptr_to_func(); });
         Ok(())
     }
 
