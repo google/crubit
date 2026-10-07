@@ -42,6 +42,8 @@ golden_test(
         "macos",
     ],
     rust_library = "rs_ops",
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
 )
 
 crubit_cc_test(

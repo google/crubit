@@ -57,6 +57,8 @@ golden_test(
     golden_h = "trait_cc_api.h",
     golden_rs = "trait_cc_api_impl.rs",
     rust_library = "trait",
+    # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
+    tags = ["no_windows"],
 )
 
 crubit_cc_test(
