@@ -48,6 +48,21 @@ target_link_libraries(crubit_support_rs_std_dyn_erased_future_cc INTERFACE
 crubit_support_rs_std_waker
 )
 
+add_library(crubit_support_rs_std_enum INTERFACE
+"enum.h"
+)
+set_target_properties(crubit_support_rs_std_enum PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(crubit_support_rs_std_enum INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+)
+
+target_link_libraries(crubit_support_rs_std_enum INTERFACE
+crubit_support_annotations
+crubit_support_internal_bindings_support
+crubit_support_rs_std_internal_enum
+)
+
 add_library(crubit_support_rs_std_int INTERFACE
 "int.h"
 )

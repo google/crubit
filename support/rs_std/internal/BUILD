@@ -6,6 +6,16 @@ load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 package(default_applicable_licenses = ["//:license"])
 
 cc_library(
+    name = "enum",
+    hdrs = ["enum.h"],
+    compatible_with = ["//buildenv/target:non_prod"],
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = [],
+)
+
+cc_library(
     name = "is_utf8",
     hdrs = ["is_utf8.h"],
     compatible_with = ["//buildenv/target:non_prod"],

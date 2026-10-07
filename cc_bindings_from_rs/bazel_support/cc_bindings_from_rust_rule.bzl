@@ -572,6 +572,7 @@ private_common_attrs = {
             "//support:lifetime_annotations",
             "//support:movable",
             "//support/rs_std:char",
+            "//support/rs_std:enum",
             "//support/rs_std:int",
             "//support/rs_std:slice_ref",
             "//support/rs_std:str_ref",

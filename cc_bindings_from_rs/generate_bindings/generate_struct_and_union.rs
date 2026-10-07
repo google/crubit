@@ -13,6 +13,7 @@ use crate::avoid_colliding_types::{AvoidCollidingTypes, TypeCollisionRisk};
 use crate::format_cc_ident;
 use crate::format_type::{get_cc_template_args, CcParamTy};
 use crate::generate_doc_comment;
+use crate::generate_enum;
 use crate::generate_function::{
     bool_constraint_template_prefix, cc_param_to_c_abi, format_variant_ctor_cc_name,
     generate_thunk_call, Param, ThunkSelfParameter,
@@ -2161,7 +2162,9 @@ pub fn generate_adt<'tcx>(
         })
         .collect();
 
-    let adt_based_ctors = if is_aggregate {
+    // With `EnumApiV2`, variants are constructed with `V::Make` instead of `MakeV`.
+    let enum_layout = generate_enum::analyze_enum(db, &core, &member_function_names);
+    let adt_based_ctors = if is_aggregate || matches!(enum_layout, Some(Ok(_))) {
         ApiSnippets::default()
     } else {
         generate_adt_based_ctors(db, core.clone(), &mut member_function_names)
@@ -2209,15 +2212,28 @@ pub fn generate_adt<'tcx>(
         main_api: mut fields_main_api,
         cc_details: fields_cc_details,
         rs_details: fields_rs_details,
-    } = generate_fields(
-        db,
-        core.common.self_ty,
-        &core.common.cc_short_name,
-        &core.common.cc_fully_qualified_name,
-        &core.rs_fully_qualified_name,
-        &member_function_names,
-        is_aggregate,
-    );
+    } = match enum_layout {
+        Some(Ok(enum_layout)) => generate_enum::generate_enum(db, &core, enum_layout),
+        enum_layout => {
+            let fields = generate_fields(
+                db,
+                core.common.self_ty,
+                &core.common.cc_short_name,
+                &core.common.cc_fully_qualified_name,
+                &core.rs_fully_qualified_name,
+                &member_function_names,
+                is_aggregate,
+            );
+            match enum_layout {
+                Some(Err(err)) => {
+                    let msg =
+                        format!("Not using the `enum_api_v2` bindings for this enum: {err:#}");
+                    fields.prepend_main_api(CcSnippet::new(quote! { __NEWLINE__ __COMMENT__ #msg }))
+                }
+                _ => fields,
+            }
+        }
+    };
 
     if let Some(def_id) = core.def_id
         && fields_main_api.prereqs.defs.contains(&def_id)

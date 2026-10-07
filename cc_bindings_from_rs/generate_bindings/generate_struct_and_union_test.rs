@@ -1971,3 +1971,296 @@ fn test_format_item_repr_c_union_non_final_private_field() {
         );
     });
 }
+
+fn enum_api_v2_features() -> flagset::FlagSet<crubit_feature::CrubitFeature> {
+    crubit_feature::CrubitFeature::Experimental
+        | crubit_feature::CrubitFeature::Supported
+        | crubit_feature::CrubitFeature::EnumApiV2
+}
+
+/// With `enum_api_v2`, a directly-tagged enum gets a struct per variant, each storing its own tag.
+/// (rustc widens the tag to 4 bytes here, to fill what would otherwise be padding before the
+/// `i32` fields.)
+#[test]
+fn test_format_item_enum_api_v2_direct() {
+    let test_src = r#"
+        #[derive(Clone, Copy)]
+        pub enum Shape {
+            Point,
+            Circle(i32),
+            Rect { w: i32, h: i32 },
+        }
+    "#;
+    test_format_item_with_features(
+        test_src,
+        "Shape",
+        enum_api_v2_features(),
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    ...
+                    using Discriminant = ::std::uint32_t;
+                    struct Point : public ::crubit::internal::Variant<
+                        Point, ::rust_out::Shape, 0> {
+                        public:
+                        constexpr explicit Point(::crubit::internal::VariantKey) {}
+                        private:
+                        ...
+                        template <typename...>
+                        friend union ::crubit::internal::VariadicUnion;
+                        Point(const Point&) = default;
+                        Point(Point&&) = default;
+                        Point& operator=(const Point&) = default;
+                        Point& operator=(Point&&) = default;
+                        [[maybe_unused]] ::std::uint32_t __crubit_tag = 0;
+                    };
+                    struct Circle : public ::crubit::internal::Variant<
+                        Circle, ::rust_out::Shape, 1> {
+                        public:
+                        constexpr explicit Circle(
+                            ::crubit::internal::VariantKey, ::std::int32_t __field0)
+                            : __field0(::std::move(__field0)) {}
+                        ...
+                        [[maybe_unused]] ::std::uint32_t __crubit_tag = 1;
+                        public:
+                        ::std::int32_t __field0;
+                    };
+                    struct Rect : public ::crubit::internal::Variant<
+                        Rect, ::rust_out::Shape, 2> {
+                        public:
+                        constexpr explicit Rect(
+                            ::crubit::internal::VariantKey, ::std::int32_t w, ::std::int32_t h)
+                            : w(::std::move(w)), h(::std::move(h)) {}
+                        ...
+                        [[maybe_unused]] ::std::uint32_t __crubit_tag = 2;
+                        public:
+                        ::std::int32_t w;
+                        ::std::int32_t h;
+                    };
+                    ...
+                    template <typename __Variant, typename... __Args>
+                        requires ::crubit::internal::ConstructibleVariantOf<
+                            __Variant, ::rust_out::Shape, __Args...>
+                    constexpr explicit Shape(
+                        ::std::in_place_type_t<__Variant> __variant, __Args&&... __args)
+                        : storage_(__variant, ::std::forward<__Args>(__args)...) {}
+                    private:
+                    friend struct ::crubit::internal::EnumAccess;
+                    ::crubit::internal::VariadicUnionStorage<
+                        ::crubit::internal::tag_encoding::Direct<::std::uint32_t, 0>,
+                        Point, Circle, Rect> storage_;
+                    ...
+                }
+            );
+            // Variants are constructed with `Shape::Circle::Make`, not `Shape::MakeCircle`.
+            assert_cc_not_matches!(result.main_api.tokens, quote! { MakeCircle });
+            assert_cc_not_matches!(result.main_api.tokens, quote! { __opaque_blob_of_bytes });
+            assert_cc_matches!(
+                result.cc_details.tokens,
+                quote! {
+                    inline void ::rust_out::Shape::__crubit_field_offset_assertions() {
+                        {
+                            using __crubit_assert_type = ::rust_out::Shape::Circle;
+                            static_assert(4 == offsetof(__crubit_assert_type, __field0));
+                        }
+                        {
+                            using __crubit_assert_type = ::rust_out::Shape::Rect;
+                            static_assert(4 == offsetof(__crubit_assert_type, w));
+                        }
+                        {
+                            using __crubit_assert_type = ::rust_out::Shape::Rect;
+                            static_assert(8 == offsetof(__crubit_assert_type, h));
+                        }
+                    }
+                }
+            );
+        },
+    );
+}
+
+/// Gaps between a variant's members become explicit padding, so that every member lands at the
+/// offset rustc chose.
+#[test]
+fn test_format_item_enum_api_v2_padding() {
+    let test_src = r#"
+        #[derive(Clone, Copy)]
+        pub enum Padded {
+            A(u8, u64),
+            B,
+        }
+    "#;
+    test_format_item_with_features(
+        test_src,
+        "Padded",
+        enum_api_v2_features(),
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    ...
+                    struct A : public ::crubit::internal::Variant<A, ::rust_out::Padded, 0> {
+                        ...
+                        [[maybe_unused]] ::std::uint8_t __crubit_tag = 0;
+                        public:
+                        ::std::uint8_t __field0;
+                        private:
+                        [[maybe_unused]] unsigned char __crubit_padding0[6] = {};
+                        public:
+                        ::std::uint64_t __field1;
+                    };
+                    ...
+                }
+            );
+        },
+    );
+}
+
+/// Discriminants keep the signedness of the tag, so negative ones stay negative.
+#[test]
+fn test_format_item_enum_api_v2_negative_discriminants() {
+    let test_src = r#"
+        #[derive(Clone, Copy)]
+        #[repr(i8)]
+        pub enum Sign {
+            Negative = -1,
+            Positive = 1,
+        }
+    "#;
+    test_format_item_with_features(
+        test_src,
+        "Sign",
+        enum_api_v2_features(),
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    ...
+                    using Discriminant = ::std::int8_t;
+                    struct Negative : public ::crubit::internal::Variant<
+                        Negative, ::rust_out::Sign, -1> {
+                        ...
+                        [[maybe_unused]] ::std::int8_t __crubit_tag = -1;
+                    };
+                    ...
+                }
+            );
+        },
+    );
+}
+
+/// A single-variant enum has no tag: its discriminant is a constant of the tag encoding.
+#[test]
+fn test_format_item_enum_api_v2_single() {
+    let test_src = r#"
+        #[derive(Clone, Copy)]
+        pub enum Wrapper {
+            Only(i32),
+        }
+    "#;
+    test_format_item_with_features(
+        test_src,
+        "Wrapper",
+        enum_api_v2_features(),
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    ...
+                    using Discriminant = ::std::int64_t;
+                    struct Only : public ::crubit::internal::Variant<
+                        Only, ::rust_out::Wrapper, INT64_C(0)> {
+                        ...
+                        public:
+                        ::std::int32_t __field0;
+                    };
+                    ...
+                    ::crubit::internal::VariadicUnionStorage<
+                        ::crubit::internal::tag_encoding::Single<::std::int64_t, INT64_C(0)>,
+                        Only> storage_;
+                    ...
+                }
+            );
+            assert_cc_not_matches!(result.main_api.tokens, quote! { __crubit_tag });
+        },
+    );
+}
+
+/// Enums that `enum_api_v2` doesn't support yet keep the opaque blob of bytes, and say why.
+#[test]
+fn test_format_item_enum_api_v2_fallback() {
+    let cases = [
+        (
+            "pub enum NotCopy { A, B(i32) }",
+            "NotCopy",
+            "Not using the `enum_api_v2` bindings for this enum: Only `Copy` enums are supported \
+             so far",
+        ),
+        (
+            "#[derive(Clone, Copy)] pub enum Niche<'a> { A, B(&'a i32) }",
+            "Niche",
+            "Not using the `enum_api_v2` bindings for this enum: Niche-encoded enums are not \
+             supported yet",
+        ),
+        (
+            "#[derive(Clone, Copy)] #[non_exhaustive] pub enum NonExhaustive { A, B(i32) }",
+            "NonExhaustive",
+            "Not using the `enum_api_v2` bindings for this enum: `#[non_exhaustive]` enums are \
+             not supported, because C++ code could not handle the variants they may gain",
+        ),
+        (
+            "#[derive(Clone, Copy)] pub enum Collides { Discriminant, B(i32) }",
+            "Collides",
+            "Not using the `enum_api_v2` bindings for this enum: Variant `Discriminant` would \
+             collide with another member of the enum's C++ class",
+        ),
+        (
+            "#[derive(Clone, Copy)] pub enum FieldCollides { A, B { #[allow(non_snake_case)] Make: i32 } }",
+            "FieldCollides",
+            "Not using the `enum_api_v2` bindings for this enum: Field `Make` of variant `B` \
+             would collide with a member of the variant's C++ struct",
+        ),
+    ];
+    for (test_src, name, expected_comment) in cases {
+        test_format_item_with_features(
+            test_src,
+            name,
+            enum_api_v2_features(),
+            /* with_kythe_annotations= */ false,
+            |result| {
+                let result = result.unwrap().unwrap();
+                assert_cc_matches!(
+                    result.main_api.tokens,
+                    quote! { ... __COMMENT__ #expected_comment ... __opaque_blob_of_bytes ... }
+                );
+                assert_cc_not_matches!(result.main_api.tokens, quote! { VariadicUnionStorage });
+            },
+        );
+    }
+}
+
+/// Without the feature, enums keep their existing bindings.
+#[test]
+fn test_format_item_enum_api_v2_feature_disabled() {
+    let test_src = r#"
+        #[derive(Clone, Copy)]
+        pub enum Shape {
+            Point,
+            Circle(i32),
+        }
+    "#;
+    test_format_item(test_src, "Shape", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(result.main_api.tokens, quote! { ... __opaque_blob_of_bytes ... });
+        assert_cc_not_matches!(result.main_api.tokens, quote! { VariadicUnionStorage });
+        assert_cc_not_matches!(result.main_api.tokens, quote! { enum_api_v2 });
+    });
+}
