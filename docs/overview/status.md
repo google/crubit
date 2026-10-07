@@ -31,9 +31,10 @@ C++ and Rust:
 | Conceptual Type                                | C++ Type                    | Rust Type                 | Compatibility | Notes                       |
 | :--------------------------------------------- | :-------------------------- | :------------------------ | :------------ | :-------------------------- |
 | **Primitives**                                 |                             |                           |               |                             |
-| Integers                                       | `int32_t`, `int64_t`, etc.  | `i32`, `i64`, etc.        | ABI           | Except 128-bit integers     |
-:                                                :                             :                           : compatible    : (`i128`/`u128` are not yet  :
-:                                                :                             :                           :               : supported\: b/254094650)    :
+| Integers                                       | `int32_t`, `int64_t`, etc.  | `i32`, `i64`, etc.        | ABI           | C++ `__int128` and          |
+:                                                :                             :                           : compatible    : `unsigned __int128` map to  :
+:                                                :                             :                           :               : `i128`/`u128`, but not the  :
+:                                                :                             :                           :               : reverse (b/254094650)       :
 | Floating point                                 | `float`, `double`           | `f32`, `f64`              | ABI           |                             |
 :                                                :                             :                           : compatible    :                             :
 | **Pointers & Refs**                            |                             |                           |               |                             |
@@ -99,8 +100,9 @@ C++ and Rust:
 The following types are **not** yet supported, among many others:
 
 *   b/254507801: Rust `!`
-*   b/254094650: `i128` and `u128` (as ABI-compatible primitives; they are not
-    supported at all)
+*   b/254094650: Rust `i128` and `u128` when calling Rust from C++. (C++
+    `__int128` and `unsigned __int128` are supported when calling C++ from Rust;
+    see [primitive types](../types/primitive.md).)
 *   b/254099023: `()` as anything but a return type.
 *   b/213960614: `std::byte`
 
@@ -169,6 +171,9 @@ features, used in public interfaces:
     *   `Drop` (destructor)
     *   `From` / `Into` (converting constructors/operators)
     *   `PartialEq` (comparison operators `==`, `!=`)
+    *   `PartialOrd` / `Ord` (`operator<=>`, returning `std::partial_ordering` /
+        `std::strong_ordering`)
+    *   `Hash` (`AbslHashValue` and `std::hash`)
     *   `Display` (`std::ostream` `operator<<`, `absl::AbslStringify`)
     *   `Index` / `IndexMut` (`operator[]`)
     *   `IntoIterator` (range-based `for` loop support via `begin`/`end`

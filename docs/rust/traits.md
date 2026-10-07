@@ -54,7 +54,6 @@ Some trait implementations will not receive bindings:
     not receive bindings.
 *   Trait methods will not receive bindings if their parameter or return types
     are not yet supported by Crubit.
-*   Standard library traits are not supported yet (b/483382648)
 
 ## How does it work?
 

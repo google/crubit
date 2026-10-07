@@ -87,7 +87,6 @@ Bindings for the following types are not supported at this point:
 ### Rust
 
 *   `char` is currently unsupported, pending design review.
-*   b/262580415: `str` has not yet been implemented
 *   b/254507801: `!` has not yet been implemented except for return types.
 *   b/254094650: `i128` and `u128` are not yet supported when calling Rust from
     C++.
