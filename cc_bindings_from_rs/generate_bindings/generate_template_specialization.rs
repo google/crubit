@@ -2021,25 +2021,30 @@ fn generate_std_hash_specialization<'tcx>(
     }
     let self_ty_cc_name = &spec.self_ty_cc_name;
     let thunk_name = &spec.thunk_name;
-    let main_api = CcSnippet {
-        tokens: quote! {
-            __NEWLINE__
-            namespace __crubit_internal {
-                extern "C" ::std::uint64_t #thunk_name(const #self_ty_cc_name&);
+
+    let main_tokens = quote! {
+        namespace __crubit_internal {
+            extern "C" ::std::uint64_t #thunk_name(const #self_ty_cc_name&);
+        }
+        namespace std {
+        template <>
+        struct hash<#self_ty_cc_name> {
+            ::std::size_t operator()(const #self_ty_cc_name& self) const {
+                return static_cast<::std::size_t>(__crubit_internal::#thunk_name(self));
             }
-            namespace std {
-            template <>
-            struct hash<#self_ty_cc_name> {
-                ::std::size_t operator()(const #self_ty_cc_name& self) const {
-                    return static_cast<::std::size_t>(__crubit_internal::#thunk_name(self));
-                }
-            };
-            }
-            __NEWLINE__
-        },
-        prereqs,
+        };
+        }
     };
-    Ok(ApiSnippets { main_api, ..Default::default() })
+
+    let (main_api_tokens, _) = ifdef_guard_specialization(
+        db,
+        quote! { std::hash },
+        [spec.self_ty],
+        main_tokens,
+        quote! {},
+    );
+
+    Ok(CcSnippet { tokens: main_api_tokens, prereqs }.into_main_api())
 }
 
 /// Generate a template specialization.

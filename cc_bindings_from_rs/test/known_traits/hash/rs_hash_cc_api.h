@@ -181,7 +181,8 @@ struct rs_std::impl<::rs_hash::explicit_struct::CustomHashStruct,
                     ::rs::core::cmp::Eq> {
   static constexpr bool kIsImplemented = true;
 };
-
+#ifndef _CRUBIT_BINDINGS_FOR_std_x00000020_x0000003a_x0000003a_x00000020hash_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_uhash_x00000020_x0000003a_x0000003a_x00000020derived_uenum_x00000020_x0000003a_x0000003a_x00000020Color_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_std_x00000020_x0000003a_x0000003a_x00000020hash_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_uhash_x00000020_x0000003a_x0000003a_x00000020derived_uenum_x00000020_x0000003a_x0000003a_x00000020Color_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" ::std::uint64_t
 __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aderived_uenum_x0000003a_x0000003aColor(
@@ -198,7 +199,10 @@ struct hash<::rs_hash::derived_enum::Color> {
   }
 };
 }  // namespace std
+#endif
 
+#ifndef _CRUBIT_BINDINGS_FOR_std_x00000020_x0000003a_x0000003a_x00000020hash_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_uhash_x00000020_x0000003a_x0000003a_x00000020derived_ustruct_x00000020_x0000003a_x0000003a_x00000020Point_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_std_x00000020_x0000003a_x0000003a_x00000020hash_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_uhash_x00000020_x0000003a_x0000003a_x00000020derived_ustruct_x00000020_x0000003a_x0000003a_x00000020Point_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" ::std::uint64_t
 __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aderived_ustruct_x0000003a_x0000003aPoint(
@@ -215,7 +219,10 @@ struct hash<::rs_hash::derived_struct::Point> {
   }
 };
 }  // namespace std
+#endif
 
+#ifndef _CRUBIT_BINDINGS_FOR_std_x00000020_x0000003a_x0000003a_x00000020hash_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_uhash_x00000020_x0000003a_x0000003a_x00000020derived_utuple_ustruct_x00000020_x0000003a_x0000003a_x00000020TupleStruct_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_std_x00000020_x0000003a_x0000003a_x00000020hash_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_uhash_x00000020_x0000003a_x0000003a_x00000020derived_utuple_ustruct_x00000020_x0000003a_x0000003a_x00000020TupleStruct_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" ::std::uint64_t
 __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aderived_utuple_ustruct_x0000003a_x0000003aTupleStruct(
@@ -233,7 +240,10 @@ struct hash<::rs_hash::derived_tuple_struct::TupleStruct> {
   }
 };
 }  // namespace std
+#endif
 
+#ifndef _CRUBIT_BINDINGS_FOR_std_x00000020_x0000003a_x0000003a_x00000020hash_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_uhash_x00000020_x0000003a_x0000003a_x00000020explicit_ustruct_x00000020_x0000003a_x0000003a_x00000020CustomHashStruct_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_std_x00000020_x0000003a_x0000003a_x00000020hash_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020rs_uhash_x00000020_x0000003a_x0000003a_x00000020explicit_ustruct_x00000020_x0000003a_x0000003a_x00000020CustomHashStruct_x00000020_x0000003e
 namespace __crubit_internal {
 extern "C" ::std::uint64_t
 __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003aexplicit_ustruct_x0000003a_x0000003aCustomHashStruct(
@@ -251,6 +261,7 @@ struct hash<::rs_hash::explicit_struct::CustomHashStruct> {
   }
 };
 }  // namespace std
+#endif
 
 namespace rs_hash::derived_enum {
 
