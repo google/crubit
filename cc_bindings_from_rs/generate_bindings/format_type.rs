@@ -978,10 +978,7 @@ pub fn format_ty_for_cc<'tcx>(
                             prereqs.includes.insert(CcInclude::from_path(path.as_str()));
                         }
 
-                        let cpp_type_str = match &cpp_type {
-                            CcType::Other(symbol) => symbol.as_str(),
-                            CcType::Pointer { cpp_type, .. } => cpp_type.as_str(),
-                        };
+                        let cpp_type_str = cpp_type.as_ref();
 
                         let tokens = if cpp_type_str.contains('{') {
                             format_legacy_bridged_type_with_placeholders(
@@ -1214,10 +1211,7 @@ fn format_layout_compatible_cpp_type_for_rust_proto_msg<'tcx>(
         prereqs.includes.insert(CcInclude::from_path(path.as_str()));
     }
     prereqs.includes.insert(CcInclude::from_path("support/protobuf/rust.h"));
-    let cpp_type_str = match cpp_type {
-        CcType::Other(symbol) => symbol.as_str(),
-        CcType::Pointer { cpp_type, .. } => cpp_type.as_str(),
-    };
+    let cpp_type_str = cpp_type.as_ref();
     let inner_tokens = match cpp_type_str.parse::<TokenStream>() {
         Ok(tokens) => tokens,
         Err(err) => {
@@ -2146,14 +2140,14 @@ fn is_manually_annotated_bridged_adt<'tcx>(
             });
 
             let cpp_type_cc = match code_gen_utils::is_cpp_pointer_type(ts) {
-                Some(cv) => {
+                Some(_) => {
                     ensure_ty_is_pointer_like(db, ty)?;
-                    CcType::Pointer { cpp_type, cv }
+                    CcType::Pointer(cpp_type)
                 }
                 None => CcType::Other(cpp_type),
             };
 
-            let is_pointer = matches!(cpp_type_cc, CcType::Pointer { .. });
+            let is_pointer = matches!(cpp_type_cc, CcType::Pointer(_));
             Ok(Some(BridgedType::Legacy {
                 cpp_type: cpp_type_cc,
                 include_paths,
@@ -2178,7 +2172,7 @@ fn is_manually_annotated_bridged_adt<'tcx>(
 
             Ok(Some(BridgedType::Legacy {
                 cpp_type: match code_gen_utils::is_cpp_pointer_type(ts) {
-                    Some(cv) => CcType::Pointer { cpp_type, cv },
+                    Some(_) => CcType::Pointer(cpp_type),
                     None => CcType::Other(cpp_type),
                 },
                 include_paths,

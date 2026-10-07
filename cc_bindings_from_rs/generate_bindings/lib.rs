@@ -43,9 +43,7 @@ use crate::generate_struct_and_union::{
 };
 use crate::generate_template_specialization::append_trait_impls;
 use arc_anyhow::{Context, Error, Result};
-use code_gen_utils::{
-    format_cc_includes, make_rs_ident, CcConstQualifier, CcInclude, NamespaceQualifier,
-};
+use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude, NamespaceQualifier};
 use database::code_snippet::{
     ApiSnippets, CcPrerequisites, CcSnippet, CcSnippets, ExternCDecl, RsSnippet,
     TemplateSpecialization,
@@ -62,9 +60,9 @@ use error_report::{anyhow, bail, ErrorReporting, ReportFatalError};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use query_compiler::{
-    does_type_implement_trait, get_layout, get_scalar_int_type, get_tag_size_with_padding,
-    is_c_abi_compatible_by_value, is_copy, is_std_ptr_non_null,
-    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, repr_attrs,
+    does_type_implement_trait, get_layout, get_tag_size_with_padding, is_c_abi_compatible_by_value,
+    is_copy, is_std_ptr_non_null, liberate_and_deanonymize_late_bound_regions,
+    post_analysis_typing_env, repr_attrs,
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
@@ -404,7 +402,6 @@ pub fn new_database<'db>(
         from_trait_impls_by_argument,
         into_trait_impls_by_destination,
         get_generic_args::get_generic_args,
-        renamed_crate_original_name,
         generate_template_specialization::parse_adt_template_specialization,
     )
 }
@@ -888,18 +885,6 @@ fn symbol_unqualified_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Option<
     Some(UnqualifiedName { cpp_name, rs_name, cpp_type })
 }
 
-fn renamed_crate_original_name(db: &BindingsGenerator<'_>, krate_id: CrateNum) -> Option<Rc<str>> {
-    let tcx = db.tcx();
-    let crate_name = tcx.crate_name(krate_id);
-    db.crate_renames().iter().find_map(|(name, renamed)| {
-        if renamed.as_ref() == crate_name.as_str() {
-            Some(name.clone())
-        } else {
-            None
-        }
-    })
-}
-
 /// Implementation of `BindingsGenerator::symbol_canonical_name`.
 fn symbol_canonical_name(db: &BindingsGenerator<'_>, def_id: DefId) -> Result<FullyQualifiedName> {
     let tcx = db.tcx();
@@ -1080,15 +1065,14 @@ fn check_slice_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CcType {
-    Pointer { cpp_type: Symbol, cv: CcConstQualifier },
+    Pointer(Symbol),
     Other(Symbol),
 }
 
 impl AsRef<str> for CcType {
     fn as_ref(&self) -> &str {
         match self {
-            CcType::Other(cpp_type) => cpp_type.as_str(),
-            CcType::Pointer { cpp_type, .. } => cpp_type.as_str(),
+            CcType::Other(cpp_type) | CcType::Pointer(cpp_type) => cpp_type.as_str(),
         }
     }
 }

@@ -218,7 +218,7 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
                     includes.extend(snippet.prereqs.includes);
                     statements.extend(snippet.tokens);
                 }
-                if let CcType::Pointer { .. } = cpp_type {
+                if let CcType::Pointer(_) = cpp_type {
                     quote! { #cc_ident }
                 } else if !ty.needs_drop(db.tcx(), post_analysis_typing_env) {
                     quote! { & #cc_ident }

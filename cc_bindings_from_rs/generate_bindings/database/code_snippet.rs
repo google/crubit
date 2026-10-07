@@ -311,10 +311,6 @@ impl<'tcx> CcPrerequisites<'tcx> {
             .extend(std::mem::take(&mut self.template_specializations));
     }
 
-    pub fn move_only_defs_to_fwd_decls(&mut self) {
-        self.fwd_decls.extend(std::mem::take(&mut self.defs));
-    }
-
     /// Move any definitions that appear in `ty` to the forward declarations of `prereqs`.
     pub fn forward_declare_type(&mut self, ty: Ty<'tcx>) {
         let mut adts = HashSet::new();
@@ -614,16 +610,6 @@ pub struct ApiSnippets<'tcx> {
 }
 
 impl<'tcx> ApiSnippets<'tcx> {
-    pub fn comment_only(comment: &str) -> Self {
-        ApiSnippets {
-            main_api: CcSnippet::new(quote::quote! {
-                __COMMENT__ #comment
-            }),
-            cc_details: CcSnippet::new(quote::quote! {}),
-            ..Default::default()
-        }
-    }
-
     pub fn prepend_main_api(mut self, main_api: CcSnippet<'tcx>) -> Self {
         self.main_api = [main_api, self.main_api].map_snippets(|[preamble, main]| {
             quote::quote! {

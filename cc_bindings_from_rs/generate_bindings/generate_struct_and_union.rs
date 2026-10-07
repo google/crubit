@@ -24,8 +24,8 @@ use crate::generate_function_thunk::{
 use crate::{
     can_be_made_layout_compatible, does_type_implement_trait, generate_const,
     generate_deprecated_tag, generate_must_use_tag, generate_trait_thunks,
-    generate_unsupported_def, get_layout, get_scalar_int_type, get_tag_size_with_padding, is_copy,
-    BridgedBuiltin, RsSnippet, SortedByDef, TraitThunks,
+    generate_unsupported_def, get_layout, get_tag_size_with_padding, is_copy, BridgedBuiltin,
+    RsSnippet, SortedByDef, TraitThunks,
 };
 
 use arc_anyhow::{Context, Result};
@@ -56,6 +56,7 @@ use rustc_hir::attrs::{ReprAttr, ReprC, ReprPacked};
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
 use rustc_middle::mir::Mutability;
+use rustc_middle::ty::layout::PrimitiveExt;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, AssocKind, Ty, TyCtxt, TyKind, TypeFlags, TypingEnv};
@@ -3572,7 +3573,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             let tag_enum = match layout_variants {
                 Variants::Single { .. } | Variants::Empty => CcSnippet::default(),
                 Variants::Multiple { tag, .. } => {
-                    let tag_ty = get_scalar_int_type(self.db.tcx(), *tag);
+                    let tag_ty = tag.primitive().to_int_ty(self.db.tcx());
 
                     let tag_snippet = self
                         .db
@@ -3952,12 +3953,8 @@ fn generate_begin_and_end_for_type<'tcx>(
         };
 
         let adt_cc_name = &core.common.cc_short_name;
-        let mut main_api_prereqs = CcPrerequisites::default();
-        main_api_prereqs.includes.insert(db.support_header("rs_std/iterator_adapter.h"));
-        main_api_prereqs.move_only_defs_to_fwd_decls();
-
-        let main_api = CcSnippet {
-            tokens: quote! {
+        let main_api = CcSnippet::with_include(
+            quote! {
                 template <typename TAdaptedSelf_ = #adt_cc_name>
                 inline rs::IteratorAdapter<TAdaptedSelf_*> begin() & {
                     return rs::IteratorAdapter<TAdaptedSelf_*>(this);
@@ -3966,8 +3963,8 @@ fn generate_begin_and_end_for_type<'tcx>(
                     return rs::IteratorEnd();
                 }
             },
-            prereqs: main_api_prereqs,
-        };
+            db.support_header("rs_std/iterator_adapter.h"),
+        );
 
         return Ok(Some(ApiSnippets { main_api, ..Default::default() }));
     }

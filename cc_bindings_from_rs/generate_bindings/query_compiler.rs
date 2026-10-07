@@ -21,11 +21,10 @@ extern crate rustc_trait_selection;
 
 use arc_anyhow::Result;
 use error_report::anyhow;
-use error_report::ensure;
 #[rustversion::before(2026-05-18)]
 use rustc_abi::FieldsShape;
 use rustc_abi::IntegerType;
-use rustc_abi::{FieldIdx, Integer, Layout, Primitive, Scalar, Variants};
+use rustc_abi::{FieldIdx, Integer, Layout, Variants};
 use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
 #[rustversion::since(2026-09-27)]
 use rustc_attr_ir::{lang_items::LangItem, IntType, ReprAttr};
@@ -37,12 +36,8 @@ use rustc_hir::attrs::{IntType, ReprAttr};
 #[rustversion::before(2026-08-09)]
 use rustc_hir::lang_items::LangItem;
 use rustc_infer::infer::TyCtxtInferExt;
-use rustc_middle::ty::layout::IntegerExt;
 use rustc_middle::ty::solve::NoSolution;
-use rustc_middle::ty::{
-    self, GenericArg, GenericArgKind, GenericParamDefKind, IntTy, Region, Ty, TyCtxt,
-    TypeSuperFoldable, UintTy,
-};
+use rustc_middle::ty::{self, GenericArg, GenericArgKind, GenericParamDefKind, Ty, TyCtxt};
 use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use rustc_trait_selection::infer::InferCtxtExt;
@@ -50,31 +45,6 @@ use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use database::BindingsGenerator;
-
-/// A type folder that replaces `isize` and `usize` with the pointer-sized integer type.
-pub struct ConcreteWidthFolder<'tcx> {
-    pub tcx: TyCtxt<'tcx>,
-}
-
-impl<'tcx> ty::TypeFolder<TyCtxt<'tcx>> for ConcreteWidthFolder<'tcx> {
-    fn cx(&self) -> TyCtxt<'tcx> {
-        self.tcx
-    }
-
-    fn fold_ty(&mut self, ty: Ty<'tcx>) -> Ty<'tcx> {
-        match ty.kind() {
-            ty::TyKind::Int(ty::IntTy::Isize) => {
-                let ptr_int = self.cx().data_layout.ptr_sized_integer();
-                ptr_int.to_ty(self.cx(), /* signed= */ true)
-            }
-            ty::TyKind::Uint(ty::UintTy::Usize) => {
-                let ptr_int = self.cx().data_layout.ptr_sized_integer();
-                ptr_int.to_ty(self.cx(), /* signed= */ false)
-            }
-            _ => ty.super_fold_with(self),
-        }
-    }
-}
 
 /// Returns true if `did` is `core::ptr::NonNull`.
 #[rustversion::since(2026-08-18)]
@@ -199,27 +169,6 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
     }
 }
 
-/// Gets the exactly one region used in this function signature.
-///
-/// If the function has more than one region, or no regions, returns None.
-pub fn count_regions<'tcx>(sig_mid: &ty::FnSig<'tcx>) -> HashMap<Region<'tcx>, u8> {
-    use rustc_middle::ty::TypeVisitor;
-    struct RegionCounter<'tcx>(HashMap<Region<'tcx>, u8>);
-    impl<'tcx> TypeVisitor<TyCtxt<'tcx>> for RegionCounter<'tcx> {
-        fn visit_region(&mut self, region: Region<'tcx>) {
-            let count = self.0.entry(region).or_default();
-            *count = count.saturating_add(1);
-        }
-    }
-
-    let mut visitor = RegionCounter(Default::default());
-    for ty in sig_mid.inputs() {
-        visitor.visit_ty(*ty);
-    }
-    visitor.visit_ty(sig_mid.output());
-    visitor.0
-}
-
 /// The prefix for deanonymized region names.
 pub const ANON_REGION_PREFIX: &str = "'__anon";
 
@@ -309,21 +258,6 @@ pub fn is_copy<'tcx>(
     tcx.type_is_copy_modulo_regions(typing_env, ty)
 }
 
-/// Like `TyCtxt::is_directly_public`, but works not only with `LocalDefId`, but
-/// also with `DefId`.
-pub fn is_directly_public(tcx: TyCtxt, def_id: DefId) -> bool {
-    match def_id.as_local() {
-        None => {
-            // This mimics the checks in `try_print_visible_def_path_recur` in
-            // `compiler/rustc_middle/src/ty/print/pretty.rs`.
-            let actual_parent = tcx.opt_parent(def_id);
-            let visible_parent = tcx.visible_parent_map(()).get(&def_id).copied();
-            actual_parent == visible_parent
-        }
-        Some(local_def_id) => tcx.effective_visibilities(()).is_directly_public(local_def_id),
-    }
-}
-
 /// Returns whether `ty` contains unrevealed opaque types (or aliases).
 ///
 /// In newer rustc versions, calling `tcx.layout_of` in an empty
@@ -378,16 +312,6 @@ pub fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>>
         })
 }
 
-pub fn get_validated_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>> {
-    let layout = get_layout(tcx, ty)?;
-    ensure!(
-        layout.backend_repr().is_sized(),
-        "Bindings for dynamically sized types are not supported."
-    );
-    ensure!(layout.size().bytes() != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
-    Ok(layout)
-}
-
 fn convert_interger_type_to_int_type(input: IntegerType) -> IntType {
     match input {
         IntegerType::Pointer(true) => IntType::SignedInt(IntT::Isize),
@@ -439,32 +363,6 @@ pub fn repr_attrs(tcx: TyCtxt, def_id: DefId) -> Rc<[ReprAttr]> {
             result.into()
         }
         _ => result.into(),
-    }
-}
-
-// Converts a scalar integer to a Ty.
-// We assume the scalar represents an integer, and not a float or a pointer.
-// https://doc.rust-lang.org/beta/nightly-rustc/rustc_abi/enum.Primitive.html
-pub fn get_scalar_int_type<'tcx>(tcx: TyCtxt<'tcx>, scalar: Scalar) -> Ty<'tcx> {
-    match scalar.primitive() {
-        Primitive::Int(scalar_int, signed) => {
-            // Map the corresponding primitive to rust type.
-            match (scalar_int, signed) {
-                (Integer::I8, false) => Ty::new_uint(tcx, UintTy::U8),
-                (Integer::I16, false) => Ty::new_uint(tcx, UintTy::U16),
-                (Integer::I32, false) => Ty::new_uint(tcx, UintTy::U32),
-                (Integer::I64, false) => Ty::new_uint(tcx, UintTy::U64),
-                (Integer::I128, false) => Ty::new_uint(tcx, UintTy::U128),
-                (Integer::I8, true) => Ty::new_int(tcx, IntTy::I8),
-                (Integer::I16, true) => Ty::new_int(tcx, IntTy::I16),
-                (Integer::I32, true) => Ty::new_int(tcx, IntTy::I32),
-                (Integer::I64, true) => Ty::new_int(tcx, IntTy::I64),
-                (Integer::I128, true) => Ty::new_int(tcx, IntTy::I128),
-            }
-        }
-        _ => {
-            panic!("Internal error: integer scalar is not valid.")
-        }
     }
 }
 

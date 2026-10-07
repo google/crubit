@@ -388,9 +388,6 @@ memoized::query_group! {
       /// Fails if any of the generic parameters cannot be replaced with a concrete type.
       fn get_generic_args(&self, fn_def_id: DefId) -> Result<ty::GenericArgsRef<'tcx>>;
 
-      // Returns the original name of a crate, if it has been renamed.
-      fn renamed_crate_original_name(&self, crate_num: CrateNum) -> Option<Rc<str>>;
-
       /// Parses `self_ty` into a supported template specialization, if one is available
       /// (e.g. `Option<T>`, `Result<T, E>`). This just checks the type conforms to the right shape
       /// and contains valid types. It does not check if the template specialization should be used
