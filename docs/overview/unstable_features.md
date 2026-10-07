@@ -185,6 +185,8 @@ previously used to implement `pin!` in the standard library.
 ## Unstable features **not** used by Crubit {#rejected}
 
 The following features are ones we'd hypothetically like to use, but do not.
+Either the cost/benefit is not there, or the feature doesn't actually exist yet
+in a non-proposal form.
 
 ### `try_trait_v2`
 
@@ -286,6 +288,35 @@ Rust doesn't know that these two are disjoint, meaning that we cannot use the
 An alternative fix would be language support for in-place pinned construction.
 That would render the `Ctor` trait obsolete, and reduce Crubit's needs around
 trait coherence (as well as `negative_impls`, above).
+
+### `forget_marker_trait`
+
+The
+[`Forget` proposal](https://internals.rust-lang.org/t/pre-rfc-forget-marker-trait/22456)
+is a marker trait to indicate when it is safe to let an object's lifetime end
+without running its destructor.
+
+Rust does not allow sound, safe code to assume that destructors will run. So,
+for example, to spawn a new thread, you call a function and wait for the
+function to return, rather than waiting for a join handle to be destroyed.
+
+C++ APIs _do_ sometimes rely on destruction. For example, the C++ standard
+library's `std::thread` is an RAII type. Similar (but harder to work around)
+concerns arise with coroutines, where a coroutine must be polled or dropped.
+These are impossible to use from ordinary-looking safe Rust code unless we give
+up soundness, or place overly restrictive `'static` lifetime requirements on C++
+code called from Rust.
+
+Making these APIs sound and safe can be done with painful workarounds. For
+example, we can do it by using user-space pinned initialization, with a `Forget`
+trait to forbid initializing anywhere other than a non-union object on the
+stack. However, it would be more helpful if Rust itself had support for this
+with non-pinned initialization, such that non-`Forget` types could never be
+passed to `Box::leak`, `ManuallyDrop`, or `mem::forget` in safe code.
+
+It would be even better if we could use it together with `Arc` somehow. This
+would probably require a more complex trait bound: a type is safe to use with
+`Arc` _either_ if it is `Forget`, or if it is non-internally-mutable.
 
 ### `register_tool`
 
