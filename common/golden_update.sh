@@ -70,6 +70,31 @@ prune_matching_files() {
   rmdir "$src_dir" 2>/dev/null || true
 }
 
+# Removes files in src_dir that are byte-for-byte identical to the golden that
+# golden_test.bzl would read instead: the file in tier_dir if there is one,
+# otherwise the file in host_dir.
+prune_against_fallback() {
+  local src_dir="$1"
+  local tier_dir="$2"
+  local host_dir="$3"
+  [ -d "$src_dir" ] || return 0
+
+  for f in "$src_dir"/*; do
+    [ -f "$f" ] || continue
+    local fname fallback
+    fname="$(basename "$f")"
+    if [ -f "$tier_dir/$fname" ]; then
+      fallback="$tier_dir/$fname"
+    else
+      fallback="$host_dir/$fname"
+    fi
+    if [ -f "$fallback" ] && cmp -s "$f" "$fallback"; then
+      rm -f "$f"
+    fi
+  done
+  rmdir "$src_dir" 2>/dev/null || true
+}
+
 # Automatically consolidate multiplatform golden files into tiered shared directories
 # (e.g. goldens/android_32/, goldens/android_64/) and prune redundant overrides.
 consolidate_goldens() {
@@ -148,6 +173,29 @@ consolidate_goldens() {
     # Step 4b: Prune redundant files in ios tier (against host)
     prune_matching_files "$ios_tier_dir" "$pkg_dir"
     prune_matching_files "$tier32_dir" "$pkg_dir"
+
+    # Step 4c: Windows. Promote windows_x86_64 -> windows_64 and
+    # windows_x86 -> windows_32. windows_arm64 shares windows_64 (both LLP64),
+    # so keep only the arm64 files that differ from it and from host. Then prune
+    # the tiers against host.
+    local win_tier64_dir="$goldens_dir/windows_64"
+    local win_tier32_dir="$goldens_dir/windows_32"
+    local win_src_dir win_tier_dir
+    for pair in "windows_x86_64:$win_tier64_dir" "windows_x86:$win_tier32_dir"; do
+      win_src_dir="$goldens_dir/${pair%%:*}"
+      win_tier_dir="${pair#*:}"
+      if [ -d "$win_src_dir" ]; then
+        mkdir -p "$win_tier_dir"
+        for f in "$win_src_dir"/*; do
+          [ -f "$f" ] || continue
+          mv -f "$f" "$win_tier_dir/"
+        done
+        rmdir "$win_src_dir" 2>/dev/null || rm -rf "$win_src_dir"
+      fi
+    done
+    prune_against_fallback "$goldens_dir/windows_arm64" "$win_tier64_dir" "$pkg_dir"
+    prune_matching_files "$win_tier64_dir" "$pkg_dir"
+    prune_matching_files "$win_tier32_dir" "$pkg_dir"
 
     # Step 5: Remove empty goldens directory if everything fell back to host
     rmdir "$goldens_dir" 2>/dev/null || true
