@@ -50,6 +50,24 @@ fn test_deref() {
 }
 
 #[gtest]
+fn test_bare_deref() {
+    let shared = test_helpers::shared_ptr_test::create_shared_ptr();
+    let r: &i32 = &shared;
+    expect_eq!(*r, 1);
+    expect_eq!(*shared, 1);
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null shared_ptr")]
+fn test_bare_deref_null_panics() {
+    // SAFETY: a null pointer with a null control block is the state of a default-constructed
+    // `std::shared_ptr`.
+    let shared =
+        unsafe { shared_ptr::<i32>::from_raw_parts(std::ptr::null(), std::ptr::null_mut()) };
+    let _value: i32 = *shared;
+}
+
+#[gtest]
 fn test_non_null_into() {
     let nn = NonNull::new(test_helpers::shared_ptr_test::create_shared_ptr()).unwrap();
     let r: &shared_ptr<i32> = (&nn).into();

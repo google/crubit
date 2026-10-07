@@ -13,6 +13,7 @@ use alloc::sync::Arc;
 use core::ffi::c_void;
 use core::fmt::{Debug, Formatter, Result};
 use core::mem::{ManuallyDrop, MaybeUninit};
+use core::ops::Deref;
 use core::pin::Pin;
 
 /// A smart pointer that shares ownership of another object of type `T` via a pointer,
@@ -192,10 +193,10 @@ impl<T: Sized> shared_ptr<T> {
     /// Otherwise, creates a control block that will drop `T` and deallocate its storage
     /// using C++ `delete` when the last reference is dropped.
     pub fn from_unique_ptr(u: unique_ptr<T>) -> Self {
-        if u.get().is_null() {
+        if unique_ptr::is_null(&u) {
             shared_ptr { ptr: core::ptr::null(), cntrl: core::ptr::null_mut() }
         } else {
-            let ptr = u.get();
+            let ptr = unique_ptr::as_ptr(&u);
             let (_inner_ptr, cntrl) = shared_ptr::into_raw_parts(shared_ptr::new(u));
             shared_ptr { ptr, cntrl }
         }
@@ -327,10 +328,10 @@ impl<T: Sized + Delete> shared_ptr<T> {
     /// Otherwise, creates a control block that will destroy `T` using `T::delete`
     /// when the last reference is dropped.
     pub fn from_virtual_unique_ptr(u: virtual_unique_ptr<T>) -> Self {
-        if u.get().is_null() {
+        if virtual_unique_ptr::is_null(&u) {
             shared_ptr { ptr: core::ptr::null(), cntrl: core::ptr::null_mut() }
         } else {
-            let ptr = u.get();
+            let ptr = virtual_unique_ptr::as_ptr(&u);
             let (_inner_ptr, cntrl) = shared_ptr::into_raw_parts(shared_ptr::new(u));
             shared_ptr { ptr, cntrl }
         }
@@ -397,6 +398,23 @@ impl<T: Sized> TryDeref for shared_ptr<T> {
         // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `shared_ptr` invariants
         // it points to an initialized `T` whose lifetime is managed by `self`.
         unsafe { &*self.ptr }
+    }
+}
+
+/// Dereferences the `shared_ptr`.
+///
+/// See the [type documentation](shared_ptr#mutation) for when it is valid to hold the returned
+/// reference while C++ mutates the pointee.
+///
+/// # Panics
+///
+/// Panics if `self` is null. Use [`shared_ptr::try_as_ref`] to check for null instead.
+impl<T: Sized> Deref for shared_ptr<T> {
+    type Target = T;
+
+    #[track_caller]
+    fn deref(&self) -> &T {
+        shared_ptr::try_as_ref(self).expect("dereferencing a null shared_ptr")
     }
 }
 

@@ -253,6 +253,110 @@ fn test_virtual_unique_ptr_null_returns_none() {
 }
 
 #[gtest]
+fn test_bare_unique_ptr_deref() {
+    let up = test_helpers::unique_ptr_test::create_unique_ptr();
+    let r: &i32 = &up;
+    expect_eq!(*r, 1);
+    expect_eq!(*up, 1);
+}
+
+#[gtest]
+fn test_bare_unique_ptr_deref_mut() {
+    let mut up = test_helpers::unique_ptr_test::create_unique_ptr();
+    *up = 654321;
+    expect_eq!(*up, 654321);
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null unique_ptr")]
+fn test_bare_unique_ptr_deref_null_panics() {
+    // SAFETY: `from_raw` accepts a null pointer.
+    let up = unsafe { unique_ptr::<i32>::from_raw(std::ptr::null_mut()) };
+    let _value: i32 = *up;
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null unique_ptr")]
+fn test_bare_unique_ptr_deref_mut_null_panics() {
+    // SAFETY: `from_raw` accepts a null pointer.
+    let mut up = unsafe { unique_ptr::<i32>::from_raw(std::ptr::null_mut()) };
+    *up = 1;
+}
+
+#[gtest]
+fn test_unique_ptr_methods_do_not_shadow_pointee() {
+    struct Pointee(i32);
+    impl Pointee {
+        fn get(&self) -> i32 {
+            self.0
+        }
+        fn as_mut(&mut self) -> &mut i32 {
+            &mut self.0
+        }
+    }
+    let mut up = unique_ptr::new(Pointee(1));
+    *up.as_mut() = 2;
+    expect_eq!(up.get(), 2);
+    expect_eq!(unique_ptr::get(&up), unique_ptr::as_ptr(&up).cast_mut());
+    unique_ptr::as_mut(&mut up).0 = 3;
+    expect_eq!(up.get(), 3);
+}
+
+/// A `virtual_unique_ptr` pointee defined in Rust, so tests using it don't touch the destructor
+/// counters in `test_helpers`, which other tests running in parallel check.
+#[derive(Debug, PartialEq)]
+struct RustVirtual {
+    val: i32,
+}
+
+// SAFETY: `delete` frees `p` with the C++ allocator after running `RustVirtual`'s destructor
+// (which is trivial), which is exactly equivalent to C++ `delete p`.
+unsafe impl cc_std::std::Delete for RustVirtual {
+    /// # Safety
+    ///
+    /// `p` must point to a valid `RustVirtual` allocated with C++ `new` (e.g. by
+    /// `unique_ptr::new`), and must not be used after this call.
+    unsafe fn delete(p: *mut Self) {
+        // SAFETY: by this function's precondition, `p` was allocated with the C++ allocator and
+        // points to a valid `RustVirtual` that we now own.
+        unsafe { drop(Box::from_raw_in(p, Allocator)) }
+    }
+}
+
+fn new_rust_virtual(val: i32) -> virtual_unique_ptr<RustVirtual> {
+    virtual_unique_ptr::from(RustVirtual { val })
+}
+
+#[gtest]
+fn test_bare_virtual_unique_ptr_deref() {
+    let mut vp = new_rust_virtual(1);
+    let r: &RustVirtual = &vp;
+    expect_eq!(r.val, 1);
+    vp.val = 2;
+    expect_eq!(vp.val, 2);
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null virtual_unique_ptr")]
+fn test_bare_virtual_unique_ptr_deref_null_panics() {
+    // SAFETY: `from_raw` accepts a null pointer.
+    let vp = unsafe {
+        virtual_unique_ptr::<test_helpers::unique_ptr_test::CustomDelete>::from_raw(
+            std::ptr::null_mut(),
+        )
+    };
+    let _value: &test_helpers::unique_ptr_test::CustomDelete = &vp;
+}
+
+#[gtest]
+#[should_panic(expected = "dereferencing a null virtual_unique_ptr")]
+fn test_bare_virtual_unique_ptr_deref_mut_null_panics() {
+    // SAFETY: `from_raw` accepts a null pointer.
+    let mut vp = unsafe { virtual_unique_ptr::<RustVirtual>::from_raw(std::ptr::null_mut()) };
+    vp.val = 1;
+}
+
+#[gtest]
 fn test_unique_ptr_debug() {
     let up = unique_ptr::new(42);
     assert_eq!(format!("{up:?}"), "42");

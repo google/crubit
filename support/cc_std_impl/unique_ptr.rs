@@ -4,6 +4,7 @@
 
 use crate::std::{Allocator, NonNull, StableNullness, TryDeref, TryDerefPin};
 use core::fmt::{Debug, Formatter, Result};
+use core::ops::{Deref, DerefMut};
 use core::pin::Pin;
 use core::ptr::null_mut;
 
@@ -19,8 +20,9 @@ pub use operator::Delete;
 ///
 /// Unlike `Box`, `unique_ptr` may hold a `nullptr` value when moved-from (via C++ move
 /// semantics). This allows it to be ABI-compatible with C++'s `std::unique_ptr`. However,
-/// `unique_ptr` is conventionally non-null, and some methods (e.g. `as_mut`, `into_box`,
-/// `into_pin_box`, `into_inner`) will panic if the pointer is null.
+/// `unique_ptr` is conventionally non-null, and some operations (e.g. [`Deref`], [`DerefMut`],
+/// `as_mut`, `into_box`, `into_pin_box`, `into_inner`) will panic if the pointer is null. Use
+/// [`is_null`](Self::is_null) to check for null instead.
 ///
 /// ## `unique_ptr` vs `virtual_unique_ptr`
 ///
@@ -99,9 +101,12 @@ impl<T: Sized> unique_ptr<T> {
 
     /// Returns a copy of the held raw pointer to the owned object.
     ///
+    /// This is an associated function rather than a method taking `&self` to avoid name collisions
+    /// with methods on the pointee, which `Deref` exposes.
+    ///
     /// Deprecated: prefer `as_ptr` or `as_mut_ptr` instead.
-    pub fn get(&self) -> *mut T {
-        self.ptr as *mut T
+    pub fn get(this: &Self) -> *mut T {
+        this.ptr as *mut T
     }
 
     /// Releases the ownership of the object pointed to by `this`, replacing this `unique_ptr` with
@@ -183,11 +188,18 @@ impl<T: Sized> unique_ptr<T> {
     }
 }
 
-impl<T: Unpin> AsMut<T> for unique_ptr<T> {
-    /// Note: this method will panic if `this` is null.
+impl<T: Unpin> unique_ptr<T> {
+    /// Returns an exclusive reference to the owned object.
+    ///
+    /// This is an associated function rather than a method taking `&mut self` to avoid name
+    /// collisions with methods on the pointee, which `DerefMut` exposes. Prefer `&mut *ptr`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `this` is null.
     #[track_caller]
-    fn as_mut(&mut self) -> &mut T {
-        NonNull::from_mut(self).expect("dereferencing a null unique_ptr")
+    pub fn as_mut(this: &mut Self) -> &mut T {
+        Pin::into_inner(unique_ptr::as_pin(this).expect("dereferencing a null unique_ptr"))
     }
 }
 
@@ -214,6 +226,39 @@ impl<T: Sized> TryDerefPin for unique_ptr<T> {
         // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `unique_ptr` invariants
         // it points to a valid, exclusively owned `T`. The pointee is pinned.
         unsafe { Pin::new_unchecked(&mut *(self.ptr as *mut T)) }
+    }
+}
+
+/// Dereferences the `unique_ptr`.
+///
+/// # Panics
+///
+/// Panics if `self` is null. Use [`unique_ptr::is_null`] to check for null instead.
+impl<T: Sized> Deref for unique_ptr<T> {
+    type Target = T;
+
+    #[track_caller]
+    fn deref(&self) -> &T {
+        // SAFETY: By `unique_ptr` invariants, `self.ptr` is either null or points to a valid,
+        // exclusively owned `T`.
+        unsafe { self.ptr.as_ref() }.expect("dereferencing a null unique_ptr")
+    }
+}
+
+/// Mutably dereferences the `unique_ptr`.
+///
+/// This requires `T: Unpin`, because the pointee is pinned. For other `T`, use
+/// [`unique_ptr::as_pin`].
+///
+/// # Panics
+///
+/// Panics if `self` is null. Use [`unique_ptr::is_null`] to check for null instead.
+impl<T: Unpin> DerefMut for unique_ptr<T> {
+    #[track_caller]
+    fn deref_mut(&mut self) -> &mut T {
+        // SAFETY: By `unique_ptr` invariants, `self.ptr` is either null or points to a valid,
+        // exclusively owned `T`. The pointee is pinned, but `T: Unpin`, so it may be moved.
+        unsafe { self.ptr.cast_mut().as_mut() }.expect("dereferencing a null unique_ptr")
     }
 }
 
@@ -360,9 +405,12 @@ impl<T: Sized + Delete> virtual_unique_ptr<T> {
 
     /// Returns a copy of the held raw pointer to the owned object.
     ///
+    /// This is an associated function rather than a method taking `&self` to avoid name collisions
+    /// with methods on the pointee, which `Deref` exposes.
+    ///
     /// Deprecated: prefer `as_ptr` or `as_mut_ptr` instead.
-    pub fn get(&self) -> *mut T {
-        self.ptr as *mut T
+    pub fn get(this: &Self) -> *mut T {
+        this.ptr as *mut T
     }
 
     /// Returns `true` if `this` is a null pointer.
@@ -437,6 +485,40 @@ impl<T: Delete> TryDerefPin for virtual_unique_ptr<T> {
         // SAFETY: The caller guarantees that `self.ptr` is non-null, so by `virtual_unique_ptr`
         // invariants it points to a valid, exclusively owned `T`. The pointee is pinned.
         unsafe { Pin::new_unchecked(&mut *(self.ptr as *mut T)) }
+    }
+}
+
+/// Dereferences the `virtual_unique_ptr`.
+///
+/// # Panics
+///
+/// Panics if `self` is null. Use [`virtual_unique_ptr::is_null`] to check for null instead.
+impl<T: Delete> Deref for virtual_unique_ptr<T> {
+    type Target = T;
+
+    #[track_caller]
+    fn deref(&self) -> &T {
+        // SAFETY: By `virtual_unique_ptr` invariants, `self.ptr` is either null or points to a
+        // valid, exclusively owned `T`.
+        unsafe { self.ptr.as_ref() }.expect("dereferencing a null virtual_unique_ptr")
+    }
+}
+
+/// Mutably dereferences the `virtual_unique_ptr`.
+///
+/// This requires `T: Unpin`, because the pointee is pinned. For other `T`, use
+/// [`virtual_unique_ptr::as_pin`].
+///
+/// # Panics
+///
+/// Panics if `self` is null. Use [`virtual_unique_ptr::is_null`] to check for null instead.
+impl<T: Delete + Unpin> DerefMut for virtual_unique_ptr<T> {
+    #[track_caller]
+    fn deref_mut(&mut self) -> &mut T {
+        // SAFETY: By `virtual_unique_ptr` invariants, `self.ptr` is either null or points to a
+        // valid, exclusively owned `T`. The pointee is pinned, but `T: Unpin`, so it may be
+        // moved.
+        unsafe { self.ptr.cast_mut().as_mut() }.expect("dereferencing a null virtual_unique_ptr")
     }
 }
 
