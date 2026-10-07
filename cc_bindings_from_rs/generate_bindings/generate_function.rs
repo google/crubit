@@ -788,14 +788,12 @@ pub enum Receiver {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct ThunkSelfParameter {
     pub is_trait_method: bool,
-    pub is_generic: bool,
     receiver: Option<Receiver>,
 }
 impl ThunkSelfParameter {
-    pub fn new(has_self: bool, by_copy: bool, is_trait_method: bool, is_generic: bool) -> Self {
+    pub fn new(has_self: bool, by_copy: bool, is_trait_method: bool) -> Self {
         Self {
             is_trait_method,
-            is_generic,
             receiver: has_self.then_some({
                 if by_copy {
                     Receiver::SelfByCopy
@@ -898,7 +896,7 @@ pub(crate) fn generate_thunk_call<'tcx>(
             .collect::<Result<Vec<_>>>()?;
         quote! { #(#cpp_top_level_ns)::* :: __crubit_internal }
     } else {
-        crate::thunk_qualifier(self_param.is_generic)
+        quote! { __crubit_internal }
     };
 
     let return_body = if is_async {
@@ -1236,18 +1234,10 @@ pub fn generate_function<'tcx>(
         }
     }
 
-    let is_generic = self_ty.is_some_and(|ty| {
-        if let ty::TyKind::Adt(adt, _) = ty.kind() {
-            query_compiler::has_non_lifetime_generics(db.tcx(), adt.did())
-        } else {
-            false
-        }
-    });
     let thunk_self = ThunkSelfParameter::new(
         function_kind.has_self_param(),
         takes_self_by_copy,
         static_method_mode == StaticMethodMode::ForceStaticMethod,
-        is_generic,
     );
 
     let struct_name = self_ty
@@ -1413,20 +1403,21 @@ pub fn generate_function<'tcx>(
                 quote! { rs_std :: impl <#struct_name, #trait_name_with_args> :: #bracketed_decl_name }
             }
             StaticMethodMode::Infer => {
-                if is_generic {
-                    let self_ty_val =
-                        self_ty.ok_or_else(|| anyhow!("Expected self_ty for generic ADT"))?;
-                    let snippet = db.format_ty_for_cc(self_ty_val, TypeLocation::Other)?;
-                    let qualifier = snippet.into_tokens(&mut prereqs);
+                if let Some(self_ty_val) = self_ty.filter(|ty| {
+                    ty.ty_adt_def().is_some_and(|adt| {
+                        query_compiler::has_non_lifetime_generics(db.tcx(), adt.did())
+                    })
+                }) {
+                    let qualifier = db
+                        .format_ty_for_cc(self_ty_val, TypeLocation::Other)?
+                        .into_tokens(&mut prereqs);
                     quote! { (#qualifier :: #bracketed_decl_name) }
+                } else if let Ok(fully_qualified_name) = struct_name.as_ref() {
+                    let name = fully_qualified_name.unqualified.cpp_name;
+                    let name = format_cc_ident(db, name.as_str())?;
+                    quote! { (#name :: #bracketed_decl_name) }
                 } else {
-                    if let Ok(fully_qualified_name) = struct_name.as_ref() {
-                        let name = fully_qualified_name.unqualified.cpp_name;
-                        let name = format_cc_ident(db, name.as_str())?;
-                        quote! { (#name :: #bracketed_decl_name) }
-                    } else {
-                        quote! { #bracketed_decl_name }
-                    }
+                    quote! { #bracketed_decl_name }
                 }
             }
         };

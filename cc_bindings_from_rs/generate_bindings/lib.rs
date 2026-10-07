@@ -1773,10 +1773,7 @@ fn copy_codegen_style_to_snippets<'tcx>(
                     let clone_from_thunk_name =
                         method_name_to_cc_thunk_name.get(&sym::clone_from).unwrap();
 
-                    let is_specialization = core
-                        .def_id
-                        .is_none_or(|id| query_compiler::has_non_lifetime_generics(db.tcx(), id));
-                    let thunk_qualifier = thunk_qualifier(is_specialization);
+                    let thunk_qualifier = thunk_qualifier(&core);
                     let ctor_body =
                         generate_ctor_thunk_call(db, &core, clone_thunk_name, &[quote! { other }])?;
                     cc_thunk_decls.map_snippets(|cc_thunk_decls| {
@@ -2470,7 +2467,7 @@ fn generate_specializations_fixpoint<'tcx>(
 
         let mut next_worklist = Vec::new();
         for spec in worklist {
-            if seen.contains(&spec) {
+            if !seen.insert(spec.clone()) {
                 continue;
             }
 
@@ -2478,7 +2475,6 @@ fn generate_specializations_fixpoint<'tcx>(
                 db,
                 spec.clone(),
             );
-            seen.insert(spec.clone());
 
             // Collect specializations required by the main_api.
             for new_spec in snippets
@@ -2842,27 +2838,13 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
             .chain(ordered_main_apis)
             .map(|(node, tokens)| match node {
                 Node::Def(def_id) => {
-                    let features = db.crate_features(def_id.krate);
-                    let use_leading_colons =
-                        features.contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
-                    (
-                        tcx.opt_parent(def_id),
-                        NamespaceQualifier::new(
-                            cpp_top_level_ns.iter().cloned().chain({
-                                db.symbol_canonical_name(def_id)
-                                    .unwrap_or_else(|err| {
-                                        panic!(
-                                            "Exported item {} should have a canonical name: {err}",
-                                            tcx.def_path_str(def_id),
-                                        )
-                                    })
-                                    .cpp_ns_path
-                                    .namespaces
-                            }),
-                            use_leading_colons,
-                        ),
-                        tokens,
-                    )
+                    let canonical_name = db.symbol_canonical_name(def_id).unwrap_or_else(|err| {
+                        panic!(
+                            "Exported item {} should have a canonical name: {err}",
+                            tcx.def_path_str(def_id),
+                        )
+                    });
+                    (tcx.opt_parent(def_id), canonical_name.cpp_ns_qualifier(db), tokens)
                 }
                 // Specializations always live in the top-level namespace.
                 Node::Specialization(_) => {
@@ -2922,8 +2904,8 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
     Ok(BindingsTokens { cc_api, cc_api_impl })
 }
 
-pub fn thunk_qualifier(is_specialization: bool) -> TokenStream {
-    if is_specialization {
+pub(crate) fn thunk_qualifier(core: &AdtCoreBindings<'_>) -> TokenStream {
+    if core.def_id.is_none() {
         quote! { ::__crubit_internal }
     } else {
         quote! { __crubit_internal }
