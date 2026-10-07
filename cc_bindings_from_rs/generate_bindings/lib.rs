@@ -52,8 +52,8 @@ use database::code_snippet::{
 };
 use database::{
     rename_clang_builtin_macros, AdtCoreBindings, CoreBindingsCommon, ExportedPath,
-    FineGrainedFeature, FullyQualifiedName, NoMoveOrAssign, PublicPaths, StaticMethodMode,
-    TypeLocation, UnqualifiedName,
+    FullyQualifiedName, NoMoveOrAssign, PublicPaths, StaticMethodMode, TypeLocation,
+    UnqualifiedName,
 };
 pub use database::{
     BindingsGenerator, CopyCodegenStyle, CppTypeSpecialization, IncludeGuard, MoveCodegenStyle,
@@ -519,11 +519,9 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
 
 fn check_feature_enabled_on_self_and_all_deps(
     db: &BindingsGenerator,
-    feature: FineGrainedFeature,
+    feature: crubit_feature::CrubitFeature,
 ) -> bool {
-    db.crate_name_to_features()
-        .values()
-        .all(|crate_features| feature.ensure_crubit_feature(*crate_features).is_ok())
+    db.crate_name_to_features().values().all(|crate_features| crate_features.contains(feature))
 }
 
 fn format_with_cc_body(
@@ -2235,7 +2233,7 @@ fn generate_item_impl<'tcx>(
     if db.symbol_canonical_name(def_id).is_err() {
         return Ok(None);
     };
-    let item = match tcx.def_kind(def_id) {
+    match tcx.def_kind(def_id) {
         DefKind::Struct | DefKind::Enum | DefKind::Union => {
             if query_compiler::has_non_lifetime_generics(tcx, def_id) {
                 generate_generic_adt_declaration(db, def_id).map(|tokens| {
@@ -2254,12 +2252,6 @@ fn generate_item_impl<'tcx>(
         DefKind::Impl { .. } => Ok(None), // Handled by `generate_adt`
         DefKind::Mod => Ok(None),         // Handled by `generate_crate`
         kind => bail!("Unsupported rustc_hir::hir::DefKind: {kind:?}"),
-    };
-
-    if let Ok(Some(item)) = item {
-        Ok(Some(item.resolve_feature_requirements(db.crate_features(db.source_crate_num()))?))
-    } else {
-        item
     }
 }
 

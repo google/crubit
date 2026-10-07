@@ -28,9 +28,7 @@ use database::code_snippet::{
     TemplateSpecialization,
 };
 use database::BindingsGenerator;
-use database::{
-    rename_c_stdlib_functions, rename_clang_builtin_macros, FineGrainedFeature, TypeLocation,
-};
+use database::{rename_c_stdlib_functions, rename_clang_builtin_macros, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{is_c_abi_compatible_by_value, is_std_ptr_non_null};
@@ -195,8 +193,7 @@ pub fn format_cc_ident(db: &BindingsGenerator, ident: &str) -> Result<Ident> {
     // current crate doesn't, we will escape the identifier in the dep but
     // consider it failed in the current crate.
     let features = db.crate_features(db.source_crate_num());
-    if check_feature_enabled_on_self_and_all_deps(db, FineGrainedFeature::EscapeCppReservedKeyword)
-    {
+    if check_feature_enabled_on_self_and_all_deps(db, CrubitFeature::Experimental) {
         code_gen_utils::format_cc_ident(
             code_gen_utils::unkeyword_cpp_ident(ident, features).as_ref(),
             features,

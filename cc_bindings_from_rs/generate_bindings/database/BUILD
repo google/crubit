@@ -18,7 +18,6 @@ rust_library(
         "adt_core_bindings.rs",
         "code_snippet.rs",
         "db.rs",
-        "fine_grained_feature.rs",
         "fully_qualified_name.rs",
         "include_guard.rs",
         "lib.rs",

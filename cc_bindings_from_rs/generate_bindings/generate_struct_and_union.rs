@@ -430,9 +430,6 @@ pub(crate) fn generate_associated_item<'tcx>(
                 })
         }
     };
-    let result = result.and_then(|snippet| {
-        snippet.resolve_feature_requirements(db.crate_features(db.source_crate_num()))
-    });
     match result {
         Err(err) => {
             if crubit_attr::get_attrs(tcx, def_id).unwrap().must_bind {
@@ -1993,7 +1990,7 @@ pub fn generate_adt<'tcx>(
             tcx.lang_items().drop_trait().expect("`Drop` trait should be present if `needs_drop");
         let TraitThunks {
             method_name_to_cc_thunk_name,
-            mut cc_thunk_decls,
+            cc_thunk_decls,
             rs_thunk_impls: rs_details,
         } = generate_trait_thunks(
             db,
@@ -2006,9 +2003,6 @@ pub fn generate_adt<'tcx>(
             /* within_template= */ false,
         )
         .expect("`generate_adt_core` should have already validated `Drop` support");
-        // Don't introduce additional feature prerequisites for the `Drop` trait impl, as this
-        // will cause type generation to fail based on an API that isn't even user-accessible.
-        cc_thunk_decls.prereqs.required_features = flagset::FlagSet::empty();
         let drop_thunk_name = method_name_to_cc_thunk_name
             .into_values()
             .exactly_one()
@@ -3100,9 +3094,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             );
         }
 
-        self.db
-            .format_ty_for_cc(ty, TypeLocation::Field)?
-            .resolve_feature_requirements(self.db.crate_features(self.db.source_crate_num()))
+        self.db.format_ty_for_cc(ty, TypeLocation::Field)
     }
 
     fn field_size(

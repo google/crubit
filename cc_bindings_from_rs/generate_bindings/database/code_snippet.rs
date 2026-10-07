@@ -6,12 +6,10 @@ extern crate rustc_abi;
 extern crate rustc_middle;
 extern crate rustc_span;
 
-use crate::{BindingsGenerator, FineGrainedFeature, TypeLocation};
+use crate::{BindingsGenerator, TypeLocation};
 use arc_anyhow::{anyhow, Result};
 use code_gen_utils::CcInclude;
 use crubit_abi_type::CrubitAbiType;
-use error_report::bail;
-use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use rustc_middle::ty::Ty;
 use rustc_span::def_id::DefId;
@@ -70,9 +68,6 @@ pub struct CcPrerequisites<'tcx> {
     /// *not* need to appear earlier (and therefore `defs` will *not*
     /// contain `DefId` corresponding to `S`).
     pub fwd_decls: HashSet<DefId>,
-
-    /// Set of Crubit feature flags required for the CcSnippet to be valid.
-    pub required_features: flagset::FlagSet<FineGrainedFeature>,
 
     // Set of template specializations our snippet requires to be complete.
     pub template_specializations: HashSet<TemplateSpecialization<'tcx>>,
@@ -295,14 +290,12 @@ impl<'tcx> CcPrerequisites<'tcx> {
             includes,
             defs,
             fwd_decls,
-            required_features,
             template_specializations,
             lazy_template_specializations,
         } = self;
         includes.is_empty()
             && defs.is_empty()
             && fwd_decls.is_empty()
-            && required_features.is_empty()
             && template_specializations.is_empty()
             && lazy_template_specializations.is_empty()
     }
@@ -388,7 +381,6 @@ impl<'tcx> AddAssign for CcPrerequisites<'tcx> {
             mut includes,
             defs,
             fwd_decls,
-            required_features,
             template_specializations,
             lazy_template_specializations,
         } = rhs;
@@ -404,7 +396,6 @@ impl<'tcx> AddAssign for CcPrerequisites<'tcx> {
 
         self.defs.extend(defs);
         self.fwd_decls.extend(fwd_decls);
-        self.required_features |= required_features;
         self.template_specializations.extend(template_specializations);
         self.lazy_template_specializations.extend(lazy_template_specializations);
     }
@@ -486,32 +477,6 @@ impl<'tcx> CcSnippet<'tcx> {
         let mut prereqs = CcPrerequisites::default();
         prereqs.includes.insert(include);
         Self { tokens, prereqs }
-    }
-
-    /// Resolves the feature requirements. If the required features of `self`
-    /// are in `crubit_features`, then this returns a version of `self` with
-    /// the feature requirements removed. Otherwise, this returns an error.
-    pub fn resolve_feature_requirements(
-        mut self,
-        crubit_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
-    ) -> Result<Self> {
-        let mut errs = Vec::new();
-        for feature in self.prereqs.required_features {
-            if let Err(e) = feature.ensure_crubit_feature(crubit_features) {
-                errs.push(e);
-            }
-        }
-        match errs.len() {
-            0 => {
-                self.prereqs.required_features.clear();
-                Ok(self)
-            }
-            1 => Err(errs.pop().unwrap()),
-            _ => {
-                let mut errs = errs.into_iter().map(|e| e.to_string());
-                bail!(errs.join(", "))
-            }
-        }
     }
 
     pub fn into_main_api(self) -> ApiSnippets<'tcx> {
@@ -649,20 +614,6 @@ pub struct ApiSnippets<'tcx> {
 }
 
 impl<'tcx> ApiSnippets<'tcx> {
-    /// Resolves the feature requirements. If the required features of `self`
-    /// are in `crubit_features`, then this returns a version of `self` with
-    /// the feature requirements removed. Otherwise, this returns an error.
-    pub fn resolve_feature_requirements(
-        self,
-        crubit_features: flagset::FlagSet<crubit_feature::CrubitFeature>,
-    ) -> Result<Self> {
-        Ok(Self {
-            main_api: self.main_api.resolve_feature_requirements(crubit_features)?,
-            cc_details: self.cc_details.resolve_feature_requirements(crubit_features)?,
-            rs_details: self.rs_details,
-        })
-    }
-
     pub fn comment_only(comment: &str) -> Self {
         ApiSnippets {
             main_api: CcSnippet::new(quote::quote! {

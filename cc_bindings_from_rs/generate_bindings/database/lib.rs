@@ -14,8 +14,6 @@ pub use adt_core_bindings::{
 };
 mod db;
 pub use db::{BindingsGenerator, CppTypeSpecialization};
-mod fine_grained_feature;
-pub use fine_grained_feature::FineGrainedFeature;
 mod fully_qualified_name;
 pub use fully_qualified_name::{
     rename_c_stdlib_functions, rename_clang_builtin_macros, ExportedPath, FullyQualifiedName,
