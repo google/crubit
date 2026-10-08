@@ -100,3 +100,86 @@ if (myoption.has_value()) {
 
 A more complete description of the API is in the common `OptionBase` public base
 class: support/rs_std/option.h
+
+## `Vec`
+
+The Rust `Vec<T>` generic receives C++ bindings as `rs_std::Vec<T>`, so long as
+`T` is a type supported by Crubit. Each `rs_std::Vec<T>` is a generated
+specialization that inherits its public API from the common `VecBase<T>` base
+class in support/rs_std/vec.h. The API is modeled on
+[`std::vector`](https://en.cppreference.com/cpp/container/vector), with a few
+differences noted below.
+
+`rs_std::Vec<T>` is a real Rust `Vec` under the hood: it has the same layout,
+and its buffer is allocated and freed through Rust's global allocator. A `Vec`
+created in C++ can therefore be handed to Rust (and vice versa) without any
+copying or conversion.
+
+### Element access and iteration
+
+`rs_std::Vec<T>` provides the usual contiguous-container accessors:
+
+*   `size()`, `capacity()`, `empty()`
+*   `data()` (returns a pointer to the contiguous element buffer)
+*   `operator[]`, `front()`, `back()` -- these are **bounds-checked** and abort
+    the process on misuse (e.g. an out-of-range index or `front()` on an empty
+    vector), mirroring the panicking behavior of Rust's `Vec`.
+*   `begin()` / `end()`, `cbegin()` / `cend()`, `rbegin()` / `rend()`,
+    `crbegin()` / `crend()`
+
+Iterators are raw pointers, so `rs_std::Vec<T>` works with range-based `for`
+loops and standard algorithms, and satisfies `std::ranges::contiguous_range`.
+This also makes it implicitly convertible to `std::span<const T>` /
+`std::span<T>` and, by extension, to `rs_std::SliceRef<const T>` /
+`rs_std::SliceRef<T>`:
+
+```c++
+rs_std::Vec<int32_t> v = my_crate::return_vec();
+for (int32_t& x : v) {
+  x += 1;
+}
+int32_t sum = std::accumulate(v.begin(), v.end(), 0);
+
+std::span<const int32_t> span = v;
+rs_std::SliceRef<const int32_t> slice = v;
+```
+
+### Modifying a `Vec` from C++
+
+Elements can be added, removed, and constructed in place from C++:
+
+```c++
+rs_std::Vec<int32_t> v;
+v.reserve(3);         // Total capacity, like std::vector::reserve.
+v.push_back(1);
+v.push_back(2);
+v.emplace_back(3);    // Constructs in place; returns a T&.
+v.insert(0, 0);       // Inserts at *index* 0, shifting the rest right.
+v.pop_back();         // Removes and destroys the last element.
+v.clear();            // Destroys all elements but keeps the buffer.
+```
+
+Differences from `std::vector` worth knowing about:
+
+*   `insert(index, value)` takes an index rather than an iterator (as in Rust's
+    `Vec::insert`).
+*   `reserve(new_cap)` has `std::vector::reserve` semantics: it ensures the
+    *total* capacity is at least `new_cap`. To request room for `n` *additional*
+    elements (Rust's `Vec::reserve(additional)` semantics), use
+    `reserve_additional_capacity(n)` instead.
+*   Only the operations listed above are currently supported. In particular,
+    there is no `erase`, `resize`, or range `insert`. For other operations,
+    write a small Rust helper function and call it through its Crubit bindings.
+
+## Availability of generic `rs_std` specializations
+
+Generic standard library types such as `rs_std::Option<T>`,
+`rs_std::Result<T, E>`, `rs_std::Tuple<Ts...>`, and `rs_std::Vec<T>` are only
+defined for type arguments that are actually used in a Crubit-bound Rust API.
+The support headers (`option.h`, `result.h`, `tuple.h`, `vec.h`) provide only
+the generic base implementations (`OptionBase`, `ResultBase`, `VecBase`, etc.)
+and leave the primary template uninstantiable; the concrete specialization for a
+given set of type arguments is emitted into the generated header of a crate
+whose public API mentions that instantiation. Attempting to use one of these
+templates with type arguments that do not appear in any of the Rust APIs you
+depend on is a compile-time error.
