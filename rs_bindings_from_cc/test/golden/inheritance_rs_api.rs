@@ -637,10 +637,10 @@ impl Default for MethodDerived {
 }
 
 // error: function `MethodDerived::Colliding1` could not be bound
-//   Function aliases are not yet supported.
+//   Using-declarations of member functions are not yet supported.
 
 // error: function `MethodDerived::Protected1` could not be bound
-//   Function aliases are not yet supported.
+//   Using-declarations of member functions are not yet supported.
 
 mod detail {
     #[allow(unused_imports)]
