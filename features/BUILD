@@ -42,7 +42,9 @@ crubit_feature_hint(
     name = "wrapper",
     compatible_with = ["//buildenv/target:non_prod"],
     crubit_features = SUPPORTED_FEATURES + _WRAPPER_FEATURES,
-    visibility = _EXPERIMENTAL_CLIENTS,
+    visibility = [
+        "//:__subpackages__",
+    ],
 )
 
 # A feature set enabling forward declaration support.
