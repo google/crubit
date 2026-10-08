@@ -39,3 +39,25 @@ check_unsupported_expected_file = rule(
         "expected_file": attr.string(mandatory = True),
     },
 )
+
+def _platform_transition_impl(_settings, attr):
+    return {
+        "//command_line_option:platforms": str(attr.platform),
+    }
+
+_platform_transition = transition(
+    implementation = _platform_transition_impl,
+    inputs = [],
+    outputs = ["//command_line_option:platforms"],
+)
+
+# Like `check_expected_file`, but with `src` built for the given `platform`.
+check_expected_file_on_platform = rule(
+    implementation = _check_expected_file_impl,
+    cfg = _platform_transition,
+    attrs = {
+        "src": attr.label(mandatory = True, allow_files = True),
+        "expected_file": attr.string(mandatory = True),
+        "platform": attr.label(mandatory = True),
+    },
+)
