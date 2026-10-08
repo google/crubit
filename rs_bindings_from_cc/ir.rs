@@ -445,7 +445,7 @@ impl CcType {
     /// `ABSL_POINTERS_DEFAULT_NONNULL`).
     ///
     /// This is recorded for every type that can carry a nullability annotation, but only smart
-    /// pointers currently act on it. See `RsTypeKind::into_nonnull_smart_pointer`.
+    /// pointers currently act on it. See `RsTypeKind::into_nullable_smart_pointer`.
     pub fn is_nonnull(&self) -> bool {
         self.is_nonnull
     }

@@ -17,4 +17,9 @@ inline absl::StatusOr<absl_nonnull std::unique_ptr<int>> MakeStatusOrOfNonnull(
   return std::make_unique<int>(value);
 }
 
+inline absl::StatusOr<absl_nullable std::unique_ptr<int>>
+MakeStatusOrOfNullNullable() {
+  return nullptr;
+}
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_BRIDGING_NONNULL_STATUS_OR_LIB_H_
