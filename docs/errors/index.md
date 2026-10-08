@@ -8,6 +8,9 @@ libraries](../rust/index.md#examine).
 
 *   [Unsupported types](unsupported_type.md): a type that Crubit can't bind,
     which also prevents bindings for every function that uses it.
+*   [Unknown targets](unknown_target.md): a type defined in a header that none
+    of the library's direct dependencies provide, so Crubit can't tell which
+    target owns it.
 *   [Nested types](nested_type.md): C++ types nested inside other types, when
     the snake_case module Crubit generates for them collides with another name.
 *   [Visibility](visibility.md): types whose bindings are `pub(crate)` and so

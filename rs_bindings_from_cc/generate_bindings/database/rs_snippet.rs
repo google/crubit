@@ -1786,6 +1786,7 @@ impl<'a> RsTypeKind<'a> {
         &self,
         target: &BazelLabel,
         enabled_features: flagset::FlagSet<CrubitFeature>,
+        current_target: &BazelLabel,
     ) -> Vec<String> {
         let mut reasons = std::collections::BTreeSet::<String>::new();
         let mut require_any_feature =
@@ -1797,10 +1798,27 @@ impl<'a> RsTypeKind<'a> {
             };
 
         if !enabled_features.contains(CrubitFeature::Types) {
-            require_any_feature(
-                <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Types),
-                format_args!("Crubit is not enabled on defining target:\n  {target}"),
-            );
+            if let Some(header) = target.as_unknown_target_header() {
+                require_any_feature(
+                    <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Types),
+                    format_args!(
+                        "crubit.rs/errors/unknown_target: the type is defined in\n  \
+                        {header}\n\
+                        which is not a public header of any Crubit-enabled target that\n  \
+                        {current_target}\n\
+                        depends on directly. Either enable Crubit on the library that provides \
+                        the header,\n\
+                        add that library as a direct dependency (and `#include` the header \
+                        directly),\n\
+                        or move the type to a public header."
+                    ),
+                );
+            } else {
+                require_any_feature(
+                    <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Types),
+                    format_args!("Crubit is not enabled on defining target:\n  {target}"),
+                );
+            }
         }
 
         for rs_type_kind in self.dfs_iter() {
@@ -3481,6 +3499,7 @@ mod tests {
             let reasons = func_ptr.missing_feature_descriptions_of_type(
                 &BazelLabel::from("//fake"),
                 CrubitFeature::Types.into(),
+                &BazelLabel::from("//fake:current"),
             );
             assert_eq!(reasons, vec!["references are not yet supported"]);
         }

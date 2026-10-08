@@ -11,9 +11,21 @@ use std::rc::Rc;
 #[derive(Debug, Eq, Clone)]
 pub struct BazelLabel(pub Rc<str>);
 
+/// Prefix of the synthetic label `rs_bindings_from_cc` assigns to declarations
+/// whose header is not owned by any Bazel target visible to Crubit. The rest of
+/// the label is the header path.
+const UNKNOWN_TARGET_PREFIX: &str = "//_unknown_target:";
+
 impl BazelLabel {
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+
+    /// If this label is a synthetic unknown-target label (see
+    /// `UNKNOWN_TARGET_PREFIX`), returns the path of the header that no visible
+    /// target owns. Otherwise returns `None`.
+    pub fn as_unknown_target_header(&self) -> Option<&str> {
+        self.0.strip_prefix(UNKNOWN_TARGET_PREFIX)
     }
 
     /// Returns the target name. E.g. `bar` for `//foo:bar`.
@@ -122,7 +134,7 @@ impl<T: Into<String>> From<T> for BazelLabel {
 impl Display for BazelLabel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // If this isn't actually a known bazel target, stringify for humans as the filename.
-        if let Some(s) = self.0.strip_prefix("//_unknown_target:") {
+        if let Some(s) = self.as_unknown_target_header() {
             write!(f, "{}", s)
         } else {
             write!(f, "{}", &*self.0)

@@ -32,6 +32,7 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
+#include "absl/strings/strip.h"
 #include "absl/strings/substitute.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
@@ -98,6 +99,22 @@ namespace {
 
 constexpr absl::string_view kTypeStatusPayloadUrl =
     "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
+
+// Prefix of the synthetic label that `Importer::GetOwningTarget` returns when
+// no Bazel target visible to Crubit claims ownership of a header. The rest of
+// the label is the header path, which is useful for error messages.
+constexpr absl::string_view kUnknownTargetPrefix = "//_unknown_target:";
+
+// Returns the header path if `label` is a synthetic unknown-target label (see
+// `kUnknownTargetPrefix`), or `std::nullopt` if it is a real Bazel label.
+std::optional<absl::string_view> HeaderOfUnknownTarget(
+    const BazelLabel& label) {
+  absl::string_view value = label.value();
+  if (!absl::ConsumePrefix(&value, kUnknownTargetPrefix)) {
+    return std::nullopt;
+  }
+  return value;
+}
 
 // Checks if the return value from `GetDeclItem` indicates that the import was
 // successful.
@@ -1565,7 +1582,7 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl& decl) const {
   // (For instance, to tell them to enable Crubit for that file!)
   if (!filename) filename = "<unknown>";
   return BazelLabel(
-      absl::StrCat("//_unknown_target:", absl::string_view(*filename)));
+      absl::StrCat(kUnknownTargetPrefix, absl::string_view(*filename)));
 }
 
 bool Importer::IsFromCurrentTarget(const clang::Decl& decl) const {
@@ -1889,8 +1906,9 @@ bool Importer::IsCrubitEnabledForTarget(const BazelLabel& label) const {
   }
   // TODO(b/471240594): This is a hack for this specific header. We need to
   // properly fix target assignment for Crubit support libraries.
-  if (label.value().starts_with("//_unknown_target:") &&
-      label.value().ends_with("crubit/support/rs_std/slice_ref.h")) {
+  if (std::optional<absl::string_view> header = HeaderOfUnknownTarget(label);
+      header.has_value() &&
+      header->ends_with("crubit/support/rs_std/slice_ref.h")) {
     return true;
   }
   return false;
@@ -2249,6 +2267,23 @@ CcType Importer::ConvertTemplateSpecializationType(
     }
     auto target = GetOwningTarget(*template_decl);
     if (!IsCrubitEnabledForTarget(target)) {
+      if (std::optional<absl::string_view> header =
+              HeaderOfUnknownTarget(target);
+          header.has_value()) {
+        return CcType(FormattedError::Substitute(
+            "crubit.rs/errors/unknown_target: Failed to complete template "
+            "specialization type $0:\n"
+            "the template is defined in\n"
+            "  $1\n"
+            "which is not a public header of any Crubit-enabled target that\n"
+            "  $2\n"
+            "depends on directly. Either enable Crubit on the library that "
+            "provides the header,\n"
+            "add that library as a direct dependency (and `#include` the "
+            "header directly),\n"
+            "or move the template to a public header.",
+            type_string, *header, invocation_.target_.value()));
+      }
       return CcType(FormattedError::Substitute(
           "Failed to complete template specialization type $0: template "
           "belongs to target $1, which does not support Crubit.",

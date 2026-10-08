@@ -207,33 +207,63 @@ pub unsafe fn callable_taking_reference(
 }
 
 // error: class `absl::internal_any_invocable::CoreImpl<false, struct ABICompatible, struct ABICompatible>` could not be bound
-//   Crubit is not enabled on defining target:
+//   crubit.rs/errors/unknown_target: the type is defined in
 //     third_party/absl/functional/internal/any_invocable.h
+//   which is not a public header of any Crubit-enabled target that
+//     //rs_bindings_from_cc/test/golden:callables_cc
+//   depends on directly. Either enable Crubit on the library that provides the header,
+//   add that library as a direct dependency (and `#include` the header directly),
+//   or move the type to a public header.
 //   template instantiation is not yet supported
 
 // error: class `absl::internal_any_invocable::CoreImpl<false, class LayoutCompatible, class LayoutCompatible>` could not be bound
-//   Crubit is not enabled on defining target:
+//   crubit.rs/errors/unknown_target: the type is defined in
 //     third_party/absl/functional/internal/any_invocable.h
+//   which is not a public header of any Crubit-enabled target that
+//     //rs_bindings_from_cc/test/golden:callables_cc
+//   depends on directly. Either enable Crubit on the library that provides the header,
+//   add that library as a direct dependency (and `#include` the header directly),
+//   or move the type to a public header.
 //   template instantiation is not yet supported
 
 // error: class `absl::internal_any_invocable::CoreImpl<false, struct Bridged, struct Bridged>` could not be bound
-//   Crubit is not enabled on defining target:
+//   crubit.rs/errors/unknown_target: the type is defined in
 //     third_party/absl/functional/internal/any_invocable.h
+//   which is not a public header of any Crubit-enabled target that
+//     //rs_bindings_from_cc/test/golden:callables_cc
+//   depends on directly. Either enable Crubit on the library that provides the header,
+//   add that library as a direct dependency (and `#include` the header directly),
+//   or move the type to a public header.
 //   template instantiation is not yet supported
 
 // error: class `absl::internal_any_invocable::CoreImpl<false, int, int>` could not be bound
-//   Crubit is not enabled on defining target:
+//   crubit.rs/errors/unknown_target: the type is defined in
 //     third_party/absl/functional/internal/any_invocable.h
+//   which is not a public header of any Crubit-enabled target that
+//     //rs_bindings_from_cc/test/golden:callables_cc
+//   depends on directly. Either enable Crubit on the library that provides the header,
+//   add that library as a direct dependency (and `#include` the header directly),
+//   or move the type to a public header.
 //   template instantiation is not yet supported
 
 // error: class `absl::internal_any_invocable::CoreImpl<false, void>` could not be bound
-//   Crubit is not enabled on defining target:
+//   crubit.rs/errors/unknown_target: the type is defined in
 //     third_party/absl/functional/internal/any_invocable.h
+//   which is not a public header of any Crubit-enabled target that
+//     //rs_bindings_from_cc/test/golden:callables_cc
+//   depends on directly. Either enable Crubit on the library that provides the header,
+//   add that library as a direct dependency (and `#include` the header directly),
+//   or move the type to a public header.
 //   template instantiation is not yet supported
 
 // error: class `absl::internal_any_invocable::CoreImpl<false, void, int &>` could not be bound
-//   Crubit is not enabled on defining target:
+//   crubit.rs/errors/unknown_target: the type is defined in
 //     third_party/absl/functional/internal/any_invocable.h
+//   which is not a public header of any Crubit-enabled target that
+//     //rs_bindings_from_cc/test/golden:callables_cc
+//   depends on directly. Either enable Crubit on the library that provides the header,
+//   add that library as a direct dependency (and `#include` the header directly),
+//   or move the type to a public header.
 //   template instantiation is not yet supported
 
 mod detail {

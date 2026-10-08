@@ -16,8 +16,13 @@
 #![deny(warnings)]
 // error: function `UseNotCrubitExposed` could not be bound
 //   Unsupported parameter type `NotCrubitExposed not_crubit_exposed`:
-//     Crubit is not enabled on defining target:
+//     crubit.rs/errors/unknown_target: the type is defined in
 //       rs_bindings_from_cc/test/golden/not_crubit_exposed.h
+//     which is not a public header of any Crubit-enabled target that
+//       //rs_bindings_from_cc/test/golden:uses_not_crubit_exposed_cc
+//     depends on directly. Either enable Crubit on the library that provides the header,
+//     add that library as a direct dependency (and `#include` the header directly),
+//     or move the type to a public header.
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "20CannotUpcastInCrubit"]
@@ -54,13 +59,23 @@ pub mod c9 { // error: class `c9::Co` could not be bound
 // error: function `ReturnsCo` could not be bound
 //   Cannot use an error type `c9 :: Co < struct NotCrubitExposed >` by value:
 //     `c9::Co<NotCrubitExposed>` is unsupported because `NotCrubitExposed` is unavailable:
-//     Crubit is not enabled on defining target:
+//     crubit.rs/errors/unknown_target: the type is defined in
 //         rs_bindings_from_cc/test/golden/not_crubit_exposed.h
+//       which is not a public header of any Crubit-enabled target that
+//         //rs_bindings_from_cc/test/golden:uses_not_crubit_exposed_cc
+//       depends on directly. Either enable Crubit on the library that provides the header,
+//       add that library as a direct dependency (and `#include` the header directly),
+//       or move the type to a public header.
 
 // error: class `c9::Co<struct NotCrubitExposed>` could not be bound
 //   `c9::Co<NotCrubitExposed>` is unsupported because `NotCrubitExposed` is unavailable:
-//   Crubit is not enabled on defining target:
+//   crubit.rs/errors/unknown_target: the type is defined in
 //       rs_bindings_from_cc/test/golden/not_crubit_exposed.h
+//     which is not a public header of any Crubit-enabled target that
+//       //rs_bindings_from_cc/test/golden:uses_not_crubit_exposed_cc
+//     depends on directly. Either enable Crubit on the library that provides the header,
+//     add that library as a direct dependency (and `#include` the header directly),
+//     or move the type to a public header.
 
 mod detail {
     #[allow(unused_imports)]

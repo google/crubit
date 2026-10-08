@@ -1468,6 +1468,52 @@ TEST(ImporterTest, FailedClassTemplateMethod) {
                 "//test:testing_target, which does not support Crubit."));
 }
 
+TEST(ImporterTest, TemplateFromUnknownTarget) {
+  // `test/unowned.h` is deliberately absent from `headers_to_targets`, which
+  // is what happens when a header is only reachable through a dependency that
+  // the Crubit aspect does not propagate into.
+  ASSERT_OK_AND_ASSIGN(
+      IR ir, IrFromCc({
+                 .current_target = BazelLabel{"//test:testing_target"},
+                 .public_headers = {HeaderName("test/header.h")},
+                 .virtual_headers_contents_for_testing =
+                     {{HeaderName("test/unowned.h"),
+                       "template <typename T> struct Unowned final { T t; };"},
+                      {HeaderName("test/header.h"),
+                       "#include \"unowned.h\"\n"
+                       "using UnownedInt = Unowned<int>;"}},
+                 .headers_to_targets =
+                     {
+                         {HeaderName("test/header.h"),
+                          BazelLabel{"//test:testing_target"}},
+                     },
+             }));
+
+  EXPECT_THAT(
+      get_items_if<TypeAlias>(ir),
+      Contains(Pointee(AllOf(
+          CcNameIs("UnownedInt"),
+          Property(
+              "underlying_type", &TypeAlias::underlying_type,
+              AllOf(Property("has_error", &CcType::has_error, true),
+                    Property(
+                        "error", &CcType::error,
+                        Property("message", &FormattedError::message,
+                                 AllOf(HasSubstr("crubit.rs/errors/"
+                                                 "unknown_target"),
+                                       HasSubstr("the template is defined in\n"
+                                                 "  test/unowned.h\nwhich is "
+                                                 "not a public header of any "
+                                                 "Crubit-enabled target that\n"
+                                                 "  //test:testing_target\n"
+                                                 "depends on directly."),
+                                       HasSubstr("add that library as a direct "
+                                                 "dependency"),
+                                       Not(HasSubstr("_unknown_target")),
+                                       Not(HasSubstr("does not support "
+                                                     "Crubit")))))))))));
+}
+
 TEST(ImporterTest, CrashRepro_FunctionTypeAlias) {
   absl::string_view file = R"cc(
     using Callback = void(const int&);

@@ -148,7 +148,11 @@ pub fn missing_feature_descriptions<'a>(
 
     let missing_features_of_type = |rs_type_kind: &RsTypeKind<'_>| -> Option<Vec<String>> {
         for TargetAndFeatures { target, features } in &defining_and_owning_target {
-            let descriptions = rs_type_kind.missing_feature_descriptions_of_type(target, *features);
+            let descriptions = rs_type_kind.missing_feature_descriptions_of_type(
+                target,
+                *features,
+                ir.current_target(),
+            );
             if !descriptions.is_empty() {
                 return Some(descriptions);
             }

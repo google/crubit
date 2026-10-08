@@ -341,7 +341,11 @@ impl<'db> BindingsGenerator<'db> {
             self.defining_target(record.id()).as_ref().into_iter().chain([record.owning_target()])
         {
             let enabled_features = ir.target_crubit_features(target);
-            let reasons = type_kind.missing_feature_descriptions_of_type(target, enabled_features);
+            let reasons = type_kind.missing_feature_descriptions_of_type(
+                target,
+                enabled_features,
+                ir.current_target(),
+            );
             ensure!(reasons.is_empty(), reasons.join(", "));
         }
 
