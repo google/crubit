@@ -58,6 +58,8 @@ pub enum TraitName<'a> {
     /// The PartialOrd trait.
     PartialOrd {
         param: Rc<RsTypeKind<'a>>,
+        /// The C++ relational operator that the generated `PartialOrd` impl is backed by.
+        op: PartialOrdOp,
     },
     /// The trait for the const C++ operator[] overload.
     CcIndex {
@@ -82,6 +84,61 @@ pub enum TraitName<'a> {
 impl std::fmt::Display for TraitName<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         f.write_str(self.name_str())
+    }
+}
+
+/// A C++ relational operator that can be used to implement `PartialOrd`.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PartialOrdOp {
+    /// `operator<`
+    Lt,
+    /// `operator>`
+    Gt,
+    /// `operator<=`
+    Le,
+    /// `operator>=`
+    Ge,
+}
+
+impl PartialOrdOp {
+    /// All relational operators, in order of preference.
+    ///
+    /// Only one of these operators is used to implement `PartialOrd` for a given pair of operand
+    /// types. If a type overloads several of them, the earliest entry in this list wins, and the
+    /// remaining operators fall back on the default `PartialOrd` methods (which are derived from
+    /// `partial_cmp`).
+    pub const ALL: [PartialOrdOp; 4] =
+        [PartialOrdOp::Lt, PartialOrdOp::Gt, PartialOrdOp::Le, PartialOrdOp::Ge];
+
+    /// Returns the `PartialOrdOp` corresponding to the given C++ operator name, if any.
+    pub fn from_cc_name(cc_name: &str) -> Option<PartialOrdOp> {
+        PartialOrdOp::ALL.into_iter().find(|op| op.cc_name() == cc_name)
+    }
+
+    /// The C++ spelling of the operator, e.g. `<=`.
+    pub fn cc_name(self) -> &'static str {
+        match self {
+            PartialOrdOp::Lt => "<",
+            PartialOrdOp::Gt => ">",
+            PartialOrdOp::Le => "<=",
+            PartialOrdOp::Ge => ">=",
+        }
+    }
+
+    /// The name of the `PartialOrd` method implemented by this operator, e.g. `le`.
+    pub fn rs_method_name(self) -> &'static str {
+        match self {
+            PartialOrdOp::Lt => "lt",
+            PartialOrdOp::Gt => "gt",
+            PartialOrdOp::Le => "le",
+            PartialOrdOp::Ge => "ge",
+        }
+    }
+
+    /// The relational operators that take precedence over `self` when implementing `PartialOrd`.
+    pub fn preferred_ops(self) -> &'static [PartialOrdOp] {
+        let index = PartialOrdOp::ALL.iter().position(|op| *op == self).unwrap();
+        &PartialOrdOp::ALL[..index]
     }
 }
 
@@ -112,7 +169,7 @@ impl<'a> TraitName<'a> {
             | Self::UnsafeCtorNew(params)
             | Self::UnsafeFrom(params)
             | Self::Other { params, .. } => params,
-            Self::PartialEq { param, .. } | Self::PartialOrd { param } => {
+            Self::PartialEq { param, .. } | Self::PartialOrd { param, .. } => {
                 core::slice::from_ref(param)
             }
             Self::CcIndex { index_type, .. } | Self::CcIndexMut { index_type, .. } => {

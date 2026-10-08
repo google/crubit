@@ -8,7 +8,9 @@ use crubit_abi_type::{CrubitAbiTypeToRustExprTokens, CrubitAbiTypeToRustTokens};
 use database::code_snippet::{
     ApiSnippets, DeprecatedAttr, Feature, GeneratedItem, MustUseAttr, Thunk, Visibility,
 };
-use database::function_types::{FunctionId, GeneratedFunction, ImplFor, ImplKind, TraitName};
+use database::function_types::{
+    FunctionId, GeneratedFunction, ImplFor, ImplKind, PartialOrdOp, TraitName,
+};
 use database::rs_snippet::{
     format_generic_params, format_generic_params_replacing_by_self, should_derive_clone,
     unique_lifetimes, Lifetime, LifetimeOptions, Mutability, PassingConvention, RsTypeKind,
@@ -84,7 +86,7 @@ fn trait_name_to_token_stream_removing_trait_record<'a>(
                 quote! {PartialEq #formatted_params}
             }
         }
-        PartialOrd { param } => {
+        PartialOrd { param, .. } => {
             if self_type.is_some_and(|self_type| param.as_ref() == self_type) {
                 quote! {PartialOrd}
             } else {
@@ -527,19 +529,56 @@ fn generate_cc_operator_index_mut_impls<'a>(
     Ok((func_name, impl_kind))
 }
 
-fn api_func_shape_for_operator_lt<'a>(
+/// Generates the shape of a `PartialOrd` impl backed by one of the C++ relational operators
+/// (`<`, `>`, `<=`, `>=`).
+///
+/// Rust only allows a single `PartialOrd` impl for a given pair of operand types, so if the C++
+/// type overloads several relational operators, only the most preferred one (see
+/// [`PartialOrdOp::ALL`]) is bound. The remaining operators emit an explanatory error comment and
+/// are served by the default `PartialOrd` methods, which are derived from the generated
+/// `partial_cmp`.
+fn api_func_shape_for_operator_partial_ord<'a>(
     db: &BindingsGenerator<'a>,
     func: &Func<'a>,
     param_types: &mut [RsTypeKind<'a>],
+    op: PartialOrdOp,
     errors: &Errors,
 ) -> ErrorsOr<(Ident, ImplKind<'a>)> {
+    let op_name = op.cc_name();
+    // If a more preferred relational operator already implements `PartialOrd` for these operand
+    // types, rely on the default `PartialOrd` methods instead of generating a conflicting impl.
+    for preferred_op in op.preferred_ops() {
+        let preferred_op_name = preferred_op.cc_name();
+        let preferred_binding = db.get_binding(
+            UnqualifiedIdentifier::Operator(Operator::new(preferred_op_name)),
+            param_types.to_vec(),
+        );
+        if let Some((_, ImplKind::Trait { trait_name: TraitName::PartialOrd { .. }, .. })) =
+            preferred_binding
+        {
+            bail_to_errors!(
+                errors,
+                "Bindings for operator{op_name} were omitted because PartialOrd is already implemented via operator{preferred_op_name}"
+            );
+        }
+    }
     let [param_1, param_2] = param_types else {
-        panic!("Expected operator< to have exactly two parameters. Found: {func:?}")
+        panic!("Expected operator{op_name} to have exactly two parameters. Found: {func:?}")
     };
-    let lhs_ty = type_by_value_or_under_const_ref(db, param_1, "first operator< param", errors);
-    let rhs_ty = type_by_value_or_under_const_ref(db, param_2, "second operator< param", errors);
+    let lhs_ty = type_by_value_or_under_const_ref(
+        db,
+        param_1,
+        &format!("first operator{op_name} param"),
+        errors,
+    );
+    let rhs_ty = type_by_value_or_under_const_ref(
+        db,
+        param_2,
+        &format!("second operator{op_name} param"),
+        errors,
+    );
     let ((_, lhs_record), (param, rhs_record)) = (lhs_ty?, rhs_ty?);
-    // Even though Rust and C++ allow operator< to be implemented on different
+    // Even though Rust and C++ allow relational operators to be implemented on different
     // types, we don't generate bindings for them at this moment. The
     // issue is that our canonical implementation of partial_cmp relies
     // on transitivity. This would require checking that both lt(&T1,
@@ -549,7 +588,7 @@ fn api_func_shape_for_operator_lt<'a>(
     if lhs_record != rhs_record {
         bail_to_errors!(
             errors,
-            "operator< where lhs and rhs are not the same type. This is not yet supported."
+            "operator{op_name} where lhs and rhs are not the same type. This is not yet supported."
         );
     }
     let param = param.clone();
@@ -560,11 +599,11 @@ fn api_func_shape_for_operator_lt<'a>(
         db.get_binding(UnqualifiedIdentifier::Operator(Operator::new("==")), param_types.to_vec());
     match partialeq_binding {
         Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) => {}
-        _ => errors.add(anyhow!("operator< where operator== is missing.")),
+        _ => errors.add(anyhow!("operator{op_name} where operator== is missing.")),
     }
-    let func_name = make_rs_ident("lt");
+    let func_name = make_rs_ident(op.rs_method_name());
     let impl_kind = ImplKind::new_trait(
-        TraitName::PartialOrd { param: Rc::new(param) },
+        TraitName::PartialOrd { param: Rc::new(param), op },
         lhs_record.clone(),
         /* format_first_param_as_self= */ true,
         /* force_const_reference_params= */ true,
@@ -772,7 +811,12 @@ fn api_func_shape_for_operator<'a>(
             errors.add(anyhow!("Three-way comparison operator not yet supported (b/219827738)"));
             None
         }
-        "<" => api_func_shape_for_operator_lt(db, func, param_types, errors).ok(),
+        "<" | ">" | "<=" | ">=" => {
+            let partial_ord_op = PartialOrdOp::from_cc_name(op.name())
+                .expect("relational operator should map to a PartialOrdOp");
+            api_func_shape_for_operator_partial_ord(db, func, param_types, partial_ord_op, errors)
+                .ok()
+        }
         "=" => api_func_shape_for_operator_assign(db, func, maybe_record, param_types, errors),
         "+" if param_types.len() == 1 => {
             api_func_shape_for_operator_unary_plus(db, &param_types[0], errors).ok()
@@ -1687,7 +1731,7 @@ fn func_should_infer_lifetimes_of_references(func: &Func) -> bool {
         Constructor | ConversionOperator => true,
         Operator(op_name) => {
             match op_name.name() {
-                "==" | "!=" | "<=>" | "<" | "=" | "[]" => true,
+                "==" | "!=" | "<=>" | "<" | ">" | "<=" | ">=" | "=" | "[]" => true,
                 // TODO(b/333759161): Temporarily disable inference for `<<` and `>>`, as they
                 // creates conflicting libc++ impls for `long` and `long long`.
                 "<<" | ">>" => false,
@@ -2564,7 +2608,7 @@ pub fn generate_function<'a>(
                     quoted_return_type = quote! { Self::#name };
                 };
                 associated_type
-            } else if let TraitName::PartialOrd { param } = &trait_name {
+            } else if let TraitName::PartialOrd { param, op } = &trait_name {
                 let mut self_type = db.rs_type_kind(trait_record.into())?;
                 if let RsTypeKind::Record { ref mut lifetimes, .. } = self_type {
                     *lifetimes = trait_lifetime_params.clone();
@@ -2573,17 +2617,42 @@ pub fn generate_function<'a>(
                     ImplFor::T => param.to_token_stream_replacing_by_self(db, Some(&self_type)),
                     ImplFor::RefT | ImplFor::Type(_) => param.to_token_stream(db),
                 };
+                // `partial_cmp` is synthesized from `==` and the single relational operator that
+                // is bound. Equality is checked first, so for `<=` and `>=` the remaining checks
+                // behave like the strict `<` and `>`.
+                let (op_tokens, forward_ordering, reverse_ordering) = match op {
+                    PartialOrdOp::Lt => (
+                        quote! { < },
+                        quote! { core::cmp::Ordering::Less },
+                        quote! { core::cmp::Ordering::Greater },
+                    ),
+                    PartialOrdOp::Gt => (
+                        quote! { > },
+                        quote! { core::cmp::Ordering::Greater },
+                        quote! { core::cmp::Ordering::Less },
+                    ),
+                    PartialOrdOp::Le => (
+                        quote! { <= },
+                        quote! { core::cmp::Ordering::Less },
+                        quote! { core::cmp::Ordering::Greater },
+                    ),
+                    PartialOrdOp::Ge => (
+                        quote! { >= },
+                        quote! { core::cmp::Ordering::Greater },
+                        quote! { core::cmp::Ordering::Less },
+                    ),
+                };
                 quote! {
                     #[inline(always)]
                     fn partial_cmp(&self, other: & #quoted_param_or_self) -> Option<core::cmp::Ordering> {
                         if self == other {
                             return Some(core::cmp::Ordering::Equal);
                         }
-                        if self < other {
-                            return Some(core::cmp::Ordering::Less);
+                        if self #op_tokens other {
+                            return Some(#forward_ordering);
                         }
-                        if other < self {
-                            return Some(core::cmp::Ordering::Greater);
+                        if other #op_tokens self {
+                            return Some(#reverse_ordering);
                         }
                         None
                     }

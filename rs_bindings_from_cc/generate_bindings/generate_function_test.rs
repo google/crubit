@@ -1673,6 +1673,307 @@ fn test_impl_lt_missing_eq_impl() -> Result<()> {
 }
 
 #[gtest]
+fn test_impl_gt_for_member_function() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"#pragma clang lifetime_elision
+        struct SomeStruct final {
+            inline bool operator==(const SomeStruct& other) const {
+                return i == other.i;
+            }
+            inline bool operator>(const SomeStruct& other) const {
+                return i > other.i;
+            }
+            int i;
+        };"#,
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl PartialOrd for SomeStruct {
+                #[inline(always)]
+                fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+                    if self == other {
+                        return Some(core::cmp::Ordering::Equal);
+                    }
+                    if self > other {
+                        return Some(core::cmp::Ordering::Greater);
+                    }
+                    if other > self {
+                        return Some(core::cmp::Ordering::Less);
+                    }
+                    None
+                }
+                #[inline(always)]
+                fn gt<'a, 'b>(&'a self, other: &'b Self) -> bool {
+                    unsafe { crate::detail::...(self, other) }
+                }
+            }
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" bool ...(struct SomeStruct const * __this, struct SomeStruct const * other) {
+                return __this->operator>(*other);
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_impl_le_for_free_function() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"#pragma clang lifetime_elision
+        struct SomeStruct final {
+            inline bool operator==(const SomeStruct& other) const {
+                return i == other.i;
+            }
+            int i;
+        };
+        bool operator<=(const SomeStruct& lhs, const SomeStruct& rhs) {
+            return lhs.i <= rhs.i;
+        }"#,
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl PartialOrd for crate::SomeStruct {
+                #[inline(always)]
+                fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+                    if self == other {
+                        return Some(core::cmp::Ordering::Equal);
+                    }
+                    if self <= other {
+                        return Some(core::cmp::Ordering::Less);
+                    }
+                    if other <= self {
+                        return Some(core::cmp::Ordering::Greater);
+                    }
+                    None
+                }
+                #[inline(always)]
+                fn le<'a, 'b>(&'a self, rhs: &'b Self) -> bool {
+                    unsafe { crate::detail::...(self, rhs) }
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_impl_ge_for_member_function() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"#pragma clang lifetime_elision
+        struct SomeStruct final {
+            inline bool operator==(const SomeStruct& other) const {
+                return i == other.i;
+            }
+            inline bool operator>=(const SomeStruct& other) const {
+                return i >= other.i;
+            }
+            int i;
+        };"#,
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl PartialOrd for SomeStruct {
+                #[inline(always)]
+                fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+                    if self == other {
+                        return Some(core::cmp::Ordering::Equal);
+                    }
+                    if self >= other {
+                        return Some(core::cmp::Ordering::Greater);
+                    }
+                    if other >= self {
+                        return Some(core::cmp::Ordering::Less);
+                    }
+                    None
+                }
+                #[inline(always)]
+                fn ge<'a, 'b>(&'a self, other: &'b Self) -> bool {
+                    unsafe { crate::detail::...(self, other) }
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+/// When a type overloads all relational operators, only `operator<` is bound; the others are
+/// served by the default `PartialOrd` methods rather than producing conflicting impls or
+/// "unsupported operator" errors.
+#[gtest]
+fn test_impl_all_relational_operators_only_binds_lt() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"#pragma clang lifetime_elision
+        struct SomeStruct final {
+            inline bool operator==(const SomeStruct& other) const {
+                return i == other.i;
+            }
+            inline bool operator<(const SomeStruct& other) const {
+                return i < other.i;
+            }
+            inline bool operator>(const SomeStruct& other) const {
+                return i > other.i;
+            }
+            inline bool operator<=(const SomeStruct& other) const {
+                return i <= other.i;
+            }
+            inline bool operator>=(const SomeStruct& other) const {
+                return i >= other.i;
+            }
+            int i;
+        };"#,
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            impl PartialOrd for SomeStruct {
+                #[inline(always)]
+                fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+                    ...
+                }
+                #[inline(always)]
+                fn lt<'a, 'b>(&'a self, other: &'b Self) -> bool {
+                    unsafe { crate::detail::...(self, other) }
+                }
+            }
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { fn gt });
+    assert_rs_not_matches!(rs_api, quote! { fn le });
+    assert_rs_not_matches!(rs_api, quote! { fn ge });
+    let rs_api_str = rs_api.to_string();
+    expect_that!(rs_api_str, not(contains_substring("not supported")));
+    expect_that!(
+        rs_api_str,
+        contains_substring(
+            "Bindings for operator> were omitted because PartialOrd is already implemented via operator<"
+        )
+    );
+    expect_that!(
+        rs_api_str,
+        contains_substring(
+            "Bindings for operator<= were omitted because PartialOrd is already implemented via operator<"
+        )
+    );
+    expect_that!(
+        rs_api_str,
+        contains_substring(
+            "Bindings for operator>= were omitted because PartialOrd is already implemented via operator<"
+        )
+    );
+    Ok(())
+}
+
+/// When `operator<` is absent, `operator>` is the next most preferred relational operator and
+/// is bound in its place, while `<=` and `>=` defer to it.
+#[gtest]
+fn test_impl_gt_le_ge_without_lt_binds_gt() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"#pragma clang lifetime_elision
+        struct SomeStruct final {
+            inline bool operator==(const SomeStruct& other) const {
+                return i == other.i;
+            }
+            inline bool operator>(const SomeStruct& other) const {
+                return i > other.i;
+            }
+            inline bool operator<=(const SomeStruct& other) const {
+                return i <= other.i;
+            }
+            inline bool operator>=(const SomeStruct& other) const {
+                return i >= other.i;
+            }
+            int i;
+        };"#,
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(rs_api, quote! { fn gt<'a, 'b>(&'a self, other: &'b Self) -> bool });
+    assert_rs_not_matches!(rs_api, quote! { fn lt });
+    assert_rs_not_matches!(rs_api, quote! { fn le });
+    assert_rs_not_matches!(rs_api, quote! { fn ge });
+    let rs_api_str = rs_api.to_string();
+    expect_that!(
+        rs_api_str,
+        contains_substring(
+            "Bindings for operator<= were omitted because PartialOrd is already implemented via operator>"
+        )
+    );
+    expect_that!(
+        rs_api_str,
+        contains_substring(
+            "Bindings for operator>= were omitted because PartialOrd is already implemented via operator>"
+        )
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_impl_gt_missing_eq_impl() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct SomeStruct final {
+            inline bool operator>(const SomeStruct& other) const {
+                return i > other.i;
+            }
+            int i;
+        };"#,
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    expect_that!(rs_api.to_string(), contains_substring("operator> where operator== is missing"),);
+    Ok(())
+}
+
+#[gtest]
+fn test_impl_le_different_operands() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct SomeStruct1 final {
+            int i;
+        };
+        struct SomeStruct2 final {
+            inline bool operator==(const SomeStruct1& other) const {
+                return i == other.i;
+            }
+            inline bool operator<=(const SomeStruct1& other) const {
+                return i <= other.i;
+            };
+            int i;
+        };"#,
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_not_matches!(rs_api, quote! {impl PartialOrd});
+    expect_that!(
+        rs_api.to_string(),
+        contains_substring("operator<= where lhs and rhs are not the same type")
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_thunk_ident_function() -> Result<()> {
     let proto = ir_proto_from_cc("inline int foo() { return 42; }")?;
 

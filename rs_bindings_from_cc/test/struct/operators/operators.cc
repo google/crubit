@@ -54,6 +54,10 @@ bool operator<(OperandByValueAndRef lhs, const OperandByValueAndRef& rhs) {
   return (lhs.i % 10) < (rhs.i % 10);
 }
 
+bool operator==(const OnlyGe& lhs, const OnlyGe& rhs) { return lhs.i == rhs.i; }
+
+bool operator>=(const OnlyGe& lhs, const OnlyGe& rhs) { return lhs.i >= rhs.i; }
+
 namespace test_namespace_bindings {
 
 // bool operator==(const OperandForFreeFuncInDifferentNamespace& lhs,

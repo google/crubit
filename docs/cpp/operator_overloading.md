@@ -40,6 +40,9 @@ C++ API       | Rust bindings
 ------------- | --------------
 `operator==`  | `PartialEq`
 `operator<`   | `PartialOrd`
+`operator>`   | `PartialOrd`
+`operator<=`  | `PartialOrd`
+`operator>=`  | `PartialOrd`
 `operator+`   | `Add`
 `operator-`   | `Sub`
 `operator*`   | `Mul`
@@ -68,6 +71,23 @@ C++ API     | Rust bindings
 ----------- | -------------
 `operator-` | `Neg`
 `operator!` | `Not`
+
+### `PartialOrd`
+
+Rust only permits a single `PartialOrd` impl for a given pair of operand types,
+so Crubit picks one of the relational operators (`<`, `>`, `<=`, `>=`) to back
+the impl, in that order of preference, and synthesizes `partial_cmp` from it
+together with `operator==`. The remaining relational operators are not bound
+directly; they are served by the default `PartialOrd` methods, which are derived
+from `partial_cmp`.
+
+A `PartialOrd` impl is only generated if `operator==` is also available for the
+same operand types, and if the left- and right-hand operands have the same type.
+
+The three-way comparison operator (`operator<=>`) is not yet supported. Types
+that only declare `operator<=>` do not receive a `PartialOrd` impl: Crubit only
+binds explicitly declared relational operators, not the rewritten candidates
+that C++20 synthesizes from `<=>`.
 
 ## One-way map into `Display`
 

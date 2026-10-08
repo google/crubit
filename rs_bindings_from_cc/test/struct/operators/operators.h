@@ -257,4 +257,49 @@ struct OnlyEq {
   }
 };
 
+// Overloads every relational operator. Only `operator<` is bound; the rest
+// are served by the default `PartialOrd` methods.
+struct AllRelationalOperators final {
+  int i;
+
+  bool operator==(const AllRelationalOperators& other) const {
+    return i == other.i;
+  }
+  bool operator<(const AllRelationalOperators& other) const {
+    return i < other.i;
+  }
+  // Deliberately inconsistent with `operator<` so that the test can tell
+  // whether these are called.
+  bool operator>(const AllRelationalOperators&) const { return false; }
+  bool operator<=(const AllRelationalOperators&) const { return false; }
+  bool operator>=(const AllRelationalOperators&) const { return false; }
+};
+
+// Should generate `impl PartialOrd for OnlyGt` backed by `operator>`.
+struct OnlyGt final {
+  int i;
+
+  bool operator==(const OnlyGt& other) const { return i == other.i; }
+  bool operator>(const OnlyGt& other) const { return i > other.i; }
+};
+
+// Should generate `impl PartialOrd for OnlyLe` backed by `operator<=`.
+struct OnlyLe final {
+  int i;
+
+  friend bool operator==(const OnlyLe& lhs, const OnlyLe& rhs) {
+    return lhs.i == rhs.i;
+  }
+  friend bool operator<=(const OnlyLe& lhs, const OnlyLe& rhs) {
+    return lhs.i <= rhs.i;
+  }
+};
+
+// Should generate `impl PartialOrd for OnlyGe` backed by `operator>=`.
+struct OnlyGe final {
+  int i;
+};
+bool operator==(const OnlyGe& lhs, const OnlyGe& rhs);
+bool operator>=(const OnlyGe& lhs, const OnlyGe& rhs);
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_OPERATORS_H_

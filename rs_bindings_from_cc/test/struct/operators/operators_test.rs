@@ -331,3 +331,65 @@ fn test_alias_eq() {
     assert!(s1 == s2);
     assert!(s2 == s1);
 }
+
+#[gtest]
+fn test_all_relational_operators_only_binds_lt() {
+    let s1 = AllRelationalOperators { i: 1 };
+    let s2 = AllRelationalOperators { i: 2 };
+    expect_true!(s1 < s2);
+    // These are derived from `partial_cmp` (and therefore from `operator<`), not from the C++
+    // `operator>`, `operator<=`, and `operator>=`, which always return `false`.
+    expect_true!(s2 > s1);
+    expect_true!(s1 <= s2);
+    expect_true!(s1 <= s1);
+    expect_true!(s2 >= s1);
+    expect_true!(s2 >= s2);
+    expect_eq!(s1.partial_cmp(&s2), Some(core::cmp::Ordering::Less));
+    expect_eq!(s2.partial_cmp(&s1), Some(core::cmp::Ordering::Greater));
+    expect_eq!(s1.partial_cmp(&s1), Some(core::cmp::Ordering::Equal));
+}
+
+#[gtest]
+fn test_only_gt() {
+    let s1 = OnlyGt { i: 1 };
+    let s2 = OnlyGt { i: 2 };
+    expect_true!(s2 > s1);
+    expect_true!(s1 < s2);
+    expect_true!(s1 <= s2);
+    expect_true!(s1 <= s1);
+    expect_true!(s2 >= s1);
+    expect_false!(s1 > s2);
+    expect_eq!(s1.partial_cmp(&s2), Some(core::cmp::Ordering::Less));
+    expect_eq!(s2.partial_cmp(&s1), Some(core::cmp::Ordering::Greater));
+    expect_eq!(s1.partial_cmp(&s1), Some(core::cmp::Ordering::Equal));
+}
+
+#[gtest]
+fn test_only_le() {
+    let s1 = OnlyLe { i: 1 };
+    let s2 = OnlyLe { i: 2 };
+    expect_true!(s1 <= s2);
+    expect_true!(s1 <= s1);
+    expect_true!(s1 < s2);
+    expect_true!(s2 > s1);
+    expect_true!(s2 >= s1);
+    expect_false!(s2 <= s1);
+    expect_eq!(s1.partial_cmp(&s2), Some(core::cmp::Ordering::Less));
+    expect_eq!(s2.partial_cmp(&s1), Some(core::cmp::Ordering::Greater));
+    expect_eq!(s1.partial_cmp(&s1), Some(core::cmp::Ordering::Equal));
+}
+
+#[gtest]
+fn test_only_ge() {
+    let s1 = OnlyGe { i: 1 };
+    let s2 = OnlyGe { i: 2 };
+    expect_true!(s2 >= s1);
+    expect_true!(s2 >= s2);
+    expect_true!(s1 < s2);
+    expect_true!(s2 > s1);
+    expect_true!(s1 <= s2);
+    expect_false!(s1 >= s2);
+    expect_eq!(s1.partial_cmp(&s2), Some(core::cmp::Ordering::Less));
+    expect_eq!(s2.partial_cmp(&s1), Some(core::cmp::Ordering::Greater));
+    expect_eq!(s1.partial_cmp(&s1), Some(core::cmp::Ordering::Equal));
+}
