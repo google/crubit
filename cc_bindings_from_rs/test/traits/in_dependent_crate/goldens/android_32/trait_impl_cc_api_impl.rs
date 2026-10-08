@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::trait_impl_golden::MyStruct>() == 4);
-const _: () = assert!(::std::mem::align_of::<::trait_impl_golden::MyStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::trait_impl_golden::MyStruct>() == 4);
+const _: () = assert!(::core::mem::align_of::<::trait_impl_golden::MyStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -21,8 +21,8 @@ unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_voi
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::trait_impl_golden::MyStruct, x) == 0);
-const _: () = assert!(::std::mem::size_of::<::trait_impl_golden::NotImplemented>() == 12);
-const _: () = assert!(::std::mem::align_of::<::trait_impl_golden::NotImplemented>() == 4);
+const _: () = assert!(::core::mem::size_of::<::trait_impl_golden::NotImplemented>() == 12);
+const _: () = assert!(::core::mem::align_of::<::trait_impl_golden::NotImplemented>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::trait_impl_golden::NotImplemented, foo) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_MyTrait_udo_usomething_utrait_uimpl_ugolden_x0000003a_x0000003aMyStruct(

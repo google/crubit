@@ -19,8 +19,9 @@ unsafe extern "C" fn __crubit_thunk_c_uchar_umut_uptr_uarg(__param_0: *mut ::ffi
 unsafe extern "C" fn __crubit_thunk_c_uchar_uptr_uarg(__param_0: *const ::ffi_11::c_char) -> () {
     unsafe { ::primitive_types_golden::argument_types::c_char_ptr_arg(__param_0) }
 }
-const _: () = assert!(::std::mem::size_of::<::primitive_types_golden::field_types::Types>() == 152);
-const _: () = assert!(::std::mem::align_of::<::primitive_types_golden::field_types::Types>() == 8);
+const _: () =
+    assert!(::core::mem::size_of::<::primitive_types_golden::field_types::Types>() == 152);
+const _: () = assert!(::core::mem::align_of::<::primitive_types_golden::field_types::Types>() == 8);
 const _: () =
     assert!(::core::mem::offset_of!(::primitive_types_golden::field_types::Types, i8_func) == 0);
 const _: () = assert!(
@@ -218,11 +219,11 @@ unsafe extern "C" fn __crubit_thunk_usize() -> usize {
     unsafe { ::primitive_types_golden::return_types::usize() }
 }
 const _: () = assert!(
-    ::std::mem::size_of::<::primitive_types_golden::test_c_void_ptr::StructWithCVoidPointerMember>(
+    ::core::mem::size_of::<::primitive_types_golden::test_c_void_ptr::StructWithCVoidPointerMember>(
     ) == 16
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::primitive_types_golden::test_c_void_ptr::StructWithCVoidPointerMember>(
+    ::core::mem::align_of::<::primitive_types_golden::test_c_void_ptr::StructWithCVoidPointerMember>(
     ) == 8
 );
 const _: () = assert!(

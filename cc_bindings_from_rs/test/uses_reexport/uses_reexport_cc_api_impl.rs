@@ -11,10 +11,10 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::uses_reexport_golden::Bar>() == 4);
-const _: () = assert!(::std::mem::align_of::<::uses_reexport_golden::Bar>() == 4);
-const _: () = assert!(::std::mem::size_of::<::uses_reexport_golden::Foo>() == 8);
-const _: () = assert!(::std::mem::align_of::<::uses_reexport_golden::Foo>() == 4);
+const _: () = assert!(::core::mem::size_of::<::uses_reexport_golden::Bar>() == 4);
+const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::Bar>() == 4);
+const _: () = assert!(::core::mem::size_of::<::uses_reexport_golden::Foo>() == 8);
+const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::Foo>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -30,14 +30,14 @@ unsafe extern "C" fn __crubit_thunk_bar(__ret_ptr: *mut core::ffi::c_void) -> ()
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::uses_reexport_golden::Foo, bar) == 4);
-const _: () = assert!(::std::mem::size_of::<::uses_reexport_golden::G>() == 4);
-const _: () = assert!(::std::mem::align_of::<::uses_reexport_golden::G>() == 4);
+const _: () = assert!(::core::mem::size_of::<::uses_reexport_golden::G>() == 4);
+const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::G>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::uses_reexport_golden::G, field) == 0);
-const _: () = assert!(::std::mem::size_of::<::uses_reexport_golden::InnerX>() == 4);
-const _: () = assert!(::std::mem::align_of::<::uses_reexport_golden::InnerX>() == 4);
+const _: () = assert!(::core::mem::size_of::<::uses_reexport_golden::InnerX>() == 4);
+const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::InnerX>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::uses_reexport_golden::InnerX, field) == 0);
-const _: () = assert!(::std::mem::size_of::<::uses_reexport_golden::X1>() == 4);
-const _: () = assert!(::std::mem::align_of::<::uses_reexport_golden::X1>() == 4);
+const _: () = assert!(::core::mem::size_of::<::uses_reexport_golden::X1>() == 4);
+const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::X1>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_f1() -> i32 {
     unsafe { ::uses_reexport_golden::f1() }

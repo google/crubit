@@ -12,8 +12,8 @@
 extern crate alloc;
 extern crate core;
 extern crate foo_rust_proto as foo_proto;
-const _: () = assert!(::std::mem::size_of::<::rust_lib_golden::FooService>() == 8);
-const _: () = assert!(::std::mem::align_of::<::rust_lib_golden::FooService>() == 8);
+const _: () = assert!(::core::mem::size_of::<::rust_lib_golden::FooService>() == 8);
+const _: () = assert!(::core::mem::align_of::<::rust_lib_golden::FooService>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_urust_ulib_ugolden_x0000003a_x0000003aFooService(
     __ret_ptr: *mut core::ffi::c_void,
@@ -70,7 +70,7 @@ unsafe extern "C" fn __crubit_thunk_clone_urequest_ustats(
     unsafe {
         let __rs_return_value = ::rust_lib_golden::FooService::clone_request_stats(__self);
         proto2_rust_thunk_Message_foo_service_FooRequestStats_crubit_rust_to_cpp_converter(
-            std::ptr::from_ref(&__rs_return_value) as *const core::ffi::c_void,
+            ::core::ptr::from_ref(&__rs_return_value) as *const ::core::ffi::c_void,
             __ret_ptr,
         );
     }
@@ -104,8 +104,8 @@ unsafe extern "C" fn __crubit_thunk_enum_uin_usignature(_e: *const core::ffi::c_
         ::rust_lib_golden::FooService::enum_in_signature(_e)
     }
 }
-const _: () = assert!(::std::mem::size_of::<::rust_lib_golden::StructWithProto>() == 8);
-const _: () = assert!(::std::mem::align_of::<::rust_lib_golden::StructWithProto>() == 8);
+const _: () = assert!(::core::mem::size_of::<::rust_lib_golden::StructWithProto>() == 8);
+const _: () = assert!(::core::mem::align_of::<::rust_lib_golden::StructWithProto>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_urust_ulib_ugolden_x0000003a_x0000003aStructWithProto(
     __ret_ptr: *mut core::ffi::c_void,

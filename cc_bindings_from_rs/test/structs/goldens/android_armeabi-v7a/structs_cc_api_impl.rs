@@ -12,9 +12,9 @@
 extern crate alloc;
 extern crate core;
 const _: () =
-    assert!(::std::mem::size_of::<::structs_golden::abi_classification::StructFloat>() == 16);
+    assert!(::core::mem::size_of::<::structs_golden::abi_classification::StructFloat>() == 16);
 const _: () =
-    assert!(::std::mem::align_of::<::structs_golden::abi_classification::StructFloat>() == 8);
+    assert!(::core::mem::align_of::<::structs_golden::abi_classification::StructFloat>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(f: f32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -45,9 +45,9 @@ unsafe extern "C" fn __crubit_thunk_inspect(
     }
 }
 const _: () =
-    assert!(::std::mem::size_of::<::structs_golden::abi_classification::StructInteger>() == 4);
+    assert!(::core::mem::size_of::<::structs_golden::abi_classification::StructInteger>() == 4);
 const _: () =
-    assert!(::std::mem::align_of::<::structs_golden::abi_classification::StructInteger>() == 4);
+    assert!(::core::mem::align_of::<::structs_golden::abi_classification::StructInteger>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(i: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -78,9 +78,9 @@ unsafe extern "C" fn __crubit_thunk_inspect(
     }
 }
 const _: () =
-    assert!(::std::mem::size_of::<::structs_golden::abi_classification::StructMemory>() == 5);
+    assert!(::core::mem::size_of::<::structs_golden::abi_classification::StructMemory>() == 5);
 const _: () =
-    assert!(::std::mem::align_of::<::structs_golden::abi_classification::StructMemory>() == 1);
+    assert!(::core::mem::align_of::<::structs_golden::abi_classification::StructMemory>() == 1);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(i: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -111,10 +111,10 @@ unsafe extern "C" fn __crubit_thunk_inspect(
     }
 }
 const _: () = assert!(
-    ::std::mem::size_of::<::structs_golden::aggregate_initialization::AnnotatedTwoDrops>() == 24
+    ::core::mem::size_of::<::structs_golden::aggregate_initialization::AnnotatedTwoDrops>() == 24
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::structs_golden::aggregate_initialization::AnnotatedTwoDrops>() == 4
+    ::core::mem::align_of::<::structs_golden::aggregate_initialization::AnnotatedTwoDrops>() == 4
 );
 const _: () = assert!(
     ::core::mem::offset_of!(::structs_golden::aggregate_initialization::AnnotatedTwoDrops, 0) == 0
@@ -123,10 +123,10 @@ const _: () = assert!(
     ::core::mem::offset_of!(::structs_golden::aggregate_initialization::AnnotatedTwoDrops, 1) == 12
 );
 const _: () = assert!(
-    ::std::mem::size_of::<::structs_golden::aggregate_initialization::BasicAggregate>() == 8
+    ::core::mem::size_of::<::structs_golden::aggregate_initialization::BasicAggregate>() == 8
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::structs_golden::aggregate_initialization::BasicAggregate>() == 4
+    ::core::mem::align_of::<::structs_golden::aggregate_initialization::BasicAggregate>() == 4
 );
 const _: () = assert!(
     ::core::mem::offset_of!(::structs_golden::aggregate_initialization::BasicAggregate, x) == 0
@@ -135,10 +135,10 @@ const _: () = assert!(
     ::core::mem::offset_of!(::structs_golden::aggregate_initialization::BasicAggregate, y) == 4
 );
 const _: () = assert!(
-    ::std::mem::size_of::<::structs_golden::aggregate_initialization::CustomDropStruct>() == 4
+    ::core::mem::size_of::<::structs_golden::aggregate_initialization::CustomDropStruct>() == 4
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::structs_golden::aggregate_initialization::CustomDropStruct>() == 4
+    ::core::mem::align_of::<::structs_golden::aggregate_initialization::CustomDropStruct>() == 4
 );
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003aaggregate_uinitialization_x0000003a_x0000003aCustomDropStruct(
@@ -158,10 +158,10 @@ const _: () = assert!(
     ::core::mem::offset_of!(::structs_golden::aggregate_initialization::CustomDropStruct, x) == 0
 );
 const _: () = assert!(
-    ::std::mem::size_of::<::structs_golden::aggregate_initialization::NonExhaustiveStruct>() == 8
+    ::core::mem::size_of::<::structs_golden::aggregate_initialization::NonExhaustiveStruct>() == 8
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::structs_golden::aggregate_initialization::NonExhaustiveStruct>() == 4
+    ::core::mem::align_of::<::structs_golden::aggregate_initialization::NonExhaustiveStruct>() == 4
 );
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(
@@ -184,20 +184,20 @@ const _: () = assert!(
         == 4
 );
 const _: () = assert!(
-    ::std::mem::size_of::<::structs_golden::aggregate_initialization::SingleDropField>() == 12
+    ::core::mem::size_of::<::structs_golden::aggregate_initialization::SingleDropField>() == 12
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::structs_golden::aggregate_initialization::SingleDropField>() == 4
+    ::core::mem::align_of::<::structs_golden::aggregate_initialization::SingleDropField>() == 4
 );
 const _: () = assert!(
     ::core::mem::offset_of!(::structs_golden::aggregate_initialization::SingleDropField, 0) == 0
 );
 const _: () = assert!(
-    ::std::mem::size_of::<::structs_golden::aggregate_initialization::StructWithPrivateField>()
+    ::core::mem::size_of::<::structs_golden::aggregate_initialization::StructWithPrivateField>()
         == 8
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::structs_golden::aggregate_initialization::StructWithPrivateField>()
+    ::core::mem::align_of::<::structs_golden::aggregate_initialization::StructWithPrivateField>()
         == 4
 );
 #[unsafe(no_mangle)]
@@ -217,10 +217,10 @@ const _: () = assert!(
         == 0
 );
 const _: () = assert!(
-    ::std::mem::size_of::<::structs_golden::aggregate_initialization::TupleAggregate>() == 16
+    ::core::mem::size_of::<::structs_golden::aggregate_initialization::TupleAggregate>() == 16
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::structs_golden::aggregate_initialization::TupleAggregate>() == 8
+    ::core::mem::align_of::<::structs_golden::aggregate_initialization::TupleAggregate>() == 8
 );
 const _: () = assert!(
     ::core::mem::offset_of!(::structs_golden::aggregate_initialization::TupleAggregate, 1) == 0
@@ -229,10 +229,10 @@ const _: () = assert!(
     ::core::mem::offset_of!(::structs_golden::aggregate_initialization::TupleAggregate, 0) == 8
 );
 const _: () = assert!(
-    ::std::mem::size_of::<::structs_golden::aggregate_initialization::UnannotatedTwoDrops>() == 24
+    ::core::mem::size_of::<::structs_golden::aggregate_initialization::UnannotatedTwoDrops>() == 24
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::structs_golden::aggregate_initialization::UnannotatedTwoDrops>() == 4
+    ::core::mem::align_of::<::structs_golden::aggregate_initialization::UnannotatedTwoDrops>() == 4
 );
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003aaggregate_uinitialization_x0000003a_x0000003aUnannotatedTwoDrops(
@@ -248,8 +248,8 @@ const _: () = assert!(
     ::core::mem::offset_of!(::structs_golden::aggregate_initialization::UnannotatedTwoDrops, 1)
         == 12
 );
-const _: () = assert!(::std::mem::size_of::<::structs_golden::default_repr::Point>() == 8);
-const _: () = assert!(::std::mem::align_of::<::structs_golden::default_repr::Point>() == 4);
+const _: () = assert!(::core::mem::size_of::<::structs_golden::default_repr::Point>() == 8);
+const _: () = assert!(::core::mem::align_of::<::structs_golden::default_repr::Point>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::structs_golden::default_repr::Point, x) == 0);
 const _: () = assert!(::core::mem::offset_of!(::structs_golden::default_repr::Point, y) == 4);
 #[unsafe(no_mangle)]
@@ -270,8 +270,8 @@ unsafe extern "C" fn __crubit_thunk_get_ux(p: *mut ::structs_golden::default_rep
         ::structs_golden::default_repr::get_x(p)
     }
 }
-const _: () = assert!(::std::mem::size_of::<::structs_golden::display::DisplayStruct>() == 4);
-const _: () = assert!(::std::mem::align_of::<::structs_golden::display::DisplayStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::structs_golden::display::DisplayStruct>() == 4);
+const _: () = assert!(::core::mem::align_of::<::structs_golden::display::DisplayStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_ToString_uto_ustring_ustructs_ugolden_x0000003a_x0000003adisplay_x0000003a_x0000003aDisplayStruct(
     __self: &'static ::structs_golden::display::DisplayStruct,
@@ -295,9 +295,9 @@ unsafe extern "C" fn __crubit_thunk_create(value: i32, __ret_ptr: *mut core::ffi
     }
 }
 const _: () =
-    assert!(::std::mem::size_of::<::structs_golden::interior_mutability::SomeStruct>() == 4);
+    assert!(::core::mem::size_of::<::structs_golden::interior_mutability::SomeStruct>() == 4);
 const _: () =
-    assert!(::std::mem::align_of::<::structs_golden::interior_mutability::SomeStruct>() == 4);
+    assert!(::core::mem::align_of::<::structs_golden::interior_mutability::SomeStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_x0000003ainterior_umutability_x0000003a_x0000003aSomeStruct(
     __ret_ptr: *mut core::ffi::c_void,
@@ -310,10 +310,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_
 const _: () =
     assert!(::core::mem::offset_of!(::structs_golden::interior_mutability::SomeStruct, field) == 0);
 const _: () = assert!(
-    ::std::mem::size_of::<::structs_golden::keyword_named_fields_and_methods::AField>() == 4
+    ::core::mem::size_of::<::structs_golden::keyword_named_fields_and_methods::AField>() == 4
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::structs_golden::keyword_named_fields_and_methods::AField>() == 4
+    ::core::mem::align_of::<::structs_golden::keyword_named_fields_and_methods::AField>() == 4
 );
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_operator(
@@ -322,11 +322,11 @@ unsafe extern "C" fn __crubit_thunk_operator(
     unsafe { ::structs_golden::keyword_named_fields_and_methods::AField::operator(__self) }
 }
 const _: () = assert!(
-    ::std::mem::size_of::<::structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct>()
+    ::core::mem::size_of::<::structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct>()
         == 8
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct>()
+    ::core::mem::align_of::<::structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct>()
         == 4
 );
 #[unsafe(no_mangle)]
@@ -350,8 +350,8 @@ const _: () = assert!(
         const_mut_ptr
     ) == 4
 );
-const _: () = assert!(::std::mem::size_of::<::structs_golden::non_cpp_movable::Point>() == 8);
-const _: () = assert!(::std::mem::align_of::<::structs_golden::non_cpp_movable::Point>() == 4);
+const _: () = assert!(::core::mem::size_of::<::structs_golden::non_cpp_movable::Point>() == 8);
+const _: () = assert!(::core::mem::align_of::<::structs_golden::non_cpp_movable::Point>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003anon_ucpp_umovable_x0000003a_x0000003aPoint(
     __self: *mut ::structs_golden::non_cpp_movable::Point,
@@ -377,8 +377,8 @@ unsafe extern "C" fn __crubit_thunk_get_ux(
 ) -> i32 {
     unsafe { ::structs_golden::non_cpp_movable::get_x(p) }
 }
-const _: () = assert!(::std::mem::size_of::<::structs_golden::repr_c::Point>() == 8);
-const _: () = assert!(::std::mem::align_of::<::structs_golden::repr_c::Point>() == 4);
+const _: () = assert!(::core::mem::size_of::<::structs_golden::repr_c::Point>() == 8);
+const _: () = assert!(::core::mem::align_of::<::structs_golden::repr_c::Point>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::structs_golden::repr_c::Point, x) == 0);
 const _: () = assert!(::core::mem::offset_of!(::structs_golden::repr_c::Point, y) == 4);
 #[unsafe(no_mangle)]
@@ -400,12 +400,12 @@ unsafe extern "C" fn __crubit_thunk_get_ux(p: *mut ::structs_golden::repr_c::Poi
     }
 }
 const _: () = assert!(
-    ::std::mem::size_of::<
+    ::core::mem::size_of::<
         ::structs_golden::struct_by_float_passing_with_no_cc_definition::StructFloat,
     >() == 16
 );
 const _: () = assert!(
-    ::std::mem::align_of::<
+    ::core::mem::align_of::<
         ::structs_golden::struct_by_float_passing_with_no_cc_definition::StructFloat,
     >() == 8
 );
@@ -446,11 +446,11 @@ unsafe extern "C" fn __crubit_thunk_no_umangle_umultiply(
     }
 }
 const _: () = assert!(
-    ::std::mem::size_of::<::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat>()
+    ::core::mem::size_of::<::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat>()
         == 16
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat>()
+    ::core::mem::align_of::<::structs_golden::struct_by_float_passing_with_no_thunk::StructFloat>()
         == 8
 );
 const _: () = assert!(
@@ -500,9 +500,9 @@ unsafe extern "C" fn __crubit_thunk_struct_uby_ufloat_upassing_uwith_uno_uthunk_
     }
 }
 const _: () =
-    assert!(::std::mem::size_of::<::structs_golden::unsupported_types::SomeStruct>() == 4);
+    assert!(::core::mem::size_of::<::structs_golden::unsupported_types::SomeStruct>() == 4);
 const _: () =
-    assert!(::std::mem::align_of::<::structs_golden::unsupported_types::SomeStruct>() == 4);
+    assert!(::core::mem::align_of::<::structs_golden::unsupported_types::SomeStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(x: *mut char, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -515,8 +515,8 @@ const _: () = assert!(
     ::core::mem::offset_of!(::structs_golden::unsupported_types::SomeStruct, unsupported_field)
         == 0
 );
-const _: () = assert!(::std::mem::size_of::<::structs_golden::zst_fields::ZstFields>() == 4);
-const _: () = assert!(::std::mem::align_of::<::structs_golden::zst_fields::ZstFields>() == 4);
+const _: () = assert!(::core::mem::size_of::<::structs_golden::zst_fields::ZstFields>() == 4);
+const _: () = assert!(::core::mem::align_of::<::structs_golden::zst_fields::ZstFields>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::structs_golden::zst_fields::ZstFields, value) == 0);
 const _: () = assert!(::core::mem::offset_of!(::structs_golden::zst_fields::ZstFields, zst1) == 4);
 const _: () = assert!(::core::mem::offset_of!(::structs_golden::zst_fields::ZstFields, zst2) == 4);

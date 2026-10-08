@@ -35,10 +35,10 @@ unsafe extern "C" fn __crubit_thunk_no_umsg_uadd(x: i32, y: i32) -> i32 {
     unsafe { ::functions_golden::fn_must_use_tests::no_msg_add(x, y) }
 }
 const _: () = assert!(
-    ::std::mem::size_of::<::functions_golden::fn_param_ty_tests::StructWithPinnedRefs>() == 8
+    ::core::mem::size_of::<::functions_golden::fn_param_ty_tests::StructWithPinnedRefs>() == 8
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::functions_golden::fn_param_ty_tests::StructWithPinnedRefs>() == 4
+    ::core::mem::align_of::<::functions_golden::fn_param_ty_tests::StructWithPinnedRefs>() == 4
 );
 const _: () = assert!(
     ::core::mem::offset_of!(
@@ -164,11 +164,11 @@ unsafe extern "C" fn __crubit_thunk_prefix_usums_u_x00000026mut_x00000020_x00000
     }
 }
 const _: () = assert!(
-    ::std::mem::size_of::<::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct>()
+    ::core::mem::size_of::<::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct>()
         == 4
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct>()
+    ::core::mem::align_of::<::functions_golden::generic_fn_tests::as_ref_trait_tests::MyStruct>()
         == 4
 );
 #[unsafe(no_mangle)]
@@ -232,11 +232,11 @@ unsafe extern "C" fn __crubit_thunk_two_uargs_u_x00000026_x0000005bi32_x0000005d
     }
 }
 const _: () = assert!(
-    ::std::mem::size_of::<::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>()
+    ::core::mem::size_of::<::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>()
         == 4
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>()
+    ::core::mem::align_of::<::functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>()
         == 4
 );
 #[unsafe(no_mangle)]
@@ -414,9 +414,10 @@ unsafe extern "C" fn __crubit_thunk_reused_ugeneric_uparam_ui32(x: i32, y: i32) 
 unsafe extern "C" fn __crubit_thunk_where_uclause_ui32(x: i32) -> i32 {
     unsafe { ::functions_golden::generic_fn_tests::into_trait_tests::where_clause(x) }
 }
-const _: () = assert!(::std::mem::size_of::<::functions_golden::non_null_tests::SomeStruct>() == 4);
 const _: () =
-    assert!(::std::mem::align_of::<::functions_golden::non_null_tests::SomeStruct>() == 4);
+    assert!(::core::mem::size_of::<::functions_golden::non_null_tests::SomeStruct>() == 4);
+const _: () =
+    assert!(::core::mem::align_of::<::functions_golden::non_null_tests::SomeStruct>() == 4);
 const _: () =
     assert!(::core::mem::offset_of!(::functions_golden::non_null_tests::SomeStruct, value) == 0);
 #[unsafe(no_mangle)]
@@ -468,10 +469,10 @@ unsafe extern "C" fn __crubit_thunk_add_ui32_uvia_urust_uabi_uwith_uduplicated_u
     }
 }
 const _: () = assert!(
-    ::std::mem::size_of::<::functions_golden::thread_safety_tests::ThreadSafeStruct>() == 4
+    ::core::mem::size_of::<::functions_golden::thread_safety_tests::ThreadSafeStruct>() == 4
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::functions_golden::thread_safety_tests::ThreadSafeStruct>() == 4
+    ::core::mem::align_of::<::functions_golden::thread_safety_tests::ThreadSafeStruct>() == 4
 );
 const _: () = assert!(
     ::core::mem::offset_of!(::functions_golden::thread_safety_tests::ThreadSafeStruct, value) == 0

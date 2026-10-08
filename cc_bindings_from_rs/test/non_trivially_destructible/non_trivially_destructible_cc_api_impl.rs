@@ -12,10 +12,10 @@
 extern crate alloc;
 extern crate core;
 const _: () = assert!(
-    ::std::mem::size_of::<::non_trivially_destructible_golden::NonTriviallyDestructable>() == 4
+    ::core::mem::size_of::<::non_trivially_destructible_golden::NonTriviallyDestructable>() == 4
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::non_trivially_destructible_golden::NonTriviallyDestructable>() == 4
+    ::core::mem::align_of::<::non_trivially_destructible_golden::NonTriviallyDestructable>() == 4
 );
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_unon_utrivially_udestructible_ugolden_x0000003a_x0000003aNonTriviallyDestructable(

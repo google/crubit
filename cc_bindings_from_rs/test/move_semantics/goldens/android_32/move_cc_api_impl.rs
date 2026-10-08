@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::move_golden::Copyable>() == 1);
-const _: () = assert!(::std::mem::align_of::<::move_golden::Copyable>() == 1);
+const _: () = assert!(::core::mem::size_of::<::move_golden::Copyable>() == 1);
+const _: () = assert!(::core::mem::align_of::<::move_golden::Copyable>() == 1);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_from_ubyte(byte: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -28,8 +28,8 @@ unsafe extern "C" fn __crubit_thunk_consume_uself(__self: *mut ::move_golden::Co
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::move_golden::Copyable, field) == 0);
-const _: () = assert!(::std::mem::size_of::<::move_golden::Foo>() == 4);
-const _: () = assert!(::std::mem::align_of::<::move_golden::Foo>() == 4);
+const _: () = assert!(::core::mem::size_of::<::move_golden::Foo>() == 4);
+const _: () = assert!(::core::mem::align_of::<::move_golden::Foo>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x0000003aFoo(
     __ret_ptr: *mut core::ffi::c_void,
@@ -63,8 +63,8 @@ unsafe extern "C" fn __crubit_thunk_into_ubyte(__self: *mut ::move_golden::Foo) 
         ::move_golden::Foo::into_byte(__self)
     }
 }
-const _: () = assert!(::std::mem::size_of::<::move_golden::UnmovableFoo>() == 4);
-const _: () = assert!(::std::mem::align_of::<::move_golden::UnmovableFoo>() == 4);
+const _: () = assert!(::core::mem::size_of::<::move_golden::UnmovableFoo>() == 4);
+const _: () = assert!(::core::mem::align_of::<::move_golden::UnmovableFoo>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aUnmovableFoo(
     __self: *mut ::move_golden::UnmovableFoo,

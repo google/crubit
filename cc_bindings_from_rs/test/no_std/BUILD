@@ -12,6 +12,10 @@ load(
     "golden_test",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+load(
+    "//support/rs_std:crubit_stdlib_cc_test.bzl",
+    "crubit_stdlib_cc_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -58,6 +62,16 @@ crubit_cc_test(
     ],
 )
 
+crubit_stdlib_cc_test(
+    name = "no_std_test_on_alloc",
+    srcs = ["no_std_test.cc"],
+    stdlib = "alloc",
+    deps = [
+        ":no_std_cc_api",
+        "//testing/base/public:gunit_main",
+    ],
+)
+
 rust_library(
     name = "no_core",
     srcs = ["no_core.rs"],
@@ -89,6 +103,16 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    deps = [
+        ":no_core_cc_api",
+        "//testing/base/public:gunit_main",
+    ],
+)
+
+crubit_stdlib_cc_test(
+    name = "no_core_test_on_core",
+    srcs = ["no_core_test.cc"],
+    stdlib = "core",
     deps = [
         ":no_core_cc_api",
         "//testing/base/public:gunit_main",

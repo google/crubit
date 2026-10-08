@@ -11,10 +11,12 @@
 
 extern crate alloc;
 extern crate core;
-const _: () =
-    assert!(::std::mem::size_of::<::into_iterator_rust_golden::ContainerWithInherentBegin>() == 12);
-const _: () =
-    assert!(::std::mem::align_of::<::into_iterator_rust_golden::ContainerWithInherentBegin>() == 4);
+const _: () = assert!(
+    ::core::mem::size_of::<::into_iterator_rust_golden::ContainerWithInherentBegin>() == 12
+);
+const _: () = assert!(
+    ::core::mem::align_of::<::into_iterator_rust_golden::ContainerWithInherentBegin>() == 4
+);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_begin(
     __self: &'static ::into_iterator_rust_golden::ContainerWithInherentBegin,
@@ -25,20 +27,21 @@ const _: () = assert!(
     ::core::mem::offset_of!(::into_iterator_rust_golden::ContainerWithInherentBegin, data) == 0
 );
 const _: () =
-    assert!(::std::mem::size_of::<::into_iterator_rust_golden::ContainerWithRefIntoIter>() == 8);
+    assert!(::core::mem::size_of::<::into_iterator_rust_golden::ContainerWithRefIntoIter>() == 8);
 const _: () =
-    assert!(::std::mem::align_of::<::into_iterator_rust_golden::ContainerWithRefIntoIter>() == 8);
+    assert!(::core::mem::align_of::<::into_iterator_rust_golden::ContainerWithRefIntoIter>() == 8);
 const _: () = assert!(
     ::core::mem::offset_of!(::into_iterator_rust_golden::ContainerWithRefIntoIter, iter) == 0
 );
-const _: () = assert!(::std::mem::size_of::<::into_iterator_rust_golden::MoveOnlyIterator>() == 8);
-const _: () = assert!(::std::mem::align_of::<::into_iterator_rust_golden::MoveOnlyIterator>() == 4);
+const _: () = assert!(::core::mem::size_of::<::into_iterator_rust_golden::MoveOnlyIterator>() == 8);
+const _: () =
+    assert!(::core::mem::align_of::<::into_iterator_rust_golden::MoveOnlyIterator>() == 4);
 const _: () =
     assert!(::core::mem::offset_of!(::into_iterator_rust_golden::MoveOnlyIterator, val) == 0);
 const _: () =
     assert!(::core::mem::offset_of!(::into_iterator_rust_golden::MoveOnlyIterator, count) == 4);
-const _: () = assert!(::std::mem::size_of::<::into_iterator_rust_golden::MoveOnlyPayload>() == 4);
-const _: () = assert!(::std::mem::align_of::<::into_iterator_rust_golden::MoveOnlyPayload>() == 4);
+const _: () = assert!(::core::mem::size_of::<::into_iterator_rust_golden::MoveOnlyPayload>() == 4);
+const _: () = assert!(::core::mem::align_of::<::into_iterator_rust_golden::MoveOnlyPayload>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_mutating_umethod(
     __self: &'static mut ::into_iterator_rust_golden::MoveOnlyPayload,
@@ -47,8 +50,8 @@ unsafe extern "C" fn __crubit_thunk_mutating_umethod(
 }
 const _: () =
     assert!(::core::mem::offset_of!(::into_iterator_rust_golden::MoveOnlyPayload, val) == 0);
-const _: () = assert!(::std::mem::size_of::<::into_iterator_rust_golden::MyContainer>() == 12);
-const _: () = assert!(::std::mem::align_of::<::into_iterator_rust_golden::MyContainer>() == 4);
+const _: () = assert!(::core::mem::size_of::<::into_iterator_rust_golden::MyContainer>() == 12);
+const _: () = assert!(::core::mem::align_of::<::into_iterator_rust_golden::MyContainer>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_uinto_uiterator_urust_ugolden_x0000003a_x0000003aMyContainer(
     __self: *mut ::into_iterator_rust_golden::MyContainer,
@@ -85,20 +88,20 @@ unsafe extern "C" fn __crubit_thunk_IntoIterator_uinto_uiter_u_x00000026mut_x000
 }
 const _: () = assert!(::core::mem::offset_of!(::into_iterator_rust_golden::MyContainer, data) == 0);
 const _: () =
-    assert!(::std::mem::size_of::<::into_iterator_rust_golden::MyContainerIntoIter>() == 24);
+    assert!(::core::mem::size_of::<::into_iterator_rust_golden::MyContainerIntoIter>() == 24);
 const _: () =
-    assert!(::std::mem::align_of::<::into_iterator_rust_golden::MyContainerIntoIter>() == 8);
-const _: () = assert!(::std::mem::size_of::<::into_iterator_rust_golden::MyContainerIter>() == 16);
-const _: () = assert!(::std::mem::align_of::<::into_iterator_rust_golden::MyContainerIter>() == 8);
+    assert!(::core::mem::align_of::<::into_iterator_rust_golden::MyContainerIntoIter>() == 8);
+const _: () = assert!(::core::mem::size_of::<::into_iterator_rust_golden::MyContainerIter>() == 16);
+const _: () = assert!(::core::mem::align_of::<::into_iterator_rust_golden::MyContainerIter>() == 8);
 const _: () =
-    assert!(::std::mem::size_of::<::into_iterator_rust_golden::MyContainerIterMut>() == 16);
+    assert!(::core::mem::size_of::<::into_iterator_rust_golden::MyContainerIterMut>() == 16);
 const _: () =
-    assert!(::std::mem::align_of::<::into_iterator_rust_golden::MyContainerIterMut>() == 8);
-const _: () = assert!(::std::mem::size_of::<::into_iterator_rust_golden::MyIterator>() == 4);
-const _: () = assert!(::std::mem::align_of::<::into_iterator_rust_golden::MyIterator>() == 4);
+    assert!(::core::mem::align_of::<::into_iterator_rust_golden::MyContainerIterMut>() == 8);
+const _: () = assert!(::core::mem::size_of::<::into_iterator_rust_golden::MyIterator>() == 4);
+const _: () = assert!(::core::mem::align_of::<::into_iterator_rust_golden::MyIterator>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::into_iterator_rust_golden::MyIterator, value) == 0);
-const _: () = assert!(::std::mem::size_of::<::into_iterator_rust_golden::SimpleIntoIter>() == 4);
-const _: () = assert!(::std::mem::align_of::<::into_iterator_rust_golden::SimpleIntoIter>() == 4);
+const _: () = assert!(::core::mem::size_of::<::into_iterator_rust_golden::SimpleIntoIter>() == 4);
+const _: () = assert!(::core::mem::align_of::<::into_iterator_rust_golden::SimpleIntoIter>() == 4);
 const _: () =
     assert!(::core::mem::offset_of!(::into_iterator_rust_golden::SimpleIntoIter, val) == 0);
 #[unsafe(no_mangle)]

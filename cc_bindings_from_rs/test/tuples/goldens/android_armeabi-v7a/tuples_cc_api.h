@@ -2201,7 +2201,7 @@ TupleWithSizeTypes final {
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < i32 >") rs_std::Option<::std::int32_t>
+    "core :: option :: Option < i32 >") rs_std::Option<::std::int32_t>
     : public rs_std::OptionBase<rs_std::Option<::std::int32_t>,
                                 ::std::int32_t> {
  public:
@@ -2326,7 +2326,7 @@ struct alignas(4)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < i32 , :: alloc :: string :: String >")
+    "core :: result :: Result < i32 , :: alloc :: string :: String >")
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String>
     : public rs_std::ResultBase<
           rs_std::Result<::std::int32_t, ::rs::alloc::string::String>,

@@ -33,7 +33,7 @@ use core::ptr;
 ///     type Value = Option<A::Value>;
 ///
 ///     // todo
-/// #    const SIZE: usize = std::mem::size_of::<bool>() + A::SIZE;
+/// #    const SIZE: usize = core::mem::size_of::<bool>() + A::SIZE;
 /// #   fn encode(self, value: Self::Value, encoder: &mut Encoder) {
 /// #       if let Some(inner) = value {
 /// #           transmute_abi().encode(true, encoder);
@@ -68,7 +68,7 @@ use core::ptr;
 /// unsafe impl<A: CrubitAbi> CrubitAbi for OptionAbi<A> {
 ///     type Value = Option<A::Value>;
 ///
-///     const SIZE: usize = std::mem::size_of::<bool>() + A::SIZE;
+///     const SIZE: usize = core::mem::size_of::<bool>() + A::SIZE;
 ///
 ///     fn encode(self, value: Self::Value, encoder: &mut Encoder) {
 ///         if let Some(inner) = value {
