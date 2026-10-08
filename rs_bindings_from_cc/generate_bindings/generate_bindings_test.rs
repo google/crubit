@@ -2125,6 +2125,85 @@ fn test_std_optional_of_bridge_type_with_layout_compat_feature() -> Result<()> {
     Ok(())
 }
 
+/// A `CRUBIT_INTERNAL_RUST_TYPE` which is not trivially destructible in C++ needs its destructor
+/// (in Rust, its `Drop` impl) to run. `trivial_optional<T>` has no `Drop` impl, so it would leak
+/// the payload; the binding must be `cc_std::std::optional<T>` instead.
+#[gtest]
+fn test_std_optional_of_non_trivial_existing_rust_type_is_not_trivial() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        void takes_optional_by_value(std::optional<NonTrivial> o);
+        "#,
+        r#"
+        class [[clang::annotate("crubit_internal_rust_type", "RustNonTrivial")]] NonTrivial final {
+          public:
+            NonTrivial(const NonTrivial&);
+            ~NonTrivial();
+          private:
+            void* rep_;
+        };
+        namespace std {
+            template <typename T> class optional { T t; bool b; };
+        }
+        "#,
+    )?;
+    let mut ir = make_test_ir_dependency(&proto, None)?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::LayoutCompatOptional;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_optional_by_value(o: ::cc_std::std::optional::<::dependency::RustNonTrivial>)
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { trivial_optional });
+    Ok(())
+}
+
+/// Like `test_std_optional_of_non_trivial_existing_rust_type_is_not_trivial`, but with the
+/// `CRUBIT_INTERNAL_RUST_TYPE` annotation on a forward declaration and `[[clang::trivial_abi]]`, as
+/// `absl::Status` has.
+#[gtest]
+fn test_std_optional_of_forward_declared_non_trivial_existing_rust_type_is_not_trivial(
+) -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        void takes_optional_by_value(std::optional<NonTrivial> o);
+        "#,
+        r#"
+        class [[clang::trivial_abi]]
+            [[clang::annotate("crubit_internal_rust_type", "RustNonTrivial")]] NonTrivial;
+        class [[clang::trivial_abi]] NonTrivial final {
+          public:
+            NonTrivial(const NonTrivial&);
+            ~NonTrivial();
+          private:
+            void* rep_;
+        };
+        namespace std {
+            template <typename T> class optional { T t; bool b; };
+        }
+        "#,
+    )?;
+    let mut ir = make_test_ir_dependency(&proto, None)?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::LayoutCompatOptional;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_optional_by_value(o: ::cc_std::std::optional::<::dependency::RustNonTrivial>)
+        }
+    );
+    assert_rs_not_matches!(rs_api, quote! { trivial_optional });
+    Ok(())
+}
+
 /// An owned protobuf message is bridged by value and has no layout-compatible form, so with
 /// `layout_compat_optional`, `std::optional<Message>` keeps the composable bridging to
 /// `Option<Message>`.
