@@ -377,19 +377,30 @@ bool IsProto2Message(const clang::Decl& decl) {
   if (!cxx_record_decl->isCompleteDefinition()) {
     return false;
   }
+  auto has_qualified_name = [](const clang::CXXRecordDecl* record,
+                               absl::string_view expected_name) {
+    std::string name_owned = record->getQualifiedNameAsString();
+    absl::string_view name = name_owned;
+    // It's not clear that the default formatting rules will give us an absolute
+    // qualified name, but popping off the first :: is benign.
+    if (name.starts_with("::")) {
+      name.remove_prefix(2);
+    }
+    return name == expected_name;
+  };
+  // `google::protobuf::Message` derives from `google::protobuf::MessageLite`, but it is the
+  // abstract base class of all full-runtime messages, not a generated message.
+  // (This mirrors `proto2::is_concrete_proto_message`.)
+  if (has_qualified_name(cxx_record_decl, "google::protobuf::Message")) {
+    return false;
+  }
   // A forward-compatible way to check this is to see whether the record derives
   // from google::protobuf::MessageLite. (Note that because the record is a complete
   // definition, we have the full inheritance hierarchy available.)
-  return !cxx_record_decl->forallBases([](const clang::CXXRecordDecl* base) {
-    std::string base_name_owned = base->getQualifiedNameAsString();
-    absl::string_view base_name = base_name_owned;
-    // It's not clear that the default formatting rules will give us an absolute
-    // qualified name, but popping off the first :: is benign.
-    if (base_name.starts_with("::")) {
-      base_name.remove_prefix(2);
-    }
-    return base_name != "google::protobuf::MessageLite";
-  });
+  return !cxx_record_decl->forallBases(
+      [&has_qualified_name](const clang::CXXRecordDecl* base) {
+        return !has_qualified_name(base, "google::protobuf::MessageLite");
+      });
 }
 
 const clang::TagDecl* StripCStyleNameIntroducingTypedef(

@@ -499,6 +499,40 @@ TEST(ImporterTest, ProtoMessageBridgeType) {
             )pb"))))));
 }
 
+TEST(ImporterTest, ProtoMessageBridgeTypeExcludesRuntimeBaseClasses) {
+  absl::string_view file = R"cc(
+    namespace proto2 {
+    class MessageLite {};
+    class Message : public MessageLite {};
+    }  // namespace proto2
+    class MyMessage : public google::protobuf::Message {};
+    class MyLiteMessage : public google::protobuf::MessageLite {};
+  )cc";
+  ASSERT_OK_AND_ASSIGN(const IR ir, IrFromCc({file}));
+
+  std::vector<const Record*> records = get_items_if<Record>(ir);
+  // The runtime base classes are not generated messages, so they must not be
+  // bridged to (nonexistent) generated Rust message types.
+  EXPECT_THAT(
+      records,
+      Contains(Pointee(AllOf(RsNameIs("MessageLite"),
+                             Property(&Record::has_bridge_type, false)))));
+  EXPECT_THAT(
+      records,
+      Contains(Pointee(AllOf(RsNameIs("Message"),
+                             Property(&Record::has_bridge_type, false)))));
+  // Messages deriving from either base class are still bridged.
+  EXPECT_THAT(records, Contains(Pointee(Partially(EqualsProto(R"pb(
+                rs_name { identifier: "MyMessage" }
+                bridge_type { proto_message_bridge { rust_name: "MyMessage" } }
+              )pb")))));
+  EXPECT_THAT(
+      records, Contains(Pointee(Partially(EqualsProto(R"pb(
+        rs_name { identifier: "MyLiteMessage" }
+        bridge_type { proto_message_bridge { rust_name: "MyLiteMessage" } }
+      )pb")))));
+}
+
 TEST(ImporterTest, Noop) {
   // Nothing interesting there, but also not empty, so that the header gets
   // generated.
