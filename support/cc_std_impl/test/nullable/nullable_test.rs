@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use cc_std::std::{
-    shared_ptr, unique_ptr, virtual_unique_ptr, Delete, Nullable, OptionLike, SupportsNullable,
+    shared_ptr, unique_ptr, vector, virtual_unique_ptr, Delete, Nullable, OptionLike,
+    SupportsNullable,
 };
 use googletest::{expect_eq, expect_true, gtest};
 use std::sync::Arc;
@@ -131,5 +132,21 @@ fn test_drop() {
     let p: Nullable<shared_ptr<Arc<()>>> = shared_ptr::new(rc.clone()).into();
     expect_eq!(Arc::strong_count(&rc), 2);
     drop(p);
+    expect_eq!(Arc::strong_count(&rc), 1);
+}
+
+/// `Nullable<Ptr>` works as a template argument, e.g. a `vector` element: null and non-null
+/// elements can be stored side by side, and dropping the `vector` drops only the non-null ones.
+#[gtest]
+fn test_vector_of_nullable() {
+    let rc = Arc::new(());
+    let mut v: vector<Nullable<unique_ptr<Arc<()>>>> = vector::new();
+    v.push(unique_ptr::new(rc.clone()).into());
+    v.push(Nullable::default());
+    expect_eq!(v.len(), 2);
+    expect_true!(v[0].as_option().is_some());
+    expect_true!(v[1].as_option().is_none());
+    expect_eq!(Arc::strong_count(&rc), 2);
+    drop(v);
     expect_eq!(Arc::strong_count(&rc), 1);
 }

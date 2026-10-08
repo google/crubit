@@ -9,6 +9,7 @@
 
 use cc_std::std::shared_ptr;
 use cc_std::std::unique_ptr;
+use cc_std::std::vector;
 use cc_std::std::virtual_unique_ptr;
 use cc_std::std::Nullable;
 use cc_std::std::OptionLike;
@@ -43,4 +44,32 @@ pub fn is_null_unique_ptr(val: &Nullable<unique_ptr<Target>>) -> bool {
 #[must_bind]
 pub fn make_null_unique_ptr() -> Nullable<unique_ptr<Target>> {
     Nullable::default()
+}
+
+// `Nullable<Ptr>` as a template argument: bridged as `std::vector<Ptr crubit_nullable>`.
+
+#[must_bind]
+pub fn roundtrip_vector_of_nullable_unique_ptr(
+    val: vector<Nullable<unique_ptr<Target>>>,
+) -> vector<Nullable<unique_ptr<Target>>> {
+    val
+}
+
+#[must_bind]
+pub fn count_null_unique_ptrs(val: vector<Nullable<unique_ptr<Target>>>) -> i32 {
+    val.iter().filter(|p| p.as_option().is_none()).count() as i32
+}
+
+#[must_bind]
+pub fn make_vector_of_null_unique_ptr() -> vector<Nullable<unique_ptr<Target>>> {
+    let mut v = vector::new();
+    v.push(Nullable::default());
+    v
+}
+
+#[must_bind]
+pub fn roundtrip_vector_of_nullable_shared_ptr(
+    val: vector<Nullable<shared_ptr<i32>>>,
+) -> vector<Nullable<shared_ptr<i32>>> {
+    val
 }

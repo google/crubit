@@ -74,6 +74,7 @@ crubit_cc_test(
     deps = [
         ":nullable_cc_api",
         ":test_helpers",
+        "//support:annotations",
         "//testing/base/public:gunit_main",
     ],
 )
