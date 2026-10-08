@@ -229,12 +229,12 @@ impl OptionWithSizeTypes {
     }
 }
 
-#[doc = "CRUBIT_ANNOTATE: cpp_type=int"]
+#[doc = "CRUBIT_ANNOTATE: cpp_type=decltype(char(0))"]
 #[repr(transparent)]
-pub struct BridgedType(i32);
+pub struct BridgedType(u8);
 
-pub fn take_option_bridged(x: Option<BridgedType>) -> i32 {
-    x.map(|b| b.0).unwrap_or(-1)
+pub fn take_option_bridged(x: Option<BridgedType>) -> u8 {
+    x.map(|b| b.0).unwrap_or(0)
 }
 
 #[must_bind]

@@ -42,7 +42,7 @@ struct HasOptions;
 // Error generating bindings for struct `option_golden::BridgedType` defined at
 // cc_bindings_from_rs/test/enums/option.rs;l=234:
 // Type bindings for option_golden::BridgedType suppressed due to being mapped
-// to an existing C++ type (int)
+// to an existing C++ type (decltype(char(0)))
 
 // CRUBIT_ANNOTATE: must_bind=
 struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: CloneNoDefault") alignas(
@@ -245,12 +245,7 @@ stress_testing_nested_types();
 rs_std::Option<::std::uint32_t> stringify_len(
     rs_std::Option<::option::HasDefault> const& x);
 
-// Error generating bindings for function `option_golden::take_option_bridged`
-// defined at
-// cc_bindings_from_rs/test/enums/option.rs;l=236:
-// Error handling parameter #0 of type
-// `std::option::Option<option_golden::BridgedType>`: Generic types are not
-// supported yet (b/259749095)
+::std::uint8_t take_option_bridged(rs_std::Option<decltype(char(0))> x);
 
 void take_option_result_unmovable(
     rs_std::Option<
@@ -508,6 +503,64 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 
  private:
   unsigned char storage_[16];
+};
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020decltype_x00000020_x00000028char_x00000020_x000000280_x00000029_x00000029_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020decltype_x00000020_x00000028char_x00000020_x000000280_x00000029_x00000029_x00000020_x0000003e
+template <>
+struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
+    "std :: option :: Option < :: option_golden :: BridgedType >")
+    rs_std::Option<decltype(char(0))>
+    : public rs_std::OptionBase<rs_std::Option<decltype(char(0))>,
+                                decltype(char(0))> {
+ public:
+  // `core::option::Option` doesn't implement the `Clone` trait
+  Option(const Option&) = delete;
+  Option& operator=(const Option&) = delete;
+  Option(Option&&) = default;
+  Option& operator=(Option&&) = default;
+
+  Option(::crubit::UnsafeRelocateTag, Option&& value);
+  using base_type =
+      rs_std::OptionBase<rs_std::Option<decltype(char(0))>, decltype(char(0))>;
+  constexpr Option() = default;
+  constexpr Option(::std::nullopt_t) noexcept;
+  constexpr Option& operator=(::std::nullopt_t) noexcept;
+  template <typename U>
+    requires(rs_std::OptionForwardConstructible<Option, decltype(char(0)), U>)
+  Option(U&& value) noexcept;
+  template <typename U>
+    requires(rs_std::OptionForwardConstructible<Option, decltype(char(0)), U>)
+  Option& operator=(U&& value) noexcept;
+  template <typename Opt>
+    requires(rs_std::OptionFromStdOptional<decltype(char(0)), Opt>)
+  Option(Opt&& value) noexcept;
+  template <typename Opt>
+    requires(rs_std::OptionFromStdOptional<decltype(char(0)), Opt>)
+  Option& operator=(Opt&& value) noexcept;
+  template <typename... Args>
+  explicit Option(::std::in_place_t ip, Args&&... args) noexcept;
+  ~Option() noexcept = default;
+
+ private:
+  friend base_type;
+  using tag_type = ::std::uint8_t;
+  static constexpr tag_type kNoneVal = 0;
+  decltype(char(0))* some_ptr() noexcept {
+    return reinterpret_cast<decltype(char(0))*>(storage_ + 1);
+  }
+  decltype(char(0)) const* some_const_ptr() const noexcept {
+    return reinterpret_cast<decltype(char(0)) const*>(storage_ + 1);
+  }
+  void set_some_tag() noexcept { set_tag(1); }
+  constexpr void set_none_tag() noexcept { set_tag(kNoneVal); }
+  constexpr bool is_none() const noexcept { return tag() == kNoneVal; }
+  constexpr ::std::uint8_t tag() const& noexcept;
+  constexpr void set_tag(::std::uint8_t tag) noexcept;
+
+ private:
+  unsigned char storage_[2];
 };
 #endif
 
@@ -2594,6 +2647,14 @@ inline rs_std::Option<::std::uint32_t> stringify_len(
 }
 
 namespace __crubit_internal {
+extern "C" ::std::uint8_t __crubit_thunk_take_uoption_ubridged(
+    rs_std::Option<decltype(char(0))>*);
+}
+inline ::std::uint8_t take_option_bridged(rs_std::Option<decltype(char(0))> x) {
+  return __crubit_internal::__crubit_thunk_take_uoption_ubridged(&x);
+}
+
+namespace __crubit_internal {
 extern "C" void __crubit_thunk_take_uoption_uresult_uunmovable(
     rs_std::Option<
         rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>*);
@@ -2896,6 +2957,74 @@ rs_std::Option<::std::int64_t>::operator=(Opt&& value) noexcept {
 template <typename... Args>
 inline rs_std::Option<::std::int64_t>::Option(::std::in_place_t ip,
                                               Args&&... args) noexcept
+    : base_type(ip, ::std::forward<Args>(args)...) {}
+
+#endif
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020decltype_x00000020_x00000028char_x00000020_x000000280_x00000029_x00000029_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020decltype_x00000020_x00000028char_x00000020_x000000280_x00000029_x00000029_x00000020_x0000003e
+static_assert(::std::is_trivially_move_constructible_v<
+              rs_std::Option<decltype(char(0))>>);
+static_assert(
+    ::std::is_trivially_move_assignable_v<rs_std::Option<decltype(char(0))>>);
+inline rs_std::Option<decltype(char(0))>::Option(::crubit::UnsafeRelocateTag,
+                                                 Option&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+static_assert(
+    ::std::is_trivially_destructible_v<rs_std::Option<decltype(char(0))>>);
+inline constexpr ::std::uint8_t rs_std::Option<decltype(char(0))>::tag()
+    const& noexcept {
+  ::std::array<unsigned char, sizeof(::std::uint8_t)> __bytes = {};
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    __bytes[i] = storage_[0 + i];
+  }
+  return ::std::bit_cast<::std::uint8_t>(__bytes);
+}
+inline constexpr void rs_std::Option<decltype(char(0))>::set_tag(
+    ::std::uint8_t tag) noexcept {
+  auto __bytes =
+      ::std::bit_cast<::std::array<unsigned char, sizeof(::std::uint8_t)>>(tag);
+  for (::std::size_t i = 0; i < sizeof(::std::uint8_t); ++i) {
+    storage_[0 + i] = __bytes[i];
+  }
+}
+
+inline constexpr rs_std::Option<decltype(char(0))>::Option(
+    ::std::nullopt_t) noexcept
+    : base_type(::std::nullopt) {}
+inline constexpr rs_std::Option<decltype(char(0))>&
+rs_std::Option<decltype(char(0))>::operator=(::std::nullopt_t) noexcept {
+  base_type::operator=(::std::nullopt);
+  return *this;
+}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<decltype(char(0))>,
+                                              decltype(char(0)), U>)
+inline rs_std::Option<decltype(char(0))>::Option(U&& value) noexcept
+    : base_type(::std::forward<U>(value)) {}
+template <typename U>
+  requires(rs_std::OptionForwardConstructible<rs_std::Option<decltype(char(0))>,
+                                              decltype(char(0)), U>)
+inline rs_std::Option<decltype(char(0))>&
+rs_std::Option<decltype(char(0))>::operator=(U&& value) noexcept {
+  base_type::operator=(::std::forward<U>(value));
+  return *this;
+}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<decltype(char(0)), Opt>)
+inline rs_std::Option<decltype(char(0))>::Option(Opt&& value) noexcept
+    : base_type(::std::forward<Opt>(value)) {}
+template <typename Opt>
+  requires(rs_std::OptionFromStdOptional<decltype(char(0)), Opt>)
+inline rs_std::Option<decltype(char(0))>&
+rs_std::Option<decltype(char(0))>::operator=(Opt&& value) noexcept {
+  base_type::operator=(::std::forward<Opt>(value));
+  return *this;
+}
+template <typename... Args>
+inline rs_std::Option<decltype(char(0))>::Option(::std::in_place_t ip,
+                                                 Args&&... args) noexcept
     : base_type(ip, ::std::forward<Args>(args)...) {}
 
 #endif

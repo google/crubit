@@ -1456,7 +1456,8 @@ struct rs_std::impl<::enums::qr_error::QrError, ::rs::core::fmt::Debug> {
   // `<enums_golden::qr_error::QrError as std::fmt::Debug>::fmt` defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=347:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`: Failed to format type for the definition of
+  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
 };
 
 template <>
@@ -1474,7 +1475,8 @@ struct rs_std::impl<::enums::qr_error::StructuredQrError,
   // defined at
   // cc_bindings_from_rs/test/enums/enums.rs;l=363:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`: Failed to format type for the definition of
+  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
 };
 
 namespace enums::param_name_collisions {

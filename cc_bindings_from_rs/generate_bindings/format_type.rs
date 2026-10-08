@@ -24,8 +24,7 @@ use crubit_abi_type::{CrubitAbiType, FullyQualifiedPath};
 use crubit_attr::BridgingAttrs;
 use crubit_feature::CrubitFeature;
 use database::code_snippet::{
-    AdtSpecializationArgs, CcPrerequisites, CcSnippet, CcSnippets, CrubitAbiTypeWithCcPrereqs,
-    TemplateSpecialization,
+    CcPrerequisites, CcSnippet, CcSnippets, CrubitAbiTypeWithCcPrereqs, TemplateSpecialization,
 };
 use database::BindingsGenerator;
 use database::{rename_c_stdlib_functions, rename_clang_builtin_macros, TypeLocation};
@@ -929,23 +928,14 @@ pub fn format_ty_for_cc<'tcx>(
                 );
             }
 
-            let specialization = db.parse_adt_template_specialization(ty);
-            if specialization.as_ref().is_some_and(|specialization| {
-                // We only want to consider errors when bridging could not occur.
-                // Otherwise, fallthrough to the normal bridging logic.
-                let error_occurred = !location.is_bridgeable() && specialization.is_err();
-                let is_layout_compatible_spec = specialization.as_ref().is_ok_and(|adt_spec_enum| {
-                    (!location.is_bridgeable() && adt_spec_enum.is_option())
-                        || adt_spec_enum.is_result()
-                        || adt_spec_enum.is_vec()
-                        || matches!(adt_spec_enum.args, AdtSpecializationArgs::UserDefinedAdt)
-                        || db
-                            .crate_features(db.source_crate_num())
-                            .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust)
-                });
-                error_occurred || is_layout_compatible_spec
-            }) {
-                let adt_spec = specialization.unwrap()?;
+            let is_bridged_option = location.is_bridgeable()
+                && matches!(BridgedBuiltin::new(db, adt), Some(BridgedBuiltin::Option))
+                && !db
+                    .crate_features(db.source_crate_num())
+                    .contains(CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
+            if !is_bridged_option
+                && let Some(adt_spec) = db.parse_adt_template_specialization(ty).transpose()?
+            {
                 let mut snippet = adt_spec.self_ty_cc.clone();
                 snippet.prereqs.depend_on_spec(db, location, adt_spec);
                 if !db.is_cpp_move_constructible(ty) && location.admits_movable() {
@@ -1048,20 +1038,6 @@ pub fn format_ty_for_cc<'tcx>(
             let canonical_name = db.symbol_canonical_name(def_id)?;
 
             let mut tokens = canonical_name.format_for_cc(db)?;
-            // Add generic arguments for a generic ADT.
-            let has_cpp_type = crubit_attr::get_attrs(db.tcx(), adt.did())?.cpp_type.is_some();
-            if !has_cpp_type && !substs.is_empty() {
-                let mut generic_types_tokens = Vec::new();
-                for subst in substs {
-                    if let Some(subst_ty) = subst.as_type() {
-                        let snippet = format_ty_for_cc(db, subst_ty, TypeLocation::NestedBridgeable)?;
-                        generic_types_tokens.push(snippet.into_tokens(&mut prereqs));
-                    }
-                }
-                if !generic_types_tokens.is_empty() {
-                    quote! { < #(#generic_types_tokens),* > }.to_tokens(&mut tokens);
-                }
-            }
 
             // Wrap in rs::Movable if the type is not C++ movable.
             if !db.is_cpp_move_constructible(ty) && location.admits_movable() {

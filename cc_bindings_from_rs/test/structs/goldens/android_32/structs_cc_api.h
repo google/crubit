@@ -789,7 +789,8 @@ struct rs_std::impl<::structs::display::DisplayStruct,
   // defined at
   // cc_bindings_from_rs/test/structs/structs.rs;l=410:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`: Failed to format type for the definition of
+  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
 };
 
 template <>
@@ -802,7 +803,8 @@ struct rs_std::impl<::structs::interior_mutability::SomeStruct,
   // defined at
   // cc_bindings_from_rs/test/structs/structs.rs;l=358:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`: Failed to format type for the definition of
+  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
 };
 
 namespace structs::abi_classification {

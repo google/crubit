@@ -346,7 +346,8 @@ struct rs_std::impl<::callables::Point, ::rs::core::fmt::Debug> {
   // as std::fmt::Debug>::fmt` defined at
   // cc_bindings_from_rs/test/callables/callables.rs;l=74:
   // Error formatting function return type `std::result::Result<(),
-  // std::fmt::Error>`: Generic types are not supported yet (b/259749095)
+  // std::fmt::Error>`: Failed to format type for the definition of
+  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
 };
 #ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
