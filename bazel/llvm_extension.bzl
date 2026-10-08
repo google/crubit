@@ -4,16 +4,31 @@
 
 """Module extension for downloading LLVM source and configuring host C dependencies."""
 
+_GCS_LLVM_URL = "https://storage.googleapis.com/crubit-ci-bazel/llvm-project/{commit}.tar.zst"
+_GITHUB_LLVM_URL = "https://github.com/llvm/llvm-project/archive/{commit}.tar.gz"
+
 def _llvm_source_fetch_impl(repository_ctx):
     commit = repository_ctx.os.environ.get("CRUBIT_LLVM_COMMIT") or repository_ctx.attr.commit
-    url = "https://github.com/llvm/llvm-project/archive/" + commit + ".tar.gz"
 
-    repository_ctx.download_and_extract(
-        url = url,
-        stripPrefix = "llvm-project-" + commit,
+    gcs_archive = "llvm-project.tar.zst"
+    gcs_res = repository_ctx.download(
+        url = _GCS_LLVM_URL.format(commit = commit),
+        output = gcs_archive,
+        allow_fail = True,
     )
+    if gcs_res.success:
+        repository_ctx.extract(
+            archive = gcs_archive,
+            stripPrefix = "llvm-project-" + commit,
+        )
+        repository_ctx.delete(gcs_archive)
+    else:
+        repository_ctx.download_and_extract(
+            url = _GITHUB_LLVM_URL.format(commit = commit),
+            stripPrefix = "llvm-project-" + commit,
+        )
 
-    # Query Gitiles for the LLVM commit date (YYYYmmDD UTC).
+    # Extract the LLVM commit date (YYYYmmDD UTC) from the archive's mtime (or Gitiles fallback).
     python = repository_ctx.which("python3")
     if not python:
         python = repository_ctx.which("python")
@@ -45,7 +60,10 @@ llvm_source_fetch = repository_rule(
             allow_single_file = True,
         ),
     },
-    environ = ["CRUBIT_LLVM_COMMIT"],
+    environ = [
+        "CRUBIT_LLVM_COMMIT",
+        "CRUBIT_LLVM_DEV_DATE",
+    ],
 )
 
 def _host_c_library_impl(repository_ctx):

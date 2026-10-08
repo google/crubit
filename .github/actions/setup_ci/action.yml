@@ -88,16 +88,22 @@ runs:
       shell: bash
       env:
         # Past this age, a pin that has stopped moving means the nightly
-        # select-llvm-commit job stopped running, not that llvm-project went
+        # update-and-generate job stopped running, not that llvm-project went
         # quiet. Three days spans a long weekend without crying wolf. The age
         # is truncating integer division, so this first warns at 4 days.
         STALE_AFTER_DAYS: '3'
       run: |
         # Published by the nightly test matrix.
-        # The repo is hardcoded rather than derived from github.repository on
-        # purpose so all workflows and branches build the same LLVM revision.
-        RAW=$(curl -fsSL --max-time 30 --retry 3 \
-          "https://raw.githubusercontent.com/google/crubit/test-matrix/llvm_commit.txt" || true)
+        # Prefer a local llvm_commit.txt when checked out on the test-matrix
+        # branch so warm-llvm-cache is not served a cached copy by
+        # raw.githubusercontent.com's 5-minute CDN. Otherwise fetch from
+        # google/crubit (hardcoded so forks and branches build the same LLVM).
+        if [[ -f llvm_commit.txt ]]; then
+          RAW=$(<llvm_commit.txt)
+        else
+          RAW=$(curl -fsSL --max-time 30 --retry 3 \
+            "https://raw.githubusercontent.com/google/crubit/test-matrix/llvm_commit.txt" || true)
+        fi
 
         # Format is "<sha> <iso8601>". Plain `read` splits on whitespace and
         # absorbs the trailing newline, and leaves PIN_DATE empty if the file
@@ -137,7 +143,7 @@ runs:
         fi
 
         if [[ -n "$STALE" ]]; then
-          echo "::warning::LLVM pin looks stale: ${STALE}. The select-llvm-commit job on the test-matrix branch may have stopped running, so CI is not exercising recent LLVM."
+          echo "::warning::LLVM pin looks stale: ${STALE}. The update-and-generate job on the test-matrix branch may have stopped running, so CI is not exercising recent LLVM."
         fi
 
         echo "Building against LLVM commit $LLVM_COMMIT ($AGE_NOTE)"
@@ -145,6 +151,77 @@ runs:
           echo "### LLVM Dependency"
           echo "Building against LLVM commit [\`$LLVM_COMMIT\`](https://github.com/llvm/llvm-project/commit/$LLVM_COMMIT), $AGE_NOTE"
         } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Ensure LLVM tarball is cached in GCS
+      if: ${{ inputs.bazel == 'true' && steps.creds.outputs.authenticated == 'true' }}
+      shell: bash
+      run: |
+        COMMIT="${CRUBIT_LLVM_COMMIT:-}"
+        if [[ ! "$COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+          COMMIT=$(sed -nE 's/.*llvm_ext\.configure\(commit = "([0-9a-f]{40})"\).*/\1/p' MODULE.bazel crubit/MODULE.bazel 2>/dev/null | head -n 1)
+        fi
+        if [[ ! "$COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+          echo "::warning::Could not determine LLVM commit to cache in GCS."
+          exit 0
+        fi
+
+        GCS_HTTPS_URL="https://storage.googleapis.com/crubit-ci-bazel/llvm-project/${COMMIT}.tar.zst"
+        GCS_URI="gs://crubit-ci-bazel/llvm-project/${COMMIT}.tar.zst"
+
+        if curl -fsSI --max-time 10 "$GCS_HTTPS_URL" >/dev/null 2>&1; then
+          echo "LLVM archive already cached at $GCS_URI"
+          exit 0
+        fi
+
+        echo "Building stripped LLVM archive for $COMMIT and uploading to $GCS_URI..."
+        TMP_DIR=$(mktemp -d)
+        trap 'rm -rf "$TMP_DIR"' EXIT
+
+        PREFIX="llvm-project-${COMMIT}"
+        curl -fsSL --retry 3 "https://github.com/llvm/llvm-project/archive/${COMMIT}.tar.gz" \
+          | tar -xzpf - -C "$TMP_DIR" \
+              --exclude='*/test' \
+              --exclude='*/tests' \
+              --exclude='*/unittests' \
+              --exclude='*/docs' \
+              --exclude='*/examples' \
+              --exclude='*/benchmarks' \
+              --exclude="${PREFIX}/utils/bazel/llvm-project-overlay/bolt" \
+              --exclude="${PREFIX}/utils/bazel/llvm-project-overlay/compiler-rt" \
+              --exclude="${PREFIX}/utils/bazel/llvm-project-overlay/flang" \
+              --exclude="${PREFIX}/utils/bazel/llvm-project-overlay/flang-rt" \
+              --exclude="${PREFIX}/utils/bazel/llvm-project-overlay/libunwind" \
+              --exclude="${PREFIX}/utils/bazel/llvm-project-overlay/lld" \
+              --exclude="${PREFIX}/utils/bazel/llvm-project-overlay/lldb" \
+              --exclude="${PREFIX}/utils/bazel/llvm-project-overlay/openmp" \
+              "${PREFIX}/cmake" \
+              "${PREFIX}/llvm" \
+              "${PREFIX}/clang" \
+              "${PREFIX}/clang-tools-extra" \
+              "${PREFIX}/libc" \
+              "${PREFIX}/third-party" \
+              "${PREFIX}/utils/bazel"
+
+        # llvm/BUILD.bazel and clang/BUILD.bazel load("//mlir:tblgen.bzl", ...),
+        # which requires //mlir to be a valid package in the overlay and mlir/
+        # to exist as a directory when _overlay_directories calls readdir().
+        mkdir -p "${TMP_DIR}/${PREFIX}/mlir"
+
+        # configure.bzl's _overlay_directories calls readdir() on the matching
+        # source directory for every directory present in llvm-project-overlay.
+        # Prune any overlay directory that does not exist in the stripped tree.
+        OVERLAY_DIR="${TMP_DIR}/${PREFIX}/utils/bazel/llvm-project-overlay"
+        mapfile -d '' OVERLAY_DIRS < <(find "$OVERLAY_DIR" -mindepth 1 -type d -print0)
+        for d in "${OVERLAY_DIRS[@]}"; do
+          rel="${d#"${OVERLAY_DIR}/"}"
+          if [[ -d "$d" && ! -d "${TMP_DIR}/${PREFIX}/${rel}" ]]; then
+            rm -rf "$d"
+          fi
+        done
+
+        ARCHIVE="${TMP_DIR}/${COMMIT}.tar.zst"
+        tar -cf - -C "$TMP_DIR" "$PREFIX" | zstd -T0 -3 -o "$ARCHIVE"
+        gcloud storage cp --no-clobber "$ARCHIVE" "$GCS_URI" || true
 
     - name: Setup Bazel
       if: ${{ inputs.bazel == 'true' }}
