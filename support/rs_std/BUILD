@@ -219,7 +219,6 @@ cc_library(
     hdrs = ["dyn_callable.h"],
     aspect_hints = [
         "//features:experimental",
-        "//features:wrapper",
     ],
     compatible_with = ["//buildenv/target:non_prod"],
     visibility = ["//visibility:public"],

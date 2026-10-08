@@ -37,10 +37,6 @@ pub struct __CcTemplateInst10MyTemplateIiE {
 }
 impl !Send for __CcTemplateInst10MyTemplateIiE {}
 impl !Sync for __CcTemplateInst10MyTemplateIiE {}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("MyTemplate < int >"),
-    crate::__CcTemplateInst10MyTemplateIiE
-);
 
 impl Default for __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
