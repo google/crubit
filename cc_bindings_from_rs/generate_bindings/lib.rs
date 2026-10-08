@@ -35,7 +35,9 @@ use crate::format_type::{
     is_bridged_type, BridgedBuiltin, BridgedType, BridgedTypeConversionInfo,
 };
 use crate::generate_function::{generate_function, must_use_attr_of};
-use crate::generate_function_thunk::{generate_trait_thunks, TraitThunks};
+use crate::generate_function_thunk::{
+    generate_ctor_thunk_call, generate_trait_thunks, TraitThunks,
+};
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
     generate_adt_core, generate_generic_adt_declaration, into_trait_impls_by_destination,
@@ -1634,26 +1636,11 @@ fn generate_default_ctor<'tcx>(
                 .exactly_one()
                 .expect("Expecting a single `default` method");
 
-            let is_specialization = core
-                .def_id
-                .is_none_or(|id| query_compiler::has_non_lifetime_generics(db.tcx(), id));
-            let thunk_qualifier = thunk_qualifier(is_specialization);
-
             let fully_qualified_name = &core.common.cc_fully_qualified_name;
-            // This might be the case for `#[repr(transparent)]` types.
-            // TODO: b/459482188 - This is ultimately dependent on the return ABI of the thunk and
-            // should be centralized with the other callsites that depend on return type ABI.
-            let ctor_impl = if is_c_abi_compatible_by_value(db, core.common.self_ty) {
-                quote! {
-                    inline #fully_qualified_name::#cc_struct_name() {
-                       *this = #thunk_qualifier::#thunk_name();
-                    }
-                }
-            } else {
-                quote! {
-                    inline #fully_qualified_name::#cc_struct_name() {
-                        #thunk_qualifier::#thunk_name(this);
-                    }
+            let ctor_body = generate_ctor_thunk_call(db, &core, &thunk_name, &[])?;
+            let ctor_impl = quote! {
+                inline #fully_qualified_name::#cc_struct_name() {
+                    #ctor_body
                 }
             };
             cc_thunk_decls.map_snippets(|cc_thunk_decls| {
@@ -1765,23 +1752,12 @@ fn copy_codegen_style_to_snippets<'tcx>(
                     let clone_from_thunk_name =
                         method_name_to_cc_thunk_name.get(&sym::clone_from).unwrap();
 
-                    // TODO: b/459482188 - This is ultimately dependent on the return ABI of the
-                    // thunk and should be centralized with the other callsites
-                    // that depend on return type ABI.
                     let is_specialization = core
                         .def_id
                         .is_none_or(|id| query_compiler::has_non_lifetime_generics(db.tcx(), id));
                     let thunk_qualifier = thunk_qualifier(is_specialization);
-
-                    let ctor_body = if is_c_abi_compatible_by_value(db, core.common.self_ty) {
-                        quote! {
-                            *this = #thunk_qualifier::#clone_thunk_name(other);
-                        }
-                    } else {
-                        quote! {
-                            #thunk_qualifier::#clone_thunk_name(other, this);
-                        }
-                    };
+                    let ctor_body =
+                        generate_ctor_thunk_call(db, &core, clone_thunk_name, &[quote! { other }])?;
                     cc_thunk_decls.map_snippets(|cc_thunk_decls| {
                         quote! {
                             #cc_thunk_decls

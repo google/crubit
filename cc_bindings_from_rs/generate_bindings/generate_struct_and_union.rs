@@ -18,8 +18,8 @@ use crate::generate_function::{
     generate_thunk_call, Param, ThunkSelfParameter,
 };
 use crate::generate_function_thunk::{
-    generate_thunk_decl, generate_thunk_impl, make_thunk_name, replace_all_regions_with_static,
-    trait_method_thunk_name, ThunkKind,
+    generate_ctor_thunk_call, generate_thunk_decl, generate_thunk_impl, make_thunk_name,
+    replace_all_regions_with_static, trait_method_thunk_name, ThunkKind,
 };
 use crate::{
     can_be_made_layout_compatible, does_type_implement_trait, generate_const,
@@ -41,8 +41,8 @@ use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
-    as_ref_or_pinned_ref, is_c_abi_compatible_by_value, is_std_ptr_non_null,
-    liberate_and_deanonymize_late_bound_regions, post_analysis_typing_env, try_normalize,
+    as_ref_or_pinned_ref, is_std_ptr_non_null, liberate_and_deanonymize_late_bound_regions,
+    post_analysis_typing_env, try_normalize,
 };
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
@@ -1024,20 +1024,11 @@ fn generate_constructor_impls<'tcx>(
                 });
             }
 
-            let is_specialization = core.def_id.is_none_or(|id| query_compiler::has_non_lifetime_generics(tcx, id));
-            let thunk_qualifier = crate::thunk_qualifier(is_specialization);
-
-            let returns_by_value = is_c_abi_compatible_by_value(db, core.common.self_ty);
-            let impl_body_tokens = if returns_by_value {
-                quote! {
-                    #statements
-                    *this = #thunk_qualifier::#thunk_name(#c_abi_expression);
-                }
-            } else {
-                quote! {
-                    #statements
-                    #thunk_qualifier::#thunk_name(#c_abi_expression, this);
-                }
+            let ctor_call =
+                generate_ctor_thunk_call(db, core, &thunk_name, &[c_abi_expression]).ok()?;
+            let impl_body_tokens = quote! {
+                #statements
+                #ctor_call
             };
             prereqs.move_defs_to_fwd_decls();
             let (template_prefix, cc_ty) = if src_ty.is_bool() {

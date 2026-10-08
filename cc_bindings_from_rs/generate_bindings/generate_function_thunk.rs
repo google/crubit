@@ -7,15 +7,14 @@ use crate::generate_function::{fn_arg_idents, get_async_future_output_ty};
 use crate::{
     does_type_implement_trait, format_cc_ident, format_param_types_for_cc_thunk, is_bridged_type,
     is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedBuiltin,
-    BridgedType, BridgedTypeConversionInfo, RsSnippet, TypeLocation,
+    BridgedType, BridgedTypeConversionInfo, CcType, RsSnippet, TypeLocation,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
 use code_gen_utils::make_rs_ident;
-use code_gen_utils::CcConstQualifier;
 use crubit_abi_type::CrubitAbiTypeToRustExprTokens;
 use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl};
-use database::BindingsGenerator;
+use database::{AdtCoreBindings, BindingsGenerator};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
@@ -29,38 +28,109 @@ use rustc_span::def_id::DefId;
 use rustc_span::symbol::{kw, sym, Symbol};
 use std::collections::{BTreeSet, HashMap};
 
-/// Returns a C ABI-compatible C type to pass a tuple, or `None` if `possibly_tuple_ty` is not a
-/// tuple.
-///
-/// Tuples are passed via a pointer to an array of `void*` where
-/// each pointer points to the corresponding element of the tuple.
-fn tuple_c_abi_c_type(db: &BindingsGenerator<'_>, possibly_tuple_ty: Ty) -> Option<TokenStream> {
-    let ty::TyKind::Tuple(_) = possibly_tuple_ty.kind() else { return None };
-    if db
-        .crate_features(db.source_crate_num())
-        .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
-    {
-        return None;
-    }
-    // Sized array types are sadly not usable by-pointer in C++.
-    Some(quote! { void** })
+/// How a function parameter is passed across the `extern "C"` thunk ABI.
+pub(crate) enum ParamAbi<'tcx> {
+    Callable(CallableInfo<'tcx>),
+    Value(ValueAbi<'tcx>),
 }
 
-/// Returns a C ABI-compatible Rust type to pass a tuple, or `None` if `possibly_tuple_ty` is not a
-/// tuple.
-///
-/// Tuples are passed via a pointer to an array of `*const c_void` where
-/// each pointer points to the corresponding element of the tuple.
-fn tuple_c_abi_rs_type(db: &BindingsGenerator<'_>, possibly_tuple_ty: Ty) -> Option<TokenStream> {
-    let ty::TyKind::Tuple(tuple_tys) = possibly_tuple_ty.kind() else { return None };
-    if db
-        .crate_features(db.source_crate_num())
-        .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
-    {
-        return None;
+pub(crate) fn classify_param_abi<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+) -> Result<ParamAbi<'tcx>> {
+    if let Some(info) = crate::format_type::get_callable_info(db.tcx(), ty)? {
+        return Ok(ParamAbi::Callable(info));
     }
-    let num_elements = tuple_tys.len();
-    Some(quote! { *const [*const core::ffi::c_void; #num_elements] })
+    Ok(ParamAbi::Value(classify_value_abi(db, ty, /* is_constructor= */ false)?))
+}
+
+/// How a non-callable value (parameter or return value) is passed across the `extern "C"` thunk
+/// ABI.
+pub(crate) enum ValueAbi<'tcx> {
+    Bridged(BridgedType<'tcx>),
+    ByValue,
+    LegacyTuple(&'tcx ty::List<Ty<'tcx>>),
+    Array,
+    ByPointer,
+}
+
+pub(crate) fn classify_value_abi<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+    is_constructor: bool,
+) -> Result<ValueAbi<'tcx>> {
+    if is_constructor {
+        return Ok(if is_c_abi_compatible_by_value(db, ty) {
+            ValueAbi::ByValue
+        } else {
+            ValueAbi::ByPointer
+        });
+    }
+    if let Some(bridged_type) = is_bridged_type(db, ty)? {
+        return Ok(ValueAbi::Bridged(bridged_type));
+    }
+    if is_c_abi_compatible_by_value(db, ty) {
+        return Ok(ValueAbi::ByValue);
+    }
+    if let ty::TyKind::Tuple(tuple_tys) = ty.kind()
+        && !db
+            .crate_features(db.source_crate_num())
+            .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
+    {
+        return Ok(ValueAbi::LegacyTuple(tuple_tys));
+    }
+    if let ty::TyKind::Array(inner_ty, _) = ty.kind() {
+        // TODO: b/451981992 - Nested arrays containing types that are Drop but not Default do not
+        // behave well in std::arrays.
+        if let ty::TyKind::Array(nested_ty, _) = inner_ty.kind()
+            && is_drop_not_default(db.tcx(), *nested_ty)
+        {
+            bail!(
+                "b/260128806 - nested array {inner_ty} is not supported because it contains a type that implements Drop but not Default"
+            );
+        }
+        return Ok(ValueAbi::Array);
+    }
+    if ty.ty_adt_def().is_some()
+        || matches!(
+            ty.kind(),
+            ty::TyKind::Tuple(_)
+                | ty::TyKind::Ref { .. }
+                | ty::TyKind::RawPtr { .. }
+                | ty::TyKind::Char
+        )
+    {
+        return Ok(ValueAbi::ByPointer);
+    }
+    bail!("Attempted to write out unknown type from Rust to C")
+}
+
+/// Generates the C++ statement calling a constructor thunk to initialize `*this`.
+pub(crate) fn generate_ctor_thunk_call<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    core: &AdtCoreBindings<'tcx>,
+    thunk_name: &Ident,
+    args: &[TokenStream],
+) -> Result<TokenStream> {
+    let is_specialization =
+        core.def_id.is_none_or(|id| query_compiler::has_non_lifetime_generics(db.tcx(), id));
+    let thunk_qualifier = crate::thunk_qualifier(is_specialization);
+    Ok(
+        if matches!(
+            classify_value_abi(db, core.common.self_ty, /* is_constructor= */ true)?,
+            ValueAbi::ByValue
+        ) {
+            quote! {
+                *this = #thunk_qualifier::#thunk_name(#( #args ),*);
+            }
+        } else {
+            let mut all_args = args.to_vec();
+            all_args.push(quote! { this });
+            quote! {
+                #thunk_qualifier::#thunk_name(#( #all_args ),*);
+            }
+        },
+    )
 }
 
 fn is_drop_not_default<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bool {
@@ -70,35 +140,6 @@ fn is_drop_not_default<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bool {
     let trait_id =
         tcx.get_diagnostic_item(sym::Default).expect("Couldn't find `core::default::Default`");
     !does_type_implement_trait(tcx, ty, trait_id, [])
-}
-
-/// Returns true for types that appear as both bridged types and layout-compatible types.
-///
-/// For example, `Option<T>` will be bridged as `std::optional<T>` in function signatures, but
-/// appears as `rs_std::Option<T>` in struct fields.
-fn is_bridged_layout_compat_type<'tcx>(db: &BindingsGenerator<'tcx>, ret_ty: Ty<'tcx>) -> bool {
-    let is_nonempty_tuple = || {
-        let ty::TyKind::Tuple(fields) = ret_ty.kind() else { return false };
-        !fields.is_empty()
-    };
-    ret_ty
-        .ty_adt_def()
-        .is_some_and(|adt| matches!(BridgedBuiltin::new(db, adt), Some(BridgedBuiltin::Option)))
-        || is_nonempty_tuple()
-}
-
-/// Returns a C ABI-compatible C type to pass a [inner_ty; _].
-///
-/// Layout-compatible arrays are passed through memory.
-fn array_c_abi_c_type<'tcx>(tcx: TyCtxt<'tcx>, inner_ty: Ty<'tcx>) -> Result<TokenStream> {
-    // TODO: b/451981992 - Nested arrays containing types that are Drop but not Default do not
-    // behave well in std::arrays.
-    match inner_ty.kind() {
-        ty::TyKind::Array(ty, _) if is_drop_not_default(tcx, *ty) => {
-            bail!("b/260128806 - nested array {inner_ty} is not supported because it contains a type that implements Drop but not Default")
-        }
-        _ => Ok(quote! { void* }),
-    }
 }
 
 /// Formats a C++ declaration of a C-ABI-compatible-function wrapper around a Rust function.
@@ -137,82 +178,74 @@ pub fn generate_thunk_decl<'tcx>(
             .iter()
             .zip(cpp_types)
             .map(|(&ty, cpp_type)| -> Result<TokenStream> {
-                if let Some(info) = crate::format_type::get_callable_info(db.tcx(), ty)? {
-                    return Ok(if info.kind.is_owning() {
+                match classify_param_abi(db, ty)? {
+                    ParamAbi::Callable(info) => Ok(if info.kind.is_owning() {
                         prereqs.includes.insert(db.support_header("rs_std/fn.h"));
                         quote! { ::rs::internal::FnPayload }
                     } else {
                         prereqs.includes.insert(db.support_header("rs_std/fn_ref.h"));
                         quote! { ::rs::internal::FnRefPayload }
-                    });
-                }
-                let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
-                let bridged_type_opt = is_bridged_type(db, ty)?;
-                if let Some(bridged_type) = bridged_type_opt {
-                    match bridged_type {
-                        BridgedType::Legacy { .. } => {
-                            match code_gen_utils::is_cpp_pointer_type(cpp_type.clone()) {
-                                Some(CcConstQualifier::Mut) | Some(CcConstQualifier::Const) => {
-                                    Ok(quote! { #cpp_type })
-                                }
-                                None => Ok(quote! { #cpp_type* }),
+                    }),
+                    ParamAbi::Value(ValueAbi::Bridged(bridged_type)) => match bridged_type {
+                        BridgedType::Legacy { cpp_type: bridged_cpp_type, .. } => {
+                            let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
+                            if matches!(bridged_cpp_type, CcType::Pointer { .. }) {
+                                Ok(quote! { #cpp_type })
+                            } else {
+                                Ok(quote! { #cpp_type* })
                             }
                         }
                         BridgedType::Composable(_) => Ok(quote! { unsigned char* }),
+                    },
+                    ParamAbi::Value(ValueAbi::ByValue) => {
+                        let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
+                        Ok(quote! { #cpp_type })
                     }
-                } else if is_c_abi_compatible_by_value(db, ty) {
-                    Ok(quote! { #cpp_type })
-                } else if let Some(tuple_abi) = tuple_c_abi_c_type(db, ty) {
-                    Ok(tuple_abi)
-                } else if let ty::TyKind::Array(inner_ty, _) = ty.kind() {
-                    array_c_abi_c_type(db.tcx(), *inner_ty)
-                } else if ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
-                    let underlying_ty =
-                        db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(&mut prereqs);
-                    Ok(quote! { #underlying_ty* })
-                } else {
-                    Ok(quote! { #cpp_type* })
+                    ParamAbi::Value(ValueAbi::LegacyTuple(_)) => Ok(quote! { void** }),
+                    ParamAbi::Value(ValueAbi::Array) => Ok(quote! { void* }),
+                    ParamAbi::Value(ValueAbi::ByPointer) => {
+                        if ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
+                            let underlying_ty = db
+                                .format_ty_for_cc(ty, TypeLocation::Other)?
+                                .into_tokens(&mut prereqs);
+                            Ok(quote! { #underlying_ty* })
+                        } else {
+                            let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
+                            Ok(quote! { #cpp_type* })
+                        }
+                    }
                 }
             })
             .collect::<Result<Vec<_>>>()?
     };
 
     // Types which are not C-ABI compatible by-value are returned via out-pointer parameters.
-    // TODO: b/ 459482188 - The order of this check must align with the order in
-    // `cc_return_value_from_c_abi`. We should centralize this logic so that the order exists in
-    // a singular location used by both places.
     let thunk_ret_type = if is_async {
         let cc_ret_ty = db
             .format_ty_for_cc(actual_output_ty, TypeLocation::FnReturn { is_constructor })?
             .tokens;
         thunk_params.push(quote! { ::crubit::DynErasedFuture<#cc_ret_ty>* __ret_ptr });
         quote! { void }
-    } else if is_constructor && is_bridged_layout_compat_type(db, sig_mid.output()) {
-        thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
-        quote! { void }
-    } else if let Some(briging) = is_bridged_type(db, sig_mid.output())? {
-        match briging {
-            BridgedType::Legacy { .. } => {
+    } else {
+        match classify_value_abi(db, sig_mid.output(), is_constructor)? {
+            ValueAbi::Bridged(BridgedType::Legacy { .. }) | ValueAbi::ByPointer => {
                 thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
                 quote! { void }
             }
-            BridgedType::Composable(_) => {
+            ValueAbi::Bridged(BridgedType::Composable(_)) => {
                 thunk_params.push(quote! { unsigned char * __ret_ptr });
                 quote! { void }
             }
+            ValueAbi::ByValue => main_api_ret_type,
+            ValueAbi::LegacyTuple(_) => {
+                thunk_params.push(quote! { void** __ret_ptr });
+                quote! { void }
+            }
+            ValueAbi::Array => {
+                thunk_params.push(quote! { void* __ret_ptr });
+                quote! { void }
+            }
         }
-    } else if is_c_abi_compatible_by_value(db, sig_mid.output()) {
-        main_api_ret_type
-    } else if let Some(tuple_abi) = tuple_c_abi_c_type(db, sig_mid.output()) {
-        thunk_params.push(quote! { #tuple_abi __ret_ptr });
-        quote! { void }
-    } else if let ty::TyKind::Array(inner_ty, _) = sig_mid.output().kind() {
-        let c_type = array_c_abi_c_type(db.tcx(), *inner_ty)?;
-        thunk_params.push(quote! { #c_type __ret_ptr });
-        quote! { void }
-    } else {
-        thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
-        quote! { void }
     };
 
     let mut attributes = vec![];
@@ -443,54 +476,45 @@ fn convert_value_from_c_abi_to_rust<'tcx>(
     local_name: &Ident,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
 ) -> Result<TokenStream> {
-    if crate::format_type::get_callable_info(db.tcx(), ty)?.is_some() {
-        return Ok(quote! {});
+    match classify_param_abi(db, ty)? {
+        ParamAbi::Callable(_) | ParamAbi::Value(ValueAbi::ByValue) => Ok(quote! {}),
+        ParamAbi::Value(ValueAbi::Bridged(bridged)) => {
+            convert_bridged_type_from_c_abi_to_rust(db, ty, &bridged, local_name, extern_c_decls)
+        }
+        ParamAbi::Value(ValueAbi::LegacyTuple(tuple_tys)) => {
+            convert_tuple_from_c_abi_to_rust(db, tuple_tys, local_name, extern_c_decls)
+        }
+        ParamAbi::Value(ValueAbi::Array | ValueAbi::ByPointer) => {
+            // Non-C-ABI-compatible-by-value types are passed by
+            // `*mut T`, so we need to read out the value.
+            Ok(quote! { let #local_name = #local_name.read(); })
+        }
     }
-    if let Some(bridged) = is_bridged_type(db, ty)? {
-        return convert_bridged_type_from_c_abi_to_rust(
-            db,
-            ty,
-            &bridged,
-            local_name,
-            extern_c_decls,
-        );
-    }
-    if is_c_abi_compatible_by_value(db, ty) {
-        return Ok(quote! {});
-    }
-    if let ty::TyKind::Tuple(tuple_tys) = ty.kind()
-        && !db
-            .crate_features(db.source_crate_num())
-            .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
-    {
-        return convert_tuple_from_c_abi_to_rust(db, tuple_tys, local_name, extern_c_decls);
-    }
-    // Non-C-ABI-compatible-by-value types are passed by
-    // `*mut T`, so we need to read out the value.
-    Ok(quote! { let #local_name = #local_name.read(); })
 }
 
 fn c_abi_for_param_type<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
-    if let Some(info) = crate::format_type::get_callable_info(db.tcx(), ty)? {
-        return Ok(if info.kind.is_owning() {
+    match classify_param_abi(db, ty)? {
+        ParamAbi::Callable(info) => Ok(if info.kind.is_owning() {
             quote! { ::crubit_support::bridge::FnPayload }
         } else {
             quote! { ::crubit_support::bridge::FnRefPayload }
-        });
-    }
-    if let Some(bridged) = is_bridged_type(db, ty)? {
-        match bridged {
+        }),
+        ParamAbi::Value(ValueAbi::Bridged(bridged)) => match bridged {
             BridgedType::Legacy { .. } => Ok(quote! { *const core::ffi::c_void }),
             BridgedType::Composable(_) => Ok(quote! { *const core::ffi::c_uchar }),
+        },
+        ParamAbi::Value(ValueAbi::ByValue) => {
+            let rs_type = db.format_ty_for_rs(ty)?;
+            Ok(quote! { #rs_type })
         }
-    } else if is_c_abi_compatible_by_value(db, ty) {
-        let rs_type = db.format_ty_for_rs(ty)?;
-        Ok(quote! { #rs_type })
-    } else if let Some(tuple_abi) = tuple_c_abi_rs_type(db, ty) {
-        Ok(quote! { #tuple_abi })
-    } else {
-        let rs_type = db.format_ty_for_rs(ty)?;
-        Ok(quote! { *mut #rs_type })
+        ParamAbi::Value(ValueAbi::LegacyTuple(tuple_tys)) => {
+            let num_elements = tuple_tys.len();
+            Ok(quote! { *const [*const core::ffi::c_void; #num_elements] })
+        }
+        ParamAbi::Value(ValueAbi::Array | ValueAbi::ByPointer) => {
+            let rs_type = db.format_ty_for_rs(ty)?;
+            Ok(quote! { *mut #rs_type })
+        }
     }
 }
 
@@ -554,13 +578,11 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
     is_constructor: bool,
 ) -> Result<TokenStream> {
-    let write_directly = || -> Result<TokenStream> {
-        Ok(quote! { ::core::ptr::write(#c_ptr as *mut _, #rs_value); })
-    };
-    Ok(if let Some(bridged_type) = is_bridged_type(db, rs_type)? {
-        match bridged_type {
+    let write_directly = || quote! { ::core::ptr::write(#c_ptr as *mut _, #rs_value); };
+    Ok(match classify_value_abi(db, rs_type, is_constructor)? {
+        ValueAbi::Bridged(bridged_type) => match bridged_type {
             BridgedType::Legacy { conversion_info, .. } => match conversion_info {
-                BridgedTypeConversionInfo::PointerLikeTransmute { .. } => write_directly()?,
+                BridgedTypeConversionInfo::PointerLikeTransmute { .. } => write_directly(),
                 BridgedTypeConversionInfo::ExternCFuncConverters {
                     rust_to_cpp_converter, ..
                 } => {
@@ -592,53 +614,35 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
                     }
                 }
             }
+        },
+        ValueAbi::LegacyTuple(tuple_tys) => {
+            let num_elements = tuple_tys.len();
+            let rs_element_names =
+                (0..num_elements).map(|i| format_ident!("{rs_value}_{i}")).collect_vec();
+            let ptr_member_names =
+                (0..num_elements).map(|i| format_ident!("{c_ptr}_{i}")).collect_vec();
+            let unpack = quote! {
+                let (#(#rs_element_names,)*) = #rs_value;
+                let [#(#ptr_member_names),*] = *(#c_ptr as *mut [*mut core::ffi::c_void; #num_elements]);
+            };
+            let write_elements = (0..num_elements)
+                .map(|i| {
+                    write_rs_value_to_c_abi_ptr(
+                        db,
+                        &rs_element_names[i],
+                        &ptr_member_names[i],
+                        tuple_tys[i],
+                        extern_c_decls,
+                        /* is_constructor= */ false,
+                    )
+                })
+                .collect::<Result<TokenStream>>()?;
+            quote! {
+                #unpack
+                #write_elements
+            }
         }
-    } else if is_c_abi_compatible_by_value(db, rs_type) {
-        write_directly()?
-    } else if let ty::TyKind::Tuple(tuple_tys) = rs_type.kind()
-        && !is_constructor
-        && !db
-            .crate_features(db.source_crate_num())
-            .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
-    {
-        let num_elements = tuple_tys.len();
-        let rs_element_names =
-            (0..num_elements).map(|i| format_ident!("{rs_value}_{i}")).collect_vec();
-        let ptr_member_names =
-            (0..num_elements).map(|i| format_ident!("{c_ptr}_{i}")).collect_vec();
-        let unpack = quote! {
-            let (#(#rs_element_names,)*) = #rs_value;
-            let [#(#ptr_member_names),*] = *(#c_ptr as *mut [*mut core::ffi::c_void; #num_elements]);
-        };
-        let write_elements = (0..num_elements)
-            .map(|i| {
-                write_rs_value_to_c_abi_ptr(
-                    db,
-                    &rs_element_names[i],
-                    &ptr_member_names[i],
-                    tuple_tys[i],
-                    extern_c_decls,
-                    /* is_constructor= */ false,
-                )
-            })
-            .collect::<Result<TokenStream>>()?;
-        quote! {
-            #unpack
-            #write_elements
-        }
-    } else if rs_type.ty_adt_def().is_some()
-        || matches!(
-            rs_type.kind(),
-            ty::TyKind::Tuple(_)
-                | ty::TyKind::Array { .. }
-                | ty::TyKind::Ref { .. }
-                | ty::TyKind::RawPtr { .. }
-                | ty::TyKind::Char
-        )
-    {
-        write_directly()?
-    } else {
-        bail!("Attempted to write out unknown type from Rust to C")
+        ValueAbi::ByValue | ValueAbi::Array | ValueAbi::ByPointer => write_directly(),
     })
 }
 
@@ -754,7 +758,6 @@ pub fn generate_thunk_impl<'tcx>(
             }
         })
         .collect::<Result<Vec<TokenStream>>>()?;
-    let output_is_bridged = is_bridged_type(db, sig.output())?;
     let thunk_return_type;
     let thunk_return_expression;
     if is_async {
@@ -770,41 +773,43 @@ pub fn generate_thunk_impl<'tcx>(
                 ::crubit_support::dyn_erased_future::DynErasedFuture::new(#fully_qualified_fn_name( #( #fn_args ),* ))
             );
         };
-    } else if output_is_bridged.is_none() && is_c_abi_compatible_by_value(db, sig.output()) {
-        // The output is not bridged and is C ABI compatible by-value, so we can just return
-        // the result directly, and no out-param is needed.
-        thunk_return_type = db.format_ty_for_rs(sig.output())?;
-        thunk_return_expression = quote! {
-            #fully_qualified_fn_name( #( #fn_args ),* )
-        };
     } else {
-        let return_ptr_ident = format_ident!("__ret_ptr");
-        let rs_return_value_ident = format_ident!("__rs_return_value");
-        thunk_return_type = quote! { () };
-
-        let return_ptr_type = if is_constructor && is_bridged_layout_compat_type(db, sig.output()) {
-            quote! { *mut core::ffi::c_void }
-        } else if let Some(BridgedType::Composable(_)) = output_is_bridged {
-            // Composable bridging writes its Crubit ABI form in an unsigned char array.
-            quote! { *mut core::ffi::c_uchar }
+        let return_abi = classify_value_abi(db, sig.output(), is_constructor)?;
+        if matches!(return_abi, ValueAbi::ByValue) {
+            // The output is not bridged and is C ABI compatible by-value, so we can just return
+            // the result directly, and no out-param is needed.
+            thunk_return_type = db.format_ty_for_rs(sig.output())?;
+            thunk_return_expression = quote! {
+                #fully_qualified_fn_name( #( #fn_args ),* )
+            };
         } else {
-            quote! { *mut core::ffi::c_void }
-        };
-        thunk_params.push(quote! {
-            #return_ptr_ident: #return_ptr_type
-        });
-        let write_return_value = write_rs_value_to_c_abi_ptr(
-            db,
-            &rs_return_value_ident,
-            &return_ptr_ident,
-            sig.output(),
-            &mut extern_c_decls,
-            is_constructor,
-        )?;
-        thunk_return_expression = quote! {
-            let #rs_return_value_ident = #fully_qualified_fn_name( #( #fn_args ),* );
-            #write_return_value
-        };
+            let return_ptr_ident = format_ident!("__ret_ptr");
+            let rs_return_value_ident = format_ident!("__rs_return_value");
+            thunk_return_type = quote! { () };
+
+            let return_ptr_type = match return_abi {
+                ValueAbi::Bridged(BridgedType::Composable(_)) => {
+                    // Composable bridging writes its Crubit ABI form in an unsigned char array.
+                    quote! { *mut core::ffi::c_uchar }
+                }
+                _ => quote! { *mut core::ffi::c_void },
+            };
+            thunk_params.push(quote! {
+                #return_ptr_ident: #return_ptr_type
+            });
+            let write_return_value = write_rs_value_to_c_abi_ptr(
+                db,
+                &rs_return_value_ident,
+                &return_ptr_ident,
+                sig.output(),
+                &mut extern_c_decls,
+                is_constructor,
+            )?;
+            thunk_return_expression = quote! {
+                let #rs_return_value_ident = #fully_qualified_fn_name( #( #fn_args ),* );
+                #write_return_value
+            };
+        }
     }
 
     let thunk_name = make_rs_ident(thunk_name);
