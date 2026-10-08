@@ -16,7 +16,7 @@
 #![deny(warnings)]
 /// This library reproduces the issue in b/458678348.
 #[inline(always)]
-pub(crate) fn GetMyTemplate() -> crate::__CcTemplateInst10MyTemplateIiE {
+pub fn GetMyTemplate() -> crate::__CcTemplateInst10MyTemplateIiE {
     unsafe {
         let mut __crubit_return =
             ::core::mem::MaybeUninit::<crate::__CcTemplateInst10MyTemplateIiE>::uninit();
@@ -32,7 +32,7 @@ pub(crate) fn GetMyTemplate() -> crate::__CcTemplateInst10MyTemplateIiE {
 #[repr(C)]
 ///CRUBIT_ANNOTATE: cpp_type=MyTemplate < int >
 ///CRUBIT_ANNOTATE: cpp_move_constructible=
-pub(crate) struct __CcTemplateInst10MyTemplateIiE {
+pub struct __CcTemplateInst10MyTemplateIiE {
     pub field: ::ffi_11::c_int,
 }
 impl !Send for __CcTemplateInst10MyTemplateIiE {}
@@ -42,26 +42,25 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIiE
 );
 
-// error: constructor `MyTemplate<int>::MyTemplate<int>` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: constructor `MyTemplate<int>::MyTemplate<int>` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: constructor `MyTemplate<int>::MyTemplate<int>` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: function `MyTemplate<int>::operator=` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
-
-// error: function `MyTemplate<int>::operator=` could not be bound
-//   b/248542210: template instantiation of member function cannot reliably get bindings
+impl Default for __CcTemplateInst10MyTemplateIiE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk__19bb63af__ZN10MyTemplateIiEC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     unsafe extern "C" {
         pub(crate) unsafe fn __rust_thunk___Z13GetMyTemplatev(__return: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk__19bb63af__ZN10MyTemplateIiEC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
     }
 }
 

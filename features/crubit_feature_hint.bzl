@@ -9,7 +9,11 @@ visibility-restricted.
 """
 
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
-load("//features:global_features.bzl", "NO_ASSUME_LIFETIMES_TARGETS")
+load(
+    "//features:global_features.bzl",
+    "NO_ASSUME_LIFETIMES_TARGETS",
+    "NO_TEMPLATE_INSTANTIATION_TARGETS",
+)
 
 visibility(["//..."])
 
@@ -71,11 +75,11 @@ def _matches_any_pattern(label, patterns):
             return True
     return False
 
-def _has_explicit_opt_in(aspect_hints):
+def _has_explicit_opt_in(aspect_hints, features):
     for hint in aspect_hints:
-        if hint.label.package == "features" and hint.label.name in ("assume_lifetimes", "experimental"):
+        if hint.label.package == "features" and hint.label.name in features:
             return True
-        if hint.label.package == "features/internal" and hint.label.name in ("testonly_assume_lifetimes", "testonly_experimental"):
+        if hint.label.package == "features/internal" and hint.label.name in ["testonly_" + f for f in features]:
             return True
     return False
 
@@ -95,7 +99,11 @@ def find_crubit_features(target, aspect_ctx):
         _add_features(features, hint)
     if features:
         if _matches_any_pattern(target.label, NO_ASSUME_LIFETIMES_TARGETS):
-            if not _has_explicit_opt_in(aspect_ctx.rule.attr.aspect_hints):
+            if not _has_explicit_opt_in(aspect_ctx.rule.attr.aspect_hints, ("assume_lifetimes", "experimental")):
                 if "no_assume_lifetimes" not in features:
                     features.append("no_assume_lifetimes")
+        if _matches_any_pattern(target.label, NO_TEMPLATE_INSTANTIATION_TARGETS):
+            if not _has_explicit_opt_in(aspect_ctx.rule.attr.aspect_hints, ("template_instantiation", "experimental")):
+                if "no_template_instantiation" not in features:
+                    features.append("no_template_instantiation")
     return sorted(features)

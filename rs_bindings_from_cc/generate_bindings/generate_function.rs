@@ -3010,6 +3010,21 @@ fn function_signature<'a>(
     };
     let func = transformed_func.as_ref().unwrap_or(func);
 
+    // For an `ImplFor::RefT` impl block (`impl Trait for &T`), a non-`Unpin` return type becomes an
+    // associated type `type Output = impl Ctor<...> + use<...>`. That `use<...>` bound has to name
+    // the lifetime of `self`, and an elided lifetime (`'_`) cannot be named there. So, as in
+    // `api_func_shape_for_constructor`, replace the elided lifetime with a named one.
+    // TODO(b/331685208): instead, return `impl Ctor` directly from the method.
+    if matches!(impl_kind, ImplKind::Trait { impl_for: ImplFor::RefT, .. })
+        && !return_type.is_unpin()
+        && let Some(
+            RsTypeKind::Reference { lifetime, .. } | RsTypeKind::RvalueReference { lifetime, .. },
+        ) = param_types.first_mut()
+        && lifetime.is_elided()
+    {
+        *lifetime = Lifetime::new("__unelided");
+    }
+
     let mut api_params = Vec::with_capacity(func.params().len());
     let mut thunk_args = Vec::with_capacity(func.params().len());
     let mut thunk_prepare = quote! {};

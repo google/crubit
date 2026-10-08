@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -35,6 +36,36 @@ extern "C" void __rust_thunk___ZN3FooC1Ev(class Foo* __this) {
   crubit::construct_at(__this);
 }
 
+extern "C" void __rust_thunk___ZN3Foo3BarE6SizeofIiE(
+    class Foo* __this, struct Sizeof<int>* __param_0) {
+  __this->Bar(crubit::UnsafeTakeValue(__param_0));
+}
+
+static_assert((void (::Foo::*)(struct Sizeof<int>)) & ::Foo::Bar);
+
+extern "C" void __rust_thunk___ZN3Foo3BarE6SizeofIfE(
+    class Foo* __this, struct Sizeof<float>* __param_0) {
+  __this->Bar(crubit::UnsafeTakeValue(__param_0));
+}
+
+static_assert((void (::Foo::*)(struct Sizeof<float>)) & ::Foo::Bar);
+
 static_assert((void (::Foo::*)(int)) & ::Foo::Bar);
+
+static_assert(sizeof(struct Sizeof<float>) == 1);
+static_assert(alignof(struct Sizeof<float>) == 1);
+
+extern "C" void __rust_thunk__4304ae3f__ZN6SizeofIfEC1Ev(
+    struct Sizeof<float>* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(sizeof(struct Sizeof<int>) == 1);
+static_assert(alignof(struct Sizeof<int>) == 1);
+
+extern "C" void __rust_thunk__4304ae3f__ZN6SizeofIiEC1Ev(
+    struct Sizeof<int>* __this) {
+  crubit::construct_at(__this);
+}
 
 #pragma clang diagnostic pop

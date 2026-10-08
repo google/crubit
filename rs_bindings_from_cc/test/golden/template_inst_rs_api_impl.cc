@@ -29,4 +29,9 @@ static_assert(CRUBIT_SIZEOF(struct MyTemplate<int>) == 4);
 static_assert(alignof(struct MyTemplate<int>) == 4);
 static_assert(CRUBIT_OFFSET_OF(field, struct MyTemplate<int>) == 0);
 
+extern "C" void __rust_thunk__19bb63af__ZN10MyTemplateIiEC1Ev(
+    struct MyTemplate<int>* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop

@@ -69,4 +69,34 @@ static_assert((::std::__u::string_view (*)(::std::__u::string_view,
                                            ::std::__u::string_view)) &
               ::unambiguous_string_view_return_annotated);
 
+static_assert(CRUBIT_SIZEOF(class std::reverse_iterator<const char*>) == 8);
+static_assert(alignof(class std::reverse_iterator<const char*>) == 8);
+
+extern "C" void __rust_thunk__046f2d88__ZNSt3__u16reverse_iteratorIPKcEC1Ev(
+    class std::reverse_iterator<const char*>* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk__9d7a113a__ZNSt3__u16reverse_iteratorIPKcEC1ES2_(
+    class std::reverse_iterator<const char*>* __this, char const* __x) {
+  crubit::construct_at(__this, __x);
+}
+
+extern "C" char const*
+__rust_thunk__74bf6f6f__ZNKSt3__u16reverse_iteratorIPKcE4baseEv(
+    class std::reverse_iterator<const char*> const* __this) {
+  return __this->base();
+}
+
+static_assert((char const* (::std::reverse_iterator<const char*>::*)() const) &
+              ::std::reverse_iterator<const char*>::base);
+
+static_assert(CRUBIT_SIZEOF(class std::reverse_iterator<const wchar_t*>) == 8);
+static_assert(alignof(class std::reverse_iterator<const wchar_t*>) == 8);
+
+extern "C" void __rust_thunk__046f2d88__ZNSt3__u16reverse_iteratorIPKwEC1Ev(
+    class std::reverse_iterator<const wchar_t*>* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop

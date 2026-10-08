@@ -69,4 +69,30 @@ extern "C" int __rust_thunk___Z3foov() { return foo(); }
 
 static_assert((int (*)()) & ::foo);
 
+static_assert(CRUBIT_SIZEOF(struct MyTemplate<int>) == 4);
+static_assert(alignof(struct MyTemplate<int>) == 4);
+static_assert(CRUBIT_OFFSET_OF(value, struct MyTemplate<int>) == 0);
+
+extern "C" void __rust_thunk__c114dea5__ZN10MyTemplateIiEC1Ev(
+    struct MyTemplate<int>* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(struct MyTemplate<float>) == 4);
+static_assert(alignof(struct MyTemplate<float>) == 4);
+static_assert(CRUBIT_OFFSET_OF(value, struct MyTemplate<float>) == 0);
+
+extern "C" void __rust_thunk__2a6ef96a__ZN10MyTemplateIfEC1Ev(
+    struct MyTemplate<float>* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(sizeof(struct OuterTemplate<int>) == 1);
+static_assert(alignof(struct OuterTemplate<int>) == 1);
+
+extern "C" void __rust_thunk__2cd151a5__ZN13OuterTemplateIiEC1Ev(
+    struct OuterTemplate<int>* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop

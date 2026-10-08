@@ -36,4 +36,9 @@ static_assert(CRUBIT_SIZEOF(struct Value<int>) == 4);
 static_assert(alignof(struct Value<int>) == 4);
 static_assert(CRUBIT_OFFSET_OF(value, struct Value<int>) == 0);
 
+extern "C" void __rust_thunk__79c7b51c__ZN5ValueIiEC1Ev(
+    struct Value<int>* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop

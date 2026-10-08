@@ -16,8 +16,9 @@ fn test_forward_declared_type_visibility() {
     // can't really test the field visibility, but we can test the visibility of the types and
     // functions.
     expect_pred!(type_exists!(pub_crate_types::ForwardDeclared));
-    expect_pred!(!type_exists!(pub_crate_types::TemplateIntAlias));
-    expect_pred!(!value_exists!(pub_crate_types::GetTemplateInt));
+    // With `template_instantiation`, `Template<int>` gets bindings, so these do too.
+    expect_pred!(type_exists!(pub_crate_types::TemplateIntAlias));
+    expect_pred!(value_exists!(pub_crate_types::GetTemplateInt));
 
     // The compound data type does exist, but its field is private.
     expect_pred!(value_exists!(pub_crate_types::ConsumeCompoundDataType));

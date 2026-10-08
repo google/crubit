@@ -8,6 +8,7 @@
 #include "support/internal/cxx20_backports.h"
 #include "support/internal/offsetof.h"
 #include "support/internal/sizeof.h"
+#include "support/internal/slot.h"
 
 #include <cstddef>
 #include <memory>
@@ -24,6 +25,22 @@ static_assert(CRUBIT_OFFSET_OF(nanos, struct repro::Interval) == 0);
 
 extern "C" void __rust_thunk___ZN5repro8IntervalC1Ev(
     struct repro::Interval* __this) {
+  crubit::construct_at(__this);
+}
+
+extern "C" void __rust_thunk___ZN5repro5crashENS_8NullableINS_8IntervalEEE(
+    struct repro::Nullable<struct repro::Interval>* __param_0) {
+  repro::crash(crubit::UnsafeTakeValue(__param_0));
+}
+
+static_assert((void (*)(struct repro::Nullable<struct repro::Interval>)) &
+              ::repro::crash);
+
+static_assert(sizeof(struct repro::Nullable<struct repro::Interval>) == 1);
+static_assert(alignof(struct repro::Nullable<struct repro::Interval>) == 1);
+
+extern "C" void __rust_thunk__c2cb6ead__ZN5repro8NullableINS_8IntervalEEC1Ev(
+    struct repro::Nullable<struct repro::Interval>* __this) {
   crubit::construct_at(__this);
 }
 

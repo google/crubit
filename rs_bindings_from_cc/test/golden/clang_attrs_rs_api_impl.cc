@@ -51,4 +51,15 @@ extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(sizeof(struct template_with_preferred_name::SomeTemplate<int>) ==
+              1);
+static_assert(alignof(struct template_with_preferred_name::SomeTemplate<int>) ==
+              1);
+
+extern "C" void
+__rust_thunk__90355363__ZN28template_with_preferred_name12SomeTemplateIiEC1Ev(
+    struct template_with_preferred_name::SomeTemplate<int>* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop
