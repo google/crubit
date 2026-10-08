@@ -18,17 +18,17 @@ using ::unique_ptr_test::Target;
 // The C++ signatures are plain smart pointers carrying the `crubit_nullable`
 // attribute, so ownership transfer is unaffected.
 TEST(NullableUniquePtrBridging, Roundtrip) {
-  int initial_count = Target::get_destructor_count();
+  auto token = std::make_shared<int32_t>(0);
 
   {
-    auto ptr = ::unique_ptr_test::create_target();
+    auto ptr = ::unique_ptr_test::create_target(token);
 
     auto ptr2 = nullable::roundtrip_nullable_unique_ptr(std::move(ptr));
     EXPECT_NE(ptr2, nullptr);
 
-    EXPECT_EQ(Target::get_destructor_count(), initial_count);
+    EXPECT_EQ(token.use_count(), 2);
   }
-  EXPECT_EQ(Target::get_destructor_count(), initial_count + 1);
+  EXPECT_EQ(token.use_count(), 1);
 }
 
 TEST(NullableUniquePtrBridging, RoundtripNull) {
@@ -39,7 +39,7 @@ TEST(NullableUniquePtrBridging, IsNull) {
   std::unique_ptr<Target> null;
   EXPECT_TRUE(nullable::is_null_unique_ptr(null));
 
-  auto ptr = ::unique_ptr_test::create_target();
+  auto ptr = ::unique_ptr_test::create_target(std::make_shared<int32_t>(0));
   EXPECT_FALSE(nullable::is_null_unique_ptr(ptr));
 }
 
@@ -48,20 +48,17 @@ TEST(NullableUniquePtrBridging, MakeNull) {
 }
 
 TEST(NullableVirtualUniquePtrBridging, Roundtrip) {
-  int initial_count =
-      ::unique_ptr_test::Derived::get_derived_destructor_count();
+  auto token = std::make_shared<int32_t>(0);
 
   {
-    auto ptr = ::unique_ptr_test::create_virtual_base();
+    auto ptr = ::unique_ptr_test::create_virtual_base(token);
 
     auto ptr2 = nullable::roundtrip_nullable_virtual_unique_ptr(std::move(ptr));
     EXPECT_NE(ptr2, nullptr);
 
-    EXPECT_EQ(::unique_ptr_test::Derived::get_derived_destructor_count(),
-              initial_count);
+    EXPECT_EQ(token.use_count(), 2);
   }
-  EXPECT_EQ(::unique_ptr_test::Derived::get_derived_destructor_count(),
-            initial_count + 1);
+  EXPECT_EQ(token.use_count(), 1);
 }
 
 TEST(NullableVirtualUniquePtrBridging, RoundtripNull) {

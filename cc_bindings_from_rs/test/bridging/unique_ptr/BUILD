@@ -43,7 +43,6 @@ crubit_cc_test(
     name = "unique_ptr_test",
     srcs = ["unique_ptr_test.cc"],
     deps = [
-        ":test_helpers",
         ":unique_ptr_cc_api",
         "//testing/base/public:gunit_main",
     ],

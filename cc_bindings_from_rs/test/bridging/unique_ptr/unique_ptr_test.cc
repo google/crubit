@@ -4,6 +4,8 @@
 
 #include "cc_bindings_from_rs/test/bridging/unique_ptr/unique_ptr.h"
 
+#include <cstdint>
+#include <memory>
 #include <utility>
 
 #include "gtest/gtest.h"
@@ -13,57 +15,57 @@ namespace {
 // Tests that a `unique_ptr` can be passed to Rust and returned back to
 // C++ without being destroyed prematurely.
 TEST(UniquePtrBridging, Roundtrip) {
-  int initial_count = ::unique_ptr::get_destructor_count();
+  auto token = std::make_shared<int32_t>(0);
 
   {
-    auto ptr = unique_ptr::create_unique_ptr();
+    auto ptr = unique_ptr::create_unique_ptr(token);
 
     auto ptr2 = unique_ptr::roundtrip_unique_ptr(std::move(ptr));
     EXPECT_NE(ptr2, nullptr);
 
-    EXPECT_EQ(::unique_ptr::get_destructor_count(), initial_count);
+    EXPECT_EQ(token.use_count(), 2);
   }
-  EXPECT_EQ(::unique_ptr::get_destructor_count(), initial_count + 1);
+  EXPECT_EQ(token.use_count(), 1);
 }
 
 // Tests that when a `unique_ptr` is passed to Rust by value and not
 // returned, Rust takes ownership and correctly destroys the C++ object when
 // it goes out of scope.
 TEST(UniquePtrBridging, ConsumedByRust) {
-  int initial_count = ::unique_ptr::get_destructor_count();
-  auto ptr = unique_ptr::create_unique_ptr();
+  auto token = std::make_shared<int32_t>(0);
+  auto ptr = unique_ptr::create_unique_ptr(token);
 
   unique_ptr::consume_unique_ptr(std::move(ptr));
 
-  EXPECT_EQ(::unique_ptr::get_destructor_count(), initial_count + 1);
+  EXPECT_EQ(token.use_count(), 1);
 }
 
 // Tests that a `virtual_unique_ptr` can be passed to Rust and returned back to
 // C++ without being destroyed prematurely.
 TEST(VirtualUniquePtrBridging, Roundtrip) {
-  int initial_count = ::unique_ptr::get_derived_destructor_count();
+  auto token = std::make_shared<int32_t>(0);
 
   {
-    auto ptr = unique_ptr::create_virtual_unique_ptr();
+    auto ptr = unique_ptr::create_virtual_unique_ptr(token);
 
     auto ptr2 = unique_ptr::roundtrip_virtual_unique_ptr(std::move(ptr));
     EXPECT_NE(ptr2, nullptr);
 
-    EXPECT_EQ(::unique_ptr::get_derived_destructor_count(), initial_count);
+    EXPECT_EQ(token.use_count(), 2);
   }
-  EXPECT_EQ(::unique_ptr::get_derived_destructor_count(), initial_count + 1);
+  EXPECT_EQ(token.use_count(), 1);
 }
 
 // Tests that when a `virtual_unique_ptr` is passed to Rust by value and not
 // returned, Rust takes ownership and correctly destroys the C++ object when
 // it goes out of scope.
 TEST(VirtualUniquePtrBridging, ConsumedByRust) {
-  int initial_count = ::unique_ptr::get_derived_destructor_count();
-  auto ptr = unique_ptr::create_virtual_unique_ptr();
+  auto token = std::make_shared<int32_t>(0);
+  auto ptr = unique_ptr::create_virtual_unique_ptr(token);
 
   unique_ptr::consume_virtual_unique_ptr(std::move(ptr));
 
-  EXPECT_EQ(::unique_ptr::get_derived_destructor_count(), initial_count + 1);
+  EXPECT_EQ(token.use_count(), 1);
 }
 
 TEST(UniquePtrBridging, Tuple) {
@@ -83,32 +85,32 @@ TEST(UniquePtrBridging, Option) {
 // a plain `std::unique_ptr<T>` carrying the `crubit_nonnull` attribute, so
 // ownership transfer is unaffected.
 TEST(NonNullUniquePtrBridging, Roundtrip) {
-  int initial_count = ::unique_ptr::get_destructor_count();
+  auto token = std::make_shared<int32_t>(0);
 
   {
-    auto ptr = unique_ptr::create_unique_ptr();
+    auto ptr = unique_ptr::create_unique_ptr(token);
 
     auto ptr2 = unique_ptr::roundtrip_nonnull_unique_ptr(std::move(ptr));
     EXPECT_NE(ptr2, nullptr);
 
-    EXPECT_EQ(::unique_ptr::get_destructor_count(), initial_count);
+    EXPECT_EQ(token.use_count(), 2);
   }
-  EXPECT_EQ(::unique_ptr::get_destructor_count(), initial_count + 1);
+  EXPECT_EQ(token.use_count(), 1);
 }
 
 TEST(NonNullVirtualUniquePtrBridging, Roundtrip) {
-  int initial_count = ::unique_ptr::get_derived_destructor_count();
+  auto token = std::make_shared<int32_t>(0);
 
   {
-    auto ptr = unique_ptr::create_virtual_unique_ptr();
+    auto ptr = unique_ptr::create_virtual_unique_ptr(token);
 
     auto ptr2 =
         unique_ptr::roundtrip_nonnull_virtual_unique_ptr(std::move(ptr));
     EXPECT_NE(ptr2, nullptr);
 
-    EXPECT_EQ(::unique_ptr::get_derived_destructor_count(), initial_count);
+    EXPECT_EQ(token.use_count(), 2);
   }
-  EXPECT_EQ(::unique_ptr::get_derived_destructor_count(), initial_count + 1);
+  EXPECT_EQ(token.use_count(), 1);
 }
 
 }  // namespace

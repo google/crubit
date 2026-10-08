@@ -4,25 +4,22 @@
 
 #include "cc_bindings_from_rs/test/bridging/unique_ptr/test_helpers.h"
 
+#include <cstdint>
 #include <memory>
+#include <utility>
 
 namespace unique_ptr_test {
 
-int Target::destructor_count = 0;
-int Derived::derived_destructor_count = 0;
+Target::Target(std::shared_ptr<int32_t> token) : token(std::move(token)) {}
 
-Target::~Target() { destructor_count++; }
+std::unique_ptr<Target> create_target(std::shared_ptr<int32_t> token) {
+  return std::make_unique<Target>(std::move(token));
+}
 
-int Target::get_destructor_count() { return destructor_count; }
+Derived::Derived(std::shared_ptr<int32_t> token) : token(std::move(token)) {}
 
-std::unique_ptr<Target> create_target() { return std::make_unique<Target>(); }
-
-Derived::~Derived() { derived_destructor_count++; }
-
-int Derived::get_derived_destructor_count() { return derived_destructor_count; }
-
-std::unique_ptr<Base> create_virtual_base() {
-  return std::make_unique<Derived>();
+std::unique_ptr<Base> create_virtual_base(std::shared_ptr<int32_t> token) {
+  return std::make_unique<Derived>(std::move(token));
 }
 
 }  // namespace unique_ptr_test
