@@ -149,7 +149,8 @@ std::unique_ptr<ir_proto::Item> EnumDeclImporter::Import(
         FormattedError::FromStatus(std::move(unknown_attr.status())));
   }
 
-  if (ictx_.IsFromProtoTarget(*enum_decl)) {
+  if (ictx_.IsFromProtoTarget(*enum_decl) &&
+      enum_decl->isCompleteDefinition()) {
     // Supporting a top-level `Foo_Bar_Baz` enum is hard! It could be any of
     // these four things:
     // * A top-level `enum Foo_Bar_Baz`

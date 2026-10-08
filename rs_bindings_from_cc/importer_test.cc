@@ -2392,5 +2392,74 @@ TEST(ImporterTest, AssumedLifetimesSurviveOnMemberFnOfSpecialization) {
   EXPECT_THAT(get->return_type().explicit_lifetimes(), ElementsAre("a"));
 }
 
+TEST(ImporterTest, ProtoEnumOpaqueForwardDeclIsIncomplete) {
+  ASSERT_OK_AND_ASSIGN(
+      IR ir, IrFromCc({
+                 .current_target = BazelLabel{"//test:testing_target"},
+                 .public_headers = {HeaderName("test/header.h")},
+                 .virtual_headers_contents_for_testing =
+                     {
+                         {HeaderName("test/wrapper.proto.h"),
+                          "namespace leaf { enum LeafResult : int; }"},
+                         {HeaderName("test/header.h"),
+                          "#include \"wrapper.proto.h\"\n"
+                          "int UseLeafResult(leaf::LeafResult r);"},
+                     },
+                 .headers_to_targets =
+                     {
+                         {HeaderName("test/wrapper.proto.h"),
+                          BazelLabel{"//test:wrapper_proto"}},
+                         {HeaderName("test/header.h"),
+                          BazelLabel{"//test:testing_target"}},
+                     },
+             }));
+  EXPECT_THAT(get_items_if<ExistingRustType>(ir), IsEmpty());
+  EXPECT_THAT(get_items_if<Enum>(ir),
+              ElementsAre(Pointee(Partially(EqualsProto(R"pb(
+                cc_name { identifier: "LeafResult" }
+                rs_name { identifier: "LeafResult" }
+                owning_target: "//test:wrapper_proto"
+                is_incomplete: true
+              )pb")))));
+}
+
+TEST(ImporterTest, ProtoEnumCompleteDefinitionResolvesToDefiningTarget) {
+  ASSERT_OK_AND_ASSIGN(
+      IR ir, IrFromCc({
+                 .current_target = BazelLabel{"//test:testing_target"},
+                 .public_headers = {HeaderName("test/header.h")},
+                 .virtual_headers_contents_for_testing =
+                     {
+                         {HeaderName("test/leaf.proto.h"),
+                          "namespace leaf {\n"
+                          "enum LeafResult : int;\n"
+                          "enum LeafResult : int { kUnknown = 0, kHit = 1 };\n"
+                          "}"},
+                         {HeaderName("test/wrapper.proto.h"),
+                          "namespace leaf { enum LeafResult : int; }"},
+                         {HeaderName("test/header.h"),
+                          "#include \"wrapper.proto.h\"\n"
+                          "#include \"leaf.proto.h\"\n"
+                          "int UseLeafResult(leaf::LeafResult r);"},
+                     },
+                 .headers_to_targets =
+                     {
+                         {HeaderName("test/leaf.proto.h"),
+                          BazelLabel{"//test:leaf_proto"}},
+                         {HeaderName("test/wrapper.proto.h"),
+                          BazelLabel{"//test:wrapper_proto"}},
+                         {HeaderName("test/header.h"),
+                          BazelLabel{"//test:testing_target"}},
+                     },
+             }));
+  EXPECT_THAT(get_items_if<ExistingRustType>(ir),
+              ElementsAre(Pointee(Partially(EqualsProto(R"pb(
+                rs_name: "LeafResult"
+                cc_name: "leaf::LeafResult"
+                owning_target: "//test:leaf_proto"
+                is_same_abi: false
+              )pb")))));
+}
+
 }  // namespace
 }  // namespace crubit
