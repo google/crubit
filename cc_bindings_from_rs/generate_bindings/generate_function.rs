@@ -8,7 +8,8 @@ use crate::format_type::{
 };
 use crate::generate_doc_comment;
 use crate::generate_function_thunk::{
-    generate_thunk_decl, generate_thunk_impl, is_thunk_required, make_thunk_name, ThunkKind,
+    classify_param_abi, classify_value_abi, generate_thunk_decl, generate_thunk_impl,
+    is_thunk_required, make_thunk_name, ParamAbi, ThunkKind, ValueAbi,
 };
 use crate::get_generic_args::GenericClausesExt;
 use crate::{
@@ -205,11 +206,11 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
     includes: &mut BTreeSet<CcInclude>,
     statements: &mut TokenStream,
 ) -> Result<TokenStream> {
-    if let Some(info) = crate::format_type::get_callable_info(db.tcx(), ty)? {
-        return cc_callable_param_to_c_abi(db, cc_ident, ty, &info, includes, statements);
-    }
-    Ok(if let Some(bridged_type) = is_bridged_type(db, ty)? {
-        match bridged_type {
+    Ok(match classify_param_abi(db, ty)? {
+        ParamAbi::Callable(info) => {
+            return cc_callable_param_to_c_abi(db, cc_ident, ty, &info, includes, statements);
+        }
+        ParamAbi::Value(ValueAbi::Bridged(bridged_type)) => match bridged_type {
             BridgedType::Legacy { cpp_type, conversion_info, .. } => {
                 if let BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer: false } =
                     conversion_info
@@ -249,95 +250,98 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
                 });
                 quote! { #buffer_name }
             }
-        }
-    } else if let ty::TyKind::Adt(adt, _) = ty.kind()
-        && (crate::matches_qualified_name(db, adt.did(), &["ctor", "RvalueReference"])
-            || crate::matches_qualified_name(db, adt.did(), &["ctor", "ByValue"]))
-    {
-        includes.insert(code_gen_utils::CcInclude::utility());
-        quote! { ::std::move(#cc_ident) }
-    } else if is_c_abi_compatible_by_value(db, ty) {
-        quote! { #cc_ident }
-    } else if let ty::TyKind::Tuple(tuple_tys) = ty.kind()
-        && !db
-            .crate_features(db.source_crate_num())
-            .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
-    {
-        let n = tuple_tys.len();
-        let c_abi_names = ident_for_each(&format!("{cc_ident}_cabi"), n);
-
-        // Create a statement defining a local for the C ABI representation of each tuple element.
-        // This is necessary in order to ensure that we have a non-temporary value to point to
-        // in the `result_name` array below.
-        //
-        // Locals of unknown type use `auto&&` in order to avoid changing the type of the
-        // expression.
-        for (i, c_abi_name) in c_abi_names.iter().enumerate() {
-            let tuple_element_name = expect_format_cc_ident(&format!("{cc_ident}_{i}"));
-            // Needed to avoid `proc_macro2` interpolating `1usize` instead of `1`.
-            let i_literal = Literal::usize_unsuffixed(i);
-            statements.extend(quote! {
-                auto&& #tuple_element_name = ::std::get<#i_literal>(#cc_ident);
-            });
-            let converted_value = cc_param_to_c_abi(
-                db,
-                tuple_element_name.clone(),
-                tuple_tys[i],
-                post_analysis_typing_env,
-                includes,
-                statements,
-            )?;
-            if matches!(tuple_tys[i].kind(), ty::TyKind::Tuple(_)) {
-                // Elements which are arrays must be referenced again in order
-                // to properly convert them to pointers.
-                //
-                // Note that `converted_value` here is a `result_name` array lvalue,
-                // never a temporary, so it's fine to take its address in the RHS.
-                statements.extend(quote! {
-                    auto* #c_abi_name = &#converted_value;
-                });
+        },
+        ParamAbi::Value(ValueAbi::ByValue) => {
+            if let ty::TyKind::Adt(adt, _) = ty.kind()
+                && (crate::matches_qualified_name(db, adt.did(), &["ctor", "RvalueReference"])
+                    || crate::matches_qualified_name(db, adt.did(), &["ctor", "ByValue"]))
+            {
+                includes.insert(code_gen_utils::CcInclude::utility());
+                quote! { ::std::move(#cc_ident) }
             } else {
-                statements.extend(quote! {
-                    auto&& #c_abi_name = #converted_value;
-                });
+                quote! { #cc_ident }
             }
         }
-        let result_name = expect_format_cc_ident(&format!("{cc_ident}_cabi"));
-        statements.extend(quote! {
-            void* #result_name[] = { #(&#c_abi_names),* };
-        });
-        quote! {
-            #result_name
+        ParamAbi::Value(ValueAbi::LegacyTuple(tuple_tys)) => {
+            let n = tuple_tys.len();
+            let c_abi_names = ident_for_each(&format!("{cc_ident}_cabi"), n);
+
+            // Create a statement defining a local for the C ABI representation of each tuple
+            // element. This is necessary in order to ensure that we have a
+            // non-temporary value to point to in the `result_name` array below.
+            //
+            // Locals of unknown type use `auto&&` in order to avoid changing the type of the
+            // expression.
+            for (i, c_abi_name) in c_abi_names.iter().enumerate() {
+                let tuple_element_name = expect_format_cc_ident(&format!("{cc_ident}_{i}"));
+                // Needed to avoid `proc_macro2` interpolating `1usize` instead of `1`.
+                let i_literal = Literal::usize_unsuffixed(i);
+                statements.extend(quote! {
+                    auto&& #tuple_element_name = ::std::get<#i_literal>(#cc_ident);
+                });
+                let converted_value = cc_param_to_c_abi(
+                    db,
+                    tuple_element_name.clone(),
+                    tuple_tys[i],
+                    post_analysis_typing_env,
+                    includes,
+                    statements,
+                )?;
+                if matches!(tuple_tys[i].kind(), ty::TyKind::Tuple(_)) {
+                    // Elements which are arrays must be referenced again in order
+                    // to properly convert them to pointers.
+                    //
+                    // Note that `converted_value` here is a `result_name` array lvalue,
+                    // never a temporary, so it's fine to take its address in the RHS.
+                    statements.extend(quote! {
+                        auto* #c_abi_name = &#converted_value;
+                    });
+                } else {
+                    statements.extend(quote! {
+                        auto&& #c_abi_name = #converted_value;
+                    });
+                }
+            }
+            let result_name = expect_format_cc_ident(&format!("{cc_ident}_cabi"));
+            statements.extend(quote! {
+                void* #result_name[] = { #(&#c_abi_names),* };
+            });
+            quote! {
+                #result_name
+            }
         }
-    } else if !ty.needs_drop(db.tcx(), post_analysis_typing_env) {
-        // As an optimization, if the type is trivially destructible, we don't
-        // need to move it to a new NoDestructor location. We can directly copy the
-        // bytes.
-        quote! { & #cc_ident }
-    } else if ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
-        includes.insert(db.support_header("internal/slot.h"));
-        let slot_name = &expect_format_cc_ident(&format!("{cc_ident}_slot"));
-        let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =
-            db.format_ty_for_cc(ty, TypeLocation::Other)?;
-        includes.extend(ty_prereqs.includes);
-        statements.extend(quote! {
-            crubit::Slot<#cc_type> #slot_name;
-            ::std::move(#cc_ident).MoveToSlot(#slot_name);
-        });
-        quote! { #slot_name.Get() }
-    } else {
-        // The implementation will copy the bytes, we just need to leave the variable
-        // behind in a valid moved-from state.
-        // TODO(jeanpierreda): Ideally, the Rust code should C++-move instead of memcpy,
-        // allowing us to avoid one extra memcpy: we could move it directly into its
-        // target location, instead of moving to a temporary that we memcpy to its
-        // target location.
-        includes.insert(db.support_header("internal/slot.h"));
-        let slot_name = &expect_format_cc_ident(&format!("{cc_ident}_slot"));
-        statements.extend(quote! {
-            crubit::Slot #slot_name((::std::move(#cc_ident)));
-        });
-        quote! { #slot_name.Get() }
+        ParamAbi::Value(ValueAbi::Array | ValueAbi::ByPointer) => {
+            if !ty.needs_drop(db.tcx(), post_analysis_typing_env) {
+                // As an optimization, if the type is trivially destructible, we don't
+                // need to move it to a new NoDestructor location. We can directly copy the
+                // bytes.
+                quote! { & #cc_ident }
+            } else if ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
+                includes.insert(db.support_header("internal/slot.h"));
+                let slot_name = &expect_format_cc_ident(&format!("{cc_ident}_slot"));
+                let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =
+                    db.format_ty_for_cc(ty, TypeLocation::Other)?;
+                includes.extend(ty_prereqs.includes);
+                statements.extend(quote! {
+                    crubit::Slot<#cc_type> #slot_name;
+                    ::std::move(#cc_ident).MoveToSlot(#slot_name);
+                });
+                quote! { #slot_name.Get() }
+            } else {
+                // The implementation will copy the bytes, we just need to leave the variable
+                // behind in a valid moved-from state.
+                // TODO(jeanpierreda): Ideally, the Rust code should C++-move instead of memcpy,
+                // allowing us to avoid one extra memcpy: we could move it directly into its
+                // target location, instead of moving to a temporary that we memcpy to its
+                // target location.
+                includes.insert(db.support_header("internal/slot.h"));
+                let slot_name = &expect_format_cc_ident(&format!("{cc_ident}_slot"));
+                statements.extend(quote! {
+                    crubit::Slot #slot_name((::std::move(#cc_ident)));
+                });
+                quote! { #slot_name.Get() }
+            }
+        }
     })
 }
 
@@ -489,11 +493,8 @@ fn cc_return_value_from_c_abi<'tcx>(
     recursive: bool,
 ) -> Result<ReturnConversion> {
     let storage_name = &expect_format_cc_ident(&format!("__{ident}_storage"));
-    // TODO: b/459482188 - The order of this check must align with the order in
-    // `generate_thunk_decl`. We should centralize this logic so that the order exists in a
-    // singular location used by both places.
-    if let Some(bridged_type) = is_bridged_type(db, ty)? {
-        match bridged_type {
+    match classify_value_abi(db, ty, /* is_constructor= */ false)? {
+        ValueAbi::Bridged(bridged_type) => match bridged_type {
             BridgedType::Legacy { conversion_info, .. } => {
                 if let BridgedTypeConversionInfo::PointerLikeTransmute { is_pointer: false } =
                     conversion_info
@@ -559,70 +560,69 @@ fn cc_return_value_from_c_abi<'tcx>(
                     },
                 })
             }
+        },
+        ValueAbi::ByValue => {
+            let cc_type = &db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(prereqs);
+            let local_name = &expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
+            storage_statements.extend(quote! {
+                #cc_type #local_name;
+                #cc_type* #storage_name = &#local_name;
+            });
+            Ok(ReturnConversion {
+                storage_name: storage_name.clone(),
+                unpack_expr: quote! { *#storage_name },
+            })
         }
-    } else if is_c_abi_compatible_by_value(db, ty) {
-        let cc_type = &db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(prereqs);
-        let local_name = &expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
-        storage_statements.extend(quote! {
-            #cc_type #local_name;
-            #cc_type* #storage_name = &#local_name;
-        });
-        Ok(ReturnConversion {
-            storage_name: storage_name.clone(),
-            unpack_expr: quote! { *#storage_name },
-        })
-    } else if let ty::TyKind::Tuple(tuple_tys) = ty.kind()
-        && !db
-            .crate_features(db.source_crate_num())
-            .contains(crubit_feature::CrubitFeature::LayoutCompatTuple)
-    {
-        let n = tuple_tys.len();
-        let mut storage_names = Vec::with_capacity(n);
-        let mut unpack_exprs = Vec::with_capacity(n);
-        for i in 0..n {
-            let tuple_element_ident = expect_format_cc_ident(&format!("{ident}_{i}"));
-            let ReturnConversion {
-                storage_name: element_storage_name,
-                unpack_expr: element_unpack_expr,
-            } = cc_return_value_from_c_abi(
-                db,
-                post_analysis_typing_env,
-                tuple_element_ident,
-                tuple_tys[i],
-                prereqs,
-                storage_statements,
-                /* recursive= */ true,
-            )?;
-            storage_names.push(element_storage_name);
-            unpack_exprs.push(element_unpack_expr);
+        ValueAbi::LegacyTuple(tuple_tys) => {
+            let n = tuple_tys.len();
+            let mut storage_names = Vec::with_capacity(n);
+            let mut unpack_exprs = Vec::with_capacity(n);
+            for i in 0..n {
+                let tuple_element_ident = expect_format_cc_ident(&format!("{ident}_{i}"));
+                let ReturnConversion {
+                    storage_name: element_storage_name,
+                    unpack_expr: element_unpack_expr,
+                } = cc_return_value_from_c_abi(
+                    db,
+                    post_analysis_typing_env,
+                    tuple_element_ident,
+                    tuple_tys[i],
+                    prereqs,
+                    storage_statements,
+                    /* recursive= */ true,
+                )?;
+                storage_names.push(element_storage_name);
+                unpack_exprs.push(element_unpack_expr);
+            }
+            storage_statements.extend(quote! {
+                void* #storage_name[] = { #(#storage_names),* };
+            });
+            Ok(ReturnConversion {
+                storage_name: storage_name.clone(),
+                unpack_expr: quote! { ::std::make_tuple(#(#unpack_exprs),*) },
+            })
         }
-        storage_statements.extend(quote! {
-            void* #storage_name[] = { #(#storage_names),* };
-        });
-        Ok(ReturnConversion {
-            storage_name: storage_name.clone(),
-            unpack_expr: quote! { ::std::make_tuple(#(#unpack_exprs),*) },
-        })
-    } else {
-        let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
-        let cc_type = db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(prereqs);
-        storage_statements.extend(quote! {
-            crubit::Slot<#cc_type> #local_name;
-            auto* #storage_name = #local_name.Get();
-        });
-        prereqs.includes.insert(CcInclude::utility()); // for `std::move`
-        prereqs.includes.insert(db.support_header("internal/slot.h"));
-        let unpack_expr = if recursive && !db.is_cpp_move_constructible(ty) {
-            prereqs.includes.insert(db.support_header("movable.h"));
-            quote! {
-                ::rs::Movable<#cc_type>::TakeFromSlot(::std::move(#local_name))
-            }
-        } else {
-            quote! {
-                ::std::move(#local_name).AssumeInitAndTakeValue()
-            }
-        };
-        Ok(ReturnConversion { storage_name: storage_name.clone(), unpack_expr })
+        ValueAbi::Array | ValueAbi::ByPointer => {
+            let local_name = expect_format_cc_ident(&format!("__{ident}_ret_val_holder"));
+            let cc_type = db.format_ty_for_cc(ty, TypeLocation::Other)?.into_tokens(prereqs);
+            storage_statements.extend(quote! {
+                crubit::Slot<#cc_type> #local_name;
+                auto* #storage_name = #local_name.Get();
+            });
+            prereqs.includes.insert(CcInclude::utility()); // for `std::move`
+            prereqs.includes.insert(db.support_header("internal/slot.h"));
+            let unpack_expr = if recursive && !db.is_cpp_move_constructible(ty) {
+                prereqs.includes.insert(db.support_header("movable.h"));
+                quote! {
+                    ::rs::Movable<#cc_type>::TakeFromSlot(::std::move(#local_name))
+                }
+            } else {
+                quote! {
+                    ::std::move(#local_name).AssumeInitAndTakeValue()
+                }
+            };
+            Ok(ReturnConversion { storage_name: storage_name.clone(), unpack_expr })
+        }
     }
 }
 
@@ -917,9 +917,10 @@ pub(crate) fn generate_thunk_call<'tcx>(
             #qualifier::#thunk_name(#( #thunk_args ),*);
             return ::std::move(#local_name).AssumeInitAndTakeValue();
         }
-    } else if is_bridged_type(db, rs_return_type)?.is_none()
-        && is_c_abi_compatible_by_value(db, rs_return_type)
-    {
+    } else if matches!(
+        classify_value_abi(db, rs_return_type, /* is_constructor= */ false)?,
+        ValueAbi::ByValue
+    ) {
         // C++ compilers can emit diagnostics if a function marked [[noreturn]] looks like it
         // might return. In this scenario, we just call the (also [[noreturn]]) thunk.
         let return_expr = if rs_return_type.is_never() {
