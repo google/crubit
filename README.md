@@ -77,13 +77,13 @@ You can call these C++ functions from Rust:
 
 ```rs
 use cpp_std::unique_ptr;
-use ffi_11::{c_double, c_int};
+use ffi_11::c_int;
 use user_api::{CreateUser, FindUser, User};
 
 let id: c_int = 123;
 let user: Option<User> = FindUser(id);
 if let Some(u) = user {
-    let balance: c_double = u.balance;
+    let balance: f64 = u.balance;
     println!("User {} has balance {}", u.id, balance);
 }
 

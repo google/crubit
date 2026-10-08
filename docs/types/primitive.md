@@ -2,7 +2,7 @@
 
 Crubit maps primitive types[^terminology] to the direct equivalent in the other
 language. For example, C++ `int32_t` is Rust `i32`, C++ `int` is Rust
-`ffi::c_int`, C++ `double` is Rust `f64`, and so on.
+`ffi_11::c_int`, C++ `double` is Rust `f64`, and so on.
 
 Exceptions:
 
@@ -22,7 +22,7 @@ Rust interface from C++ using Crubit, `i32` in Rust becomes `int32_t` in C++.
 
 C++                  | Rust
 -------------------- | -------------------------------------------------------
-`void`               | `()` as a return type, `::core::ffi::c_void` otherwise.
+`void`               | `()` as a return type, `::ffi_11::c_void` otherwise.
 `int8_t`             | `i8`
 `int16_t`            | `i16`
 `int32_t`            | `i32`
@@ -36,17 +36,17 @@ C++                  | Rust
 `bool`               | `bool`
 `double`             | `f64`
 `float`              | `f32`
-`char`               | `::core::ffi::c_char` [^char]
-`signed char`        | `::core::ffi::c_schar`
-`unsigned char`      | `::core::ffi::c_uchar`
-`short`              | `::core::ffi::c_short`
-`unsigned short`     | `::core::ffi::c_ushort`
-`int`                | `::core::ffi::c_int`
-`unsigned int`       | `::core::ffi::c_uint`
-`long`               | `::core::ffi::c_long`
-`unsigned long`      | `::core::ffi::c_ulong`
-`long long`          | `::core::ffi::c_longlong`
-`unsigned long long` | `::core::ffi::c_ulonglong`
+`char`               | `::ffi_11::c_char` [^char]
+`signed char`        | `::ffi_11::c_schar`
+`unsigned char`      | `::ffi_11::c_uchar`
+`short`              | `::ffi_11::c_short`
+`unsigned short`     | `::ffi_11::c_ushort`
+`int`                | `::ffi_11::c_int`
+`unsigned int`       | `::ffi_11::c_uint`
+`long`               | `::ffi_11::c_long`
+`unsigned long`      | `::ffi_11::c_ulong`
+`long long`          | `::ffi_11::c_longlong`
+`unsigned long long` | `::ffi_11::c_ulonglong`
 `rs_std::char_`      | `char`
 
 ## One-way type mapping {#one_way}
