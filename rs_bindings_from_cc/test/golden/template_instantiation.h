@@ -19,4 +19,13 @@ bool operator==(const NormalClass&, const T&) {
   return true;
 }
 
+// Static data members of class template specializations are not supported
+// yet, because their initializers and definitions are instantiated lazily.
+template <typename T>
+struct TemplateWithStaticMembers {
+  static constexpr int kValue = 14;
+  static T value;
+};
+using TemplateWithStaticMembersInt = TemplateWithStaticMembers<int>;
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATE_INSTANTIATION_H_

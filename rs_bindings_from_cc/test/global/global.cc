@@ -19,3 +19,12 @@ int GetNamespacedIntVal() { return foo::extern_int_namespaced; }
 int GetCNamespacedIntVal() { return foo::extern_c_int_namespaced; }
 
 int GetInlineIntVal() { return inline_int; }
+
+int StructWithStaticMembers::static_int{8};
+int StructWithStaticMembers::private_static_int{9};
+
+int GetStaticIntVal() { return StructWithStaticMembers::static_int; }
+
+int GetStaticInlineIntVal() {
+  return StructWithStaticMembers::static_inline_int;
+}

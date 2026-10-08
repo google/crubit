@@ -38,4 +38,16 @@ extern "C" void __rust_thunk___ZN18StructWithAnonEnumC1Ev(
   crubit::construct_at(__this);
 }
 
+static_assert(sizeof(struct StructWithStaticMembers) == 1);
+static_assert(alignof(struct StructWithStaticMembers) == 1);
+
+extern "C" void __rust_thunk___ZN23StructWithStaticMembersC1Ev(
+    struct StructWithStaticMembers* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert((int (*)()) & ::GetStaticIntVal);
+
+static_assert((int (*)()) & ::GetStaticInlineIntVal);
+
 #pragma clang diagnostic pop

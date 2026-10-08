@@ -78,6 +78,11 @@ unsafe impl ::cxx::ExternType for AlignmentRegressionTest {
     type Id = ::cxx::type_id!("AlignmentRegressionTest");
     type Kind = ::cxx::kind::Trivial;
 }
+impl AlignmentRegressionTest {
+    pub const ok: u32 = 0;
+
+    pub const error: u32 = 1;
+}
 
 impl Default for AlignmentRegressionTest {
     #[inline(always)]
@@ -88,12 +93,6 @@ impl Default for AlignmentRegressionTest {
             tmp.assume_init()
         }
     }
-}
-
-pub mod alignment_regression_test {
-    pub const ok: u32 = 0;
-
-    pub const error: u32 = 1;
 }
 
 mod detail {

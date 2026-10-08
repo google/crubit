@@ -557,11 +557,14 @@ pub fn generate_record<'a>(
 
     let mut items = vec![];
     let mut nested_items = vec![];
+    let mut associated_consts = vec![];
     for child_item in child_items(&record, db) {
         let id = child_item.item.id();
-        api_snippets.append(db.generate_item(child_item.item)?);
+        api_snippets.append(db.generate_item(child_item.item.clone())?);
         if child_item.is_nested {
             nested_items.push(id);
+        } else if matches!(child_item.item, Item::Constant(_)) {
+            associated_consts.push(id);
         } else {
             items.push(id);
         }
@@ -844,6 +847,7 @@ pub fn generate_record<'a>(
         no_unique_address_accessors,
         items,
         nested_items,
+        associated_consts,
         indirect_functions,
         owned_ptr_config,
         member_methods,

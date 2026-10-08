@@ -38,10 +38,25 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
     return nullptr;
   }
 
+  // Static data members are imported like namespace-scoped variables: the
+  // bindings generator places them in the snake-cased module that holds the
+  // record's other nested items (e.g. `Foo::kBar` becomes `foo::kBar`).
   if (var_decl->isStaticDataMember()) {
-    return ictx_.ImportUnsupportedItem(
-        *var_decl, std::nullopt,
-        {FormattedError::Static("static data members are not supported")});
+    if (decl_context->isDependentContext()) {
+      // Members of uninstantiated templates have no concrete type or value.
+      return nullptr;
+    }
+    if (clang::isa<clang::ClassTemplateSpecializationDecl>(decl_context)) {
+      // Static data members of class template specializations are instantiated
+      // lazily: their initializers may not have been evaluated and their
+      // definitions may never be emitted by C++ unless ODR-used, which would
+      // lead to link errors from the Rust side.
+      return ictx_.ImportUnsupportedItem(
+          *var_decl, std::nullopt,
+          {FormattedError::Static(
+              "static data members of class template specializations are not "
+              "supported")});
+    }
   }
 
   if (var_decl->getTLSKind() != clang::VarDecl::TLS_None) {

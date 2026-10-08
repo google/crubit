@@ -101,6 +101,9 @@ unsafe impl ::cxx::ExternType for StructWithAnonEnum {
     type Id = ::cxx::type_id!("StructWithAnonEnum");
     type Kind = ::cxx::kind::Trivial;
 }
+impl StructWithAnonEnum {
+    pub const kAnonEnumInStructConst: ::ffi_11::c_uint = ::ffi_11::new_c_uint(789);
+}
 
 impl Default for StructWithAnonEnum {
     #[inline(always)]
@@ -113,8 +116,57 @@ impl Default for StructWithAnonEnum {
     }
 }
 
-pub mod struct_with_anon_enum {
-    pub const kAnonEnumInStructConst: ::ffi_11::c_uint = ::ffi_11::new_c_uint(789);
+/// Constant static data members become associated consts
+/// (`StructWithStaticMembers::kStaticConstInt`); mutable ones are exposed in the
+/// snake-cased module for the struct (`struct_with_static_members::static_int`).
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "23StructWithStaticMembers"]
+#[repr(C)]
+///CRUBIT_ANNOTATE: cpp_type=StructWithStaticMembers
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct StructWithStaticMembers {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 1],
+}
+impl !Send for StructWithStaticMembers {}
+impl !Sync for StructWithStaticMembers {}
+unsafe impl ::cxx::ExternType for StructWithStaticMembers {
+    type Id = ::cxx::type_id!("StructWithStaticMembers");
+    type Kind = ::cxx::kind::Trivial;
+}
+impl StructWithStaticMembers {
+    pub const kStaticConstInt: ::ffi_11::c_int = ::ffi_11::new_c_int(11);
+
+    pub const kStaticConstexprInt: ::ffi_11::c_int = ::ffi_11::new_c_int(12);
+
+    pub const static_inline_int: ::ffi_11::c_int = ::ffi_11::new_c_int(13);
+}
+
+impl Default for StructWithStaticMembers {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN23StructWithStaticMembersC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+pub mod struct_with_static_members {
+    unsafe extern "C" {
+        #[link_name = "_ZN23StructWithStaticMembers10static_intE"]
+        pub static mut static_int: ::ffi_11::c_int;
+    }
+}
+
+#[inline(always)]
+pub fn GetStaticIntVal() -> ::ffi_11::c_int {
+    unsafe { crate::detail::__rust_thunk___Z15GetStaticIntValv() }
+}
+
+#[inline(always)]
+pub fn GetStaticInlineIntVal() -> ::ffi_11::c_int {
+    unsafe { crate::detail::__rust_thunk___Z21GetStaticInlineIntValv() }
 }
 
 mod detail {
@@ -133,6 +185,13 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN18StructWithAnonEnumC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
+        pub(crate) unsafe fn __rust_thunk___ZN23StructWithStaticMembersC1Ev(
+            __this: *mut ::core::ffi::c_void,
+        );
+        #[link_name = "_Z15GetStaticIntValv"]
+        pub(crate) unsafe fn __rust_thunk___Z15GetStaticIntValv() -> ::ffi_11::c_int;
+        #[link_name = "_Z21GetStaticInlineIntValv"]
+        pub(crate) unsafe fn __rust_thunk___Z21GetStaticInlineIntValv() -> ::ffi_11::c_int;
     }
 }
 
@@ -141,4 +200,9 @@ const _: () = {
     assert!(::core::mem::align_of::<crate::StructWithAnonEnum>() == 1);
     static_assertions::assert_impl_all!(crate::StructWithAnonEnum: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::StructWithAnonEnum: Drop);
+
+    assert!(::core::mem::size_of::<crate::StructWithStaticMembers>() == 1);
+    assert!(::core::mem::align_of::<crate::StructWithStaticMembers>() == 1);
+    static_assertions::assert_impl_all!(crate::StructWithStaticMembers: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::StructWithStaticMembers: Drop);
 };

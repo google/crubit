@@ -547,6 +547,7 @@ pub fn generated_items_to_tokens<'db>(
                     no_unique_address_accessors,
                     items,
                     nested_items,
+                    associated_consts,
                     indirect_functions,
                     delete,
                     owned_ptr_config,
@@ -662,6 +663,18 @@ pub fn generated_items_to_tokens<'db>(
                     }
                 });
 
+                let associated_consts_impl = if !associated_consts.is_empty() {
+                    let consts =
+                        generated_items_to_token_stream(generated_items, db, associated_consts);
+                    Some(quote! {
+                        impl #type_param_tokens #ident #type_param_tokens {
+                            #consts
+                        }
+                    })
+                } else {
+                    None
+                };
+
                 let member_methods_impl = if !member_methods.is_empty() {
                     Some(quote! {
                         impl #type_param_tokens #ident #type_param_tokens {
@@ -694,6 +707,8 @@ pub fn generated_items_to_tokens<'db>(
                     #incomplete_definition
 
                     #no_unique_address_accessors_impl
+
+                    #associated_consts_impl
 
                     #member_methods_impl
 
@@ -1068,6 +1083,9 @@ pub struct Record {
     pub no_unique_address_accessors: Vec<NoUniqueAddressAccessor>,
     pub items: Vec<ItemId>,
     pub nested_items: Vec<ItemId>,
+    /// Constants nested in the record (static data members, anonymous enum
+    /// constants), emitted as associated consts in an inherent impl.
+    pub associated_consts: Vec<ItemId>,
     /// Functions that get attached either by a trait or from a base class.
     pub indirect_functions: Vec<TokenStream>,
     pub delete: Option<DeleteImpl>,

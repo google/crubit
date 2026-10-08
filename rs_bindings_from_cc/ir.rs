@@ -4085,6 +4085,9 @@ impl<'pb> Item<'pb> {
 
     /// If this item is a child item of a Record, returns true if it should be
     /// placed in a nested module.
+    ///
+    /// Functions become methods and constants become associated consts of the
+    /// record, so they do not need the module.
     pub fn place_in_nested_module_if_nested_in_record(&self) -> bool {
         match self {
             Item::IncompleteRecord(_)
@@ -4092,10 +4095,11 @@ impl<'pb> Item<'pb> {
             | Item::GlobalVar(_)
             | Item::TypeAlias(_)
             | Item::Enum(_)
-            | Item::Constant(_)
             | Item::UseMod(_)
             | Item::ExistingRustType(_) => true,
-            Item::Func(_) | Item::UnsupportedItem(_) | Item::Comment(_) => false,
+            Item::Func(_) | Item::Constant(_) | Item::UnsupportedItem(_) | Item::Comment(_) => {
+                false
+            }
             Item::Namespace(_) => unreachable!("Found a namespace that's opened inside of a record. This is not valid C++, so this is a bug."),
         }
     }

@@ -46,4 +46,21 @@ struct StructWithAnonEnum {
   enum { kAnonEnumInStructConst = 789 };
 };
 
+// Constant static data members become associated consts
+// (`StructWithStaticMembers::kStaticConstInt`); mutable ones are exposed in the
+// snake-cased module for the struct (`struct_with_static_members::static_int`).
+struct StructWithStaticMembers {
+  static int static_int;
+  static const int kStaticConstInt = 11;
+  static constexpr int kStaticConstexprInt = 12;
+  static inline int static_inline_int = 13;
+
+  // Private members should not receive bindings.
+ private:
+  static int private_static_int;
+};
+
+int GetStaticIntVal();
+int GetStaticInlineIntVal();
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_EXTERN_BASIC_EXTERN_H_

@@ -38,4 +38,12 @@ extern "C" void __rust_thunk__20ba560a__ZN2TSIiEC1Ev(struct TS<int>* __this) {
   crubit::construct_at(__this);
 }
 
+static_assert(sizeof(struct TemplateWithStaticMembers<int>) == 1);
+static_assert(alignof(struct TemplateWithStaticMembers<int>) == 1);
+
+extern "C" void __rust_thunk__ae801879__ZN25TemplateWithStaticMembersIiEC1Ev(
+    struct TemplateWithStaticMembers<int>* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop

@@ -46,5 +46,22 @@ fn test_constexpr_and_inline_const_are_constants() {
 fn test_anonymous_enum_constants() {
     assert_eq!(global::kAnonEnumConst, 123);
     assert_eq!(global::foo::kAnonEnumNamespacedConst, 456);
-    assert_eq!(global::struct_with_anon_enum::kAnonEnumInStructConst, 789);
+    assert_eq!(global::StructWithAnonEnum::kAnonEnumInStructConst, 789);
+}
+
+#[gtest]
+fn test_static_data_members() {
+    use global::StructWithStaticMembers;
+    // Mutable static data members have no associated-static equivalent in Rust,
+    // so they live in the struct's snake-cased module.
+    assert_eq!(unsafe { global::struct_with_static_members::static_int }, 8);
+    assert_eq!(global::GetStaticIntVal(), 8);
+    unsafe { global::struct_with_static_members::static_int = 80 };
+    assert_eq!(global::GetStaticIntVal(), 80);
+
+    // Constant static data members are associated consts.
+    assert_eq!(StructWithStaticMembers::kStaticConstInt, 11);
+    assert_eq!(StructWithStaticMembers::kStaticConstexprInt, 12);
+    assert_eq!(StructWithStaticMembers::static_inline_int, 13);
+    assert_eq!(global::GetStaticInlineIntVal(), 13);
 }
