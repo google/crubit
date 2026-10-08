@@ -121,61 +121,15 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
         {FormattedError::FromStatus(std::move(unknown_attr.status()))});
   }
 
+  if (has_const_init) {
+    return ImportConstant(var_decl, *var_name, *enclosing_item_id,
+                          std::move(*unknown_attr), std::move(deprecated));
+  }
+
   CcType type =
       ictx_.ConvertQualType(var_decl->getType(), nullptr, /*nullable=*/true,
                             ictx_.AreAssumedLifetimesEnabledForTarget(
                                 ictx_.GetOwningTarget(*var_decl)));
-
-  if (has_const_init) {
-    const clang::Type& var_type = *var_decl->getType().getTypePtr();
-    if (!var_type.isBooleanType() && !var_type.isIntegerType()) {
-      return ictx_.ImportUnsupportedItem(
-          *var_decl, std::nullopt,
-          {FormattedError::Static(
-              "only boolean and integer constexpr variables "
-              "are supported")});
-    }
-    const clang::APValue* value = var_decl->evaluateValue();
-    if (value == nullptr || !value->isInt()) {
-      return ictx_.ImportUnsupportedItem(
-          *var_decl, std::nullopt,
-          {FormattedError::Static("unable to evaluate constexpr value")});
-    }
-    absl::StatusOr<IntegerConstant> integer_constant =
-        IntegerConstant::FromAPValue(value->getInt());
-    if (!integer_constant.ok()) {
-      return ictx_.ImportUnsupportedItem(
-          *var_decl, std::nullopt,
-          {FormattedError::FromStatus(std::move(integer_constant.status()))});
-    }
-    ictx_.MarkAsSuccessfullyImported(*var_decl);
-    auto item = std::make_unique<ir_proto::Item>();
-    auto* constant = item->mutable_constant();
-    integer_constant->WriteToProto(*constant->mutable_value());
-    constant->mutable_cc_name()->set_identifier(
-        var_name->cc_identifier.Ident());
-    constant->mutable_rs_name()->set_identifier(
-        var_name->rs_identifier().Ident());
-    constant->set_unique_name(ictx_.GetUniqueName(*var_decl));
-    constant->set_id(ictx_.GenerateItemId(*var_decl).value());
-    constant->set_owning_target(ictx_.GetOwningTarget(*var_decl).value());
-    constant->set_source_loc(
-        ictx_.ConvertSourceLocation(var_decl->getBeginLoc(), nullptr));
-    type.WriteToProto(*constant->mutable_type());
-    if (unknown_attr->has_value()) {
-      constant->set_unknown_attr(std::move(**unknown_attr));
-    }
-    if (enclosing_item_id->has_value()) {
-      constant->set_enclosing_item_id((*enclosing_item_id)->value());
-    }
-    if (deprecated.has_value()) {
-      constant->set_deprecated(std::move(*deprecated));
-    }
-    if (auto comment = ictx_.GetComment(*var_decl); comment.has_value()) {
-      constant->set_doc_comment(std::move(*comment));
-    }
-    return item;
-  }
 
   // Global variables without extern "C" have different linkage, but in practice
   // all this means is that the name is mangled, not that the ABI is different.
@@ -216,6 +170,63 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
   }
   if (auto comment = ictx_.GetComment(*var_decl); comment.has_value()) {
     global_var->set_doc_comment(std::move(*comment));
+  }
+  return item;
+}
+
+std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
+    clang::VarDecl* var_decl, TranslatedIdentifier& var_name,
+    std::optional<ItemId> enclosing_item_id,
+    std::optional<std::string> unknown_attr,
+    std::optional<std::string> deprecated) {
+  CcType type =
+      ictx_.ConvertQualType(var_decl->getType(), nullptr, /*nullable=*/true,
+                            ictx_.AreAssumedLifetimesEnabledForTarget(
+                                ictx_.GetOwningTarget(*var_decl)));
+
+  const clang::Type& var_type = *var_decl->getType().getTypePtr();
+  if (!var_type.isBooleanType() && !var_type.isIntegerType()) {
+    return ictx_.ImportUnsupportedItem(
+        *var_decl, std::nullopt,
+        {FormattedError::Static("only boolean and integer constexpr variables "
+                                "are supported")});
+  }
+  const clang::APValue* value = var_decl->evaluateValue();
+  if (value == nullptr || !value->isInt()) {
+    return ictx_.ImportUnsupportedItem(
+        *var_decl, std::nullopt,
+        {FormattedError::Static("unable to evaluate constexpr value")});
+  }
+  absl::StatusOr<IntegerConstant> integer_constant =
+      IntegerConstant::FromAPValue(value->getInt());
+  if (!integer_constant.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        *var_decl, std::nullopt,
+        {FormattedError::FromStatus(std::move(integer_constant.status()))});
+  }
+  ictx_.MarkAsSuccessfullyImported(*var_decl);
+  auto item = std::make_unique<ir_proto::Item>();
+  auto* constant = item->mutable_constant();
+  integer_constant->WriteToProto(*constant->mutable_value());
+  constant->mutable_cc_name()->set_identifier(var_name.cc_identifier.Ident());
+  constant->mutable_rs_name()->set_identifier(var_name.rs_identifier().Ident());
+  constant->set_unique_name(ictx_.GetUniqueName(*var_decl));
+  constant->set_id(ictx_.GenerateItemId(*var_decl).value());
+  constant->set_owning_target(ictx_.GetOwningTarget(*var_decl).value());
+  constant->set_source_loc(
+      ictx_.ConvertSourceLocation(var_decl->getBeginLoc(), nullptr));
+  type.WriteToProto(*constant->mutable_type());
+  if (unknown_attr.has_value()) {
+    constant->set_unknown_attr(std::move(*unknown_attr));
+  }
+  if (enclosing_item_id.has_value()) {
+    constant->set_enclosing_item_id(enclosing_item_id->value());
+  }
+  if (deprecated.has_value()) {
+    constant->set_deprecated(std::move(*deprecated));
+  }
+  if (auto comment = ictx_.GetComment(*var_decl); comment.has_value()) {
+    constant->set_doc_comment(std::move(*comment));
   }
   return item;
 }
