@@ -8,6 +8,10 @@ parameter and return types are supported by Crubit:
 *   Similarly, if a parameter or return type is a
     [pointer type](../types/pointer.md), then the bindings for the function use
     the corresponding Rust pointer type.
+*   If a parameter or return type is a C++ reference type, then the bindings for
+    the function use a Rust reference (if the lifetime was either explicitly
+    specified or elided and inferred) or a Rust pointer (otherwise). See
+    [References and lifetimes](references_and_lifetimes.md).
 *   If the type is a user-defined type, such as a
     [class type](classes_and_structs.md) or [enum](enums.md), then the bindings
     for the function use the bindings for that type.
@@ -76,6 +80,9 @@ Which can be used like this:
 ```
 <!--  function:main -->
 
+
+The `this` parameter of a method becomes `&self` or `&mut self`. See
+[References and lifetimes](references_and_lifetimes.md) for more details.
 
 ### `unsafe` functions {#unsafe}
 

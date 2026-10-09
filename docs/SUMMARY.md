@@ -46,6 +46,7 @@
 
 -   [Functions](./cpp/functions.md)
 -   [Classes and Structs](./cpp/classes_and_structs.md)
+-   [References and Lifetimes](./cpp/references_and_lifetimes.md)
 -   [Enums](./cpp/enums.md)
 -   [Inline C++](./cpp/inline_cpp.md)
 

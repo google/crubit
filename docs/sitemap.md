@@ -31,6 +31,7 @@
     *   [Functions](/docs/cpp/functions.md)
         *   [Operator overloading](/docs/cpp/operator_overloading.md)
     *   [Classes and Structs](/docs/cpp/classes_and_structs.md)
+    *   [References and Lifetimes](/docs/cpp/references_and_lifetimes.md)
     *   [Enums](/docs/cpp/enums.md)
     *   [Inline C++](/docs/cpp/inline_cpp.md)
     *   [Carcinize](/docs/cpp/carcinize.md)
