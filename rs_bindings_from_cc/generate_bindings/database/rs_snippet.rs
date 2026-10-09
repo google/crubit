@@ -315,9 +315,9 @@ pub enum UniformReprTemplateType<'a> {
     StdUniquePtr {
         // No lifetime here: owned by the unique_ptr
         element_type: RsTypeKind<'a>,
-        /// Whether the use site was annotated `_Nonnull`, in which case this is spelled
-        /// `NonNull<unique_ptr<T>>` rather than `unique_ptr<T>`.
-        is_nonnull: bool,
+        /// Whether the use site may be null, in which case this is spelled
+        /// `Nullable<unique_ptr<T>>` rather than `unique_ptr<T>`.
+        is_nullable: bool,
     },
     /// std::atomic<T>
     StdAtomic {
@@ -329,9 +329,9 @@ pub enum UniformReprTemplateType<'a> {
     StdSharedPtr {
         // No lifetime here: owned by the shared_ptr
         element_type: RsTypeKind<'a>,
-        /// Whether the use site was annotated `_Nonnull`, in which case this is spelled
-        /// `NonNull<shared_ptr<T>>` rather than `shared_ptr<T>`.
-        is_nonnull: bool,
+        /// Whether the use site may be null, in which case this is spelled
+        /// `Nullable<shared_ptr<T>>` rather than `shared_ptr<T>`.
+        is_nullable: bool,
     },
     AbslSpan {
         is_const: bool,
@@ -344,13 +344,13 @@ pub enum UniformReprTemplateType<'a> {
     StdStringView { in_cc_std: bool, lifetime: Lifetime },
 }
 
-/// Wraps a smart pointer type in `cc_std::std::NonNull` if its use site was annotated `_Nonnull`.
+/// Wraps a smart pointer type in `cc_std::std::Nullable` if its use site may be null.
 ///
-/// `NonNull` is `#[repr(transparent)]`, so this does not change the layout, ABI, or passing
+/// `Nullable` is `#[repr(transparent)]`, so this does not change the layout, ABI, or passing
 /// convention of the type it wraps.
-fn wrap_in_non_null(smart_pointer: TokenStream, is_nonnull: bool) -> TokenStream {
-    if is_nonnull {
-        quote! { ::cc_std::std::NonNull::<#smart_pointer> }
+fn wrap_in_nullable(smart_pointer: TokenStream, is_nullable: bool) -> TokenStream {
+    if is_nullable {
+        quote! { ::cc_std::std::Nullable::<#smart_pointer> }
     } else {
         smart_pointer
     }
@@ -427,7 +427,7 @@ impl<'a> UniformReprTemplateType<'a> {
                 Ok(Some(Rc::new(UniformReprTemplateType::StdSharedPtr {
                     element_type: element_type_kind,
                     // Set from the use site, which this function does not see.
-                    is_nonnull: false,
+                    is_nullable: false,
                 })))
             }
             Some(TemplateSpecializationKind::StdUniquePtr { raw_element_type }) => {
@@ -442,7 +442,7 @@ impl<'a> UniformReprTemplateType<'a> {
                 Ok(Some(Rc::new(UniformReprTemplateType::StdUniquePtr {
                     element_type,
                     // Set from the use site, which this function does not see.
-                    is_nonnull: false,
+                    is_nullable: false,
                 })))
             }
             Some(TemplateSpecializationKind::StdAtomic { raw_element_type }) => {
@@ -556,14 +556,14 @@ impl<'a> UniformReprTemplateType<'a> {
                     quote! { ::cc_std::std::trivial_optional::<#element_type_tokens> }
                 }
             }
-            Self::StdUniquePtr { element_type, is_nonnull } => {
+            Self::StdUniquePtr { element_type, is_nullable } => {
                 let element_type_tokens = element_type.to_token_stream(db);
                 let unique_ptr = if element_type.overloads_operator_delete() {
                     quote! { ::cc_std::std::virtual_unique_ptr::<#element_type_tokens> }
                 } else {
                     quote! { ::cc_std::std::unique_ptr::<#element_type_tokens> }
                 };
-                wrap_in_non_null(unique_ptr, *is_nonnull)
+                wrap_in_nullable(unique_ptr, *is_nullable)
             }
             Self::StdAtomic { in_cc_std: _, element_type } => match element_type.unalias() {
                 RsTypeKind::Primitive(p) => match p {
@@ -631,11 +631,11 @@ impl<'a> UniformReprTemplateType<'a> {
                     quote! { ::core::compile_error!(#msg) }
                 }
             },
-            Self::StdSharedPtr { element_type, is_nonnull } => {
+            Self::StdSharedPtr { element_type, is_nullable } => {
                 let element_type_tokens = element_type.to_token_stream(db);
-                wrap_in_non_null(
+                wrap_in_nullable(
                     quote! { ::cc_std::std::shared_ptr::<#element_type_tokens> },
-                    *is_nonnull,
+                    *is_nullable,
                 )
             }
             Self::AbslSpan { is_const, include_lifetime, element_type, lifetime } => {
@@ -1293,23 +1293,21 @@ impl<'a> RsTypeKind<'a> {
         }
     }
 
-    /// Records that this type's use site was annotated `_Nonnull`, so that a `std::unique_ptr`
-    /// or `std::shared_ptr` is spelled `NonNull<...>` in the generated bindings.
+    /// Records that this type's use site may be null, so that a `std::unique_ptr` or
+    /// `std::shared_ptr` is spelled `Nullable<...>` in the generated bindings.
     ///
     /// This is applied after the fact rather than threaded through construction because the two
     /// facts come from different places: `unique_ptr`-ness is a property of the record, shared by
-    /// every use of the instantiation, while `_Nonnull` belongs to one particular use.
+    /// every use of the instantiation, while nullability belongs to one particular use.
     ///
-    /// Returns `self` unchanged for any other type. `_Nonnull` is legal on types we do not treat
-    /// specially (raw pointers, `std::function`, ...), and ignoring it there is what we did before
-    /// this method existed.
-    pub fn into_nonnull_smart_pointer(mut self) -> Self {
+    /// Returns `self` unchanged for any other type: only smart pointers have a `Nullable` spelling.
+    pub fn into_nullable_smart_pointer(mut self) -> Self {
         if let RsTypeKind::Record { uniform_repr_template_type: Some(template_type), .. } =
             &mut self
         {
             match Rc::make_mut(template_type) {
-                UniformReprTemplateType::StdUniquePtr { is_nonnull, .. }
-                | UniformReprTemplateType::StdSharedPtr { is_nonnull, .. } => *is_nonnull = true,
+                UniformReprTemplateType::StdUniquePtr { is_nullable, .. }
+                | UniformReprTemplateType::StdSharedPtr { is_nullable, .. } => *is_nullable = true,
                 _ => {}
             }
         }
@@ -2521,7 +2519,7 @@ fn all_static_lifetimes_internal<'a>(
                             .clone(),
                         }
                     }
-                    UniformReprTemplateType::StdSharedPtr { element_type, is_nonnull } => {
+                    UniformReprTemplateType::StdSharedPtr { element_type, is_nullable } => {
                         UniformReprTemplateType::StdSharedPtr {
                             element_type: all_static_lifetimes_internal(
                                 element_type,
@@ -2529,10 +2527,10 @@ fn all_static_lifetimes_internal<'a>(
                             )
                             .as_ref()
                             .clone(),
-                            is_nonnull: *is_nonnull,
+                            is_nullable: *is_nullable,
                         }
                     }
-                    UniformReprTemplateType::StdUniquePtr { element_type, is_nonnull } => {
+                    UniformReprTemplateType::StdUniquePtr { element_type, is_nullable } => {
                         UniformReprTemplateType::StdUniquePtr {
                             element_type: all_static_lifetimes_internal(
                                 element_type,
@@ -2540,7 +2538,7 @@ fn all_static_lifetimes_internal<'a>(
                             )
                             .as_ref()
                             .clone(),
-                            is_nonnull: *is_nonnull,
+                            is_nullable: *is_nullable,
                         }
                     }
                     UniformReprTemplateType::StdAtomic { in_cc_std, element_type } => {

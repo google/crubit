@@ -875,6 +875,10 @@ fn unique_ptr_preamble() -> TokenStream {
                 #[doc="CRUBIT_ANNOTATE: cpp_move_constructible = "]
                 pub struct virtual_unique_ptr<T: crate::operator::Delete>(pub *mut T);
 
+                pub unsafe trait SupportsNullable {}
+                unsafe impl<T> SupportsNullable for unique_ptr<T> {}
+                unsafe impl<T: crate::operator::Delete> SupportsNullable for virtual_unique_ptr<T> {}
+
                 #[doc="CRUBIT_ANNOTATE: cpp_type = {Ptr} crubit_nonnull"]
                 #[doc="CRUBIT_ANNOTATE: include_path = <crubit/support/annotations_internal.h>"]
                 pub struct NonNull<Ptr>(pub Ptr);
@@ -1074,6 +1078,50 @@ fn test_format_ty_for_cc_nullable_unique_ptr_with_delete_fails() {
                 .expect_err(&format!("Expecting error for: {desc}"));
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
+        },
+    );
+}
+
+/// Under `nonnull_smart_pointers`, a bare smart pointer is non-null, so it is spelled with
+/// `crubit_nonnull`. `Nullable<Ptr>` and `NonNull<Ptr>` carry exactly one annotation: the
+/// wrapper's, not also the bare pointer's.
+#[test]
+fn test_format_ty_for_cc_smart_pointers_under_nonnull_smart_pointers() {
+    test_ty(
+        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+        &[
+            (
+                "cc_std::std::unique_ptr<StructWithoutDelete>",
+                "::std::unique_ptr<::rust_out::StructWithoutDelete> crubit_nonnull",
+            ),
+            (
+                "cc_std::std::virtual_unique_ptr<StructWithDelete>",
+                "::std::unique_ptr<::rust_out::StructWithDelete> crubit_nonnull",
+            ),
+            (
+                "cc_std::std::Nullable<cc_std::std::unique_ptr<StructWithoutDelete>>",
+                "::std::unique_ptr<::rust_out::StructWithoutDelete> crubit_nullable",
+            ),
+            (
+                "cc_std::std::Nullable<cc_std::std::virtual_unique_ptr<StructWithDelete>>",
+                "::std::unique_ptr<::rust_out::StructWithDelete> crubit_nullable",
+            ),
+            (
+                "cc_std::std::NonNull<cc_std::std::unique_ptr<StructWithoutDelete>>",
+                "::std::unique_ptr<::rust_out::StructWithoutDelete> crubit_nonnull",
+            ),
+        ],
+        unique_ptr_preamble(),
+        |desc, tcx, ty, expected| {
+            let db = nonnull_bindings_db_for_tests(tcx);
+            let cc_snippet = db
+                .format_ty_for_cc(
+                    ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .unwrap();
+            let parsed_expected = expected.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(cc_snippet.tokens.to_string(), parsed_expected, "{desc}");
         },
     );
 }

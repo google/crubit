@@ -263,12 +263,13 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
-# A feature set enabling the `cc_std::std::NonNull` bridge in both directions: `absl_nonnull` on
-# `std::unique_ptr` and `std::shared_ptr` generates `NonNull`-wrapped Rust types, and a `NonNull`
-# in a Rust API generates the wrapped C++ pointer type with the `crubit_nonnull` attribute.
+# A feature set mapping `std::unique_ptr` and `std::shared_ptr` by nullability (crubit.rs-nullable):
+# a smart pointer known to be non-null (`absl_nonnull`, or unannotated under
+# `ABSL_POINTERS_DEFAULT_NONNULL`) is a bare Rust `Ptr`, and any other is `cc_std::std::Nullable<Ptr>`.
+# In the other direction, a bare Rust `Ptr` is spelled `Ptr crubit_nonnull` in C++.
 #
-# Visible only to Crubit itself: the meaning of this feature will change (crubit.rs-nullable), so
-# it must not gain users outside Crubit's own tests in the meantime.
+# Visible only to Crubit itself, and to targets migrated early (crubit.rs-nullable), until it becomes
+# the default.
 crubit_feature_hint(
     name = "nonnull_smart_pointers",
     compatible_with = ["//buildenv/target:non_prod"],
