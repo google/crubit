@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_SEMANTIC_IMPORT_SEMANTIC_IMPORT_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_SEMANTIC_IMPORT_SEMANTIC_IMPORT_H_
 
+#include "support/rs_std/slice_ref.h"
+
 class S {
  public:
   explicit S(int x) : x_(x) {}
@@ -47,6 +49,63 @@ class Bools {
 
  private:
   bool b_ = true;
+};
+
+class Pointers {
+ public:
+  const int* p() const { return p_; }
+  void set_p(const int* p) { p_ = p; }
+  int* mut_p() const { return mut_p_; }
+  void set_mut_p(int* mut_p) { mut_p_ = mut_p; }
+
+ private:
+  const int* p_ = nullptr;
+  int* mut_p_ = nullptr;
+};
+
+class NonTrivial {
+ public:
+  NonTrivial() = default;
+  // A user-provided destructor is what makes this type non-trivial (and so
+  // `!Unpin` in Rust).
+  // `= default` would defeat the purpose.
+  // NOLINTNEXTLINE(modernize-use-equals-default)
+  ~NonTrivial() {}
+  const NonTrivial* p() const { return p_; }
+  void set_p(const NonTrivial* p) { p_ = p; }
+  NonTrivial* mut_p() { return mut_p_; }
+  void set_mut_p(NonTrivial* mut_p) { mut_p_ = mut_p; }
+
+ private:
+  const NonTrivial* p_ = nullptr;
+  NonTrivial* mut_p_ = nullptr;
+};
+
+// A type which is never defined, so that `Incomplete*` below is a pointer to an
+// incomplete type.
+class Incomplete;
+
+class MorePointers {
+ public:
+  void* v() const { return v_; }
+  void set_v(void* v) { v_ = v; }
+  Incomplete* i() const { return i_; }
+  void set_i(Incomplete* i) { i_ = i; }
+
+ private:
+  void* v_ = nullptr;
+  Incomplete* i_ = nullptr;
+};
+
+// `rs_std::SliceRef` is not a raw pointer, so these accessors keep using a
+// thunk.
+class Slices {
+ public:
+  rs_std::SliceRef<const int> s() const { return s_; }
+  void set_s(rs_std::SliceRef<const int> s) { s_ = s; }
+
+ private:
+  rs_std::SliceRef<const int> s_;
 };
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_SEMANTIC_IMPORT_SEMANTIC_IMPORT_H_
