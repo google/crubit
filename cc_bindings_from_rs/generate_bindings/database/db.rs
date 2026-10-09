@@ -2,9 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[rustversion::since(2026-09-27)]
-extern crate rustc_attr_ir;
-extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;
 
@@ -23,10 +20,6 @@ use code_gen_utils::CcInclude;
 use dyn_format::Format;
 use error_report::{ErrorReporting, ReportFatalError};
 use proc_macro2::{Ident, TokenStream};
-#[rustversion::since(2026-09-27)]
-use rustc_attr_ir::ReprAttr;
-#[rustversion::before(2026-09-27)]
-use rustc_hir::attrs::ReprAttr;
 use rustc_middle::ty::{self, Ty, TyCtxt};
 use rustc_span::def_id::{CrateNum, DefId};
 use rustc_span::Symbol;
@@ -144,14 +137,6 @@ memoized::query_group! {
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:support_header
       fn support_header(&self, suffix: &'tcx str) -> CcInclude;
-
-      /// Returns the representation attributes for the given definition.
-      ///
-      /// TODO: Replace calls to this function with direct call to `repr.transparent()`
-      /// and `repr.c()` etc.
-      ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/query_compiler.rs?q=function:repr_attrs
-      fn repr_attrs(&self, did: DefId) -> Rc<[ReprAttr]>;
 
       /// Returns the list of traits that should appear in the generated bindings.
       ///

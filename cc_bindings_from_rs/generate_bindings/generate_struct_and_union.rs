@@ -3,8 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 extern crate rustc_abi;
-#[rustversion::since(2026-09-27)]
-extern crate rustc_attr_ir;
 extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_span;
@@ -48,10 +46,6 @@ use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
 use rustc_abi::VariantLayout;
 use rustc_abi::{Endian, FieldIdx, FieldsShape, LayoutData, VariantIdx, Variants};
-#[rustversion::since(2026-09-27)]
-use rustc_attr_ir::{ReprAttr, ReprC, ReprPacked};
-#[rustversion::before(2026-09-27)]
-use rustc_hir::attrs::{ReprAttr, ReprC, ReprPacked};
 
 use rustc_middle::mir::interpret::Scalar;
 use rustc_middle::mir::ConstValue;
@@ -2221,13 +2215,7 @@ pub fn generate_adt<'tcx>(
             quote! {alignas(#alignment)},
             quote! {[[clang::trivial_abi]]},
         ];
-        if core
-            .def_id
-            .map(|id| db.repr_attrs(id).to_vec())
-            .unwrap_or_default()
-            .iter()
-            .any(|repr| matches!(repr, ReprPacked { .. }))
-        {
+        if core.def_id.is_some_and(|id| tcx.adt_def(id).repr().packed()) {
             attributes.push(quote! { __attribute__((packed)) })
         }
 
@@ -2622,15 +2610,11 @@ enum EnumKind {
     /// (i.e. bindings only have a single, private `__opaque_blob_of_bytes` field).
     OpaqueBlobOfBytes,
 }
-fn get_enum_kind<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    adt_def: ty::AdtDef<'tcx>,
-) -> Option<EnumKind> {
+fn get_enum_kind<'tcx>(adt_def: ty::AdtDef<'tcx>) -> Option<EnumKind> {
     if !adt_def.is_enum() {
         return None;
     }
-    let repr_attrs = db.repr_attrs(adt_def.did());
-    if repr_attrs.contains(&ReprC) {
+    if adt_def.repr().c() {
         Some(EnumKind::ReprC)
     } else {
         Some(EnumKind::OpaqueBlobOfBytes)
@@ -2750,7 +2734,7 @@ fn generate_variant_ctor<'tcx>(
                 }
                 return result;
             }
-            let enum_kind = get_enum_kind(db, *adt_def).expect("AtdKindEnum implied EnumKind");
+            let enum_kind = get_enum_kind(*adt_def).expect("AtdKindEnum implied EnumKind");
             let body = match enum_kind {
                 EnumKind::ReprC => {
                     let discr = core
@@ -2906,7 +2890,6 @@ struct CppFieldGenerator<'a, 'tcx> {
     cc_short_name: &'a TokenStream,
     cc_fully_qualified_name: &'a TokenStream,
     rs_fully_qualified_name: &'a TokenStream,
-    repr_attrs: &'a [ReprAttr],
     member_function_names: &'a HashSet<String>,
 }
 
@@ -3028,7 +3011,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         let layout = &self.layout;
         let layout_variants = layout.variants();
 
-        let enum_kind = self.adt_def.and_then(|adt_def| get_enum_kind(self.db, adt_def));
+        let enum_kind = self.adt_def.and_then(get_enum_kind);
         let tag_size_with_padding = match enum_kind {
             Some(EnumKind::ReprC) => get_tag_size_with_padding(*layout),
             None | Some(EnumKind::OpaqueBlobOfBytes) => 0,
@@ -3039,7 +3022,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         let adt_kind = self.adt_def.map(|d| d.adt_kind()).unwrap_or(ty::AdtKind::Struct);
         match adt_kind {
             ty::AdtKind::Struct => {
-                let always_omit_padding = self.repr_attrs.contains(&ReprC)
+                let always_omit_padding = self.adt_def.is_some_and(|adt| adt.repr().c())
                     && variants_fields.iter().flatten().all(|field| field.cpp_type.is_ok());
                 let fields = variants_fields.into_iter().next().unwrap_or_default();
                 Ok(CppLayout::Struct { fields, always_omit_padding })
@@ -3436,7 +3419,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
     fn generate_union(&self, fields: Vec<Field<'tcx>>) -> ApiSnippets<'tcx> {
         let assertions = self.generate_common_assertions(&fields);
 
-        let is_repr_c = self.repr_attrs.contains(&ReprC);
+        let is_repr_c = self.adt_def.is_some_and(|adt| adt.repr().c());
         let mut current_visibility = CcFieldVisState::public();
         let fields: CcSnippet<'tcx> = fields
             .into_iter()
@@ -3781,11 +3764,9 @@ pub(crate) fn generate_fields<'tcx>(
     member_function_names: &HashSet<String>,
     is_aggregate: bool,
 ) -> ApiSnippets<'tcx> {
-    let (adt_def, adt_generic_args, repr_attrs) = match self_ty.kind() {
-        TyKind::Adt(adt_def, adt_generic_args) => {
-            (Some(*adt_def), Some(*adt_generic_args), db.repr_attrs(adt_def.did()).to_vec())
-        }
-        TyKind::Tuple(_) => (None, None, vec![]),
+    let (adt_def, adt_generic_args) = match self_ty.kind() {
+        TyKind::Adt(adt_def, adt_generic_args) => (Some(*adt_def), Some(*adt_generic_args)),
+        TyKind::Tuple(_) => (None, None),
         _ => panic!("Attempted to generate fields for a non-composite type: {:?}", self_ty),
     };
 
@@ -3801,7 +3782,6 @@ pub(crate) fn generate_fields<'tcx>(
         cc_short_name,
         cc_fully_qualified_name,
         rs_fully_qualified_name,
-        repr_attrs: &repr_attrs,
         member_function_names,
     };
 

@@ -9,7 +9,6 @@
 //! Query the rust compiler.
 
 extern crate rustc_abi;
-extern crate rustc_ast;
 #[rustversion::since(2026-09-27)]
 extern crate rustc_attr_ir;
 extern crate rustc_driver;
@@ -23,16 +22,12 @@ use arc_anyhow::Result;
 use error_report::anyhow;
 #[rustversion::before(2026-05-18)]
 use rustc_abi::FieldsShape;
-use rustc_abi::IntegerType;
-use rustc_abi::{FieldIdx, Integer, Layout, Variants};
-use rustc_ast::ast::{IntTy as IntT, UintTy as UintT};
+use rustc_abi::{FieldIdx, Layout, Variants};
 #[rustversion::since(2026-09-27)]
-use rustc_attr_ir::{lang_items::LangItem, IntType, ReprAttr};
+use rustc_attr_ir::lang_items::LangItem;
 #[rustversion::since(2026-08-09)]
 #[rustversion::before(2026-09-27)]
 use rustc_hir::attrs::lang_items::LangItem;
-#[rustversion::before(2026-09-27)]
-use rustc_hir::attrs::{IntType, ReprAttr};
 #[rustversion::before(2026-08-09)]
 use rustc_hir::lang_items::LangItem;
 use rustc_infer::infer::TyCtxtInferExt;
@@ -42,7 +37,6 @@ use rustc_span::def_id::DefId;
 use rustc_span::symbol::Symbol;
 use rustc_trait_selection::infer::InferCtxtExt;
 use std::collections::{HashMap, HashSet};
-use std::rc::Rc;
 
 use database::BindingsGenerator;
 
@@ -310,60 +304,6 @@ pub fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>>
             // `anyhow::context::ext::StdError` trait bound.
             anyhow!("Error computing the layout: {layout_err}")
         })
-}
-
-fn convert_interger_type_to_int_type(input: IntegerType) -> IntType {
-    match input {
-        IntegerType::Pointer(true) => IntType::SignedInt(IntT::Isize),
-        IntegerType::Pointer(false) => IntType::UnsignedInt(UintT::Usize),
-        IntegerType::Fixed(Integer::I8, false) => IntType::UnsignedInt(UintT::U8),
-        IntegerType::Fixed(Integer::I16, false) => IntType::UnsignedInt(UintT::U16),
-        IntegerType::Fixed(Integer::I32, false) => IntType::UnsignedInt(UintT::U32),
-        IntegerType::Fixed(Integer::I64, false) => IntType::UnsignedInt(UintT::U64),
-        IntegerType::Fixed(Integer::I128, false) => IntType::UnsignedInt(UintT::U128),
-        IntegerType::Fixed(Integer::I8, true) => IntType::SignedInt(IntT::I8),
-        IntegerType::Fixed(Integer::I16, true) => IntType::SignedInt(IntT::I16),
-        IntegerType::Fixed(Integer::I32, true) => IntType::SignedInt(IntT::I32),
-        IntegerType::Fixed(Integer::I64, true) => IntType::SignedInt(IntT::I64),
-        IntegerType::Fixed(Integer::I128, true) => IntType::SignedInt(IntT::I128),
-    }
-}
-
-/// Implementation of `BindingsGenerator::repr_attrs`.
-pub fn repr_attrs(tcx: TyCtxt, def_id: DefId) -> Rc<[ReprAttr]> {
-    let mut result = Vec::new();
-    #[rustversion::before(2026-04-19)]
-    let ty = tcx.type_of(def_id).instantiate_identity();
-    #[rustversion::since(2026-04-19)]
-    let ty = tcx.type_of(def_id).instantiate_identity().skip_normalization();
-    match ty.kind() {
-        ty::TyKind::Adt(adt_def, _) => {
-            let repr = adt_def.repr();
-            if repr.transparent() {
-                result.push(ReprAttr::ReprTransparent);
-            }
-            if repr.c() {
-                result.push(ReprAttr::ReprC);
-            }
-            if repr.simd() {
-                result.push(ReprAttr::ReprSimd);
-            }
-            if let Some(alignment) = repr.align {
-                result.push(ReprAttr::ReprAlign(alignment));
-            }
-            if let Some(alignment) = repr.pack {
-                result.push(ReprAttr::ReprPacked(alignment));
-            }
-            if let Some(integer) = repr.int {
-                result.push(ReprAttr::ReprInt(convert_interger_type_to_int_type(integer)));
-            }
-            if result.is_empty() {
-                result.push(ReprAttr::ReprRust);
-            }
-            result.into()
-        }
-        _ => result.into(),
-    }
 }
 
 // Accounts for the offset in the front of a repr(C) enum with multiple

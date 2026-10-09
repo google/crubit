@@ -64,14 +64,10 @@ use proc_macro2::TokenStream;
 use query_compiler::{
     does_type_implement_trait, get_layout, get_tag_size_with_padding, is_c_abi_compatible_by_value,
     is_copy, is_std_ptr_non_null, liberate_and_deanonymize_late_bound_regions,
-    post_analysis_typing_env, repr_attrs,
+    post_analysis_typing_env,
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
-#[rustversion::since(2026-09-27)]
-use rustc_attr_ir::ReprAttr;
-#[rustversion::before(2026-09-27)]
-use rustc_hir::attrs::ReprAttr;
 use rustc_hir::def::{DefKind, Res};
 #[cfg_accessible(rustc_middle::metadata)] // Before nightly-2026-09-06
 use rustc_middle::metadata::{ModChild, Reexport};
@@ -226,11 +222,6 @@ fn add_include_guard(db: &BindingsGenerator<'_>, cc_api: TokenStream) -> Result<
     }
 }
 
-/// Wrap `repr_attrs` for use as a database function.
-fn repr_attrs_from_db(db: &BindingsGenerator<'_>, def_id: DefId) -> Rc<[ReprAttr]> {
-    repr_attrs(db.tcx(), def_id)
-}
-
 fn source_crate_num(db: &BindingsGenerator<'_>) -> CrateNum {
     // This is a temporary workaround while migrating to the rmeta interface. Our old implementation
     // breaks with some rmeta files, notably proto files, due to crate renaming behavior. But our
@@ -377,7 +368,6 @@ pub fn new_database<'db>(
         specializations,
         source_crate_num,
         support_header,
-        repr_attrs_from_db,
         supported_traits,
         symbol_unqualified_name,
         symbol_canonical_name,
