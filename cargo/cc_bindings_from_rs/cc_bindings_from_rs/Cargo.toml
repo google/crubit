@@ -23,4 +23,3 @@ cmdline = { path = "../../../cargo/cc_bindings_from_rs/cmdline", package = "cc_b
 cpp_api_from_rust_lib = { path = "../../../cargo/cc_bindings_from_rs/cpp_api_from_rust_lib", package = "cc_bindings_from_rs_cpp_api_from_rust_lib"}
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
 clap.workspace = true
-itertools.workspace = true

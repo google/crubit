@@ -8,14 +8,11 @@
 
 #[rustversion::since(2026-09-27)]
 extern crate rustc_attr_ir;
+#[cfg(test)]
 extern crate rustc_driver;
-extern crate rustc_errors;
 extern crate rustc_hir;
-extern crate rustc_interface;
 extern crate rustc_middle;
 extern crate rustc_session;
-extern crate rustc_span;
-extern crate rustc_target;
 
 #[rustversion::since(2026-09-27)]
 use rustc_attr_ir::{find_attr, AttributeKind};
@@ -322,7 +319,8 @@ pub fn run_with_cmdline_args(cmdline: &Cmdline) -> Result<()> {
     }
 }
 
-pub fn run_rustc(args: &[String]) -> Result<()> {
+#[cfg(test)]
+fn run_rustc(args: &[String]) -> Result<()> {
     struct Callbacks;
     impl rustc_driver::Callbacks for Callbacks {}
     match rustc_driver::catch_fatal_errors(|| {

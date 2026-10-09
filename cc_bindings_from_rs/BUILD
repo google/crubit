@@ -40,7 +40,6 @@ rust_library(
         "//common:error_report",
         "//common:kythe_metadata",
         "//common:token_stream_printer",
-        "@crate_index//:clap",  # v4
         "@crate_index//:flagset",  # v0_4
         "@crate_index//:itertools",  # v0_13
         "@crate_index//:quote",  # v1
@@ -82,7 +81,6 @@ crubit_rust_binary(
         ":cpp_api_from_rust_lib",
         "//common:arc_anyhow",
         "@crate_index//:clap",  # v4
-        "@crate_index//:itertools",  # v0_13
     ],
 )
 
@@ -161,7 +159,6 @@ rust_library(
     srcs = ["crubit_attr.rs"],
     edition = "2024",
     deps = [
-        ":rustversion",
         "@crate_index//:anyhow",  # v1
     ],
 )
@@ -185,7 +182,6 @@ rust_library(
     ],
     edition = "2024",
     deps = [
-        ":rustversion",
         "//common:arc_anyhow",
         "@crate_index//:either",  # v1
     ],

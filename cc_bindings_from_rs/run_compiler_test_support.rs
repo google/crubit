@@ -8,8 +8,6 @@
 #![allow(unexpected_cfgs)]
 
 extern crate rustc_driver;
-extern crate rustc_error_codes;
-extern crate rustc_errors;
 extern crate rustc_feature;
 extern crate rustc_interface;
 extern crate rustc_lint_defs;
