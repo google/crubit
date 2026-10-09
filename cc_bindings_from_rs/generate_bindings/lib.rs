@@ -2913,23 +2913,8 @@ pub fn try_normalize_ty<'tcx, T>(
 where
     T: ty::TypeFoldable<TyCtxt<'tcx>>,
 {
-    use rustc_infer::infer::TyCtxtInferExt;
-    use rustc_infer::traits::ObligationCause;
-    use rustc_trait_selection::infer::canonical::ir::TypingMode;
-    use rustc_trait_selection::traits::ObligationCtxt;
-
-    let infcx = tcx.infer_ctxt().build(TypingMode::non_body_analysis());
-    let ocx = ObligationCtxt::new_with_diagnostics(&infcx);
-    let cause = ObligationCause::dummy(); // RESPECTFUL_TERMS_EXCEPTION
-    let normalized = ocx.normalize(&cause, param_env, val);
-    #[rustversion::before(2026-08-06)]
-    let tyid = infcx.unresolved_variables();
-    #[rustversion::since(2026-08-06)]
-    let (tyid, _, _) = infcx.unresolved_root_variables();
-    if !tyid.is_empty() {
-        bail!("val contained unresolved type variables and could not be normalized");
-    }
-    Ok(normalized)
+    query_compiler::try_normalize_non_body(tcx, param_env, val.skip_normalization())
+        .map_err(|_| anyhow!("val contained unresolved type variables and could not be normalized"))
 }
 
 #[rustversion::since(2026-04-19)]

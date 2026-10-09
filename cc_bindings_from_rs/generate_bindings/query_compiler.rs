@@ -208,14 +208,32 @@ pub fn liberate_and_deanonymize_late_bound_regions<'tcx>(
 /// This is mirroring the logic of TyCtxt::try_normalize_after_erasing_regions except it does not
 /// erase regions. Because we emit lifetime annotations it's important that we do not erase
 /// regions.
-pub fn try_normalize<'tcx, T: ty::TypeFoldable<TyCtxt<'tcx>> + PartialEq + Copy>(
+pub fn try_normalize<'tcx, T: ty::TypeFoldable<TyCtxt<'tcx>>>(
     tcx: TyCtxt<'tcx>,
-    goal: ty::PseudoCanonicalInput<'tcx, T>,
+    typing_env: ty::TypingEnv<'tcx>,
+    value: T,
+) -> Result<T, NoSolution> {
+    let (infcx, param_env) = tcx.infer_ctxt().build_with_typing_env(typing_env);
+    try_normalize_with_infcx(&infcx, param_env, value)
+}
+
+pub fn try_normalize_non_body<'tcx, T: ty::TypeFoldable<TyCtxt<'tcx>>>(
+    tcx: TyCtxt<'tcx>,
+    param_env: ty::ParamEnv<'tcx>,
+    value: T,
+) -> Result<T, NoSolution> {
+    use rustc_trait_selection::infer::canonical::ir::TypingMode;
+    let infcx = tcx.infer_ctxt().build(TypingMode::non_body_analysis());
+    try_normalize_with_infcx(&infcx, param_env, value)
+}
+
+fn try_normalize_with_infcx<'tcx, T: ty::TypeFoldable<TyCtxt<'tcx>>>(
+    infcx: &rustc_infer::infer::InferCtxt<'tcx>,
+    param_env: ty::ParamEnv<'tcx>,
+    value: T,
 ) -> Result<T, NoSolution> {
     use rustc_trait_selection::traits::query::normalize::QueryNormalizeExt;
     use rustc_trait_selection::traits::{Normalized, ObligationCause};
-    let ty::PseudoCanonicalInput { typing_env, value } = goal;
-    let (infcx, param_env) = tcx.infer_ctxt().build_with_typing_env(typing_env);
     let cause = ObligationCause::dummy(); // RESPECTFUL_TERMS_EXCEPTION: rustc code we don't own.
     infcx
         .at(&cause, param_env)
@@ -265,8 +283,7 @@ fn has_unrevealed_opaque_type<'tcx>(
     ty: Ty<'tcx>,
     seen: &mut HashSet<DefId>,
 ) -> bool {
-    let ty =
-        try_normalize(tcx, ty::TypingEnv::fully_monomorphized().as_query_input(ty)).unwrap_or(ty);
+    let ty = try_normalize(tcx, ty::TypingEnv::fully_monomorphized(), ty).unwrap_or(ty);
     for generic_arg in ty.walk() {
         if let Some(inner_ty) = generic_arg.as_type() {
             if matches!(inner_ty.kind(), ty::TyKind::Alias(..)) {

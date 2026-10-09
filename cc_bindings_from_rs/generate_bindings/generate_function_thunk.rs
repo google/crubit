@@ -979,21 +979,13 @@ pub fn generate_trait_thunks<'tcx>(
         let thunk_name = make_thunk_name(db, ThunkKind::TraitMethod { method, substs });
 
         // We normalize here to expand associated types to their underlying type.
-        let sig_mid = try_normalize(
+        let sig_mid = liberate_and_deanonymize_late_bound_regions(
             tcx,
-            ty::PseudoCanonicalInput {
-                typing_env: TypingEnv::non_body_analysis(tcx, method.def_id),
-                value: crate::normalize_ty(
-                    tcx,
-                    tcx.param_env(method.def_id),
-                    tcx.fn_sig(method.def_id).instantiate(tcx, substs),
-                ),
-            },
-        )
-        .expect("Normalization should succeed since this code typechecked");
-        #[rustversion::since(2026-04-19)]
-        let sig_mid = ty::Unnormalized::new(sig_mid);
-        let sig_mid = liberate_and_deanonymize_late_bound_regions(tcx, sig_mid, method.def_id);
+            tcx.fn_sig(method.def_id).instantiate(tcx, substs),
+            method.def_id,
+        );
+        let sig_mid = try_normalize(tcx, TypingEnv::non_body_analysis(tcx, method.def_id), sig_mid)
+            .expect("Normalization should succeed since this code typechecked");
 
         let thunk_name_cc_ident = format_cc_ident(db, &thunk_name)?;
         let is_async = tcx.asyncness(method.def_id).is_async();

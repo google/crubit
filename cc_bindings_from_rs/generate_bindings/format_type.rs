@@ -653,16 +653,11 @@ pub fn format_ty_for_cc<'tcx>(
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
 
-    // Normalize the type to resolve projections (associated types) without revealing opaque types.
+    // Normalize the type to resolve projections (associated types).
     let ty = query_compiler::try_normalize(
         tcx,
-        ty::PseudoCanonicalInput {
-            typing_env: ty::TypingEnv::new(
-                ty::ParamEnv::empty(),
-                ty::TypingMode::non_body_analysis(),
-            ),
-            value: ty,
-        },
+        ty::TypingEnv::new(ty::ParamEnv::empty(), ty::TypingMode::non_body_analysis()),
+        ty,
     )
     .map_err(|_| anyhow!("Failed to normalize type: {ty}"))?;
     fn keyword<'tcx>(tokens: TokenStream) -> CcSnippet<'tcx> {

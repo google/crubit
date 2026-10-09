@@ -395,14 +395,7 @@ pub(crate) fn generate_associated_item<'tcx>(
                 .zip(tcx.trait_impl_of_assoc(def_id))
                 .ok_or(anyhow!("Associated types with no name are not supported."))
                 .and_then(|(name, impl_id)| {
-                    #[rustversion::before(2026-04-19)]
-                    let trait_ref = tcx.impl_trait_header(impl_id).trait_ref.instantiate_identity();
-                    #[rustversion::since(2026-04-19)]
-                    let trait_ref = crate::normalize_ty(
-                        tcx,
-                        tcx.param_env(impl_id),
-                        tcx.impl_trait_header(impl_id).trait_ref.instantiate_identity(),
-                    );
+                    let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
                     let trait_rs_name = db
                         .symbol_canonical_name(trait_ref.def_id)
                         .expect("Trait impl should have a canonical name.")
@@ -951,14 +944,7 @@ fn generate_constructor_impls<'tcx>(
                     sig,
                     into_trait_assoc_fn.def_id,
                 );
-                let sig = try_normalize(
-                    tcx,
-                    ty::PseudoCanonicalInput {
-                        typing_env: TypingEnv::fully_monomorphized(),
-                        value: sig,
-                    },
-                )
-                .ok()?;
+                let sig = try_normalize(tcx, TypingEnv::fully_monomorphized(), sig).ok()?;
 
                 // Just a small unique name for the custom Into thunk
                 let thunk_name = make_thunk_name(
@@ -3897,10 +3883,8 @@ fn get_into_iter_ty<'tcx>(
 
     query_compiler::try_normalize(
         tcx,
-        ty::PseudoCanonicalInput {
-            typing_env: rustc_middle::ty::TypingEnv::fully_monomorphized(),
-            value: projection_ty,
-        },
+        rustc_middle::ty::TypingEnv::fully_monomorphized(),
+        projection_ty,
     )
     .map_err(|_| anyhow!("Failed to normalize `<{} as IntoIterator>::IntoIter`", self_ty))
 }
@@ -3925,10 +3909,8 @@ fn get_into_iter_item_ty<'tcx>(
 
     query_compiler::try_normalize(
         tcx,
-        ty::PseudoCanonicalInput {
-            typing_env: rustc_middle::ty::TypingEnv::fully_monomorphized(),
-            value: projection_ty,
-        },
+        rustc_middle::ty::TypingEnv::fully_monomorphized(),
+        projection_ty,
     )
     .map_err(|_| anyhow!("Failed to normalize `<{} as IntoIterator>::Item`", self_ty))
 }
