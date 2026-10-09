@@ -58,9 +58,10 @@
 //!
 //! * LP64:
 //!     * Any LP64 platform which uses the smallest suitable fundamental type for `intN_t` (i.e.,
-//!       `int64_t` is `long`). For example, Linux on x86_64 or Aarch64, but not iOS or OpenBSD.
-//!     * Listed LP64 platforms where `int64_t` is `long long`: iOS and OpenBSD. (other platforms in
-//!       this category but not on this list will be broken)
+//!       `int64_t` is `long`). For example, Linux on x86_64 or Aarch64, but not iOS, macOS, or
+//!       OpenBSD.
+//!     * Listed LP64 platforms where `int64_t` is `long long`: iOS, macOS, and OpenBSD. (other
+//!       platforms in this category but not on this list will be broken)
 //! * LLP64: 64-bit Windows.
 //!
 //! We will add support over time to other commonly used platforms.
@@ -275,7 +276,7 @@ pub const fn new_c_uint(value: u32) -> c_uint {
 /// LP64 with long int64_t.
 #[cfg(all(
     target_pointer_width = "64",
-    not(any(windows, target_os = "ios", target_os = "openbsd"))
+    not(any(windows, target_os = "ios", target_os = "macos", target_os = "openbsd"))
 ))]
 mod long_integers {
     use super::*;
@@ -305,7 +306,10 @@ mod long_integers {
 }
 
 /// LP64 with long long int64_t
-#[cfg(all(target_pointer_width = "64", any(target_os = "ios", target_os = "openbsd")))]
+#[cfg(all(
+    target_pointer_width = "64",
+    any(target_os = "ios", target_os = "macos", target_os = "openbsd")
+))]
 mod long_integers {
     use super::*;
     new_integer! {
