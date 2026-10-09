@@ -72,10 +72,10 @@ TAGS = {}
 
 ASPECT_HINTS = {
     "composable_bridging_template_type": [
-        "//features:wrapper",
+        "//features:template_instantiation",
     ],
     "template_inst": [
-        "//features:wrapper",
+        "//features:template_instantiation",
     ],
     "deprecated_experimental": [
         "//features:experimental",
@@ -94,10 +94,7 @@ ASPECT_HINTS = {
         "//features:assume_this_lifetimes",
     ],
     "typedef_incomplete_types": [
-        "//features:wrapper",
-    ],
-    "dunder_types": [
-        "//features:wrapper",
+        "//features:forward_declare",
     ],
     "types_in_extra_cpp_srcs": [
         ":types_in_extra_cpp_srcs_aspect_hint",
@@ -212,7 +209,7 @@ cc_library(
     name = "template_def_with_crubit",
     hdrs = ["template_def_with_crubit.h"],
     aspect_hints = [
-        "//features:wrapper",
+        "//features:template_instantiation",
     ],
 )
 

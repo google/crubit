@@ -43,7 +43,7 @@ crubit_feature_hint(
     compatible_with = ["//buildenv/target:non_prod"],
     crubit_features = SUPPORTED_FEATURES + _WRAPPER_FEATURES,
     visibility = [
-        "//:__subpackages__",
+        "//rs_bindings_from_cc/test/wrapper:__subpackages__",
     ],
 )
 
