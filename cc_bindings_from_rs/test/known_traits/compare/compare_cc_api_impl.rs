@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::compare_golden::MyOrd>() == 4);
-const _: () = assert!(::std::mem::align_of::<::compare_golden::MyOrd>() == 4);
+const _: () = assert!(::core::mem::size_of::<::compare_golden::MyOrd>() == 4);
+const _: () = assert!(::core::mem::align_of::<::compare_golden::MyOrd>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyOrd_ucompare_ugolden_x0000003a_x0000003aMyOrd(
     __self: &'static ::compare_golden::MyOrd,
@@ -32,8 +32,8 @@ extern "C" fn __crubit_thunk_Ord_ucmp_ucompare_ugolden_x0000003a_x0000003aMyOrd(
     <::compare_golden::MyOrd as ::core::cmp::Ord>::cmp(lhs, rhs) as i8
 }
 const _: () = assert!(::core::mem::offset_of!(::compare_golden::MyOrd, 0) == 0);
-const _: () = assert!(::std::mem::size_of::<::compare_golden::MyPartialOrd>() == 8);
-const _: () = assert!(::std::mem::align_of::<::compare_golden::MyPartialOrd>() == 4);
+const _: () = assert!(::core::mem::size_of::<::compare_golden::MyPartialOrd>() == 8);
+const _: () = assert!(::core::mem::align_of::<::compare_golden::MyPartialOrd>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyPartialOrd_ucompare_ugolden_x0000003a_x0000003aMyPartialOrd(
     __self: &'static ::compare_golden::MyPartialOrd,
@@ -57,8 +57,8 @@ extern "C" fn __crubit_thunk_PartialOrd_upartial_ucmp_ucompare_ugolden_x0000003a
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::compare_golden::MyPartialOrd, 0) == 0);
-const _: () = assert!(::std::mem::size_of::<::compare_golden::MyUnordered>() == 4);
-const _: () = assert!(::std::mem::align_of::<::compare_golden::MyUnordered>() == 4);
+const _: () = assert!(::core::mem::size_of::<::compare_golden::MyUnordered>() == 4);
+const _: () = assert!(::core::mem::align_of::<::compare_golden::MyUnordered>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_ucompare_ugolden_x0000003a_x0000003aMyUnordered_ucompare_ugolden_x0000003a_x0000003aMyUnordered(
     __self: &'static ::compare_golden::MyUnordered,

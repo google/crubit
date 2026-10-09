@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::no_core_golden::Test>() == 24);
-const _: () = assert!(::std::mem::align_of::<::no_core_golden::Test>() == 8);
+const _: () = assert!(::core::mem::size_of::<::no_core_golden::Test>() == 24);
+const _: () = assert!(::core::mem::align_of::<::no_core_golden::Test>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {

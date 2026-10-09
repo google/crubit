@@ -161,7 +161,7 @@ bool take_result_unit_ok(rs_std::Result<rs_std::unit_t, ::std::uint8_t> val);
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020unit_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020DropNoDefault_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < () , :: result_golden :: DropNoDefault >")
+    "core :: result :: Result < () , :: result_golden :: DropNoDefault >")
     rs_std::Result<rs_std::unit_t, ::result::DropNoDefault>
     : public rs_std::ResultBase<
           rs_std::Result<rs_std::unit_t, ::result::DropNoDefault>,
@@ -229,7 +229,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020unit_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
 struct alignas(1)
-    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < () , u8 >")
+    CRUBIT_INTERNAL_RUST_TYPE("core :: result :: Result < () , u8 >")
         rs_std::Result<rs_std::unit_t, ::std::uint8_t>
     : public rs_std::ResultBase<rs_std::Result<rs_std::unit_t, ::std::uint8_t>,
                                 rs_std::unit_t, ::std::uint8_t> {
@@ -294,7 +294,7 @@ struct alignas(1)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 template <>
 struct alignas(4)
-    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < i8 , isize >")
+    CRUBIT_INTERNAL_RUST_TYPE("core :: result :: Result < i8 , isize >")
         rs_std::Result<::std::int8_t, ::std::int32_t>
     : public rs_std::ResultBase<rs_std::Result<::std::int8_t, ::std::int32_t>,
                                 ::std::int8_t, ::std::int32_t> {
@@ -359,7 +359,7 @@ struct alignas(4)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int8_ut_x00000020_x0000003e
 template <>
 struct alignas(4)
-    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < isize , i8 >")
+    CRUBIT_INTERNAL_RUST_TYPE("core :: result :: Result < isize , i8 >")
         rs_std::Result<::std::int32_t, ::std::int8_t>
     : public rs_std::ResultBase<rs_std::Result<::std::int32_t, ::std::int8_t>,
                                 ::std::int32_t, ::std::int8_t> {
@@ -424,7 +424,7 @@ struct alignas(4)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < :: result_golden :: CloneNoDefault , u8 >")
+    "core :: result :: Result < :: result_golden :: CloneNoDefault , u8 >")
     rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>
     : public rs_std::ResultBase<
           rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>,
@@ -495,7 +495,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020CopyNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < :: result_golden :: CopyNoDefault , u8 >")
+    "core :: result :: Result < :: result_golden :: CopyNoDefault , u8 >")
     rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>
     : public rs_std::ResultBase<
           rs_std::Result<::result::CopyNoDefault, ::std::uint8_t>,
@@ -563,7 +563,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020DropNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < :: result_golden :: DropNoDefault , u8 >")
+    "core :: result :: Result < :: result_golden :: DropNoDefault , u8 >")
     rs_std::Result<::result::DropNoDefault, ::std::uint8_t>
     : public rs_std::ResultBase<
           rs_std::Result<::result::DropNoDefault, ::std::uint8_t>,
@@ -633,7 +633,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < :: result_golden :: HasDefault , u8 >")
+    "core :: result :: Result < :: result_golden :: HasDefault , u8 >")
     rs_std::Result<::result::HasDefault, ::std::uint8_t>
     : public rs_std::ResultBase<
           rs_std::Result<::result::HasDefault, ::std::uint8_t>,
@@ -703,7 +703,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < :: result_golden :: HasNoDefault , u8 >")
+    "core :: result :: Result < :: result_golden :: HasNoDefault , u8 >")
     rs_std::Result<::result::HasNoDefault, ::std::uint8_t>
     : public rs_std::ResultBase<
           rs_std::Result<::result::HasNoDefault, ::std::uint8_t>,
@@ -773,9 +773,9 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < :: core :: result :: Result < u32 , u32 > , u32 "
-    ">") rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
-                        ::std::uint32_t>
+    "core :: result :: Result < :: core :: result :: Result < u32 , u32 > , "
+    "u32 >") rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
+                            ::std::uint32_t>
     : public rs_std::ResultBase<
           rs_std::Result<rs_std::Result<::std::uint32_t, ::std::uint32_t>,
                          ::std::uint32_t>,
@@ -847,9 +847,9 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < u32 , :: core :: result :: Result < u32 , u32 > "
-    ">") rs_std::Result<::std::uint32_t,
-                        rs_std::Result<::std::uint32_t, ::std::uint32_t>>
+    "core :: result :: Result < u32 , :: core :: result :: Result < u32 , u32 "
+    "> >") rs_std::Result<::std::uint32_t,
+                          rs_std::Result<::std::uint32_t, ::std::uint32_t>>
     : public rs_std::ResultBase<
           rs_std::Result<::std::uint32_t,
                          rs_std::Result<::std::uint32_t, ::std::uint32_t>>,
@@ -961,7 +961,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: NestedResult") alignas(4)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 template <>
 struct alignas(4)
-    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < u32 , u32 >")
+    CRUBIT_INTERNAL_RUST_TYPE("core :: result :: Result < u32 , u32 >")
         rs_std::Result<::std::uint32_t, ::std::uint32_t>
     : public rs_std::ResultBase<
           rs_std::Result<::std::uint32_t, ::std::uint32_t>, ::std::uint32_t,
@@ -1060,7 +1060,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: GetsResult") alignas(4)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020unit_ut_x00000020_x0000003e
 template <>
 struct alignas(1)
-    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < u8 , () >")
+    CRUBIT_INTERNAL_RUST_TYPE("core :: result :: Result < u8 , () >")
         rs_std::Result<::std::uint8_t, rs_std::unit_t>
     : public rs_std::ResultBase<rs_std::Result<::std::uint8_t, rs_std::unit_t>,
                                 ::std::uint8_t, rs_std::unit_t> {
@@ -1125,7 +1125,7 @@ struct alignas(1)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < u8 , :: result_golden :: CloneNoDefault >")
+    "core :: result :: Result < u8 , :: result_golden :: CloneNoDefault >")
     rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>
     : public rs_std::ResultBase<
           rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>,
@@ -1232,7 +1232,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020CopyNoDefault_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < u8 , :: result_golden :: CopyNoDefault >")
+    "core :: result :: Result < u8 , :: result_golden :: CopyNoDefault >")
     rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>
     : public rs_std::ResultBase<
           rs_std::Result<::std::uint8_t, ::result::CopyNoDefault>,
@@ -1335,7 +1335,7 @@ CopyNoDefaultResult final {
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020DropNoDefault_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < u8 , :: result_golden :: DropNoDefault >")
+    "core :: result :: Result < u8 , :: result_golden :: DropNoDefault >")
     rs_std::Result<::std::uint8_t, ::result::DropNoDefault>
     : public rs_std::ResultBase<
           rs_std::Result<::std::uint8_t, ::result::DropNoDefault>,
@@ -1403,7 +1403,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < u8 , :: result_golden :: HasDefault >")
+    "core :: result :: Result < u8 , :: result_golden :: HasDefault >")
     rs_std::Result<::std::uint8_t, ::result::HasDefault>
     : public rs_std::ResultBase<
           rs_std::Result<::std::uint8_t, ::result::HasDefault>, ::std::uint8_t,
@@ -1511,7 +1511,7 @@ HasDefaultResult final {
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020result_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < u8 , :: result_golden :: HasNoDefault >")
+    "core :: result :: Result < u8 , :: result_golden :: HasNoDefault >")
     rs_std::Result<::std::uint8_t, ::result::HasNoDefault>
     : public rs_std::ResultBase<
           rs_std::Result<::std::uint8_t, ::result::HasNoDefault>,
@@ -1619,7 +1619,7 @@ HasNoDefaultResult final {
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
 struct alignas(1)
-    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < u8 , u8 >")
+    CRUBIT_INTERNAL_RUST_TYPE("core :: result :: Result < u8 , u8 >")
         rs_std::Result<::std::uint8_t, ::std::uint8_t>
     : public rs_std::ResultBase<rs_std::Result<::std::uint8_t, ::std::uint8_t>,
                                 ::std::uint8_t, ::std::uint8_t> {
@@ -1684,7 +1684,7 @@ struct alignas(1)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 template <>
 struct alignas(4)
-    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < u8 , usize >")
+    CRUBIT_INTERNAL_RUST_TYPE("core :: result :: Result < u8 , usize >")
         rs_std::Result<::std::uint8_t, ::std::uint32_t>
     : public rs_std::ResultBase<rs_std::Result<::std::uint8_t, ::std::uint32_t>,
                                 ::std::uint8_t, ::std::uint32_t> {
@@ -1749,9 +1749,9 @@ struct alignas(4)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000002c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < unsafe extern \"C\" fn (* mut :: core :: ffi :: "
-    "c_void , * mut :: core :: ffi :: c_void) , unsafe extern \"C\" fn (* mut "
-    ":: core :: ffi :: c_void , * mut :: core :: ffi :: c_void) >")
+    "core :: result :: Result < unsafe extern \"C\" fn (* mut :: core :: ffi "
+    ":: c_void , * mut :: core :: ffi :: c_void) , unsafe extern \"C\" fn (* "
+    "mut :: core :: ffi :: c_void , * mut :: core :: ffi :: c_void) >")
     rs_std::Result<crubit::type_identity_t<void(void*, void*)>*,
                    crubit::type_identity_t<void(void*, void*)>*>
     : public rs_std::ResultBase<
@@ -1865,7 +1865,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: result_golden :: ZStream") alignas(4)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
 struct alignas(4)
-    CRUBIT_INTERNAL_RUST_TYPE("std :: result :: Result < usize , u8 >")
+    CRUBIT_INTERNAL_RUST_TYPE("core :: result :: Result < usize , u8 >")
         rs_std::Result<::std::uint32_t, ::std::uint8_t>
     : public rs_std::ResultBase<rs_std::Result<::std::uint32_t, ::std::uint8_t>,
                                 ::std::uint32_t, ::std::uint8_t> {

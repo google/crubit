@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::async_fn_golden::NotCppMovable>() == 4);
-const _: () = assert!(::std::mem::align_of::<::async_fn_golden::NotCppMovable>() == 4);
+const _: () = assert!(::core::mem::size_of::<::async_fn_golden::NotCppMovable>() == 4);
+const _: () = assert!(::core::mem::align_of::<::async_fn_golden::NotCppMovable>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_uasync_ufn_ugolden_x0000003a_x0000003aNotCppMovable(
     __self: *mut ::async_fn_golden::NotCppMovable,
@@ -20,8 +20,8 @@ extern "C" fn __crubit_thunk_Drop_udrop_uasync_ufn_ugolden_x0000003a_x0000003aNo
     unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::async_fn_golden::NotCppMovable, 0) == 0);
-const _: () = assert!(::std::mem::size_of::<::async_fn_golden::StructWithDrop>() == 4);
-const _: () = assert!(::std::mem::align_of::<::async_fn_golden::StructWithDrop>() == 4);
+const _: () = assert!(::core::mem::size_of::<::async_fn_golden::StructWithDrop>() == 4);
+const _: () = assert!(::core::mem::align_of::<::async_fn_golden::StructWithDrop>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_uasync_ufn_ugolden_x0000003a_x0000003aStructWithDrop(
     __ret_ptr: *mut core::ffi::c_void,

@@ -40,7 +40,7 @@ returns_result(bool is_ok);
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < & 'static str >") rs_std::Option<rs_std::StrRef>
+    "core :: option :: Option < & 'static str >") rs_std::Option<rs_std::StrRef>
     : public rs_std::OptionBase<rs_std::Option<rs_std::StrRef>,
                                 rs_std::StrRef> {
  public:
@@ -98,8 +98,8 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020StrRef_x00000020_x0000003e_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < :: core :: option :: Option < & 'static str > , "
-    ":: alloc :: string :: String >")
+    "core :: result :: Result < :: core :: option :: Option < & 'static str > "
+    ", :: alloc :: string :: String >")
     rs_std::Result<rs_std::Option<rs_std::StrRef>, ::rs::alloc::string::String>
     : public rs_std::ResultBase<rs_std::Result<rs_std::Option<rs_std::StrRef>,
                                                ::rs::alloc::string::String>,

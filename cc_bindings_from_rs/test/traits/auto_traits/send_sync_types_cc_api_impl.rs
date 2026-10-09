@@ -11,20 +11,20 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::send_sync_types_golden::NeitherSendNorSync>() == 4);
-const _: () = assert!(::std::mem::align_of::<::send_sync_types_golden::NeitherSendNorSync>() == 4);
+const _: () = assert!(::core::mem::size_of::<::send_sync_types_golden::NeitherSendNorSync>() == 4);
+const _: () = assert!(::core::mem::align_of::<::send_sync_types_golden::NeitherSendNorSync>() == 4);
 const _: () =
     assert!(::core::mem::offset_of!(::send_sync_types_golden::NeitherSendNorSync, 0) == 0);
 const _: () =
     assert!(::core::mem::offset_of!(::send_sync_types_golden::NeitherSendNorSync, 1) == 4);
-const _: () = assert!(::std::mem::size_of::<::send_sync_types_golden::SendAndSync>() == 4);
-const _: () = assert!(::std::mem::align_of::<::send_sync_types_golden::SendAndSync>() == 4);
+const _: () = assert!(::core::mem::size_of::<::send_sync_types_golden::SendAndSync>() == 4);
+const _: () = assert!(::core::mem::align_of::<::send_sync_types_golden::SendAndSync>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::send_sync_types_golden::SendAndSync, 0) == 0);
-const _: () = assert!(::std::mem::size_of::<::send_sync_types_golden::SendButNotSync>() == 4);
-const _: () = assert!(::std::mem::align_of::<::send_sync_types_golden::SendButNotSync>() == 4);
+const _: () = assert!(::core::mem::size_of::<::send_sync_types_golden::SendButNotSync>() == 4);
+const _: () = assert!(::core::mem::align_of::<::send_sync_types_golden::SendButNotSync>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::send_sync_types_golden::SendButNotSync, 0) == 0);
 const _: () = assert!(::core::mem::offset_of!(::send_sync_types_golden::SendButNotSync, 1) == 4);
-const _: () = assert!(::std::mem::size_of::<::send_sync_types_golden::SyncButNotSend>() == 4);
-const _: () = assert!(::std::mem::align_of::<::send_sync_types_golden::SyncButNotSend>() == 4);
+const _: () = assert!(::core::mem::size_of::<::send_sync_types_golden::SyncButNotSend>() == 4);
+const _: () = assert!(::core::mem::align_of::<::send_sync_types_golden::SyncButNotSend>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::send_sync_types_golden::SyncButNotSend, 0) == 0);
 const _: () = assert!(::core::mem::offset_of!(::send_sync_types_golden::SyncButNotSend, 1) == 4);

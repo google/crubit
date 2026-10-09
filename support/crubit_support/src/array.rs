@@ -60,6 +60,8 @@ pub const fn c_char_array_from_string_literal<const N: usize>(bytes: &[u8]) -> [
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::boxed::Box;
+    use alloc::vec;
     use ffi_11::{c_int, c_longlong, new_c_char, new_c_longlong};
     use googletest::{expect_eq, gtest};
 
@@ -108,7 +110,7 @@ mod tests {
     #[should_panic(expected = "elements do not fit in the array")]
     fn test_padded_array_too_long() {
         // Not a const, so that this panics at run time instead of failing to compile.
-        let _ = padded_array::<c_int, 1>(std::hint::black_box(&[1, 2]), 0);
+        let _ = padded_array::<c_int, 1>(core::hint::black_box(&[1, 2]), 0);
     }
 
     #[gtest]
@@ -139,6 +141,6 @@ mod tests {
     #[should_panic(expected = "string literal and its NUL terminator do not fit in the array")]
     fn test_c_char_array_from_string_literal_no_room_for_nul_terminator() {
         // Not a const, so that this panics at run time instead of failing to compile.
-        let _ = c_char_array_from_string_literal::<4>(std::hint::black_box(b"NOOP"));
+        let _ = c_char_array_from_string_literal::<4>(core::hint::black_box(b"NOOP"));
     }
 }

@@ -526,7 +526,7 @@ fn test_format_item_reexport_private_type() {
         assert_rs_matches!(
             bindings.cc_api_impl,
             quote! {
-                const _: () = assert!(::std::mem::size_of::<::rust_out::X>() == 4);
+                const _: () = assert!(::core::mem::size_of::<::rust_out::X>() == 4);
             }
         );
 

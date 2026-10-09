@@ -51,7 +51,7 @@ unsafe extern "C" fn __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_upoi
     unsafe {
         let __rs_return_value=::bridged_types_golden::test_format_bridged_return_type_by_pointer::test_format_bridged_return_type_by_pointer();
         rust_struct_to_cpp_pointer(
-            std::ptr::from_ref(&__rs_return_value) as *const core::ffi::c_void,
+            ::core::ptr::from_ref(&__rs_return_value) as *const ::core::ffi::c_void,
             __ret_ptr,
         );
     }
@@ -63,7 +63,7 @@ unsafe extern "C" fn __crubit_thunk_test_uformat_ubridged_ureturn_utype_uby_uval
     unsafe {
         let __rs_return_value=::bridged_types_golden::test_format_bridged_return_type_by_value::test_format_bridged_return_type_by_value();
         rust_to_cpp_converter(
-            std::ptr::from_ref(&__rs_return_value) as *const core::ffi::c_void,
+            ::core::ptr::from_ref(&__rs_return_value) as *const ::core::ffi::c_void,
             __ret_ptr,
         );
     }

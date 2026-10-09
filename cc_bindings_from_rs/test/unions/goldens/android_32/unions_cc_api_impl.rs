@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_c::U>() == 4);
-const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_c::U>() == 4);
+const _: () = assert!(::core::mem::size_of::<::unions_golden::repr_c::U>() == 4);
+const _: () = assert!(::core::mem::align_of::<::unions_golden::repr_c::U>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::unions_golden::repr_c::U, x) == 0);
 const _: () = assert!(::core::mem::offset_of!(::unions_golden::repr_c::U, y) == 0);
 #[unsafe(no_mangle)]
@@ -22,8 +22,8 @@ unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) ->
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
-const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_c_clone::U>() == 4);
-const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_c_clone::U>() == 4);
+const _: () = assert!(::core::mem::size_of::<::unions_golden::repr_c_clone::U>() == 4);
+const _: () = assert!(::core::mem::align_of::<::unions_golden::repr_c_clone::U>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_uunions_ugolden_x0000003a_x0000003arepr_uc_uclone_x0000003a_x0000003aU(
     __self: &'static ::unions_golden::repr_c_clone::U,
@@ -52,8 +52,8 @@ unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) ->
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
-const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_c_drop::U>() == 4);
-const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_c_drop::U>() == 4);
+const _: () = assert!(::core::mem::size_of::<::unions_golden::repr_c_drop::U>() == 4);
+const _: () = assert!(::core::mem::align_of::<::unions_golden::repr_c_drop::U>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_uunions_ugolden_x0000003a_x0000003arepr_uc_udrop_x0000003a_x0000003aU(
     __ret_ptr: *mut core::ffi::c_void,
@@ -71,8 +71,8 @@ extern "C" fn __crubit_thunk_Drop_udrop_uunions_ugolden_x0000003a_x0000003arepr_
     unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::unions_golden::repr_c_drop::U, x) == 0);
-const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_c_packed::U>() == 4);
-const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_c_packed::U>() == 1);
+const _: () = assert!(::core::mem::size_of::<::unions_golden::repr_c_packed::U>() == 4);
+const _: () = assert!(::core::mem::align_of::<::unions_golden::repr_c_packed::U>() == 1);
 const _: () = assert!(::core::mem::offset_of!(::unions_golden::repr_c_packed::U, x) == 0);
 const _: () = assert!(::core::mem::offset_of!(::unions_golden::repr_c_packed::U, y) == 0);
 #[unsafe(no_mangle)]
@@ -82,8 +82,8 @@ unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) ->
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
-const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_rust::U>() == 4);
-const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_rust::U>() == 4);
+const _: () = assert!(::core::mem::size_of::<::unions_golden::repr_rust::U>() == 4);
+const _: () = assert!(::core::mem::align_of::<::unions_golden::repr_rust::U>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_set_ux(
     __self: &'static mut ::unions_golden::repr_rust::U,
@@ -115,8 +115,8 @@ unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) ->
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
-const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_rust_clone::U>() == 4);
-const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_rust_clone::U>() == 4);
+const _: () = assert!(::core::mem::size_of::<::unions_golden::repr_rust_clone::U>() == 4);
+const _: () = assert!(::core::mem::align_of::<::unions_golden::repr_rust_clone::U>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_uunions_ugolden_x0000003a_x0000003arepr_urust_uclone_x0000003a_x0000003aU(
     __self: &'static ::unions_golden::repr_rust_clone::U,
@@ -158,8 +158,8 @@ unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) ->
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
-const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_rust_drop::U>() == 4);
-const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_rust_drop::U>() == 4);
+const _: () = assert!(::core::mem::size_of::<::unions_golden::repr_rust_drop::U>() == 4);
+const _: () = assert!(::core::mem::align_of::<::unions_golden::repr_rust_drop::U>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_uunions_ugolden_x0000003a_x0000003arepr_urust_udrop_x0000003a_x0000003aU(
     __ret_ptr: *mut core::ffi::c_void,
@@ -190,8 +190,8 @@ unsafe extern "C" fn __crubit_thunk_get_ux(
     unsafe { ::unions_golden::repr_rust_drop::U::get_x(__self) }
 }
 const _: () = assert!(::core::mem::offset_of!(::unions_golden::repr_rust_drop::U, x) == 0);
-const _: () = assert!(::std::mem::size_of::<::unions_golden::repr_rust_packed::U>() == 4);
-const _: () = assert!(::std::mem::align_of::<::unions_golden::repr_rust_packed::U>() == 1);
+const _: () = assert!(::core::mem::size_of::<::unions_golden::repr_rust_packed::U>() == 4);
+const _: () = assert!(::core::mem::align_of::<::unions_golden::repr_rust_packed::U>() == 1);
 const _: () = assert!(::core::mem::offset_of!(::unions_golden::repr_rust_packed::U, x) == 0);
 const _: () = assert!(::core::mem::offset_of!(::unions_golden::repr_rust_packed::U, y) == 0);
 #[unsafe(no_mangle)]

@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::rs_hash_golden::derived_enum::Color>() == 1);
-const _: () = assert!(::std::mem::align_of::<::rs_hash_golden::derived_enum::Color>() == 1);
+const _: () = assert!(::core::mem::size_of::<::rs_hash_golden::derived_enum::Color>() == 1);
+const _: () = assert!(::core::mem::align_of::<::rs_hash_golden::derived_enum::Color>() == 1);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Clone_uclone_urs_uhash_ugolden_x0000003a_x0000003aderived_uenum_x0000003a_x0000003aColor(
     __self: &'static ::rs_hash_golden::derived_enum::Color,
@@ -71,8 +71,8 @@ unsafe extern "C" fn __crubit_thunk_create_ured(__ret_ptr: *mut core::ffi::c_voi
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
-const _: () = assert!(::std::mem::size_of::<::rs_hash_golden::derived_struct::Point>() == 8);
-const _: () = assert!(::std::mem::align_of::<::rs_hash_golden::derived_struct::Point>() == 4);
+const _: () = assert!(::core::mem::size_of::<::rs_hash_golden::derived_struct::Point>() == 8);
+const _: () = assert!(::core::mem::align_of::<::rs_hash_golden::derived_struct::Point>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_urs_uhash_ugolden_x0000003a_x0000003aderived_ustruct_x0000003a_x0000003aPoint_urs_uhash_ugolden_x0000003a_x0000003aderived_ustruct_x0000003a_x0000003aPoint(
     __self: &'static ::rs_hash_golden::derived_struct::Point,
@@ -104,9 +104,9 @@ unsafe extern "C" fn __crubit_thunk_create_upoint(
     }
 }
 const _: () =
-    assert!(::std::mem::size_of::<::rs_hash_golden::derived_tuple_struct::TupleStruct>() == 8);
+    assert!(::core::mem::size_of::<::rs_hash_golden::derived_tuple_struct::TupleStruct>() == 8);
 const _: () =
-    assert!(::std::mem::align_of::<::rs_hash_golden::derived_tuple_struct::TupleStruct>() == 4);
+    assert!(::core::mem::align_of::<::rs_hash_golden::derived_tuple_struct::TupleStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_urs_uhash_ugolden_x0000003a_x0000003aderived_utuple_ustruct_x0000003a_x0000003aTupleStruct_urs_uhash_ugolden_x0000003a_x0000003aderived_utuple_ustruct_x0000003a_x0000003aTupleStruct(
     __self: &'static ::rs_hash_golden::derived_tuple_struct::TupleStruct,
@@ -140,9 +140,9 @@ unsafe extern "C" fn __crubit_thunk_create_utuple(
     }
 }
 const _: () =
-    assert!(::std::mem::size_of::<::rs_hash_golden::explicit_struct::CustomHashStruct>() == 4);
+    assert!(::core::mem::size_of::<::rs_hash_golden::explicit_struct::CustomHashStruct>() == 4);
 const _: () =
-    assert!(::std::mem::align_of::<::rs_hash_golden::explicit_struct::CustomHashStruct>() == 4);
+    assert!(::core::mem::align_of::<::rs_hash_golden::explicit_struct::CustomHashStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_urs_uhash_ugolden_x0000003a_x0000003aexplicit_ustruct_x0000003a_x0000003aCustomHashStruct_urs_uhash_ugolden_x0000003a_x0000003aexplicit_ustruct_x0000003a_x0000003aCustomHashStruct(
     __self: &'static ::rs_hash_golden::explicit_struct::CustomHashStruct,

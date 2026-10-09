@@ -11,10 +11,10 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::AdtHoldingFiveAndSix>() == 8);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::AdtHoldingFiveAndSix>() == 4);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::CloneNoDefault>() == 1);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::CloneNoDefault>() == 1);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::AdtHoldingFiveAndSix>() == 8);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::AdtHoldingFiveAndSix>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::CloneNoDefault>() == 1);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::CloneNoDefault>() == 1);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -23,8 +23,8 @@ unsafe extern "C" fn __crubit_thunk_new(val: u8, __ret_ptr: *mut core::ffi::c_vo
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::CloneNoDefault, val) == 0);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::CloneNoDefaultTuple>() == 4);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::CloneNoDefaultTuple>() == 1);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::CloneNoDefaultTuple>() == 4);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::CloneNoDefaultTuple>() == 1);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -36,8 +36,8 @@ const _: () =
     assert!(::core::mem::offset_of!(::tuples_golden::CloneNoDefaultTuple, in_tuple1) == 0);
 const _: () =
     assert!(::core::mem::offset_of!(::tuples_golden::CloneNoDefaultTuple, in_tuple2) == 2);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::CopyNoDefault>() == 1);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::CopyNoDefault>() == 1);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::CopyNoDefault>() == 1);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::CopyNoDefault>() == 1);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -46,8 +46,8 @@ unsafe extern "C" fn __crubit_thunk_new(val: u8, __ret_ptr: *mut core::ffi::c_vo
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::CopyNoDefault, val) == 0);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::CopyNoDefaultTuple>() == 4);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::CopyNoDefaultTuple>() == 1);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::CopyNoDefaultTuple>() == 4);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::CopyNoDefaultTuple>() == 1);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -57,8 +57,8 @@ unsafe extern "C" fn __crubit_thunk_new(val: u8, __ret_ptr: *mut core::ffi::c_vo
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::CopyNoDefaultTuple, in_tuple1) == 0);
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::CopyNoDefaultTuple, in_tuple2) == 2);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::GetsTuple>() == 8);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::GetsTuple>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::GetsTuple>() == 8);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::GetsTuple>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: u32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -67,8 +67,8 @@ unsafe extern "C" fn __crubit_thunk_new(val: u32, __ret_ptr: *mut core::ffi::c_v
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::GetsTuple, value) == 0);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasDefault>() == 12);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasDefault>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::HasDefault>() == 12);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::HasDefault>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(
     val: *mut &'static str,
@@ -91,8 +91,8 @@ unsafe extern "C" fn __crubit_thunk_val(
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasDefault, val) == 0);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasDefaultTuple>() == 32);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasDefaultTuple>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::HasDefaultTuple>() == 32);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::HasDefaultTuple>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasDefaultTuple(
     __self: *mut ::tuples_golden::HasDefaultTuple,
@@ -112,8 +112,8 @@ unsafe extern "C" fn __crubit_thunk_new(
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasDefaultTuple, in_tuple1) == 0);
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasDefaultTuple, in_tuple2) == 16);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasNoDefault>() == 12);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasNoDefault>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::HasNoDefault>() == 12);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::HasNoDefault>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_val(
     __self: &'static ::tuples_golden::HasNoDefault,
@@ -125,8 +125,8 @@ unsafe extern "C" fn __crubit_thunk_val(
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasNoDefault, val) == 0);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::HasNoDefaultTuple>() == 32);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::HasNoDefaultTuple>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::HasNoDefaultTuple>() == 32);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::HasNoDefaultTuple>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aHasNoDefaultTuple(
     __self: *mut ::tuples_golden::HasNoDefaultTuple,
@@ -146,16 +146,16 @@ unsafe extern "C" fn __crubit_thunk_new(
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasNoDefaultTuple, in_tuple1) == 0);
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::HasNoDefaultTuple, in_tuple2) == 16);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::NestedTupleIntermediate1>() == 24);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::NestedTupleIntermediate1>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::NestedTupleIntermediate1>() == 24);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::NestedTupleIntermediate1>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::NestedTupleIntermediate1, v1) == 0);
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::NestedTupleIntermediate1, v2) == 12);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::NestedTupleIntermediate2>() == 32);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::NestedTupleIntermediate2>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::NestedTupleIntermediate2>() == 32);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::NestedTupleIntermediate2>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::NestedTupleIntermediate2, v1) == 0);
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::NestedTupleIntermediate2, v2) == 16);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::NestedTupleStruct>() == 32);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::NestedTupleStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::NestedTupleStruct>() == 32);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::NestedTupleStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: u32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -165,8 +165,8 @@ unsafe extern "C" fn __crubit_thunk_new(val: u32, __ret_ptr: *mut core::ffi::c_v
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::NestedTupleStruct, in_tuple1) == 0);
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::NestedTupleStruct, in_tuple2) == 16);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::NonCppMovable>() == 1);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::NonCppMovable>() == 1);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::NonCppMovable>() == 1);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::NonCppMovable>() == 1);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aNonCppMovable(
     __self: *mut ::tuples_golden::NonCppMovable,
@@ -174,8 +174,8 @@ extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aNonCp
     unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::NonCppMovable, value) == 0);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::NontrivialDrop>() == 1);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::NontrivialDrop>() == 1);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::NontrivialDrop>() == 1);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::NontrivialDrop>() == 1);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_utuples_ugolden_x0000003a_x0000003aNontrivialDrop(
     __ret_ptr: *mut core::ffi::c_void,
@@ -192,8 +192,8 @@ extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aNontr
 ) {
     unsafe { ::core::ptr::drop_in_place(__self) };
 }
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::StructWithOptionTuple>() == 20);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::StructWithOptionTuple>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::StructWithOptionTuple>() == 20);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::StructWithOptionTuple>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_utuples_ugolden_x0000003a_x0000003aStructWithOptionTuple(
     __self: *mut ::tuples_golden::StructWithOptionTuple,
@@ -209,13 +209,13 @@ unsafe extern "C" fn __crubit_thunk_new(val: i32, __ret_ptr: *mut core::ffi::c_v
 }
 const _: () =
     assert!(::core::mem::offset_of!(::tuples_golden::StructWithOptionTuple, opt_tuple) == 0);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::TupleStruct>() == 4);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::TupleStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::TupleStruct>() == 4);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::TupleStruct>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::TupleStruct, tuple_field) == 0);
 const _: () =
     assert!(::core::mem::offset_of!(::tuples_golden::TupleStruct, empty_tuple_field) == 4);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::TupleWithSizeTypes>() == 32);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::TupleWithSizeTypes>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::TupleWithSizeTypes>() == 32);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::TupleWithSizeTypes>() == 4);
 const _: () =
     assert!(::core::mem::offset_of!(::tuples_golden::TupleWithSizeTypes, uval_in_tuple1) == 0);
 const _: () =
@@ -224,8 +224,8 @@ const _: () =
     assert!(::core::mem::offset_of!(::tuples_golden::TupleWithSizeTypes, ival_in_tuple1) == 16);
 const _: () =
     assert!(::core::mem::offset_of!(::tuples_golden::TupleWithSizeTypes, ival_in_tuple2) == 24);
-const _: () = assert!(::std::mem::size_of::<::tuples_golden::TuplesWithU64>() == 16);
-const _: () = assert!(::std::mem::align_of::<::tuples_golden::TuplesWithU64>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tuples_golden::TuplesWithU64>() == 16);
+const _: () = assert!(::core::mem::align_of::<::tuples_golden::TuplesWithU64>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::tuples_golden::TuplesWithU64, u64_in_tuple1) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_assert_unon_ucpp_umovable_udrop_ucount(drop_count: u8) -> () {
@@ -957,7 +957,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_
 ) -> () {
     unsafe {
         let __rs_return_value =
-            <std::result::Result<i32, ::alloc::string::String> as ::core::clone::Clone>::clone(
+            <core::result::Result<i32, ::alloc::string::String> as ::core::clone::Clone>::clone(
                 __self,
             );
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
@@ -969,7 +969,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003ar
     source: &'static ::core::result::Result<i32, ::alloc::string::String>,
 ) -> () {
     unsafe {
-        <std::result::Result<i32, ::alloc::string::String> as ::core::clone::Clone>::clone_from(
+        <core::result::Result<i32, ::alloc::string::String> as ::core::clone::Clone>::clone_from(
             __self, source,
         )
     }
