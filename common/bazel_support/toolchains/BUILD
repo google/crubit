@@ -50,6 +50,18 @@ _NON_PROD_PLATFORMS = {
         "@platforms//cpu:riscv64",
         "@platforms//os:android",
     ],
+    "windows_x86_64": [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+    "windows_x86": [
+        "@platforms//cpu:x86_32",
+        "@platforms//os:windows",
+    ],
+    "windows_arm64": [
+        "@platforms//cpu:arm64",
+        "@platforms//os:windows",
+    ],
     "macos_x86_64": [
         "@platforms//cpu:x86_64",
         "@platforms//os:macos",
