@@ -38,6 +38,11 @@ load(
     "CRUBIT_IOS_SIM_PLATFORMS",
     "CRUBIT_IOS_SIM_TAGS_MAPPING",
 )
+load(
+    "//google_internal/build_flavors:crubit_build_flavors_macos.bzl",
+    "CRUBIT_MACOS_PLATFORMS",
+    "CRUBIT_MACOS_TAGS_MAPPING",
+)
 
 def _generate_bindings_impl(ctx):
     rust_library = ctx.attr.rust_library[0]
@@ -167,7 +172,7 @@ def golden_test(
         basename: The name to use for generated files.
         golden_h: The generated C++ source code for the bindings.
         golden_rs: The generated Rust source code for the bindings.
-        platforms: List of additional target platforms to generate tests for (e.g. ["android", "ios"]). Defaults to None.
+        platforms: List of additional target platforms to generate tests for (e.g. ["android", "ios", "macos"]). Defaults to None.
         kythe_annotations: Whether to generate Kythe annotations.
     """
     if not basename:
@@ -225,7 +230,13 @@ def golden_test(
 
     # 2. Generate multi-platform sub-tests for requested platforms.
     # Exclusion tags that should not be propagated to platform subtests or test_suites.
-    subtest_tags = [t for t in tags if t not in CRUBIT_TAGS_MAPPING and t not in CRUBIT_IOS_SIM_TAGS_MAPPING]
+    subtest_tags = [
+        t
+        for t in tags
+        if t not in CRUBIT_TAGS_MAPPING and
+           t not in CRUBIT_IOS_SIM_TAGS_MAPPING and
+           t not in CRUBIT_MACOS_TAGS_MAPPING
+    ]
 
     for platform in platforms:
         if platform == "android":
@@ -288,6 +299,43 @@ def golden_test(
                 native.test_suite(
                     name = name + "_on_ios",
                     tests = ios_tests,
+                    tags = subtest_tags,
+                    visibility = ["//visibility:private"],
+                )
+        elif platform == "macos":
+            macos_tests = []
+
+            # Skip architectures matching exclusion tags (e.g. no_test_macos_x86_64).
+            excluded_cpus = [CRUBIT_MACOS_TAGS_MAPPING[t] for t in tags if t in CRUBIT_MACOS_TAGS_MAPPING]
+
+            for arch_name, platform_label in CRUBIT_MACOS_PLATFORMS.items():
+                if arch_name in excluded_cpus:
+                    continue
+                arch_dir = "macos_" + arch_name
+                subtest_name = "%s_%s" % (name, arch_dir)
+
+                # Apple Silicon and Intel Macs share the same LP64 type layouts, so every macOS
+                # architecture is compared against (and writes to) the single shared `macos` tier.
+                # There are intentionally no per-architecture overrides: if the generated bindings
+                # ever differ between arm64 and x86_64, one of these subtests fails.
+                _generate_golden_subtest(
+                    name = subtest_name,
+                    basename = "%s_%s" % (basename, arch_dir),
+                    rust_library = patched_name,
+                    tags = subtest_tags,
+                    golden_h = golden_h,
+                    golden_rs = golden_rs,
+                    target_platform = platform_label,
+                    # Ensure both architectures match against the same shared baseline.
+                    golden_dir = "macos",
+                    abi_tier = "macos",
+                )
+                macos_tests.append(":" + subtest_name)
+
+            if macos_tests:
+                native.test_suite(
+                    name = name + "_on_macos",
+                    tests = macos_tests,
                     tags = subtest_tags,
                     visibility = ["//visibility:private"],
                 )
