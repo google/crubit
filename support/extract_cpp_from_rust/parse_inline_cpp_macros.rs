@@ -30,7 +30,7 @@ impl MacroKind {
 pub struct ParsedMacro<'a> {
     pub kind: MacroKind,
     /// Byte offset where the macro identifier or path starts (e.g.
-    /// `::crubit_support::inline_cpp!`).
+    /// `::inline_cpp_macro::inline_cpp!`).
     pub macro_start_offset: usize,
     /// Line (1-indexed) where the outer macro token starts.
     pub macro_line: usize,
@@ -303,7 +303,7 @@ mod tests {
     #[gtest]
     fn test_parse_all_macro_kinds() {
         let source = r#"
-            ::crubit_support::inline_cpp! { (int a, int b) -> int { return a + b; } }
+            ::inline_cpp_macro::inline_cpp! { (int a, int b) -> int { return a + b; } }
             global_cpp! { int g = 1; }
             DO_NOT_SUBMIT_CPP_DECL! { void foo(); }
         "#;

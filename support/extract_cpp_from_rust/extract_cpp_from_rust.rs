@@ -236,7 +236,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-        use super::*;
+    use super::*;
     use googletest::prelude::*;
 
     fn parse<'a>(rust_source: &'a str, file_name: &str) -> Vec<ParsedMacro<'a>> {
@@ -428,13 +428,13 @@ mod tests {
 
     #[gtest]
     fn test_extract_inline_cpp_path_qualified() {
-        let input = "        ::crubit_support::inline_cpp! { () -> int { return 42; } };";
+        let input = "        ::inline_cpp_macro::inline_cpp! { () -> int { return 42; } };";
         let file_name = "test_src.rs";
         let target = "//test:target";
-        // Column 9 is the start of `::crubit_support::inline_cpp!`
+        // Column 9 is the start of `::inline_cpp_macro::inline_cpp!`
         let thunk_name = inline_cpp_utils::compute_thunk_name(target, file_name, 1, 9);
         let expected = format!(
-            "inline auto {}\n#line 1 \"test_src.rs\"\n                                        () -> int {{ return 42; }} \n\n",
+            "inline auto {}\n#line 1 \"test_src.rs\"\n                                          () -> int {{ return 42; }} \n\n",
             thunk_name
         );
         expect_eq!(

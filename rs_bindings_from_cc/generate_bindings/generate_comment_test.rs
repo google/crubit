@@ -218,7 +218,7 @@ fn test_generate_unsupported_item_with_global_cpp() -> Result<()> {
     let expected_comment = "Generated from: some/header;l=1\nerror: item `test_item` could not be bound\n  unsupported_message";
     let expected = quote! {
         __COMMENT__ #expected_comment
-        ::crubit_support::global_cpp! {
+        ::inline_cpp_macro::global_cpp! {
             int Add(int a, int b) { return a + b; }
         }
     };
@@ -247,7 +247,7 @@ fn test_generate_unsupported_item_no_global_cpp_if_empty_source_text() -> Result
     unsupported_item.set_inline_cpp_source_text(None);
     let actual = generate_unsupported(&db, unsupported_item.into()).generated_items;
     let actual = code_snippet::generated_items_to_token_stream(&actual, &db, &[TEST_ITEM_ID]);
-    assert_rs_not_matches!(actual, quote! { ::crubit_support::global_cpp! });
+    assert_rs_not_matches!(actual, quote! { ::inline_cpp_macro::global_cpp! });
     Ok(())
 }
 
@@ -342,7 +342,7 @@ fn test_generate_unsupported_function_template_with_global_cpp() -> Result<()> {
         "Generated from: some/header;l=1\nerror: item `test_item` could not be bound\n  unsupported_message";
     let expected = quote! {
         __COMMENT__ #expected_comment
-        ::crubit_support::global_cpp! {
+        ::inline_cpp_macro::global_cpp! {
             template <typename T>
             T Add(T a, T b) {
               return a + b;

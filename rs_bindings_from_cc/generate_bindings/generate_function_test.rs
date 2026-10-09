@@ -111,7 +111,7 @@ fn test_inline_function_with_inline_cpp() -> Result<()> {
         rs_api,
         quote! {
             unsafe {
-                (::crubit_support::inline_cpp! {
+                (::inline_cpp_macro::inline_cpp! {
                     (int a, int b) -> int {
                       return a + b;
                     }
@@ -146,7 +146,7 @@ fn test_non_inline_function_with_inline_cpp() -> Result<()> {
         rs_api,
         quote! {
             unsafe {
-                (::crubit_support::inline_cpp! {
+                (::inline_cpp_macro::inline_cpp! {
                     (int a, int b) -> int {
                       return a + b;
                     }
@@ -171,7 +171,7 @@ fn test_member_function_with_inline_cpp() -> Result<()> {
         rs_api,
         quote! {
             unsafe {
-                (::crubit_support::inline_cpp! {
+                (::inline_cpp_macro::inline_cpp! {
                     (
                         struct SomeStruct const* __this, int arg) -> int {
                       return 42 + arg;
@@ -199,7 +199,7 @@ fn test_non_pod_param_with_inline_cpp() -> Result<()> {
         quote! {
             pub fn TakeNonPod(s: ::ctor::Ctor![crate::NonPod]) {
                 unsafe {
-                    (::crubit_support::inline_cpp! {
+                    (::inline_cpp_macro::inline_cpp! {
                         (struct NonPod* __s)
                             -> void {
                           auto&& s = std::move(*__s);
@@ -228,7 +228,7 @@ fn test_non_pod_return_with_inline_cpp() -> Result<()> {
         quote! {
             pub fn ReturnNonPod() -> ::ctor::Ctor![crate::NonPod] {
                 unsafe {
-                    (::crubit_support::inline_cpp! {
+                    (::inline_cpp_macro::inline_cpp! {
                         (
                             struct NonPod* __return) -> void {
                           new (__return) struct NonPod(
@@ -256,7 +256,7 @@ fn test_non_pod_param_and_return_with_inline_cpp() -> Result<()> {
         quote! {
             pub fn Transform(s: ::ctor::Ctor![crate::NonPod]) -> ::ctor::Ctor![crate::NonPod] {
                 unsafe {
-                    (::crubit_support::inline_cpp! {
+                    (::inline_cpp_macro::inline_cpp! {
                         (
                             struct NonPod* __return, struct NonPod* __s)
                             -> void {

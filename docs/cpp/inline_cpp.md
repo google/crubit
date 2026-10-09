@@ -80,7 +80,7 @@ factory method directly into the crate's public API:
 
 ```rust
 // widget_custom.rs (compiled directly into the widget_rust crate)
-use crubit_support::inline_cpp;
+use inline_cpp_macro::inline_cpp;
 
 impl Widget {
     /// Ergonomic Rust wrapper over a C++ factory function template.

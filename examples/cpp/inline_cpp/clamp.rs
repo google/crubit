@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crubit_support::{global_cpp, inline_cpp};
+use inline_cpp_macro::{global_cpp, inline_cpp};
 
 global_cpp! {
     #include <algorithm>

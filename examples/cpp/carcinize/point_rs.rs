@@ -4,14 +4,14 @@
 
 #![allow(non_snake_case, clippy::needless_lifetimes)]
 
-use crubit_support::global_cpp;
+use inline_cpp_macro::global_cpp;
 
 global_cpp! {
     // Declarations for geometry::point
 }
 
 pub mod geometry {
-    use crubit_support::inline_cpp;
+    use inline_cpp_macro::inline_cpp;
 
     #[derive(Clone, Copy, Default)]
     #[repr(C)]

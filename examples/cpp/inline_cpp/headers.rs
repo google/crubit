@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crubit_support::global_cpp;
+use inline_cpp_macro::global_cpp;
 
 // Declaring C++ headers and types:
 global_cpp! {

@@ -630,7 +630,31 @@ pub fn generate_cc_thunk_parts<'a>(
                 PassingConvention::AbiCompatible
                 | PassingConvention::Void
                 | PassingConvention::OwnedPtr => {
-                    param_idents.push(ident);
+                    // The `inline_cpp!` body is the original C++ source text, which refers to
+                    // reference parameters using reference syntax (e.g. `p.x`). References are
+                    // lowered to pointers for the C ABI, so bind a reference with the original
+                    // parameter name to keep the body compiling.
+                    let mut ffi_ident = ident.clone();
+                    match p.type_().variant() {
+                        CcTypeVariant::Pointer(pointer)
+                            if pointer.kind() == PointerTypeKind::RValueRef =>
+                        {
+                            ffi_ident = format_ident!("__{ident}");
+                            conversion_stmts.extend(quote! {
+                                auto&& #ident = std::move(*#ffi_ident);
+                            });
+                        }
+                        CcTypeVariant::Pointer(pointer)
+                            if pointer.kind() == PointerTypeKind::LValueRef =>
+                        {
+                            ffi_ident = format_ident!("__{ident}");
+                            conversion_stmts.extend(quote! {
+                                auto&& #ident = *#ffi_ident;
+                            });
+                        }
+                        _ => {}
+                    }
+                    param_idents.push(ffi_ident);
                     param_types.push(cpp_type);
                 }
             }
@@ -955,7 +979,7 @@ pub fn generate_inline_cpp_call<'a>(
 
     Ok(Some(quote! {
         unsafe {
-            (::crubit_support::inline_cpp! {
+            (::inline_cpp_macro::inline_cpp! {
                 (
                 #(#param_types #param_idents), *)->#return_type_name
                 #body_block
