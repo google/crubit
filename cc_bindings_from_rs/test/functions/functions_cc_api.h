@@ -841,7 +841,8 @@ static_assert(
 static_assert(
     alignof(::functions::generic_fn_tests::ctor_trait_tests::CppMovable) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CppMovable>);
+static_assert(::std::is_trivially_destructible_v<
+              ::functions::generic_fn_tests::ctor_trait_tests::CppMovable>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::functions::generic_fn_tests::ctor_trait_tests::CppMovable>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -1065,7 +1066,8 @@ static_assert(
 static_assert(
     alignof(::functions::non_null_tests::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<SomeStruct>);
+static_assert(::std::is_trivially_destructible_v<
+              ::functions::non_null_tests::SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::functions::non_null_tests::SomeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -1157,7 +1159,8 @@ static_assert(
 static_assert(
     alignof(::functions::thread_safety_tests::ThreadSafeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<ThreadSafeStruct>);
+static_assert(::std::is_trivially_destructible_v<
+              ::functions::thread_safety_tests::ThreadSafeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::functions::thread_safety_tests::ThreadSafeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<

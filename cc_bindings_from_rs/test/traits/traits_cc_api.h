@@ -506,7 +506,8 @@ static_assert(
 static_assert(
     alignof(::traits::StructWithAssociatedConst) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<StructWithAssociatedConst>);
+static_assert(
+    ::std::is_trivially_destructible_v<::traits::StructWithAssociatedConst>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::traits::StructWithAssociatedConst>);
 static_assert(

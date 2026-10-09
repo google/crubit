@@ -644,7 +644,7 @@ static_assert(
 static_assert(
     alignof(::callables::Point) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Point>);
+static_assert(::std::is_trivially_destructible_v<::callables::Point>);
 static_assert(::std::is_trivially_move_constructible_v<::callables::Point>);
 static_assert(::std::is_trivially_move_assignable_v<::callables::Point>);
 static_assert(::std::is_trivially_copy_constructible_v<::callables::Point>);

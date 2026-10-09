@@ -221,7 +221,7 @@ static_assert(
 static_assert(
     alignof(::uses_reexport::G) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<G>);
+static_assert(::std::is_trivially_destructible_v<::uses_reexport::G>);
 static_assert(::std::is_trivially_move_constructible_v<::uses_reexport::G>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::G>);
 inline void ::uses_reexport::G::__crubit_field_offset_assertions() {
@@ -238,7 +238,7 @@ static_assert(
 static_assert(
     alignof(::uses_reexport::InnerX) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<InnerX>);
+static_assert(::std::is_trivially_destructible_v<::uses_reexport::InnerX>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::uses_reexport::InnerX>);
 static_assert(::std::is_trivially_move_assignable_v<::uses_reexport::InnerX>);

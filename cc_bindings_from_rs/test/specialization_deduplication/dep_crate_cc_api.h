@@ -116,7 +116,7 @@ static_assert(
 static_assert(
     alignof(::dep_crate::ExpectedName) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<ExpectedName>);
+static_assert(::std::is_trivially_destructible_v<::dep_crate::ExpectedName>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::dep_crate::ExpectedName>);
 static_assert(::std::is_trivially_move_assignable_v<::dep_crate::ExpectedName>);

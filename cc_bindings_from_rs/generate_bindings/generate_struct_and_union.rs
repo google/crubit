@@ -1992,7 +1992,7 @@ pub fn generate_adt<'tcx>(
     let destructor_snippets = if is_aggregate {
         if !adt_core_bindings_needs_drop(&core, tcx) {
             let cc_details = CcSnippet::with_include(
-                quote! { static_assert(::std::is_trivially_destructible_v<#adt_cc_name>); },
+                quote! { static_assert(::std::is_trivially_destructible_v<#cc_fully_qualified_name>); },
                 CcInclude::type_traits(),
             );
             ApiSnippets { cc_details, ..Default::default() }

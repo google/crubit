@@ -2034,7 +2034,7 @@ static_assert(
 static_assert(
     alignof(::option::CloneNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CloneNoDefault>);
+static_assert(::std::is_trivially_destructible_v<::option::CloneNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::option::CloneNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<::option::CloneNoDefault>);
@@ -2048,7 +2048,7 @@ static_assert(
 static_assert(
     alignof(::option::CopyNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CopyNoDefault>);
+static_assert(::std::is_trivially_destructible_v<::option::CopyNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::option::CopyNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<::option::CopyNoDefault>);
@@ -2100,7 +2100,7 @@ static_assert(
 static_assert(
     alignof(::option::HasHasOptions) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<HasHasOptions>);
+static_assert(::std::is_trivially_destructible_v<::option::HasHasOptions>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::option::HasHasOptions>);
 static_assert(::std::is_trivially_move_assignable_v<::option::HasHasOptions>);
@@ -2160,7 +2160,7 @@ static_assert(
 static_assert(
     alignof(::option::HasOptions) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<HasOptions>);
+static_assert(::std::is_trivially_destructible_v<::option::HasOptions>);
 static_assert(::std::is_trivially_move_constructible_v<::option::HasOptions>);
 static_assert(::std::is_trivially_move_assignable_v<::option::HasOptions>);
 namespace __crubit_internal {
@@ -2362,7 +2362,7 @@ static_assert(
 static_assert(
     alignof(::option::OptCloneNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<OptCloneNoDefault>);
+static_assert(::std::is_trivially_destructible_v<::option::OptCloneNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::option::OptCloneNoDefault>);
 static_assert(
@@ -2387,7 +2387,7 @@ static_assert(
 static_assert(
     alignof(::option::OptCopyNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<OptCopyNoDefault>);
+static_assert(::std::is_trivially_destructible_v<::option::OptCopyNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::option::OptCopyNoDefault>);
 static_assert(
@@ -2500,7 +2500,8 @@ static_assert(
 static_assert(
     alignof(::option::OptionWithSizeTypes) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<OptionWithSizeTypes>);
+static_assert(
+    ::std::is_trivially_destructible_v<::option::OptionWithSizeTypes>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::option::OptionWithSizeTypes>);
 static_assert(
@@ -2528,7 +2529,7 @@ static_assert(
 static_assert(
     alignof(::option::UnitOptionField) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<UnitOptionField>);
+static_assert(::std::is_trivially_destructible_v<::option::UnitOptionField>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::option::UnitOptionField>);
 static_assert(::std::is_trivially_move_assignable_v<::option::UnitOptionField>);
@@ -2552,7 +2553,7 @@ static_assert(
 static_assert(
     alignof(::option::ZStream) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<ZStream>);
+static_assert(::std::is_trivially_destructible_v<::option::ZStream>);
 static_assert(::std::is_trivially_move_constructible_v<::option::ZStream>);
 static_assert(::std::is_trivially_move_assignable_v<::option::ZStream>);
 inline void ::option::ZStream::__crubit_field_offset_assertions() {

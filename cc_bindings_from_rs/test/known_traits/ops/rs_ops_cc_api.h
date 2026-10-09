@@ -153,7 +153,7 @@ static_assert(
 static_assert(
     alignof(::rs_ops::MyBorrowedInt) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyBorrowedInt>);
+static_assert(::std::is_trivially_destructible_v<::rs_ops::MyBorrowedInt>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::rs_ops::MyBorrowedInt>);
 static_assert(::std::is_trivially_move_assignable_v<::rs_ops::MyBorrowedInt>);
@@ -239,7 +239,7 @@ static_assert(
 static_assert(
     alignof(::rs_ops::MyInt) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyInt>);
+static_assert(::std::is_trivially_destructible_v<::rs_ops::MyInt>);
 static_assert(::std::is_trivially_move_constructible_v<::rs_ops::MyInt>);
 static_assert(::std::is_trivially_move_assignable_v<::rs_ops::MyInt>);
 static_assert(::std::is_trivially_copy_constructible_v<::rs_ops::MyInt>);

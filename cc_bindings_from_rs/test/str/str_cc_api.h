@@ -63,7 +63,7 @@ static_assert(
 static_assert(
     alignof(::str::TypeWithStr) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TypeWithStr>);
+static_assert(::std::is_trivially_destructible_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_move_constructible_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_move_assignable_v<::str::TypeWithStr>);
 static_assert(::std::is_trivially_copy_constructible_v<::str::TypeWithStr>);

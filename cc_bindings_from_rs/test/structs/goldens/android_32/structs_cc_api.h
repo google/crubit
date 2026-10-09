@@ -1011,7 +1011,8 @@ static_assert(
 static_assert(
     alignof(::structs::aggregate_initialization::BasicAggregate) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<BasicAggregate>);
+static_assert(::std::is_trivially_destructible_v<
+              ::structs::aggregate_initialization::BasicAggregate>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::structs::aggregate_initialization::BasicAggregate>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -1158,7 +1159,8 @@ static_assert(
 static_assert(
     alignof(::structs::aggregate_initialization::TupleAggregate) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TupleAggregate>);
+static_assert(::std::is_trivially_destructible_v<
+              ::structs::aggregate_initialization::TupleAggregate>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::structs::aggregate_initialization::TupleAggregate>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -1209,7 +1211,8 @@ static_assert(
 static_assert(
     alignof(::structs::default_repr::Point) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Point>);
+static_assert(
+    ::std::is_trivially_destructible_v<::structs::default_repr::Point>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::structs::default_repr::Point>);
 static_assert(
@@ -1249,7 +1252,8 @@ static_assert(
 static_assert(
     alignof(::structs::display::DisplayStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<DisplayStruct>);
+static_assert(
+    ::std::is_trivially_destructible_v<::structs::display::DisplayStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::structs::display::DisplayStruct>);
 static_assert(
@@ -1443,7 +1447,7 @@ static_assert(
 static_assert(
     alignof(::structs::repr_c::Point) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Point>);
+static_assert(::std::is_trivially_destructible_v<::structs::repr_c::Point>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::structs::repr_c::Point>);
 static_assert(::std::is_trivially_move_assignable_v<::structs::repr_c::Point>);
@@ -1558,7 +1562,8 @@ static_assert(
 static_assert(
     alignof(::structs::struct_by_float_passing_with_no_thunk::StructFloat) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<StructFloat>);
+static_assert(::std::is_trivially_destructible_v<
+              ::structs::struct_by_float_passing_with_no_thunk::StructFloat>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::structs::struct_by_float_passing_with_no_thunk::StructFloat>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -1629,7 +1634,8 @@ static_assert(
 static_assert(
     alignof(::structs::unsupported_types::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<SomeStruct>);
+static_assert(::std::is_trivially_destructible_v<
+              ::structs::unsupported_types::SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::structs::unsupported_types::SomeStruct>);
 static_assert(::std::is_trivially_move_assignable_v<

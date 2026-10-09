@@ -107,7 +107,8 @@ static_assert(
 static_assert(
     alignof(::generic_traits::AnotherStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<AnotherStruct>);
+static_assert(
+    ::std::is_trivially_destructible_v<::generic_traits::AnotherStruct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::generic_traits::AnotherStruct>);
 static_assert(
@@ -123,7 +124,8 @@ static_assert(
 static_assert(
     alignof(::generic_traits::StructGeneric) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<StructGeneric>);
+static_assert(
+    ::std::is_trivially_destructible_v<::generic_traits::StructGeneric>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::generic_traits::StructGeneric>);
 static_assert(

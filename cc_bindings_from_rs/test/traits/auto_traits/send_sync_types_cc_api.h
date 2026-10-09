@@ -153,7 +153,8 @@ static_assert(
 static_assert(
     alignof(::send_sync_types::SendAndSync) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<SendAndSync>);
+static_assert(
+    ::std::is_trivially_destructible_v<::send_sync_types::SendAndSync>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::send_sync_types::SendAndSync>);
 static_assert(

@@ -400,7 +400,8 @@ static_assert(
 static_assert(
     alignof(::rs_hash::derived_struct::Point) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Point>);
+static_assert(
+    ::std::is_trivially_destructible_v<::rs_hash::derived_struct::Point>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::rs_hash::derived_struct::Point>);
 static_assert(
@@ -460,7 +461,8 @@ static_assert(
 static_assert(
     alignof(::rs_hash::derived_tuple_struct::TupleStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TupleStruct>);
+static_assert(::std::is_trivially_destructible_v<
+              ::rs_hash::derived_tuple_struct::TupleStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::rs_hash::derived_tuple_struct::TupleStruct>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -522,7 +524,8 @@ static_assert(
 static_assert(
     alignof(::rs_hash::explicit_struct::CustomHashStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CustomHashStruct>);
+static_assert(::std::is_trivially_destructible_v<
+              ::rs_hash::explicit_struct::CustomHashStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::rs_hash::explicit_struct::CustomHashStruct>);
 static_assert(::std::is_trivially_move_assignable_v<

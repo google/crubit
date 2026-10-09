@@ -67,7 +67,7 @@ static_assert(
 static_assert(
     alignof(::trait_impl::MyStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyStruct>);
+static_assert(::std::is_trivially_destructible_v<::trait_impl::MyStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::trait_impl::MyStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::trait_impl::MyStruct>);
 namespace __crubit_internal {

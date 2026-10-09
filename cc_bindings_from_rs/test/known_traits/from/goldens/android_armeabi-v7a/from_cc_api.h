@@ -504,7 +504,7 @@ static_assert(
 static_assert(
     alignof(::from::CloneCopySource) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CloneCopySource>);
+static_assert(::std::is_trivially_destructible_v<::from::CloneCopySource>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::from::CloneCopySource>);
 static_assert(::std::is_trivially_move_assignable_v<::from::CloneCopySource>);
@@ -535,7 +535,7 @@ static_assert(
 static_assert(
     alignof(::from::CloneCopyType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CloneCopyType>);
+static_assert(::std::is_trivially_destructible_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_move_constructible_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_move_assignable_v<::from::CloneCopyType>);
 static_assert(::std::is_trivially_copy_constructible_v<::from::CloneCopyType>);
@@ -580,7 +580,7 @@ static_assert(
 static_assert(
     alignof(::from::LoopA) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<LoopA>);
+static_assert(::std::is_trivially_destructible_v<::from::LoopA>);
 static_assert(::std::is_trivially_move_constructible_v<::from::LoopA>);
 static_assert(::std::is_trivially_move_assignable_v<::from::LoopA>);
 namespace __crubit_internal {
@@ -607,7 +607,7 @@ static_assert(
 static_assert(
     alignof(::from::LoopB) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<LoopB>);
+static_assert(::std::is_trivially_destructible_v<::from::LoopB>);
 static_assert(::std::is_trivially_move_constructible_v<::from::LoopB>);
 static_assert(::std::is_trivially_move_assignable_v<::from::LoopB>);
 namespace __crubit_internal {
@@ -634,7 +634,8 @@ static_assert(
 static_assert(
     alignof(::from::NoCloneCopyDropSource) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NoCloneCopyDropSource>);
+static_assert(
+    ::std::is_trivially_destructible_v<::from::NoCloneCopyDropSource>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneCopyDropSource>);
 static_assert(
@@ -663,7 +664,7 @@ static_assert(
 static_assert(
     alignof(::from::NoCloneCopyDropType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NoCloneCopyDropType>);
+static_assert(::std::is_trivially_destructible_v<::from::NoCloneCopyDropType>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneCopyDropType>);
 static_assert(
@@ -678,7 +679,7 @@ static_assert(
 static_assert(
     alignof(::from::NoCloneDefaultSource) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NoCloneDefaultSource>);
+static_assert(::std::is_trivially_destructible_v<::from::NoCloneDefaultSource>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneDefaultSource>);
 static_assert(
@@ -707,7 +708,7 @@ static_assert(
 static_assert(
     alignof(::from::NoCloneDefaultType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NoCloneDefaultType>);
+static_assert(::std::is_trivially_destructible_v<::from::NoCloneDefaultType>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::from::NoCloneDefaultType>);
 static_assert(
@@ -760,7 +761,7 @@ static_assert(
 static_assert(
     alignof(::from::Opaque) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Opaque>);
+static_assert(::std::is_trivially_destructible_v<::from::Opaque>);
 static_assert(::std::is_trivially_move_constructible_v<::from::Opaque>);
 static_assert(::std::is_trivially_move_assignable_v<::from::Opaque>);
 namespace __crubit_internal {

@@ -123,7 +123,8 @@ static_assert(
 static_assert(
     alignof(::uses::AliasOfExportedStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<AliasOfExportedStruct>);
+static_assert(
+    ::std::is_trivially_destructible_v<::uses::AliasOfExportedStruct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::uses::AliasOfExportedStruct>);
 static_assert(
@@ -159,7 +160,7 @@ static_assert(
 static_assert(
     alignof(::uses::Original) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Original>);
+static_assert(::std::is_trivially_destructible_v<::uses::Original>);
 static_assert(::std::is_trivially_move_constructible_v<::uses::Original>);
 static_assert(::std::is_trivially_move_assignable_v<::uses::Original>);
 inline void ::uses::Original::__crubit_field_offset_assertions() {
@@ -178,7 +179,7 @@ static_assert(
 static_assert(
     alignof(::uses::OtherPublicName) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<OtherPublicName>);
+static_assert(::std::is_trivially_destructible_v<::uses::OtherPublicName>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::uses::OtherPublicName>);
 static_assert(::std::is_trivially_move_assignable_v<::uses::OtherPublicName>);

@@ -670,7 +670,8 @@ static_assert(
 static_assert(
     alignof(::tuple_structs::CopyNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CopyNoDefault>);
+static_assert(
+    ::std::is_trivially_destructible_v<::tuple_structs::CopyNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::tuple_structs::CopyNoDefault>);
 static_assert(
@@ -759,7 +760,8 @@ static_assert(
 static_assert(
     alignof(::tuple_structs::DefaultNoCopyNoClone) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<DefaultNoCopyNoClone>);
+static_assert(
+    ::std::is_trivially_destructible_v<::tuple_structs::DefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::DefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -846,7 +848,8 @@ static_assert(
 static_assert(
     alignof(::tuple_structs::TupleStructOnePublicArg) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TupleStructOnePublicArg>);
+static_assert(::std::is_trivially_destructible_v<
+              ::tuple_structs::TupleStructOnePublicArg>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructOnePublicArg>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -1002,7 +1005,8 @@ static_assert(
 static_assert(
     alignof(::tuple_structs::TupleStructTwoPublicArgs) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TupleStructTwoPublicArgs>);
+static_assert(::std::is_trivially_destructible_v<
+              ::tuple_structs::TupleStructTwoPublicArgs>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructTwoPublicArgs>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -1171,8 +1175,8 @@ static_assert(
 static_assert(
     alignof(::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    ::std::is_trivially_destructible_v<TupleStructWithDefaultAndCloneNoUnpin>);
+static_assert(::std::is_trivially_destructible_v<
+              ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithDefaultAndCloneNoUnpin>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -1210,8 +1214,8 @@ static_assert(
 static_assert(
     alignof(::tuple_structs::TupleStructWithDefaultNoCopyNoClone) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    ::std::is_trivially_destructible_v<TupleStructWithDefaultNoCopyNoClone>);
+static_assert(::std::is_trivially_destructible_v<
+              ::tuple_structs::TupleStructWithDefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithDefaultNoCopyNoClone>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -1228,7 +1232,8 @@ static_assert(
 static_assert(
     alignof(::tuple_structs::TupleStructWithNoDefault) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TupleStructWithNoDefault>);
+static_assert(::std::is_trivially_destructible_v<
+              ::tuple_structs::TupleStructWithNoDefault>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -1299,8 +1304,8 @@ static_assert(
 static_assert(
     alignof(::tuple_structs::TupleStructWithTupleFieldType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(
-    ::std::is_trivially_destructible_v<TupleStructWithTupleFieldType>);
+static_assert(::std::is_trivially_destructible_v<
+              ::tuple_structs::TupleStructWithTupleFieldType>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuple_structs::TupleStructWithTupleFieldType>);
 static_assert(::std::is_trivially_move_assignable_v<

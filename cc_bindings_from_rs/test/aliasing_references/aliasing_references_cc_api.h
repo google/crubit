@@ -156,7 +156,8 @@ static_assert(
 static_assert(
     alignof(::aliasing_references::SomeStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<SomeStruct>);
+static_assert(
+    ::std::is_trivially_destructible_v<::aliasing_references::SomeStruct>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::aliasing_references::SomeStruct>);
 static_assert(

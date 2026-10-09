@@ -121,7 +121,8 @@ static_assert(
 static_assert(
     alignof(::modules::impl_in_separate_private_module::Foo) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Foo>);
+static_assert(::std::is_trivially_destructible_v<
+              ::modules::impl_in_separate_private_module::Foo>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::modules::impl_in_separate_private_module::Foo>);
 static_assert(::std::is_trivially_move_assignable_v<

@@ -413,7 +413,8 @@ static_assert(
 static_assert(
     alignof(::into_iterator_rust::ContainerWithInherentBegin) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<ContainerWithInherentBegin>);
+static_assert(::std::is_trivially_destructible_v<
+              ::into_iterator_rust::ContainerWithInherentBegin>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::ContainerWithInherentBegin>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -458,7 +459,8 @@ static_assert(
 static_assert(
     alignof(::into_iterator_rust::MoveOnlyIterator) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MoveOnlyIterator>);
+static_assert(
+    ::std::is_trivially_destructible_v<::into_iterator_rust::MoveOnlyIterator>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MoveOnlyIterator>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -475,7 +477,8 @@ static_assert(
 static_assert(
     alignof(::into_iterator_rust::MoveOnlyPayload) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MoveOnlyPayload>);
+static_assert(
+    ::std::is_trivially_destructible_v<::into_iterator_rust::MoveOnlyPayload>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MoveOnlyPayload>);
 static_assert(::std::is_trivially_move_assignable_v<
@@ -499,7 +502,8 @@ static_assert(
 static_assert(
     alignof(::into_iterator_rust::MyContainer) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyContainer>);
+static_assert(
+    ::std::is_trivially_destructible_v<::into_iterator_rust::MyContainer>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::MyContainer>);
 static_assert(
@@ -652,7 +656,8 @@ static_assert(
 static_assert(
     alignof(::into_iterator_rust::MyIterator) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyIterator>);
+static_assert(
+    ::std::is_trivially_destructible_v<::into_iterator_rust::MyIterator>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::into_iterator_rust::MyIterator>);
 static_assert(
@@ -668,7 +673,8 @@ static_assert(
 static_assert(
     alignof(::into_iterator_rust::SimpleIntoIter) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<SimpleIntoIter>);
+static_assert(
+    ::std::is_trivially_destructible_v<::into_iterator_rust::SimpleIntoIter>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::into_iterator_rust::SimpleIntoIter>);
 static_assert(::std::is_trivially_move_assignable_v<

@@ -50,7 +50,7 @@ static_assert(
 static_assert(
     alignof(::example_crate::Type) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Type>);
+static_assert(::std::is_trivially_destructible_v<::example_crate::Type>);
 static_assert(::std::is_trivially_move_constructible_v<::example_crate::Type>);
 static_assert(::std::is_trivially_move_assignable_v<::example_crate::Type>);
 inline void ::example_crate::Type::__crubit_field_offset_assertions() {

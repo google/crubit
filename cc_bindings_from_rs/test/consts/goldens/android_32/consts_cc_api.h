@@ -320,7 +320,7 @@ static_assert(
 static_assert(
     alignof(::consts::NestedStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NestedStruct>);
+static_assert(::std::is_trivially_destructible_v<::consts::NestedStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::consts::NestedStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::consts::NestedStruct>);
 static_assert(::std::is_trivially_copy_constructible_v<::consts::NestedStruct>);
@@ -348,7 +348,7 @@ static_assert(
 static_assert(
     alignof(::consts::Point) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Point>);
+static_assert(::std::is_trivially_destructible_v<::consts::Point>);
 static_assert(::std::is_trivially_move_constructible_v<::consts::Point>);
 static_assert(::std::is_trivially_move_assignable_v<::consts::Point>);
 static_assert(::std::is_trivially_copy_constructible_v<::consts::Point>);
@@ -377,7 +377,7 @@ static_assert(
 static_assert(
     alignof(::consts::StructWithArray) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<StructWithArray>);
+static_assert(::std::is_trivially_destructible_v<::consts::StructWithArray>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::consts::StructWithArray>);
 static_assert(::std::is_trivially_move_assignable_v<::consts::StructWithArray>);
@@ -440,7 +440,7 @@ static_assert(
 static_assert(
     alignof(::consts::StructWithStr) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<StructWithStr>);
+static_assert(::std::is_trivially_destructible_v<::consts::StructWithStr>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::consts::StructWithStr>);
 static_assert(::std::is_trivially_move_assignable_v<::consts::StructWithStr>);
@@ -470,7 +470,7 @@ static_assert(
 static_assert(
     alignof(::consts::TupleStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TupleStruct>);
+static_assert(::std::is_trivially_destructible_v<::consts::TupleStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::consts::TupleStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::consts::TupleStruct>);
 static_assert(::std::is_trivially_copy_constructible_v<::consts::TupleStruct>);

@@ -274,7 +274,8 @@ static_assert(
 static_assert(
     alignof(::stdlib::NonCloneableIterator) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NonCloneableIterator>);
+static_assert(
+    ::std::is_trivially_destructible_v<::stdlib::NonCloneableIterator>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::stdlib::NonCloneableIterator>);
 static_assert(
@@ -300,7 +301,7 @@ static_assert(
 static_assert(
     alignof(::stdlib::NonCloneableValue) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NonCloneableValue>);
+static_assert(::std::is_trivially_destructible_v<::stdlib::NonCloneableValue>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::stdlib::NonCloneableValue>);
 static_assert(
@@ -315,7 +316,7 @@ static_assert(
 static_assert(
     alignof(::stdlib::RefIterator) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<RefIterator>);
+static_assert(::std::is_trivially_destructible_v<::stdlib::RefIterator>);
 static_assert(::std::is_trivially_move_constructible_v<::stdlib::RefIterator>);
 static_assert(::std::is_trivially_move_assignable_v<::stdlib::RefIterator>);
 namespace __crubit_internal {

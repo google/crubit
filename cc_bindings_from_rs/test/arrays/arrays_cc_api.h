@@ -250,7 +250,7 @@ static_assert(
 static_assert(
     alignof(::arrays::ArrayStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<ArrayStruct>);
+static_assert(::std::is_trivially_destructible_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_move_constructible_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_move_assignable_v<::arrays::ArrayStruct>);
 static_assert(::std::is_trivially_copy_constructible_v<::arrays::ArrayStruct>);

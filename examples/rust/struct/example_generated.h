@@ -38,7 +38,7 @@ static_assert(
 static_assert(
     alignof(::example_crate::Struct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Struct>);
+static_assert(::std::is_trivially_destructible_v<::example_crate::Struct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::example_crate::Struct>);
 static_assert(::std::is_trivially_move_assignable_v<::example_crate::Struct>);

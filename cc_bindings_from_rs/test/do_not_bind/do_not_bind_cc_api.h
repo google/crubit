@@ -59,7 +59,7 @@ static_assert(
 static_assert(
     alignof(::do_not_bind::Struct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Struct>);
+static_assert(::std::is_trivially_destructible_v<::do_not_bind::Struct>);
 static_assert(::std::is_trivially_move_constructible_v<::do_not_bind::Struct>);
 static_assert(::std::is_trivially_move_assignable_v<::do_not_bind::Struct>);
 namespace __crubit_internal {

@@ -373,7 +373,7 @@ static_assert(
 static_assert(
     alignof(::into::CloneCopyTarget) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CloneCopyTarget>);
+static_assert(::std::is_trivially_destructible_v<::into::CloneCopyTarget>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::into::CloneCopyTarget>);
 static_assert(::std::is_trivially_move_assignable_v<::into::CloneCopyTarget>);
@@ -390,7 +390,7 @@ static_assert(
 static_assert(
     alignof(::into::CloneCopyType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CloneCopyType>);
+static_assert(::std::is_trivially_destructible_v<::into::CloneCopyType>);
 static_assert(::std::is_trivially_move_constructible_v<::into::CloneCopyType>);
 static_assert(::std::is_trivially_move_assignable_v<::into::CloneCopyType>);
 static_assert(::std::is_trivially_copy_constructible_v<::into::CloneCopyType>);
@@ -419,7 +419,7 @@ static_assert(
 static_assert(
     alignof(::into::CollidingOperators) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CollidingOperators>);
+static_assert(::std::is_trivially_destructible_v<::into::CollidingOperators>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::into::CollidingOperators>);
 static_assert(
@@ -445,7 +445,7 @@ static_assert(
 static_assert(
     alignof(::into::Convert) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Convert>);
+static_assert(::std::is_trivially_destructible_v<::into::Convert>);
 static_assert(::std::is_trivially_move_constructible_v<::into::Convert>);
 static_assert(::std::is_trivially_move_assignable_v<::into::Convert>);
 namespace __crubit_internal {
@@ -505,7 +505,7 @@ static_assert(
 static_assert(
     alignof(::into::ConvertModule) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<ConvertModule>);
+static_assert(::std::is_trivially_destructible_v<::into::ConvertModule>);
 static_assert(::std::is_trivially_move_constructible_v<::into::ConvertModule>);
 static_assert(::std::is_trivially_move_assignable_v<::into::ConvertModule>);
 namespace __crubit_internal {
@@ -610,7 +610,7 @@ static_assert(
 static_assert(
     alignof(::into::LoopA) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<LoopA>);
+static_assert(::std::is_trivially_destructible_v<::into::LoopA>);
 static_assert(::std::is_trivially_move_constructible_v<::into::LoopA>);
 static_assert(::std::is_trivially_move_assignable_v<::into::LoopA>);
 namespace __crubit_internal {
@@ -637,7 +637,7 @@ static_assert(
 static_assert(
     alignof(::into::LoopB) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<LoopB>);
+static_assert(::std::is_trivially_destructible_v<::into::LoopB>);
 static_assert(::std::is_trivially_move_constructible_v<::into::LoopB>);
 static_assert(::std::is_trivially_move_assignable_v<::into::LoopB>);
 namespace __crubit_internal {
@@ -664,7 +664,8 @@ static_assert(
 static_assert(
     alignof(::into::NoCloneCopyDropTarget) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NoCloneCopyDropTarget>);
+static_assert(
+    ::std::is_trivially_destructible_v<::into::NoCloneCopyDropTarget>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::into::NoCloneCopyDropTarget>);
 static_assert(
@@ -679,7 +680,7 @@ static_assert(
 static_assert(
     alignof(::into::NoCloneCopyDropType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NoCloneCopyDropType>);
+static_assert(::std::is_trivially_destructible_v<::into::NoCloneCopyDropType>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::into::NoCloneCopyDropType>);
 static_assert(
@@ -708,7 +709,7 @@ static_assert(
 static_assert(
     alignof(::into::NoCloneDefaultTarget) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NoCloneDefaultTarget>);
+static_assert(::std::is_trivially_destructible_v<::into::NoCloneDefaultTarget>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::into::NoCloneDefaultTarget>);
 static_assert(
@@ -723,7 +724,7 @@ static_assert(
 static_assert(
     alignof(::into::NoCloneDefaultType) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NoCloneDefaultType>);
+static_assert(::std::is_trivially_destructible_v<::into::NoCloneDefaultType>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::into::NoCloneDefaultType>);
 static_assert(

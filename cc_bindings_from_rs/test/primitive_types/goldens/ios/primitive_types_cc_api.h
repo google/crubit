@@ -559,7 +559,9 @@ static_assert(
     alignof(::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember) ==
         8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<StructWithCVoidPointerMember>);
+static_assert(
+    ::std::is_trivially_destructible_v<
+        ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember>);
 static_assert(
     ::std::is_trivially_move_constructible_v<
         ::primitive_types::test_c_void_ptr::StructWithCVoidPointerMember>);

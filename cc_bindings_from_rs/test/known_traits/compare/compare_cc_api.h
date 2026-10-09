@@ -154,7 +154,7 @@ static_assert(
 static_assert(
     alignof(::compare::MyOrd) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyOrd>);
+static_assert(::std::is_trivially_destructible_v<::compare::MyOrd>);
 static_assert(::std::is_trivially_move_constructible_v<::compare::MyOrd>);
 static_assert(::std::is_trivially_move_assignable_v<::compare::MyOrd>);
 namespace __crubit_internal {
@@ -199,7 +199,7 @@ static_assert(
 static_assert(
     alignof(::compare::MyPartialOrd) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyPartialOrd>);
+static_assert(::std::is_trivially_destructible_v<::compare::MyPartialOrd>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::compare::MyPartialOrd>);
 static_assert(::std::is_trivially_move_assignable_v<::compare::MyPartialOrd>);
@@ -248,7 +248,7 @@ static_assert(
 static_assert(
     alignof(::compare::MyUnordered) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<MyUnordered>);
+static_assert(::std::is_trivially_destructible_v<::compare::MyUnordered>);
 static_assert(::std::is_trivially_move_constructible_v<::compare::MyUnordered>);
 static_assert(::std::is_trivially_move_assignable_v<::compare::MyUnordered>);
 namespace __crubit_internal {

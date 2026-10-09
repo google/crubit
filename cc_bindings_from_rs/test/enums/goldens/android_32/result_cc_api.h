@@ -1971,7 +1971,7 @@ static_assert(
 static_assert(
     alignof(::result::CloneNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CloneNoDefault>);
+static_assert(::std::is_trivially_destructible_v<::result::CloneNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::result::CloneNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<::result::CloneNoDefault>);
@@ -2018,7 +2018,7 @@ static_assert(
 static_assert(
     alignof(::result::CopyNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CopyNoDefault>);
+static_assert(::std::is_trivially_destructible_v<::result::CopyNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::result::CopyNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<::result::CopyNoDefault>);

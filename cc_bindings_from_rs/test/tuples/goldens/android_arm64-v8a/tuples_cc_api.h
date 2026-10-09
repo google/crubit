@@ -2550,7 +2550,7 @@ static_assert(
 static_assert(
     alignof(::tuples::CloneNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CloneNoDefault>);
+static_assert(::std::is_trivially_destructible_v<::tuples::CloneNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::CloneNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<::tuples::CloneNoDefault>);
@@ -2607,7 +2607,7 @@ static_assert(
 static_assert(
     alignof(::tuples::CopyNoDefault) == 1,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CopyNoDefault>);
+static_assert(::std::is_trivially_destructible_v<::tuples::CopyNoDefault>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::CopyNoDefault>);
 static_assert(::std::is_trivially_move_assignable_v<::tuples::CopyNoDefault>);
@@ -2666,7 +2666,7 @@ static_assert(
 static_assert(
     alignof(::tuples::GetsTuple) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<GetsTuple>);
+static_assert(::std::is_trivially_destructible_v<::tuples::GetsTuple>);
 static_assert(::std::is_trivially_move_constructible_v<::tuples::GetsTuple>);
 static_assert(::std::is_trivially_move_assignable_v<::tuples::GetsTuple>);
 namespace __crubit_internal {
@@ -2819,7 +2819,8 @@ static_assert(
 static_assert(
     alignof(::tuples::NestedTupleIntermediate1) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NestedTupleIntermediate1>);
+static_assert(
+    ::std::is_trivially_destructible_v<::tuples::NestedTupleIntermediate1>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuples::NestedTupleIntermediate1>);
 static_assert(
@@ -2836,7 +2837,8 @@ static_assert(
 static_assert(
     alignof(::tuples::NestedTupleIntermediate2) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NestedTupleIntermediate2>);
+static_assert(
+    ::std::is_trivially_destructible_v<::tuples::NestedTupleIntermediate2>);
 static_assert(::std::is_trivially_move_constructible_v<
               ::tuples::NestedTupleIntermediate2>);
 static_assert(
@@ -2853,7 +2855,7 @@ static_assert(
 static_assert(
     alignof(::tuples::NestedTupleStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<NestedTupleStruct>);
+static_assert(::std::is_trivially_destructible_v<::tuples::NestedTupleStruct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::NestedTupleStruct>);
 static_assert(
@@ -3001,7 +3003,7 @@ static_assert(
 static_assert(
     alignof(::tuples::TupleWithSizeTypes) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TupleWithSizeTypes>);
+static_assert(::std::is_trivially_destructible_v<::tuples::TupleWithSizeTypes>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::TupleWithSizeTypes>);
 static_assert(
@@ -3019,7 +3021,7 @@ static_assert(
 static_assert(
     alignof(::tuples::TuplesWithU64) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<TuplesWithU64>);
+static_assert(::std::is_trivially_destructible_v<::tuples::TuplesWithU64>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::tuples::TuplesWithU64>);
 static_assert(::std::is_trivially_move_assignable_v<::tuples::TuplesWithU64>);

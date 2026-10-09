@@ -133,7 +133,7 @@ static_assert(
 static_assert(
     alignof(::function_pointers::CStruct) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CStruct>);
+static_assert(::std::is_trivially_destructible_v<::function_pointers::CStruct>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::function_pointers::CStruct>);
 static_assert(

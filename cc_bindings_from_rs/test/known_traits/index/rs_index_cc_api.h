@@ -139,7 +139,7 @@ static_assert(
 static_assert(
     alignof(::rs_index::CustomIndex) == 8,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<CustomIndex>);
+static_assert(::std::is_trivially_destructible_v<::rs_index::CustomIndex>);
 static_assert(
     ::std::is_trivially_move_constructible_v<::rs_index::CustomIndex>);
 static_assert(::std::is_trivially_move_assignable_v<::rs_index::CustomIndex>);
@@ -166,7 +166,7 @@ static_assert(
 static_assert(
     alignof(::rs_index::Id) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<Id>);
+static_assert(::std::is_trivially_destructible_v<::rs_index::Id>);
 static_assert(::std::is_trivially_move_constructible_v<::rs_index::Id>);
 static_assert(::std::is_trivially_move_assignable_v<::rs_index::Id>);
 namespace __crubit_internal {
@@ -188,7 +188,7 @@ static_assert(
 static_assert(
     alignof(::rs_index::IntPair) == 4,
     "Verify that ADT layout didn't change since this header got generated");
-static_assert(::std::is_trivially_destructible_v<IntPair>);
+static_assert(::std::is_trivially_destructible_v<::rs_index::IntPair>);
 static_assert(::std::is_trivially_move_constructible_v<::rs_index::IntPair>);
 static_assert(::std::is_trivially_move_assignable_v<::rs_index::IntPair>);
 namespace __crubit_internal {
