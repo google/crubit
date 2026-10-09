@@ -12,12 +12,13 @@
 #![deny(missing_docs, unsafe_op_in_unsafe_fn)]
 
 use crate::erased_future::ErasedFuture;
-use std::future;
-use std::future::Future;
-use std::mem::ManuallyDrop;
-use std::pin::Pin;
-use std::ptr;
-use std::task::{Context, RawWaker, RawWakerVTable, Waker};
+use alloc::boxed::Box;
+use core::future;
+use core::future::Future;
+use core::mem::ManuallyDrop;
+use core::pin::Pin;
+use core::ptr;
+use core::task::{Context, RawWaker, RawWakerVTable, Waker};
 
 /// A type-erased, FFI-compatible container for a pinned Rust [`Future`].
 ///

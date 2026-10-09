@@ -8,10 +8,10 @@
 //! Note that this crate is intended to be used as a Crubit support library for cc_bindings_from_rs,
 //! and not intended for direct use by Rust library authors.
 
-use std::future::Future;
-use std::pin::Pin;
-use std::ptr;
-use std::task::{Context, Poll};
+use core::future::Future;
+use core::pin::Pin;
+use core::ptr;
+use core::task::{Context, Poll};
 
 /// A type-erased version of [`Future`] that writes its output into a caller-provided raw pointer.
 ///
@@ -49,7 +49,7 @@ impl<T, F: Future<Output = T> + Send> ErasedFuture for F {
 }
 
 mod sealed {
-    use std::future::Future;
+    use core::future::Future;
 
     /// Sealed trait to ensure that only `Future`s can implement `ErasedFuture`.
     pub trait Sealed {}

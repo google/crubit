@@ -7,8 +7,8 @@
 
 #include <type_traits>
 
-#include "support/annotations.h"
 #include "support/internal/check.h"
+#include "support/annotations.h"
 #include "support/rs_std/internal/enum.h"  // IWYU pragma: export
 
 // C++ API for Rust enums bound by Crubit.

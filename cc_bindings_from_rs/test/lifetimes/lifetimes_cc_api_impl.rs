@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::lifetimes_golden::StructWithLifetime>() == 8);
-const _: () = assert!(::std::mem::align_of::<::lifetimes_golden::StructWithLifetime>() == 8);
+const _: () = assert!(::core::mem::size_of::<::lifetimes_golden::StructWithLifetime>() == 8);
+const _: () = assert!(::core::mem::align_of::<::lifetimes_golden::StructWithLifetime>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_from_uref_u_x00000027a(
     field_with_lifetime: &'static i32,
@@ -120,9 +120,9 @@ const _: () = assert!(
     ::core::mem::offset_of!(::lifetimes_golden::StructWithLifetime, field_with_lifetime) == 0
 );
 const _: () =
-    assert!(::std::mem::size_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 32);
+    assert!(::core::mem::size_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 32);
 const _: () =
-    assert!(::std::mem::align_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 8);
+    assert!(::core::mem::align_of::<::lifetimes_golden::StructWithLifetimeAndDropGlue>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_ulifetimes_ugolden_x0000003a_x0000003aStructWithLifetimeAndDropGlue_x0000003c_x00000027_u_x0000003e(
     __self: *mut ::lifetimes_golden::StructWithLifetimeAndDropGlue,

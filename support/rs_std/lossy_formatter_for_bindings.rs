@@ -18,7 +18,7 @@ pub unsafe extern "C" fn crubit_LossyFormatter_write_bytes(
 ) -> usize {
     let data = if count > 0 {
         // SAFETY: caller guarantees that `data` points to `count` bytes.
-        unsafe { std::slice::from_raw_parts(data as *const u8, count) }
+        unsafe { core::slice::from_raw_parts(data as *const u8, count) }
     } else {
         &[]
     };

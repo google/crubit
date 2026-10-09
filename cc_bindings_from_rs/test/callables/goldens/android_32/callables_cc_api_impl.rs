@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::callables_golden::CallbackHolder>() == 8);
-const _: () = assert!(::std::mem::align_of::<::callables_golden::CallbackHolder>() == 4);
+const _: () = assert!(::core::mem::size_of::<::callables_golden::CallbackHolder>() == 8);
+const _: () = assert!(::core::mem::align_of::<::callables_golden::CallbackHolder>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_ucallables_ugolden_x0000003a_x0000003aCallbackHolder(
     __ret_ptr: *mut core::ffi::c_void,
@@ -66,8 +66,8 @@ unsafe extern "C" fn __crubit_thunk_drop_ucallback(
 ) -> () {
     unsafe { ::callables_golden::CallbackHolder::drop_callback(__self) }
 }
-const _: () = assert!(::std::mem::size_of::<::callables_golden::CppMovableDrop>() == 4);
-const _: () = assert!(::std::mem::align_of::<::callables_golden::CppMovableDrop>() == 4);
+const _: () = assert!(::core::mem::size_of::<::callables_golden::CppMovableDrop>() == 4);
+const _: () = assert!(::core::mem::align_of::<::callables_golden::CppMovableDrop>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_ucallables_ugolden_x0000003a_x0000003aCppMovableDrop(
     __ret_ptr: *mut core::ffi::c_void,
@@ -85,8 +85,8 @@ extern "C" fn __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCp
     unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::callables_golden::CppMovableDrop, 0) == 0);
-const _: () = assert!(::std::mem::size_of::<::callables_golden::NonCppMovable>() == 4);
-const _: () = assert!(::std::mem::align_of::<::callables_golden::NonCppMovable>() == 4);
+const _: () = assert!(::core::mem::size_of::<::callables_golden::NonCppMovable>() == 4);
+const _: () = assert!(::core::mem::align_of::<::callables_golden::NonCppMovable>() == 4);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aNonCppMovable(
     __self: *mut ::callables_golden::NonCppMovable,
@@ -94,8 +94,8 @@ extern "C" fn __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aNo
     unsafe { ::core::ptr::drop_in_place(__self) };
 }
 const _: () = assert!(::core::mem::offset_of!(::callables_golden::NonCppMovable, 0) == 0);
-const _: () = assert!(::std::mem::size_of::<::callables_golden::Point>() == 8);
-const _: () = assert!(::std::mem::align_of::<::callables_golden::Point>() == 4);
+const _: () = assert!(::core::mem::size_of::<::callables_golden::Point>() == 8);
+const _: () = assert!(::core::mem::align_of::<::callables_golden::Point>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_ucallables_ugolden_x0000003a_x0000003aPoint_ucallables_ugolden_x0000003a_x0000003aPoint(
     __self: &'static ::callables_golden::Point,

@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::uses_golden::AliasOfExportedStruct>() == 4);
-const _: () = assert!(::std::mem::align_of::<::uses_golden::AliasOfExportedStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::uses_golden::AliasOfExportedStruct>() == 4);
+const _: () = assert!(::core::mem::align_of::<::uses_golden::AliasOfExportedStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(field: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -21,11 +21,11 @@ unsafe extern "C" fn __crubit_thunk_create(field: i32, __ret_ptr: *mut core::ffi
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::uses_golden::AliasOfExportedStruct, field) == 0);
-const _: () = assert!(::std::mem::size_of::<::uses_golden::Original>() == 4);
-const _: () = assert!(::std::mem::align_of::<::uses_golden::Original>() == 4);
+const _: () = assert!(::core::mem::size_of::<::uses_golden::Original>() == 4);
+const _: () = assert!(::core::mem::align_of::<::uses_golden::Original>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::uses_golden::Original, field) == 0);
-const _: () = assert!(::std::mem::size_of::<::uses_golden::OtherPublicName>() == 4);
-const _: () = assert!(::std::mem::align_of::<::uses_golden::OtherPublicName>() == 4);
+const _: () = assert!(::core::mem::size_of::<::uses_golden::OtherPublicName>() == 4);
+const _: () = assert!(::core::mem::align_of::<::uses_golden::OtherPublicName>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::uses_golden::OtherPublicName, 0) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_private_umiddle_upath() -> i32 {

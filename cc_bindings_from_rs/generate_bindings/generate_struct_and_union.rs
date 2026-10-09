@@ -2346,8 +2346,8 @@ pub fn generate_adt<'tcx>(
         let fields_rs_details = fields_rs_details.into_tokens(&mut extern_c_decls);
         RsSnippet {
             tokens: quote! {
-                const _: () = assert!(::std::mem::size_of::<#adt_rs_name>() == #size);
-                const _: () = assert!(::std::mem::align_of::<#adt_rs_name>() == #alignment);
+                const _: () = assert!(::core::mem::size_of::<#adt_rs_name>() == #size);
+                const _: () = assert!(::core::mem::align_of::<#adt_rs_name>() == #alignment);
                 #public_functions_rs_details
                 #fields_rs_details
             },

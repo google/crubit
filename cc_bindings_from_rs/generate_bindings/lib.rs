@@ -472,19 +472,36 @@ pub fn generate_bindings(db: &BindingsGenerator) -> Result<BindingsTokens> {
         });
     }
 
+    let tcx = db.tcx();
+    let source_crate_num = db.source_crate_num();
+
+    let has_std = tcx.crate_name(source_crate_num).as_str() == "std"
+        || tcx.used_crates(()).iter().any(|&cnum| tcx.crate_name(cnum).as_str() == "std");
+    let is_no_std = !has_std;
+    let has_alloc = tcx.crate_name(source_crate_num).as_str() == "alloc"
+        || tcx.used_crates(()).iter().any(|&cnum| tcx.crate_name(cnum).as_str() == "alloc");
+
     if !core_renamed {
         extern_crate_decls.push(quote! {
             extern crate core;
         });
     }
-    if !alloc_renamed {
+    if has_alloc && !alloc_renamed {
         extern_crate_decls.push(quote! {
             extern crate alloc;
         });
     }
 
+    let no_std_attr = if is_no_std {
+        quote! { #![no_std] __NEWLINE__ }
+    } else {
+        quote! {}
+    };
+
     let cc_api_impl = quote! {
         #top_comment
+
+        #no_std_attr
 
         #![allow(unused_unsafe, deprecated, non_snake_case, unreachable_code)] __NEWLINE__
 
