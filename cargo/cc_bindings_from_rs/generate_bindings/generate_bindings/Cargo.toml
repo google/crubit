@@ -46,3 +46,4 @@ rustversion = { path = "../../../../cargo/cc_bindings_from_rs/rustversion", pack
 proc-macro2.workspace = true
 quote.workspace = true
 crubit_feature = { path = "../../../../cargo/common/crubit_feature"}
+error_report = { path = "../../../../cargo/common/error_report"}

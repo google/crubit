@@ -2113,14 +2113,52 @@ fn generate_doc_comment(db: &BindingsGenerator, def_id: DefId) -> TokenStream {
     }
 }
 
-fn item_name_for_error_report(db: &BindingsGenerator<'_>, def_id: DefId) -> error_report::ItemName {
-    let crate_name = db.tcx().crate_name(def_id.krate);
-    let name = if def_id.is_local() {
-        format!("{crate_name}::{}", db.tcx().def_path_str(def_id)).into()
+fn non_lifetime_args<'tcx>(args: &'tcx [ty::GenericArg<'tcx>]) -> &'tcx [ty::GenericArg<'tcx>] {
+    if args.iter().any(|arg| !matches!(arg.kind(), ty::GenericArgKind::Lifetime(_))) {
+        args
     } else {
-        db.tcx().def_path_str(def_id).into()
+        &[]
+    }
+}
+
+#[doc(hidden)]
+pub fn item_name_for_error_report<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+    args: &'tcx [ty::GenericArg<'tcx>],
+) -> error_report::ItemName {
+    let tcx = db.tcx();
+    let args = non_lifetime_args(args);
+    let crate_name = tcx.crate_name(def_id.krate);
+    let def_path = tcx.def_path_str_with_args(def_id, args);
+    let name = if def_id.is_local() {
+        format!("{crate_name}::{def_path}").into()
+    } else {
+        def_path.into()
     };
-    let id = ((def_id.index.as_u32() as u64) << 32) | def_id.krate.as_u32() as u64;
+    let id = if args.is_empty() {
+        ((def_id.index.as_u32() as u64) << 32) | def_id.krate.as_u32() as u64
+    } else {
+        #[cfg_accessible(rustc_data_structures::stable_hash)]
+        use rustc_data_structures::stable_hash;
+        #[cfg_accessible(rustc_data_structures::stable_hasher)]
+        use rustc_data_structures::stable_hasher as stable_hash;
+
+        tcx.with_stable_hashing_context(|mut hcx| {
+            let mut hasher = stable_hash::StableHasher::new();
+            let key = (def_id, args);
+
+            #[cfg_accessible(stable_hash::HashStable)]
+            stable_hash::HashStable::hash_stable(&key, &mut hcx, &mut hasher);
+            #[cfg_accessible(stable_hash::StableHash)]
+            stable_hash::StableHash::stable_hash(&key, &mut hcx, &mut hasher);
+
+            hasher
+                .finish::<rustc_data_structures::fingerprint::Fingerprint>()
+                .to_smaller_hash()
+                .as_u64()
+        })
+    };
     let defining_target = if def_id.krate == db.source_crate_num() {
         None
     } else {
@@ -2129,20 +2167,23 @@ fn item_name_for_error_report(db: &BindingsGenerator<'_>, def_id: DefId) -> erro
     error_report::ItemName { name, id, unique_name: None, defining_target }
 }
 
-pub(crate) fn report_must_bind_error<'tcx>(
+#[doc(hidden)]
+pub fn report_must_bind_error<'tcx>(
     db: &BindingsGenerator<'tcx>,
     def_id: DefId,
+    args: &'tcx [ty::GenericArg<'tcx>],
     err: &Error,
 ) {
     let tcx = db.tcx();
-    let item_path = tcx.def_path_str(def_id);
+    let args = non_lifetime_args(args);
+    let item_path = tcx.def_path_str_with_args(def_id, args);
     let bold = "\x1B[1m";
     let reset = "\x1B[0m";
     let red = "\x1B[31m";
     let must_bind_message = format!(
         "{bold}{red}error:{reset}{bold}{}\n\
         {bold}note:{reset} hard error because `#[crubit_annotate::must_bind]` was applied to `{item_path}`",
-        unsupported_def_error_message(db, def_id, err, ErrorStyle::Terminal),
+        unsupported_def_error_message(db, def_id, args, err, ErrorStyle::Terminal),
     );
     db.fatal_errors().report(&must_bind_message);
 }
@@ -2158,7 +2199,7 @@ fn generate_item<'tcx>(
     if attributes.must_bind
         && let Err(e) = &generated
     {
-        report_must_bind_error(db, def_id, e);
+        report_must_bind_error(db, def_id, &[], e);
     }
     generated
 }
@@ -2166,10 +2207,15 @@ fn generate_item<'tcx>(
 #[macro_export]
 macro_rules! error_scope {
     ($db:expr, $def_id:expr) => {
+        $crate::error_scope!($db, $def_id, &[]);
+    };
+    ($db:expr, $def_id:expr, $args:expr) => {
         let db = $db;
         let errors = db.errors();
-        let _error_scope =
-            error_report::ItemScope::new(&*errors, $crate::item_name_for_error_report(db, $def_id));
+        let _error_scope = error_report::ItemScope::new(
+            &*errors,
+            $crate::item_name_for_error_report(db, $def_id, $args),
+        );
     };
 }
 
@@ -2212,15 +2258,17 @@ enum ErrorStyle {
     Terminal,
 }
 
-pub(crate) fn unsupported_def_error_message(
-    db: &BindingsGenerator,
+pub(crate) fn unsupported_def_error_message<'tcx>(
+    db: &BindingsGenerator<'tcx>,
     def_id: DefId,
+    args: &'tcx [ty::GenericArg<'tcx>],
     err: &Error,
     style: ErrorStyle,
 ) -> String {
     let tcx = db.tcx();
+    let args = non_lifetime_args(args);
     let source_loc = generate_source_location(db, def_id);
-    let name = tcx.def_path_str(def_id);
+    let name = tcx.def_path_str_with_args(def_id, args);
     let def_kind = tcx.def_kind(def_id);
     let kind_str = def_kind.descr(def_id);
     let err_msg = if let ErrorStyle::Terminal = style {
@@ -2243,11 +2291,21 @@ pub(crate) fn generate_unsupported_def<'tcx>(
     def_id: DefId,
     err: Error,
 ) -> CcSnippet<'tcx> {
-    db.errors().assert_in_item(item_name_for_error_report(db, def_id));
+    generate_unsupported_def_with_args(db, def_id, &[], err)
+}
+
+#[doc(hidden)]
+pub fn generate_unsupported_def_with_args<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+    args: &'tcx [ty::GenericArg<'tcx>],
+    err: Error,
+) -> CcSnippet<'tcx> {
+    db.errors().assert_in_item(item_name_for_error_report(db, def_id, args));
     db.errors().report(&err);
     let msg = format!(
         "Error generating bindings for {}",
-        unsupported_def_error_message(db, def_id, &err, ErrorStyle::Comment)
+        unsupported_def_error_message(db, def_id, args, &err, ErrorStyle::Comment)
     );
     CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ })
 }

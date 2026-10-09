@@ -22,8 +22,8 @@ use crate::generate_function_thunk::{
 use crate::{
     can_be_made_layout_compatible, does_type_implement_trait, generate_const,
     generate_deprecated_tag, generate_must_use_tag, generate_trait_thunks,
-    generate_unsupported_def, get_layout, get_tag_size_with_padding, is_copy, BridgedBuiltin,
-    RsSnippet, SortedByDef, TraitThunks,
+    generate_unsupported_def_with_args, get_layout, get_tag_size_with_padding, is_copy,
+    BridgedBuiltin, RsSnippet, SortedByDef, TraitThunks,
 };
 
 use arc_anyhow::{Context, Result};
@@ -369,7 +369,8 @@ pub(crate) fn generate_associated_item<'tcx>(
     if crate::should_receive_bindings(db, def_id).is_err() {
         return None;
     }
-    crate::error_scope!(db, def_id);
+    let args = generic_args.map_or(&[][..], |args| args.as_slice());
+    crate::error_scope!(db, def_id, args);
     let result = match assoc_item.kind {
         ty::AssocKind::Fn { .. } => {
             db.generate_function(def_id, generic_args, method_name_override, static_method_mode).inspect(|_binding| {
@@ -428,9 +429,9 @@ pub(crate) fn generate_associated_item<'tcx>(
     match result {
         Err(err) => {
             if crubit_attr::get_attrs(tcx, def_id).unwrap().must_bind {
-                crate::report_must_bind_error(db, def_id, &err);
+                crate::report_must_bind_error(db, def_id, args, &err);
             }
-            Some(generate_unsupported_def(db, def_id, err).into_main_api())
+            Some(generate_unsupported_def_with_args(db, def_id, args, err).into_main_api())
         }
         Ok(result) => Some(result),
     }
@@ -642,10 +643,10 @@ fn generate_into_impls<'tcx>(
             let cc_ty = db
                 .format_ty_for_cc(from_middle_ty, TypeLocation::FnReturn { is_constructor: false })
                 .ok()?;
-            Some((from_middle_ty, cc_ty, *from_impl_id))
+            Some((from_middle_ty, cc_ty, *from_impl_id, &[][..]))
         });
     let into_impls = non_blanket_impls_for_ty(tcx, into_trait, core.common.self_ty).filter_map(
-        |(into_impl_id, _)| {
+        |(into_impl_id, impl_args)| {
             let trait_ref = get_trait_ref_from_impl_id(tcx, into_impl_id);
             // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
             // into.
@@ -659,23 +660,31 @@ fn generate_into_impls<'tcx>(
                 .format_ty_for_cc(into_middle_ty, TypeLocation::FnReturn { is_constructor: false })
                 .ok()?;
 
-            Some((into_middle_ty, cc_ty, into_impl_id))
+            Some((into_middle_ty, cc_ty, into_impl_id, impl_args.as_slice()))
         },
     );
 
     from_impls
         .chain(into_impls)
-        .avoid_colliding_types(tcx, |(middle_ty, _, _)| *middle_ty)
+        .avoid_colliding_types(tcx, |(middle_ty, _, _, _)| *middle_ty)
         .into_iter()
         .filter_map(|res| {
-            let (middle_ty, cc_ty, def_id) = match res {
+            let (middle_ty, cc_ty, def_id, _) = match res {
                 Ok(item) => item,
-                Err(TypeCollisionRisk { item: (_, _, def_id), key_type, preferred_type }) => {
+                Err(TypeCollisionRisk {
+                    item: (_, _, def_id, impl_args),
+                    key_type,
+                    preferred_type,
+                }) => {
+                    crate::error_scope!(db, def_id, impl_args);
                     let err = anyhow!(
                         "Conversion to `{key_type}` is not supported when conversion to \
                          `{preferred_type}` is implemented as they may overlap in C++."
                     );
-                    return Some(generate_unsupported_def(db, def_id, err).into_main_api());
+                    return Some(
+                        generate_unsupported_def_with_args(db, def_id, impl_args, err)
+                            .into_main_api(),
+                    );
                 }
             };
             let mut prereqs = CcPrerequisites::default();
@@ -811,7 +820,7 @@ fn generate_constructor_impls<'tcx>(
     // Find From impls from the selected ADT
     let from_trait = tcx.get_diagnostic_item(sym::From).expect("Could not find From trait");
     let from_impls = non_blanket_impls_for_ty(tcx, from_trait, core.common.self_ty).filter_map(
-        |(impl_id, _)| {
+        |(impl_id, impl_args)| {
             let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
             let src_ty = trait_ref.args.type_at(1);
             if src_ty.flags().intersects(has_type_or_const_vars()) {
@@ -839,7 +848,7 @@ fn generate_constructor_impls<'tcx>(
                 )
                 .ok()?;
 
-            Some((src_ty, cc_ty, impl_id, /* is_from= */ true))
+            Some((src_ty, cc_ty, impl_id, impl_args.as_slice(), /* is_from= */ true))
         },
     );
 
@@ -868,30 +877,34 @@ fn generate_constructor_impls<'tcx>(
                     )
                     .ok()?;
 
-                Some((src_ty, cc_ty, *impl_id, /* is_from= */ false))
+                Some((src_ty, cc_ty, *impl_id, &[][..], /* is_from= */ false))
             },
         );
 
     // Avoid collisions in cases where types may map to the same underlying C++ type.
     from_impls
         .chain(into_impls)
-        .avoid_colliding_types(tcx, |(src_ty, _, _, _)| *src_ty)
+        .avoid_colliding_types(tcx, |(src_ty, _, _, _, _)| *src_ty)
         .into_iter()
         .filter_map(|res| {
-            let (src_ty, cc_ty, impl_id, is_from) = match res {
+            let (src_ty, cc_ty, impl_id, _, is_from) = match res {
                 Ok(item) => item,
                 Err(TypeCollisionRisk { item, .. }) if is_aggregate => item,
                 Err(TypeCollisionRisk {
-                    item: (_, _, impl_id, is_from),
+                    item: (_, _, impl_id, impl_args, is_from),
                     key_type,
                     preferred_type,
                 }) => {
+                    crate::error_scope!(db, impl_id, impl_args);
                     let trait_name = if is_from { "From" } else { "Into" };
                     let err = anyhow!(
                         "{trait_name} implementation for `{key_type}` is not supported when \
                          `{trait_name}<{preferred_type}>` is implemented as it may overlap."
                     );
-                    return Some(generate_unsupported_def(db, impl_id, err).into_main_api());
+                    return Some(
+                        generate_unsupported_def_with_args(db, impl_id, impl_args, err)
+                            .into_main_api(),
+                    );
                 }
             };
             let mut prereqs = CcPrerequisites::default();
@@ -1130,12 +1143,16 @@ fn generate_trait_operator_impls<'tcx>(
             .into_iter()
             .map(|res| {
                 res.map_err(
-                    |TypeCollisionRisk { item: (impl_id, _, _), key_type, preferred_type }| {
+                    |TypeCollisionRisk {
+                         item: (impl_id, impl_args, _),
+                         key_type,
+                         preferred_type,
+                     }| {
                         let err = anyhow!(
                             "{trait_name} implementation for `{key_type}` is not supported when \
                          `{trait_name}<{preferred_type}>` is implemented as it may overlap."
                         );
-                        (err, impl_id)
+                        (err, impl_id, impl_args)
                     },
                 )
                 .and_then(|(impl_id, impl_args, trait_arg_ty)| {
@@ -1144,7 +1161,7 @@ fn generate_trait_operator_impls<'tcx>(
                             "{trait_name} impl has uninstantiated generic parameters, \
                                    which is not yet supported {trait_arg_ty}"
                         );
-                        return Err((err, impl_id));
+                        return Err((err, impl_id, impl_args));
                     }
 
                     let assoc_fn_id = tcx
@@ -1164,10 +1181,11 @@ fn generate_trait_operator_impls<'tcx>(
                         Some(operator_name),
                         StaticMethodMode::Infer,
                     )
-                    .map_err(|e| (e, assoc_fn_id))
+                    .map_err(|e| (e, assoc_fn_id, impl_args))
                 })
-                .unwrap_or_else(|(err, def_id)| {
-                    generate_unsupported_def(db, def_id, err).into_main_api()
+                .unwrap_or_else(|(err, def_id, impl_args)| {
+                    crate::error_scope!(db, def_id, impl_args);
+                    generate_unsupported_def_with_args(db, def_id, impl_args, err).into_main_api()
                 })
             })
             .collect()
@@ -1317,10 +1335,13 @@ fn generate_ord_and_partialord_impls<'tcx>(
     let mut snippets = Vec::new();
 
     // Handle Ord impls (Rhs is always Self)
-    for (impl_id, _) in non_blanket_impls_for_ty(tcx, ord_trait_id, core.common.self_ty) {
+    for (impl_id, impl_args) in non_blanket_impls_for_ty(tcx, ord_trait_id, core.common.self_ty) {
+        crate::error_scope!(db, impl_id, impl_args);
         match generate_ord_impls(db, core) {
             Ok(s) => snippets.push(s),
-            Err(err) => snippets.push(generate_unsupported_def(db, impl_id, err).into_main_api()),
+            Err(err) => snippets.push(
+                generate_unsupported_def_with_args(db, impl_id, impl_args, err).into_main_api(),
+            ),
         }
     }
 
@@ -1332,7 +1353,9 @@ fn generate_ord_and_partialord_impls<'tcx>(
         ord_rhs_types.insert(erase_regions(tcx, core.common.self_ty));
     }
 
-    for (impl_id, _) in non_blanket_impls_for_ty(tcx, partial_ord_trait_id, core.common.self_ty) {
+    for (impl_id, impl_args) in
+        non_blanket_impls_for_ty(tcx, partial_ord_trait_id, core.common.self_ty)
+    {
         let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
         let rhs_ty = trait_ref.args.type_at(1);
         let erased_rhs_ty = erase_regions(tcx, rhs_ty);
@@ -1341,9 +1364,12 @@ fn generate_ord_and_partialord_impls<'tcx>(
             continue;
         }
 
+        crate::error_scope!(db, impl_id, impl_args);
         match generate_partial_ord_impls(db, core, rhs_ty) {
             Ok(s) => snippets.push(s),
-            Err(err) => snippets.push(generate_unsupported_def(db, impl_id, err).into_main_api()),
+            Err(err) => snippets.push(
+                generate_unsupported_def_with_args(db, impl_id, impl_args, err).into_main_api(),
+            ),
         }
     }
 
@@ -1551,7 +1577,8 @@ fn generate_display_impl<'tcx>(
     let Some(def_id) = core.def_id else {
         return ApiSnippets::default();
     };
-    let err_snippets = |err| generate_unsupported_def(db, def_id, err).into_main_api();
+    let err_snippets =
+        |err| generate_unsupported_def_with_args(db, def_id, core.substs(), err).into_main_api();
     let Some(display_trait_id) = tcx.get_diagnostic_item(sym::Display) else {
         return err_snippets(anyhow!(
             "Internal Crubit Error: `std::fmt::Display` trait not found."
@@ -1853,7 +1880,8 @@ fn generate_hash_impl<'tcx>(
     let Some(def_id) = core.def_id else {
         return ApiSnippets::default();
     };
-    let err_snippets = |err| generate_unsupported_def(db, def_id, err).into_main_api();
+    let err_snippets =
+        |err| generate_unsupported_def_with_args(db, def_id, core.substs(), err).into_main_api();
     let Some(hash_trait_id) = tcx.get_diagnostic_item(sym::Hash) else {
         return err_snippets(anyhow!("Internal Crubit Error: `core::hash::Hash` trait not found."));
     };
@@ -2152,15 +2180,18 @@ pub fn generate_adt<'tcx>(
     let compare_snippets = generate_ord_and_partialord_impls(db, core.as_ref());
     let display_snippets = generate_display_impl(db, core.as_ref());
     let hash_snippets = generate_hash_impl(db, core.as_ref());
-    let into_iterator_snippets = generate_into_iterator_impls(
-        db,
-        core.as_ref(),
-        &mut member_function_names,
-    )
-    .unwrap_or_else(|err| {
-        generate_unsupported_def(db, core.def_id.expect("DefId should be present for an ADT"), err)
-            .into_main_api()
-    });
+    let into_iterator_snippets =
+        generate_into_iterator_impls(db, core.as_ref(), &mut member_function_names).unwrap_or_else(
+            |err| {
+                generate_unsupported_def_with_args(
+                    db,
+                    core.def_id.expect("DefId should be present for an ADT"),
+                    core.substs(),
+                    err,
+                )
+                .into_main_api()
+            },
+        );
 
     let ApiSnippets {
         main_api: public_functions_main_api,
@@ -2590,12 +2621,14 @@ fn generate_adt_based_ctors<'tcx>(
         .variants()
         .iter_enumerated()
         .map(|(variant_index, variant)| {
+            crate::error_scope!(db, variant.def_id, core.substs());
             generate_variant_ctor(db, core.clone(), member_function_names, variant_index, variant)
                 .unwrap_or_else(|err| {
                     if should_suppress_errors {
                         Default::default()
                     } else {
-                        generate_unsupported_def(db, variant.def_id, err).into_main_api()
+                        generate_unsupported_def_with_args(db, variant.def_id, core.substs(), err)
+                            .into_main_api()
                     }
                 })
         })
@@ -4152,7 +4185,10 @@ fn generate_into_iterator_impls<'tcx>(
         .map(|mode| generate_begin_and_end_for_type(db, core, into_iterator_trait_id, mode))
         .filter_map(|result| {
             result.unwrap_or_else(|err| {
-                core.def_id.map(|def_id| generate_unsupported_def(db, def_id, err).into_main_api())
+                core.def_id.map(|def_id| {
+                    generate_unsupported_def_with_args(db, def_id, core.substs(), err)
+                        .into_main_api()
+                })
             })
         })
         .collect())

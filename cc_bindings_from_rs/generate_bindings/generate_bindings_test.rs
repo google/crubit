@@ -4,6 +4,8 @@
 
 #![feature(rustc_private)]
 
+extern crate rustc_middle;
+
 use code_gen_utils::NamespaceQualifier;
 use generate_bindings::format_namespace_bound_cc_tokens;
 use proc_macro2::{Ident, TokenStream, TokenTree};
@@ -2711,5 +2713,474 @@ fn test_method_returning_self_in_tuple() {
                 ...
             }
         );
+    });
+}
+
+#[test]
+fn test_error_scope_with_generic_args_reports_distinct_specializations() {
+    let test_src = r#"
+        pub struct Point<T> {
+            pub x: T,
+            pub y: T,
+        }
+
+        impl<T> Point<T> {
+            pub fn generic_method<U>(&self, _u: U) {}
+        }
+
+        pub fn generic_fn<T>(_x: T) {}
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let (db, error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported.into(),
+            );
+        let point_def_id = find_def_id_by_name(tcx, "Point").to_def_id();
+        let method_def_id = tcx
+            .inherent_impls(point_def_id)
+            .iter()
+            .flat_map(|&impl_id| tcx.associated_items(impl_id).in_definition_order())
+            .find(|item| item.name().as_str() == "generic_method")
+            .unwrap()
+            .def_id;
+        let fn_def_id = find_def_id_by_name(tcx, "generic_fn").to_def_id();
+
+        let i32_args = tcx.mk_args(&[rustc_middle::ty::GenericArg::from(tcx.types.i32)]);
+        let u32_args = tcx.mk_args(&[rustc_middle::ty::GenericArg::from(tcx.types.u32)]);
+        let type_err = error_report::anyhow!("Generic types are not supported");
+        let fn_err = error_report::anyhow!("Generic functions are not supported");
+
+        let point_i32_snippet = {
+            generate_bindings::error_scope!(&db, point_def_id, i32_args);
+            generate_bindings::report_must_bind_error(&db, point_def_id, i32_args, &type_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                point_def_id,
+                i32_args,
+                error_report::anyhow!("Generic types are not supported"),
+            )
+        };
+        let point_u32_snippet = {
+            generate_bindings::error_scope!(&db, point_def_id, u32_args);
+            generate_bindings::report_must_bind_error(&db, point_def_id, u32_args, &type_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                point_def_id,
+                u32_args,
+                error_report::anyhow!("Generic types are not supported"),
+            )
+        };
+        let i32_snippet = {
+            generate_bindings::error_scope!(&db, method_def_id, i32_args);
+            generate_bindings::report_must_bind_error(&db, method_def_id, i32_args, &fn_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                method_def_id,
+                i32_args,
+                error_report::anyhow!("Generic functions are not supported"),
+            )
+        };
+        let u32_snippet = {
+            generate_bindings::error_scope!(&db, method_def_id, u32_args);
+            generate_bindings::report_must_bind_error(&db, method_def_id, u32_args, &fn_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                method_def_id,
+                u32_args,
+                error_report::anyhow!("Generic functions are not supported"),
+            )
+        };
+        let fn_i32_snippet = {
+            generate_bindings::error_scope!(&db, fn_def_id, i32_args);
+            generate_bindings::report_must_bind_error(&db, fn_def_id, i32_args, &fn_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                fn_def_id,
+                i32_args,
+                error_report::anyhow!("Generic functions are not supported"),
+            )
+        };
+        let fn_u32_snippet = {
+            generate_bindings::error_scope!(&db, fn_def_id, u32_args);
+            generate_bindings::report_must_bind_error(&db, fn_def_id, u32_args, &fn_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                fn_def_id,
+                u32_args,
+                error_report::anyhow!("Generic functions are not supported"),
+            )
+        };
+
+        let point_i32_unsupported_msg = "Error generating bindings for struct `Point<i32>` \
+             defined at <crubit_unittests.rs>;l=2: \
+             Generic types are not supported";
+        let point_u32_unsupported_msg = "Error generating bindings for struct `Point<u32>` \
+             defined at <crubit_unittests.rs>;l=2: \
+             Generic types are not supported";
+        let i32_unsupported_msg =
+            "Error generating bindings for associated function `Point::<i32>::generic_method` \
+             defined at <crubit_unittests.rs>;l=8: \
+             Generic functions are not supported";
+        let u32_unsupported_msg =
+            "Error generating bindings for associated function `Point::<u32>::generic_method` \
+             defined at <crubit_unittests.rs>;l=8: \
+             Generic functions are not supported";
+        let fn_i32_unsupported_msg = "Error generating bindings for function `generic_fn::<i32>` \
+             defined at <crubit_unittests.rs>;l=11: \
+             Generic functions are not supported";
+        let fn_u32_unsupported_msg = "Error generating bindings for function `generic_fn::<u32>` \
+             defined at <crubit_unittests.rs>;l=11: \
+             Generic functions are not supported";
+        assert_cc_matches!(
+            point_i32_snippet.tokens,
+            quote! { __COMMENT__ #point_i32_unsupported_msg }
+        );
+        assert_cc_matches!(
+            point_u32_snippet.tokens,
+            quote! { __COMMENT__ #point_u32_unsupported_msg }
+        );
+        assert_cc_matches!(i32_snippet.tokens, quote! { __COMMENT__ #i32_unsupported_msg });
+        assert_cc_matches!(u32_snippet.tokens, quote! { __COMMENT__ #u32_unsupported_msg });
+        assert_cc_matches!(fn_i32_snippet.tokens, quote! { __COMMENT__ #fn_i32_unsupported_msg });
+        assert_cc_matches!(fn_u32_snippet.tokens, quote! { __COMMENT__ #fn_u32_unsupported_msg });
+
+        let report_json = error_report.to_json_string();
+        for expected_item in [
+            "rust_out::Point<i32>",
+            "rust_out::Point<u32>",
+            "rust_out::Point::<i32>::generic_method",
+            "rust_out::Point::<u32>::generic_method",
+            "rust_out::generic_fn::<i32>",
+            "rust_out::generic_fn::<u32>",
+        ] {
+            assert!(
+                report_json.contains(&format!("\"name\": \"{expected_item}\"")),
+                "Expected error report to contain entry for {expected_item}, got:\n{report_json}"
+            );
+        }
+
+        let fatal_msg = fatal_errors.take_string();
+        for expected_item in [
+            "Point<i32>",
+            "Point<u32>",
+            "Point::<i32>::generic_method",
+            "Point::<u32>::generic_method",
+            "generic_fn::<i32>",
+            "generic_fn::<u32>",
+        ] {
+            assert!(
+                fatal_msg.contains(&format!(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                     `{expected_item}`"
+                )),
+                "Expected fatal_errors to record must_bind error for {expected_item}, got:\n{fatal_msg}"
+            );
+        }
+    });
+}
+
+#[test]
+fn test_error_scope_with_only_lifetime_args_omits_lifetimes() {
+    let test_src = r#"
+        pub struct Borrowed<'a> {
+            pub x: &'a i32,
+        }
+
+        impl<'a> Borrowed<'a> {
+            pub fn generic_method<U>(&self, _u: U) {}
+        }
+
+        pub fn lifetime_fn<'a: 'a>(_x: &'a i32) {}
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let (db, error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported.into(),
+            );
+        let borrowed_def_id = find_def_id_by_name(tcx, "Borrowed").to_def_id();
+        let method_def_id = tcx
+            .inherent_impls(borrowed_def_id)
+            .iter()
+            .flat_map(|&impl_id| tcx.associated_items(impl_id).in_definition_order())
+            .find(|item| item.name().as_str() == "generic_method")
+            .unwrap()
+            .def_id;
+        let fn_def_id = find_def_id_by_name(tcx, "lifetime_fn").to_def_id();
+
+        let static_args =
+            tcx.mk_args(&[rustc_middle::ty::GenericArg::from(tcx.lifetimes.re_static)]);
+        let erased_args =
+            tcx.mk_args(&[rustc_middle::ty::GenericArg::from(tcx.lifetimes.re_erased)]);
+        let type_err = error_report::anyhow!("Lifetime types are not supported");
+        let fn_err = error_report::anyhow!("Lifetime functions are not supported");
+
+        let borrowed_snippet = {
+            generate_bindings::error_scope!(&db, borrowed_def_id, static_args);
+            generate_bindings::report_must_bind_error(&db, borrowed_def_id, static_args, &type_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                borrowed_def_id,
+                static_args,
+                error_report::anyhow!("Lifetime types are not supported"),
+            )
+        };
+        let borrowed_erased_snippet = {
+            generate_bindings::error_scope!(&db, borrowed_def_id, erased_args);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                borrowed_def_id,
+                erased_args,
+                error_report::anyhow!("Lifetime types are not supported"),
+            )
+        };
+        let method_snippet = {
+            generate_bindings::error_scope!(&db, method_def_id, static_args);
+            generate_bindings::report_must_bind_error(&db, method_def_id, static_args, &fn_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                method_def_id,
+                static_args,
+                error_report::anyhow!("Lifetime functions are not supported"),
+            )
+        };
+        let fn_snippet = {
+            generate_bindings::error_scope!(&db, fn_def_id, static_args);
+            generate_bindings::report_must_bind_error(&db, fn_def_id, static_args, &fn_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                fn_def_id,
+                static_args,
+                error_report::anyhow!("Lifetime functions are not supported"),
+            )
+        };
+
+        let borrowed_unsupported_msg = "Error generating bindings for struct `Borrowed` \
+             defined at <crubit_unittests.rs>;l=2: \
+             Lifetime types are not supported";
+        let method_unsupported_msg =
+            "Error generating bindings for associated function `Borrowed::<'a>::generic_method` \
+             defined at <crubit_unittests.rs>;l=7: \
+             Lifetime functions are not supported";
+        let fn_unsupported_msg = "Error generating bindings for function `lifetime_fn` \
+             defined at <crubit_unittests.rs>;l=10: \
+             Lifetime functions are not supported";
+        assert_cc_matches!(
+            borrowed_snippet.tokens,
+            quote! { __COMMENT__ #borrowed_unsupported_msg }
+        );
+        assert_cc_matches!(
+            borrowed_erased_snippet.tokens,
+            quote! { __COMMENT__ #borrowed_unsupported_msg }
+        );
+        assert_cc_matches!(method_snippet.tokens, quote! { __COMMENT__ #method_unsupported_msg });
+        assert_cc_matches!(fn_snippet.tokens, quote! { __COMMENT__ #fn_unsupported_msg });
+
+        let report_json = error_report.to_json_string();
+        assert_eq!(
+            report_json.matches("\"name\": \"rust_out::Borrowed\"").count(),
+            1,
+            "Expected a single merged error report entry for Borrowed, got:\n{report_json}"
+        );
+        assert!(
+            report_json.contains("\"name\": \"rust_out::Borrowed::<'a>::generic_method\""),
+            "Expected error report to contain entry for Borrowed::<'a>::generic_method, got:\n{report_json}"
+        );
+        assert!(
+            report_json.contains("\"name\": \"rust_out::lifetime_fn\""),
+            "Expected error report to contain entry for lifetime_fn, got:\n{report_json}"
+        );
+
+        let fatal_msg = fatal_errors.take_string();
+        for expected_item in ["Borrowed", "Borrowed::<'a>::generic_method", "lifetime_fn"] {
+            assert!(
+                fatal_msg.contains(&format!(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                     `{expected_item}`"
+                )),
+                "Expected fatal_errors to record must_bind error for {expected_item}, got:\n{fatal_msg}"
+            );
+        }
+    });
+}
+
+#[test]
+fn test_error_scope_with_lifetime_and_non_lifetime_args_reports_distinct_specializations() {
+    let test_src = r#"
+        pub struct BorrowedPoint<'a, T> {
+            pub x: &'a T,
+            pub y: &'a T,
+        }
+
+        impl<'a, T> BorrowedPoint<'a, T> {
+            pub fn generic_method<U>(&self, _u: U) {}
+        }
+
+        pub fn borrowed_generic_fn<'a, T: 'a>(_x: &'a T) {}
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let (db, error_report, fatal_errors) =
+            test_helpers::bindings_db_for_tests_with_error_report(
+                tcx,
+                crubit_feature::CrubitFeature::Supported.into(),
+            );
+        let point_def_id = find_def_id_by_name(tcx, "BorrowedPoint").to_def_id();
+        let method_def_id = tcx
+            .inherent_impls(point_def_id)
+            .iter()
+            .flat_map(|&impl_id| tcx.associated_items(impl_id).in_definition_order())
+            .find(|item| item.name().as_str() == "generic_method")
+            .unwrap()
+            .def_id;
+        let fn_def_id = find_def_id_by_name(tcx, "borrowed_generic_fn").to_def_id();
+
+        let i32_args = tcx.mk_args(&[
+            rustc_middle::ty::GenericArg::from(tcx.lifetimes.re_static),
+            rustc_middle::ty::GenericArg::from(tcx.types.i32),
+        ]);
+        let u32_args = tcx.mk_args(&[
+            rustc_middle::ty::GenericArg::from(tcx.lifetimes.re_static),
+            rustc_middle::ty::GenericArg::from(tcx.types.u32),
+        ]);
+        let type_err = error_report::anyhow!("Generic types are not supported");
+        let fn_err = error_report::anyhow!("Generic functions are not supported");
+
+        let point_i32_snippet = {
+            generate_bindings::error_scope!(&db, point_def_id, i32_args);
+            generate_bindings::report_must_bind_error(&db, point_def_id, i32_args, &type_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                point_def_id,
+                i32_args,
+                error_report::anyhow!("Generic types are not supported"),
+            )
+        };
+        let point_u32_snippet = {
+            generate_bindings::error_scope!(&db, point_def_id, u32_args);
+            generate_bindings::report_must_bind_error(&db, point_def_id, u32_args, &type_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                point_def_id,
+                u32_args,
+                error_report::anyhow!("Generic types are not supported"),
+            )
+        };
+        let method_i32_snippet = {
+            generate_bindings::error_scope!(&db, method_def_id, i32_args);
+            generate_bindings::report_must_bind_error(&db, method_def_id, i32_args, &fn_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                method_def_id,
+                i32_args,
+                error_report::anyhow!("Generic functions are not supported"),
+            )
+        };
+        let method_u32_snippet = {
+            generate_bindings::error_scope!(&db, method_def_id, u32_args);
+            generate_bindings::report_must_bind_error(&db, method_def_id, u32_args, &fn_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                method_def_id,
+                u32_args,
+                error_report::anyhow!("Generic functions are not supported"),
+            )
+        };
+        let fn_i32_snippet = {
+            generate_bindings::error_scope!(&db, fn_def_id, i32_args);
+            generate_bindings::report_must_bind_error(&db, fn_def_id, i32_args, &fn_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                fn_def_id,
+                i32_args,
+                error_report::anyhow!("Generic functions are not supported"),
+            )
+        };
+        let fn_u32_snippet = {
+            generate_bindings::error_scope!(&db, fn_def_id, u32_args);
+            generate_bindings::report_must_bind_error(&db, fn_def_id, u32_args, &fn_err);
+            generate_bindings::generate_unsupported_def_with_args(
+                &db,
+                fn_def_id,
+                u32_args,
+                error_report::anyhow!("Generic functions are not supported"),
+            )
+        };
+
+        let point_i32_unsupported_msg =
+            "Error generating bindings for struct `BorrowedPoint<'static, i32>` \
+             defined at <crubit_unittests.rs>;l=2: \
+             Generic types are not supported";
+        let point_u32_unsupported_msg =
+            "Error generating bindings for struct `BorrowedPoint<'static, u32>` \
+             defined at <crubit_unittests.rs>;l=2: \
+             Generic types are not supported";
+        let method_i32_unsupported_msg = "Error generating bindings for associated function \
+             `BorrowedPoint::<'static, i32>::generic_method` \
+             defined at <crubit_unittests.rs>;l=8: \
+             Generic functions are not supported";
+        let method_u32_unsupported_msg = "Error generating bindings for associated function \
+             `BorrowedPoint::<'static, u32>::generic_method` \
+             defined at <crubit_unittests.rs>;l=8: \
+             Generic functions are not supported";
+        let fn_i32_unsupported_msg =
+            "Error generating bindings for function `borrowed_generic_fn::<'static, i32>` \
+             defined at <crubit_unittests.rs>;l=11: \
+             Generic functions are not supported";
+        let fn_u32_unsupported_msg =
+            "Error generating bindings for function `borrowed_generic_fn::<'static, u32>` \
+             defined at <crubit_unittests.rs>;l=11: \
+             Generic functions are not supported";
+        assert_cc_matches!(
+            point_i32_snippet.tokens,
+            quote! { __COMMENT__ #point_i32_unsupported_msg }
+        );
+        assert_cc_matches!(
+            point_u32_snippet.tokens,
+            quote! { __COMMENT__ #point_u32_unsupported_msg }
+        );
+        assert_cc_matches!(
+            method_i32_snippet.tokens,
+            quote! { __COMMENT__ #method_i32_unsupported_msg }
+        );
+        assert_cc_matches!(
+            method_u32_snippet.tokens,
+            quote! { __COMMENT__ #method_u32_unsupported_msg }
+        );
+        assert_cc_matches!(fn_i32_snippet.tokens, quote! { __COMMENT__ #fn_i32_unsupported_msg });
+        assert_cc_matches!(fn_u32_snippet.tokens, quote! { __COMMENT__ #fn_u32_unsupported_msg });
+
+        let report_json = error_report.to_json_string();
+        for expected_item in [
+            "rust_out::BorrowedPoint<'static, i32>",
+            "rust_out::BorrowedPoint<'static, u32>",
+            "rust_out::BorrowedPoint::<'static, i32>::generic_method",
+            "rust_out::BorrowedPoint::<'static, u32>::generic_method",
+            "rust_out::borrowed_generic_fn::<'static, i32>",
+            "rust_out::borrowed_generic_fn::<'static, u32>",
+        ] {
+            assert!(
+                report_json.contains(&format!("\"name\": \"{expected_item}\"")),
+                "Expected error report to contain entry for {expected_item}, got:\n{report_json}"
+            );
+        }
+
+        let fatal_msg = fatal_errors.take_string();
+        for expected_item in [
+            "BorrowedPoint<'static, i32>",
+            "BorrowedPoint<'static, u32>",
+            "BorrowedPoint::<'static, i32>::generic_method",
+            "BorrowedPoint::<'static, u32>::generic_method",
+            "borrowed_generic_fn::<'static, i32>",
+            "borrowed_generic_fn::<'static, u32>",
+        ] {
+            assert!(
+                fatal_msg.contains(&format!(
+                    "hard error because `#[crubit_annotate::must_bind]` was applied to \
+                     `{expected_item}`"
+                )),
+                "Expected fatal_errors to record must_bind error for {expected_item}, got:\n{fatal_msg}"
+            );
+        }
     });
 }

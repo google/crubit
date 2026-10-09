@@ -7,7 +7,7 @@ use crate::generate_struct_and_union::{
     anonymous_field_ident, generate_associated_item, generate_fields, generate_relocating_ctor,
     has_type_or_const_vars, scalar_value_to_string,
 };
-use crate::generate_unsupported_def;
+use crate::{generate_unsupported_def, generate_unsupported_def_with_args};
 use arc_anyhow::{bail, Result};
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
@@ -2055,11 +2055,13 @@ pub fn generate_template_specialization<'tcx>(
     let mut snippets = match &specialization {
         TemplateSpecialization::Adt(adt) => adt.clone().api_snippets(db),
         TemplateSpecialization::TraitImpl(trait_impl) => {
+            crate::error_scope!(db, trait_impl.trait_impl);
             generate_trait_impl_specialization(db, trait_impl).unwrap_or_else(|err| {
                 generate_unsupported_def(db, trait_impl.trait_impl, err).into_main_api()
             })
         }
         TemplateSpecialization::NegativeAutoTraitImpl(negative_auto_trait_impl) => {
+            crate::error_scope!(db, negative_auto_trait_impl.self_def_id);
             generate_negative_auto_trait_impl_specialization(db, negative_auto_trait_impl)
                 .unwrap_or_else(|err| {
                     generate_unsupported_def(db, negative_auto_trait_impl.self_def_id, err)
@@ -2068,8 +2070,9 @@ pub fn generate_template_specialization<'tcx>(
         }
         TemplateSpecialization::StdHash(std_hash) => generate_std_hash_specialization(db, std_hash)
             .unwrap_or_else(|err| {
-                if let Some(adt) = std_hash.self_ty.ty_adt_def() {
-                    generate_unsupported_def(db, adt.did(), err).into_main_api()
+                if let ty::TyKind::Adt(adt, substs) = std_hash.self_ty.kind() {
+                    crate::error_scope!(db, adt.did(), substs);
+                    generate_unsupported_def_with_args(db, adt.did(), substs, err).into_main_api()
                 } else {
                     ApiSnippets::default()
                 }

@@ -76,6 +76,15 @@ pub struct AdtCoreBindings<'tcx> {
     pub rs_fully_qualified_name: TokenStream,
 }
 
+impl<'tcx> AdtCoreBindings<'tcx> {
+    pub fn substs(&self) -> &'tcx [rustc_middle::ty::GenericArg<'tcx>] {
+        match self.common.self_ty.kind() {
+            rustc_middle::ty::TyKind::Adt(_, substs) => substs,
+            _ => &[],
+        }
+    }
+}
+
 // AdtCoreBindings are a pure (and memoized...) function of the def_id.
 impl PartialEq for AdtCoreBindings<'_> {
     fn eq(&self, other: &Self) -> bool {

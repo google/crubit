@@ -126,6 +126,41 @@ pub fn bindings_db_for_tests_with_features<'tcx>(
     with_kythe_annotations: bool,
     self_namespace: Option<&str>,
 ) -> BindingsGenerator<'tcx> {
+    bindings_db_for_tests_with_features_and_errors(
+        tcx,
+        features,
+        with_kythe_annotations,
+        self_namespace,
+        Rc::new(IgnoreErrors),
+        Rc::new(FatalErrors::new()),
+    )
+}
+
+pub fn bindings_db_for_tests_with_error_report<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+) -> (BindingsGenerator<'tcx>, Rc<error_report::ErrorReport>, Rc<FatalErrors>) {
+    let error_report = Rc::new(error_report::ErrorReport::new(error_report::SourceLanguage::Rust));
+    let fatal_errors = Rc::new(FatalErrors::new());
+    let db = bindings_db_for_tests_with_features_and_errors(
+        tcx,
+        features,
+        /* with_kythe_annotations= */ false,
+        /* self_namespace= */ None,
+        error_report.clone(),
+        fatal_errors.clone(),
+    );
+    (db, error_report, fatal_errors)
+}
+
+fn bindings_db_for_tests_with_features_and_errors<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    features: flagset::FlagSet<crubit_feature::CrubitFeature>,
+    with_kythe_annotations: bool,
+    self_namespace: Option<&str>,
+    errors: Rc<dyn error_report::ErrorReporting>,
+    fatal_errors: Rc<dyn error_report::ReportFatalError>,
+) -> BindingsGenerator<'tcx> {
     const KNOWN_CRATE_NAMES: &[&str] = &["alloc", "core", "std"];
     let crate_name_to_include_paths = KNOWN_CRATE_NAMES
         .iter()
@@ -165,8 +200,8 @@ pub fn bindings_db_for_tests_with_features<'tcx>(
         Rc::new(crate_name_to_features),
         Rc::new(crate_name_to_namespace),
         /* crate_renames= */ HashMap::default().into(),
-        /* errors = */ Rc::new(IgnoreErrors),
-        /* fatal_errors= */ Rc::new(FatalErrors::new()),
+        errors,
+        fatal_errors,
         /* is_golden_test= */ true,
         /* include_guard */ IncludeGuard::PragmaOnce,
         /* ignore_symbols_from_files */ HashSet::default().into(),
