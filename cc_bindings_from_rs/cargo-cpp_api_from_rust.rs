@@ -473,6 +473,23 @@ impl BindingGenerationContext {
         cpp_api_from_rust_lib::run_with_cmdline_args(&cmdline)?;
         pkg_to_header.insert(info.pkg_id_repr.to_string(), final_h_filename);
 
+        // In cargo-cpp_api_from_rust, each crate's bindings are compiled as submodules
+        // of a single combined crate (`[target]_cc_api.rs`). `#![no_std]` is only valid
+        // at the crate root, so delete it from submodule files to prevent `unused_attributes`
+        // errors.
+        if intermediate_rs.exists() {
+            let rs_content = fs::read_to_string(&intermediate_rs)?;
+            if rs_content.contains("#![no_std]") {
+                let updated = rs_content
+                    .lines()
+                    .filter(|line| line.trim() != "#![no_std]")
+                    .collect::<Vec<_>>()
+                    .join("\n")
+                    + "\n";
+                fs::write(&intermediate_rs, updated)?;
+            }
+        }
+
         // Final outputs: copy/rename from deps/ to their final locations.
         fs::copy(&intermediate_h, &final_h)?;
         Ok(())
@@ -480,13 +497,6 @@ impl BindingGenerationContext {
 
     fn generate_bindings(&self) -> Result<String> {
         let mut pkg_to_header = HashMap::new();
-        let mut lib_rs_content = r#"
-extern crate alloc;
-extern crate core;
-extern crate proc_macro;
-
-"#
-        .to_string();
         let headers_dir = &self.dirs.headers_dir;
         let profile_dir = &self.dirs.profile_dir;
 
@@ -496,6 +506,16 @@ extern crate proc_macro;
 
         // 1. Locate standard library crates and generate bindings for them first.
         let stdlib_crates = Self::find_stdlib_rmetas(&self.target_libdir)?;
+        let has_std = stdlib_crates.iter().any(|(name, _)| name == "std");
+        let no_std = if has_std { "" } else { "#![no_std]\n" };
+        let mut lib_rs_content = format!(
+            r#"
+{no_std}extern crate alloc;
+extern crate core;
+extern crate proc_macro;
+
+"#
+        );
         let mut stdlib_externs = Vec::new();
         for (crate_name, rmeta_path) in &stdlib_crates {
             let rs_crate_name = format!("{}_cc_api", crate_name.replace('-', "_"));

@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::traits_golden::AssociatedTypeStruct>() == 16);
-const _: () = assert!(::std::mem::align_of::<::traits_golden::AssociatedTypeStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::traits_golden::AssociatedTypeStruct>() == 16);
+const _: () = assert!(::core::mem::align_of::<::traits_golden::AssociatedTypeStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(
     __ret_ptr: *mut core::ffi::c_void,
@@ -49,8 +49,8 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_ufrom_utraits_ugolden_x0000003a
         <::traits_golden::AssociatedTypeStruct as ::core::clone::Clone>::clone_from(__self, source)
     }
 }
-const _: () = assert!(::std::mem::size_of::<::traits_golden::Foo>() == 8);
-const _: () = assert!(::std::mem::align_of::<::traits_golden::Foo>() == 4);
+const _: () = assert!(::core::mem::size_of::<::traits_golden::Foo>() == 8);
+const _: () = assert!(::core::mem::align_of::<::traits_golden::Foo>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aFoo(
     __ret_ptr: *mut core::ffi::c_void,
@@ -67,10 +67,10 @@ unsafe extern "C" fn __crubit_thunk_new(x: i32, y: i32, __ret_ptr: *mut core::ff
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
-const _: () = assert!(::std::mem::size_of::<::traits_golden::LifetimeStruct>() == 4);
-const _: () = assert!(::std::mem::align_of::<::traits_golden::LifetimeStruct>() == 4);
-const _: () = assert!(::std::mem::size_of::<::traits_golden::MyStruct>() == 4);
-const _: () = assert!(::std::mem::align_of::<::traits_golden::MyStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::traits_golden::LifetimeStruct>() == 4);
+const _: () = assert!(::core::mem::align_of::<::traits_golden::LifetimeStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::traits_golden::MyStruct>() == 4);
+const _: () = assert!(::core::mem::align_of::<::traits_golden::MyStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aMyStruct(
     __ret_ptr: *mut core::ffi::c_void,
@@ -87,8 +87,8 @@ unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_voi
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
-const _: () = assert!(::std::mem::size_of::<::traits_golden::MyStruct2>() == 4);
-const _: () = assert!(::std::mem::align_of::<::traits_golden::MyStruct2>() == 4);
+const _: () = assert!(::core::mem::size_of::<::traits_golden::MyStruct2>() == 4);
+const _: () = assert!(::core::mem::align_of::<::traits_golden::MyStruct2>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x0000003aMyStruct2(
     __ret_ptr: *mut core::ffi::c_void,
@@ -98,8 +98,8 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_utraits_ugolden_x0000003a_x
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
-const _: () = assert!(::std::mem::size_of::<::traits_golden::StructWithAssociatedConst>() == 4);
-const _: () = assert!(::std::mem::align_of::<::traits_golden::StructWithAssociatedConst>() == 4);
+const _: () = assert!(::core::mem::size_of::<::traits_golden::StructWithAssociatedConst>() == 4);
+const _: () = assert!(::core::mem::align_of::<::traits_golden::StructWithAssociatedConst>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::traits_golden::StructWithAssociatedConst, x) == 0);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_AssociatedTypeTrait_uget_umy_uassoc_utype_utraits_ugolden_x0000003a_x0000003aAssociatedTypeStruct(

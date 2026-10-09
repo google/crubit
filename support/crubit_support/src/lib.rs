@@ -4,6 +4,8 @@
 
 //! Unified runtime support library for Crubit generated bindings.
 
+#![no_std]
+
 extern crate alloc;
 
 pub mod array;

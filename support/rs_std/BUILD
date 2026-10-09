@@ -6,6 +6,7 @@ load("@rules_rust//rust:defs.bzl", "rust_library")
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
     "cpp_api_from_rust_toolchain_bindings",
+    "crubit_rust_stdlib",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test", "crubit_rust_test")
 
@@ -505,6 +506,47 @@ cpp_api_from_rust_toolchain_bindings(
         ":rs_alloc",
         ":rs_core",
     ],
+)
+
+crubit_rust_stdlib(
+    name = "core",
+    visibility = ["//visibility:public"],
+    deps = [":rs_core"],
+)
+
+crubit_rust_stdlib(
+    name = "alloc",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":rs_alloc",
+        ":rs_core",
+    ],
+)
+
+crubit_rust_stdlib(
+    name = "std",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":rs_alloc",
+        ":rs_core",
+        ":rs_std",
+    ],
+)
+
+alias(
+    name = "default_stdlib",
+    actual = select({
+        "@platforms//os:none": ":core",
+        "@rules_rust//:is_no_std": ":alloc",
+        "//conditions:default": ":std",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+label_flag(
+    name = "stdlib",
+    build_setting_default = ":default_stdlib",
+    visibility = ["//visibility:public"],
 )
 
 crubit_cc_test(

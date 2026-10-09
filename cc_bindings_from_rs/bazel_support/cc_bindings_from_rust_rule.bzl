@@ -48,6 +48,7 @@ load(
 )
 load(
     "//cc_bindings_from_rs/bazel_support:providers.bzl",
+    "CcBindingsFromRustGroupInfo",
     "CcBindingsFromRustInfo",
     "GeneratedBindingsInfo",
 )
@@ -511,10 +512,11 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         if "cc_std_impl" in file.path or "cc_std_impl" in file.short_path:
             continue
         cli_flags.append("--ignore-symbols-from-files=" + file.path)
-    dep_bindings_infos = _get_dep_bindings_infos(ctx.rule.attr) + [
-        target[CcBindingsFromRustInfo]
-        for target in ctx.attr._stdlib_bindings
-    ]
+    stdlib_target = ctx.attr._stdlib_bindings
+    stdlib_bindings_infos = (
+        stdlib_target[CcBindingsFromRustGroupInfo].infos if CcBindingsFromRustGroupInfo in stdlib_target else [stdlib_target[CcBindingsFromRustInfo]]
+    )
+    dep_bindings_infos = _get_dep_bindings_infos(ctx.rule.attr) + stdlib_bindings_infos
     config = crate_name_to_library_config(
         aspect_hints = ctx.rule.attr.aspect_hints,
         rust_infos = dep_bindings_infos,
@@ -618,7 +620,6 @@ private_common_attrs = {
             "//support:bridge_rust",
             "//support:crubit_support",
             "//support:hash_rust",
-            "//support/rs_std:dyn_erased_future",
         ],
     ),
     "_rustfmt": attr.label(
@@ -656,13 +657,9 @@ cc_bindings_from_rust_aspect = aspect(
     doc = "Aspect for generating C++ bindings for a Rust library.",
     attr_aspects = ["deps"],
     attrs = private_common_attrs | {
-        "_stdlib_bindings": attr.label_list(
-            doc = "Bindings for the standard library. These are implicitly imported by all bindings.",
-            default = [
-                "//support/rs_std:rs_std",
-                "//support/rs_std:rs_alloc",
-                "//support/rs_std:rs_core",
-            ],
+        "_stdlib_bindings": attr.label(
+            doc = "Standard library crates (core, alloc, std). These are implicitly imported by all bindings.",
+            default = "//support/rs_std:stdlib",
         ),
     },
     toolchains = [
@@ -874,4 +871,23 @@ cpp_api_from_rust_toolchain_bindings = rule(
         config_common.toolchain_type("//cc_bindings_from_rs/bazel_support:toolchain_type", mandatory = False),
     ] + use_cpp_toolchain(),
     fragments = ["cpp"],
+)
+
+def _crubit_rust_stdlib_impl(ctx):
+    infos = [dep[CcBindingsFromRustInfo] for dep in ctx.attr.deps if CcBindingsFromRustInfo in dep]
+    cc_infos = [dep[CcInfo] for dep in ctx.attr.deps if CcInfo in dep]
+    return [
+        CcBindingsFromRustGroupInfo(infos = infos),
+        cc_common.merge_cc_infos(cc_infos = cc_infos),
+    ]
+
+crubit_rust_stdlib = rule(
+    implementation = _crubit_rust_stdlib_impl,
+    doc = "Aggregates Rust standard library targets (e.g. core, alloc, std) for Crubit bindings.",
+    attrs = {
+        "deps": attr.label_list(
+            doc = "Targets for the active standard library crates (e.g. :rs_core, :rs_alloc, :rs_std).",
+            providers = [[CcBindingsFromRustInfo], [CcInfo]],
+        ),
+    },
 )

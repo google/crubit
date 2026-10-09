@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::rs_index_golden::CustomIndex>() == 8);
-const _: () = assert!(::std::mem::align_of::<::rs_index_golden::CustomIndex>() == 8);
+const _: () = assert!(::core::mem::size_of::<::rs_index_golden::CustomIndex>() == 8);
+const _: () = assert!(::core::mem::align_of::<::rs_index_golden::CustomIndex>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(index: usize, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -21,8 +21,8 @@ unsafe extern "C" fn __crubit_thunk_new(index: usize, __ret_ptr: *mut core::ffi:
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::CustomIndex, 0) == 0);
-const _: () = assert!(::std::mem::size_of::<::rs_index_golden::Id>() == 4);
-const _: () = assert!(::std::mem::align_of::<::rs_index_golden::Id>() == 4);
+const _: () = assert!(::core::mem::size_of::<::rs_index_golden::Id>() == 4);
+const _: () = assert!(::core::mem::align_of::<::rs_index_golden::Id>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(id: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -31,8 +31,8 @@ unsafe extern "C" fn __crubit_thunk_new(id: i32, __ret_ptr: *mut core::ffi::c_vo
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::Id, 0) == 0);
-const _: () = assert!(::std::mem::size_of::<::rs_index_golden::IntPair>() == 8);
-const _: () = assert!(::std::mem::align_of::<::rs_index_golden::IntPair>() == 4);
+const _: () = assert!(::core::mem::size_of::<::rs_index_golden::IntPair>() == 8);
+const _: () = assert!(::core::mem::align_of::<::rs_index_golden::IntPair>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(x: i32, y: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -80,8 +80,8 @@ unsafe extern "C" fn __crubit_thunk_IndexMut_uindex_umut_urs_uindex_ugolden_x000
 }
 const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::IntPair, x) == 0);
 const _: () = assert!(::core::mem::offset_of!(::rs_index_golden::IntPair, y) == 4);
-const _: () = assert!(::std::mem::size_of::<::rs_index_golden::Map>() == 32);
-const _: () = assert!(::std::mem::align_of::<::rs_index_golden::Map>() == 8);
+const _: () = assert!(::core::mem::size_of::<::rs_index_golden::Map>() == 32);
+const _: () = assert!(::core::mem::align_of::<::rs_index_golden::Map>() == 8);
 #[unsafe(no_mangle)]
 extern "C" fn __crubit_thunk_Drop_udrop_urs_uindex_ugolden_x0000003a_x0000003aMap(
     __self: *mut ::rs_index_golden::Map,

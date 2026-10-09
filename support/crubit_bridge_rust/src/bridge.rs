@@ -4,6 +4,8 @@
 
 //! Forwarding module to `crubit_support::bridge`.
 
+#![cfg_attr(not(test), no_std)]
+
 pub use crubit_support::bridge::*;
 // Replicates the interface of `crubit_support::bridge`.
 pub use crubit_support::{unstable_encode, unstable_return};

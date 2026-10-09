@@ -258,7 +258,7 @@ void take_option_result_unmovable(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020unit_ut_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < () >") rs_std::Option<rs_std::unit_t>
+    "core :: option :: Option < () >") rs_std::Option<rs_std::unit_t>
     : public rs_std::OptionBase<rs_std::Option<rs_std::unit_t>,
                                 rs_std::unit_t> {
  public:
@@ -333,7 +333,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: UnitOptionField") alignas(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020const_x00000020_x0000002a_x00000020_x0000003e
 template <>
 struct alignas(8)
-    CRUBIT_INTERNAL_RUST_TYPE("std :: option :: Option < * const i32 >")
+    CRUBIT_INTERNAL_RUST_TYPE("core :: option :: Option < * const i32 >")
         rs_std::Option<::std::int32_t const*>
     : public rs_std::OptionBase<rs_std::Option<::std::int32_t const*>,
                                 ::std::int32_t const*> {
@@ -394,7 +394,7 @@ struct alignas(8)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < i32 >") rs_std::Option<::std::int32_t>
+    "core :: option :: Option < i32 >") rs_std::Option<::std::int32_t>
     : public rs_std::OptionBase<rs_std::Option<::std::int32_t>,
                                 ::std::int32_t> {
  public:
@@ -452,7 +452,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int64_ut_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < isize >") rs_std::Option<::std::int64_t>
+    "core :: option :: Option < isize >") rs_std::Option<::std::int64_t>
     : public rs_std::OptionBase<rs_std::Option<::std::int64_t>,
                                 ::std::int64_t> {
  public:
@@ -510,7 +510,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020decltype_x00000020_x00000028char_x00000020_x000000280_x00000029_x00000029_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: option_golden :: BridgedType >")
+    "core :: option :: Option < :: option_golden :: BridgedType >")
     rs_std::Option<decltype(char(0))>
     : public rs_std::OptionBase<rs_std::Option<decltype(char(0))>,
                                 decltype(char(0))> {
@@ -568,7 +568,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CloneNoDefault_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: option_golden :: CloneNoDefault >")
+    "core :: option :: Option < :: option_golden :: CloneNoDefault >")
     rs_std::Option<::option::CloneNoDefault>
     : public rs_std::OptionBase<rs_std::Option<::option::CloneNoDefault>,
                                 ::option::CloneNoDefault> {
@@ -649,7 +649,7 @@ OptCloneNoDefault final {
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020CopyNoDefault_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: option_golden :: CopyNoDefault >")
+    "core :: option :: Option < :: option_golden :: CopyNoDefault >")
     rs_std::Option<::option::CopyNoDefault>
     : public rs_std::OptionBase<rs_std::Option<::option::CopyNoDefault>,
                                 ::option::CopyNoDefault> {
@@ -728,7 +728,7 @@ OptCopyNoDefault final {
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasDefault_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: option_golden :: HasDefault >")
+    "core :: option :: Option < :: option_golden :: HasDefault >")
     rs_std::Option<::option::HasDefault>
     : public rs_std::OptionBase<rs_std::Option<::option::HasDefault>,
                                 ::option::HasDefault> {
@@ -805,7 +805,7 @@ OptDefaultWithDrop final {
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: option_golden :: HasNoDefault >")
+    "core :: option :: Option < :: option_golden :: HasNoDefault >")
     rs_std::Option<::option::HasNoDefault>
     : public rs_std::OptionBase<rs_std::Option<::option::HasNoDefault>,
                                 ::option::HasNoDefault> {
@@ -886,7 +886,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasOptions_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: option_golden :: HasOptions >")
+    "core :: option :: Option < :: option_golden :: HasOptions >")
     rs_std::Option<::option::HasOptions>
     : public rs_std::OptionBase<rs_std::Option<::option::HasOptions>,
                                 ::option::HasOptions> {
@@ -963,7 +963,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasHasOptions") alignas(1)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: option_golden :: LessThan20U8 >")
+    "core :: option :: Option < :: option_golden :: LessThan20U8 >")
     rs_std::Option<::option::LessThan20U8>
     : public rs_std::OptionBase<rs_std::Option<::option::LessThan20U8>,
                                 ::option::LessThan20U8> {
@@ -1024,7 +1024,7 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020LessThan20U8_x00000020_x0000003e_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: core :: option :: Option < :: option_golden "
+    "core :: option :: Option < :: core :: option :: Option < :: option_golden "
     ":: LessThan20U8 > >")
     rs_std::Option<rs_std::Option<::option::LessThan20U8>>
     : public rs_std::OptionBase<
@@ -1092,8 +1092,8 @@ struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: core :: result :: Result < i32 , :: alloc :: "
-    "string :: String > >")
+    "core :: option :: Option < :: core :: result :: Result < i32 , :: alloc "
+    ":: string :: String > >")
     rs_std::Option<rs_std::Result<::std::int32_t, ::rs::alloc::string::String>>
     : public rs_std::OptionBase<
           rs_std::Option<
@@ -1170,7 +1170,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: core :: result :: Result < :: option_golden "
+    "core :: option :: Option < :: core :: result :: Result < :: option_golden "
     ":: HasNoDefault , :: alloc :: string :: String > >") rs_std::
     Option<rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>>
     : public rs_std::OptionBase<
@@ -1254,10 +1254,10 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < :: core :: result :: Result < :: core :: option "
-    ":: Option < :: core :: result :: Result < i32 , :: alloc :: string :: "
-    "String > > , :: core :: result :: Result < :: core :: option :: Option < "
-    "i32 > , :: core :: option :: Option < i32 > > > >") rs_std::
+    "core :: option :: Option < :: core :: result :: Result < :: core :: "
+    "option :: Option < :: core :: result :: Result < i32 , :: alloc :: string "
+    ":: String > > , :: core :: result :: Result < :: core :: option :: Option "
+    "< i32 > , :: core :: option :: Option < i32 > > > >") rs_std::
     Option<rs_std::Result<rs_std::Option<rs_std::Result<
                               ::std::int32_t, ::rs::alloc::string::String>>,
                           rs_std::Result<rs_std::Option<::std::int32_t>,
@@ -1384,7 +1384,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint32_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < u32 >") rs_std::Option<::std::uint32_t>
+    "core :: option :: Option < u32 >") rs_std::Option<::std::uint32_t>
     : public rs_std::OptionBase<rs_std::Option<::std::uint32_t>,
                                 ::std::uint32_t> {
  public:
@@ -1442,7 +1442,7 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
 struct alignas(1) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < u8 >") rs_std::Option<::std::uint8_t>
+    "core :: option :: Option < u8 >") rs_std::Option<::std::uint8_t>
     : public rs_std::OptionBase<rs_std::Option<::std::uint8_t>,
                                 ::std::uint8_t> {
  public:
@@ -1529,8 +1529,8 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: HasOptions") alignas(1)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020crubit_x00000020_x0000003a_x0000003a_x00000020type_uidentity_ut_x00000020_x0000003c_x00000020void_x00000020_x00000028void_x00000020_x0000002a_x00000020_x0000002c_x00000020void_x00000020_x0000002a_x00000029_x00000020_x0000003e_x00000020_x0000002a_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < unsafe extern \"C\" fn (* mut :: core :: ffi :: "
-    "c_void , * mut :: core :: ffi :: c_void) >")
+    "core :: option :: Option < unsafe extern \"C\" fn (* mut :: core :: ffi "
+    ":: c_void , * mut :: core :: ffi :: c_void) >")
     rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>
     : public rs_std::OptionBase<
           rs_std::Option<crubit::type_identity_t<void(void*, void*)>*>,
@@ -1611,7 +1611,7 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: option_golden :: ZStream") alignas(8)
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint64_ut_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: option :: Option < usize >") rs_std::Option<::std::uint64_t>
+    "core :: option :: Option < usize >") rs_std::Option<::std::uint64_t>
     : public rs_std::OptionBase<rs_std::Option<::std::uint64_t>,
                                 ::std::uint64_t> {
  public:
@@ -1690,7 +1690,7 @@ OptionWithSizeTypes final {
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < i32 , :: alloc :: string :: String >")
+    "core :: result :: Result < i32 , :: alloc :: string :: String >")
     rs_std::Result<::std::int32_t, ::rs::alloc::string::String>
     : public rs_std::ResultBase<
           rs_std::Result<::std::int32_t, ::rs::alloc::string::String>,
@@ -1760,7 +1760,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020option_x00000020_x0000003a_x0000003a_x00000020HasNoDefault_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < :: option_golden :: HasNoDefault , :: alloc :: "
+    "core :: result :: Result < :: option_golden :: HasNoDefault , :: alloc :: "
     "string :: String >")
     rs_std::Result<::option::HasNoDefault, ::rs::alloc::string::String>
     : public rs_std::ResultBase<
@@ -1835,7 +1835,7 @@ struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < :: core :: option :: Option < i32 > , :: core "
+    "core :: result :: Result < :: core :: option :: Option < i32 > , :: core "
     ":: option :: Option < i32 > >")
     rs_std::Result<rs_std::Option<::std::int32_t>,
                    rs_std::Option<::std::int32_t>>
@@ -1912,10 +1912,10 @@ struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020rs_x00000020_x0000003a_x0000003a_x00000020alloc_x00000020_x0000003a_x0000003a_x00000020string_x00000020_x0000003a_x0000003a_x00000020String_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000002c_x00000020rs_ustd_x00000020_x0000003a_x0000003a_x00000020Option_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e_x00000020_x0000003e_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < :: core :: option :: Option < :: core :: result "
-    ":: Result < i32 , :: alloc :: string :: String > > , :: core :: result :: "
-    "Result < :: core :: option :: Option < i32 > , :: core :: option :: "
-    "Option < i32 > > >")
+    "core :: result :: Result < :: core :: option :: Option < :: core :: "
+    "result :: Result < i32 , :: alloc :: string :: String > > , :: core :: "
+    "result :: Result < :: core :: option :: Option < i32 > , :: core :: "
+    "option :: Option < i32 > > >")
     rs_std::Result<rs_std::Option<rs_std::Result<::std::int32_t,
                                                  ::rs::alloc::string::String>>,
                    rs_std::Result<rs_std::Option<::std::int32_t>,
