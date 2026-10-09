@@ -17,7 +17,6 @@
 #include "support/annotations.h"
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
-#include "rs_bindings_from_cc/test/bridging/rust_library.h"
 #include "support/annotations.h"
 #include "support/bridge.h"
 #include "support/rs_std/slice_ref.h"
@@ -69,15 +68,10 @@ inline std::optional<inner::Foo> MakeOptionalFoo() { return inner::Foo(); }
 
 std::pair<std::pair<int, float>, bool> MakePair(int a, float b, bool c);
 
-std::pair<std::optional<int>, std::optional<std::pair<float, Vec3<float>>>>
-MakeStuff();
-
 // Aliases to bridge types are bound as aliases to the bridged Rust types
-// (`Option<i32>` and `(i32, f32)` respectively).
-using OptionalInt = std::optional<int>;
+// (`(i32, f32)`).
 using IntFloatPair = std::pair<int, float>;
 
-OptionalInt MakeOptionalInt(bool is_present);
 IntFloatPair MakeIntFloatPair(int a, float b);
 
 // Not a bridge type!
@@ -96,9 +90,6 @@ std::pair<std::string, Stuff> ProperlyGreetStuff(Stuff stuff);
 
 std::string_view StringViewByValue(std::string_view sv);
 
-std::optional<std::string_view> ReturnOptionalStringView(bool is_present,
-                                                         std::string_view sv);
-
 rs_std::SliceRef<const std::string_view> ReturnSliceRefStringView(
     rs_std::SliceRef<const std::string_view> slice);
 
@@ -108,15 +99,6 @@ absl::StatusOr<void*> AcceptsVoidPtrAndReturnsStatusErrorIfNull(void* ptr);
 CRUBIT_UNSAFE_MARK_SAFE
 absl::StatusOr<rs_std::SliceRef<const int>>
 AcceptsSliceAndReturnsStatusErrorIfEmpty(rs_std::SliceRef<const int> slice);
-
-CRUBIT_MUST_BIND
-inline std::optional<rust_library::MyStruct> ReturnOptionalMyStruct() {
-  return rust_library::MyStruct();
-};
-
-enum class MyEnum { kFoo, kBar };
-
-std::optional<MyEnum> ValidateMyEnum(MyEnum value);
 
 struct StructWithVirtualDestructor {
   virtual ~StructWithVirtualDestructor() = default;
