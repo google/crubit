@@ -2,12 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#![feature(allocator_api)]
-
 use cc_std::std::{
     unique_ptr, virtual_unique_ptr, Allocator, NonNull, TryDeref, TryDerefMut, TryDerefPin,
 };
-use googletest::{expect_eq, expect_false, expect_true, gtest};
+use googletest::{expect_eq, expect_true, gtest};
 use std::sync::Arc;
 
 #[track_caller]
