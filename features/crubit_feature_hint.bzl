@@ -13,6 +13,7 @@ load(
     "//features:global_features.bzl",
     "NO_ASSUME_LIFETIMES_TARGETS",
     "NO_TEMPLATE_INSTANTIATION_TARGETS",
+    "SUPPORTED_FEATURE_DENYLISTS",
 )
 
 visibility(["//..."])
@@ -83,6 +84,30 @@ def _has_explicit_opt_in(aspect_hints, features):
             return True
     return False
 
+def _denied_features(label, aspect_hints, denylists):
+    return set([
+        feature
+        for feature, patterns in denylists.items()
+        if _matches_any_pattern(label, patterns) and not _has_explicit_opt_in(aspect_hints, (feature,))
+    ])
+
+denied_features_for_test = _denied_features
+
+def find_denied_crubit_features(target, aspect_ctx):
+    """Returns the features in `SUPPORTED_FEATURE_DENYLISTS` which are denied for a target.
+
+    A feature is denied if the target matches one of the feature's denylist patterns, and the
+    target doesn't explicitly opt in to the feature with the feature's own aspect hint.
+
+    Args:
+        target: The target, as seen in aspect_hint.
+        aspect_ctx: The ctx from an aspect_hint.
+
+    Returns:
+        A set of feature strings.
+    """
+    return _denied_features(target.label, aspect_ctx.rule.attr.aspect_hints, SUPPORTED_FEATURE_DENYLISTS)
+
 def find_crubit_features(target, aspect_ctx):
     """Returns the set of Crubit features enabled on a target.
 
@@ -97,6 +122,8 @@ def find_crubit_features(target, aspect_ctx):
     _add_features(features, target)
     for hint in aspect_ctx.rule.attr.aspect_hints:
         _add_features(features, hint)
+    denied = find_denied_crubit_features(target, aspect_ctx)
+    features = [f for f in features if f not in denied]
     if features:
         if _matches_any_pattern(target.label, NO_ASSUME_LIFETIMES_TARGETS):
             if not _has_explicit_opt_in(aspect_ctx.rule.attr.aspect_hints, ("assume_lifetimes", "experimental")):

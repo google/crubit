@@ -14,6 +14,8 @@ CcBindingsFromRustInfo = provider(
         "crate_key": "String with a crate key to use in --other-crate-bindings",
         "headers": "A list of C++ headers which correspond to this crate.",
         "features": "A list of features enabled for the bindings for this crate.",
+        "target_denied_features": ("A set of features denied for this crate by " +
+                                   "`SUPPORTED_FEATURE_DENYLISTS`, overriding `--default-features`. Optional."),
         "configuration": "A CcBindingsFromRustLibraryConfigInfo provider.",
     },
 )

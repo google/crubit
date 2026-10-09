@@ -59,6 +59,7 @@ load(
     "//features:crubit_feature_hint.bzl",
     "CrubitFeaturesInfo",
     "find_crubit_features",
+    "find_denied_crubit_features",
 )
 load(
     "//features:global_features.bzl",
@@ -184,7 +185,7 @@ def _filter_crubit_rustc_args(ctx, original_args, toolchain, dep_info):
     )
     return args
 
-def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_flags, crate_name, basename, inputs, args, rustc_env, proto_crate_renames, self_rmeta, is_golden_test_override = None):
+def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_flags, crate_name, basename, inputs, args, rustc_env, proto_crate_renames, self_rmeta, is_golden_test_override = None, target_denied_features = []):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
 
     Args:
@@ -202,6 +203,7 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
       proto_crate_renames: Mapping of the `rust_proto_library` to the `proto_library` crate name.
       self_rmeta: The rmeta file for the current crate.
       is_golden_test_override: Overrides value of `--is-golden-test` flag instead of checking for the transition.
+      target_denied_features: Features denied for this target by `SUPPORTED_FEATURE_DENYLISTS`, overriding `--default-features`.
 
     Returns:
       A tuple of (GeneratedBindingsInfo, features, current_config, output_depset).
@@ -240,12 +242,23 @@ def _generate_bindings(ctx, dep_bindings_infos, config, label, features, cli_fla
         default_features = [f for f in SUPPORTED_FEATURES if f not in unsupported_features]
         features = [f for f in features if f not in unsupported_features]
     else:
+        unsupported_features = []
         default_features = SUPPORTED_FEATURES
 
     crubit_args.add("--default-features", ",".join(default_features))
 
     for feature in features:
         crubit_args.add("--crate-feature", "self=" + feature)
+
+    # Features denied by `SUPPORTED_FEATURE_DENYLISTS` would otherwise come back via
+    # `--default-features`.
+    for dep_bindings_info in dep_bindings_infos:
+        for feature in getattr(dep_bindings_info, "target_denied_features", []):
+            if feature not in unsupported_features:
+                crubit_args.add("--crate-disabled-feature", dep_bindings_info.crate_key + "=" + feature)
+    for feature in target_denied_features:
+        if feature not in unsupported_features:
+            crubit_args.add("--crate-disabled-feature", "self=" + feature)
 
     outputs = [h_out_file, rs_out_file]
     if ctx.attr._generate_error_report[BuildSettingInfo].value:
@@ -484,6 +497,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         rmeta = target[CrateInfo].output
 
     features = find_crubit_features(target, ctx)
+    target_denied_features = find_denied_crubit_features(target, ctx)
     cli_flags = collect_cc_bindings_from_rust_cli_flags(target, ctx)
 
     ignore_symbols_from_files = depset(transitive = [
@@ -524,6 +538,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         rustc_env = env,
         proto_crate_renames = proto_crate_renames,
         self_rmeta = rmeta,
+        target_denied_features = target_denied_features,
     )
 
     dep_variant_info = _compile_rs_out_file(ctx, ctx.rule.attr, bindings_info.rust_file, target[CrateInfo].name, [target])
@@ -550,6 +565,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
             crate_key = crate_info.name,
             headers = [bindings_info.h_file],
             features = features,
+            target_denied_features = target_denied_features,
             configuration = config,
         ),
         bindings_info,

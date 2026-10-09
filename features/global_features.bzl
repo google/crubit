@@ -50,3 +50,12 @@ NO_ASSUME_LIFETIMES_TARGETS = [
 # buildifier: keep sorted <internal link>
 NO_TEMPLATE_INSTANTIATION_TARGETS = [
 ]
+
+# Per-feature denylists for features in `SUPPORTED_FEATURES`: maps a feature name to a list of
+# target patterns (in the same format as `NO_ASSUME_LIFETIMES_TARGETS`) which do not get that
+# feature by default.
+#
+# WARNING: Only add entries here as part of turning on a feature by default (i.e. adding it to
+# `SUPPORTED_FEATURES`). Do not add targets here for any other reason.
+SUPPORTED_FEATURE_DENYLISTS = {
+}
