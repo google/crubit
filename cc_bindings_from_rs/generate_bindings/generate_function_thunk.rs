@@ -47,7 +47,7 @@ pub(crate) fn classify_param_abi<'tcx>(
 /// How a non-callable value (parameter or return value) is passed across the `extern "C"` thunk
 /// ABI.
 pub(crate) enum ValueAbi<'tcx> {
-    Bridged(BridgedType<'tcx>),
+    Bridged(BridgedType),
     ByValue,
     LegacyTuple(&'tcx ty::List<Ty<'tcx>>),
     Array,
@@ -184,7 +184,7 @@ pub fn generate_thunk_decl<'tcx>(
                                 Ok(quote! { #cpp_type* })
                             }
                         }
-                        BridgedType::Composable(_) => Ok(quote! { unsigned char* }),
+                        BridgedType::Option(_) => Ok(quote! { unsigned char* }),
                     },
                     ParamAbi::Value(ValueAbi::ByValue) => {
                         let cpp_type = cpp_type.snippet.into_tokens(&mut prereqs);
@@ -221,7 +221,7 @@ pub fn generate_thunk_decl<'tcx>(
                 thunk_params.push(quote! { #main_api_ret_type* __ret_ptr });
                 quote! { void }
             }
-            ValueAbi::Bridged(BridgedType::Composable(_)) => {
+            ValueAbi::Bridged(BridgedType::Option(_)) => {
                 thunk_params.push(quote! { unsigned char * __ret_ptr });
                 quote! { void }
             }
@@ -265,7 +265,7 @@ pub fn generate_thunk_decl<'tcx>(
 fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
-    bridged_type: &BridgedType<'tcx>,
+    bridged_type: &BridgedType,
     local_name: &Ident,
     extern_c_decls: &mut BTreeSet<ExternCDecl>,
 ) -> Result<TokenStream> {
@@ -310,8 +310,8 @@ fn convert_bridged_type_from_c_abi_to_rust<'tcx>(
                 };
             })
         }
-        BridgedType::Composable(composable) => {
-            let crubit_abi_type_expr = CrubitAbiTypeToRustExprTokens(&composable.crubit_abi_type);
+        BridgedType::Option(crubit_abi_type) => {
+            let crubit_abi_type_expr = CrubitAbiTypeToRustExprTokens(crubit_abi_type);
             // SAFETY: The buffer is the correct size, as determined by Crubit.
             Ok(quote! {
                 let #local_name = unsafe {
@@ -384,7 +384,7 @@ fn c_abi_for_param_type<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
         }),
         ParamAbi::Value(ValueAbi::Bridged(bridged)) => match bridged {
             BridgedType::Legacy { .. } => Ok(quote! { *const core::ffi::c_void }),
-            BridgedType::Composable(_) => Ok(quote! { *const core::ffi::c_uchar }),
+            BridgedType::Option(_) => Ok(quote! { *const core::ffi::c_uchar }),
         },
         ParamAbi::Value(ValueAbi::ByValue) => {
             let rs_type = db.format_ty_for_rs(ty)?;
@@ -481,9 +481,8 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
                     }
                 }
             },
-            BridgedType::Composable(composable) => {
-                let crubit_abi_type_expr =
-                    CrubitAbiTypeToRustExprTokens(&composable.crubit_abi_type);
+            BridgedType::Option(crubit_abi_type) => {
+                let crubit_abi_type_expr = CrubitAbiTypeToRustExprTokens(&crubit_abi_type);
                 quote! {
                     // SAFETY: TODO(okabayashi)
                     unsafe {
@@ -671,7 +670,7 @@ pub fn generate_thunk_impl<'tcx>(
             thunk_return_type = quote! { () };
 
             let return_ptr_type = match return_abi {
-                ValueAbi::Bridged(BridgedType::Composable(_)) => {
+                ValueAbi::Bridged(BridgedType::Option(_)) => {
                     // Composable bridging writes its Crubit ABI form in an unsigned char array.
                     quote! { *mut core::ffi::c_uchar }
                 }
