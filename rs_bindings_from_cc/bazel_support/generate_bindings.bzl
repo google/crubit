@@ -178,11 +178,20 @@ def generate_bindings(
         system_include_directories = system_include_directories,
         include_directories = compilation_context.includes,
         quote_include_directories = compilation_context.quote_includes,
-        user_compile_flags = ctx.fragments.cpp.copts +
-                             ctx.fragments.cpp.cxxopts +
-                             header_includes + (
-            attr.copts if hasattr(attr, "copts") else []
-        ),
+        # TODO(b/571633624): Remove this intermediate filter once Crubit handles
+        # driver diagnostics / flag filtering in rs_bindings_from_cc and the
+        # release stabilizes.
+        user_compile_flags = [
+            f
+            for f in (
+                ctx.fragments.cpp.copts +
+                ctx.fragments.cpp.cxxopts +
+                header_includes + (
+                    attr.copts if hasattr(attr, "copts") else []
+                )
+            )
+            if not f.startswith("-Xactionanalyzer")
+        ],
         preprocessor_defines = depset(
             local_defines,
             transitive = [compilation_context.defines],
