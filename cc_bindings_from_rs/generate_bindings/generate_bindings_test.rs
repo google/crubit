@@ -536,6 +536,64 @@ fn test_format_item_reexport_private_type() {
 }
 
 #[test]
+fn test_generic_adt_pub_use_preserves_doc_deprecated_and_kythe() {
+    let test_src = r#"
+        #![allow(deprecated)]
+        pub mod submodule {
+            /// Doc comment for SubGeneric.
+            #[deprecated = "Use `NewGeneric` instead"]
+            pub struct SubGeneric<T> {
+                pub item: T,
+            }
+        }
+        pub use submodule::SubGeneric;
+        pub use submodule::SubGeneric as RenamedSubGeneric;
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Experimental
+                | crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::Generics,
+            /* with_kythe_annotations= */ true,
+            None,
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                namespace rust_out {
+                    __CAPTURE_TAG__ "<crubit_unittests.rs>" "181" "191"
+                    __COMMENT__ " Doc comment for SubGeneric.\n\nGenerated from: <crubit_unittests.rs>;l=6"
+                    template <typename T>
+                    struct __CAPTURE_BEGIN__ RenamedSubGeneric __CAPTURE_END__ {
+                        static_assert(false, "This template can only be used via a specialization");
+                    };
+
+                    __CAPTURE_TAG__ "<crubit_unittests.rs>" "181" "191"
+                    __COMMENT__ " Doc comment for SubGeneric.\n\nGenerated from: <crubit_unittests.rs>;l=6"
+                    template <typename T>
+                    using __CAPTURE_BEGIN__ SubGeneric __CAPTURE_END__
+                        [[deprecated("Use `NewGeneric` instead")]] =
+                            ::rust_out::RenamedSubGeneric<T>;
+                }
+                ...
+                namespace rust_out::submodule {
+                    __CAPTURE_TAG__ "<crubit_unittests.rs>" "181" "191"
+                    __COMMENT__ " Doc comment for SubGeneric.\n\nGenerated from: <crubit_unittests.rs>;l=6"
+                    template <typename T>
+                    using __CAPTURE_BEGIN__ SubGeneric __CAPTURE_END__
+                        [[deprecated("Use `NewGeneric` instead")]] =
+                            ::rust_out::RenamedSubGeneric<T>;
+                }
+                ...
+            }
+        );
+    });
+}
+
+#[test]
 fn test_generated_bindings_module_deprecated_no_args() {
     let test_src = r#"
             #[deprecated]

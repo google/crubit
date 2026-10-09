@@ -40,8 +40,8 @@ use crate::generate_function_thunk::{
 };
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
-    generate_adt_core, generate_generic_adt_declaration, into_trait_impls_by_destination,
-    is_struct_aggregate, scalar_value_to_string,
+    generate_adt_core, generate_generic_adt_declaration, get_generic_adt_header,
+    into_trait_impls_by_destination, is_struct_aggregate, scalar_value_to_string, GenericAdtHeader,
 };
 use crate::generate_template_specialization::append_trait_impls;
 use arc_anyhow::{Context, Error, Result};
@@ -82,6 +82,11 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::{self, Display, Formatter};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+
+pub(crate) fn are_generics_enabled<'tcx>(db: &BindingsGenerator<'tcx>, krate: CrateNum) -> bool {
+    db.crate_features(db.source_crate_num()).contains(crubit_feature::CrubitFeature::Generics)
+        && db.crate_features(krate).contains(crubit_feature::CrubitFeature::Generics)
+}
 
 /// Implementation of `BindingsGenerator::support_header`.
 fn support_header<'tcx>(db: &BindingsGenerator<'tcx>, suffix: &'tcx str) -> CcInclude {
@@ -1154,15 +1159,41 @@ fn generate_using<'tcx>(
             };
             Ok(CcSnippet { prereqs, tokens })
         }
-        DefKind::Struct | DefKind::Enum => {
-            // This points directly to a type definition, not an alias or compound data
-            // type, so we can drop the hir type.
-            let use_type = normalize_ty(
-                tcx,
-                tcx.param_env(def_id),
-                tcx.type_of(def_id).instantiate_identity(),
-            );
-            create_type_alias(db, def_id, using_name.as_str(), use_type)
+        DefKind::Struct | DefKind::Enum | DefKind::Union => {
+            if query_compiler::has_non_lifetime_generics(tcx, def_id) {
+                let GenericAdtHeader {
+                    fully_qualified_cc_name: formatted_cc_name,
+                    template_args,
+                    ..
+                } = get_generic_adt_header(db, def_id)?;
+                let doc_comment = generate_doc_comment(db, def_id);
+                let using_name_ident = format_cc_ident(db, using_name.as_str())
+                    .context("Error formatting using name")?;
+                let deprecated_tag = generate_deprecated_tag(tcx, def_id);
+                let bracketed_alias_name = if db.kythe_annotations() {
+                    quote! { __CAPTURE_BEGIN__ #using_name_ident __CAPTURE_END__ }
+                } else {
+                    quote! { #using_name_ident }
+                };
+
+                let mut prereqs = CcPrerequisites::default();
+                prereqs.depend_on_def(db, def_id)?;
+
+                let tokens = quote! {
+                    __NEWLINE__ #doc_comment
+                    template <#(typename #template_args),*>
+                    using #bracketed_alias_name #deprecated_tag = #formatted_cc_name<#(#template_args),*>;
+                };
+
+                Ok(CcSnippet { prereqs, tokens })
+            } else {
+                let alias_type = normalize_ty(
+                    tcx,
+                    tcx.param_env(def_id),
+                    tcx.type_of(def_id).instantiate_identity(),
+                );
+                create_type_alias(db, def_id, using_name.as_str(), alias_type)
+            }
         }
         DefKind::TyAlias => generate_type_alias(db, def_id, using_name.as_str()),
         DefKind::Trait => {

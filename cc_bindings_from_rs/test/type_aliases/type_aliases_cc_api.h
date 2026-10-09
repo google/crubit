@@ -199,8 +199,8 @@ namespace type_aliases::test_generics_matching {
 
 // Error generating bindings for enum `std::result::Result` defined at
 // third_party/rust_toolchain/library/core/src/result.rs;l=558:
-// crubit.rs/errors/unsupported_type: Generic type parameter `T` is not
-// supported without monomorphization
+// crubit.rs/errors/unsupported_type: Generic types are not supported yet
+// (b/259749095)
 
 }
 
