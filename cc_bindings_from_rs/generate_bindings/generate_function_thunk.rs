@@ -91,18 +91,7 @@ pub(crate) fn classify_value_abi<'tcx>(
         }
         return Ok(ValueAbi::Array);
     }
-    if ty.ty_adt_def().is_some()
-        || matches!(
-            ty.kind(),
-            ty::TyKind::Tuple(_)
-                | ty::TyKind::Ref { .. }
-                | ty::TyKind::RawPtr { .. }
-                | ty::TyKind::Char
-        )
-    {
-        return Ok(ValueAbi::ByPointer);
-    }
-    bail!("Attempted to write out unknown type from Rust to C")
+    Ok(ValueAbi::ByPointer)
 }
 
 /// Generates the C++ statement calling a constructor thunk to initialize `*this`.

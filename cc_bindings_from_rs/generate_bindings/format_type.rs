@@ -654,11 +654,14 @@ pub fn format_ty_for_cc<'tcx>(
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
 
-    // Normalize the type to resolve projections (associated types).
+    // Normalize the type to resolve projections (associated types) without revealing opaque types.
     let ty = query_compiler::try_normalize(
         tcx,
         ty::PseudoCanonicalInput {
-            typing_env: rustc_middle::ty::TypingEnv::fully_monomorphized(),
+            typing_env: ty::TypingEnv::new(
+                ty::ParamEnv::empty(),
+                ty::TypingMode::non_body_analysis(),
+            ),
             value: ty,
         },
     )

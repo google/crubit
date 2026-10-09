@@ -288,7 +288,10 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // `functions_golden::generic_fn_tests::ctor_trait_tests::return_ctor` defined
 // at
 // cc_bindings_from_rs/test/functions/functions.rs;l=367:
-// Attempted to write out unknown type from Rust to C
+// Error formatting function return type `impl ctor::Ctor<Output =
+// functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>`: The
+// following Rust type is not supported yet: impl ctor::Ctor<Output =
+// functions_golden::generic_fn_tests::ctor_trait_tests::CppMovable>
 
 ::functions::generic_fn_tests::ctor_trait_tests::CppMovable&&
 return_rvalue_reference(

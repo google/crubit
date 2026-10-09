@@ -62,33 +62,37 @@ struct CRUBIT_INTERNAL_RUST_TYPE(
 // Error generating bindings for function
 // `return_position_impl_trait_golden::return_impl_drop` defined at
 // cc_bindings_from_rs/test/return_position_impl_trait/return_position_impl_trait.rs;l=25:
-// Attempted to write out unknown type from Rust to C
+// Error formatting function return type `impl std::ops::Drop + 'static`: The
+// following Rust type is not supported yet: impl std::ops::Drop + 'static
 
 // Error generating bindings for function
 // `return_position_impl_trait_golden::return_impl_future_trivial` defined at
 // cc_bindings_from_rs/test/return_position_impl_trait/return_position_impl_trait.rs;l=41:
 // Error formatting function return type `impl std::future::Future<Output = i32>
-// + 'static`: Generic types are not supported yet (b/259749095)
+// + 'static`: The following Rust type is not supported yet: impl
+// std::future::Future<Output = i32> + 'static
 
 // Error generating bindings for function
 // `return_position_impl_trait_golden::return_impl_future_with_drop` defined at
 // cc_bindings_from_rs/test/return_position_impl_trait/return_position_impl_trait.rs;l=31:
 // Error formatting function return type `impl std::future::Future<Output = ()>
-// + 'static`: The following Rust type is not supported yet: {async
-// block@return_position_impl_trait_golden::return_impl_future_with_drop::{closure#0}}
+// + 'static`: The following Rust type is not supported yet: impl
+// std::future::Future<Output = ()> + 'static
 
 // Error generating bindings for function
 // `return_position_impl_trait_golden::return_impl_iterator_trivial` defined at
 // cc_bindings_from_rs/test/return_position_impl_trait/return_position_impl_trait.rs;l=56:
 // Error formatting function return type `impl std::iter::Iterator<Item = i32> +
-// 'static`: Generic types are not supported yet (b/259749095)
+// 'static`: The following Rust type is not supported yet: impl
+// std::iter::Iterator<Item = i32> + 'static
 
 // Error generating bindings for function
 // `return_position_impl_trait_golden::return_impl_iterator_with_drop` defined
 // at
 // cc_bindings_from_rs/test/return_position_impl_trait/return_position_impl_trait.rs;l=47:
 // Error formatting function return type `impl std::iter::Iterator<Item = ()> +
-// 'static`: Generic types are not supported yet (b/259749095)
+// 'static`: The following Rust type is not supported yet: impl
+// std::iter::Iterator<Item = ()> + 'static
 
 static_assert(
     sizeof(::return_position_impl_trait::ArcWrapper) == 8,

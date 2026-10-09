@@ -108,6 +108,25 @@ fn test_format_ret_ty_for_cc_successes() {
     );
 }
 
+#[test]
+fn test_format_ret_ty_for_cc_failures() {
+    let testcases =
+        [("impl Eq", "The following Rust type is not supported yet: impl std::cmp::Eq")];
+    test_ty(
+        TypeLocation::FnReturn { is_constructor: false },
+        &testcases,
+        quote! { #![feature(never_type)] },
+        |desc, tcx, ty, expected_msg| {
+            let db = bindings_db_for_tests(tcx);
+            let anyhow_err = db
+                .format_ty_for_cc(ty, TypeLocation::FnReturn { is_constructor: false })
+                .expect_err(&format!("Expecting error for: {desc}"));
+            let actual_msg = format!("{anyhow_err:#}");
+            assert_eq!(&actual_msg, *expected_msg, "{desc}");
+        },
+    );
+}
+
 /// `test_format_ty_for_cc_successes` provides test coverage for cases where
 /// `format_ty_for_cc` returns an `Ok(...)`.
 ///

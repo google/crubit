@@ -154,7 +154,8 @@ return_cpp_layout_equivalent(::std::int32_t x);
 // defined at
 // cc_bindings_from_rs/test/async_fn/async_fn.rs;l=125:
 // Error formatting function return type `impl std::future::Future<Output =
-// i32>`: Generic types are not supported yet (b/259749095)
+// i32>`: The following Rust type is not supported yet: impl
+// std::future::Future<Output = i32>
 
 ::crubit::DynErasedFuture<::async_fn::StructWithDrop> return_struct_with_drop(
     ::std::int32_t x);
