@@ -358,7 +358,7 @@ memoized::query_group! {
       /// reason, this function is currently limited to `From` specifically.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/generate_struct_and_union.rs?q=function:from_trait_impls_by_argument
-      fn from_trait_impls_by_argument(&self, crate_num: CrateNum) -> Rc<HashMap<Ty<'tcx>, Vec<DefId>>>;
+      fn from_trait_impls_by_argument(&self, crate_num: CrateNum) -> Rc<HashMap<DefId, Vec<DefId>>>;
 
 
       /// Gathers all `Into` trail impls for the current crate and provides a mapping from
@@ -366,7 +366,7 @@ memoized::query_group! {
       /// This is useful for discovering impls that convert from a given type.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/generate_struct_and_union.rs?q=function:into_trait_impls_by_destination
-      fn into_trait_impls_by_destination(&self, crate_num: CrateNum) -> Rc<HashMap<Ty<'tcx>, Vec<DefId>>>;
+      fn into_trait_impls_by_destination(&self, crate_num: CrateNum) -> Rc<HashMap<DefId, Vec<DefId>>>;
 
       /// Given a function identified by `fn_def_id` (generic or non-generic) tries to return
       /// the generic arguments that should be used in the generated Crubit bindings.
