@@ -51,8 +51,8 @@ fn test_generated_bindings_struct() {
             quote! {
                 // No point replicating test coverage of
                 // `test_format_item_struct_with_fields`.
-                const _: () = assert!(::std::mem::size_of::<::rust_out::Point>() == 8);
-                const _: () = assert!(::std::mem::align_of::<::rust_out::Point>() == 4);
+                const _: () = assert!(::core::mem::size_of::<::rust_out::Point>() == 8);
+                const _: () = assert!(::core::mem::align_of::<::rust_out::Point>() == 4);
                 const _: () = assert!(::core::mem::offset_of!(::rust_out::Point, x) == 0);
                 const _: () = assert!(::core::mem::offset_of!(::rust_out::Point, y) == 4);
             }
@@ -112,8 +112,8 @@ fn test_format_struct_cpp_name() {
         assert_rs_matches!(
             result.rs_details.tokens,
             quote! {
-                const _: () = assert!(::std::mem::size_of::<::rust_out::Foo>() == 4);
-                const _: () = assert!(::std::mem::align_of::<::rust_out::Foo>() == 4);
+                const _: () = assert!(::core::mem::size_of::<::rust_out::Foo>() == 4);
+                const _: () = assert!(::core::mem::align_of::<::rust_out::Foo>() == 4);
                 const _: () = assert!(::core::mem::offset_of!(::rust_out::Foo, x) == 0);
             }
         );
@@ -747,8 +747,8 @@ fn test_repr_c_union_unknown_fields() {
         assert_rs_matches!(
             result.rs_details.tokens,
             quote! {
-                const _: () = assert!(::std::mem::size_of::<::rust_out::SomeUnion>() == 8);
-                const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 8);
+                const _: () = assert!(::core::mem::size_of::<::rust_out::SomeUnion>() == 8);
+                const _: () = assert!(::core::mem::align_of::<::rust_out::SomeUnion>() == 8);
                 const _: () = assert!( ::core::mem::offset_of!(::rust_out::SomeUnion, z) == 0);
             }
         );

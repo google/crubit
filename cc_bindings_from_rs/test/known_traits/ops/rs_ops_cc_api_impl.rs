@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::rs_ops_golden::MyBorrowedInt>() == 4);
-const _: () = assert!(::std::mem::align_of::<::rs_ops_golden::MyBorrowedInt>() == 4);
+const _: () = assert!(::core::mem::size_of::<::rs_ops_golden::MyBorrowedInt>() == 4);
+const _: () = assert!(::core::mem::align_of::<::rs_ops_golden::MyBorrowedInt>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -66,8 +66,8 @@ unsafe extern "C" fn __crubit_thunk_Shl_ushl_u_x00000026rs_uops_ugolden_x0000003
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::rs_ops_golden::MyBorrowedInt, value) == 0);
-const _: () = assert!(::std::mem::size_of::<::rs_ops_golden::MyInt>() == 4);
-const _: () = assert!(::std::mem::align_of::<::rs_ops_golden::MyInt>() == 4);
+const _: () = assert!(::core::mem::size_of::<::rs_ops_golden::MyInt>() == 4);
+const _: () = assert!(::core::mem::align_of::<::rs_ops_golden::MyInt>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {

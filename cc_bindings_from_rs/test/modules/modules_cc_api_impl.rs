@@ -20,9 +20,9 @@ unsafe extern "C" fn __crubit_thunk_add_ui32(x: i32, y: i32) -> i32 {
     unsafe { ::modules_golden::deprecated_module::add_i32(x, y) }
 }
 const _: () =
-    assert!(::std::mem::size_of::<::modules_golden::impl_in_separate_private_module::Foo>() == 4);
+    assert!(::core::mem::size_of::<::modules_golden::impl_in_separate_private_module::Foo>() == 4);
 const _: () =
-    assert!(::std::mem::align_of::<::modules_golden::impl_in_separate_private_module::Foo>() == 4);
+    assert!(::core::mem::align_of::<::modules_golden::impl_in_separate_private_module::Foo>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(i: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {

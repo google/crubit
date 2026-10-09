@@ -20,6 +20,13 @@ CcBindingsFromRustInfo = provider(
     },
 )
 
+CcBindingsFromRustGroupInfo = provider(
+    doc = "A provider that groups multiple CcBindingsFromRustInfo providers.",
+    fields = {
+        "infos": "A list of CcBindingsFromRustInfo providers.",
+    },
+)
+
 GeneratedBindingsInfo = provider(
     doc = "A provider that contains the generated C++ and Rust files.",
     fields = {

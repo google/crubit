@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::str_golden::TypeWithStr>() == 16);
-const _: () = assert!(::std::mem::align_of::<::str_golden::TypeWithStr>() == 8);
+const _: () = assert!(::core::mem::size_of::<::str_golden::TypeWithStr>() == 16);
+const _: () = assert!(::core::mem::align_of::<::str_golden::TypeWithStr>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(
     s: *mut &'static str,

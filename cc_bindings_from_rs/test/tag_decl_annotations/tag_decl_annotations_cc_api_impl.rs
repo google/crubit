@@ -11,6 +11,6 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::tag_decl_annotations_golden::SomeStruct>() == 4);
-const _: () = assert!(::std::mem::align_of::<::tag_decl_annotations_golden::SomeStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::tag_decl_annotations_golden::SomeStruct>() == 4);
+const _: () = assert!(::core::mem::align_of::<::tag_decl_annotations_golden::SomeStruct>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::tag_decl_annotations_golden::SomeStruct, f) == 0);

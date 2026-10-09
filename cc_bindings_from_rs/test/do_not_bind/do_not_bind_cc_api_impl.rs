@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::do_not_bind_golden::Struct>() == 4);
-const _: () = assert!(::std::mem::align_of::<::do_not_bind_golden::Struct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::do_not_bind_golden::Struct>() == 4);
+const _: () = assert!(::core::mem::align_of::<::do_not_bind_golden::Struct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_bound_uinherent_umethod(
     __self: &'static ::do_not_bind_golden::Struct,

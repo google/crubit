@@ -12,10 +12,10 @@
 extern crate alloc;
 extern crate core;
 const _: () = assert!(
-    ::std::mem::size_of::<::struct_with_conflicting_fields_and_member_functions_golden::X>() == 12
+    ::core::mem::size_of::<::struct_with_conflicting_fields_and_member_functions_golden::X>() == 12
 );
 const _: () = assert!(
-    ::std::mem::align_of::<::struct_with_conflicting_fields_and_member_functions_golden::X>() == 4
+    ::core::mem::align_of::<::struct_with_conflicting_fields_and_member_functions_golden::X>() == 4
 );
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_a(

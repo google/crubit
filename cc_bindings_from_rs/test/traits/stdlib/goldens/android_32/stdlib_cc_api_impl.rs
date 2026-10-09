@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::stdlib_golden::MyStruct>() == 4);
-const _: () = assert!(::std::mem::align_of::<::stdlib_golden::MyStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::stdlib_golden::MyStruct>() == 4);
+const _: () = assert!(::core::mem::align_of::<::stdlib_golden::MyStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_ustdlib_ugolden_x0000003a_x0000003aMyStruct(
     __ret_ptr: *mut core::ffi::c_void,
@@ -64,8 +64,8 @@ unsafe extern "C" fn __crubit_thunk_From_ufrom_ustdlib_ugolden_x0000003a_x000000
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::MyStruct, x) == 0);
-const _: () = assert!(::std::mem::size_of::<::stdlib_golden::NonCloneableIterator>() == 4);
-const _: () = assert!(::std::mem::align_of::<::stdlib_golden::NonCloneableIterator>() == 4);
+const _: () = assert!(::core::mem::size_of::<::stdlib_golden::NonCloneableIterator>() == 4);
+const _: () = assert!(::core::mem::align_of::<::stdlib_golden::NonCloneableIterator>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
@@ -74,11 +74,11 @@ unsafe extern "C" fn __crubit_thunk_new(x: i32, __ret_ptr: *mut core::ffi::c_voi
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::NonCloneableIterator, x) == 0);
-const _: () = assert!(::std::mem::size_of::<::stdlib_golden::NonCloneableValue>() == 4);
-const _: () = assert!(::std::mem::align_of::<::stdlib_golden::NonCloneableValue>() == 4);
+const _: () = assert!(::core::mem::size_of::<::stdlib_golden::NonCloneableValue>() == 4);
+const _: () = assert!(::core::mem::align_of::<::stdlib_golden::NonCloneableValue>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::stdlib_golden::NonCloneableValue, x) == 0);
-const _: () = assert!(::std::mem::size_of::<::stdlib_golden::RefIterator>() == 12);
-const _: () = assert!(::std::mem::align_of::<::stdlib_golden::RefIterator>() == 4);
+const _: () = assert!(::core::mem::size_of::<::stdlib_golden::RefIterator>() == 12);
+const _: () = assert!(::core::mem::align_of::<::stdlib_golden::RefIterator>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new_u_x00000027a(
     slice: *mut &'static [i32],

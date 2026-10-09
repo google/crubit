@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::vec_golden::RustVecOwner>() == 12);
-const _: () = assert!(::std::mem::align_of::<::vec_golden::RustVecOwner>() == 4);
+const _: () = assert!(::core::mem::size_of::<::vec_golden::RustVecOwner>() == 12);
+const _: () = assert!(::core::mem::align_of::<::vec_golden::RustVecOwner>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_uvec_ugolden_x0000003a_x0000003aRustVecOwner(
     __ret_ptr: *mut core::ffi::c_void,
@@ -56,8 +56,8 @@ unsafe extern "C" fn __crubit_thunk_element(
 ) -> i32 {
     unsafe { ::vec_golden::RustVecOwner::element(__self, index) }
 }
-const _: () = assert!(::std::mem::size_of::<::vec_golden::StructWithVec>() == 12);
-const _: () = assert!(::std::mem::align_of::<::vec_golden::StructWithVec>() == 4);
+const _: () = assert!(::core::mem::size_of::<::vec_golden::StructWithVec>() == 12);
+const _: () = assert!(::core::mem::align_of::<::vec_golden::StructWithVec>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {

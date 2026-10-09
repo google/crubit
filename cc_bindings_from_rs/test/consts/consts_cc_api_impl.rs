@@ -11,8 +11,8 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::consts_golden::NestedStruct>() == 16);
-const _: () = assert!(::std::mem::align_of::<::consts_golden::NestedStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::consts_golden::NestedStruct>() == 16);
+const _: () = assert!(::core::mem::align_of::<::consts_golden::NestedStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aNestedStruct_uconsts_ugolden_x0000003a_x0000003aNestedStruct(
     __self: &'static ::consts_golden::NestedStruct,
@@ -26,8 +26,8 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x000
 }
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::NestedStruct, point) == 0);
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::NestedStruct, tuple) == 8);
-const _: () = assert!(::std::mem::size_of::<::consts_golden::Point>() == 8);
-const _: () = assert!(::std::mem::align_of::<::consts_golden::Point>() == 4);
+const _: () = assert!(::core::mem::size_of::<::consts_golden::Point>() == 8);
+const _: () = assert!(::core::mem::align_of::<::consts_golden::Point>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aPoint_uconsts_ugolden_x0000003a_x0000003aPoint(
     __self: &'static ::consts_golden::Point,
@@ -41,8 +41,8 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x000
 }
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::Point, x) == 0);
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::Point, y) == 4);
-const _: () = assert!(::std::mem::size_of::<::consts_golden::StructWithArray>() == 8);
-const _: () = assert!(::std::mem::align_of::<::consts_golden::StructWithArray>() == 4);
+const _: () = assert!(::core::mem::size_of::<::consts_golden::StructWithArray>() == 8);
+const _: () = assert!(::core::mem::align_of::<::consts_golden::StructWithArray>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithArray_uconsts_ugolden_x0000003a_x0000003aStructWithArray(
     __self: &'static ::consts_golden::StructWithArray,
@@ -55,8 +55,8 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x000
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::StructWithArray, values) == 0);
-const _: () = assert!(::std::mem::size_of::<::consts_golden::StructWithRef>() == 8);
-const _: () = assert!(::std::mem::align_of::<::consts_golden::StructWithRef>() == 8);
+const _: () = assert!(::core::mem::size_of::<::consts_golden::StructWithRef>() == 8);
+const _: () = assert!(::core::mem::align_of::<::consts_golden::StructWithRef>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithRef_x0000003c_x00000027a_x0000003e_u_x00000027static(
     __self: &'static ::consts_golden::StructWithRef<'static>,
@@ -69,8 +69,8 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x000
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::StructWithRef, r) == 0);
-const _: () = assert!(::std::mem::size_of::<::consts_golden::StructWithStr>() == 24);
-const _: () = assert!(::std::mem::align_of::<::consts_golden::StructWithStr>() == 8);
+const _: () = assert!(::core::mem::size_of::<::consts_golden::StructWithStr>() == 24);
+const _: () = assert!(::core::mem::align_of::<::consts_golden::StructWithStr>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_uconsts_ugolden_x0000003a_x0000003aStructWithStr_x0000003c_x00000027a_x0000003e_u_x00000027static(
     __self: &'static ::consts_golden::StructWithStr<'static>,
@@ -84,8 +84,8 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x000
 }
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::StructWithStr, msg) == 0);
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::StructWithStr, count) == 16);
-const _: () = assert!(::std::mem::size_of::<::consts_golden::TupleStruct>() == 8);
-const _: () = assert!(::std::mem::align_of::<::consts_golden::TupleStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::consts_golden::TupleStruct>() == 8);
+const _: () = assert!(::core::mem::align_of::<::consts_golden::TupleStruct>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x0000003aTupleStruct_uconsts_ugolden_x0000003a_x0000003aTupleStruct(
     __self: &'static ::consts_golden::TupleStruct,
@@ -99,5 +99,5 @@ unsafe extern "C" fn __crubit_thunk_PartialEq_ueq_uconsts_ugolden_x0000003a_x000
 }
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::TupleStruct, 0) == 0);
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::TupleStruct, 1) == 4);
-const _: () = assert!(::std::mem::size_of::<::consts_golden::TyWithAssocConsts>() == 1);
-const _: () = assert!(::std::mem::align_of::<::consts_golden::TyWithAssocConsts>() == 1);
+const _: () = assert!(::core::mem::size_of::<::consts_golden::TyWithAssocConsts>() == 1);
+const _: () = assert!(::core::mem::align_of::<::consts_golden::TyWithAssocConsts>() == 1);

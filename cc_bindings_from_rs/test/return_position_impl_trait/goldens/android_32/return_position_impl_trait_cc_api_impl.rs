@@ -12,9 +12,9 @@
 extern crate alloc;
 extern crate core;
 const _: () =
-    assert!(::std::mem::size_of::<::return_position_impl_trait_golden::ArcWrapper>() == 4);
+    assert!(::core::mem::size_of::<::return_position_impl_trait_golden::ArcWrapper>() == 4);
 const _: () =
-    assert!(::std::mem::align_of::<::return_position_impl_trait_golden::ArcWrapper>() == 4);
+    assert!(::core::mem::align_of::<::return_position_impl_trait_golden::ArcWrapper>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_ureturn_uposition_uimpl_utrait_ugolden_x0000003a_x0000003aArcWrapper(
     __ret_ptr: *mut core::ffi::c_void,

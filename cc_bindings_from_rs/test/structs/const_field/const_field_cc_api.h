@@ -44,7 +44,7 @@ return_struct_with_const_field_by_value_in_result();
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020struct_uwith_uconst_ufield_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020uint8_ut_x00000020_x0000003e
 template <>
 struct alignas(8) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < :: cc_struct :: struct_with_const_field , u8 >")
+    "core :: result :: Result < :: cc_struct :: struct_with_const_field , u8 >")
     rs_std::Result<::struct_with_const_field, ::std::uint8_t>
     : public rs_std::ResultBase<
           rs_std::Result<::struct_with_const_field, ::std::uint8_t>,

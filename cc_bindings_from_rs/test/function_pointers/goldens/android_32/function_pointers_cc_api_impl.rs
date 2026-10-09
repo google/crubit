@@ -11,11 +11,11 @@
 
 extern crate alloc;
 extern crate core;
-const _: () = assert!(::std::mem::size_of::<::function_pointers_golden::CStruct>() == 4);
-const _: () = assert!(::std::mem::align_of::<::function_pointers_golden::CStruct>() == 4);
+const _: () = assert!(::core::mem::size_of::<::function_pointers_golden::CStruct>() == 4);
+const _: () = assert!(::core::mem::align_of::<::function_pointers_golden::CStruct>() == 4);
 const _: () = assert!(::core::mem::offset_of!(::function_pointers_golden::CStruct, field) == 0);
-const _: () = assert!(::std::mem::size_of::<::function_pointers_golden::HasFnPtrField>() == 4);
-const _: () = assert!(::std::mem::align_of::<::function_pointers_golden::HasFnPtrField>() == 4);
+const _: () = assert!(::core::mem::size_of::<::function_pointers_golden::HasFnPtrField>() == 4);
+const _: () = assert!(::core::mem::align_of::<::function_pointers_golden::HasFnPtrField>() == 4);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_with_uadd_uten(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {

@@ -476,7 +476,7 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
                     );
                     quote! {
                         #rust_to_cpp_converter_ident(
-                            std::ptr::from_ref(&#rs_value) as *const core::ffi::c_void,
+                            ::core::ptr::from_ref(&#rs_value) as *const ::core::ffi::c_void,
                             #c_ptr);
                     }
                 }

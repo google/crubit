@@ -257,15 +257,12 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
             // bindings for it and we'll generate the relevant error below.
             return Ok(());
         };
-        // Direct TyCtxt query fallback handles cases where macro-based attribute checks
-        // evaluate to false during bootstrapping phases (such as compiling standard library
-        // standard-prelude).
-        #[rustversion::before(2026-05-24)]
-        let has_no_std =
-            find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoStd { .. } => ())
-                .is_some();
-        #[rustversion::since(2026-05-24)]
-        let has_no_std = find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd { .. });
+        // AttributeKind::NoStd is not serialized into cross-crate metadata (rmeta) by rustc.
+        // If std is not among the loaded crates in the probe, the crate is no_std.
+        let has_no_std = crate_name == "core"
+            || crate_name == "alloc"
+            || (!tcx.used_crates(()).iter().any(|&c| tcx.crate_name(c).as_str() == "std")
+                && crate_name != "std");
 
         #[rustversion::before(2026-05-24)]
         let has_no_core =

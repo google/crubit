@@ -39,7 +39,7 @@ rs_std::Result<::dep_crate::ExpectedName, ::std::int32_t> use_s_alias();
 #define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Result_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020dep_ucrate_x00000020_x0000003a_x0000003a_x00000020ExpectedName_x00000020_x0000002c_x00000020_x0000003a_x0000003a_x00000020std_x00000020_x0000003a_x0000003a_x00000020int32_ut_x00000020_x0000003e
 template <>
 struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
-    "std :: result :: Result < :: dep_crate :: ExpectedName , i32 >")
+    "core :: result :: Result < :: dep_crate :: ExpectedName , i32 >")
     rs_std::Result<::dep_crate::ExpectedName, ::std::int32_t>
     : public rs_std::ResultBase<
           rs_std::Result<::dep_crate::ExpectedName, ::std::int32_t>,

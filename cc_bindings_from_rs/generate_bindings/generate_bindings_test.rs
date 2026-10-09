@@ -526,7 +526,7 @@ fn test_format_item_reexport_private_type() {
         assert_rs_matches!(
             bindings.cc_api_impl,
             quote! {
-                const _: () = assert!(::std::mem::size_of::<::rust_out::X>() == 4);
+                const _: () = assert!(::core::mem::size_of::<::rust_out::X>() == 4);
             }
         );
 
@@ -3182,5 +3182,17 @@ fn test_error_scope_with_lifetime_and_non_lifetime_args_reports_distinct_special
                 "Expected fatal_errors to record must_bind error for {expected_item}, got:\n{fatal_msg}"
             );
         }
+    });
+}
+
+#[test]
+fn test_no_std_crate() {
+    let test_src = r#"
+        #![no_std]
+        pub struct S;
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_rs_matches!(bindings.cc_api_impl, quote! { #![no_std] });
     });
 }
