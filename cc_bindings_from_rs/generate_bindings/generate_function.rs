@@ -1129,7 +1129,11 @@ pub fn generate_function<'tcx>(
         .impl_of_assoc(def_id)
         .and_then(|impl_id| tcx.impl_opt_trait_ref(impl_id))
         .map(|trait_ref| {
-            crate::normalize_ty(tcx, tcx.param_env(def_id), trait_ref.instantiate_identity())
+            crate::normalize_ty(
+                tcx,
+                tcx.param_env(def_id),
+                trait_ref.instantiate(tcx, generic_args),
+            )
         });
     let function_kind = function_kind(tcx, def_id, &sig_mid, generic_args)?;
     let self_ty = function_kind.self_ty();
