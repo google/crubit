@@ -27,7 +27,6 @@ token_stream_printer = { path = "../../../cargo/common/token_stream_printer"}
 kythe_metadata = { path = "../../../cargo/common/kythe_metadata"}
 arc_anyhow = { path = "../../../cargo/common/arc_anyhow"}
 error_report = { path = "../../../cargo/common/error_report"}
-clap.workspace = true
 itertools.workspace = true
 crubit_feature = { path = "../../../cargo/common/crubit_feature"}
 flagset.workspace = true
