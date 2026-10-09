@@ -118,12 +118,15 @@ def compile_rust(ctx, attr, src, extra_srcs, deps, crate_name, include_coverage,
 
     remapped_flags = []
     for symlink, source in remap_path_prefix.items():
-        remapped_flags.append("--remap-path-prefix={}={}".format(symlink, source))
+        if hasattr(symlink, "path"):
+            remapped_flags.append(("--remap-path-prefix=%s=" + source, symlink))
+        else:
+            remapped_flags.append("--remap-path-prefix={}={}".format(symlink, source))
 
     remap_paths_file = ctx.actions.declare_file(crate_name + "_rust_api.remap_paths")
     ctx.actions.write(
         output = remap_paths_file,
-        content = "\n".join(["{}={}".format(k, v) for k, v in remap_path_prefix.items()]),
+        content = "\n".join(["{}={}".format(k.path if hasattr(k, "path") else k, v) for k, v in remap_path_prefix.items()]),
     )
 
     providers = rustc_compile_action(
