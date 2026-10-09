@@ -2307,6 +2307,32 @@ CcType Importer::ConvertTemplateSpecializationType(
   // TODO(lukasza): Limit specialization depth? (e.g. using
   // `isSpecializationDepthGreaterThan` from earlier prototypes).
 
+  // Import record type arguments before the specialization itself. Importing a
+  // specialization like `std::unique_ptr<T>` converts `T`, and if `T` has not
+  // been imported yet, that imports `T` together with all of its members. If
+  // one of those members mentions `std::unique_ptr<T>` (e.g. a
+  // `static std::unique_ptr<T> Create()` factory), it would find the
+  // specialization still in progress, and fail to be imported. Importing `T`
+  // first means that `T`'s members are imported while the specialization is
+  // not in progress yet, and that the specialization later finds `T` already
+  // imported.
+  //
+  // Arguments that are themselves specializations are skipped, so that this
+  // doesn't import specializations (e.g. `std::allocator<T>`) that the
+  // specialization's importer would not.
+  for (const clang::TemplateArgument& arg :
+       specialization_decl->getTemplateArgs().asArray()) {
+    if (arg.getKind() != clang::TemplateArgument::Type) continue;
+    auto* arg_record = arg.getAsType()->getAsCXXRecordDecl();
+    if (arg_record == nullptr ||
+        clang::isa<clang::ClassTemplateSpecializationDecl>(arg_record)) {
+      continue;
+    }
+    // The result is discarded: if `T` can't be imported, the specialization's
+    // importer reports that.
+    (void)EnsureSuccessfullyImported(arg_record);
+  }
+
   absl::Status import_status =
       CheckImportStatus(GetDeclItem(specialization_decl));
   if (!import_status.ok()) {

@@ -155,6 +155,8 @@ rust_bindings_from_cc_cli_flag(
 ) for name in TESTS]
 
 NON_BUILDABLE_TEST = [
+    # The bridge ABI types are not defined anywhere.
+    "bridged_template_to_self",
     "callables",
 
     # The rust type is not defined in the C++ header so it cannot be built.
