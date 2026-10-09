@@ -119,10 +119,7 @@ def generate_bindings(
         ctx.file._rustfmt_cfg.path,
     ]
 
-    # Golden tests always use lazy import of alien declarations, so that the goldens exercise it
-    # even while it is off by default.
-    if (ctx.attr._lazy_import_alien_decls[BuildSettingInfo].value or
-        ctx.attr._is_golden_test[BuildSettingInfo].value):
+    if ctx.attr._lazy_import_alien_decls[BuildSettingInfo].value:
         rs_bindings_from_cc_flags.append("--lazy_import_alien_decls")
 
     if ctx.attr._generate_error_report[BuildSettingInfo].value:

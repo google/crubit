@@ -195,7 +195,7 @@ bool_flag(
 # importing all of them eagerly.
 bool_flag(
     name = "lazy_import_alien_decls",
-    build_setting_default = False,
+    build_setting_default = True,
     visibility = ["//visibility:public"],
 )
 
