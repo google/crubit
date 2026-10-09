@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::format_type::{CallableInfo, CallableKind};
+use crate::format_type::{format_ty_for_closure_param_rs, CallableInfo, CallableKind};
 use crate::generate_function::{fn_arg_idents, get_async_future_output_ty};
 use crate::{
     does_type_implement_trait, format_cc_ident, format_param_types_for_cc_thunk, is_bridged_type,
@@ -18,7 +18,7 @@ use database::{AdtCoreBindings, BindingsGenerator};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
-use query_compiler::{is_std_ptr_non_null, post_analysis_typing_env, try_normalize};
+use query_compiler::{post_analysis_typing_env, try_normalize};
 use quote::format_ident;
 use quote::quote;
 #[rustversion::since(2026-04-22)]
@@ -349,112 +349,6 @@ fn convert_tuple_from_c_abi_to_rust<'tcx>(
     Ok(quote! {
         let #local_name = (#(#read_elements,)*);
     })
-}
-
-fn format_ty_for_closure_param_rs<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    ty: Ty<'tcx>,
-    is_return_ty: bool,
-) -> Result<TokenStream> {
-    if let ty::TyKind::Ref(_, referent_ty, mutability) = ty.kind() {
-        if matches!(referent_ty.kind(), ty::TyKind::Str) {
-            return Ok(match mutability {
-                Mutability::Mut => quote! { &mut str },
-                Mutability::Not => quote! { &str },
-            });
-        }
-        let mutability_prefix = match mutability {
-            Mutability::Mut => quote! { mut },
-            Mutability::Not => quote! {},
-        };
-        let formatted_referent = format_ty_for_closure_param_rs(db, *referent_ty, is_return_ty)?;
-        return Ok(quote! { &#mutability_prefix #formatted_referent });
-    }
-    if let ty::TyKind::Slice(elem_ty) = ty.kind() {
-        let formatted_elem = format_ty_for_closure_param_rs(db, *elem_ty, is_return_ty)?;
-        return Ok(quote! { [#formatted_elem] });
-    }
-    if let ty::TyKind::Tuple(types) = ty.kind() {
-        let rs_types = types
-            .iter()
-            .map(|t| format_ty_for_closure_param_rs(db, t, is_return_ty))
-            .collect::<Result<Vec<_>>>()?;
-        return Ok(quote! { (#(#rs_types,)*) });
-    }
-    if let ty::TyKind::RawPtr(pointee_ty, mutbl) = ty.kind() {
-        let mutability = match mutbl {
-            Mutability::Mut => quote! { *mut },
-            Mutability::Not => quote! { *const },
-        };
-        let formatted_ty = format_ty_for_closure_param_rs(db, *pointee_ty, is_return_ty)?;
-        return Ok(quote! { #mutability #formatted_ty });
-    }
-    if let ty::TyKind::Adt(adt, substs) = ty.kind() {
-        if is_std_ptr_non_null(db.tcx(), adt.did()) {
-            let t_param = substs[0].expect_ty();
-            let t_param = format_ty_for_closure_param_rs(db, t_param, is_return_ty)?;
-            return Ok(quote! { ::core::ptr::NonNull<#t_param> });
-        }
-        if adt.is_pin() {
-            let t_param = substs[0].expect_ty();
-            let t_param = format_ty_for_closure_param_rs(db, t_param, is_return_ty)?;
-            return Ok(quote! { ::core::pin::Pin<#t_param> });
-        }
-        if let Some(bridged_builtin) = BridgedBuiltin::new(db, *adt) {
-            match bridged_builtin {
-                BridgedBuiltin::Vec => {
-                    let t_param = match substs[0].kind() {
-                        ty::GenericArgKind::Type(ty) => {
-                            format_ty_for_closure_param_rs(db, ty, is_return_ty)?
-                        }
-                        _ => panic!("First generic argument of Vec must be a type"),
-                    };
-                    return Ok(quote! { ::alloc::vec::Vec<#t_param> });
-                }
-                BridgedBuiltin::Option
-                    if db.crate_features(db.source_crate_num()).contains(
-                        crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust,
-                    ) =>
-                {
-                    let t_param = match substs[0].kind() {
-                        ty::GenericArgKind::Type(ty) => {
-                            format_ty_for_closure_param_rs(db, ty, is_return_ty)?
-                        }
-                        _ => panic!("First generic argument of Option must be a type"),
-                    };
-                    return Ok(quote! { ::core::option::Option<#t_param> });
-                }
-                _ => {}
-            }
-        }
-        let canonical_name = db.symbol_canonical_name(adt.did())?;
-        let type_name = canonical_name.format_for_rs();
-        let generic_params = if substs.is_empty() {
-            quote! {}
-        } else {
-            let generic_params = substs
-                .iter()
-                .map(|subst| match subst.kind() {
-                    ty::GenericArgKind::Type(ty) => {
-                        format_ty_for_closure_param_rs(db, ty, is_return_ty)
-                    }
-                    ty::GenericArgKind::Lifetime(_) => {
-                        if is_return_ty {
-                            Ok(quote! { 'static })
-                        } else {
-                            Ok(quote! { '_ })
-                        }
-                    }
-                    ty::GenericArgKind::Const(_) => {
-                        panic!("Const parameters are not supported, but found {ty}")
-                    }
-                })
-                .collect::<Result<Vec<TokenStream>>>()?;
-            quote! { < #(#generic_params),* > }
-        };
-        return Ok(quote! { #type_name #generic_params });
-    }
-    db.format_ty_for_rs(ty)
 }
 
 /// Returns code to convert a local named `local_name` from its C ABI-compatible type to its Rust

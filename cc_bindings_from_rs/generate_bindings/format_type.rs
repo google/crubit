@@ -1437,16 +1437,37 @@ fn try_ty_as_maybe_uninit<'tcx>(
     None
 }
 
-/// Format a supported `repr(transparent)` pointee type
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum RsLifetimeMode {
+    /// Formats reference regions explicitly (e.g., `&'static T`) and generic lifetime arguments as
+    /// `'static`.
+    Default,
+    /// Omits lifetimes on references (`&T`) and formats generic lifetime arguments as `'_`.
+    ClosureParam,
+    /// Omits lifetimes on references (`&T`) and formats generic lifetime arguments as `'static`.
+    ClosureReturn,
+}
+
+impl RsLifetimeMode {
+    fn format_ty<'tcx>(self, db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
+        match self {
+            Self::Default => db.format_ty_for_rs(ty),
+            Self::ClosureParam | Self::ClosureReturn => {
+                format_ty_for_rs_with_lifetime_mode(db, ty, self)
+            }
+        }
+    }
+}
+
+/// Formats a supported `repr(transparent)` pointee type (`MaybeUninit<T>`), or returns `None`.
 fn format_transparent_pointee<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
-) -> Result<TokenStream> {
-    let Some(generic_arg) = try_ty_as_maybe_uninit(db, ty) else {
-        bail!("unable to generate bindings for anything other than `MaybeUninit<T>`")
-    };
-    let generic_ty = db.format_ty_for_rs(generic_arg.expect_ty())?;
-    Ok(quote! { std::mem::MaybeUninit<#generic_ty> })
+    lifetime_mode: RsLifetimeMode,
+) -> Option<TokenStream> {
+    let generic_arg = try_ty_as_maybe_uninit(db, ty)?;
+    let generic_ty = lifetime_mode.format_ty(db, generic_arg.expect_ty()).ok()?;
+    Some(quote! { std::mem::MaybeUninit<#generic_ty> })
 }
 
 fn has_non_lifetime_substs(substs: &[ty::GenericArg]) -> bool {
@@ -1458,6 +1479,7 @@ fn format_fn_ptr_for_rs<'tcx>(
     db: &BindingsGenerator<'tcx>,
     binder_with_fn_sig_tys: BinderWithFnSigTys<'tcx>,
     fn_header: ty::FnHeader<TyCtxt<'tcx>>,
+    lifetime_mode: RsLifetimeMode,
 ) -> Result<TokenStream> {
     let tcx = db.tcx();
     #[rustversion::before(2026-04-19)]
@@ -1496,12 +1518,12 @@ fn format_fn_ptr_for_rs<'tcx>(
     let inputs = fn_sig_tys
         .inputs()
         .iter()
-        .map(|&ty| db.format_ty_for_rs(ty))
+        .map(|&ty| lifetime_mode.format_ty(db, ty))
         .collect::<Result<Vec<TokenStream>>>()?;
     let maybe_output = if fn_sig_tys.output().is_unit() {
         TokenStream::new()
     } else {
-        let output_ty = db.format_ty_for_rs(fn_sig_tys.output())?;
+        let output_ty = lifetime_mode.format_ty(db, fn_sig_tys.output())?;
         quote! { -> #output_ty }
     };
     Ok(quote! {
@@ -1515,10 +1537,37 @@ fn format_fn_ptr_for_rs<'tcx>(
 /// names whenever necessary - for example: `target_crate::SomeStruct` rather
 /// than just `SomeStruct`.
 pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<TokenStream> {
+    format_ty_for_rs_with_lifetime_mode(db, ty, RsLifetimeMode::Default)
+}
+
+/// Formats a closure parameter or return type `ty` for Rust in `..._cc_api_impl.rs`.
+///
+/// Unlike [`format_ty_for_rs`], this omits explicit lifetimes on references (`&T` instead of
+/// `&'static T`) so Rust can infer higher-ranked lifetimes on closure parameters, and formats
+/// generic lifetime arguments as `'_` for parameters (`is_return_ty == false`) or `'static` for
+/// return types (`is_return_ty == true`).
+pub(crate) fn format_ty_for_closure_param_rs<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+    is_return_ty: bool,
+) -> Result<TokenStream> {
+    let lifetime_mode =
+        if is_return_ty { RsLifetimeMode::ClosureReturn } else { RsLifetimeMode::ClosureParam };
+    format_ty_for_rs_with_lifetime_mode(db, ty, lifetime_mode)
+}
+
+fn format_ty_for_rs_with_lifetime_mode<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+    lifetime_mode: RsLifetimeMode,
+) -> Result<TokenStream> {
     if let Some(info) = get_callable_info(db.tcx(), ty)? {
-        let rs_ret_ty = db.format_ty_for_rs(info.return_ty)?;
-        let rs_param_tys =
-            info.param_tys.iter().map(|&t| db.format_ty_for_rs(t)).collect::<Result<Vec<_>>>()?;
+        let rs_ret_ty = lifetime_mode.format_ty(db, info.return_ty)?;
+        let rs_param_tys = info
+            .param_tys
+            .iter()
+            .map(|&t| lifetime_mode.format_ty(db, t))
+            .collect::<Result<Vec<_>>>()?;
         return Ok(match info.kind {
             CallableKind::FnRef => {
                 quote! { &'static (dyn ::core::ops::Fn(#(#rs_param_tys),*) -> #rs_ret_ty + 'static) }
@@ -1550,17 +1599,17 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
             .parse()
             .expect("rustc_middle::ty::Ty::to_string() should produce no parsing errors"),
         ty::TyKind::FnPtr(binder_with_fn_sig_tys, fn_header) => {
-            format_fn_ptr_for_rs(db, binder_with_fn_sig_tys, fn_header)?
+            format_fn_ptr_for_rs(db, binder_with_fn_sig_tys, fn_header, lifetime_mode)?
         }
         ty::TyKind::Tuple(types) => {
             let rs_types = types
                 .iter()
-                .map(|ty| db.format_ty_for_rs(ty))
+                .map(|ty| lifetime_mode.format_ty(db, ty))
                 .collect::<Result<Vec<TokenStream>>>()?;
             quote! { (#(#rs_types,)*) }
         }
         ty::TyKind::Array(element_type, length) => {
-            let rs_element_type = db.format_ty_for_rs(element_type)?;
+            let rs_element_type = lifetime_mode.format_ty(db, element_type)?;
             let target_size = evaluate_const_as_u64(db.tcx(), length)?;
             let unsuffixed_length = Literal::u64_unsuffixed(target_size);
             quote! { [ #rs_element_type; #unsuffixed_length ] }
@@ -1568,9 +1617,9 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
         ty::TyKind::Adt(adt, substs) => {
             if is_std_ptr_non_null(db.tcx(), adt.did()) {
                 let pointee_ty = substs[0].expect_ty();
-                let t_param = match format_transparent_pointee(db, pointee_ty) {
-                    Ok(generic_ty) => generic_ty,
-                    Err(_) => db.format_ty_for_rs(pointee_ty).with_context(|| {
+                let t_param = match format_transparent_pointee(db, pointee_ty, lifetime_mode) {
+                    Some(generic_ty) => generic_ty,
+                    None => lifetime_mode.format_ty(db, pointee_ty).with_context(|| {
                         format!("Failed to format the pointee of the NonNull type `{ty}`")
                     })?,
                 };
@@ -1578,13 +1627,13 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
             }
             if adt.is_pin() {
                 let inner_ty = substs[0].expect_ty();
-                let inner_rs = db.format_ty_for_rs(inner_ty)?;
+                let inner_rs = lifetime_mode.format_ty(db, inner_ty)?;
                 return Ok(quote! { ::core::pin::Pin<#inner_rs> });
             }
             if let Some(bridged_builtin) = BridgedBuiltin::new(db, adt) {
                 match bridged_builtin {
                     BridgedBuiltin::Vec => {
-                        let t_param = db.format_ty_for_rs(substs[0].expect_ty())?;
+                        let t_param = lifetime_mode.format_ty(db, substs[0].expect_ty())?;
                         return Ok(quote! { ::alloc::vec::Vec<#t_param> });
                     }
                     BridgedBuiltin::Option
@@ -1592,7 +1641,7 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
                             crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust,
                         ) =>
                     {
-                        let t_param = db.format_ty_for_rs(substs[0].expect_ty())?;
+                        let t_param = lifetime_mode.format_ty(db, substs[0].expect_ty())?;
                         return Ok(quote! { ::core::option::Option<#t_param> });
                     }
                     _ => {}
@@ -1621,8 +1670,13 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
                 let generic_params = substs
                     .iter()
                     .map(|subst| match subst.kind() {
-                        ty::GenericArgKind::Type(ty) => db.format_ty_for_rs(ty),
-                        ty::GenericArgKind::Lifetime(_) => Ok(quote! { 'static }),
+                        ty::GenericArgKind::Type(ty) => lifetime_mode.format_ty(db, ty),
+                        ty::GenericArgKind::Lifetime(_) => match lifetime_mode {
+                            RsLifetimeMode::Default | RsLifetimeMode::ClosureReturn => {
+                                Ok(quote! { 'static })
+                            }
+                            RsLifetimeMode::ClosureParam => Ok(quote! { '_ }),
+                        },
                         ty::GenericArgKind::Const(_) => {
                             panic!("Const parameters are not supported, but found {ty}")
                         }
@@ -1637,33 +1691,33 @@ pub fn format_ty_for_rs<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Res
                 Mutability::Mut => quote! { mut },
                 Mutability::Not => quote! { const },
             };
-            let ty = match format_transparent_pointee(db, pointee_ty) {
-                Ok(generic_ty) => generic_ty,
-                Err(_) => db.format_ty_for_rs(pointee_ty).with_context(|| {
+            let ty = match format_transparent_pointee(db, pointee_ty, lifetime_mode) {
+                Some(generic_ty) => generic_ty,
+                None => lifetime_mode.format_ty(db, pointee_ty).with_context(|| {
                     format!("Failed to format the pointee of the pointer type `{ty}`")
                 })?,
             };
             quote! { * #qualifier #ty }
         }
         ty::TyKind::Ref(region, referent_ty, mutability) => {
-            let lifetime = format_region_as_rs_lifetime(db.tcx(), region);
-            if matches!(referent_ty.kind(), ty::TyKind::Str) && mutability.is_not() {
-                return Ok(quote! { & #lifetime str });
-            }
+            let lifetime = match lifetime_mode {
+                RsLifetimeMode::Default => format_region_as_rs_lifetime(db.tcx(), region),
+                RsLifetimeMode::ClosureParam | RsLifetimeMode::ClosureReturn => quote! {},
+            };
             let mutability = match mutability {
                 Mutability::Mut => quote! { mut },
                 Mutability::Not => quote! {},
             };
-            let ty = match format_transparent_pointee(db, referent_ty) {
-                Ok(generic_ty) => generic_ty,
-                Err(_) => db.format_ty_for_rs(referent_ty).with_context(|| {
+            let ty = match format_transparent_pointee(db, referent_ty, lifetime_mode) {
+                Some(generic_ty) => generic_ty,
+                None => lifetime_mode.format_ty(db, referent_ty).with_context(|| {
                     format!("Failed to format the referent of the reference type `{ty}`")
                 })?,
             };
             quote! { & #lifetime #mutability #ty }
         }
         ty::TyKind::Slice(slice_ty) => {
-            let ty = db.format_ty_for_rs(slice_ty).with_context(|| {
+            let ty = lifetime_mode.format_ty(db, slice_ty).with_context(|| {
                 format!("Failed to format the element type of the slice type `{ty}`")
             })?;
             quote! { [#ty] }
