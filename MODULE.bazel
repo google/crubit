@@ -29,7 +29,7 @@ bazel_dep(name = "toolchains_llvm", version = "1.9.0")
 # `CRUBIT_LLVM_COMMIT` environment variable is missing
 # (it is typically set present in CI/CQ via `rust.yml`).
 llvm_ext = use_extension("//bazel:llvm_extension.bzl", "llvm_extension")
-llvm_ext.configure(commit = "712196951e77eea330269d3c2267c571e07f4577")
+llvm_ext.configure(commit = "b02dbdd4ef51d24d882cdd14112229144c05f9a1")
 use_repo(llvm_ext, "llvm-raw", "llvm_libxml2", "llvm_zlib", "llvm_zstd")
 
 llvm_configure = use_repo_rule("@llvm-raw//utils/bazel:configure.bzl", "llvm_configure")
