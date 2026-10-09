@@ -50,6 +50,14 @@ _NON_PROD_PLATFORMS = {
         "@platforms//cpu:riscv64",
         "@platforms//os:android",
     ],
+    "macos_x86_64": [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:macos",
+    ],
+    "macos_arm64": [
+        "@platforms//cpu:arm64",
+        "@platforms//os:macos",
+    ],
 }
 
 # cc_bindings_from_rs
