@@ -37,6 +37,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
         "macos",
     ],
     rust_library = "structs",
