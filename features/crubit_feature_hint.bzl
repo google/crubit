@@ -9,11 +9,7 @@ visibility-restricted.
 """
 
 load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
-load(
-    "//features:global_features.bzl",
-    "NO_ASSUME_LIFETIMES_TARGETS",
-    "SUPPORTED_FEATURE_DENYLISTS",
-)
+load("//features:global_features.bzl", "SUPPORTED_FEATURE_DENYLISTS")
 
 visibility(["//..."])
 
@@ -123,9 +119,4 @@ def find_crubit_features(target, aspect_ctx):
         _add_features(features, hint)
     denied = find_denied_crubit_features(target, aspect_ctx)
     features = [f for f in features if f not in denied]
-    if features:
-        if _matches_any_pattern(target.label, NO_ASSUME_LIFETIMES_TARGETS):
-            if not _has_explicit_opt_in(aspect_ctx.rule.attr.aspect_hints, ("assume_lifetimes", "experimental")):
-                if "no_assume_lifetimes" not in features:
-                    features.append("no_assume_lifetimes")
     return sorted(features)
