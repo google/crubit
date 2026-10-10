@@ -5,7 +5,7 @@
 #include "rs_bindings_from_cc/test/struct/destructors/destructors.h"
 
 namespace {
-int g_destruction_record = 0;
+thread_local int g_destruction_record = 0;
 }  // namespace
 
 // static
