@@ -519,6 +519,10 @@ fn test_trivial_abstract_by_value() -> Result<()> {
     let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     // It isn't available by value:
+    expect_that!(
+        rs_api.to_string(),
+        contains_substring("`Abstract` can't be used by-value because it has pure virtual functions that are not overridden"),
+    );
     assert_rs_not_matches!(rs_api, quote! {Default});
     assert_rs_not_matches!(rs_api, quote! {From});
     assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
@@ -549,6 +553,10 @@ fn test_nontrivial_abstract_by_value() -> Result<()> {
     let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
     let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
     assert_rs_not_matches!(rs_api, quote! {CtorNew});
+    expect_that!(
+        rs_api.to_string(),
+        contains_substring("`Abstract` can't be used by-value because it has pure virtual functions that are not overridden"),
+    );
     // ... but it is otherwise available:
     assert_rs_matches!(rs_api, quote! {struct Abstract});
     assert_rs_matches!(rs_api, quote! {fn Foo<'__this>(&'__this self)});

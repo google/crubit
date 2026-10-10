@@ -14,8 +14,10 @@ prefer just copy-pasting something, start there.
 
 Crubit allows you to call some C++ interfaces from Rust. It supports
 [functions](functions.md), [classes and structs](classes_and_structs.md), and
-[enums](enums.md). Crubit does **not** support advanced features like templates
-or virtual inheritance.
+[enums](enums.md). Crubit does **not** support advanced features like function
+templates or overriding C++ virtual methods in Rust. Class templates only get
+bindings for concrete instantiations, such as `MyTemplate<int>`. See the
+[status page](../overview/status.md) for details.
 
 The rest of this document goes over how to create a C++ library that can be
 called from Rust, and how to actually call it from Rust. The quick summary is:

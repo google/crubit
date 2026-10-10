@@ -115,6 +115,14 @@ features**, used in public interfaces:
     `[[clang::trivial_abi]]`)
 *   **Non**-Rust-movable structs, via Crubit's `ctor` crate, including
     nontrivial types.
+*   structs with base classes, including `virtual` base classes. The base class
+    subobjects are opaque.
+*   class template instantiations, such as `MyTemplate<int>`, as non-generic
+    Rust structs, including explicit and partial specializations. Their member
+    functions, other than constructors, destructors, and assignment operators,
+    only get bindings if the template, or a type alias for the instantiation, is
+    annotated with `CRUBIT_ALWAYS_INSTANTIATE`, or if the template is in
+    namespace `std` or `absl`.
 *   enums
 *   type aliases
 *   non-overloaded functions
@@ -126,15 +134,9 @@ features**, used in public interfaces:
 We have *experimental* unreleased support for the following language features:
 
 *   forward declarations
-*   templated types, bridged to a non-generic concrete type.
-    *   e.g. `vector<int>` becomes `struct __crubit_mangled_vector_i`, not
-        `struct vector<T>(...)`
-    *   specialization
 *   lifetime annotations, mapped unsafely to references
-*   Some object-orientation:
-    *   types with **non-virtual** base classes
-    *   upcasting
-    *   downcasting
+*   Some object-orientation, with the `oo_casting` feature:
+    *   upcasting, including to `virtual` base classes
     *   inherited methods
 
 The following features are **not** supported yet, among many others:
@@ -142,8 +144,10 @@ The following features are **not** supported yet, among many others:
 *   b/213280424: Overloading in general
 *   b/313733992: Object-Oriented Programming more generally
     *   e.g., cannot derive from a C++ class and override its virtual methods
+    *   b/216195042: downcasting
 *   *safe* support for references
 *   template-generic bridging, so that a C++ template becomes a Rust generic
+*   b/200066401: function templates
 *   non-type `using` aliases
     *   using enum
     *   using namespace
