@@ -719,9 +719,6 @@ fn generate_into_impls<'tcx>(
                     "ADT's self type should be C++-convertible after generate_adt_core succeeds",
                 );
             let self_cpp_ty = self_cpp_ty.into_tokens(&mut prereqs);
-            let is_generic = core
-                .def_id
-                .is_none_or(|def_id| query_compiler::has_non_lifetime_generics(tcx, def_id));
             let is_copy = is_copy(tcx, def_id, core.common.self_ty);
             if !is_copy && !db.is_cpp_move_constructible(core.common.self_ty) {
                 return None;
@@ -733,7 +730,6 @@ fn generate_into_impls<'tcx>(
                 middle_ty,
                 ThunkSelfParameter::new(
                     /* has_self= */ true, is_copy, /* is_trait_method = */ false,
-                    is_generic,
                 ),
                 &[Param {
                     cc_name: format_ident!("self"),
@@ -1391,17 +1387,13 @@ fn generate_ord_impls<'tcx>(
         TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
     )?;
 
-    let is_specialization =
-        core.def_id.is_none_or(|id| query_compiler::has_non_lifetime_generics(tcx, id));
-    let thunk_qualifier = crate::thunk_qualifier(is_specialization);
-
     let mut cc_details = ref_self_cc_ty.map_snippets(|ref_self_cc_tokens| {
         quote! {
             namespace __crubit_internal {
                 extern "C" ::std::int8_t #thunk_name(#ref_self_cc_tokens, #ref_self_cc_tokens);
             }
             inline ::std::strong_ordering (#cc_fully_qualified_name::operator<=>)(const #adt_cc_short_name& other) const {
-                auto val = #thunk_qualifier::#thunk_name(*this, other);
+                auto val = __crubit_internal::#thunk_name(*this, other);
                 switch (val) {
                     case -1: return ::std::strong_ordering::less;
                     case 0: return ::std::strong_ordering::equal;
@@ -1482,10 +1474,6 @@ fn generate_partial_ord_impls<'tcx>(
         TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
     )?;
 
-    let is_specialization =
-        core.def_id.is_none_or(|id| query_compiler::has_non_lifetime_generics(tcx, id));
-    let thunk_qualifier = crate::thunk_qualifier(is_specialization);
-
     let template_prefix = if rhs_ty.is_bool() {
         bool_constraint_template_prefix()
     } else {
@@ -1523,7 +1511,7 @@ fn generate_partial_ord_impls<'tcx>(
                 }
                 #template_prefix
                 inline ::std::partial_ordering (#cc_fully_qualified_name::operator<=>)(#rhs_cc_tokens_for_impl other) const {
-                    auto val = #thunk_qualifier::#thunk_name(*this, other);
+                    auto val = __crubit_internal::#thunk_name(*this, other);
                     switch (val) {
                         case -1: return ::std::partial_ordering::less;
                         case 0: return ::std::partial_ordering::equivalent;
@@ -2012,12 +2000,11 @@ pub fn generate_adt<'tcx>(
             ~#adt_cc_name(); __NEWLINE__
             __NEWLINE__
         });
-        let thunk_qualifier = crate::thunk_qualifier(is_specialization);
         let cc_details = cc_thunk_decls.map_snippets(|cc_thunk_decls| {
             quote! {
                 #cc_thunk_decls
                 inline #cc_fully_qualified_name::~#adt_cc_name() {
-                    #thunk_qualifier::#drop_thunk_name(*this);
+                    __crubit_internal::#drop_thunk_name(*this);
                 }
             }
         });
@@ -4008,8 +3995,6 @@ fn generate_begin_and_end_for_type<'tcx>(
         ty: check_ty,
     };
 
-    let is_generic =
-        core.def_id.is_some_and(|def_id| query_compiler::has_non_lifetime_generics(tcx, def_id));
     let impl_body = generate_thunk_call(
         db,
         into_iter_fn_id,
@@ -4017,7 +4002,7 @@ fn generate_begin_and_end_for_type<'tcx>(
         into_iter_ty,
         ThunkSelfParameter::new(
             /* has_self= */ false, /* by_copy= */ false,
-            /* is_trait_method= */ false, is_generic,
+            /* is_trait_method= */ false,
         ),
         &[param],
         /* is_async= */ false,

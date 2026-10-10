@@ -388,7 +388,7 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003
 }
 inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
     const Vec& other) noexcept {
-  ::__crubit_internal::
+  __crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
           other, this);
 }
@@ -396,7 +396,7 @@ inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>&
 rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator=(
     const Vec& other) noexcept {
   if (this != &other) {
-    ::__crubit_internal::
+    __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
             *this, other);
   }

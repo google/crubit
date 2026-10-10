@@ -101,9 +101,7 @@ pub(crate) fn generate_ctor_thunk_call<'tcx>(
     thunk_name: &Ident,
     args: &[TokenStream],
 ) -> Result<TokenStream> {
-    let is_specialization =
-        core.def_id.is_none_or(|id| query_compiler::has_non_lifetime_generics(db.tcx(), id));
-    let thunk_qualifier = crate::thunk_qualifier(is_specialization);
+    let thunk_qualifier = crate::thunk_qualifier(core);
     Ok(
         if matches!(
             classify_value_abi(db, core.common.self_ty, /* is_constructor= */ true)?,
