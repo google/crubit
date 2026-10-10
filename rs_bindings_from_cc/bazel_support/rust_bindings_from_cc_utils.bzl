@@ -141,7 +141,7 @@ def generate_and_compile_bindings(
         new_file = ctx.actions.declare_file(file_path, sibling = rs_output)
         ctx.actions.symlink(output = new_file, target_file = file)
         extra_rs_srcs_relocated.append(new_file)
-        remap_paths[new_file.path] = file.path
+        remap_paths[new_file] = file.path
         relocated_paths[file_path] = new_file
 
     # Create symlinks to the compile data alongside the symlinked rs files, so that paths relative
