@@ -62,13 +62,41 @@ static constexpr char CheckHeader[] = R"cc(
   };
   }  // namespace absl::something
 
-#define CHECK_OP(name, op, a, b)                                  \
-    while (string* result = ::absl::something::name##Impl(          \
-               ::absl::something::GetReferenceableValue(a),         \
-               ::absl::something::GetReferenceableValue(b), "msg")) \
-    ::absl::something::LogMessageFatal().InternalStream()
+  // Mirrors the real `CHECK_OP` in "third_party/absl/log/internal/check_op.h":
+  // on the success path it emits the shared `ABSL_ANALYZER_ASSUME` primitive so
+  // the analysis learns `a op b`; the real check lives in the dead `else` so
+  // streaming extensions still compile. The `switch (0) case 0: default:`
+  // blocker keeps it a single if/else-safe statement.
+#define CHECK_OP(name, op, a, b)                                 \
+    switch (0)                                                     \
+    case 0:                                                        \
+    default:                                                       \
+      if (string* result = ::absl::something::name##Impl(          \
+              ::absl::something::GetReferenceableValue(a),         \
+              ::absl::something::GetReferenceableValue(b), "msg"); \
+          result == nullptr) {                                     \
+        ABSL_ANALYZER_ASSUME((a)op(b));                            \
+      } else                                                       \
+        ::absl::something::LogMessageFatal().InternalStream()
 
 #define CHECK_NE(a, b) CHECK_OP(Check_NE, !=, (a), (b))
+
+  // Mock of the shared analyzer-only assumption primitive defined in
+  // `third_party/absl/base/optimization.h`. Because these mock headers already
+  // represent the code as the analyzer sees it, we always define the "active"
+  // (analyzer) form here rather than gating on `__clang_analyzer__`.
+  namespace absl::analyzer_internal {
+  inline void AnalyzerAssume(bool) {}
+  }  // namespace absl::analyzer_internal
+
+#define ABSL_ANALYZER_ASSUME(cond) \
+    (::absl::analyzer_internal::AnalyzerAssume((cond)))
+
+  // Mock of the analyzer-mode expansion of Waymo's `CAR_CHECK_NE` (see
+  // `waymo/onboard/global/error.h`). In the real header the assume now lives in
+  // the shared `CAR_CHECK_OP_LOG`; here we simply reuse the mock `CHECK_OP`,
+  // which already emits `ABSL_ANALYZER_ASSUME` on its success path.
+#define CAR_CHECK_NE(a, b) CHECK_OP(Check_NE, !=, (a), (b))
 
 #endif  // CRUBIT_NULLABILITY_TEST_CHECK_H_
 )cc";
@@ -218,6 +246,10 @@ static constexpr char MemoryHeader[] = R"cc(
 #if __cplusplus < 202002L
   template <class T>
   bool operator==(std::nullptr_t, const unique_ptr<T>&);
+  template <class T>
+  bool operator!=(const unique_ptr<T>&, std::nullptr_t);
+  template <class T>
+  bool operator!=(std::nullptr_t, const unique_ptr<T>&);
 #endif  // __cplusplus < 202002L
 
   template <class T>
