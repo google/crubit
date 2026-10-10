@@ -47,10 +47,6 @@ NO_ASSUME_LIFETIMES_TARGETS = [
     "//support/cc_std_impl/test/string_view/...",
 ]
 
-# buildifier: keep sorted <internal link>
-NO_TEMPLATE_INSTANTIATION_TARGETS = [
-]
-
 # Per-feature denylists for features in `SUPPORTED_FEATURES`: maps a feature name to a list of
 # target patterns (in the same format as `NO_ASSUME_LIFETIMES_TARGETS`) which do not get that
 # feature by default.
