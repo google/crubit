@@ -57,9 +57,9 @@ crubit_cc_test(
     ],
     deps = [
         ":rs_hash_cc_api",
-        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/hash",
+        "@googletest//:gtest_main",
     ],
 )
