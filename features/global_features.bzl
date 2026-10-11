@@ -11,6 +11,7 @@ SUPPORTED_FEATURES = [
     "assume_lifetimes",
     "template_instantiation",
     "proto_references",
+    "layout_compat_optional",
 ]
 
 # Per-feature denylists for features in `SUPPORTED_FEATURES`: maps a feature name to a list of

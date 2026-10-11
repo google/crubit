@@ -17,10 +17,8 @@
 
 use ctor::emplace;
 use googletest::matchers::{anything, err as is_err, ok as is_ok};
-use googletest::{expect_eq, expect_that, expect_true, gtest};
-use nested_layout_compat_string_lib::{
-    MakeLayoutCompatString, MakeLayoutCompatStringOrError, MaybeMakeRustMovable, RustMovable,
-};
+use googletest::{expect_eq, expect_that, gtest};
+use nested_layout_compat_string_lib::{MakeLayoutCompatString, MakeLayoutCompatStringOrError};
 
 #[gtest]
 fn test_bare_layout_compat_string_is_bound() {
@@ -30,24 +28,11 @@ fn test_bare_layout_compat_string_is_bound() {
 
 #[gtest]
 fn test_layout_compat_string_in_status_or_is_bound() {
-    // `absl::StatusOr` is layout-compatible under `CRUBIT_NEW_STATUS`, so unlike `std::optional`
-    // it can carry a layout-compatible `std::string`.
+    // `absl::StatusOr` is layout-compatible under `CRUBIT_NEW_STATUS`, so it can carry a
+    // layout-compatible `std::string`.
     let ok = emplace!(MakeLayoutCompatStringOrError(true));
     expect_that!(&*ok, is_ok(anything()));
 
     let err = emplace!(MakeLayoutCompatStringOrError(false));
     expect_that!(&*err, is_err(anything()));
-}
-
-#[gtest]
-fn test_rust_movable_payload_in_optional_is_bound() {
-    // A user-defined Rust-movable type can still be bridged inside a `std::optional`.
-    let engaged: Option<RustMovable> = MaybeMakeRustMovable(true);
-    let Some(value) = engaged else {
-        panic!("expected an engaged optional");
-    };
-    expect_eq!(value.x, 7);
-    expect_true!(value.y);
-
-    expect_true!(MaybeMakeRustMovable(false).is_none());
 }

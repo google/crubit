@@ -60,8 +60,11 @@ fn test_map_int() {
 
 #[gtest]
 fn test_map_optional_int() {
-    let result = map_optional_int(Box::new(|x| x.map(|x| x * 2)), Some(10));
-    expect_eq!(result, Some(20));
+    fn double(x: Option<i32>) -> Option<i32> {
+        x.map(|x| x * 2)
+    }
+    let result = map_optional_int(Box::new(|x| double(x.into()).into()), Some(10).into());
+    expect_eq!(Option::<i32>::from(result), Some(20));
 }
 
 #[gtest]

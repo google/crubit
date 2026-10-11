@@ -48,18 +48,6 @@ std::pair<std::pair<int, float>, bool> MakePair(int a, float b, bool c) {
   return {{a, b}, c};
 }
 
-std::pair<std::optional<int>, std::optional<std::pair<float, Vec3<float>>>>
-MakeStuff() {
-  return {std::nullopt, {{3.14f, {1.0f, 2.0f, 3.0f}}}};
-}
-
-OptionalInt MakeOptionalInt(bool is_present) {
-  if (is_present) {
-    return 42;
-  }
-  return std::nullopt;
-}
-
 IntFloatPair MakeIntFloatPair(int a, float b) { return {a, b}; }
 
 Vec3<Stuff> MakeVec3OfStructs(Stuff x, Stuff y, Stuff z) { return {x, y, z}; }
@@ -75,14 +63,6 @@ std::pair<std::string, Stuff> ProperlyGreetStuff(Stuff stuff) {
 }
 
 std::string_view StringViewByValue(std::string_view sv) { return sv; }
-
-std::optional<std::string_view> ReturnOptionalStringView(bool is_present,
-                                                         std::string_view sv) {
-  if (!is_present) {
-    return std::nullopt;
-  }
-  return sv;
-}
 
 rs_std::SliceRef<const std::string_view> ReturnSliceRefStringView(
     rs_std::SliceRef<const std::string_view> slice) {
@@ -102,16 +82,6 @@ AcceptsSliceAndReturnsStatusErrorIfEmpty(rs_std::SliceRef<const int> slice) {
     return absl::InvalidArgumentError("slice is empty");
   }
   return slice;
-}
-
-std::optional<MyEnum> ValidateMyEnum(MyEnum value) {
-  switch (value) {
-    case MyEnum::kFoo:
-    case MyEnum::kBar:
-      return value;
-    default:
-      return std::nullopt;
-  }
 }
 
 absl::StatusOr<std::unique_ptr<StructWithVirtualDestructor>>

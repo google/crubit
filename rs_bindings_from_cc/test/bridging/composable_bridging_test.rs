@@ -32,17 +32,8 @@ fn test_map_multiply() {
 }
 
 #[gtest]
-fn test_stuff() {
-    expect_eq!(MakeStuff(), (None, Some((3.14, Vec3 { x: 1.0, y: 2.0, z: 3.0 }))));
-}
-
-#[gtest]
 fn test_aliases_to_bridge_types() {
     // The C++ aliases are bound as Rust aliases to the bridged types.
-    let present: OptionalInt = MakeOptionalInt(true);
-    expect_eq!(present, Some(42));
-    expect_eq!(MakeOptionalInt(false), None);
-
     let pair: IntFloatPair = MakeIntFloatPair(1, 2.0);
     expect_eq!(pair, (1, 2.0));
 }
@@ -76,15 +67,6 @@ fn test_string_view_by_value() {
         &*value.as_bytes()
     }
     expect_eq!(live(StringViewByValue("Hello".into())), b"Hello");
-}
-
-#[gtest]
-fn test_return_optional_string_view() {
-    fn live(value: Option<cc_std::std::raw_string_view>) -> Option<&'static [u8]> {
-        value.map(|sv| unsafe { &*sv.as_raw_bytes() })
-    }
-    expect_eq!(live(ReturnOptionalStringView(true, "Hello".into())), live(Some("Hello".into())));
-    expect_eq!(live(ReturnOptionalStringView(false, "Hello".into())), live(None));
 }
 
 #[gtest]
@@ -131,19 +113,6 @@ fn test_status_of_slice_ref_is_bridged_as_slice_ptr() {
     let non_empty_slice: &[core::ffi::c_int] = &[1, 2, 3];
     let result = AcceptsSliceAndReturnsStatusErrorIfEmpty(non_empty_slice as *const _);
     expect_that!(result, ok(eq(&(non_empty_slice as *const _))));
-}
-
-#[gtest]
-fn test_optional_my_struct() {
-    let x = ReturnOptionalMyStruct();
-    assert_eq!(x.unwrap().x, 42);
-}
-
-#[gtest]
-fn test_composable_bridge_with_enum_inside() {
-    assert_eq!(ValidateMyEnum(MyEnum::kFoo), Some(MyEnum::kFoo));
-    assert_eq!(ValidateMyEnum(MyEnum::kBar), Some(MyEnum::kBar));
-    assert_eq!(ValidateMyEnum(MyEnum::from(42)), None);
 }
 
 #[gtest]
