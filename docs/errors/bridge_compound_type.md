@@ -1,4 +1,4 @@
-# Bridge types as struct fields
+# Compound types containing bridge types
 
 ## Overview
 
