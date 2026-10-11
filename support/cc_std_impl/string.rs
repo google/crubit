@@ -10,7 +10,6 @@ use crate::lossy_utf8::{debug_bytes, LossyUtf8Display};
 use crate::std::string_view;
 use alloc::string::String;
 use alloc::vec::Vec;
-use bridge_rust::{transmute_abi, CrubitAbi, Decoder, Encoder};
 use core::clone::Clone;
 use core::cmp::Eq;
 use core::cmp::PartialEq;
@@ -18,6 +17,7 @@ use core::ffi::c_void;
 use core::mem::{ManuallyDrop, MaybeUninit};
 use core::ops::Deref;
 use core::ptr::NonNull;
+use crubit_support::bridge::{transmute_abi, CrubitAbi, Decoder, Encoder};
 use ctor::{Ctor, CtorNew, FnCtor, Infallible, PinnedDrop, RvalueReference};
 use std::fmt::Display;
 
