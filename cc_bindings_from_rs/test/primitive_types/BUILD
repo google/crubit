@@ -53,6 +53,7 @@ crubit_cc_test(
     platforms = [
         "android",
         "ios",
+        "macos",
     ],
     deps = [
         ":primitive_types_cc_api",
