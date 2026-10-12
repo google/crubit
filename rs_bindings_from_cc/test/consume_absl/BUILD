@@ -37,9 +37,8 @@ crubit_test_cc_library(
     hdrs = ["uses_anyinvocable.h"],
     aspect_hints = [
         "//features:layout_compat_optional",
-        "//features:supported",
         # Required to support incomplete types.
-        "//features:wrapper",
+        "//features:forward_declare",
     ],
     deps = [
         "@abseil-cpp//absl/functional:any_invocable",
