@@ -15,8 +15,10 @@ TEST(FoobarTest, FooBar) {
   // from our crates.
   const rs_std::Option<int32_t>& b_bar = b.bar;
   a.set_field(b_bar);
-  EXPECT_EQ(foobar::foo(foo::Foo::new_(1)), 1);
-  EXPECT_EQ(foobar::bar(bar::Bar::new_(2)), 2);
+  EXPECT_TRUE(foobar::foo(foo::Foo::new_(1)).has_value());
+  EXPECT_EQ(*foobar::foo(foo::Foo::new_(1)), 1);
+  EXPECT_TRUE(foobar::bar(bar::Bar::new_(2)).has_value());
+  EXPECT_EQ(*foobar::bar(bar::Bar::new_(2)), 2);
 }
 
 }  // namespace

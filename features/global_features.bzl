@@ -12,6 +12,7 @@ SUPPORTED_FEATURES = [
     "template_instantiation",
     "proto_references",
     "layout_compat_optional",
+    "always_specialize_generics_in_cpp_api_from_rust",
 ]
 
 # Per-feature denylists for features in `SUPPORTED_FEATURES`: maps a feature name to a list of
@@ -51,5 +52,8 @@ SUPPORTED_FEATURE_DENYLISTS = {
         "//rs_bindings_from_cc/test/wrapper/fallback_bridge_types:wrapper_library",
         "//rs_bindings_from_cc/test/wrapper/fallback_types:wrapper_library",
         "//support/cc_std_impl/test/string_view/...",
+    ],
+    "always_specialize_generics_in_cpp_api_from_rust": [
+        "//cc_bindings_from_rs/test/bridging/composable:composable_bridging",
     ],
 }

@@ -394,7 +394,9 @@ TEST(TuplesTest, ElementConstructor) {
 
   rs_std::Tuple<rs_std::Option<std::int32_t>> opt_tuple(
       rs_std::Option<std::int32_t>(42));
-  EXPECT_EQ(tuples::return_option_in_tuple_ref(opt_tuple), 42);
+  EXPECT_EQ(
+      std::optional<int32_t>(tuples::return_option_in_tuple_ref(opt_tuple)),
+      42);
 }
 
 }  // namespace
