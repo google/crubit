@@ -214,45 +214,11 @@ pub struct AdtEnumSpecialization<'tcx> {
     pub kind: EnumSpecializationKind<'tcx>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[allow(clippy::large_enum_variant)]
 pub enum EnumSpecializationKind<'tcx> {
     Option { some_ty: FormattedTy<'tcx> },
     Result { ok_ty: FormattedTy<'tcx>, err_ty: FormattedTy<'tcx> },
-}
-
-impl PartialEq for EnumSpecializationKind<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (
-                EnumSpecializationKind::Option { some_ty: self_some_ty },
-                EnumSpecializationKind::Option { some_ty: other_some_ty },
-            ) => self_some_ty == other_some_ty,
-            (
-                EnumSpecializationKind::Result { ok_ty: self_ok_ty, err_ty: self_err_ty },
-                EnumSpecializationKind::Result { ok_ty: other_ok_ty, err_ty: other_err_ty },
-            ) => self_ok_ty == other_ok_ty && self_err_ty == other_err_ty,
-            _ => false,
-        }
-    }
-}
-
-impl Eq for EnumSpecializationKind<'_> {}
-
-impl Hash for EnumSpecializationKind<'_> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        match self {
-            EnumSpecializationKind::Option { some_ty } => {
-                state.write_u8(0);
-                some_ty.hash(state);
-            }
-            EnumSpecializationKind::Result { ok_ty, err_ty } => {
-                state.write_u8(1);
-                ok_ty.hash(state);
-                err_ty.hash(state);
-            }
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
