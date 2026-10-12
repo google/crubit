@@ -70,8 +70,50 @@ prune_matching_files() {
   rmdir "$src_dir" 2>/dev/null || true
 }
 
+# Removes files in src_dir that are byte-for-byte identical to the golden that
+# golden_test.bzl would read instead: the file in tier_dir if there is one,
+# otherwise the file in host_dir.
+prune_against_fallback() {
+  local src_dir="$1"
+  local tier_dir="$2"
+  local host_dir="$3"
+  [ -d "$src_dir" ] || return 0
+
+  for f in "$src_dir"/*; do
+    [ -f "$f" ] || continue
+    local fname fallback
+    fname="$(basename "$f")"
+    if [ -f "$tier_dir/$fname" ]; then
+      fallback="$tier_dir/$fname"
+    else
+      fallback="$host_dir/$fname"
+    fi
+    if [ -f "$fallback" ] && cmp -s "$f" "$fallback"; then
+      rm -f "$f"
+    fi
+  done
+  rmdir "$src_dir" 2>/dev/null || true
+}
+
+# Moves every golden in src_dir into tier_dir (overwriting) and removes src_dir.
+promote_to_tier() {
+  local src_dir="$1"
+  local tier_dir="$2"
+  [ -d "$src_dir" ] || return 0
+
+  mkdir -p "$tier_dir"
+  for f in "$src_dir"/*; do
+    [ -f "$f" ] || continue
+    mv -f "$f" "$tier_dir/"
+  done
+  rm -rf "$src_dir"
+}
+
 # Automatically consolidate multiplatform golden files into tiered shared directories
-# (e.g. goldens/android_32/, goldens/android_64/) and prune redundant overrides.
+# (goldens/android_32/, goldens/android_64/, goldens/ios/, goldens/windows_32/,
+# goldens/windows_64/) and prune redundant overrides. This walks every goldens/
+# directory under third_party/crubit, whatever targets were passed to the script,
+# and is a no-op for directories that are already consolidated.
 consolidate_goldens() {
   local script_dir
   script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -95,38 +137,27 @@ consolidate_goldens() {
     local ios_arm64_dir="$goldens_dir/ios_arm64"
     local ios_tier_dir="$goldens_dir/ios"
 
+    # Windows is LLP64 on every CPU, so x86_64 is the windows_64 baseline and
+    # arm64 only overrides it. The directory names match the Windows arch names
+    # and ABI tiers used by golden_test.bzl.
+    local windows_x86_dir="$goldens_dir/windows_x86"
+    local windows_tier32_dir="$goldens_dir/windows_32"
+
+    local windows_x86_64_dir="$goldens_dir/windows_x86_64"
+    local windows_arm64_dir="$goldens_dir/windows_arm64"
+    local windows_tier64_dir="$goldens_dir/windows_64"
 
     # Step 1: Promote x86 baselines to shared ABI tiers
-    if [ -d "$x86_32_dir" ]; then
-      mkdir -p "$tier32_dir"
-      for f in "$x86_32_dir"/*; do
-        [ -f "$f" ] || continue
-        mv -f "$f" "$tier32_dir/"
-      done
-      rmdir "$x86_32_dir" 2>/dev/null || rm -rf "$x86_32_dir"
-    fi
-
-    if [ -d "$x86_64_dir" ]; then
-      mkdir -p "$tier64_dir"
-      for f in "$x86_64_dir"/*; do
-        [ -f "$f" ] || continue
-        mv -f "$f" "$tier64_dir/"
-      done
-      rmdir "$x86_64_dir" 2>/dev/null || rm -rf "$x86_64_dir"
-    fi
+    promote_to_tier "$x86_32_dir" "$tier32_dir"
+    promote_to_tier "$x86_64_dir" "$tier64_dir"
 
     # Step 1b: Promote ios_sim_arm64 / ios_arm64 -> ios (shared baseline)
-    for arm64_dir in "$ios_sim_arm64_dir" "$ios_arm64_dir"; do
-      if [ -d "$arm64_dir" ]; then
-        mkdir -p "$ios_tier_dir"
-        for f in "$arm64_dir"/*; do
-          [ -f "$f" ] || continue
-          mv -f "$f" "$ios_tier_dir/"
-        done
-        rmdir "$arm64_dir" 2>/dev/null || rm -rf "$arm64_dir"
-      fi
-    done
+    promote_to_tier "$ios_sim_arm64_dir" "$ios_tier_dir"
+    promote_to_tier "$ios_arm64_dir" "$ios_tier_dir"
 
+    # Step 1c: Promote windows_x86 -> windows_32 and windows_x86_64 -> windows_64
+    promote_to_tier "$windows_x86_dir" "$windows_tier32_dir"
+    promote_to_tier "$windows_x86_64_dir" "$windows_tier64_dir"
 
     # Step 2: Prune redundant files in 32-bit ARM overrides (against android_32 and host)
     prune_matching_files "$arm_32_dir" "$tier32_dir"
@@ -142,12 +173,20 @@ consolidate_goldens() {
       prune_matching_files "$goldens_dir/$arch" "$pkg_dir"
     done
 
+    # Step 3c: Prune redundant files in the Windows arm64 override (against the
+    # golden it would read otherwise: windows_64 if present, else host)
+    prune_against_fallback "$windows_arm64_dir" "$windows_tier64_dir" "$pkg_dir"
+
     # Step 4: Prune redundant files in shared ABI tiers against host
+    prune_matching_files "$tier32_dir" "$pkg_dir"
     prune_matching_files "$tier64_dir" "$pkg_dir"
 
     # Step 4b: Prune redundant files in ios tier (against host)
     prune_matching_files "$ios_tier_dir" "$pkg_dir"
-    prune_matching_files "$tier32_dir" "$pkg_dir"
+
+    # Step 4c: Prune redundant files in Windows tiers (against host)
+    prune_matching_files "$windows_tier32_dir" "$pkg_dir"
+    prune_matching_files "$windows_tier64_dir" "$pkg_dir"
 
     # Step 5: Remove empty goldens directory if everything fell back to host
     rmdir "$goldens_dir" 2>/dev/null || true
