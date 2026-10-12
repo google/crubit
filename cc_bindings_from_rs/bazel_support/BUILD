@@ -55,7 +55,6 @@ bzl_library(
     srcs = ["cc_bindings_from_rust_library_config_aspect_hint.bzl"],
     visibility = ["//visibility:private"],
     deps = [
-        ":providers_bzl",
         "@bazel_skylib//lib:collections",
     ],
 )

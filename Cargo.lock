@@ -167,7 +167,6 @@ dependencies = [
  "cc_bindings_from_rs_cmdline",
  "cc_bindings_from_rs_cpp_api_from_rust_lib",
  "clap",
- "itertools",
 ]
 
 [[package]]
@@ -194,7 +193,6 @@ dependencies = [
  "cc_bindings_from_rs_run_compiler",
  "cc_bindings_from_rs_run_compiler_test_support",
  "cc_bindings_from_rs_rustversion",
- "clap",
  "code_gen_utils",
  "crubit_feature",
  "error_report",
@@ -215,7 +213,6 @@ dependencies = [
  "anyhow",
  "cc_bindings_from_rs_crubit_attr",
  "cc_bindings_from_rs_run_compiler_test_support",
- "cc_bindings_from_rs_rustversion",
 ]
 
 [[package]]
@@ -224,7 +221,6 @@ version = "0.0.0"
 dependencies = [
  "arc_anyhow",
  "cc_bindings_from_rs_crubit_attr",
- "cc_bindings_from_rs_rustversion",
  "code_gen_utils",
  "crubit_abi_type",
  "crubit_feature",
@@ -246,7 +242,6 @@ dependencies = [
  "cc_bindings_from_rs_database",
  "cc_bindings_from_rs_generate_bindings",
  "cc_bindings_from_rs_query_compiler",
- "cc_bindings_from_rs_run_compiler",
  "cc_bindings_from_rs_run_compiler_test_support",
  "cc_bindings_from_rs_rustversion",
  "cc_bindings_from_rs_test_helpers",
@@ -282,7 +277,6 @@ version = "0.0.0"
 dependencies = [
  "arc_anyhow",
  "cc_bindings_from_rs_run_compiler_test_support",
- "cc_bindings_from_rs_rustversion",
  "either",
  "tempfile",
 ]

@@ -30,7 +30,6 @@ rust_library(
     deps = [
         ":query_compiler",
         "//cc_bindings_from_rs:crubit_attr",
-        "//cc_bindings_from_rs:run_compiler",
         "//cc_bindings_from_rs:rustversion",
         "//cc_bindings_from_rs:toposort",
         "//cc_bindings_from_rs/generate_bindings/database",
