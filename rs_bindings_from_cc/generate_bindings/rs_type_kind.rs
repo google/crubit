@@ -334,8 +334,10 @@ fn rs_type_kind_with_lifetime_elision_impl<'a>(
                 .ir()
                 .target_crubit_features(db.ir().current_target())
                 .contains(crubit_feature::CrubitFeature::NonnullSmartPointers);
-            Ok(if ty.is_nonnull() && nonnull_smart_pointers {
-                type_kind.into_nonnull_smart_pointer()
+            // Under `nonnull_smart_pointers`, a smart pointer is non-null (bare `Ptr`) only if its
+            // use site promises so; every other use may be null (`Nullable<Ptr>`).
+            Ok(if nonnull_smart_pointers && !ty.is_nonnull() {
+                type_kind.into_nullable_smart_pointer()
             } else {
                 type_kind
             })

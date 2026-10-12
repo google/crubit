@@ -95,8 +95,11 @@ flagset::flags! {
         /// Generate bindings for generic types (templates).
         Generics,
 
-        /// Honor `absl_nonnull` (clang's `_Nonnull`) on `std::unique_ptr` and `std::shared_ptr` by
-        /// wrapping the generated Rust type in `cc_std::std::NonNull`.
+        /// Map `std::unique_ptr` and `std::shared_ptr` by nullability (crubit.rs-nullable): a smart
+        /// pointer known to be non-null (`absl_nonnull`, or unannotated under
+        /// `ABSL_POINTERS_DEFAULT_NONNULL`) is a bare Rust `Ptr`, and any other is
+        /// `cc_std::std::Nullable<Ptr>`. In the other direction, a bare Rust `Ptr` is spelled
+        /// `Ptr crubit_nonnull` in C++.
         NonnullSmartPointers,
 
         /// Generate `::cxx::ExternType` implementations for records.

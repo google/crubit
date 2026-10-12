@@ -95,6 +95,70 @@ fn is_unique_ptr(db: &BindingsGenerator<'_>, did: DefId) -> bool {
         }
 }
 
+/// Names of the Crubit support crate that defines `SupportsNullable`, `Nullable`, and the smart
+/// pointers.
+const SUPPORT_CRATE_NAMES: &[&str] = &["cc_std", "cpp_std"];
+
+/// Returns true if `did` is the item called `name` in the Crubit support crate.
+///
+/// This checks the crate and the item name rather than the full path because the support crate's
+/// hand-written sources are mounted under generated module names (`cc_std::std::__crubit_mod_N`),
+/// where `N` depends on the order of the sources. Crubit owns the support crate, so the names
+/// looked up here are unambiguous in it.
+fn is_support_crate_item(db: &BindingsGenerator<'_>, did: DefId, name: &str) -> bool {
+    let tcx = db.tcx();
+    if tcx.item_name(did).as_str() != name {
+        return false;
+    }
+    SUPPORT_CRATE_NAMES.contains(&tcx.crate_name(did.krate).as_str())
+        // The unit tests mock the support crate as `rust_out::cc_std::std`.
+        || matches_qualified_name(db, did, &["rust_out", "cc_std", "std", name])
+}
+
+/// Returns the `DefId` of the `cc_std::std::SupportsNullable` trait, or `None` if the support crate
+/// is not loaded, in which case there are no smart pointers to format.
+///
+/// Returns an error if the support crate is loaded but does not define the trait: that means
+/// Crubit and its support library are out of sync.
+fn supports_nullable_trait(db: &BindingsGenerator<'_>) -> Result<Option<DefId>> {
+    let tcx = db.tcx();
+    if let Some(trait_id) = tcx
+        .all_traits_including_private()
+        .find(|&trait_id| is_support_crate_item(db, trait_id, "SupportsNullable"))
+    {
+        return Ok(Some(trait_id));
+    }
+    if let Some(&krate) = tcx
+        .crates(())
+        .iter()
+        .find(|&&krate| SUPPORT_CRATE_NAMES.contains(&tcx.crate_name(krate).as_str()))
+    {
+        bail!(
+            "crubit.rs-bug: the Crubit support crate `{}` is loaded but does not define the \
+             `SupportsNullable` trait, this should never happen.",
+            tcx.crate_name(krate)
+        );
+    }
+    Ok(None)
+}
+
+/// Returns true if `ty` is a smart pointer that can be null, i.e. it implements
+/// `cc_std::std::SupportsNullable` (`unique_ptr`, `virtual_unique_ptr`, and `shared_ptr`).
+///
+/// Under `nonnull_smart_pointers`, such a pointer is non-null unless it is wrapped in `Nullable`.
+fn is_smart_pointer<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<bool> {
+    let Some(trait_id) = supports_nullable_trait(db)? else {
+        return Ok(false);
+    };
+    Ok(query_compiler::does_type_implement_trait(db.tcx(), ty, trait_id, []))
+}
+
+/// Returns true if `did` is `cc_std::std::Nullable` or `cc_std::std::NonNull` (**not**
+/// `core::ptr::NonNull`): a wrapper that supplies the nullability of the smart pointer it wraps.
+fn is_nullability_wrapper(db: &BindingsGenerator<'_>, did: DefId) -> bool {
+    is_support_crate_item(db, did, "Nullable") || is_support_crate_item(db, did, "NonNull")
+}
+
 /// Returns true if `ty` implements the `Delete` trait (e.g., C++ types with virtual destructors or
 /// overloaded operator delete).
 fn does_type_implement_delete<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
@@ -359,6 +423,7 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
             | TypeLocation::FnParam { .. }
             | TypeLocation::NestedBridgeable
     );
+    let is_wrapper = is_nullability_wrapper(db, adt.did());
 
     for (param, subst) in generics.own_params.iter().zip(substs.iter()) {
         let ty::GenericArgKind::Type(ty) = subst.kind() else {
@@ -380,7 +445,15 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
                 tcx.def_path_str(adt.did())
             );
         }
-        let snippet = db.format_ty_for_cc(ty, TypeLocation::Other).map_err(|err| {
+        // Inside `Nullable<Ptr>` or `NonNull<Ptr>`, the wrapper's own `cpp_type` supplies the
+        // nullability annotation, so `Ptr` must not get its default one.
+        let snippet = format_ty_for_cc_impl(
+            db,
+            ty,
+            TypeLocation::Other,
+            /* apply_default_nullability= */ !is_wrapper,
+        )
+        .map_err(|err| {
             let err = err.to_string().replace('\n', "\n  ");
             anyhow!(
                 "`{ty}` has no layout-compatible C++ type, but is used as a generic parameter\n  {err}"
@@ -650,6 +723,21 @@ pub fn format_ty_for_cc<'tcx>(
     db: &BindingsGenerator<'tcx>,
     ty: Ty<'tcx>,
     location: TypeLocation,
+) -> Result<CcSnippet<'tcx>> {
+    format_ty_for_cc_impl(db, ty, location, /* apply_default_nullability= */ true)
+}
+
+/// Formats `ty` as a C++ type.
+///
+/// Under `nonnull_smart_pointers`, a bare smart pointer (see [`is_smart_pointer`]) is non-null, so
+/// it is spelled `Ptr crubit_nonnull`. `apply_default_nullability` is false only when formatting
+/// the `Ptr` inside `Nullable<Ptr>` or `NonNull<Ptr>`, whose own `cpp_type` supplies the
+/// annotation instead: a C++ type has at most one nullability annotation.
+fn format_ty_for_cc_impl<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    ty: Ty<'tcx>,
+    location: TypeLocation,
+    apply_default_nullability: bool,
 ) -> Result<CcSnippet<'tcx>> {
     let tcx = db.tcx();
 
@@ -1002,6 +1090,22 @@ pub fn format_ty_for_cc<'tcx>(
                                     quote! {}
                                 }
                             }
+                        };
+
+                        // Under `nonnull_smart_pointers`, a bare smart pointer is non-null, and
+                        // `Nullable<Ptr>` is the spelling for one that may be null.
+                        let tokens = if apply_default_nullability
+                            && db
+                                .crate_features(db.source_crate_num())
+                                .contains(CrubitFeature::NonnullSmartPointers)
+                            && is_smart_pointer(db, ty)?
+                        {
+                            prereqs
+                                .includes
+                                .insert(db.support_header("annotations_internal.h"));
+                            quote! { #tokens crubit_nonnull }
+                        } else {
+                            tokens
                         };
 
                         return Ok(CcSnippet { tokens, prereqs });
@@ -2054,10 +2158,10 @@ fn is_manually_annotated_bridged_adt<'tcx>(
         .unwrap_or_else(|e| panic!("Invalid attrs for {ty}: {e}"));
 
     // `cpp_std::NonNull<Ptr>` (**not** `core::ptr::NonNull<T>`) is spelled `Ptr crubit_nonnull`.
-    // Gate that on `nonnull_smart_pointers`, the same feature that lets `rs_bindings_from_cc`
-    // produce `NonNull` from an `_Nonnull`-annotated smart pointer, so a target opts into both
-    // directions of the bridge at once. Without the feature, treat `NonNull` as non-bridged,
-    // which is how it behaved before it was annotated.
+    // Gate that on `nonnull_smart_pointers`, which is also what makes a bare `Ptr` mean non-null
+    // (spelled `Ptr crubit_nonnull`) in both directions. Without the feature, treat `NonNull` as
+    // non-bridged, which is how it behaved before it was annotated. `NonNull` is being removed
+    // (crubit.rs-nullable); new code should use a bare `Ptr` instead.
     //
     // `Nullable<Ptr>` (spelled `Ptr crubit_nullable`) is not gated: it means the same thing as an
     // unannotated C++ smart pointer, so bridging it is correct with or without the feature.

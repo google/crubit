@@ -35,9 +35,18 @@ MakeNonnullVirtualUniquePtr() {
   return std::make_unique<OverloadedDelete>();
 }
 
-// Unannotated, for contrast: this stays a plain `unique_ptr` on the Rust side.
+// Unannotated, so it may be null: this becomes `Nullable<unique_ptr>` on the
+// Rust side.
 inline std::unique_ptr<int> MakeUniquePtr(int value) {
   return std::make_unique<int>(value);
+}
+
+inline int UseUniquePtrByValue(std::unique_ptr<int> p) {
+  return p == nullptr ? -1 : *p;
+}
+
+inline std::shared_ptr<int> MakeSharedPtr(int value) {
+  return std::make_shared<int>(value);
 }
 
 // Nullability on a template argument applies to that argument.
@@ -45,6 +54,14 @@ inline std::vector<absl_nonnull std::unique_ptr<int>> MakeVectorOfNonnull(
     int value) {
   std::vector<absl_nonnull std::unique_ptr<int>> v;
   v.push_back(std::make_unique<int>(value));
+  return v;
+}
+
+inline std::vector<absl_nullable std::unique_ptr<int>> MakeVectorOfNullable(
+    int value) {
+  std::vector<absl_nullable std::unique_ptr<int>> v;
+  v.push_back(std::make_unique<int>(value));
+  v.push_back(nullptr);
   return v;
 }
 
