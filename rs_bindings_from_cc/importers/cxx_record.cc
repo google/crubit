@@ -756,7 +756,7 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
           default:
             break;
         }
-      } else if (t->isPointerType() &&
+      } else if (t->isPointerType() && !t->isFunctionPointerType() &&
                  !t->getPointeeType().isConstQualified()) {
         supported = true;
       }

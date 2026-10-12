@@ -64,6 +64,6 @@ fn test_atomic_ptr() -> googletest::Result<()> {
 #[gtest]
 fn test_edge_cases_compilation() -> googletest::Result<()> {
     // Simply instantiating or referencing the container type proves the generator
-    // successfully processed atomic enums, floats, and structs without crashing.
+    // successfully processed atomic enums, floats, structs, and function pointers without crashing.
     verify_that!(std::mem::size_of::<atomic_lib::EdgeCasesContainer>() > 0, eq(true))
 }

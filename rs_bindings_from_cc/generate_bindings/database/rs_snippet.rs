@@ -448,6 +448,9 @@ impl<'a> UniformReprTemplateType<'a> {
             Some(TemplateSpecializationKind::StdAtomic { raw_element_type }) => {
                 let element_type = choose_one_type(raw_element_type, template_args)?;
                 let element_type = type_arg(&element_type)?;
+                if Self::std_atomic_type(&element_type, db).is_none() {
+                    return Ok(None);
+                }
                 Ok(Some(Rc::new(UniformReprTemplateType::StdAtomic { in_cc_std, element_type })))
             }
             Some(TemplateSpecializationKind::StdVector { raw_element_type }) => {
@@ -542,6 +545,56 @@ impl<'a> UniformReprTemplateType<'a> {
             if !(element_type.implements_copy() && element_type.is_unpin()))
     }
 
+    fn std_atomic_type(
+        element_type: &RsTypeKind<'a>,
+        db: &BindingsGenerator<'a>,
+    ) -> Option<TokenStream> {
+        match element_type.unalias() {
+            RsTypeKind::Primitive(p) => match PrimitiveName::from_primitive(*p) {
+                PrimitiveName::NativeType("bool") => {
+                    Some(quote! { ::core::sync::atomic::AtomicBool })
+                }
+                PrimitiveName::Ffi11Type("c_char") => Some(quote! { ::ffi_11::c_atomic_char }),
+                PrimitiveName::NativeType("i8") | PrimitiveName::Ffi11Type("c_schar") => {
+                    Some(quote! { ::core::sync::atomic::AtomicI8 })
+                }
+                PrimitiveName::NativeType("u8") | PrimitiveName::Ffi11Type("c_uchar") => {
+                    Some(quote! { ::core::sync::atomic::AtomicU8 })
+                }
+                PrimitiveName::NativeType("i16") | PrimitiveName::Ffi11Type("c_short") => {
+                    Some(quote! { ::core::sync::atomic::AtomicI16 })
+                }
+                PrimitiveName::NativeType("u16") | PrimitiveName::Ffi11Type("c_ushort") => {
+                    Some(quote! { ::core::sync::atomic::AtomicU16 })
+                }
+                PrimitiveName::NativeType("i32") | PrimitiveName::Ffi11Type("c_int") => {
+                    Some(quote! { ::core::sync::atomic::AtomicI32 })
+                }
+                PrimitiveName::NativeType("u32") | PrimitiveName::Ffi11Type("c_uint") => {
+                    Some(quote! { ::core::sync::atomic::AtomicU32 })
+                }
+                PrimitiveName::NativeType("i64") | PrimitiveName::Ffi11Type("c_longlong") => {
+                    Some(quote! { ::core::sync::atomic::AtomicI64 })
+                }
+                PrimitiveName::NativeType("u64") | PrimitiveName::Ffi11Type("c_ulonglong") => {
+                    Some(quote! { ::core::sync::atomic::AtomicU64 })
+                }
+                PrimitiveName::NativeType("isize") => {
+                    Some(quote! { ::core::sync::atomic::AtomicIsize })
+                }
+                PrimitiveName::NativeType("usize") => {
+                    Some(quote! { ::core::sync::atomic::AtomicUsize })
+                }
+                _ => None,
+            },
+            RsTypeKind::Pointer { pointee, mutability: Mutability::Mut, .. } => {
+                let p_tok = pointee.to_token_stream(db);
+                Some(quote! { ::core::sync::atomic::AtomicPtr<#p_tok> })
+            }
+            _ => None,
+        }
+    }
+
     pub fn to_token_stream(&self, db: &BindingsGenerator<'a>) -> TokenStream {
         match self {
             Self::StdVector { element_type } => {
@@ -565,72 +618,11 @@ impl<'a> UniformReprTemplateType<'a> {
                 };
                 wrap_in_nullable(unique_ptr, *is_nullable)
             }
-            Self::StdAtomic { in_cc_std: _, element_type } => match element_type.unalias() {
-                RsTypeKind::Primitive(p) => match p {
-                    ir::Primitive::SizeT
-                    | ir::Primitive::StdSizeT
-                    | ir::Primitive::UintptrT
-                    | ir::Primitive::StdUintptrT => {
-                        quote! { ::core::sync::atomic::AtomicUsize }
-                    }
-                    ir::Primitive::PtrdiffT
-                    | ir::Primitive::StdPtrdiffT
-                    | ir::Primitive::IntptrT
-                    | ir::Primitive::StdIntptrT => {
-                        quote! { ::core::sync::atomic::AtomicIsize }
-                    }
-                    ir::Primitive::Int32T | ir::Primitive::Int | ir::Primitive::StdInt32T => {
-                        quote! { ::core::sync::atomic::AtomicI32 }
-                    }
-                    ir::Primitive::UnsignedInt
-                    | ir::Primitive::Uint32T
-                    | ir::Primitive::StdUint32T
-                    | ir::Primitive::Char32T => {
-                        quote! { ::core::sync::atomic::AtomicU32 }
-                    }
-                    ir::Primitive::Bool => quote! { ::core::sync::atomic::AtomicBool },
-                    ir::Primitive::Char => quote! { ::ffi_11::c_atomic_char },
-                    ir::Primitive::SignedChar | ir::Primitive::Int8T | ir::Primitive::StdInt8T => {
-                        quote! { ::core::sync::atomic::AtomicI8 }
-                    }
-                    ir::Primitive::UnsignedChar
-                    | ir::Primitive::Uint8T
-                    | ir::Primitive::StdUint8T => {
-                        quote! { ::core::sync::atomic::AtomicU8 }
-                    }
-                    ir::Primitive::Short | ir::Primitive::Int16T | ir::Primitive::StdInt16T => {
-                        quote! { ::core::sync::atomic::AtomicI16 }
-                    }
-                    ir::Primitive::UnsignedShort
-                    | ir::Primitive::Uint16T
-                    | ir::Primitive::StdUint16T
-                    | ir::Primitive::Char16T => {
-                        quote! { ::core::sync::atomic::AtomicU16 }
-                    }
-                    ir::Primitive::LongLong | ir::Primitive::Int64T | ir::Primitive::StdInt64T => {
-                        quote! { ::core::sync::atomic::AtomicI64 }
-                    }
-                    ir::Primitive::UnsignedLongLong
-                    | ir::Primitive::Uint64T
-                    | ir::Primitive::StdUint64T => {
-                        quote! { ::core::sync::atomic::AtomicU64 }
-                    }
-                    _ => {
-                        let type_name = element_type.display(db).to_string();
-                        let msg = format!("Unsupported StdAtomic inner type: {type_name}");
-                        quote! { ::core::compile_error!(#msg) }
-                    }
-                },
-                RsTypeKind::Pointer { pointee, mutability: Mutability::Mut, .. } => {
-                    let p_tok = pointee.to_token_stream(db);
-                    quote! { ::core::sync::atomic::AtomicPtr<#p_tok> }
-                }
-                _ => {
-                    let type_name = element_type.display(db).to_string();
-                    let msg = format!("Unsupported StdAtomic inner type: {type_name}");
-                    quote! { ::core::compile_error!(#msg) }
-                }
-            },
+            Self::StdAtomic { in_cc_std: _, element_type } => {
+                Self::std_atomic_type(element_type, db).expect(
+                    "UniformReprTemplateType::StdAtomic should only be constructed for supported element types",
+                )
+            }
             Self::StdSharedPtr { element_type, is_nullable } => {
                 let element_type_tokens = element_type.to_token_stream(db);
                 wrap_in_nullable(
@@ -686,8 +678,11 @@ impl<'a> UniformReprTemplateType<'a> {
             Self::StdUniquePtr { .. } => None,
             Self::StdAtomic { .. } => None,
             Self::StdSharedPtr { .. } => None,
-            Self::AbslSpan { include_lifetime: true, .. } => Some(Lifetime::elided()),
-            Self::AbslSpan { include_lifetime: false, .. } => None,
+            Self::AbslSpan { lifetime: Some(lifetime), .. } => Some(lifetime.clone()),
+            Self::AbslSpan { include_lifetime: true, lifetime: None, .. } => {
+                Some(Lifetime::elided())
+            }
+            Self::AbslSpan { include_lifetime: false, lifetime: None, .. } => None,
             Self::StdStringView { lifetime, .. } => Some(lifetime.clone()),
         }
     }

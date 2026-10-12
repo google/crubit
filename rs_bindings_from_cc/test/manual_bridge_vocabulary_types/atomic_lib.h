@@ -56,7 +56,10 @@ struct EdgeCasesContainer {
   std::atomic<MyStruct> atomic_struct;
   std::atomic<long> atomic_long;            // NOLINT(google-runtime-int)
   std::atomic<unsigned long> atomic_ulong;  // NOLINT(google-runtime-int)
+  std::atomic<int (*)(int)> atomic_fn_ptr;
 };
+
+extern std::atomic<int (*)(int)> global_atomic_fn_ptr;
 
 inline const int* exchange_atomic_const_ptr(std::atomic<const int*>* val,
                                             const int* new_ptr) {

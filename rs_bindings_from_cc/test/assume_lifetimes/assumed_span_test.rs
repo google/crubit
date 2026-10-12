@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use cc_std::std::string_view;
-use span::absl::SpanMut;
+use span::absl::{Span, SpanMut};
 
 use googletest::gtest;
 
@@ -41,4 +41,12 @@ fn nota_bene_spans_and_inner_lifetimes() {
     let span: SpanMut<'_, string_view> = SpanMut::from(&mut array[..]);
     let span_out: SpanMut<'_, string_view> = identity_span_wrap(span);
     assert_eq!(span_out.len(), 2);
+}
+
+#[gtest]
+fn span_constructors() {
+    let array: [u32; 2] = [1, 2];
+    let _two_arg = assumed_span::TwoArgSpanCtor::from((0x3u64, Span::from(&array[..])));
+    let _one_arg = assumed_span::OneArgSpanCtor::from(Span::from(&array[..]));
+    let _unnamed = assumed_span::UnnamedSpanParamCtor::from(Span::from(&array[..]));
 }
