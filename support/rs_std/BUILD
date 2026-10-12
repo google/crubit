@@ -506,6 +506,22 @@ cpp_api_from_rust_toolchain_bindings(
     ],
 )
 
+alias(
+    name = "default_stdlib",
+    actual = select({
+        "@platforms//os:none": ":rs_core",
+        "@rules_rust//:is_no_std": ":rs_alloc",
+        "//conditions:default": ":rs_std",
+    }),
+    visibility = ["//visibility:public"],
+)
+
+label_flag(
+    name = "stdlib",
+    build_setting_default = ":default_stdlib",
+    visibility = ["//visibility:public"],
+)
+
 crubit_cc_test(
     name = "include_cpp_config_test",
     srcs = ["include_cpp_config_test.cc"],

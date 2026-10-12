@@ -17,6 +17,7 @@ CcBindingsFromRustInfo = provider(
         "target_denied_features": ("A set of features denied for this crate by " +
                                    "`SUPPORTED_FEATURE_DENYLISTS`, overriding `--default-features`. Optional."),
         "configuration": "A CcBindingsFromRustLibraryConfigInfo provider.",
+        "transitive_infos": "A depset of direct and transitive CcBindingsFromRustInfo providers.",
     },
 )
 

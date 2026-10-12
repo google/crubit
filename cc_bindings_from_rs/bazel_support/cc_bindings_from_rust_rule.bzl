@@ -511,10 +511,9 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         if "cc_std_impl" in file.path or "cc_std_impl" in file.short_path:
             continue
         cli_flags.append("--ignore-symbols-from-files=" + file.path)
-    dep_bindings_infos = _get_dep_bindings_infos(ctx.rule.attr) + [
-        target[CcBindingsFromRustInfo]
-        for target in ctx.attr._stdlib_bindings
-    ]
+    stdlib_info = ctx.attr._stdlib_bindings[CcBindingsFromRustInfo]
+    stdlib_bindings_infos = [stdlib_info] + stdlib_info.transitive_infos.to_list()
+    dep_bindings_infos = _get_dep_bindings_infos(ctx.rule.attr) + stdlib_bindings_infos
     config = crate_name_to_library_config(
         aspect_hints = ctx.rule.attr.aspect_hints,
         rust_infos = dep_bindings_infos,
@@ -567,6 +566,13 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
             features = features,
             target_denied_features = target_denied_features,
             configuration = config,
+            transitive_infos = depset(
+                direct = dep_bindings_infos,
+                transitive = [
+                    getattr(dep, "transitive_infos", depset())
+                    for dep in dep_bindings_infos
+                ],
+            ),
         ),
         bindings_info,
         OutputGroupInfo(out = output_depset, out_compiled = out_compiled),
@@ -618,7 +624,6 @@ private_common_attrs = {
             "//support:bridge_rust",
             "//support:crubit_support",
             "//support:hash_rust",
-            "//support/rs_std:dyn_erased_future",
         ],
     ),
     "_rustfmt": attr.label(
@@ -656,13 +661,9 @@ cc_bindings_from_rust_aspect = aspect(
     doc = "Aspect for generating C++ bindings for a Rust library.",
     attr_aspects = ["deps"],
     attrs = private_common_attrs | {
-        "_stdlib_bindings": attr.label_list(
-            doc = "Bindings for the standard library. These are implicitly imported by all bindings.",
-            default = [
-                "//support/rs_std:rs_std",
-                "//support/rs_std:rs_alloc",
-                "//support/rs_std:rs_core",
-            ],
+        "_stdlib_bindings": attr.label(
+            doc = "Standard library crates (core, alloc, std). These are implicitly imported by all bindings.",
+            default = "//support/rs_std:stdlib",
         ),
     },
     toolchains = [
@@ -839,14 +840,23 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
         get_static_libraries_from_cc_info(cc_info),
     )
 
-    return [
-        CcBindingsFromRustInfo(
-            cc_info = cc_info,
-            crate_key = crate_name,
-            headers = [bindings_info.h_file],
-            features = features,
-            configuration = config,
+    self_info = CcBindingsFromRustInfo(
+        cc_info = cc_info,
+        crate_key = crate_name,
+        headers = [bindings_info.h_file],
+        features = features,
+        configuration = config,
+        transitive_infos = depset(
+            direct = dep_bindings_infos,
+            transitive = [
+                getattr(dep, "transitive_infos", depset())
+                for dep in dep_bindings_infos
+            ],
         ),
+    )
+
+    return [
+        self_info,
         bindings_info,
         cc_info,
         OutputGroupInfo(out = output_depset, out_compiled = out_compiled),

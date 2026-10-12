@@ -6,6 +6,8 @@
 
 #![no_std]
 
+// TODO(b/572850571): Evaluate splitting runtime support libraries based on global
+// allocator requirements (alloc vs pure core).
 extern crate alloc;
 
 pub mod array;

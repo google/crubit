@@ -3,21 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #![feature(rustc_private)]
-#![feature(proc_macro_hygiene)]
-#![feature(cfg_accessible)]
+#![cfg_attr(test, feature(proc_macro_hygiene))]
+#![cfg_attr(test, feature(cfg_accessible))]
 
-#[rustversion::since(2026-09-27)]
-extern crate rustc_attr_ir;
 #[cfg(test)]
 extern crate rustc_driver;
-extern crate rustc_hir;
 extern crate rustc_middle;
 extern crate rustc_session;
 
-#[rustversion::since(2026-09-27)]
-use rustc_attr_ir::{find_attr, AttributeKind};
-#[rustversion::before(2026-09-27)]
-use rustc_hir::{attrs::AttributeKind, find_attr};
 use rustc_middle::ty::TyCtxt;
 use rustc_session::config::OptionsTargetModifiers;
 
@@ -247,32 +240,25 @@ fn run_with_rmetas(cmdline: &Cmdline) -> Result<()> {
     // Because this is just to probe for attributes on our underlying crate, we are okay to ignore
     // the result of the compilation. Any errors will be reported below.
     let _ = run_compiler_with_input(&compiler_args, probe_input, |tcx| {
-        let Some(cnum) =
-            tcx.used_crates(()).iter().find(|&&cnum| tcx.crate_name(cnum).as_str() == crate_name)
-        else {
+        let used_crates = tcx.used_crates(());
+        let has_crate =
+            |name: &str| used_crates.iter().any(|&c| tcx.crate_name(c).as_str() == name);
+
+        if !has_crate(crate_name) {
             // If we can't load the metadata for the crate, we won't be able to generate
             // bindings for it and we'll generate the relevant error below.
             return Ok(());
-        };
-        // Direct TyCtxt query fallback handles cases where macro-based attribute checks
-        // evaluate to false during bootstrapping phases (such as compiling standard library
-        // standard-prelude).
-        #[rustversion::before(2026-05-24)]
-        let has_no_std =
-            find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoStd { .. } => ())
-                .is_some();
-        #[rustversion::since(2026-05-24)]
-        let has_no_std = find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoStd { .. });
+        }
 
-        #[rustversion::before(2026-05-24)]
-        let has_no_core =
-            find_attr!(tcx.get_all_attrs(cnum.as_def_id()), AttributeKind::NoCore { .. } => ())
-                .is_some();
-        #[rustversion::since(2026-05-24)]
-        let has_no_core = find_attr!(tcx, cnum.as_def_id(), AttributeKind::NoCore { .. });
-        // core and compiler_builtins are special cases that don't literally contain `#![no_core]`
-        // but should be considered `#![no_core]` crates.
-        let has_no_core = crate_name == "core" || crate_name == "compiler_builtins" || has_no_core;
+        // Determine `#![no_std]` and `#![no_core]` by checking if `std` or `core`
+        // are present in the crate's dependency graph.
+        let has_no_std = crate_name == "core"
+            || crate_name == "alloc"
+            || (!has_crate("std") && crate_name != "std");
+
+        let has_no_core = crate_name == "core"
+            || crate_name == "compiler_builtins"
+            || (!has_crate("core") && crate_name != "core");
 
         if has_no_std {
             crate_attrs.push("#![no_std]");

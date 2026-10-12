@@ -270,6 +270,7 @@ def generate_and_compile_bindings(
             headers = public_hdrs,
             features = [],
             configuration = None,
+            transitive_infos = depset(),
         ),
     ]
 
