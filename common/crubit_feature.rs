@@ -112,6 +112,11 @@ flagset::flags! {
         /// Generate C++ bindings for Rust enums with one nested struct per variant, built on
         /// `support/rs_std/enum.h` (crubit.rs-enum-api-v2). Only affects cpp_api_from_rust.
         EnumApiV2,
+
+        /// Let rustc infer `Send` and `Sync` for C++ records from their fields, instead of
+        /// emitting `impl !Send` / `impl !Sync` for records without an explicit annotation.
+        /// Opaque byte blobs which hold C++ data are marked as neither `Send` nor `Sync`.
+        InferSendSync,
     }
 }
 
@@ -153,6 +158,7 @@ impl CrubitFeature {
             Self::ImplCxxExternType => "impl_cxx_extern_type",
             Self::NoImplCxxExternType => "no_impl_cxx_extern_type",
             Self::EnumApiV2 => "enum_api_v2",
+            Self::InferSendSync => "infer_send_sync",
         }
     }
 
@@ -197,6 +203,7 @@ impl CrubitFeature {
             Self::ImplCxxExternType => "//features:impl_cxx_extern_type",
             Self::NoImplCxxExternType => "//features:no_impl_cxx_extern_type",
             Self::EnumApiV2 => "//features:enum_api_v2",
+            Self::InferSendSync => "//features:infer_send_sync",
         }
     }
 }
@@ -221,6 +228,8 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::NonnullSmartPointers
                 // Out of `all` until existing `E::MakeV` callers are migrated.
                 - CrubitFeature::EnumApiV2
+                // Standalone opt-in: changes the soundness defaults for Send/Sync.
+                - CrubitFeature::InferSendSync
         }
         // `supported` automatically implies `types` and `impl_cxx_extern_type`.
         b"supported" => {
@@ -255,6 +264,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"impl_cxx_extern_type" => CrubitFeature::ImplCxxExternType.into(),
         b"no_impl_cxx_extern_type" => CrubitFeature::NoImplCxxExternType.into(),
         b"enum_api_v2" => CrubitFeature::EnumApiV2.into(),
+        b"infer_send_sync" => CrubitFeature::InferSendSync.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -407,6 +417,13 @@ mod tests {
     fn test_serialized_crubit_feature_enum_api_v2() {
         let SerializedCrubitFeature(features) = serde_json::from_str("\"enum_api_v2\"").unwrap();
         assert_eq!(features, CrubitFeature::EnumApiV2);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_feature_infer_send_sync() {
+        let SerializedCrubitFeature(features) =
+            serde_json::from_str("\"infer_send_sync\"").unwrap();
+        assert_eq!(features, CrubitFeature::InferSendSync);
     }
 
     #[gtest]

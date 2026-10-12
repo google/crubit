@@ -305,6 +305,17 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set where rustc infers `Send` and `Sync` for C++ records from their fields, instead of
+# Crubit emitting `impl !Send` / `impl !Sync` for every record without an explicit
+# `CRUBIT_UNSAFE_IMPL`. Fields which Crubit represents as opaque bytes are treated as neither `Send`
+# nor `Sync`. Use `CRUBIT_TRAIT_DERIVE("!Send")` / `CRUBIT_TRAIT_DERIVE("!Sync")` to opt out.
+crubit_feature_hint(
+    name = "infer_send_sync",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["infer_send_sync"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(
