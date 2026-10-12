@@ -2782,7 +2782,7 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000
 }
 inline rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::Result(
     const Result& other) noexcept {
-  ::__crubit_internal::
+  __crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cresult_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x0000003e(
           other, this);
 }
@@ -2790,7 +2790,7 @@ inline rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>&
 rs_std::Result<::result::CloneNoDefault, ::std::uint8_t>::operator=(
     const Result& other) noexcept {
   if (this != &other) {
-    ::__crubit_internal::
+    __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cresult_ugolden_x0000003a_x0000003aCloneNoDefault_x0000002c_x00000020u8_x0000003e(
             *this, other);
   }
@@ -3498,7 +3498,7 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000
 }
 inline rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::Result(
     const Result& other) noexcept {
-  ::__crubit_internal::
+  __crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cu8_x0000002c_x00000020result_ugolden_x0000003a_x0000003aCloneNoDefault_x0000003e(
           other, this);
 }
@@ -3506,7 +3506,7 @@ inline rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>&
 rs_std::Result<::std::uint8_t, ::result::CloneNoDefault>::operator=(
     const Result& other) noexcept {
   if (this != &other) {
-    ::__crubit_internal::
+    __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003aresult_x0000003a_x0000003aResult_x0000003cu8_x0000002c_x00000020result_ugolden_x0000003a_x0000003aCloneNoDefault_x0000003e(
             *this, other);
   }

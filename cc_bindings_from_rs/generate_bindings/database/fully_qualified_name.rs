@@ -137,6 +137,19 @@ impl FullyQualifiedName {
         Ok(quote! { :: #(#cpp_top_level_ns::)* #ns_path #name })
     }
 
+    pub fn cpp_ns_qualifier(&self, db: &BindingsGenerator<'_>) -> NamespaceQualifier {
+        let use_leading_colons = db
+            .crate_features(self.krate_num)
+            .contains(crubit_feature::CrubitFeature::LeadingColonsForCppType);
+        NamespaceQualifier::new(
+            self.cpp_top_level_ns
+                .iter()
+                .map(|sym| Rc::<str>::from(sym.as_str()))
+                .chain(self.cpp_ns_path.namespaces.iter().cloned()),
+            use_leading_colons,
+        )
+    }
+
     pub fn format_for_rs(&self) -> TokenStream {
         let iter = self.rs_name_parts();
         quote! { #( ::#iter )* }

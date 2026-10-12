@@ -342,14 +342,14 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003
     rs_std::Vec<::std::int32_t>&, rs_std::Vec<::std::int32_t> const&);
 }
 inline rs_std::Vec<::std::int32_t>::Vec(const Vec& other) noexcept {
-  ::__crubit_internal::
+  __crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
           other, this);
 }
 inline rs_std::Vec<::std::int32_t>& rs_std::Vec<::std::int32_t>::operator=(
     const Vec& other) noexcept {
   if (this != &other) {
-    ::__crubit_internal::
+    __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003ci32_x0000003e(
             *this, other);
   }
@@ -391,14 +391,14 @@ __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003
     rs_std::Vec<::std::uint8_t>&, rs_std::Vec<::std::uint8_t> const&);
 }
 inline rs_std::Vec<::std::uint8_t>::Vec(const Vec& other) noexcept {
-  ::__crubit_internal::
+  __crubit_internal::
       __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
           other, this);
 }
 inline rs_std::Vec<::std::uint8_t>& rs_std::Vec<::std::uint8_t>::operator=(
     const Vec& other) noexcept {
   if (this != &other) {
-    ::__crubit_internal::
+    __crubit_internal::
         __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cu8_x0000003e(
             *this, other);
   }
