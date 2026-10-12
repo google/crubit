@@ -58,10 +58,11 @@ crubit_cc_test(
     platforms = [
         "android",
         "ios",
+        "macos",
     ],
     deps = [
         ":functions_cc_api",
         "//support/rs_std:char",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )

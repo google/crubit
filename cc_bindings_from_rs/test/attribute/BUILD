@@ -53,7 +53,7 @@ crubit_cc_test(
     ],
     deps = [
         ":cpp_name_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -93,6 +93,6 @@ crubit_cc_test(
     ],
     deps = [
         ":must_bind_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )

@@ -50,10 +50,11 @@ crubit_cc_test(
     platforms = [
         "android",
         "ios",
+        "macos",
     ],
     deps = [
         ":structs_cc_api",
-        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/strings",
+        "@googletest//:gtest_main",
     ],
 )
