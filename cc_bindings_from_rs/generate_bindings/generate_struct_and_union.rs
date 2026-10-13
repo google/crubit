@@ -435,13 +435,21 @@ fn erase_regions<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Ty<'tcx> {
     tcx.erase_and_anonymize_regions(ty)
 }
 
-fn get_trait_ref_from_impl_id<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId) -> ty::TraitRef<'tcx> {
+fn get_instantiated_trait_ref<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    impl_id: DefId,
+    impl_args: ty::GenericArgsRef<'tcx>,
+) -> ty::TraitRef<'tcx> {
     let middle_trait_header = tcx.impl_trait_header(impl_id);
     crate::normalize_ty(
         tcx,
         tcx.param_env(impl_id),
-        middle_trait_header.trait_ref.instantiate_identity(),
+        middle_trait_header.trait_ref.instantiate(tcx, impl_args),
     )
+}
+
+fn get_trait_ref_from_impl_id<'tcx>(tcx: TyCtxt<'tcx>, impl_id: DefId) -> ty::TraitRef<'tcx> {
+    get_instantiated_trait_ref(tcx, impl_id, ty::GenericArgs::identity_for_item(tcx, impl_id))
 }
 
 fn does_impl_apply<'tcx>(
@@ -479,6 +487,7 @@ fn does_impl_apply<'tcx>(
     }
 
     use ty::TypeVisitableExt;
+
     ocxt.evaluate_obligations_error_on_ambiguity()
         .into_iter()
         .next()
@@ -494,7 +503,16 @@ fn does_impl_apply<'tcx>(
             return infcx.deeply_resolve_ignoring_regions(impl_args);
         })
         .filter(|resolved| !resolved.has_non_region_infer())
-        .map(|resolved| replace_all_regions_with_static(tcx, resolved))
+        .map(|resolved| {
+            ty::GenericArgs::for_item(tcx, impl_id, |param_def, _| {
+                // This check preserves lifetimes in the generated bindings.
+                if matches!(param_def.kind, ty::GenericParamDefKind::Lifetime) {
+                    tcx.mk_param_from_def(param_def)
+                } else {
+                    tcx.erase_and_anonymize_regions(resolved[param_def.index as usize])
+                }
+            })
+        })
 }
 
 #[must_use]
@@ -1072,23 +1090,27 @@ fn operator_impls_for_ty<'tcx>(
     // Since `forward_ref_binop!`/`forward_ref_unop!` usually create both, we dedup them.
     let overloads_covered_by_adt_impls: HashSet<Option<Ty<'tcx>>> = impls
         .iter()
-        .map(|(impl_id, _)| operator_rhs_ty(get_trait_ref_from_impl_id(tcx, *impl_id)))
+        .map(|(impl_id, impl_args)| {
+            operator_rhs_ty(get_instantiated_trait_ref(tcx, *impl_id, impl_args))
+                .map(|ty| erase_regions(tcx, ty))
+        })
         .collect();
 
     let ref_to_self_ty = Ty::new_ref(tcx, tcx.lifetimes.re_erased, self_ty, Mutability::Not);
     impls.extend(non_blanket_impls_for_ty(tcx, trait_def_id, ref_to_self_ty).filter(
-        |(impl_id, _)| {
-            // Normalizing builds an inference context, so do it once and read both the self type
-            // and the right-hand operand off the same trait ref.
-            let trait_ref = get_trait_ref_from_impl_id(tcx, *impl_id);
-            // A `SimplifiedType::Ref` bucket does not discriminate on the referent, so it holds
-            // every `impl ... for &_`. Keep only the ones for a reference to `self_ty`.
-            let is_impl_for_ref_to_self_ty = matches!(
-                trait_ref.self_ty().kind(),
-                ty::TyKind::Ref(_, referent_ty, Mutability::Not) if *referent_ty == self_ty
+        |(impl_id, impl_args)| {
+            // A `SimplifiedType::Ref` bucket does not discriminate on the referent, so it also
+            // holds blanket impls like `impl<A, B> PartialEq<&B> for &A`. Exclude impls whose
+            // uninstantiated referent is a bare type parameter.
+            let uninstantiated_self_ty = tcx.type_of(*impl_id).skip_binder();
+            let is_blanket_ref_impl = matches!(
+                uninstantiated_self_ty.kind(),
+                ty::TyKind::Ref(_, referent_ty, _) if matches!(referent_ty.kind(), ty::TyKind::Param(_))
             );
-            is_impl_for_ref_to_self_ty
-                && !overloads_covered_by_adt_impls.contains(&operator_rhs_ty(trait_ref))
+            let trait_ref = get_instantiated_trait_ref(tcx, *impl_id, impl_args);
+            !is_blanket_ref_impl
+                && !overloads_covered_by_adt_impls
+                    .contains(&operator_rhs_ty(trait_ref).map(|ty| erase_regions(tcx, ty)))
         },
     ));
     impls
@@ -1115,7 +1137,7 @@ fn generate_trait_operator_impls<'tcx>(
         operator_impls_for_ty(tcx, trait_def_id, core.common.self_ty)
             .into_iter()
             .map(|(impl_id, impl_args)| {
-                let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
+                let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
                 // For a unary operator (e.g. `Neg` or `Not`) there is no right-hand operand, so
                 // fall back to index 0 of the trait ref - the self type - as a placeholder.
                 let trait_arg_ty =
@@ -1339,7 +1361,7 @@ fn generate_ord_and_partialord_impls<'tcx>(
     for (impl_id, impl_args) in
         non_blanket_impls_for_ty(tcx, partial_ord_trait_id, core.common.self_ty)
     {
-        let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
+        let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
         let rhs_ty = trait_ref.args.type_at(1);
         let erased_rhs_ty = erase_regions(tcx, rhs_ty);
 
@@ -1430,8 +1452,6 @@ fn generate_partial_ord_impls<'tcx>(
     let static_self_ty = replace_all_regions_with_static(tcx, core.common.self_ty);
     let self_rs_ty = db.format_ty_for_rs(static_self_ty)?;
 
-    let rhs_ty = replace_all_regions_with_static(tcx, rhs_ty);
-
     if rhs_ty.flags().intersects(has_type_or_const_vars()) {
         bail!(
             "PartialOrd impl has uninstantiated generic parameters, which is not yet supported {rhs_ty}"
@@ -1450,7 +1470,8 @@ fn generate_partial_ord_impls<'tcx>(
         TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
     )?;
 
-    let rhs_rs_ty = db.format_ty_for_rs(rhs_ty)?;
+    let static_rhs_ty = replace_all_regions_with_static(tcx, rhs_ty);
+    let rhs_rs_ty = db.format_ty_for_rs(static_rhs_ty)?;
 
     let partial_ord_trait_id = tcx
         .get_diagnostic_item(sym::PartialOrd)
