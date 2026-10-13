@@ -6,7 +6,7 @@
 // //rs_bindings_from_cc/test/function/semantic_import:semantic_import_upcast
 
 #![rustfmt::skip]
-#![feature(cfi_encoding, custom_inner_attributes, negative_impls)]
+#![feature(cfi_encoding, custom_inner_attributes, impl_trait_in_assoc_type, negative_impls)]
 #![allow(stable_features)]
 #![allow(improper_ctypes)]
 #![allow(nonstandard_style)]
@@ -334,6 +334,488 @@ pub mod bools {
     }
 }
 
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "8Pointers"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=Pointers
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct Pointers {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) p_: [::core::mem::MaybeUninit<u8>; 8],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) mut_p_: [::core::mem::MaybeUninit<u8>; 8],
+}
+impl !Send for Pointers {}
+impl !Sync for Pointers {}
+unsafe impl ::cxx::ExternType for Pointers {
+    type Id = ::cxx::type_id!("Pointers");
+    type Kind = ::cxx::kind::Trivial;
+}
+impl Pointers {
+    #[inline(always)]
+    pub fn p<'__this>(&'__this self) -> *const ::ffi_11::c_int {
+        unsafe { self::pointers::p(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `p`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_p<'__this>(&'__this mut self, p: *const ::ffi_11::c_int) {
+        unsafe { self::pointers::set_p(self, p) }
+    }
+    #[inline(always)]
+    pub fn mut_p<'__this>(&'__this self) -> *mut ::ffi_11::c_int {
+        unsafe { self::pointers::mut_p(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `mut_p`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_mut_p<'__this>(&'__this mut self, mut_p: *mut ::ffi_11::c_int) {
+        unsafe { self::pointers::set_mut_p(self, mut_p) }
+    }
+}
+
+impl Default for Pointers {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN8PointersC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+pub mod pointers {
+    #[inline(always)]
+    pub(crate) fn p<'__this>(__this: &'__this crate::Pointers) -> *const ::ffi_11::c_int {
+        unsafe { (*((&*__this as *const _ as *const u8).add(0) as *const *const ::ffi_11::c_int)) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `p`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_p<'__this>(
+        __this: &'__this mut crate::Pointers,
+        p: *const ::ffi_11::c_int,
+    ) {
+        unsafe { *((__this as *mut _ as *mut u8).add(0) as *mut *const ::ffi_11::c_int) = p }
+    }
+    #[inline(always)]
+    pub(crate) fn mut_p<'__this>(__this: &'__this crate::Pointers) -> *mut ::ffi_11::c_int {
+        unsafe { (*((&*__this as *const _ as *const u8).add(8) as *const *mut ::ffi_11::c_int)) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `mut_p`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_mut_p<'__this>(
+        __this: &'__this mut crate::Pointers,
+        mut_p: *mut ::ffi_11::c_int,
+    ) {
+        unsafe { *((__this as *mut _ as *mut u8).add(8) as *mut *mut ::ffi_11::c_int) = mut_p }
+    }
+}
+
+#[::ctor::recursively_pinned(PinnedDrop)]
+#[cfi_encoding = "10NonTrivial"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=NonTrivial
+pub struct NonTrivial {
+    __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) p_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) mut_p_: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; 8],
+}
+impl !Send for NonTrivial {}
+impl !Sync for NonTrivial {}
+unsafe impl ::cxx::ExternType for NonTrivial {
+    type Id = ::cxx::type_id!("NonTrivial");
+    type Kind = ::cxx::kind::Opaque;
+}
+impl NonTrivial {
+    #[inline(always)]
+    pub fn p<'__this>(&'__this self) -> *const crate::NonTrivial {
+        unsafe { self::non_trivial::p(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `p`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_p<'__this>(self: ::core::pin::Pin<&'__this mut Self>, p: *const Self) {
+        unsafe { self::non_trivial::set_p(self, p) }
+    }
+    #[inline(always)]
+    pub fn mut_p<'__this>(self: ::core::pin::Pin<&'__this mut Self>) -> *mut crate::NonTrivial {
+        unsafe { self::non_trivial::mut_p(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `mut_p`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_mut_p<'__this>(self: ::core::pin::Pin<&'__this mut Self>, mut_p: *mut Self) {
+        unsafe { self::non_trivial::set_mut_p(self, mut_p) }
+    }
+}
+
+impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for NonTrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: &'__param_0 Self) -> Self::CtorType {
+        let mut __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10NonTrivialC1ERKS_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __param_0,
+                );
+            })
+        }
+    }
+}
+impl<'__param_0> ::ctor::CtorNew<(&'__param_0 Self,)> for NonTrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: (&'__param_0 Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'__param_0 Self>>::ctor_new(arg)
+    }
+}
+
+impl<'__param_0> ::ctor::Assign<&'__param_0 Self> for NonTrivial {
+    #[inline(always)]
+    fn assign<'__this>(self: ::core::pin::Pin<&'__this mut Self>, __param_0: &'__param_0 Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10NonTrivialaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl ::ctor::CtorNew<()> for NonTrivial {
+    type CtorType = ::ctor::Ctor![Self];
+    type Error = ::ctor::Infallible;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut Self| {
+                crate::detail::__rust_thunk___ZN10NonTrivialC1Ev(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                );
+            })
+        }
+    }
+}
+
+/// A user-provided destructor is what makes this type non-trivial (and so
+/// `!Unpin` in Rust).
+/// `= default` would defeat the purpose.
+impl ::ctor::PinnedDrop for NonTrivial {
+    #[inline(always)]
+    unsafe fn pinned_drop<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN10NonTrivialD1Ev(self) }
+    }
+}
+
+pub mod non_trivial {
+    #[inline(always)]
+    pub(crate) fn p<'__this>(__this: &'__this crate::NonTrivial) -> *const crate::NonTrivial {
+        unsafe {
+            (*((&*__this as *const _ as *const u8).add(0) as *const *const crate::NonTrivial))
+        }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `p`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_p<'__this>(
+        __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
+        p: *const crate::NonTrivial,
+    ) {
+        unsafe {
+            *((::core::pin::Pin::into_inner_unchecked(__this) as *mut _ as *mut u8).add(0)
+                as *mut *const crate::NonTrivial) = p
+        }
+    }
+    #[inline(always)]
+    pub(crate) fn mut_p<'__this>(
+        __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
+    ) -> *mut crate::NonTrivial {
+        unsafe { (*((&*__this as *const _ as *const u8).add(8) as *const *mut crate::NonTrivial)) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `mut_p`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_mut_p<'__this>(
+        __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
+        mut_p: *mut crate::NonTrivial,
+    ) {
+        unsafe {
+            *((::core::pin::Pin::into_inner_unchecked(__this) as *mut _ as *mut u8).add(8)
+                as *mut *mut crate::NonTrivial) = mut_p
+        }
+    }
+}
+
+// error: class `Incomplete` could not be bound
+//   incomplete type
+
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "12MorePointers"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=MorePointers
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct MorePointers {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) v_: [::core::mem::MaybeUninit<u8>; 8],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) i_: [::core::mem::MaybeUninit<u8>; 8],
+}
+impl !Send for MorePointers {}
+impl !Sync for MorePointers {}
+unsafe impl ::cxx::ExternType for MorePointers {
+    type Id = ::cxx::type_id!("MorePointers");
+    type Kind = ::cxx::kind::Trivial;
+}
+impl MorePointers {
+    #[inline(always)]
+    pub fn v<'__this>(&'__this self) -> *mut ::ffi_11::c_void {
+        unsafe { self::more_pointers::v(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `v`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_v<'__this>(&'__this mut self, v: *mut ::ffi_11::c_void) {
+        unsafe { self::more_pointers::set_v(self, v) }
+    }
+}
+
+impl Default for MorePointers {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN12MorePointersC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+// error: function `MorePointers::i` could not be bound
+//   Unsupported return type `Incomplete*`:
+//     incomplete type
+
+// error: function `MorePointers::set_i` could not be bound
+//   Unsupported parameter type `Incomplete* i`:
+//     incomplete type
+
+pub mod more_pointers {
+    #[inline(always)]
+    pub(crate) fn v<'__this>(__this: &'__this crate::MorePointers) -> *mut ::ffi_11::c_void {
+        unsafe { (*((&*__this as *const _ as *const u8).add(0) as *const *mut ::ffi_11::c_void)) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `v`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_v<'__this>(
+        __this: &'__this mut crate::MorePointers,
+        v: *mut ::ffi_11::c_void,
+    ) {
+        unsafe { *((__this as *mut _ as *mut u8).add(0) as *mut *mut ::ffi_11::c_void) = v }
+    }
+}
+
+/// `rs_std::SliceRef` is not a raw pointer, so these accessors keep using a
+/// thunk.
+#[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
+#[cfi_encoding = "6Slices"]
+#[repr(C, align(8))]
+///CRUBIT_ANNOTATE: cpp_type=Slices
+///CRUBIT_ANNOTATE: cpp_move_constructible=
+pub struct Slices {
+    __non_field_data: [::core::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) s_: [::core::mem::MaybeUninit<u8>; 16],
+}
+impl !Send for Slices {}
+impl !Sync for Slices {}
+unsafe impl ::cxx::ExternType for Slices {
+    type Id = ::cxx::type_id!("Slices");
+    type Kind = ::cxx::kind::Trivial;
+}
+impl Slices {
+    #[inline(always)]
+    pub fn s<'__this>(&'__this self) -> *const [::ffi_11::c_int] {
+        unsafe { self::slices::s(self) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `s`: raw pointer
+    #[inline(always)]
+    pub unsafe fn set_s<'__this>(&'__this mut self, s: *const [::ffi_11::c_int]) {
+        unsafe { self::slices::set_s(self, s) }
+    }
+}
+
+impl Default for Slices {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::core::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN6SlicesC1Ev(&raw mut tmp as *mut _);
+            tmp.assume_init()
+        }
+    }
+}
+
+pub mod slices {
+    #[inline(always)]
+    pub(crate) fn s<'__this>(__this: &'__this crate::Slices) -> *const [::ffi_11::c_int] {
+        unsafe { crate::detail::__rust_thunk___ZNK6Slices1sEv(__this) }
+    }
+    /// # Safety
+    ///
+    /// The caller must ensure that the following unsafe arguments are not misused by the function:
+    /// * `s`: raw pointer
+    #[inline(always)]
+    pub(crate) unsafe fn set_s<'__this>(
+        __this: &'__this mut crate::Slices,
+        s: *const [::ffi_11::c_int],
+    ) {
+        unsafe { crate::detail::__rust_thunk___ZN6Slices5set_sEN6rs_std8SliceRefIKiEE(__this, s) }
+    }
+}
+
+// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::pmr::polymorphic_allocator<char32_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_string<char32_t, std::char_traits<char32_t>, std::allocator<char32_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::pmr::polymorphic_allocator<char16_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_string<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_string<char, std::char_traits<char>, std::pmr::polymorphic_allocator<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_string<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_istream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_istream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_iostream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_iostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_streambuf<char, std::char_traits<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_streambuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_filebuf<char, std::char_traits<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_filebuf<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ifstream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ifstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ofstream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ofstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_fstream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_fstream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ios<char, std::char_traits<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ios<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ostream<char, std::char_traits<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ostream<wchar_t, std::char_traits<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_stringbuf<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_stringbuf<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_istringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ostringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_stringstream<char, std::char_traits<char>, std::allocator<char>>` could not be bound
+//   incomplete type
+
+// error: class `std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>` could not be bound
+//   incomplete type
+
+// error: class `std::fpos<__mbstate_t>` could not be bound
+//   incomplete type
+
+// Type bindings for rs_std::SliceRef<const int> suppressed due to being mapped to an existing Rust type (*const[::ffi_11::c_int])
+
+// Type bindings for rs_std::SliceRef<int> suppressed due to being mapped to an existing Rust type (*mut[::ffi_11::c_int])
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -349,6 +831,28 @@ mod detail {
         );
         pub(crate) unsafe fn __rust_thunk___ZN5CharsC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZN5BoolsC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN8PointersC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10NonTrivialC1ERKS_<'__param_0>(
+            __this: *mut ::core::ffi::c_void,
+            __param_0: &'__param_0 crate::NonTrivial,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN10NonTrivialaSERKS_<'__param_0, '__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
+            __param_0: &'__param_0 crate::NonTrivial,
+        ) -> ::core::pin::Pin<&'__this mut crate::NonTrivial>;
+        pub(crate) unsafe fn __rust_thunk___ZN10NonTrivialC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN10NonTrivialD1Ev<'__this>(
+            __this: ::core::pin::Pin<&'__this mut crate::NonTrivial>,
+        );
+        pub(crate) unsafe fn __rust_thunk___ZN12MorePointersC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZN6SlicesC1Ev(__this: *mut ::core::ffi::c_void);
+        pub(crate) unsafe fn __rust_thunk___ZNK6Slices1sEv<'__this>(
+            __this: &'__this crate::Slices,
+        ) -> *const [::ffi_11::c_int];
+        pub(crate) unsafe fn __rust_thunk___ZN6Slices5set_sEN6rs_std8SliceRefIKiEE<'__this>(
+            __this: &'__this mut crate::Slices,
+            s: *const [::ffi_11::c_int],
+        );
     }
 }
 
@@ -375,4 +879,31 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::Bools: Copy,Clone);
     static_assertions::assert_not_impl_any!(crate::Bools: Drop);
     assert!(::core::mem::offset_of!(crate::Bools, b_) == 0);
+    assert!(::core::mem::size_of::<crate::Pointers>() == 16);
+    assert!(::core::mem::align_of::<crate::Pointers>() == 8);
+    static_assertions::assert_impl_all!(crate::Pointers: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::Pointers: Drop);
+    assert!(::core::mem::offset_of!(crate::Pointers, p_) == 0);
+    assert!(::core::mem::offset_of!(crate::Pointers, mut_p_) == 8);
+    assert!(::core::mem::size_of::<crate::NonTrivial>() == 16);
+    assert!(::core::mem::align_of::<crate::NonTrivial>() == 8);
+    static_assertions::assert_impl_all!(crate::NonTrivial: Drop);
+    static_assertions::assert_not_impl_any!(crate::NonTrivial: Copy);
+    assert!(::core::mem::offset_of!(crate::NonTrivial, p_) == 0);
+    assert!(::core::mem::offset_of!(crate::NonTrivial, mut_p_) == 8);
+    assert!(::core::mem::size_of::<crate::MorePointers>() == 16);
+    assert!(::core::mem::align_of::<crate::MorePointers>() == 8);
+    static_assertions::assert_impl_all!(crate::MorePointers: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::MorePointers: Drop);
+    assert!(::core::mem::offset_of!(crate::MorePointers, v_) == 0);
+    assert!(::core::mem::offset_of!(crate::MorePointers, i_) == 8);
+    assert!(::core::mem::size_of::<crate::Slices>() == 16);
+    assert!(::core::mem::align_of::<crate::Slices>() == 8);
+    static_assertions::assert_impl_all!(crate::Slices: Copy,Clone);
+    static_assertions::assert_not_impl_any!(crate::Slices: Drop);
+    assert!(::core::mem::offset_of!(crate::Slices, s_) == 0);
+    assert!(::core::mem::size_of::<*const [::ffi_11::c_int]>() == 16);
+    assert!(::core::mem::align_of::<*const [::ffi_11::c_int]>() == 8);
+    assert!(::core::mem::size_of::<*mut [::ffi_11::c_int]>() == 16);
+    assert!(::core::mem::align_of::<*mut [::ffi_11::c_int]>() == 8);
 };
