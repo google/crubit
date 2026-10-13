@@ -26,7 +26,9 @@ cc_library(
     ],
     # It is important to be thoughtful when adding new dependencies for
     # `bindings_support` (and possibly other targets in this BUILD file).
-    deps = [],
+    deps = [
+        "//support:unsafe_relocate_tag",
+    ],
 )
 
 cc_test(
