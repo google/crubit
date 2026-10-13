@@ -59,7 +59,7 @@ crubit_cc_test(
     srcs = ["unique_ptr_test.cc"],
     deps = [
         ":unique_ptr_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -92,6 +92,6 @@ crubit_cc_test(
         ":nullable_cc_api",
         ":test_helpers",
         "//support:annotations",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
