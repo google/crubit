@@ -514,11 +514,17 @@ enum TraitImplPolarity {
 
 // The set of traits to derive on the Rust type.
 message TraitDerives {
+  reserved 4, 5;
+  reserved send, sync;
   TraitImplPolarity clone = 1;
   TraitImplPolarity copy = 2;
   TraitImplPolarity debug = 3;
-  bool send = 4;
-  bool sync = 5;
+  // POSITIVE: `unsafe impl Send` (from `CRUBIT_UNSAFE_IMPL("Send")` or
+  // `CRUBIT_THREAD_SAFE`). NEGATIVE: `impl !Send` (from
+  // `CRUBIT_TRAIT_DERIVE("!Send")`). NONE: no annotation.
+  TraitImplPolarity send_polarity = 7;
+  // Same as `send_polarity`, but for `Sync`.
+  TraitImplPolarity sync_polarity = 8;
   repeated string custom = 6;
 }
 

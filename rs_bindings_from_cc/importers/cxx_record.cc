@@ -427,8 +427,16 @@ absl::Status AddTraitDerives(const clang::Decl& decl, TraitDerives& result) {
 
     if (trait == "Send" || trait == "Sync") {
       if (polarity == TraitImplPolarity::NEGATIVE) {
-        return absl::InvalidArgumentError(absl::StrCat(
-            "Trait '", trait, "' is negatively derived by default."));
+        // An explicit opt-out. This is the default unless the
+        // `infer_send_sync` feature is enabled, but it is always allowed.
+        TraitImplPolarity& selected =
+            trait == "Send" ? result.send : result.sync;
+        if (selected != TraitImplPolarity::NONE) {
+          return absl::InvalidArgumentError(
+              absl::StrCat("Trait '", trait, "' is derived multiple times."));
+        }
+        selected = TraitImplPolarity::NEGATIVE;
+        continue;
       }
       return absl::InvalidArgumentError(
           absl::StrCat("Trait '", trait,
@@ -484,18 +492,20 @@ absl::Status AddUnsafeImpls(const clang::Decl& decl, TraitDerives& result) {
   for (const clang::Expr* arg : *args) {
     CRUBIT_ASSIGN_OR_RETURN(const absl::string_view unsafe_impl,
                             GetExprAsStringLiteral(*arg, ast_context));
-    if (unsafe_impl == "Send") {
-      if (result.send) {
+    if (unsafe_impl == "Send" || unsafe_impl == "Sync") {
+      TraitImplPolarity& selected =
+          unsafe_impl == "Send" ? result.send : result.sync;
+      if (selected == TraitImplPolarity::POSITIVE) {
         return absl::InvalidArgumentError(
-            "Unsafe implementation 'Send' is derived multiple times.");
+            absl::StrCat("Unsafe implementation '", unsafe_impl,
+                         "' is derived multiple times."));
       }
-      result.send = true;
-    } else if (unsafe_impl == "Sync") {
-      if (result.sync) {
+      if (selected == TraitImplPolarity::NEGATIVE) {
         return absl::InvalidArgumentError(
-            "Unsafe implementation 'Sync' is derived multiple times.");
+            absl::StrCat("Trait '", unsafe_impl,
+                         "' is derived both positively and negatively."));
       }
-      result.sync = true;
+      selected = TraitImplPolarity::POSITIVE;
     } else {
       return absl::InvalidArgumentError(absl::StrCat(
           "Unsafe implementation '", unsafe_impl, "' is not supported."));
@@ -1470,8 +1480,13 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   }
 
   if (*is_thread_safe) {
-    trait_derives->send = true;
-    trait_derives->sync = true;
+    if (trait_derives->send == TraitImplPolarity::NEGATIVE ||
+        trait_derives->sync == TraitImplPolarity::NEGATIVE) {
+      return unsupported(FormattedError::Static(
+          "CRUBIT_THREAD_SAFE types cannot opt out of `Send` or `Sync`."));
+    }
+    trait_derives->send = TraitImplPolarity::POSITIVE;
+    trait_derives->sync = TraitImplPolarity::POSITIVE;
   }
 
   absl::StatusOr<SafetyAnnotation> safety_annotation =

@@ -519,13 +519,13 @@ struct TraitDerives {
 
   TraitImplPolarity* absl_nullable Polarity(absl::string_view trait);
 
-  // <internal link> start
   TraitImplPolarity clone = TraitImplPolarity::NONE;
   TraitImplPolarity copy = TraitImplPolarity::NONE;
   TraitImplPolarity debug = TraitImplPolarity::NONE;
-  // <internal link> end
-  bool send = false;
-  bool sync = false;
+  // POSITIVE: `CRUBIT_UNSAFE_IMPL` / `CRUBIT_THREAD_SAFE`.
+  // NEGATIVE: `CRUBIT_TRAIT_DERIVE("!Send")` / `CRUBIT_TRAIT_DERIVE("!Sync")`.
+  TraitImplPolarity send = TraitImplPolarity::NONE;
+  TraitImplPolarity sync = TraitImplPolarity::NONE;
   std::vector<std::string> custom;
 };
 

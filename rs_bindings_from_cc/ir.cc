@@ -318,8 +318,8 @@ void TraitDerives::WriteToProto(ir_proto::TraitDerives& proto) const {
   proto.set_clone(clone);
   proto.set_copy(copy);
   proto.set_debug(debug);
-  proto.set_send(send);
-  proto.set_sync(sync);
+  proto.set_send_polarity(send);
+  proto.set_sync_polarity(sync);
   proto.mutable_custom()->Add(custom.begin(), custom.end());
 }
 

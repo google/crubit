@@ -192,6 +192,12 @@
 // TODO(b/475834520): Deriving `Debug` will be deprecated in favor of the
 // default behavior. To opt out of the default `Debug` implementation, use
 // `CRUBIT_OVERRIDE_DEBUG(false)`.
+//
+// `"!Send"` and `"!Sync"` can be used to opt a type out of `Send` / `Sync`,
+// producing `impl !Send for MyStruct {}` / `impl !Sync for MyStruct {}`. This
+// is already the default, unless the `infer_send_sync` Crubit feature is
+// enabled (see `CRUBIT_UNSAFE_IMPL`). Positive `Send` / `Sync` must use
+// `CRUBIT_UNSAFE_IMPL` instead.
 #define CRUBIT_TRAIT_DERIVE(...)                                         \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_trait_derive" __VA_OPT__(, ) \
                                __VA_ARGS__)
@@ -219,6 +225,15 @@
 // unsafe impl Send for MyStruct {}
 // unsafe impl Sync for MyStruct {}
 // ```
+//
+// By default, types without this annotation get `impl !Send` and `impl !Sync`.
+// With the `infer_send_sync` Crubit feature, they instead get no impl at all,
+// and Rust infers `Send` and `Sync` from the fields, just as it does for Rust
+// types. Fields that Crubit represents as opaque bytes (e.g. non-public fields,
+// fields of unsupported types, and base class subobjects) are treated as
+// neither `Send` nor `Sync`. Use `CRUBIT_TRAIT_DERIVE("!Send")` /
+// `CRUBIT_TRAIT_DERIVE("!Sync")` to opt out of inference for a type which must
+// not be sent or shared between threads, e.g. because it is thread-affine.
 #define CRUBIT_UNSAFE_IMPL(...)                                         \
   CRUBIT_INTERNAL_ANNOTATE("crubit_internal_unsafe_impl" __VA_OPT__(, ) \
                                __VA_ARGS__)

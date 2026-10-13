@@ -234,6 +234,7 @@ fn field_definition<'a>(
     desc: &[BitfieldComment],
     override_alignment: &mut bool,
     fields_that_must_be_copy: &mut Vec<TokenStream>,
+    infer_send_sync: bool,
 ) -> Result<FieldDefinition> {
     // TODO(b/481405536): we should do this unconditionally.
     let internally_mutable_unknown_fields = !record.should_derive_copy();
@@ -343,6 +344,11 @@ fn field_definition<'a>(
         }
     };
 
+    // Under `infer_send_sync`, rustc infers `Send`/`Sync` from the fields. A field erased to opaque
+    // bytes would otherwise be (incorrectly) inferred as `Send` (and, if not internally mutable,
+    // `Sync`), so prevent that.
+    let do_not_auto_impl_send_sync = infer_send_sync && matches!(field_type, FieldType::Erased(_));
+
     Ok(FieldDefinition::Field {
         field_index,
         padding,
@@ -353,7 +359,24 @@ fn field_definition<'a>(
         field_type,
         is_debug_formattable: field.cpp_identifier().is_some()
             && is_debug_formattable(db, field.type_()),
+        do_not_auto_impl_send_sync,
     })
+}
+
+/// Returns the `Send` or `Sync` impl to emit for a record, given the polarity from its C++
+/// annotations.
+///
+/// Explicit annotations are always honored. Without one, the trait is negatively implemented,
+/// unless `infer_send_sync` is enabled, in which case no impl is emitted and rustc infers the trait
+/// from the fields.
+fn send_sync_impl_polarity(
+    annotated: TraitImplPolarity,
+    infer_send_sync: bool,
+) -> TraitImplPolarity {
+    match annotated {
+        TraitImplPolarity::None if !infer_send_sync => TraitImplPolarity::Negative,
+        other => other,
+    }
 }
 
 /// Implementation of `BindingsGenerator::generate_record`.
@@ -457,6 +480,16 @@ pub fn generate_record<'a>(
 
     let mut override_alignment = record.override_alignment();
     let mut fields_that_must_be_copy = vec![];
+    // Send/Sync are a property of the C++ type, so whether to infer them is controlled by the
+    // target which defines the type: for template instantiations that's the template's target, not
+    // the target which happens to instantiate it.
+    let infer_send_sync = {
+        let defining_target = db
+            .defining_target(record.id())
+            .unwrap_or_else(|| record.as_ref().owning_target().clone());
+        ir.target_crubit_features(&defining_target)
+            .contains(crubit_feature::CrubitFeature::InferSendSync)
+    };
 
     // Pair up fields with the preceding and following fields (if any):
     // - the end offset of the previous field determines if we need to insert padding.
@@ -492,6 +525,7 @@ pub fn generate_record<'a>(
                 &cur.description,
                 &mut override_alignment,
                 &mut fields_that_must_be_copy,
+                infer_send_sync,
             )
         })
         .collect::<Result<Vec<_>>>()?;
@@ -550,6 +584,15 @@ pub fn generate_record<'a>(
     let allow_direct_init = record.is_aggregate() || record.is_union();
     let head_padding =
         if head_padding > 0 || !allow_direct_init { Some(head_padding) } else { None };
+    // Under `infer_send_sync`, `__non_field_data` is opaque C++ data whose thread-safety rustc
+    // can't see: base class subobjects (Crubit doesn't emit the base class's fields, only its
+    // bytes) or a vptr. So it prevents `Send` and `Sync` from being automatically implemented.
+    // The exception is the single byte of an empty class, which holds no data. (Non-empty
+    // `__non_field_data` with no bases and at least one field can only be a vptr.)
+    let head_padding_do_not_auto_impl_send_sync = infer_send_sync
+        && (record.is_derived_class()
+            || !record.fields().is_empty()
+            || record.size_align().size() > 1);
 
     api_snippets.cc_details.push(cc_struct_layout_assertion(db, &record)?);
 
@@ -836,9 +879,10 @@ pub fn generate_record<'a>(
         ident,
         id: record.id(),
         head_padding,
+        head_padding_do_not_auto_impl_send_sync,
         field_definitions,
-        implements_send: record.trait_derives().send,
-        implements_sync: record.trait_derives().sync,
+        send: send_sync_impl_polarity(record.trait_derives().send, infer_send_sync),
+        sync: send_sync_impl_polarity(record.trait_derives().sync, infer_send_sync),
         cxx_impl,
         incomplete_definition,
         upcast_impls,
@@ -877,6 +921,17 @@ pub fn generate_record<'a>(
             assert_impls |= AssertableTrait::Drop;
         } else {
             assert_not_impls |= AssertableTrait::Drop;
+        }
+        // Assert `Send`/`Sync` when they are explicitly annotated, rather than inferred.
+        for (polarity, assertable) in [
+            (record.trait_derives().send, AssertableTrait::Send),
+            (record.trait_derives().sync, AssertableTrait::Sync),
+        ] {
+            match polarity {
+                TraitImplPolarity::Positive => assert_impls |= assertable,
+                TraitImplPolarity::Negative => assert_not_impls |= assertable,
+                TraitImplPolarity::None => {}
+            }
         }
         Assertion::Impls {
             type_name: record_rs_type_kind.to_token_stream(db),

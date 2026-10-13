@@ -832,8 +832,88 @@ fn test_struct_with_trait_derive_annotation() {
                 rs_name: "RecordWithDerives", ...
                 trait_derives: TraitDerives { ...
                   debug: Positive, ...
-                  send: true, ...
+                  send: Positive, ...
                 }, ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_struct_with_negative_send_sync_trait_derive() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_internal_trait_derive", "!Send", "!Sync")]]
+                NotSendNotSync {
+            int foo;
+        };"#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "NotSendNotSync", ...
+                trait_derives: TraitDerives { ...
+                  send: Negative,
+                  sync: Negative, ...
+                }, ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_struct_without_send_sync_annotation() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct Unannotated {
+            int foo;
+        };"#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "Unannotated", ...
+                trait_derives: TraitDerives { ...
+                  send: None,
+                  sync: None, ...
+                }, ...
+            }
+        }
+    );
+}
+
+#[gtest]
+fn test_struct_with_positive_and_negative_send_is_unsupported() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_internal_trait_derive", "!Send"),
+                 clang::annotate("crubit_internal_unsafe_impl", "Send")]]
+                Conflicting {
+            int foo;
+        };"#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            UnsupportedItem {
+                name: "Conflicting", ...
+                errors: [FormattedError {
+                    ... message: "Trait 'Send' is derived both positively and negatively.", ...
+                }], ...
             }
         }
     );

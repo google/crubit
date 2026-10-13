@@ -2257,6 +2257,147 @@ fn test_non_thread_safe_struct_has_negative_send_sync() -> Result<()> {
 }
 
 #[gtest]
+fn test_infer_send_sync_omits_negative_impls() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct RegularStruct final {
+            int field;
+        };
+    "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    // No impls at all: rustc infers `Send` and `Sync` from the fields.
+    assert_rs_not_matches!(rs_api, quote! { impl !Send for RegularStruct {} });
+    assert_rs_not_matches!(rs_api, quote! { impl !Sync for RegularStruct {} });
+    assert_rs_not_matches!(rs_api, quote! { unsafe impl Send for RegularStruct {} });
+    assert_rs_not_matches!(rs_api, quote! { unsafe impl Sync for RegularStruct {} });
+    assert_rs_not_matches!(rs_api, quote! { PhantomData<*mut ()> });
+    Ok(())
+}
+
+#[gtest]
+fn test_infer_send_sync_marks_erased_fields() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct StructWithUnsupportedField {
+          volatile int my_field;
+        };
+    "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct StructWithUnsupportedField {
+                #[doc = ...]
+                pub(crate) my_field: [::core::mem::MaybeUninit<u8>; 4],
+                __do_not_auto_impl_send_sync0: ::core::marker::PhantomData<*mut ()>,
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_without_infer_send_sync_erased_fields_are_unmarked() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct StructWithUnsupportedField {
+          volatile int my_field;
+        };
+    "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_not_matches!(rs_api, quote! { __do_not_auto_impl_send_sync0 });
+    assert_rs_matches!(rs_api, quote! { impl !Send for StructWithUnsupportedField {} });
+    Ok(())
+}
+
+#[gtest]
+fn test_infer_send_sync_marks_base_class_subobjects() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct Base {
+            int base_field;
+        };
+        struct Derived final : Base {
+            int derived_field;
+        };
+    "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct Derived {
+                __non_field_data: [::core::mem::MaybeUninit<u8>; 4],
+                __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
+                pub derived_field: ::ffi_11::c_int,
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_infer_send_sync_does_not_mark_empty_struct() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct Empty final {
+            Empty() {}
+        };
+    "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_not_matches!(rs_api, quote! { __non_field_data_do_not_auto_impl_send_sync });
+    assert_rs_not_matches!(rs_api, quote! { impl !Send for Empty {} });
+    Ok(())
+}
+
+#[gtest]
+fn test_infer_send_sync_honors_explicit_annotations() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct [[clang::annotate("crubit_internal_trait_derive", "!Send")]] NotSend final {
+            int field;
+        };
+        struct [[clang::annotate("crubit_internal_unsafe_impl", "Send", "Sync")]] SendSync final {
+            volatile int field;
+        };
+    "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("infer_send_sync"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+
+    assert_rs_matches!(rs_api, quote! { impl !Send for NotSend {} });
+    assert_rs_not_matches!(rs_api, quote! { impl !Sync for NotSend {} });
+
+    assert_rs_matches!(rs_api, quote! { unsafe impl Send for SendSync {} });
+    assert_rs_matches!(rs_api, quote! { unsafe impl Sync for SendSync {} });
+
+    // Explicitly annotated `Send`/`Sync` are asserted. The inferred `Sync` of `NotSend` is not.
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            static_assertions::assert_not_impl_any!(crate::NotSend: Drop, Send);
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            static_assertions::assert_impl_all!(crate::SendSync: Copy, Clone, Send, Sync);
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_impl_debug() -> Result<()> {
     let proto = ir_proto_from_record_impl_debug_cc("struct S { int x; };")?;
     let ir = make_test_ir(&proto)?;

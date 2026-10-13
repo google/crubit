@@ -462,6 +462,7 @@ mod detail {
 const _: () = {
     assert!(::core::mem::size_of::<crate::crubit::test::ThreadSafeStruct>() == 4);
     assert!(::core::mem::align_of::<crate::crubit::test::ThreadSafeStruct>() == 4);
+    static_assertions::assert_impl_all!(crate::crubit::test::ThreadSafeStruct: Send,Sync);
     static_assertions::assert_not_impl_any!(crate::crubit::test::ThreadSafeStruct: Copy,Drop);
     assert!(::core::mem::size_of::<crate::crubit::test::RegularStruct>() == 4);
     assert!(::core::mem::align_of::<crate::crubit::test::RegularStruct>() == 4);
@@ -470,9 +471,10 @@ const _: () = {
     assert!(::core::mem::offset_of!(crate::crubit::test::RegularStruct, x_) == 0);
     assert!(::core::mem::size_of::<crate::crubit::test::ThreadSafeUnpin>() == 1);
     assert!(::core::mem::align_of::<crate::crubit::test::ThreadSafeUnpin>() == 1);
+    static_assertions::assert_impl_all!(crate::crubit::test::ThreadSafeUnpin: Send,Sync);
     static_assertions::assert_not_impl_any!(crate::crubit::test::ThreadSafeUnpin: Copy,Drop);
     assert!(::core::mem::size_of::<crate::crubit::test::ThreadSafePinned>() == 1);
     assert!(::core::mem::align_of::<crate::crubit::test::ThreadSafePinned>() == 1);
-    static_assertions::assert_impl_all!(crate::crubit::test::ThreadSafePinned: Drop);
+    static_assertions::assert_impl_all!(crate::crubit::test::ThreadSafePinned: Drop,Send,Sync);
     static_assertions::assert_not_impl_any!(crate::crubit::test::ThreadSafePinned: Copy);
 };

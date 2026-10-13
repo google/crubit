@@ -15,7 +15,7 @@ use flagset::FlagSet;
 use heck::ToSnakeCase;
 use ir::{
     BazelLabel, GenericItem, IntegerConstant, Item, ItemId, Namespace, RecordType,
-    UnqualifiedIdentifier,
+    TraitImplPolarity, UnqualifiedIdentifier,
 };
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::format_ident;
@@ -540,9 +540,10 @@ pub fn generated_items_to_tokens<'db>(
                     ident,
                     id,
                     head_padding,
+                    head_padding_do_not_auto_impl_send_sync,
                     field_definitions,
-                    implements_send,
-                    implements_sync,
+                    send,
+                    sync,
                     cxx_impl,
                     incomplete_definition,
                     upcast_impls,
@@ -583,13 +584,21 @@ pub fn generated_items_to_tokens<'db>(
                     }
                 } else {
                     let head_padding = head_padding.map(|n| {
-                        let n = Literal::usize_unsuffixed(n);
+                        let n_literal = Literal::usize_unsuffixed(n);
                         // TODO(b/481405536): Do this unconditionally.
-                        if *internally_mutable_unknown_fields {
-                            quote! { __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #n], }
+                        let padding = if *internally_mutable_unknown_fields {
+                            quote! { __non_field_data: [::core::cell::Cell<::core::mem::MaybeUninit<u8>>; #n_literal], }
                         } else {
-                            quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n], }
-                        }
+                            quote! { __non_field_data: [::core::mem::MaybeUninit<u8>; #n_literal], }
+                        };
+                        let marker = if *head_padding_do_not_auto_impl_send_sync && n > 0 {
+                            Some(quote! {
+                                __non_field_data_do_not_auto_impl_send_sync: ::core::marker::PhantomData<*mut ()>,
+                            })
+                        } else {
+                            None
+                        };
+                        quote! { #padding #marker }
                     });
                     let lifetime_markers: Vec<TokenStream> = lifetime_params
                         .iter()
@@ -605,21 +614,23 @@ pub fn generated_items_to_tokens<'db>(
                     }
                 };
 
-                let send_impl = match implements_send {
-                    true => {
+                let send_impl = match send {
+                    TraitImplPolarity::Positive => {
                         quote! { unsafe impl #type_param_tokens Send for #ident #type_param_tokens {} }
                     }
-                    false => {
+                    TraitImplPolarity::Negative => {
                         quote! { impl #type_param_tokens !Send for #ident #type_param_tokens {} }
                     }
+                    TraitImplPolarity::None => quote! {},
                 };
-                let sync_impl = match implements_sync {
-                    true => {
+                let sync_impl = match sync {
+                    TraitImplPolarity::Positive => {
                         quote! { unsafe impl #type_param_tokens Sync for #ident #type_param_tokens {} }
                     }
-                    false => {
+                    TraitImplPolarity::Negative => {
                         quote! { impl #type_param_tokens !Sync for #ident #type_param_tokens {} }
                     }
+                    TraitImplPolarity::None => quote! {},
                 };
 
                 let cxx_impl = match cxx_impl {
@@ -1076,9 +1087,21 @@ pub struct Record {
     pub ident: Ident,
     pub id: ItemId,
     pub head_padding: Option<usize>,
+    /// Whether to prevent `Send` and `Sync` from being automatically implemented because of
+    /// `__non_field_data`.
+    ///
+    /// `__non_field_data` holds opaque bytes (e.g. base class subobjects) whose thread-safety
+    /// rustc can't see, so if this is set, a `PhantomData<*mut ()>` marker is emitted after it.
+    pub head_padding_do_not_auto_impl_send_sync: bool,
     pub field_definitions: Vec<FieldDefinition>,
-    pub implements_send: bool,
-    pub implements_sync: bool,
+    /// The `Send` impl to emit:
+    ///
+    /// * `Positive`: `unsafe impl Send`.
+    /// * `Negative`: `impl !Send`.
+    /// * `None`: no impl, so that rustc infers `Send` from the fields.
+    pub send: TraitImplPolarity,
+    /// The `Sync` impl to emit. See `send`.
+    pub sync: TraitImplPolarity,
     pub cxx_impl: Option<CxxExternTypeImpl>,
     pub incomplete_definition: Option<TokenStream>,
     pub upcast_impls: Vec<Result<UpcastImpl, String>>,
@@ -1362,6 +1385,12 @@ pub enum FieldDefinition {
         ident: Ident,
         field_type: FieldType,
         is_debug_formattable: bool,
+        /// Whether to prevent `Send` and `Sync` from being automatically implemented because of
+        /// this field.
+        ///
+        /// Used for fields erased to opaque bytes, whose thread-safety rustc can't see. If set, a
+        /// `PhantomData<*mut ()>` marker is emitted after the field.
+        do_not_auto_impl_send_sync: bool,
     },
 }
 
@@ -1393,17 +1422,25 @@ impl ToTokens for FieldDefinition {
                 ident,
                 field_type,
                 is_debug_formattable: _,
+                do_not_auto_impl_send_sync,
             } => {
                 let padding_field = padding.map(|padding| {
                     let padding_name =
                         syn::parse_str::<Ident>(&format!("__padding{field_index}")).unwrap();
                     quote! { #padding_name: #padding, }
                 });
+                let marker_field = if *do_not_auto_impl_send_sync {
+                    let marker_name = format_ident!("__do_not_auto_impl_send_sync{field_index}");
+                    Some(quote! { #marker_name: ::core::marker::PhantomData<*mut ()>, })
+                } else {
+                    None
+                };
                 quote! {
                     #padding_field
                     #doc_comment
                     #deprecated_attr
                     #visibility #ident: #field_type,
+                    #marker_field
                 }
                 .to_tokens(tokens);
             }
@@ -1535,6 +1572,8 @@ flagset::flags! {
         Copy,
         Clone,
         Drop,
+        Send,
+        Sync,
     }
 }
 
@@ -1589,6 +1628,8 @@ impl ToTokens for AssertableTrait {
             AssertableTrait::Copy => quote! { Copy },
             AssertableTrait::Clone => quote! { Clone },
             AssertableTrait::Drop => quote! { Drop },
+            AssertableTrait::Send => quote! { Send },
+            AssertableTrait::Sync => quote! { Sync },
         }
         .to_tokens(tokens);
     }

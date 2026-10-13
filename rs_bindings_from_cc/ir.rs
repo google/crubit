@@ -2091,8 +2091,11 @@ pub struct TraitDerives<'pb> {
     pub copy: TraitImplPolarity,
     pub debug: TraitImplPolarity,
     // <internal link> end
-    pub send: bool,
-    pub sync: bool,
+    /// `Positive` for `unsafe impl Send`, `Negative` for `impl !Send`, and `None` if the C++ type
+    /// has no annotation.
+    pub send: TraitImplPolarity,
+    /// Same as `send`, but for `Sync`.
+    pub sync: TraitImplPolarity,
     pub custom: Vec<&'pb str>,
 }
 
@@ -2103,6 +2106,8 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::TraitDerivesView<'pb> {
         self.clone().validate()?;
         self.copy().validate()?;
         self.debug().validate()?;
+        self.send_polarity().validate()?;
+        self.sync_polarity().validate()?;
         for c in self.custom().iter() {
             c.validate()?;
         }
@@ -2114,8 +2119,8 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::TraitDerivesView<'pb> {
             clone: self.clone().to_ir(),
             copy: self.copy().to_ir(),
             debug: self.debug().to_ir(),
-            send: self.send(),
-            sync: self.sync(),
+            send: self.send_polarity().to_ir(),
+            sync: self.sync_polarity().to_ir(),
             custom: self.custom().iter().map(|s| s.to_ir()).collect(),
         }
     }
