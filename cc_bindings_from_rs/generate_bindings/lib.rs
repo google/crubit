@@ -2457,6 +2457,7 @@ impl<T: Iterator + Sized> SortedByDef for T {}
 
 struct FormattedItem<'tcx> {
     def_id: DefId,
+    cpp_ns_path: NamespaceQualifier,
     snippets: Option<ApiSnippets<'tcx>>,
     aliases: Vec<ExportedPath>,
 }
@@ -2556,7 +2557,12 @@ fn formatted_items_in_crate<'tcx>(
             } else {
                 paths.into_extern_aliases()
             };
-            Some(FormattedItem { def_id, snippets, aliases })
+            Some(FormattedItem {
+                def_id,
+                cpp_ns_path: canonical_name.cpp_ns_path,
+                snippets,
+                aliases,
+            })
         })
         .sorted_by_def_with(tcx, |item| item.def_id)
 }
@@ -2692,14 +2698,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
         // meets the prerequisites.
         cc_details.push(CcDetails::new(
             def_id,
-            db.symbol_canonical_name(def_id)
-                .unwrap_or_else(|err| {
-                    panic!(
-                        "Exported item {} should have a canonical name: {err}",
-                        db.tcx().def_path_str(def_id)
-                    )
-                })
-                .cpp_ns_path,
+            item.cpp_ns_path,
             api_snippets.cc_details.into_tokens(&mut cc_details_prereqs),
         ));
         cc_api_impl.extend(api_snippets.rs_details.into_tokens(&mut extern_c_decls));
