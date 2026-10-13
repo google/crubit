@@ -373,13 +373,16 @@ fn inhabited_variant_field_shape(
     layout: Layout<'_>,
     variant_index: VariantIdx,
 ) -> Option<FieldsShape<FieldIdx>> {
-    if layout.is_variant_uninhabited(variant_index) {
-        return None;
+    // Note: `LayoutData::is_variant_uninhabited` would be simpler, but it was only added on
+    // 2026-08-06 (rust-lang/rust#160398), so it is unavailable in Rust 1.98.
+    match layout.variants() {
+        Variants::Multiple { variants, .. } => (!variants[variant_index].is_uninhabited())
+            .then(|| LayoutData::for_variant(&layout, variant_index).fields),
+        Variants::Single { index } => {
+            (*index == variant_index && !layout.is_uninhabited()).then(|| layout.fields().clone())
+        }
+        Variants::Empty => None,
     }
-    Some(match layout.variants() {
-        Variants::Multiple { .. } => LayoutData::for_variant(&layout, variant_index).fields,
-        Variants::Single { .. } | Variants::Empty => layout.fields().clone(),
-    })
 }
 
 /// Generates the members of the enum's C++ class: its `Discriminant` type, a struct per variant,
