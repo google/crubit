@@ -729,6 +729,10 @@ cc_bindings_from_rust = rule(
     },
 )
 
+cpp_api_from_rust = cc_bindings_from_rust
+
+cc_bindings_from_rs = cc_bindings_from_rust
+
 def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
     crate_name = ctx.attr.crate_name
     basename = ctx.label.name

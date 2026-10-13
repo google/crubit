@@ -39,6 +39,9 @@ bzl_library(
 bzl_library(
     name = "rust_api_from_cpp",
     srcs = ["rust_api_from_cpp.bzl"],
+    visibility = [
+        "//:__subpackages__",
+    ],
     deps = [
         ":providers_bzl",
         ":rust_bindings_from_cc_aspect",
