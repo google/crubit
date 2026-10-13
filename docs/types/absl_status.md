@@ -19,6 +19,77 @@ pub fn Foo() -> Status { ... }
 pub fn Bar() -> StatusOr<i32> { ... }
 ```
 
+## Working with `Status` in Rust
+
+### Construction and Conversion
+
+To construct status instances in Rust, use `status::ok` and `status::err`:
+
+```rust
+use status::{err, ok, NewStatus as Status, NewStatusOr as StatusOr};
+
+let success: Status = ok(());
+let value: StatusOr<i32> = ok(42);
+let failure: Status = err(status::internal("error message"));
+```
+
+Existing Rust `Result` types can be converted using
+`status::into_new_status(...)`.
+
+### Testing with Googletest
+
+When using `googletest` alongside `status::{ok, err}`, import matchers with
+aliases to avoid name collisions:
+
+```rust
+use googletest::matchers::{err as is_err, ok as is_ok, status_is};
+```
+
+You can then assert on `Status` or `StatusOr` values:
+
+```rust
+expect_that!(result, is_ok(eq(&42)));
+expect_that!(result, is_err(status_is(StatusCode::Internal)));
+```
+
+## Types inside `StatusOr` must be layout-compatible {#layout-compatibility}
+
+`NewStatusOr<T>` is layout-compatible with C++ `absl::StatusOr<T>`, enabling
+zero-cost passing across the FFI boundary. However, this layout compatibility
+requires that the inner payload type `T` is **also layout-compatible** between
+C++ and Rust.
+
+Types that are bridged across the FFI boundary via runtime conversions (such as
+[Protocol Buffers](/docs/types/protobuf.md), which are not
+layout-compatible between C++ and Rust; see b/534900713, or `std::string`) do
+not share the same in-memory representation between C++ and Rust. Because `T` is
+stored directly inside `StatusOr<T>`, `absl::StatusOr<T>` cannot be used with
+these types.
+
+As a result, functions that accept or return `absl::StatusOr<MyProto>` (or
+`c9::Co<absl::StatusOr<MyProto>>`) cannot be bound directly by Crubit.
+
+### Workaround: Out-Parameters with Proto Views
+
+Instead of returning `absl::StatusOr<MyProto>` directly by value across FFI, the
+C++ API can return `absl::Status` and accept a mutable reference (`MyProto&`)
+output parameter:
+
+```
+{{ #include ../../examples/types/absl_status/cpp_api.h }}
+```
+<!--  function:ReturnsStatusWithProto -->
+
+
+In Rust, create an instance of the message and pass its mutable view
+(`.as_mut()`):
+
+```
+{{ #include ../../examples/types/absl_status/user_of_cpp_api.rs }}
+```
+<!--  function:test_returns_status_with_proto -->
+
+
 ## Calling C++ APIs using `Status` {#cpp}
 
 To enable `absl::Status` and `absl::StatusOr` bindings for C++ libraries, enable
@@ -98,77 +169,6 @@ functions:
 
 Do **not** use `StatusWrapper` or old `Result`-based `Status` / `StatusOr`
 aliases.
-
-## Working with `Status` in Rust
-
-### Construction and Conversion
-
-To construct status instances in Rust, use `status::ok` and `status::err`:
-
-```rust
-use status::{err, ok, NewStatus as Status, NewStatusOr as StatusOr};
-
-let success: Status = ok(());
-let value: StatusOr<i32> = ok(42);
-let failure: Status = err(status::internal("error message"));
-```
-
-Existing Rust `Result` types can be converted using
-`status::into_new_status(...)`.
-
-### Testing with Googletest
-
-When using `googletest` alongside `status::{ok, err}`, import matchers with
-aliases to avoid name collisions:
-
-```rust
-use googletest::matchers::{err as is_err, ok as is_ok, status_is};
-```
-
-You can then assert on `Status` or `StatusOr` values:
-
-```rust
-expect_that!(result, is_ok(eq(&42)));
-expect_that!(result, is_err(status_is(StatusCode::Internal)));
-```
-
-## Types inside `StatusOr` must be layout-compatible {#layout-compatibility}
-
-`NewStatusOr<T>` is layout-compatible with C++ `absl::StatusOr<T>`, enabling
-zero-cost passing across the FFI boundary. However, this layout compatibility
-requires that the inner payload type `T` is **also layout-compatible** between
-C++ and Rust.
-
-Types that are bridged across the FFI boundary via runtime conversions (such as
-[Protocol Buffers](/docs/types/protobuf.md), which are not
-layout-compatible between C++ and Rust; see b/534900713, or `std::string`) do
-not share the same in-memory representation between C++ and Rust. Because `T` is
-stored directly inside `StatusOr<T>`, `absl::StatusOr<T>` cannot be used with
-these types.
-
-As a result, functions that accept or return `absl::StatusOr<MyProto>` (or
-`c9::Co<absl::StatusOr<MyProto>>`) cannot be bound directly by Crubit.
-
-### Workaround: Out-Parameters with Proto Views
-
-Instead of returning `absl::StatusOr<MyProto>` directly by value across FFI, the
-C++ API can return `absl::Status` and accept a mutable reference (`MyProto&`)
-output parameter:
-
-```
-{{ #include ../../examples/types/absl_status/cpp_api.h }}
-```
-<!--  function:ReturnsStatusWithProto -->
-
-
-In Rust, create an instance of the message and pass its mutable view
-(`.as_mut()`):
-
-```
-{{ #include ../../examples/types/absl_status/user_of_cpp_api.rs }}
-```
-<!--  function:test_returns_status_with_proto -->
-
 
 ## Migration and Future Evolution
 
