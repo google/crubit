@@ -23,7 +23,7 @@ use rustc_span::symbol::{sym, Symbol};
 use rustc_trait_selection::infer::canonical::ir::TypingMode;
 use rustc_trait_selection::infer::TyCtxtInferExt;
 use rustc_trait_selection::traits::ObligationCtxt;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 #[cfg_accessible(rustc_middle::ty::GenericPredicates)]
 type GenericClauses<'tcx> = ty::GenericPredicates<'tcx>;
@@ -65,10 +65,13 @@ pub fn get_generic_args<'tcx>(
     // See the doc comment for `unused_generic_param` in
     // `test/functions/functions.rs` for an explanation why we currently don't
     // support unused generic params.
+    let fn_sig = liberate_and_deanonymize_late_bound_regions(
+        tcx,
+        tcx.fn_sig(fn_def_id).instantiate_identity(),
+        fn_def_id,
+    );
     let indices_of_actually_used_generic_params = {
         let mut finder = GenericParamsFinder::default();
-        let fn_sig = tcx.fn_sig(fn_def_id).instantiate_identity();
-        let fn_sig = liberate_and_deanonymize_late_bound_regions(tcx, fn_sig, fn_def_id);
         use rustc_type_ir::TypeVisitable;
         fn_sig.visit_with(&mut finder);
         finder.generic_param_indices
@@ -76,8 +79,6 @@ pub fn get_generic_args<'tcx>(
 
     let params_used_in_return_type = {
         let mut finder = GenericParamsFinder::default();
-        let fn_sig = tcx.fn_sig(fn_def_id).instantiate_identity();
-        let fn_sig = liberate_and_deanonymize_late_bound_regions(tcx, fn_sig, fn_def_id);
         use rustc_type_ir::TypeVisitable;
         fn_sig.output().visit_with(&mut finder);
         finder.generic_param_indices
@@ -94,14 +95,14 @@ pub fn get_generic_args<'tcx>(
             ty::Region::new_late_param(tcx, fn_def_id, ty::LateParamRegionKind::Anon(curr_id))
         }
     };
-    let replacements: HashMap<usize, ty::GenericArg<'tcx>> = (0..generics.count())
+    let replacements: Vec<ty::GenericArg<'tcx>> = (0..generics.count())
         .map(|idx| {
             let param_def = generics.param_at(idx, tcx);
-            let replacement = match param_def.kind {
+            match param_def.kind {
                 ty::GenericParamDefKind::Const { .. } => {
                     bail!("crubit.rs/errors/unsupported_type: `const`-generic functions are not supported (b/259749023)");
                 }
-                ty::GenericParamDefKind::Lifetime => tcx.mk_param_from_def(param_def),
+                ty::GenericParamDefKind::Lifetime => Ok(tcx.mk_param_from_def(param_def)),
                 ty::GenericParamDefKind::Type { .. } => {
                     ensure!(
                         indices_of_actually_used_generic_params.contains(&param_def.index),
@@ -122,19 +123,14 @@ pub fn get_generic_args<'tcx>(
                             "No valid non-generic replacement for generic type param `{}`",
                             param_def.name,
                         )
-                    })?
+                    })
                 }
-            };
-            Ok((idx, replacement))
+            }
         })
-        .collect::<Result<Vec<_>>>()?
-        .into_iter()
-        .collect();
+        .collect::<Result<Vec<_>>>()?;
 
     Ok(ty::GenericArgs::for_item(tcx, fn_def_id, |param_def, _old_generic_args| {
-        *replacements
-            .get(&(param_def.index as usize))
-            .expect("All errors should have been handled above")
+        replacements[param_def.index as usize]
     }))
 }
 
