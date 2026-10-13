@@ -2960,25 +2960,28 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         &self,
         enum_kind: Option<EnumKind>,
         tag_size_with_padding: u64,
-    ) -> Vec<Vec<Field<'tcx>>> {
+    ) -> Vec<CppVariantLayout<'tcx>> {
         if let Some(adt_def) = self.adt_def {
             if let ty::AdtKind::Enum = adt_def.adt_kind()
                 && enum_kind != Some(EnumKind::ReprC)
             {
-                return vec![vec![Field {
-                    cpp_type: Err(anyhow!(
-                        "No support for bindings of individual non-repr(C) `enum`s"
-                    )),
+                return vec![CppVariantLayout {
+                    fields: vec![Field {
+                        cpp_type: Err(anyhow!(
+                            "No support for bindings of individual non-repr(C) `enum`s"
+                        )),
+                        size: self.layout.size.bytes(),
+                        cc_name: format_ident!("__opaque_blob_of_bytes"),
+                        rs_name: quote! { __opaque_blob_of_bytes },
+                        is_public: false,
+                        index: 0,
+                        offset: 0,
+                        offset_of_next_field: self.layout.size.bytes(),
+                        doc_comment: quote! {},
+                        attributes: vec![],
+                    }],
                     size: self.layout.size.bytes(),
-                    cc_name: format_ident!("__opaque_blob_of_bytes"),
-                    rs_name: quote! { __opaque_blob_of_bytes },
-                    is_public: false,
-                    index: 0,
-                    offset: 0,
-                    offset_of_next_field: self.layout.size.bytes(),
-                    doc_comment: quote! {},
-                    attributes: vec![],
-                }]];
+                }];
             };
 
             let layout = &self.layout;
@@ -3018,23 +3021,25 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
                     let enum_adjustment =
                         if enum_kind == Some(EnumKind::ReprC) { tag_size_with_padding } else { 0 };
 
-                    Self::field_offsets(&field_shape, enum_adjustment, size)
+                    let fields = Self::field_offsets(&field_shape, enum_adjustment, size)
                         .map(|(index, offset, offset_of_next_field)| {
                             let field_def = &variant.fields[FieldIdx::from_usize(index)];
                             self.analyze_field(index, field_def, offset, offset_of_next_field)
                         })
-                        .collect_vec()
+                        .collect_vec();
+                    CppVariantLayout { fields, size }
                 })
                 .collect_vec()
         } else if let ty::TyKind::Tuple(types) = self.self_ty.kind() {
             let layout = &self.layout;
-            let fields = Self::field_offsets(layout.fields(), 0, layout.size.bytes())
+            let size = layout.size.bytes();
+            let fields = Self::field_offsets(layout.fields(), 0, size)
                 .map(|(index, offset, offset_of_next_field)| {
                     self.analyze_tuple_field(index, types[index], offset, offset_of_next_field)
                 })
                 .collect_vec();
 
-            vec![fields]
+            vec![CppVariantLayout { fields, size }]
         } else {
             panic!("Expected ADT or Tuple type: {:?}", self.self_ty);
         }
@@ -3067,7 +3072,6 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
 
     fn analyze_layout(&self) -> Result<CppLayout<'tcx>> {
         let layout = &self.layout;
-        let layout_variants = layout.variants();
 
         let enum_kind = self.adt_def.and_then(get_enum_kind);
         let tag_size_with_padding = match enum_kind {
@@ -3075,42 +3079,21 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             None | Some(EnumKind::OpaqueBlobOfBytes) => 0,
         };
 
-        let variants_fields = self.variant_fields(enum_kind, tag_size_with_padding);
+        let variants = self.variant_fields(enum_kind, tag_size_with_padding);
 
         let adt_kind = self.adt_def.map(|d| d.adt_kind()).unwrap_or(ty::AdtKind::Struct);
         match adt_kind {
             ty::AdtKind::Struct => {
+                let fields = variants.into_iter().next().map(|v| v.fields).unwrap_or_default();
                 let always_omit_padding = self.adt_def.is_some_and(|adt| adt.repr().c())
-                    && variants_fields.iter().flatten().all(|field| field.cpp_type.is_ok());
-                let fields = variants_fields.into_iter().next().unwrap_or_default();
+                    && fields.iter().all(|field| field.cpp_type.is_ok());
                 Ok(CppLayout::Struct { fields, always_omit_padding })
             }
             ty::AdtKind::Union => {
-                let fields = variants_fields.into_iter().next().unwrap_or_default();
+                let fields = variants.into_iter().next().map(|v| v.fields).unwrap_or_default();
                 Ok(CppLayout::Union { fields })
             }
             ty::AdtKind::Enum => {
-                let adt_def = self.adt_def.expect("Enum should have adt_def");
-                let variant_sizes = match layout_variants {
-                    Variants::Multiple { tag: _, tag_encoding: _, tag_field: _, variants } => {
-                        variants
-                            .iter_enumerated()
-                            .map(|(variant_index, layout)| {
-                                if self.variant_has_non_zst_fields(adt_def.variant(variant_index)) {
-                                    layout.size.bytes() - tag_size_with_padding
-                                } else {
-                                    0
-                                }
-                            })
-                            .collect_vec()
-                    }
-                    Variants::Single { .. } | Variants::Empty => vec![self.layout.size.bytes()],
-                };
-                let variants = variants_fields
-                    .into_iter()
-                    .zip(variant_sizes)
-                    .map(|(fields, size)| CppVariantLayout { fields, size })
-                    .collect_vec();
                 let enum_kind = enum_kind.expect("Enum kind should be set for enums");
                 Ok(CppLayout::Enum { enum_kind, tag_size_with_padding, variants })
             }
@@ -3496,7 +3479,6 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
         let adt_def = self.adt_def.expect("Enum should have adt_def");
         let tcx = self.db.tcx();
         let adt_cc_fully_qualified_name = self.cc_fully_qualified_name;
-        let adt_rs_name = self.rs_fully_qualified_name;
         let layout_variants = &self.layout.variants;
 
         let cc_details = if variants.is_empty() {
@@ -3570,22 +3552,7 @@ impl<'a, 'tcx> CppFieldGenerator<'a, 'tcx> {
             )
         };
 
-        let rs_details: RsSnippet = if enum_kind == EnumKind::ReprC {
-            RsSnippet::default()
-        } else {
-            variants
-                .iter()
-                .flat_map(|v| &v.fields)
-                .filter(|field| field.is_public)
-                .map(|Field { rs_name, offset, .. }| {
-                    let expected_offset = Literal::u64_unsuffixed(*offset);
-                    let actual_offset = quote! { ::core::mem::offset_of!(#adt_rs_name, #rs_name) };
-                    RsSnippet::new(
-                        quote! { const _: () = assert!(#actual_offset == #expected_offset); },
-                    )
-                })
-                .collect()
-        };
+        let rs_details = RsSnippet::default();
 
         let assertions_method_decl = if variants.is_empty() {
             quote! {}
