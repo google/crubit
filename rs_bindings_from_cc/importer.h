@@ -293,7 +293,7 @@ class Importer final : public ImportContext {
   //
   // This mirrors the "governing file" logic of the nullability library
   // (`getGoverningFile` in nullability/type_nullability.cc).
-  clang::NullabilityKindOrNone GetDefaultNullability(
+  std::optional<clang::NullabilityKind> GetDefaultNullability(
       const clang::Type& type) const;
 
   // Returns true if `type`, as written, contains a type whose nullability is

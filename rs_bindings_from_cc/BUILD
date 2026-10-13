@@ -386,6 +386,7 @@ cc_library(
         ":ast_util",
         ":bazel_types",
         ":cc_ir",
+        ":clang_compat_macros",
         ":cmdline_flags",
         ":decl_importer",
         ":ir_cc_proto",

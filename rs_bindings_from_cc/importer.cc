@@ -42,6 +42,7 @@
 #include "rs_bindings_from_cc/annotations_consumer.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/clang_compat_macros.h"
 #include "rs_bindings_from_cc/cmdline_flags.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/importers/class_template.h"
@@ -723,7 +724,11 @@ Importer::DeclItems Importer::GetDeclItems(const clang::Decl& decl) {
 
     // We remove comments attached to a child decl or that are within a child
     // decl.
+#if LLVM_DEV_DATE_GE(20260527)
     if (auto raw_comment = ctx_.getRawCommentNoCache(decl)) {
+#else
+    if (auto raw_comment = ctx_.getRawCommentForDeclNoCache(decl)) {
+#endif
       ordered_comments.erase(raw_comment->getBeginLoc());
     }
     if (decl->getLocation().isValid()) {
@@ -2022,7 +2027,11 @@ std::optional<std::string> Importer::GetComment(const clang::Decl& decl) const {
   // This is going to be a heuristic that needs to be tuned over time.
 
   clang::SourceManager& sm = ctx_.getSourceManager();
+#if LLVM_DEV_DATE_GE(20260527)
   clang::RawComment* raw_comment = ctx_.getRawCommentNoCache(&decl);
+#else
+  clang::RawComment* raw_comment = ctx_.getRawCommentForDeclNoCache(&decl);
+#endif
 
   if (raw_comment == nullptr) {
     return {};
@@ -2437,7 +2446,7 @@ static bool IsSameCanonicalUnqualifiedType(clang::QualType type1,
   return type1 == type2;
 }
 
-clang::NullabilityKindOrNone Importer::GetDefaultNullability(
+std::optional<clang::NullabilityKind> Importer::GetDefaultNullability(
     const clang::Type& type) const {
   // By default, the type was spelled directly in the decl being imported.
   clang::FileID file = governing_file_;
@@ -2506,10 +2515,14 @@ absl::StatusOr<CcType> Importer::ConvertType(
     // Nullability is sugar: it lives on an `AttributedType` wrapping the type,
     // and `ConvertUnattributedType` looks straight through that. `type` is
     // still sugared here, so this is the last point at which we can see it.
-    clang::NullabilityKindOrNone nullability = type.getNullability();
+    auto nullability = type.getNullability();
     if (!nullability.has_value() &&
         type.canHaveNullability(/*ResultIfUnknown=*/false)) {
-      nullability = GetDefaultNullability(type);
+      if (std::optional<clang::NullabilityKind> default_nullability =
+              GetDefaultNullability(type);
+          default_nullability.has_value()) {
+        nullability = *default_nullability;
+      }
     }
     cpp_type->is_nonnull = nullability.has_value() &&
                            *nullability == clang::NullabilityKind::NonNull;

@@ -496,7 +496,7 @@ bool ForceDefineImplicitFunction(ImportContext& ictx,
           // https://github.com/llvm/llvm-project/commit/ab547095ead5464dc024d66264d9b8a987f429f3
       function_decl->getDefaultedFunctionKind();
 #else
-          ictx.getDefaultedFunctionKind(function_decl);
+          ictx.sema_.getDefaultedFunctionKind(function_decl);
 #endif
       defaulted_kind.isSpecialMember()) {
     auto special_member_kind = defaulted_kind.asSpecialMember();
