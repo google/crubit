@@ -11,7 +11,15 @@ load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from
 load("//support/extract_cpp_from_rust:extract_cpp.bzl", "extract_cpp")
 
 def rust_library_with_embedded_cpp(name, srcs, deps = [], deps_of_cc_library = [], **kwargs):
-    """Compiles a Rust library containing `global_cpp!` or 'inline_cpp!' blocks."""
+    """Compiles a Rust library containing `global_cpp!` or `inline_cpp!` blocks.
+
+    Args:
+      name: The name of the `rust_library` target.
+      srcs: The Rust source files containing embedded C++.
+      deps: Rust dependencies for the `rust_library`.
+      deps_of_cc_library: C++ dependencies for the extracted `cc_library`.
+      **kwargs: Additional arguments forwarded to `rust_library`.
+    """
     cc_lib_name = name + "_extracted_cc"
     extracted_header = cc_lib_name + ".h"
 
