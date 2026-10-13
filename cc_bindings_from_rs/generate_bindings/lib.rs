@@ -22,6 +22,7 @@ extern crate rustc_type_ir;
 
 pub mod avoid_colliding_types;
 pub mod format_type;
+mod generate_enum;
 pub mod generate_function;
 mod generate_function_thunk;
 mod generate_struct_and_union;

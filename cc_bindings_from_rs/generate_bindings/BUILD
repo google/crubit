@@ -19,6 +19,7 @@ rust_library(
     srcs = [
         "avoid_colliding_types.rs",
         "format_type.rs",
+        "generate_enum.rs",
         "generate_function.rs",
         "generate_function_thunk.rs",
         "generate_struct_and_union.rs",
@@ -112,6 +113,7 @@ crubit_rust_test(
         ":test_helpers",
         "//common:crubit_feature",
         "//common:token_stream_matchers",
+        "@crate_index//:flagset",  # v0_4
         "@crate_index//:quote",  # v1
     ],
 )
