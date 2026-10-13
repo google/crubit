@@ -498,7 +498,11 @@ fn does_impl_apply<'tcx>(
 }
 
 #[must_use]
-pub(crate) fn is_recursive_specialization<'tcx>(self_ty: Ty<'tcx>, target_ty: Ty<'tcx>) -> bool {
+pub(crate) fn is_recursive_specialization<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    self_ty: Ty<'tcx>,
+    target_ty: Ty<'tcx>,
+) -> bool {
     // Coarse grain calculation of type depth for preventing infinite type expansion.
     fn type_depth<'tcx>(ty: Ty<'tcx>) -> usize {
         match ty.kind() {
@@ -510,6 +514,9 @@ pub(crate) fn is_recursive_specialization<'tcx>(self_ty: Ty<'tcx>, target_ty: Ty
             _ => 1,
         }
     }
+    let self_ty = erase_regions(tcx, self_ty);
+    let target_ty = erase_regions(tcx, target_ty);
+
     // We don't want to exclude methods that list the self type as a parameter (such as inherent
     // methods).
     if self_ty == target_ty {
@@ -518,28 +525,21 @@ pub(crate) fn is_recursive_specialization<'tcx>(self_ty: Ty<'tcx>, target_ty: Ty
 
     // 1. Self-containment: if target_ty contains self_ty anywhere as a subterm (e.g. Self ->
     //    Wrapper<Self>)
-    if target_ty.walk().any(|arg| arg.as_type() == Some(self_ty)) {
-        return true;
-    }
-    let ty::TyKind::Adt(self_adt, _) = self_ty.kind() else {
-        return false;
-    };
-    let self_ty_depth = type_depth(self_ty);
-
-    // 2. Same-template inductive growth: Foo<T> -> Foo<Ref<T> in any nested ADT inside target_ty
+    // 2. Same-template inductive growth: Foo<T> -> Foo<Ref<T>> if any nested ADT inside target_ty
     //    (or target_ty itself) has the same DefId as self_ty and is deeper (e.g.
     //    Result<Date<Ref<T>>, Error>)
-    for sub_ty in target_ty.walk().filter_map(|arg| arg.as_type()) {
-        let Some(sub_adt) = sub_ty.ty_adt_def() else {
-            continue;
-        };
-        if sub_adt.did() == self_adt.did() && type_depth(sub_ty) > self_ty_depth {
-            return true;
-        }
-    }
+    let self_adt = self_ty.ty_adt_def();
+    let self_ty_depth = type_depth(self_ty);
+    let is_recursive = target_ty.walk().filter_map(|arg| arg.as_type()).any(|sub_ty| {
+        sub_ty == self_ty
+            || matches!(
+                (self_adt, sub_ty.ty_adt_def()),
+                (Some(a), Some(b)) if a.did() == b.did() && type_depth(sub_ty) > self_ty_depth
+            )
+    });
 
     // 3. Arbitrary depth limit to avoid infinite recursion.
-    type_depth(target_ty) >= 6
+    is_recursive || type_depth(target_ty) >= 6
 }
 
 pub fn from_trait_impls_by_argument<'tcx>(
@@ -2126,7 +2126,7 @@ pub fn generate_adt<'tcx>(
                             // can arise from inherent methods that use
                             // Self as template argument of another
                             // specialization among other things.
-                            is_recursive_specialization(self_ty, adt_spec.self_ty_rs)
+                            is_recursive_specialization(tcx, self_ty, adt_spec.self_ty_rs)
                         }
                         _ => false,
                     });
