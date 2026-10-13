@@ -502,6 +502,34 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
                     if struct(label = label) not in aliases:
                         aliases[struct(label = label)] = name
 
+        # Collect dependencies of manual bindings attached to this target.
+        # The Rust sources of manual bindings expect their dependencies to be
+        # available as under their regular (non-mangled) names, e.g.,:
+        #
+        #   rust_api_from_cpp(srcs = ["bar.rs], deps = ["//rust/crate:foo"])
+        #   # bar.rs
+        #   use foo;
+        #
+        # If two such distinct dependencies share a name, there is an ambiguity
+        # and we don't make that name available.
+        #
+        # Note that it's possible that a dependency is present both here and as
+        # a direct dependency of the cc_library (handled in the code block above).
+        # In that case, we still present the dependency under its regular
+        # non-mangled name, so that its available to manual bindings.
+        name_counts = {}
+        for dep in extra_deps:
+            if dep.crate_info:
+                name = dep.crate_info.name
+                name_counts[name] = name_counts.get(name, 0) + 1
+
+        for dep in extra_deps:
+            if dep.crate_info:
+                name = dep.crate_info.name
+                if name_counts[name] == 1:
+                    label = dep.crate_info.owner
+                    aliases[struct(label = label)] = name
+
     compilation_context = target[CcInfo].compilation_context
     if generated_cpp_support_deps or extra_cpp_srcs:
         compilation_context = cc_common.merge_cc_infos(
