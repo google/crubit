@@ -95,6 +95,10 @@ consolidate_goldens() {
     local ios_arm64_dir="$goldens_dir/ios_arm64"
     local ios_tier_dir="$goldens_dir/ios"
 
+    # macOS golden tests are written directly to the shared tier by both archs given that arm64 and
+    # x86_64 must produce identical bindings. So there are no per-architecture directories.
+    local macos_tier_dir="$goldens_dir/macos"
+
 
     # Step 1: Promote x86 baselines to shared ABI tiers
     if [ -d "$x86_32_dir" ]; then
@@ -145,8 +149,9 @@ consolidate_goldens() {
     # Step 4: Prune redundant files in shared ABI tiers against host
     prune_matching_files "$tier64_dir" "$pkg_dir"
 
-    # Step 4b: Prune redundant files in ios tier (against host)
+    # Step 4b: Prune redundant files in ios and macos tiers (against host)
     prune_matching_files "$ios_tier_dir" "$pkg_dir"
+    prune_matching_files "$macos_tier_dir" "$pkg_dir"
     prune_matching_files "$tier32_dir" "$pkg_dir"
 
     # Step 5: Remove empty goldens directory if everything fell back to host
