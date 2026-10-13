@@ -710,6 +710,10 @@ fn generate_into_impls<'tcx>(
                     );
                 }
             };
+            let is_copy = is_copy(tcx, def_id, core.common.self_ty);
+            if !is_copy && !db.is_cpp_move_constructible(core.common.self_ty) {
+                return None;
+            }
             let mut prereqs = CcPrerequisites::default();
             let cc_ty = cc_ty.into_tokens(&mut prereqs);
 
@@ -749,10 +753,6 @@ fn generate_into_impls<'tcx>(
                     "ADT's self type should be C++-convertible after generate_adt_core succeeds",
                 );
             let self_cpp_ty = self_cpp_ty.into_tokens(&mut prereqs);
-            let is_copy = is_copy(tcx, def_id, core.common.self_ty);
-            if !is_copy && !db.is_cpp_move_constructible(core.common.self_ty) {
-                return None;
-            }
             let impl_body = generate_thunk_call(
                 db,
                 def_id,
