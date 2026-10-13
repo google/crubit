@@ -457,6 +457,23 @@ fn does_impl_apply<'tcx>(
     impl_id: DefId,
     target_ty: Ty<'tcx>,
 ) -> Option<ty::GenericArgsRef<'tcx>> {
+    does_impl_apply_inner(tcx, impl_id, target_ty, /* match_first_trait_arg= */ false)
+}
+
+fn does_trait_arg_impl_apply<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    impl_id: DefId,
+    target_ty: Ty<'tcx>,
+) -> Option<ty::GenericArgsRef<'tcx>> {
+    does_impl_apply_inner(tcx, impl_id, target_ty, /* match_first_trait_arg= */ true)
+}
+
+fn does_impl_apply_inner<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    impl_id: DefId,
+    target_ty: Ty<'tcx>,
+    match_first_trait_arg: bool,
+) -> Option<ty::GenericArgsRef<'tcx>> {
     use rustc_infer::infer::TyCtxtInferExt;
     use rustc_infer::traits::{Obligation, ObligationCause};
     use rustc_trait_selection::infer::canonical::ir::TypingMode;
@@ -469,8 +486,16 @@ fn does_impl_apply<'tcx>(
     let impl_args = infcx.fresh_args_for_item(tcx.def_span(impl_id), impl_id);
     let param_env = tcx.param_env(impl_id);
 
-    let instantiated_impl_ty =
-        ocxt.normalize(&cause, param_env, tcx.type_of(impl_id).instantiate(tcx, impl_args));
+    let instantiated_impl_ty = if match_first_trait_arg {
+        let trait_ref = ocxt.normalize(
+            &cause,
+            param_env,
+            tcx.impl_trait_header(impl_id).trait_ref.instantiate(tcx, impl_args),
+        );
+        trait_ref.args.type_at(1)
+    } else {
+        ocxt.normalize(&cause, param_env, tcx.type_of(impl_id).instantiate(tcx, impl_args))
+    };
 
     if ocxt.eq(&cause, param_env, instantiated_impl_ty, target_ty).is_err() {
         return None;
@@ -560,67 +585,45 @@ pub(crate) fn is_recursive_specialization<'tcx>(
     is_recursive || type_depth(target_ty) >= 6
 }
 
+fn trait_impls_by_argument_adt<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    crate_num: CrateNum,
+    trait_id: DefId,
+) -> Rc<HashMap<DefId, Vec<DefId>>> {
+    let impls_iter: Box<dyn Iterator<Item = DefId>> = if crate_num == LOCAL_CRATE {
+        Box::new(tcx.local_trait_impls(trait_id).iter().map(|impl_id| impl_id.to_def_id()))
+    } else {
+        Box::new(
+            tcx.implementations_of_trait((crate_num, trait_id)).iter().map(|(impl_id, _)| *impl_id),
+        )
+    };
+    let mut map: HashMap<DefId, Vec<DefId>> = HashMap::new();
+    for impl_id in impls_iter {
+        let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
+        let ty::TyKind::Adt(adt_def, _) = trait_ref.args.type_at(1).kind() else {
+            continue;
+        };
+        map.entry(adt_def.did()).or_default().push(impl_id);
+    }
+    Rc::new(map)
+}
+
 pub fn from_trait_impls_by_argument<'tcx>(
     db: &BindingsGenerator<'tcx>,
     crate_num: CrateNum,
-) -> Rc<HashMap<Ty<'tcx>, Vec<DefId>>> {
+) -> Rc<HashMap<DefId, Vec<DefId>>> {
     let tcx = db.tcx();
     let from_trait = tcx.get_diagnostic_item(sym::From).expect("Could not find From trait");
-    let impls_iter: Box<dyn Iterator<Item = DefId>> = if crate_num == LOCAL_CRATE {
-        Box::new(tcx.local_trait_impls(from_trait).iter().map(|impl_id| impl_id.to_def_id()))
-    } else {
-        Box::new(
-            tcx.implementations_of_trait((crate_num, from_trait))
-                .iter()
-                .map(|(impl_id, _)| *impl_id),
-        )
-    };
-    let mut map: HashMap<Ty<'tcx>, Vec<DefId>> = HashMap::new();
-    for from_impl_id in impls_iter {
-        let trait_ref = get_trait_ref_from_impl_id(tcx, from_impl_id);
-        let ty = trait_ref.args.type_at(1);
-        // We want to check if our type has type variables and constant variables, but not
-        // region variables. Region variables are fine and we'll replace them with 'static.
-        if ty.flags().intersects(has_type_or_const_vars()) {
-            continue;
-        }
-
-        // We want to work in region-erased types because that's what we will be querying by
-        // for lookup.
-        let from_self_ty = erase_regions(tcx, ty);
-        map.entry(from_self_ty).or_default().push(from_impl_id);
-    }
-    Rc::new(map)
+    trait_impls_by_argument_adt(tcx, crate_num, from_trait)
 }
 
 pub fn into_trait_impls_by_destination<'tcx>(
     db: &BindingsGenerator<'tcx>,
     crate_num: CrateNum,
-) -> Rc<HashMap<Ty<'tcx>, Vec<DefId>>> {
+) -> Rc<HashMap<DefId, Vec<DefId>>> {
     let tcx = db.tcx();
     let into_trait = tcx.get_diagnostic_item(sym::Into).expect("Could not find Into trait");
-    let impls_iter: Box<dyn Iterator<Item = DefId>> = if crate_num == LOCAL_CRATE {
-        Box::new(tcx.local_trait_impls(into_trait).iter().map(|impl_id| impl_id.to_def_id()))
-    } else {
-        Box::new(
-            tcx.implementations_of_trait((crate_num, into_trait))
-                .iter()
-                .map(|(impl_id, _)| *impl_id),
-        )
-    };
-    let mut map: HashMap<Ty<'tcx>, Vec<DefId>> = HashMap::new();
-    for into_impl_id in impls_iter {
-        let trait_ref = get_trait_ref_from_impl_id(tcx, into_impl_id);
-        let dest_ty = trait_ref.args.type_at(1);
-        // We want to check if our type has type variables and constant variables, and still allow
-        // region variables.
-        if dest_ty.flags().intersects(has_type_or_const_vars()) {
-            continue;
-        }
-        let dest_self_ty = erase_regions(tcx, dest_ty);
-        map.entry(dest_self_ty).or_default().push(into_impl_id);
-    }
-    Rc::new(map)
+    trait_impls_by_argument_adt(tcx, crate_num, into_trait)
 }
 
 fn generate_into_impls<'tcx>(
@@ -637,12 +640,10 @@ fn generate_into_impls<'tcx>(
     };
 
     let from_map = db.from_trait_impls_by_argument(def_id.krate);
-    let from_impls = from_map
-        .get(&core.common.self_ty)
-        .into_iter()
-        .flat_map(|vec| vec.iter())
-        .filter_map(|from_impl_id| {
-            let trait_ref = get_trait_ref_from_impl_id(tcx, *from_impl_id);
+    let from_impls =
+        from_map.get(&def_id).into_iter().flat_map(|vec| vec.iter()).filter_map(|from_impl_id| {
+            let impl_args = does_trait_arg_impl_apply(tcx, *from_impl_id, core.common.self_ty)?;
+            let trait_ref = get_instantiated_trait_ref(tcx, *from_impl_id, impl_args);
             let from_middle_ty = trait_ref.args.type_at(0);
 
             // If our type contains type variables or constant variables (but not region variables),
@@ -650,20 +651,30 @@ fn generate_into_impls<'tcx>(
             if from_middle_ty.flags().intersects(has_type_or_const_vars()) {
                 return None;
             }
+            if query_compiler::has_non_lifetime_generics(tcx, def_id)
+                && is_recursive_specialization(tcx, core.common.self_ty, from_middle_ty)
+            {
+                return None;
+            }
             // We know that our type will always appear in FnReturn position for the `into` method.
             // If our type isn't C++-compatible, we can't generate an `into` impl.
             let cc_ty = db
                 .format_ty_for_cc(from_middle_ty, TypeLocation::FnReturn { is_constructor: false })
                 .ok()?;
-            Some((from_middle_ty, cc_ty, *from_impl_id, &[][..]))
+            Some((from_middle_ty, cc_ty, *from_impl_id, impl_args))
         });
     let into_impls = non_blanket_impls_for_ty(tcx, into_trait, core.common.self_ty).filter_map(
         |(into_impl_id, impl_args)| {
-            let trait_ref = get_trait_ref_from_impl_id(tcx, into_impl_id);
+            let trait_ref = get_instantiated_trait_ref(tcx, into_impl_id, impl_args);
             // Index 0 of our trait ref is the self type, so index 1 is the type we're converting
             // into.
             let into_middle_ty = trait_ref.args.type_at(1);
             if into_middle_ty.flags().intersects(has_type_or_const_vars()) {
+                return None;
+            }
+            if query_compiler::has_non_lifetime_generics(tcx, def_id)
+                && is_recursive_specialization(tcx, core.common.self_ty, into_middle_ty)
+            {
                 return None;
             }
 
@@ -672,7 +683,7 @@ fn generate_into_impls<'tcx>(
                 .format_ty_for_cc(into_middle_ty, TypeLocation::FnReturn { is_constructor: false })
                 .ok()?;
 
-            Some((into_middle_ty, cc_ty, into_impl_id, impl_args.as_slice()))
+            Some((into_middle_ty, cc_ty, into_impl_id, impl_args))
         },
     );
 
@@ -829,9 +840,14 @@ fn generate_constructor_impls<'tcx>(
     let from_trait = tcx.get_diagnostic_item(sym::From).expect("Could not find From trait");
     let from_impls = non_blanket_impls_for_ty(tcx, from_trait, core.common.self_ty).filter_map(
         |(impl_id, impl_args)| {
-            let trait_ref = get_trait_ref_from_impl_id(tcx, impl_id);
+            let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
             let src_ty = trait_ref.args.type_at(1);
             if src_ty.flags().intersects(has_type_or_const_vars()) {
+                return None;
+            }
+            if query_compiler::has_non_lifetime_generics(tcx, def_id)
+                && is_recursive_specialization(tcx, core.common.self_ty, src_ty)
+            {
                 return None;
             }
             // Skip generating a constructor for the `From` impl if the target type is a
@@ -846,7 +862,7 @@ fn generate_constructor_impls<'tcx>(
                 ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
                 _ => src_ty,
             };
-            if src_referent_ty == core.common.self_ty {
+            if erase_regions(tcx, src_referent_ty) == core.common.self_ty {
                 return None;
             }
             let cc_ty = db
@@ -856,38 +872,42 @@ fn generate_constructor_impls<'tcx>(
                 )
                 .ok()?;
 
-            Some((src_ty, cc_ty, impl_id, impl_args.as_slice(), /* is_from= */ true))
+            Some((src_ty, cc_ty, impl_id, impl_args, /* is_from= */ true))
         },
     );
 
     // Find Into impls to the selected ADT
     let into_map = db.into_trait_impls_by_destination(def_id.krate);
     let into_impls =
-        into_map.get(&core.common.self_ty).into_iter().flat_map(|vec| vec.iter()).filter_map(
-            |impl_id| {
-                let trait_ref = get_trait_ref_from_impl_id(tcx, *impl_id);
-                let src_ty = trait_ref.args.type_at(0);
-                if src_ty.flags().intersects(has_type_or_const_vars()) {
-                    return None;
-                }
-                // Skip if source type is Self or a reference to Self (e.g. &Self)
-                let src_referent_ty = match src_ty.kind() {
-                    ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
-                    _ => src_ty,
-                };
-                if src_referent_ty == core.common.self_ty {
-                    return None;
-                }
-                let cc_ty = db
-                    .format_ty_for_cc(
-                        src_ty,
-                        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-                    )
-                    .ok()?;
+        into_map.get(&def_id).into_iter().flat_map(|vec| vec.iter()).filter_map(|impl_id| {
+            let impl_args = does_trait_arg_impl_apply(tcx, *impl_id, core.common.self_ty)?;
+            let trait_ref = get_instantiated_trait_ref(tcx, *impl_id, impl_args);
+            let src_ty = trait_ref.args.type_at(0);
+            if src_ty.flags().intersects(has_type_or_const_vars()) {
+                return None;
+            }
+            if query_compiler::has_non_lifetime_generics(tcx, def_id)
+                && is_recursive_specialization(tcx, core.common.self_ty, src_ty)
+            {
+                return None;
+            }
+            // Skip if source type is Self or a reference to Self (e.g. &Self)
+            let src_referent_ty = match src_ty.kind() {
+                ty::TyKind::Ref(_, referent_ty, _) => *referent_ty,
+                _ => src_ty,
+            };
+            if erase_regions(tcx, src_referent_ty) == core.common.self_ty {
+                return None;
+            }
+            let cc_ty = db
+                .format_ty_for_cc(
+                    src_ty,
+                    TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+                )
+                .ok()?;
 
-                Some((src_ty, cc_ty, *impl_id, &[][..], /* is_from= */ false))
-            },
-        );
+            Some((src_ty, cc_ty, *impl_id, impl_args, /* is_from= */ false))
+        });
 
     // Avoid collisions in cases where types may map to the same underlying C++ type.
     from_impls
@@ -984,7 +1004,7 @@ fn generate_constructor_impls<'tcx>(
                             .map_or(true, |name| name.krate_num == db.source_crate_num()),
                         _ => false,
                     };
-                    if is_src_local_adt {
+                    if is_src_local_adt && does_impl_apply(tcx, impl_id, src_ty).is_some() {
                         RsSnippet::default()
                     } else {
                         let static_src_ty = replace_all_regions_with_static(tcx, src_ty);
