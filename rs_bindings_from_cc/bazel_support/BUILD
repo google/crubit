@@ -39,9 +39,14 @@ bzl_library(
 bzl_library(
     name = "rust_api_from_cpp",
     srcs = ["rust_api_from_cpp.bzl"],
+    visibility = [
+    ],
     deps = [
+        ":additional_rust_srcs_for_crubit_bindings_aspect_hint_bzl",
         ":providers_bzl",
         ":rust_bindings_from_cc_aspect",
+        "//cc_bindings_from_rs/bazel_support:providers_bzl",
+        "@rules_rust//rust:bzl_lib",
     ],
 )
 
