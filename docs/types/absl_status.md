@@ -29,13 +29,13 @@ C++ functions returning `Status`/`StatusOr` return the corresponding Rust types:
 ```
 {{ #include ../../examples/types/absl_status/cpp_api.h }}
 ```
-<!--  content:absl::Status -->
+<!--  function:ReturnsStatus\b|ReturnsStatusOrInt\b -->
 
 
 ```
 {{ #include ../../examples/types/absl_status/user_of_cpp_api.rs }}
 ```
-<!--  content:ReturnsStatus -->
+<!--  function:test_returns_status\b|test_returns_status_or_int\b -->
 
 
 ## Calling Rust APIs using `Status` {#rust}
@@ -56,6 +56,13 @@ Rust APIs can directly return `Status` or `StatusOr<T>` in public functions:
 ```
 <!--  content:rust_api::returns_status -->
 
+
+Passing `StatusOr<T>` by value to or from C++ requires `T` to be
+[C++-movable](/docs/rust/movable_types.md) (no `Drop`,
+`Clone`, or `Drop + Default`; supporting non-C++-movable Rust types via
+`derive_rust_movable` is tracked in b/545695274). Otherwise, derive `Default` or
+`Clone` on `T`, wrap `T` in `Box<T>` or `Vec<T>`, or return `Status` with an
+`&mut T` out-parameter.
 
 ## Working with `Status` in Rust
 
@@ -90,6 +97,37 @@ expect_that!(result, is_ok(eq(&42)));
 expect_that!(result, is_err(status_is(StatusCode::Internal)));
 ```
 
+## Non-Rust-movable C++ types and `std::string` {#non-rust-movable}
+
+When `T` is a
+[non-Rust-movable](/docs/cpp/classes_and_structs.md#rust_movable)
+(`!Unpin`) C++ type, `StatusOr<T>` is also `!Unpin`: C++ functions returning
+`absl::StatusOr<T>` return a `Ctor` (initialized with `ctor::emplace!`; borrow
+via `(&*res).as_ref()?` / `res.as_ok_ref()` or mutate via
+`res.as_mut().as_ok_pin_mut()`).
+
+For `absl::StatusOr<std::string>`, default `std::string`
+(`cpp_std::string_wrapper`, b/408961701) is not layout-compatible (see
+[below](#layout-compatibility)). Adding
+`//features:layout_compat_string` to `aspect_hints` maps
+`std::string` to the layout-compatible `cpp_std::string` (`!Unpin` due to SSO
+self-references, so `derive_rust_movable` does not apply, but C++-movable via
+`cpp_move_constructible`), which works from Rust via `ctor::emplace!` (or use an
+out-parameter, `absl::string_view`, or `std::unique_ptr` / `Box` when
+`layout_compat_string` is not enabled or when returning from Rust to C++):
+
+```
+{{ #include ../../examples/types/absl_status/cpp_api.h }}
+```
+<!--  function:ReturnsStatusOrString -->
+
+
+```
+{{ #include ../../examples/types/absl_status/user_of_cpp_api.rs }}
+```
+<!--  function:test_returns_status_or_string -->
+
+
 ## Types inside `StatusOr` must be layout-compatible {#layout-compatibility}
 
 `StatusOr<T>` is layout-compatible with C++ `absl::StatusOr<T>`, enabling
@@ -99,10 +137,10 @@ C++ and Rust.
 
 Types that are bridged across the FFI boundary via runtime conversions (such as
 [Protocol Buffers](/docs/types/protobuf.md), which are not
-layout-compatible between C++ and Rust; see b/534900713, or `std::string`) do
-not share the same in-memory representation between C++ and Rust. Because `T` is
-stored directly inside `StatusOr<T>`, `absl::StatusOr<T>` cannot be used with
-these types.
+layout-compatible between C++ and Rust; see b/534900713, or `std::string`
+without `layout_compat_string`) do not share the same in-memory representation
+between C++ and Rust. Because `T` is stored directly inside `StatusOr<T>`,
+`absl::StatusOr<T>` cannot be used with these types.
 
 As a result, functions that accept or return `absl::StatusOr<MyProto>` (or
 `c9::Co<absl::StatusOr<MyProto>>`) cannot be bound directly by Crubit.
