@@ -23,9 +23,9 @@ You can use embedded C++ in two ways:
 1.  **In a `rust_api_from_cpp` target (Recommended)**: When extending the
     generated Rust bindings of an existing C++ library using custom Rust source
     files (`additional_rust_srcs_for_crubit_bindings`).
-2.  **In a `rust_library_with_embedded_cpp` target**: When authoring a
-    standalone Rust library with embedded C++ without an underlying
-    `cc_library`.
+2.  **In a `rust_library_with_embedded_cpp` or `rust_test_with_embedded_cpp`
+    target**: When authoring a standalone Rust library or test with embedded C++
+    without an underlying `cc_library`.
 
 ### 1. Using embedded C++ in a `rust_api_from_cpp` target {#rust_api_from_cpp}
 
@@ -95,10 +95,11 @@ impl Widget {
 }
 ```
 
-### 2. Using embedded C++ in a standalone `rust_library` target {#build}
+### 2. Using embedded C++ in a standalone `rust_library` or `rust_test` target {#build}
 
-To write a standalone Rust library that uses embedded C++ without an underlying
-`cc_library`, define your target with `rust_library_with_embedded_cpp`:
+To write a standalone Rust library or test that uses embedded C++ without an
+underlying `cc_library`, define your target with
+`rust_library_with_embedded_cpp` or `rust_test_with_embedded_cpp`:
 
 ```
 {{ #include ../../examples/cpp/inline_cpp/BUILD }}

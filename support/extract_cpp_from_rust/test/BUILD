@@ -3,7 +3,7 @@ load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@rules_rust//rust:defs.bzl", "rust_test")
 load("//bazel:cpp_api_from_rust.bzl", "cpp_api_from_rust")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
-load("//support/extract_cpp_from_rust:rust_library_with_embedded_cpp.bzl", "rust_library_with_embedded_cpp")
+load("//support/extract_cpp_from_rust:rust_library_with_embedded_cpp.bzl", "rust_library_with_embedded_cpp", "rust_test_with_embedded_cpp")
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -42,6 +42,17 @@ rust_test(
     srcs = ["rust_library_with_embedded_cpp_test.rs"],
     deps = [
         ":library_with_embedded_cpp",
+        "@crate_index//:googletest",
+    ],
+)
+
+rust_test_with_embedded_cpp(
+    name = "rust_test_with_embedded_cpp_test",
+    srcs = ["rust_test_with_embedded_cpp_test.rs"],
+    deps_of_cc_library = ["@abseil-cpp//absl/strings:string_view"],
+    harness = "libtest",
+    deps = [
+        "//support:ctor",
         "@crate_index//:googletest",
     ],
 )
