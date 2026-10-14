@@ -76,6 +76,27 @@ fn test_emplace_macro() {
     assert_eq!(*foo, 42);
 }
 
+/// The `Ctor` passed to `emplace!` / `try_emplace!` may borrow temporaries
+/// created in the macro argument.
+#[gtest]
+fn test_emplace_ctor_borrows_temporary() {
+    let foo = emplace!(copy(&u32::from(42u8)));
+    assert_eq!(*foo, 42);
+    let bar: Result<Pin<&mut u32>, String> =
+        try_emplace!(copy(&u32::from(43u8)).ctor_make_fallible());
+    assert_eq!(*bar.unwrap(), 43);
+}
+
+/// `emplace!` and `try_emplace!` can be used in code that denies `unsafe_code`.
+#[gtest]
+#[deny(unsafe_code)]
+fn test_emplace_in_deny_unsafe_code() {
+    let foo = emplace!(u32::ctor_new(()));
+    assert_eq!(*foo, 0);
+    let bar: Result<Pin<&mut u32>, String> = try_emplace!(u32::ctor_new(()).ctor_make_fallible());
+    assert_eq!(*bar.unwrap(), 0);
+}
+
 #[gtest]
 fn test_try_emplace_returns_ok() {
     struct OkCtor;

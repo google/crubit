@@ -1011,7 +1011,23 @@ macro_rules! emplace {
     ($expr:expr) => {
         {
             super let mut slot = $crate::Slot::unsafe_new();
-            slot.unsafe_construct($expr).unsafe_as_pin_unchecked()
+            // `$expr` is evaluated outside of the `unsafe` block below, so that the
+            // block doesn't cover user code. A `match` (rather than a `let`) keeps
+            // temporaries created by `$expr` alive until construction is done.
+            match $expr {
+                __crubit_ctor => {
+                    // SAFETY:
+                    // - `unsafe_construct`: `slot` was just created by `Slot::unsafe_new`,
+                    //   so it is uninitialized. It is a `super let` local which this
+                    //   macro never moves, and which is only reachable through the
+                    //   returned `Pin<&mut T>`, so it stays in place until it is
+                    //   dropped, and dropping it drops the value (`Slot`'s `Drop`).
+                    // - `unsafe_as_pin_unchecked`: `unsafe_construct` returned, so
+                    //   `slot` holds an initialized `T` (it panics otherwise), and
+                    //   `slot` is pinned as argued above.
+                    unsafe { slot.unsafe_construct(__crubit_ctor).unsafe_as_pin_unchecked() }
+                }
+            }
         }
     };
 }
@@ -1031,7 +1047,17 @@ macro_rules! try_emplace {
     ($expr:expr) => {
         {
             super let mut slot = $crate::Slot::unsafe_new();
-            slot.try_unsafe_construct($expr)
+            // See `emplace!` for why `$expr` is evaluated in a `match`.
+            match $expr {
+                __crubit_ctor => {
+                    // SAFETY: `slot` was just created by `Slot::unsafe_new`, so it is
+                    // uninitialized. It is a `super let` local which this macro never
+                    // moves, and which is only reachable through the returned
+                    // `Pin<&mut T>`, so it stays in place until it is dropped, and
+                    // dropping it drops the value, if any (`Slot`'s `Drop`).
+                    unsafe { slot.try_unsafe_construct(__crubit_ctor) }
+                }
+            }
         }
     };
 }
@@ -1147,7 +1173,11 @@ impl<T> Slot<T> {
 
     pub fn as_opt_mut(self: Pin<&mut Self>) -> Option<Pin<&mut T>> {
         if self.is_initialized {
-            Some(unsafe { Pin::into_inner_unchecked(self) }.unsafe_as_pin_unchecked())
+            // SAFETY: `self` is pinned, so we don't move out of the result of
+            // `into_inner_unchecked`. `unsafe_as_pin_unchecked`: `self` was just checked
+            // to be initialized, and it is pinned because we have a `Pin<&mut Self>`
+            // (`maybe_uninit` is structurally pinned).
+            Some(unsafe { Pin::into_inner_unchecked(self).unsafe_as_pin_unchecked() })
         } else {
             None
         }
@@ -1169,48 +1199,81 @@ impl<T> Slot<T> {
         Slot { is_initialized: false, maybe_uninit: MaybeUninit::uninit() }
     }
 
-    // The following two functions are not marked `unsafe` so that they can be
-    // called from a single expression in a macro, without an `unsafe{}` block
-    // which would also cover macro parameters.
-    //
-    // One alternative would be an immediately-invoked lambda, but this forces type
-    // inference, which leads to confusing error messages when it isn't
-    // inferrable. And, since this is a lambda, the type is not known concretely
-    // to begin with!
-    //
-    // We could instead use a generic function with `impl Ctor` and the like, but
-    // this function would be unsafe... leading back to the very original
-    // problem!
-    //
-    // So here we bite the bullet: these functions should ideally be marked
-    // "unsafe", but, seeing as they are only invoked from a macro, and that
-    // macro needs to invoke expressions in calls to these functions, they are
-    // only *named* "unsafe_foo" instead.
-
-    /// Safety: must not have already been constructed, as that would violate
-    /// the pin guarantee.
-    pub fn unsafe_construct(
+    /// Constructs a value in this (uninitialized) slot, in place.
+    ///
+    /// Panics if `ctor` panics, in which case the slot is left uninitialized.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that:
+    ///
+    /// 1. `self` is uninitialized: it was created by `Slot::unsafe_new`, and no value has been
+    ///    constructed in it since. (Otherwise, the existing value would be overwritten without
+    ///    being dropped, which violates the drop guarantee of `Pin` if it has been pinned.)
+    /// 2. From this call on, `*self` is pinned: unless `T: Unpin`, it is never moved, and its
+    ///    memory is never deallocated or reused without first dropping `*self` (which drops the
+    ///    constructed value) or otherwise dropping the constructed value in place.
+    ///
+    /// If these hold and this function returns, `self` holds an initialized `T`,
+    /// and `self.unsafe_as_pin_unchecked()` may be called on the result.
+    pub unsafe fn unsafe_construct(
         &mut self,
         ctor: impl Ctor<Output = T, Error = Infallible>,
     ) -> &mut Self {
+        // SAFETY: `self.maybe_uninit.as_mut_ptr()` comes from a live `&mut`, so it is
+        // valid for writes of a `T`. It is uninitialized by precondition 1, and the
+        // pointee stays pinned by precondition 2, as `Ctor::ctor` requires.
         unsafe { ctor.ctor(self.maybe_uninit.as_mut_ptr()).unwrap() };
+        // `ctor` returned (an `Infallible` error can't be returned), so per the
+        // `Ctor::ctor` contract `maybe_uninit` is now initialized.
         self.is_initialized = true;
         self
     }
 
-    /// Safety: must not have already been constructed, as that would violate
-    /// the pin guarantee.
-    pub fn try_unsafe_construct<C: Ctor<Output = T>>(
+    /// Constructs a value in this (uninitialized) slot, in place, and returns a
+    /// pinned reference to it.
+    ///
+    /// If `ctor` returns an error (or panics), the slot is left uninitialized.
+    ///
+    /// # Safety
+    ///
+    /// Same as [`Slot::unsafe_construct`]: the caller must ensure that `self` is
+    /// uninitialized (created by `Slot::unsafe_new`, with no value constructed in
+    /// it since), and that from this call on, `*self` is pinned.
+    pub unsafe fn try_unsafe_construct<C: Ctor<Output = T>>(
         &mut self,
         ctor: C,
     ) -> Result<Pin<&mut T>, C::Error> {
+        // SAFETY: `self.maybe_uninit.as_mut_ptr()` comes from a live `&mut`, so it is
+        // valid for writes of a `T`. It is uninitialized and stays pinned by this
+        // function's preconditions, as `Ctor::ctor` requires.
         unsafe { ctor.ctor(self.maybe_uninit.as_mut_ptr())? };
+        // `ctor` returned `Ok`, so per the `Ctor::ctor` contract `maybe_uninit` is
+        // now initialized.
         self.is_initialized = true;
-        Ok(self.unsafe_as_pin_unchecked())
+        // SAFETY: `self` was just initialized above, and it is pinned by this
+        // function's precondition.
+        Ok(unsafe { self.unsafe_as_pin_unchecked() })
     }
 
-    /// Safety: pin guarantee, assumes init.
-    pub fn unsafe_as_pin_unchecked(&mut self) -> Pin<&mut T> {
+    /// Returns a pinned reference to the value in this slot, without checking
+    /// whether the slot is initialized.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that:
+    ///
+    /// 1. `self` is initialized (`self.is_initialized` is true), e.g. because `unsafe_construct` or
+    ///    `try_unsafe_construct` returned successfully on it and the value hasn't been cleared
+    ///    since.
+    /// 2. `*self` is pinned: unless `T: Unpin`, it is never moved, and its memory is never
+    ///    deallocated or reused without first dropping the value in place (e.g. by dropping
+    ///    `*self`).
+    pub unsafe fn unsafe_as_pin_unchecked(&mut self) -> Pin<&mut T> {
+        // SAFETY:
+        // - `assume_init_mut`: `maybe_uninit` is initialized by precondition 1.
+        // - `Pin::new_unchecked`: the pointee is pinned by precondition 2, and `&mut T` has no
+        //   custom `Deref`/`DerefMut` that could move it.
         unsafe { Pin::new_unchecked(self.maybe_uninit.assume_init_mut()) }
     }
 }
