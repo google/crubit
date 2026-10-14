@@ -7,7 +7,11 @@ use crate::generate_struct_and_union::{
     anonymous_field_ident, generate_associated_item, generate_fields, generate_relocating_ctor,
     has_type_or_const_vars, scalar_value_to_string,
 };
-use crate::{generate_unsupported_def, generate_unsupported_def_with_args};
+use crate::{
+    generate_copy_ctor_and_assignment_operator, generate_default_ctor,
+    generate_move_ctor_and_assignment_operator, generate_unsupported_def,
+    generate_unsupported_def_with_args,
+};
 use arc_anyhow::{bail, Result};
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
@@ -840,17 +844,14 @@ fn specialize_tuple<'tcx>(
         rs_fully_qualified_name: rs_fully_qualified_name.clone(),
     });
 
-    let copy_ctor_and_assignment_snippets =
-        db.generate_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
-    let move_ctor_and_assignment_snippets = db
-        .generate_move_ctor_and_assignment_operator(core.clone())
-        .unwrap_or_else(|err| err.explicitly_deleted);
+    let copy_ctor_and_assignment_snippets = generate_copy_ctor_and_assignment_operator(db, &core);
+    let move_ctor_and_assignment_snippets = generate_move_ctor_and_assignment_operator(db, &core);
     let relocating_ctor_snippets = generate_relocating_ctor(
         db,
         &core.common.cc_short_name,
         &core.common.cc_fully_qualified_name,
     );
-    let default_ctor_snippets = db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err);
+    let default_ctor_snippets = generate_default_ctor(db, &core);
 
     let fields_snippets = generate_fields(
         db,
@@ -1081,8 +1082,7 @@ fn specialize_vec<'tcx>(
         }
     };
 
-    let copy_ctor_and_assignment_snippets =
-        db.generate_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
+    let copy_ctor_and_assignment_snippets = generate_copy_ctor_and_assignment_operator(db, &core);
     let move_ctor_and_assignment_snippets = {
         let cc_struct_name = &core.common.cc_short_name;
         let main_api = CcSnippet::new(quote! {
@@ -1376,11 +1376,8 @@ fn specialize_result<'tcx>(
         rs_fully_qualified_name: rs_fully_qualified_name.clone(),
     });
 
-    let copy_ctor_and_assignment_snippets =
-        db.generate_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
-    let move_ctor_and_assignment_snippets = db
-        .generate_move_ctor_and_assignment_operator(core.clone())
-        .unwrap_or_else(|err| err.explicitly_deleted);
+    let copy_ctor_and_assignment_snippets = generate_copy_ctor_and_assignment_operator(db, &core);
+    let move_ctor_and_assignment_snippets = generate_move_ctor_and_assignment_operator(db, &core);
     let relocating_ctor_snippets = generate_relocating_ctor(
         db,
         &core.common.cc_short_name,
@@ -1583,12 +1580,9 @@ fn specialize_option<'tcx>(
         rs_fully_qualified_name: rs_fully_qualified_name.clone(),
     });
 
-    let copy_ctor_and_assignment_snippets =
-        db.generate_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err);
+    let copy_ctor_and_assignment_snippets = generate_copy_ctor_and_assignment_operator(db, &core);
 
-    let move_ctor_and_assignment_snippets = db
-        .generate_move_ctor_and_assignment_operator(core.clone())
-        .unwrap_or_else(|err| err.explicitly_deleted);
+    let move_ctor_and_assignment_snippets = generate_move_ctor_and_assignment_operator(db, &core);
 
     let relocating_ctor_snippets = generate_relocating_ctor(
         db,

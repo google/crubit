@@ -5,7 +5,6 @@
 extern crate rustc_middle;
 extern crate rustc_span;
 
-use crate::code_snippet::ApiSnippets;
 use proc_macro2::TokenStream;
 use rustc_middle::ty::Ty;
 use rustc_span::def_id::DefId;
@@ -98,19 +97,6 @@ impl Hash for AdtCoreBindings<'_> {
         self.def_id.hash(state);
         self.common.hash(state);
     }
-}
-
-/// The error type returned by `BindingsGenerator::generate_move_ctor_and_assignment_operator`.
-//
-// See discussion on http://cl/828812151 for why the type is in this crate/module, not the one that
-// defines BindingsGenerator.
-#[derive(Clone)]
-pub struct NoMoveOrAssign<'tcx> {
-    /// An error explaining why we didn't generate the special member functions.
-    pub err: arc_anyhow::Error,
-
-    /// Snippets containing explicitly deleted declarations.
-    pub explicitly_deleted: ApiSnippets<'tcx>,
 }
 
 /// If we were to generate a C++ copy constructor and assignment operator for a

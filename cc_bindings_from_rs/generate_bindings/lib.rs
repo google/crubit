@@ -53,8 +53,7 @@ use database::code_snippet::{
 };
 use database::{
     rename_clang_builtin_macros, AdtCoreBindings, CoreBindingsCommon, ExportedPath,
-    FullyQualifiedName, NoMoveOrAssign, PublicPaths, StaticMethodMode, TypeLocation,
-    UnqualifiedName,
+    FullyQualifiedName, PublicPaths, StaticMethodMode, TypeLocation, UnqualifiedName,
 };
 pub use database::{
     BindingsGenerator, CopyCodegenStyle, CppTypeSpecialization, IncludeGuard, MoveCodegenStyle,
@@ -389,9 +388,6 @@ pub fn new_database<'db>(
         copy_ctor_and_assignment_operator_codegen_style,
         move_ctor_and_assignment_operator_codegen_style,
         is_cpp_move_constructible,
-        generate_default_ctor,
-        generate_copy_ctor_and_assignment_operator,
-        generate_move_ctor_and_assignment_operator,
         generate_item,
         generate_function,
         adt_needs_bindings,
@@ -1644,14 +1640,15 @@ fn has_default_ctor<'tcx>(db: &BindingsGenerator<'tcx>, self_ty: Ty<'tcx>) -> bo
     does_type_implement_trait(tcx, self_ty, trait_id, [])
 }
 
-/// Implementation of `BindingsGenerator::generate_default_ctor`.
-fn generate_default_ctor<'tcx>(
+/// Generates a default constructor for an ADT if possible (i.e. if the `Default`
+/// trait is implemented for the ADT), or a `= delete`d default constructor otherwise.
+pub(crate) fn generate_default_ctor<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    core: Rc<AdtCoreBindings<'tcx>>,
-) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>> {
+    core: &AdtCoreBindings<'tcx>,
+) -> ApiSnippets<'tcx> {
     fn fallible_format_default_ctor<'tcx>(
         db: &BindingsGenerator<'tcx>,
-        core: Rc<AdtCoreBindings<'tcx>>,
+        core: &AdtCoreBindings<'tcx>,
     ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
         let trait_id = tcx
@@ -1684,7 +1681,7 @@ fn generate_default_ctor<'tcx>(
                 .expect("Expecting a single `default` method");
 
             let fully_qualified_name = &core.common.cc_fully_qualified_name;
-            let ctor_body = generate_ctor_thunk_call(db, &core, &thunk_name, &[])?;
+            let ctor_body = generate_ctor_thunk_call(db, core, &thunk_name, &[])?;
             let ctor_impl = quote! {
                 inline #fully_qualified_name::#cc_struct_name() {
                     #ctor_body
@@ -1699,7 +1696,7 @@ fn generate_default_ctor<'tcx>(
         };
         Ok(ApiSnippets { main_api, cc_details, rs_details })
     }
-    fallible_format_default_ctor(db, core.clone()).map_err(|err| {
+    fallible_format_default_ctor(db, core).unwrap_or_else(|err| {
         generate_deleted_default_ctor(&core.common.cc_short_name, &format!("{err:#}"))
     })
 }
@@ -1735,15 +1732,16 @@ fn copy_ctor_and_assignment_operator_codegen_style<'tcx>(
     )
 }
 
-/// Implementation detail of `generate_copy_ctor_and_assignment_operator`.
-fn copy_codegen_style_to_snippets<'tcx>(
+/// Generates the copy constructor and the copy-assignment operator for an ADT if
+/// possible (i.e. if the `Clone` trait is implemented for the ADT), or `= delete`d
+/// declarations otherwise.
+pub(crate) fn generate_copy_ctor_and_assignment_operator<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    core: Rc<AdtCoreBindings<'tcx>>,
-    copy_codegen_style: Option<CopyCodegenStyle>,
-) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>> {
+    core: &AdtCoreBindings<'tcx>,
+) -> ApiSnippets<'tcx> {
     fn fallible_format_copy_codegen_style<'tcx>(
         db: &BindingsGenerator<'tcx>,
-        core: Rc<AdtCoreBindings<'tcx>>,
+        core: &AdtCoreBindings<'tcx>,
         copy_codegen_style: Option<CopyCodegenStyle>,
     ) -> Result<ApiSnippets<'tcx>> {
         let tcx = db.tcx();
@@ -1801,7 +1799,7 @@ fn copy_codegen_style_to_snippets<'tcx>(
 
                     let thunk_qualifier = thunk_qualifier(&core);
                     let ctor_body =
-                        generate_ctor_thunk_call(db, &core, clone_thunk_name, &[quote! { other }])?;
+                        generate_ctor_thunk_call(db, core, clone_thunk_name, &[quote! { other }])?;
                     cc_thunk_decls.map_snippets(|cc_thunk_decls| {
                         quote! {
                             #cc_thunk_decls
@@ -1833,7 +1831,9 @@ fn copy_codegen_style_to_snippets<'tcx>(
             }
         }
     }
-    fallible_format_copy_codegen_style(db, core.clone(), copy_codegen_style).map_err(|err| {
+    let copy_codegen_style =
+        db.copy_ctor_and_assignment_operator_codegen_style(core.def_id, core.common.self_ty);
+    fallible_format_copy_codegen_style(db, core, copy_codegen_style).unwrap_or_else(|err| {
         let msg = format!("{err:#}");
         let adt_cc_name = &core.common.cc_short_name;
         ApiSnippets {
@@ -1845,16 +1845,6 @@ fn copy_codegen_style_to_snippets<'tcx>(
             ..Default::default()
         }
     })
-}
-
-/// Implementation of `BindingsGenerator::generate_copy_ctor_and_assignment_operator`.
-fn generate_copy_ctor_and_assignment_operator<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    core: Rc<AdtCoreBindings<'tcx>>,
-) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>> {
-    let copy_codegen_style =
-        db.copy_ctor_and_assignment_operator_codegen_style(core.def_id, core.common.self_ty);
-    copy_codegen_style_to_snippets(db, core, copy_codegen_style)
 }
 
 /// If we were to generate a C++ move constructor and assignment operator for a Rust-originating
@@ -1944,124 +1934,98 @@ fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -
     }
 }
 
-/// Implementation of `BindingsGenerator::generate_move_ctor_and_assignment_operator`.
-#[allow(clippy::result_large_err)]
-fn move_codegen_style_to_snippets<'tcx>(
+/// Generates the move constructor and the move-assignment operator for an ADT if possible
+/// (depending on `needs_drop`, `is_unpin`, and implementations of `Default` and/or `Clone` traits),
+/// or `= delete`d declarations otherwise.
+pub(crate) fn generate_move_ctor_and_assignment_operator<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    common: &CoreBindingsCommon<'tcx>,
-    move_codegen_style: Option<MoveCodegenStyle>,
-) -> Result<ApiSnippets<'tcx>, NoMoveOrAssign<'tcx>> {
-    fn fallible_format_move_codegen_style<'tcx>(
-        db: &BindingsGenerator<'tcx>,
-        common: &CoreBindingsCommon<'tcx>,
-        move_codegen_style: Option<MoveCodegenStyle>,
-    ) -> Result<ApiSnippets<'tcx>> {
-        let adt_cc_name = &common.cc_short_name;
-        let qualified_adt_name = &common.cc_fully_qualified_name;
-        match move_codegen_style {
-            // We rely on the copy constructor and assignment operator to handle the move
-            // operations.
-            Some(MoveCodegenStyle::Copy) => Ok(ApiSnippets::default()),
-            None => {
-                bail!(
-                    "C++ move operations are unavailable for this type. See \
-                    http://crubit.rs/rust/movable_types for an explanation of Rust types that are C++ \
-                    movable."
-                );
-            }
-            Some(MoveCodegenStyle::MemSwap) => {
-                let main_api = CcSnippet::new(quote! {
-                    #adt_cc_name(#adt_cc_name&&) noexcept; __NEWLINE__
-                    #qualified_adt_name& operator=(#adt_cc_name&&) noexcept; __NEWLINE__
-                });
-                let mut prereqs = CcPrerequisites::default();
-                prereqs.includes.insert(db.support_header("internal/memswap.h"));
-                prereqs.includes.insert(CcInclude::utility()); // for `std::move`
-                let tokens = quote! {
-                    inline #qualified_adt_name::#adt_cc_name(#adt_cc_name&& other) noexcept
-                            : #adt_cc_name() {
-                        *this = ::std::move(other);
-                    }
-                    inline #qualified_adt_name& #qualified_adt_name::operator=(#adt_cc_name&& other) noexcept {
-                        crubit::MemSwap(*this, other);
-                        return *this;
-                    }
-                };
-                let cc_details = CcSnippet { tokens, prereqs };
-                Ok(ApiSnippets { main_api, cc_details, ..Default::default() })
-            }
-            Some(MoveCodegenStyle::Default) => {
-                let main_api = CcSnippet::new(quote! {
-                    // The generated bindings have to follow Rust move semantics:
-                    // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
-                    //   that "Every type must be ready for it to be blindly memcopied to somewhere
-                    //   else in memory")
-                    // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
-                    //   it.
-                    //
-                    // The generated C++ bindings below match the required semantics because they:
-                    // * Generate trivial` C++ move constructor and move assignment operator. Per
-                    //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial
-                    //   move constructor is a constructor that performs the same action as the trivial
-                    //   copy constructor, that is, makes a copy of the object representation as if by
-                    //   std::memmove."
-                    // * Generate trivial C++ destructor.
-                    //
-                    // In particular, note that the following C++ code and Rust code are exactly
-                    // equivalent (except that in Rust, reuse of `y` is forbidden at compile time,
-                    // whereas in C++, it's only prohibited by convention):
-                    // * C++, assumming trivial move constructor and trivial destructor:
-                    //   `auto x = std::move(y);`
-                    // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
-                    //   `let x = y;`
-                    //
-                    // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop
-                    // glue, then extra care should be taken to ensure the C++ destructor can handle
-                    // the moved-from object in a way that meets Rust move semantics.  For example, the
-                    // generated C++ move constructor might need to assign `Default::default()` to the
-                    // moved-from object.
-                    #adt_cc_name(#adt_cc_name&&) = default; __NEWLINE__
-                    #adt_cc_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
-                    __NEWLINE__
-                });
-                let cc_details = CcSnippet::with_include(
-                    quote! {
-                        static_assert(::std::is_trivially_move_constructible_v<#qualified_adt_name>);
-                        static_assert(::std::is_trivially_move_assignable_v<#qualified_adt_name>);
-                    },
-                    CcInclude::type_traits(),
-                );
-                Ok(ApiSnippets { main_api, cc_details, ..Default::default() })
-            }
-        }
-    }
-    fallible_format_move_codegen_style(db, common, move_codegen_style).map_err(|err| {
-        let msg = format!("{err:#}");
-        let adt_cc_name = &common.cc_short_name;
-        let qualified_adt_name = &common.cc_fully_qualified_name;
-        NoMoveOrAssign {
-            err,
-            explicitly_deleted: ApiSnippets {
+    core: &AdtCoreBindings<'tcx>,
+) -> ApiSnippets<'tcx> {
+    let common = &core.common;
+    let adt_cc_name = &common.cc_short_name;
+    let qualified_adt_name = &common.cc_fully_qualified_name;
+    match db.move_ctor_and_assignment_operator_codegen_style(core.def_id, common.self_ty) {
+        // We rely on the copy constructor and assignment operator to handle the move
+        // operations.
+        Some(MoveCodegenStyle::Copy) => ApiSnippets::default(),
+        None => {
+            let msg = "C++ move operations are unavailable for this type. See \
+                http://crubit.rs/rust/movable_types for an explanation of Rust types that are C++ \
+                movable.";
+            ApiSnippets {
                 main_api: CcSnippet::new(quote! {
                     __NEWLINE__ __COMMENT__ #msg
                     #adt_cc_name(#adt_cc_name&&) = delete;  __NEWLINE__
                     #qualified_adt_name& operator=(#adt_cc_name&&) = delete;
                 }),
                 ..Default::default()
-            },
+            }
         }
-    })
-}
-
-/// Implementation of `BindingsGenerator::generate_move_ctor_and_assignment_operator`.
-#[allow(clippy::result_large_err)]
-fn generate_move_ctor_and_assignment_operator<'tcx>(
-    db: &BindingsGenerator<'tcx>,
-    core: Rc<AdtCoreBindings<'tcx>>,
-) -> Result<ApiSnippets<'tcx>, NoMoveOrAssign<'tcx>> {
-    let move_codegen_style =
-        db.move_ctor_and_assignment_operator_codegen_style(core.def_id, core.common.self_ty);
-    move_codegen_style_to_snippets(db, &core.common, move_codegen_style)
+        Some(MoveCodegenStyle::MemSwap) => {
+            let main_api = CcSnippet::new(quote! {
+                #adt_cc_name(#adt_cc_name&&) noexcept; __NEWLINE__
+                #qualified_adt_name& operator=(#adt_cc_name&&) noexcept; __NEWLINE__
+            });
+            let mut prereqs = CcPrerequisites::default();
+            prereqs.includes.insert(db.support_header("internal/memswap.h"));
+            prereqs.includes.insert(CcInclude::utility()); // for `std::move`
+            let tokens = quote! {
+                inline #qualified_adt_name::#adt_cc_name(#adt_cc_name&& other) noexcept
+                        : #adt_cc_name() {
+                    *this = ::std::move(other);
+                }
+                inline #qualified_adt_name& #qualified_adt_name::operator=(#adt_cc_name&& other) noexcept {
+                    crubit::MemSwap(*this, other);
+                    return *this;
+                }
+            };
+            let cc_details = CcSnippet { tokens, prereqs };
+            ApiSnippets { main_api, cc_details, ..Default::default() }
+        }
+        Some(MoveCodegenStyle::Default) => {
+            let main_api = CcSnippet::new(quote! {
+                // The generated bindings have to follow Rust move semantics:
+                // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
+                //   that "Every type must be ready for it to be blindly memcopied to somewhere
+                //   else in memory")
+                // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
+                //   it.
+                //
+                // The generated C++ bindings below match the required semantics because they:
+                // * Generate trivial` C++ move constructor and move assignment operator. Per
+                //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial
+                //   move constructor is a constructor that performs the same action as the trivial
+                //   copy constructor, that is, makes a copy of the object representation as if by
+                //   std::memmove."
+                // * Generate trivial C++ destructor.
+                //
+                // In particular, note that the following C++ code and Rust code are exactly
+                // equivalent (except that in Rust, reuse of `y` is forbidden at compile time,
+                // whereas in C++, it's only prohibited by convention):
+                // * C++, assumming trivial move constructor and trivial destructor:
+                //   `auto x = std::move(y);`
+                // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
+                //   `let x = y;`
+                //
+                // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop
+                // glue, then extra care should be taken to ensure the C++ destructor can handle
+                // the moved-from object in a way that meets Rust move semantics.  For example, the
+                // generated C++ move constructor might need to assign `Default::default()` to the
+                // moved-from object.
+                #adt_cc_name(#adt_cc_name&&) = default; __NEWLINE__
+                #adt_cc_name& operator=(#adt_cc_name&&) = default; __NEWLINE__
+                __NEWLINE__
+            });
+            let cc_details = CcSnippet::with_include(
+                quote! {
+                    static_assert(::std::is_trivially_move_constructible_v<#qualified_adt_name>);
+                    static_assert(::std::is_trivially_move_assignable_v<#qualified_adt_name>);
+                },
+                CcInclude::type_traits(),
+            );
+            ApiSnippets { main_api, cc_details, ..Default::default() }
+        }
+    }
 }
 
 /// Formats the forward declaration of an algebraic data type (an ADT - a

@@ -10,7 +10,7 @@ pub mod code_snippet;
 
 mod adt_core_bindings;
 pub use adt_core_bindings::{
-    AdtCoreBindings, CopyCodegenStyle, CoreBindingsCommon, MoveCodegenStyle, NoMoveOrAssign,
+    AdtCoreBindings, CopyCodegenStyle, CoreBindingsCommon, MoveCodegenStyle,
 };
 mod db;
 pub use db::{BindingsGenerator, CppTypeSpecialization};

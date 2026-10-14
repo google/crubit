@@ -22,7 +22,8 @@ use crate::generate_function_thunk::{
 };
 use crate::{
     can_be_made_layout_compatible, does_type_implement_trait, generate_const,
-    generate_deprecated_tag, generate_must_use_tag, generate_trait_thunks,
+    generate_copy_ctor_and_assignment_operator, generate_default_ctor, generate_deprecated_tag,
+    generate_move_ctor_and_assignment_operator, generate_must_use_tag, generate_trait_thunks,
     generate_unsupported_def_with_args, get_layout, get_tag_size_with_padding, is_copy,
     BridgedBuiltin, RsSnippet, SortedByDef, TraitThunks,
 };
@@ -1999,11 +2000,8 @@ pub fn generate_adt<'tcx>(
     let aggregate_result = is_struct_aggregate(db, core.def_id, core.common.self_ty);
     let is_aggregate = aggregate_result.is_ok();
 
-    let default_ctor_snippets = if is_aggregate {
-        ApiSnippets::default()
-    } else {
-        db.generate_default_ctor(core.clone()).unwrap_or_else(|err| err)
-    };
+    let default_ctor_snippets =
+        if is_aggregate { ApiSnippets::default() } else { generate_default_ctor(db, &core) };
 
     let destructor_snippets = if is_aggregate {
         if !adt_core_bindings_needs_drop(&core, tcx) {
@@ -2078,7 +2076,7 @@ pub fn generate_adt<'tcx>(
             ApiSnippets::default()
         }
     } else {
-        db.generate_copy_ctor_and_assignment_operator(core.clone()).unwrap_or_else(|err| err)
+        generate_copy_ctor_and_assignment_operator(db, &core)
     };
 
     let move_ctor_and_assignment_snippets = if is_aggregate {
@@ -2100,8 +2098,7 @@ pub fn generate_adt<'tcx>(
             ApiSnippets::default()
         }
     } else {
-        db.generate_move_ctor_and_assignment_operator(core.clone())
-            .unwrap_or_else(|err| err.explicitly_deleted)
+        generate_move_ctor_and_assignment_operator(db, &core)
     };
 
     let relocating_ctor_snippets = if is_aggregate {

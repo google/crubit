@@ -5,9 +5,7 @@
 extern crate rustc_middle;
 extern crate rustc_span;
 
-use crate::adt_core_bindings::{
-    AdtCoreBindings, CopyCodegenStyle, MoveCodegenStyle, NoMoveOrAssign,
-};
+use crate::adt_core_bindings::{AdtCoreBindings, CopyCodegenStyle, MoveCodegenStyle};
 use crate::code_snippet::{
     AdtTemplateSpecialization, ApiSnippets, CcSnippet, CrubitAbiTypeWithCcPrereqs,
 };
@@ -272,37 +270,6 @@ memoized::query_group! {
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:is_cpp_move_constructible
       fn is_cpp_move_constructible(&self, ty: Ty<'tcx>) -> bool;
-
-      /// Generates a default constructor for an ADT if possible (i.e. if the `Default`
-      /// trait is implemented for the ADT).  Returns an error otherwise (e.g. if
-      /// there is no `Default` impl, then the default constructor will be
-      /// `=delete`d in the returned snippet).
-      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:generate_default_ctor
-      fn generate_default_ctor(
-          &self,
-          core: Rc<AdtCoreBindings<'tcx>>,
-      ) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>>;
-
-      /// Generates the copy constructor and the copy-assignment operator for an ADT if
-      /// possible (i.e. if the `Clone` trait is implemented for the ADT).  Returns an
-      /// error otherwise (e.g. if there is no `Clone` impl, then the copy constructor
-      /// and assignment operator will be `=delete`d in the returned snippet).
-      ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:generate_copy_ctor_and_assignment_operator
-      fn generate_copy_ctor_and_assignment_operator(
-          &self,
-          core: Rc<AdtCoreBindings<'tcx>>,
-      ) -> Result<ApiSnippets<'tcx>, ApiSnippets<'tcx>>;
-
-      /// Generates the move constructor and the move-assignment operator for an ADT if possible
-      /// (it depends on various factors like `needs_drop`, `is_unpin` and implementations of
-      /// `Default` and/or `Clone` traits).
-      ///
-      /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:generate_move_ctor_and_assignment_operator
-      fn generate_move_ctor_and_assignment_operator(
-          &self,
-          core: Rc<AdtCoreBindings<'tcx>>,
-      ) -> Result<ApiSnippets<'tcx>, NoMoveOrAssign<'tcx>>;
 
       /// Generates bindings for a HIR item idenfied by `def_id`.  Returns `None` if
       /// the item can be ignored. Returns an `Err` if the bindings could not be
