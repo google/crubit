@@ -955,12 +955,12 @@ pub enum CcInclude {
     SystemHeader(Rc<str>),
     /// Represents a user header, which will be included by quotes.
     UserHeader(Rc<str>),
+    /// Represents a user header which should be re-exported by IWYU.
+    ExportedUserHeader(Rc<str>),
     /// Represents an `#include` for Crubit C++ support library headers: the
     /// format specifier for what comes after `#include` and path of the support
     /// library header.
     SupportLibHeader(Format<1>, Rc<str>),
-    /// Represents a user header which should be re-exported by IWYU.
-    ExportedUserHeader(Rc<str>),
 }
 
 impl CcInclude {
@@ -1106,12 +1106,23 @@ impl ToTokens for CcInclude {
 /// [the Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html#Names_and_Order_of_Includes).
 pub fn format_cc_includes(set_of_includes: &BTreeSet<CcInclude>) -> TokenStream {
     let mut tokens = TokenStream::default();
-    let mut iter = set_of_includes.iter().peekable();
+    let mut iter = set_of_includes
+        .iter()
+        .filter(|include| match include {
+            CcInclude::UserHeader(path) => {
+                !set_of_includes.contains(&CcInclude::ExportedUserHeader(path.clone()))
+            }
+            _ => true,
+        })
+        .peekable();
     while let Some(include) = iter.next() {
         include.to_tokens(&mut tokens);
 
         // Add an empty line between system headers and user headers.
-        if let (CcInclude::SystemHeader(_), Some(CcInclude::UserHeader(_))) = (include, iter.peek())
+        if let (
+            CcInclude::SystemHeader(_),
+            Some(CcInclude::UserHeader(_) | CcInclude::ExportedUserHeader(_)),
+        ) = (include, iter.peek())
         {
             quote! { __NEWLINE__ }.to_tokens(&mut tokens)
         }
@@ -1349,6 +1360,31 @@ pub mod tests {
 #include <memory>
 
 #include "a.h"
+#include "b.h"
+"#
+        );
+    }
+
+    #[gtest]
+    fn test_format_cc_includes_exported_user_header_deduplicates_user_header() {
+        let includes = [
+            CcInclude::cstddef(),
+            CcInclude::user_header("a.h".into()),
+            CcInclude::exported_user_header("a.h".into()),
+            CcInclude::user_header("b.h".into()),
+        ]
+        .into_iter()
+        .collect::<BTreeSet<_>>();
+
+        let tokens = format_cc_includes(&includes);
+        let actual =
+            cc_tokens_to_formatted_string_for_tests(quote! { __NEWLINE__ #tokens }).unwrap();
+        assert_eq!(
+            actual,
+            r#"
+#include <cstddef>
+
+#include "a.h"  // IWYU pragma: export
 #include "b.h"
 "#
         );

@@ -1672,6 +1672,30 @@ fn test_generate_bindings_use_glob() {
 }
 
 #[test]
+fn test_generate_bindings_use_external_crate_exports_header() {
+    let test_src = r#"
+        pub use std::string::String;
+
+        pub fn takes_string(_s: String) {}
+        "#;
+
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        let cc_api = cc_tokens_to_formatted_string_for_tests(bindings.cc_api).unwrap();
+        assert!(
+            cc_api.contains(
+                "#include \"fake_bindings_for_unittests/alloc_cc_api.h\"  // IWYU pragma: export\n"
+            ),
+            "Expected exported include for alloc_cc_api.h in:\n{cc_api}"
+        );
+        assert!(
+            !cc_api.contains("#include \"fake_bindings_for_unittests/alloc_cc_api.h\"\n"),
+            "Expected non-exported include for alloc_cc_api.h to be deduplicated in:\n{cc_api}"
+        );
+    });
+}
+
+#[test]
 fn test_format_item_type_alias() {
     let test_src = r#"
             pub type TypeAlias = i32;

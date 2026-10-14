@@ -25,7 +25,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "cc_bindings_from_rs/test/specialization_deduplication/dep_crate.h"
+#include "cc_bindings_from_rs/test/specialization_deduplication/dep_crate.h"  // IWYU pragma: export
 
 namespace reexport_crate {
 

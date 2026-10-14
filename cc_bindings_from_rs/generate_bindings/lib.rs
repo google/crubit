@@ -1146,15 +1146,15 @@ fn generate_using<'tcx>(
     if using_name.as_str().starts_with("__CrubitProject") {
         return Ok(CcSnippet { prereqs: CcPrerequisites::default(), tokens: quote! {} });
     }
-    match tcx.def_kind(def_id) {
+    let mut fn_prereqs = CcPrerequisites::default();
+    let mut snippet = match tcx.def_kind(def_id) {
         DefKind::Fn => {
-            let mut prereqs =
-                match db.generate_function(def_id, None, None, StaticMethodMode::Infer) {
-                    Ok(snippet) => snippet.main_api.prereqs,
-                    Err(err) => {
-                        bail!("Unable to `use` function whose bindings failed: {err:?}");
-                    }
-                };
+            fn_prereqs = match db.generate_function(def_id, None, None, StaticMethodMode::Infer) {
+                Ok(snippet) => snippet.main_api.prereqs,
+                Err(err) => {
+                    bail!("Unable to `use` function whose bindings failed: {err:?}");
+                }
+            };
             let fully_qualified_fn_name = db.symbol_canonical_name(def_id)?;
             let formatted_fully_qualified_fn_name = fully_qualified_fn_name.format_for_cc(db)?;
             let main_api_fn_name =
@@ -1163,13 +1163,14 @@ fn generate_using<'tcx>(
             let using_name_ident =
                 format_cc_ident(db, using_name.as_str()).context("Error formatting using name")?;
 
+            let mut prereqs = CcPrerequisites::default();
             prereqs.depend_on_def(db, def_id)?;
             let tokens = if using_name_ident == main_api_fn_name {
                 quote! { using #formatted_fully_qualified_fn_name; }
             } else {
                 quote! { constexpr auto #using_name_ident = #formatted_fully_qualified_fn_name; }
             };
-            Ok(CcSnippet { prereqs, tokens })
+            CcSnippet { prereqs, tokens }
         }
         DefKind::Struct | DefKind::Enum | DefKind::Union => {
             if query_compiler::has_non_lifetime_generics(tcx, def_id) {
@@ -1196,18 +1197,17 @@ fn generate_using<'tcx>(
                     template <#(typename #template_args),*>
                     using #bracketed_alias_name #deprecated_tag = #formatted_cc_name<#(#template_args),*>;
                 };
-
-                Ok(CcSnippet { prereqs, tokens })
+                CcSnippet { prereqs, tokens }
             } else {
                 let alias_type = normalize_ty(
                     tcx,
                     tcx.param_env(def_id),
                     tcx.type_of(def_id).instantiate_identity(),
                 );
-                create_type_alias(db, def_id, using_name.as_str(), alias_type)
+                create_type_alias(db, def_id, using_name.as_str(), alias_type)?
             }
         }
-        DefKind::TyAlias => generate_type_alias(db, def_id, using_name.as_str()),
+        DefKind::TyAlias => generate_type_alias(db, def_id, using_name.as_str())?,
         DefKind::Trait => {
             if !db.supported_traits().contains(&def_id) {
                 bail!(
@@ -1244,7 +1244,7 @@ fn generate_using<'tcx>(
             } else {
                 quote! { using #using_name_ident = #trait_name; }
             };
-            Ok(CcSnippet { prereqs, tokens })
+            CcSnippet { prereqs, tokens }
         }
         kind => {
             bail!(
@@ -1253,7 +1253,19 @@ fn generate_using<'tcx>(
                 kind
             )
         }
-    }
+    };
+    // Mark any user headers included by a using statement as exported.
+    snippet.prereqs.includes = snippet
+        .prereqs
+        .includes
+        .into_iter()
+        .map(|include| match include {
+            CcInclude::UserHeader(path) => CcInclude::ExportedUserHeader(path),
+            other => other,
+        })
+        .collect();
+    snippet.prereqs += fn_prereqs;
+    Ok(snippet)
 }
 
 fn format_const_value<'tcx>(

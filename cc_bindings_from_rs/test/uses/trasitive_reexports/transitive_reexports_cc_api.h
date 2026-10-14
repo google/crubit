@@ -20,7 +20,7 @@
 
 #include <utility>
 
-#include "cc_bindings_from_rs/test/uses/trasitive_reexports/direct.h"
+#include "cc_bindings_from_rs/test/uses/trasitive_reexports/direct.h"  // IWYU pragma: export
 
 namespace transitive_reexports {
 

@@ -23,7 +23,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "cc_bindings_from_rs/test/uses/extern_crate.h"
+#include "cc_bindings_from_rs/test/uses/extern_crate.h"  // IWYU pragma: export
 
 namespace uses {
 
