@@ -289,24 +289,55 @@ impl<T> vector<T> {
     }
 }
 
+/// Temporarily lends the storage of a `vector<T>` to a `Vec<T, Allocator>`.
+///
+/// When dropped, writes the (possibly reallocated) buffer, length, and capacity
+/// of `vec` back into `vector` and re-poisons the tail. Because this happens in
+/// `Drop`, `vector` is also updated when the mutation panics, e.g. when a user
+/// callback passed to `retain` or `resize_with` panics after the `Vec` has
+/// reallocated or dropped elements. Without this, `vector` would keep a stale
+/// pointer, length, or capacity, which leads to a use-after-free, double-free,
+/// or double-drop when it is next used or dropped.
+struct VecMutationGuard<'a, T> {
+    vector: &'a mut vector<T>,
+    vec: ManuallyDrop<Vec<T, Allocator>>,
+}
+
+impl<T> Drop for VecMutationGuard<'_, T> {
+    fn drop(&mut self) {
+        // SAFETY: `self.vec` was created from the storage of `self.vector` and
+        // is the sole owner of its (possibly reallocated) buffer and elements.
+        // Ownership is transferred back to `self.vector` here, and `self.vec`
+        // is never dropped or used again, since it is a `ManuallyDrop` and
+        // `self` is being dropped.
+        unsafe {
+            self.vector.set_begin_len_capacity(
+                self.vec.as_mut_ptr(),
+                self.vec.len(),
+                self.vec.capacity(),
+            );
+        }
+        self.vector.asan_poison_tail();
+    }
+}
+
 impl<T: Unpin> vector<T> {
     /// Mutates `self` as if it were a `Vec<T>`.
+    ///
+    /// `self` is updated to match the `Vec` even if `mutate_self` panics.
     fn mutate_self_as_vec<F, R>(&mut self, mutate_self: F) -> R
     where
         F: FnOnce(&mut Vec<T, Allocator>) -> R,
     {
-        unsafe {
-            self.asan_unpoison_tail();
-            let mut v = ManuallyDrop::new(create_vec_from_raw_parts(
-                self.begin as *mut _,
-                self.len(),
-                self.capacity(),
-            ));
-            let result = mutate_self(v.deref_mut());
-            self.set_begin_len_capacity(v.as_mut_ptr(), v.len(), v.capacity());
-            self.asan_poison_tail();
-            result
-        }
+        self.asan_unpoison_tail();
+        // SAFETY: the storage of `self` was allocated with `Allocator` and its
+        // first `len()` elements are initialized. Ownership of the storage
+        // moves to `vec` and is handed back to `self` by `VecMutationGuard`'s
+        // `Drop`, which runs both on return and while unwinding.
+        let vec =
+            unsafe { create_vec_from_raw_parts(self.begin as *mut _, self.len(), self.capacity()) };
+        let mut guard = VecMutationGuard { vector: self, vec: ManuallyDrop::new(vec) };
+        mutate_self(guard.vec.deref_mut())
     }
 
     // Methods for changing the capacity of the vector.

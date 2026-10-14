@@ -4,11 +4,12 @@
 #![feature(allocator_api)]
 
 use googletest::matchers::{ge, le};
-use googletest::{expect_eq, expect_that, gtest};
+use googletest::{expect_eq, expect_that, expect_true, gtest};
 use static_assertions::assert_impl_all;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::hash::BuildHasher;
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::rc::Rc;
 
 #[gtest]
@@ -606,6 +607,75 @@ fn test_retain_mut() {
         }
     });
     expect_eq!(v, [2, 3, 4]);
+}
+
+/// Regression test for b/573618210: a panic after `Vec` reallocated must not
+/// leave the `vector` pointing at the freed buffer.
+#[gtest]
+fn test_resize_with_panic_after_realloc() {
+    let token = Rc::new(());
+    let mut v = cc_std::std::vector::new();
+    v.push(token.clone());
+    v.shrink_to_fit();
+    expect_eq!(v.capacity(), 1);
+
+    let mut calls = 0;
+    let result = catch_unwind(AssertUnwindSafe(|| {
+        // `resize_with` reserves space for all 100 elements (reallocating the
+        // buffer) before calling the closure.
+        v.resize_with(100, || {
+            calls += 1;
+            if calls == 3 {
+                panic!("panic in resize_with callback");
+            }
+            token.clone()
+        });
+    }));
+    expect_true!(result.is_err());
+
+    // `v` holds the original element plus the two elements created before the
+    // panic, in the reallocated buffer.
+    expect_eq!(v.len(), 3);
+    expect_that!(v.capacity(), ge(100));
+    expect_eq!(Rc::strong_count(&token), 4);
+
+    // `v` is still usable after the panic.
+    v.push(token.clone());
+    expect_eq!(v.len(), 4);
+    expect_eq!(Rc::strong_count(&token), 5);
+
+    drop(v);
+    expect_eq!(Rc::strong_count(&token), 1);
+}
+
+/// Regression test for b/573618210: a panic after `Vec::retain` dropped
+/// elements must not leave the `vector` with a stale length.
+#[gtest]
+fn test_retain_panic_after_element_drop() {
+    let token = Rc::new(());
+    let mut v = cc_std::std::vector::from(vec![token.clone(); 5]);
+    expect_eq!(Rc::strong_count(&token), 6);
+
+    let mut calls = 0;
+    let result = catch_unwind(AssertUnwindSafe(|| {
+        v.retain(|_| {
+            calls += 1;
+            if calls == 3 {
+                panic!("panic in retain callback");
+            }
+            // Drop the first element, keep the second.
+            calls != 1
+        });
+    }));
+    expect_true!(result.is_err());
+
+    // The first element was dropped. `Vec::retain` keeps the remaining
+    // elements when the predicate panics, so 4 elements are left.
+    expect_eq!(v.len(), 4);
+    expect_eq!(Rc::strong_count(&token), 5);
+
+    drop(v);
+    expect_eq!(Rc::strong_count(&token), 1);
 }
 
 #[gtest]
