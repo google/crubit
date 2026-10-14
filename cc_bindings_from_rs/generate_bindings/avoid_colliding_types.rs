@@ -30,7 +30,10 @@ pub trait AvoidCollidingTypes<'tcx, T: 'tcx>: Iterator<Item = T> {
     where
         Self: Sized,
     {
-        let results = self.map(Ok).collect();
+        let results: Vec<_> = self.map(Ok).collect();
+        if results.len() <= 1 {
+            return results;
+        }
 
         // Types that only differ in the width of their integers (e.g. `u64` and `usize`) may
         // map to the same C++ type on some target platforms.
