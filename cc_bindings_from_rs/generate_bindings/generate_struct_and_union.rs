@@ -942,6 +942,30 @@ fn generate_constructor_impls<'tcx>(
                 }
             };
             let mut prereqs = CcPrerequisites::default();
+            let mut statements = quote! {};
+            let c_abi_expression = cc_param_to_c_abi(
+                db,
+                format_ident!("value"),
+                src_ty,
+                &mut prereqs.includes,
+                &mut statements,
+            )
+            .ok()?;
+
+            if is_aggregate {
+                db.format_ty_for_rs(replace_all_regions_with_static(tcx, src_ty)).ok()?;
+                let impl_name = tcx.def_path_str(impl_id);
+                let msg = format!(
+                    "Constructor from `{impl_name}` is suppressed because `{cc_struct_name}` is a C++ aggregate."
+                );
+                return Some(ApiSnippets {
+                    main_api: CcSnippet::new(quote! {
+                        __NEWLINE__ __COMMENT__ #msg __NEWLINE__
+                    }),
+                    ..Default::default()
+                });
+            }
+
             let cc_ty = cc_ty.into_tokens(&mut prereqs);
             // Generate thunk names, declarations, and implementations.
             // `From` and `Into` are handled differently Self is different for both
@@ -1034,28 +1058,6 @@ fn generate_constructor_impls<'tcx>(
             };
             let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
             let doc_comment = generate_doc_comment(db, impl_id);
-            let mut statements = quote! {};
-            let c_abi_expression = cc_param_to_c_abi(
-                db,
-                format_ident!("value"),
-                src_ty,
-                &mut prereqs.includes,
-                &mut statements,
-            )
-            .ok()?;
-
-            if is_aggregate {
-                let impl_name = tcx.def_path_str(impl_id);
-                let msg = format!(
-                    "Constructor from `{impl_name}` is suppressed because `{cc_struct_name}` is a C++ aggregate."
-                );
-                return Some(ApiSnippets {
-                    main_api: CcSnippet::new(quote! {
-                        __NEWLINE__ __COMMENT__ #msg __NEWLINE__
-                    }),
-                    ..Default::default()
-                });
-            }
 
             let ctor_call =
                 generate_ctor_thunk_call(db, core, &thunk_name, &[c_abi_expression]).ok()?;
