@@ -385,6 +385,7 @@ pub unsafe extern "C" fn cpp_string_to_rust_string(input: *mut c_void, output: *
 /// assert_eq!(my_string.to_str().unwrap(), "Hello, C++!");
 /// ```
 #[crubit_annotate::cpp_layout_equivalent(cpp_type = "::std::string", include_path = "<string>")]
+#[crubit_annotate::cpp_move_constructible]
 #[cfg_attr(target_pointer_width = "64", repr(C, align(8)))]
 #[cfg_attr(target_pointer_width = "32", repr(C, align(4)))]
 #[allow(non_camel_case_types)]
