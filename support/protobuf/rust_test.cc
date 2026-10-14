@@ -6,9 +6,7 @@
 
 #include <cstddef>
 #include <type_traits>
-#include <utility>
 
-#include "support/movable.h"
 #include "gtest/gtest.h"
 #include "support/protobuf/test.pb.h"
 
@@ -24,22 +22,22 @@ TEST(RustWrapperTest, SizeAndAlignment) {
   static_assert(!std::is_constructible_v<Rust<DummyMessage>, std::nullptr_t>);
   static_assert(!std::is_copy_constructible_v<Rust<DummyMessage>>);
   static_assert(!std::is_copy_assignable_v<Rust<DummyMessage>>);
-  static_assert(!std::is_move_constructible_v<Rust<DummyMessage>>);
-  static_assert(!std::is_move_assignable_v<Rust<DummyMessage>>);
-  static_assert(
-      std::is_constructible_v<Rust<DummyMessage>, ::crubit::UnsafeRelocateTag,
-                              Rust<DummyMessage>&&>);
+  static_assert(std::is_move_constructible_v<Rust<DummyMessage>>);
+  static_assert(std::is_move_assignable_v<Rust<DummyMessage>>);
 }
 
-TEST(RustWrapperTest, RelocatesObject) {
-  rs::Movable<Rust<DummyMessage>> src(std::in_place);
-  DummyMessage* orig_ptr = src->get();
+TEST(RustWrapperTest, MoveConstructionAndAssignment) {
+  Rust<DummyMessage> msg;
+  DummyMessage* orig_ptr = msg.get();
   EXPECT_NE(orig_ptr, nullptr);
 
-  rs::Movable<Rust<DummyMessage>> relocated = std::move(src);
-  EXPECT_TRUE(src.valueless_after_move());
-  EXPECT_FALSE(relocated.valueless_after_move());
-  EXPECT_EQ(relocated->get(), orig_ptr);
+  Rust<DummyMessage> moved_msg(std::move(msg));
+  EXPECT_EQ(moved_msg.get(), orig_ptr);
+
+  Rust<DummyMessage> msg2;
+  DummyMessage* orig_ptr2 = msg2.get();
+  moved_msg = std::move(msg2);
+  EXPECT_EQ(moved_msg.get(), orig_ptr2);
 }
 
 TEST(RustWrapperTest, DefaultConstructsObject) {

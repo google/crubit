@@ -22,9 +22,6 @@ cc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [
-        "//support:unsafe_relocate_tag",
-    ],
 )
 
 proto_library(
@@ -43,7 +40,6 @@ crubit_cc_test(
     deps = [
         ":rust",
         ":test_cc_proto",
-        "//support:movable",
         "//testing/base/public:gunit_main",
     ],
 )

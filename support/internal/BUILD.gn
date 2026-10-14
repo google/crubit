@@ -31,9 +31,6 @@ source_set("bindings_support") {
   sources = [
     "check_no_mutable_aliasing.cc",
   ]
-  deps = [
-    "$crubit_src_dir/support:unsafe_relocate_tag",
-  ]
 }
 
 group("internal_cpp") {
