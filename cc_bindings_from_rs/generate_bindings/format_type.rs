@@ -2433,6 +2433,7 @@ pub fn evaluate_const_as_u64<'tcx>(tcx: ty::TyCtxt<'tcx>, cst: ty::Const<'tcx>) 
         .try_normalize_erasing_regions(ty::TypingEnv::fully_monomorphized(), unnorm_cst)
         .unwrap_or_else(|_| panic!("Unable to normalize type constant {{cst}}."));
     #[rustversion::since(2026-09-22)]
+    #[rustversion::before(2026-10-13)]
     use ty::consts::ConstExt;
     let Some(target_u64) = normalized.try_to_target_usize(tcx) else {
         bail!("Unable to get size from normalized type constant ({cst} => {normalized}).")
