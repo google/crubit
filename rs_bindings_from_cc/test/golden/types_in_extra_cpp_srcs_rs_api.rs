@@ -41,6 +41,7 @@ unsafe impl ::cxx::ExternType for MyStruct {
     type Id = ::cxx::type_id!("MyStruct");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("MyStruct"), crate::MyStruct);
 
 impl Default for MyStruct {
     #[inline(always)]

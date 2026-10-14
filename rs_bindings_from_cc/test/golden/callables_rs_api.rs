@@ -93,6 +93,7 @@ unsafe impl ::cxx::ExternType for ABICompatible {
     type Id = ::cxx::type_id!("ABICompatible");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("ABICompatible"), crate::ABICompatible);
 
 impl Default for ABICompatible {
     #[inline(always)]
@@ -140,6 +141,10 @@ unsafe impl ::cxx::ExternType for LayoutCompatible {
     type Id = ::cxx::type_id!("LayoutCompatible");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("LayoutCompatible"),
+    crate::LayoutCompatible
+);
 impl LayoutCompatible {
     #[inline(always)]
     pub fn Create(x: ::ffi_11::c_int) -> crate::LayoutCompatible {

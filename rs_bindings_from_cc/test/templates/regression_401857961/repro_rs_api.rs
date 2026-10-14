@@ -39,6 +39,10 @@ pub mod repro {
         type Id = ::cxx::type_id!("repro :: Interval");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("repro :: Interval"),
+        crate::repro::Interval
+    );
 
     impl Default for Interval {
         #[inline(always)]
@@ -79,6 +83,10 @@ pub struct __CcTemplateInstN5repro8NullableINS_8IntervalEEE {
 }
 impl !Send for __CcTemplateInstN5repro8NullableINS_8IntervalEEE {}
 impl !Sync for __CcTemplateInstN5repro8NullableINS_8IntervalEEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("repro :: Nullable < struct repro :: Interval >"),
+    crate::__CcTemplateInstN5repro8NullableINS_8IntervalEEE
+);
 
 impl Default for __CcTemplateInstN5repro8NullableINS_8IntervalEEE {
     #[inline(always)]

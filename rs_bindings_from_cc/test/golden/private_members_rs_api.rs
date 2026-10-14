@@ -33,6 +33,10 @@ pub mod test_namespace_bindings {
         type Id = ::cxx::type_id!("test_namespace_bindings :: SomeClass");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("test_namespace_bindings :: SomeClass"),
+        crate::test_namespace_bindings::SomeClass
+    );
     impl SomeClass {
         #[inline(always)]
         pub fn public_method<'__this>(&'__this mut self) {

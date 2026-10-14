@@ -34,6 +34,10 @@ unsafe impl ::cxx::ExternType for StructWithBridgeField {
     type Id = ::cxx::type_id!("StructWithBridgeField");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithBridgeField"),
+    crate::StructWithBridgeField
+);
 
 impl Default for StructWithBridgeField {
     #[inline(always)]
@@ -82,6 +86,7 @@ unsafe impl ::cxx::ExternType for Vec3 {
     type Id = ::cxx::type_id!("Vec3");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Vec3"), crate::Vec3);
 
 impl Default for Vec3 {
     #[inline(always)]
@@ -255,6 +260,10 @@ pub struct __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {
 }
 impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {}
 impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std :: reverse_iterator < class std :: __wrap_iter < const int *>>"),
+    crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE
+);
 impl __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPKiEEEE {
     #[must_use]
     #[inline(always)]
@@ -331,6 +340,7 @@ pub struct __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basi
 }
 impl!Send for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE{  }
 impl!Sync for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE{  }
+forward_declare::unsafe_define!(forward_declare::symbol!("std :: reverse_iterator < class std :: __wrap_iter < class std :: basic_string_view < char , struct std :: char_traits < char >> *>>"),crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE);
 impl __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE{ #[must_use]#[inline(always)]pub fn base<'__this>(&'__this self)->crate::__CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE{ unsafe{ self::cc_template_inst_n_st3_u16reverse_iterator_ins_11_wrap_iter_ipns_17basic_string_view_ic_ns_11char_traits_ic_eeeeeeee::base(self) } } }
 
 impl Default for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE{ #[inline(always)]fn default()->Self{ let mut tmp=::core::mem::MaybeUninit::<Self>::zeroed();unsafe{ crate::detail::__rust_thunk__12254c19__ZNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEC1Ev(&raw mut tmp as*mut _);tmp.assume_init() } } }
@@ -366,6 +376,10 @@ pub struct __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE {
 }
 impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE {}
 impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std :: reverse_iterator < class std :: __wrap_iter < int *>>"),
+    crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE
+);
 impl __CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPiEEEE {
     #[must_use]
     #[inline(always)]
@@ -441,6 +455,10 @@ pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
 }
 impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {}
 impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std :: reverse_iterator < const char *>"),
+    crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE
+);
 impl __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
     #[must_use]
     #[inline(always)]
@@ -514,6 +532,10 @@ pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
 }
 impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
 impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std :: reverse_iterator < const wchar_t *>"),
+    crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE
+);
 
 impl Default for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
     #[inline(always)]
@@ -541,6 +563,10 @@ pub struct __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
 }
 impl !Send for __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {}
 impl !Sync for __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std :: __wrap_iter < const int *>"),
+    crate::__CcTemplateInstNSt3__u11__wrap_iterIPKiEE
+);
 
 impl Default for __CcTemplateInstNSt3__u11__wrap_iterIPKiEE {
     #[inline(always)]
@@ -647,6 +673,7 @@ impl !Sync
     for __CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE
 {
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("std :: __wrap_iter < class std :: basic_string_view < char , struct std :: char_traits < char >> *>"),crate::__CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE);
 
 impl Default
     for __CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE
@@ -700,6 +727,10 @@ pub struct __CcTemplateInstNSt3__u11__wrap_iterIPiEE {
 }
 impl !Send for __CcTemplateInstNSt3__u11__wrap_iterIPiEE {}
 impl !Sync for __CcTemplateInstNSt3__u11__wrap_iterIPiEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std :: __wrap_iter < int *>"),
+    crate::__CcTemplateInstNSt3__u11__wrap_iterIPiEE
+);
 
 impl Default for __CcTemplateInstNSt3__u11__wrap_iterIPiEE {
     #[inline(always)]
@@ -787,6 +818,10 @@ pub struct __CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {
 }
 impl !Send for __CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {}
 impl !Sync for __CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std :: span < const int , 18446744073709551615UL >"),
+    crate::__CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE
+);
 impl __CcTemplateInstNSt3__u4spanIKiLm18446744073709551615EEE {
     #[must_use]
     #[inline(always)]
@@ -1101,6 +1136,7 @@ pub struct __CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traits
 }
 impl!Send for __CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{  }
 impl!Sync for __CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{  }
+forward_declare::unsafe_define!(forward_declare::symbol!("std :: span < class std :: basic_string_view < char , struct std :: char_traits < char >>, 18446744073709551615UL >"),crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE);
 impl __CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{ #[must_use]#[inline(always)]pub fn first<'__this>(&'__this self,__count: usize)->crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::first(self,__count) } }#[must_use]#[inline(always)]pub fn last<'__this>(&'__this self,__count: usize)->crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::last(self,__count) } }#[must_use]#[inline(always)]pub fn subspan<'__this>(&'__this self,__offset: usize,__count: usize)->crate::__CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::subspan(self,__offset,__count) } }#[must_use]#[inline(always)]pub fn size<'__this>(&'__this self)->usize{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::size(self) } }#[must_use]#[inline(always)]pub fn size_bytes<'__this>(&'__this self)->usize{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::size_bytes(self) } }#[must_use]#[inline(always)]pub fn empty<'__this>(&'__this self)->bool{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::empty(self) } }#[must_use]#[inline(always)]pub fn front<'__this>(&'__this self)->::cref::CMut<'__this,::cc_std::std::__u::raw_string_view>{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::front(self) } }#[must_use]#[inline(always)]pub fn back<'__this>(&'__this self)->::cref::CMut<'__this,::cc_std::std::__u::raw_string_view>{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::back(self) } }#[must_use]#[inline(always)]pub fn data<'__this>(&'__this self)->*mut::cc_std::std::__u::raw_string_view{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::data(self) } }#[must_use]#[inline(always)]pub fn begin<'__this>(&'__this self)->crate::__CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::begin(self) } }#[must_use]#[inline(always)]pub fn end<'__this>(&'__this self)->crate::__CcTemplateInstNSt3__u11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEE{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::end(self) } }#[must_use]#[inline(always)]pub fn rbegin<'__this>(&'__this self)->crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::rbegin(self) } }#[must_use]#[inline(always)]pub fn rend<'__this>(&'__this self)->crate::__CcTemplateInstNSt3__u16reverse_iteratorINS_11__wrap_iterIPNS_17basic_string_viewIcNS_11char_traitsIcEEEEEEEE{ unsafe{ self::cc_template_inst_n_st3_u4span_ins_17basic_string_view_ic_ns_11char_traits_ic_eeee_lm18446744073709551615_eee::rend(self) } } }
 
 impl Default for __CcTemplateInstNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEE{ #[inline(always)]fn default()->Self{ let mut tmp=::core::mem::MaybeUninit::<Self>::zeroed();unsafe{ crate::detail::__rust_thunk__9ef48370__ZNSt3__u4spanINS_17basic_string_viewIcNS_11char_traitsIcEEEELm18446744073709551615EEC1Ev(&raw mut tmp as*mut _);tmp.assume_init() } } }
@@ -1241,6 +1277,10 @@ pub struct __CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {
 }
 impl !Send for __CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {}
 impl !Sync for __CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std :: span < int , 18446744073709551615UL >"),
+    crate::__CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE
+);
 impl __CcTemplateInstNSt3__u4spanIiLm18446744073709551615EEE {
     #[must_use]
     #[inline(always)]

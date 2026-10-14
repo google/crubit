@@ -27,6 +27,7 @@ unsafe impl ::cxx::ExternType for TypeAliasCtor {
     type Id = ::cxx::type_id!("TypeAliasCtor");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("TypeAliasCtor"), crate::TypeAliasCtor);
 
 impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for TypeAliasCtor {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__param_0>;
@@ -107,6 +108,10 @@ pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
 }
 impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {}
 impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std :: reverse_iterator < const char *>"),
+    crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE
+);
 impl __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
     #[must_use]
     #[inline(always)]
@@ -180,6 +185,10 @@ pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
 }
 impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
 impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std :: reverse_iterator < const wchar_t *>"),
+    crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE
+);
 
 impl Default for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
     #[inline(always)]

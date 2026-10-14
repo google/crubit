@@ -30,6 +30,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: Plain");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: Plain"),
+            crate::crubit::test::Plain
+        );
 
         impl Default for Plain {
             #[inline(always)]
@@ -55,6 +59,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: Empty");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: Empty"),
+            crate::crubit::test::Empty
+        );
 
         impl Default for Empty {
             #[inline(always)]
@@ -80,6 +88,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ContainsPlain");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ContainsPlain"),
+            crate::crubit::test::ContainsPlain
+        );
 
         impl Default for ContainsPlain {
             #[inline(always)]
@@ -113,6 +125,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: WithPointer");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: WithPointer"),
+            crate::crubit::test::WithPointer
+        );
 
         impl Default for WithPointer {
             #[inline(always)]
@@ -146,6 +162,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ContainsWithPointer");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ContainsWithPointer"),
+            crate::crubit::test::ContainsWithPointer
+        );
 
         impl Default for ContainsWithPointer {
             #[inline(always)]
@@ -178,6 +198,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: WithPrivateField");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: WithPrivateField"),
+            crate::crubit::test::WithPrivateField
+        );
 
         impl Default for WithPrivateField {
             #[inline(always)]
@@ -214,6 +238,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: WithUnsupportedField");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: WithUnsupportedField"),
+            crate::crubit::test::WithUnsupportedField
+        );
 
         impl Default for WithUnsupportedField {
             #[inline(always)]
@@ -240,6 +268,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: Base");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: Base"),
+            crate::crubit::test::Base
+        );
 
         impl Default for Base {
             #[inline(always)]
@@ -267,6 +299,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: Derived");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: Derived"),
+            crate::crubit::test::Derived
+        );
 
         impl Default for Derived {
             #[inline(always)]
@@ -295,6 +331,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: NotSend");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: NotSend"),
+            crate::crubit::test::NotSend
+        );
 
         impl Default for NotSend {
             #[inline(always)]
@@ -323,6 +363,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: NotSync");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: NotSync"),
+            crate::crubit::test::NotSync
+        );
 
         impl Default for NotSync {
             #[inline(always)]
@@ -352,6 +396,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: NotSendNotSync");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: NotSendNotSync"),
+            crate::crubit::test::NotSendNotSync
+        );
 
         impl Default for NotSendNotSync {
             #[inline(always)]
@@ -387,6 +435,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ExplicitSendSync");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ExplicitSendSync"),
+            crate::crubit::test::ExplicitSendSync
+        );
 
         impl Default for ExplicitSendSync {
             #[inline(always)]

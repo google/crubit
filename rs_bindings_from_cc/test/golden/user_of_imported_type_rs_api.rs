@@ -47,6 +47,10 @@ unsafe impl ::cxx::ExternType for UserOfImportedType {
     type Id = ::cxx::type_id!("UserOfImportedType");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("UserOfImportedType"),
+    crate::UserOfImportedType
+);
 
 impl Default for UserOfImportedType {
     #[inline(always)]

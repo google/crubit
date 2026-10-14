@@ -30,6 +30,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ItemUnpin");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ItemUnpin"),
+            crate::crubit::test::ItemUnpin
+        );
 
         impl Default for ItemUnpin {
             #[inline(always)]
@@ -57,6 +61,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ItemNonUnpin");
             type Kind = ::cxx::kind::Opaque;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ItemNonUnpin"),
+            crate::crubit::test::ItemNonUnpin
+        );
 
         impl ::ctor::CtorNew<()> for ItemNonUnpin {
             type CtorType = ::ctor::Ctor![Self];
@@ -140,6 +148,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerUnpinItemUnpin");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ContainerUnpinItemUnpin"),
+            crate::crubit::test::ContainerUnpinItemUnpin
+        );
 
         impl Default for ContainerUnpinItemUnpin {
             #[inline(always)]
@@ -219,6 +231,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerUnpinItemNonUnpin");
             type Kind = ::cxx::kind::Opaque;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ContainerUnpinItemNonUnpin"),
+            crate::crubit::test::ContainerUnpinItemNonUnpin
+        );
 
         impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for ContainerUnpinItemNonUnpin {
             type CtorType =
@@ -404,6 +420,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerNonUnpinItemUnpin");
             type Kind = ::cxx::kind::Opaque;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ContainerNonUnpinItemUnpin"),
+            crate::crubit::test::ContainerNonUnpinItemUnpin
+        );
 
         impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for ContainerNonUnpinItemUnpin {
             type CtorType =
@@ -527,6 +547,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerNonUnpinItemNonUnpin");
             type Kind = ::cxx::kind::Opaque;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ContainerNonUnpinItemNonUnpin"),
+            crate::crubit::test::ContainerNonUnpinItemNonUnpin
+        );
 
         impl<'__param_0> ::ctor::CtorNew<&'__param_0 Self> for ContainerNonUnpinItemNonUnpin {
             type CtorType =
@@ -640,6 +664,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerValue");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ContainerValue"),
+            crate::crubit::test::ContainerValue
+        );
 
         impl Default for ContainerValue {
             #[inline(always)]
@@ -672,6 +700,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerRvalue");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ContainerRvalue"),
+            crate::crubit::test::ContainerRvalue
+        );
 
         impl Default for ContainerRvalue {
             #[inline(always)]
@@ -707,6 +739,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerMutRefFromConst");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ContainerMutRefFromConst"),
+            crate::crubit::test::ContainerMutRefFromConst
+        );
 
         impl Default for ContainerMutRefFromConst {
             #[inline(always)]
@@ -741,6 +777,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ContainerConstRefFromMut");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ContainerConstRefFromMut"),
+            crate::crubit::test::ContainerConstRefFromMut
+        );
 
         impl Default for ContainerConstRefFromMut {
             #[inline(always)]

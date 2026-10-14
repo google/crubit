@@ -41,6 +41,10 @@ unsafe impl ::cxx::ExternType for DeprecatedStruct {
     type Id = ::cxx::type_id!("DeprecatedStruct");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DeprecatedStruct"),
+    crate::DeprecatedStruct
+);
 
 impl Default for DeprecatedStruct {
     #[inline(always)]
@@ -68,6 +72,10 @@ unsafe impl ::cxx::ExternType for DeprecatedStructWithMessage {
     type Id = ::cxx::type_id!("DeprecatedStructWithMessage");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DeprecatedStructWithMessage"),
+    crate::DeprecatedStructWithMessage
+);
 
 impl Default for DeprecatedStructWithMessage {
     #[inline(always)]
@@ -185,6 +193,10 @@ unsafe impl ::cxx::ExternType for DeprecatedFields {
     type Id = ::cxx::type_id!("DeprecatedFields");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DeprecatedFields"),
+    crate::DeprecatedFields
+);
 
 impl Default for DeprecatedFields {
     #[inline(always)]

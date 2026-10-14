@@ -35,6 +35,7 @@ pub mod ns {
         type Id = ::cxx::type_id!("ns :: Member");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(forward_declare::symbol!("ns :: Member"), crate::ns::Member);
 
     impl ::ctor::UnsafeFrom<crate::MyBox<crate::ns::Instruction>> for Member {
         #[inline(always)]
@@ -74,6 +75,10 @@ pub mod ns {
         type Id = ::cxx::type_id!("ns :: Instruction");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("ns :: Instruction"),
+        crate::ns::Instruction
+    );
     impl Instruction {
         /// # Safety
         ///
@@ -127,6 +132,7 @@ pub mod ns {
         type Id = ::cxx::type_id!("ns :: Region");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(forward_declare::symbol!("ns :: Region"), crate::ns::Region);
     impl Region {
         /// # Safety
         ///

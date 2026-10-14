@@ -84,6 +84,10 @@ pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
 }
 impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {}
 impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std :: reverse_iterator < const char *>"),
+    crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKcEE
+);
 impl __CcTemplateInstNSt3__u16reverse_iteratorIPKcEE {
     #[must_use]
     #[inline(always)]
@@ -157,6 +161,10 @@ pub struct __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
 }
 impl !Send for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
 impl !Sync for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std :: reverse_iterator < const wchar_t *>"),
+    crate::__CcTemplateInstNSt3__u16reverse_iteratorIPKwEE
+);
 
 impl Default for __CcTemplateInstNSt3__u16reverse_iteratorIPKwEE {
     #[inline(always)]

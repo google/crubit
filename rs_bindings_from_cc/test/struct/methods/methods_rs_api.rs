@@ -28,6 +28,7 @@ unsafe impl ::cxx::ExternType for SomeClass {
     type Id = ::cxx::type_id!("SomeClass");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), crate::SomeClass);
 impl SomeClass {
     #[inline(always)]
     pub fn static_factory_method(int_var_initial_value: ::ffi_11::c_int) -> crate::SomeClass {
@@ -106,6 +107,10 @@ unsafe impl ::cxx::ExternType for InstanceMethods {
     type Id = ::cxx::type_id!("InstanceMethods");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("InstanceMethods"),
+    crate::InstanceMethods
+);
 impl InstanceMethods {
     #[inline(always)]
     pub fn get_int_field(&self) -> ::ffi_11::c_int {

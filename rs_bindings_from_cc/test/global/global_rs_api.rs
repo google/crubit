@@ -101,6 +101,10 @@ unsafe impl ::cxx::ExternType for StructWithAnonEnum {
     type Id = ::cxx::type_id!("StructWithAnonEnum");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithAnonEnum"),
+    crate::StructWithAnonEnum
+);
 impl StructWithAnonEnum {
     pub const kAnonEnumInStructConst: ::ffi_11::c_uint = ::ffi_11::new_c_uint(789);
 }
@@ -133,6 +137,10 @@ unsafe impl ::cxx::ExternType for StructWithStaticMembers {
     type Id = ::cxx::type_id!("StructWithStaticMembers");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("StructWithStaticMembers"),
+    crate::StructWithStaticMembers
+);
 impl StructWithStaticMembers {
     pub const kStaticConstInt: ::ffi_11::c_int = ::ffi_11::new_c_int(11);
 

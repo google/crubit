@@ -34,6 +34,7 @@ unsafe impl ::cxx::ExternType for RawThing {
     type Id = ::cxx::type_id!("Thing");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Thing"), crate::RawThing);
 impl RawThing {
     /// # Safety
     ///
@@ -110,6 +111,7 @@ unsafe impl ::cxx::ExternType for CustomRawThing {
     type Id = ::cxx::type_id!("CustomThing");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("CustomThing"), crate::CustomRawThing);
 impl CustomRawThing {
     /// # Safety
     ///

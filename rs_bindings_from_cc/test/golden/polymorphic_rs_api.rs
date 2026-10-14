@@ -27,6 +27,10 @@ unsafe impl ::cxx::ExternType for PolymorphicBase {
     type Id = ::cxx::type_id!("PolymorphicBase");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("PolymorphicBase"),
+    crate::PolymorphicBase
+);
 
 impl ::ctor::CtorNew<()> for PolymorphicBase {
     type CtorType = ::ctor::Ctor![Self];
@@ -108,6 +112,10 @@ unsafe impl ::cxx::ExternType for PolymorphicBase2 {
     type Id = ::cxx::type_id!("PolymorphicBase2");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("PolymorphicBase2"),
+    crate::PolymorphicBase2
+);
 impl PolymorphicBase2 {
     #[inline(always)]
     pub fn Foo<'__this>(self: ::core::pin::Pin<&'__this mut Self>) {
@@ -203,6 +211,10 @@ unsafe impl ::cxx::ExternType for PolymorphicDerived {
     type Id = ::cxx::type_id!("PolymorphicDerived");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("PolymorphicDerived"),
+    crate::PolymorphicDerived
+);
 
 impl ::ctor::CtorNew<()> for PolymorphicDerived {
     type CtorType = ::ctor::Ctor![Self];

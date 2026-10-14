@@ -30,6 +30,10 @@ pub mod test_namespace {
         type Id = ::cxx::type_id!("test_namespace :: Foo");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("test_namespace :: Foo"),
+        crate::test_namespace::Foo
+    );
 
     impl Default for Foo {
         #[inline(always)]

@@ -41,6 +41,7 @@ unsafe impl ::cxx::ExternType for NormalClass {
     type Id = ::cxx::type_id!("NormalClass");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("NormalClass"), crate::NormalClass);
 
 impl Default for NormalClass {
     #[inline(always)]
@@ -71,6 +72,10 @@ pub struct __CcTemplateInst2TSIiE {
 }
 impl !Send for __CcTemplateInst2TSIiE {}
 impl !Sync for __CcTemplateInst2TSIiE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TS < int >"),
+    crate::__CcTemplateInst2TSIiE
+);
 
 impl Default for __CcTemplateInst2TSIiE {
     #[inline(always)]
@@ -95,6 +100,10 @@ pub struct __CcTemplateInst25TemplateWithStaticMembersIiE {
 }
 impl !Send for __CcTemplateInst25TemplateWithStaticMembersIiE {}
 impl !Sync for __CcTemplateInst25TemplateWithStaticMembersIiE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TemplateWithStaticMembers < int >"),
+    crate::__CcTemplateInst25TemplateWithStaticMembersIiE
+);
 
 impl Default for __CcTemplateInst25TemplateWithStaticMembersIiE {
     #[inline(always)]

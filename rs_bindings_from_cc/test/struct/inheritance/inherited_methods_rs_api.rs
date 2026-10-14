@@ -27,6 +27,7 @@ unsafe impl ::cxx::ExternType for Nonmovable {
     type Id = ::cxx::type_id!("Nonmovable");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Nonmovable"), crate::Nonmovable);
 
 impl ::ctor::CtorNew<()> for Nonmovable {
     type CtorType = ::ctor::Ctor![Self];
@@ -58,6 +59,7 @@ unsafe impl ::cxx::ExternType for Base {
     type Id = ::cxx::type_id!("Base");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Base"), crate::Base);
 impl Base {
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {
@@ -203,6 +205,7 @@ unsafe impl ::cxx::ExternType for Derived {
     type Id = ::cxx::type_id!("Derived");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), crate::Derived);
 impl Derived {
     #[inline(always)]
     pub fn has_bindings<'__this>(&'__this self) -> bool {

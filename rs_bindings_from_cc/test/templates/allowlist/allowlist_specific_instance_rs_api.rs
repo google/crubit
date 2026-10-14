@@ -49,6 +49,10 @@ pub struct __CcTemplateInst2TsIifE {
 }
 impl !Send for __CcTemplateInst2TsIifE {}
 impl !Sync for __CcTemplateInst2TsIifE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("Ts < int , float >"),
+    crate::__CcTemplateInst2TsIifE
+);
 impl __CcTemplateInst2TsIifE {
     /// # Safety
     ///
@@ -101,6 +105,10 @@ pub struct __CcTemplateInst2TsIsdE {
 }
 impl !Send for __CcTemplateInst2TsIsdE {}
 impl !Sync for __CcTemplateInst2TsIsdE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("Ts < short , double >"),
+    crate::__CcTemplateInst2TsIsdE
+);
 
 impl From<(::ffi_11::c_short, f64)> for __CcTemplateInst2TsIsdE {
     #[inline(always)]

@@ -66,6 +66,7 @@ unsafe impl ::cxx::ExternType for Foo {
     type Id = ::cxx::type_id!("Foo");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 impl Foo {
     #[inline(always)]
     pub fn BarBridgedInt<'__this>(&'__this mut self, __param_0: crate::__CcTemplateInst6SizeofIiE) {
@@ -132,6 +133,10 @@ pub struct __CcTemplateInst6SizeofIfE {
 }
 impl !Send for __CcTemplateInst6SizeofIfE {}
 impl !Sync for __CcTemplateInst6SizeofIfE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("Sizeof < float >"),
+    crate::__CcTemplateInst6SizeofIfE
+);
 
 impl Default for __CcTemplateInst6SizeofIfE {
     #[inline(always)]
@@ -157,6 +162,10 @@ pub struct __CcTemplateInst6SizeofIiE {
 }
 impl !Send for __CcTemplateInst6SizeofIiE {}
 impl !Sync for __CcTemplateInst6SizeofIiE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("Sizeof < int >"),
+    crate::__CcTemplateInst6SizeofIiE
+);
 
 impl Default for __CcTemplateInst6SizeofIiE {
     #[inline(always)]

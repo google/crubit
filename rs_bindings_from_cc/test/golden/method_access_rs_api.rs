@@ -28,6 +28,7 @@ unsafe impl ::cxx::ExternType for Struct {
     type Id = ::cxx::type_id!("Struct");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Struct"), crate::Struct);
 impl Struct {
     #[inline(always)]
     pub fn AccessNone<'__this>(&'__this mut self) {
@@ -75,6 +76,7 @@ unsafe impl ::cxx::ExternType for Class {
     type Id = ::cxx::type_id!("Class");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Class"), crate::Class);
 impl Class {
     #[inline(always)]
     pub fn AccessPublic<'__this>(&'__this mut self) {

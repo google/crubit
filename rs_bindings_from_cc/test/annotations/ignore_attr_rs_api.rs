@@ -33,6 +33,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: MyStruct");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: MyStruct"),
+            crate::crubit::test::MyStruct
+        );
 
         impl Default for MyStruct {
             #[inline(always)]
@@ -62,6 +66,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: PackedStruct");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: PackedStruct"),
+            crate::crubit::test::PackedStruct
+        );
 
         impl Default for PackedStruct {
             #[inline(always)]
@@ -90,6 +98,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: PointerStruct");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: PointerStruct"),
+            crate::crubit::test::PointerStruct
+        );
 
         impl Default for PointerStruct {
             #[inline(always)]

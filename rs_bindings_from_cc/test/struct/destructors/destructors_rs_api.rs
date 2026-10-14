@@ -30,6 +30,10 @@ unsafe impl ::cxx::ExternType for DestructionOrderRecorder {
     type Id = ::cxx::type_id!("DestructionOrderRecorder");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DestructionOrderRecorder"),
+    crate::DestructionOrderRecorder
+);
 impl DestructionOrderRecorder {
     #[inline(always)]
     pub fn RecordDestruction(int_field: ::ffi_11::c_int) {
@@ -152,6 +156,10 @@ unsafe impl ::cxx::ExternType for FieldDestructionOrderTester {
     type Id = ::cxx::type_id!("FieldDestructionOrderTester");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("FieldDestructionOrderTester"),
+    crate::FieldDestructionOrderTester
+);
 impl FieldDestructionOrderTester {
     #[inline(always)]
     pub fn DestructFromCpp(
@@ -284,6 +292,10 @@ unsafe impl ::cxx::ExternType for PrivateOperatorDelete {
     type Id = ::cxx::type_id!("PrivateOperatorDelete");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("PrivateOperatorDelete"),
+    crate::PrivateOperatorDelete
+);
 
 impl<'__param_0> ::ctor::UnpinAssign<&'__param_0 Self> for PrivateOperatorDelete {
     #[inline(always)]

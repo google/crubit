@@ -67,6 +67,10 @@ unsafe impl ::cxx::ExternType for ExistingRustTypeFieldTypes {
     type Id = ::cxx::type_id!("ExistingRustTypeFieldTypes");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("ExistingRustTypeFieldTypes"),
+    crate::ExistingRustTypeFieldTypes
+);
 
 impl Default for ExistingRustTypeFieldTypes {
     #[inline(always)]
@@ -154,6 +158,7 @@ unsafe impl ::cxx::ExternType for NonRustMovable {
     type Id = ::cxx::type_id!("NonRustMovable");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("NonRustMovable"), crate::NonRustMovable);
 
 impl<'__unelided> ::ctor::CtorNew<::ctor::RvalueReference<'__unelided, Self>> for NonRustMovable {
     type CtorType = impl ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible> + use<'__unelided>;

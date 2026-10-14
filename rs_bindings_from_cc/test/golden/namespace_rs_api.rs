@@ -29,6 +29,10 @@ pub mod test_namespace_bindings {
         type Id = ::cxx::type_id!("test_namespace_bindings :: S");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("test_namespace_bindings :: S"),
+        crate::test_namespace_bindings::S
+    );
 
     impl Default for S {
         #[inline(always)]
@@ -113,6 +117,10 @@ pub mod test_namespace_bindings_reopened {
             type Id = ::cxx::type_id!("test_namespace_bindings_reopened :: inner :: S");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("test_namespace_bindings_reopened :: inner :: S"),
+            crate::test_namespace_bindings_reopened::inner::S
+        );
 
         impl Default for S {
             #[inline(always)]
@@ -161,6 +169,12 @@ pub mod test_namespace_bindings_inline {
             );
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!(
+                "test_namespace_bindings_inline :: inner :: StructInInlineNamespace"
+            ),
+            crate::test_namespace_bindings_inline::inner::StructInInlineNamespace
+        );
 
         impl Default for StructInInlineNamespace {
             #[inline(always)]

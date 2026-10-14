@@ -28,6 +28,10 @@ unsafe impl ::cxx::ExternType for TypeWithPtrConstructor {
     type Id = ::cxx::type_id!("TypeWithPtrConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TypeWithPtrConstructor"),
+    crate::TypeWithPtrConstructor
+);
 
 impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for TypeWithPtrConstructor {
     #[inline(always)]
@@ -66,6 +70,10 @@ unsafe impl ::cxx::ExternType for TypeWithNonNullPtrConstructor {
     type Id = ::cxx::type_id!("TypeWithNonNullPtrConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TypeWithNonNullPtrConstructor"),
+    crate::TypeWithNonNullPtrConstructor
+);
 
 impl ::ctor::UnsafeFrom<*mut ::ffi_11::c_int> for TypeWithNonNullPtrConstructor {
     #[inline(always)]
@@ -104,6 +112,10 @@ unsafe impl ::cxx::ExternType for TypeWithReferenceConstructor {
     type Id = ::cxx::type_id!("TypeWithReferenceConstructor");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TypeWithReferenceConstructor"),
+    crate::TypeWithReferenceConstructor
+);
 
 impl<'r#ref> From<&'r#ref mut ::ffi_11::c_int> for TypeWithReferenceConstructor {
     #[inline(always)]

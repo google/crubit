@@ -40,6 +40,10 @@ impl ::core::fmt::Display for DisplayableStruct {
         }
     }
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DisplayableStruct"),
+    crate::DisplayableStruct
+);
 
 impl Default for DisplayableStruct {
     #[inline(always)]

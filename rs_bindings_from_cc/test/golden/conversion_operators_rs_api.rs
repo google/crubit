@@ -28,6 +28,10 @@ unsafe impl ::cxx::ExternType for DstLocalMovable {
     type Id = ::cxx::type_id!("DstLocalMovable");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DstLocalMovable"),
+    crate::DstLocalMovable
+);
 
 impl Default for DstLocalMovable {
     #[inline(always)]
@@ -54,6 +58,10 @@ unsafe impl ::cxx::ExternType for DstLocalNonMovable {
     type Id = ::cxx::type_id!("DstLocalNonMovable");
     type Kind = ::cxx::kind::Opaque;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DstLocalNonMovable"),
+    crate::DstLocalNonMovable
+);
 
 #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
 #[cfi_encoding = "3Src"]
@@ -69,6 +77,7 @@ unsafe impl ::cxx::ExternType for Src {
     type Id = ::cxx::type_id!("Src");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Src"), crate::Src);
 
 impl Default for Src {
     #[inline(always)]

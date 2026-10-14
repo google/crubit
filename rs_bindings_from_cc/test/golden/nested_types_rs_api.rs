@@ -28,6 +28,7 @@ unsafe impl ::cxx::ExternType for Foo {
     type Id = ::cxx::type_id!("Foo");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 
 impl Default for Foo {
     #[inline(always)]
@@ -55,6 +56,7 @@ pub mod foo {
         type Id = ::cxx::type_id!("Foo :: Bar");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(forward_declare::symbol!("Foo :: Bar"), crate::foo::Bar);
 
     impl Default for Bar {
         #[inline(always)]
@@ -82,6 +84,10 @@ pub mod foo {
             type Id = ::cxx::type_id!("Foo :: Bar :: Baz");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("Foo :: Bar :: Baz"),
+            crate::foo::bar::Baz
+        );
 
         impl Default for Baz {
             #[inline(always)]
@@ -110,6 +116,10 @@ unsafe impl ::cxx::ExternType for already_snake_case {
     type Id = ::cxx::type_id!("already_snake_case");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("already_snake_case"),
+    crate::already_snake_case
+);
 
 impl Default for already_snake_case {
     #[inline(always)]
@@ -137,6 +147,10 @@ pub mod already_snake_case_items {
         type Id = ::cxx::type_id!("already_snake_case :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("already_snake_case :: Inner"),
+        crate::already_snake_case_items::Inner
+    );
 
     impl Default for Inner {
         #[inline(always)]
@@ -166,6 +180,10 @@ unsafe impl ::cxx::ExternType for ConflictingSnakeCaseNames {
     type Id = ::cxx::type_id!("ConflictingSnakeCaseNames");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("ConflictingSnakeCaseNames"),
+    crate::ConflictingSnakeCaseNames
+);
 
 impl Default for ConflictingSnakeCaseNames {
     #[inline(always)]
@@ -193,6 +211,10 @@ pub mod conflicting_snake_case_names {
         type Id = ::cxx::type_id!("ConflictingSnakeCaseNames :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("ConflictingSnakeCaseNames :: Inner"),
+        crate::conflicting_snake_case_names::Inner
+    );
 
     impl Default for Inner {
         #[inline(always)]
@@ -222,6 +244,10 @@ unsafe impl ::cxx::ExternType for ConflictingSnakeCaseNames_ {
     type Id = ::cxx::type_id!("ConflictingSnakeCaseNames_");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("ConflictingSnakeCaseNames_"),
+    crate::ConflictingSnakeCaseNames_
+);
 
 impl Default for ConflictingSnakeCaseNames_ {
     #[inline(always)]
@@ -251,6 +277,10 @@ pub mod conflicting_snake_case_names_items {
         type Id = ::cxx::type_id!("ConflictingSnakeCaseNames_ :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("ConflictingSnakeCaseNames_ :: Inner"),
+        crate::conflicting_snake_case_names_items::Inner
+    );
 
     impl Default for Inner {
         #[inline(always)]
@@ -280,6 +310,10 @@ unsafe impl ::cxx::ExternType for OnlyOneHasNestedItems {
     type Id = ::cxx::type_id!("OnlyOneHasNestedItems");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("OnlyOneHasNestedItems"),
+    crate::OnlyOneHasNestedItems
+);
 
 impl Default for OnlyOneHasNestedItems {
     #[inline(always)]
@@ -307,6 +341,10 @@ pub mod only_one_has_nested_items {
         type Id = ::cxx::type_id!("OnlyOneHasNestedItems :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("OnlyOneHasNestedItems :: Inner"),
+        crate::only_one_has_nested_items::Inner
+    );
 
     impl Default for Inner {
         #[inline(always)]
@@ -336,6 +374,10 @@ unsafe impl ::cxx::ExternType for OnlyOneHasNestedItems_ {
     type Id = ::cxx::type_id!("OnlyOneHasNestedItems_");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("OnlyOneHasNestedItems_"),
+    crate::OnlyOneHasNestedItems_
+);
 
 impl Default for OnlyOneHasNestedItems_ {
     #[inline(always)]
@@ -364,6 +406,10 @@ unsafe impl ::cxx::ExternType for SameNameAsNamespace {
     type Id = ::cxx::type_id!("SameNameAsNamespace");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("SameNameAsNamespace"),
+    crate::SameNameAsNamespace
+);
 
 impl Default for SameNameAsNamespace {
     #[inline(always)]
@@ -391,6 +437,10 @@ pub mod same_name_as_namespace_items {
         type Id = ::cxx::type_id!("SameNameAsNamespace :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("SameNameAsNamespace :: Inner"),
+        crate::same_name_as_namespace_items::Inner
+    );
 
     impl Default for Inner {
         #[inline(always)]
@@ -423,6 +473,10 @@ pub mod same_name_as_namespace {
         type Id = ::cxx::type_id!("same_name_as_namespace :: Foo");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("same_name_as_namespace :: Foo"),
+        crate::same_name_as_namespace::Foo
+    );
 
     impl Default for Foo {
         #[inline(always)]
@@ -451,6 +505,10 @@ pub mod same_name_as_namespace {
         type Id = ::cxx::type_id!("same_name_as_namespace :: Bar");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("same_name_as_namespace :: Bar"),
+        crate::same_name_as_namespace::Bar
+    );
 
     impl Default for Bar {
         #[inline(always)]
@@ -483,6 +541,10 @@ pub mod no_longer_top_level {
         type Id = ::cxx::type_id!("no_longer_top_level :: already_snake_case");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("no_longer_top_level :: already_snake_case"),
+        crate::no_longer_top_level::already_snake_case
+    );
 
     impl Default for already_snake_case {
         #[inline(always)]
@@ -512,6 +574,10 @@ pub mod no_longer_top_level {
             type Id = ::cxx::type_id!("no_longer_top_level :: already_snake_case :: Inner");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("no_longer_top_level :: already_snake_case :: Inner"),
+            crate::no_longer_top_level::already_snake_case_items::Inner
+        );
 
         impl Default for Inner {
             #[inline(always)]
@@ -539,6 +605,10 @@ pub mod no_longer_top_level {
         type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("no_longer_top_level :: ConflictingSnakeCaseNames"),
+        crate::no_longer_top_level::ConflictingSnakeCaseNames
+    );
 
     impl Default for ConflictingSnakeCaseNames {
         #[inline(always)]
@@ -566,6 +636,10 @@ pub mod no_longer_top_level {
             type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames :: Inner");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("no_longer_top_level :: ConflictingSnakeCaseNames :: Inner"),
+            crate::no_longer_top_level::conflicting_snake_case_names::Inner
+        );
 
         impl Default for Inner {
             #[inline(always)]
@@ -593,6 +667,10 @@ pub mod no_longer_top_level {
         type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames_");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("no_longer_top_level :: ConflictingSnakeCaseNames_"),
+        crate::no_longer_top_level::ConflictingSnakeCaseNames_
+    );
 
     impl Default for ConflictingSnakeCaseNames_ {
         #[inline(always)]
@@ -620,6 +698,10 @@ pub mod no_longer_top_level {
             type Id = ::cxx::type_id!("no_longer_top_level :: ConflictingSnakeCaseNames_ :: Inner");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("no_longer_top_level :: ConflictingSnakeCaseNames_ :: Inner"),
+            crate::no_longer_top_level::conflicting_snake_case_names_items::Inner
+        );
 
         impl Default for Inner {
             #[inline(always)]
@@ -647,6 +729,10 @@ pub mod no_longer_top_level {
         type Id = ::cxx::type_id!("no_longer_top_level :: OnlyOneHasNestedItems");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("no_longer_top_level :: OnlyOneHasNestedItems"),
+        crate::no_longer_top_level::OnlyOneHasNestedItems
+    );
 
     impl Default for OnlyOneHasNestedItems {
         #[inline(always)]
@@ -676,6 +762,10 @@ pub mod no_longer_top_level {
             type Id = ::cxx::type_id!("no_longer_top_level :: OnlyOneHasNestedItems :: Inner");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("no_longer_top_level :: OnlyOneHasNestedItems :: Inner"),
+            crate::no_longer_top_level::only_one_has_nested_items::Inner
+        );
 
         impl Default for Inner {
             #[inline(always)]
@@ -703,6 +793,10 @@ pub mod no_longer_top_level {
         type Id = ::cxx::type_id!("no_longer_top_level :: OnlyOneHasNestedItems_");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("no_longer_top_level :: OnlyOneHasNestedItems_"),
+        crate::no_longer_top_level::OnlyOneHasNestedItems_
+    );
 
     impl Default for OnlyOneHasNestedItems_ {
         #[inline(always)]
@@ -733,6 +827,10 @@ pub mod no_longer_top_level {
         type Id = ::cxx::type_id!("no_longer_top_level :: SameNameAsNamespace");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("no_longer_top_level :: SameNameAsNamespace"),
+        crate::no_longer_top_level::SameNameAsNamespace
+    );
 
     impl Default for SameNameAsNamespace {
         #[inline(always)]
@@ -762,6 +860,10 @@ pub mod no_longer_top_level {
             type Id = ::cxx::type_id!("no_longer_top_level :: SameNameAsNamespace :: Inner");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("no_longer_top_level :: SameNameAsNamespace :: Inner"),
+            crate::no_longer_top_level::same_name_as_namespace_items::Inner
+        );
 
         impl Default for Inner {
             #[inline(always)]
@@ -792,6 +894,10 @@ pub mod no_longer_top_level {
             type Id = ::cxx::type_id!("no_longer_top_level :: same_name_as_namespace :: Foo");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("no_longer_top_level :: same_name_as_namespace :: Foo"),
+            crate::no_longer_top_level::same_name_as_namespace::Foo
+        );
 
         impl Default for Foo {
             #[inline(always)]
@@ -818,6 +924,10 @@ pub mod no_longer_top_level {
             type Id = ::cxx::type_id!("no_longer_top_level :: same_name_as_namespace :: Bar");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("no_longer_top_level :: same_name_as_namespace :: Bar"),
+            crate::no_longer_top_level::same_name_as_namespace::Bar
+        );
 
         impl Default for Bar {
             #[inline(always)]
@@ -850,6 +960,10 @@ unsafe impl ::cxx::ExternType for ContainsForwardDeclared {
     type Id = ::cxx::type_id!("ContainsForwardDeclared");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("ContainsForwardDeclared"),
+    crate::ContainsForwardDeclared
+);
 
 impl Default for ContainsForwardDeclared {
     #[inline(always)]
@@ -877,6 +991,10 @@ pub mod contains_forward_declared {
         type Id = ::cxx::type_id!("ContainsForwardDeclared :: Nested");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("ContainsForwardDeclared :: Nested"),
+        crate::contains_forward_declared::Nested
+    );
 
     impl Default for Nested {
         #[inline(always)]

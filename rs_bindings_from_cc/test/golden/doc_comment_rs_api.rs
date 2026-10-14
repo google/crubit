@@ -33,6 +33,10 @@ unsafe impl ::cxx::ExternType for DocCommentSlashes {
     type Id = ::cxx::type_id!("DocCommentSlashes");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DocCommentSlashes"),
+    crate::DocCommentSlashes
+);
 impl DocCommentSlashes {
     /// A non-static member function (`const` flavor).
     #[inline(always)]
@@ -134,6 +138,7 @@ unsafe impl ::cxx::ExternType for DocCommentBang {
     type Id = ::cxx::type_id!("DocCommentBang");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("DocCommentBang"), crate::DocCommentBang);
 
 impl Default for DocCommentBang {
     #[inline(always)]
@@ -164,6 +169,10 @@ unsafe impl ::cxx::ExternType for MultilineCommentTwoStars {
     type Id = ::cxx::type_id!("MultilineCommentTwoStars");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MultilineCommentTwoStars"),
+    crate::MultilineCommentTwoStars
+);
 
 impl Default for MultilineCommentTwoStars {
     #[inline(always)]
@@ -194,6 +203,7 @@ unsafe impl ::cxx::ExternType for LineComment {
     type Id = ::cxx::type_id!("LineComment");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("LineComment"), crate::LineComment);
 
 impl Default for LineComment {
     #[inline(always)]
@@ -224,6 +234,10 @@ unsafe impl ::cxx::ExternType for MultilineOneStar {
     type Id = ::cxx::type_id!("MultilineOneStar");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MultilineOneStar"),
+    crate::MultilineOneStar
+);
 
 impl Default for MultilineOneStar {
     #[inline(always)]
@@ -264,7 +278,7 @@ pub type MySpecializedInstantiation = crate::__CcTemplateInst10MyTemplateIfE;
 //   Class templates are not yet supported
 
 // error: type alias `ConcreteNestedStruct` could not be bound
-//   incomplete type
+//   b/485949049: type definitions nested inside templated records are not yet supported
 
 /// Doc comment for an enum.
 #[repr(transparent)]
@@ -303,6 +317,10 @@ pub struct __CcTemplateInst10MyTemplateIiE {
 }
 impl !Send for __CcTemplateInst10MyTemplateIiE {}
 impl !Sync for __CcTemplateInst10MyTemplateIiE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate < int >"),
+    crate::__CcTemplateInst10MyTemplateIiE
+);
 
 impl Default for __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
@@ -329,6 +347,10 @@ pub struct __CcTemplateInst10MyTemplateIfE {
 }
 impl !Send for __CcTemplateInst10MyTemplateIfE {}
 impl !Sync for __CcTemplateInst10MyTemplateIfE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate < float >"),
+    crate::__CcTemplateInst10MyTemplateIfE
+);
 
 impl Default for __CcTemplateInst10MyTemplateIfE {
     #[inline(always)]
@@ -354,6 +376,10 @@ pub struct __CcTemplateInst13OuterTemplateIiE {
 }
 impl !Send for __CcTemplateInst13OuterTemplateIiE {}
 impl !Sync for __CcTemplateInst13OuterTemplateIiE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("OuterTemplate < int >"),
+    crate::__CcTemplateInst13OuterTemplateIiE
+);
 
 impl Default for __CcTemplateInst13OuterTemplateIiE {
     #[inline(always)]
@@ -369,7 +395,7 @@ impl Default for __CcTemplateInst13OuterTemplateIiE {
 // Doc comment for the nested struct.
 
 // error: struct `OuterTemplate<int>::NestedStruct` could not be bound
-//   incomplete type
+//   b/485949049: type definitions nested inside templated records are not yet supported
 
 // Data member in a nested struct.
 

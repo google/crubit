@@ -28,6 +28,7 @@ unsafe impl ::cxx::ExternType for SomeClass {
     type Id = ::cxx::type_id!("SomeClass");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), crate::SomeClass);
 impl SomeClass {
     #[inline(always)]
     pub fn create(i: ::ffi_11::c_int, c: ::ffi_11::c_char) {

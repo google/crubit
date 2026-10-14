@@ -30,6 +30,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ArgumentToBoundOverload");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ArgumentToBoundOverload"),
+            crate::crubit::test::ArgumentToBoundOverload
+        );
 
         impl Default for ArgumentToBoundOverload {
             #[inline(always)]
@@ -58,6 +62,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: ArgumentToUnboundOverload");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: ArgumentToUnboundOverload"),
+            crate::crubit::test::ArgumentToUnboundOverload
+        );
 
         impl Default for ArgumentToUnboundOverload {
             #[inline(always)]
@@ -97,6 +105,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: StructWithDoNotBindConstructor");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: StructWithDoNotBindConstructor"),
+            crate::crubit::test::StructWithDoNotBindConstructor
+        );
 
         impl From<crate::crubit::test::ArgumentToBoundOverload> for StructWithDoNotBindConstructor {
             #[inline(always)]
@@ -135,6 +147,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: StructWithDoNotBindMethod");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: StructWithDoNotBindMethod"),
+            crate::crubit::test::StructWithDoNotBindMethod
+        );
         impl StructWithDoNotBindMethod {
             /// # Safety
             ///

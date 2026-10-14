@@ -35,6 +35,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: StructOldName");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: StructOldName"),
+            crate::crubit::test::StructNewName
+        );
 
         impl Default for StructNewName {
             #[inline(always)]
@@ -64,6 +68,10 @@ pub mod crubit {
             type Id = ::cxx::type_id!("crubit :: test :: SomeStruct");
             type Kind = ::cxx::kind::Trivial;
         }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("crubit :: test :: SomeStruct"),
+            crate::crubit::test::SomeStruct
+        );
         impl SomeStruct {
             #[inline(always)]
             pub fn ConstructorNewName(

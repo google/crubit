@@ -28,6 +28,10 @@ unsafe impl ::cxx::ExternType for HasCustomAlignment {
     type Id = ::cxx::type_id!("HasCustomAlignment");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("HasCustomAlignment"),
+    crate::HasCustomAlignment
+);
 
 impl Default for HasCustomAlignment {
     #[inline(always)]
@@ -54,6 +58,10 @@ unsafe impl ::cxx::ExternType for HasFieldWithCustomAlignment {
     type Id = ::cxx::type_id!("HasFieldWithCustomAlignment");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("HasFieldWithCustomAlignment"),
+    crate::HasFieldWithCustomAlignment
+);
 
 impl Default for HasFieldWithCustomAlignment {
     #[inline(always)]
@@ -82,6 +90,10 @@ unsafe impl ::cxx::ExternType for InheritsFromBaseWithCustomAlignment {
     type Id = ::cxx::type_id!("InheritsFromBaseWithCustomAlignment");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("InheritsFromBaseWithCustomAlignment"),
+    crate::InheritsFromBaseWithCustomAlignment
+);
 
 impl Default for InheritsFromBaseWithCustomAlignment {
     #[inline(always)]
@@ -110,6 +122,10 @@ unsafe impl ::cxx::ExternType for HasCustomAlignmentWithGnuAttr {
     type Id = ::cxx::type_id!("HasCustomAlignmentWithGnuAttr");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("HasCustomAlignmentWithGnuAttr"),
+    crate::HasCustomAlignmentWithGnuAttr
+);
 
 impl Default for HasCustomAlignmentWithGnuAttr {
     #[inline(always)]
@@ -152,6 +168,10 @@ pub struct __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
 }
 impl !Send for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {}
 impl !Sync for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("template_with_preferred_name :: SomeTemplate < int >"),
+    crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
+);
 
 impl Default for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
     #[inline(always)]

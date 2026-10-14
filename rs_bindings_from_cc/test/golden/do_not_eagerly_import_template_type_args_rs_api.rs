@@ -54,6 +54,10 @@ pub struct __CcTemplateInst10DoesNotUseIS_IiEE {
 }
 impl !Send for __CcTemplateInst10DoesNotUseIS_IiEE {}
 impl !Sync for __CcTemplateInst10DoesNotUseIS_IiEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DoesNotUse < struct DoesNotUse < int >>"),
+    crate::__CcTemplateInst10DoesNotUseIS_IiEE
+);
 
 impl Default for __CcTemplateInst10DoesNotUseIS_IiEE {
     #[inline(always)]
@@ -78,6 +82,10 @@ pub struct __CcTemplateInst10DoesNotUseIiE {
 }
 impl !Send for __CcTemplateInst10DoesNotUseIiE {}
 impl !Sync for __CcTemplateInst10DoesNotUseIiE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("DoesNotUse < int >"),
+    crate::__CcTemplateInst10DoesNotUseIiE
+);
 
 impl Default for __CcTemplateInst10DoesNotUseIiE {
     #[inline(always)]

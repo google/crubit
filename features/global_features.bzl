@@ -13,6 +13,7 @@ SUPPORTED_FEATURES = [
     "proto_references",
     "layout_compat_optional",
     "always_specialize_generics_in_cpp_api_from_rust",
+    "forward_declare",
 ]
 
 # Per-feature denylists for features in `SUPPORTED_FEATURES`: maps a feature name to a list of

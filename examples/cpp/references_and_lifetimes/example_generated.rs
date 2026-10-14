@@ -29,6 +29,10 @@ pub mod example {
         type Id = ::cxx::type_id!("example :: Counter");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("example :: Counter"),
+        crate::example::Counter
+    );
     impl Counter {
         #[inline(always)]
         pub fn Get<'__this>(&'__this self) -> ::ffi_11::c_int {
@@ -119,6 +123,10 @@ pub mod example {
         type Id = ::cxx::type_id!("example :: Number");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("example :: Number"),
+        crate::example::Number
+    );
     impl Number {
         /// The result may refer to `this` or to `other`, but lifetime elision ties the
         /// result only to `this`.

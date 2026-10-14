@@ -46,6 +46,10 @@ pub struct __CcTemplateInst12TemplateTypeIiE {
 }
 impl !Send for __CcTemplateInst12TemplateTypeIiE {}
 impl !Sync for __CcTemplateInst12TemplateTypeIiE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TemplateType < int >"),
+    crate::__CcTemplateInst12TemplateTypeIiE
+);
 
 impl Default for __CcTemplateInst12TemplateTypeIiE {
     #[inline(always)]

@@ -29,6 +29,7 @@ pub mod foo {
         type Id = ::cxx::type_id!("foo :: Bar");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(forward_declare::symbol!("foo :: Bar"), crate::foo::Bar);
     impl Bar {
         #[inline(always)]
         pub fn MyMethod<'__this>(&'__this mut self) {

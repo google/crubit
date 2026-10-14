@@ -31,6 +31,7 @@ unsafe impl ::cxx::ExternType for TopLevel {
     type Id = ::cxx::type_id!("TopLevel");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("TopLevel"), crate::TopLevel);
 
 impl Default for TopLevel {
     #[inline(always)]
@@ -70,6 +71,10 @@ pub mod test_namespace_bindings {
         type Id = ::cxx::type_id!("test_namespace_bindings :: Inner");
         type Kind = ::cxx::kind::Trivial;
     }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("test_namespace_bindings :: Inner"),
+        crate::test_namespace_bindings::Inner
+    );
 
     impl Default for Inner {
         #[inline(always)]
@@ -106,6 +111,10 @@ pub struct __CcTemplateInst10MyTemplateI8TopLevelE {
 }
 impl !Send for __CcTemplateInst10MyTemplateI8TopLevelE {}
 impl !Sync for __CcTemplateInst10MyTemplateI8TopLevelE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate < struct TopLevel >"),
+    crate::__CcTemplateInst10MyTemplateI8TopLevelE
+);
 
 impl Default for __CcTemplateInst10MyTemplateI8TopLevelE {
     #[inline(always)]
@@ -133,6 +142,10 @@ pub struct __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
 }
 impl !Send for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {}
 impl !Sync for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate < struct test_namespace_bindings :: Inner >"),
+    crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
+);
 
 impl Default for __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     #[inline(always)]
@@ -158,6 +171,10 @@ pub struct __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
 }
 impl !Send for __CcTemplateInst10MyTemplateIS_I8TopLevelEE {}
 impl !Sync for __CcTemplateInst10MyTemplateIS_I8TopLevelEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate < class MyTemplate < struct TopLevel >>"),
+    crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
+);
 
 impl Default for __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     #[inline(always)]
@@ -185,6 +202,12 @@ pub struct __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
 }
 impl !Send for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {}
 impl !Sync for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!(
+        "MyTemplate < class MyTemplate < struct test_namespace_bindings :: Inner >>"
+    ),
+    crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
+);
 
 impl Default for __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     #[inline(always)]
@@ -210,6 +233,10 @@ pub struct __CcTemplateInst10MyTemplateIbE {
 }
 impl !Send for __CcTemplateInst10MyTemplateIbE {}
 impl !Sync for __CcTemplateInst10MyTemplateIbE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate < bool >"),
+    crate::__CcTemplateInst10MyTemplateIbE
+);
 
 impl Default for __CcTemplateInst10MyTemplateIbE {
     #[inline(always)]
@@ -235,6 +262,10 @@ pub struct __CcTemplateInst10MyTemplateIcE {
 }
 impl !Send for __CcTemplateInst10MyTemplateIcE {}
 impl !Sync for __CcTemplateInst10MyTemplateIcE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate < char >"),
+    crate::__CcTemplateInst10MyTemplateIcE
+);
 
 impl Default for __CcTemplateInst10MyTemplateIcE {
     #[inline(always)]
@@ -260,6 +291,10 @@ pub struct __CcTemplateInst10MyTemplateIdE {
 }
 impl !Send for __CcTemplateInst10MyTemplateIdE {}
 impl !Sync for __CcTemplateInst10MyTemplateIdE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate < double >"),
+    crate::__CcTemplateInst10MyTemplateIdE
+);
 
 impl Default for __CcTemplateInst10MyTemplateIdE {
     #[inline(always)]
@@ -285,6 +320,10 @@ pub struct __CcTemplateInst10MyTemplateIfE {
 }
 impl !Send for __CcTemplateInst10MyTemplateIfE {}
 impl !Sync for __CcTemplateInst10MyTemplateIfE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate < float >"),
+    crate::__CcTemplateInst10MyTemplateIfE
+);
 
 impl Default for __CcTemplateInst10MyTemplateIfE {
     #[inline(always)]
@@ -310,6 +349,10 @@ pub struct __CcTemplateInst10MyTemplateIiE {
 }
 impl !Send for __CcTemplateInst10MyTemplateIiE {}
 impl !Sync for __CcTemplateInst10MyTemplateIiE {}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate < int >"),
+    crate::__CcTemplateInst10MyTemplateIiE
+);
 
 impl Default for __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]

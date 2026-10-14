@@ -34,6 +34,7 @@ unsafe impl ::cxx::ExternType for SomeStruct {
     type Id = ::cxx::type_id!("SomeStruct");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
 impl Default for SomeStruct {
     #[inline(always)]
@@ -46,8 +47,7 @@ impl Default for SomeStruct {
     }
 }
 
-// error: struct `ForwardDeclaredStruct` could not be bound
-//   incomplete type
+forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
 
 /// # Safety
 ///
@@ -113,10 +113,7 @@ pub struct FieldTypeTestStruct {
     /// TODO(b/226580208): Uncomment when these don't cause struct import to fail.
     /// SomeStruct&& struct_rvalue_ref_field;
     /// const SomeStruct&& const_struct_rvalue_ref_field;
-    ///
-    /// Reason for representing this field as a blob of bytes:
-    /// incomplete type
-    pub(crate) forward_declared_ptr_field: [::core::mem::MaybeUninit<u8>; 8],
+    pub forward_declared_ptr_field: *mut crate::ForwardDeclaredStruct,
     pub cyclic_ptr_field: *mut crate::FieldTypeTestStruct,
 }
 impl !Send for FieldTypeTestStruct {}
@@ -125,6 +122,10 @@ unsafe impl ::cxx::ExternType for FieldTypeTestStruct {
     type Id = ::cxx::type_id!("FieldTypeTestStruct");
     type Kind = ::cxx::kind::Trivial;
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("FieldTypeTestStruct"),
+    crate::FieldTypeTestStruct
+);
 
 /// # Safety
 ///
