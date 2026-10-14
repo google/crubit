@@ -2050,6 +2050,7 @@ pub fn generate_function<'a>(
     let BindingsSignature {
         lifetimes,
         lifetimes_including_impl: _lifetimes_including_impl,
+        generic_type_params,
         params: api_params,
         return_type_fragment: mut quoted_return_type,
         thunk_prepare,
@@ -2209,8 +2210,7 @@ pub fn generate_function<'a>(
     match impl_kind {
         ImplKind::None { .. } => {
             let func_body = create_func_body()?;
-            let fn_generic_params =
-                format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
+            let fn_generic_params = format_generic_params(&lifetimes, &generic_type_params);
             api_func = quote! {
                 #unimplemented_trait_def
                 #capture_tags
@@ -2247,8 +2247,7 @@ pub fn generate_function<'a>(
             }
 
             let record_name = make_rs_ident(target_record.rs_name().as_str());
-            let fn_generic_params =
-                format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
+            let fn_generic_params = format_generic_params(&lifetimes, &generic_type_params);
 
             // Generate the free function.
             let free_param_idents = {
@@ -2274,6 +2273,7 @@ pub fn generate_function<'a>(
             let BindingsSignature {
                 lifetimes: free_lifetimes,
                 lifetimes_including_impl,
+                generic_type_params: free_generic_type_params,
                 params: free_api_params,
                 return_type_fragment: free_return_type_fragment,
                 thunk_prepare: free_thunk_prepare,
@@ -2322,7 +2322,7 @@ pub fn generate_function<'a>(
             };
 
             let free_fn_generic_params =
-                format_generic_params(&free_lifetimes, std::iter::empty::<syn::Ident>());
+                format_generic_params(&free_lifetimes, &free_generic_type_params);
 
             // Add the free method to the mapping, which we will extract and put into
             // snippets inside db later.
@@ -2899,6 +2899,15 @@ struct BindingsSignature {
     /// the parameters that would be bound in an impl block).
     lifetimes_including_impl: Vec<Lifetime>,
 
+    /// The generic type parameters (with their bounds) for the Rust function, which follow the
+    /// lifetime parameters.
+    ///
+    /// For example, `vec![quote!{__Ctor1: ::ctor::Ctor<Output = T, Error = ::ctor::Infallible>}]`.
+    ///
+    /// This is only non-empty if a non-`Unpin` by-value parameter has to be named in the
+    /// precise-capturing `use<...>` bound of an `impl Ctor` return type.
+    generic_type_params: Vec<TokenStream>,
+
     /// The parameter list for the Rust function.
     ///
     /// For example, `vec![quote!{self}, quote!{x: &i32}]`.
@@ -2922,6 +2931,18 @@ struct BindingsSignature {
 
     /// Any features required by the function.
     features: FlagSet<Feature>,
+}
+
+/// A non-`Unpin` by-value parameter, passed to the Rust function as a `Ctor![T]`.
+struct CtorParam {
+    /// The index of the parameter in `BindingsSignature::params`.
+    api_param_index: usize,
+    /// The name of the parameter.
+    ident: Ident,
+    /// The name of the generic type parameter to use for the parameter, if it needs to be named.
+    generic_ident: Ident,
+    /// The type `T` constructed by the parameter.
+    quoted_type: TokenStream,
 }
 
 fn collect_parent_lifetime_bindings(
@@ -3028,6 +3049,10 @@ fn function_signature<'a>(
     let mut api_params = Vec::with_capacity(func.params().len());
     let mut thunk_args = Vec::with_capacity(func.params().len());
     let mut thunk_prepare = quote! {};
+    // Non-`Unpin` by-value parameters, which are passed as `Ctor![T]` (an argument-position
+    // `impl Trait`).
+    let mut ctor_params: Vec<CtorParam> = vec![];
+    let mut generic_type_params: Vec<TokenStream> = vec![];
     let impl_kind_record = match impl_kind {
         ImplKind::Struct { record, .. } | ImplKind::Trait { record, impl_for: ImplFor::T, .. } => {
             Some(record)
@@ -3117,6 +3142,12 @@ fn function_signature<'a>(
                     errors.add(anyhow!("Non-movable, non-trivial_abi type '{}' is not supported by value as parameter #{i}", type_.display(db)));
                 }
                 features |= Feature::impl_trait_in_assoc_type;
+                ctor_params.push(CtorParam {
+                    api_param_index: api_params.len(),
+                    ident: ident.clone(),
+                    generic_ident: format_ident!("__Ctor{i}"),
+                    quoted_type: quoted_type_or_self.clone(),
+                });
                 api_params.push(quote! {#ident: ::ctor::Ctor![#quoted_type_or_self]});
                 thunk_args.push(
                     quote! {::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))},
@@ -3289,18 +3320,34 @@ fn function_signature<'a>(
             // similar to top-level functions.)
 
             // The returned lazy FnCtor depends on all inputs.
-            let extra_lifetimes = if assume_lifetimes {
-                if all_lifetimes.is_empty() {
-                    quote! {}
-                } else {
-                    quote! {+ use<#(#all_lifetimes),*> }
-                }
+            let captured_lifetimes = if assume_lifetimes { &all_lifetimes } else { &lifetimes };
+            let extra_lifetimes = if captured_lifetimes.is_empty() {
+                quote! {}
             } else {
-                if lifetimes.is_empty() {
-                    quote! {}
-                } else {
-                    quote! {+ use<#(#lifetimes),*> }
+                // A precise-capturing `use<...>` bound has to name every type parameter in scope,
+                // but an argument-position `impl Trait` (such as a `Ctor![T]` parameter) can't be
+                // named. So turn every `Ctor![T]` parameter into a named generic type parameter,
+                // and capture it.
+                //
+                // `api_params` has not been reordered since the parameter loop above: the only
+                // adjustments that remove or replace parameters are for constructors and trait
+                // methods. Those return `Self`, and either have no `Ctor![T]` parameters or return
+                // an `Unpin` type (so they don't reach this branch).
+                let mut captures: Vec<TokenStream> =
+                    captured_lifetimes.iter().map(|lifetime| lifetime.to_token_stream()).collect();
+                for CtorParam { api_param_index, ident, generic_ident, quoted_type } in &ctor_params
+                {
+                    debug_assert_eq!(
+                        api_params[*api_param_index].to_string(),
+                        quote! {#ident: ::ctor::Ctor![#quoted_type]}.to_string(),
+                    );
+                    api_params[*api_param_index] = quote! {#ident: #generic_ident};
+                    generic_type_params.push(quote! {
+                        #generic_ident: ::ctor::Ctor<Output=#quoted_type, Error=::ctor::Infallible>
+                    });
+                    captures.push(generic_ident.to_token_stream());
                 }
+                quote! {+ use<#(#captures),*> }
             };
             features |= Feature::impl_trait_in_assoc_type;
             if extra_lifetimes.is_empty() {
@@ -3466,6 +3513,7 @@ fn function_signature<'a>(
     Ok(BindingsSignature {
         lifetimes,
         lifetimes_including_impl,
+        generic_type_params,
         params: api_params,
         return_type_fragment,
         thunk_prepare,
