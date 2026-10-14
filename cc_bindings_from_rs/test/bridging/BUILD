@@ -4,11 +4,11 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
-load("//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl", "cc_bindings_from_rust_library_config")
 load(
-    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "cc_bindings_from_rust",
+    "//bazel:cpp_api_from_rust.bzl",
+    "cpp_api_from_rust",
 )
+load("//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl", "cc_bindings_from_rust_library_config")
 load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
     "golden_test",
@@ -40,7 +40,7 @@ cc_bindings_from_rust_library_config(
     extra_cc_hdrs = ["cc_type.h"],
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "rust_type_cc_api",
     crate = ":rust_type",
 )
@@ -57,7 +57,7 @@ rust_library(
     ],
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "rust_pointer_types_cc_api",
     crate = ":rust_pointer_types",
 )
@@ -79,7 +79,7 @@ cc_bindings_from_rust_library_config(
     extra_cc_hdrs = ["cc_generics.h"],
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "layout_equivalent_generics_cc_api",
     crate = ":layout_equivalent_generics",
 )
@@ -187,7 +187,7 @@ cc_bindings_from_rust_library_config(
     extra_cc_hdrs = ["mapped_cpp_type_def.h"],
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "mapped_cpp_type_cc_api",
     crate = ":mapped_cpp_type",
 )

@@ -5,8 +5,8 @@ load(
     "rust_library",
 )
 load(
-    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "cc_bindings_from_rust",
+    "//bazel:cpp_api_from_rust.bzl",
+    "cpp_api_from_rust",
 )
 load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
@@ -40,7 +40,7 @@ golden_test(
     rust_library = "callables",
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "callables_cc_api",
     testonly = 1,
     crate = ":callables",

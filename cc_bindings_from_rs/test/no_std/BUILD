@@ -4,8 +4,8 @@ load(
 )
 load("@rules_rust//rust:rust_make_no_std.bzl", "rust_make_no_std")
 load(
-    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "cc_bindings_from_rust",
+    "//bazel:cpp_api_from_rust.bzl",
+    "cpp_api_from_rust",
 )
 load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
@@ -43,7 +43,7 @@ rust_make_no_std(
     deps = [":no_std"],
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "no_std_cc_api",
     testonly = 1,
     crate = ":no_std",
@@ -90,7 +90,7 @@ golden_test(
     rust_library = "no_core",
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "no_core_cc_api",
     testonly = 1,
     crate = ":no_core",

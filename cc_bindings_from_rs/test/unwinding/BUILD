@@ -3,8 +3,8 @@ load(
     "rust_library",
 )
 load(
-    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "cc_bindings_from_rust",
+    "//bazel:cpp_api_from_rust.bzl",
+    "cpp_api_from_rust",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
@@ -17,7 +17,7 @@ rust_library(
     edition = "2024",
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "panic_function_cc_api",
     testonly = 1,
     crate = ":panic_function",

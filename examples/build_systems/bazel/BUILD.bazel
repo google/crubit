@@ -1,7 +1,7 @@
 load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
 load(
-    "@rules_crubit//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "cc_bindings_from_rust",
+    "@rules_crubit//bazel:cpp_api_from_rust.bzl",
+    "cpp_api_from_rust",
 )
 load("@rules_rust//rust:rust_library.bzl", "rust_library")
 
@@ -22,7 +22,7 @@ rust_library(
     ],
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "lib_cc_api",
     crate = ":lib",
 )

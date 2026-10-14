@@ -5,11 +5,11 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
-load("//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl", "cc_bindings_from_rust_library_config")
 load(
-    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "cc_bindings_from_rust",
+    "//bazel:cpp_api_from_rust.bzl",
+    "cpp_api_from_rust",
 )
+load("//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl", "cc_bindings_from_rust_library_config")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(default_applicable_licenses = ["//:license"])
@@ -32,7 +32,7 @@ rust_library(
     ],
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "other_crate_cc_api",
     testonly = 1,
     crate = ":other_crate",
@@ -46,7 +46,7 @@ rust_library(
     deps = [":other_crate"],
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "test_api_cc_api",
     testonly = 1,
     crate = ":test_api",

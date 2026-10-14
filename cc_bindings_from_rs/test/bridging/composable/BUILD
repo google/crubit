@@ -10,8 +10,8 @@ load(
 #     "golden_test",
 # )
 load(
-    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "cc_bindings_from_rust",
+    "//bazel:cpp_api_from_rust.bzl",
+    "cpp_api_from_rust",
 )
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
@@ -45,7 +45,7 @@ rust_library(
 #     rust_library = "composable_bridging",
 # )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "composable_bridging_cc_api",
     crate = ":composable_bridging",
 )

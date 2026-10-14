@@ -1,7 +1,7 @@
 load("@bazel_tools//tools/build_defs/build_test:build_test.bzl", "build_test")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@rules_rust//rust:defs.bzl", "rust_test")
-load("//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl", "cc_bindings_from_rust")
+load("//bazel:cpp_api_from_rust.bzl", "cpp_api_from_rust")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 load("//support/extract_cpp_from_rust:rust_library_with_embedded_cpp.bzl", "rust_library_with_embedded_cpp")
 
@@ -46,7 +46,7 @@ rust_test(
     ],
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "library_with_embedded_cpp_cc_api",
     crate = ":library_with_embedded_cpp",
     tags = ["manual"],

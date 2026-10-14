@@ -6,8 +6,8 @@ load(
     "rust_library",
 )
 load(
-    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "cc_bindings_from_rust",
+    "//bazel:cpp_api_from_rust.bzl",
+    "cpp_api_from_rust",
 )
 load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
@@ -46,7 +46,7 @@ golden_test(
     rust_library = "enums",
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "enums_cc_api",
     testonly = 1,
     crate = ":enums",
@@ -95,7 +95,7 @@ golden_test(
     rust_library = "cpp_enums",
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "cpp_enums_cc_api",
     testonly = 1,
     crate = ":cpp_enums",
@@ -136,7 +136,7 @@ golden_test(
     rust_library = "option",
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "option_cc_api",
     testonly = 1,
     crate = ":option",
@@ -178,7 +178,7 @@ golden_test(
     rust_library = "result",
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "result_cc_api",
     testonly = 1,
     crate = ":result",

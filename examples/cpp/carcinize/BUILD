@@ -11,8 +11,8 @@ load(
     "rust_test",
 )
 load(
-    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "cc_bindings_from_rust",
+    "//bazel:cpp_api_from_rust.bzl",
+    "cpp_api_from_rust",
 )
 load(
     "//support/extract_cpp_from_rust:rust_library_with_embedded_cpp.bzl",
@@ -42,7 +42,7 @@ rust_library_with_embedded_cpp(
 )
 
 # Re-exports :point_rs to C++ callers under the original target name.
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "point",
     crate = ":point_rs",
 )
@@ -72,7 +72,7 @@ rust_library_with_embedded_cpp(
 )
 
 # Re-exports :math_utils_rs to C++ callers.
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "math_utils",
     crate = ":math_utils_rs",
 )

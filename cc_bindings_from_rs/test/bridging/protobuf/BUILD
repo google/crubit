@@ -8,8 +8,8 @@ load(
     "rust_library",
 )
 load(
-    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
-    "cc_bindings_from_rust",
+    "//bazel:cpp_api_from_rust.bzl",
+    "cpp_api_from_rust",
 )
 load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
@@ -52,7 +52,7 @@ rust_library(
     deps = [":foo_rust_proto"],
 )
 
-cc_bindings_from_rust(
+cpp_api_from_rust(
     name = "rust_lib_cc_api",
     testonly = True,
     crate = ":rust_lib",
