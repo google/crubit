@@ -27,7 +27,7 @@ use error_report::anyhow;
 use itertools::Itertools;
 use proc_macro2::Literal;
 use proc_macro2::TokenStream;
-use query_compiler::{self, get_layout, post_analysis_typing_env};
+use query_compiler::{self, get_layout};
 use quote::{format_ident, quote};
 #[rustversion::since(2026-04-22)]
 use rustc_abi::LayoutData;
@@ -1257,7 +1257,7 @@ fn specialize_result<'tcx>(
         ..Default::default()
     };
 
-    let needs_drop = adt_spec.self_ty_rs.needs_drop(tcx, post_analysis_typing_env(tcx, adt.did()));
+    let needs_drop = adt_spec.self_ty_rs.needs_drop(tcx, ty::TypingEnv::fully_monomorphized());
     let discr_for_ok = adt_spec.self_ty_rs.discriminant_for_variant(tcx, ok_idx).expect(
         "We do not support zero sized types. Before generating a specialization, we\
             check that the type can be formatted as a C++ type. That should exclude this case \
@@ -1452,7 +1452,7 @@ fn specialize_option<'tcx>(
     let ty::TyKind::Adt(adt, _) = adt_spec.self_ty_rs.kind() else {
         unreachable!("Option<T> must be an ADT");
     };
-    let needs_drop = adt_spec.self_ty_rs.needs_drop(tcx, post_analysis_typing_env(tcx, adt.did()));
+    let needs_drop = adt_spec.self_ty_rs.needs_drop(tcx, ty::TypingEnv::fully_monomorphized());
 
     let OptionVariantIndices { some_idx, none_idx } = get_option_variant_indices(tcx, *adt);
 

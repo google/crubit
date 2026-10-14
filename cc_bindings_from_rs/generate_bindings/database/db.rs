@@ -239,24 +239,18 @@ memoized::query_group! {
       /// If we were to generate a C++ copy constructor and assignment operator for a Rust-originating
       /// type, how would we do it?
       ///
-      /// `def_id` is used to determine the typing env of `self_ty`.
-      ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:copy_ctor_and_assignment_operator_codegen_style
       fn copy_ctor_and_assignment_operator_codegen_style(
           &self,
-          def_id: Option<DefId>,
           self_ty: Ty<'tcx>,
       ) -> Option<CopyCodegenStyle>;
 
       /// If we were to generate a C++ move constructor and assignment operator for a Rust-originating
       /// type, how would we do it?
       ///
-      /// `def_id` is used to determine the typing env of `self_ty`.
-      ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/lib.rs?q=function:move_ctor_and_assignment_operator_codegen_style
       fn move_ctor_and_assignment_operator_codegen_style(
           &self,
-          def_id: Option<DefId>,
           self_ty: Ty<'tcx>,
       ) -> Option<MoveCodegenStyle>;
 

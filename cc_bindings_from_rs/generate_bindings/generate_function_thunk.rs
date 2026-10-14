@@ -6,8 +6,8 @@ use crate::format_type::{format_ty_for_closure_param_rs, CallableInfo, CallableK
 use crate::generate_function::{fn_arg_idents, get_async_future_output_ty};
 use crate::{
     does_type_implement_trait, format_cc_ident, format_param_types_for_cc_thunk, is_bridged_type,
-    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedBuiltin,
-    BridgedType, BridgedTypeConversionInfo, CcType, RsSnippet, TypeLocation,
+    is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedType,
+    BridgedTypeConversionInfo, CcType, RsSnippet, TypeLocation,
 };
 use arc_anyhow::{Context, Result};
 use code_gen_utils::escape_non_identifier_chars;
@@ -18,7 +18,7 @@ use database::{AdtCoreBindings, BindingsGenerator};
 use error_report::{anyhow, bail, ensure};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
-use query_compiler::{post_analysis_typing_env, try_normalize};
+use query_compiler::try_normalize;
 use quote::format_ident;
 use quote::quote;
 #[rustversion::since(2026-04-22)]
@@ -913,10 +913,7 @@ pub fn generate_trait_thunks<'tcx>(
         // To support "drop glue" we don't require that `self_ty` directly implements
         // the `Drop` trait.  Instead we require the caller to check
         // `needs_drop`.
-        let typing_env = def_id
-            .map(|id| post_analysis_typing_env(tcx, id))
-            .unwrap_or_else(TypingEnv::fully_monomorphized);
-        assert!(self_ty.needs_drop(tcx, typing_env));
+        assert!(self_ty.needs_drop(tcx, TypingEnv::fully_monomorphized()));
     } else if !does_type_implement_trait(
         tcx,
         self_ty,

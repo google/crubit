@@ -2832,3 +2832,73 @@ fn test_format_item_non_null_c_void() {
         );
     });
 }
+
+#[test]
+fn test_unmovable_type_with_unsatisfied_copy_where_bound_in_fn() {
+    let test_src = r#"
+        pub struct Unmovable<'a> {
+            pub x: &'a i32,
+        }
+
+        impl<'a> Drop for Unmovable<'a> {
+            fn drop(&mut self) {}
+        }
+
+        pub fn pass_unmovable<'a>(_x: Unmovable<'a>)
+        where
+            Unmovable<'a>: Copy,
+        {}
+    "#;
+    test_format_item(test_src, "pass_unmovable", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                void pass_unmovable(::rs::Movable<::rust_out::Unmovable> _x);
+            }
+        );
+        assert_cc_matches!(
+            result.cc_details.tokens,
+            quote! {
+                inline void pass_unmovable(::rs::Movable<::rust_out::Unmovable> _x) {
+                    crubit::Slot<::rust_out::Unmovable> _x_slot;
+                    ::std::move(_x).MoveToSlot(_x_slot);
+                    return __crubit_internal::__crubit_thunk_pass_uunmovable_u_x00000027a(_x_slot.Get());
+                }
+            }
+        );
+    });
+}
+
+#[test]
+fn test_unmovable_self_with_unsatisfied_copy_where_bound_in_method() {
+    let test_src = r#"
+        pub struct Unmovable<'a> {
+            pub x: &'a i32,
+        }
+
+        impl<'a> Drop for Unmovable<'a> {
+            fn drop(&mut self) {}
+        }
+
+        impl<'a> Unmovable<'a> {
+            pub fn consume(self)
+            where
+                Self: Copy,
+            {}
+        }
+    "#;
+    test_format_item(test_src, "Unmovable", |result| {
+        let result = result.unwrap().unwrap();
+        assert_cc_matches!(
+            result.main_api.tokens,
+            quote! {
+                struct ... Unmovable final {
+                    ...
+                    __COMMENT__ "Error generating bindings for associated function `Unmovable::<'a>::consume` defined at <crubit_unittests.rs>;l=11: Can't pass `self` by value for an unmovable type without a move constructor."
+                    ...
+                };
+            }
+        );
+    });
+}

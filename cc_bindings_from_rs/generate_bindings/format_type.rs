@@ -687,7 +687,6 @@ fn format_ref_for_cc<'tcx>(
     mutability: Mutability,
     location: TypeLocation,
 ) -> Result<CcSnippet<'tcx>> {
-    let tcx = db.tcx();
     if let ty::TyKind::Slice(element_ty) = *referent.kind() {
         check_slice_layout(db.tcx(), ty);
         return format_slice_ref_for_cc(db, element_ty, mutability);

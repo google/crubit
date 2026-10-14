@@ -26,9 +26,7 @@ use database::{BindingsGenerator, StaticMethodMode, TypeLocation};
 use error_report::{anyhow, bail};
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::{
-    as_ref_or_pinned_ref, does_type_implement_trait, get_layout, is_copy, post_analysis_typing_env,
-};
+use query_compiler::{as_ref_or_pinned_ref, does_type_implement_trait, get_layout, is_copy};
 use quote::quote;
 #[rustversion::since(2026-09-27)]
 use rustc_attr_ir::{find_attr, Attribute, AttributeKind};
@@ -211,8 +209,6 @@ fn legacy_bridged_type_needs_slot<'tcx>(
 /// * `db` - the bindings generator
 /// * `cc_ident` - the name of the C++ lvalue.
 /// * `ty` - the Rust type of the parameter
-/// * `post_analysis_typing_env` - the typing environment, used to determine if the type is
-///   trivially destructible (no drop glue).
 /// * `includes` - an output parameter used to store the set of C++ includes required
 /// * `statements` - an output parameter used to store the C++ statements performing the conversion
 ///
@@ -222,10 +218,10 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
     db: &BindingsGenerator<'tcx>,
     cc_ident: Ident,
     ty: Ty<'tcx>,
-    post_analysis_typing_env: ty::TypingEnv<'tcx>,
     includes: &mut BTreeSet<CcInclude>,
     statements: &mut TokenStream,
 ) -> Result<TokenStream> {
+    let typing_env = ty::TypingEnv::fully_monomorphized();
     Ok(match classify_param_abi(db, ty)? {
         ParamAbi::Callable(info) => {
             return cc_callable_param_to_c_abi(db, cc_ident, ty, &info, includes, statements);
@@ -243,12 +239,8 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
                     }
                     if let CcType::Pointer(_) = cpp_type {
                         quote! { #cc_ident }
-                    } else if !legacy_bridged_type_needs_slot(
-                        db,
-                        ty,
-                        is_layout_compat,
-                        post_analysis_typing_env,
-                    ) {
+                    } else if !legacy_bridged_type_needs_slot(db, ty, is_layout_compat, typing_env)
+                    {
                         quote! { & #cc_ident }
                     } else {
                         includes.insert(db.support_header("internal/slot.h"));
@@ -320,7 +312,6 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
                     db,
                     tuple_element_name.clone(),
                     tuple_tys[i],
-                    post_analysis_typing_env,
                     includes,
                     statements,
                 )?;
@@ -348,7 +339,7 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
             }
         }
         ParamAbi::Value(ValueAbi::Array | ValueAbi::ByPointer) => {
-            if !ty.needs_drop(db.tcx(), post_analysis_typing_env) {
+            if !ty.needs_drop(db.tcx(), typing_env) {
                 // As an optimization, if the type is trivially destructible, we don't
                 // need to move it to a new NoDestructor location. We can directly copy the
                 // bytes.
@@ -522,7 +513,6 @@ struct ReturnConversion {
 
 fn cc_return_value_from_c_abi<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    post_analysis_typing_env: ty::TypingEnv<'tcx>,
     ident: Ident,
     ty: Ty<'tcx>,
     prereqs: &mut CcPrerequisites<'tcx>,
@@ -548,7 +538,7 @@ fn cc_return_value_from_c_abi<'tcx>(
                         db,
                         ty,
                         is_layout_compat,
-                        post_analysis_typing_env,
+                        ty::TypingEnv::fully_monomorphized(),
                     ) {
                         prereqs.includes.insert(db.support_header("internal/slot.h"));
                         let local_name =
@@ -631,7 +621,6 @@ fn cc_return_value_from_c_abi<'tcx>(
                     unpack_expr: element_unpack_expr,
                 } = cc_return_value_from_c_abi(
                     db,
-                    post_analysis_typing_env,
                     tuple_element_ident,
                     tuple_tys[i],
                     prereqs,
@@ -868,14 +857,12 @@ impl ThunkSelfParameter {
 /// This can be checking parameter invariants or creating a slot to pass as an output pointer.
 pub(crate) fn generate_thunk_call<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    def_id: DefId,
     thunk_name: Ident,
     rs_return_type: Ty<'tcx>,
     self_param: ThunkSelfParameter,
     params: &[Param<'tcx>],
     is_async: bool,
 ) -> Result<CcSnippet<'tcx>> {
-    let tcx = db.tcx();
     let mut prereqs = CcPrerequisites::default();
     let mut tokens = TokenStream::new();
 
@@ -904,7 +891,6 @@ pub(crate) fn generate_thunk_call<'tcx>(
                 db,
                 cc_name.clone(),
                 *ty,
-                post_analysis_typing_env(tcx, def_id),
                 &mut prereqs.includes,
                 &mut tokens,
             )
@@ -979,7 +965,6 @@ pub(crate) fn generate_thunk_call<'tcx>(
     } else {
         let ReturnConversion { storage_name, unpack_expr } = cc_return_value_from_c_abi(
             db,
-            post_analysis_typing_env(tcx, def_id),
             expect_format_cc_ident("return_value"),
             rs_return_type,
             &mut prereqs,
@@ -1245,14 +1230,14 @@ pub fn generate_function<'tcx>(
             .collect_vec()
     };
 
-    let takes_self_by_copy = matches!(function_kind, FunctionKind::MethodTakingSelfByValue { .. } if is_copy(tcx, def_id, params[0].ty));
+    let takes_self_by_copy = matches!(function_kind, FunctionKind::MethodTakingSelfByValue { .. } if is_copy(tcx, params[0].ty));
     let mut method_qualifiers = quote! {};
     if static_method_mode != StaticMethodMode::ForceStaticMethod {
         match function_kind {
             FunctionKind::Free | FunctionKind::AssociatedFn { .. } => {}
             FunctionKind::MethodTakingSelfByValue { self_ty } => {
                 assert_eq!(self_ty, params[0].ty);
-                method_qualifiers = if is_copy(tcx, def_id, self_ty) {
+                method_qualifiers = if is_copy(tcx, self_ty) {
                     quote! { const }
                 } else {
                     quote! { && }
@@ -1343,7 +1328,6 @@ pub fn generate_function<'tcx>(
     let thunk_name_cc = format_cc_ident(db, &thunk_name).context("Error formatting thunk name")?;
     let impl_body = generate_thunk_call(
         db,
-        def_id,
         thunk_name_cc.clone(),
         actual_rs_return_type,
         thunk_self,

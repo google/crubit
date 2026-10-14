@@ -26,7 +26,6 @@ use database::code_snippet::{ApiSnippets, CcPrerequisites, CcSnippet};
 use database::{AdtCoreBindings, BindingsGenerator, TypeLocation};
 use error_report::{anyhow, bail, ensure};
 use proc_macro2::{Ident, Literal, TokenStream};
-use query_compiler::post_analysis_typing_env;
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
 use rustc_abi::LayoutData;
@@ -174,7 +173,7 @@ pub(crate) fn analyze_enum<'tcx>(
     let def_id = adt_def.did();
 
     // TODO(b/489126000): Support enums with drop glue and non-`Copy` enums.
-    ensure!(is_copy(tcx, def_id, self_ty), "Only `Copy` enums are supported so far");
+    ensure!(is_copy(tcx, self_ty), "Only `Copy` enums are supported so far");
 
     let layout = get_layout(tcx, self_ty)?;
     let (discriminant_ty, tag_encoding) = match layout.variants() {
@@ -201,7 +200,7 @@ pub(crate) fn analyze_enum<'tcx>(
     reserved_names.insert(tcx.item_name(def_id).to_string());
     reserved_names.insert(core.common.cc_short_name.to_string());
 
-    let typing_env = post_analysis_typing_env(tcx, def_id);
+    let typing_env = ty::TypingEnv::fully_monomorphized();
     // Uninhabited variants can never exist, so they get no bindings. (rustc may lay out an enum
     // with several variants as `Single` if all but one of them are uninhabited.)
     let variants = adt_def

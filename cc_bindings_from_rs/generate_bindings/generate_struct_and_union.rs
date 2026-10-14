@@ -42,7 +42,7 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use query_compiler::{
     as_ref_or_pinned_ref, is_std_ptr_non_null, liberate_and_deanonymize_late_bound_regions,
-    post_analysis_typing_env, try_normalize,
+    try_normalize,
 };
 use quote::{format_ident, quote};
 #[rustversion::since(2026-05-18)]
@@ -77,11 +77,7 @@ pub(crate) fn adt_core_bindings_needs_drop<'tcx>(
     bindings: &AdtCoreBindings<'tcx>,
     tcx: TyCtxt<'tcx>,
 ) -> bool {
-    let typing_env = bindings
-        .def_id
-        .map(|id| post_analysis_typing_env(tcx, id))
-        .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
-    bindings.common.self_ty.needs_drop(tcx, typing_env)
+    bindings.common.self_ty.needs_drop(tcx, ty::TypingEnv::fully_monomorphized())
 }
 
 /// Similar to the method `TyCtxt::non_blanket_impls_for_ty` but checks for precise self_ty matching
@@ -721,7 +717,7 @@ fn generate_into_impls<'tcx>(
                     );
                 }
             };
-            let is_copy = is_copy(tcx, def_id, core.common.self_ty);
+            let is_copy = is_copy(tcx, core.common.self_ty);
             if !is_copy && !db.is_cpp_move_constructible(core.common.self_ty) {
                 return None;
             }
@@ -766,7 +762,6 @@ fn generate_into_impls<'tcx>(
             let self_cpp_ty = self_cpp_ty.into_tokens(&mut prereqs);
             let impl_body = generate_thunk_call(
                 db,
-                def_id,
                 thunk_name.clone(),
                 middle_ty,
                 ThunkSelfParameter::new(
@@ -1044,7 +1039,6 @@ fn generate_constructor_impls<'tcx>(
                 db,
                 format_ident!("value"),
                 src_ty,
-                ty::TypingEnv::fully_monomorphized(),
                 &mut prereqs.includes,
                 &mut statements,
             )
@@ -1838,7 +1832,7 @@ pub(crate) fn is_struct_aggregate<'tcx>(
     if crubit_attrs.cpp_enum.is_some() {
         return Err(NotAggregateReason::CppEnum);
     }
-    let typing_env = post_analysis_typing_env(tcx, def_id);
+    let typing_env = ty::TypingEnv::fully_monomorphized();
     let mut drop_glue_count = 0;
     for field_def in &variant.fields {
         if crate::field_def_is_pub_and_stable(tcx, field_def).is_err() {
@@ -2062,7 +2056,7 @@ pub fn generate_adt<'tcx>(
     };
 
     let copy_ctor_and_assignment_snippets = if is_aggregate {
-        if is_copy(tcx, core.def_id, core.common.self_ty) {
+        if is_copy(tcx, core.common.self_ty) {
             let qualified_adt_name = &core.common.cc_fully_qualified_name;
             let cc_details = CcSnippet::with_include(
                 quote! {
@@ -2080,11 +2074,7 @@ pub fn generate_adt<'tcx>(
     };
 
     let move_ctor_and_assignment_snippets = if is_aggregate {
-        let typing_env = core
-            .def_id
-            .map(|id| post_analysis_typing_env(tcx, id))
-            .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
-        if !core.common.self_ty.needs_drop(tcx, typing_env) {
+        if !adt_core_bindings_needs_drop(&core, tcx) {
             let qualified_adt_name = &core.common.cc_fully_qualified_name;
             let cc_details = CcSnippet::with_include(
                 quote! {
@@ -2818,10 +2808,7 @@ fn generate_variant_ctor<'tcx>(
                             }
                             rustc_abi::Variants::Single { .. } => (0, rustc_abi::Size::ZERO, 0),
                             rustc_abi::Variants::Multiple { tag_field, .. } => {
-                                let typing_env = post_analysis_typing_env(
-                                    tcx,
-                                    core.def_id.expect("Enums must have a DefId"),
-                                );
+                                let typing_env = ty::TypingEnv::fully_monomorphized();
                                 let tag = tcx.tag_for_variant(typing_env.as_query_input((
                                     tcx.erase_and_anonymize_regions(core.common.self_ty),
                                     variant_index,
@@ -3993,13 +3980,6 @@ fn generate_begin_and_end_for_type<'tcx>(
         .get(&sym::into_iter)
         .expect("IntoIterator trait missing into_iter method");
 
-    let into_iter_fn_assoc_item = tcx
-        .associated_items(into_iterator_trait_id)
-        .in_definition_order()
-        .find(|item| item.name() == sym::into_iter && matches!(item.kind, ty::AssocKind::Fn { .. }))
-        .expect("IntoIterator should have into_iter method");
-    let into_iter_fn_id = into_iter_fn_assoc_item.def_id;
-
     let adt_cc_name = &core.common.cc_short_name;
     let param_cc_type_tokens = match passing_mode {
         PassingMode::Value => quote! { #adt_cc_name && },
@@ -4018,7 +3998,6 @@ fn generate_begin_and_end_for_type<'tcx>(
 
     let impl_body = generate_thunk_call(
         db,
-        into_iter_fn_id,
         into_iter_thunk_name.clone(),
         into_iter_ty,
         ThunkSelfParameter::new(

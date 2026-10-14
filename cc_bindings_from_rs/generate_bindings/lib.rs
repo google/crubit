@@ -64,7 +64,6 @@ use proc_macro2::TokenStream;
 use query_compiler::{
     does_type_implement_trait, get_layout, get_tag_size_with_padding, is_c_abi_compatible_by_value,
     is_copy, is_std_ptr_non_null, liberate_and_deanonymize_late_bound_regions,
-    post_analysis_typing_env,
 };
 use quote::{format_ident, quote};
 use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
@@ -1718,7 +1717,6 @@ fn generate_deleted_default_ctor<'tcx>(
 /// type, how would we do it?
 fn copy_ctor_and_assignment_operator_codegen_style<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    def_id: Option<DefId>,
     self_ty: Ty<'tcx>,
 ) -> Option<CopyCodegenStyle> {
     if db.is_proto_message(self_ty) {
@@ -1727,7 +1725,7 @@ fn copy_ctor_and_assignment_operator_codegen_style<'tcx>(
     let tcx = db.tcx();
     let clone_trait_id = tcx.lang_items().clone_trait().expect("Can't find the `Clone` trait");
     CopyCodegenStyle::from_available_traits(
-        is_copy(tcx, def_id, self_ty),
+        is_copy(tcx, self_ty),
         does_type_implement_trait(tcx, self_ty, clone_trait_id, []),
     )
 }
@@ -1832,7 +1830,7 @@ pub(crate) fn generate_copy_ctor_and_assignment_operator<'tcx>(
         }
     }
     let copy_codegen_style =
-        db.copy_ctor_and_assignment_operator_codegen_style(core.def_id, core.common.self_ty);
+        db.copy_ctor_and_assignment_operator_codegen_style(core.common.self_ty);
     fallible_format_copy_codegen_style(db, core, copy_codegen_style).unwrap_or_else(|err| {
         let msg = format!("{err:#}");
         let adt_cc_name = &core.common.cc_short_name;
@@ -1851,21 +1849,18 @@ pub(crate) fn generate_copy_ctor_and_assignment_operator<'tcx>(
 /// type, how would we do it?
 fn move_ctor_and_assignment_operator_codegen_style<'tcx>(
     db: &BindingsGenerator<'tcx>,
-    def_id: Option<DefId>,
     self_ty: Ty<'tcx>,
 ) -> Option<MoveCodegenStyle> {
     if db.is_proto_message(self_ty) {
         return None;
     }
     let tcx = db.tcx();
-    let typing_env = def_id
-        .map(|id| post_analysis_typing_env(tcx, id))
-        .unwrap_or_else(ty::TypingEnv::fully_monomorphized);
+    let typing_env = ty::TypingEnv::fully_monomorphized();
     MoveCodegenStyle::from_available_traits(
         !self_ty.needs_drop(tcx, typing_env),
         db.has_default_ctor(self_ty),
         self_ty.is_unpin(tcx, typing_env),
-        db.copy_ctor_and_assignment_operator_codegen_style(def_id, self_ty).is_some(),
+        db.copy_ctor_and_assignment_operator_codegen_style(self_ty).is_some(),
     )
 }
 
@@ -1910,18 +1905,7 @@ fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -
                 }
             }
 
-            let always_specialize_generics = db
-                .crate_features(db.source_crate_num())
-                .contains(crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust);
-            let def_id = if always_specialize_generics
-                && db.parse_adt_template_specialization(ty).is_some()
-            {
-                None
-            } else {
-                Some(adt_def.did())
-            };
-
-            db.move_ctor_and_assignment_operator_codegen_style(def_id, ty).is_some()
+            db.move_ctor_and_assignment_operator_codegen_style(ty).is_some()
         }
 
         // Tuples: all elements must be move-constructible.
@@ -1944,7 +1928,7 @@ pub(crate) fn generate_move_ctor_and_assignment_operator<'tcx>(
     let common = &core.common;
     let adt_cc_name = &common.cc_short_name;
     let qualified_adt_name = &common.cc_fully_qualified_name;
-    match db.move_ctor_and_assignment_operator_codegen_style(core.def_id, common.self_ty) {
+    match db.move_ctor_and_assignment_operator_codegen_style(common.self_ty) {
         // We rely on the copy constructor and assignment operator to handle the move
         // operations.
         Some(MoveCodegenStyle::Copy) => ApiSnippets::default(),
