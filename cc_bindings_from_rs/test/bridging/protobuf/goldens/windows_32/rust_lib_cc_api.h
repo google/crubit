@@ -1,0 +1,465 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// rust_lib_golden
+
+// clang-format off
+#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_RUST_LIB_GOLDEN
+#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_RUST_LIB_GOLDEN
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wshadow"
+#include "support/annotations_internal.h"
+#include "support/internal/check.h"
+#include "support/internal/memswap.h"
+#include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
+#include "support/rs_std/vec.h"
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <new>
+#include <type_traits>
+#include <utility>
+
+#include "absl/status/statusor.h"
+#include "cc_bindings_from_rs/test/bridging/protobuf/foo.pb.h"
+#include "support/protobuf/rust.h"
+
+namespace rust_lib {
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(":: rust_lib_golden :: FooService") alignas(4)
+    [[clang::trivial_abi]] FooService final {
+ public:
+  // Default::default
+  FooService();
+
+  // Drop::drop
+  ~FooService();
+
+  FooService(FooService&&) noexcept;
+  ::rust_lib::FooService& operator=(FooService&&) noexcept;
+
+  // `rust_lib_golden::FooService` doesn't implement the `Clone` trait
+  FooService(const FooService&) = delete;
+  FooService& operator=(const FooService&) = delete;
+  FooService(::crubit::UnsafeRelocateTag, FooService&& value);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  bool handle_request(const ::foo_service::FooRequest* req,
+                      ::foo_service::FooResponse* rsp);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  const ::foo_service::FooRequestStats* request_stats() const& $(__anon1)
+      CRUBIT_LIFETIME_BOUND;
+
+  // CRUBIT_ANNOTATE: must_bind=
+  ::foo_service::FooRequestStats clone_request_stats() const;
+
+  // CRUBIT_ANNOTATE: must_bind=
+  void update_request_stats(::foo_service::FooRequestStats updated_stats);
+
+  // CRUBIT_ANNOTATE: must_bind=
+  static void enum_in_signature(::foo_service::FooEnum _e);
+
+ private:
+  // Field type has been replaced with a blob of bytes: Field is private
+  ::std::array<unsigned char, 4> stats;
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// Error generating bindings for struct `rust_lib_golden::NewStatusOr` defined
+// at
+// cc_bindings_from_rs/test/bridging/protobuf/rust_lib.rs;l=77:
+// Type bindings for rust_lib_golden::NewStatusOr suppressed due to being mapped
+// to an existing C++ type (absl::StatusOr<{T}>)
+
+// CRUBIT_ANNOTATE: must_bind=
+struct CRUBIT_INTERNAL_RUST_TYPE(
+    ":: rust_lib_golden :: StructWithProto") alignas(4) [[clang::trivial_abi]]
+StructWithProto final {
+ public:
+  // Type is not a C++ aggregate: Field `stats` requires drop glue but is not
+  // C++-movable
+
+  // Default::default
+  StructWithProto();
+
+  // Drop::drop
+  ~StructWithProto();
+
+  StructWithProto(StructWithProto&&) noexcept;
+  ::rust_lib::StructWithProto& operator=(StructWithProto&&) noexcept;
+
+  // `rust_lib_golden::StructWithProto` doesn't implement the `Clone` trait
+  StructWithProto(const StructWithProto&) = delete;
+  StructWithProto& operator=(const StructWithProto&) = delete;
+  StructWithProto(::crubit::UnsafeRelocateTag, StructWithProto&& value);
+
+  union {
+    ::proto::Rust<::foo_service::FooRequestStats> stats;
+  };
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+// CRUBIT_ANNOTATE: must_bind=
+absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>
+create_proto_status_or(::std::int32_t num);
+
+// CRUBIT_ANNOTATE: must_bind=
+rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>> create_proto_vec(
+    ::std::int32_t num);
+
+// CRUBIT_ANNOTATE: must_bind=
+::rust_lib::StructWithProto create_struct_with_proto(::std::int32_t num);
+
+// CRUBIT_ANNOTATE: must_bind=
+//  # Safety
+//
+//  `p` must be valid for reads.
+::std::int32_t read_proto_pointer(
+    ::proto::Rust<::foo_service::FooRequestStats> const* p);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::int32_t read_proto_ref(
+    ::proto::Rust<::foo_service::FooRequestStats> const& p);
+
+}  // namespace rust_lib
+
+#ifndef _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
+template <>
+struct alignas(4) CRUBIT_INTERNAL_RUST_TYPE(
+    ":: alloc :: vec :: Vec < :: foo_proto :: FooRequestStats >")
+    rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>
+    : public rs_std::VecBase<::proto::Rust<::foo_service::FooRequestStats>> {
+ public:
+  // Default::default
+  Vec() noexcept;
+
+  // Clone::clone
+  Vec(const Vec&) noexcept;
+
+  // Clone::clone_from
+  rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>& operator=(
+      const Vec&) noexcept;
+
+  Vec(Vec&&) noexcept;
+  rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>& operator=(
+      Vec&&) noexcept;
+  Vec(::crubit::UnsafeRelocateTag, Vec&& value);
+
+  ~Vec() noexcept;
+
+ private:
+  friend class rs_std::VecBase<::proto::Rust<::foo_service::FooRequestStats>>;
+  static constexpr std::size_t kPtrOffset = 4;
+  static constexpr std::size_t kCapOffset = 0;
+  static constexpr std::size_t kLenOffset = 8;
+  unsigned char storage_[12];
+};
+#endif
+
+namespace rust_lib {
+
+static_assert(
+    sizeof(::rust_lib::FooService) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::rust_lib::FooService) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Default_udefault_urust_ulib_ugolden_x0000003a_x0000003aFooService(
+    ::rust_lib::FooService* __ret_ptr);
+}
+inline ::rust_lib::FooService::FooService() {
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_urust_ulib_ugolden_x0000003a_x0000003aFooService(
+          this);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aFooService(
+    ::rust_lib::FooService&);
+}
+inline ::rust_lib::FooService::~FooService() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aFooService(
+          *this);
+}
+inline ::rust_lib::FooService::FooService(FooService&& other) noexcept
+    : FooService() {
+  *this = ::std::move(other);
+}
+inline ::rust_lib::FooService& ::rust_lib::FooService::operator=(
+    FooService&& other) noexcept {
+  crubit::MemSwap(*this, other);
+  return *this;
+}
+inline ::rust_lib::FooService::FooService(::crubit::UnsafeRelocateTag,
+                                          FooService&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+namespace __crubit_internal {
+extern "C" bool __crubit_thunk_handle_urequest(::rust_lib::FooService&,
+                                               const ::foo_service::FooRequest*,
+                                               ::foo_service::FooResponse*);
+}
+inline bool(FooService::handle_request)(const ::foo_service::FooRequest* req,
+                                        ::foo_service::FooResponse* rsp) {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_handle_urequest(self, req, rsp);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_request_ustats(
+    ::rust_lib::FooService const&,
+    const ::foo_service::FooRequestStats** __ret_ptr);
+}
+inline const ::foo_service::FooRequestStats*(
+    FooService::request_stats)() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
+  auto&& self = *this;
+  union __return_value_crubit_return_union {
+    constexpr __return_value_crubit_return_union() {}
+    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
+    const ::foo_service::FooRequestStats* val;
+  } __return_value_ret_val_holder;
+  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  __crubit_internal::__crubit_thunk_request_ustats(self,
+                                                   __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder.val);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_clone_urequest_ustats(
+    ::rust_lib::FooService const&, ::foo_service::FooRequestStats* __ret_ptr);
+}
+inline ::foo_service::FooRequestStats(FooService::clone_request_stats)() const {
+  auto&& self = *this;
+  crubit::Slot<::foo_service::FooRequestStats> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_clone_urequest_ustats(
+      self, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_update_urequest_ustats(
+    ::rust_lib::FooService&, ::foo_service::FooRequestStats*);
+}
+inline void(FooService::update_request_stats)(
+    ::foo_service::FooRequestStats updated_stats) {
+  auto&& self = *this;
+  crubit::Slot updated_stats_slot((::std::move(updated_stats)));
+  return __crubit_internal::__crubit_thunk_update_urequest_ustats(
+      self, updated_stats_slot.Get());
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_enum_uin_usignature(::foo_service::FooEnum*);
+}
+inline void(FooService::enum_in_signature)(::foo_service::FooEnum _e) {
+  static_assert(sizeof(::foo_service::FooEnum) == 4 &&
+                    alignof(::foo_service::FooEnum) == 4,
+                "Verify that C++ layout-equivalent type has the same size and "
+                "alignment as the Rust type");
+  return __crubit_internal::__crubit_thunk_enum_uin_usignature(&_e);
+}
+inline void ::rust_lib::FooService::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::rust_lib::FooService;
+  static_assert(0 == offsetof(__crubit_assert_type, stats));
+}
+static_assert(
+    sizeof(::rust_lib::StructWithProto) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::rust_lib::StructWithProto) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Default_udefault_urust_ulib_ugolden_x0000003a_x0000003aStructWithProto(
+    ::rust_lib::StructWithProto* __ret_ptr);
+}
+inline ::rust_lib::StructWithProto::StructWithProto() {
+  __crubit_internal::
+      __crubit_thunk_Default_udefault_urust_ulib_ugolden_x0000003a_x0000003aStructWithProto(
+          this);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aStructWithProto(
+    ::rust_lib::StructWithProto&);
+}
+inline ::rust_lib::StructWithProto::~StructWithProto() {
+  __crubit_internal::
+      __crubit_thunk_Drop_udrop_urust_ulib_ugolden_x0000003a_x0000003aStructWithProto(
+          *this);
+}
+inline ::rust_lib::StructWithProto::StructWithProto(
+    StructWithProto&& other) noexcept
+    : StructWithProto() {
+  *this = ::std::move(other);
+}
+inline ::rust_lib::StructWithProto& ::rust_lib::StructWithProto::operator=(
+    StructWithProto&& other) noexcept {
+  crubit::MemSwap(*this, other);
+  return *this;
+}
+inline ::rust_lib::StructWithProto::StructWithProto(::crubit::UnsafeRelocateTag,
+                                                    StructWithProto&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+inline void ::rust_lib::StructWithProto::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::rust_lib::StructWithProto;
+  static_assert(0 == offsetof(__crubit_assert_type, stats));
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_create_uproto_ustatus_uor(
+    ::std::int32_t,
+    absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>* __ret_ptr);
+}
+inline absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>
+create_proto_status_or(::std::int32_t num) {
+  static_assert(
+      sizeof(absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>) ==
+              8 &&
+          alignof(
+              absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>) ==
+              4,
+      "Verify that C++ layout-equivalent type has the same size and alignment "
+      "as the Rust type");
+  crubit::Slot<absl::StatusOr<::proto::Rust<::foo_service::FooRequestStats>>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create_uproto_ustatus_uor(
+      num, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_create_uproto_uvec(
+    ::std::int32_t,
+    rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>* __ret_ptr);
+}
+inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>
+create_proto_vec(::std::int32_t num) {
+  crubit::Slot<rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create_uproto_uvec(num,
+                                                       __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_create_ustruct_uwith_uproto(
+    ::std::int32_t, ::rust_lib::StructWithProto* __ret_ptr);
+}
+inline ::rust_lib::StructWithProto create_struct_with_proto(
+    ::std::int32_t num) {
+  crubit::Slot<::rust_lib::StructWithProto> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create_ustruct_uwith_uproto(
+      num, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_read_uproto_upointer(
+    ::proto::Rust<::foo_service::FooRequestStats> const*);
+}
+inline ::std::int32_t read_proto_pointer(
+    ::proto::Rust<::foo_service::FooRequestStats> const* p) {
+  return __crubit_internal::__crubit_thunk_read_uproto_upointer(p);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::int32_t __crubit_thunk_read_uproto_uref(
+    ::proto::Rust<::foo_service::FooRequestStats> const&);
+}
+inline ::std::int32_t read_proto_ref(
+    ::proto::Rust<::foo_service::FooRequestStats> const& p) {
+  return __crubit_internal::__crubit_thunk_read_uproto_uref(p);
+}
+
+}  // namespace rust_lib
+
+#ifndef _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
+#define _CRUBIT_BINDINGS_FOR_IMPL_rs_ustd_x00000020_x0000003a_x0000003a_x00000020Vec_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020proto_x00000020_x0000003a_x0000003a_x00000020Rust_x00000020_x0000003c_x00000020_x0000003a_x0000003a_x00000020foo_uservice_x00000020_x0000003a_x0000003a_x00000020FooRequestStats_x00000020_x0000003e_x00000020_x0000003e
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
+    rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>> const&,
+    rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>* __ret_ptr);
+}
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
+    rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>&,
+    rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>> const&);
+}
+inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
+    const Vec& other) noexcept {
+  __crubit_internal::
+      __crubit_thunk_Clone_uclone_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
+          other, this);
+}
+inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>&
+rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator=(
+    const Vec& other) noexcept {
+  if (this != &other) {
+    __crubit_internal::
+        __crubit_thunk_Clone_uclone_ufrom_ustd_x0000003a_x0000003avec_x0000003a_x0000003aVec_x0000003cfoo_uproto_x0000003a_x0000003athird_uparty_ucrubit_ucc_ubindings_ufrom_urs_utest_ubridging_uprotobuf_ufoo_uproto_x0000003a_x0000003aFooRequestStats_x0000003e(
+            *this, other);
+  }
+  return *this;
+}
+inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
+    Vec&& other) noexcept
+    : storage_{} {
+  ::std::memcpy(storage_, other.storage_, sizeof(storage_));
+  other.init_empty();
+}
+inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>&
+rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::operator=(
+    Vec&& other) noexcept {
+  if (this != &other) {
+    destroy();
+    crubit::MemSwap(*this, other);
+  }
+  return *this;
+}
+inline rs_std::Vec<::proto::Rust<::foo_service::FooRequestStats>>::Vec(
+    ::crubit::UnsafeRelocateTag, Vec&& value) {
+  ::std::memcpy(this, &value, sizeof(value));
+}
+
+inline rs_std::Vec<
+    ::proto::Rust<::foo_service::FooRequestStats>>::Vec() noexcept
+    : storage_{} {
+  init_empty();
+}
+inline rs_std::Vec<
+    ::proto::Rust<::foo_service::FooRequestStats>>::~Vec() noexcept {
+  destroy();
+}
+#endif
+
+#pragma clang diagnostic pop
+#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_BRIDGING_PROTOBUF_RUST_LIB_GOLDEN

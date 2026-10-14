@@ -42,6 +42,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
     rust_library = "function_annotations",
 )
