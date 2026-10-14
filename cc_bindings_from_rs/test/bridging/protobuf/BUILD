@@ -46,6 +46,9 @@ rust_library(
     testonly = True,
     srcs = ["rust_lib.rs"],
     edition = "2024",
+    proc_macro_deps = [
+        "//support:crubit_annotate",  # build_cleaner: keep
+    ],
     deps = [":foo_rust_proto"],
 )
 

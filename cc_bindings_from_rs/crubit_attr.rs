@@ -121,6 +121,11 @@ pub struct CrubitAttrs {
     /// Whether the annotated item corresponds to a C++-originated move-constructible type.
     pub cpp_move_constructible: bool,
 
+    /// For generic bridged types, whether the C++ type is constructible via
+    /// `T(const ::crubit::UnsafeRelocateTag&, T&&)` if its generic type parameters are
+    /// Rust-movable.
+    pub derive_rust_movable: bool,
+
     /// Whether the annotated item should be skipped during C++ bindings generation.
     pub do_not_bind: bool,
 
@@ -144,6 +149,7 @@ impl CrubitAttrs {
     pub const SAME_ABI: &'static str = "same_abi";
     pub const CPP_ORIGINATED_THREAD_SAFE: &'static str = "cpp_thread_safe";
     pub const CPP_MOVE_CONSTRUCTIBLE: &'static str = "cpp_move_constructible";
+    pub const DERIVE_RUST_MOVABLE: &'static str = "derive_rust_movable";
     pub const DO_NOT_BIND: &'static str = "do_not_bind";
     pub const FIELD_DROP_ORDER_DOES_NOT_MATTER: &'static str = "field_drop_order_does_not_matter";
     pub const ALLOW_UNBINDABLE_TYPE: &'static str = "allow_unbindable_type";
@@ -177,6 +183,7 @@ impl CrubitAttrs {
             CrubitAttrs::SAME_ABI => set_bool_once(&mut self.same_abi)?,
             CrubitAttrs::CPP_ORIGINATED_THREAD_SAFE => set_bool_once(&mut self.cpp_thread_safe)?,
             CrubitAttrs::CPP_MOVE_CONSTRUCTIBLE => set_bool_once(&mut self.cpp_move_constructible)?,
+            CrubitAttrs::DERIVE_RUST_MOVABLE => set_bool_once(&mut self.derive_rust_movable)?,
             CrubitAttrs::DO_NOT_BIND => set_bool_once(&mut self.do_not_bind)?,
             CrubitAttrs::FIELD_DROP_ORDER_DOES_NOT_MATTER => {
                 set_bool_once(&mut self.field_drop_order_does_not_matter)?
@@ -356,6 +363,19 @@ pub fn get_attrs(tcx: TyCtxt, did: DefId) -> Result<CrubitAttrs> {
             matches!(tcx.def_kind(did), DefKind::Struct | DefKind::Enum | DefKind::Union),
             "`allow_unbindable_type` is only permitted on structs, enums, and unions"
         )
+    }
+    if crubit_attrs.derive_rust_movable {
+        ensure!(
+            matches!(
+                tcx.def_kind(did),
+                DefKind::Struct | DefKind::Enum | DefKind::Union | DefKind::TyAlias
+            ),
+            "`derive_rust_movable` is only permitted on structs, enums, unions, and type aliases"
+        );
+        ensure!(
+            !crubit_attrs.cpp_move_constructible,
+            "`cpp_move_constructible` and `derive_rust_movable` cannot both be specified"
+        );
     }
     Ok(crubit_attrs)
 }

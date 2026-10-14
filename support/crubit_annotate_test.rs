@@ -69,3 +69,6 @@ struct FieldDropOrderDoesNotMatter {}
 
 #[crubit_annotate::allow_unbindable_type]
 struct AllowUnbindableType {}
+
+#[crubit_annotate::derive_rust_movable]
+struct DeriveRustMovable {}

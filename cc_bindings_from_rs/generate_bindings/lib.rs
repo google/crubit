@@ -1896,17 +1896,20 @@ fn is_cpp_move_constructible<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -
 
         // ADT: check CrubitAttrs if C++-originated, else check
         // move_ctor_and_assignment_operator_codegen_style.
-        ty::Adt(adt_def, _) => {
+        ty::Adt(adt_def, substs) => {
             if is_std_ptr_non_null(db.tcx(), adt_def.did()) {
                 return true;
             }
             if db.is_proto_message(ty) {
                 return false;
             }
-            if let Ok(attrs) = crubit_attr::get_attrs(db.tcx(), adt_def.did())
-                && attrs.cpp_move_constructible
-            {
-                return true;
+            if let Ok(attrs) = crubit_attr::get_attrs(db.tcx(), adt_def.did()) {
+                if attrs.cpp_move_constructible {
+                    return true;
+                }
+                if attrs.cpp_type.is_some() && substs.types().next().is_some() {
+                    return substs.types().all(|t| db.is_cpp_move_constructible(t));
+                }
             }
 
             let always_specialize_generics = db

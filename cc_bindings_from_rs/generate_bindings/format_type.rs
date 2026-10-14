@@ -381,6 +381,25 @@ fn format_transparent_pointee_or_reference_for_cc<'tcx>(
     format_pointer_or_reference_ty_for_cc(db, referent, mutability, pointer_sigil).ok()
 }
 
+fn is_cpp_relocatable<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+    if db.is_cpp_move_constructible(ty) {
+        return true;
+    }
+    if db.is_proto_message(ty) {
+        return true;
+    }
+    let ty::TyKind::Adt(adt_def, substs) = ty.kind() else {
+        return false;
+    };
+    if let Ok(attrs) = crubit_attr::get_attrs(db.tcx(), adt_def.did())
+        && attrs.cpp_type.is_some()
+    {
+        return attrs.derive_rust_movable && substs.types().all(|t| is_cpp_relocatable(db, t));
+    }
+    // Rust-defined ADTs always receive a `T(::crubit::UnsafeRelocateTag, T&&)` constructor.
+    true
+}
+
 fn format_legacy_bridged_type_with_placeholders<'tcx>(
     db: &BindingsGenerator<'tcx>,
     cpp_type_str: &str,
@@ -414,9 +433,10 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
     // it means its C++ move constructor is unconditionally available (e.g. pointer/heap
     // wrappers like `std::unique_ptr<T>` and `std::vector<T>` only transfer internal
     // pointers upon move and never invoke `{T}`'s move constructor).
-    let is_unconditionally_cpp_movable = crubit_attr::get_attrs(tcx, adt.did())
-        .map(|attrs| attrs.cpp_move_constructible)
-        .unwrap_or(false);
+    let attrs = crubit_attr::get_attrs(tcx, adt.did()).ok();
+    let is_unconditionally_cpp_movable =
+        attrs.as_ref().is_some_and(|attrs| attrs.cpp_move_constructible);
+    let is_derive_rust_movable = attrs.as_ref().is_some_and(|attrs| attrs.derive_rust_movable);
     let is_passed_by_value = matches!(
         location,
         TypeLocation::FnReturn { is_constructor: false }
@@ -434,10 +454,10 @@ fn format_legacy_bridged_type_with_placeholders<'tcx>(
         if !result_str.contains(&placeholder) {
             continue;
         }
-        if is_passed_by_value
-            && !is_unconditionally_cpp_movable
-            && !db.is_cpp_move_constructible(ty)
-        {
+        let can_pass_type_arg = is_unconditionally_cpp_movable
+            || db.is_cpp_move_constructible(ty)
+            || (is_derive_rust_movable && is_cpp_relocatable(db, ty));
+        if is_passed_by_value && !can_pass_type_arg {
             bail!(
                 "crubit.rs/errors/unsupported_type: Bridged type `{}` cannot be passed \
                  by value because `{ty}` is not C++ move-constructible. \
@@ -1094,7 +1114,7 @@ fn format_ty_for_cc_impl<'tcx>(
 
                         // Under `nonnull_smart_pointers`, a bare smart pointer is non-null, and
                         // `Nullable<Ptr>` is the spelling for one that may be null.
-                        let tokens = if apply_default_nullability
+                        let mut tokens = if apply_default_nullability
                             && db
                                 .crate_features(db.source_crate_num())
                                 .contains(CrubitFeature::NonnullSmartPointers)
@@ -1108,6 +1128,13 @@ fn format_ty_for_cc_impl<'tcx>(
                             tokens
                         };
 
+                        if is_layout_compat
+                            && !db.is_cpp_move_constructible(ty)
+                            && matches!(location, TypeLocation::FnParam { .. })
+                        {
+                            prereqs.includes.insert(db.support_header("movable.h"));
+                            tokens = quote! { ::rs::Movable< #tokens > };
+                        }
                         return Ok(CcSnippet { tokens, prereqs });
                     }
                     BridgedType::Option(_) => {
