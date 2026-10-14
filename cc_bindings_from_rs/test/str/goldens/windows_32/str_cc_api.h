@@ -1,0 +1,144 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// str_golden
+
+// clang-format off
+#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STR_STR_GOLDEN
+#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STR_STR_GOLDEN
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wshadow"
+#include "support/annotations_internal.h"
+#include "support/internal/check_no_mutable_aliasing.h"
+#include "support/internal/slot.h"
+#include "support/rs_std/str_ref.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
+#include <utility>
+
+namespace str {
+static constexpr rs_std::StrRef CONST_STR_FOO = rs_std::StrRef("foo");
+
+// Error generating bindings for static `str_golden::STATIC_STR_FOO` defined at
+// cc_bindings_from_rs/test/str/str.rs;l=43:
+// Unsupported rustc_hir::hir::DefKind: Static { safety: Safe, mutability: Not,
+// nested: false }
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: str_golden :: TypeWithStr") alignas(4)
+    [[clang::trivial_abi]] TypeWithStr final {
+ public:
+  static ::str::TypeWithStr create(rs_std::StrRef s);
+
+  ::std::uintptr_t get_str_len() const;
+
+  ::std::uint8_t const* get_str_data() const;
+
+  rs_std::StrRef str_field{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+rs_std::StrRef foo_as_str();
+
+::std::uint8_t const* get_str_data(rs_std::StrRef s);
+
+::std::uintptr_t get_str_len(rs_std::StrRef s);
+
+void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
+                                         ::std::uint8_t& __param_1);
+
+static_assert(
+    sizeof(::str::TypeWithStr) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::str::TypeWithStr) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<::str::TypeWithStr>);
+static_assert(::std::is_trivially_move_constructible_v<::str::TypeWithStr>);
+static_assert(::std::is_trivially_move_assignable_v<::str::TypeWithStr>);
+static_assert(::std::is_trivially_copy_constructible_v<::str::TypeWithStr>);
+static_assert(::std::is_trivially_copy_assignable_v<::str::TypeWithStr>);
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_create(rs_std::StrRef*,
+                                      ::str::TypeWithStr* __ret_ptr);
+}
+inline ::str::TypeWithStr(TypeWithStr::create)(rs_std::StrRef s) {
+  crubit::Slot<::str::TypeWithStr> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_create(&s, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t __crubit_thunk_get_ustr_ulen(
+    ::str::TypeWithStr const&);
+}
+inline ::std::uintptr_t(TypeWithStr::get_str_len)() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_get_ustr_ulen(self);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(
+    ::str::TypeWithStr const&);
+}
+inline ::std::uint8_t const*(TypeWithStr::get_str_data)() const {
+  auto&& self = *this;
+  return __crubit_internal::__crubit_thunk_get_ustr_udata(self);
+}
+inline void ::str::TypeWithStr::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::str::TypeWithStr;
+  static_assert(0 == offsetof(__crubit_assert_type, str_field));
+}
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_foo_uas_ustr(rs_std::StrRef* __ret_ptr);
+}
+inline rs_std::StrRef foo_as_str() {
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_foo_uas_ustr(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uint8_t const* __crubit_thunk_get_ustr_udata(rs_std::StrRef*);
+}
+inline ::std::uint8_t const* get_str_data(rs_std::StrRef s) {
+  return __crubit_internal::__crubit_thunk_get_ustr_udata(&s);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t __crubit_thunk_get_ustr_ulen(rs_std::StrRef*);
+}
+inline ::std::uintptr_t get_str_len(rs_std::StrRef s) {
+  return __crubit_internal::__crubit_thunk_get_ustr_ulen(&s);
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(
+    rs_std::StrRef*, ::std::uint8_t&);
+}
+inline void str_checked_as_potentially_aliasing(rs_std::StrRef __param_0,
+                                                ::std::uint8_t& __param_1) {
+  crubit::internal::CheckNoMutableAliasing(
+      crubit::internal::AsMutPtrDatas<::std::uint8_t&>(__param_1),
+      crubit::internal::AsPtrDatas<rs_std::StrRef>(__param_0));
+  return __crubit_internal::
+      __crubit_thunk_str_uchecked_uas_upotentially_ualiasing(&__param_0,
+                                                             __param_1);
+}
+
+}  // namespace str
+
+#pragma clang diagnostic pop
+#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_STR_STR_GOLDEN

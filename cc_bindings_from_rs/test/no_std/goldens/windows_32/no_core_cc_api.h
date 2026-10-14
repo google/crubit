@@ -1,0 +1,78 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// Automatically @generated C++ bindings for the following Rust crate:
+// no_core_golden
+
+// clang-format off
+#ifndef THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NO_STD_NO_CORE_GOLDEN
+#define THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NO_STD_NO_CORE_GOLDEN
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wignored-attributes"
+#pragma clang diagnostic ignored "-Wshadow"
+#include "support/annotations_internal.h"
+#include "support/internal/slot.h"
+#include "support/lifetime_annotations.h"
+#include "support/rs_std/str_ref.h"
+
+#include <cstddef>
+#include <utility>
+
+#include "support/rs_std/rs_alloc.h"
+
+namespace no_core {
+
+struct CRUBIT_INTERNAL_RUST_TYPE(":: no_core_golden :: Test") alignas(4)
+    [[clang::trivial_abi]] Test final {
+ public:
+  static ::no_core::Test new_();
+
+  rs_std::StrRef s() const& $(__anon1) CRUBIT_LIFETIME_BOUND;
+
+  ::rs::alloc::string::String s_{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+
+static_assert(
+    sizeof(::no_core::Test) == 12,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::no_core::Test) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_new(::no_core::Test* __ret_ptr);
+}
+inline ::no_core::Test(Test::new_)() {
+  crubit::Slot<::no_core::Test> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_new(__return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_s(::no_core::Test const&,
+                                 rs_std::StrRef* __ret_ptr);
+}
+inline rs_std::StrRef(Test::s)() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
+  auto&& self = *this;
+  crubit::Slot<rs_std::StrRef> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_s(self, __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+inline void ::no_core::Test::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::no_core::Test;
+  static_assert(0 == offsetof(__crubit_assert_type, s_));
+}
+}  // namespace no_core
+
+#pragma clang diagnostic pop
+#endif  // THIRD_PARTY_CRUBIT_CC_BINDINGS_FROM_RS_TEST_NO_STD_NO_CORE_GOLDEN

@@ -92,6 +92,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
     rust_library = "layout_equivalent_generics",
 )
@@ -142,6 +143,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
     rust_library = "bridged_types",
 )
@@ -166,6 +168,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
     rust_library = "layout_equivalent_pointers",
 )
