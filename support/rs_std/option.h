@@ -33,13 +33,6 @@ inline constexpr bool OptionFromStdOptional = std::conjunction_v<
 template <typename Derived, typename T>
 class OptionBase {
  private:
-  // Sets `option` to `None` when destroyed. This lets a `return` statement
-  // relocate the value out of `option` before `option` is marked empty.
-  struct SetNoneOnDestruction {
-    Derived* option;
-    ~SetNoneOnDestruction() { option->set_none_tag(); }
-  };
-
   Derived& derived() { return *static_cast<Derived*>(this); }
   const Derived& derived() const { return *static_cast<const Derived*>(this); }
 
@@ -152,7 +145,10 @@ class OptionBase {
     if constexpr (requires(T x) {
                     T(::crubit::UnsafeRelocateTag{}, std::move(x));
                   }) {
-      SetNoneOnDestruction set_none{&derived()};
+      struct DeferSetTagNone {
+        Derived* value;
+        ~DeferSetTagNone() { value->set_none_tag(); }
+      } defer(&derived());
       return std::make_optional<T>(::crubit::UnsafeRelocateTag{},
                                    std::move(*some));
     } else {
@@ -200,87 +196,7 @@ class OptionBase {
     check_has_value();
     return derived().some_const_ptr();
   }
-
-  // TODO(b/523234159): Remove temporary `std::optional` compatibility
-  // `.value()` and `.value_or()` overloads once existing callers are migrated.
-  //
-  // Unlike `std::optional::value()`, which throws `std::bad_optional_access`,
-  // `value()` on a `None` option CHECK-fails.
-  T& value() &
-    requires(!is_unit_t_v<T>)
-  {
-    return **this;
-  }
-  const T& value() const&
-    requires(!is_unit_t_v<T>)
-  {
-    return **this;
-  }
-  T&& value() &&
-    requires(!is_unit_t_v<T>)
-  {
-    return *std::move(*this);
-  }
-
-  template <typename U = std::remove_cv_t<T>>
-    requires(!is_unit_t_v<T> && std::is_copy_constructible_v<T> &&
-             std::is_convertible_v<U &&, T>)
-  T value_or(U&& default_value) const& {
-    return has_value() ? **this
-                       : static_cast<T>(std::forward<U>(default_value));
-  }
-
-  // Unlike `std::optional::value_or() &&`, which leaves a moved-from value in
-  // the optional, this leaves `*this` as `None`.
-  template <typename U = std::remove_cv_t<T>>
-    requires(!is_unit_t_v<T> &&
-             (std::is_move_constructible_v<T> ||
-              requires(T x) {
-                T(::crubit::UnsafeRelocateTag{}, std::move(x));
-              }) &&
-             std::is_convertible_v<U &&, T>)
-  T value_or(U&& default_value) && {
-    if (!has_value()) {
-      return static_cast<T>(std::forward<U>(default_value));
-    }
-    SetNoneOnDestruction set_none{&derived()};
-    return ::crubit::UnsafeTakeValue(derived().some_ptr());
-  }
 };
-
-// TODO(b/523234159): Remove temporary `std::optional` compatibility
-// `operator==` overloads once existing callers are migrated.
-template <typename Derived, typename T>
-  requires requires(const T& a, const T& b) {
-    requires std::is_convertible_v<decltype(a == b), bool>;
-  }
-bool operator==(const OptionBase<Derived, T>& lhs,
-                const OptionBase<Derived, T>& rhs) {
-  if (lhs.has_value() != rhs.has_value()) {
-    return false;
-  }
-  if constexpr (is_unit_t_v<T>) {
-    return true;
-  } else {
-    return !lhs.has_value() || static_cast<bool>(*lhs == *rhs);
-  }
-}
-
-template <typename Derived, typename T>
-bool operator==(const OptionBase<Derived, T>& opt, ::std::nullopt_t) noexcept {
-  return !opt.has_value();
-}
-
-template <typename Derived, typename T, typename U>
-  requires(!is_unit_t_v<T> &&
-           !std::is_base_of_v<OptionBase<Derived, T>, std::decay_t<U>> &&
-           !std::is_same_v<std::decay_t<U>, ::std::nullopt_t> &&
-           requires(const T& a, const U& b) {
-             requires std::is_convertible_v<decltype(a == b), bool>;
-           })
-bool operator==(const OptionBase<Derived, T>& opt, const U& v) {
-  return opt.has_value() && static_cast<bool>(*opt == v);
-}
 
 template <typename T>
 struct Option final {
