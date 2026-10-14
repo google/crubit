@@ -6,8 +6,8 @@ extern crate transitive;
 pub use transitive::Transitive;
 pub use transitive::Transitive as TransitiveUseAlias;
 
-pub use transitive::public as transitive_public;
-pub use transitive::public::*;
+pub use transitive::public_mod as transitive_public;
+pub use transitive::public_mod::*;
 
 pub type TransitiveTypeAlias = transitive::Transitive;
 

@@ -529,7 +529,22 @@ fn check_feature_enabled_on_self_and_all_deps(
     db: &BindingsGenerator,
     feature: crubit_feature::CrubitFeature,
 ) -> bool {
-    db.crate_name_to_features().values().all(|crate_features| crate_features.contains(feature))
+    let is_stdlib_crate = |name: &str| matches!(name, "std" | "alloc" | "core");
+    let crate_features = db.crate_name_to_features();
+    let default_features = db.default_features();
+    let features_for_crate =
+        |name: &str| crate_features.get(name).copied().unwrap_or(default_features);
+
+    features_for_crate("self").contains(feature)
+        && db
+            .crate_name_to_include_paths()
+            .keys()
+            .filter(|name| !is_stdlib_crate(name.as_ref()))
+            .all(|name| features_for_crate(name.as_ref()).contains(feature))
+        && crate_features
+            .iter()
+            .filter(|(name, _)| !is_stdlib_crate(name.as_ref()))
+            .all(|(_, features)| features.contains(feature))
 }
 
 fn format_with_cc_body(
@@ -1376,21 +1391,6 @@ fn format_const_value<'tcx>(
 
 fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<ApiSnippets<'tcx>> {
     let tcx = db.tcx();
-    // TODO: b/457843120 - Remove this workaround once we can properly support float constants.
-    let unsupported_consts = [
-        ["core", "f32", "INFINITY"],
-        ["core", "f64", "INFINITY"],
-        ["core", "f32", "NEG_INFINITY"],
-        ["core", "f64", "NEG_INFINITY"],
-        ["core", "f32", "NAN"],
-        ["core", "f64", "NAN"],
-    ];
-    if unsupported_consts.iter().any(|const_path| matches_qualified_name(db, def_id, const_path)) {
-        bail!(
-            "Cannot generate bindings to unsupported constant: {}",
-            tcx.item_name(def_id).as_str()
-        )
-    }
     let ty = normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity());
     let rust_type = ty;
     let cc_type = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;

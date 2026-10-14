@@ -122,6 +122,23 @@ pub(crate) fn cpp_enum_cpp_underlying_type<'tcx>(
     db.format_ty_for_cc(field_type, TypeLocation::Field)
 }
 
+/// Formats an IEEE-754 NaN into a Clang/GCC `constexpr` builtin call that preserves the sign bit,
+/// quiet vs. signaling bit, and NaN payload.
+fn format_cc_nan(is_negative: bool, is_quiet: bool, payload: u64, is_f32: bool) -> String {
+    let sign = if is_negative { "-" } else { "" };
+    let builtin = match (is_quiet, is_f32) {
+        (true, true) => "__builtin_nanf",
+        (true, false) => "__builtin_nan",
+        (false, true) => "__builtin_nansf",
+        (false, false) => "__builtin_nans",
+    };
+    if is_quiet && payload == 0 {
+        format!(r#"{sign}{builtin}("")"#)
+    } else {
+        format!(r#"{sign}{builtin}("0x{payload:x}")"#)
+    }
+}
+
 /// Returns a string representation of the value of a given numeric Scalar having a given TyKind.
 pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Result<String> {
     let scalar = match scalar {
@@ -152,8 +169,42 @@ pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Resu
         TyKind::Uint(U16) => format!("UINT16_C({})", scalar.to_u16()),
         TyKind::Uint(U32) => format!("UINT32_C({})", scalar.to_u32()),
         TyKind::Uint(U64) => format!("UINT64_C({})", scalar.to_u64()),
-        TyKind::Float(F32) => format!("{}f", scalar.to_f32()),
-        TyKind::Float(F64) => format!("{}L", scalar.to_f64()),
+        TyKind::Float(F32) => {
+            let bits = scalar.to_u32();
+            let value = f32::from_bits(bits);
+            if value.is_nan() {
+                format_cc_nan(
+                    (bits & 0x8000_0000) != 0,
+                    (bits & 0x0040_0000) != 0,
+                    (bits & 0x003f_ffff) as u64,
+                    /* is_f32= */ true,
+                )
+            } else if value == f32::INFINITY {
+                "__builtin_inff()".to_string()
+            } else if value == f32::NEG_INFINITY {
+                "-__builtin_inff()".to_string()
+            } else {
+                format!("{value:?}f")
+            }
+        }
+        TyKind::Float(F64) => {
+            let bits = scalar.to_u64();
+            let value = f64::from_bits(bits);
+            if value.is_nan() {
+                format_cc_nan(
+                    (bits & 0x8000_0000_0000_0000) != 0,
+                    (bits & 0x0008_0000_0000_0000) != 0,
+                    bits & 0x0007_ffff_ffff_ffff,
+                    /* is_f32= */ false,
+                )
+            } else if value == f64::INFINITY {
+                "__builtin_inf()".to_string()
+            } else if value == f64::NEG_INFINITY {
+                "-__builtin_inf()".to_string()
+            } else {
+                format!("{value:?}")
+            }
+        }
         TyKind::Uint(Usize) => format!("UINT64_C({})", scalar.to_target_usize(tcx)),
 
         // Signed integer minimums cannot be expressed with literals, as `-<int>` parses as a unary

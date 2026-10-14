@@ -33,13 +33,45 @@ use crubit_annotate::must_bind;
 #[must_bind] pub const RUST_USIZE_MAX: isize = isize::MAX;
 #[must_bind] pub const RUST_F32_MIN: f32 = f32::MIN;
 #[must_bind] pub const RUST_F32_MAX: f32 = f32::MAX;
+#[must_bind] pub const RUST_F32_MIN_POSITIVE: f32 = f32::MIN_POSITIVE;
+#[must_bind] pub const RUST_F32_EPSILON: f32 = f32::EPSILON;
 #[must_bind] pub const RUST_F64_MIN: f64 = f64::MIN;
 #[must_bind] pub const RUST_F64_MAX: f64 = f64::MAX;
+#[must_bind] pub const RUST_F64_MIN_POSITIVE: f64 = f64::MIN_POSITIVE;
+#[must_bind] pub const RUST_F64_EPSILON: f64 = f64::EPSILON;
 
 #[must_bind] pub const INT_POS: i32 = 42;
 #[must_bind] pub const INT_NEG: i32 = -17;
 #[must_bind] pub const FLOAT_32: f32 = 0.125; // 2^(-3)
+#[must_bind] pub const FLOAT_32_WHOLE: f32 = 64.0;
+#[must_bind] pub const FLOAT_32_NEG_ZERO: f32 = -0.0;
+#[must_bind] pub const FLOAT_32_MIN_SUBNORMAL: f32 = f32::from_bits(1);
+#[must_bind] pub const FLOAT_32_MAX_SUBNORMAL: f32 = f32::from_bits(0x007f_ffff);
+#[must_bind] pub const FLOAT_32_NEG_SUBNORMAL: f32 = f32::from_bits(0x8000_0001);
+#[must_bind] pub const FLOAT_32_INFINITY: f32 = f32::INFINITY;
+#[must_bind] pub const FLOAT_32_NEG_INFINITY: f32 = f32::NEG_INFINITY;
+#[must_bind] pub const FLOAT_32_NAN: f32 = f32::NAN;
+#[must_bind] pub const FLOAT_32_NEG_NAN: f32 = -f32::NAN;
+#[must_bind] pub const FLOAT_32_PAYLOAD_NAN: f32 = f32::from_bits(0x7fc0_0042);
+#[must_bind] pub const FLOAT_32_NEG_PAYLOAD_NAN: f32 = f32::from_bits(0xffc0_0042);
+#[must_bind] pub const FLOAT_32_MAX_PAYLOAD_NAN: f32 = f32::from_bits(0x7fff_ffff);
+#[must_bind] pub const FLOAT_32_SIGNALING_NAN: f32 = f32::from_bits(0x7f80_0001);
+#[must_bind] pub const FLOAT_32_NEG_SIGNALING_NAN: f32 = f32::from_bits(0xff80_0001);
 #[must_bind] pub const FLOAT_64: f64 = 0.0078125; // 2^(-7)
+#[must_bind] pub const FLOAT_64_WHOLE: f64 = 64.0;
+#[must_bind] pub const FLOAT_64_NEG_ZERO: f64 = -0.0;
+#[must_bind] pub const FLOAT_64_MIN_SUBNORMAL: f64 = f64::from_bits(1);
+#[must_bind] pub const FLOAT_64_MAX_SUBNORMAL: f64 = f64::from_bits(0x000f_ffff_ffff_ffff);
+#[must_bind] pub const FLOAT_64_NEG_SUBNORMAL: f64 = f64::from_bits(0x8000_0000_0000_0001);
+#[must_bind] pub const FLOAT_64_INFINITY: f64 = f64::INFINITY;
+#[must_bind] pub const FLOAT_64_NEG_INFINITY: f64 = f64::NEG_INFINITY;
+#[must_bind] pub const FLOAT_64_NAN: f64 = f64::NAN;
+#[must_bind] pub const FLOAT_64_NEG_NAN: f64 = -f64::NAN;
+#[must_bind] pub const FLOAT_64_PAYLOAD_NAN: f64 = f64::from_bits(0x7ff8_0000_0000_0042);
+#[must_bind] pub const FLOAT_64_NEG_PAYLOAD_NAN: f64 = f64::from_bits(0xfff8_0000_0000_0042);
+#[must_bind] pub const FLOAT_64_MAX_PAYLOAD_NAN: f64 = f64::from_bits(0x7fff_ffff_ffff_ffff);
+#[must_bind] pub const FLOAT_64_SIGNALING_NAN: f64 = f64::from_bits(0x7ff0_0000_0000_0001);
+#[must_bind] pub const FLOAT_64_NEG_SIGNALING_NAN: f64 = f64::from_bits(0xfff0_0000_0000_0001);
 #[must_bind] pub const LARGE_INT: i64 = 9223372036854775807;
 #[must_bind] pub const UNSIGNED_INT: u32 = 4294967295;
 #[must_bind] pub const SLICE_LENGTH: usize = "hello world".len();
@@ -88,6 +120,45 @@ pub const NESTED_STRUCT_CONST: NestedStruct = NestedStruct {
 
 #[must_bind]
 pub const ARRAY_CONST: [i32; 3] = [10, 20, 30];
+
+#[derive(Copy, Clone, Debug)]
+#[repr(C)]
+pub struct FloatStruct {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[must_bind]
+pub const FLOAT_STRUCT_CONST: FloatStruct = FloatStruct {
+    x: -0.0,
+    y: f32::INFINITY,
+};
+
+#[must_bind]
+pub const FLOAT_ARRAY_CONST: [f32; 4] = [64.0, -0.0, f32::NEG_INFINITY, f32::NAN];
+
+#[must_bind]
+pub const FLOAT_64_ARRAY_CONST: [f64; 2] = [-0.0, f64::INFINITY];
+
+#[must_bind]
+pub fn f32_to_bits(x: f32) -> u32 {
+    x.to_bits()
+}
+
+#[must_bind]
+pub fn f64_to_bits(x: f64) -> u64 {
+    x.to_bits()
+}
+
+#[must_bind]
+pub fn roundtrip_f32(x: f32) -> f32 {
+    x
+}
+
+#[must_bind]
+pub fn roundtrip_f64(x: f64) -> f64 {
+    x
+}
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct StructWithArray {
