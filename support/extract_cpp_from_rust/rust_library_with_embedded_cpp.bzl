@@ -6,8 +6,8 @@
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
+load("//bazel:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl", "cc_bindings_from_rust_library_config")
-load("//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl", "rust_api_from_cpp")
 load("//support/extract_cpp_from_rust:extract_cpp.bzl", "extract_cpp")
 
 def rust_library_with_embedded_cpp(name, srcs, deps = [], deps_of_cc_library = [], **kwargs):

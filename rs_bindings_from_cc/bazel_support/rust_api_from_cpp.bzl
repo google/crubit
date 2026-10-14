@@ -11,6 +11,11 @@ generated `<name>.hint` target to its `aspect_hints` attribute.
 
 Example:
 ```python
+load(
+    "//bazel:rust_api_from_cpp.bzl",
+    "rust_api_from_cpp",
+)
+
 cc_library(
     name = "foo",
     aspect_hints = [":foo_rust.hint"],

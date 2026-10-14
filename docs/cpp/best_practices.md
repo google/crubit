@@ -14,6 +14,11 @@ A C++ library and its Rust bindings are defined as separate targets in the same
 `rust_api_from_cpp` target.
 
 ```python
+load(
+    "//bazel:rust_api_from_cpp.bzl",
+    "rust_api_from_cpp",
+)
+
 cc_library(
     name = "my_lib",
     hdrs = ["my_lib.h"],
@@ -77,7 +82,7 @@ If you need a type to be accessible from both C++ and Rust, you can either:
     `rust_api_from_cpp` so that Crubit generates Rust bindings for it, or
 *   **Define the type in a separate `rust_library`**: Define the type in a
     separate `rust_library` target that is then used as a dependency in both
-    Rust and (via a `cc_bindings_from_rust` target) in C++.
+    Rust and (via a `cpp_api_from_rust` target) in C++.
 
 If the type is purely for internal use within Rust and is never intended to be
 used from C++, you can silence the warning on the type definition using the
@@ -153,6 +158,11 @@ To enable Crubit on a C++ target, define a `rust_api_from_cpp` target and add
 its `.hint` target to the C++ target's `aspect_hints`:
 
 ```python
+load(
+    "//bazel:rust_api_from_cpp.bzl",
+    "rust_api_from_cpp",
+)
+
 cc_library(
     name = "my_lib",
     hdrs = ["my_lib.h"],

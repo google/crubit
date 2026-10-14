@@ -4,12 +4,12 @@ load("@bazel_tools//tools/build_defs/build_test:build_test.bzl", "build_test")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load(
-    "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
-    "additional_rust_srcs_for_crubit_bindings",
+    "//bazel:rust_api_from_cpp.bzl",
+    "rust_api_from_cpp",
 )
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl",
-    "rust_api_from_cpp",
+    "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
+    "additional_rust_srcs_for_crubit_bindings",
 )
 
 package(

@@ -22,7 +22,7 @@ called from C++, and how to actually use it from C++. The quick summary is:
 *   All `rust_library` targets can receive C++ bindings.
 *   To use the bindings for a target `//path/to:example_crate`, you must create
     a C++ rule exporting the bindings, using
-    `cc_bindings_from_rust(name="any_name_here", crate=":example_crate")`.
+    `cpp_api_from_rust(name="any_name_here", crate=":example_crate")`.
 *   The header name is the Rust target's label with a `.h` appended: to include
     the header for the Rust library `//path/to:example_crate`, you use `#include
     "path/to/example_crate.h"`.
@@ -48,7 +48,7 @@ The first part of creating a library that can be used by Crubit is to write a
 
 
 In the BUILD file, in addition to defining the `rust_library`, you should also
-define the `cc_bindings_from_rust` target to make it easier to use from C++:
+define the `cpp_api_from_rust` target (loaded via `load("//bazel:cpp_api_from_rust.bzl", "cpp_api_from_rust")`) to make it easier to use from C++:
 
 ```
 {{ #include ../../examples/rust/function/BUILD }}
@@ -63,7 +63,7 @@ header file is `"path/to/example_crate.h"`, and the C++ namespace is
 ### Use a Rust library from C++ {#use}
 
 C++ build rules do not have a `rust_deps` parameter, so to depend on the C++
-bindings for a target, they must depend on the `cc_bindings_from_rust` rule.
+bindings for a target, they must depend on the `cpp_api_from_rust` rule.
 
 For example:
 

@@ -13,7 +13,7 @@ Carcinize generates a Rust crate where:
 2.  **Rust Functions** are generated to wrap the original C++ functions using
     [`inline_cpp!`](inline_cpp.md) blocks.
 3.  **Downstream C++ Callers** continue using the library through generated
-    `cc_bindings_from_rust` targets.
+    `cpp_api_from_rust` targets.
 
 The generated Rust target will result in the same API and use the same
 implementation as the original C++ target, but will be entirely within a Rust
@@ -39,7 +39,7 @@ Carcinize will:
 1.  Generate the Rust source file `//path/to/pkg/my_target_rs.rs`.
 2.  Update `//path/to/pkg/BUILD` to replace the `cc_library` with a
     `rust_library_with_embedded_cpp` and re-export the original target name via
-    `cc_bindings_from_rust`.
+    `cpp_api_from_rust`.
 
 After the command completes, verify the generated target with your unit tests:
 
@@ -132,7 +132,7 @@ When migrated, Carcinize generates `math_utils_rs.rs`:
 
 `rust_library_with_embedded_cpp` extracts the companion C++ code from
 `global_cpp!` and compiles it into a companion C++ header.
-`cc_bindings_from_rust` re-exports both the Rust bindings and the companion
+`cpp_api_from_rust` re-exports both the Rust bindings and the companion
 header back to C++ callers.
 
 *   **C++ callers** retain access to all declarations, including templates
@@ -159,7 +159,7 @@ declarations with Rust implementations over time using one of these strategies:
 <!--  function:clamp -->
 
 
-> NOTE: `cc_bindings_from_rust` does not currently generate C++ function
+> NOTE: `cpp_api_from_rust` does not currently generate C++ function
 > templates from Rust generic functions. If existing C++ callers still require
 > the C++ template, keep the declaration in the `global_cpp!` block (or provide
 > concrete C++ wrappers as shown below) until downstream C++ callers are
@@ -240,7 +240,7 @@ target for the migrated Rust library:
 
 
 And re-exports the library back to C++ callers under the original target name
-using `cc_bindings_from_rust`:
+using `cpp_api_from_rust`:
 
 ```
 {{ #include ../../examples/cpp/carcinize/BUILD }}
@@ -252,7 +252,7 @@ using `cc_bindings_from_rust`:
     Rust crate and formats/extracts embedded C++ blocks.
 *   **`deps_of_cc_library`**: Lists C++ dependencies required by C++ headers
     used in `inline_cpp!` and `global_cpp!` blocks.
-*   **`cc_bindings_from_rust` (`:point`)**: Exposes the Rust library back to C++
+*   **`cpp_api_from_rust` (`:point`)**: Exposes the Rust library back to C++
     callers under the original target name, so downstream dependencies require
     no changes.
 

@@ -30,6 +30,11 @@ depends on `@abseil-cpp//absl/status:status_rust`:
 TODO: b/490215742 - Clean this up when the old API is removed.
 
 ```python
+load(
+    "//bazel:rust_api_from_cpp.bzl",
+    "rust_api_from_cpp",
+)
+
 cc_library(
     name = "cpp_api",
     srcs = ["cpp_api.cc"],
@@ -87,7 +92,7 @@ functions:
 <!--  -->
 
 
-`cc_bindings_from_rust` will automatically generate C++ bindings returning
+`cpp_api_from_rust` will automatically generate C++ bindings returning
 `absl::Status` and `absl::StatusOr<T>`:
 
 ```

@@ -1,6 +1,6 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl",
+    "//bazel:rust_api_from_cpp.bzl",
     "rust_api_from_cpp",
 )
 

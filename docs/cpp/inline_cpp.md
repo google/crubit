@@ -53,7 +53,7 @@ You can define the `BUILD` targets as follows:
 
 ```python
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl",
+    "//bazel:rust_api_from_cpp.bzl",
     "rust_api_from_cpp",
 )
 

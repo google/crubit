@@ -1,9 +1,9 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl",
+    "//bazel:rust_api_from_cpp.bzl",
     "rust_api_from_cpp",
 )
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load(
     "//rs_bindings_from_cc/test/golden:golden_test.bzl",
     "golden_test",

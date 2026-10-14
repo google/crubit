@@ -10,12 +10,12 @@ load(
     "rust_test",
 )
 load(
-    "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
-    "additional_rust_srcs_for_crubit_bindings",
+    "//bazel:rust_api_from_cpp.bzl",
+    "rust_api_from_cpp",
 )
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl",
-    "rust_api_from_cpp",
+    "//rs_bindings_from_cc/bazel_support:additional_rust_srcs_for_crubit_bindings_aspect_hint.bzl",
+    "additional_rust_srcs_for_crubit_bindings",
 )
 
 package(

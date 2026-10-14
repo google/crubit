@@ -1,12 +1,12 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_test")
 load(
-    "//common:crubit_wrapper_macros_oss.bzl",
-    "crubit_rust_test",
+    "//bazel:rust_api_from_cpp.bzl",
+    "rust_api_from_cpp",
 )
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_api_from_cpp.bzl",
-    "rust_api_from_cpp",
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_rust_test",
 )
 
 package(default_applicable_licenses = ["//:license"])

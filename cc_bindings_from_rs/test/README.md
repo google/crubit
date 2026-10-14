@@ -9,7 +9,7 @@ Each test is located in its own directory, e.g., `test/functions`.
 *   Create empty files named `foo_cc_api.h` and `foo_cc_api_impl.rs` in that
     directory.
 *   Create a `BUILD` file similar to other tests (e.g., `test/functions/BUILD`),
-    defining `rust_library`, `cc_bindings_from_rust`, `golden_test`, and
+    defining `rust_library`, `cpp_api_from_rust`, `golden_test`, and
     `crubit_cc_test` targets.
 *   Create a C++ test file `foo_test.cc`.
 *   Run `common/golden_update.sh` to populate the golden
