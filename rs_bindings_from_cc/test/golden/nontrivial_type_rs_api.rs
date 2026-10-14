@@ -60,6 +60,20 @@ impl Nontrivial {
     pub fn ConstRvalueRefQualified<'__this>(&'__this self) {
         unsafe { self::nontrivial::ConstRvalueRefQualified(self) }
     }
+    /// Takes a non-Unpin type by value (as a `Ctor`) and returns a non-Unpin type,
+    /// so that the returned `Ctor` has a precise-capturing `use` bound that names
+    /// the lifetime of `this`.
+    #[inline(always)]
+    pub fn TakesByValueMember<
+        '__this,
+        __Ctor1: ::ctor::Ctor<Output = Self, Error = ::ctor::Infallible>,
+    >(
+        &'__this self,
+        nontrivial: __Ctor1,
+    ) -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible> + use<'__this, __Ctor1>
+    {
+        unsafe { self::nontrivial::TakesByValueMember(self, nontrivial) }
+    }
 }
 
 impl ::ctor::CtorNew<()> for Nontrivial {
@@ -301,6 +315,28 @@ pub mod nontrivial {
     #[inline(always)]
     pub(crate) fn ConstRvalueRefQualified<'__this>(__this: &'__this crate::Nontrivial) {
         unsafe { crate::detail::__rust_thunk___ZNKO10Nontrivial23ConstRvalueRefQualifiedEv(__this) }
+    }
+    /// Takes a non-Unpin type by value (as a `Ctor`) and returns a non-Unpin type,
+    /// so that the returned `Ctor` has a precise-capturing `use` bound that names
+    /// the lifetime of `this`.
+    #[inline(always)]
+    pub(crate) fn TakesByValueMember<
+        '__this,
+        __Ctor1: ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>,
+    >(
+        __this: &'__this crate::Nontrivial,
+        nontrivial: __Ctor1,
+    ) -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible> + use<'__this, __Ctor1>
+    {
+        unsafe {
+            ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
+                crate::detail::__rust_thunk___ZNK10Nontrivial18TakesByValueMemberES_(
+                    __crubit_dest as *mut ::core::ffi::c_void,
+                    __this,
+                    ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
+                );
+            })
+        }
     }
 }
 
@@ -835,6 +871,29 @@ pub fn TakesByValueUnpin(nontrivial: crate::NontrivialUnpin) -> crate::Nontrivia
     }
 }
 
+/// Takes a non-Unpin type by value (as a `Ctor`) and returns a non-Unpin type,
+/// while also taking a reference, so that the returned `Ctor` has a
+/// precise-capturing `use` bound that names the lifetime of that reference.
+#[inline(always)]
+pub fn TakesByValueAndByReference<
+    'nontrivial_ref,
+    __Ctor1: ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>,
+>(
+    nontrivial_ref: &'nontrivial_ref crate::Nontrivial,
+    nontrivial: __Ctor1,
+) -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>
+       + use<'nontrivial_ref, __Ctor1> {
+    unsafe {
+        ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
+            crate::detail::__rust_thunk___Z26TakesByValueAndByReferenceRK10NontrivialS_(
+                __crubit_dest as *mut ::core::ffi::c_void,
+                nontrivial_ref,
+                ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
+            );
+        })
+    }
+}
+
 #[inline(always)]
 pub fn TakesByReference<'nontrivial>(
     nontrivial: ::core::pin::Pin<&'nontrivial mut crate::Nontrivial>,
@@ -1129,6 +1188,11 @@ mod detail {
             __this: &'__this crate::Nontrivial,
             rhs: &'rhs crate::Nontrivial,
         );
+        pub(crate) unsafe fn __rust_thunk___ZNK10Nontrivial18TakesByValueMemberES_<'__this>(
+            __return: *mut ::core::ffi::c_void,
+            __this: &'__this crate::Nontrivial,
+            nontrivial: &mut crate::Nontrivial,
+        );
         pub(crate) unsafe fn __rust_thunk___ZN16NontrivialInlineC1Ev(
             __this: *mut ::core::ffi::c_void,
         );
@@ -1250,6 +1314,13 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
             __return: *mut ::core::ffi::c_void,
             nontrivial: *mut crate::NontrivialUnpin,
+        );
+        pub(crate) unsafe fn __rust_thunk___Z26TakesByValueAndByReferenceRK10NontrivialS_<
+            'nontrivial_ref,
+        >(
+            __return: *mut ::core::ffi::c_void,
+            nontrivial_ref: &'nontrivial_ref crate::Nontrivial,
+            nontrivial: &mut crate::Nontrivial,
         );
         #[link_name = "_Z16TakesByReferenceR10Nontrivial"]
         pub(crate) unsafe fn __rust_thunk___Z16TakesByReferenceR10Nontrivial<'nontrivial>(
