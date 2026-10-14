@@ -41,6 +41,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
     rust_library = "do_not_bind",
 )

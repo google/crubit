@@ -43,6 +43,12 @@ load(
     "CRUBIT_MACOS_PLATFORMS",
     "CRUBIT_MACOS_TAGS_MAPPING",
 )
+load(
+    "//google_internal/build_flavors:crubit_build_flavors_windows.bzl",
+    "CRUBIT_WINDOWS_ABI_TIERS",
+    "CRUBIT_WINDOWS_PLATFORMS",
+    "CRUBIT_WINDOWS_TAGS_MAPPING",
+)
 
 def _generate_bindings_impl(ctx):
     rust_library = ctx.attr.rust_library[0]
@@ -172,7 +178,7 @@ def golden_test(
         basename: The name to use for generated files.
         golden_h: The generated C++ source code for the bindings.
         golden_rs: The generated Rust source code for the bindings.
-        platforms: List of additional target platforms to generate tests for (e.g. ["android", "ios", "macos"]). Defaults to None.
+        platforms: List of additional target platforms to generate tests for (e.g. ["android", "ios", "macos", "windows"]). Defaults to None.
         kythe_annotations: Whether to generate Kythe annotations.
     """
     if not basename:
@@ -235,7 +241,8 @@ def golden_test(
         for t in tags
         if t not in CRUBIT_TAGS_MAPPING and
            t not in CRUBIT_IOS_SIM_TAGS_MAPPING and
-           t not in CRUBIT_MACOS_TAGS_MAPPING
+           t not in CRUBIT_MACOS_TAGS_MAPPING and
+           t not in CRUBIT_WINDOWS_TAGS_MAPPING
     ]
 
     for platform in platforms:
@@ -336,6 +343,38 @@ def golden_test(
                 native.test_suite(
                     name = name + "_on_macos",
                     tests = macos_tests,
+                    tags = subtest_tags,
+                    visibility = ["//visibility:private"],
+                )
+        elif platform == "windows":
+            windows_tests = []
+
+            # Skip architectures matching exclusion tags (e.g. no_test_windows_x86).
+            excluded_cpus = [CRUBIT_WINDOWS_TAGS_MAPPING[t] for t in tags if t in CRUBIT_WINDOWS_TAGS_MAPPING]
+
+            # The subtests only generate bindings, so they also cover build-only CPUs such as arm64.
+            for cpu, config in CRUBIT_WINDOWS_PLATFORMS.items():
+                if cpu in excluded_cpus:
+                    continue
+                arch_dir = "windows_" + cpu
+                subtest_name = "%s_%s" % (name, arch_dir)
+                _generate_golden_subtest(
+                    name = subtest_name,
+                    basename = "%s_%s" % (basename, arch_dir),
+                    rust_library = patched_name,
+                    tags = subtest_tags,
+                    golden_h = golden_h,
+                    golden_rs = golden_rs,
+                    target_platform = config.platform,
+                    golden_dir = arch_dir,
+                    abi_tier = CRUBIT_WINDOWS_ABI_TIERS[cpu],
+                )
+                windows_tests.append(":" + subtest_name)
+
+            if windows_tests:
+                native.test_suite(
+                    name = name + "_on_windows",
+                    tests = windows_tests,
                     tags = subtest_tags,
                     visibility = ["//visibility:private"],
                 )
