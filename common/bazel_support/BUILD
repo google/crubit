@@ -119,3 +119,12 @@ config_setting(
     visibility = [
     ],
 )
+
+config_setting(
+    name = "cpu_riscv64",
+    constraint_values = [
+        "@platforms//cpu:riscv64",
+    ],
+    visibility = [
+    ],
+)
