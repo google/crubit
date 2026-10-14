@@ -601,7 +601,7 @@ fn public_paths_by_def_id(
 
     let mut add_child = |bfs_queue: &mut VecDeque<_>,
                          child: &ModChild,
-                         mut parent: Vec<Symbol>,
+                         parent: &[Symbol],
                          is_doc_hidden: bool| {
         // Underscores do not create paths that are valid to spell, so we can exclude them from our
         // traversal.
@@ -683,20 +683,18 @@ fn public_paths_by_def_id(
 
         // Don't include paths for definitions inside of `std::os`.
         // These collide with definitions in the C++ standard library that provide OS functionality.
-        if crate_name.as_str() == "std" {
-            let path = tcx
+        if crate_name.as_str() == "std"
+            && tcx
                 .def_path(def_id)
                 .data
-                .iter()
-                .map(|seg| seg.as_sym(/* verbose= */ false))
-                .collect::<Vec<_>>();
-            if path.first().is_some_and(|p| p.as_str() == "os") {
-                return;
-            }
+                .first()
+                .is_some_and(|seg| seg.as_sym(/* verbose= */ false).as_str() == "os")
+        {
+            return;
         }
 
         let path = ExportedPath {
-            path: parent.clone(),
+            path: parent.to_vec(),
             name: child.ident.name,
             type_alias_def_id,
             is_doc_hidden,
@@ -722,8 +720,9 @@ fn public_paths_by_def_id(
             && module_seen_set.insert(def_id)
             && !is_extern_crate_core(child)
         {
-            parent.push(child.ident.name);
-            bfs_queue.push_back(ModLikeDef { path_so_far: parent, is_doc_hidden, def_id });
+            let mut path_so_far = parent.to_vec();
+            path_so_far.push(child.ident.name);
+            bfs_queue.push_back(ModLikeDef { path_so_far, is_doc_hidden, def_id });
         }
     };
 
@@ -731,7 +730,7 @@ fn public_paths_by_def_id(
         let module_children = module_children(tcx, mod_like.def_id);
         let is_doc_hidden = mod_like.is_doc_hidden || tcx.is_doc_hidden(mod_like.def_id);
         for child in module_children.iter() {
-            add_child(bfs_queue, child, mod_like.path_so_far.clone(), is_doc_hidden);
+            add_child(bfs_queue, child, &mod_like.path_so_far, is_doc_hidden);
         }
     }
 
