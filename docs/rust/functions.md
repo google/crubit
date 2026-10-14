@@ -113,8 +113,27 @@ Crubit doesn't support generating bindings for *arbitrary* generic functions.
 Nevertheless, a small set of generic type parameters is supported by using
 canonical substitutions which are defined as follows:
 
-Generic constraints | Canonical substitution
-------------------- | ----------------------
-`T: AsMut<U>`       | `&mut U`
-`T: AsRef<U>`       | `&U`
-`T: Into<U>`        | `U`
+Generic constraints             | Canonical substitution
+------------------------------- | ----------------------
+`T: AsMut<U>`                   | `&mut U`
+`T: AsRef<U>`                   | `&U`
+`T: Into<U>`                    | `U`
+`F: Fn(Args...) -> R`           | `rs::FnRef<R(Args...) const>`
+`F: FnMut(Args...) -> R`        | `rs::FnRef<R(Args...)>`
+`F: FnOnce(Args...) -> R + 'static` | `rs::Fn<R(Args...) &&>`
+
+## Callbacks (`Fn`, `FnMut`, `FnOnce`) {#callbacks}
+
+Rust functions can accept callbacks as borrowed trait objects (`&dyn Fn`, `&mut dyn FnMut`),
+owned boxes (`Box<dyn Fn>`, `Box<dyn FnMut>`, `Box<dyn FnOnce>`), or generic `impl Trait`
+parameters:
+
+*   **`&dyn Fn(...)` / `impl Fn(...)`**: Maps to `rs::FnRef<... const>` (borrowed, no allocation).
+*   **`&mut dyn FnMut(...)` / `impl FnMut(...)`**: Maps to `rs::FnRef<...>` (borrowed, no allocation).
+*   **`Box<dyn Fn(...)>`**: Maps to `rs::Fn<... const>` (owned).
+*   **`Box<dyn FnMut(...)>`**: Maps to `rs::Fn<...>` (owned mutable).
+*   **`Box<dyn FnOnce(...)>` / `impl FnOnce(...) + 'static`**: Maps to `rs::Fn<... &&>` (owned, single-use).
+
+C++ callers can satisfy these parameters by passing C++ lambdas, function pointers,
+or `absl::AnyInvocable`. See [Callbacks](callbacks.md) for full
+details.

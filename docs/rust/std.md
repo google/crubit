@@ -183,3 +183,21 @@ given set of type arguments is emitted into the generated header of a crate
 whose public API mentions that instantiation. Attempting to use one of these
 templates with type arguments that do not appear in any of the Rust APIs you
 depend on is a compile-time error.
+
+## Callables (`Fn`, `FnMut`, `FnOnce`) {#callables}
+
+Rust function traits and callable parameters receive bindings through `rs::FnRef`
+and `rs::Fn`:
+
+*   **`rs::FnRef<Sig>`** (`support/rs_std/fn_ref.h`): Non-owning,
+    borrowed view of a callable corresponding to `&dyn Fn` or `&mut dyn FnMut`
+    (or generic `impl Fn` / `impl FnMut`). Does not allocate on the heap.
+*   **`rs::Fn<Sig>`** (`support/rs_std/fn.h`): Owning, heap-allocated
+    callable corresponding to `Box<dyn Fn>`, `Box<dyn FnMut>`, or `Box<dyn FnOnce>`
+    (or generic `impl FnOnce + 'static`). `rs::Fn<Sig &&>` corresponds to `FnOnce`
+    and must be invoked via `std::move(f)(...)`.
+*   **`rs_std::DynCallable<Sig>`** (`support/rs_std/dyn_callable.h`):
+    Move-only wrapper for Rust `Box<dyn Trait>` objects received in C++, implicitly
+    convertible to `absl::AnyInvocable<Sig>`.
+
+See [Callbacks](http://crubit.rs/types/callbacks) for the complete guide and examples.

@@ -12,6 +12,7 @@
     *   [Overview](/docs/types/)
     *   [Primitive Types](/docs/types/primitive.md)
     *   [Pointer Types](/docs/types/pointer.md)
+    *   [Callbacks](/docs/types/callbacks.md)
     *   [`absl::Status`](/docs/types/absl_status.md)
     *   [Protobuf](/docs/types/protobuf.md)
     *   Non-Rust-Movable Types
@@ -30,6 +31,7 @@
     *   <hr>
     *   [Functions](/docs/cpp/functions.md)
         *   [Operator overloading](/docs/cpp/operator_overloading.md)
+    *   [Callbacks](/docs/cpp/callbacks.md)
     *   [Classes and Structs](/docs/cpp/classes_and_structs.md)
     *   [References and Lifetimes](/docs/cpp/references_and_lifetimes.md)
     *   [Enums](/docs/cpp/enums.md)
@@ -42,6 +44,7 @@
 
     *   [Overview](/docs/rust/)
     *   [Functions](/docs/rust/functions.md)
+    *   [Callbacks](/docs/rust/callbacks.md)
     *   [Structs](/docs/rust/structs.md)
     *   [Enums](/docs/rust/enums.md)
     *   [Cpp Enums](/docs/rust/cpp_enums.md)

@@ -13,6 +13,8 @@ In brief, Crubit supports:
     i32`, including function pointers.
 *   [Rust standard library (`std`) types](../rust/std.md), such as `String`,
     `Option`, and `Vec`.
+*   [Callbacks](http://crubit.rs/types/callbacks), such as `absl::AnyInvocable`
+    and Rust callable traits (`Fn`, `FnMut`, `FnOnce`).
 *   User-defined types, with some language-specific rules and restrictions. (See
     [crubit.rs/cpp](http://crubit.rs/cpp) and
     [crubit.rs/rust](http://crubit.rs/rust)).

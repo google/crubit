@@ -10,6 +10,7 @@
 -   [Overview](./types/index.md)
 -   [Primitive Types](./types/primitive.md)
 -   [Pointer Types](./types/pointer.md)
+-   [Callbacks (`absl::AnyInvocable` and `Fn`/`FnMut`/`FnOnce`)](./types/callbacks.md)
 -   [`absl::Status`](./types/absl_status.md)
 -   [Protobuf](./types/protobuf.md)
 
@@ -22,6 +23,7 @@
 -   [Overview](./rust/index.md)
 -   [Building](./rust/building.md)
 -   [Functions](./rust/functions.md)
+-   [Callbacks (`Fn`, `FnMut`, `FnOnce`)](./rust/callbacks.md)
 -   [Structs](./rust/structs.md)
 -   [Enums](./rust/enums.md)
 -   [Cpp Enums](./rust/cpp_enums.md)
@@ -45,6 +47,7 @@
 --------------------------------------------------------------------------------
 
 -   [Functions](./cpp/functions.md)
+-   [Callbacks (`absl::AnyInvocable`)](./cpp/callbacks.md)
 -   [Classes and Structs](./cpp/classes_and_structs.md)
 -   [References and Lifetimes](./cpp/references_and_lifetimes.md)
 -   [Enums](./cpp/enums.md)
