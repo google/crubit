@@ -109,6 +109,38 @@ fn pipe_through_process<'a>(
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
+/// Resolves the path to a tool binary (`rustfmt` or `clang-format`) when not explicitly specified
+/// via CLI flags:
+/// 1. A sibling binary in the same directory as the running executable.
+/// 2. The compiled-in relative runfiles path (`external_binaries::*`), if it exists on disk.
+/// 3. Standard system locations (`system_fallbacks`), if present.
+/// 4. The bare executable name, resolved via `PATH`.
+fn resolve_default_exe_path(
+    compiled_default: &str,
+    exe_name: &str,
+    system_fallbacks: &[&str],
+) -> PathBuf {
+    if let Ok(current_exe) = std::env::current_exe()
+        && let Some(parent) = current_exe.parent()
+    {
+        let sibling = parent.join(exe_name);
+        if sibling.is_file() {
+            return sibling;
+        }
+    }
+    let compiled = Path::new(compiled_default);
+    if compiled.is_file() {
+        return compiled.to_path_buf();
+    }
+    for fallback in system_fallbacks {
+        let path = Path::new(fallback);
+        if path.is_file() {
+            return path.to_path_buf();
+        }
+    }
+    PathBuf::from(exe_name)
+}
+
 /// Runs `rustfmt` on the source string.
 pub fn run_rustfmt(
     source: &str,
@@ -116,8 +148,15 @@ pub fn run_rustfmt(
     rustfmt_config_path: Option<&Path>,
     extra_args: &[String],
 ) -> Result<String> {
-    let default_path = Path::new(external_binaries::RUSTFMT_EXE_PATH);
-    let exe = rustfmt_path.unwrap_or(default_path);
+    let default_path;
+    let exe = match rustfmt_path {
+        Some(path) => path,
+        None => {
+            default_path =
+                resolve_default_exe_path(external_binaries::RUSTFMT_EXE_PATH, "rustfmt", &[]);
+            &default_path
+        }
+    };
 
     let mut args: Vec<&OsStr> = vec![OsStr::new("--emit"), OsStr::new("stdout")];
     let config_arg;
@@ -144,8 +183,18 @@ pub fn run_clang_format(
     clang_format_path: Option<&Path>,
     extra_args: &[String],
 ) -> Result<String> {
-    let default_path = Path::new(external_binaries::CLANG_FORMAT_EXE_PATH);
-    let exe = clang_format_path.unwrap_or(default_path);
+    let default_path;
+    let exe = match clang_format_path {
+        Some(path) => path,
+        None => {
+            default_path = resolve_default_exe_path(
+                external_binaries::CLANG_FORMAT_EXE_PATH,
+                "clang-format",
+                &["/usr/bin/clang-format", "/usr/local/bin/clang-format"],
+            );
+            &default_path
+        }
+    };
 
     let trimmed = body.trim();
     let (input, wrapper_prefix) = match kind {
@@ -427,6 +476,28 @@ mod tests {
       int a;
     };
 }"#
+            )
+        );
+        Ok(())
+    }
+
+    #[gtest]
+    fn test_preserves_inline_cpp_inside_quote_block() -> anyhow::Result<()> {
+        let source = r#"pub fn emit_thunk() {
+    let _ = quote! {
+        unsafe {
+            (::inline_cpp_macro::inline_cpp! {
+                ( #( #param_types #param_idents ),* ) -> #return_type_name #body_block
+            })( #( #adjusted_thunk_args ),* )
+        }
+    };
+}
+"#;
+        let formatted = format_rust_source(source, None, None, None, &[], &[])?;
+        expect_that!(
+            formatted.as_str(),
+            contains_substring(
+                "( #( #param_types #param_idents ),* ) -> #return_type_name #body_block"
             )
         );
         Ok(())

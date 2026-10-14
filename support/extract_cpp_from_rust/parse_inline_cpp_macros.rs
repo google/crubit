@@ -48,6 +48,12 @@ pub struct ParsedMacro<'a> {
     pub body_text: &'a str,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MatchedMacro {
+    Cpp(MacroKind),
+    Quote,
+}
+
 #[derive(Debug, Clone, Copy)]
 struct SpannedToken {
     kind: TokenKind,
@@ -149,10 +155,11 @@ impl<'s, 'f> MacroParser<'s, 'f> {
     }
 
     /// Checks if the tokens starting at `cursor` form an embedded C++ macro invocation path
-    /// ending in `!`. Returns `(MacroKind, token_count)`.
-    fn check_macro_path(&self) -> Option<(MacroKind, usize)> {
+    /// or a `quote!` / `quote_spanned!` macro invocation path ending in `!`.
+    /// Returns `(MatchedMacro, token_count)`.
+    fn check_macro_path(&self) -> Option<(MatchedMacro, usize)> {
         let mut idx = self.cursor;
-        let mut matched_kind = None;
+        let mut last_ident = None;
 
         // Optional leading `::`
         self.try_eat_path_separator_at(&mut idx);
@@ -163,29 +170,24 @@ impl<'s, 'f> MacroParser<'s, 'f> {
                 return None;
             }
 
-            let ident = token.text(self.source);
+            last_ident = Some(token.text(self.source));
             idx += 1;
-
-            if ident == "inline_cpp" {
-                matched_kind = Some(MacroKind::InlineCpp);
-                break;
-            }
-            if ident == "global_cpp" {
-                matched_kind = Some(MacroKind::GlobalCpp);
-                break;
-            }
-            if ident == "DO_NOT_SUBMIT_CPP_DECL" {
-                matched_kind = Some(MacroKind::DoNotSubmitCppDecl);
-                break;
-            }
 
             // Path separator `::`
             if !self.try_eat_path_separator_at(&mut idx) {
-                return None;
+                break;
             }
         }
 
-        let kind = matched_kind?;
+        let matched = match last_ident? {
+            "inline_cpp" => MatchedMacro::Cpp(MacroKind::InlineCpp),
+            "global_cpp" => MatchedMacro::Cpp(MacroKind::GlobalCpp),
+            "quote" | "quote_spanned" => MatchedMacro::Quote,
+            ident if ident == MacroKind::DoNotSubmitCppDecl.name() => {
+                MatchedMacro::Cpp(MacroKind::DoNotSubmitCppDecl)
+            }
+            _ => return None,
+        };
 
         // Skip optional whitespace before `!`
         let mut bang_idx = idx;
@@ -195,18 +197,53 @@ impl<'s, 'f> MacroParser<'s, 'f> {
 
         // Ensure this is a macro invocation ending in `!`
         if bang_idx < self.tokens.len() && self.tokens[bang_idx].kind == TokenKind::Bang {
-            Some((kind, bang_idx + 1 - self.cursor))
+            Some((matched, bang_idx + 1 - self.cursor))
         } else {
             None
+        }
+    }
+
+    /// Skips a balanced `{ ... }`, `( ... )`, or `[ ... ]` delimiter group if present at `cursor`.
+    fn skip_delimited_group(&mut self) {
+        let (open_kind, close_kind) = match self.peek().map(|t| t.kind) {
+            Some(TokenKind::OpenBrace) => (TokenKind::OpenBrace, TokenKind::CloseBrace),
+            Some(TokenKind::OpenParen) => (TokenKind::OpenParen, TokenKind::CloseParen),
+            Some(TokenKind::OpenBracket) => (TokenKind::OpenBracket, TokenKind::CloseBracket),
+            _ => return,
+        };
+        self.advance();
+        let mut depth = 1usize;
+        while let Some(t) = self.peek() {
+            let kind = t.kind;
+            self.advance();
+            if kind == open_kind {
+                depth += 1;
+            } else if kind == close_kind {
+                depth -= 1;
+                if depth == 0 {
+                    break;
+                }
+            }
         }
     }
 
     /// Advances the parser and extracts the next macro block if one exists.
     pub fn next_macro(&mut self) -> Result<Option<ParsedMacro<'s>>, String> {
         while self.peek().is_some() {
-            let Some((kind, macro_tokens_count)) = self.check_macro_path() else {
-                self.advance();
-                continue;
+            let (kind, macro_tokens_count) = match self.check_macro_path() {
+                Some((MatchedMacro::Cpp(kind), count)) => (kind, count),
+                Some((MatchedMacro::Quote, count)) => {
+                    for _ in 0..count {
+                        self.advance();
+                    }
+                    self.eat_whitespace();
+                    self.skip_delimited_group();
+                    continue;
+                }
+                None => {
+                    self.advance();
+                    continue;
+                }
             };
 
             let macro_tok = self.tokens[self.cursor];
@@ -372,5 +409,29 @@ mod tests {
                 r#"Unmatched delimiter starting at test.rs:4: Context around open brace:"#
             )
         );
+    }
+
+    #[gtest]
+    fn test_ignores_macros_inside_quote_blocks() {
+        let source = r#"
+            let q1 = quote! {
+                unsafe {
+                    (::inline_cpp_macro::inline_cpp! {
+                        ( #( #param_types #param_idents ),* ) -> #return_type_name #body_block
+                    })( #( #adjusted_thunk_args ),* )
+                }
+            };
+            let q2 = ::quote::quote! {
+                ::inline_cpp_macro::global_cpp! {
+                    #parsed_tokens
+                }
+            };
+            let q3 = quote::quote_spanned! (span=> inline_cpp! { () -> void {} });
+            inline_cpp! { (int x) -> int { return x + 1; } }
+        "#;
+        let macros = parse_inline_cpp_macros(source, "test.rs").unwrap();
+        expect_eq!(macros.len(), 1);
+        expect_eq!(macros[0].kind, MacroKind::InlineCpp);
+        expect_eq!(macros[0].body_text, " (int x) -> int { return x + 1; } ");
     }
 }
