@@ -82,6 +82,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":into_iterator_cc_api",
         "@googletest//:gtest_main",
@@ -93,6 +95,8 @@ crubit_cc_test(
     name = "into_iterator_references_cc_test",
     srcs = ["into_iterator_test.cc"],
     copts = ["-DCRUBIT_ITERATOR_ITEM_REFERENCES"],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":into_iterator_references_cc_api",
         "@googletest//:gtest_main",

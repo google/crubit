@@ -29,6 +29,8 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "string_test",
     srcs = ["string_test.cc"],
+    # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
+    tags = ["no_windows"],
     deps = [
         ":string_cc_api",
         "@googletest//:gtest_main",

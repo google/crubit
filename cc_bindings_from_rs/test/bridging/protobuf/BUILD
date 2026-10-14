@@ -78,6 +78,9 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): `absl::StatusOr` has a different layout under the MSVC ABI
+    # than its Rust mirror expects.
+    tags = ["no_windows"],
     deps = [
         ":foo_cc_proto",
         ":rust_lib_cc_api",

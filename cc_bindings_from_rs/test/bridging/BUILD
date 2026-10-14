@@ -100,6 +100,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":layout_equivalent_generics_cc_api",
         ":rust_pointer_types_cc_api",
@@ -187,6 +189,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":mapped_cpp_type_cc_api",
         "@googletest//:gtest_main",

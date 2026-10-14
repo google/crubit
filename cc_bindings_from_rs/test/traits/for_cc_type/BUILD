@@ -62,6 +62,8 @@ golden_test(
 crubit_cc_test(
     name = "trait_test",
     srcs = ["trait_test.cc"],
+    # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
+    tags = ["no_windows"],
     deps = [
         ":cc_type",
         ":trait_cc_api",
