@@ -508,6 +508,7 @@ impl<'a> UniformReprTemplateType<'a> {
                 | TemplateSpecializationKind::C9Co { .. }
                 | TemplateSpecializationKind::AbslFlatHashMap { .. }
                 | TemplateSpecializationKind::AbslFlatHashSet { .. }
+                | TemplateSpecializationKind::AbslOptionalRef { .. }
                 | TemplateSpecializationKind::NonSpecial,
             )
             | None => Ok(None),
@@ -843,6 +844,7 @@ impl<'a> CustomizeMethodsKind<'a> {
                 | TemplateSpecializationKind::C9Co { .. }
                 | TemplateSpecializationKind::AbslFlatHashSet { .. }
                 | TemplateSpecializationKind::AbslSpan { .. }
+                | TemplateSpecializationKind::AbslOptionalRef { .. }
                 | TemplateSpecializationKind::NonSpecial,
             )
             | None => Ok(None),
