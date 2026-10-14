@@ -125,7 +125,7 @@ instantiated with an incomplete type:
     such as `forward_declare::Incomplete<...>`) because their size and alignment
     are unknown.
 *   **Generic parameters require `Sized`:** Layout-compatible generic types
-    (such as `Option<T>`, `unique_ptr<T>`, `shared_ptr<T>`, or `NewStatusOr<T>`)
+    (such as `Option<T>`, `unique_ptr<T>`, `shared_ptr<T>`, or `StatusOr<T>`)
     rely on the concrete in-memory layout, size, and alignment of `T` to achieve
     layout compatibility between Rust and C++. In Rust, generic type parameters
     have an implicit `Sized` bound (`T: Sized`). An unsized or `extern type`

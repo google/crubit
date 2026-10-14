@@ -49,6 +49,7 @@
 -   [Functions](./cpp/functions.md)
 -   [Callbacks (`absl::AnyInvocable`)](./cpp/callbacks.md)
 -   [Classes and Structs](./cpp/classes_and_structs.md)
+-   [Static Data Members](./cpp/static_data_members.md)
 -   [References and Lifetimes](./cpp/references_and_lifetimes.md)
 -   [Enums](./cpp/enums.md)
 -   [Inline C++](./cpp/inline_cpp.md)

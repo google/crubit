@@ -101,6 +101,21 @@ if (myoption.has_value()) {
 A more complete description of the API is in the common `OptionBase` public base
 class: support/rs_std/option.h
 
+## `Tuple`
+
+A Rust tuple `(T1, T2, ...)` receives C++ bindings as `rs_std::Tuple<T1, T2,
+...>`. It can be constructed from its elements (including with
+brace-initialization, e.g. `{a, b}`) when all elements are move-constructible in
+C++, or converted from a `std::tuple<T1, T2, ...>`. Elements are accessed with
+`std::get<I>` or structured bindings:
+
+```c++
+rs_std::Tuple<int32_t, int32_t> pair = {1, 2};
+auto [first, second] = pair;
+```
+
+The support header is support/rs_std/tuple.h.
+
 ## `Vec`
 
 The Rust `Vec<T>` generic receives C++ bindings as `rs_std::Vec<T>`, so long as

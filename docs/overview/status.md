@@ -66,14 +66,10 @@ C++ and Rust:
 | Growable string (Rust)                         | `rs::alloc::string::String` | `String`                  | Layout        |                             |
 :                                                :                             :                           : compatible    :                             :
 | **Option & Result**                            |                             |                           |               |                             |
-| [Optional                                      | `std::optional<T>`          | `Option<T>`               | Bridged       | TODO(b/493911621): the      |
-: (C++)](http\://crubit.rs/cpp/std#optional)     :                             :                           :               : layout-compatible           :
-:                                                :                             :                           :               : `cpp_std\:\:optional<T>` is :
-:                                                :                             :                           :               : used in positions which     :
-:                                                :                             :                           :               : cannot hold a bridged type, :
-:                                                :                             :                           :               : and everywhere if the       :
-:                                                :                             :                           :               : `layout_compat_optional`    :
-:                                                :                             :                           :               : feature is enabled          :
+| [Optional                                      | `std::optional<T>`          | `cpp_std::optional<T>`    | Layout        | Converts to/from            |
+: (C++)](http\://crubit.rs/cpp/std#optional)     :                             :                           : compatible    : `Option<T>`. Uses           :
+:                                                :                             :                           :               : `trivial_optional<T>` if    :
+:                                                :                             :                           :               : `T\: Copy`                  :
 | Option (Rust)                                  | `rs_std::Option<T>`         | `Option<T>`               | Layout        | Converts to/from            |
 :                                                :                             :                           : compatible    : `std\:\:optional<T>` in C++ :
 | Result                                         | `rs_std::Result<T, E>`      | `Result<T, E>`            | Layout        |                             |
@@ -85,10 +81,10 @@ C++ and Rust:
 | Tuples                                         | `rs_std::Tuple<T1, T2,      | `(T1, T2, ...)`           | Layout        |                             |
 :                                                : ...>`                       :                           : compatible    :                             :
 | Protocol Buffers                               | C++ Proto                   | Rust Proto                | Bridged       |                             |
-| Status                                         | `absl::Status`              | `status::NewStatus`       | Layout        | TODO(b/490215742): update   |
-:                                                :                             :                           : compatible    : once NewStatus is default   :
-| StatusOr                                       | `absl::StatusOr<T>`         | `status::NewStatusOr<T>`  | Layout        | TODO(b/490215742): update   |
-:                                                :                             :                           : compatible    : once NewStatus is default   :
+| Status                                         | `absl::Status`              | `status::Status`          | Layout        |                             |
+:                                                :                             :                           : compatible    :                             :
+| StatusOr                                       | `absl::StatusOr<T>`         | `status::StatusOr<T>`     | Layout        |                             |
+:                                                :                             :                           : compatible    :                             :
 
 ### Experimental Type Support
 
@@ -122,14 +118,13 @@ features**, used in public interfaces:
     *   extern "C" or non-extern "C"
 *   non-overloaded member functions, (overloaded) constructors and assignment
     operators
+*   static data members
+*   forward-declared (incomplete) types
+*   class template specializations, such as
+    `MyTemplate<int>`
 
 We have *experimental* unreleased support for the following language features:
 
-*   forward declarations
-*   templated types, bridged to a non-generic concrete type.
-    *   e.g. `vector<int>` becomes `struct __crubit_mangled_vector_i`, not
-        `struct vector<T>(...)`
-    *   specialization
 *   lifetime annotations, mapped unsafely to references
 *   Some object-orientation:
     *   types with **non-virtual** base classes

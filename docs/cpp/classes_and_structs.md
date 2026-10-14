@@ -71,6 +71,13 @@ of Crubit, it should not be passed by value. Within Crubit, it can't be passed
 by value in [function pointers](../types/pointer.md#function), but can otherwise
 be used as normal.
 
+## Static data members {#static_members}
+
+Public static data members get bindings: compile-time integer and `bool`
+constants become associated `const`s of the Rust struct, and other static data
+members become Rust `static`s. See [Static data members](static_data_members.md)
+for details.
+
 <span id="trivially_relocatable"></span>
 
 ## Rust-movable classes {#rust_movable}

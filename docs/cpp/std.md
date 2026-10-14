@@ -72,19 +72,11 @@ API: support/cc_std_impl/vector.rs
 
 ## `std::optional<T>` {#optional}
 
-By default, `std::optional<T>` is a "bridge type", with runtime conversion: when
-it is passed or returned by value, it is transformed into a Rust `Option<T>`.
-
-In positions which cannot hold a bridged type, such as struct fields, pointees,
-and template arguments, `std::optional<T>` is instead the layout-compatible
-`cpp_std::optional<T>`, or `cpp_std::trivial_optional<T>` when `T` is `Copy`
-(mirroring C++, where `std::optional<T>` is trivially copyable and trivially
-destructible whenever `T` is).
-
-To use the layout-compatible type in by-value positions as well, enable the
-`layout_compat_optional` Crubit feature
-on
-your target. This is a breaking change for code which relies on the bridged
-`Option<T>`, so it is opt-in.
+`std::optional<T>` in C++ is bound as `cpp_std::optional<T>` or
+`cpp_std::trivial_optional<T>` in Rust. `trivial_optional` is used when `T:
+Copy`, which allows `optional` of trivially copyable types to also be trivially
+copyable (see the `trivial_optional` docs in the API below). Convert to and from
+a Rust `Option<T>` with `From`/`Into`, e.g. `Option::from(opt)` or
+`Some(x).into()`.
 
 API: support/cc_std_impl/optional.rs

@@ -33,6 +33,7 @@
         *   [Operator overloading](/docs/cpp/operator_overloading.md)
     *   [Callbacks](/docs/cpp/callbacks.md)
     *   [Classes and Structs](/docs/cpp/classes_and_structs.md)
+    *   [Static Data Members](/docs/cpp/static_data_members.md)
     *   [References and Lifetimes](/docs/cpp/references_and_lifetimes.md)
     *   [Enums](/docs/cpp/enums.md)
     *   [Inline C++](/docs/cpp/inline_cpp.md)
