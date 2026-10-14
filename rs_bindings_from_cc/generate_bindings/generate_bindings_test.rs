@@ -1200,6 +1200,30 @@ fn test_visibility_attribute_on_functions() -> Result<()> {
     Ok(())
 }
 
+#[gtest]
+fn test_maybe_unused_attribute_on_field() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct SomeStruct final {
+            [[maybe_unused]] int field;
+        };
+        "#,
+    )?;
+
+    let mut ir = make_test_ir(&proto)?;
+    enable_supported(&mut ir);
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct SomeStruct {
+                pub field: ::ffi_11::c_int,
+            }
+        }
+    );
+    Ok(())
+}
+
 /// The default crubit feature set currently doesn't include supported.
 #[gtest]
 fn test_default_crubit_features_disabled_supported() -> Result<()> {

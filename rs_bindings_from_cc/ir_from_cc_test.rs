@@ -6603,3 +6603,28 @@ fn test_setter_semantic() {
         .expect("should find not_setter_wrong_param_count()");
     assert_eq!(func_not_param.semantic(), None);
 }
+
+#[gtest]
+fn test_field_maybe_unused_attr() -> Result<()> {
+    let proto = ir_proto_from_cc("struct SomeStruct { [[maybe_unused]] int field; };")?;
+    let ir = ir_testing::make_test_ir(&proto)?;
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "SomeStruct",
+                cc_name: "SomeStruct",
+                ...
+                fields: [Field {
+                    rust_identifier: Some("field"),
+                    cpp_identifier: Some("field"),
+                    ...
+                    unknown_attr: Ok(None),
+                    ...
+                }],
+                ...
+            }
+        }
+    );
+    Ok(())
+}

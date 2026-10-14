@@ -1730,6 +1730,11 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
                   clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
             deprecated.emplace(deprecated_attr->getMessage());
             return true;
+          } else if (clang::isa<clang::UnusedAttr>(attr)) {
+            // Diagnostic attributes like `[[maybe_unused]]` don't affect
+            // layout, so we can ignore them when collecting unknown attributes
+            // on fields.
+            return true;
           }
           return false;
         });
