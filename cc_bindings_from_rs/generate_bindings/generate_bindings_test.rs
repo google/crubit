@@ -3269,3 +3269,78 @@ fn test_no_std_crate() {
         assert_rs_matches!(bindings.cc_api_impl, quote! { #![no_std] });
     });
 }
+
+#[test]
+fn test_iterator_item_references() {
+    let test_src = r#"
+        pub type MyRefAlias<'a> = &'a i32;
+
+        pub struct RefIter<'a> {
+            pub slice: &'a [i32],
+        }
+
+        impl<'a> Iterator for RefIter<'a> {
+            type Item = &'a i32;
+            fn next(&mut self) -> Option<Self::Item> {
+                self.slice.split_off_first()
+            }
+        }
+
+        pub struct MutRefIter<'a> {
+            pub slice: &'a mut [i32],
+        }
+
+        impl<'a> Iterator for MutRefIter<'a> {
+            type Item = &'a mut i32;
+            fn next(&mut self) -> Option<Self::Item> {
+                self.slice.split_off_first_mut()
+            }
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let db = test_helpers::bindings_db_for_tests_with_features(
+            tcx,
+            crubit_feature::CrubitFeature::Experimental
+                | crubit_feature::CrubitFeature::Supported
+                | crubit_feature::CrubitFeature::AlwaysSpecializeGenericsInCppApiFromRust
+                | crubit_feature::CrubitFeature::IteratorItemReferences,
+            /* with_kythe_annotations= */ false,
+            None,
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                using MyRefAlias CRUBIT_INTERNAL_RUST_TYPE(...) = ::std::int32_t const* $a crubit_nonnull;
+                ...
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                template<>
+                struct rs_std::impl<::rust_out::MutRefIter, ::rs::core::iter::Iterator> {
+                    static constexpr bool kIsImplemented = true;
+                    using Item CRUBIT_INTERNAL_RUST_TYPE(...) = ::std::int32_t& $a;
+                    static rs_std::Option<::std::int32_t* $static crubit_nonnull> next(::rust_out::MutRefIter& self);
+                };
+                ...
+            }
+        );
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                template<>
+                struct rs_std::impl<::rust_out::RefIter, ::rs::core::iter::Iterator> {
+                    static constexpr bool kIsImplemented = true;
+                    using Item CRUBIT_INTERNAL_RUST_TYPE(...) = ::std::int32_t const& $a;
+                    static rs_std::Option<::std::int32_t const* $static crubit_nonnull> next(::rust_out::RefIter& self);
+                };
+                ...
+            }
+        );
+    });
+}

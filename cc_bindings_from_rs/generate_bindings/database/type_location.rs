@@ -46,8 +46,17 @@ pub enum TypeLocation {
     NestedBridgeable,
 
     /// The type of a template argument when specializing a generic class template or trait (e.g.,
-    /// inside `rs_std::Option<T>`).
+    /// inside `rs_std::Result<T, E>` or `rs_std::Vec<T>`).
     TemplateArg,
+
+    /// The `Item` associated type of `core::iter::Iterator` or `core::iter::IntoIterator`.
+    ///
+    /// Unlike other associated types and type aliases (where Rust references are formatted as C++
+    /// pointers to stay consistent with generic specializations like `rs_std::Option<const T*>`
+    /// returned by `Iterator::next`), `Iterator::Item` and `IntoIterator::Item` are formatted as
+    /// C++ references (`const T&` / `T&`) when `iterator_item_references` is enabled so that
+    /// `rs::IteratorAdapter` yields C++ references when iterating in C++.
+    IteratorItem,
 
     /// Other location (e.g. pointee type, etc.).
     Other,
@@ -74,7 +83,7 @@ impl TypeLocation {
             TypeLocation::TemplateArg => bail!("Template arguments do not support bridgeable types"),
             // TODO(jeanpierreda): Why?
             TypeLocation::FnReturn { is_constructor: true } => bail!("Constructor functions cannot return bridge types"),
-            TypeLocation::ClosureReturn | TypeLocation::Other => bail!("crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"),
+            TypeLocation::ClosureReturn | TypeLocation::IteratorItem | TypeLocation::Other => bail!("crubit.rs/errors/bridge_compound_type: Non-bridgeable compound data types containing bridge types cannot receive bindings"),
             TypeLocation::Field => bail!("crubit.rs/errors/bridge_field: Fields containing bridge types cannot receive bindings"),
         }
     }
@@ -90,6 +99,7 @@ impl TypeLocation {
             TypeLocation::FnReturn { .. }
             | TypeLocation::Const
             | TypeLocation::TemplateArg
+            | TypeLocation::IteratorItem
             | TypeLocation::ClosureReturn
             | TypeLocation::Other
             | TypeLocation::Field => false,
@@ -114,6 +124,7 @@ mod tests {
         assert!(!TypeLocation::FnReturn { is_constructor: true }.admits_movable());
         assert!(!TypeLocation::Const.admits_movable());
         assert!(!TypeLocation::TemplateArg.admits_movable());
+        assert!(!TypeLocation::IteratorItem.admits_movable());
         assert!(!TypeLocation::ClosureReturn.admits_movable());
         assert!(!TypeLocation::Other.admits_movable());
         assert!(!TypeLocation::Field.admits_movable());

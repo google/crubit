@@ -316,6 +316,18 @@ crubit_feature_hint(
     visibility = ["//visibility:public"],
 )
 
+# A feature set enabling C++ references (`T const&` / `T&`) instead of pointers (`T const*` / `T*`)
+# for `Iterator::Item` and `IntoIterator::Item` associated types. This flag only impacts
+# cpp_api_from_rust users.
+#
+# See b/562051251
+crubit_feature_hint(
+    name = "iterator_item_references",
+    compatible_with = ["//buildenv/target:non_prod"],
+    crubit_features = SUPPORTED_FEATURES + ["iterator_item_references"],
+    visibility = ["//visibility:public"],
+)
+
 # Implementation details follow.
 
 bzl_library(

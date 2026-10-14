@@ -1594,7 +1594,14 @@ fn create_type_alias<'tcx>(
 ) -> Result<CcSnippet<'tcx>> {
     let fully_qualified_name = db.symbol_canonical_name(def_id)?;
     let rs_type = format!("{}", fully_qualified_name.format_for_rs());
-    create_type_alias_with_rs_type(db, def_id, &rs_type, alias_name, alias_type)
+    create_type_alias_with_rs_type(
+        db,
+        def_id,
+        &rs_type,
+        alias_name,
+        alias_type,
+        TypeLocation::Other,
+    )
 }
 
 pub(crate) fn create_type_alias_with_rs_type<'tcx>(
@@ -1603,9 +1610,10 @@ pub(crate) fn create_type_alias_with_rs_type<'tcx>(
     rs_type: &str,
     alias_name: &str,
     alias_type: Ty<'tcx>,
+    type_location: TypeLocation,
 ) -> Result<CcSnippet<'tcx>> {
     let doc_comment = generate_doc_comment(db, def_id);
-    let cc_bindings = db.format_ty_for_cc(alias_type, TypeLocation::Other)?;
+    let cc_bindings = db.format_ty_for_cc(alias_type, type_location)?;
     let alias_name = format_cc_ident(db, alias_name).context("Error formatting type alias name")?;
 
     let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];

@@ -409,12 +409,22 @@ pub(crate) fn generate_associated_item<'tcx>(
                         tcx.type_of(def_id).instantiate_identity(),
                     );
                     let rs_type_spelling = format!("<{} as {}>::{}", self_ty, trait_rs_name, name);
+                    let is_iterator_item = name == sym::Item
+                        && (Some(trait_ref.def_id) == tcx.get_diagnostic_item(sym::Iterator)
+                            || Some(trait_ref.def_id)
+                                == tcx.get_diagnostic_item(sym::IntoIterator));
+                    let type_location = if is_iterator_item {
+                        TypeLocation::IteratorItem
+                    } else {
+                        TypeLocation::Other
+                    };
                     crate::create_type_alias_with_rs_type(
                         db,
                         def_id,
                         &rs_type_spelling,
                         name.as_str(),
                         alias_type,
+                        type_location,
                     )
                     .map(|snippet| snippet.into_main_api())
                 })
@@ -3970,7 +3980,7 @@ fn generate_begin_and_end_for_type<'tcx>(
     let item_ty = get_into_iter_item_ty(tcx, check_ty, into_iterator_trait_id)?;
 
     let _ = db
-        .format_ty_for_cc(item_ty, TypeLocation::Other)
+        .format_ty_for_cc(item_ty, TypeLocation::IteratorItem)
         .context("Failed to format IntoIterator::Item")?;
 
     let into_iter_cc_ty = db

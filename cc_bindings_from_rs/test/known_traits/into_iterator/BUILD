@@ -12,7 +12,10 @@ load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
     "golden_test",
 )
-load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
+load(
+    "//common:crubit_wrapper_macros_oss.bzl",
+    "crubit_cc_test",
+)
 
 package(default_applicable_licenses = ["//:license"])
 
@@ -24,6 +27,21 @@ rust_library(
     srcs = ["into_iterator.rs"],
     aspect_hints = [
         "//features:experimental",
+    ],
+    edition = "2024",
+    deps = [
+        "//support:bridge_rust",
+    ],
+)
+
+# TODO(b/562051251): Remove this once the iterator_item_references feature has stabilized.
+rust_library(
+    name = "into_iterator_references_rust",
+    testonly = 1,
+    srcs = ["into_iterator.rs"],
+    aspect_hints = [
+        "//features:experimental",
+        "//features:iterator_item_references",
     ],
     edition = "2024",
     deps = [
@@ -49,6 +67,13 @@ cpp_api_from_rust(
     crate = ":into_iterator_rust",
 )
 
+# TODO(b/562051251): Remove this once the iterator_item_references feature has stabilized.
+cpp_api_from_rust(
+    name = "into_iterator_references_cc_api",
+    testonly = 1,
+    crate = ":into_iterator_references_rust",
+)
+
 crubit_cc_test(
     name = "into_iterator_cc_test",
     srcs = ["into_iterator_test.cc"],
@@ -58,6 +83,17 @@ crubit_cc_test(
     ],
     deps = [
         ":into_iterator_cc_api",
+        "//testing/base/public:gunit_main",
+    ],
+)
+
+# TODO(b/562051251): Remove this once the iterator_item_references feature has stabilized.
+crubit_cc_test(
+    name = "into_iterator_references_cc_test",
+    srcs = ["into_iterator_test.cc"],
+    copts = ["-DCRUBIT_ITERATOR_ITEM_REFERENCES"],
+    deps = [
+        ":into_iterator_references_cc_api",
         "//testing/base/public:gunit_main",
     ],
 )

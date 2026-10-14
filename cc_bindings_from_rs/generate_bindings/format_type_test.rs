@@ -1217,3 +1217,70 @@ fn test_is_bridged_type_never_bridges_vec_or_result() {
         );
     }
 }
+
+#[test]
+fn test_format_ty_for_cc_iterator_item_references() {
+    let default_features =
+        crubit_feature::CrubitFeature::Experimental | crubit_feature::CrubitFeature::Supported;
+    let enabled_features = default_features | crubit_feature::CrubitFeature::IteratorItemReferences;
+
+    for (
+        location,
+        expected_disabled_imm,
+        expected_disabled_mut,
+        expected_enabled_imm,
+        expected_enabled_mut,
+    ) in [
+        (
+            TypeLocation::IteratorItem,
+            "::std::int32_t const * $static crubit_nonnull",
+            "::std::int32_t * $static crubit_nonnull",
+            "::std::int32_t const & $static",
+            "::std::int32_t & $static",
+        ),
+        (
+            TypeLocation::Other,
+            "::std::int32_t const * $static crubit_nonnull",
+            "::std::int32_t * $static crubit_nonnull",
+            "::std::int32_t const * $static crubit_nonnull",
+            "::std::int32_t * $static crubit_nonnull",
+        ),
+        (
+            TypeLocation::TemplateArg,
+            "::std::int32_t const * $static crubit_nonnull",
+            "::std::int32_t * $static crubit_nonnull",
+            "::std::int32_t const * $static crubit_nonnull",
+            "::std::int32_t * $static crubit_nonnull",
+        ),
+    ] {
+        test_ty(
+            TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
+            &[
+                ("&'static i32", (expected_disabled_imm, expected_enabled_imm)),
+                ("&'static mut i32", (expected_disabled_mut, expected_enabled_mut)),
+            ],
+            quote! {},
+            |desc, tcx, ty, &(expected_disabled, expected_enabled)| {
+                let db_disabled = bindings_db_for_tests_with_features(
+                    tcx,
+                    default_features,
+                    /* with_kythe_annotations= */ false,
+                    None,
+                );
+                let cc_disabled = db_disabled.format_ty_for_cc(ty, location).unwrap();
+                let parsed_disabled = expected_disabled.parse::<TokenStream>().unwrap().to_string();
+                assert_eq!(cc_disabled.tokens.to_string(), parsed_disabled, "disabled {desc}");
+
+                let db_enabled = bindings_db_for_tests_with_features(
+                    tcx,
+                    enabled_features,
+                    /* with_kythe_annotations= */ false,
+                    None,
+                );
+                let cc_enabled = db_enabled.format_ty_for_cc(ty, location).unwrap();
+                let parsed_enabled = expected_enabled.parse::<TokenStream>().unwrap().to_string();
+                assert_eq!(cc_enabled.tokens.to_string(), parsed_enabled, "enabled {desc}");
+            },
+        );
+    }
+}

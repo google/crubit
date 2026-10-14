@@ -707,7 +707,7 @@ fn format_ref_for_cc<'tcx>(
         mutability
     };
 
-    let treat_ref_as_ptr = treat_ref_as_ptr(tcx, ty, location);
+    let treat_ref_as_ptr = treat_ref_as_ptr(db, ty, location);
 
     let mut prereqs = CcPrerequisites::default();
     let ptr_or_ref_prefix = if let RefConvert::ToPtr { .. } = treat_ref_as_ptr {
@@ -1249,6 +1249,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 }
                 TypeLocation::NestedBridgeable
                 | TypeLocation::Other
+                | TypeLocation::IteratorItem
                 | TypeLocation::ClosureReturn
                 | TypeLocation::Field
                 | TypeLocation::TemplateArg => {
@@ -1399,10 +1400,11 @@ enum RefConvert {
 }
 
 fn treat_ref_as_ptr<'tcx>(
-    tcx: TyCtxt<'tcx>,
+    db: &BindingsGenerator<'tcx>,
     ty: ty::Ty<'tcx>,
     location: TypeLocation,
 ) -> RefConvert {
+    let tcx = db.tcx();
     match location {
         // Parameter type references are only converted to C++ references if they are
         // valid exclusively for the lifetime of the function.
@@ -1430,6 +1432,17 @@ fn treat_ref_as_ptr<'tcx>(
             RefConvert::ToRef
         }
         TypeLocation::FnReturn { .. } | TypeLocation::Const => RefConvert::ToRef,
+
+        TypeLocation::IteratorItem => {
+            if db
+                .crate_features(db.source_crate_num())
+                .contains(CrubitFeature::IteratorItemReferences)
+            {
+                RefConvert::ToRef
+            } else {
+                RefConvert::ToPtr { is_lifetime_bound: false }
+            }
+        }
 
         // References in other locations are always converted to pointers, as references are often
         // not allowed in these locations (e.g. the target of another reference, the element type
@@ -1521,7 +1534,7 @@ fn format_param_types_for_cc_impl<'tcx>(
         snippets.push(CcParamTy {
             snippet: cc_type,
             is_lifetime_bound: matches!(
-                treat_ref_as_ptr(db.tcx(), param_type, location),
+                treat_ref_as_ptr(db, param_type, location),
                 RefConvert::ToPtr { is_lifetime_bound: true }
             ),
         });

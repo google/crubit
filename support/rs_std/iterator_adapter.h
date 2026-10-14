@@ -58,10 +58,10 @@ class IteratorAdapter {
   using element_type = impl::Item;
 
  public:
-  using value_type = ::std::remove_const_t<element_type>;
+  using value_type = ::std::remove_cvref_t<element_type>;
   using difference_type = ::std::ptrdiff_t;
-  using pointer = value_type*;
-  using reference = value_type&;
+  using pointer = ::std::remove_reference_t<element_type>*;
+  using reference = element_type&;
   using const_reference = const value_type&;
   using iterator_category = ::std::input_iterator_tag;
   using iterator_concept = ::std::input_iterator_tag;
@@ -110,9 +110,24 @@ class IteratorAdapter {
   //   a `const value_type&` and not `value_type&` (the former cannot be moved
   //   out of).  `iter_move` has to move out of `current_item_`, so we mark
   //   `current_item_` as `mutable` to reconcile all of these requirements.
-  reference operator*() const { return current_item_.value(); }
-  friend value_type&& iter_move(const IteratorAdapter& self) noexcept {
-    return ::std::move(*self.current_item_);
+  reference operator*() const {
+    // Reference items (`T&` / `const T&`) are returned from `impl::next()` and
+    // stored in `current_item_` as pointers (`T*` / `const T*`).
+    if constexpr (::std::is_reference_v<element_type>) {
+      return **current_item_;
+    } else {
+      return current_item_.value();
+    }
+  }
+  friend ::std::remove_reference_t<element_type>&& iter_move(
+      const IteratorAdapter& self) noexcept {
+    // Reference items (`T&` / `const T&`) are returned from `impl::next()` and
+    // stored in `current_item_` as pointers (`T*` / `const T*`).
+    if constexpr (::std::is_reference_v<element_type>) {
+      return ::std::move(**self.current_item_);
+    } else {
+      return ::std::move(*self.current_item_);
+    }
   }
   IteratorAdapter& operator++() {
     next();
@@ -126,8 +141,16 @@ class IteratorAdapter {
 
   TAdaptedIterator source_;
 
+  // Reference items (`T&` / `const T&`) are returned as pointers (`T*` /
+  // `const T*`) from `impl::next()`, since `rs_std::Option` and
+  // `std::optional` cannot hold C++ references directly.
+  using stored_item_type =
+      ::std::conditional_t< ::std::is_reference_v<element_type>,
+                            ::std::remove_reference_t<element_type>*,
+                            element_type>;
+
   // `mutable` to support `iter_move` taking a `const IteratorAdapter&`.
-  mutable ::std::optional<typename impl::Item> current_item_;
+  mutable ::std::optional<stored_item_type> current_item_;
 };
 
 template <typename TAdaptedIterator>
@@ -144,7 +167,12 @@ template <typename T>
 struct impl<T*, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item = typename rs_std::impl<T, ::rs::core::iter::Iterator>::Item;
-  static ::std::optional<Item> next(T* self) {
+  // Reference items (`T&` / `const T&`) are returned as pointers (`T*` /
+  // `const T*`) from `next()`.
+  using StoredItem =
+      ::std::conditional_t< ::std::is_reference_v<Item>,
+                            ::std::remove_reference_t<Item>*, Item>;
+  static ::std::optional<StoredItem> next(T* self) {
     return rs_std::impl<T, ::rs::core::iter::Iterator>::next(*self);
   }
 };

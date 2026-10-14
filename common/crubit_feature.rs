@@ -117,6 +117,11 @@ flagset::flags! {
         /// emitting `impl !Send` / `impl !Sync` for records without an explicit annotation.
         /// Opaque byte blobs which hold C++ data are marked as neither `Send` nor `Sync`.
         InferSendSync,
+
+        /// Emit C++ references (`T const&` / `T&`) instead of pointers (`T const*` / `T*`) for
+        /// `Iterator::Item` and `IntoIterator::Item` associated types. Only affects
+        /// cpp_api_from_rust.
+        IteratorItemReferences,
     }
 }
 
@@ -159,6 +164,7 @@ impl CrubitFeature {
             Self::NoImplCxxExternType => "no_impl_cxx_extern_type",
             Self::EnumApiV2 => "enum_api_v2",
             Self::InferSendSync => "infer_send_sync",
+            Self::IteratorItemReferences => "iterator_item_references",
         }
     }
 
@@ -204,6 +210,9 @@ impl CrubitFeature {
             Self::NoImplCxxExternType => "//features:no_impl_cxx_extern_type",
             Self::EnumApiV2 => "//features:enum_api_v2",
             Self::InferSendSync => "//features:infer_send_sync",
+            Self::IteratorItemReferences => {
+                "//features:iterator_item_references"
+            }
         }
     }
 }
@@ -230,6 +239,8 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
                 - CrubitFeature::EnumApiV2
                 // Standalone opt-in: changes the soundness defaults for Send/Sync.
                 - CrubitFeature::InferSendSync
+                // Out of `all` until callers expecting pointers from iterators are migrated.
+                - CrubitFeature::IteratorItemReferences
         }
         // `supported` automatically implies `types` and `impl_cxx_extern_type`.
         b"supported" => {
@@ -265,6 +276,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"no_impl_cxx_extern_type" => CrubitFeature::NoImplCxxExternType.into(),
         b"enum_api_v2" => CrubitFeature::EnumApiV2.into(),
         b"infer_send_sync" => CrubitFeature::InferSendSync.into(),
+        b"iterator_item_references" => CrubitFeature::IteratorItemReferences.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -424,6 +436,13 @@ mod tests {
         let SerializedCrubitFeature(features) =
             serde_json::from_str("\"infer_send_sync\"").unwrap();
         assert_eq!(features, CrubitFeature::InferSendSync);
+    }
+
+    #[gtest]
+    fn test_serialized_crubit_feature_iterator_item_references() {
+        let SerializedCrubitFeature(features) =
+            serde_json::from_str("\"iterator_item_references\"").unwrap();
+        assert_eq!(features, CrubitFeature::IteratorItemReferences);
     }
 
     #[gtest]
