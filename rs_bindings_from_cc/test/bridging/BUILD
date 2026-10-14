@@ -70,6 +70,7 @@ cc_library(
         ":additional_composable_bridging_lib_src",
         "//features:experimental",
     ],
+    local_defines = ["CRUBIT_OLD_STATUS"],
     deps = [
         "//support:annotations",
         "//support:bridge_cpp",
@@ -105,6 +106,7 @@ cc_library(
     aspect_hints = [
         "//features:nonnull_smart_pointers",
     ],
+    local_defines = ["CRUBIT_OLD_STATUS"],
     deps = [
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/status:statusor",
