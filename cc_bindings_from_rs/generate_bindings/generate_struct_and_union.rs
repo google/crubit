@@ -1490,12 +1490,7 @@ fn generate_partial_ord_impls<'tcx>(
 
     let ref_rhs_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, rhs_ty);
 
-    let rhs_cc_ty_for_main = db.format_ty_for_cc(
-        ref_rhs_ty,
-        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-    )?;
-
-    let rhs_cc_ty_for_impl = db.format_ty_for_cc(
+    let ref_rhs_cc_ty = db.format_ty_for_cc(
         ref_rhs_ty,
         TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
     )?;
@@ -1521,18 +1516,13 @@ fn generate_partial_ord_impls<'tcx>(
         TypeLocation::FnParam { is_self_param: true, elided_is_output: true },
     )?;
 
-    let ref_rhs_cc_ty = db.format_ty_for_cc(
-        ref_rhs_ty,
-        TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
-    )?;
-
     let template_prefix = if rhs_ty.is_bool() {
         bool_constraint_template_prefix()
     } else {
         quote! {}
     };
 
-    let mut main_api = rhs_cc_ty_for_main.map_snippets(|rhs_cc_tokens_for_main| {
+    let mut main_api = ref_rhs_cc_ty.clone().map_snippets(|rhs_cc_tokens_for_main| {
         let rhs_cc_tokens_for_main = if rhs_ty.is_bool() {
             quote! { __CrubitBoolT const& }
         } else {
@@ -1550,12 +1540,12 @@ fn generate_partial_ord_impls<'tcx>(
         main_api.prereqs.includes.insert(CcInclude::type_traits());
     }
 
-    let mut cc_details = [rhs_cc_ty_for_impl, ref_self_cc_ty, ref_rhs_cc_ty].map_snippets(
-        |[rhs_cc_tokens_for_impl, ref_self_cc_tokens, ref_rhs_cc_tokens]| {
+    let mut cc_details = [ref_self_cc_ty, ref_rhs_cc_ty].map_snippets(
+        |[ref_self_cc_tokens, ref_rhs_cc_tokens]| {
             let rhs_cc_tokens_for_impl = if rhs_ty.is_bool() {
                 quote! { __CrubitBoolT const& }
             } else {
-                rhs_cc_tokens_for_impl
+                ref_rhs_cc_tokens.clone()
             };
             quote! {
                 namespace __crubit_internal {
