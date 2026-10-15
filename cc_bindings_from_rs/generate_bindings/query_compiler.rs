@@ -19,7 +19,7 @@ extern crate rustc_span;
 extern crate rustc_trait_selection;
 
 use arc_anyhow::Result;
-use error_report::anyhow;
+use error_report::{anyhow, ensure};
 #[rustversion::before(2026-05-18)]
 use rustc_abi::FieldsShape;
 use rustc_abi::{FieldIdx, Layout, Variants};
@@ -155,6 +155,7 @@ pub fn is_c_abi_compatible_by_value<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'
         ty::TyKind::Array { .. } | ty::TyKind::Alias { .. } |
         // In case we were visited via a repr(transparent) wrapper, instead of `Ref` etc.
         ty::TyKind::Slice { .. } | ty::TyKind::Str => false,
+        ty::TyKind::Param { .. } => false,
 
         // `format_ty_for_cc` is expected to fail for other kinds of types
         // and therefore `is_c_abi_compatible_by_value` should never be called for
@@ -306,6 +307,16 @@ pub fn get_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>>
             // `anyhow::context::ext::StdError` trait bound.
             anyhow!("Error computing the layout: {layout_err}")
         })
+}
+
+pub fn get_validated_layout<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> Result<Layout<'tcx>> {
+    let layout = get_layout(tcx, ty)?;
+    ensure!(
+        layout.backend_repr().is_sized(),
+        "Bindings for dynamically sized types are not supported."
+    );
+    ensure!(layout.size().bytes() != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
+    Ok(layout)
 }
 
 // Accounts for the offset in the front of a repr(C) enum with multiple
