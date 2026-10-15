@@ -15,10 +15,10 @@ package(default_applicable_licenses = ["//:license"])
 rust_library(
     name = "string",
     srcs = ["string.rs"],
-    cc_deps = [
+    edition = "2024",
+    deps = [
         "//support/cc_std",
     ],
-    edition = "2024",
 )
 
 cpp_api_from_rust(

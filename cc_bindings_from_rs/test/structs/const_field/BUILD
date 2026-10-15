@@ -11,6 +11,10 @@ load(
     "cpp_api_from_rust",
 )
 load(
+    "//bazel:rust_api_from_cpp.bzl",
+    "rust_api_from_cpp",
+)
+load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
     "golden_test",
 )
@@ -24,18 +28,24 @@ package(default_applicable_licenses = ["//:license"])
 cc_library(
     name = "cc_struct",
     hdrs = ["cc_struct.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":cc_struct_rust.hint"],
+)
+
+rust_api_from_cpp(
+    name = "cc_struct_rust",
+    testonly = 1,
+    cpp_target = ":cc_struct",
 )
 
 rust_library(
     name = "const_field",
     testonly = 1,
     srcs = ["lib.rs"],
-    cc_deps = [":cc_struct"],
     edition = "2024",
     proc_macro_deps = [
         "//support:crubit_annotate",
     ],
+    deps = [":cc_struct_rust"],
 )
 
 cpp_api_from_rust(

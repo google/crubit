@@ -11,6 +11,10 @@ load(
     "cpp_api_from_rust",
 )
 load(
+    "//bazel:rust_api_from_cpp.bzl",
+    "rust_api_from_cpp",
+)
+load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
     "golden_test",
 )
@@ -24,15 +28,21 @@ package(default_applicable_licenses = ["//:license"])
 cc_library(
     name = "cc_type",
     hdrs = ["cc_type.h"],
-    aspect_hints = ["//features:supported"],
+    aspect_hints = [":cc_type_rust.hint"],
+)
+
+rust_api_from_cpp(
+    name = "cc_type_rust",
+    testonly = 1,
+    cpp_target = ":cc_type",
 )
 
 rust_library(
     name = "trait",
     testonly = 1,
     srcs = ["trait.rs"],
-    cc_deps = [":cc_type"],
     edition = "2024",
+    deps = [":cc_type_rust"],
 )
 
 cpp_api_from_rust(

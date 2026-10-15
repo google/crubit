@@ -6,6 +6,10 @@ load(
     "//bazel:cpp_api_from_rust.bzl",
     "cpp_api_from_rust",
 )
+load(
+    "//bazel:rust_api_from_cpp.bzl",
+    "rust_api_from_cpp",
+)
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -16,8 +20,17 @@ crubit_test_cc_library(
     testonly = 1,
     srcs = ["test_helpers.cc"],
     hdrs = ["test_helpers.h"],
-    aspect_hints = ["//features:experimental"],
+    aspect_hints = [
+        ":test_helpers_rust.hint",
+        "//features:experimental",
+    ],
     deps = ["//support:annotations"],
+)
+
+rust_api_from_cpp(
+    name = "test_helpers_rust",
+    testonly = 1,
+    cpp_target = ":test_helpers",
 )
 
 rust_library(
@@ -26,9 +39,11 @@ rust_library(
     srcs = [
         "vector.rs",
     ],
-    cc_deps = [":test_helpers"],
     edition = "2024",
-    deps = ["//support/cc_std"],
+    deps = [
+        ":test_helpers_rust",
+        "//support/cc_std",
+    ],
 )
 
 cpp_api_from_rust(
