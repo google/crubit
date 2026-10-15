@@ -9,6 +9,7 @@
 //! and not intended for direct use by Rust library authors.
 
 use std::future::Future;
+use std::mem;
 use std::pin::Pin;
 use std::ptr;
 use std::task::{Context, Poll};
@@ -25,11 +26,14 @@ pub trait ErasedFuture: Send + sealed::Sealed {
     /// by `out`, and `Poll::Ready(())` is returned. If the future is pending, `out` remains
     /// untouched, and `Poll::Pending` is returned.
     ///
+    /// In either case, ownership of the output is transferred to the caller: `poll_erased` never
+    /// drops it. This includes zero-sized output types, for which nothing is written to `out`.
+    ///
     /// # Safety
     ///
     /// If the underlying future's output type `T` contains data (`size_of::<T>() > 0`), `out` must
     /// be a valid, `align_of::<T>()`-aligned pointer to uninitialized memory suitable for writing a
-    /// value of type `T`.  If `T` is zero-sized, `out` is ignored.
+    /// value of type `T`.  If `T` is zero-sized, `out` is ignored (and may be null).
     ///
     /// Polling after completion: unlike `Future`, which is technically safe to poll after
     /// completion, it is considered unsafe to poll an ErasedFuture after completion.
@@ -43,6 +47,11 @@ impl<T, F: Future<Output = T> + Send> ErasedFuture for F {
                 // SAFETY: `out` is valid for writes of `T` and properly aligned by the caller's
                 // preconditions.
                 unsafe { ptr::write(out as *mut T, val) };
+            } else {
+                // `out` may be null for zero-sized `T`, so we can't write through it. Forget `val`
+                // instead of dropping it, because ownership of the output is transferred to the
+                // caller just like in the non-zero-sized case.
+                mem::forget(val);
             }
         })
     }

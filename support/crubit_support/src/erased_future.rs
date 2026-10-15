@@ -9,6 +9,7 @@
 //! and not intended for direct use by Rust library authors.
 
 use core::future::Future;
+use core::mem;
 use core::pin::Pin;
 use core::ptr;
 use core::task::{Context, Poll};
@@ -25,11 +26,14 @@ pub trait ErasedFuture: Send + sealed::Sealed {
     /// by `out`, and `Poll::Ready(())` is returned. If the future is pending, `out` remains
     /// untouched, and `Poll::Pending` is returned.
     ///
+    /// In either case, ownership of the output is transferred to the caller: `poll_erased` never
+    /// drops it. This includes zero-sized output types, for which nothing is written to `out`.
+    ///
     /// # Safety
     ///
     /// If the underlying future's output type `T` contains data (`size_of::<T>() > 0`), `out` must
     /// be a valid, `align_of::<T>()`-aligned pointer to uninitialized memory suitable for writing a
-    /// value of type `T`.  If `T` is zero-sized, `out` is ignored.
+    /// value of type `T`.  If `T` is zero-sized, `out` is ignored (and may be null).
     ///
     /// Polling after completion: unlike `Future`, which is technically safe to poll after
     /// completion, it is considered unsafe to poll an ErasedFuture after completion.
@@ -43,6 +47,11 @@ impl<T, F: Future<Output = T> + Send> ErasedFuture for F {
                 // SAFETY: `out` is valid for writes of `T` and properly aligned by the caller's
                 // preconditions.
                 unsafe { ptr::write(out as *mut T, val) };
+            } else {
+                // `out` may be null for zero-sized `T`, so we can't write through it. Forget `val`
+                // instead of dropping it, because ownership of the output is transferred to the
+                // caller just like in the non-zero-sized case.
+                mem::forget(val);
             }
         })
     }
@@ -55,4 +64,45 @@ mod sealed {
     pub trait Sealed {}
 
     impl<T, F: Future<Output = T> + Send> Sealed for F {}
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloc::boxed::Box;
+    use core::future;
+    use core::sync::atomic::{AtomicUsize, Ordering};
+    use core::task::Waker;
+    use googletest::{expect_eq, gtest};
+
+    static ZST_DROP_COUNT: AtomicUsize = AtomicUsize::new(0);
+
+    /// A zero-sized type that counts how many times it is dropped.
+    struct ZstDropCounter;
+
+    impl Drop for ZstDropCounter {
+        fn drop(&mut self) {
+            ZST_DROP_COUNT.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    #[gtest]
+    fn poll_erased_ready_zero_sized_with_drop_transfers_ownership() {
+        const { assert!(size_of::<ZstDropCounter>() == 0) };
+        let mut fut = Box::pin(future::ready(ZstDropCounter));
+        let mut cx = Context::from_waker(Waker::noop());
+        // SAFETY: the output is zero-sized, so `out` is ignored.
+        let poll = unsafe { fut.as_mut().poll_erased(&mut cx, ptr::null_mut()) };
+        expect_eq!(poll, Poll::Ready(()));
+        // Ownership of the output was transferred to the caller, so `poll_erased` must not drop it.
+        expect_eq!(ZST_DROP_COUNT.load(Ordering::SeqCst), 0);
+        drop(fut);
+        expect_eq!(ZST_DROP_COUNT.load(Ordering::SeqCst), 0);
+
+        // SAFETY: `poll_erased` transferred ownership of the zero-sized output to us, and reading a
+        // zero-sized value through a dangling, well-aligned pointer is valid.
+        let output = unsafe { ptr::read(ptr::NonNull::<ZstDropCounter>::dangling().as_ptr()) };
+        drop(output);
+        expect_eq!(ZST_DROP_COUNT.load(Ordering::SeqCst), 1);
+    }
 }
