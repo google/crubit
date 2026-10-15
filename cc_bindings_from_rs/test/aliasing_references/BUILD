@@ -31,6 +31,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
     rust_library = "aliasing_references",
 )

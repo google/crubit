@@ -28,6 +28,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
     rust_library = "pass_by_value_unmovable",
 )
