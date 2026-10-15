@@ -78,8 +78,10 @@ C++ and Rust:
 | User-defined types                             | `struct`/`class`            | `struct`/`enum`/`union`   | Layout        | Must be rust-movable        |
 :                                                :                             :                           : compatible    : (trivially copyable or      :
 :                                                :                             :                           :               : `[[clang\:\:trivial_abi]]`) :
-| Tuples                                         | `rs_std::Tuple<T1, T2,      | `(T1, T2, ...)`           | Layout        |                             |
-:                                                : ...>`                       :                           : compatible    :                             :
+| Tuples                                         | `rs_std::Tuple<T1, T2,      | `(T1, T2, ...)`           | Layout        | Rust tuples in C++ only.    |
+:                                                : ...>`                       :                           : compatible    : Not supported in C++ APIs   :
+:                                                :                             :                           :               : used from Rust; use a named :
+:                                                :                             :                           :               : struct (b/557569186)        :
 | Protocol Buffers                               | C++ Proto                   | Rust Proto                | Bridged       |                             |
 | Status                                         | `absl::Status`              | `status::Status`          | Layout        |                             |
 :                                                :                             :                           : compatible    :                             :
