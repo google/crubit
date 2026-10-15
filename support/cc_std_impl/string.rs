@@ -369,11 +369,21 @@ pub unsafe extern "C" fn cpp_string_to_rust_string(input: *mut c_void, output: *
 ///   - `string` is most similar to these in that it does not enforce UTF-8 validation, but it
 ///     retains the C++ layout and non-movability constraints.
 ///
+/// # Copying and Converting
+///
+/// Because `string` is `!Unpin`, it cannot implement `Clone` (which returns `Self` by value).
+/// Instead:
+/// - To copy into an owned Rust `String` or `Vec<u8>`, call [`string::to_string`] (or
+///   `s.display().to_string()` for lossy UTF-8) or [`string::to_vec`].
+/// - To copy-construct a new `cpp_std::string` in place, use `ctor::emplace!(ctor::copy(&*s))` or
+///   `ctor::emplace!(cpp_std::string::ctor_new(&*s))` (the `&*` reborrow can be omitted when `s` is
+///   already `&cpp_std::string`).
+///
 /// # Examples
 ///
 /// ```
 /// use cpp_std::string;
-/// use ctor::{emplace, CtorNew};
+/// use ctor::{copy, emplace, CtorNew};
 ///
 /// // Create a string using emplace! and CtorNew:
 /// let my_string = emplace!(string::ctor_new("Hello, C++!"));
@@ -381,8 +391,13 @@ pub unsafe extern "C" fn cpp_string_to_rust_string(input: *mut c_void, output: *
 /// // Access it as a slice:
 /// assert_eq!(my_string.as_slice(), b"Hello, C++!");
 ///
-/// // Convert to Rust str (if valid UTF-8):
+/// // Convert to Rust str or String (if valid UTF-8):
 /// assert_eq!(my_string.to_str().unwrap(), "Hello, C++!");
+/// assert_eq!(my_string.to_string().unwrap(), String::from("Hello, C++!"));
+///
+/// // Copy-construct another cpp_std::string in place:
+/// let cloned_in_place = emplace!(copy(&*my_string));
+/// assert_eq!(&*cloned_in_place, "Hello, C++!");
 /// ```
 #[crubit_annotate::cpp_layout_equivalent(cpp_type = "::std::string", include_path = "<string>")]
 #[cfg_attr(target_pointer_width = "64", repr(C, align(8)))]
@@ -621,6 +636,22 @@ impl PartialEq<[u8]> for string {
 impl<'a> PartialEq<&'a [u8]> for string {
     fn eq(&self, other: &&'a [u8]) -> bool {
         self.as_slice() == *other
+    }
+}
+
+#[diagnostic::on_unimplemented(
+    message = "`cpp_std::string` cannot implement `Clone` because it is `!Unpin` (non-Rust-movable)",
+    note = "To copy a `cpp_std::string` in place, use `ctor::emplace!(ctor::copy(s))` or `ctor::emplace!(cpp_std::string::ctor_new(s))` (see crubit.rs/cpp/std#string).",
+    note = "To copy into a Rust `String` or `Vec<u8>`, use `s.to_string()` (or `s.display().to_string()`) or `s.to_vec()`."
+)]
+trait CannotCloneNonRustMovableCppString {}
+
+impl Clone for string
+where
+    for<'error> &'error (): CannotCloneNonRustMovableCppString,
+{
+    fn clone(&self) -> Self {
+        unreachable!()
     }
 }
 
