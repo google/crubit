@@ -503,12 +503,21 @@ impl PartialEq for ExternCDecl {
 
 impl Eq for ExternCDecl {}
 
+#[derive(Clone, Debug)]
+struct RsSnippetPart {
+    thunk_name: Option<Symbol>,
+    tokens: TokenStream,
+}
+
 #[derive(Clone, Default)]
 pub struct RsSnippet {
     pub tokens: TokenStream,
 
     /// Set of extern "C" declarations needed by `tokens`.
     pub extern_c_decls: BTreeSet<ExternCDecl>,
+
+    parts: Vec<RsSnippetPart>,
+    seen_thunks: HashSet<Symbol>,
 }
 
 // Override debug to use the Display impl for tokens, as the Debug impl for TokenStream is rarely
@@ -525,9 +534,8 @@ impl fmt::Debug for RsSnippet {
 impl FromIterator<RsSnippet> for RsSnippet {
     fn from_iter<I: IntoIterator<Item = RsSnippet>>(iter: I) -> Self {
         let mut result = RsSnippet::default();
-        for RsSnippet { tokens, extern_c_decls } in iter.into_iter() {
-            result.tokens.extend(tokens);
-            result.extern_c_decls.extend(extern_c_decls);
+        for item in iter.into_iter() {
+            result += item;
         }
         result
     }
@@ -536,7 +544,31 @@ impl FromIterator<RsSnippet> for RsSnippet {
 impl RsSnippet {
     // Creates a new RsSnippet from a TokenStream.
     pub fn new(tokens: TokenStream) -> Self {
-        Self { tokens, ..Default::default() }
+        let parts = if tokens.is_empty() {
+            Vec::new()
+        } else {
+            vec![RsSnippetPart { thunk_name: None, tokens: tokens.clone() }]
+        };
+        Self { tokens, parts, ..Default::default() }
+    }
+
+    pub fn with_extern_c_decls(tokens: TokenStream, extern_c_decls: BTreeSet<ExternCDecl>) -> Self {
+        let parts = if tokens.is_empty() {
+            Vec::new()
+        } else {
+            vec![RsSnippetPart { thunk_name: None, tokens: tokens.clone() }]
+        };
+        Self { tokens, extern_c_decls, parts, ..Default::default() }
+    }
+
+    /// Marks this single-thunk `RsSnippet` with `thunk_name` so that combining multiple
+    /// `RsSnippet`s deduplicates identical thunks by name.
+    pub fn into_deduplicated_thunk(self, thunk_name: Symbol) -> Self {
+        let Self { tokens, extern_c_decls, .. } = self;
+        let mut seen_thunks = HashSet::new();
+        seen_thunks.insert(thunk_name);
+        let parts = vec![RsSnippetPart { thunk_name: Some(thunk_name), tokens: tokens.clone() }];
+        Self { tokens, extern_c_decls, parts, seen_thunks }
     }
 
     /// Consumes `self` and returns its `tokens`, while preserving
@@ -552,8 +584,16 @@ impl RsSnippet {
 
 impl AddAssign for RsSnippet {
     fn add_assign(&mut self, rhs: Self) {
-        self.tokens.extend(rhs.tokens);
         self.extern_c_decls.extend(rhs.extern_c_decls);
+        for part in rhs.parts {
+            if let Some(thunk_name) = part.thunk_name
+                && !self.seen_thunks.insert(thunk_name)
+            {
+                continue;
+            }
+            self.tokens.extend(part.tokens.clone());
+            self.parts.push(part);
+        }
     }
 }
 

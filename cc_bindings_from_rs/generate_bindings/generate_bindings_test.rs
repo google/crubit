@@ -3295,6 +3295,110 @@ fn test_no_std_crate() {
 }
 
 #[test]
+fn test_into_constructor_emits_thunk_when_src_is_unmovable() {
+    let test_src = r#"
+        #![allow(dead_code)]
+        pub struct UnmovableSrc(pub i32);
+        impl Drop for UnmovableSrc {
+            fn drop(&mut self) {}
+        }
+
+        pub struct Target {
+            val: i32,
+        }
+
+        impl Into<Target> for UnmovableSrc {
+            fn into(self) -> Target {
+                Target { val: self.0 }
+            }
+        }
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                struct ... Target final {
+                    public:
+                        ...
+                        explicit Target(::rs::Movable<::rust_out::UnmovableSrc> value);
+                        ...
+                };
+                ...
+            }
+        );
+        assert_rs_matches!(
+            bindings.cc_api_impl,
+            quote! {
+                ...
+                <::rust_out::UnmovableSrc as ::core::convert::Into<::rust_out::Target>>::into
+                ...
+            }
+        );
+    });
+}
+
+#[test]
+fn test_into_constructor_and_operator_share_single_thunk() {
+    let test_src = r#"
+        #![allow(dead_code)]
+        pub struct Src(pub i32);
+
+        pub struct Dst {
+            val: i32,
+        }
+
+        impl Into<Dst> for Src {
+            fn into(self) -> Dst {
+                Dst { val: self.0 }
+            }
+        }
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let bindings = bindings.unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                ...
+                struct ... Dst final {
+                    public:
+                        ...
+                        explicit Dst(::rust_out::Src value);
+                        ...
+                };
+                ...
+                struct ... Src final {
+                    public:
+                        ...
+                        explicit operator ::rust_out::Dst();
+                        ...
+                };
+                ...
+            }
+        );
+        assert_rs_matches!(
+            bindings.cc_api_impl,
+            quote! {
+                ...
+                <::rust_out::Src as ::core::convert::Into<::rust_out::Dst>>::into
+                ...
+            }
+        );
+        assert_rs_not_matches!(
+            bindings.cc_api_impl,
+            quote! {
+                ...
+                <::rust_out::Src as ::core::convert::Into<::rust_out::Dst>>::into
+                ...
+                <::rust_out::Src as ::core::convert::Into<::rust_out::Dst>>::into
+                ...
+            }
+        );
+    });
+}
+
+#[test]
 fn test_iterator_item_references() {
     let test_src = r#"
         pub type MyRefAlias<'a> = &'a i32;
