@@ -134,6 +134,15 @@ initializes primitive fields to zero/false, matching C++ value initialization.
 To receive C++ bindings, the `struct` must be movable in C++. See
 [Movable Types](movable_types.md).
 
+## Zero-sized types (ZSTs) {#zsts}
+
+C++ does not allow 0-byte types, so Crubit cannot generate bindings for
+zero-sized Rust structs (such as `pub struct Empty;`, `pub struct Empty {}`, or
+structs containing only zero-sized fields) and emits a `Zero-sized types (ZSTs)
+are not supported (b/258259459)` comment instead. To expose an empty Rust struct
+to C++, add a placeholder non-zero-sized field (for example, `_unused: u8`,
+`_unused: bool`, or `_unused: Option<()>`).
+
 ## `CRUBIT_INTERNAL_RUST_TYPE` annotation {#crubit_internal_rust_type}
 
 You may notice that the generated C++ structs are annotated with the
