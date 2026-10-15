@@ -731,7 +731,12 @@ Importer::DeclItems Importer::GetDeclItems(const clang::Decl& decl) {
 #endif
       ordered_comments.erase(raw_comment->getBeginLoc());
     }
-    if (decl->getLocation().isValid()) {
+    // Implicit decls can have an inverted source range: e.g. the implicit copy
+    // deduction guide of a class template that is declared more than once can
+    // begin at the `template` keyword of its most recent declaration, but end
+    // at the name of an earlier one. Erasing an inverted range is UB.
+    if (decl->getLocation().isValid() &&
+        !compare_locations(decl->getEndLoc(), decl->getBeginLoc())) {
       ordered_comments.erase(ordered_comments.lower_bound(decl->getBeginLoc()),
                              ordered_comments.upper_bound(decl->getEndLoc()));
     }

@@ -537,6 +537,9 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     clang::FunctionDecl* function_decl) {
   if (!ictx_.IsFromCurrentTarget(*function_decl)) return nullptr;
   if (function_decl->isDeleted()) return nullptr;
+  // Like deduction guide templates (see FunctionTemplateDeclImporter), non-
+  // template deduction guides aren't functions, and can't be mangled.
+  if (clang::isa<clang::CXXDeductionGuideDecl>(function_decl)) return nullptr;
   const bool only_import_types =
       ictx_.IsFeatureEnabledForCurrentTarget("types") &&
       !ictx_.IsFeatureEnabledForCurrentTarget("supported");

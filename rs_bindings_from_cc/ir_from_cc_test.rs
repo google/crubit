@@ -493,6 +493,74 @@ fn test_function_template_with_deduction_guide_does_not_generate_ir() {
     expect_eq!(path.enclosing_item_id(), None);
 }
 
+/// Regression test for b/569989494: the implicit copy deduction guide of a
+/// class template that is declared more than once can have an inverted source
+/// range. It begins at the `template` keyword of the most recent declaration,
+/// and ends at the name of the declaration that the deduced type refers to
+/// (here, the first one).
+#[gtest]
+fn test_implicit_deduction_guide_of_redeclared_class_template() {
+    let proto = ir_proto_from_cc(
+        r#"
+    namespace ns {
+    template <typename T>
+    struct S;
+
+    template <S s>
+    constexpr int Get() { return 0; }
+
+    // Comment between the two declarations of S.
+    template <typename T>
+    struct S;
+
+    template <>
+    struct S<int> {
+      constexpr S(int) {}
+    };
+    S(int) -> S<int>;
+
+    // Class template argument deduction declares the implicit deduction guides.
+    inline constexpr int kX = Get<0>();
+
+    // Comment after the implicit deduction guides are declared.
+
+    }  // namespace ns
+    "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let comments: HashSet<String> = ir.comments().map(|c| c.text().to_string()).collect();
+    for expected in [
+        "Comment between the two declarations of S.",
+        "Comment after the implicit deduction guides are declared.",
+    ] {
+        expect_true!(comments.contains(expected), "missing {expected:?} in {comments:?}");
+    }
+}
+
+#[gtest]
+fn test_non_template_deduction_guide_does_not_generate_ir() {
+    let proto = ir_proto_from_cc(
+        r#"
+    template <typename T>
+    struct S {
+      S(int) {}
+    };
+
+    S(int) -> S<int>;
+    "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    expect_eq!(ir.functions().count(), 0);
+    expect_eq!(
+        ir.unsupported_items().filter(|item| item.kind() == UnsupportedItemKind::Func).count(),
+        0
+    );
+}
+
 #[gtest]
 fn test_function_with_rvalue_reference_parameter_without_lifetime_analysis_has_no_lifetime(
 ) -> googletest::Result<()> {
