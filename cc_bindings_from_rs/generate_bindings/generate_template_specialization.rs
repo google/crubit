@@ -70,7 +70,7 @@ pub(crate) fn parse_adt_template_specialization<'tcx>(
             parse_adt_def_template_specialization(db, self_ty, *adt, substs)
         }
         ty::TyKind::Tuple(types) if !types.is_empty() => {
-            parse_tuple_template_specialization(db, self_ty, types)
+            Some(parse_tuple_template_specialization(db, self_ty, types))
         }
         _ => None,
     }
@@ -238,15 +238,14 @@ fn parse_tuple_template_specialization<'tcx>(
     db: &BindingsGenerator<'tcx>,
     self_ty: Ty<'tcx>,
     types: &'tcx ty::List<Ty<'tcx>>,
-) -> Option<Result<AdtTemplateSpecialization<'tcx>>> {
+) -> Result<AdtTemplateSpecialization<'tcx>> {
     let tcx = db.tcx();
     let element_tys = types
         .iter()
         .map(|ty| FormattedTy::try_from_ty(ty, TypeLocation::TemplateArg, db))
-        .collect::<Result<Vec<_>>>()
-        .ok()?;
+        .collect::<Result<Vec<_>>>()?;
 
-    let layout = get_layout(tcx, self_ty).ok()?;
+    let layout = get_layout(tcx, self_ty)?;
     let self_ty_cc = {
         let mut prereqs = CcPrerequisites::default();
         let element_tys_cc = element_tys
@@ -255,12 +254,12 @@ fn parse_tuple_template_specialization<'tcx>(
             .collect::<Vec<_>>();
         CcSnippet { tokens: quote! { rs_std::Tuple<#(#element_tys_cc),*> }, prereqs }
     };
-    Some(Ok(AdtTemplateSpecialization {
+    Ok(AdtTemplateSpecialization {
         layout,
         self_ty_rs: self_ty,
         self_ty_cc,
         args: AdtSpecializationArgs::Tuple(element_tys),
-    }))
+    })
 }
 
 struct OptionApiGenerator<'tcx> {
@@ -1635,16 +1634,16 @@ fn specialize_option<'tcx>(
 }
 
 trait TemplateSpecializationExt<'tcx> {
-    fn api_snippets(self, db: &BindingsGenerator<'tcx>) -> ApiSnippets<'tcx>;
+    fn api_snippets(&self, db: &BindingsGenerator<'tcx>) -> ApiSnippets<'tcx>;
 }
 
 impl<'tcx> TemplateSpecializationExt<'tcx> for AdtTemplateSpecialization<'tcx> {
-    fn api_snippets(self, db: &BindingsGenerator<'tcx>) -> ApiSnippets<'tcx> {
+    fn api_snippets(&self, db: &BindingsGenerator<'tcx>) -> ApiSnippets<'tcx> {
         match &self.args {
             AdtSpecializationArgs::Enum(enum_spec) => match &enum_spec.kind {
                 EnumSpecializationKind::Option { some_ty } => {
                     let some_ty_ty = some_ty.ty;
-                    let mut snippets = specialize_option(db, &self, enum_spec, some_ty.clone());
+                    let mut snippets = specialize_option(db, self, enum_spec, some_ty.clone());
                     snippets.main_api.prereqs.forward_declare_type(some_ty_ty);
                     snippets
                 }
@@ -1652,18 +1651,18 @@ impl<'tcx> TemplateSpecializationExt<'tcx> for AdtTemplateSpecialization<'tcx> {
                     let ok_ty_ty = ok_ty.ty;
                     let err_ty_ty = err_ty.ty;
                     let mut snippets =
-                        specialize_result(db, &self, enum_spec, ok_ty.clone(), err_ty.clone());
+                        specialize_result(db, self, enum_spec, ok_ty.clone(), err_ty.clone());
                     snippets.main_api.prereqs.forward_declare_type(ok_ty_ty);
                     snippets.main_api.prereqs.forward_declare_type(err_ty_ty);
                     snippets
                 }
             },
             AdtSpecializationArgs::Tuple(element_tys) => {
-                specialize_tuple(db, &self, element_tys.clone())
+                specialize_tuple(db, self, element_tys.clone())
             }
             AdtSpecializationArgs::Vec(inner_ty) => {
                 let inner_ty_ty = inner_ty.ty;
-                let mut snippets = specialize_vec(db, &self, inner_ty.clone());
+                let mut snippets = specialize_vec(db, self, inner_ty.clone());
                 snippets.main_api.prereqs.forward_declare_type(inner_ty_ty);
                 snippets
             }
@@ -2047,7 +2046,7 @@ pub fn generate_template_specialization<'tcx>(
     specialization: TemplateSpecialization<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let mut snippets = match &specialization {
-        TemplateSpecialization::Adt(adt) => adt.clone().api_snippets(db),
+        TemplateSpecialization::Adt(adt) => adt.api_snippets(db),
         TemplateSpecialization::TraitImpl(trait_impl) => {
             crate::error_scope!(db, trait_impl.trait_impl);
             generate_trait_impl_specialization(db, trait_impl).unwrap_or_else(|err| {

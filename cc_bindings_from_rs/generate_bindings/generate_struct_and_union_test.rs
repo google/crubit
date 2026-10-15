@@ -707,6 +707,28 @@ fn test_cpp_enum_fails_for_rust_enum() {
 }
 
 #[test]
+fn test_cpp_enum_fails_for_generic_struct() {
+    let test_src = r#"
+    #[doc="CRUBIT_ANNOTATE: cpp_enum=enum class"]
+    #[repr(transparent)]
+    pub struct Color<T>(pub T);
+    "#;
+
+    test_format_item_with_features(
+        test_src,
+        "Color",
+        crubit_feature::CrubitFeature::Experimental
+            | crubit_feature::CrubitFeature::Supported
+            | crubit_feature::CrubitFeature::Generics,
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let err = result.unwrap_err();
+            assert_eq!(err, "`cpp_enum` structs cannot be generic");
+        },
+    );
+}
+
+#[test]
 fn test_repr_c_union_unknown_fields() {
     let test_src = r#"
     #[repr(C)]

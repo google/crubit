@@ -41,8 +41,9 @@ use crate::generate_function_thunk::{
 };
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
-    generate_adt_core, generate_generic_adt_declaration, get_generic_adt_header,
-    into_trait_impls_by_destination, is_struct_aggregate, scalar_value_to_string, GenericAdtHeader,
+    generate_adt_core, generate_generic_adt_declaration, generate_generic_adt_fwd_decl,
+    get_generic_adt_header, into_trait_impls_by_destination, is_struct_aggregate,
+    scalar_value_to_string, GenericAdtHeader,
 };
 use crate::generate_template_specialization::append_trait_impls;
 use arc_anyhow::{Context, Error, Result};
@@ -2031,6 +2032,15 @@ pub(crate) fn generate_move_ctor_and_assignment_operator<'tcx>(
 /// Will panic if `def_id` doesn't identify an ADT that can be successfully
 /// handled by `generate_adt_core`.
 fn generate_fwd_decl(db: &BindingsGenerator<'_>, def_id: DefId) -> TokenStream {
+    let tcx = db.tcx();
+    let def_kind = tcx.def_kind(def_id);
+    if matches!(def_kind, DefKind::Struct | DefKind::Enum | DefKind::Union)
+        && query_compiler::has_non_lifetime_generics(tcx, def_id)
+    {
+        return generate_generic_adt_fwd_decl(db, def_id).expect(
+            "`generate_fwd_decl` should only be called if `get_generic_adt_header` succeeded",
+        );
+    }
     // `generate_fwd_decl` should only be called for items from
     // `CcPrerequisites::fwd_decls` and `fwd_decls` should only contain ADTs
     // that `generate_adt_core` succeeds for.
