@@ -54,7 +54,11 @@ crubit_cc_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
+    # TODO(b/522829368): `StructsTest.ThunklessStructFloat` fails on 32-bit Windows:
+    # C++ and Rust disagree on how `StructFloat` is passed by value.
+    tags = ["no_test_windows_x86"],
     deps = [
         ":structs_cc_api",
         "//testing/base/public:gunit_main",
