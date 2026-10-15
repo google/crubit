@@ -96,8 +96,7 @@ impl<'a> string_view<'a> {
     }
 
     pub fn len(&self) -> usize {
-        // SAFETY: `&self.raw` is valid according to the `string_view` invariants.
-        unsafe { self.raw.len() }
+        self.raw.len()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -280,22 +279,8 @@ impl raw_string_view {
     }
 
     /// Returns the length of the underlying string.
-    ///
-    /// # Safety
-    ///
-    /// Behavior is undefined if the `raw_string_view` was not constructed with a valid (base,
-    /// length) pair for a real allocation.
-    #[allow(unused_unsafe)] // raw_string_view::{begin, end}
-    pub unsafe fn len(&self) -> usize {
-        // TODO(b/249376862): use size(), which does not have the soundness issue below.
-        // let size = unsafe {raw_string_view::size(&sv)};
-        //
-        // SAFETY: the call to end() requires that the raw_string_view not be dangling,
-        // so this is unsound. (If `self` is dangling, then `end()` will perform pointer
-        // arithmetic on a dangling pointer, which is implementation defined (and treated on
-        // Clang as if it were UB).)
-        (unsafe { raw_string_view::end(self) }) as usize
-            - unsafe { raw_string_view::begin(self) } as usize
+    pub fn len(&self) -> usize {
+        self.size()
     }
 
     /// Returns a `string_view` with a lifetime linked to the lifetime of a reference to a raw
@@ -341,8 +326,7 @@ impl From<raw_string_view> for *const [u8] {
         // SAFETY: `&sv` is a valid pointer. `data()` does not dereference the
         // raw_string_view.
         let mut data = unsafe { raw_string_view::data(&sv) } as *const u8;
-        // SAFETY: this is unsound for the reason explained in raw_string_view::len().
-        let size = unsafe { sv.len() };
+        let size = sv.len();
         // Unlike C++, Rust does not allow for null data pointers in slices.
         if data.is_null() {
             data = ptr::NonNull::dangling().as_ptr();

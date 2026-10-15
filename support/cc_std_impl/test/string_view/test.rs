@@ -26,11 +26,13 @@ fn test_len_and_empty() {
     let original: &'static str = "";
     let sv: string_view = original.into();
     assert_eq!(sv.len(), 0);
+    assert_eq!(sv.as_raw().len(), 0);
     assert!(sv.is_empty());
 
     let original: &'static str = "12345";
     let sv: string_view = original.into();
     assert_eq!(sv.len(), 5);
+    assert_eq!(sv.as_raw().len(), 5);
     assert_eq!(sv.is_empty(), false);
 }
 
