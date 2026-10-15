@@ -1095,7 +1095,8 @@ bool IsKnownAttr(const clang::Attr& attr) {
          clang::isa<clang::TypeNullableAttr>(attr) ||
          clang::isa<clang::ScopedLockableAttr>(attr) ||
          clang::isa<clang::CapabilityAttr>(attr) ||
-         clang::isa<clang::ReentrantCapabilityAttr>(attr);
+         clang::isa<clang::ReentrantCapabilityAttr>(attr) ||
+         clang::isa<clang::UnusedAttr>(attr);
 }
 
 static ir_proto::StatusOrOptionalString ToFlatProto(
@@ -1729,6 +1730,8 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
           if (auto* deprecated_attr =
                   clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
             deprecated.emplace(deprecated_attr->getMessage());
+            return true;
+          } else if (clang::isa<clang::UnusedAttr>(attr)) {
             return true;
           }
           return false;

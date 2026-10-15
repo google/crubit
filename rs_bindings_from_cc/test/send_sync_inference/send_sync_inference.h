@@ -42,8 +42,7 @@ class WithPrivateField final {
   int public_field_;
 
  private:
-  // NOLINTNEXTLINE(clang-diagnostic-unused-private-field)
-  int private_field_;
+  [[maybe_unused]] int private_field_;
 };
 
 // Neither: fields of unsupported types are opaque bytes.
