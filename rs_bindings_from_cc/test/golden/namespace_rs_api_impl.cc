@@ -112,4 +112,22 @@ extern "C" void __rust_thunk___ZN4impl3fooEv() { impl::foo(); }
 
 static_assert((void (*)()) & ::impl::foo);
 
+static_assert(CRUBIT_SIZEOF(struct ns_with_type_visibility::S) == 4);
+static_assert(alignof(struct ns_with_type_visibility::S) == 4);
+static_assert(CRUBIT_OFFSET_OF(x, struct ns_with_type_visibility::S) == 0);
+
+extern "C" void __rust_thunk___ZN23ns_with_type_visibility1SC1Ev(
+    struct ns_with_type_visibility::S* __this) {
+  crubit::construct_at(__this);
+}
+
+static_assert(CRUBIT_SIZEOF(struct ns_with_visibility::S) == 4);
+static_assert(alignof(struct ns_with_visibility::S) == 4);
+static_assert(CRUBIT_OFFSET_OF(x, struct ns_with_visibility::S) == 0);
+
+extern "C" void __rust_thunk___ZN18ns_with_visibility1SC1Ev(
+    struct ns_with_visibility::S* __this) {
+  crubit::construct_at(__this);
+}
+
 #pragma clang diagnostic pop
