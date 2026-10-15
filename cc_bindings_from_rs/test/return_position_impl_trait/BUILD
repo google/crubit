@@ -41,6 +41,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "macos",
     ],
     rust_library = "return_position_impl_trait",
 )

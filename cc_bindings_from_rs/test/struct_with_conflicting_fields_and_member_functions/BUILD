@@ -41,6 +41,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "macos",
     ],
     rust_library = "struct_with_conflicting_fields_and_member_functions",
 )

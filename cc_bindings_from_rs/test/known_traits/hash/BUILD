@@ -43,6 +43,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "macos",
     ],
     rust_library = "rs_hash",
 )

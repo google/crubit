@@ -48,6 +48,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "macos",
     ],
     rust_library = "async_fn",
 )

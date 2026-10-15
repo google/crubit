@@ -44,6 +44,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "macos",
     ],
     rust_library = "std_os_fd",
 )
