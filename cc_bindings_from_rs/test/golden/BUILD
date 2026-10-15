@@ -8,5 +8,6 @@ bzl_library(
     visibility = ["//visibility:private"],
     deps = [
         "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule_bzl",
+        "@rules_shell//shell:rules_bzl",
     ],
 )

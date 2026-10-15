@@ -9,6 +9,7 @@ load(
     rust_library_rule = "rust_library",
 )
 load("@rules_rust//rust/private:providers.bzl", "CrateInfo")  # buildifier: disable=bzl-visibility
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_cli_flag_aspect_hint.bzl",
     "cc_bindings_from_rust_cli_flag",
@@ -137,7 +138,7 @@ def _generate_golden_subtest(
         owned_files.append(read_target)
 
     if not native.package_name().startswith("third_party/crosstool/"):
-        native.sh_test(
+        sh_test(
             name = name,
             srcs = ["//common:golden_test.sh"],
             args = sh_args,

@@ -198,6 +198,7 @@ bzl_library(
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect",
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils_bzl",
         "@rules_cc//cc/common",
+        "@rules_shell//shell:rules_bzl",
     ],
 )
 

@@ -1,4 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(":cc_std_test.bzl", "cc_std_test")
 

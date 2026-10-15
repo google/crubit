@@ -1,4 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("//common/bazel_support:external_binaries.bzl", "EXTERNAL_BINARIES")
 
 package(default_applicable_licenses = ["//:license"])

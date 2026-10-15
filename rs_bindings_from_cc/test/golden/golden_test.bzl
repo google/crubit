@@ -5,6 +5,7 @@
 """A rule that generates bindings source files for a given C++ library."""
 
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "ENABLE_CRUBIT_ASSERTIONS_ATTR",
@@ -136,7 +137,7 @@ def golden_test(
         ]
         owned_files.append(golden_namespaces)
 
-    native.sh_test(
+    sh_test(
         name = name,
         srcs = ["//common:golden_test.sh"],
         args = args,

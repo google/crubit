@@ -8,8 +8,10 @@ contained assertions about the nullability of expressions.
 See nullability_test.h for details.
 """
 
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
+
 def nullability_test(name, srcs):
-    native.sh_test(
+    sh_test(
         name = name,
         data = srcs + [
             "//nullability/test:nullability_test",

@@ -1,6 +1,6 @@
 """End-to-end tests of `cc_bindings_from_rs`, focusing on bridging Protobuf types."""
 
-load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@protobuf//bazel:cc_proto_library.bzl", "cc_proto_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
 load("@protobuf//rust:defs.bzl", "rust_proto_library")
 load(
