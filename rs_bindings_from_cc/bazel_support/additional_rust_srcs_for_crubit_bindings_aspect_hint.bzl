@@ -80,7 +80,6 @@ visibility([
     # <internal link> start
     "//cc_bindings_from_rs/...",
     "//examples/...",
-    "//google_internal/carcinize/...",
     "//rs_bindings_from_cc/...",
     "//support/...",
     # <internal link> end

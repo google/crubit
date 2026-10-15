@@ -243,7 +243,7 @@ rust_proc_macro(
 
 crubit_rust_test(
     name = "rustversion_impl_test",
-    crate = ":rustversion_impl_proc_macro_internal",
+    crate = ":rustversion_impl",
 )
 
 rust_library(

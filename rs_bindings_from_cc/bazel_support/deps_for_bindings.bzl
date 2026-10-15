@@ -32,9 +32,6 @@ def _deps_for_bindings_impl(ctx):
         for dep in ctx.attr.deps_for_generated_rs_file
     ]
 
-    if CrateInfo in ctx.attr._import_macro_dep:
-        dep_variant_infos.append(make_dep_variant_info(ctx.attr._import_macro_dep))
-
     return [
         DepsForBindingsInfo(
             deps_for_rs_file = dep_variant_infos,

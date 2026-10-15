@@ -133,7 +133,7 @@ rust_test(
 
 crubit_rust_test(
     name = "ctor_proc_macros_test",
-    crate = ":ctor_proc_macros_proc_macro_internal",
+    crate = ":ctor_proc_macros",
     deps = [
         "//common:token_stream_matchers",
         "@crate_index//:googletest",

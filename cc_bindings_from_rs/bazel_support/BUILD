@@ -17,7 +17,6 @@ bzl_library(
     srcs = ["cc_bindings_from_rust_rule.bzl"],
     visibility = [
         "//:__subpackages__",
-        "//cloud/vmm/tiny/vmm:__pkg__",
     ],
     deps = [
         ":cc_bindings_from_rust_cli_flag_aspect_hint_bzl",

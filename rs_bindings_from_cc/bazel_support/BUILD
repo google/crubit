@@ -32,7 +32,6 @@ bzl_library(
         "@bazel_skylib//lib:collections",
         "@protobuf//rust/bazel:aspects_bzl",
         "@rules_cc//cc/common",
-        "@rules_rust//allowlists:bzl_lib",
     ],
 )
 
@@ -43,8 +42,11 @@ bzl_library(
         "//:__subpackages__",
     ],
     deps = [
+        ":additional_rust_srcs_for_crubit_bindings_aspect_hint_bzl",
         ":providers_bzl",
         ":rust_bindings_from_cc_aspect",
+        "//cc_bindings_from_rs/bazel_support:providers_bzl",
+        "@rules_rust//rust:bzl_lib",
     ],
 )
 
@@ -103,6 +105,8 @@ bzl_library(
     name = "providers_bzl",
     srcs = ["providers.bzl"],
     visibility = [
+        "//cc_bindings_from_rs/bazel_support:__pkg__",
+        "//rs_bindings_from_cc/test:__subpackages__",
     ],
 )
 

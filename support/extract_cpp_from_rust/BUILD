@@ -5,6 +5,7 @@ load(
     "rust_proc_macro",
     "rust_test",
 )
+load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 
 package(default_applicable_licenses = ["//:license"])
 

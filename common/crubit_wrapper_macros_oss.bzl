@@ -46,6 +46,7 @@ crubit_golden_flavor_transition = transition(
     inputs = [],
     outputs = ["//common/bazel_support:is_golden_test"],
 )
+crubit_multiplatform_golden_transition = crubit_golden_flavor_transition
 crubit_make_analysis_test = analysistest.make
 
 # Placeholder for an internal attribute that asks Crubit's own tests to be
