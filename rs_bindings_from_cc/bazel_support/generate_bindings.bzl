@@ -169,6 +169,13 @@ def generate_bindings(
     for d in getattr(attr, "local_defines", []):
         local_defines.append(ctx.expand_make_variables("local_defines", d, {}))
 
+    builtin_headers = toolchain.rs_bindings_from_cc_toolchain_info.builtin_headers
+    resource_dir_flags = []
+    if builtin_headers and "/include/" in builtin_headers[0].path:
+        resource_dir_flags.append(
+            "-resource-dir=" + builtin_headers[0].path.partition("/include/")[0],
+        )
+
     variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
@@ -178,7 +185,7 @@ def generate_bindings(
         # TODO(b/571633624): Remove this intermediate filter once Crubit handles
         # driver diagnostics / flag filtering in rs_bindings_from_cc and the
         # release stabilizes.
-        user_compile_flags = [
+        user_compile_flags = resource_dir_flags + [
             f
             for f in (
                 ctx.fragments.cpp.copts +
