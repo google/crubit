@@ -393,6 +393,7 @@ cc_test(
 filegroup(
     name = "annotations_swig",
     srcs = ["annotations.swig"],
+    compatible_with = ["//buildenv/target:non_prod"],
     visibility = [
         "//visibility:public",
     ],
