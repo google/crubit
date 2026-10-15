@@ -57,6 +57,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
     rust_library = "into_iterator_rust",
 )

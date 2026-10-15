@@ -37,6 +37,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
     rust_library = "dep_crate",
 )
@@ -66,6 +67,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
     rust_library = "reexport_crate",
 )

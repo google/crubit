@@ -44,6 +44,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        # This is not applicable to "windows" as `std::os::fd` is Unix-only.
     ],
     rust_library = "std_os_fd",
 )
