@@ -2049,6 +2049,7 @@ pub fn generate_function<'a>(
 
     let BindingsSignature {
         lifetimes,
+        type_params,
         lifetimes_including_impl: _lifetimes_including_impl,
         params: api_params,
         return_type_fragment: mut quoted_return_type,
@@ -2209,8 +2210,7 @@ pub fn generate_function<'a>(
     match impl_kind {
         ImplKind::None { .. } => {
             let func_body = create_func_body()?;
-            let fn_generic_params =
-                format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
+            let fn_generic_params = format_generic_params(&lifetimes, &type_params);
             api_func = quote! {
                 #unimplemented_trait_def
                 #capture_tags
@@ -2247,8 +2247,7 @@ pub fn generate_function<'a>(
             }
 
             let record_name = make_rs_ident(target_record.rs_name().as_str());
-            let fn_generic_params =
-                format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
+            let fn_generic_params = format_generic_params(&lifetimes, &type_params);
 
             // Generate the free function.
             let free_param_idents = {
@@ -2273,6 +2272,7 @@ pub fn generate_function<'a>(
             let free_errors = Errors::new();
             let BindingsSignature {
                 lifetimes: free_lifetimes,
+                type_params: free_type_params,
                 lifetimes_including_impl,
                 params: free_api_params,
                 return_type_fragment: free_return_type_fragment,
@@ -2321,8 +2321,7 @@ pub fn generate_function<'a>(
                 create_func_body()?
             };
 
-            let free_fn_generic_params =
-                format_generic_params(&free_lifetimes, std::iter::empty::<syn::Ident>());
+            let free_fn_generic_params = format_generic_params(&free_lifetimes, &free_type_params);
 
             // Add the free method to the mapping, which we will extract and put into
             // snippets inside db later.
@@ -2895,6 +2894,10 @@ struct BindingsSignature {
     /// The lifetime parameters for the Rust function.
     lifetimes: Vec<Lifetime>,
 
+    /// The type parameters for the Rust function (e.g., for `Ctor` parameters when `use<...>`
+    /// is present on the return type).
+    type_params: Vec<TokenStream>,
+
     /// The lifetime parameters for the Rust function, if it were a free function (e.g., rebinding
     /// the parameters that would be bound in an impl block).
     lifetimes_including_impl: Vec<Lifetime>,
@@ -3026,6 +3029,8 @@ fn function_signature<'a>(
     }
 
     let mut api_params = Vec::with_capacity(func.params().len());
+    let mut ctor_params: Vec<(usize, Ident, TokenStream)> = Vec::new();
+    let mut type_params: Vec<TokenStream> = Vec::new();
     let mut thunk_args = Vec::with_capacity(func.params().len());
     let mut thunk_prepare = quote! {};
     let impl_kind_record = match impl_kind {
@@ -3117,6 +3122,13 @@ fn function_signature<'a>(
                     errors.add(anyhow!("Non-movable, non-trivial_abi type '{}' is not supported by value as parameter #{i}", type_.display(db)));
                 }
                 features |= Feature::impl_trait_in_assoc_type;
+                if !(i == 0 && impl_kind.format_first_param_as_self()) {
+                    ctor_params.push((
+                        api_params.len(),
+                        ident.clone(),
+                        quoted_type_or_self.clone(),
+                    ));
+                }
                 api_params.push(quote! {#ident: ::ctor::Ctor![#quoted_type_or_self]});
                 thunk_args.push(
                     quote! {::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))},
@@ -3271,6 +3283,9 @@ fn function_signature<'a>(
         | None => {}
     }
 
+    lifetimes.retain(|lifetime| !lifetime.is_elided());
+    lifetimes_including_impl.retain(|lifetime| !lifetime.is_elided());
+
     let return_type_fragment = if matches!(
         return_type.unalias(),
         RsTypeKind::Primitive(Primitive::Void)
@@ -3289,24 +3304,31 @@ fn function_signature<'a>(
             // similar to top-level functions.)
 
             // The returned lazy FnCtor depends on all inputs.
-            let extra_lifetimes = if assume_lifetimes {
-                if all_lifetimes.is_empty() {
-                    quote! {}
-                } else {
-                    quote! {+ use<#(#all_lifetimes),*> }
-                }
+            let use_lifetimes = if assume_lifetimes { &all_lifetimes } else { &lifetimes };
+            let extra_captures = if use_lifetimes.is_empty() {
+                quote! {}
             } else {
-                if lifetimes.is_empty() {
-                    quote! {}
-                } else {
-                    quote! {+ use<#(#lifetimes),*> }
+                // Rust's `use<...>` precise capturing syntax requires all in-scope type
+                // parameters to be listed, which is incompatible with anonymous `impl Trait`
+                // parameters (`::ctor::Ctor![...]`). When `use<...>` is emitted, rewrite any
+                // `PassingConvention::Ctor` parameters to named generic type parameters and
+                // include them in `use<...>`.
+                let mut ctor_type_param_names = Vec::with_capacity(ctor_params.len());
+                for (param_idx, param_ident, param_ty) in &ctor_params {
+                    let type_param_ident = format_ident!("__CtorParam_{param_ident}");
+                    api_params[*param_idx] = quote! {#param_ident: #type_param_ident};
+                    type_params.push(quote! {
+                        #type_param_ident: ::ctor::Ctor<Output=#param_ty, Error=::ctor::Infallible>
+                    });
+                    ctor_type_param_names.push(type_param_ident);
                 }
+                quote! {+ use<#(#use_lifetimes),* #(, #ctor_type_param_names)*> }
             };
             features |= Feature::impl_trait_in_assoc_type;
-            if extra_lifetimes.is_empty() {
+            if extra_captures.is_empty() {
                 quote! {::ctor::Ctor![#ty]}
             } else {
-                quote! {impl ::ctor::Ctor<Output=#ty, Error=::ctor::Infallible> #extra_lifetimes }
+                quote! {impl ::ctor::Ctor<Output=#ty, Error=::ctor::Infallible> #extra_captures }
             }
         }
     };
@@ -3460,11 +3482,9 @@ fn function_signature<'a>(
         );
     }
 
-    lifetimes.retain(|lifetime| !lifetime.is_elided());
-    lifetimes_including_impl.retain(|lifetime| !lifetime.is_elided());
-
     Ok(BindingsSignature {
         lifetimes,
+        type_params,
         lifetimes_including_impl,
         params: api_params,
         return_type_fragment,

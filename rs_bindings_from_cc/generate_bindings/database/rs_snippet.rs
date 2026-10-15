@@ -1124,10 +1124,11 @@ impl<'a> BridgeRsTypeKind<'a> {
             BridgeType::StdString => {
                 let in_cc_std = db.ir().is_current_target(record.owning_target())
                     && record.owning_target().target_name_escaped() == "cc_std";
-                let layout_compatible = db
-                    .ir()
-                    .target_crubit_features(db.ir().current_target())
-                    .contains(CrubitFeature::LayoutCompatString);
+                let layout_compatible = options.requires_layout_compatible
+                    || db
+                        .ir()
+                        .target_crubit_features(db.ir().current_target())
+                        .contains(CrubitFeature::LayoutCompatString);
                 BridgeRsTypeKind::StdString { in_cc_std, layout_compatible }
             }
             BridgeType::Callable { backing_type, fn_trait, return_type, param_types } => {
@@ -1282,7 +1283,7 @@ impl<'a> RsTypeKind<'a> {
                 RsTypeKind::new_type_alias(db, type_alias, options, lifetimes)
             }
             Item::ExistingRustType(existing_rust_type) => {
-                RsTypeKind::new_existing_rust_type(db, existing_rust_type)
+                RsTypeKind::new_existing_rust_type(db, existing_rust_type, options)
             }
             other_item => bail!("Item does not define a type: {other_item:?}"),
         }
@@ -1433,6 +1434,7 @@ impl<'a> RsTypeKind<'a> {
     fn new_existing_rust_type(
         db: impl Deref<Target = BindingsGenerator<'a>> + Copy,
         existing_rust_type: Rc<ExistingRustType<'a>>,
+        options: &LifetimeOptions,
     ) -> Result<Self> {
         if existing_rust_type.rs_name() == SLICE_REF_NAME_RS {
             let [template_arg] = &existing_rust_type.template_args() else {
@@ -1445,7 +1447,15 @@ impl<'a> RsTypeKind<'a> {
                 bail!("SliceRef should have a type as its singular template argument");
             };
 
-            let inner_rs_type_kind = db.rs_type_kind(inner_cc_type.clone())?;
+            let mut inner_rs_type_kind = db.rs_type_kind_with_lifetime_elision(
+                inner_cc_type.clone(),
+                LifetimeOptions {
+                    is_return_type: false,
+                    requires_layout_compatible: true,
+                    ..*options
+                },
+            )?;
+            inner_rs_type_kind.force_layout_compatible();
             ensure!(
                 inner_rs_type_kind.allowed_behind_multi_element_ptr(),
                 "SliceRef pointee type is not allowed behind a multi element pointer: {}",
@@ -1540,7 +1550,15 @@ impl<'a> RsTypeKind<'a> {
             .map(|subst| {
                 match subst {
                     TemplateArg::Type(type_param) => {
-                        let rs_type_kind = db.rs_type_kind(type_param.clone())?;
+                        let mut rs_type_kind = db.rs_type_kind_with_lifetime_elision(
+                            type_param.clone(),
+                            LifetimeOptions {
+                                is_return_type: false,
+                                requires_layout_compatible: true,
+                                ..*options
+                            },
+                        )?;
+                        rs_type_kind.force_layout_compatible();
                         ensure!(
                             !rs_type_kind.pass_by_value_bridges(),
                             "Type parameter `{}` is a bridged type (such as a Protobuf message or std::string) and is not layout-compatible between Rust and C++. See crubit.rs/types.",
@@ -3360,6 +3378,7 @@ mod tests {
         RsTypeKind::new_existing_rust_type(
             EmptyDatabase::new(),
             Rc::new(ExistingRustType::try_from(proto).unwrap()),
+            &LifetimeOptions::default(),
         )
         .expect("Should succeed because all fallible operations come from BindingsGenerated, which EmptyDatabase cannot successfully deref to (it panics).")
     }

@@ -63,6 +63,34 @@ crubit_rust_test(
 )
 
 cc_library(
+    name = "status_or_string_lib",
+    hdrs = ["status_or_string_lib.h"],
+    aspect_hints = [
+        "//features:supported",
+    ],
+    local_defines = ["CRUBIT_NEW_STATUS"],
+    deps = [
+        "//support/internal:bindings_support",  # build_cleaner: keep
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+    ],
+)
+
+crubit_rust_test(
+    name = "status_or_string_test",
+    srcs = ["status_or_string_test.rs"],
+    cc_deps = [
+        ":status_or_string_lib",
+        "//support/cc_std",
+        "@abseil-cpp//absl/status",
+    ],
+    deps = [
+        "//support:ctor",
+        "@crate_index//:googletest",
+    ],
+)
+
+cc_library(
     name = "composable_bridging_lib",
     srcs = ["composable_bridging_lib.cc"],
     hdrs = ["composable_bridging_lib.h"],

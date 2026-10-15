@@ -1883,6 +1883,106 @@ fn test_std_string_with_layout_compat_feature() -> Result<()> {
     Ok(())
 }
 
+#[gtest]
+fn test_existing_rust_type_with_std_string_without_layout_compat_feature() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        namespace crubit::rust_type {
+        template <typename...>
+        struct Args {};
+        }
+
+        template <typename T>
+        struct [[clang::annotate("crubit_internal_rust_type", "MyGeneric<{}>", crubit::rust_type::Args<T>())]] Generic {};
+
+        Generic<std::string> returns_generic_string();
+        "#,
+        r#"
+        namespace std {
+            template <typename T> struct char_traits {};
+            template <typename T> struct allocator {};
+            template <typename CharT, typename Traits = char_traits<CharT>, typename Alloc = allocator<CharT>>
+            class basic_string {};
+            using string = basic_string<char>;
+        }
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn returns_generic_string() -> ::ctor::Ctor![crate::MyGeneric<::cc_std::std::string>]
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_existing_rust_type_with_std_optional_without_layout_compat_feature() -> Result<()> {
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        namespace crubit::rust_type {
+        template <typename...>
+        struct Args {};
+        }
+
+        template <typename T>
+        struct [[clang::annotate("crubit_internal_rust_type", "MyGeneric<{}>", crubit::rust_type::Args<T>())]] Generic {};
+
+        Generic<std::optional<int>> returns_generic_optional();
+        "#,
+        FAKE_STD_OPTIONAL,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn returns_generic_optional() -> crate::MyGeneric<::cc_std::std::trivial_optional::<::ffi_11::c_int>>
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_existing_rust_type_with_nested_optional_string_without_layout_compat_feature() -> Result<()>
+{
+    let proto = ir_proto_from_cc_dependency(
+        r#"
+        namespace crubit::rust_type {
+        template <typename...>
+        struct Args {};
+        }
+
+        template <typename T>
+        struct [[clang::annotate("crubit_internal_rust_type", "MyGeneric<{}>", crubit::rust_type::Args<T>())]] Generic {};
+
+        Generic<std::optional<std::string>> returns_generic_optional_string();
+        "#,
+        r#"
+        namespace std {
+            template <typename T> class optional { T t; bool b; };
+
+            template <typename T> struct char_traits {};
+            template <typename T> struct allocator {};
+            template <typename CharT, typename Traits = char_traits<CharT>, typename Alloc = allocator<CharT>>
+            class basic_string {};
+            using string = basic_string<char>;
+        }
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn returns_generic_optional_string() -> ::ctor::Ctor![crate::MyGeneric<::cc_std::std::optional::<::cc_std::std::string>>]
+        }
+    );
+    Ok(())
+}
+
 /// The C++ source of a fake `std::optional`, laid out the way libc++ and libstdc++ lay it out.
 const FAKE_STD_OPTIONAL: &str = r#"
     namespace std {

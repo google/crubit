@@ -2509,6 +2509,43 @@ fn test_nonunpin_const_return() -> Result<()> {
 }
 
 #[gtest]
+fn test_nonunpin_return_with_lifetime_and_ctor_param() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"#pragma clang lifetime_elision
+        struct Nontrivial {
+            Nontrivial(Nontrivial&&);
+            ~Nontrivial();
+        };
+
+        Nontrivial ReturnsByValue(const int& x, Nontrivial y);
+        "#,
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, .. } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn ReturnsByValue<'a, __CtorParam_y: ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible>>(
+                x: &'a ::ffi_11::c_int,
+                y: __CtorParam_y
+            ) -> impl ::ctor::Ctor<Output = crate::Nontrivial, Error = ::ctor::Infallible> + use<'a, __CtorParam_y> {
+                unsafe {
+                    ::ctor::FnCtor::new(move |__crubit_dest: *mut crate::Nontrivial| {
+                        crate::detail::...(
+                            __crubit_dest as *mut ::core::ffi::c_void,
+                            x,
+                            ::core::pin::Pin::into_inner_unchecked(::ctor::emplace!(y))
+                        );
+                    })
+                }
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_unpin_by_value_param() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
