@@ -1134,10 +1134,15 @@ impl<T> Slot<T> {
     pub fn clear(self: Pin<&mut Self>) {
         if self.is_initialized {
             let Self { is_initialized, maybe_uninit } = unsafe { Pin::into_inner_unchecked(self) };
+            // Mark the slot as uninitialized *before* dropping the value. If `T::drop` panics,
+            // the value is still considered dropped, and `Slot::drop` (which runs during
+            // unwinding) must not drop it a second time.
+            *is_initialized = false;
+            // SAFETY: `is_initialized` was true, so `maybe_uninit` holds a valid, pinned `T`,
+            // which is dropped in place exactly once.
             unsafe {
                 core::ptr::drop_in_place(maybe_uninit.as_mut_ptr());
             }
-            *is_initialized = false;
         }
     }
 

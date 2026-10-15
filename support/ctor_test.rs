@@ -18,6 +18,7 @@ use std::mem::ManuallyDrop;
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::rc::Rc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 #[gtest]
@@ -370,6 +371,29 @@ fn test_emplace_no_drop_on_panic() {
     });
     assert!(panic_result.is_err());
     assert!(!*is_dropped.lock().unwrap());
+}
+
+/// Tests that when the value's `Drop` panics during `Slot::clear`, the value is
+/// not dropped a second time when the `Slot` itself is dropped during unwinding.
+#[gtest]
+fn test_slot_clear_no_double_drop_on_panic() {
+    /// Counts drops, and panics on the first one.
+    struct PanicOnFirstDrop<'a>(&'a AtomicUsize);
+    impl Drop for PanicOnFirstDrop<'_> {
+        fn drop(&mut self) {
+            if self.0.fetch_add(1, Ordering::SeqCst) == 0 {
+                panic!("PanicOnFirstDrop");
+            }
+        }
+    }
+
+    let drop_count = AtomicUsize::new(0);
+    let panic_result = std::panic::catch_unwind(|| {
+        let mut slot = emplace!(Slot::new(PanicOnFirstDrop(&drop_count)));
+        slot.as_mut().clear();
+    });
+    assert!(panic_result.is_err());
+    assert_eq!(drop_count.load(Ordering::SeqCst), 1);
 }
 
 /// Tests that when a panic occurs during initialization of a struct with
