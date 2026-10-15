@@ -9,6 +9,14 @@
 
 #include "support/annotations_internal.h"
 
+// SWIG does not follow `#include` directives, so it cannot see the definitions
+// below and reports "Syntax error in input" when it parses a header that uses
+// these annotations. To make SWIG treat them as no-ops, add
+// `%include "support/annotations.swig"` to the `.swig` file
+// (after `%include "base/swig/google.swig"`), and add
+// `//support:annotations_swig` to the SWIG rule's
+// `swig_includes`. See b/566029265.
+
 // Marks a function or type as requiring Rust binding.
 //
 // If Crubit fails to generate bindings for a function or type annotated with
