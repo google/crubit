@@ -10,6 +10,6 @@ the existing C++/Rust toolchains. But for now, at least, we centralize the locat
 
 # Note: this has different paths in the Google monorepo.
 EXTERNAL_BINARIES = {
-       "CRUBIT_RUSTFMT_EXE_PATH": "rustfmt",
-       "CRUBIT_CLANG_FORMAT_EXE_PATH": "clang-format",
+       "CRUBIT_RUSTFMT_EXE_PATH": "../+crubit_toolchains+rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain/bin/rustfmt",
+       "CRUBIT_CLANG_FORMAT_EXE_PATH": "../+crubit_toolchains+llvm_toolchain/clang-format",
 }
