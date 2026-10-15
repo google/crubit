@@ -417,6 +417,62 @@ fn test_from_unique_ptr_destroyed_in_cpp() {
 }
 
 #[gtest]
+fn test_from_ptr_and_deleter() {
+    let deleted = Arc::new(AtomicUsize::new(0));
+    let raw = Box::into_raw(Box::new(42));
+    let sp = {
+        let deleted = Arc::clone(&deleted);
+        // SAFETY: `raw` is a valid pointer from `Box::into_raw`, and the deleter frees it with
+        // `Box::from_raw` exactly once.
+        unsafe {
+            shared_ptr::from_ptr_and_deleter(raw, move |p| {
+                drop(Box::from_raw(p));
+                deleted.fetch_add(1, Ordering::SeqCst);
+            })
+        }
+    };
+    expect_false!(shared_ptr::is_null(&sp));
+    expect_eq!(shared_ptr::as_ptr(&sp), raw as *const i32);
+    expect_eq!(*shared_ptr::try_as_ref(&sp).unwrap(), 42);
+    expect_eq!(shared_ptr::use_count(&sp), 1);
+
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+    drop(sp);
+    expect_eq!(deleted.load(Ordering::SeqCst), 0);
+    drop(sp_clone);
+    expect_eq!(deleted.load(Ordering::SeqCst), 1);
+}
+
+#[gtest]
+fn test_from_ptr_and_deleter_null() {
+    // Like C++ `std::shared_ptr<T>(nullptr, deleter)`, this allocates a control block and calls
+    // the deleter with a null pointer once the last strong owner is dropped.
+    let deleted_null = Arc::new(AtomicUsize::new(0));
+    let sp = {
+        let deleted_null = Arc::clone(&deleted_null);
+        // SAFETY: `ptr` may be null, and the deleter does not dereference it.
+        unsafe {
+            shared_ptr::from_ptr_and_deleter(core::ptr::null_mut::<i32>(), move |p| {
+                if p.is_null() {
+                    deleted_null.fetch_add(1, Ordering::SeqCst);
+                }
+            })
+        }
+    };
+    expect_true!(shared_ptr::is_null(&sp));
+    expect_true!(shared_ptr::try_as_ref(&sp).is_none());
+    expect_eq!(shared_ptr::use_count(&sp), 1);
+
+    let sp_clone = sp.clone();
+    expect_eq!(shared_ptr::use_count(&sp_clone), 2);
+    drop(sp);
+    expect_eq!(deleted_null.load(Ordering::SeqCst), 0);
+    drop(sp_clone);
+    expect_eq!(deleted_null.load(Ordering::SeqCst), 1);
+}
+
+#[gtest]
 fn test_from_virtual_unique_ptr() {
     let mut count = 0;
     {

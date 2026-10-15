@@ -240,8 +240,14 @@ impl<T: Sized> shared_ptr<T> {
         let delete_on_drop =
             shared_ptr::new(DeleteOnDrop { ptr, deleter: MaybeUninit::new(deleter) });
 
-        // SAFETY: We only project away the deleter FnOnce object, which we guaranteed was 'static.
-        unsafe { shared_ptr::project_unchecked(delete_on_drop, |d| &*d.ptr) }
+        // Don't use `project_unchecked` here: it would have to turn `ptr` into a `&T`, which is
+        // undefined behavior when `ptr` is null. Like C++ `std::shared_ptr<T>(nullptr, deleter)`,
+        // a null `ptr` still gets a control block that calls `deleter(ptr)`.
+        let (_, cntrl) = shared_ptr::into_raw_parts(delete_on_drop);
+        // SAFETY: `ptr` is valid or null per the caller's precondition, and `cntrl` holds one
+        // strong reference to the `DeleteOnDrop` that calls `deleter(ptr)` when it is dropped. The
+        // deleter is `'static`, so no lifetimes are erased.
+        unsafe { shared_ptr::from_raw_parts(ptr, cntrl) }
     }
 
     /// Creates a `shared_ptr` from a raw pointer and a control block pointer.
