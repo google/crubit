@@ -222,6 +222,40 @@ fn filter_out_ambiguous_member_functions<'a>(
         .collect()
 }
 
+fn record_has_repr_align<'a>(db: &BindingsGenerator<'a>, record: &Record<'a>) -> bool {
+    if record.is_packed() || record.size_align().alignment() <= 1 {
+        return false;
+    }
+    if record.override_alignment() || record.is_thread_safe() {
+        return true;
+    }
+    for field in record.fields() {
+        if field.is_bitfield() || get_field_rs_type_kind_for_layout(db, record, field).is_err() {
+            return true;
+        }
+    }
+    false
+}
+
+fn type_has_repr_align<'a>(db: &BindingsGenerator<'a>, type_kind: &RsTypeKind<'a>) -> bool {
+    match type_kind.unalias() {
+        RsTypeKind::Record { record, .. } => {
+            if record_has_repr_align(db, record) {
+                return true;
+            }
+            for field in record.fields() {
+                if let Ok(field_type_kind) = db.rs_type_kind(field.type_().clone())
+                    && type_has_repr_align(db, &field_type_kind)
+                {
+                    return true;
+                }
+            }
+            false
+        }
+        _ => false,
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn field_definition<'a>(
     db: &BindingsGenerator<'a>,
@@ -279,35 +313,50 @@ fn field_definition<'a>(
     let deprecated_attr = field.deprecated().map(|s| DeprecatedAttr(Rc::from(s)));
     let ident = make_rs_field_ident(field, field_index);
     let field_rs_type_kind = get_field_rs_type_kind_for_layout(db, record, field);
-    let doc_comment = match &field_rs_type_kind {
-        Ok(_) => generate_doc_comment(
-            field.doc_comment(),
+    let field_has_repr_align_in_packed = record.is_packed()
+        && field_rs_type_kind.as_ref().map(|tk| type_has_repr_align(db, tk)).unwrap_or(false);
+    let doc_comment = if field_has_repr_align_in_packed {
+        generate_doc_comment(
+            Some("Reason for representing this field as a blob of bytes:\nRust does not support packed structs containing `#[repr(align)]` types"),
             None,
             None,
             db.is_golden_test(),
             db.kythe_annotations(),
-        ),
-        Err(msg) => {
-            use std::fmt::Write;
-
-            let mut new_text = field
-                .doc_comment()
-                .map(|doc_comment| format!("{doc_comment}\n\n"))
-                .unwrap_or_default();
-            let _ = write!(
-                &mut new_text,
-                "Reason for representing this field as a blob of bytes:\n{msg:#}"
-            );
-            generate_doc_comment(
-                Some(new_text.as_str()),
+        )
+    } else {
+        match &field_rs_type_kind {
+            Ok(_) => generate_doc_comment(
+                field.doc_comment(),
                 None,
                 None,
                 db.is_golden_test(),
                 db.kythe_annotations(),
-            )
+            ),
+            Err(msg) => {
+                use std::fmt::Write;
+
+                let mut new_text = field
+                    .doc_comment()
+                    .map(|doc_comment| format!("{doc_comment}\n\n"))
+                    .unwrap_or_default();
+                let _ = write!(
+                    &mut new_text,
+                    "Reason for representing this field as a blob of bytes:\n{msg:#}"
+                );
+                generate_doc_comment(
+                    Some(new_text.as_str()),
+                    None,
+                    None,
+                    db.is_golden_test(),
+                    db.kythe_annotations(),
+                )
+            }
         }
     };
-    let visibility = if field.access() == AccessSpecifier::Public && field_rs_type_kind.is_ok() {
+    let visibility = if field.access() == AccessSpecifier::Public
+        && field_rs_type_kind.is_ok()
+        && !field_has_repr_align_in_packed
+    {
         db.type_visibility(record.owning_target(), field_rs_type_kind.clone().unwrap())
             .unwrap_or_default()
     } else {
@@ -323,6 +372,11 @@ fn field_definition<'a>(
                 internally_mutable: internally_mutable_unknown_fields,
             })
         }
+        Ok(_) if field_has_repr_align_in_packed => FieldType::Erased(BitPadding {
+            size: NonZeroUsize::new(end - field.offset())
+                .expect("Bit padding should always be greater than 0"),
+            internally_mutable: internally_mutable_unknown_fields,
+        }),
         Ok(type_kind) => {
             let ty = type_kind.to_token_stream(db);
             let mut wrap_in_manually_drop = false;
@@ -707,7 +761,8 @@ pub fn generate_record<'a>(
     };
     let debug_impl = if record.impl_debug() &&
     // Keep the `impl Debug for raw_string_view` string_view.rs already defines.
-    !record.is_raw_string_view()
+    !record.is_raw_string_view() &&
+    !record.is_packed()
     {
         let mut fields: Vec<database::code_snippet::DebugField> = vec![];
         if !record.is_union() {
@@ -839,13 +894,15 @@ pub fn generate_record<'a>(
         cfi_encoding_attr: CfiEncodingAttr(record.mangled_cc_name().into()),
         // Thread-safe types always need explicit alignment because the opaque
         // UnsafeCell<[MaybeUninit<u8>; N]> body has alignment 1.
-        align: if (override_alignment || record.is_thread_safe())
+        align: if !record.is_packed()
+            && (override_alignment || record.is_thread_safe())
             && record.size_align().alignment() > 1
         {
             Some(record.size_align().alignment())
         } else {
             None
         },
+        pack: record.pack(),
         // TODO(b/481405536): we should do this unconditionally.
         internally_mutable_unknown_fields: !record.should_derive_copy(),
         crubit_annotations: {
@@ -1005,7 +1062,7 @@ pub fn generate_derives(record: &Record<'_>) -> DeriveAttr {
             derives.push(quote! { ::ctor::MoveAndAssignViaCopy });
         }
     }
-    if record.trait_derives().debug == TraitImplPolarity::Positive {
+    if !record.is_packed() && record.trait_derives().debug == TraitImplPolarity::Positive {
         derives.push(quote! { Debug });
     }
     for custom_trait in &record.trait_derives().custom {

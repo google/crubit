@@ -711,11 +711,9 @@ fn test_struct_with_packed_attribute() {
 
     assert_ir_matches!(
         ir,
-        quote! { UnsupportedItem {
-            name: "PackedStruct", ...
-            errors: [FormattedError {
-                ... message: "Records with packed layout are not supported", ...
-            }], ...
+        quote! { Record {
+            rs_name: "PackedStruct", ...
+            pack: Some(1), ...
         }}
     );
 }
@@ -739,7 +737,7 @@ fn test_struct_with_packed_field() {
         quote! { UnsupportedItem {
             name: "PackedStruct", ...
             errors: [FormattedError {
-                ... message: "Records with packed layout are not supported", ...
+                ... message: "Records with packed fields are not supported", ...
             }], ...
         }}
     );
@@ -764,10 +762,32 @@ fn test_struct_with_pragma_pack() {
 
     assert_ir_matches!(
         ir,
+        quote! { Record {
+            rs_name: "PackedStruct", ...
+            pack: Some(4), ...
+        }}
+    );
+}
+
+#[gtest]
+fn test_struct_with_packed_and_greater_alignment_unsupported() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct __attribute__((packed)) alignas(4) PackedStructWithAlignas {
+          char char_var;
+          int int_var;
+        };"#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
+    assert_ir_matches!(
+        ir,
         quote! { UnsupportedItem {
-            name: "PackedStruct", ...
+            name: "PackedStructWithAlignas", ...
             errors: [FormattedError {
-                ... message: "Records with packed layout are not supported", ...
+                ... message: "Records with packed layout and explicit alignment greater than packed alignment are not supported", ...
             }], ...
         }}
     );
@@ -3673,14 +3693,14 @@ fn test_ignore_union_typedef_from_decl_context_redecl_from_multiple_targets() {
 
 #[gtest]
 fn test_record_with_unsupported_field_type() -> Result<()> {
-    // Using a packed struct because it's currently not supported.
-    // But... any other unsupported type would also work for this test.
+    // Using `Self` because records with name `Self` are unsupported.
+    // Any other unsupported type would also work for this test.
     let proto = ir_proto_from_cc(
         r#"
-        struct __attribute__((packed)) Packed {};
+        struct Self {};
         struct StructWithUnsupportedField {
           // Doc comment for `my_field`.
-          Packed my_field;
+          Self my_field;
         };
     "#,
     )?;
@@ -3700,7 +3720,7 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
                   type_: CcType {
                       variant: Error(FormattedError {
                           fmt: "Unsupported type '$0': $1",
-                          message: "Unsupported type 'Packed': No generated bindings found for 'Packed'",
+                          message: "Unsupported type 'Self': No generated bindings found for 'Self'",
                       }), ... },
                   access: Public,
                   offset: 0,
@@ -3725,7 +3745,7 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
         ir,
         quote! {
             UnsupportedItem {
-                name: "Packed", ...
+                name: "Self", ...
             }
         }
     );
@@ -3736,24 +3756,23 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
 fn test_record_with_unsupported_base() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
-            struct __attribute__((packed)) IllegalBaseClass {
+            struct Self {
               // Having a field here avoids empty base class optimization
               // and forces `derived_field` to be at a non-zero offset.
               // See also: https://en.cppreference.com/w/cpp/language/ebo
               char nested_field;
             };
 
-            // Using a packed struct as a base class because packed structs are
-            // currently unsupported.  But... any other unsupported base class
-            // would also work for this test.
-            struct DerivedClass : public IllegalBaseClass {
+            // Using `Self` as a base class because records named `Self` are
+            // unsupported. Any other unsupported base class would also work for this test.
+            struct DerivedClass : public Self {
               int derived_field;
             }; "#,
     )?;
 
     let ir = ir_testing::make_test_ir(&proto)?;
     // Verify that `unambiguous_public_bases` are empty (instead of containing a
-    // dangling `ItemId` of the `IllegalBaseClass` (which got imported as
+    // dangling `ItemId` of the `Self` (which got imported as
     // `UnsupportedItem` rather than as a `Record`).
     assert_ir_matches!(
         ir,
@@ -3784,14 +3803,14 @@ fn test_record_with_unsupported_base() -> Result<()> {
            }
         }
     );
-    // Verify that the IllegalBaseClass is unsupported (this is mostly verification
-    // that the test input correctly sets up the test scenario;  the real
+    // Verify that Self is unsupported (this is mostly verification
+    // that the test input correctly sets up the test scenario; the real
     // verification is above).
     assert_ir_matches!(
         ir,
         quote! {
            UnsupportedItem {
-                name: "IllegalBaseClass", ...
+                name: "Self", ...
            }
         }
     );
@@ -3800,10 +3819,10 @@ fn test_record_with_unsupported_base() -> Result<()> {
 
 #[gtest]
 fn test_do_not_import_static_member_functions_when_record_not_supported_yet() {
-    // only using __attribute__((packed)) as an example of a record we cannot import yet.
+    // only using `Self` as an example of a record we cannot import yet.
     let proto = ir_proto_from_cc(
         "
-        struct __attribute__((packed)) SomeStruct {
+        struct Self {
           static void StaticMemberFunction();
         };",
     )
@@ -3817,7 +3836,7 @@ fn test_do_not_import_static_member_functions_when_record_not_supported_yet() {
             ...
             (
                 BazelLabel("//test:testing_target"),
-                [UnsupportedItem(UnsupportedItem { name: "SomeStruct" ... })]
+                [UnsupportedItem(UnsupportedItem { name: "Self" ... })]
                 ...
             ),
             ...
@@ -3828,10 +3847,10 @@ fn test_do_not_import_static_member_functions_when_record_not_supported_yet() {
 
 #[gtest]
 fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet() {
-    // only using __attribute__((packed)) as an example of a record we cannot import yet.
+    // only using `Self` as an example of a record we cannot import yet.
     let proto = ir_proto_from_cc(
         "
-        struct __attribute__((packed)) SomeStruct {
+        struct Self {
           void NonStaticMemberFunction();
         };",
     )
@@ -3845,7 +3864,7 @@ fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet()
             ...
             (
                 BazelLabel("//test:testing_target"),
-                [UnsupportedItem(UnsupportedItem { name: "SomeStruct" ... })]
+                [UnsupportedItem(UnsupportedItem { name: "Self" ... })]
                 ...
             ),
             ...
@@ -4458,14 +4477,12 @@ fn test_destructor_function_name() {
 
 #[gtest]
 fn test_unsupported_items_are_emitted() -> Result<()> {
-    // We will have to rewrite this test to use something else that is unsupported
-    // once we start importing nested structs.
-    let proto = ir_proto_from_cc("struct __attribute__((packed)) PackedStruct {};")?;
+    let proto = ir_proto_from_cc("struct Self {};")?;
 
     let ir = ir_testing::make_test_ir(&proto)?;
     assert_strings_contain(
         ir.unsupported_items().map(|i| i.name()).collect_vec().as_slice(),
-        "PackedStruct",
+        "Self",
     );
     Ok(())
 }
@@ -4474,7 +4491,7 @@ fn test_unsupported_items_are_emitted() -> Result<()> {
 fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
     let proto = ir_proto_from_cc_dependency(
         "struct MyOtherStruct { ImportantLibaryTypeThatsUnsupported my_field; };",
-        "struct __attribute__((packed)) ImportantLibaryTypeThatsUnsupported {};",
+        "struct __attribute__((packed)) alignas(4) ImportantLibaryTypeThatsUnsupported {};",
     )?;
 
     let ir = ir_testing::make_test_ir_dependency(&proto, None)?;
@@ -4486,8 +4503,8 @@ fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
 #[gtest]
 fn test_user_of_unsupported_type_is_unsupported() -> Result<()> {
     let proto = ir_proto_from_cc(
-        r#"struct __attribute__((packed)) Packed {};
-           void f(Packed n);
+        r#"struct Self {};
+           void f(Self n);
         "#,
     )?;
 
@@ -4496,7 +4513,7 @@ fn test_user_of_unsupported_type_is_unsupported() -> Result<()> {
         ir,
         quote! {
             UnsupportedItem {
-                name: "Packed",
+                name: "Self",
                 ...
                 kind: Struct,
                 ...
@@ -4821,10 +4838,10 @@ fn test_literal_operator_unsupported() {
 
 #[gtest]
 fn test_unsupported_item_has_item_id() {
-    let proto = ir_proto_from_cc("struct __attribute__((packed)) SomeStruct {};").unwrap();
+    let proto = ir_proto_from_cc("struct Self {};").unwrap();
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
-    let unsupported = ir.unsupported_items().find(|i| i.name() == "SomeStruct").unwrap();
+    let unsupported = ir.unsupported_items().find(|i| i.name() == "Self").unwrap();
     assert_ne!(unsupported.id(), ItemId::new_for_testing(0));
 }
 

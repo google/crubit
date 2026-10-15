@@ -651,6 +651,7 @@ message Record {
   repeated Item children = 41;
   bool impl_debug = 42;
   bool has_private_pointer_or_reference_fields = 43;
+  uint64 pack = 44;
 }
 
 // A forward-declared record (e.g. `struct Foo;`)
