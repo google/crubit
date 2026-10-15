@@ -18,6 +18,10 @@
 %enddef
 %define CRUBIT_BRIDGE_SLICE_PTR(abi)
 %enddef
+%define CRUBIT_BRIDGE(...)
+%enddef
+%define CRUBIT_UNSAFE_IGNORE_ATTR(...)
+%enddef
 %define CRUBIT_MUST_BIND
 %enddef
 %define CRUBIT_DO_NOT_BIND
