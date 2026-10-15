@@ -370,6 +370,11 @@ impl TryFrom<::ir_rust_proto::TemplateSpecializationView<'_>> for TemplateSpecia
                     raw_element_type: CcType::try_from(as_.element_type())?,
                 }
             }
+            ::ir_rust_proto::template_specialization::KindOneof::AbslOptionalRef(aor) => {
+                TemplateSpecializationKind::AbslOptionalRef {
+                    raw_element_type: CcType::try_from(aor.element_type())?,
+                }
+            }
             ::ir_rust_proto::template_specialization::KindOneof::AbslFlatHashMap(afhm) => {
                 TemplateSpecializationKind::AbslFlatHashMap {
                     raw_key_type: CcType::try_from(afhm.key_type())?,

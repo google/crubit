@@ -156,6 +156,28 @@ crubit_rust_test(
 )
 
 crubit_test_cc_library(
+    name = "assumed_optional_ref",
+    srcs = ["assumed_optional_ref.cc"],
+    hdrs = ["assumed_optional_ref.h"],
+    aspect_hints = [
+        "//features:assume_lifetimes",
+        "//features:supported",
+    ],
+)
+
+crubit_rust_test(
+    name = "assumed_optional_ref_test",
+    srcs = ["assumed_optional_ref_test.rs"],
+    cc_deps = [
+        ":assumed_optional_ref",
+    ],
+    deps = [
+        "//support:cref",
+        "@crate_index//:googletest",
+    ],
+)
+
+crubit_test_cc_library(
     name = "string_view",
     srcs = ["string_view.cc"],
     hdrs = ["string_view.h"],
