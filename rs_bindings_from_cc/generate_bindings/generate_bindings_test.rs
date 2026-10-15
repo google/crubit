@@ -2435,3 +2435,117 @@ fn test_existing_rust_type_single_ident_matching_target_name_does_not_infer_hint
     expect_eq!("crate :: testing_target", fmt);
     Ok(())
 }
+
+#[gtest]
+fn test_absl_optional_ref_with_assumed_lifetimes() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        r#"
+        namespace absl {
+        template <typename T>
+        class optional_ref {
+          T* ptr_;
+        };
+        }  // namespace absl
+
+        struct NonUnpin {
+          ~NonUnpin();
+        };
+
+        void takes_const_optional_ref(absl::optional_ref<const int> x);
+        void takes_mut_optional_ref(absl::optional_ref<int> x);
+        void takes_mut_nonunpin_optional_ref(absl::optional_ref<NonUnpin> x);
+        absl::optional_ref<const int> returns_const_optional_ref(const int& x);
+        absl::optional_ref<int> returns_mut_optional_ref(
+            int& x [[clang::lifetimebound]]);
+        absl::optional_ref<const int> returns_ambiguous_optional_ref(
+            const int& x, const int& y);
+        "#,
+    )?;
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_const_optional_ref<'x>(
+                x: ::core::option::Option<&'x ::ffi_11::c_int>
+            )
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_mut_optional_ref<'x>(
+                x: ::core::option::Option<&'x mut ::ffi_11::c_int>
+            )
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_mut_nonunpin_optional_ref<'x>(
+                x: ::core::option::Option<::core::pin::Pin<&'x mut crate::NonUnpin>>
+            )
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn returns_const_optional_ref<'x>(
+                x: &'x ::ffi_11::c_int
+            ) -> ::core::option::Option<::cref::CRef<'x, ::ffi_11::c_int>>
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn returns_mut_optional_ref<'__rv>(
+                x: &'__rv mut ::ffi_11::c_int
+            ) -> ::core::option::Option<::cref::CMut<'__rv, ::ffi_11::c_int>>
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn returns_ambiguous_optional_ref<'x, 'y>(
+                x: &'x ::ffi_11::c_int,
+                y: &'y ::ffi_11::c_int
+            ) -> ::core::option::Option<::core::ptr::NonNull<::ffi_11::c_int>>
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
+fn test_absl_optional_ref_without_lifetimes() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace absl {
+        template <typename T>
+        class optional_ref {
+          T* ptr_;
+        };
+        }  // namespace absl
+
+        void takes_optional_ref(absl::optional_ref<const int> x);
+        absl::optional_ref<const int> returns_optional_ref();
+        "#,
+    )?;
+    let ir = make_test_ir(&proto)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn takes_optional_ref(
+                x: ::core::option::Option<::core::ptr::NonNull<::ffi_11::c_int>>
+            )
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn returns_optional_ref()
+                -> ::core::option::Option<::core::ptr::NonNull<::ffi_11::c_int>>
+        }
+    );
+    Ok(())
+}
