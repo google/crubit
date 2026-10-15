@@ -110,6 +110,11 @@ pub unsafe trait Ctor: Sized {
     /// if `ctor` does not panic, and returns `Ok`, then `dest` is
     /// initialized to the constructed value.
     ///
+    /// If `ctor` panics or returns `Err`, the caller treats `dest` as
+    /// uninitialized and will not drop it. An implementation which initializes
+    /// `*dest` and then fails must drop it before returning or unwinding,
+    /// to uphold the `Pin` drop guarantee.
+    ///
     /// # Safety
     ///
     /// `dest` is valid for writes and uninitialized.
@@ -140,6 +145,9 @@ pub unsafe trait Ctor: Sized {
     /// Returns a `Ctor`, which will invoke `f` after construction, if successful.
     ///
     /// This functions similarly to `Result::and_then`.
+    ///
+    /// If `f` returns an error or panics, the constructed value is dropped in place before the
+    /// error is returned or the panic propagates.
     ///
     /// For example, these two snippets are equivalent:
     ///
@@ -304,18 +312,37 @@ where
 {
 }
 
-// SAFETY: unconditionally initializes dest.
+// SAFETY: initializes dest, or returns an error / panics with dest uninitialized.
 unsafe impl<C: Ctor, F: FnOnce(Pin<&mut C::Output>) -> Result<(), C::Error>> Ctor
     for CtorThen<C, F>
 {
     type Output = C::Output;
     type Error = C::Error;
     unsafe fn ctor(self, dest: *mut Self::Output) -> Result<(), Self::Error> {
+        /// Drops the pointee when dropped.
+        struct DropGuard<T: ?Sized>(*mut T);
+        impl<T: ?Sized> Drop for DropGuard<T> {
+            fn drop(&mut self) {
+                // SAFETY: the pointee is initialized, and is not used again after this.
+                unsafe { core::ptr::drop_in_place(self.0) }
+            }
+        }
+
+        // SAFETY: the caller guarantees that `dest` is valid for writes, uninitialized, and pinned.
         unsafe {
             self.ctor.ctor(dest)?;
         }
-        let dest = unsafe { Pin::new_unchecked(&mut *dest) };
-        (self.f)(dest)
+        // `*dest` is now initialized and pinned. If `f` returns an error or panics, our caller
+        // treats `dest` as uninitialized and will not drop it, so we must drop it here to uphold
+        // the `Pin` drop guarantee.
+        let guard = DropGuard(dest);
+        // SAFETY: `*dest` was initialized above, and the caller guarantees it is pinned.
+        let pinned = unsafe { Pin::new_unchecked(&mut *dest) };
+        let result = (self.f)(pinned);
+        if result.is_ok() {
+            core::mem::forget(guard);
+        }
+        result
     }
 }
 

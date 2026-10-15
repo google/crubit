@@ -12,9 +12,10 @@ use ctor::{
     UnreachableCtor,
 };
 use googletest::gtest;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::convert::Infallible;
 use std::mem::ManuallyDrop;
+use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
@@ -539,6 +540,52 @@ fn test_ctor_then() {
         Ok(())
     }));
     assert_eq!(*x, 42);
+}
+
+/// Counts how many times it has been dropped.
+struct DropCounter<'a>(&'a Cell<usize>);
+
+impl Drop for DropCounter<'_> {
+    fn drop(&mut self) {
+        self.0.set(self.0.get() + 1);
+    }
+}
+
+/// Tests that the value is dropped exactly once, at the end of its scope, if `f` succeeds.
+#[gtest]
+fn test_ctor_then_ok_drops_once() {
+    let drops = Cell::new(0);
+    {
+        let _x = emplace!(DropCounter(&drops).ctor_then(|_| Ok(())));
+        assert_eq!(drops.get(), 0);
+    }
+    assert_eq!(drops.get(), 1);
+}
+
+/// Tests that the value is dropped if `f` returns an error, as the caller treats the destination
+/// as uninitialized (b/573618152).
+#[gtest]
+fn test_ctor_then_err_drops() {
+    let drops = Cell::new(0);
+    {
+        let res: Result<Pin<&mut DropCounter>, i32> =
+            try_emplace!(DropCounter(&drops).ctor_make_fallible().ctor_then(|_| Err(15)));
+        assert_eq!(res.err(), Some(15));
+        assert_eq!(drops.get(), 1);
+    }
+    assert_eq!(drops.get(), 1);
+}
+
+/// Tests that the value is dropped if `f` panics, as the caller treats the destination as
+/// uninitialized (b/573618152).
+#[gtest]
+fn test_ctor_then_panic_drops() {
+    let drops = Cell::new(0);
+    let panic_result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+        let _x = emplace!(DropCounter(&drops).ctor_then(|_| panic!("ctor_then panic")));
+    }));
+    assert!(panic_result.is_err());
+    assert_eq!(drops.get(), 1);
 }
 
 #[gtest]
