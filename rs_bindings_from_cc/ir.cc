@@ -280,6 +280,10 @@ void TemplateSpecialization::WriteToProto(
             absl_span.element_type.WriteToProto(
                 *proto.mutable_absl_span()->mutable_element_type());
           },
+          [&](const AbslOptionalRef& absl_optional_ref) {
+            absl_optional_ref.element_type.WriteToProto(
+                *proto.mutable_absl_optional_ref()->mutable_element_type());
+          },
           [&](const AbslFlatHashMap& absl_flat_hash_map) {
             auto* msg = proto.mutable_absl_flat_hash_map();
             absl_flat_hash_map.key_type.WriteToProto(*msg->mutable_key_type());
