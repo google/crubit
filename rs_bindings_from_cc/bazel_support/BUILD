@@ -152,6 +152,7 @@ bzl_library(
 bool_flag(
     name = "use_actual_bindings_generator",
     build_setting_default = True,
+    scope = "universal",
     visibility = ["//visibility:public"],
 )
 
@@ -180,6 +181,7 @@ config_setting(
 bool_flag(
     name = "use_actual_deps",
     build_setting_default = True,
+    scope = "universal",
     visibility = ["//visibility:public"],
 )
 
