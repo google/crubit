@@ -4,15 +4,24 @@
 
 #include "rs_bindings_from_cc/importers/var.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/types/span.h"
+#include "common/status_macros.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/APValue.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
@@ -22,6 +31,97 @@
 #include "llvm/Support/Casting.h"
 
 namespace crubit {
+namespace {
+
+// The maximum number of explicitly initialized elements of a C-style array
+// constant. Every such element is emitted individually in the generated
+// bindings, so this bounds the size (and compile time) of the bindings, and of
+// every crate that uses them. Elements that are not explicitly initialized are
+// emitted as a single filler, and don't count towards this limit.
+constexpr uint64_t kMaxInitializedArrayElements = 1024;
+
+// Returns the number of explicitly initialized elements of `value`, an array
+// with `num_dimensions` dimensions, counting the elements of nested arrays
+// (including the filler, which is emitted once) rather than the arrays
+// themselves.
+uint64_t CountInitializedElements(const clang::APValue& value,
+                                  size_t num_dimensions) {
+  if (!value.isArray()) return 0;
+  const unsigned num_initialized = value.getArrayInitializedElts();
+  if (num_dimensions <= 1) return num_initialized;
+  uint64_t count = 0;
+  for (unsigned i = 0; i < num_initialized; ++i) {
+    count += CountInitializedElements(value.getArrayInitializedElt(i),
+                                      num_dimensions - 1);
+  }
+  if (value.hasArrayFiller()) {
+    count +=
+        CountInitializedElements(value.getArrayFiller(), num_dimensions - 1);
+  }
+  return count;
+}
+
+// Converts `value`, an integer or boolean array element, to `out`.
+absl::Status ConvertIntegerElement(const clang::APValue& value,
+                                   ir_proto::IntegerConstant& out) {
+  if (!value.isInt()) {
+    return absl::InvalidArgumentError(
+        "array element did not evaluate to an integer");
+  }
+  CRUBIT_ASSIGN_OR_RETURN(IntegerConstant integer_constant,
+                          IntegerConstant::FromAPValue(value.getInt()));
+  integer_constant.WriteToProto(out);
+  return absl::OkStatus();
+}
+
+// Converts `value`, a (possibly nested) array with the given `dimensions`
+// (outermost first), to `out`.
+//
+// Only the explicitly initialized elements are recorded individually. The
+// remaining elements are value-initialized, and their value is recorded as the
+// filler.
+absl::Status ConvertArrayValue(const clang::APValue& value,
+                               absl::Span<const uint64_t> dimensions,
+                               ir_proto::ArrayValue& out) {
+  CHECK(!dimensions.empty()) << "must be called with at least one dimension";
+  CHECK(value.isArray()) << "`value` must be the evaluated value of an array";
+  CHECK_EQ(value.getArraySize(), dimensions[0])
+      << "`dimensions` must come from the type `value` was evaluated from";
+  out.set_length(static_cast<int32_t>(dimensions[0]));
+  // "Filler" in Clang means the value of the trailing elements that were not
+  // explicitly initialized, and are therefore value-initialized. For example,
+  // `int x[4] = {1, 2};` has two initialized elements and a filler of `0`.
+  const unsigned num_initialized = value.getArrayInitializedElts();
+  const clang::APValue* filler =
+      value.hasArrayFiller() ? &value.getArrayFiller() : nullptr;
+
+  if (dimensions.size() > 1) {
+    auto* elements = out.mutable_array_elements();
+    for (unsigned i = 0; i < num_initialized; ++i) {
+      CRUBIT_RETURN_IF_ERROR(ConvertArrayValue(value.getArrayInitializedElt(i),
+                                               dimensions.subspan(1),
+                                               *elements->add_elements()));
+    }
+    if (filler != nullptr) {
+      CRUBIT_RETURN_IF_ERROR(ConvertArrayValue(*filler, dimensions.subspan(1),
+                                               *elements->mutable_filler()));
+    }
+    return absl::OkStatus();
+  }
+
+  auto* elements = out.mutable_integer_elements();
+  for (unsigned i = 0; i < num_initialized; ++i) {
+    CRUBIT_RETURN_IF_ERROR(ConvertIntegerElement(
+        value.getArrayInitializedElt(i), *elements->add_elements()));
+  }
+  if (filler != nullptr) {
+    CRUBIT_RETURN_IF_ERROR(
+        ConvertIntegerElement(*filler, *elements->mutable_filler()));
+  }
+  return absl::OkStatus();
+}
+
+}  // namespace
 
 std::unique_ptr<ir_proto::Item> VarDeclImporter::Import(
     clang::VarDecl* var_decl) {
@@ -179,35 +279,93 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
     std::optional<ItemId> enclosing_item_id,
     std::optional<std::string> unknown_attr,
     std::optional<std::string> deprecated) {
-  CcType type =
-      ictx_.ConvertQualType(var_decl->getType(), nullptr, /*nullable=*/true,
-                            ictx_.AreAssumedLifetimesEnabledForTarget(
-                                ictx_.GetOwningTarget(*var_decl)));
-
-  const clang::Type& var_type = *var_decl->getType().getTypePtr();
-  if (!var_type.isBooleanType() && !var_type.isIntegerType()) {
+  // For (possibly nested) C-style arrays, the type of the constant is the
+  // innermost element type.
+  std::vector<uint64_t> dimensions;
+  clang::QualType value_type = var_decl->getType();
+  while (const clang::ConstantArrayType* array_type =
+             ictx_.ctx_.getAsConstantArrayType(value_type)) {
+    uint64_t dimension = array_type->getZExtSize();
+    if (dimension == 0) {
+      return ictx_.ImportUnsupportedItem(
+          *var_decl, std::nullopt,
+          {FormattedError::Static(
+              "zero-length C-style arrays are not supported")});
+    }
+    if (dimension > std::numeric_limits<int32_t>::max()) {
+      return ictx_.ImportUnsupportedItem(
+          *var_decl, std::nullopt,
+          {FormattedError::Static("C-style array dimension is too large")});
+    }
+    dimensions.push_back(dimension);
+    value_type = array_type->getElementType();
+  }
+  bool is_array = !dimensions.empty();
+  if (!value_type->isBooleanType() && !value_type->isIntegerType()) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
-        {FormattedError::Static("only boolean and integer constexpr variables "
-                                "are supported")});
+        {is_array ? FormattedError::Static(
+                        "only C-style arrays of boolean and integer elements "
+                        "are supported")
+                  : FormattedError::Static(
+                        "only boolean and integer constexpr variables "
+                        "are supported")});
   }
+
   const clang::APValue* value = var_decl->evaluateValue();
-  if (value == nullptr || !value->isInt()) {
+  if (value == nullptr) {
     return ictx_.ImportUnsupportedItem(
         *var_decl, std::nullopt,
         {FormattedError::Static("unable to evaluate constexpr value")});
   }
-  absl::StatusOr<IntegerConstant> integer_constant =
-      IntegerConstant::FromAPValue(value->getInt());
-  if (!integer_constant.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        *var_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(integer_constant.status()))});
+
+  if (is_array) {
+    uint64_t num_initialized =
+        CountInitializedElements(*value, dimensions.size());
+    if (num_initialized > kMaxInitializedArrayElements) {
+      return ictx_.ImportUnsupportedItem(
+          *var_decl, std::nullopt,
+          {FormattedError::Substitute(
+              "C-style array constants can have at most $0 explicitly "
+              "initialized elements, but this one has $1. Each one is emitted "
+              "in the generated bindings, which would make them slow to "
+              "compile. To use this array from Rust, expose it through a "
+              "function instead, e.g. one that returns an `absl::Span` or a "
+              "pointer to its first element.",
+              kMaxInitializedArrayElements, num_initialized)});
+    }
   }
-  ictx_.MarkAsSuccessfullyImported(*var_decl);
+
   auto item = std::make_unique<ir_proto::Item>();
   auto* constant = item->mutable_constant();
-  integer_constant->WriteToProto(*constant->mutable_value());
+  if (!is_array) {
+    if (!value->isInt()) {
+      return ictx_.ImportUnsupportedItem(
+          *var_decl, std::nullopt,
+          {FormattedError::Static(
+              "constexpr value did not evaluate to an integer")});
+    }
+    absl::StatusOr<IntegerConstant> integer_constant =
+        IntegerConstant::FromAPValue(value->getInt());
+    if (!integer_constant.ok()) {
+      return ictx_.ImportUnsupportedItem(
+          *var_decl, std::nullopt,
+          {FormattedError::FromStatus(std::move(integer_constant.status()))});
+    }
+    integer_constant->WriteToProto(*constant->mutable_value());
+  } else if (absl::Status status = ConvertArrayValue(
+                 *value, dimensions, *constant->mutable_array_value());
+             !status.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        *var_decl, std::nullopt,
+        {FormattedError::FromStatus(std::move(status))});
+  }
+
+  CcType type = ictx_.ConvertQualType(value_type, nullptr, /*nullable=*/true,
+                                      ictx_.AreAssumedLifetimesEnabledForTarget(
+                                          ictx_.GetOwningTarget(*var_decl)));
+
+  ictx_.MarkAsSuccessfullyImported(*var_decl);
   constant->mutable_cc_name()->set_identifier(var_name.cc_identifier.Ident());
   constant->mutable_rs_name()->set_identifier(var_name.rs_identifier().Ident());
   constant->set_unique_name(ictx_.GetUniqueName(*var_decl));

@@ -27,6 +27,14 @@ inline long long inline_long_long_namespaced = 24;
 inline bool inline_bool_namespaced = true;
 }  // namespace foo
 
+// C-style arrays of integers and booleans are bound as Rust arrays `[T; N]`.
+constexpr int kConstexprIntArray[] = {1, -2, 3};
+constexpr bool kConstexprBoolArray[] = {true, false};
+// Elements that are not explicitly initialized are zero, and are bound using
+// `crubit_support::array::padded_array`.
+inline constexpr unsigned char kUnsignedCharArrayWithFiller[4] = {7, 8};
+constexpr int kMultidimensionalIntArray[3][2] = {{1, 2}, {3}};
+
 // Also make sure we don't choke on templated variables.
 template <typename T>
 T templated_variable = {};
@@ -53,6 +61,7 @@ struct StructWithStaticMembers {
   static int static_int;
   static const int kStaticConstInt = 11;
   static constexpr int kStaticConstexprInt = 12;
+  static constexpr int kStaticConstexprIntArray[] = {1, 2, 3};
   static inline int static_inline_int = 13;
 
   // Private members should not receive bindings.

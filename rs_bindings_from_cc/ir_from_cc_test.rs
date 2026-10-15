@@ -4,8 +4,9 @@
 #![cfg(test)]
 
 use arc_anyhow::Result;
+use googletest::matcher::Matcher;
 use googletest::matchers::{eq, pat, some};
-use googletest::{expect_eq, expect_that, fail, gtest, OrFail};
+use googletest::{expect_eq, expect_that, expect_true, fail, gtest, OrFail};
 use ir::*;
 use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
 use ir_rust_proto::IRProto;
@@ -6394,6 +6395,14 @@ fn expect_constant<'pb>(ir: &'pb ir::IR<'pb>) -> &'pb ir::Constant<'pb> {
     constant
 }
 
+/// Matches the `value()` of a scalar constant with the given `wrapped_value`.
+fn integer_constant_value<'a>(wrapped_value: u64) -> impl Matcher<&'a ir::ConstantValue<'a>> {
+    pat!(ir::ConstantValue::Integer(property!(
+        &ir::IntegerConstant.wrapped_value(),
+        eq(wrapped_value)
+    )))
+}
+
 #[gtest]
 fn test_top_level_constexpr_int() {
     let proto = ir_proto_from_cc("constexpr int x = 1;").unwrap();
@@ -6401,7 +6410,7 @@ fn test_top_level_constexpr_int() {
     let ir = ir_testing::make_test_ir(&proto).unwrap();
     let constant = expect_constant(&ir);
     expect_eq!(constant.cc_name(), "x");
-    expect_eq!(constant.value().wrapped_value(), 1);
+    expect_that!(&constant.value(), integer_constant_value(1));
 }
 
 #[gtest]
@@ -6411,7 +6420,235 @@ fn test_top_level_constexpr_bool() {
     let ir = ir_testing::make_test_ir(&proto).unwrap();
     let constant = expect_constant(&ir);
     expect_eq!(constant.cc_name(), "x");
-    expect_eq!(constant.value().wrapped_value(), 0);
+    expect_that!(&constant.value(), integer_constant_value(0));
+}
+
+/// A simplified `ir::ArrayValue`, for testing.
+#[derive(Debug, PartialEq)]
+enum TestArrayValue {
+    Integers { elements: Vec<i128>, filler: Option<i128> },
+    Arrays { elements: Vec<TestArrayValue>, filler: Option<Box<TestArrayValue>> },
+}
+
+fn simplify_integer(value: &ir::IntegerConstant) -> i128 {
+    if value.is_negative() {
+        value.wrapped_value() as i64 as i128
+    } else {
+        value.wrapped_value() as i128
+    }
+}
+
+fn simplify_array_value(value: ir::ArrayValue<'_>) -> TestArrayValue {
+    match value.kind() {
+        ir::ArrayValueKind::Integers(integers) => TestArrayValue::Integers {
+            elements: integers
+                .elements()
+                .iter()
+                .map(|element| simplify_integer(&element))
+                .collect(),
+            filler: integers.filler().as_ref().map(simplify_integer),
+        },
+        ir::ArrayValueKind::Arrays(arrays) => TestArrayValue::Arrays {
+            elements: arrays.elements().iter().map(simplify_array_value).collect(),
+            filler: arrays.filler().map(|filler| Box::new(simplify_array_value(filler))),
+        },
+    }
+}
+
+/// Returns the length of each dimension of `value`, outermost first.
+fn array_dimensions(value: ir::ArrayValue<'_>) -> Vec<u64> {
+    let mut dimensions = vec![value.length()];
+    if let ir::ArrayValueKind::Arrays(arrays) = value.kind() {
+        // All elements, including the filler, have the same shape.
+        let element = arrays.elements().iter().next().or(arrays.filler()).unwrap();
+        dimensions.extend(array_dimensions(element));
+    }
+    dimensions
+}
+
+/// Returns the dimensions and the (simplified) value of an array constant.
+fn expect_array_constant(constant: &ir::Constant) -> (Vec<u64>, TestArrayValue) {
+    let ir::ConstantValue::Array(array) = constant.value() else {
+        panic!("Expected an array constant, got: {constant:#?}");
+    };
+    (array_dimensions(array), simplify_array_value(array))
+}
+
+/// Fully initialized integer elements.
+fn integer_elements(elements: &[i128]) -> TestArrayValue {
+    TestArrayValue::Integers { elements: elements.to_vec(), filler: None }
+}
+
+/// Integer elements, followed by `filler`.
+fn padded_integer_elements(elements: &[i128], filler: i128) -> TestArrayValue {
+    TestArrayValue::Integers { elements: elements.to_vec(), filler: Some(filler) }
+}
+
+/// Array elements, followed by `filler`.
+fn padded_array_elements(elements: Vec<TestArrayValue>, filler: TestArrayValue) -> TestArrayValue {
+    TestArrayValue::Arrays { elements, filler: Some(Box::new(filler)) }
+}
+
+fn array_constant_from_cc(cc: &str) -> (Vec<u64>, TestArrayValue) {
+    let proto = ir_proto_from_cc(cc).unwrap();
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    let constant = expect_constant(&ir);
+    expect_eq!(constant.cc_name(), "x");
+    expect_array_constant(constant)
+}
+
+#[gtest]
+fn test_top_level_constexpr_int_array() {
+    expect_eq!(
+        array_constant_from_cc("constexpr int x[] = {1, -2, 3};"),
+        (vec![3], integer_elements(&[1, -2, 3]))
+    );
+}
+
+#[gtest]
+fn test_top_level_const_array_with_filler() {
+    // Not `constexpr`, but `const` with a constant initializer. Only the explicitly initialized
+    // elements are recorded individually; the trailing elements are recorded as the filler.
+    expect_eq!(
+        array_constant_from_cc("const unsigned char x[4] = {7, 8};"),
+        (vec![4], padded_integer_elements(&[7, 8], 0))
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_value_initialized_array() {
+    expect_eq!(
+        array_constant_from_cc("constexpr int x[3] = {};"),
+        (vec![3], padded_integer_elements(&[], 0))
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_multidimensional_array() {
+    // The last row is not explicitly initialized, and neither is the last element of the first
+    // row.
+    expect_eq!(
+        array_constant_from_cc("constexpr int x[3][2] = {{1}, {3, 4}};"),
+        (
+            vec![3, 2],
+            padded_array_elements(
+                vec![padded_integer_elements(&[1], 0), integer_elements(&[3, 4])],
+                padded_integer_elements(&[], 0)
+            )
+        )
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_unsupported_arrays() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct S { int i; };
+        constexpr S struct_array[] = {{1}};
+        constexpr double double_array[] = {1.0};
+        constexpr double multidimensional_double_array[1][1] = {{1.0}};
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    expect_eq!(ir.constants().count(), 0);
+    for name in ["struct_array", "double_array", "multidimensional_double_array"] {
+        assert_ir_matches!(
+            ir,
+            quote! { UnsupportedItem {
+                name: #name, ...
+                errors: [FormattedError {
+                    ... message: "only C-style arrays of boolean and integer elements are supported", ...
+                }], ...
+            }}
+        );
+    }
+}
+
+#[gtest]
+fn test_top_level_constexpr_zero_length_array() {
+    // A GNU extension. With no elements and no filler, the shape of nested arrays is unknown.
+    let proto = ir_proto_from_cc("constexpr int x[0][2] = {};").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    expect_eq!(ir.constants().count(), 0);
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "x", ...
+            errors: [FormattedError {
+                ... message: "zero-length C-style arrays are not supported", ...
+            }], ...
+        }}
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_array_with_too_many_initialized_elements() {
+    let elements = |n| vec!["1"; n].join(", ");
+    let proto = ir_proto_from_cc(&format!(
+        r#"
+        // Up to the limit, and fillers don't count towards it.
+        constexpr int at_limit[100000] = {{{}}};
+        constexpr int over_limit[2][1024] = {{{{{}}}, {{1}}}};
+        "#,
+        elements(1024),
+        elements(1024),
+    ))
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    expect_eq!(ir.constants().count(), 1);
+    expect_true!(ir.constants().any(|c| c.cc_name() == "at_limit"));
+    let message = "C-style array constants can have at most 1024 explicitly initialized \
+                   elements, but this one has 1025. Each one is emitted in the generated \
+                   bindings, which would make them slow to compile. To use this array from Rust, \
+                   expose it through a function instead, e.g. one that returns an `absl::Span` \
+                   or a pointer to its first element.";
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "over_limit", ...
+            errors: [FormattedError {
+                ... message: #message, ...
+            }], ...
+        }}
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_array_with_too_large_dimension() {
+    let proto = ir_proto_from_cc("constexpr char x[1ull << 31] = {};").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    expect_eq!(ir.constants().count(), 0);
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "x", ...
+            errors: [FormattedError {
+                ... message: "C-style array dimension is too large", ...
+            }], ...
+        }}
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_array_with_unrepresentable_element() {
+    let proto = ir_proto_from_cc("constexpr __int128 x[] = {1, (__int128)1 << 64};").unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+    expect_eq!(ir.constants().count(), 0);
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "x", ...
+            errors: [FormattedError {
+                ... message: "value is too large to fit in 64 bits: 18446744073709551616", ...
+            }], ...
+        }}
+    );
 }
 
 #[gtest]
@@ -6420,9 +6657,9 @@ fn test_anonymous_enum() {
 
     let ir = ir_testing::make_test_ir(&proto).unwrap();
     let kfoo = ir.constants().find(|c| c.cc_name() == "kFoo").unwrap();
-    assert_eq!(kfoo.value().wrapped_value(), 1);
+    expect_that!(&kfoo.value(), integer_constant_value(1));
     let kbar = ir.constants().find(|c| c.cc_name() == "kBar").unwrap();
-    assert_eq!(kbar.value().wrapped_value(), 2);
+    expect_that!(&kbar.value(), integer_constant_value(2));
 }
 
 #[gtest]
@@ -6433,7 +6670,7 @@ fn test_anonymous_enum_in_record() {
     let record = retrieve_record(&ir, "S");
     let constant = ir.constants().find(|c| c.cc_name() == "kFoo").unwrap();
     assert_eq!(constant.enclosing_item_id(), Some(record.id()));
-    assert_eq!(constant.value().wrapped_value(), 1);
+    expect_that!(&constant.value(), integer_constant_value(1));
 }
 
 #[gtest]

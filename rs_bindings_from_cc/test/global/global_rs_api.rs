@@ -37,6 +37,29 @@ pub const inline_int: ::ffi_11::c_int = ::ffi_11::new_c_int(5);
 
 // namespace foo
 
+pub const kConstexprIntArray: [::ffi_11::c_int; 3] =
+    [::ffi_11::new_c_int(1), ::ffi_11::new_c_int(-2), ::ffi_11::new_c_int(3)];
+
+pub const kConstexprBoolArray: [bool; 2] = [true, false];
+
+pub const kUnsignedCharArrayWithFiller: [::ffi_11::c_uchar; 4] =
+    ::crubit_support::array::padded_array(
+        &[::ffi_11::new_c_uchar(7), ::ffi_11::new_c_uchar(8)],
+        ::ffi_11::new_c_uchar(0),
+    );
+
+pub const kMultidimensionalIntArray: [[::ffi_11::c_int; 2]; 3] =
+    ::crubit_support::array::padded_array(
+        &[
+            [::ffi_11::new_c_int(1), ::ffi_11::new_c_int(2)],
+            ::crubit_support::array::padded_array(
+                &[::ffi_11::new_c_int(3)],
+                ::ffi_11::new_c_int(0),
+            ),
+        ],
+        [::ffi_11::new_c_int(0); 2],
+    );
+
 // error: global variable `templated_variable` could not be bound
 //   templated variables are not supported
 
@@ -145,6 +168,9 @@ impl StructWithStaticMembers {
     pub const kStaticConstInt: ::ffi_11::c_int = ::ffi_11::new_c_int(11);
 
     pub const kStaticConstexprInt: ::ffi_11::c_int = ::ffi_11::new_c_int(12);
+
+    pub const kStaticConstexprIntArray: [::ffi_11::c_int; 3] =
+        [::ffi_11::new_c_int(1), ::ffi_11::new_c_int(2), ::ffi_11::new_c_int(3)];
 
     pub const static_inline_int: ::ffi_11::c_int = ::ffi_11::new_c_int(13);
 }

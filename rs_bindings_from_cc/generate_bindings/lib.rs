@@ -30,7 +30,7 @@ use ir::*;
 use itertools::Itertools;
 use kythe_metadata::rs_embed_provenance_map;
 use lifetime_defaults_transform::lifetime_defaults_transform_type_alias;
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use rs_type_kind::rs_type_kind_with_lifetime_elision;
 use std::collections::{BTreeSet, HashMap};
@@ -211,9 +211,17 @@ fn generate_constant<'a>(
     constant: &Constant<'a>,
 ) -> Result<ApiSnippets> {
     db.errors().add_category(error_report::Category::Constant);
+    // For array constants, this is the innermost element type.
     let type_ = db.rs_type_kind(constant.type_().clone())?;
-    let value = match integer_constant_to_token_stream(db, constant.value(), &type_) {
-        Ok(value) => value,
+    let type_tokens = type_.to_token_stream(db);
+    let type_and_value = match constant.value() {
+        ConstantValue::Integer(value) => {
+            integer_constant_to_token_stream(db, value, &type_).map(|value| (type_tokens, value))
+        }
+        ConstantValue::Array(array) => array_value_to_tokens(db, array, &type_, &type_tokens),
+    };
+    let (type_tokens, value) = match type_and_value {
+        Ok(type_and_value) => type_and_value,
         Err(e) => {
             return Ok(ApiSnippets {
                 generated_items: HashMap::from([(
@@ -229,13 +237,65 @@ fn generate_constant<'a>(
             constant.id(),
             GeneratedItem::Constant {
                 ident: make_rs_ident(constant.rs_name().as_str()),
-                type_tokens: type_.to_token_stream(db),
+                type_tokens,
                 value,
                 deprecated_attr: constant.deprecated().map(|s| DeprecatedAttr(Rc::from(s))),
             },
         )]),
         ..Default::default()
     })
+}
+
+/// Returns the type and value tokens for `value`, a C-style array whose innermost elements have
+/// type `element_type`.
+///
+/// C-style arrays are bound as (nested) Rust arrays. For example, `int x[3][2]` is bound as
+/// `[[c_int; 2]; 3]`.
+///
+/// If every element is explicitly initialized, the value is an array expression. If none are, the
+/// value is an array repeat expression of the filler. Otherwise, the value is a call to
+/// `::crubit_support::array::padded_array`, which pads the explicitly initialized elements with
+/// the filler. The array lengths of these calls are inferred from the type.
+fn array_value_to_tokens<'a>(
+    db: &BindingsGenerator<'a>,
+    value: ArrayValue<'_>,
+    element_type: &RsTypeKind<'a>,
+    element_type_tokens: &TokenStream,
+) -> Result<(TokenStream, TokenStream)> {
+    let (inner_type_tokens, elements, filler) = match value.kind() {
+        ArrayValueKind::Integers(integers) => {
+            let to_tokens = |element| integer_constant_to_token_stream(db, element, element_type);
+            (
+                element_type_tokens.clone(),
+                integers.elements().iter().map(to_tokens).collect::<Result<Vec<_>>>()?,
+                integers.filler().map(to_tokens).transpose()?,
+            )
+        }
+        ArrayValueKind::Arrays(arrays) => {
+            let to_tokens =
+                |element| array_value_to_tokens(db, element, element_type, element_type_tokens);
+            let elements = arrays.elements().iter().map(to_tokens).collect::<Result<Vec<_>>>()?;
+            let filler = arrays.filler().map(to_tokens).transpose()?;
+            // All elements, including the filler, have the same type.
+            let Some((inner_type_tokens, _)) = elements.first().or(filler.as_ref()) else {
+                bail!("array has neither elements nor a filler");
+            };
+            (
+                inner_type_tokens.clone(),
+                elements.into_iter().map(|(_, value)| value).collect(),
+                filler.map(|(_, value)| value),
+            )
+        }
+    };
+    let length = Literal::u64_unsuffixed(value.length());
+    let value_tokens = match filler {
+        None => quote! { [#(#elements),*] },
+        Some(filler) if elements.is_empty() => quote! { [#filler; #length] },
+        Some(filler) => {
+            quote! { ::crubit_support::array::padded_array(&[#(#elements),*], #filler) }
+        }
+    };
+    Ok((quote! { [#inner_type_tokens; #length] }, value_tokens))
 }
 
 fn generate_global_var(db: &BindingsGenerator, var: &GlobalVar) -> Result<ApiSnippets> {

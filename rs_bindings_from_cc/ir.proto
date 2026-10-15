@@ -435,15 +435,57 @@ message BridgeType {
   }
 }
 
+// A (possibly multidimensional) C-style array of integers or booleans, e.g.
+// `constexpr int kArr[] = {1, 2, 3};`.
+//
+// Only the elements that were explicitly initialized in the C++ source are
+// recorded individually. The remaining elements are value-initialized, and
+// their (shared) value is recorded as the `filler`. For example,
+// `int x[3][2] = {{1}, {3, 4}};` has the explicitly initialized rows `{1}`
+// (with a filler of `0`) and `{3, 4}` (with no filler), and a filler row of
+// `{}` (with a filler of `0`).
+message ArrayValue {
+  // Wrapper messages, since `repeated` fields are not allowed in a `oneof`.
+  message IntegerElements {
+    repeated IntegerConstant elements = 1;
+    // The value of the elements after `elements`. Set if and only if there are
+    // fewer `elements` than the length of the array.
+    IntegerConstant filler = 2;
+  }
+  message ArrayElements {
+    // All elements, including the filler, have the same shape.
+    repeated ArrayValue elements = 1;
+    // The value of the elements after `elements`. Set if and only if there are
+    // fewer `elements` than the length of the array.
+    ArrayValue filler = 2;
+  }
+
+  // The length of the array. Always positive.
+  int32 length = 3;
+  oneof kind {
+    // Used for the innermost dimension.
+    IntegerElements integer_elements = 1;
+    // Used for all but the innermost dimension.
+    ArrayElements array_elements = 2;
+  }
+}
+
 // A constant value (constexpr or const with constant initializer).
 message Constant {
-  IntegerConstant value = 1;
+  oneof kind {
+    // A scalar integer or boolean value.
+    IntegerConstant value = 1;
+    // A C-style array of integer or boolean values.
+    ArrayValue array_value = 14;
+  }
   Identifier cc_name = 2;
   Identifier rs_name = 3;
   string unique_name = 4;
   uint64 id = 5;
   string owning_target = 6;
   string source_loc = 7;
+  // The type of the constant. For array constants (`array_value`), this is
+  // the innermost element type of the array.
   CcType type = 8;
   string unknown_attr = 9;
   uint64 enclosing_item_id = 10;

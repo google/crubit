@@ -5,7 +5,7 @@
 //! Types and deserialization logic for IR. See docs in
 //! `rs_bindings_from_cc/ir.h` for more
 //! information.
-use arc_anyhow::{bail, ensure, Context, Error, Result};
+use arc_anyhow::{anyhow, bail, ensure, Context, Error, Result};
 use code_gen_utils::{make_rs_ident, try_make_rs_ident};
 use crubit_feature::CrubitFeature;
 use ir_rust_proto::{
@@ -17,7 +17,7 @@ use ir_rust_proto::{
 };
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
-use protobuf::ProtoStr;
+use protobuf::{ProtoStr, ProxiedInRepeated, RepeatedView, View};
 use quote::{quote, ToTokens};
 use std::collections::hash_map::{Entry, HashMap};
 use std::collections::{BTreeMap, HashSet};
@@ -76,6 +76,64 @@ impl<T: ProtoToIr> ProtoToIr for Option<T> {
 
     fn to_ir(self) -> Self::IrType {
         self.map(ProtoToIr::to_ir)
+    }
+}
+
+/// A repeated proto field, whose elements are lazily converted to IR when accessed.
+///
+/// This allows IR types to expose repeated fields without allocating, while still supporting
+/// `Debug`, `PartialEq`, `Eq` and `Hash` (e.g. for `derive_debug_partialeq_eq_hash!`).
+pub struct RepeatedIr<'pb, P: ProxiedInRepeated, T> {
+    proto: RepeatedView<'pb, P>,
+    to_ir: fn(View<'pb, P>) -> T,
+}
+
+impl<'pb, P: ProxiedInRepeated> ProtoToIr for RepeatedView<'pb, P>
+where
+    View<'pb, P>: ProtoToIr,
+{
+    type IrType = RepeatedIr<'pb, P, <View<'pb, P> as ProtoToIr>::IrType>;
+
+    fn validate(self) -> Result<()> {
+        self.iter().try_for_each(ProtoToIr::validate)
+    }
+
+    fn to_ir(self) -> Self::IrType {
+        RepeatedIr { proto: self, to_ir: ProtoToIr::to_ir }
+    }
+}
+
+impl<'pb, P: ProxiedInRepeated, T> RepeatedIr<'pb, P, T> {
+    pub fn iter(&self) -> impl ExactSizeIterator<Item = T> + '_ {
+        self.proto.iter().map(self.to_ir)
+    }
+}
+
+impl<'pb, P: ProxiedInRepeated, T> Clone for RepeatedIr<'pb, P, T> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<'pb, P: ProxiedInRepeated, T> Copy for RepeatedIr<'pb, P, T> {}
+
+impl<P: ProxiedInRepeated, T: Debug> Debug for RepeatedIr<'_, P, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_list().entries(self.iter()).finish()
+    }
+}
+
+impl<P: ProxiedInRepeated, T: PartialEq> PartialEq for RepeatedIr<'_, P, T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.iter().eq(other.iter())
+    }
+}
+
+impl<P: ProxiedInRepeated, T: Eq> Eq for RepeatedIr<'_, P, T> {}
+
+impl<P: ProxiedInRepeated, T: Hash> Hash for RepeatedIr<'_, P, T> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.iter().for_each(|element| element.hash(state));
     }
 }
 
@@ -900,6 +958,179 @@ impl IntegerConstant {
     pub fn wrapped_value(&self) -> u64 {
         self.wrapped_value
     }
+}
+
+/// The value of a `Constant`.
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum ConstantValue<'pb> {
+    /// A scalar integer or boolean value.
+    Integer(IntegerConstant),
+    /// A (possibly multidimensional) C-style array of integers or booleans.
+    Array(ArrayValue<'pb>),
+}
+
+/// A (possibly multidimensional) C-style array of integers or booleans.
+///
+/// Only the elements that were explicitly initialized in the C++ source are recorded individually.
+/// The remaining elements are value-initialized, and their (shared) value is recorded as the
+/// `filler`, which is present if and only if there are fewer `elements` than the length of the
+/// array. For example, `int x[3][2] = {{1}, {3, 4}};` is recorded as:
+///
+/// ```text
+/// length: 3, Arrays {
+///     elements: [
+///         length: 2, Integers { elements: [1], filler: Some(0) },
+///         length: 2, Integers { elements: [3, 4], filler: None },
+///     ],
+///     filler: Some(length: 2, Integers { elements: [], filler: Some(0) }),
+/// }
+/// ```
+#[derive(Clone, Copy)]
+pub struct ArrayValue<'pb> {
+    proto: ::ir_rust_proto::ArrayValueView<'pb>,
+}
+
+impl<'pb> ProtoToIr for ::ir_rust_proto::ArrayValueView<'pb> {
+    type IrType = ArrayValue<'pb>;
+
+    fn validate(self) -> Result<()> {
+        use ::ir_rust_proto::array_value::KindOneof;
+        let length = u64::try_from(self.length())
+            .ok()
+            .filter(|&length| length > 0)
+            .ok_or_else(|| anyhow!("ArrayValue has non-positive length {}", self.length()))?;
+        match self.kind() {
+            KindOneof::IntegerElements(elements) => {
+                validate_num_elements(elements.elements().len(), elements.has_filler(), length)?;
+                elements.elements().validate()?;
+                elements.filler_opt().into_option().validate()
+            }
+            KindOneof::ArrayElements(elements) => {
+                validate_num_elements(elements.elements().len(), elements.has_filler(), length)?;
+                let mut first = None;
+                let filler = elements.filler_opt().into_option();
+                for element in elements.elements().iter().chain(filler) {
+                    element.validate()?;
+                    let first = *first.get_or_insert(element);
+                    ensure!(
+                        array_dimensions(element).eq(array_dimensions(first)),
+                        "ArrayValue elements have different shapes: [{}] and [{}]",
+                        array_dimensions(first).format(", "),
+                        array_dimensions(element).format(", "),
+                    );
+                }
+                Ok(())
+            }
+            _ => bail!("unmapped ArrayValue KindOneof: {:?}", self.kind()),
+        }
+    }
+
+    fn to_ir(self) -> ArrayValue<'pb> {
+        ArrayValue { proto: self }
+    }
+}
+
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> ArrayValue<'pb> {
+        /// The length of the array. Always positive.
+        pub fn length(&self) -> u64 {
+            u64::try_from(self.proto.length())
+                .expect("`length` should have been validated by `ArrayValueView::validate`")
+        }
+
+        pub fn kind(&self) -> ArrayValueKind<'pb> {
+            match self.proto.kind() {
+                ::ir_rust_proto::array_value::KindOneof::IntegerElements(proto) => {
+                    ArrayValueKind::Integers(IntegerElements { proto })
+                }
+                ::ir_rust_proto::array_value::KindOneof::ArrayElements(proto) => {
+                    ArrayValueKind::Arrays(ArrayElements { proto })
+                }
+                _ => unreachable!("`kind` should have been validated by `ArrayValueView::validate`"),
+            }
+        }
+    }
+}
+
+/// The kind of an `ArrayValue`.
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum ArrayValueKind<'pb> {
+    /// Used for the innermost dimension.
+    Integers(IntegerElements<'pb>),
+    /// Used for all but the innermost dimension.
+    Arrays(ArrayElements<'pb>),
+}
+
+/// The elements of the innermost dimension of an array. See `ArrayValue`.
+#[derive(Clone, Copy)]
+pub struct IntegerElements<'pb> {
+    proto: ::ir_rust_proto::array_value::IntegerElementsView<'pb>,
+}
+
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> IntegerElements<'pb> {
+        /// The explicitly initialized elements.
+        pub fn elements(&self)
+            -> RepeatedIr<'pb, ::ir_rust_proto::IntegerConstant, IntegerConstant> {
+            self.proto.elements().to_ir()
+        }
+
+        /// The value of the remaining elements, if any.
+        pub fn filler(&self) -> Option<IntegerConstant> {
+            self.proto.filler_opt().into_option().to_ir()
+        }
+    }
+}
+
+/// The elements of an outer dimension of an array, which all have the same shape. See
+/// `ArrayValue`.
+#[derive(Clone, Copy)]
+pub struct ArrayElements<'pb> {
+    proto: ::ir_rust_proto::array_value::ArrayElementsView<'pb>,
+}
+
+derive_debug_partialeq_eq_hash! {
+    impl<'pb> ArrayElements<'pb> {
+        /// The explicitly initialized elements.
+        pub fn elements(&self) -> RepeatedIr<'pb, ::ir_rust_proto::ArrayValue, ArrayValue<'pb>> {
+            self.proto.elements().to_ir()
+        }
+
+        /// The value of the remaining elements, if any.
+        pub fn filler(&self) -> Option<ArrayValue<'pb>> {
+            self.proto.filler_opt().into_option().to_ir()
+        }
+    }
+}
+
+/// Returns the length of each dimension of `value`, outermost first.
+///
+/// `value` must already have been validated, so that all elements of each outer dimension have
+/// the same shape, and only the first element (or the filler) needs to be followed.
+fn array_dimensions(value: ::ir_rust_proto::ArrayValueView) -> impl Iterator<Item = i32> + '_ {
+    std::iter::successors(Some(value), |value| match value.kind() {
+        ::ir_rust_proto::array_value::KindOneof::ArrayElements(elements) => {
+            elements.elements().first().or(elements.filler_opt().into_option())
+        }
+        _ => None,
+    })
+    .map(|value| value.length())
+}
+
+/// Validates that `num_elements` explicitly initialized elements fit in an array of length `size`,
+/// and that there is a filler if and only if they don't fill it.
+fn validate_num_elements(num_elements: usize, has_filler: bool, size: u64) -> Result<()> {
+    let num_elements = num_elements as u64;
+    ensure!(
+        num_elements <= size,
+        "{num_elements} elements do not fit in an array of length {size}"
+    );
+    ensure!(
+        has_filler == (num_elements < size),
+        "an array of length {size} with {num_elements} elements must {}have a filler",
+        if has_filler { "not " } else { "" }
+    );
+    Ok(())
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy)]
@@ -2656,7 +2887,13 @@ impl<'pb> ProtoToIr for ConstantView<'pb> {
         self.unique_name().validate()?;
         self.owning_target().validate()?;
         self.source_loc().validate()?;
-        self.value().validate()?;
+        match self.kind() {
+            ::ir_rust_proto::constant::KindOneof::Value(value) => value.validate()?,
+            ::ir_rust_proto::constant::KindOneof::ArrayValue(array_value) => {
+                array_value.validate()?
+            }
+            _ => bail!("unmapped Constant KindOneof: {:?}", self.kind()),
+        }
         self.unknown_attr_opt().into_option().validate()?;
         let _ = CcType::try_from(self.r#type())?;
         self.deprecated_opt().into_option().validate()?;
@@ -2673,8 +2910,16 @@ impl<'pb> ProtoToIr for ConstantView<'pb> {
 
 derive_debug_partialeq_eq_hash! {
     impl<'pb> Constant<'pb> {
-        pub fn value(&self) -> IntegerConstant {
-            self.proto.value().to_ir()
+        pub fn value(&self) -> ConstantValue<'pb> {
+            match self.proto.kind() {
+                ::ir_rust_proto::constant::KindOneof::Value(value) => {
+                    ConstantValue::Integer(value.to_ir())
+                }
+                ::ir_rust_proto::constant::KindOneof::ArrayValue(array_value) => {
+                    ConstantValue::Array(array_value.to_ir())
+                }
+                _ => unreachable!("`kind` should have been validated by `ConstantView::validate`"),
+            }
         }
 
         pub fn cc_name(&self) -> Identifier<'pb> {

@@ -25,7 +25,8 @@ class VarDeclImporter : public DeclImporterBase<clang::VarDecl> {
  private:
   // Imports a variable with a constant initializer as an `ir_proto::Constant`.
   //
-  // Supported are boolean and integer scalars.
+  // Supported are boolean and integer scalars, as well as C-style arrays of
+  // booleans and integers.
   std::unique_ptr<ir_proto::Item> ImportConstant(
       clang::VarDecl* var_decl, TranslatedIdentifier& var_name,
       std::optional<ItemId> enclosing_item_id,
