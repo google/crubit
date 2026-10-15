@@ -38,6 +38,7 @@ use rustc_middle::ty::layout::IntegerExt;
 use rustc_middle::ty::{self, TyCtxt, TyKind};
 use rustc_span::def_id::DefId;
 use std::collections::HashSet;
+use std::ops::RangeInclusive;
 
 /// What `EnumApiV2` needs to know about an enum to generate its bindings.
 pub(crate) struct EnumLayout<'tcx> {
@@ -63,10 +64,14 @@ impl DiscriminantTy {
         Ok(Self { integer, signed })
     }
 
-    /// The type of the tag `tag`, which is an integer for every encoding supported so far.
-    fn of_tag(tag: rustc_abi::Scalar) -> Result<Self> {
+    /// The type of the tag `tag`. Pointer tags (as in `Option<&T>`) are mapped to the
+    /// pointer-sized unsigned integer, matching rustc's `Primitive::to_int_ty`.
+    fn of_tag(tcx: TyCtxt, tag: rustc_abi::Scalar) -> Result<Self> {
         match tag.primitive() {
             Primitive::Int(integer, signed) => Self::new(integer, signed),
+            Primitive::Pointer(_) => {
+                Self::new(tcx.data_layout.ptr_sized_integer(), /* signed= */ false)
+            }
             primitive => bail!("Unsupported tag type: {primitive:?}"),
         }
     }
@@ -97,6 +102,12 @@ impl DiscriminantTy {
         }
     }
 
+    /// Formats `value` as a C++ literal of this type, truncating it to this type's width.
+    fn literal_from_uint(self, tcx: TyCtxt, value: u128) -> Result<TokenStream> {
+        let (scalar, _truncated) = ty::ScalarInt::truncate_from_uint(value, self.size());
+        self.literal(tcx, scalar)
+    }
+
     /// Formats `value` as a C++ literal of this type.
     fn literal(self, tcx: TyCtxt, value: ty::ScalarInt) -> Result<TokenStream> {
         let ty = self.integer.to_ty(tcx, self.signed);
@@ -114,6 +125,16 @@ enum EnumTagEncoding {
     /// `rustc_abi::TagEncoding::Direct`: every variant stores its discriminant in a tag at
     /// `offset` bytes from the start of the enum.
     Direct { offset: u64 },
+    /// `rustc_abi::TagEncoding::Niche`: the niche variants store consecutive tag values starting
+    /// at `niche_start` at `offset` bytes from the start of the enum; `untagged_variant` has
+    /// no tag, and its field at `offset` never holds any of those values. Every variant's
+    /// discriminant is its variant index.
+    Niche {
+        offset: u64,
+        untagged_variant: VariantIdx,
+        niche_variants: RangeInclusive<VariantIdx>,
+        niche_start: TokenStream,
+    },
 }
 
 struct EnumVariant<'tcx> {
@@ -183,11 +204,26 @@ pub(crate) fn analyze_enum<'tcx>(
         }
         Variants::Multiple { tag, tag_encoding: TagEncoding::Direct, tag_field, .. } => {
             let offset = layout.fields().offset(tag_field.as_usize()).bytes();
-            (DiscriminantTy::of_tag(*tag)?, EnumTagEncoding::Direct { offset })
+            (DiscriminantTy::of_tag(tcx, *tag)?, EnumTagEncoding::Direct { offset })
         }
-        Variants::Multiple { tag_encoding: TagEncoding::Niche { .. }, .. } => {
-            // TODO(b/489126000): Support niche-encoded enums.
-            bail!("Niche-encoded enums are not supported yet")
+        Variants::Multiple {
+            tag,
+            tag_encoding: TagEncoding::Niche { untagged_variant, niche_variants, niche_start },
+            tag_field,
+            ..
+        } => {
+            let offset = layout.fields().offset(tag_field.as_usize()).bytes();
+            let discriminant_ty = DiscriminantTy::of_tag(tcx, *tag)?;
+            let niche_start = discriminant_ty.literal_from_uint(tcx, *niche_start)?;
+            (
+                discriminant_ty,
+                EnumTagEncoding::Niche {
+                    offset,
+                    untagged_variant: *untagged_variant,
+                    niche_variants: (*niche_variants).into(),
+                    niche_start,
+                },
+            )
         }
     };
 
@@ -222,26 +258,35 @@ pub(crate) fn analyze_enum<'tcx>(
             );
             let cc_name = format_cc_ident(db, name)?;
 
+            let tag_at = |offset| -> Result<Option<EnumTag>> {
+                let Some(value) = tcx.tag_for_variant(
+                    typing_env
+                        .as_query_input((tcx.erase_and_anonymize_regions(self_ty), variant_index)),
+                ) else {
+                    return Ok(None);
+                };
+                Ok(Some(EnumTag {
+                    offset,
+                    size: value.size().bytes(),
+                    value: discriminant_ty.literal(tcx, value)?,
+                }))
+            };
             let (discriminant, tag) = match tag_encoding {
                 EnumTagEncoding::Single => {
                     let discr = self_ty
                         .discriminant_for_variant(tcx, variant_index)
                         .expect("Invalid VariantIdx");
-                    let (value, _) =
-                        ty::ScalarInt::truncate_from_uint(discr.val, discriminant_ty.size());
-                    (discriminant_ty.literal(tcx, value)?, None)
+                    (discriminant_ty.literal_from_uint(tcx, discr.val)?, None)
                 }
                 EnumTagEncoding::Direct { offset } => {
-                    let value = tcx
-                        .tag_for_variant(typing_env.as_query_input((
-                            tcx.erase_and_anonymize_regions(self_ty),
-                            variant_index,
-                        )))
-                        .expect("Every variant of a directly-tagged enum has a tag");
-                    let literal = discriminant_ty.literal(tcx, value)?;
                     let tag =
-                        EnumTag { offset, size: value.size().bytes(), value: literal.clone() };
-                    (literal, Some(tag))
+                        tag_at(offset)?.expect("Every variant of a directly-tagged enum has a tag");
+                    (tag.value.clone(), Some(tag))
+                }
+                EnumTagEncoding::Niche { offset, .. } => {
+                    let discriminant = discriminant_ty
+                        .literal_from_uint(tcx, u128::from(variant_index.as_u32()))?;
+                    (discriminant, tag_at(offset)?)
                 }
             };
 
@@ -417,6 +462,16 @@ pub(crate) fn generate_enum<'tcx>(
         EnumTagEncoding::Direct { offset } => {
             let offset = Literal::u64_unsuffixed(offset);
             quote! { ::crubit::internal::tag_encoding::Direct<#discriminant_ty, #offset> }
+        }
+        EnumTagEncoding::Niche { offset, untagged_variant, niche_variants, niche_start } => {
+            let offset = Literal::u64_unsuffixed(offset);
+            let untagged = Literal::u32_unsuffixed(untagged_variant.as_u32());
+            let start = Literal::u32_unsuffixed(niche_variants.start().as_u32());
+            let end = Literal::u32_unsuffixed(niche_variants.end().as_u32());
+            quote! {
+                ::crubit::internal::tag_encoding::Niche<
+                    #discriminant_ty, #offset, #untagged, #start, #end, #niche_start>
+            }
         }
     };
     let variant_names = layout.variants.iter().map(|variant| &variant.cc_name);
