@@ -13,11 +13,52 @@ support. Instead of linking to API docs, we link to Rust source files.
 
 ## `std::string` {#string}
 
-TODO(b/408961701): Bindings for the real `std::string` type.
+C++'s `std::string` has two representations in Rust:
 
-`std::string` is only supported as a "bridge type", with runtime conversion.
-When a `std::string` is passed or returned by value, it is transformed into a
-`cpp_std::string_wrapper`.
+*   **By value (`cpp_std::string_wrapper`)**: By default, when a `std::string`
+    is passed or returned by value, it is bridged into a
+    `cpp_std::string_wrapper` (an owned, Rust-movable wrapper that implements
+    `Clone` and converts to/from `&str`, `String`, `&[u8]`, and `Vec<u8>`).
+*   **By reference, pointer, struct field, or container element
+    (`cpp_std::string`)**: In compound positions (such as `const std::string&`,
+    `std::string&`, `const std::string*`, struct fields, or
+    `std::vector<std::string>`), or when the `layout_compat_string` Crubit
+    feature is enabled, `std::string` is bound as the layout-compatible
+    `cpp_std::string`.
+
+### Copying and converting `cpp_std::string` {#copying_string}
+
+Because C++ `std::string` is not trivially relocatable across all platforms (for
+example, due to Short String Optimization self-pointers), `cpp_std::string` is
+`!Unpin` (see crubit.rs/types/non_rust_movable/intro_short) and cannot implement
+`Clone` (which returns `Self` by value).
+
+Depending on what you need:
+
+*   **Borrow or copy into a Rust `String`, `&str`, or `Vec<u8>`**:
+    *   `s.to_str()` returns `Result<&str, std::str::Utf8Error>`.
+    *   `s.to_string()` returns `Result<String, std::str::Utf8Error>`.
+    *   `s.display().to_string()` converts to a `String`, replacing invalid
+        UTF-8 sequences with the Unicode replacement character.
+    *   `s.as_slice()` (or `&*s` via `Deref<Target = [u8]>`) returns `&[u8]`,
+        and `s.to_vec()` returns `Vec<u8>`.
+*   **Copy-construct a new `cpp_std::string` in place** using `ctor`:
+
+    ```rust
+    use ctor::{copy, emplace, CtorNew};
+
+    // Given `s: &cpp_std::string`:
+    let copy1 = emplace!(copy(s));
+    let copy2 = emplace!(cpp_std::string::ctor_new(s));
+
+    // Given `s: Pin<&mut cpp_std::string>`, reborrow as `&cpp_std::string` with `&*s`:
+    let copy3 = emplace!(copy(&*s));
+    let copy4 = emplace!(cpp_std::string::ctor_new(&*s));
+    ```
+
+*   **Pass to a C++ function taking bridged `std::string` by value**: convert to
+    `cpp_std::string_wrapper` with
+    `cpp_std::string_wrapper::from(s.as_slice())`.
 
 API: support/cc_std_impl/string.rs
 

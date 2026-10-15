@@ -13,6 +13,18 @@ use test_helpers::cpp_std_string_test::RoundTrip;
 // The types should implement Send and Sync.
 static_assertions::assert_impl_all!(cc_std::std::string_wrapper : Send, Sync);
 static_assertions::assert_impl_all!(cc_std::std::string : Send, Sync);
+static_assertions::assert_not_impl_all!(cc_std::std::string : Clone);
+
+#[gtest]
+fn test_string_copy_construction() {
+    let s1 = emplace!(string::ctor_new("hello"));
+    let s2 = emplace!(ctor::copy(&*s1));
+    let s3 = emplace!(string::ctor_new(&*s1));
+    let s4 = emplace!(ctor::copy(s1.as_ref()));
+    expect_eq!(*s1, *s2);
+    expect_eq!(*s1, *s3);
+    expect_eq!(*s1, *s4);
+}
 
 #[googletest::test]
 #[rstest]
