@@ -1730,6 +1730,8 @@ std::vector<ir_proto::Field> CXXRecordDeclImporter::ImportFields(
                   clang::dyn_cast<clang::DeprecatedAttr>(&attr)) {
             deprecated.emplace(deprecated_attr->getMessage());
             return true;
+          } else if (clang::isa<clang::UnusedAttr>(attr)) {
+            return true;
           }
           return false;
         });
