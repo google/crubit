@@ -34,6 +34,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
     rust_library = "cpp_name",
 )
@@ -73,6 +74,7 @@ golden_test(
     platforms = [
         "android",
         "ios",
+        "windows",
     ],
     rust_library = "must_bind",
 )
