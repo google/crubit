@@ -34,7 +34,51 @@ static constexpr ::std::array<::std::int32_t, 3> ARRAY_CONST =
     ::std::array<::std::int32_t, 3>{INT32_C(10), INT32_C(20), INT32_C(30)};
 static constexpr decltype(char(0)) CHAR = 42;
 static constexpr float FLOAT_32 = 0.125f;
-static constexpr double FLOAT_64 = 0.0078125L;
+static constexpr float FLOAT_32_INFINITY = __builtin_inff();
+static constexpr float FLOAT_32_MAX_PAYLOAD_NAN = __builtin_nanf("0x3fffff");
+static constexpr float FLOAT_32_MAX_SUBNORMAL = 1.1754942e-38f;
+static constexpr float FLOAT_32_MIN_SUBNORMAL = 1e-45f;
+static constexpr float FLOAT_32_NAN = __builtin_nanf("");
+static constexpr float FLOAT_32_NEG_INFINITY = -__builtin_inff();
+static constexpr float FLOAT_32_NEG_NAN = -__builtin_nanf("");
+static constexpr float FLOAT_32_NEG_PAYLOAD_NAN = -__builtin_nanf("0x42");
+static constexpr float FLOAT_32_NEG_SIGNALING_NAN = -__builtin_nansf("0x1");
+static constexpr float FLOAT_32_NEG_SUBNORMAL = -1e-45f;
+static constexpr float FLOAT_32_NEG_ZERO = -0.0f;
+static constexpr float FLOAT_32_PAYLOAD_NAN = __builtin_nanf("0x42");
+static constexpr float FLOAT_32_SIGNALING_NAN = __builtin_nansf("0x1");
+static constexpr float FLOAT_32_WHOLE = 64.0f;
+static constexpr double FLOAT_64 = 0.0078125;
+static constexpr ::std::array<double, 2> FLOAT_64_ARRAY_CONST =
+    ::std::array<double, 2>{-0.0, __builtin_inf()};
+static constexpr double FLOAT_64_INFINITY = __builtin_inf();
+static constexpr double FLOAT_64_MAX_PAYLOAD_NAN =
+    __builtin_nan("0x7ffffffffffff");
+static constexpr double FLOAT_64_MAX_SUBNORMAL = 2.225073858507201e-308;
+static constexpr double FLOAT_64_MIN_SUBNORMAL = 5e-324;
+static constexpr double FLOAT_64_NAN = __builtin_nan("");
+static constexpr double FLOAT_64_NEG_INFINITY = -__builtin_inf();
+static constexpr double FLOAT_64_NEG_NAN = -__builtin_nan("");
+static constexpr double FLOAT_64_NEG_PAYLOAD_NAN = -__builtin_nan("0x42");
+static constexpr double FLOAT_64_NEG_SIGNALING_NAN = -__builtin_nans("0x1");
+static constexpr double FLOAT_64_NEG_SUBNORMAL = -5e-324;
+static constexpr double FLOAT_64_NEG_ZERO = -0.0;
+static constexpr double FLOAT_64_PAYLOAD_NAN = __builtin_nan("0x42");
+static constexpr double FLOAT_64_SIGNALING_NAN = __builtin_nans("0x1");
+static constexpr double FLOAT_64_WHOLE = 64.0;
+static constexpr ::std::array<float, 4> FLOAT_ARRAY_CONST =
+    ::std::array<float, 4>{64.0f, -0.0f, -__builtin_inff(), __builtin_nanf("")};
+struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: FloatStruct") alignas(4)
+    [[clang::trivial_abi]] FloatStruct final {
+ public:
+  float x{};
+  float y{};
+
+ private:
+  static void __crubit_field_offset_assertions();
+};
+static constexpr ::consts::FloatStruct FLOAT_STRUCT_CONST =
+    ::consts::FloatStruct{.x = -0.0f, .y = __builtin_inff()};
 static constexpr ::std::int32_t INT_NEG = INT32_C(-17);
 static constexpr ::std::int32_t INT_POS = INT32_C(42);
 static constexpr ::std::intptr_t ISIZE = INT64_C(42);
@@ -54,10 +98,14 @@ struct CRUBIT_INTERNAL_RUST_TYPE(":: consts_golden :: Point") alignas(4)
 };
 static constexpr ::consts::Point POINT_CONST =
     ::consts::Point{.x = INT32_C(10), .y = INT32_C(-20)};
-static constexpr float RUST_F32_MAX = 3.40282347E+38f;
-static constexpr float RUST_F32_MIN = -3.40282347E+38f;
-static constexpr double RUST_F64_MAX = 1.7976931348623157E+308L;
-static constexpr double RUST_F64_MIN = -1.7976931348623157E+308L;
+static constexpr float RUST_F32_EPSILON = 1.1920929e-7f;
+static constexpr float RUST_F32_MAX = 3.4028235e38f;
+static constexpr float RUST_F32_MIN = -3.4028235e38f;
+static constexpr float RUST_F32_MIN_POSITIVE = 1.1754944e-38f;
+static constexpr double RUST_F64_EPSILON = 2.220446049250313e-16;
+static constexpr double RUST_F64_MAX = 1.7976931348623157e308;
+static constexpr double RUST_F64_MIN = -1.7976931348623157e308;
+static constexpr double RUST_F64_MIN_POSITIVE = 2.2250738585072014e-308;
 static constexpr bool RUST_FALSE = false;
 static constexpr ::std::int16_t RUST_INT16_MAX = 32767;
 static constexpr ::std::int16_t RUST_INT16_MIN = -32768;
@@ -85,7 +133,7 @@ static constexpr ::std::uintptr_t SLICE_LENGTH = 11;
 
 // Error generating bindings for constant `consts_golden::STRUCT_WITH_REF_CONST`
 // defined at
-// cc_bindings_from_rs/test/consts/consts.rs;l=129:
+// cc_bindings_from_rs/test/consts/consts.rs;l=200:
 // const of type `consts_golden::StructWithRef<'static>` cannot be generated as
 // it is not a C++ aggregate: Field `r` is not default-constructible in C++
 
@@ -203,12 +251,36 @@ TyWithAssocConsts final {
 };
 static constexpr ::std::uint32_t UNSIGNED_INT = UINT32_C(4294967295);
 
+// CRUBIT_ANNOTATE: must_bind=
+::std::uint32_t f32_to_bits(float x);
+
+// CRUBIT_ANNOTATE: must_bind=
+::std::uint64_t f64_to_bits(double x);
+
 // Error generating bindings for function
 // `consts_golden::fn_with_unreturnable_const` defined at
-// cc_bindings_from_rs/test/consts/consts.rs;l=117:
+// cc_bindings_from_rs/test/consts/consts.rs;l=188:
 // Function contains a const block that cannot return
 
+// CRUBIT_ANNOTATE: must_bind=
+float roundtrip_f32(float x);
+
+// CRUBIT_ANNOTATE: must_bind=
+double roundtrip_f64(double x);
+
 }  // namespace consts
+
+template <>
+struct rs_std::impl<::consts::FloatStruct, ::rs::core::fmt::Debug> {
+  static constexpr bool kIsImplemented = true;
+
+  // Error generating bindings for associated function
+  // `<consts_golden::FloatStruct as std::fmt::Debug>::fmt` defined at
+  // cc_bindings_from_rs/test/consts/consts.rs;l=124:
+  // Error formatting function return type `std::result::Result<(),
+  // std::fmt::Error>`: Failed to format type for the definition of
+  // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
+};
 
 template <>
 struct rs_std::impl<::consts::NestedStruct, ::rs::core::cmp::Eq> {
@@ -221,7 +293,7 @@ struct rs_std::impl<::consts::NestedStruct, ::rs::core::fmt::Debug> {
 
   // Error generating bindings for associated function
   // `<consts_golden::NestedStruct as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=77:
+  // cc_bindings_from_rs/test/consts/consts.rs;l=109:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Failed to format type for the definition of
   // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
@@ -238,7 +310,7 @@ struct rs_std::impl<::consts::Point, ::rs::core::fmt::Debug> {
 
   // Error generating bindings for associated function `<consts_golden::Point as
   // std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=56:
+  // cc_bindings_from_rs/test/consts/consts.rs;l=88:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Failed to format type for the definition of
   // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
@@ -255,7 +327,7 @@ struct rs_std::impl<::consts::StructWithArray, ::rs::core::fmt::Debug> {
 
   // Error generating bindings for associated function
   // `<consts_golden::StructWithArray as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=92:
+  // cc_bindings_from_rs/test/consts/consts.rs;l=163:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Failed to format type for the definition of
   // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
@@ -272,7 +344,7 @@ struct rs_std::impl<::consts::StructWithRef, ::rs::core::fmt::Debug> {
 
   // Error generating bindings for associated function
   // `<consts_golden::StructWithRef<'a> as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=123:
+  // cc_bindings_from_rs/test/consts/consts.rs;l=194:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Failed to format type for the definition of
   // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
@@ -289,7 +361,7 @@ struct rs_std::impl<::consts::StructWithStr, ::rs::core::fmt::Debug> {
 
   // Error generating bindings for associated function
   // `<consts_golden::StructWithStr<'a> as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=102:
+  // cc_bindings_from_rs/test/consts/consts.rs;l=173:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Failed to format type for the definition of
   // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
@@ -306,7 +378,7 @@ struct rs_std::impl<::consts::TupleStruct, ::rs::core::fmt::Debug> {
 
   // Error generating bindings for associated function
   // `<consts_golden::TupleStruct as std::fmt::Debug>::fmt` defined at
-  // cc_bindings_from_rs/test/consts/consts.rs;l=71:
+  // cc_bindings_from_rs/test/consts/consts.rs;l=103:
   // Error formatting function return type `std::result::Result<(),
   // std::fmt::Error>`: Failed to format type for the definition of
   // `std::fmt::Error`: Zero-sized types (ZSTs) are not supported (b/258259459)
@@ -314,6 +386,22 @@ struct rs_std::impl<::consts::TupleStruct, ::rs::core::fmt::Debug> {
 
 namespace consts {
 
+static_assert(
+    sizeof(::consts::FloatStruct) == 8,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(
+    alignof(::consts::FloatStruct) == 4,
+    "Verify that ADT layout didn't change since this header got generated");
+static_assert(::std::is_trivially_destructible_v<::consts::FloatStruct>);
+static_assert(::std::is_trivially_move_constructible_v<::consts::FloatStruct>);
+static_assert(::std::is_trivially_move_assignable_v<::consts::FloatStruct>);
+static_assert(::std::is_trivially_copy_constructible_v<::consts::FloatStruct>);
+static_assert(::std::is_trivially_copy_assignable_v<::consts::FloatStruct>);
+inline void ::consts::FloatStruct::__crubit_field_offset_assertions() {
+  using __crubit_assert_type = ::consts::FloatStruct;
+  static_assert(0 == offsetof(__crubit_assert_type, x));
+  static_assert(4 == offsetof(__crubit_assert_type, y));
+}
 static_assert(
     sizeof(::consts::NestedStruct) == 16,
     "Verify that ADT layout didn't change since this header got generated");
@@ -510,6 +598,34 @@ inline void ::consts::TyWithAssocConsts::__crubit_field_offset_assertions() {
   using __crubit_assert_type = ::consts::TyWithAssocConsts;
   static_assert(0 == offsetof(__crubit_assert_type, __field0));
 }
+namespace __crubit_internal {
+extern "C" ::std::uint32_t __crubit_thunk_f32_uto_ubits(float);
+}
+inline ::std::uint32_t f32_to_bits(float x) {
+  return __crubit_internal::__crubit_thunk_f32_uto_ubits(x);
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uint64_t __crubit_thunk_f64_uto_ubits(double);
+}
+inline ::std::uint64_t f64_to_bits(double x) {
+  return __crubit_internal::__crubit_thunk_f64_uto_ubits(x);
+}
+
+namespace __crubit_internal {
+extern "C" float __crubit_thunk_roundtrip_uf32(float);
+}
+inline float roundtrip_f32(float x) {
+  return __crubit_internal::__crubit_thunk_roundtrip_uf32(x);
+}
+
+namespace __crubit_internal {
+extern "C" double __crubit_thunk_roundtrip_uf64(double);
+}
+inline double roundtrip_f64(double x) {
+  return __crubit_internal::__crubit_thunk_roundtrip_uf64(x);
+}
+
 }  // namespace consts
 
 #pragma clang diagnostic pop

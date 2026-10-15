@@ -11,6 +11,10 @@
 
 extern crate alloc;
 extern crate core;
+const _: () = assert!(::core::mem::size_of::<::consts_golden::FloatStruct>() == 8);
+const _: () = assert!(::core::mem::align_of::<::consts_golden::FloatStruct>() == 4);
+const _: () = assert!(::core::mem::offset_of!(::consts_golden::FloatStruct, x) == 0);
+const _: () = assert!(::core::mem::offset_of!(::consts_golden::FloatStruct, y) == 4);
 const _: () = assert!(::core::mem::size_of::<::consts_golden::NestedStruct>() == 16);
 const _: () = assert!(::core::mem::align_of::<::consts_golden::NestedStruct>() == 4);
 #[unsafe(no_mangle)]
@@ -101,3 +105,19 @@ const _: () = assert!(::core::mem::offset_of!(::consts_golden::TupleStruct, 0) =
 const _: () = assert!(::core::mem::offset_of!(::consts_golden::TupleStruct, 1) == 4);
 const _: () = assert!(::core::mem::size_of::<::consts_golden::TyWithAssocConsts>() == 1);
 const _: () = assert!(::core::mem::align_of::<::consts_golden::TyWithAssocConsts>() == 1);
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_f32_uto_ubits(x: f32) -> u32 {
+    unsafe { ::consts_golden::f32_to_bits(x) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_f64_uto_ubits(x: f64) -> u64 {
+    unsafe { ::consts_golden::f64_to_bits(x) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_roundtrip_uf32(x: f32) -> f32 {
+    unsafe { ::consts_golden::roundtrip_f32(x) }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_roundtrip_uf64(x: f64) -> f64 {
+    unsafe { ::consts_golden::roundtrip_f64(x) }
+}

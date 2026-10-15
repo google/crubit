@@ -2467,6 +2467,176 @@ fn test_const_non_aggregate_struct_fails() {
 }
 
 #[test]
+fn test_const_float() {
+    let test_src = r#"
+        pub const WHOLE_F32: f32 = 64.0;
+        pub const LARGE_WHOLE_F32: f32 = 12583039.0;
+        pub const SCI_F32: f32 = 1e-7;
+        pub const NEG_ZERO_F32: f32 = -0.0;
+        pub const INF_F32: f32 = f32::INFINITY;
+        pub const NEG_INF_F32: f32 = f32::NEG_INFINITY;
+        pub const NAN_F32: f32 = f32::NAN;
+        pub const NEG_NAN_F32: f32 = -f32::NAN;
+        pub const PAYLOAD_NAN_F32: f32 = f32::from_bits(0x7fc0_0042);
+        pub const NEG_PAYLOAD_NAN_F32: f32 = f32::from_bits(0xffc0_0042);
+        pub const MAX_PAYLOAD_NAN_F32: f32 = f32::from_bits(0x7fff_ffff);
+        pub const SIGNALING_NAN_F32: f32 = f32::from_bits(0x7f80_0001);
+        pub const NEG_SIGNALING_NAN_F32: f32 = f32::from_bits(0xff80_0001);
+        pub const WHOLE_F64: f64 = 64.0;
+        pub const INF_F64: f64 = f64::INFINITY;
+        pub const NEG_INF_F64: f64 = f64::NEG_INFINITY;
+        pub const NAN_F64: f64 = f64::NAN;
+        pub const NEG_NAN_F64: f64 = -f64::NAN;
+        pub const PAYLOAD_NAN_F64: f64 = f64::from_bits(0x7ff8_0000_0000_0042);
+        pub const NEG_PAYLOAD_NAN_F64: f64 = f64::from_bits(0xfff8_0000_0000_0042);
+        pub const MAX_PAYLOAD_NAN_F64: f64 = f64::from_bits(0x7fff_ffff_ffff_ffff);
+        pub const SIGNALING_NAN_F64: f64 = f64::from_bits(0x7ff0_0000_0000_0001);
+        pub const NEG_SIGNALING_NAN_F64: f64 = f64::from_bits(0xfff0_0000_0000_0001);
+    "#;
+    test_generated_bindings(test_src, |bindings| {
+        let cc_api = &bindings.unwrap().cc_api;
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float WHOLE_F32 = 64.0f;
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float LARGE_WHOLE_F32 = 12583039.0f;
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float SCI_F32 = 1e-7f;
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float NEG_ZERO_F32 = -0.0f;
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float INF_F32 = __builtin_inff();
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float NEG_INF_F32 = -__builtin_inff();
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float NAN_F32 = __builtin_nanf("");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float NEG_NAN_F32 = -__builtin_nanf("");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float PAYLOAD_NAN_F32 = __builtin_nanf("0x42");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float NEG_PAYLOAD_NAN_F32 = -__builtin_nanf("0x42");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float MAX_PAYLOAD_NAN_F32 = __builtin_nanf("0x3fffff");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float SIGNALING_NAN_F32 = __builtin_nansf("0x1");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr float NEG_SIGNALING_NAN_F32 = -__builtin_nansf("0x1");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr double WHOLE_F64 = 64.0;
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr double INF_F64 = __builtin_inf();
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr double NEG_INF_F64 = -__builtin_inf();
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr double NAN_F64 = __builtin_nan("");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr double NEG_NAN_F64 = -__builtin_nan("");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr double PAYLOAD_NAN_F64 = __builtin_nan("0x42");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr double NEG_PAYLOAD_NAN_F64 = -__builtin_nan("0x42");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr double MAX_PAYLOAD_NAN_F64 = __builtin_nan("0x7ffffffffffff");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr double SIGNALING_NAN_F64 = __builtin_nans("0x1");
+            }
+        );
+        assert_cc_matches!(
+            cc_api,
+            quote! {
+                static constexpr double NEG_SIGNALING_NAN_F64 = -__builtin_nans("0x1");
+            }
+        );
+    });
+}
+
+#[test]
 fn test_unbindable_types_warning() {
     let test_src = r#"
             pub struct SomeStruct {
@@ -3366,5 +3536,74 @@ fn test_iterator_item_references() {
                 ...
             }
         );
+    });
+}
+
+#[test]
+fn test_cpp_keyword_module_escaping_checks_self_and_non_stdlib_deps() {
+    let test_src = r#"
+        pub mod public {
+            pub fn foo() {}
+        }
+    "#;
+    run_compiler_for_testing(test_src, |tcx| {
+        let supported = crubit_feature::CrubitFeature::Supported.into();
+        let experimental =
+            crubit_feature::CrubitFeature::Supported | crubit_feature::CrubitFeature::Experimental;
+        let stdlib_features = crubit_feature::CrubitFeature::Supported
+            | crubit_feature::CrubitFeature::ReserveStandardMacros;
+
+        // 1. Empty `crate_name_to_features` with `default_features = Supported` must not
+        // vacuously enable `Experimental` keyword escaping on module names.
+        let db = test_helpers::bindings_db_for_tests_with_crate_features(
+            tcx,
+            supported,
+            /* crate_headers= */ &[],
+            /* crate_features= */ &[],
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        assert_cc_not_matches!(bindings.cc_api, quote! { namespace rust_out::public_ });
+
+        // 2. Enabling `Experimental` on `self` while toolchain stdlib crates (`core`, `alloc`,
+        // `std`) only have `Supported | ReserveStandardMacros` should still escape keywords.
+        let db = test_helpers::bindings_db_for_tests_with_crate_features(
+            tcx,
+            supported,
+            /* crate_headers= */ &["alloc", "core", "std"],
+            /* crate_features= */
+            &[
+                ("alloc", stdlib_features),
+                ("core", stdlib_features),
+                ("std", stdlib_features),
+                ("self", experimental),
+            ],
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        assert_cc_matches!(
+            bindings.cc_api,
+            quote! {
+                namespace rust_out::public_ {
+                void foo();
+                ...
+                }
+            }
+        );
+
+        // 3. A non-stdlib dependency crate without `Experimental` (falling back to
+        // `default_features`) prevents keyword escaping.
+        let db = test_helpers::bindings_db_for_tests_with_crate_features(
+            tcx,
+            supported,
+            /* crate_headers= */ &["alloc", "core", "std", "user_dep"],
+            /* crate_features= */
+            &[
+                ("alloc", stdlib_features),
+                ("core", stdlib_features),
+                ("std", stdlib_features),
+                ("self", experimental),
+            ],
+        );
+        let bindings = generate_bindings::generate_bindings(&db).unwrap();
+        assert_cc_not_matches!(bindings.cc_api, quote! { namespace rust_out::public_ });
     });
 }

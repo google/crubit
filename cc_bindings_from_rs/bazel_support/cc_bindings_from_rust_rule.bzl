@@ -813,7 +813,7 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
         # namespaces.
         config = config,
         label = ctx.label,
-        features = [],
+        features = ["reserve_standard_macros"],
         cli_flags = [],
         crate_name = crate_name,
         basename = basename,

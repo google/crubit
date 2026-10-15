@@ -11,7 +11,7 @@ impl Transitive {
     }
 }
 
-pub mod public {
+pub mod public_mod {
     pub struct TransitiveGlobA {
         pub value: i32,
     }
