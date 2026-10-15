@@ -2527,8 +2527,7 @@ fn generate_specializations_fixpoint<'tcx>(
     db: &BindingsGenerator<'tcx>,
     mut worklist: Vec<TemplateSpecialization<'tcx>>,
     cc_details_prereqs: &mut CcPrerequisites<'tcx>,
-    extern_c_decls: &mut BTreeSet<ExternCDecl>,
-    cc_api_impl: &mut TokenStream,
+    rs_details: &mut RsSnippet,
 ) -> GeneratedSpecializations<'tcx> {
     let mut seen = HashSet::new();
     let mut specializations = HashMap::new();
@@ -2573,7 +2572,7 @@ fn generate_specializations_fixpoint<'tcx>(
                 }
             }
 
-            cc_api_impl.extend(snippets.rs_details.into_tokens(extern_c_decls));
+            *rs_details += snippets.rs_details;
             specializations.insert(spec, snippets.main_api);
         }
         worklist = next_worklist;
@@ -2719,8 +2718,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
     }
     let mut cc_details_prereqs = CcPrerequisites::default();
     let mut cc_details: Vec<CcDetails> = vec![];
-    let mut cc_api_impl = TokenStream::default();
-    let mut extern_c_decls = BTreeSet::new();
+    let mut rs_details = RsSnippet::default();
     let mut main_apis = HashMap::<DefId, CcSnippet>::new();
     for item in formatted_items_in_crate(db) {
         let def_id = item.def_id;
@@ -2755,7 +2753,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
             item.cpp_ns_path,
             api_snippets.cc_details.into_tokens(&mut cc_details_prereqs),
         ));
-        cc_api_impl.extend(api_snippets.rs_details.into_tokens(&mut extern_c_decls));
+        rs_details += api_snippets.rs_details;
     }
 
     let mut worklist: Vec<_> = std::mem::take(&mut cc_details_prereqs.template_specializations)
@@ -2776,13 +2774,7 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
     append_trait_impls(db, &mut worklist);
 
     let GeneratedSpecializations { mut specializations, impls_cc_details } =
-        generate_specializations_fixpoint(
-            db,
-            worklist,
-            &mut cc_details_prereqs,
-            &mut extern_c_decls,
-            &mut cc_api_impl,
-        );
+        generate_specializations_fixpoint(db, worklist, &mut cc_details_prereqs, &mut rs_details);
 
     // Find the order of `main_apis` that 1) meets the requirements of
     // `CcPrerequisites::defs` and 2) makes a best effort attempt to keep the
@@ -2957,6 +2949,8 @@ fn generate_crate(db: &BindingsGenerator) -> Result<BindingsTokens> {
         }
     };
 
+    let mut extern_c_decls = BTreeSet::new();
+    let mut cc_api_impl = rs_details.into_tokens(&mut extern_c_decls);
     let mut decls = quote! {};
     for ExternCDecl { decl, .. } in extern_c_decls.into_iter() {
         decls.extend(decl);
