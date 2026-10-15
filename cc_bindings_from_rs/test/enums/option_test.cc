@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <utility>
 
 #include "gtest/gtest.h"
 #include "support/rs_std/rs_std.h"
@@ -229,6 +230,9 @@ template <typename T>
 concept HasValue = requires(T& t) { t.value(); };
 template <typename T>
 concept HasDeref = requires(T& t) { *t; };
+template <typename T, typename U>
+concept HasValueOr =
+    requires(T t, U u) { std::forward<T>(t).value_or(std::forward<U>(u)); };
 
 TEST(OptionTest, OptionUnitSome) {
   option::UnitOptionField unit_option_field =
@@ -237,6 +241,81 @@ TEST(OptionTest, OptionUnitSome) {
   EXPECT_TRUE(some_unit.has_value());
   static_assert(!HasDeref<rs_std::Option<rs_std::unit_t>>);
   static_assert(!HasValue<rs_std::Option<rs_std::unit_t>>);
+  static_assert(!HasValueOr<rs_std::Option<rs_std::unit_t>&, rs_std::unit_t>);
+  static_assert(!HasValueOr<rs_std::Option<rs_std::unit_t>&&, rs_std::unit_t>);
+}
+
+TEST(OptionTest, OptionUnitEquality) {
+  const rs_std::Option<rs_std::unit_t> some_unit =
+      option::UnitOptionField::new_with_some().unit;
+  const rs_std::Option<rs_std::unit_t> other_some_unit =
+      option::UnitOptionField::new_with_some().unit;
+  const rs_std::Option<rs_std::unit_t> none_unit =
+      option::UnitOptionField().unit;
+  EXPECT_EQ(some_unit, other_some_unit);
+  EXPECT_NE(some_unit, none_unit);
+  EXPECT_EQ(none_unit, option::UnitOptionField().unit);
+  EXPECT_EQ(none_unit, std::nullopt);
+  EXPECT_NE(some_unit, std::nullopt);
+}
+
+TEST(OptionTest, ValueOrLvalue) {
+  const rs_std::Option<uint8_t> some_u8(uint8_t{42});
+  const rs_std::Option<uint8_t> none_u8(std::nullopt);
+  EXPECT_EQ(some_u8.value_or(99), 42);
+  EXPECT_EQ(none_u8.value_or(99), 99);
+  EXPECT_EQ(none_u8.value_or({}), 0);
+}
+
+TEST(OptionTest, Value) {
+  rs_std::Option<uint8_t> some_u8(uint8_t{42});
+  const rs_std::Option<uint8_t>& const_some_u8 = some_u8;
+  EXPECT_EQ(some_u8.value(), 42);
+  EXPECT_EQ(const_some_u8.value(), 42);
+  EXPECT_EQ(std::move(some_u8).value(), 42);
+}
+
+TEST(OptionTest, ValueOnNoneDies) {
+  const rs_std::Option<uint8_t> none_u8(std::nullopt);
+  EXPECT_DEATH_IF_SUPPORTED(none_u8.value(), "");
+}
+
+TEST(OptionTest, ValueOrRvalue) {
+  static_assert(
+      HasValueOr<rs_std::Option<option::HasDefault>&&, option::HasDefault>);
+
+  rs_std::Option<option::HasDefault> some_opt(
+      option::HasDefault::new_("from some"));
+  option::HasDefault unwrapped_some =
+      std::move(some_opt).value_or(option::HasDefault::new_("default"));
+  EXPECT_EQ(unwrapped_some.get_string_inside_option().to_string_view(),
+            "from some");
+  EXPECT_FALSE(some_opt.has_value());
+
+  rs_std::Option<option::HasDefault> none_opt(std::nullopt);
+  option::HasDefault unwrapped_none =
+      std::move(none_opt).value_or(option::HasDefault::new_("default"));
+  EXPECT_EQ(unwrapped_none.get_string_inside_option().to_string_view(),
+            "default");
+  EXPECT_FALSE(none_opt.has_value());
+}
+
+TEST(OptionTest, EqualityComparison) {
+  const rs_std::Option<uint8_t> some_42(uint8_t{42});
+  const rs_std::Option<uint8_t> some_42_b(uint8_t{42});
+  const rs_std::Option<uint8_t> some_99(uint8_t{99});
+  const rs_std::Option<uint8_t> none_u8(std::nullopt);
+
+  EXPECT_EQ(some_42, some_42_b);
+  EXPECT_NE(some_42, some_99);
+  EXPECT_NE(some_42, none_u8);
+  EXPECT_EQ(none_u8, std::nullopt);
+  EXPECT_EQ(std::nullopt, none_u8);
+  EXPECT_NE(some_42, std::nullopt);
+  EXPECT_EQ(some_42, 42);
+  EXPECT_EQ(42, some_42);
+  EXPECT_NE(some_42, 99);
+  EXPECT_NE(none_u8, 42);
 }
 
 }  // namespace
