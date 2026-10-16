@@ -55,6 +55,6 @@ crubit_cc_test(
     ],
     deps = [
         ":struct_with_conflicting_fields_and_member_functions_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
