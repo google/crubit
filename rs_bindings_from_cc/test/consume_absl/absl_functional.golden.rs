@@ -22,12 +22,10 @@ extern crate alloc;
 /// Calls the invocable and returns void.
 #[inline(always)]
 pub fn CallVoidVoid(
-    f: ::alloc::boxed::Box<
-        dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
-    >,
+    f: ::alloc::boxed::Box<dyn ::core::ops::FnOnce() + ::core::marker::Send + 'static>,
 ) {
     unsafe {
-        crate::detail::__rust_thunk___Z12CallVoidVoidN4absl12AnyInvocableIFvvOEEE(::crubit_support::bridge::unstable_encode!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::FnOnce()+::core::marker::Send+::core::marker::Sync+'static>::new(::alloc::boxed::Box::new(||{ ::core::panic!("moved-from value") }),|raw_any_invocable: ::cc_std::std::unique_ptr<::any_invocable::RawAnyInvocable>|->::alloc::boxed::Box<dyn::core::ops::FnOnce()+::core::marker::Send+::core::marker::Sync+'static>{ ::alloc::boxed::Box::new(move||{ unsafe{ crate::detail::__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(::cc_std::std::unique_ptr::as_ptr(&raw_any_invocable)as*mut _) }; }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::FnOnce()+::core::marker::Send+::core::marker::Sync+'static>,f).as_ptr()as*const u8)
+        crate::detail::__rust_thunk___Z12CallVoidVoidN4absl12AnyInvocableIFvvOEEE(::crubit_support::bridge::unstable_encode!(@::any_invocable::AnyInvocableAbi::<dyn::core::ops::FnOnce()+::core::marker::Send+'static>::new(::alloc::boxed::Box::new(||{ ::core::panic!("moved-from value") }),|raw_any_invocable: ::cc_std::std::unique_ptr<::any_invocable::RawAnyInvocable>|->::alloc::boxed::Box<dyn::core::ops::FnOnce()+::core::marker::Send+'static>{ ::alloc::boxed::Box::new(move||{ unsafe{ crate::detail::__crubit_invoke_any_invocable___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(::cc_std::std::unique_ptr::as_ptr(&raw_any_invocable)as*mut _) }; }) },),::any_invocable::AnyInvocableAbi<dyn::core::ops::FnOnce()+::core::marker::Send+'static>,f).as_ptr()as*const u8)
     }
 }
 
@@ -127,9 +125,8 @@ impl Default for Widget {
 }
 
 pub mod widget {
-    pub type DoneCallback = ::alloc::boxed::Box<
-        dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
-    >;
+    pub type DoneCallback =
+        ::alloc::boxed::Box<dyn ::core::ops::FnOnce() + ::core::marker::Send + 'static>;
 }
 
 forward_declare::forward_declare!(pub Incomplete = forward_declare::symbol!("Incomplete"));
@@ -235,9 +232,7 @@ mod detail {
     }
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
-        f: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
-        >,
+        f: *mut ::alloc::boxed::Box<dyn ::core::ops::FnOnce() + ::core::marker::Send + 'static>,
     ) {
         (unsafe {
             ::core::ptr::replace(
@@ -251,12 +246,8 @@ mod detail {
     #[unsafe(no_mangle)]
     unsafe extern "C" fn __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
         operation: ::dyn_callable_rs::FunctionToCall,
-        from: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
-        >,
-        to: *mut ::alloc::boxed::Box<
-            dyn ::core::ops::FnOnce() + ::core::marker::Send + ::core::marker::Sync + 'static,
-        >,
+        from: *mut ::alloc::boxed::Box<dyn ::core::ops::FnOnce() + ::core::marker::Send + 'static>,
+        to: *mut ::alloc::boxed::Box<dyn ::core::ops::FnOnce() + ::core::marker::Send + 'static>,
     ) {
         unsafe {
             ::dyn_callable_rs::manager(operation, from, to);

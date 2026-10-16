@@ -51,6 +51,6 @@ crubit_cc_test(
         ":move_cc_api",
         "//support:movable",
         "//support/internal:bindings_support",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )

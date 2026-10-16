@@ -47,13 +47,12 @@ The complete, tested version is in
 
 ## Type mapping
 
-Crubit maps `absl::AnyInvocable` to heap-allocated Rust trait objects with
-`Send + Sync` bounds:
+Crubit maps `absl::AnyInvocable` to heap-allocated Rust trait objects:
 
 C++ `absl::AnyInvocable` signature             | Rust binding type
 :-------------------------------------------- | :----------------
 `absl::AnyInvocable<R(Args...) const>`        | `Box<dyn Fn(Args...) -> R + Send + Sync>`
-`absl::AnyInvocable<R(Args...) &&>`           | `Box<dyn FnOnce(Args...) -> R + Send + Sync>`
+`absl::AnyInvocable<R(Args...) &&>`           | `Box<dyn FnOnce(Args...) -> R + Send>`
 `absl::AnyInvocable<R(Args...)>` (non-const)  | `Box<dyn Fn(Args...) -> R + Send + Sync>`
 
 ### Non-const `absl::AnyInvocable` is promoted to `Fn`

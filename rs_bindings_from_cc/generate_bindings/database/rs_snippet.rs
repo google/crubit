@@ -922,8 +922,12 @@ impl<'a> Callable<'a> {
         let param_type_tokens =
             self.param_types.iter().map(|param_ty| param_ty.to_token_stream(db));
         let fn_trait = self.rust_fn_trait;
+        let sync_bound = match self.rust_fn_trait {
+            FnTrait::Fn | FnTrait::FnMut => Some(quote! { + ::core::marker::Sync }),
+            FnTrait::FnOnce => None,
+        };
         quote! {
-            dyn #fn_trait(#(#param_type_tokens),*) #rust_return_type_fragment + ::core::marker::Send + ::core::marker::Sync + 'static
+            dyn #fn_trait(#(#param_type_tokens),*) #rust_return_type_fragment + ::core::marker::Send #sync_bound + 'static
         }
     }
 
