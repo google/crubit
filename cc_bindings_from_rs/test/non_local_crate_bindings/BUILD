@@ -11,6 +11,6 @@ crubit_cc_test(
     ],
     deps = [
         "//support/rs_std:rs_core",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
