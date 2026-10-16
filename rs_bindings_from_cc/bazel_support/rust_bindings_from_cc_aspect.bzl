@@ -479,11 +479,11 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         extra_rs_srcs = extra_rs_srcs,
         extra_rs_compile_data = extra_rs_compile_data,
         unstable_rust_features = unstable_rust_features,
-        deps_for_cc_file = [target[CcInfo]] + [
+        deps_for_cc_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file + [target[CcInfo]] + [
             d.cc_info
             for d in binding_infos
             if d.cc_info
-        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file + generated_cpp_support_deps,
+        ] + generated_cpp_support_deps,
         deps_for_rs_file = depset(
             direct = [
                 d.dep_variant_info
