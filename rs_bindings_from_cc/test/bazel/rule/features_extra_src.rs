@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-pub fn f() -> i32 {
-    lib_public_deps::f_public()
+impl crate::SomeType {
+    pub fn get_value_plus_one(&self) -> i32 {
+        self.value + 1
+    }
 }

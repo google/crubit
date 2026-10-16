@@ -22,7 +22,6 @@ crubit_test_cc_library(
     hdrs = ["test_helpers.h"],
     aspect_hints = [
         ":test_helpers_rust.hint",
-        "//features:experimental",
     ],
     deps = ["//support:annotations"],
 )
@@ -31,6 +30,7 @@ rust_api_from_cpp(
     name = "test_helpers_rust",
     testonly = 1,
     cpp_target = ":test_helpers",
+    crubit_features = ["experimental"],
 )
 
 rust_library(
@@ -59,7 +59,7 @@ crubit_cc_test(
     srcs = ["unique_ptr_test.cc"],
     deps = [
         ":unique_ptr_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -92,6 +92,6 @@ crubit_cc_test(
         ":nullable_cc_api",
         ":test_helpers",
         "//support:annotations",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
