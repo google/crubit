@@ -226,6 +226,22 @@ memoized::query_group! {
           ty: Ty<'tcx>
       ) -> Result<TokenStream>;
 
+      /// Returns the `DefId` of the `cc_std::std::SupportsNullable` trait, or `None` if the
+      /// support crate is not loaded.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:supports_nullable_trait_id
+      fn supports_nullable_trait_id(&self) -> Result<Option<DefId>>;
+
+      /// Returns the `DefId` of the `operator::Delete` trait, if present in the crate graph.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:delete_trait_id
+      fn delete_trait_id(&self) -> Option<DefId>;
+
+      /// Returns the `DefId` of the `::protobuf::Message` trait, if present in the crate graph.
+      ///
+      /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:proto_message_trait_id
+      fn proto_message_trait_id(&self) -> Option<DefId>;
+
       /// Returns true if the type implements the `::protobuf::Message` trait.
       ///
       /// Implementation: cc_bindings_from_rs/generate_bindings/format_type.rs?q=function:is_proto_message

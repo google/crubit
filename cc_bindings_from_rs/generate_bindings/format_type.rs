@@ -115,12 +115,14 @@ fn is_support_crate_item(db: &BindingsGenerator<'_>, did: DefId, name: &str) -> 
         || matches_qualified_name(db, did, &["rust_out", "cc_std", "std", name])
 }
 
+/// Implementation of `BindingsGenerator::supports_nullable_trait_id`.
+///
 /// Returns the `DefId` of the `cc_std::std::SupportsNullable` trait, or `None` if the support crate
 /// is not loaded, in which case there are no smart pointers to format.
 ///
 /// Returns an error if the support crate is loaded but does not define the trait: that means
 /// Crubit and its support library are out of sync.
-fn supports_nullable_trait(db: &BindingsGenerator<'_>) -> Result<Option<DefId>> {
+pub fn supports_nullable_trait_id(db: &BindingsGenerator<'_>) -> Result<Option<DefId>> {
     let tcx = db.tcx();
     if let Some(trait_id) = tcx
         .all_traits_including_private()
@@ -147,7 +149,7 @@ fn supports_nullable_trait(db: &BindingsGenerator<'_>) -> Result<Option<DefId>> 
 ///
 /// Under `nonnull_smart_pointers`, such a pointer is non-null unless it is wrapped in `Nullable`.
 fn is_smart_pointer<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> Result<bool> {
-    let Some(trait_id) = supports_nullable_trait(db)? else {
+    let Some(trait_id) = db.supports_nullable_trait_id()? else {
         return Ok(false);
     };
     Ok(query_compiler::does_type_implement_trait(db.tcx(), ty, trait_id, []))
@@ -159,11 +161,12 @@ fn is_nullability_wrapper(db: &BindingsGenerator<'_>, did: DefId) -> bool {
     is_support_crate_item(db, did, "Nullable") || is_support_crate_item(db, did, "NonNull")
 }
 
-/// Returns true if `ty` implements the `Delete` trait (e.g., C++ types with virtual destructors or
-/// overloaded operator delete).
-fn does_type_implement_delete<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+/// Implementation of `BindingsGenerator::delete_trait_id`.
+///
+/// Returns the `DefId` of the `operator::Delete` trait, if present in the crate graph.
+pub fn delete_trait_id(db: &BindingsGenerator<'_>) -> Option<DefId> {
     let tcx = db.tcx();
-    let delete_trait_id = tcx.all_traits_including_private().find(|&trait_id| {
+    tcx.all_traits_including_private().find(|&trait_id| {
         if tcx.item_name(trait_id).as_str() != "Delete" {
             return false;
         }
@@ -172,29 +175,40 @@ fn does_type_implement_delete<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) 
             || matches_qualified_name(db, trait_id, &["rust_out", "Delete"])
             || matches_qualified_name(db, trait_id, &["cc_std", "operator", "Delete"])
             || matches_qualified_name(db, trait_id, &["cc_std_impl", "operator", "Delete"])
-    });
-    let Some(delete_trait_id) = delete_trait_id else {
+    })
+}
+
+/// Returns true if `ty` implements the `Delete` trait (e.g., C++ types with virtual destructors or
+/// overloaded operator delete).
+fn does_type_implement_delete<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
+    let Some(delete_trait_id) = db.delete_trait_id() else {
         return false;
     };
-    query_compiler::does_type_implement_trait(tcx, ty, delete_trait_id, [])
+    query_compiler::does_type_implement_trait(db.tcx(), ty, delete_trait_id, [])
+}
+
+/// Implementation of `BindingsGenerator::proto_message_trait_id`.
+///
+/// Returns the `DefId` of the `::protobuf::Message` trait, if present in the crate graph.
+pub fn proto_message_trait_id(db: &BindingsGenerator<'_>) -> Option<DefId> {
+    let tcx = db.tcx();
+    tcx.all_traits_including_private().find(|&trait_id| {
+        // In Bazel and Cargo builds, the protobuf runtime crate name can vary
+        // (e.g. `protobuf`, `protobuf_cpp`, `protobuf_upb`, or `protobuf_runtime`).
+        // Matching `starts_with("protobuf")` ensures we match any of these variants.
+        tcx.item_name(trait_id).as_str() == "Message"
+            && tcx.crate_name(trait_id.krate).as_str().starts_with("protobuf")
+    })
 }
 
 /// Implementation of `BindingsGenerator::is_proto_message`.
 ///
 /// Returns true if `ty` implements the `::protobuf::Message` trait.
 pub fn is_proto_message<'tcx>(db: &BindingsGenerator<'tcx>, ty: Ty<'tcx>) -> bool {
-    let tcx = db.tcx();
-    let message_trait_id = tcx.all_traits_including_private().find(|&trait_id| {
-        // In Bazel and Cargo builds, the protobuf runtime crate name can vary
-        // (e.g. `protobuf`, `protobuf_cpp`, `protobuf_upb`, or `protobuf_runtime`).
-        // Matching `starts_with("protobuf")` ensures we match any of these variants.
-        tcx.item_name(trait_id).as_str() == "Message"
-            && tcx.crate_name(trait_id.krate).as_str().starts_with("protobuf")
-    });
-    let Some(message_trait_id) = message_trait_id else {
+    let Some(message_trait_id) = db.proto_message_trait_id() else {
         return false;
     };
-    query_compiler::does_type_implement_trait(tcx, ty, message_trait_id, [])
+    query_compiler::does_type_implement_trait(db.tcx(), ty, message_trait_id, [])
 }
 
 /// Returns true if `ty` is annotated with `cpp_thread_safe`.
