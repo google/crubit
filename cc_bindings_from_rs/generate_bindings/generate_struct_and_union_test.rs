@@ -2,6 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#![feature(rustc_private)]
+
 use quote::quote;
 use test_helpers::{test_format_item, test_format_item_with_features, test_generated_bindings};
 use token_stream_matchers::{
