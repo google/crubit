@@ -68,6 +68,10 @@ load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 # buildifier: disable=bzl-visibility
 load("@rules_rust//rust/private:providers.bzl", "BuildInfo", "CrateInfo", "DepInfo", "DepVariantInfo")
 load("@bazel_skylib//lib:collections.bzl", "collections")
+load(
+    "//bazel:additional_rust_srcs_for_crubit_bindings_allowlist.bzl",
+    "ADDITIONAL_RUST_SRCS_FOR_CRUBIT_BINDINGS_USERS",
+)
 load("//features:crubit_feature_hint.bzl", "CrubitFeaturesInfo")
 load("@rules_crubit//rs_bindings_from_cc/bazel_support:providers.bzl", "AdditionalRustSrcsProviderInfo", "RustBindingsFromCcInfo")
 load(
@@ -75,13 +79,11 @@ load(
     "rust_bindings_from_cc_aspect",
 )
 
-visibility([
-    # <internal link> start
-    "//cc_bindings_from_rs/...",
-    "//examples/...",
-    "//rs_bindings_from_cc/...",
-    "//support/...",
-    # <internal link> end
+# The allowlist lives next to the public entry point in //bazel,
+# which is the only loader of this file outside Crubit's implementation once
+# all users are migrated (b/315382130).
+visibility(ADDITIONAL_RUST_SRCS_FOR_CRUBIT_BINDINGS_USERS + [
+    "//bazel",
 ])
 
 def make_additional_rust_srcs_provider(
