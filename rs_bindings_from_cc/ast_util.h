@@ -20,6 +20,7 @@
 #include "clang/AST/Type.h"
 #include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/Specifiers.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace crubit {
 
@@ -33,6 +34,11 @@ bool IsClangLifetimeAnnotation(const clang::Attr& attr);
 
 // Returns true if `attr` is a Clang coroutine attribute.
 bool IsClangCoroAnnotation(const clang::Attr& attr);
+
+// Returns the name of `context` if it is a top-level namespace, looking
+// through inline namespaces (e.g. `std::__u`), otherwise std::nullopt.
+std::optional<llvm::StringRef> AsTopLevelNamespace(
+    const clang::DeclContext* context);
 
 // Returns the set of ignored attribute names.
 absl::flat_hash_set<absl::string_view> GetIgnoredAttrs(const clang::Decl* decl);

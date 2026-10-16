@@ -582,31 +582,6 @@ bool HasPrivateOrDeletedOperatorDelete(clang::CXXRecordDecl& record_decl) {
   return false;
 }
 
-// Returns the name of this DeclContext if it is a top-level namespace,
-// otherwise std::nullopt.
-std::optional<llvm::StringRef> AsTopLevelNamespace(
-    const clang::DeclContext* context) {
-  if (!context->isNamespace()) {
-    return std::nullopt;
-  }
-
-  const auto* namespace_decl = clang::cast<clang::NamespaceDecl>(context);
-  if (namespace_decl->isInline()) {
-    return AsTopLevelNamespace(namespace_decl->getParent());
-  }
-
-  if (!context->getParent()->getRedeclContext()->isTranslationUnit()) {
-    return std::nullopt;
-  }
-
-  const clang::IdentifierInfo* identifier_info =
-      namespace_decl->getIdentifier();
-  if (!identifier_info) {
-    return std::nullopt;
-  }
-  return identifier_info->getName();
-}
-
 // Checks that a ClassTemplateSpecializationDecl has template arguments of the
 // form `<T, std::std_trait_name<T>>`. If so, returns `T`.
 //

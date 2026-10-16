@@ -39,6 +39,7 @@
 #include "clang/Basic/Specifiers.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 
 namespace crubit {
@@ -57,6 +58,29 @@ bool IsFullClassTemplateSpecializationOrChild(const clang::Decl* decl) {
   }
 
   return false;
+}
+
+std::optional<llvm::StringRef> AsTopLevelNamespace(
+    const clang::DeclContext* context) {
+  if (!context->isNamespace()) {
+    return std::nullopt;
+  }
+
+  const auto* namespace_decl = clang::cast<clang::NamespaceDecl>(context);
+  if (namespace_decl->isInline()) {
+    return AsTopLevelNamespace(namespace_decl->getParent());
+  }
+
+  if (!context->getParent()->getRedeclContext()->isTranslationUnit()) {
+    return std::nullopt;
+  }
+
+  const clang::IdentifierInfo* identifier_info =
+      namespace_decl->getIdentifier();
+  if (!identifier_info) {
+    return std::nullopt;
+  }
+  return identifier_info->getName();
 }
 
 bool IsClangLifetimeAnnotation(const clang::Attr& attr) {
