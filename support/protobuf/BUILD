@@ -44,6 +44,6 @@ crubit_cc_test(
         ":rust",
         ":test_cc_proto",
         "//support:movable",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
