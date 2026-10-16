@@ -1374,8 +1374,25 @@ fn format_const_value<'tcx>(
     }
 }
 
-fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<ApiSnippets<'tcx>> {
+fn generate_const<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+    generic_args: Option<ty::GenericArgsRef<'tcx>>,
+) -> Result<ApiSnippets<'tcx>> {
+    use crate::get_generic_args::GenericClausesExt;
     let tcx = db.tcx();
+    if !tcx.generics_of(def_id).is_own_empty() {
+        bail!("Generic constants are not supported");
+    }
+    if generic_args.is_some() && tcx.trait_impl_of_assoc(def_id).is_none() {
+        #[cfg_accessible(rustc_middle::ty::GenericPredicates)]
+        let explicit_predicates = tcx.explicit_predicates_of(def_id);
+        #[cfg_accessible(rustc_middle::ty::GenericClauses)]
+        let explicit_predicates = tcx.explicit_clauses_of(def_id);
+        if !explicit_predicates.clauses().is_empty() {
+            bail!("Associated constants with their own predicates are not supported");
+        }
+    }
     // TODO: b/457843120 - Remove this workaround once we can properly support float constants.
     let unsupported_consts = [
         ["core", "f32", "INFINITY"],
@@ -1391,18 +1408,68 @@ fn generate_const<'tcx>(db: &BindingsGenerator<'tcx>, def_id: DefId) -> Result<A
             tcx.item_name(def_id).as_str()
         )
     }
-    let ty = normalize_ty(tcx, tcx.param_env(def_id), tcx.type_of(def_id).instantiate_identity());
+    let (ty, const_value) = match generic_args {
+        Some(args) => {
+            let typing_env = ty::TypingEnv::fully_monomorphized();
+            #[rustversion::before(2026-04-19)]
+            let raw_ty = tcx.type_of(def_id).instantiate(tcx, args);
+            #[rustversion::since(2026-04-19)]
+            let raw_ty = tcx.type_of(def_id).instantiate(tcx, args).skip_normalization();
+            let ty = query_compiler::try_normalize(tcx, typing_env, raw_ty).map_err(|_| {
+                anyhow!("Failed to normalize const type for {}", tcx.def_path_str(def_id))
+            })?;
+            let const_value = tcx
+                .const_eval_resolve(
+                    typing_env,
+                    rustc_middle::mir::UnevaluatedConst::new(def_id, args),
+                    tcx.def_span(def_id),
+                )
+                .map_err(|err| {
+                    anyhow!("Failed to evaluate constant `{}`: {err:?}", tcx.def_path_str(def_id))
+                })?;
+            (ty, const_value)
+        }
+        None => {
+            let ty = normalize_ty(
+                tcx,
+                tcx.param_env(def_id),
+                tcx.type_of(def_id).instantiate_identity(),
+            );
+            let const_value = tcx.const_eval_poly(def_id).map_err(|err| {
+                anyhow!("Failed to evaluate constant `{}`: {err:?}", tcx.def_path_str(def_id))
+            })?;
+            (ty, const_value)
+        }
+    };
     let rust_type = ty;
     let cc_type = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
     let cc_name = format_cc_ident(db, tcx.item_name(def_id).as_str())?;
 
-    let const_value: ConstValue = tcx.const_eval_poly(def_id).unwrap();
     let cc_value = format_const_value(db, const_value, ty)?;
 
     let is_self_referential = tcx.inherent_impl_of_assoc(def_id).is_some_and(|impl_id| {
-        let impl_ty =
-            normalize_ty(tcx, tcx.param_env(impl_id), tcx.type_of(impl_id).instantiate_identity());
-        impl_ty == ty
+        let impl_ty = match generic_args {
+            Some(args) => {
+                #[rustversion::before(2026-04-19)]
+                let raw_impl_ty = tcx.type_of(impl_id).instantiate(tcx, args);
+                #[rustversion::since(2026-04-19)]
+                let raw_impl_ty = tcx.type_of(impl_id).instantiate(tcx, args).skip_normalization();
+                query_compiler::try_normalize(
+                    tcx,
+                    ty::TypingEnv::fully_monomorphized(),
+                    raw_impl_ty,
+                )
+                .ok()
+            }
+            None => Some(normalize_ty(
+                tcx,
+                tcx.param_env(impl_id),
+                tcx.type_of(impl_id).instantiate_identity(),
+            )),
+        };
+        impl_ty.is_some_and(|impl_ty| {
+            tcx.erase_and_anonymize_regions(impl_ty) == tcx.erase_and_anonymize_regions(ty)
+        })
     });
 
     let cc_type_tokens = cc_type.tokens.clone();
@@ -2276,7 +2343,7 @@ fn generate_item_impl<'tcx>(
         DefKind::Fn => db.generate_function(def_id, None, None, StaticMethodMode::Infer).map(Some),
         DefKind::TyAlias => generate_type_alias(db, def_id, tcx.item_name(def_id).as_str())
             .map(|snippets| Some(snippets.into_main_api())),
-        DefKind::Const { .. } => generate_const(db, def_id).map(Some),
+        DefKind::Const => generate_const(db, def_id, None).map(Some),
         DefKind::Trait => generate_trait(db, def_id).map(Some),
         DefKind::Impl { .. } => Ok(None), // Handled by `generate_adt`
         DefKind::Mod => Ok(None),         // Handled by `generate_crate`

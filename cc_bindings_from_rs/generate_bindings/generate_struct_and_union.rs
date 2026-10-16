@@ -384,7 +384,7 @@ pub(crate) fn generate_associated_item<'tcx>(
             );
             })
         }
-        ty::AssocKind::Const { .. } => generate_const(db, def_id),
+        ty::AssocKind::Const { .. } => generate_const(db, def_id, generic_args),
         // TODO: b/405132277 - Rust does not support inherent associated types, but should support
         // associated types when adding traits.
         ty::AssocKind::Type { .. } => {
