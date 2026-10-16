@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "support/annotations_internal.h"
+
 namespace crubit::internal {
 
 struct CheckFail {
