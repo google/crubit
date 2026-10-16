@@ -39,7 +39,7 @@
 ## Rust Bindings for C++ Libraries
 
 -   [Overview](./cpp/index.md)
--   [Building the tool](./cpp/building.md)
+-   [Building](./cpp/building.md)
 -   [Cookbook](./cpp/cookbook.md)
 -   [Best Practices](./cpp/best_practices.md)
 -   [Customizing](./cpp/customizing.md)
@@ -60,8 +60,12 @@
 
 ## Integration notes
 
--   [Cargo build](./overview/cargo_build.md)
 -   [Build System Integrations](./overview/build_systems.md)
+    -   [Bazel](./overview/bazel.md)
+    -   [CMake](./overview/cmake.md)
+-   [Cargo build](./overview/cargo_build.md)
+    -   [Protobuf in the Cargo build](./overview/cargo_build_protobuf.md)
+-   [Limitations](./overview/limits.md)
 -   [Required unstable features of Rust](./overview/unstable_features.md)
 
 ## Design

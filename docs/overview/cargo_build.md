@@ -9,6 +9,18 @@ freshness: { owner: 'lukasza' reviewed: '2025-12-19' }
 
 [TOC]
 
+This page explains how to build Crubit's own tools with Cargo. To use Crubit in
+your project, start with [Build System Integrations](build_systems.md); the
+Bazel and CMake integrations build the tools for you.
+
+`cc_bindings_from_rs` uses the Rust compiler's internal APIs (`rustc_private`),
+so it needs a toolchain with the `rustc-dev` component, and it must be built by
+the same `rustc` that compiles the crates it generates bindings for. In a
+Crubit checkout, `rust-toolchain.toml` selects a nightly toolchain with
+`rustc-dev` for you. Stable toolchains work too, with `rustc-dev` installed and
+`RUSTC_BOOTSTRAP=1` set. See
+[Toolchain requirements](build_systems.md#toolchain-requirements).
+
 ## cc_bindings_from_rs
 
 `cc_bindings_from_rs` can be built by invoking `cargo` as follows:

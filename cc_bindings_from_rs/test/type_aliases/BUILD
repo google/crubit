@@ -57,6 +57,6 @@ crubit_cc_test(
     ],
     deps = [
         ":type_aliases_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )

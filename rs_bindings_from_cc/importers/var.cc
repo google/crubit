@@ -26,6 +26,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/Expr.h"
 #include "clang/AST/TypeBase.h"
 #include "clang/Basic/LLVM.h"
 #include "llvm/Support/Casting.h"
@@ -61,6 +62,51 @@ uint64_t CountInitializedElements(const clang::APValue& value,
   return count;
 }
 
+// Returns true if `type` is plain `char` (not `signed char` or
+// `unsigned char`), which Crubit maps to `ffi_11::c_char`.
+bool IsPlainChar(clang::QualType type) {
+  const auto* builtin = type->getAs<clang::BuiltinType>();
+  if (builtin == nullptr) {
+    return false;
+  }
+  switch (builtin->getKind()) {
+    // Plain `char`, on targets where it is signed or unsigned, respectively.
+    case clang::BuiltinType::Char_S:
+    case clang::BuiltinType::Char_U:
+      return true;
+    // `signed char` and `unsigned char`.
+    case clang::BuiltinType::SChar:
+    case clang::BuiltinType::UChar:
+    default:
+      return false;
+  }
+}
+
+// If `init` initializes a one-dimensional `char` array of the given `size` by
+// a narrow string literal which leaves room for its NULL terminator, returns
+// the string literal. Otherwise, returns null.
+const clang::StringLiteral* GetStringLiteralInit(const clang::Expr* init,
+                                                 uint64_t size) {
+  if (init == nullptr) {
+    return nullptr;
+  }
+  const clang::Expr* expr = init->IgnoreImplicit()->IgnoreParens();
+  // `char x[] = {"abc"};` is equivalent to `char x[] = "abc";`.
+  if (const auto* init_list = llvm::dyn_cast<clang::InitListExpr>(expr);
+      init_list != nullptr && init_list->isStringLiteralInit()) {
+    expr = init_list->getInit(0)->IgnoreImplicit()->IgnoreParens();
+  }
+  const auto* string_literal = llvm::dyn_cast<clang::StringLiteral>(expr);
+  // In C++, the string literal and its NULL terminator always fit, but in C the
+  // NUL terminator may be dropped (`char x[2] = "ab";`). Such an array is
+  // treated as individual elements instead.
+  if (string_literal == nullptr || string_literal->getCharByteWidth() != 1 ||
+      string_literal->getLength() >= size) {
+    return nullptr;
+  }
+  return string_literal;
+}
+
 // Converts `value`, an integer or boolean array element, to `out`.
 absl::Status ConvertIntegerElement(const clang::APValue& value,
                                    ir_proto::IntegerConstant& out) {
@@ -77,17 +123,23 @@ absl::Status ConvertIntegerElement(const clang::APValue& value,
 // Converts `value`, a (possibly nested) array with the given `dimensions`
 // (outermost first), to `out`.
 //
+// `char_array_init` is the initializer expression of a plain `char` array, or
+// null for other arrays. It is only used to find rows initialized by string
+// literals.
+//
 // Only the explicitly initialized elements are recorded individually. The
 // remaining elements are value-initialized, and their value is recorded as the
 // filler.
 absl::Status ConvertArrayValue(const clang::APValue& value,
                                absl::Span<const uint64_t> dimensions,
+                               const clang::Expr* char_array_init,
                                ir_proto::ArrayValue& out) {
   CHECK(!dimensions.empty()) << "must be called with at least one dimension";
+  const uint64_t size = dimensions[0];
   CHECK(value.isArray()) << "`value` must be the evaluated value of an array";
-  CHECK_EQ(value.getArraySize(), dimensions[0])
+  CHECK_EQ(value.getArraySize(), size)
       << "`dimensions` must come from the type `value` was evaluated from";
-  out.set_length(static_cast<int32_t>(dimensions[0]));
+  out.set_length(static_cast<int32_t>(size));
   // "Filler" in Clang means the value of the trailing elements that were not
   // explicitly initialized, and are therefore value-initialized. For example,
   // `int x[4] = {1, 2};` has two initialized elements and a filler of `0`.
@@ -96,16 +148,34 @@ absl::Status ConvertArrayValue(const clang::APValue& value,
       value.hasArrayFiller() ? &value.getArrayFiller() : nullptr;
 
   if (dimensions.size() > 1) {
+    const clang::InitListExpr* char_array_init_list =
+        char_array_init == nullptr
+            ? nullptr
+            : llvm::dyn_cast<clang::InitListExpr>(
+                  char_array_init->IgnoreImplicit()->IgnoreParens());
     auto* elements = out.mutable_array_elements();
     for (unsigned i = 0; i < num_initialized; ++i) {
-      CRUBIT_RETURN_IF_ERROR(ConvertArrayValue(value.getArrayInitializedElt(i),
-                                               dimensions.subspan(1),
-                                               *elements->add_elements()));
+      const clang::Expr* element_char_array_init =
+          char_array_init_list != nullptr &&
+                  i < char_array_init_list->getNumInits()
+              ? char_array_init_list->getInit(i)
+              : nullptr;
+      CRUBIT_RETURN_IF_ERROR(ConvertArrayValue(
+          value.getArrayInitializedElt(i), dimensions.subspan(1),
+          element_char_array_init, *elements->add_elements()));
     }
     if (filler != nullptr) {
+      // The filler has no initializer expression of its own.
       CRUBIT_RETURN_IF_ERROR(ConvertArrayValue(*filler, dimensions.subspan(1),
+                                               /*char_array_init=*/nullptr,
                                                *elements->mutable_filler()));
     }
+    return absl::OkStatus();
+  }
+
+  if (const clang::StringLiteral* string_literal =
+          GetStringLiteralInit(char_array_init, size)) {
+    out.set_string_literal(string_literal->getBytes().str());
     return absl::OkStatus();
   }
 
@@ -353,12 +423,19 @@ std::unique_ptr<ir_proto::Item> VarDeclImporter::ImportConstant(
           {FormattedError::FromStatus(std::move(integer_constant.status()))});
     }
     integer_constant->WriteToProto(*constant->mutable_value());
-  } else if (absl::Status status = ConvertArrayValue(
-                 *value, dimensions, *constant->mutable_array_value());
-             !status.ok()) {
-    return ictx_.ImportUnsupportedItem(
-        *var_decl, std::nullopt,
-        {FormattedError::FromStatus(std::move(status))});
+  } else {
+    // String-literal rows are only recorded for plain `char` arrays, which
+    // Crubit maps to `ffi_11::c_char`.
+    const clang::Expr* char_array_init =
+        IsPlainChar(value_type) ? var_decl->getInit() : nullptr;
+    if (absl::Status status =
+            ConvertArrayValue(*value, dimensions, char_array_init,
+                              *constant->mutable_array_value());
+        !status.ok()) {
+      return ictx_.ImportUnsupportedItem(
+          *var_decl, std::nullopt,
+          {FormattedError::FromStatus(std::move(status))});
+    }
   }
 
   CcType type = ictx_.ConvertQualType(value_type, nullptr, /*nullable=*/true,

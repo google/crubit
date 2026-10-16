@@ -2,23 +2,94 @@
 <!-- Exceptions. See /LICENSE for license information. -->
 <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
 
-# Building the tool
+# Building
 
-> [!WARNING] Building `rs_bindings_from_cc` from source is experimental. Further
-> support is coming soon.
+This page is about calling **C++ from Rust** with `rust_api_from_cpp`. If you
+want to call Rust from C++, see [C++ bindings for Rust
+libraries](../rust/building.md) instead.
 
-## Cargo
+## Using `rust_api_from_cpp` in your build
 
-### Prerequisites
+`rust_api_from_cpp` is available in **Bazel**, through the `rules_crubit`
+module. See [Bazel](../overview/bazel.md#rust_api_from_cpp) for setup
+instructions. Bazel builds the `rs_bindings_from_cc` tool for you, including
+the LLVM libraries it depends on, so there is nothing else to install.
 
-*   Requires LLVM and Clang libraries to be built and installed.
-    *   They must be built with support for compression (zlib), which is the
+<!-- TODO(b/574505910): Link to a rust_api_from_cpp example and CI job once
+examples/build_systems/bazel covers it. -->
+
+CMake and Cargo integrations for `rust_api_from_cpp` are planned
+<!-- TODO(b/539627008) --> but not available yet. See
+[Build System Integrations](../overview/build_systems.md) for the current
+status of every build system.
+
+## Building `rs_bindings_from_cc` yourself
+
+If you're integrating Crubit into another build system, you can build the
+`rs_bindings_from_cc` binary yourself and run it the way the
+[Bazel rules](https://github.com/google/crubit/tree/main/rs_bindings_from_cc/bazel_support)
+do.
+
+`rs_bindings_from_cc` is a Rust program that links against Clang's C++
+libraries, plus Abseil and Protobuf. It is built against a specific
+`llvm-project` commit, pinned in `MODULE.bazel` and updated regularly by CI.
+Open-source CI covers Linux x86_64.
+
+There are three ways to build it, from most to least tested.
+
+### Bazel
+
+This is how Crubit's CI builds the tool. Bazel downloads the Rust and Clang
+toolchains, and it builds LLVM from source at the commit pinned in
+[`MODULE.bazel`](https://github.com/google/crubit/blob/main/MODULE.bazel).
+Because it builds LLVM, the first build takes a long time.
+
+Prerequisites: `bazelisk`, `python3`, and the development headers for zlib,
+libxml2, and zstd in `/usr/include`. On Debian or Ubuntu, install them with
+`apt install zlib1g-dev libxml2-dev libzstd-dev`.
+
+```sh
+git clone https://github.com/google/crubit.git
+cd crubit
+bazelisk build //rs_bindings_from_cc:rs_bindings_from_cc_main
+```
+
+To build against a different `llvm-project` commit, set the
+`CRUBIT_LLVM_COMMIT` environment variable to the full commit SHA.
+
+### Cargo, with C++ dependencies from Bazel
+
+CI uses this setup to check that the tool builds with Cargo. Bazel builds the
+C++ dependencies. Then a helper script packages them for Cargo:
+
+```sh
+bazelisk build --remote_download_outputs=all \
+    //rs_bindings_from_cc:rs_bindings_from_cc_main @protobuf//:protoc
+python3 cargo/build/setup_bazel_env.py
+source target/bazel_outputs/bazel-env.sh
+cargo build --locked -p rs_bindings_from_cc
+```
+
+See [Cargo build of Crubit](../overview/cargo_build.md#rs_bindings_from_cc) for
+details.
+
+### Cargo, with your own LLVM, Abseil, and Protobuf
+
+This option is for packagers and for projects that already build LLVM, such as
+Chromium. CI doesn't test it.
+
+#### Prerequisites
+
+*   LLVM and Clang libraries, built and installed from the `llvm-project`
+    commit pinned in `MODULE.bazel` (or one close to it).
+    *   They must be built with compression support (zlib), which is the
         default build config.
-*   Requires Abseil libraries to be built and installed.
-*   Requires Protobuf libraries and protoc compiler (v27.1+) to be installed.
-*   Requires zlib (e.g. libz.so) to be available in the system include and lib
-    paths.
-*   An up-to-date stable Rust toolchain.
+*   Abseil libraries, built and installed.
+*   Protobuf libraries and the `protoc` compiler (v27.1 or later), installed.
+    Crubit's CI uses Protobuf 36.1.
+*   zlib (for example, `libz.so`) in the system include and lib paths.
+*   A recent Rust toolchain. In a Crubit checkout, `rustup` automatically
+    selects the nightly toolchain from `rust-toolchain.toml`.
 
 Linux-specific setup:
 
@@ -38,7 +109,7 @@ export RUSTFLAGS="$RUSTFLAGS -Clink-arg=-fuse-ld=lld"
 # export RUSTFLAGS="$RUSTFLAGS -Clink-arg=$SYSROOT_FLAG"
 ```
 
-MacOS-specific setup:
+macOS-specific setup (untested):
 
 ```sh
 export CC=clang
@@ -81,7 +152,13 @@ export CXXFLAGS="$CXXFLAGS /D_CRT_SECURE_NO_DEPRECATE"
 Run the build step via cargo:
 
 ```sh
-# Paths for Crubit's cargo to use.
+# Pre-generate the C++ headers for Crubit's own .proto files. This avoids
+# races during the parallel Cargo build.
+python3 cargo/build/generate_proto_headers.py \
+    --protoc=/path/to/protoc --out_dir=/path/to/generated_headers
+export PROTOC=/path/to/protoc
+
+# Paths for Crubit's cargo to use. Most accept a comma-separated list.
 ## This path contains clang/ and llvm/ dirs with their respective headers.
 export CLANG_INCLUDE_PATH=/path/to/llvm/and/clang/headers
 ## This path contains libLLVM*.a and libclang*.a.  On Windows it may also hold the
@@ -92,26 +169,26 @@ export CLANG_LIB_STATIC_PATH=/path/to/llvm/and/clang/libs
 export ABSL_INCLUDE_PATH=/path/to/absl/include/dir
 ## This path contains libabsl_*
 export ABSL_LIB_STATIC_PATH=/path/to/absl/libs
-## This path contains google/protobuf/ dir with all the includes.
-export PROTOBUF_INCLUDE_PATH=/path/to/protobuf/include/dir
+## These paths contain google/protobuf/ dir with all the includes, and the
+## headers generated above.
+export PROTOBUF_INCLUDE_PATH=/path/to/protobuf/include/dir,/path/to/generated_headers
 ## This path contains libprotobuf.a and libutf8_validity.a.  Other archives that a
 ## protobuf install tree holds (libutf8_range.a, libprotobuf-lite.a, libprotoc.a,
 ## libupb.a) are ignored; the first two would collide with the ones above.
 export PROTOBUF_LIB_STATIC_PATH=/path/to/protobuf/libs
 
-cargo build --bin rs_bindings_from_cc
+# Tell Crubit which LLVM it is compiled against, as the commit date (YYYYMMDD) of
+# your llvm-project checkout.
+LLVM_DATE=$(python3 cargo/build/get_llvm_commit_date.py <llvm_commit_sha>)
+export CXXFLAGS="$CXXFLAGS -DCRUBIT_LLVM_DEV_DATE=${LLVM_DATE}"
+
+cargo build --locked --release -p rs_bindings_from_cc
 ```
 
-## Bazel
+[Cargo build of Crubit](../overview/cargo_build.md#custom-build-systems-chromium-android-or-other-projects)
+explains each of these variables in more detail.
 
-```sh
-apt install clang lld bazel
-git clone git@github.com:google/crubit.git
-cd crubit
-bazel build --linkopt=-fuse-ld=/usr/bin/ld.lld //rs_bindings_from_cc:rs_bindings_from_cc_impl
-```
-
-### Using a prebuilt LLVM tree
+If you need to build LLVM and Clang yourself, here is an example:
 
 ```sh
 git clone https://github.com/llvm/llvm-project
@@ -120,6 +197,4 @@ CC=clang CXX=clang++ cmake -S llvm -B build -DLLVM_ENABLE_PROJECTS='clang' -DCMA
 cmake --build build -j
 # wait...
 cmake --install build
-cd ../crubit
-LLVM_INSTALL_PATH=../llvm-project/install bazel build //rs_bindings_from_cc:rs_bindings_from_cc_impl
 ```
