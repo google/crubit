@@ -22,6 +22,9 @@ rust_static_library("ffi_11") {
     "src/lib.rs",
     "src/newtype.rs",
   ]
+  features = [
+    "crubit",
+  ]
   allow_unsafe = true
   no_clippy = true
 }
