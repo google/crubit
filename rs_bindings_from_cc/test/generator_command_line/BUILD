@@ -70,9 +70,15 @@ crubit_rust_test(
 )
 
 cc_library(
+    name = "uses_includes",
+    hdrs = ["subdir_for_includes/header_from_includes.h"],
+    includes = ["subdir_for_includes"],
+)
+
+cc_library(
     name = "consumes_header_from_includes",
     hdrs = ["consumes_header_from_includes.h"],
-    deps = ["//nowhere/experimentstargets_for_testing:uses_includes"],
+    deps = [":uses_includes"],
 )
 
 crubit_rust_test(
@@ -82,9 +88,19 @@ crubit_rust_test(
 )
 
 cc_library(
+    name = "uses_include_prefix",
+    hdrs = [
+        "subdir_for_includes/also_uses_include_prefix.h",
+        "subdir_for_includes/uses_include_prefix.h",
+    ],
+    include_prefix = "using_include_prefix",
+    strip_include_prefix = "subdir_for_includes",
+)
+
+cc_library(
     name = "consumes_header_with_include_prefix",
     hdrs = ["consumes_header_with_include_prefix.h"],
-    deps = ["//nowhere/experimentstargets_for_testing:uses_include_prefix"],
+    deps = [":uses_include_prefix"],
 )
 
 crubit_rust_test(

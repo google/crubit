@@ -51,13 +51,14 @@ crubit_cc_test(
     platforms = [
         "android",
         "ios",
+        "macos",
     ],
     deps = [
         ":vec_cc_api",
         "//support/rs_std:rs_alloc",
         "//support/rs_std:slice_ref",
         "//support/rs_std:vec",
-        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/types:span",
+        "@googletest//:gtest_main",
     ],
 )

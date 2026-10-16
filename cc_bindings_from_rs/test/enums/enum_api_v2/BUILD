@@ -35,6 +35,6 @@ crubit_cc_test(
     deps = [
         ":enum_api_v2_cc_api",
         "//support/rs_std:enum",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
