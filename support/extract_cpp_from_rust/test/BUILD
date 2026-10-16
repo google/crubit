@@ -1,4 +1,4 @@
-load("@bazel_tools//tools/build_defs/build_test:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("@rules_rust//rust:defs.bzl", "rust_test")
 load("//bazel:cpp_api_from_rust.bzl", "cpp_api_from_rust")
@@ -25,7 +25,7 @@ cc_test(
     ],
     deps = [
         ":library_with_embedded_cpp_extracted_cc",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -70,6 +70,6 @@ crubit_cc_test(
     ],
     deps = [
         ":library_with_embedded_cpp_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
