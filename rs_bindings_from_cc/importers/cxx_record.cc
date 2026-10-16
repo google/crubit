@@ -63,10 +63,10 @@ namespace {
 //
 // `#pragma pack(N)` does not attach a `PackedAttr`; instead, Sema attaches an
 // implicit `MaxFieldAlignmentAttr`. Like `packed`, this can produce layouts
-// (e.g. under-aligned fields) that cannot be expressed with `#[repr(C)]`, so
-// such records must be treated like packed records. A `#pragma pack(N)` that
-// does not actually lower any alignment does not affect the layout and is
-// ignored.
+// (e.g. under-aligned fields) that cannot be expressed with standard
+// `#[repr(C)]`, so such records must be treated like packed records. A
+// `#pragma pack(N)` that does not actually lower any alignment does not affect
+// the layout and is ignored.
 bool HasLayoutReducedByPragmaPack(const clang::ASTContext& ctx,
                                   const clang::RecordDecl& record_decl) {
   const auto* max_field_alignment =
@@ -91,6 +91,29 @@ bool HasLayoutReducedByPragmaPack(const clang::ASTContext& ctx,
     }
   }
   return false;
+}
+
+// Returns the packing alignment (in bytes) if `record_decl` has packed layout.
+//
+// In C++, packing can come from:
+// 1. `__attribute__((packed))` on the record: packs all fields with
+// alignment 1.
+// 2. `#pragma pack(N)` (represented by `MaxFieldAlignmentAttr`).
+//
+// Returns std::nullopt if the record is not packed.
+std::optional<uint64_t> GetPack(const clang::ASTContext& ctx,
+                                const clang::RecordDecl& record_decl) {
+  if (crubit::HasAttr<clang::PackedAttr>(&record_decl)) {
+    return 1;
+  }
+  const auto* max_field_alignment =
+      record_decl.getAttr<clang::MaxFieldAlignmentAttr>();
+  if (max_field_alignment != nullptr) {
+    if (HasLayoutReducedByPragmaPack(ctx, record_decl)) {
+      return max_field_alignment->getAlignment() / 8;
+    }
+  }
+  return std::nullopt;
 }
 
 // Returns true if the given declaration is publicly accessible, i.e. if it and
@@ -1096,7 +1119,9 @@ bool IsKnownAttr(const clang::Attr& attr) {
          clang::isa<clang::ScopedLockableAttr>(attr) ||
          clang::isa<clang::CapabilityAttr>(attr) ||
          clang::isa<clang::ReentrantCapabilityAttr>(attr) ||
-         clang::isa<clang::UnusedAttr>(attr);
+         clang::isa<clang::UnusedAttr>(attr) ||
+         clang::isa<clang::PackedAttr>(attr) ||
+         clang::isa<clang::MaxFieldAlignmentAttr>(attr);
 }
 
 static ir_proto::StatusOrOptionalString ToFlatProto(
@@ -1413,14 +1438,28 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
         FormattedError::Static("Dependent records are not supported"));
   }
 
-  if (crubit::HasAttr<clang::PackedAttr>(record_decl) ||
+  if (record_decl->isCompleteDefinition() &&
       std::any_of(record_decl->field_begin(), record_decl->field_end(),
                   [](const clang::FieldDecl* field_decl) {
                     return crubit::HasAttr<clang::PackedAttr>(field_decl);
-                  }) ||
-      HasLayoutReducedByPragmaPack(ictx_.ctx_, *record_decl)) {
+                  })) {
     return unsupported(
-        FormattedError::Static("Records with packed layout are not supported"));
+        FormattedError::Static("Records with packed fields are not supported"));
+  }
+
+  auto pack = GetPack(ictx_.ctx_, *record_decl);
+  if (pack.has_value()) {
+    if (const auto* aligned = record_decl->getAttr<clang::AlignedAttr>();
+        aligned != nullptr) {
+      uint64_t align_bytes =
+          ictx_.ctx_.toCharUnitsFromBits(aligned->getAlignment(ictx_.ctx_))
+              .getQuantity();
+      if (align_bytes > *pack) {
+        return unsupported(FormattedError::Static(
+            "Records with packed layout and explicit alignment greater than "
+            "packed alignment are not supported"));
+      }
+    }
   }
 
   ictx_.MarkAsSuccessfullyImported(*record_decl);
@@ -1590,6 +1629,9 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
   record->mutable_size_align()->set_size(layout.getSize().getQuantity());
   record->mutable_size_align()->set_alignment(
       layout.getAlignment().getQuantity());
+  if (pack.has_value()) {
+    record->set_pack(*pack);
+  }
   trait_derives->WriteToProto(*record->mutable_trait_derives());
   record->set_is_derived_class(is_derived_class);
   record->set_override_alignment(override_alignment);
@@ -1644,6 +1686,11 @@ std::unique_ptr<ir_proto::Item> CXXRecordDeclImporter::Import(
       int64_t alignment =
           ictx_.ctx_.toCharUnitsFromBits(aligned->getAlignment(ictx_.ctx_))
               .getQuantity();
+      if (pack.has_value() && static_cast<uint64_t>(alignment) > *pack) {
+        return unsupported(FormattedError::Static(
+            "Records with packed layout and explicit alignment greater than "
+            "packed alignment are not supported"));
+      }
       record->mutable_size_align()->set_alignment(alignment);
       record->set_override_alignment(true);
       // If it has alignment, update the `record->size` to the aligned
