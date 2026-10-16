@@ -84,7 +84,7 @@ crubit_cc_test(
     ],
     deps = [
         ":into_iterator_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -95,6 +95,6 @@ crubit_cc_test(
     copts = ["-DCRUBIT_ITERATOR_ITEM_REFERENCES"],
     deps = [
         ":into_iterator_references_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )

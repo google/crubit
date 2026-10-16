@@ -17,8 +17,10 @@ unsafe impl bridge_rust::CrubitAbi for TypeBAbi {
 
     const SIZE: usize = 4;
 
-    fn encode(self, value: Self::Value, encoder: &mut bridge_rust::Encoder) {
-        bridge_rust::transmute_abi::<i32>().encode(value.y, encoder);
+    unsafe fn encode(self, value: Self::Value, encoder: &mut bridge_rust::Encoder) {
+        unsafe {
+            bridge_rust::transmute_abi::<i32>().encode(value.y, encoder);
+        }
     }
 
     unsafe fn decode(self, decoder: &mut bridge_rust::Decoder) -> Self::Value {

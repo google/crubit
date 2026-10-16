@@ -23,15 +23,18 @@ where
     const SIZE: usize = core::mem::size_of::<bool>()
         + if LeftAbi::SIZE > RightAbi::SIZE { LeftAbi::SIZE } else { RightAbi::SIZE };
 
-    fn encode(self, value: Self::Value, encoder: &mut Encoder) {
-        match value {
-            Either::Left(inner) => {
-                transmute_abi().encode(true, encoder);
-                self.0.encode(inner, encoder);
-            }
-            Either::Right(inner) => {
-                transmute_abi().encode(false, encoder);
-                self.1.encode(inner, encoder);
+    unsafe fn encode(self, value: Self::Value, encoder: &mut Encoder) {
+        // SAFETY: The caller guarantees that `encoder` has at least `Self::SIZE` bytes remaining.
+        unsafe {
+            match value {
+                Either::Left(inner) => {
+                    transmute_abi().encode(true, encoder);
+                    self.0.encode(inner, encoder);
+                }
+                Either::Right(inner) => {
+                    transmute_abi().encode(false, encoder);
+                    self.1.encode(inner, encoder);
+                }
             }
         }
     }
