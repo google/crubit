@@ -2204,6 +2204,157 @@ fn test_format_item_enum_api_v2_single() {
     );
 }
 
+/// A niche-encoded enum omits `__crubit_tag` on the untagged variant and writes consecutive niche
+/// values on the other variants.
+#[test]
+fn test_format_item_enum_api_v2_niche() {
+    let test_src = r#"
+        #[derive(Clone, Copy)]
+        pub enum Command {
+            SetFlag(bool),
+            Start,
+            Stop,
+        }
+    "#;
+    test_format_item_with_features(
+        test_src,
+        "Command",
+        enum_api_v2_features(),
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    ...
+                    using Discriminant = ::std::uint8_t;
+                    struct SetFlag : public ::crubit::internal::Variant<
+                        SetFlag, ::rust_out::Command, 0> {
+                        ...
+                        SetFlag& operator=(SetFlag&&) = default;
+                        public:
+                        bool __field0;
+                    };
+                    struct Start : public ::crubit::internal::Variant<
+                        Start, ::rust_out::Command, 1> {
+                        ...
+                        Start& operator=(Start&&) = default;
+                        [[maybe_unused]] ::std::uint8_t __crubit_tag = 2;
+                    };
+                    struct Stop : public ::crubit::internal::Variant<
+                        Stop, ::rust_out::Command, 2> {
+                        ...
+                        Stop& operator=(Stop&&) = default;
+                        [[maybe_unused]] ::std::uint8_t __crubit_tag = 3;
+                    };
+                    ...
+                    ::crubit::internal::VariadicUnionStorage<
+                        ::crubit::internal::tag_encoding::Niche<
+                            ::std::uint8_t, 0, 0, 1, 2, 2>,
+                        SetFlag, Start, Stop> storage_;
+                    ...
+                }
+            );
+        },
+    );
+}
+
+/// Pointer-niched enums (like `Option<&T>`) use a pointer-sized unsigned integer for the tag.
+#[test]
+fn test_format_item_enum_api_v2_niche_pointer() {
+    let test_src = r#"
+        #[derive(Clone, Copy)]
+        pub enum MaybeRef {
+            None,
+            Some(&'static i32),
+        }
+    "#;
+    test_format_item_with_features(
+        test_src,
+        "MaybeRef",
+        enum_api_v2_features(),
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    ...
+                    using Discriminant = ::std::uint64_t;
+                    struct None : public ::crubit::internal::Variant<
+                        None, ::rust_out::MaybeRef, 0> {
+                        ...
+                        None& operator=(None&&) = default;
+                        [[maybe_unused]] ::std::uint64_t __crubit_tag = 0;
+                    };
+                    struct Some : public ::crubit::internal::Variant<
+                        Some, ::rust_out::MaybeRef, 1> {
+                        ...
+                        Some& operator=(Some&&) = default;
+                        public:
+                        ::std::int32_t const* $static crubit_nonnull __field0;
+                    };
+                    ...
+                    ::crubit::internal::VariadicUnionStorage<
+                        ::crubit::internal::tag_encoding::Niche<
+                            ::std::uint64_t, 0, 1, 0, 0, 0>,
+                        None, Some> storage_;
+                    ...
+                }
+            );
+        },
+    );
+}
+
+/// When the niche sits at a non-zero offset inside the untagged variant, the tagged variants pad
+/// up to that offset before writing `__crubit_tag`.
+#[test]
+fn test_format_item_enum_api_v2_niche_nonzero_offset() {
+    let test_src = r#"
+        #[derive(Clone, Copy)]
+        pub enum PaddedNiche {
+            Untagged { a: u16, b: u8, flag: bool },
+            Other,
+        }
+    "#;
+    test_format_item_with_features(
+        test_src,
+        "PaddedNiche",
+        enum_api_v2_features(),
+        /* with_kythe_annotations= */ false,
+        |result| {
+            let result = result.unwrap().unwrap();
+            assert_cc_matches!(
+                result.main_api.tokens,
+                quote! {
+                    ...
+                    struct Untagged : public ::crubit::internal::Variant<
+                        Untagged, ::rust_out::PaddedNiche, 0> {
+                        ...
+                        public:
+                        ::std::uint16_t a;
+                        ::std::uint8_t b;
+                        bool flag;
+                    };
+                    struct Other : public ::crubit::internal::Variant<
+                        Other, ::rust_out::PaddedNiche, 1> {
+                        ...
+                        Other& operator=(Other&&) = default;
+                        [[maybe_unused]] unsigned char __crubit_padding0[3] = {};
+                        [[maybe_unused]] ::std::uint8_t __crubit_tag = 2;
+                    };
+                    ...
+                    ::crubit::internal::VariadicUnionStorage<
+                        ::crubit::internal::tag_encoding::Niche<
+                            ::std::uint8_t, 3, 0, 1, 1, 2>,
+                        Untagged, Other> storage_;
+                    ...
+                }
+            );
+        },
+    );
+}
+
 /// `#[non_exhaustive]` only restricts exhaustive matching, which C++ can't do anyway (`rs::get_if`
 /// returns null for any other variant), so such enums still get `enum_api_v2` bindings.
 #[test]
@@ -2280,12 +2431,6 @@ fn test_format_item_enum_api_v2_fallback() {
             "NotCopy",
             "Not using the `enum_api_v2` bindings for this enum: Only `Copy` enums are supported \
              so far",
-        ),
-        (
-            "#[derive(Clone, Copy)] pub enum Niche<'a> { A, B(&'a i32) }",
-            "Niche",
-            "Not using the `enum_api_v2` bindings for this enum: Niche-encoded enums are not \
-             supported yet",
         ),
         (
             "#[derive(Clone, Copy)] pub enum Collides { Discriminant, B(i32) }",

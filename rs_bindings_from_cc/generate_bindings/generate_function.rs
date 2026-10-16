@@ -1459,6 +1459,15 @@ fn adjust_param_types_for_trait_impl<'a>(
     ParamValueAdjustments { clone_prefixes, clone_suffixes }
 }
 
+/// Returns whether a getter returning `return_type` from a field of type `field_type` can be
+/// emitted directly in Rust as a pointer read at the field offset without a C++ thunk.
+fn can_use_thunkless_getter(field_type: &RsTypeKind, return_type: &RsTypeKind) -> bool {
+    field_type.unalias() == return_type.unalias()
+        && field_type.is_layout_compatible()
+        && field_type.implements_copy()
+        && field_type.is_unpin()
+}
+
 #[allow(clippy::too_many_arguments)]
 fn generate_func_body<'a>(
     db: &BindingsGenerator<'a>,
@@ -1497,14 +1506,13 @@ fn generate_func_body<'a>(
         .contains(crubit_feature::CrubitFeature::ThunklessAccessors)
     {
         if let Some(MemberFuncSemantic::Getter(getter)) = func.semantic()
-            && let (Ok(field_type @ RsTypeKind::Primitive(_)), RsTypeKind::Primitive(_)) =
-                (db.rs_type_kind(getter.type_.clone()), return_type)
+            && let Ok(field_type) = db.rs_type_kind(getter.type_.clone())
+            && can_use_thunkless_getter(&field_type, return_type)
         {
             let self_arg = &thunk_args[0];
             let offset_bytes = syn::Index::from(getter.offset / 8);
-            let field_type_tokens = field_type.to_token_stream(db);
             let body = quote! {
-                (*((&*#self_arg as *const _ as *const u8).add(#offset_bytes) as *const #field_type_tokens)) as #return_type_or_self
+                *((&*#self_arg as *const _ as *const u8).add(#offset_bytes) as *const #return_type_or_self)
             };
             return Ok(quote! {
                 #thunk_prepare
@@ -1996,12 +2004,9 @@ pub fn generate_function<'a>(
         .target_crubit_features(func.as_ref().owning_target())
         .contains(crubit_feature::CrubitFeature::ThunklessAccessors)
         && match func.semantic() {
-            Some(MemberFuncSemantic::Getter(getter)) => {
-                matches!(
-                    (db.rs_type_kind(getter.type_.clone()), &return_type),
-                    (Ok(RsTypeKind::Primitive(_)), RsTypeKind::Primitive(_))
-                )
-            }
+            Some(MemberFuncSemantic::Getter(getter)) => db
+                .rs_type_kind(getter.type_.clone())
+                .is_ok_and(|field_type| can_use_thunkless_getter(&field_type, &return_type)),
             Some(MemberFuncSemantic::Setter(setter)) => {
                 matches!(
                     (db.rs_type_kind(setter.type_.clone()), param_types.get(1)),
