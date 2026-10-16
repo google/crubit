@@ -256,12 +256,17 @@ fn generate_constant<'a>(
 /// value is an array repeat expression of the filler. Otherwise, the value is a call to
 /// `::crubit_support::array::padded_array`, which pads the explicitly initialized elements with
 /// the filler. The array lengths of these calls are inferred from the type.
+///
+/// Innermost dimensions of `char` arrays which were initialized by a string literal are bound as
+/// calls to `::crubit_support::array::c_char_array_from_string_literal`, which NUL-fills the
+/// remaining elements.
 fn array_value_to_tokens<'a>(
     db: &BindingsGenerator<'a>,
     value: ArrayValue<'_>,
     element_type: &RsTypeKind<'a>,
     element_type_tokens: &TokenStream,
 ) -> Result<(TokenStream, TokenStream)> {
+    let length = Literal::u64_unsuffixed(value.length());
     let (inner_type_tokens, elements, filler) = match value.kind() {
         ArrayValueKind::Integers(integers) => {
             let to_tokens = |element| integer_constant_to_token_stream(db, element, element_type);
@@ -286,8 +291,19 @@ fn array_value_to_tokens<'a>(
                 filler.map(|(_, value)| value),
             )
         }
+        ArrayValueKind::StringLiteral(bytes) => {
+            ensure!(
+                element_type.is_char(),
+                "string literal array initializers are only supported for `char`, not {}",
+                element_type.display(db)
+            );
+            let bytes = Literal::byte_string(bytes);
+            return Ok((
+                quote! { [#element_type_tokens; #length] },
+                quote! { ::crubit_support::array::c_char_array_from_string_literal(#bytes) },
+            ));
+        }
     };
-    let length = Literal::u64_unsuffixed(value.length());
     let value_tokens = match filler {
         None => quote! { [#(#elements),*] },
         Some(filler) if elements.is_empty() => quote! { [#filler; #length] },

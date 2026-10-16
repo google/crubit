@@ -56,6 +56,6 @@ crubit_cc_test(
     ],
     deps = [
         ":tag_decl_annotations_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )

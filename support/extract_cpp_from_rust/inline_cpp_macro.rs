@@ -40,9 +40,12 @@ pub fn inline_cpp(_input: TokenStream) -> TokenStream {
     let line = span.line();
     let col = span.column();
 
-    let Ok(target) = std::env::var("CRUBIT_TARGET") else {
+    let (Ok(target), Err(_)) =
+        (std::env::var("CRUBIT_TARGET"), std::env::var("RUST_ANALYZER_INTERNALS_DO_NOT_USE"))
+    else {
         // Fallback placeholder for IDE and tooling environments (e.g. rust-analyzer)
-        // where CRUBIT_TARGET is unset. Expands to a closure matching the parameter
+        // where CRUBIT_TARGET is unset or RUST_ANALYZER_INTERNALS_DO_NOT_USE is set.
+        // Expands to a closure matching the parameter
         // arity of the inline C++ signature so invocations parse as valid callable expressions.
         let param_count = match _input.into_iter().next() {
             Some(proc_macro::TokenTree::Group(group))
