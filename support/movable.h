@@ -14,16 +14,12 @@
 namespace rs {
 
 namespace internal {
+// Relocates `*src` into the uninitialized storage at `dest`, leaving `*src`
+// uninitialized. See `crubit::UnsafeTakeValue` for how each kind of type is
+// relocated.
 template <typename T>
 void Relocate(T* dest, T* src) {
-  if constexpr (requires(T x) {
-                  T(crubit::UnsafeRelocateTag{}, std::move(x));
-                }) {
-    new (dest) T(crubit::UnsafeRelocateTag{}, std::move(*src));
-  } else {
-    new (dest) T(std::move(*src));
-    std::destroy_at(src);
-  }
+  new (dest) T(crubit::UnsafeTakeValue(src));
 }
 }  // namespace internal
 

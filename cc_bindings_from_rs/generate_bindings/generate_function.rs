@@ -344,7 +344,10 @@ pub(crate) fn cc_param_to_c_abi<'tcx>(
                 // need to move it to a new NoDestructor location. We can directly copy the
                 // bytes.
                 quote! { & #cc_ident }
-            } else if ty.ty_adt_def().is_some() && !db.is_cpp_move_constructible(ty) {
+            } else if (ty.ty_adt_def().is_some() || ty.is_array())
+                && !db.is_cpp_move_constructible(ty)
+            {
+                // The parameter is an `rs::Movable` (see `format_ty_for_cc`).
                 includes.insert(db.support_header("internal/slot.h"));
                 let slot_name = &expect_format_cc_ident(&format!("{cc_ident}_slot"));
                 let CcSnippet { tokens: cc_type, prereqs: ty_prereqs } =

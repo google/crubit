@@ -24,10 +24,12 @@ namespace crubit {
 // prvalue, C++17 guaranteed copy elision initializes the caller's target
 // directly, so no move constructor is required for relocatable types.
 //
-// Both branches leave `*src` uninitialized, so the caller's obligation does not
+// Every branch leaves `*src` uninitialized, so the caller's obligation does not
 // depend on which one is taken:
 //   * a type with an `(UnsafeRelocateTag, T&&)` constructor is relocated, and
 //     never had a moved-from state to destroy;
+//   * a non-empty `std::array` (which can't have such a constructor) is taken
+//     element by element, recursively, so its elements need not be C++-movable;
 //   * any other type is C++-moved, and the moved-from husk is destroyed here.
 //
 // SAFETY REQUIREMENTS:
@@ -35,9 +37,38 @@ namespace crubit {
 // - The caller must not use or destroy `*src` afterwards without first
 //   reinitializing it.
 template <typename T>
+T UnsafeTakeValue(T* src);
+
+namespace internal {
+
+template <typename T>
+inline constexpr bool kIsNonEmptyStdArray = false;
+
+template <typename T, std::size_t N>
+inline constexpr bool kIsNonEmptyStdArray<std::array<T, N>> = (N > 0);
+
+// Takes each element of `*src` with `UnsafeTakeValue`.
+//
+// Each element of the result is initialized directly from the prvalue returned
+// by `UnsafeTakeValue` (C++17 guaranteed copy elision), so the elements don't
+// need to be C++-movable. Nested arrays are handled by recursion.
+template <typename T, std::size_t N, std::size_t... I>
+std::array<T, N> UnsafeTakeArrayElements(std::array<T, N>* src,
+                                         std::index_sequence<I...>) {
+  return {{UnsafeTakeValue(src->data() + I)...}};
+}
+
+}  // namespace internal
+
+template <typename T>
 T UnsafeTakeValue(T* src) {
   if constexpr (requires(T x) { T(UnsafeRelocateTag{}, std::move(x)); }) {
     return T(UnsafeRelocateTag{}, std::move(*src));
+  } else if constexpr (internal::kIsNonEmptyStdArray<T>) {
+    // `std::array` can't be given an `UnsafeRelocateTag` constructor, so its
+    // elements (which may themselves be arrays) are taken one by one.
+    return internal::UnsafeTakeArrayElements(
+        src, std::make_index_sequence<std::tuple_size_v<T>>());
   } else {
     // The husk must be destroyed *after* the return object has been
     // initialized, so the destruction is deferred to a scope guard rather than
@@ -142,26 +173,14 @@ class Slot {
   // Leaves the value contained in `Slot` uninitialized.
   //
   // SAFETY REQUIREMENTS: The contained value is initialized.
-  T AssumeInitAndTakeValue() && {
-    if constexpr (requires(T x) { T(UnsafeRelocateTag{}, std::move(x)); }) {
-      return T(UnsafeRelocateTag{}, std::move(value_));
-    } else {
-      T return_value(std::move(value_));
-      std::destroy_at(&value_);
-      return return_value;
-    }
-  }
+  T AssumeInitAndTakeValue() && { return UnsafeTakeValue(&value_); }
 
+  // Destructively takes the value contained in `other`, leaving `other`
+  // uninitialized.
+  //
   // SAFETY REQUIREMENTS: The value contained in `other` must be initialized
   // (but may be moved-from).
-  Slot(Slot&& other) {
-    if constexpr (requires(T x) { T(UnsafeRelocateTag{}, std::move(x)); }) {
-      new (&value_) T(UnsafeRelocateTag{}, std::move(other.value_));
-    } else {
-      new (&value_) T(std::move(other.value_));
-      std::destroy_at(&other.value_);
-    }
-  }
+  Slot(Slot&& other) { new (&value_) T(UnsafeTakeValue(&other.value_)); }
 
   // Does not destroy the contained value.
   //
@@ -188,49 +207,6 @@ class Slot {
 template <typename T>
 Slot(T) -> Slot<T>;
 
-template <typename T, std::size_t N, std::size_t... I>
-constexpr std::array<T, N> unsafe_move_array(T* ptr,
-                                             std::index_sequence<I...>) {
-  return {{T(UnsafeRelocateTag{}, std::move(ptr[I]))...}};
-}
-
-// TODO: b/451981992 - This works for single-level arrays, but we'd like to
-// support arbitrary composite types that include arrays in Slot.
-template <typename UT, unsigned S>
-class Slot<std::array<UT, S>> {
- public:
-  using T = std::array<UT, S>;
-  Slot() {}
-  explicit constexpr Slot(T&& x) {
-    if constexpr (requires(UT t) { UT(UnsafeRelocateTag{}, std::move(t)); }) {
-      memcpy(value_.data(), x.data(), sizeof(UT) * S);
-    } else {
-      value_ = std::move(x);
-    }
-  }
-  T* Get() { return &value_; }
-  T AssumeInitAndTakeValue() && {
-    if constexpr (requires(UT x) { UT(UnsafeRelocateTag{}, std::move(x)); }) {
-      return unsafe_move_array<UT, S>(value_.data(),
-                                      std::make_index_sequence<S>());
-    } else {
-      T return_value(std::move(value_));
-      std::destroy_at(&value_);
-      return return_value;
-    }
-  }
-  Slot(Slot&& other) { value_ = std::move(other.value_); }
-  ~Slot() {}
-
-  Slot(const Slot&) = delete;
-  Slot& operator=(const Slot&) = delete;
-  Slot& operator=(Slot&&) = delete;
-
- private:
-  union {
-    T value_;
-  };
-};
 }  // namespace crubit
 
 #endif  // CRUBIT_SUPPORT_INTERNAL_RETURN_VALUE_SLOT_H_
