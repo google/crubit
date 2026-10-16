@@ -693,8 +693,8 @@ pub fn generate_thunk_impl<'tcx>(
     }
 
     let thunk_name = make_rs_ident(thunk_name);
-    Ok(RsSnippet {
-        tokens: quote! {
+    Ok(RsSnippet::with_extern_c_decls(
+        quote! {
             #[unsafe(no_mangle)]
             unsafe extern "C" fn #thunk_name (
                 #( #thunk_params ),*
@@ -704,7 +704,7 @@ pub fn generate_thunk_impl<'tcx>(
             } }
         },
         extern_c_decls,
-    })
+    ))
 }
 
 /// Returns the raw pointer spelling of `ty`, if `ty` is a thin Rust reference.
@@ -1045,6 +1045,7 @@ pub fn generate_trait_thunks<'tcx>(
                 is_constructor,
                 is_async,
             )?
+            .into_deduplicated_thunk(Symbol::intern(&thunk_name))
         };
     }
 
