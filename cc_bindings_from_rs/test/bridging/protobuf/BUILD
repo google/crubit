@@ -81,7 +81,7 @@ crubit_cc_test(
     deps = [
         ":foo_cc_proto",
         ":rust_lib_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -91,6 +91,6 @@ crubit_ios_device_test(
     deps = [
         ":foo_cc_proto",
         ":rust_lib_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
