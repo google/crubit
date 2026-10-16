@@ -182,8 +182,8 @@ impl<T> vector<T> {
         #[cfg(not(feature = "len_capacity_encoding"))]
         {
             self.begin = begin as *const _;
-            self._end = self.begin.add(len);
-            self._capacity_end = self.begin.add(capacity);
+            self._end = unsafe { self.begin.add(len) };
+            self._capacity_end = unsafe { self.begin.add(capacity) };
         }
     }
 
@@ -218,7 +218,7 @@ impl<T> vector<T> {
         }
         #[cfg(not(feature = "len_capacity_encoding"))]
         {
-            self._end = self.begin.add(len);
+            self._end = unsafe { self.begin.add(len) };
         }
         self.asan_poison_tail();
     }

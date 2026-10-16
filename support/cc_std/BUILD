@@ -19,7 +19,6 @@ bindings_for_toolchain_headers(
     compatible_with = [
         "//buildenv/target:non_prod",
     ],
-    crate_features = ["len_capacity_encoding"],
     extra_hdrs = ["//support/cc_std_impl:crubit_internal_helper_headers"],
     extra_rs_srcs = [
         "//support/cc_std_impl:extra_rs_srcs_for_cc_std",
