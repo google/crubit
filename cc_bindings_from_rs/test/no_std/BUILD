@@ -59,7 +59,7 @@ crubit_cc_test(
     ],
     deps = [
         ":no_std_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -69,7 +69,7 @@ crubit_stdlib_cc_test(
     stdlib = "alloc",
     deps = [
         ":no_std_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -107,7 +107,7 @@ crubit_cc_test(
     ],
     deps = [
         ":no_core_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -117,6 +117,6 @@ crubit_stdlib_cc_test(
     stdlib = "core",
     deps = [
         ":no_core_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
