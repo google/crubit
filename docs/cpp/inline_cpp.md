@@ -131,6 +131,12 @@ submodules) to specify `#include` headers and define supporting C++ types:
 > regardless of which Rust module defined them. Standard Rust visibility (`pub`,
 > `pub(crate)`) governs access to the wrapping Rust functions.
 
+> **NOTE:** Each `#include` directive in `global_cpp!` must be on its own line
+> (not on the same line as the macro's opening `{` or closing `}`). This lets
+> `build_cleaner` discover the C++ dependency and add it to `deps_of_cc_library`
+> automatically; the extractor rejects `#include`s that share a line with a
+> brace.
+
 ### Calling C++ with `inline_cpp!` {#inline_cpp}
 
 Inside a Rust function, `inline_cpp!` defines an inline C++ expression. The

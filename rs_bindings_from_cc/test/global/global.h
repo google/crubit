@@ -34,6 +34,12 @@ constexpr bool kConstexprBoolArray[] = {true, false};
 // `crubit_support::array::padded_array`.
 inline constexpr unsigned char kUnsignedCharArrayWithFiller[4] = {7, 8};
 constexpr int kMultidimensionalIntArray[3][2] = {{1, 2}, {3}};
+// Rows of `char` arrays initialized from string literals are bound using
+// `crubit_support::array::c_char_array_from_string_literal`. Other `char`
+// arrays are bound like arrays of any other integer type.
+constexpr char kCharArray[] = "NOOP";
+constexpr char kMultidimensionalCharArray[3][8] = {"NOOP", "DROP"};
+constexpr char kMixedCharArray[2][4] = {"ab", {'c', 'd', 'e', 'f'}};
 
 // Also make sure we don't choke on templated variables.
 template <typename T>

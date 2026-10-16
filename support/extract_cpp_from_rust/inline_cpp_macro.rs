@@ -40,9 +40,12 @@ pub fn inline_cpp(_input: TokenStream) -> TokenStream {
     let line = span.line();
     let col = span.column();
 
-    let Ok(target) = std::env::var("CRUBIT_TARGET") else {
+    let (Ok(target), Err(_)) =
+        (std::env::var("CRUBIT_TARGET"), std::env::var("RUST_ANALYZER_INTERNALS_DO_NOT_USE"))
+    else {
         // Fallback placeholder for IDE and tooling environments (e.g. rust-analyzer)
-        // where CRUBIT_TARGET is unset. Expands to a closure matching the parameter
+        // where CRUBIT_TARGET is unset or RUST_ANALYZER_INTERNALS_DO_NOT_USE is set.
+        // Expands to a closure matching the parameter
         // arity of the inline C++ signature so invocations parse as valid callable expressions.
         let param_count = match _input.into_iter().next() {
             Some(proc_macro::TokenTree::Group(group))
@@ -89,7 +92,11 @@ pub fn inline_cpp(_input: TokenStream) -> TokenStream {
 ///
 /// # Syntax
 /// Accepts arbitrary top-level C++ declarations, including `#include` directives,
-/// struct/class definitions, type aliases, and helper functions:
+/// struct/class definitions, type aliases, and helper functions.
+///
+/// Each `#include` directive must be on its own line (not on the same line as the
+/// macro's opening `{` or closing `}`), so that `build_cleaner` can discover the
+/// corresponding C++ dependency and add it to `deps_of_cc_library`.
 ///
 /// ```ignore
 /// global_cpp! {
