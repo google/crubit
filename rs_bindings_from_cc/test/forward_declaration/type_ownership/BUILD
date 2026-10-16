@@ -29,7 +29,7 @@ crubit_cc_test(
     deps = [
         ":definition",
         ":forward_declaration",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
