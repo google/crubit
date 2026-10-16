@@ -55,6 +55,6 @@ crubit_cc_test(
     ],
     deps = [
         ":do_not_bind_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )

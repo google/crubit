@@ -34,6 +34,6 @@ crubit_cc_test(
         ":string_cc_api",
         "//support/rs_std",
         "//support/rs_std:rs_alloc",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
