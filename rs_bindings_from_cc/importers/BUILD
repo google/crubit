@@ -213,7 +213,7 @@ cc_test(
     srcs = ["cxx_record_test.cc"],
     deps = [
         ":cxx_record",
-        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
     ],
 )
