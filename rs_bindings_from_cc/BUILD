@@ -304,12 +304,12 @@ crubit_cc_test(
         ":cmdline_flags",
         "//common:status_macros",
         "//common:status_test_matchers",
-        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/flags:flag",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -430,12 +430,11 @@ crubit_cc_test(
         ":cc_ir",
         ":ir_from_cc",
         "//common:status_test_matchers",
-        "//net/proto2/contrib/proto_matcher",
-        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/functional:overload",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -652,21 +651,6 @@ cc_library(
     ],
 )
 
-crubit_cc_test(
-    name = "src_code_gen_ffi_test",
-    srcs = ["src_code_gen_ffi_test.cc"],
-    deps = [
-        ":cmdline",  # buildcleaner: keep
-        ":cmdline_flags",
-        ":src_code_gen_ffi",
-        "//net/proto2/contrib/parse_proto:parse_text_proto",
-        "//rs_bindings_from_cc/generate_bindings:cc_api_ffi",  # buildcleaner: keep
-        "//rs_bindings_from_cc/generate_bindings:generate_bindings_cc_proto",  # buildcleaner: keep
-        "//testing/base/public:gunit_main",
-        "@abseil-cpp//absl/flags:flag",
-    ],
-)
-
 cc_library(
     name = "src_code_gen",
     srcs = ["src_code_gen.cc"],
@@ -785,7 +769,7 @@ crubit_cc_test(
         ":cc_collect_instantiations",
         "//common:status_test_matchers",
         "//common:test_utils",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -838,10 +822,10 @@ crubit_cc_test(
         ":cc_ir",
         ":collect_namespaces",
         ":ir_from_cc",
-        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:span",
+        "@googletest//:gtest_main",
     ],
 )

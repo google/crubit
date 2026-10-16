@@ -7,7 +7,6 @@
 #include <variant>
 #include <vector>
 
-#include "net/proto2/contrib/proto_matcher/proto_matcher.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/functional/overload.h"
@@ -65,7 +64,6 @@ using ::testing::Contains;
 using ::testing::Each;
 using ::testing::ElementsAre;
 using ::testing::Eq;
-using ::testing::EqualsProto;
 using ::testing::ExplainMatchResult;
 using ::testing::Field;
 using ::testing::HasSubstr;
@@ -75,7 +73,6 @@ using ::testing::Pointee;
 using ::testing::Property;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
-using ::testing::proto::Partially;
 
 template <typename T, typename Matcher>
 auto VariantWith(Matcher matcher) {
@@ -152,6 +149,10 @@ inline absl::string_view GetName(const Record& record) {
   return record.cc_name().identifier();
 }
 
+inline absl::string_view GetName(const Enum& enum_decl) {
+  return enum_decl.cc_name().identifier();
+}
+
 inline absl::string_view GetName(const TypeAlias& type_alias) {
   return type_alias.cc_name().identifier();
 }
@@ -187,6 +188,33 @@ MATCHER_P(CcNameIs, cc_name, "") { return GetName(arg) == cc_name; }
 MATCHER(HasDetectedFormatter, "") {
   if (arg.detected_formatter()) return true;
   *result_listener << "detected_formatter is false";
+  return false;
+}
+
+MATCHER_P(HasProtoMessageBridgeType, expected_rust_name, "") {
+  if (!arg.has_bridge_type()) {
+    *result_listener << "no bridge_type";
+    return false;
+  }
+  if (!arg.bridge_type().has_proto_message_bridge()) {
+    *result_listener << "not ProtoMessageBridge";
+    return false;
+  }
+  absl::string_view actual =
+      arg.bridge_type().proto_message_bridge().rust_name();
+  if (actual != expected_rust_name) {
+    *result_listener << "expected rust_name '" << expected_rust_name
+                     << "', got '" << actual << "'";
+    return false;
+  }
+  return true;
+}
+
+// Matches a Func that has the given mangled name.
+MATCHER_P(MangledNameIs, mangled_name, "") {
+  if (arg.mangled_name() == mangled_name) return true;
+
+  *result_listener << "actual mangled name: '" << arg.mangled_name() << "'";
   return false;
 }
 
@@ -457,7 +485,7 @@ std::vector<ir_proto::Item> GetTopLevelItems(const IR& ir) {
 
 TEST(ImporterTest, ProtoMessageBridgeType) {
   absl::string_view file = R"cc(
-    namespace proto2 {
+    namespace google::protobuf {
     struct MessageLite {};
     struct Message : public MessageLite {};
     }  // namespace proto2
@@ -471,37 +499,24 @@ TEST(ImporterTest, ProtoMessageBridgeType) {
 
   EXPECT_THAT(
       get_items_if<Record>(ir),
-      AllOf(Contains(Pointee(Partially(EqualsProto(R"pb(
-              rs_name { identifier: "MyMessage" }
-              bridge_type { proto_message_bridge { rust_name: "MyMessage" } }
-            )pb")))),
-            Contains(Pointee(Partially(EqualsProto(R"pb(
-              rs_name { identifier: "MyMessage_Request" }
-              bridge_type {
-                proto_message_bridge { rust_name: "my_message::Request" }
-              }
-            )pb")))),
-            Contains(Pointee(Partially(EqualsProto(R"pb(
-              rs_name { identifier: "MyMessage_Request_Inner" }
-              bridge_type {
-                proto_message_bridge { rust_name: "my_message::request::Inner" }
-              }
-            )pb")))),
-            Contains(Pointee(Partially(EqualsProto(R"pb(
-              rs_name { identifier: "Outer" }
-              bridge_type { proto_message_bridge { rust_name: "Outer" } }
-            )pb")))),
-            Contains(Pointee(Partially(EqualsProto(R"pb(
-              rs_name { identifier: "Outer_Inner_Level2" }
-              bridge_type {
-                proto_message_bridge { rust_name: "outer::Inner_Level2" }
-              }
-            )pb"))))));
+      AllOf(Contains(Pointee(AllOf(RsNameIs("MyMessage"),
+                                   HasProtoMessageBridgeType("MyMessage")))),
+            Contains(Pointee(
+                AllOf(RsNameIs("MyMessage_Request"),
+                      HasProtoMessageBridgeType("my_message::Request")))),
+            Contains(Pointee(AllOf(
+                RsNameIs("MyMessage_Request_Inner"),
+                HasProtoMessageBridgeType("my_message::request::Inner")))),
+            Contains(Pointee(
+                AllOf(RsNameIs("Outer"), HasProtoMessageBridgeType("Outer")))),
+            Contains(Pointee(
+                AllOf(RsNameIs("Outer_Inner_Level2"),
+                      HasProtoMessageBridgeType("outer::Inner_Level2"))))));
 }
 
 TEST(ImporterTest, ProtoMessageBridgeTypeExcludesRuntimeBaseClasses) {
   absl::string_view file = R"cc(
-    namespace proto2 {
+    namespace google::protobuf {
     class MessageLite {};
     class Message : public MessageLite {};
     }  // namespace proto2
@@ -522,15 +537,13 @@ TEST(ImporterTest, ProtoMessageBridgeTypeExcludesRuntimeBaseClasses) {
       Contains(Pointee(AllOf(RsNameIs("Message"),
                              Property(&Record::has_bridge_type, false)))));
   // Messages deriving from either base class are still bridged.
-  EXPECT_THAT(records, Contains(Pointee(Partially(EqualsProto(R"pb(
-                rs_name { identifier: "MyMessage" }
-                bridge_type { proto_message_bridge { rust_name: "MyMessage" } }
-              )pb")))));
+  EXPECT_THAT(records,
+              Contains(Pointee(AllOf(RsNameIs("MyMessage"),
+                                     HasProtoMessageBridgeType("MyMessage")))));
   EXPECT_THAT(
-      records, Contains(Pointee(Partially(EqualsProto(R"pb(
-        rs_name { identifier: "MyLiteMessage" }
-        bridge_type { proto_message_bridge { rust_name: "MyLiteMessage" } }
-      )pb")))));
+      records,
+      Contains(Pointee(AllOf(RsNameIs("MyLiteMessage"),
+                             HasProtoMessageBridgeType("MyLiteMessage")))));
 }
 
 TEST(ImporterTest, Noop) {
@@ -551,30 +564,20 @@ TEST(ImporterTest, ErrorOnInvalidInput) {
 TEST(ImporterTest, FuncWithVoidReturnType) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo();"}));
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
-              UnorderedElementsAre(VariantWith<Func>(Partially(EqualsProto(R"pb(
-                cc_name { ident { identifier: "Foo" } }
-                mangled_name: "_Z3Foov"
-                return_type { primitive { spelling: "void" } }
-                params: []
-              )pb")))));
+              UnorderedElementsAre(VariantWith<Func>(
+                  AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
+                        ReturnType(IsVoid()), ParamsAre()))));
 }
 
 TEST(ImporterTest, TwoFuncs) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo(); void Bar();"}));
   EXPECT_THAT(
       ItemsWithoutBuiltins(ir),
-      UnorderedElementsAre(VariantWith<Func>(Partially(EqualsProto(R"pb(
-                             cc_name { ident { identifier: "Foo" } }
-                             mangled_name: "_Z3Foov"
-                             return_type { primitive { spelling: "void" } }
-                             params: []
-                           )pb"))),
-                           VariantWith<Func>(Partially(EqualsProto(R"pb(
-                             cc_name { ident { identifier: "Bar" } }
-                             mangled_name: "_Z3Barv"
-                             return_type { primitive { spelling: "void" } }
-                             params: []
-                           )pb")))));
+      UnorderedElementsAre(
+          VariantWith<Func>(AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
+                                  ReturnType(IsVoid()), ParamsAre())),
+          VariantWith<Func>(AllOf(IdentifierIs("Bar"), MangledNameIs("_Z3Barv"),
+                                  ReturnType(IsVoid()), ParamsAre()))));
 }
 
 TEST(ImporterTest, TwoFuncsFromTwoHeaders) {
@@ -2461,12 +2464,10 @@ TEST(ImporterTest, ProtoEnumOpaqueForwardDeclIsIncomplete) {
              }));
   EXPECT_THAT(get_items_if<ExistingRustType>(ir), IsEmpty());
   EXPECT_THAT(get_items_if<Enum>(ir),
-              ElementsAre(Pointee(Partially(EqualsProto(R"pb(
-                cc_name { identifier: "LeafResult" }
-                rs_name { identifier: "LeafResult" }
-                owning_target: "//test:wrapper_proto"
-                is_incomplete: true
-              )pb")))));
+              ElementsAre(Pointee(
+                  AllOf(CcNameIs("LeafResult"), RsNameIs("LeafResult"),
+                        Property(&Enum::owning_target, "//test:wrapper_proto"),
+                        Property(&Enum::is_incomplete, true)))));
 }
 
 TEST(ImporterTest, ProtoEnumCompleteDefinitionResolvesToDefiningTarget) {
@@ -2498,13 +2499,13 @@ TEST(ImporterTest, ProtoEnumCompleteDefinitionResolvesToDefiningTarget) {
                           BazelLabel{"//test:testing_target"}},
                      },
              }));
-  EXPECT_THAT(get_items_if<ExistingRustType>(ir),
-              ElementsAre(Pointee(Partially(EqualsProto(R"pb(
-                rs_name: "LeafResult"
-                cc_name: "leaf::LeafResult"
-                owning_target: "//test:leaf_proto"
-                is_same_abi: false
-              )pb")))));
+  EXPECT_THAT(
+      get_items_if<ExistingRustType>(ir),
+      ElementsAre(Pointee(
+          AllOf(Property(&ExistingRustType::rs_name, "LeafResult"),
+                CcNameIs("leaf::LeafResult"),
+                Property(&ExistingRustType::owning_target, "//test:leaf_proto"),
+                Property(&ExistingRustType::is_same_abi, false)))));
 }
 
 }  // namespace
