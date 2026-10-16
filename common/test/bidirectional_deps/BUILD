@@ -97,6 +97,6 @@ crubit_cc_test(
     deps = [
         ":leaf_cc_lib",
         ":middle_rs_lib_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )

@@ -6,16 +6,42 @@
 Crubit is a bidirectional bindings generator for C++ and Rust, with the goal of
 integrating the C++ and Rust ecosystems.
 
-## Status
+## Why Crubit?
 
-See the [status](http://crubit.rs/overview/status) page for an overview of the
-current supported features.
+*   **No hand-written glue code.** Crubit reads C++ headers and Rust crates
+    directly and generates bindings in both directions. Your signatures can't
+    drift out of sync with the code they wrap, and you don't need to maintain a
+    separate interface file.
+*   **More than the C ABI.** Crubit can call functions that aren't
+    `extern "C"`, pass structs by value, and match the memory layout of Rust
+    structs that aren't `#[repr(C)]`.
+*   **Idiomatic types on both sides.** References, slices, `&str`, `Option`,
+    `Result`, tuples, smart pointers, `std::vector`/`Vec`, callbacks,
+    `absl::Status`, and more map to their natural counterparts. See the
+    [status](http://crubit.rs/overview/status) page for the full table.
+*   **Traits and operators, too.** C++ can call Rust trait implementations,
+    and Rust traits such as `Display`, `Clone`, and `Default` become the
+    matching C++ operators and special member functions. In the other
+    direction, C++ operator overloads and special member functions become the
+    matching Rust traits, such as `PartialEq`, `Add`, `Clone`, and `Drop`.
+
+## Using Crubit in your project
+
+Build system                                    | C++ calling Rust (`cpp_api_from_rust`)                                                                                                       | Rust calling C++ (`rust_api_from_cpp`)
+:---------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------
+[Bazel](http://crubit.rs/overview/bazel)       | [Supported](http://crubit.rs/overview/bazel#cpp_api_from_rust) ([example](https://github.com/google/crubit/tree/main/examples/build_systems/bazel)) | [Supported](http://crubit.rs/overview/bazel#rust_api_from_cpp)
+[CMake](http://crubit.rs/overview/cmake)       | [Supported](http://crubit.rs/overview/cmake) ([example](https://github.com/google/crubit/tree/main/examples/build_systems/cmake))                   | Not yet
+[Other](http://crubit.rs/overview/build_systems#other-build-systems) | Through the `cargo cpp_api_from_rust` subcommand                                                                       | Not yet
+
+Crubit works with nightly Rust toolchains and with the two most recent stable
+releases, as long as the `rustc-dev` component is installed (see the test
+matrix below). There are no binary releases yet; pin a commit of this
+repository. [Build System Integrations](http://crubit.rs/overview/build_systems)
+covers toolchain requirements and how to set up each build system.
 
 ## Example
 
-{{#tabs}}
-
-{{#tab name="Calling Rust from C++"}}
+### Calling Rust from C++
 
 Consider the following Rust library:
 
@@ -53,9 +79,7 @@ void demo() {
 }
 ```
 
-{{#endtab}}
-
-{{#tab name="Calling C++ from Rust"}}
+### Calling C++ from Rust
 
 Consider the following C++ header:
 
@@ -90,15 +114,11 @@ if let Some(u) = user {
 let new_user: unique_ptr<User> = CreateUser("Alice".into(), 456);
 ```
 
-{{#endtab}}
-
-{{#endtabs}}
-
 ## Getting Started
 
 We have detailed walkthroughs on how to use C++ from Rust, or Rust from C++,
 using Crubit, as well as copy-pastable example code. The example code also
-includes spanshots of what the generated bindings look like.
+includes snapshots of what the generated bindings look like.
 
 *   Walkthrough: [C++ Bindings for Rust Libraries](http://crubit.rs/rust)
     *   Examples:
