@@ -1736,6 +1736,7 @@ pub enum ThunkImpl {
         /// Whether the emitted C++ references `crubit::UnsafeTakeValue`, and so
         /// requires `support/internal/slot.h` to be included.
         needs_slot_header: bool,
+        is_always_inline: bool,
     },
     /// A set of `static_assert`s that check the layout of a record.
     LayoutAssertion {
@@ -1796,9 +1797,15 @@ impl ToTokens for ThunkImpl {
                 return_stmt,
                 // Only affects the include set, not the emitted tokens.
                 needs_slot_header: _,
+                is_always_inline,
             } => {
+                let attr = if *is_always_inline {
+                    quote! { __attribute__((always_inline)) }
+                } else {
+                    quote! {}
+                };
                 quote! {
-                    extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
+                    extern "C" #attr #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
                         #conversion_stmts
                         #return_stmt;
                     }

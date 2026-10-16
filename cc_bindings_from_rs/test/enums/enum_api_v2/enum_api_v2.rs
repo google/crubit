@@ -60,3 +60,86 @@ pub fn unwrap(wrapper: Wrapper) -> i64 {
     let Wrapper::Only(value) = wrapper;
     value
 }
+
+/// Niche-encoded enum: `Start` and `Stop` are stored in the unused bit patterns of `bool`.
+#[derive(Clone, Copy)]
+pub enum Command {
+    SetFlag(bool),
+    Start,
+    Stop,
+}
+
+pub fn make_set_flag(flag: bool) -> Command {
+    Command::SetFlag(flag)
+}
+
+pub fn make_start() -> Command {
+    Command::Start
+}
+
+pub fn make_stop() -> Command {
+    Command::Stop
+}
+
+pub fn describe_command(cmd: Command) -> i32 {
+    match cmd {
+        Command::SetFlag(false) => 0,
+        Command::SetFlag(true) => 1,
+        Command::Start => 2,
+        Command::Stop => 3,
+    }
+}
+
+/// Niche at a non-zero offset (`flag` sits at offset 3 after `count` and `extra`), with another
+/// variant that carries its own payload in the bytes before the niche.
+#[derive(Clone, Copy)]
+pub enum TaggedEntry {
+    Entry { count: i16, extra: i8, flag: bool },
+    Empty(i16),
+    Tombstone,
+}
+
+pub fn make_entry(count: i16, extra: i8, flag: bool) -> TaggedEntry {
+    TaggedEntry::Entry { count, extra, flag }
+}
+
+pub fn make_empty_entry(id: i16) -> TaggedEntry {
+    TaggedEntry::Empty(id)
+}
+
+pub fn make_tombstone() -> TaggedEntry {
+    TaggedEntry::Tombstone
+}
+
+pub fn describe_entry(entry: TaggedEntry) -> i32 {
+    match entry {
+        TaggedEntry::Entry { count, extra, flag: true } => i32::from(count) + i32::from(extra),
+        TaggedEntry::Entry { count, extra, flag: false } => -(i32::from(count) + i32::from(extra)),
+        TaggedEntry::Empty(id) => 1000 + i32::from(id),
+        TaggedEntry::Tombstone => -999,
+    }
+}
+
+/// Pointer-niched enum (`None` is stored as the null pointer).
+#[derive(Clone, Copy)]
+pub enum MaybeRef {
+    None,
+    Some(&'static i32),
+}
+
+pub static STATIC_INT: i32 = 99;
+
+pub fn make_some_ref() -> MaybeRef {
+    MaybeRef::Some(&STATIC_INT)
+}
+
+pub fn make_none_ref() -> MaybeRef {
+    MaybeRef::None
+}
+
+pub fn read_maybe_ref(r: MaybeRef) -> i32 {
+    match r {
+        MaybeRef::None => -1,
+        MaybeRef::Some(&x) => x,
+    }
+}

@@ -1236,6 +1236,7 @@ fn cc_struct_operator_delete_impl(
         conversion_stmts: quote! {},
         return_stmt: quote! { delete ptr },
         needs_slot_header: false,
+        is_always_inline: false,
     };
 
     let operator_delete = DeleteImpl { record_type, thunk_ident, crate_root_path };

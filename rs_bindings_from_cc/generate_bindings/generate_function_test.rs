@@ -64,6 +64,34 @@ fn test_simple_function() -> Result<()> {
 }
 
 #[gtest]
+fn test_always_inline_function() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        "inline __attribute__((always_inline)) int Add(int a, int b) { return a + b; }",
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub fn Add(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int {
+                unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
+            }
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" __attribute__((always_inline)) int __rust_thunk___Z3Addii(int a, int b) {
+                return Add(a, b);
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_inline_function() -> Result<()> {
     let proto = ir_proto_from_cc("inline int Add(int a, int b) { return a + b; }")?;
 
@@ -3098,12 +3126,17 @@ fn test_function_using_error_type_by_value() -> Result<()> {
 fn test_thunkless_accessors_enabled() -> Result<()> {
     let proto = ir_proto_from_cc(
         r#"
+        #pragma clang lifetime_elision
+        struct Inner { int v; };
         class S {
          public:
           int x() const { return x_; }
+          Inner inner() const { return inner_; }
+          friend inline int free_get_x(const S& s) { return s.x_; }
           void set_x(int x) { x_ = x; }
          private:
           int x_;
+          Inner inner_;
         };
         "#,
     )?;
@@ -3112,8 +3145,19 @@ fn test_thunkless_accessors_enabled() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
-                as ::ffi_11::c_int
+            *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int)
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            *((&*__this as *const _ as *const u8).add(4) as *const crate::Inner)
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            *((&*s as *const _ as *const u8).add(0) as *const ::ffi_11::c_int)
         }
     );
     // Match on the thunk bodies rather than on the thunk names, because the
@@ -3146,8 +3190,7 @@ fn test_thunkless_accessors_non_const_getter() -> Result<()> {
     assert_rs_matches!(
         rs_api,
         quote! {
-            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
-                as ::ffi_11::c_int
+            *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int)
         }
     );
     // Match on the thunk body rather than on the thunk name, because the
@@ -3177,8 +3220,7 @@ fn test_thunkless_accessors_disabled() -> Result<()> {
     assert_rs_not_matches!(
         rs_api,
         quote! {
-            (*((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int))
-                as ::ffi_11::c_int
+            *((&*__this as *const _ as *const u8).add(0) as *const ::ffi_11::c_int)
         }
     );
     // Match on the thunk bodies rather than on the thunk names, because the
