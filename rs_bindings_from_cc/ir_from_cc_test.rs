@@ -6496,6 +6496,7 @@ fn test_top_level_constexpr_bool() {
 enum TestArrayValue {
     Integers { elements: Vec<i128>, filler: Option<i128> },
     Arrays { elements: Vec<TestArrayValue>, filler: Option<Box<TestArrayValue>> },
+    StringLiteral(Vec<u8>),
 }
 
 fn simplify_integer(value: &ir::IntegerConstant) -> i128 {
@@ -6520,6 +6521,7 @@ fn simplify_array_value(value: ir::ArrayValue<'_>) -> TestArrayValue {
             elements: arrays.elements().iter().map(simplify_array_value).collect(),
             filler: arrays.filler().map(|filler| Box::new(simplify_array_value(filler))),
         },
+        ir::ArrayValueKind::StringLiteral(bytes) => TestArrayValue::StringLiteral(bytes.to_vec()),
     }
 }
 
@@ -6555,6 +6557,21 @@ fn padded_integer_elements(elements: &[i128], filler: i128) -> TestArrayValue {
 /// Array elements, followed by `filler`.
 fn padded_array_elements(elements: Vec<TestArrayValue>, filler: TestArrayValue) -> TestArrayValue {
     TestArrayValue::Arrays { elements, filler: Some(Box::new(filler)) }
+}
+
+/// A char row initialized by a string literal.
+fn string_literal_row(bytes: &[u8]) -> TestArrayValue {
+    TestArrayValue::StringLiteral(bytes.to_vec())
+}
+
+/// Fully initialized integer elements for the given chars.
+fn char_elements(bytes: &[u8]) -> TestArrayValue {
+    integer_elements(&bytes.iter().map(|&b| b as i128).collect::<Vec<_>>())
+}
+
+/// Integer elements for the given chars, followed by NUL fillers.
+fn padded_char_elements(bytes: &[u8]) -> TestArrayValue {
+    padded_integer_elements(&bytes.iter().map(|&b| b as i128).collect::<Vec<_>>(), 0)
 }
 
 fn array_constant_from_cc(cc: &str) -> (Vec<u64>, TestArrayValue) {
@@ -6604,6 +6621,81 @@ fn test_top_level_constexpr_multidimensional_array() {
                 padded_integer_elements(&[], 0)
             )
         )
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_char_array_from_string_literal() {
+    // The dimension includes the NUL terminator, but the row doesn't.
+    expect_eq!(
+        array_constant_from_cc(r#"constexpr char x[] = "ab";"#),
+        (vec![3], string_literal_row(b"ab"))
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_char_array_from_braced_string_literal() {
+    expect_eq!(
+        array_constant_from_cc(r#"constexpr char x[8] = {"a\0b"};"#),
+        (vec![8], string_literal_row(b"a\0b"))
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_multidimensional_char_array_from_string_literals() {
+    // The last row is not explicitly initialized, so it is not a string literal row.
+    expect_eq!(
+        array_constant_from_cc(r#"constexpr char x[3][8] = {"NOOP", "DROP"};"#),
+        (
+            vec![3, 8],
+            padded_array_elements(
+                vec![string_literal_row(b"NOOP"), string_literal_row(b"DROP")],
+                padded_char_elements(b"")
+            )
+        )
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_char_array_from_chars() {
+    // Not a string literal, so the chars are recorded as integer elements, and no room is
+    // needed for a NUL terminator.
+    expect_eq!(
+        array_constant_from_cc("constexpr char x[] = {'a', 'b'};"),
+        (vec![2], char_elements(b"ab"))
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_char_array_from_chars_with_nuls() {
+    // Explicitly initialized NULs are recorded.
+    expect_eq!(
+        array_constant_from_cc(r"constexpr char x[6] = {'a', '\0', 'b', '\0'};"),
+        (vec![6], padded_char_elements(b"a\0b\0"))
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_multidimensional_char_array_mixed() {
+    expect_eq!(
+        array_constant_from_cc(r#"constexpr char x[3][4] = {"ab", {'c', 'd', 'e', 'f'}};"#),
+        (
+            vec![3, 4],
+            padded_array_elements(
+                vec![string_literal_row(b"ab"), char_elements(b"cdef")],
+                padded_char_elements(b"")
+            )
+        )
+    );
+}
+
+#[gtest]
+fn test_top_level_constexpr_unsigned_char_array_from_string_literal() {
+    // Only plain `char` (`ffi_11::c_char`) uses string literal rows. The NUL terminator is not
+    // explicitly initialized.
+    expect_eq!(
+        array_constant_from_cc(r#"constexpr unsigned char x[] = "a";"#),
+        (vec![2], padded_integer_elements(&['a' as i128], 0))
     );
 }
 
