@@ -54,6 +54,8 @@ crubit_cc_test(
     ],
     deps = [
         ":arrays_cc_api",
-        "//testing/base/public:gunit_main",
+        "//support:movable",
+        "//support/internal:bindings_support",
+        "@googletest//:gtest_main",
     ],
 )

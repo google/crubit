@@ -175,6 +175,28 @@ unsafe extern "C" fn __crubit_thunk_function_uwith_unested_udrop_udefault_uarray
     }
 }
 #[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_unested_udroponly_uarrays(
+    array: *mut [[::arrays_golden::HasDrop; 2]; 2],
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let array = array.read();
+        let __rs_return_value = ::arrays_golden::function_with_nested_droponly_arrays(array);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_function_uwith_unested_unested_udroponly_uarrays(
+    array: *mut [[[::arrays_golden::HasDrop; 2]; 2]; 2],
+    __ret_ptr: *mut core::ffi::c_void,
+) -> () {
+    unsafe {
+        let array = array.read();
+        let __rs_return_value = ::arrays_golden::function_with_nested_nested_droponly_arrays(array);
+        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+    }
+}
+#[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_function_uwith_utuple_uarray_uid(
     tup_array: *mut [(i32, i32); 2],
     __ret_ptr: *mut core::ffi::c_void,
@@ -184,6 +206,14 @@ unsafe extern "C" fn __crubit_thunk_function_uwith_utuple_uarray_uid(
         let __rs_return_value = ::arrays_golden::function_with_tuple_array_id(tup_array);
         ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_has_udrop_uand_udefault_unonzero_udrop_ucount() -> usize {
+    unsafe { ::arrays_golden::has_drop_and_default_nonzero_drop_count() }
+}
+#[unsafe(no_mangle)]
+unsafe extern "C" fn __crubit_thunk_has_udrop_udrop_ucount() -> usize {
+    unsafe { ::arrays_golden::has_drop_drop_count() }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x00000020i32_x00000029(

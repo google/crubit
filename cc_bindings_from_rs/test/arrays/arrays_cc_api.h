@@ -18,6 +18,7 @@
 #include "support/annotations_internal.h"
 #include "support/internal/memswap.h"
 #include "support/internal/slot.h"
+#include "support/movable.h"
 #include "support/rs_std/tuple.h"
 
 #include <array>
@@ -128,7 +129,7 @@ function_with_has_drop_and_default_array_id(
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::array<::arrays::HasDrop, 2> function_with_has_drop_array_id(
-    ::std::array<::arrays::HasDrop, 2> array);
+    ::rs::Movable<::std::array<::arrays::HasDrop, 2>> array);
 
 // CRUBIT_ANNOTATE: must_bind=
 ::std::array<::arrays::HasDrop, 2> function_with_has_drop_ret_only();
@@ -147,21 +148,30 @@ function_with_mut_array_named_size_ptr_id(
 function_with_nested_drop_default_arrays(
     ::std::array<::std::array<::arrays::HasDropAndDefault, 2>, 2> array);
 
-// Error generating bindings for function
-// `arrays_golden::function_with_nested_droponly_arrays` defined at
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=98:
-// b/260128806 - nested array [arrays_golden::HasDrop; 2] is not supported
-// because it contains a type that implements Drop but not Default
+// CRUBIT_ANNOTATE: must_bind=
+::std::array<::std::array<::arrays::HasDrop, 2>, 2>
+function_with_nested_droponly_arrays(
+    ::rs::Movable<::std::array<::std::array<::arrays::HasDrop, 2>, 2>> array);
 
-// Error generating bindings for function
-// `arrays_golden::function_with_nested_nested_droponly_arrays` defined at
-// cc_bindings_from_rs/test/arrays/arrays.rs;l=104:
-// b/260128806 - nested array [[arrays_golden::HasDrop; 2]; 2] is not supported
-// because it contains a type that implements Drop but not Default
+// CRUBIT_ANNOTATE: must_bind=
+::std::array<::std::array<::std::array<::arrays::HasDrop, 2>, 2>, 2>
+function_with_nested_nested_droponly_arrays(
+    ::rs::Movable<
+        ::std::array<::std::array<::std::array<::arrays::HasDrop, 2>, 2>, 2>>
+        array);
 
 ::std::array<rs_std::Tuple<::std::int32_t, ::std::int32_t>, 2>
 function_with_tuple_array_id(
     ::std::array<rs_std::Tuple<::std::int32_t, ::std::int32_t>, 2> tup_array);
+
+// CRUBIT_ANNOTATE: must_bind=
+//  Returns the number of times `HasDropAndDefault::drop` has run on a value
+//  whose `x` is not 0 (i.e. not a default value).
+::std::uintptr_t has_drop_and_default_nonzero_drop_count();
+
+// CRUBIT_ANNOTATE: must_bind=
+//  Returns the number of times `HasDrop::drop` has run.
+::std::uintptr_t has_drop_drop_count();
 
 }  // namespace arrays
 
@@ -438,8 +448,9 @@ extern "C" void __crubit_thunk_function_uwith_uhas_udrop_uarray_uid(
     void*, void* __ret_ptr);
 }
 inline ::std::array<::arrays::HasDrop, 2> function_with_has_drop_array_id(
-    ::std::array<::arrays::HasDrop, 2> array) {
-  crubit::Slot array_slot((::std::move(array)));
+    ::rs::Movable<::std::array<::arrays::HasDrop, 2>> array) {
+  crubit::Slot<::std::array<::arrays::HasDrop, 2>> array_slot;
+  ::std::move(array).MoveToSlot(array_slot);
   crubit::Slot<::std::array<::arrays::HasDrop, 2>>
       __return_value_ret_val_holder;
   auto* __return_value_storage = __return_value_ret_val_holder.Get();
@@ -507,6 +518,46 @@ function_with_nested_drop_default_arrays(
 }
 
 namespace __crubit_internal {
+extern "C" void __crubit_thunk_function_uwith_unested_udroponly_uarrays(
+    void*, void* __ret_ptr);
+}
+inline ::std::array<::std::array<::arrays::HasDrop, 2>, 2>
+function_with_nested_droponly_arrays(
+    ::rs::Movable<::std::array<::std::array<::arrays::HasDrop, 2>, 2>> array) {
+  crubit::Slot<::std::array<::std::array<::arrays::HasDrop, 2>, 2>> array_slot;
+  ::std::move(array).MoveToSlot(array_slot);
+  crubit::Slot<::std::array<::std::array<::arrays::HasDrop, 2>, 2>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::__crubit_thunk_function_uwith_unested_udroponly_uarrays(
+      array_slot.Get(), __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" void __crubit_thunk_function_uwith_unested_unested_udroponly_uarrays(
+    void*, void* __ret_ptr);
+}
+inline ::std::array<::std::array<::std::array<::arrays::HasDrop, 2>, 2>, 2>
+function_with_nested_nested_droponly_arrays(
+    ::rs::Movable<
+        ::std::array<::std::array<::std::array<::arrays::HasDrop, 2>, 2>, 2>>
+        array) {
+  crubit::Slot<
+      ::std::array<::std::array<::std::array<::arrays::HasDrop, 2>, 2>, 2>>
+      array_slot;
+  ::std::move(array).MoveToSlot(array_slot);
+  crubit::Slot<
+      ::std::array<::std::array<::std::array<::arrays::HasDrop, 2>, 2>, 2>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
+  __crubit_internal::
+      __crubit_thunk_function_uwith_unested_unested_udroponly_uarrays(
+          array_slot.Get(), __return_value_storage);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
 extern "C" void __crubit_thunk_function_uwith_utuple_uarray_uid(
     void*, void* __ret_ptr);
 }
@@ -519,6 +570,22 @@ function_with_tuple_array_id(
   __crubit_internal::__crubit_thunk_function_uwith_utuple_uarray_uid(
       &tup_array, __return_value_storage);
   return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t
+__crubit_thunk_has_udrop_uand_udefault_unonzero_udrop_ucount();
+}
+inline ::std::uintptr_t has_drop_and_default_nonzero_drop_count() {
+  return __crubit_internal::
+      __crubit_thunk_has_udrop_uand_udefault_unonzero_udrop_ucount();
+}
+
+namespace __crubit_internal {
+extern "C" ::std::uintptr_t __crubit_thunk_has_udrop_udrop_ucount();
+}
+inline ::std::uintptr_t has_drop_drop_count() {
+  return __crubit_internal::__crubit_thunk_has_udrop_udrop_ucount();
 }
 
 }  // namespace arrays

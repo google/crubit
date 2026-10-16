@@ -25,7 +25,7 @@ use quote::quote;
 use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, Mutability, Ty, TyCtxt, TypingEnv};
 use rustc_span::def_id::DefId;
-use rustc_span::symbol::{kw, sym, Symbol};
+use rustc_span::symbol::{kw, Symbol};
 use std::collections::{BTreeSet, HashMap};
 
 /// How a function parameter is passed across the `extern "C"` thunk ABI.
@@ -79,16 +79,7 @@ pub(crate) fn classify_value_abi<'tcx>(
     {
         return Ok(ValueAbi::LegacyTuple(tuple_tys));
     }
-    if let ty::TyKind::Array(inner_ty, _) = ty.kind() {
-        // TODO: b/451981992 - Nested arrays containing types that are Drop but not Default do not
-        // behave well in std::arrays.
-        if let ty::TyKind::Array(nested_ty, _) = inner_ty.kind()
-            && is_drop_not_default(db.tcx(), *nested_ty)
-        {
-            bail!(
-                "b/260128806 - nested array {inner_ty} is not supported because it contains a type that implements Drop but not Default"
-            );
-        }
+    if let ty::TyKind::Array(..) = ty.kind() {
         return Ok(ValueAbi::Array);
     }
     Ok(ValueAbi::ByPointer)
@@ -118,15 +109,6 @@ pub(crate) fn generate_ctor_thunk_call<'tcx>(
             }
         },
     )
-}
-
-fn is_drop_not_default<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>) -> bool {
-    if !ty.needs_drop(tcx, TypingEnv::fully_monomorphized()) {
-        return false;
-    }
-    let trait_id =
-        tcx.get_diagnostic_item(sym::Default).expect("Couldn't find `core::default::Default`");
-    !does_type_implement_trait(tcx, ty, trait_id, [])
 }
 
 /// Formats a C++ declaration of a C-ABI-compatible-function wrapper around a Rust function.

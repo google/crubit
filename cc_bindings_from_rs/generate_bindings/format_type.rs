@@ -901,6 +901,13 @@ fn format_ty_for_cc_impl<'tcx>(
                 .format_ty_for_cc(element_type, TypeLocation::Other)?
                 .map_snippets(|cc_element_ty| quote! { ::std::array<#cc_element_ty, #c_int> });
             snippet.prereqs.includes.insert(CcInclude::array());
+            // An array of non-C++-movable elements is not C++-movable either. Like for ADTs, wrap
+            // it in `rs::Movable`, so that it can be moved into Rust without leaving behind a
+            // value that C++ would destroy again.
+            if !db.is_cpp_move_constructible(ty) && location.admits_movable() {
+                snippet.prereqs.includes.insert(db.support_header("movable.h"));
+                snippet = snippet.map_snippets(|tokens| quote! { ::rs::Movable< #tokens > });
+            }
             snippet
         }
 

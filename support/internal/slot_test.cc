@@ -4,6 +4,9 @@
 
 #include "support/internal/slot.h"
 
+#include <array>
+#include <new>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -160,6 +163,81 @@ TYPED_TEST(SlotTest, Test) {
   }
 
   EXPECT_EQ(kReturnedValue, return_value.state);
+}
+
+// A type which can only be relocated, like the C++ projection of a Rust type
+// that implements `Drop` but not `Default`.
+struct ABSL_ATTRIBUTE_TRIVIAL_ABI RelocateOnly {
+  explicit RelocateOnly(int state, std::vector<int>* destroyed_states)
+      : state(state), destroyed_states(destroyed_states) {}
+  RelocateOnly(crubit::UnsafeRelocateTag, RelocateOnly&& other)
+      : state(other.state), destroyed_states(other.destroyed_states) {
+    other.state = kRelocatedState;
+  }
+  RelocateOnly(RelocateOnly&&) = delete;
+  RelocateOnly& operator=(RelocateOnly&&) = delete;
+  ~RelocateOnly() { destroyed_states->push_back(state); }
+
+  int state;
+  std::vector<int>* destroyed_states;
+};
+
+using NestedRelocateOnlyArray = std::array<std::array<RelocateOnly, 2>, 2>;
+static_assert(!std::is_move_constructible_v<NestedRelocateOnlyArray>);
+
+TEST(SlotTest, NestedArrayOfRelocateOnly) {
+  std::vector<int> destroyed_states;
+  {
+    Slot<NestedRelocateOnlyArray> slot;
+    new (slot.Get()) NestedRelocateOnlyArray{{
+        {RelocateOnly(1, &destroyed_states),
+         RelocateOnly(2, &destroyed_states)},
+        {RelocateOnly(3, &destroyed_states),
+         RelocateOnly(4, &destroyed_states)},
+    }};
+    NestedRelocateOnlyArray* slot_ptr = slot.Get();
+
+    // Every element is relocated, and nothing is destroyed.
+    NestedRelocateOnlyArray value = std::move(slot).AssumeInitAndTakeValue();
+    EXPECT_THAT(destroyed_states, IsEmpty());
+    for (const auto& inner : *slot_ptr) {
+      for (const auto& element : inner) {
+        EXPECT_EQ(element.state, kRelocatedState);
+      }
+    }
+    EXPECT_EQ(value[0][0].state, 1);
+    EXPECT_EQ(value[0][1].state, 2);
+    EXPECT_EQ(value[1][0].state, 3);
+    EXPECT_EQ(value[1][1].state, 4);
+  }
+  // Only the taken value is destroyed, not the relocated-from slot contents.
+  EXPECT_THAT(destroyed_states, ElementsAre(4, 3, 2, 1));
+}
+
+TEST(SlotTest, MoveNestedArrayOfRelocateOnly) {
+  std::vector<int> destroyed_states;
+  {
+    Slot<NestedRelocateOnlyArray> slot;
+    new (slot.Get()) NestedRelocateOnlyArray{{
+        {RelocateOnly(1, &destroyed_states),
+         RelocateOnly(2, &destroyed_states)},
+        {RelocateOnly(3, &destroyed_states),
+         RelocateOnly(4, &destroyed_states)},
+    }};
+    Slot<NestedRelocateOnlyArray> moved(std::move(slot));
+    EXPECT_THAT(destroyed_states, IsEmpty());
+    EXPECT_EQ((*slot.Get())[1][1].state, kRelocatedState);
+    NestedRelocateOnlyArray value = std::move(moved).AssumeInitAndTakeValue();
+    EXPECT_EQ(value[1][1].state, 4);
+  }
+  EXPECT_THAT(destroyed_states, ElementsAre(4, 3, 2, 1));
+}
+
+TEST(SlotTest, EmptyArrayOfRelocateOnly) {
+  Slot<std::array<RelocateOnly, 0>> slot;
+  new (slot.Get()) std::array<RelocateOnly, 0>{};
+  std::array<RelocateOnly, 0> value = std::move(slot).AssumeInitAndTakeValue();
+  EXPECT_TRUE(value.empty());
 }
 
 }  // namespace
