@@ -5,6 +5,9 @@
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
+extern crate rustc_middle;
+extern crate rustc_span;
+
 use anyhow::Result;
 use crubit_attr::{get_attrs, CrubitAttrs};
 use run_compiler_test_support::{find_def_id_by_name, run_compiler_for_testing};
