@@ -52,7 +52,7 @@ bzl_library(
 bzl_library(
     name = "cc_bindings_from_rust_library_config_aspect_hint_bzl",
     srcs = ["cc_bindings_from_rust_library_config_aspect_hint.bzl"],
-    visibility = ["//visibility:private"],
+    visibility = ["//bazel:__pkg__"],
     deps = [
         "@bazel_skylib//lib:collections",
     ],
@@ -61,7 +61,7 @@ bzl_library(
 bzl_library(
     name = "toolchain_bzl",
     srcs = ["toolchain.bzl"],
-    visibility = ["//visibility:private"],
+    visibility = ["//bazel:__pkg__"],
     deps = [":providers_bzl"],
 )
 
