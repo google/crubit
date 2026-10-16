@@ -19,10 +19,12 @@ unsafe impl<A: CrubitAbi + Clone> CrubitAbi for Vec3Abi<A> {
 
     const SIZE: usize = A::SIZE * 3;
 
-    fn encode(self, value: Self::Value, encoder: &mut Encoder) {
-        self.0.clone().encode(value.x, encoder);
-        self.0.clone().encode(value.y, encoder);
-        self.0.encode(value.z, encoder);
+    unsafe fn encode(self, value: Self::Value, encoder: &mut Encoder) {
+        unsafe {
+            self.0.clone().encode(value.x, encoder);
+            self.0.clone().encode(value.y, encoder);
+            self.0.encode(value.z, encoder);
+        }
     }
 
     unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {

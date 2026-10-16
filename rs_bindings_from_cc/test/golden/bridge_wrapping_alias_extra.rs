@@ -16,8 +16,10 @@ unsafe impl<A: CrubitAbi> CrubitAbi for BridgeAbi<A> {
 
     const SIZE: usize = A::SIZE;
 
-    fn encode(self, value: Self::Value, encoder: &mut Encoder) {
-        self.0.encode(value.value, encoder);
+    unsafe fn encode(self, value: Self::Value, encoder: &mut Encoder) {
+        unsafe {
+            self.0.encode(value.value, encoder);
+        }
     }
 
     unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {

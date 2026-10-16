@@ -34,12 +34,14 @@ use core::ptr;
 ///
 ///     // todo
 /// #    const SIZE: usize = core::mem::size_of::<bool>() + A::SIZE;
-/// #   fn encode(self, value: Self::Value, encoder: &mut Encoder) {
-/// #       if let Some(inner) = value {
-/// #           transmute_abi().encode(true, encoder);
-/// #           self.0.encode(inner, encoder);
-/// #       } else {
-/// #           transmute_abi().encode(false, encoder);
+/// #   unsafe fn encode(self, value: Self::Value, encoder: &mut Encoder) {
+/// #       unsafe {
+/// #           if let Some(inner) = value {
+/// #               transmute_abi().encode(true, encoder);
+/// #               self.0.encode(inner, encoder);
+/// #           } else {
+/// #               transmute_abi().encode(false, encoder);
+/// #           }
 /// #       }
 /// #   }
 /// #   unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
@@ -70,12 +72,16 @@ use core::ptr;
 ///
 ///     const SIZE: usize = core::mem::size_of::<bool>() + A::SIZE;
 ///
-///     fn encode(self, value: Self::Value, encoder: &mut Encoder) {
-///         if let Some(inner) = value {
-///             transmute_abi().encode(true, encoder);
-///             self.0.encode(inner, encoder);
-///         } else {
-///             transmute_abi().encode(false, encoder);
+///     unsafe fn encode(self, value: Self::Value, encoder: &mut Encoder) {
+///         // SAFETY: The caller guarantees that `encoder` has at least `Self::SIZE` bytes
+///         // remaining, which is enough for a `bool` followed by `A::SIZE` bytes.
+///         unsafe {
+///             if let Some(inner) = value {
+///                 transmute_abi().encode(true, encoder);
+///                 self.0.encode(inner, encoder);
+///             } else {
+///                 transmute_abi().encode(false, encoder);
+///             }
 ///         }
 ///     }
 ///
@@ -115,12 +121,12 @@ pub unsafe trait CrubitAbi {
     /// Encodes a `Value`, advancing the encoders's position by `SIZE` bytes.
     ///
     /// Aside from implementations for primitives, most implementations of this function will be
-    /// composed of other calls to [`Encoder::encode::<A>`], for some `A: CrubitAbi`,
+    /// composed of other calls to [`CrubitAbi::encode`], for some `A: CrubitAbi`,
     /// each one advancing the encoder's position by `A::SIZE` bytes. The
-    /// implementation should ensure that the these calls do not advance the encoder's position by
-    /// more than `SIZE` bytes. This is because the `SIZES` constant is used to compute the buffer
-    /// size statically, and if the encoder's position is advanced by more than `SIZE`, the encoder
-    /// may panic in debug builds, or cause undefined behavior in release builds.
+    /// implementation should ensure that these calls do not advance the encoder's position by
+    /// more than `SIZE` bytes. This is because the `SIZE` constant is used to compute the buffer
+    /// size statically, and if the encoder's position is advanced by more than `SIZE`, encoding
+    /// will write out of bounds and cause undefined behavior.
     ///
     /// # Notes
     ///
@@ -137,9 +143,13 @@ pub unsafe trait CrubitAbi {
     /// pub struct Pair<A1, A2>(A1, A2);
     ///
     /// unsafe impl<A1: CrubitAbi, A2: CrubitAbi> CrubitAbi for Pair<A1, A2> {
-    ///     fn encode(self, (a, b): Self::Value, encoder: &mut Encoder) {
-    ///         self.0.encode(a, encoder);
-    ///         self.1.encode(b, encoder);
+    ///     unsafe fn encode(self, (a, b): Self::Value, encoder: &mut Encoder) {
+    ///         // SAFETY: The caller guarantees that the buffer has at least `Self::SIZE`
+    ///         // (`A1::SIZE + A2::SIZE`) remaining bytes.
+    ///         unsafe {
+    ///             self.0.encode(a, encoder);
+    ///             self.1.encode(b, encoder);
+    ///         }
     ///     }
     ///     // other items omitted...
     /// #    type Value = (A1::Value, A2::Value);
@@ -155,7 +165,12 @@ pub unsafe trait CrubitAbi {
     /// #    }
     /// }
     /// ```
-    fn encode(self, value: Self::Value, encoder: &mut Encoder);
+    ///
+    /// # Safety
+    ///
+    /// The caller guarantees that `encoder` points to a valid, writable buffer with at least
+    /// `Self::SIZE` bytes remaining.
+    unsafe fn encode(self, value: Self::Value, encoder: &mut Encoder);
 
     /// Decodes a [`Value`], advancing the decoder's position by `SIZE` bytes.
     ///
@@ -187,9 +202,11 @@ pub unsafe trait CrubitAbi {
     ///     // other items omitted...
     /// #    type Value = (A1::Value, A2::Value);
     /// #    const SIZE: usize = A1::SIZE + A2::SIZE;
-    /// #    fn encode(self, (a, b): Self::Value, encoder: &mut Encoder) {
-    /// #        self.0.encode(a, encoder);
-    /// #        self.1.encode(b, encoder);
+    /// #    unsafe fn encode(self, (a, b): Self::Value, encoder: &mut Encoder) {
+    /// #        unsafe {
+    /// #            self.0.encode(a, encoder);
+    /// #            self.1.encode(b, encoder);
+    /// #        }
     /// #    }
     /// }
     /// ```
@@ -203,16 +220,16 @@ pub unsafe trait CrubitAbi {
 
 /// A wrapper around a buffer that tracks which parts of a buffer have already been written to.
 pub struct Encoder {
-    // The number of bytes remaining in the buffer. We write backwards (counting down) so that
-    // subtracting too much leads to underflow, which is checked in debug builds.
+    // The number of bytes remaining in the buffer. We write backwards (counting down) from the end
+    // of the buffer.
     remaining_bytes: usize,
     buf: *mut u8,
 }
 
 /// A wrapper around a buffer that tracks which parts of a buffer have already been read from.
 pub struct Decoder {
-    // The number of bytes remaining in the buffer. We read backwards (counting down) so that
-    // subtracting too much leads to underflow, which is checked in debug builds.
+    // The number of bytes remaining in the buffer. We read backwards (counting down) from the end
+    // of the buffer.
     remaining_bytes: usize,
     buf: *const u8,
 }
@@ -220,7 +237,7 @@ pub struct Decoder {
 /// A [`CrubitAbi`] for encoding a value by transmuting it into the buffer.
 pub struct TransmuteAbi<T>(pub PhantomData<T>);
 
-/// Shorthand for constructiong a new [`TransmuteAbi<T>`].
+/// Shorthand for constructing a new [`TransmuteAbi<T>`].
 pub fn transmute_abi<T>() -> TransmuteAbi<T> {
     Default::default()
 }
@@ -246,21 +263,19 @@ unsafe impl<T> CrubitAbi for TransmuteAbi<T> {
 
     const SIZE: usize = mem::size_of::<Self::Value>();
 
-    fn encode(self, value: Self::Value, encoder: &mut Encoder) {
-        // We use the fact that underflow is checked in debug builds to ensure that callers
-        // don't overwrite the buffer.
-        encoder.remaining_bytes -= Self::SIZE;
+    #[inline(always)]
+    unsafe fn encode(self, value: Self::Value, encoder: &mut Encoder) {
+        encoder.remaining_bytes = encoder.remaining_bytes.wrapping_sub(Self::SIZE);
 
-        // SAFETY: We have just allocated space to write the value.
+        // SAFETY: The caller guarantees that `encoder` has at least `Self::SIZE` bytes remaining.
         unsafe {
             ptr::write_unaligned(encoder.buf.add(encoder.remaining_bytes).cast::<T>(), value);
         }
     }
 
+    #[inline(always)]
     unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
-        // We use the fact that underflow is checked in debug builds to ensure that callers
-        // don't overwrite the buffer.
-        decoder.remaining_bytes -= Self::SIZE;
+        decoder.remaining_bytes = decoder.remaining_bytes.wrapping_sub(Self::SIZE);
 
         // SAFETY: The caller guarantees that the buffer contains a T.
         unsafe { ptr::read_unaligned(decoder.buf.add(decoder.remaining_bytes).cast::<T>()) }
@@ -277,15 +292,19 @@ macro_rules! unsafe_impl_crubit_abi_for_tuple {
 
                 const SIZE: usize = 0 $( + $A::SIZE )*;
 
-                 fn encode(self, ( $($A,)* ): Self::Value, encoder: &mut Encoder) {
+                #[inline(always)]
+                unsafe fn encode(self, ( $($A,)* ): Self::Value, encoder: &mut Encoder) {
                     #![allow(non_snake_case)]
                     #![allow(unused_variables)] // for `encoder` in () case
                     let ($($a,)*) = self;
+                    // SAFETY: The caller guarantees that `encoder` has at least `Self::SIZE` bytes
+                    // remaining, which equals the sum of `$A::SIZE` for each element.
                     $(
-                        $a.encode($A, encoder);
+                        unsafe { $a.encode($A, encoder); }
                     )*
                 }
 
+                #[inline(always)]
                 unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
                     #![allow(clippy::unused_unit)] // for () case
                     #![allow(unused_variables)] // for `decoder` in () case
@@ -336,15 +355,21 @@ unsafe impl<A: CrubitAbi> CrubitAbi for OptionAbi<A> {
 
     const SIZE: usize = mem::size_of::<bool>() + A::SIZE;
 
-    fn encode(self, value: Self::Value, encoder: &mut Encoder) {
-        if let Some(inner) = value {
-            transmute_abi().encode(true, encoder);
-            self.0.encode(inner, encoder);
-        } else {
-            transmute_abi().encode(false, encoder);
+    #[inline(always)]
+    unsafe fn encode(self, value: Self::Value, encoder: &mut Encoder) {
+        // SAFETY: The caller guarantees that `encoder` has at least `Self::SIZE` bytes remaining,
+        // which is enough for a `bool` followed by `A::SIZE` bytes.
+        unsafe {
+            if let Some(inner) = value {
+                transmute_abi().encode(true, encoder);
+                self.0.encode(inner, encoder);
+            } else {
+                transmute_abi().encode(false, encoder);
+            }
         }
     }
 
+    #[inline(always)]
     unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
         // SAFETY: the caller guarantees that the buffer contains a bool, and if the bool is true,
         // that the buffer also contains the value.
@@ -371,8 +396,12 @@ pub mod internal {
     ///
     /// `buf` must point to a buffer that is large enough to hold the encoded value. The exact size
     /// written can be determined by `<T as CrubitAbi<S>>::SIZE`.
+    #[inline(always)]
     pub unsafe fn encode<A: CrubitAbi>(crubit_abi: A, buf: *mut u8, value: A::Value) {
-        crubit_abi.encode(value, &mut Encoder { remaining_bytes: A::SIZE, buf });
+        // SAFETY: The caller guarantees that `buf` is at least `A::SIZE` bytes large.
+        unsafe {
+            crubit_abi.encode(value, &mut Encoder { remaining_bytes: A::SIZE, buf });
+        }
     }
 
     /// Decodes a value from a buffer.
@@ -383,6 +412,7 @@ pub mod internal {
     ///
     /// `buf` must point to a buffer that is at least `<T as CrubitAbi<S>>::SIZE` bytes large, and
     /// must contain a `T` that was encoded with the same schema `S`.
+    #[inline(always)]
     pub unsafe fn decode<A: CrubitAbi>(crubit_abi: A, buf: *const u8) -> A::Value {
         // SAFETY: The caller guarantees that the buffer contains a `T` that was encoded with schema
         // `S`.
@@ -392,6 +422,7 @@ pub mod internal {
     /// Helper function that returns an empty buffer to reduce noise in the generated code.
     ///
     /// This function is intended to be used by Crubit generated code.
+    #[inline(always)]
     pub const fn empty_buffer<const BYTES: usize>() -> [MaybeUninit<u8>; BYTES] {
         [const { MaybeUninit::uninit() }; BYTES]
     }

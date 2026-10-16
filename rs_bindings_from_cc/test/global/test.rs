@@ -56,6 +56,19 @@ fn test_constexpr_arrays_are_rust_arrays() {
 }
 
 #[gtest]
+fn test_constexpr_char_arrays() {
+    let char_array: [ffi_11::c_char; 5] = global::kCharArray;
+    expect_eq!(char_array, b"NOOP\0".map(ffi_11::new_c_char));
+    let multidimensional_char_array: [[ffi_11::c_char; 8]; 3] = global::kMultidimensionalCharArray;
+    expect_eq!(
+        multidimensional_char_array,
+        [*b"NOOP\0\0\0\0", *b"DROP\0\0\0\0", [0; 8]].map(|row| row.map(ffi_11::new_c_char))
+    );
+    let mixed_char_array: [[ffi_11::c_char; 4]; 2] = global::kMixedCharArray;
+    expect_eq!(mixed_char_array, [*b"ab\0\0", *b"cdef"].map(|row| row.map(ffi_11::new_c_char)));
+}
+
+#[gtest]
 fn test_anonymous_enum_constants() {
     expect_eq!(global::kAnonEnumConst, 123);
     expect_eq!(global::foo::kAnonEnumNamespacedConst, 456);

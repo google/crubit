@@ -297,8 +297,11 @@ unsafe impl CrubitAbi for BoxedCppStringAbi {
 
     const SIZE: usize = core::mem::size_of::<*mut c_void>();
 
-    fn encode(self, value: Self::Value, encoder: &mut Encoder) {
-        transmute_abi().encode(ManuallyDrop::new(value).as_mut_void_ptr(), encoder);
+    unsafe fn encode(self, value: Self::Value, encoder: &mut Encoder) {
+        // SAFETY: The caller guarantees that `encoder` has at least `Self::SIZE` bytes remaining.
+        unsafe {
+            transmute_abi().encode(ManuallyDrop::new(value).as_mut_void_ptr(), encoder);
+        }
     }
 
     unsafe fn decode(self, decoder: &mut Decoder) -> Self::Value {
