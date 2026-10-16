@@ -294,6 +294,7 @@ message Func {
   CallingConv call_conv = 31;
   // Whether the function or method should have `pub(crate)` visibility.
   bool is_pub_crate = 32;
+  bool is_always_inline = 33;
 }
 
 // Access specifier for a member or base class.
@@ -436,7 +437,8 @@ message BridgeType {
 }
 
 // A (possibly multidimensional) C-style array of integers or booleans, e.g.
-// `constexpr int kArr[] = {1, 2, 3};`.
+// `constexpr int kArr[] = {1, 2, 3};` or
+// `constexpr char kNames[][8] = {"NOOP", "DROP"};`.
 //
 // Only the elements that were explicitly initialized in the C++ source are
 // recorded individually. The remaining elements are value-initialized, and
@@ -463,10 +465,17 @@ message ArrayValue {
   // The length of the array. Always positive.
   int32 length = 3;
   oneof kind {
-    // Used for the innermost dimension.
+    // Used for the innermost dimension, unless it was initialized by a string
+    // literal.
     IntegerElements integer_elements = 1;
     // Used for all but the innermost dimension.
     ArrayElements array_elements = 2;
+    // Used for the innermost dimension of arrays of plain `char` which were
+    // initialized by a string literal, e.g. `char x[8] = "abc";`. Holds the
+    // bytes of the string literal, excluding the implicit NUL terminator. The
+    // string literal and its NUL terminator always fit, and the remainder of
+    // the array is NUL-filled.
+    bytes string_literal = 4;
   }
 }
 

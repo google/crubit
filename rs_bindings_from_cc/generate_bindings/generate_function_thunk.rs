@@ -531,6 +531,7 @@ pub fn generate_function_thunk_impl<'a>(
         conversion_stmts,
         return_stmt,
         needs_slot_header,
+        is_always_inline: func.is_always_inline(),
     }))
 }
 
