@@ -27,9 +27,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_uasync_ufn_ugolden_x0000003
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::async_fn_golden::StructWithDrop as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            <::async_fn_golden::StructWithDrop as ::core::default::Default>::default(),
+        );
     }
 }
 #[unsafe(no_mangle)]

@@ -865,7 +865,7 @@ inline ::std::int32_t call_impl_with_tuple_option(
             rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>(
                 rs_std::Tuple<::std::int32_t,
                               rs_std::Option<::std::int32_t>>) &&>*>(__data))(
-        ::std::move(*__arg_0)));
+        ::crubit::UnsafeTakeValue(__arg_0)));
   };
   auto __f_destroyer = [](void* __data) noexcept {
     delete reinterpret_cast<::rs::Fn<rs_std::Tuple<
@@ -923,7 +923,7 @@ inline ::callables::Point call_point_mut(
                         void* __ret_ptr) -> void {
     new (__ret_ptr)::callables::Point((
         *reinterpret_cast<::rs::FnRef<::callables::Point(::callables::Point)>*>(
-            __data))(::std::move(*__arg_0)));
+            __data))(::crubit::UnsafeTakeValue(__arg_0)));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -952,7 +952,7 @@ inline ::callables::Point call_point_once_static(
                         void* __ret_ptr) -> void {
     new (__ret_ptr)::callables::Point(::std::move(
         *reinterpret_cast<::rs::Fn<::callables::Point(::callables::Point) &&>*>(
-            __data))(::std::move(*__arg_0)));
+            __data))(::crubit::UnsafeTakeValue(__arg_0)));
   };
   auto __f_destroyer = [](void* __data) noexcept {
     delete reinterpret_cast<
@@ -983,7 +983,7 @@ inline ::std::int32_t call_point_to_int(
                         ::callables::Point* __arg_0) -> ::std::int32_t {
     return (*reinterpret_cast<
             ::rs::FnRef<::std::int32_t(::callables::Point) const>*>(__data))(
-        ::std::move(*__arg_0));
+        ::crubit::UnsafeTakeValue(__arg_0));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -1003,7 +1003,7 @@ inline void call_point_void(::rs::FnRef<void(::callables::Point) const> f,
                             ::callables::Point pt) {
   auto __f_invoker = [](void* __data, ::callables::Point* __arg_0) -> void {
     (*reinterpret_cast<::rs::FnRef<void(::callables::Point) const>*>(__data))(
-        ::std::move(*__arg_0));
+        ::crubit::UnsafeTakeValue(__arg_0));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -1043,7 +1043,8 @@ inline ::callables::Point call_two_points(
     new (__ret_ptr)::callables::Point(
         (*reinterpret_cast<::rs::FnRef<::callables::Point(
              ::callables::Point, ::callables::Point) const>*>(__data))(
-            ::std::move(*__arg_0), ::std::move(*__arg_1)));
+            ::crubit::UnsafeTakeValue(__arg_0),
+            ::crubit::UnsafeTakeValue(__arg_1)));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -1104,7 +1105,7 @@ inline ::std::int32_t call_with_hrtb_str(
                         rs_std::StrRef* __arg_0) -> ::std::int32_t {
     return (
         *reinterpret_cast<::rs::FnRef<::std::int32_t(rs_std::StrRef) const>*>(
-            __data))(::std::move(*__arg_0));
+            __data))(::crubit::UnsafeTakeValue(__arg_0));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -1126,7 +1127,7 @@ inline ::std::uintptr_t call_with_hrtb_str_to_str(
                         void* __ret_ptr) -> void {
     new (__ret_ptr) rs_std::StrRef(
         (*reinterpret_cast<::rs::FnRef<rs_std::StrRef(rs_std::StrRef) const>*>(
-            __data))(::std::move(*__arg_0)));
+            __data))(::crubit::UnsafeTakeValue(__arg_0)));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -1147,7 +1148,7 @@ inline void call_with_movable_drop(
   auto __f_invoker = [](void* __data,
                         ::callables::CppMovableDrop* __arg_0) -> void {
     (*reinterpret_cast<::rs::FnRef<void(::callables::CppMovableDrop) const>*>(
-        __data))(::std::move(*__arg_0));
+        __data))(::crubit::UnsafeTakeValue(__arg_0));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -1203,7 +1204,7 @@ inline ::callables::Point call_with_point(
     new (__ret_ptr)::callables::Point(
         (*reinterpret_cast<
             ::rs::FnRef<::callables::Point(::callables::Point) const>*>(
-            __data))(::std::move(*__arg_0)));
+            __data))(::crubit::UnsafeTakeValue(__arg_0)));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -1244,7 +1245,7 @@ inline ::std::int32_t call_with_str(
                         rs_std::StrRef* __arg_0) -> ::std::int32_t {
     return (
         *reinterpret_cast<::rs::FnRef<::std::int32_t(rs_std::StrRef) const>*>(
-            __data))(::std::move(*__arg_0));
+            __data))(::crubit::UnsafeTakeValue(__arg_0));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -1266,7 +1267,7 @@ inline rs_std::StrRef call_with_str_to_str(
                         void* __ret_ptr) -> void {
     new (__ret_ptr) rs_std::StrRef(
         (*reinterpret_cast<::rs::FnRef<rs_std::StrRef(rs_std::StrRef) const>*>(
-            __data))(::std::move(*__arg_0)));
+            __data))(::crubit::UnsafeTakeValue(__arg_0)));
   };
   ::rs::internal::FnRefPayload __f_payload{
       const_cast<void*>(reinterpret_cast<const void*>(&f)),
@@ -1302,7 +1303,7 @@ inline ::std::int32_t call_with_tuple_option(
             rs_std::Tuple<::std::int32_t, rs_std::Option<::std::int32_t>>(
                 rs_std::Tuple<::std::int32_t,
                               rs_std::Option<::std::int32_t>>) &&>*>(__data))(
-        ::std::move(*__arg_0)));
+        ::crubit::UnsafeTakeValue(__arg_0)));
   };
   auto __f_destroyer = [](void* __data) noexcept {
     delete reinterpret_cast<::rs::Fn<rs_std::Tuple<

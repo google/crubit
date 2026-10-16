@@ -22,14 +22,7 @@ unsafe extern "C" fn __crubit_thunk_accept_uoptional_uby_uvalue(
     opt: *const core::ffi::c_void,
 ) -> i32 {
     unsafe {
-        let opt = {
-            let mut __crubit_temp = ::core::mem::MaybeUninit::<
-                ::layout_equivalent_generics_golden::MyOptional<i32>,
-            >::uninit();
-            __crubit_temp
-                .write((opt as *const ::layout_equivalent_generics_golden::MyOptional<i32>).read());
-            __crubit_temp.assume_init()
-        };
+        let opt = (opt as *const ::layout_equivalent_generics_golden::MyOptional<i32>).read();
         ::layout_equivalent_generics_golden::accept_optional_by_value(opt)
     }
 }
@@ -38,15 +31,7 @@ unsafe extern "C" fn __crubit_thunk_accept_uoptional_uisize(
     opt: *const core::ffi::c_void,
 ) -> isize {
     unsafe {
-        let opt = {
-            let mut __crubit_temp = ::core::mem::MaybeUninit::<
-                ::layout_equivalent_generics_golden::MyOptional<isize>,
-            >::uninit();
-            __crubit_temp.write(
-                (opt as *const ::layout_equivalent_generics_golden::MyOptional<isize>).read(),
-            );
-            __crubit_temp.assume_init()
-        };
+        let opt = (opt as *const ::layout_equivalent_generics_golden::MyOptional<isize>).read();
         ::layout_equivalent_generics_golden::accept_optional_isize(opt)
     }
 }
@@ -55,30 +40,14 @@ unsafe extern "C" fn __crubit_thunk_accept_uoptional_uusize(
     opt: *const core::ffi::c_void,
 ) -> usize {
     unsafe {
-        let opt = {
-            let mut __crubit_temp = ::core::mem::MaybeUninit::<
-                ::layout_equivalent_generics_golden::MyOptional<usize>,
-            >::uninit();
-            __crubit_temp.write(
-                (opt as *const ::layout_equivalent_generics_golden::MyOptional<usize>).read(),
-            );
-            __crubit_temp.assume_init()
-        };
+        let opt = (opt as *const ::layout_equivalent_generics_golden::MyOptional<usize>).read();
         ::layout_equivalent_generics_golden::accept_optional_usize(opt)
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_accept_ustatus(status: *const core::ffi::c_void) -> bool {
     unsafe {
-        let status = {
-            let mut __crubit_temp = ::core::mem::MaybeUninit::<
-                ::layout_equivalent_generics_golden::MyStatusOr<()>,
-            >::uninit();
-            __crubit_temp.write(
-                (status as *const ::layout_equivalent_generics_golden::MyStatusOr<()>).read(),
-            );
-            __crubit_temp.assume_init()
-        };
+        let status = (status as *const ::layout_equivalent_generics_golden::MyStatusOr<()>).read();
         ::layout_equivalent_generics_golden::accept_status(status)
     }
 }
@@ -87,15 +56,7 @@ unsafe extern "C" fn __crubit_thunk_accept_ustatus_uor_uunit(
     status: *const core::ffi::c_void,
 ) -> bool {
     unsafe {
-        let status = {
-            let mut __crubit_temp = ::core::mem::MaybeUninit::<
-                ::layout_equivalent_generics_golden::MyStatusOr<()>,
-            >::uninit();
-            __crubit_temp.write(
-                (status as *const ::layout_equivalent_generics_golden::MyStatusOr<()>).read(),
-            );
-            __crubit_temp.assume_init()
-        };
+        let status = (status as *const ::layout_equivalent_generics_golden::MyStatusOr<()>).read();
         ::layout_equivalent_generics_golden::accept_status_or_unit(status)
     }
 }
@@ -104,8 +65,10 @@ unsafe extern "C" fn __crubit_thunk_create_ubool_ubool_upair(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::layout_equivalent_generics_golden::create_bool_bool_pair();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::create_bool_bool_pair(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -113,8 +76,10 @@ unsafe extern "C" fn __crubit_thunk_create_uint_ubool_upair(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::layout_equivalent_generics_golden::create_int_bool_pair();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::create_int_bool_pair(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -122,9 +87,10 @@ unsafe extern "C" fn __crubit_thunk_create_ustatus_uwith_uprivate_usecret(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::layout_equivalent_generics_golden::create_status_with_private_secret();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::create_status_with_private_secret(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -132,8 +98,10 @@ unsafe extern "C" fn __crubit_thunk_create_ustatus_uwith_usecret(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::layout_equivalent_generics_golden::create_status_with_secret();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::create_status_with_secret(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -141,23 +109,16 @@ unsafe extern "C" fn __crubit_thunk_create_ustatus_uwith_usecret_ualias(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::layout_equivalent_generics_golden::create_status_with_secret_alias();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::create_status_with_secret_alias(),
+        );
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_is_uok_usecret(status: *const core::ffi::c_void) -> bool {
     unsafe {
-        let status = {
-            let mut __crubit_temp = ::core::mem::MaybeUninit::<
-                ::layout_equivalent_generics_golden::MyStatusOr<i32>,
-            >::uninit();
-            __crubit_temp.write(
-                (status as *const ::layout_equivalent_generics_golden::MyStatusOr<i32>).read(),
-            );
-            __crubit_temp.assume_init()
-        };
+        let status = (status as *const ::layout_equivalent_generics_golden::MyStatusOr<i32>).read();
         ::layout_equivalent_generics_golden::is_ok_secret(status)
     }
 }
@@ -167,8 +128,10 @@ unsafe extern "C" fn __crubit_thunk_return_uoptional_uby_uvalue(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::layout_equivalent_generics_golden::return_optional_by_value(x);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::return_optional_by_value(x),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -177,8 +140,10 @@ unsafe extern "C" fn __crubit_thunk_return_uoptional_uisize(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::layout_equivalent_generics_golden::return_optional_isize(x);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::return_optional_isize(x),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -187,22 +152,28 @@ unsafe extern "C" fn __crubit_thunk_return_uoptional_uusize(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::layout_equivalent_generics_golden::return_optional_usize(x);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::return_optional_usize(x),
+        );
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_ustatus(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::layout_equivalent_generics_golden::return_status();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::return_status(),
+        );
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_ustatus_ualias(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::layout_equivalent_generics_golden::return_status_alias();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::return_status_alias(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -211,17 +182,11 @@ unsafe extern "C" fn __crubit_thunk_return_ustatus_unon_uunit(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let status = {
-            let mut __crubit_temp = ::core::mem::MaybeUninit::<
-                ::layout_equivalent_generics_golden::MyStatusOr<u32>,
-            >::uninit();
-            __crubit_temp.write(
-                (status as *const ::layout_equivalent_generics_golden::MyStatusOr<u32>).read(),
-            );
-            __crubit_temp.assume_init()
-        };
-        let __rs_return_value = ::layout_equivalent_generics_golden::return_status_non_unit(status);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        let status = (status as *const ::layout_equivalent_generics_golden::MyStatusOr<u32>).read();
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::return_status_non_unit(status),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -229,8 +194,10 @@ unsafe extern "C" fn __crubit_thunk_return_ustatus_uor_uunit(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::layout_equivalent_generics_golden::return_status_or_unit();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::return_status_or_unit(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -238,7 +205,9 @@ unsafe extern "C" fn __crubit_thunk_return_ustatus_uor_uunit_ualias(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::layout_equivalent_generics_golden::return_status_or_unit_alias();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::layout_equivalent_generics_golden::return_status_or_unit_alias(),
+        );
     }
 }

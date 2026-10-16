@@ -16,8 +16,10 @@ const _: () = assert!(::core::mem::align_of::<::uses_golden::AliasOfExportedStru
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(field: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::uses_golden::AliasOfExportedStruct::create(field);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::uses_golden::AliasOfExportedStruct::create(field),
+        );
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::uses_golden::AliasOfExportedStruct, field) == 0);
@@ -50,14 +52,12 @@ unsafe extern "C" fn __crubit_thunk_private_ufn() -> i32 {
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_ux(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::uses_golden::return_x();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::uses_golden::return_x());
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uy(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::uses_golden::return_y();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::uses_golden::return_y());
     }
 }

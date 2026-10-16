@@ -19,9 +19,10 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_urs_uhash_ugolden_x0000003a_x00
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::rs_hash_golden::derived_enum::Color as ::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            <::rs_hash_golden::derived_enum::Color as ::core::clone::Clone>::clone(__self),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -53,22 +54,19 @@ extern "C" fn __crubit_thunk_Hash_uhash_urs_uhash_ugolden_x0000003a_x0000003ader
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create_ublue(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::rs_hash_golden::derived_enum::create_blue();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::rs_hash_golden::derived_enum::create_blue());
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create_ugreen(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::rs_hash_golden::derived_enum::create_green();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::rs_hash_golden::derived_enum::create_green());
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create_ured(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::rs_hash_golden::derived_enum::create_red();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::rs_hash_golden::derived_enum::create_red());
     }
 }
 const _: () = assert!(::core::mem::size_of::<::rs_hash_golden::derived_struct::Point>() == 8);
@@ -99,8 +97,10 @@ unsafe extern "C" fn __crubit_thunk_create_upoint(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::rs_hash_golden::derived_struct::create_point(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::rs_hash_golden::derived_struct::create_point(x, y),
+        );
     }
 }
 const _: () =
@@ -135,8 +135,10 @@ unsafe extern "C" fn __crubit_thunk_create_utuple(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::rs_hash_golden::derived_tuple_struct::create_tuple(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::rs_hash_golden::derived_tuple_struct::create_tuple(x, y),
+        );
     }
 }
 const _: () =
@@ -169,7 +171,9 @@ unsafe extern "C" fn __crubit_thunk_create_ucustom(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::rs_hash_golden::explicit_struct::create_custom(value);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::rs_hash_golden::explicit_struct::create_custom(value),
+        );
     }
 }

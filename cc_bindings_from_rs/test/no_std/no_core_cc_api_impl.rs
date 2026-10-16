@@ -17,8 +17,7 @@ const _: () = assert!(::core::mem::align_of::<::no_core_golden::Test>() == 8);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::no_core_golden::Test::new();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::no_core_golden::Test::new());
     }
 }
 #[unsafe(no_mangle)]
@@ -27,8 +26,7 @@ unsafe extern "C" fn __crubit_thunk_s(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::no_core_golden::Test::s(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::no_core_golden::Test::s(__self));
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::no_core_golden::Test, s) == 0);

@@ -22,8 +22,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_unon_utrivially_udestructib
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::non_trivially_destructible_golden::NonTriviallyDestructable as::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as*mut _,<::non_trivially_destructible_golden::NonTriviallyDestructable as::core::default::Default>::default());
     }
 }
 #[unsafe(no_mangle)]
@@ -38,8 +37,7 @@ unsafe extern "C" fn __crubit_thunk_Clone_uclone_unon_utrivially_udestructible_u
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::non_trivially_destructible_golden::NonTriviallyDestructable as::core::clone::Clone>::clone(__self);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as*mut _,<::non_trivially_destructible_golden::NonTriviallyDestructable as::core::clone::Clone>::clone(__self));
     }
 }
 #[unsafe(no_mangle)]
@@ -58,8 +56,10 @@ const _: () = assert!(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_return_uby_uvalue(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::non_trivially_destructible_golden::return_by_value();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::non_trivially_destructible_golden::return_by_value(),
+        );
     }
 }
 #[unsafe(no_mangle)]

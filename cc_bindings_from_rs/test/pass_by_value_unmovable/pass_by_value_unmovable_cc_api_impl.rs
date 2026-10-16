@@ -18,9 +18,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_upass_uby_uvalue_uunmovable
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::pass_by_value_unmovable_golden::CppMovable as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            <::pass_by_value_unmovable_golden::CppMovable as ::core::default::Default>::default(),
+        );
     }
 }
 #[unsafe(no_mangle)]

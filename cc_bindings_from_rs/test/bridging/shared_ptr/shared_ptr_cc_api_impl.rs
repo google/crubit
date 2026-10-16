@@ -17,19 +17,13 @@ unsafe extern "C" fn __crubit_thunk_clone_ushared_uptr(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::shared_ptr_golden::clone_shared_ptr(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::shared_ptr_golden::clone_shared_ptr(val));
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_consume_ushared_uptr(_val: *const core::ffi::c_void) -> () {
     unsafe {
-        let _val = {
-            let mut __crubit_temp =
-                ::core::mem::MaybeUninit::<::cc_std::std::shared_ptr<i32>>::uninit();
-            __crubit_temp.write((_val as *const ::cc_std::std::shared_ptr<i32>).read());
-            __crubit_temp.assume_init()
-        };
+        let _val = (_val as *const ::cc_std::std::shared_ptr<i32>).read();
         ::shared_ptr_golden::consume_shared_ptr(_val)
     }
 }
@@ -39,17 +33,11 @@ unsafe extern "C" fn __crubit_thunk_roundtrip_unonnull_ushared_uptr(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let val = {
-            let mut __crubit_temp = ::core::mem::MaybeUninit::<
-                ::cc_std::std::NonNull<::cc_std::std::shared_ptr<i32>>,
-            >::uninit();
-            __crubit_temp.write(
-                (val as *const ::cc_std::std::NonNull<::cc_std::std::shared_ptr<i32>>).read(),
-            );
-            __crubit_temp.assume_init()
-        };
-        let __rs_return_value = ::shared_ptr_golden::roundtrip_nonnull_shared_ptr(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        let val = (val as *const ::cc_std::std::NonNull<::cc_std::std::shared_ptr<i32>>).read();
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::shared_ptr_golden::roundtrip_nonnull_shared_ptr(val),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -58,13 +46,7 @@ unsafe extern "C" fn __crubit_thunk_roundtrip_ushared_uptr(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let val = {
-            let mut __crubit_temp =
-                ::core::mem::MaybeUninit::<::cc_std::std::shared_ptr<i32>>::uninit();
-            __crubit_temp.write((val as *const ::cc_std::std::shared_ptr<i32>).read());
-            __crubit_temp.assume_init()
-        };
-        let __rs_return_value = ::shared_ptr_golden::roundtrip_shared_ptr(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        let val = (val as *const ::cc_std::std::shared_ptr<i32>).read();
+        ::core::ptr::write(__ret_ptr as *mut _, ::shared_ptr_golden::roundtrip_shared_ptr(val));
     }
 }

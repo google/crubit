@@ -14,14 +14,12 @@ extern crate core;
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_use_us(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::reexport_crate_golden::use_s();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::reexport_crate_golden::use_s());
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_use_us_ualias(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::reexport_crate_golden::use_s_alias();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::reexport_crate_golden::use_s_alias());
     }
 }

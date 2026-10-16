@@ -18,15 +18,13 @@ const _: () = assert!(::core::mem::align_of::<::uses_reexport_golden::Foo>() == 
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::uses_reexport_golden::Foo::create();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::uses_reexport_golden::Foo::create());
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_bar(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::uses_reexport_golden::Foo::bar();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::uses_reexport_golden::Foo::bar());
     }
 }
 const _: () = assert!(::core::mem::offset_of!(::uses_reexport_golden::Foo, bar) == 4);

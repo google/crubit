@@ -1323,24 +1323,26 @@ fn test_format_item_fn_layout_compatible_not_abi_compatible_type() {
                     __ret_ptr: *mut core::ffi::c_void
                 ) -> () {
                     unsafe {
-                        let __rs_return_value = ::rust_out::call_point(move |__arg_0: ::rust_out::Point| {
-                            let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
-                            let __invoker: unsafe extern "C" fn(
-                                *mut core::ffi::c_void,
-                                *mut ::rust_out::Point,
-                                *mut core::ffi::c_void
-                            ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-                            let mut __ret_storage = ::core::mem::MaybeUninit::<::rust_out::Point>::uninit();
-                            unsafe {
-                                __invoker(
-                                    f.data(),
-                                    &mut *__arg_0 as *mut _,
-                                    __ret_storage.as_mut_ptr() as *mut _
-                                );
-                                __ret_storage.assume_init()
-                            }
-                        });
-                        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+                        ::core::ptr::write(
+                            __ret_ptr as *mut _,
+                            ::rust_out::call_point(move |__arg_0: ::rust_out::Point| {
+                                let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
+                                let __invoker: unsafe extern "C" fn(
+                                    *mut core::ffi::c_void,
+                                    *mut ::rust_out::Point,
+                                    *mut core::ffi::c_void
+                                ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                                let mut __ret_storage = ::core::mem::MaybeUninit::<::rust_out::Point>::uninit();
+                                unsafe {
+                                    __invoker(
+                                        f.data(),
+                                        &mut *__arg_0 as *mut _,
+                                        __ret_storage.as_mut_ptr() as *mut _
+                                    );
+                                    __ret_storage.assume_init()
+                                }
+                            })
+                        );
                     }
                 }
             }
@@ -1776,8 +1778,7 @@ fn test_format_item_fn_rust_abi_returning_struct_by_value() {
                     __ret_ptr: *mut core::ffi::c_void
                 ) -> () {
                     unsafe {
-                        let __rs_return_value = ::rust_out::create(i);
-                        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+                        ::core::ptr::write(__ret_ptr as *mut _, ::rust_out::create(i));
                     }
                 }
             }

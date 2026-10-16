@@ -16,9 +16,10 @@ unsafe extern "C" fn __crubit_thunk_returns_uflipped_ualias(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::type_aliases_golden::test_generics_matching::returns_flipped_alias();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::type_aliases_golden::test_generics_matching::returns_flipped_alias(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -26,17 +27,19 @@ unsafe extern "C" fn __crubit_thunk_returns_umatching_ualias(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::type_aliases_golden::test_generics_matching::returns_matching_alias();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::type_aliases_golden::test_generics_matching::returns_matching_alias(),
+        );
     }
 }
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_returns_uspecialized(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value =
-            ::type_aliases_golden::test_generics_matching::returns_specialized();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::type_aliases_golden::test_generics_matching::returns_specialized(),
+        );
     }
 }
 #[unsafe(no_mangle)]

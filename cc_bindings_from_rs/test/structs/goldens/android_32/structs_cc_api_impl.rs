@@ -18,8 +18,10 @@ const _: () =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(f: f32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::structs_golden::abi_classification::StructFloat::create(f);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::abi_classification::StructFloat::create(f),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -31,8 +33,10 @@ unsafe extern "C" fn __crubit_thunk_multiply(
     unsafe {
         let x = x.read();
         let y = y.read();
-        let __rs_return_value = ::structs_golden::abi_classification::StructFloat::multiply(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::abi_classification::StructFloat::multiply(x, y),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -51,8 +55,10 @@ const _: () =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(i: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::structs_golden::abi_classification::StructInteger::create(i);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::abi_classification::StructInteger::create(i),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -64,8 +70,10 @@ unsafe extern "C" fn __crubit_thunk_multiply(
     unsafe {
         let x = x.read();
         let y = y.read();
-        let __rs_return_value = ::structs_golden::abi_classification::StructInteger::multiply(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::abi_classification::StructInteger::multiply(x, y),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -84,8 +92,10 @@ const _: () =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(i: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::structs_golden::abi_classification::StructMemory::create(i);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::abi_classification::StructMemory::create(i),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -97,8 +107,10 @@ unsafe extern "C" fn __crubit_thunk_multiply(
     unsafe {
         let x = x.read();
         let y = y.read();
-        let __rs_return_value = ::structs_golden::abi_classification::StructMemory::multiply(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::abi_classification::StructMemory::multiply(x, y),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -149,9 +161,10 @@ extern "C" fn __crubit_thunk_Drop_udrop_ustructs_ugolden_x0000003a_x0000003aaggr
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(x: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value =
-            ::structs_golden::aggregate_initialization::CustomDropStruct::create(x);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::aggregate_initialization::CustomDropStruct::create(x),
+        );
     }
 }
 const _: () = assert!(
@@ -170,9 +183,10 @@ unsafe extern "C" fn __crubit_thunk_create(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::structs_golden::aggregate_initialization::NonExhaustiveStruct::create(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::aggregate_initialization::NonExhaustiveStruct::create(x, y),
+        );
     }
 }
 const _: () = assert!(
@@ -207,9 +221,10 @@ unsafe extern "C" fn __crubit_thunk_create(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::structs_golden::aggregate_initialization::StructWithPrivateField::create(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::aggregate_initialization::StructWithPrivateField::create(x, y),
+        );
     }
 }
 const _: () = assert!(
@@ -259,8 +274,7 @@ unsafe extern "C" fn __crubit_thunk_create(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::structs_golden::default_repr::create(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::structs_golden::default_repr::create(x, y));
     }
 }
 #[unsafe(no_mangle)]
@@ -278,11 +292,12 @@ unsafe extern "C" fn __crubit_thunk_ToString_uto_ustring_ustructs_ugolden_x00000
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
             <::structs_golden::display::DisplayStruct as ::alloc::string::ToString>::to_string(
                 __self,
-            );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+            ),
+        );
     }
 }
 const _: () =
@@ -290,8 +305,7 @@ const _: () =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::structs_golden::display::create(value);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::structs_golden::display::create(value));
     }
 }
 const _: () =
@@ -303,8 +317,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::structs_golden::interior_mutability::SomeStruct as::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as*mut _,<::structs_golden::interior_mutability::SomeStruct as::core::default::Default>::default());
     }
 }
 const _: () =
@@ -334,8 +347,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ustructs_ugolden_x0000003a_
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct as::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as*mut _,<::structs_golden::nested_ptr_type_mutability_qualifiers::SomeStruct as::core::default::Default>::default());
     }
 }
 const _: () = assert!(
@@ -367,8 +379,7 @@ unsafe extern "C" fn __crubit_thunk_create(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::structs_golden::non_cpp_movable::create(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::structs_golden::non_cpp_movable::create(x, y));
     }
 }
 #[unsafe(no_mangle)]
@@ -388,8 +399,7 @@ unsafe extern "C" fn __crubit_thunk_create(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::structs_golden::repr_c::create(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::structs_golden::repr_c::create(x, y));
     }
 }
 #[unsafe(no_mangle)]
@@ -415,9 +425,10 @@ unsafe extern "C" fn __crubit_thunk_no_umangle_ucreate(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::structs_golden::struct_by_float_passing_with_no_cc_definition::no_mangle_create(f);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::struct_by_float_passing_with_no_cc_definition::no_mangle_create(f),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -438,11 +449,12 @@ unsafe extern "C" fn __crubit_thunk_no_umangle_umultiply(
     unsafe {
         let x = x.read();
         let y = y.read();
-        let __rs_return_value =
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
             ::structs_golden::struct_by_float_passing_with_no_cc_definition::no_mangle_multiply(
                 x, y,
-            );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+            ),
+        );
     }
 }
 const _: () = assert!(
@@ -471,9 +483,10 @@ unsafe extern "C" fn __crubit_thunk_struct_uby_ufloat_upassing_uwith_uno_uthunk_
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::structs_golden::struct_by_float_passing_with_no_thunk::thunkless_create(f);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::struct_by_float_passing_with_no_thunk::thunkless_create(f),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -494,9 +507,10 @@ unsafe extern "C" fn __crubit_thunk_struct_uby_ufloat_upassing_uwith_uno_uthunk_
     unsafe {
         let x = x.read();
         let y = y.read();
-        let __rs_return_value =
-            ::structs_golden::struct_by_float_passing_with_no_thunk::thunkless_multiply(x, y);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::struct_by_float_passing_with_no_thunk::thunkless_multiply(x, y),
+        );
     }
 }
 const _: () =
@@ -507,8 +521,10 @@ const _: () =
 unsafe extern "C" fn __crubit_thunk_create(x: *mut char, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
         let x = x.read();
-        let __rs_return_value = ::structs_golden::unsupported_types::SomeStruct::create(x);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::structs_golden::unsupported_types::SomeStruct::create(x),
+        );
     }
 }
 const _: () = assert!(
@@ -524,8 +540,7 @@ const _: () = assert!(::core::mem::offset_of!(::structs_golden::zst_fields::ZstF
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_create(value: i32, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::structs_golden::zst_fields::create(value);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::structs_golden::zst_fields::create(value));
     }
 }
 #[unsafe(no_mangle)]

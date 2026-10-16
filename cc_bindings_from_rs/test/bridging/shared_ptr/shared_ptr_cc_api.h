@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <utility>
 
 namespace shared_ptr {
 
