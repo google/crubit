@@ -1086,12 +1086,13 @@ pub fn generate_function<'tcx>(
 
     let generic_args = match self_generic_args {
         Some(args) => {
-            // Suppress inherent methods on generic structs that have their own predicates (e.g.,
+            let generics = tcx.generics_of(def_id);
+            if !matches!(tcx.def_kind(def_id), DefKind::Ctor(..)) && !generics.is_own_empty() {
+                bail!("Generic methods are not supported");
+            }
+            // Suppress inherent methods on generic types that have their own predicates (e.g.,
             // `where` clause)
-            if let Some(parent_id) = tcx.opt_parent(def_id)
-                && matches!(tcx.def_kind(parent_id), rustc_hir::def::DefKind::Impl { .. })
-                && tcx.trait_impl_of_assoc(def_id).is_none()
-            {
+            if tcx.trait_impl_of_assoc(def_id).is_none() {
                 #[cfg_accessible(rustc_middle::ty::GenericPredicates)]
                 let explicit_predicates = tcx.explicit_predicates_of(def_id);
                 #[cfg_accessible(rustc_middle::ty::GenericClauses)]
@@ -1099,10 +1100,6 @@ pub fn generate_function<'tcx>(
                 if !explicit_predicates.clauses().is_empty() {
                     bail!("Inherent methods with their own predicates are not supported");
                 }
-            }
-            let generics = tcx.generics_of(def_id);
-            if !generics.is_own_empty() {
-                bail!("Generic methods are not supported");
             }
             args
         }
@@ -1115,7 +1112,7 @@ pub fn generate_function<'tcx>(
             tcx.fn_sig(def_id).instantiate(tcx, generic_args),
             def_id,
         );
-        if tcx.trait_impl_of_assoc(def_id).is_some() {
+        if tcx.trait_impl_of_assoc(def_id).is_some() || self_generic_args.is_some() {
             query_compiler::try_normalize(
                 tcx,
                 ty::TypingEnv::non_body_analysis(tcx, def_id),
@@ -1513,8 +1510,17 @@ pub fn generate_function<'tcx>(
             quote! { <#rs_self_ty as #trait_name_with_args>::#fn_name }
         } else if let Ok(struct_name) = struct_name.as_ref() {
             let fn_name = make_rs_ident(unqualified_rust_fn_name.as_str());
-            let struct_name = struct_name.format_for_rs();
-            quote! { #struct_name :: #fn_name }
+            if self_ty.is_some_and(|ty| {
+                ty.ty_adt_def().is_some_and(|adt| {
+                    query_compiler::has_non_lifetime_generics(db.tcx(), adt.did())
+                })
+            }) && let Some(struct_name_tokens) = struct_name_tokens.as_ref()
+            {
+                quote! { <#struct_name_tokens>::#fn_name }
+            } else {
+                let struct_name = struct_name.format_for_rs();
+                quote! { #struct_name :: #fn_name }
+            }
         } else if let Ok(canonical) = db.symbol_canonical_name(def_id) {
             canonical.format_for_rs()
         } else {
