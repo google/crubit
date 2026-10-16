@@ -158,6 +158,7 @@ crubit_cc_test(
         # cross-compilation, but it's mostly uninteresting from a multi-platform POV.
         "not_run:arm",
         "not_run:mac",
+        "no_macos",
     ],
     deps = [
         ":cc_ir",
@@ -216,6 +217,9 @@ cc_library(
 crubit_cc_test(
     name = "ast_util_test",
     srcs = ["ast_util_test.cc"],
+    # rs_bindings_from_cc relies on `llvm::StringRef` <-> `absl::string_view` conversions, which
+    # only exist where `absl::string_view` is `std::string_view` (not with Apple's libc++).
+    tags = ["no_macos"],
     deps = [
         ":ast_util",
         "@abseil-cpp//absl/status",
@@ -821,6 +825,8 @@ cc_library(
 crubit_cc_test(
     name = "collect_namespaces_test",
     srcs = ["collect_namespaces_test.cc"],
+    # See `ast_util_test`.
+    tags = ["no_macos"],
     deps = [
         ":cc_ir",
         ":collect_namespaces",
