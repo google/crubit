@@ -53,7 +53,7 @@ crubit_cc_test(
     deps = [
         ":int",
         "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "@googletest//:gtest",
     ],
 )
 
@@ -77,7 +77,7 @@ crubit_cc_test(
         "@abseil-cpp//absl/types:span",
         "@fuzztest",
         "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "@googletest//:gtest",
     ],
 )
 
@@ -166,7 +166,7 @@ crubit_cc_test(
         "@abseil-cpp//absl/types:span",
         "@fuzztest",
         "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "@googletest//:gtest",
     ],
 )
 
@@ -199,7 +199,7 @@ crubit_cc_test(
         "@abseil-cpp//absl/strings:string_view",
         "@fuzztest",
         "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "@googletest//:gtest",
     ],
 )
 
@@ -236,7 +236,7 @@ crubit_cc_test(
         ":dyn_callable",
         "@abseil-cpp//absl/functional:any_invocable",
         "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "@googletest//:gtest",
     ],
 )
 
@@ -255,7 +255,7 @@ crubit_cc_test(
     deps = [
         ":fn_ref",
         "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "@googletest//:gtest",
     ],
 )
 
@@ -275,7 +275,7 @@ crubit_cc_test(
         ":fn",
         "//support:movable",
         "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "@googletest//:gtest",
     ],
 )
 
@@ -309,7 +309,7 @@ crubit_cc_test(
     deps = [
         ":iterator_adapter",
         "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "@googletest//:gtest",
     ],
 )
 
@@ -382,7 +382,7 @@ crubit_cc_test(
     deps = [
         ":unit",
         "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "@googletest//:gtest",
     ],
 )
 
@@ -409,7 +409,7 @@ crubit_cc_test(
     deps = [
         ":enum",
         "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "@googletest//:gtest",
     ],
 )
 
@@ -419,7 +419,7 @@ crubit_cc_test(
     deps = [
         ":enum",
         "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "@googletest//:gtest",
     ],
 )
 
@@ -433,7 +433,7 @@ crubit_cc_test(
         ":enum",
         "@abseil-cpp//absl/base:core_headers",
         "@fuzztest//:fuzztest_gtest_main",
-        "@googletest//:gmock",
+        "@googletest//:gtest",
     ],
 )
 
@@ -520,20 +520,4 @@ label_flag(
     name = "stdlib",
     build_setting_default = ":default_stdlib",
     visibility = ["//visibility:public"],
-)
-
-crubit_cc_test(
-    name = "include_cpp_config_test",
-    srcs = ["include_cpp_config_test.cc"],
-    deps = [
-        "//support/public:cpp_config",
-    ],
-)
-
-cc_test(
-    name = "include_cpp_config_test_stable",
-    srcs = ["include_cpp_config_test.cc"],
-    deps = [
-        "//support/public:cpp_config",
-    ],
 )

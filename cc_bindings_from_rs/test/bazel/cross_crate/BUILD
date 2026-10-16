@@ -62,6 +62,6 @@ crubit_cc_test(
     deps = [
         ":other_crate_cc_api",
         ":test_api_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
