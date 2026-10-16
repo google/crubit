@@ -52,6 +52,6 @@ crubit_cc_test(
         "//support/rs_std",
         "//support/rs_std:iterator_adapter",
         "//support/rs_std:rs_core",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
