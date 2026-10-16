@@ -39,3 +39,10 @@ fn test_cpp_std_string_wrapper() {
     let s = cpp_std::string_wrapper::from("hello string");
     expect_eq!(s.as_slice(), b"hello string");
 }
+
+#[gtest]
+fn test_cpp_std_string_wrapper_to_string_view() {
+    let s = cpp_std::string_wrapper::from("hello string");
+    let sv: cpp_std::string_view = (&s).into();
+    expect_eq!(sv.as_bytes(), b"hello string");
+}

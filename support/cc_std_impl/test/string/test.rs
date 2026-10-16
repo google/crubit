@@ -82,6 +82,21 @@ fn test_from_slice() {
 }
 
 #[gtest]
+#[rstest]
+#[case(b"")]
+#[case(b"Hello\xffworld")]
+#[case(b"A super longggggggggggggggggggggg non sso string")]
+fn test_string_wrapper_to_string_view(#[case] input: &[u8]) {
+    let s = string_wrapper::from(input);
+    let view: string_view<'_> = (&s).into();
+    expect_eq!(view, *input);
+    if !input.is_empty() {
+        // The view borrows the string's buffer rather than copying it.
+        expect_eq!(view.as_bytes().as_ptr(), s.as_slice().as_ptr());
+    }
+}
+
+#[gtest]
 fn test_len_and_empty() {
     let s: string_wrapper = "".into();
     assert_eq!(s.len(), 0);
@@ -138,6 +153,21 @@ fn test_string_construction() {
     let s = emplace!(string::ctor_new("Hello string"));
     expect_eq!(s.as_slice(), b"Hello string");
     expect_eq!(s.to_str().unwrap(), "Hello string");
+}
+
+#[gtest]
+#[rstest]
+#[case(b"")]
+#[case(b"Hello\xffworld")]
+#[case(b"A super longggggggggggggggggggggg non sso string")]
+fn test_string_to_string_view(#[case] input: &[u8]) {
+    let s = emplace!(string::ctor_new(input));
+    let view: string_view<'_> = (&*s).into();
+    expect_eq!(view, *input);
+    if !input.is_empty() {
+        // The view borrows the string's buffer rather than copying it.
+        expect_eq!(view.as_bytes().as_ptr(), s.as_slice().as_ptr());
+    }
 }
 
 #[gtest]
