@@ -53,7 +53,7 @@ cc_test(
     srcs = ["user_of_rust_api.cc"],
     deps = [
         ":rust_api_cc",
-        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/functional:any_invocable",
+        "@googletest//:gtest_main",
     ],
 )

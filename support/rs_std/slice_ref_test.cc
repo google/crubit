@@ -131,11 +131,11 @@ TEST(SliceTest, Comparison) {
   EXPECT_EQ(kSlice, kSliceCopy);
   EXPECT_EQ(kSlice, kSlice2);
   static constexpr rs_std::SliceRef<const uint8_t> kSlicePrefix =
-      absl::MakeSpan(kArr.data(), kArr.size() - 1);
+      absl::MakeSpan(kArr).first(kArr.size() - 1);
   static constexpr rs_std::SliceRef<const uint8_t> kSliceSuffix =
-      absl::MakeSpan(kArr.data() + 1, kArr.size() - 1);
+      absl::MakeSpan(kArr).subspan(1);
   static constexpr rs_std::SliceRef<const uint8_t> kSliceInfix =
-      absl::MakeSpan(kArr.data() + 1, kArr.size() - 2);
+      absl::MakeSpan(kArr).subspan(1, kArr.size() - 2);
 
   EXPECT_NE(kSlice, kSlicePrefix);
   EXPECT_NE(kSlice, kSliceSuffix);
