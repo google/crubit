@@ -179,6 +179,8 @@ jobs:
     # The first build after LLVM moves is expensive by design; this is the one
     # place per day that pays it.
     timeout-minutes: 180
+    env:
+      CRUBIT_LLVM_COMMIT: ${{ needs.update-and-generate.outputs.commit }}
     steps:
       - name: Checkout test-matrix
         uses: actions/checkout@v6
@@ -194,10 +196,8 @@ jobs:
         with:
           gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
           bazel: 'true'
-          llvm: 'none'    # the commit comes from the job output, below
+          llvm: 'none'    # the commit comes from the job env, above
       - name: Build against today's LLVM
-        env:
-          CRUBIT_LLVM_COMMIT: ${{ needs.update-and-generate.outputs.commit }}
         run: |
           cd crubit
           bazelisk build --lockfile_mode=error \
@@ -211,6 +211,8 @@ jobs:
       - name: Report failure in issue
         env:
           GH_TOKEN: ${{ github.token }}
+          # No checkout here, so gh cannot infer the repository.
+          GH_REPO: ${{ github.repository }}
           TEAM_HANDLE: "@google/crubit-readers"
         run: |
           TITLE="🚨 LLVM head build failure: $(date +'%Y-%m-%d')"
