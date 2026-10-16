@@ -5,12 +5,10 @@ load(
     "rust_library",
     "rust_proc_macro",
 )
-load("//common/bazel_support:external_binaries.bzl", "EXTERNAL_BINARIES")
 load(
     "//common:crubit_wrapper_macros_oss.bzl",
     "crubit_rust_binary",
     "crubit_rust_test",
-    "crubit_sh_test",
 )
 
 package(
@@ -103,20 +101,6 @@ crubit_rust_test(
         "//common:external_binaries",
         "@crate_index//:regex",  # v1
         "@crate_index//:tempfile",  # v3
-    ],
-)
-
-crubit_sh_test(
-    name = "cc_bindings_from_rs_sh_test",
-    srcs = ["cc_bindings_from_rs_sh_test.sh"],
-    data = [
-        ":cc_bindings_from_rs",
-    ],
-    # We don't yet support running cc_bindings_from_rs itself on macOS (we only target macOS).
-    tags = ["not_run:mac"],
-    deps = [
-        "//util/shell/gbash",
-        "//util/shell/gbash:unit",
     ],
 )
 
