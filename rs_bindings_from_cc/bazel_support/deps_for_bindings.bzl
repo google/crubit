@@ -29,7 +29,7 @@ def _deps_for_bindings_impl(ctx):
 
     dep_variant_infos = [
         make_dep_variant_info(dep)
-        for dep in ctx.attr.deps_for_generated_rs_file
+        for dep in ctx.attr.deps_for_generated_rs_file + ctx.attr.proc_macro_deps_for_generated_rs_file
     ]
 
     return [
@@ -43,6 +43,11 @@ deps_for_bindings = rule(
     attrs = {
         "deps_for_generated_rs_file": attr.label_list(
             doc = "Rust dependencies that are needed to compile the generated _impl.rs file.",
+            default = [],
+        ),
+        "proc_macro_deps_for_generated_rs_file": attr.label_list(
+            doc = "Rust proc_macro dependencies that are needed to compile the generated _impl.rs file.",
+            cfg = "exec",
             default = [],
         ),
         "deps_for_generated_cc_file": attr.label_list(
