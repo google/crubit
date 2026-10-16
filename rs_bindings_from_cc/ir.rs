@@ -1021,6 +1021,15 @@ impl<'pb> ProtoToIr for ::ir_rust_proto::ArrayValueView<'pb> {
                 }
                 Ok(())
             }
+            KindOneof::StringLiteral(bytes) => {
+                let len = bytes.len() as u64;
+                ensure!(
+                    len < length,
+                    "string literal of length {len} (plus NUL terminator) does not fit in an \
+                     array of length {length}"
+                );
+                Ok(())
+            }
             _ => bail!("unmapped ArrayValue KindOneof: {:?}", self.kind()),
         }
     }
@@ -1046,6 +1055,9 @@ derive_debug_partialeq_eq_hash! {
                 ::ir_rust_proto::array_value::KindOneof::ArrayElements(proto) => {
                     ArrayValueKind::Arrays(ArrayElements { proto })
                 }
+                ::ir_rust_proto::array_value::KindOneof::StringLiteral(bytes) => {
+                    ArrayValueKind::StringLiteral(bytes)
+                }
                 _ => unreachable!("`kind` should have been validated by `ArrayValueView::validate`"),
             }
         }
@@ -1055,10 +1067,15 @@ derive_debug_partialeq_eq_hash! {
 /// The kind of an `ArrayValue`.
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum ArrayValueKind<'pb> {
-    /// Used for the innermost dimension.
+    /// Used for the innermost dimension, unless it was initialized by a string literal.
     Integers(IntegerElements<'pb>),
     /// Used for all but the innermost dimension.
     Arrays(ArrayElements<'pb>),
+    /// Used for the innermost dimension of arrays of plain `char` which were initialized by a
+    /// string literal (e.g. `char x[8] = "abc";`). Holds the bytes of the string literal,
+    /// excluding the implicit NUL terminator. The string literal and its NUL terminator always
+    /// fit, and the remainder of the row is NUL-filled.
+    StringLiteral(&'pb [u8]),
 }
 
 /// The elements of the innermost dimension of an array. See `ArrayValue`.
