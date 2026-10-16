@@ -363,7 +363,7 @@ cc_test(
     srcs = ["bridge_test.cc"],
     deps = [
         ":bridge_cpp",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -385,7 +385,7 @@ cc_test(
     deps = [
         ":movable",
         "//support/internal:bindings_support",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 

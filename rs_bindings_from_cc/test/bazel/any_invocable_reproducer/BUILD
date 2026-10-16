@@ -15,7 +15,7 @@
 # a conflicting user-defined `any_invocable` crate is present in the dependencies,
 # provided that crate renaming is enabled.
 
-load("@bazel_tools//tools/build_defs/build_test:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load(
