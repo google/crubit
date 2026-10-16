@@ -56,6 +56,16 @@ fn test_optional_by_value() {
     expect_eq!(UseOptionalByValue(trivial_optional::<i32>::nullopt()), -1);
 }
 
+/// `std::optional<size_t>` preserves `size_t`'s mapping to `usize` rather than canonicalizing to
+/// `u64` / `c_ulong`.
+#[gtest]
+fn test_optional_size_t() {
+    let o: trivial_optional<usize> = MakeOptionalSize(42);
+    expect_eq!(o.as_ref(), Some(&42));
+    expect_eq!(UseOptionalSize(o), 42);
+    expect_eq!(UseOptionalSize(trivial_optional::<usize>::nullopt()), 0);
+}
+
 /// `trivial_optional<T>` has the same layout as C++'s `std::optional<T>`.
 #[gtest]
 fn test_layout() {

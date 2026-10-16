@@ -157,10 +157,10 @@ message CcType {
   // Like `is_const`, this describes one use of the type rather than the type
   // itself, which is why it sits here rather than on the decl.
   //
-  // Populated only under the `assume_lifetimes` feature, and only for a
-  // specialization with exactly one type argument that contains an explicit
-  // lifetime (possibly nested, as in `W<W<int* $a>>`); see
-  // `Importer::WithAsWrittenTemplateArgs`.
+  // Populated only for a specialization with exactly one type argument that
+  // carries an explicit lifetime (under `assume_lifetimes`), a known
+  // nullability, or a primitive typedef such as `size_t` (possibly nested, as
+  // in `W<W<int* $a>>`); see `Importer::WithAsWrittenTemplateArgs`.
   repeated CcType template_args = 10;
 }
 
