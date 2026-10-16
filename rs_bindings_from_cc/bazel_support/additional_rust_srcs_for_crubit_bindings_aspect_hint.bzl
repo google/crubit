@@ -69,7 +69,6 @@ load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_rust//rust/private:providers.bzl", "BuildInfo", "CrateInfo", "DepInfo", "DepVariantInfo")
 load("@bazel_skylib//lib:collections.bzl", "collections")
 load("//features:crubit_feature_hint.bzl", "CrubitFeaturesInfo")
-load("//features:global_features.bzl", "SUPPORTED_FEATURES")
 load("@rules_crubit//rs_bindings_from_cc/bazel_support:providers.bzl", "AdditionalRustSrcsProviderInfo", "RustBindingsFromCcInfo")
 load(
     "@rules_crubit//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
@@ -163,8 +162,13 @@ def _additional_rust_srcs_for_crubit_bindings_impl(ctx):
         link_deps = ctx.attr.link_deps,
         compile_data = ctx.files.compile_data,
     )]
-    if ctx.attr.crubit_features:
-        providers.append(CrubitFeaturesInfo(crubit_features = ctx.attr.crubit_features))
+    crubit_features = []
+    for hint in ctx.attr.crubit_features:
+        for feature in hint[CrubitFeaturesInfo].crubit_features:
+            if feature not in crubit_features:
+                crubit_features.append(feature)
+    if crubit_features:
+        providers.append(CrubitFeaturesInfo(crubit_features = crubit_features))
     return providers
 
 _additional_rust_srcs_for_crubit_bindings_rule = rule(
@@ -215,9 +219,10 @@ _additional_rust_srcs_for_crubit_bindings_rule = rule(
             mandatory = False,
             default = [],
         ),
-        "crubit_features": attr.string_list(
+        "crubit_features": attr.label_list(
+            providers = [CrubitFeaturesInfo],
             mandatory = False,
-            default = SUPPORTED_FEATURES,
+            default = ["//features:supported"],
         ),
         "root_namespaces": attr.string_list(
             mandatory = False,
@@ -250,7 +255,7 @@ def additional_rust_srcs_for_crubit_bindings(
         generated_cpp_support_deps = [],
         cc_support_deps = [],
         unstable_rust_features = [],
-        crubit_features = SUPPORTED_FEATURES,
+        crubit_features = ["supported"],
         root_namespaces = [],
         aliases = {},
         warn_on_raw_cc_deps = False,
@@ -303,7 +308,6 @@ def additional_rust_srcs_for_crubit_bindings(
         warn_on_raw_cc_deps: Whether to emit a warning when a direct dependency in `deps` is a raw C++ library without Rust bindings.
         **kwargs: Args passed through to the underlying rule (visibility, etc.).
     """
-
     _additional_rust_srcs_for_crubit_bindings_rule(
         name = name,
         srcs = srcs,
@@ -316,7 +320,10 @@ def additional_rust_srcs_for_crubit_bindings(
         generated_cpp_support_deps = generated_cpp_support_deps,
         cc_support_deps = cc_support_deps,
         unstable_rust_features = unstable_rust_features,
-        crubit_features = crubit_features,
+        crubit_features = [
+            f if (f.startswith("//") or f.startswith(":")) else "//features:" + f
+            for f in crubit_features
+        ],
         root_namespaces = root_namespaces,
         aliases = aliases,
         warn_on_raw_cc_deps = warn_on_raw_cc_deps,
