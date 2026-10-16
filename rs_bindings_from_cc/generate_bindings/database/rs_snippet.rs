@@ -1090,7 +1090,8 @@ impl<'a> BridgeRsTypeKind<'a> {
                 if options.requires_layout_compatible {
                     return Ok(None);
                 }
-                let inner = db.rs_type_kind(t.clone());
+                let t = choose_one_type(&t, template_args)?;
+                let inner = db.rs_type_kind(t);
                 if db
                     .ir()
                     .target_crubit_features(db.ir().current_target())

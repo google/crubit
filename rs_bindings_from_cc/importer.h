@@ -215,10 +215,12 @@ class Importer final : public ImportContext {
 
   // Attaches the template arguments of `type` as written at this use site to
   // `converted`, so that per-use information the shared specialization decl
-  // cannot carry (e.g. nullability or lifetimes) reaches codegen.
+  // cannot carry (e.g. nullability, lifetimes, or primitive typedefs such as
+  // `size_t`) reaches codegen.
   //
   // Only a single written argument, which must be a type, is recorded, and
-  // only if it carries an explicit lifetime or a known nullability.
+  // only if it carries an explicit lifetime, a known nullability, or a
+  // primitive typedef.
   // Records nothing if it fails to convert, except that it returns an error
   // type if the argument carries an explicit lifetime annotation, because the
   // lifetime was written down in the source, so dropping it silently would

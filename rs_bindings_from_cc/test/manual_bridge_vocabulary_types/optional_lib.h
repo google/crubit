@@ -5,6 +5,7 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_OPTIONAL_LIB_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_MANUAL_BRIDGE_VOCABULARY_TYPES_OPTIONAL_LIB_H_
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
@@ -19,6 +20,13 @@ CRUBIT_MUST_BIND
 inline std::optional<int> MakeOptional(int value) { return value; }
 CRUBIT_MUST_BIND
 inline int UseOptionalByValue(std::optional<int> o) { return o.value_or(-1); }
+
+// Primitive typedefs such as `size_t` preserve their `usize` mapping inside
+// `std::optional<size_t>`.
+CRUBIT_MUST_BIND
+inline std::optional<size_t> MakeOptionalSize(size_t value) { return value; }
+CRUBIT_MUST_BIND
+inline size_t UseOptionalSize(std::optional<size_t> o) { return o.value_or(0); }
 
 struct CRUBIT_MUST_BIND StructWithOptionalField {
   std::optional<int> optional_int;

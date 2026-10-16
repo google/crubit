@@ -2098,6 +2098,64 @@ fn test_std_optional_with_layout_compat_feature() -> Result<()> {
     Ok(())
 }
 
+/// Primitive typedefs such as `size_t` and `ptrdiff_t` preserve their Rust mapping (`usize` and
+/// `isize`) when used as template arguments to `std::optional<T>`, both with composable bridging
+/// (`Option<usize>`) and with `layout_compat_optional` (`trivial_optional<usize>`).
+#[gtest]
+fn test_std_optional_preserves_size_t() -> Result<()> {
+    let cc_src = r#"
+        using size_t = decltype(sizeof(0));
+        struct StructWithOptional final { std::optional<size_t> o; };
+        void takes_optional_by_value(std::optional<size_t> o);
+        void takes_optional_ref(const std::optional<size_t>& o);
+        "#;
+    let proto = ir_proto_from_cc_dependency(cc_src, FAKE_STD_OPTIONAL)?;
+
+    // Without `layout_compat_optional`: by-value uses composable bridging (`Option<usize>`), while
+    // fields and pointers use `trivial_optional<usize>`.
+    let ir = make_test_ir_dependency(&proto, None)?;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub struct StructWithOptional {
+                pub o: ::cc_std::std::trivial_optional::<usize>,
+            }
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_optional_by_value(o: ::core::option::Option<usize>)
+        }
+    );
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub unsafe fn takes_optional_ref(
+                o: *const ::cc_std::std::trivial_optional::<usize>
+            )
+        }
+    );
+
+    // With `layout_compat_optional`: by-value also uses `trivial_optional<usize>`.
+    let mut ir = make_test_ir_dependency(&proto, None)?;
+    let target = ir.current_target().clone();
+    let features = ir.target_crubit_features(&target);
+    *ir.target_crubit_features_mut(&target) =
+        features | crubit_feature::CrubitFeature::LayoutCompatOptional;
+    let rs_api = generate_bindings_tokens_for_test(ir)?.rs_api;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            pub fn takes_optional_by_value(
+                o: ::cc_std::std::trivial_optional::<usize>
+            )
+        }
+    );
+    Ok(())
+}
+
 /// `cc_std::std::optional<T>` stores `T` inline, so it is `!Unpin` exactly when `T` is. Such a
 /// `T` is supported: the generated API goes through the same `Ctor` machinery as any other
 /// non-Rust-movable type.
