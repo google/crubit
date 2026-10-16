@@ -1,6 +1,6 @@
 # Test cases about usage of aliases in manual bindings attached to C++ libraries.
 
-load("@bazel_tools//tools/build_defs/build_test:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 load(
