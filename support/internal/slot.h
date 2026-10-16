@@ -142,15 +142,7 @@ class Slot {
   // Leaves the value contained in `Slot` uninitialized.
   //
   // SAFETY REQUIREMENTS: The contained value is initialized.
-  T AssumeInitAndTakeValue() && {
-    if constexpr (requires(T x) { T(UnsafeRelocateTag{}, std::move(x)); }) {
-      return T(UnsafeRelocateTag{}, std::move(value_));
-    } else {
-      T return_value(std::move(value_));
-      std::destroy_at(&value_);
-      return return_value;
-    }
-  }
+  T AssumeInitAndTakeValue() && { return UnsafeTakeValue(&value_); }
 
   // SAFETY REQUIREMENTS: The value contained in `other` must be initialized
   // (but may be moved-from).
@@ -214,9 +206,7 @@ class Slot<std::array<UT, S>> {
       return unsafe_move_array<UT, S>(value_.data(),
                                       std::make_index_sequence<S>());
     } else {
-      T return_value(std::move(value_));
-      std::destroy_at(&value_);
-      return return_value;
+      return UnsafeTakeValue(&value_);
     }
   }
   Slot(Slot&& other) { value_ = std::move(other.value_); }

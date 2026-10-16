@@ -427,10 +427,8 @@ mod detail {
         out: *mut crate::ABICompatible,
     ) {
         let param_0 = unsafe { ::core::ptr::read(param_0) };
-        match (unsafe { &*f })(param_0) {
-            result => unsafe {
-                ::core::ptr::write(out, result);
-            },
+        unsafe {
+            ::core::ptr::write(out, (unsafe { &*f })(param_0));
         }
     }
     #[unsafe(no_mangle)]
@@ -472,10 +470,8 @@ mod detail {
         out: *mut crate::LayoutCompatible,
     ) {
         let param_0 = unsafe { ::core::ptr::read(param_0) };
-        match (unsafe { &*f })(param_0) {
-            result => unsafe {
-                ::core::ptr::write(out, result);
-            },
+        unsafe {
+            ::core::ptr::write(out, (unsafe { &*f })(param_0));
         }
     }
     #[unsafe(no_mangle)]
@@ -713,10 +709,8 @@ mod detail {
         out: *mut crate::ABICompatible,
     ) {
         let param_0 = unsafe { ::core::ptr::read(param_0) };
-        match (unsafe { &*f })(param_0) {
-            result => unsafe {
-                ::core::ptr::write(out, result);
-            },
+        unsafe {
+            ::core::ptr::write(out, (unsafe { &*f })(param_0));
         }
     }
     #[unsafe(no_mangle)]
@@ -751,10 +745,8 @@ mod detail {
         out: *mut crate::LayoutCompatible,
     ) {
         let param_0 = unsafe { ::core::ptr::read(param_0) };
-        match (unsafe { &*f })(param_0) {
-            result => unsafe {
-                ::core::ptr::write(out, result);
-            },
+        unsafe {
+            ::core::ptr::write(out, (unsafe { &*f })(param_0));
         }
     }
     #[unsafe(no_mangle)]

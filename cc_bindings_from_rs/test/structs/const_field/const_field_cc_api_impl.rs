@@ -16,9 +16,10 @@ unsafe extern "C" fn __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalu
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::const_field_golden::return_struct_with_const_field_by_value_in_option();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::const_field_golden::return_struct_with_const_field_by_value_in_option(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -26,8 +27,9 @@ unsafe extern "C" fn __crubit_thunk_return_ustruct_uwith_uconst_ufield_uby_uvalu
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::const_field_golden::return_struct_with_const_field_by_value_in_result();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::const_field_golden::return_struct_with_const_field_by_value_in_result(),
+        );
     }
 }

@@ -19,9 +19,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x00000
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::rs_default_golden::derived_impl::SomeStruct as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            <::rs_default_golden::derived_impl::SomeStruct as ::core::default::Default>::default(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -44,9 +45,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x00000
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::rs_default_golden::explicit_impl::SomeStruct as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            <::rs_default_golden::explicit_impl::SomeStruct as ::core::default::Default>::default(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -73,8 +75,7 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_urs_udefault_ugolden_x00000
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value=<::rs_default_golden::field_with_no_default::StructWithFieldWithNoDefault as::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as*mut _,<::rs_default_golden::field_with_no_default::StructWithFieldWithNoDefault as::core::default::Default>::default());
     }
 }
 #[unsafe(no_mangle)]

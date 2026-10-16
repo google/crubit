@@ -16,8 +16,7 @@ const _: () = assert!(::core::mem::align_of::<::move_golden::Copyable>() == 1);
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_from_ubyte(byte: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::move_golden::Copyable::from_byte(byte);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::move_golden::Copyable::from_byte(byte));
     }
 }
 #[unsafe(no_mangle)]
@@ -35,8 +34,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_umove_ugolden_x0000003a_x00
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = <::move_golden::Foo as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            <::move_golden::Foo as ::core::default::Default>::default(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -48,8 +49,7 @@ extern "C" fn __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aFoo(
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_from_ubyte(byte: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::move_golden::Foo::from_byte(byte);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::move_golden::Foo::from_byte(byte));
     }
 }
 #[unsafe(no_mangle)]
@@ -74,8 +74,7 @@ extern "C" fn __crubit_thunk_Drop_udrop_umove_ugolden_x0000003a_x0000003aUnmovab
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_from_ubyte(byte: u8, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::move_golden::UnmovableFoo::from_byte(byte);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::move_golden::UnmovableFoo::from_byte(byte));
     }
 }
 #[unsafe(no_mangle)]
@@ -102,7 +101,6 @@ unsafe extern "C" fn __crubit_thunk_new_uunmovable_ufoo(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::move_golden::new_unmovable_foo(byte);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::move_golden::new_unmovable_foo(byte));
     }
 }

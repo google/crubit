@@ -15,6 +15,10 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wshadow"
+#include "support/internal/slot.h"
+
+#include <utility>
+
 #include "cpp_ns/cpp_type.h"
 
 namespace layout_equivalent_pointers::test_format_func_arg_pointer_like {
@@ -65,15 +69,11 @@ extern "C" void __crubit_thunk_test_uformat_ureturn_utype_upointer_ulike(
     CppType** __ret_ptr);
 }
 inline CppType* test_format_return_type_pointer_like() {
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    CppType* val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<CppType*> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_test_uformat_ureturn_utype_upointer_ulike(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace layout_equivalent_pointers::test_format_return_type_pointer_like

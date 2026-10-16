@@ -16,8 +16,10 @@ const _: () = assert!(::core::mem::align_of::<::partial_eq_golden::basic_test::M
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: usize, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::partial_eq_golden::basic_test::MyStruct::new(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::partial_eq_golden::basic_test::MyStruct::new(val),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -43,9 +45,10 @@ unsafe extern "C" fn __crubit_thunk_new(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            ::partial_eq_golden::bool_and_str_rhs::MyStruct::new(bool_val, str_len, int_val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::partial_eq_golden::bool_and_str_rhs::MyStruct::new(bool_val, str_len, int_val),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -89,8 +92,10 @@ const _: () =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(str_len: usize, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::partial_eq_golden::str_and_ref_str_rhs::MyStruct::new(str_len);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::partial_eq_golden::str_and_ref_str_rhs::MyStruct::new(str_len),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -112,8 +117,10 @@ const _: () =
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: usize, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::partial_eq_golden::tuple_collision::MyStruct::new(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::partial_eq_golden::tuple_collision::MyStruct::new(val),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -130,8 +137,7 @@ const _: () = assert!(::core::mem::align_of::<::partial_eq_golden::usize_rhs::My
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(val: usize, __ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::partial_eq_golden::usize_rhs::MyStruct::new(val);
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::partial_eq_golden::usize_rhs::MyStruct::new(val));
     }
 }
 #[unsafe(no_mangle)]
@@ -150,8 +156,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028usize_x0000002c_
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = <(usize, bool) as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            <(usize, bool) as ::core::default::Default>::default(),
+        );
     }
 }
 const _: () = assert!(::core::mem::offset_of!((usize, bool,), 0) == 0);

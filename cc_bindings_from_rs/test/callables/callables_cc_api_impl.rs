@@ -18,9 +18,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ucallables_ugolden_x0000003
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::callables_golden::CallbackHolder as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            <::callables_golden::CallbackHolder as ::core::default::Default>::default(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -32,8 +33,7 @@ extern "C" fn __crubit_thunk_Drop_udrop_ucallables_ugolden_x0000003a_x0000003aCa
 #[unsafe(no_mangle)]
 unsafe extern "C" fn __crubit_thunk_new(__ret_ptr: *mut core::ffi::c_void) -> () {
     unsafe {
-        let __rs_return_value = ::callables_golden::CallbackHolder::new();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as *mut _, ::callables_golden::CallbackHolder::new());
     }
 }
 #[unsafe(no_mangle)]
@@ -73,9 +73,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_ucallables_ugolden_x0000003
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <::callables_golden::CppMovableDrop as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            <::callables_golden::CppMovableDrop as ::core::default::Default>::default(),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -115,19 +116,21 @@ unsafe extern "C" fn __crubit_thunk_call_uand_ureturn_unon_umovable_u_x00000026d
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::callables_golden::call_and_return_non_movable(move || {
-            let __invoker: unsafe extern "C" fn(
-                *mut core::ffi::c_void,
-                *mut core::ffi::c_void,
-            ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-            let mut __ret_storage =
-                ::core::mem::MaybeUninit::<::callables_golden::NonCppMovable>::uninit();
-            unsafe {
-                __invoker(f.data(), __ret_storage.as_mut_ptr() as *mut _);
-                __ret_storage.assume_init()
-            }
-        });
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::callables_golden::call_and_return_non_movable(move || {
+                let __invoker: unsafe extern "C" fn(
+                    *mut core::ffi::c_void,
+                    *mut core::ffi::c_void,
+                ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                let mut __ret_storage =
+                    ::core::mem::MaybeUninit::<::callables_golden::NonCppMovable>::uninit();
+                unsafe {
+                    __invoker(f.data(), __ret_storage.as_mut_ptr() as *mut _);
+                    __ret_storage.assume_init()
+                }
+            }),
+        );
     }
 }
 #[unsafe(no_mangle)]
@@ -136,21 +139,23 @@ unsafe extern "C" fn __crubit_thunk_call_uand_ureturn_unon_umovable_ubox_ufn(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::callables_golden::call_and_return_non_movable_box_fn(
-            ::alloc::boxed::Box::new(move || {
-                let __invoker: unsafe extern "C" fn(
-                    *mut core::ffi::c_void,
-                    *mut core::ffi::c_void,
-                ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-                let mut __ret_storage =
-                    ::core::mem::MaybeUninit::<::callables_golden::NonCppMovable>::uninit();
-                unsafe {
-                    __invoker(f.data(), __ret_storage.as_mut_ptr() as *mut _);
-                    __ret_storage.assume_init()
-                }
-            }),
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::callables_golden::call_and_return_non_movable_box_fn(::alloc::boxed::Box::new(
+                move || {
+                    let __invoker: unsafe extern "C" fn(
+                        *mut core::ffi::c_void,
+                        *mut core::ffi::c_void,
+                    ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                    let mut __ret_storage =
+                        ::core::mem::MaybeUninit::<::callables_golden::NonCppMovable>::uninit();
+                    unsafe {
+                        __invoker(f.data(), __ret_storage.as_mut_ptr() as *mut _);
+                        __ret_storage.assume_init()
+                    }
+                },
+            )),
         );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -159,21 +164,23 @@ unsafe extern "C" fn __crubit_thunk_call_uand_ureturn_unon_umovable_uboxed(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::callables_golden::call_and_return_non_movable_boxed(
-            ::alloc::boxed::Box::new(move || {
-                let __invoker: unsafe extern "C" fn(
-                    *mut core::ffi::c_void,
-                    *mut core::ffi::c_void,
-                ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-                let mut __ret_storage =
-                    ::core::mem::MaybeUninit::<::callables_golden::NonCppMovable>::uninit();
-                unsafe {
-                    __invoker(f.data(), __ret_storage.as_mut_ptr() as *mut _);
-                    __ret_storage.assume_init()
-                }
-            }),
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::callables_golden::call_and_return_non_movable_boxed(::alloc::boxed::Box::new(
+                move || {
+                    let __invoker: unsafe extern "C" fn(
+                        *mut core::ffi::c_void,
+                        *mut core::ffi::c_void,
+                    ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                    let mut __ret_storage =
+                        ::core::mem::MaybeUninit::<::callables_golden::NonCppMovable>::uninit();
+                    unsafe {
+                        __invoker(f.data(), __ret_storage.as_mut_ptr() as *mut _);
+                        __ret_storage.assume_init()
+                    }
+                },
+            )),
         );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -354,23 +361,25 @@ unsafe extern "C" fn __crubit_thunk_call_uint_uto_upoint_u_x00000026dyn_x0000002
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value = ::callables_golden::call_int_to_point(
-            move |__arg_0: i32| {
-                let __invoker: unsafe extern "C" fn(
-                    *mut core::ffi::c_void,
-                    i32,
-                    *mut core::ffi::c_void,
-                ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-                let mut __ret_storage =
-                    ::core::mem::MaybeUninit::<::callables_golden::Point>::uninit();
-                unsafe {
-                    __invoker(f.data(), __arg_0, __ret_storage.as_mut_ptr() as *mut _);
-                    __ret_storage.assume_init()
-                }
-            },
-            x,
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::callables_golden::call_int_to_point(
+                move |__arg_0: i32| {
+                    let __invoker: unsafe extern "C" fn(
+                        *mut core::ffi::c_void,
+                        i32,
+                        *mut core::ffi::c_void,
+                    ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                    let mut __ret_storage =
+                        ::core::mem::MaybeUninit::<::callables_golden::Point>::uninit();
+                    unsafe {
+                        __invoker(f.data(), __arg_0, __ret_storage.as_mut_ptr() as *mut _);
+                        __ret_storage.assume_init()
+                    }
+                },
+                x,
+            ),
         );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -381,28 +390,30 @@ unsafe extern "C" fn __crubit_thunk_call_upoint_umut_u_x00000026mut_x00000020dyn
 ) -> () {
     unsafe {
         let pt = pt.read();
-        let __rs_return_value = ::callables_golden::call_point_mut(
-            move |__arg_0: ::callables_golden::Point| {
-                let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
-                let __invoker: unsafe extern "C" fn(
-                    *mut core::ffi::c_void,
-                    *mut ::callables_golden::Point,
-                    *mut core::ffi::c_void,
-                ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-                let mut __ret_storage =
-                    ::core::mem::MaybeUninit::<::callables_golden::Point>::uninit();
-                unsafe {
-                    __invoker(
-                        f.data(),
-                        &mut *__arg_0 as *mut _,
-                        __ret_storage.as_mut_ptr() as *mut _,
-                    );
-                    __ret_storage.assume_init()
-                }
-            },
-            pt,
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::callables_golden::call_point_mut(
+                move |__arg_0: ::callables_golden::Point| {
+                    let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
+                    let __invoker: unsafe extern "C" fn(
+                        *mut core::ffi::c_void,
+                        *mut ::callables_golden::Point,
+                        *mut core::ffi::c_void,
+                    ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                    let mut __ret_storage =
+                        ::core::mem::MaybeUninit::<::callables_golden::Point>::uninit();
+                    unsafe {
+                        __invoker(
+                            f.data(),
+                            &mut *__arg_0 as *mut _,
+                            __ret_storage.as_mut_ptr() as *mut _,
+                        );
+                        __ret_storage.assume_init()
+                    }
+                },
+                pt,
+            ),
         );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -413,28 +424,30 @@ unsafe extern "C" fn __crubit_thunk_call_upoint_uonce_ustatic_ustd_x0000003a_x00
 ) -> () {
     unsafe {
         let pt = pt.read();
-        let __rs_return_value = ::callables_golden::call_point_once_static(
-            move |__arg_0: ::callables_golden::Point| {
-                let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
-                let __invoker: unsafe extern "C" fn(
-                    *mut core::ffi::c_void,
-                    *mut ::callables_golden::Point,
-                    *mut core::ffi::c_void,
-                ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-                let mut __ret_storage =
-                    ::core::mem::MaybeUninit::<::callables_golden::Point>::uninit();
-                unsafe {
-                    __invoker(
-                        f.data(),
-                        &mut *__arg_0 as *mut _,
-                        __ret_storage.as_mut_ptr() as *mut _,
-                    );
-                    __ret_storage.assume_init()
-                }
-            },
-            pt,
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::callables_golden::call_point_once_static(
+                move |__arg_0: ::callables_golden::Point| {
+                    let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
+                    let __invoker: unsafe extern "C" fn(
+                        *mut core::ffi::c_void,
+                        *mut ::callables_golden::Point,
+                        *mut core::ffi::c_void,
+                    ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                    let mut __ret_storage =
+                        ::core::mem::MaybeUninit::<::callables_golden::Point>::uninit();
+                    unsafe {
+                        __invoker(
+                            f.data(),
+                            &mut *__arg_0 as *mut _,
+                            __ret_storage.as_mut_ptr() as *mut _,
+                        );
+                        __ret_storage.assume_init()
+                    }
+                },
+                pt,
+            ),
         );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -507,32 +520,34 @@ unsafe extern "C" fn __crubit_thunk_call_utwo_upoints_u_x00000026dyn_x00000020st
     unsafe {
         let a = a.read();
         let b = b.read();
-        let __rs_return_value = ::callables_golden::call_two_points(
-            move |__arg_0: ::callables_golden::Point, __arg_1: ::callables_golden::Point| {
-                let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
-                let mut __arg_1 = ::core::mem::ManuallyDrop::new(__arg_1);
-                let __invoker: unsafe extern "C" fn(
-                    *mut core::ffi::c_void,
-                    *mut ::callables_golden::Point,
-                    *mut ::callables_golden::Point,
-                    *mut core::ffi::c_void,
-                ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-                let mut __ret_storage =
-                    ::core::mem::MaybeUninit::<::callables_golden::Point>::uninit();
-                unsafe {
-                    __invoker(
-                        f.data(),
-                        &mut *__arg_0 as *mut _,
-                        &mut *__arg_1 as *mut _,
-                        __ret_storage.as_mut_ptr() as *mut _,
-                    );
-                    __ret_storage.assume_init()
-                }
-            },
-            a,
-            b,
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::callables_golden::call_two_points(
+                move |__arg_0: ::callables_golden::Point, __arg_1: ::callables_golden::Point| {
+                    let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
+                    let mut __arg_1 = ::core::mem::ManuallyDrop::new(__arg_1);
+                    let __invoker: unsafe extern "C" fn(
+                        *mut core::ffi::c_void,
+                        *mut ::callables_golden::Point,
+                        *mut ::callables_golden::Point,
+                        *mut core::ffi::c_void,
+                    ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                    let mut __ret_storage =
+                        ::core::mem::MaybeUninit::<::callables_golden::Point>::uninit();
+                    unsafe {
+                        __invoker(
+                            f.data(),
+                            &mut *__arg_0 as *mut _,
+                            &mut *__arg_1 as *mut _,
+                            __ret_storage.as_mut_ptr() as *mut _,
+                        );
+                        __ret_storage.assume_init()
+                    }
+                },
+                a,
+                b,
+            ),
         );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -705,28 +720,30 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_upoint_u_x00000026dyn_x00000020st
 ) -> () {
     unsafe {
         let pt = pt.read();
-        let __rs_return_value = ::callables_golden::call_with_point(
-            move |__arg_0: ::callables_golden::Point| {
-                let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
-                let __invoker: unsafe extern "C" fn(
-                    *mut core::ffi::c_void,
-                    *mut ::callables_golden::Point,
-                    *mut core::ffi::c_void,
-                ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-                let mut __ret_storage =
-                    ::core::mem::MaybeUninit::<::callables_golden::Point>::uninit();
-                unsafe {
-                    __invoker(
-                        f.data(),
-                        &mut *__arg_0 as *mut _,
-                        __ret_storage.as_mut_ptr() as *mut _,
-                    );
-                    __ret_storage.assume_init()
-                }
-            },
-            pt,
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::callables_golden::call_with_point(
+                move |__arg_0: ::callables_golden::Point| {
+                    let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
+                    let __invoker: unsafe extern "C" fn(
+                        *mut core::ffi::c_void,
+                        *mut ::callables_golden::Point,
+                        *mut core::ffi::c_void,
+                    ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                    let mut __ret_storage =
+                        ::core::mem::MaybeUninit::<::callables_golden::Point>::uninit();
+                    unsafe {
+                        __invoker(
+                            f.data(),
+                            &mut *__arg_0 as *mut _,
+                            __ret_storage.as_mut_ptr() as *mut _,
+                        );
+                        __ret_storage.assume_init()
+                    }
+                },
+                pt,
+            ),
         );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -775,27 +792,29 @@ unsafe extern "C" fn __crubit_thunk_call_uwith_ustr_uto_ustr_u_x00000027a_u_x000
 ) -> () {
     unsafe {
         let s = s.read();
-        let __rs_return_value = ::callables_golden::call_with_str_to_str(
-            move |__arg_0: &str| {
-                let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
-                let __invoker: unsafe extern "C" fn(
-                    *mut core::ffi::c_void,
-                    *mut &str,
-                    *mut core::ffi::c_void,
-                ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
-                let mut __ret_storage = ::core::mem::MaybeUninit::<&str>::uninit();
-                unsafe {
-                    __invoker(
-                        f.data(),
-                        &mut *__arg_0 as *mut _,
-                        __ret_storage.as_mut_ptr() as *mut _,
-                    );
-                    __ret_storage.assume_init()
-                }
-            },
-            s,
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            ::callables_golden::call_with_str_to_str(
+                move |__arg_0: &str| {
+                    let mut __arg_0 = ::core::mem::ManuallyDrop::new(__arg_0);
+                    let __invoker: unsafe extern "C" fn(
+                        *mut core::ffi::c_void,
+                        *mut &str,
+                        *mut core::ffi::c_void,
+                    ) -> () = unsafe { ::core::mem::transmute(f.invoker()) };
+                    let mut __ret_storage = ::core::mem::MaybeUninit::<&str>::uninit();
+                    unsafe {
+                        __invoker(
+                            f.data(),
+                            &mut *__arg_0 as *mut _,
+                            __ret_storage.as_mut_ptr() as *mut _,
+                        );
+                        __ret_storage.assume_init()
+                    }
+                },
+                s,
+            ),
         );
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
     }
 }
 #[unsafe(no_mangle)]
@@ -830,9 +849,10 @@ unsafe extern "C" fn __crubit_thunk_Default_udefault_u_x00000028i32_x0000002c_x0
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value =
-            <(i32, ::core::option::Option<i32>) as ::core::default::Default>::default();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(
+            __ret_ptr as *mut _,
+            <(i32, ::core::option::Option<i32>) as ::core::default::Default>::default(),
+        );
     }
 }
 const _: () = assert!(::core::mem::offset_of!((i32, ::core::option::Option<i32>,), 0) == 0);

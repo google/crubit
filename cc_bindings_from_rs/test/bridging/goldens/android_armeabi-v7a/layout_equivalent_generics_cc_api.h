@@ -16,8 +16,10 @@
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wshadow"
 #include "support/annotations_internal.h"
+#include "support/internal/slot.h"
 
 #include <cstdint>
+#include <utility>
 
 #include "cc_bindings_from_rs/test/bridging/cc_generics.h"
 
@@ -218,15 +220,11 @@ inline crubit::test::MyPair<bool, bool> create_bool_bool_pair() {
                     alignof(crubit::test::MyPair<bool, bool>) == 1,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyPair<bool, bool> val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyPair<bool, bool>> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create_ubool_ubool_upair(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -238,15 +236,11 @@ inline crubit::test::MyIntBoolPair create_int_bool_pair() {
                     alignof(crubit::test::MyIntBoolPair) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyIntBoolPair val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyIntBoolPair> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create_uint_ubool_upair(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -258,15 +252,11 @@ inline crubit::test::MyStatusOr<int32_t> create_status_with_private_secret() {
                     alignof(crubit::test::MyStatusOr<int32_t>) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyStatusOr<int32_t> val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyStatusOr<int32_t>> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create_ustatus_uwith_uprivate_usecret(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -278,15 +268,11 @@ inline crubit::test::MyStatusOr<int32_t> create_status_with_secret() {
                     alignof(crubit::test::MyStatusOr<int32_t>) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyStatusOr<int32_t> val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyStatusOr<int32_t>> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create_ustatus_uwith_usecret(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -298,15 +284,11 @@ inline crubit::test::MyStatusOr<int32_t> create_status_with_secret_alias() {
                     alignof(crubit::test::MyStatusOr<int32_t>) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyStatusOr<int32_t> val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyStatusOr<int32_t>> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_create_ustatus_uwith_usecret_ualias(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -331,15 +313,12 @@ inline crubit::test::MyOptional<::std::int32_t> return_optional_by_value(
                     alignof(crubit::test::MyOptional<::std::int32_t>) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyOptional<::std::int32_t> val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyOptional<::std::int32_t>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_uoptional_uby_uvalue(
       x, __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -352,15 +331,12 @@ inline crubit::test::MyOptional<::std::intptr_t> return_optional_isize(
                     alignof(crubit::test::MyOptional<::std::intptr_t>) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyOptional<::std::intptr_t> val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyOptional<::std::intptr_t>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_uoptional_uisize(
       x, __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -373,15 +349,12 @@ inline crubit::test::MyOptional<::std::uintptr_t> return_optional_usize(
                     alignof(crubit::test::MyOptional<::std::uintptr_t>) == 4,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyOptional<::std::uintptr_t> val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyOptional<::std::uintptr_t>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_uoptional_uusize(
       x, __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -393,14 +366,10 @@ inline crubit::test::MyStatus return_status() {
                     alignof(crubit::test::MyStatus) == 1,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyStatus val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyStatus> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_ustatus(__return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -412,15 +381,11 @@ inline crubit::test::MyStatus return_status_alias() {
                     alignof(crubit::test::MyStatus) == 1,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyStatus val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyStatus> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_ustatus_ualias(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -438,15 +403,12 @@ inline crubit::test::MyStatusOr<::std::uint64_t> return_status_non_unit(
                     alignof(crubit::test::MyStatusOr<::std::uint64_t>) == 8,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyStatusOr<::std::uint64_t> val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyStatusOr<::std::uint64_t>>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_ustatus_unon_uunit(
       &status, __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -458,15 +420,11 @@ inline crubit::test::MyStatus return_status_or_unit() {
                     alignof(crubit::test::MyStatus) == 1,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyStatus val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyStatus> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_ustatus_uor_uunit(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {
@@ -478,15 +436,11 @@ inline crubit::test::MyStatus return_status_or_unit_alias() {
                     alignof(crubit::test::MyStatus) == 1,
                 "Verify that C++ layout-equivalent type has the same size and "
                 "alignment as the Rust type");
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    crubit::test::MyStatus val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<crubit::test::MyStatus> __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_return_ustatus_uor_uunit_ualias(
       __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 }  // namespace layout_equivalent_generics

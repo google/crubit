@@ -235,15 +235,12 @@ extern "C" void __crubit_thunk_request_ustats(
 inline const ::foo_service::FooRequestStats*(
     FooService::request_stats)() const& $(__anon1) CRUBIT_LIFETIME_BOUND {
   auto&& self = *this;
-  union __return_value_crubit_return_union {
-    constexpr __return_value_crubit_return_union() {}
-    ~__return_value_crubit_return_union() { ::std::destroy_at(&this->val); }
-    const ::foo_service::FooRequestStats* val;
-  } __return_value_ret_val_holder;
-  auto* __return_value_storage = &__return_value_ret_val_holder.val;
+  crubit::Slot<const ::foo_service::FooRequestStats*>
+      __return_value_ret_val_holder;
+  auto* __return_value_storage = __return_value_ret_val_holder.Get();
   __crubit_internal::__crubit_thunk_request_ustats(self,
                                                    __return_value_storage);
-  return ::std::move(__return_value_ret_val_holder.val);
+  return ::std::move(__return_value_ret_val_holder).AssumeInitAndTakeValue();
 }
 
 namespace __crubit_internal {

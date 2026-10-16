@@ -16,11 +16,7 @@ unsafe extern "C" fn __crubit_thunk_test_uformat_ufunc_uarg_upointer_ulike(
     __param_0: *const core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __param_0 = {
-            let mut __crubit_temp=::core::mem::MaybeUninit::<::layout_equivalent_pointers_golden::test_format_func_arg_pointer_like::RustTypeView>::uninit();
-            __crubit_temp.write(::core::mem::transmute(__param_0));
-            __crubit_temp.assume_init()
-        };
+        let __param_0: ::layout_equivalent_pointers_golden::test_format_func_arg_pointer_like::RustTypeView=::core::mem::transmute(__param_0);
         ::layout_equivalent_pointers_golden::test_format_func_arg_pointer_like::test_format_func_arg_pointer_like(__param_0)
     }
 }
@@ -29,7 +25,6 @@ unsafe extern "C" fn __crubit_thunk_test_uformat_ureturn_utype_upointer_ulike(
     __ret_ptr: *mut core::ffi::c_void,
 ) -> () {
     unsafe {
-        let __rs_return_value=::layout_equivalent_pointers_golden::test_format_return_type_pointer_like::test_format_return_type_pointer_like();
-        ::core::ptr::write(__ret_ptr as *mut _, __rs_return_value);
+        ::core::ptr::write(__ret_ptr as*mut _,::layout_equivalent_pointers_golden::test_format_return_type_pointer_like::test_format_return_type_pointer_like());
     }
 }
