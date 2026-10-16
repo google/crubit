@@ -11,7 +11,11 @@ use uses_anyinvocable::*;
 fn test_call_void_void() {
     let called = Arc::new(Mutex::new(false));
     let called_clone = Arc::clone(&called);
+    // Capture a `!Sync` `Cell` to verify that `FnOnce` callbacks do not require `Sync`.
+    let non_sync_cell = std::cell::Cell::new(1);
     CallVoidVoid(Box::new(move || -> () {
+        assert_eq!(non_sync_cell.get(), 1);
+        non_sync_cell.set(2);
         assert_eq!(Arc::strong_count(&called_clone), 2);
         *called_clone.lock().unwrap() = true;
     }));
@@ -21,7 +25,7 @@ fn test_call_void_void() {
 
 #[gtest]
 fn test_call_with_any_invocable_param() {
-    let res = CallWithAnyInvocableParam(Box::new(|g: Box<dyn FnOnce() + Send + Sync>| {
+    let res = CallWithAnyInvocableParam(Box::new(|g: Box<dyn FnOnce() + Send>| {
         g();
     }));
     expect_that!(res, eq(true));
