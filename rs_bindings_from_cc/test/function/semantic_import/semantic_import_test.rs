@@ -45,3 +45,10 @@ fn test_bool_accessors() {
     bools.set_b(false);
     assert_eq!(bools.b(), false);
 }
+
+#[gtest]
+fn test_record_and_free_getter() {
+    let wrapper = semantic_import::StructWithRecordAndFreeGetter::from(77);
+    assert_eq!(wrapper.s().x(), 77);
+    assert_eq!(semantic_import::free_get_s(&wrapper).x(), 77);
+}
