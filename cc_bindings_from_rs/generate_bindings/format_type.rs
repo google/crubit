@@ -1789,7 +1789,7 @@ fn format_ty_for_rs_with_lifetime_mode<'tcx>(
                 || !has_non_lifetime_substs(substs)
                 || is_rvalue_reference(db, adt.did())
                 || is_ctor_by_value(db, adt.did())
-                || db.parse_adt_template_specialization(ty).is_some();
+                || db.parse_adt_template_specialization(ty).transpose()?.is_some();
             ensure!(
                 has_cpp_type || is_supported_generic_type,
                 "Generic types without composable bridging are not supported yet (b/259749095)"
@@ -1810,7 +1810,7 @@ fn format_ty_for_rs_with_lifetime_mode<'tcx>(
                             RsLifetimeMode::ClosureParam => Ok(quote! { '_ }),
                         },
                         ty::GenericArgKind::Const(_) => {
-                            panic!("Const parameters are not supported, but found {ty}")
+                            bail!("crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)")
                         }
                     })
                     .collect::<Result<Vec<TokenStream>>>()?;

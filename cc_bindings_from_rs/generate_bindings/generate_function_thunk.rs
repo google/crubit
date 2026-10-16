@@ -539,8 +539,12 @@ where
         fn cx(&self) -> TyCtxt<'tcx> {
             self.tcx
         }
-        fn fold_region(&mut self, _: ty::Region<'tcx>) -> ty::Region<'tcx> {
-            self.static_region
+        fn fold_region(&mut self, r: ty::Region<'tcx>) -> ty::Region<'tcx> {
+            if matches!(r.kind(), ty::RegionKind::ReBound(..)) {
+                r
+            } else {
+                self.static_region
+            }
         }
     }
 

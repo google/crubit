@@ -756,8 +756,17 @@ fn test_format_ty_for_rs_failures() {
             "impl Eq", // TyKind::Alias
             "crubit.rs/errors/unsupported_type: Generic type parameter `impl Eq` is not supported without monomorphization",
         ),
+        (
+            "CppTypeConstGenericStruct<42>",
+            "crubit.rs/errors/unsupported_type: `const`-generic ADTs are not supported yet (b/259749095)",
+        ),
     ];
-    let preamble = quote! {};
+    let preamble = quote! {
+        #[doc = "CRUBIT_ANNOTATE: cpp_type=CppTypeConstGenericStruct"]
+        pub struct CppTypeConstGenericStruct<const N: usize> {
+            pub arr: [u8; N],
+        }
+    };
     test_ty(
         TypeLocation::FnParam { is_self_param: false, elided_is_output: false },
         &testcases,
