@@ -104,7 +104,7 @@ crubit_cc_test(
         ":layout_equivalent_generics_cc_api",
         ":rust_pointer_types_cc_api",
         ":rust_type_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -189,6 +189,6 @@ crubit_cc_test(
     ],
     deps = [
         ":mapped_cpp_type_cc_api",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
