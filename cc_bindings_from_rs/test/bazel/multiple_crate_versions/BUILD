@@ -74,6 +74,6 @@ crubit_cc_test(
     deps = [
         ":consumer_v1",
         ":consumer_v2",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )

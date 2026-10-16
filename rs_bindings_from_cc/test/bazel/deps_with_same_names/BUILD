@@ -2,7 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-load("@bazel_tools//tools/build_defs/build_test:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load(
     "@rules_rust//rust:defs.bzl",
@@ -77,23 +77,6 @@ rust_library(
     name = "lib_with_proto_deps_with_same_names",
     srcs = ["proto_deps.rs"],
     cc_deps = [":lib_proto_deps"],
-    edition = "2024",
-)
-
-# cc_public_library dependency collision test
-cc_library(
-    name = "lib_public_deps",
-    hdrs = ["public_deps.h"],
-    aspect_hints = ["//features:supported"],
-    deps = [
-        "//rs_bindings_from_cc/test/bazel/deps_with_same_names/deps/I_cc_library_deps_GH:a",
-    ],
-)
-
-rust_library(
-    name = "lib_with_public_deps_with_same_names",
-    srcs = ["public_deps.rs"],
-    cc_deps = [":lib_public_deps"],
     edition = "2024",
 )
 
@@ -188,7 +171,6 @@ build_test(
         ":lib_with_two_direct_deps_with_same_name",
         ":lib_with_indirect_deps_with_same_names",
         ":lib_with_proto_deps_with_same_names",
-        ":lib_with_public_deps_with_same_names",
         ":lib_with_mixed_deps",
         ":lib_with_aspect_hint_dep",
         ":cc_deps_test",
