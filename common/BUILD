@@ -352,6 +352,8 @@ rust_library(
     name = "token_stream_printer",
     srcs = ["token_stream_printer.rs"],
     data = [
+        "@llvm_toolchain//:clang-format",
+        "@rules_rust//rust/toolchain:current_rust_toolchain",
     ],
     edition = "2024",
     deps = [
@@ -433,7 +435,6 @@ cc_library(
 cc_library(
     name = "rust_allocator_shims",
     srcs = ["rust_allocator_shims.c"],
-    visibility = ["@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:__subpackages__"],
 )
 
 cc_library(

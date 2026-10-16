@@ -46,11 +46,18 @@ pub fn sysroot_path() -> Option<PathBuf> {
     #[cfg(bazel)]
     {
         #[cfg(oss)]
-        const TOOLCHAIN_ROOT: &str = "rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain/lib/rustlib/x86_64-unknown-linux-gnu";
+        let loc = PathBuf::from(
+            std::env::var_os("RUNFILES_DIR")
+                .or_else(|| std::env::var_os("TEST_SRCDIR"))
+                .expect("Neither RUNFILES_DIR nor TEST_SRCDIR was set"),
+        )
+        .join("+crubit_toolchains+rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools/rust_toolchain");
         #[cfg(not(oss))]
-        const TOOLCHAIN_ROOT: &str = env!("G3_SYSROOT_PATH");
-        let runfiles = runfiles::Runfiles::create().unwrap();
-        let loc = runfiles.rlocation(Path::new(TOOLCHAIN_ROOT)).expect("Failed to locate runfile");
+        let loc = {
+            const TOOLCHAIN_ROOT: &str = env!("G3_SYSROOT_PATH");
+            let runfiles = runfiles::Runfiles::create().unwrap();
+            runfiles.rlocation(Path::new(TOOLCHAIN_ROOT)).expect("Failed to locate runfile")
+        };
         assert!(loc.exists(), "Sysroot directory '{}' doesn't exist", loc.display());
         assert!(loc.is_dir(), "Provided sysroot '{}' is not a directory", loc.display());
         Some(loc)

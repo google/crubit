@@ -182,7 +182,7 @@ rust_library(
         "run_compiler_test_support.rs",
     ],
     data = [
-        "@rust_linux_x86_64__x86_64-unknown-linux-gnu__nightly_tools//:rust_std-x86_64-unknown-linux-gnu",
+        "@rules_rust//rust/toolchain:current_rust_stdlib_files",
     ],
     edition = "2024",
     rustc_flags = [
@@ -199,7 +199,10 @@ rust_library(
 crubit_rust_test(
     name = "run_compiler_test_support_test",
     crate = ":run_compiler_test_support",
-    rustc_flags = ["--cfg=oss"],
+    rustc_flags = [
+        "--cfg=bazel",
+        "--cfg=oss",
+    ],
     # We don't yet support running rustc itself on macOS (we only target macOS).
     tags = ["not_run:mac"],
 )
