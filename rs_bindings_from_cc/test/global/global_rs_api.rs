@@ -60,6 +60,28 @@ pub const kMultidimensionalIntArray: [[::ffi_11::c_int; 2]; 3] =
         [::ffi_11::new_c_int(0); 2],
     );
 
+pub const kCharArray: [::ffi_11::c_char; 5] =
+    ::crubit_support::array::c_char_array_from_string_literal(b"NOOP");
+
+pub const kMultidimensionalCharArray: [[::ffi_11::c_char; 8]; 3] =
+    ::crubit_support::array::padded_array(
+        &[
+            ::crubit_support::array::c_char_array_from_string_literal(b"NOOP"),
+            ::crubit_support::array::c_char_array_from_string_literal(b"DROP"),
+        ],
+        [::ffi_11::new_c_char(0 as u8); 8],
+    );
+
+pub const kMixedCharArray: [[::ffi_11::c_char; 4]; 2] = [
+    ::crubit_support::array::c_char_array_from_string_literal(b"ab"),
+    [
+        ::ffi_11::new_c_char(99 as u8),
+        ::ffi_11::new_c_char(100 as u8),
+        ::ffi_11::new_c_char(101 as u8),
+        ::ffi_11::new_c_char(102 as u8),
+    ],
+];
+
 // error: global variable `templated_variable` could not be bound
 //   templated variables are not supported
 

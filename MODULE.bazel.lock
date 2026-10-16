@@ -257,7 +257,7 @@
   "moduleExtensions": {
     "//bazel:llvm_extension.bzl%llvm_extension": {
       "general": {
-        "bzlTransitiveDigest": "lAlERDeUnDDDsW5c7In5doX1tSpzp6uld2fvlvSl/a0=",
+        "bzlTransitiveDigest": "YIfjQQiUheoGpg+EMjO57C6YzNSFASDyuz2KfRn0M4s=",
         "usagesDigest": "NwB0l5BhgXRU2v6naDPRop0ULoGpg7livFIbGyygQiY=",
         "recordedInputs": [],
         "generatedRepoSpecs": {

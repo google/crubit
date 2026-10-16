@@ -65,6 +65,6 @@ crubit_cc_test(
         "//support:movable",
         "//support/internal:bindings_support",
         "//support/rs_std:waker",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )
