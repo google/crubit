@@ -54,6 +54,6 @@ crubit_cc_test(
     deps = [
         ":composable_bridging_cc_api",
         "//support/rs_std:slice_ref",
-        "//testing/base/public:gunit_main",
+        "@googletest//:gtest_main",
     ],
 )

@@ -51,7 +51,7 @@ crubit_cc_test(
     ],
     deps = [
         ":aliasing_references_cc_api",
-        "//testing/base/public:gunit_main",
         "@abseil-cpp//absl/types:span",
+        "@googletest//:gtest_main",
     ],
 )
