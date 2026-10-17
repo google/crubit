@@ -2673,6 +2673,12 @@ derive_debug_partialeq_eq_hash! {
             self.proto.has_private_pointer_or_reference_fields()
         }
 
+        /// Whether the last of `lifetime_inputs` is the lifetime of this class template
+        /// specialization's template argument, added by Crubit rather than written by the user.
+        pub fn has_template_argument_lifetime(&self) -> bool {
+            self.proto.has_template_argument_lifetime()
+        }
+
         pub fn detected_formatter(&self) -> bool {
             self.proto.detected_formatter()
         }

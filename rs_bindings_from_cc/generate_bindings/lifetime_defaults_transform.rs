@@ -59,6 +59,139 @@ fn has_members_with_lifetimes(db: &BindingsGenerator, rc: &Record) -> bool {
     false
 }
 
+/// Returns true if `ty` is an lvalue or rvalue reference.
+fn is_reference(ty: &CcType) -> bool {
+    matches!(
+        ty.variant(),
+        CcTypeVariant::Pointer(pty)
+            if matches!(pty.kind(), PointerTypeKind::LValueRef | PointerTypeKind::RValueRef)
+    )
+}
+
+/// If `ty` is an lvalue or rvalue reference, returns its pointee type; otherwise, returns `ty`.
+fn strip_reference(ty: &CcType) -> &CcType {
+    match ty.variant() {
+        CcTypeVariant::Pointer(pty) if is_reference(ty) => pty.pointee_type(),
+        _ => ty,
+    }
+}
+
+/// Returns true if `ty` names the record `record_id`.
+fn is_record_type(ty: &CcType, record_id: ItemId) -> bool {
+    matches!(ty.variant(), CcTypeVariant::Decl { id, .. } if *id == record_id)
+}
+
+/// Returns true if the lifetime `name` is written anywhere in `ty`.
+fn mentions_lifetime(ty: &CcType, name: &str) -> bool {
+    if ty.explicit_lifetimes().iter().any(|l| l.as_ref() == name) {
+        return true;
+    }
+    match ty.variant() {
+        CcTypeVariant::Pointer(pty) => mentions_lifetime(pty.pointee_type(), name),
+        CcTypeVariant::Decl { template_args: Some(args), .. } => {
+            args.iter().any(|arg| mentions_lifetime(arg, name))
+        }
+        _ => false,
+    }
+}
+
+/// If `ty` is the record `record_id` (or a reference to it) without explicit lifetimes, gives it
+/// `lifetimes`.
+fn tie_record_type_to_lifetimes(ty: &mut CcType, record_id: ItemId, lifetimes: &[Rc<str>]) {
+    let tie = |ty: &mut CcType| {
+        if is_record_type(ty, record_id) && ty.explicit_lifetimes().is_empty() {
+            *ty.explicit_lifetimes_mut() = lifetimes.to_vec();
+        }
+    };
+    if !is_reference(ty) {
+        tie(ty);
+        return;
+    }
+    if let CcTypeVariant::Pointer(pty) = ty.variant_mut() {
+        let mut pointee_type = pty.pointee_type().clone();
+        tie(&mut pointee_type);
+        pty.set_pointee_type(Rc::new(pointee_type));
+    }
+}
+
+/// Returns the record that `func` is a member of, if that record has a lifetime parameter for its
+/// template argument (see `Record::has_template_argument_lifetime`).
+fn record_with_template_argument_lifetime<'ir>(
+    db: &BindingsGenerator<'ir>,
+    func: &Func,
+) -> Option<Rc<Record<'ir>>> {
+    let record_id = func.enclosing_item_id()?;
+    match db.find_untyped_decl(record_id) {
+        Item::Record(record) if record.has_template_argument_lifetime() => Some(record.clone()),
+        _ => None,
+    }
+}
+
+/// Returns the record that `func` is a friend of (and defined in), if that record has a lifetime
+/// parameter for its template argument (see `Record::has_template_argument_lifetime`).
+fn friend_of_record_with_template_argument_lifetime<'ir>(
+    db: &BindingsGenerator<'ir>,
+    func: &Func,
+) -> Option<Rc<Record<'ir>>> {
+    let record_id = func.adl_enclosing_record()?;
+    if func.enclosing_item_id() == Some(record_id) {
+        return None;
+    }
+    match db.find_untyped_decl(record_id) {
+        Item::Record(record) if record.has_template_argument_lifetime() => Some(record.clone()),
+        _ => None,
+    }
+}
+
+/// Returns true if a parameter or the return type of `func` is the record `record_id`, or a
+/// reference to it, without explicit lifetimes.
+fn mentions_record_type(func: &Func, record_id: ItemId) -> bool {
+    let is_unannotated_record =
+        |ty: &CcType| is_record_type(ty, record_id) && ty.explicit_lifetimes().is_empty();
+    func.params().iter().any(|param| {
+        !param.clang_lifetimebound() && is_unannotated_record(strip_reference(param.type_()))
+    }) || (is_reference(func.return_type())
+        && is_unannotated_record(strip_reference(func.return_type())))
+}
+
+/// In member functions (and friend functions) of a record with a lifetime parameter for its
+/// template argument, ties unannotated uses of the record type to that lifetime: in parameters (as
+/// in copy and move constructors, assignment operators, and `swap`), and, except for constructors
+/// and static member functions, in returned references (as in assignment operators).
+///
+/// Otherwise, each such use would get its own lifetime, so that (for example) a copy constructor
+/// would turn a `Self<'a>` into a `Self<'b>` for arbitrary `'a` and `'b`, and `swap` could
+/// exchange the contents of a `Self<'a>` and a `Self<'b>`. A returned `&mut Self` would get the
+/// lifetime of the reference to `*this` as its lifetime argument, through which a shorter-lived
+/// object could be assigned to `*this`.
+///
+/// `record_lifetimes` are the lifetimes to use, as named in the IR (before renaming). `is_friend`
+/// is whether `func` is a friend function rather than a member function.
+fn tie_self_types_to_template_argument_lifetime(
+    func: &mut Func,
+    record_id: ItemId,
+    record_lifetimes: &[Rc<str>],
+    is_friend: bool,
+) {
+    let mut is_non_static_member_function = false;
+    for param in func.params_mut().iter_mut() {
+        if param.identifier() == "__this" {
+            is_non_static_member_function = true;
+            continue;
+        }
+        if param.clang_lifetimebound() {
+            // Already tied to some lifetime by `lower_clang_annotations`.
+            continue;
+        }
+        tie_record_type_to_lifetimes(param.type_mut(), record_id, record_lifetimes);
+    }
+    let is_constructor = *func.cc_name() == ir::UnqualifiedIdentifier::Constructor;
+    let tie_return = is_friend || (is_non_static_member_function && !is_constructor);
+    if tie_return && is_reference(func.return_type()) {
+        tie_record_type_to_lifetimes(func.return_type_mut(), record_id, record_lifetimes);
+    }
+}
+
 #[cfg_attr(enable_heap_profiling, inline(never))]
 pub fn record_lifetime_arity(
     db: &BindingsGenerator,
@@ -720,8 +853,73 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
         Ok(this_lifetimebound_names)
     }
 
+    /// Returns an error if `func` is a constructor of `record`, a record with a lifetime parameter
+    /// for its template argument, and `func` takes a parameter that may carry a lifetime but is
+    /// not tied to that lifetime parameter.
+    ///
+    /// For such a constructor, the generated binding would be generic over the lifetime parameter
+    /// without any input constraining it, so callers could pick any lifetime (e.g. 'static) while
+    /// the object actually refers to the (shorter-lived) input.
+    ///
+    /// Parameters are allowed if they carry the lifetime parameter (as `T` or `const T&` do), if
+    /// they are [[lifetimebound]] (which ties them to it), if they are the record itself or
+    /// references to it (as in copy and move constructors; see
+    /// `tie_self_types_to_template_argument_lifetime`), or if they carry no lifetimes (so the
+    /// object can't borrow from them). Constructors without any lifetime-carrying inputs (like
+    /// default constructors) can't make the object borrow from anything shorter-lived than
+    /// 'static, so they're allowed too.
+    fn check_constructor_constrains_template_argument_lifetime(
+        &self,
+        func: &Func,
+        record: &Record,
+    ) -> Result<()> {
+        if *func.cc_name() != ir::UnqualifiedIdentifier::Constructor {
+            return Ok(());
+        }
+        let Some(lifetime) = record.lifetime_inputs().last() else {
+            return Ok(());
+        };
+        let Some((this_param, params)) = func.params().split_first() else {
+            return Ok(());
+        };
+        if this_param.identifier() != "__this" {
+            return Ok(());
+        }
+        for param in params {
+            let ty = param.type_();
+            if param.clang_lifetimebound()
+                || mentions_lifetime(ty, lifetime)
+                || is_record_type(strip_reference(ty), record.id())
+            {
+                continue;
+            }
+            // Function pointers only ever have a 'static lifetime. Otherwise, if we can't
+            // determine the arity, conservatively assume that the type carries lifetimes.
+            let carries_lifetimes = match ty.variant() {
+                CcTypeVariant::FuncPointer { .. } => false,
+                _ => lifetime_arity(self.db, ty).unwrap_or(1) > 0,
+            };
+            if !carries_lifetimes {
+                continue;
+            }
+            bail!(
+                "constructor parameter `{}` of `{}` may carry a lifetime, but neither has the \
+                 lifetime of the template argument nor is marked [[clang::lifetimebound]]; the \
+                 lifetime parameter '{} would be unconstrained",
+                param.identifier().as_str(),
+                record.cc_name(),
+                lifetime,
+            );
+        }
+        Ok(())
+    }
+
     /// Transforms a function to use default lifetime rules.
     fn add_lifetime_to_func<'ir>(&mut self, func: &Func<'ir>) -> Result<Func<'ir>> {
+        let template_argument_record = record_with_template_argument_lifetime(self.db, func);
+        if let Some(record) = &template_argument_record {
+            self.check_constructor_constrains_template_argument_lifetime(func, record)?;
+        }
         let mut new_func = func.clone();
         let mut state = LifetimeState::Unseen;
         let mut this_state = LifetimeState::Unseen;
@@ -736,6 +934,28 @@ impl<'a, 'db> LifetimeDefaults<'a, 'db> {
             new_func.lifetime_inputs_mut().push(self.bindings.push_new_binding(name))
         });
         self.lower_clang_annotations(&mut new_func, &this_lifetimebound_names)?;
+        if let Some(record) = &template_argument_record {
+            tie_self_types_to_template_argument_lifetime(
+                &mut new_func,
+                record.id(),
+                record.lifetime_inputs(),
+                /* is_friend= */ false,
+            );
+        } else if let Some(record) = friend_of_record_with_template_argument_lifetime(self.db, func)
+            && let Some(lifetime) = record.lifetime_inputs().last()
+            && mentions_record_type(&new_func, record.id())
+        {
+            // A friend function defined in the record isn't a member, so the record's lifetime
+            // parameter isn't in scope. Give the function its own, shared by all of its uses of
+            // the record.
+            new_func.lifetime_inputs_mut().push(self.bindings.push_new_binding(lifetime));
+            tie_self_types_to_template_argument_lifetime(
+                &mut new_func,
+                record.id(),
+                std::slice::from_ref(lifetime),
+                /* is_friend= */ true,
+            );
+        }
         let mut lifetime_inputs = std::mem::take(new_func.lifetime_inputs_mut());
         for (ix, param) in new_func.params_mut().iter_mut().enumerate() {
             let is_constructor = *func.cc_name() == ir::UnqualifiedIdentifier::Constructor;
