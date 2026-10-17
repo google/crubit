@@ -34,7 +34,6 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/strip.h"
-#include "absl/strings/substitute.h"
 #include "common/annotation_reader.h"
 #include "common/status_macros.h"
 #include "common/string_view_conversion.h"
@@ -2186,8 +2185,6 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
           clang::dyn_cast<clang::NamedDecl>(&original_decl)) {
     name = named_decl->getQualifiedNameAsString();
   }
-  std::string source_loc =
-      ConvertSourceLocation(original_decl.getBeginLoc(), nullptr);
   std::optional<std::string> inline_cpp_source_text;
   if (invocation_.allow_incomplete_migration()) {
     clang::SourceManager& sm = ctx_.getSourceManager();
@@ -2212,7 +2209,8 @@ std::unique_ptr<ir_proto::Item> Importer::ImportUnsupportedItem(
   for (const auto& err : errors) {
     err.WriteToProto(*unsupported->add_errors());
   }
-  unsupported->set_source_loc(std::move(source_loc));
+  *unsupported->mutable_decl_loc() =
+      ConvertDeclLocation(original_decl.getBeginLoc(), nullptr);
   unsupported->set_id(GenerateItemId(original_decl).value());
   unsupported->set_defining_target(GetOwningTarget(original_decl).value());
   unsupported->set_must_bind(is_hard_error || invocation_.carcinize_mode() ==
@@ -2257,73 +2255,55 @@ std::optional<std::string> Importer::GetComment(const clang::Decl& decl) const {
   return cleaned_comment_text;
 }
 
-std::string Importer::ConvertSourceLocation(
+ir_proto::DeclLocation Importer::ConvertDeclLocation(
     clang::SourceLocation loc,
     clang::DeclarationNameInfo* absl_nullable name_info) const {
-  bool kythe_annotations = invocation_.kythe_annotations();
-  auto& sm = ctx_.getSourceManager();
-  // For macros: https://clang.llvm.org/doxygen/SourceManager_8h.html:
-  // Spelling location: where the macro is originally defined.
-  // Expansion location: where the macro is expanded.
-  const clang::SourceLocation& spelling_loc = sm.getSpellingLoc(loc);
-  // TODO(b/261185414): The path format should probably come from a command
-  // line argument.
-  // TODO(b/261185414): Consider linking to the symbol instead of to the line
-  // number to avoid wrong links while generated files have not caught up.
-  constexpr absl::string_view kGeneratedFrom = "Generated from";
-  constexpr absl::string_view kExpandedAt = "Expanded at";
-  constexpr auto kSourceLocationFunc = [](bool kythe_annotations,
-                                          absl::string_view origin,
-                                          absl::string_view filename,
-                                          uint32_t line, uint32_t begin,
-                                          int32_t end) {
-    return absl::Substitute("$0: $1;l=$2", origin, filename, line);
+  const clang::SourceManager& sm = ctx_.getSourceManager();
+  // Returns the path of the file containing `file_loc`, or an empty string if
+  // it's unknown.
+  auto get_path = [&sm](clang::SourceLocation file_loc) {
+    absl::string_view path = StringViewFromStringRef(sm.getFilename(file_loc));
+    absl::ConsumePrefix(&path, "./");
+    return path;
   };
-  constexpr absl::string_view kSourceLocUnknown = "<unknown location>";
-  std::string spelling_loc_str;
-  if (absl::string_view spelling_filename =
-          StringViewFromStringRef(sm.getFilename(spelling_loc));
-      spelling_filename.empty()) {
-    spelling_loc_str = kSourceLocUnknown;
-  } else {
-    uint32_t spelling_line = sm.getSpellingLineNumber(loc);
-    if (absl::StartsWith(spelling_filename, "./")) {
-      spelling_filename = spelling_filename.substr(2);
-    }
-    // This gets us most of the way there, but getting it right in generality
-    // is tricky (see ClangRangeFinder::RangeForNameInfo for details).
-    uint32_t spelling_begin = 0, spelling_end = 0;
-    if (kythe_annotations && name_info != nullptr) {
+
+  ir_proto::DeclLocation result;
+  // For macros (https://clang.llvm.org/doxygen/SourceManager_8h.html), the
+  // spelling location is where the macro is defined, and the expansion
+  // location is where it is expanded.
+  bool spelling_known = false;
+  if (absl::string_view path = get_path(sm.getSpellingLoc(loc));
+      !path.empty()) {
+    spelling_known = true;
+    ir_proto::SourceLocation& spelling = *result.mutable_spelling();
+    spelling.set_path(path);
+    spelling.set_line(sm.getSpellingLineNumber(loc));
+  }
+  if (invocation_.kythe_annotations()) {
+    ir_proto::DeclLocation::ByteRange& name_range =
+        *result.mutable_name_range();
+    name_range.set_begin(0);
+    name_range.set_end(0);
+    if (spelling_known && name_info != nullptr) {
+      // This gets us most of the way there, but getting it right in generality
+      // is tricky (see ClangRangeFinder::RangeForNameInfo for details).
       auto tr =
           clang::CharSourceRange::getTokenRange(name_info->getSourceRange());
       auto sr =
           clang::Lexer::getAsCharRange(tr, sm, ctx_.getLangOpts()).getAsRange();
-      spelling_begin = sm.getFileOffset(sr.getBegin());
-      spelling_end = sm.getFileOffset(sr.getEnd());
+      name_range.set_begin(sm.getFileOffset(sr.getBegin()));
+      name_range.set_end(sm.getFileOffset(sr.getEnd()));
     }
-    spelling_loc_str = kSourceLocationFunc(kythe_annotations, kGeneratedFrom,
-                                           spelling_filename, spelling_line,
-                                           spelling_begin, spelling_end);
   }
-  if (!loc.isMacroID()) {
-    return spelling_loc_str;
-  }
-  const clang::SourceLocation& expansion_loc = sm.getExpansionLoc(loc);
-  std::string expansion_loc_str;
-  if (absl::string_view expansion_filename =
-          StringViewFromStringRef(sm.getFilename(expansion_loc));
-      expansion_filename.empty()) {
-    expansion_loc_str = kSourceLocUnknown;
-  } else {
-    uint32_t expansion_line = sm.getExpansionLineNumber(loc);
-    if (absl::StartsWith(expansion_filename, "./")) {
-      expansion_filename = expansion_filename.substr(2);
+  if (loc.isMacroID()) {
+    if (absl::string_view path = get_path(sm.getExpansionLoc(loc));
+        !path.empty()) {
+      ir_proto::SourceLocation& expansion = *result.mutable_expansion();
+      expansion.set_path(path);
+      expansion.set_line(sm.getExpansionLineNumber(loc));
     }
-    expansion_loc_str =
-        kSourceLocationFunc(kythe_annotations, kExpandedAt, expansion_filename,
-                            expansion_line, 0, 0);
   }
-  return absl::StrCat(spelling_loc_str, "\n", expansion_loc_str);
+  return result;
 }
 
 std::optional<std::string> Importer::CheckTemplateArgInstantiable(

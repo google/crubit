@@ -94,8 +94,8 @@ std::unique_ptr<ir_proto::Item> EnumConstantDeclImporter::Import(
   constant->set_id(ictx_.GenerateItemId(*enum_constant_decl).value());
   constant->set_owning_target(
       ictx_.GetOwningTarget(*enum_constant_decl).value());
-  constant->set_source_loc(
-      ictx_.ConvertSourceLocation(enum_constant_decl->getBeginLoc(), nullptr));
+  *constant->mutable_decl_loc() =
+      ictx_.ConvertDeclLocation(enum_constant_decl->getBeginLoc(), nullptr);
   type->WriteToProto(*constant->mutable_type());
   if (unknown_attr->has_value()) {
     constant->set_unknown_attr(std::move(**unknown_attr));
