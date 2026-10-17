@@ -2250,7 +2250,7 @@ static llvm::Expected<PointerNullState> loadPointerNullState(
 }
 
 static std::vector<InferableSlot> loadInferableSlots(
-    const proto2::RepeatedPtrField<InferableSlotProto>& Protos,
+    const google::protobuf::RepeatedPtrField<InferableSlotProto>& Protos,
     dataflow::Arena& Arena, llvm::DenseMap<unsigned, Atom>& AtomMap) {
   std::vector<InferableSlot> InferableSlots;
   for (const auto& ISProto : Protos) {

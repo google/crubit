@@ -414,7 +414,7 @@ bool IsProto2Message(const clang::Decl& decl) {
   };
   // `google::protobuf::Message` derives from `google::protobuf::MessageLite`, but it is the
   // abstract base class of all full-runtime messages, not a generated message.
-  // (This mirrors `proto2::is_concrete_proto_message`.)
+  // (This mirrors `google::protobuf::is_concrete_proto_message`.)
   if (has_qualified_name(cxx_record_decl, "google::protobuf::Message")) {
     return false;
   }
