@@ -281,6 +281,10 @@ def additional_rust_srcs_for_crubit_bindings(
             `include_bytes!`). These files can be referenced from `srcs` using paths relative to
             the source file, just like the `compile_data` attribute of `rust_library`.
         cpp_srcs: The C++ source files whose contents are parsed by Clang to generate Rust bindings, and prepended to the generated C++ implementation (`rs_api_impl.cc`).
+            Note: if `cpp_srcs` is non-empty, the generated C++ implementation is compiled
+            textually, without precompiled header modules, which is slower. Other than the wrapped
+            library's own headers, headers included by `cpp_srcs` should come from
+            `generated_cpp_support_deps`.
         namespace_path: This allows Rust source files define new entries inside of a specific
             existing C++ namespace instead of the top level namespace. For modules which are not
             existing namespace names, use `pub mod` statement in the Rust source file instead.

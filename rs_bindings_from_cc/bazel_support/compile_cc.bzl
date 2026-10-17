@@ -26,14 +26,20 @@ def compile_cc(
       cc_toolchain: A cc_toolchain.
       feature_configuration: A feature configuration.
       src: The source file to be compiled.
-      cc_infos: List[CcInfo]: A list of CcInfo dependencies.
+      cc_infos: List[CcInfo]: A list of CcInfo dependencies. They are treated as exported deps of
+        `src`: `src` may include their headers and the headers of their exported deps under
+        `layering_check`, and consume their precompiled header modules.
       extra_cc_compilation_action_inputs: A list of input files for the C++ compilation action.
-      extra_hdrs: A list of headers to be passed to the C++ compilation action.
+      extra_hdrs: A list of headers owned by this compilation action (passed as `public_hdrs`).
 
     Returns:
       A CcInfo provider.
     """
-    cc_info = cc_common.merge_cc_infos(cc_infos = cc_infos)
+
+    # Use `direct_cc_infos` (exported deps) rather than `cc_infos` (non-exported deps) so that
+    # `_module_map` and `_exporting_module_maps` are preserved for `layering_check` and
+    # `use_header_modules`.
+    cc_info = cc_common.merge_cc_infos(direct_cc_infos = cc_infos)
 
     user_copts = []
     for copt in getattr(attr, "copts", []):
@@ -79,6 +85,9 @@ def compile_cc(
         cc_common.create_debug_context(compilation_outputs),
     ])
 
+    # `compilation_context` already carries the headers and header modules of `cc_infos` as
+    # non-exported deps. Don't re-export `cc_infos` here: the caller decides which module maps
+    # dependents may use (see `RustBindingsFromCcInfo.cc_info`).
     return CcInfo(
         compilation_context = compilation_context,
         linking_context = linking_context,

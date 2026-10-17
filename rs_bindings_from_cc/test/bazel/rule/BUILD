@@ -61,6 +61,29 @@ crubit_rust_test(
     ],
 )
 
+# A target without public headers. Crubit generates bindings for it only because of the extra
+# Rust `srcs`; its generated `_rust_api_impl.cc` includes a synthetic empty header that the impl
+# compile itself owns, and is compiled against precompiled header modules like any other.
+cc_library(
+    name = "no_hdrs_lib",
+    aspect_hints = [":no_hdrs_lib_rust.hint"],
+)
+
+rust_api_from_cpp(
+    name = "no_hdrs_lib_rust",
+    srcs = ["no_hdrs_srcs.rs"],
+    cpp_target = ":no_hdrs_lib",
+)
+
+crubit_rust_test(
+    name = "no_hdrs_test",
+    srcs = ["no_hdrs_test.rs"],
+    deps = [
+        ":no_hdrs_lib_rust",
+        "@crate_index//:googletest",
+    ],
+)
+
 cc_library(
     name = "compile_data_lib",
     hdrs = ["compile_data_lib.h"],

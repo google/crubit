@@ -33,7 +33,15 @@ RustBindingsFromCcInfo = provider(
            " `.cc` and `.rs` files."),
     fields = {
         "cc_info": ("A CcInfo provider for the implementation of the API projection, " +
-                    "or None if this is a real Rust target."),
+                    "or None if this is a real Rust target. Its compilation context exports " +
+                    "only the module map of the C++ target and the module maps in " +
+                    "`support_cc_info`, so that a dependent's `_rust_api_impl.cc` can include " +
+                    "them under `layering_check`."),
+        "support_cc_info": ("An optional CcInfo whose compilation context exports the module " +
+                            "maps of the `generated_cpp_support_deps` of this target and of its " +
+                            "transitive dependencies. Generated code can include these support " +
+                            "headers (for example `co_crubit_abi.h`) in any target that uses " +
+                            "the corresponding bridged type, even through a type alias."),
         "dep_variant_info": ("A DepVariantInfo provider that carries information about the " +
                              "generated bindings (compiled `.rs` file)."),
         "pass_through_dep_variant_infos": ("A depset of DepVariantInfo providers that should be " +

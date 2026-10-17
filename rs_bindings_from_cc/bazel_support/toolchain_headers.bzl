@@ -97,11 +97,12 @@ def _bindings_for_toolchain_headers_impl(ctx):
                 fail("toolchain_headers do not accept additional Rust cc_deps")
         else:
             extra_rs_srcs.extend([(f, "") for f in target.files.to_list()])
+    public_hdrs = public_libc_files + public_libcxx_files + ctx.files.extra_hdrs
     bindings_providers = generate_and_compile_bindings(
         ctx,
         ctx.attr,
         compilation_context = ctx.attr._stl[CcInfo].compilation_context,
-        public_hdrs = public_libc_files + public_libcxx_files + ctx.files.extra_hdrs,
+        public_hdrs = public_hdrs,
         header_includes = header_includes,
         action_inputs = std_and_builtin_files,
         target_args = target_args,
@@ -109,6 +110,11 @@ def _bindings_for_toolchain_headers_impl(ctx):
         extra_rs_compile_data = extra_rs_compile_data,
         deps_for_cc_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
         deps_for_rs_file = depset(extra_rs_deps + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file),
+        # No `CcInfo` owns the toolchain headers, so the `_rust_api_impl.cc` compile owns them.
+        extra_hdrs = public_hdrs,
+        # The Crubit toolchain's `stl_headers` may come from a different crosstool flavor than the
+        # active C++ toolchain's module map, so don't use module maps for this compile.
+        compile_textually = True,
     )
     bindings_providers = list(bindings_providers)
     for p in list(bindings_providers):

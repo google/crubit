@@ -205,6 +205,14 @@ def _get_generated_cpp_support_deps(aspect_ctx):
             generated_cpp_support_deps.extend(info.generated_cpp_support_deps)
     return generated_cpp_support_deps
 
+def _get_support_cc_infos(binding_infos):
+    """Returns the `support_cc_info`s of `binding_infos` that have one."""
+    return [
+        b.support_cc_info
+        for b in binding_infos
+        if getattr(b, "support_cc_info", None)
+    ]
+
 def _collect_hdrs(ctx, crubit_features):
     public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
     label = str(ctx.label)
@@ -440,7 +448,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     compilation_context = target[CcInfo].compilation_context
     if generated_cpp_support_deps or extra_cpp_srcs:
         compilation_context = cc_common.merge_cc_infos(
-            cc_infos = [target[CcInfo]] + generated_cpp_support_deps + [
+            direct_cc_infos = [target[CcInfo]] + generated_cpp_support_deps + [
                 CcInfo(
                     compilation_context = cc_common.create_compilation_context(
                         headers = depset(extra_cpp_srcs),
@@ -496,6 +504,9 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             ],
         ),
         extra_cc_compilation_action_inputs = extra_cc_compilation_action_inputs,
+        # The synthetic empty header of a headerless target (if any) is included by the generated
+        # `_rust_api_impl.cc` and isn't owned by any `CcInfo`, so the impl compile owns it.
+        extra_hdrs = extra_cc_compilation_action_inputs,
         extra_rs_bindings_from_cc_cli_flags = extra_rs_bindings_from_cc_cli_flags,
         should_generate_bindings = (
             has_public_headers or extra_rs_srcs
@@ -511,6 +522,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         extra_cpp_srcs = extra_cpp_srcs,
         extra_named_deps = extra_named_deps,
         use_label_encoded_names_for_deps = use_label_encoded_names_for_deps,
+        exported_cc_infos = [target[CcInfo]],
+        support_cc_infos = generated_cpp_support_deps + _get_support_cc_infos(binding_infos),
     )
 
 def _attr_predicate(ctx):

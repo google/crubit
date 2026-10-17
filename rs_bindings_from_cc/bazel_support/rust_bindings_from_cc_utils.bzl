@@ -37,6 +37,19 @@ load(
 )
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
+# Flags that turn Clang modules off. Precompiled `.pcm` files can't be loaded when one of them is
+# passed ("modules semantics was enabled in precompiled file ... but is currently disabled").
+_NO_MODULES_FLAGS = ["-fno-modules", "-fno-cxx-modules"]
+
+def _has_fno_modules(ctx, attr):
+    """Returns whether the `_rust_api_impl.cc` compile is passed a flag that turns modules off.
+
+    The flags checked are the ones that `compile_cc` passes: the global `--copt`/`--cxxopt`s and
+    the target's `copts`. (`--per_file_copt` is not visible to Starlark.)
+    """
+    flags = ctx.fragments.cpp.copts + ctx.fragments.cpp.cxxopts + getattr(attr, "copts", [])
+    return any([flag in flags for flag in _NO_MODULES_FLAGS])
+
 def generate_and_compile_bindings(
         ctx,
         attr,
@@ -57,7 +70,11 @@ def generate_and_compile_bindings(
         extra_cpp_srcs = [],
         extra_named_deps = depset(),
         use_label_encoded_names_for_deps = False,
-        extra_rs_compile_data = []):
+        extra_rs_compile_data = [],
+        extra_hdrs = [],
+        compile_textually = False,
+        exported_cc_infos = [],
+        support_cc_infos = []):
     """Runs the bindings generator.
 
     Args:
@@ -88,14 +105,36 @@ def generate_and_compile_bindings(
       extra_rs_compile_data: list[tuple[file, str]]: Files (and the module path of the
         `extra_rs_srcs` which may use them) that must be available when compiling the Rust crate,
         e.g. for `include_str!` or `include_bytes!`.
+      extra_hdrs: list[File]: Additional headers owned by the `_rust_api_impl.cc` compile itself
+        (not already owned by a `CcInfo` in `deps_for_cc_file`), such as the headers of
+        `bindings_for_toolchain_headers` or the synthetic empty header for headerless targets. When
+        module maps are on, they belong to the module map of the `_rust_api_impl.cc` compile.
+      compile_textually: Whether to compile `_rust_api_impl.cc` without module maps (and so without
+        precompiled header modules or `layering_check`), regardless of the other conditions below.
+        `bindings_for_toolchain_headers` sets this because the Crubit toolchain's `stl_headers` may
+        come from a different crosstool flavor than the active C++ toolchain's module map.
+      exported_cc_infos: list[CcInfo]: CcInfos whose module maps the `_rust_api_impl.cc` of a
+        direct dependent may use (usually just the C++ target itself). They are exported one level
+        through `RustBindingsFromCcInfo.cc_info`.
+      support_cc_infos: list[CcInfo]: This target's `generated_cpp_support_deps` and the
+        `support_cc_info` of its bindings deps. They are exported transitively through
+        `RustBindingsFromCcInfo.support_cc_info` and `RustBindingsFromCcInfo.cc_info`.
     Returns:
       A RustBindingsFromCcInfo containing the result of the compilation of the generated source
       files, as well a GeneratedBindingsInfo provider containing the generated source files.
     """
+
+    # Exports the module maps of `support_cc_infos` transitively, and nothing else.
+    support_cc_info = cc_common.merge_cc_infos(direct_cc_infos = support_cc_infos)
+
     if not should_generate_bindings:
         return [
             RustBindingsFromCcInfo(
-                cc_info = cc_common.merge_cc_infos(cc_infos = deps_for_cc_file),
+                cc_info = cc_common.merge_cc_infos(
+                    direct_cc_infos = exported_cc_infos + [support_cc_info],
+                    cc_infos = deps_for_cc_file,
+                ),
+                support_cc_info = support_cc_info,
                 dep_variant_info = None,
                 pass_through_dep_variant_infos = deps_for_rs_file,
                 target_args = target_args,
@@ -166,12 +205,33 @@ def generate_and_compile_bindings(
 
     # We use a separate feature_configuration for the clang compile action as the feature
     # configuration for bindings generation needs to use a param file. The clang wrapper script
-    # however does not handle param files well today (b/326976757)
+    # however does not handle param files well today (b/326976757).
+    #
+    # By default, we disable only `"header_modules"` (the module producer feature) so that
+    # `_rust_api_impl.cc` does not compile a redundant `.pcm` for the headers it owns (`extra_hdrs`;
+    # for standard `cc_library` targets via `rust_bindings_from_cc_aspect`, the target's headers are
+    # already owned by `target[CcInfo]` in `deps_for_cc_file`), while keeping `"module_maps"` and
+    # `"use_header_modules"` enabled so it can consume precompiled `.pcm` header modules from
+    # `target` and its dependencies.
+    # `"module_maps"` is disabled instead, so that `_rust_api_impl.cc` is compiled textually as it
+    # was before header modules were consumed here, when:
+    # - The caller asks for it (`compile_textually`, see the docstring).
+    # - `-fno-modules` (or `-fno-cxx-modules`) is passed. The `_rust_api_impl.cc` compile inherits
+    #   the target's `copts` and the global `--copt`/`--cxxopt`s, and precompiled header modules
+    #   cannot be loaded with these flags.
+    # - `extra_cpp_srcs` is non-empty. Handwritten C++ (e.g. `rust_api_from_cpp(cpp_srcs=...)`) is
+    #   concatenated into `_rust_api_impl.cc`. That code was never checked by `layering_check`
+    #   (which needs `"module_maps"`), and may include headers of transitive deps.
+    #   TODO(b/573160050): Remove this case once `cpp_srcs` users declare their includes in
+    #   `generated_cpp_support_deps`.
+    compile_textually = compile_textually or extra_cpp_srcs or _has_fno_modules(ctx, attr)
     feature_configuration_for_cc_compile = cc_common.configure_features(
         ctx = ctx,
         cc_toolchain = cc_toolchain,
         requested_features = ctx.features,
-        unsupported_features = ctx.disabled_features + ["module_maps"],
+        unsupported_features = ctx.disabled_features + (
+            ["module_maps"] if compile_textually else ["header_modules"]
+        ),
     )
 
     # TODO(b/216587072): Remove this hacky escaping and use the import! macro once available
@@ -186,7 +246,7 @@ def generate_and_compile_bindings(
         cc_output,
         deps_for_cc_file,
         extra_cc_compilation_action_inputs,
-        extra_hdrs = public_hdrs,
+        extra_hdrs = extra_hdrs,
     )
 
     # Compile the "_rust_api.rs" file together with extra_rs_srcs.
@@ -225,9 +285,19 @@ def generate_and_compile_bindings(
     else:
         name = dep_variant_info.crate_info.name
 
+    # The headers, header modules, and linking information of the impl and its deps flow to
+    # dependents as non-exported deps. Only `exported_cc_infos` (one level) and `support_cc_info`
+    # (transitively) export their module maps, so that a dependent's `_rust_api_impl.cc` doesn't
+    # receive a module map for every target in the bindings dependency graph.
+    merged_cc_info = cc_common.merge_cc_infos(
+        direct_cc_infos = exported_cc_infos + [support_cc_info],
+        cc_infos = [cc_info, dep_variant_info.cc_info],
+    )
+
     return [
         RustBindingsFromCcInfo(
-            cc_info = dep_variant_info.cc_info,
+            cc_info = merged_cc_info,
+            support_cc_info = support_cc_info,
             dep_variant_info = dep_variant_info,
             target_args = target_args,
             namespaces = namespaces_output,

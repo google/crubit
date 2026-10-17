@@ -105,7 +105,11 @@ def rust_api_from_cpp(
         `include_str!` or `include_bytes!`). These files can be referenced from
         `srcs` using paths relative to the source file, just like the
         `compile_data` attribute of `rust_library`.
-      cpp_srcs: Additional C++ source files (e.g. from inline_cpp!).
+      cpp_srcs: Additional C++ source files (e.g. from inline_cpp!). Note: if
+        `cpp_srcs` is non-empty, the generated `_rust_api_impl.cc` is compiled
+        textually, without precompiled header modules, which is slower.
+        Other than the wrapped library's own headers, headers included by
+        `cpp_srcs` should come from `generated_cpp_support_deps`.
       deps: Dependencies for the Rust API.
       link_deps: Native C++ dependencies to link into the Rust library.
       srcs_mod: Controls which module inside the Rust crate the additional rust sources are added to.

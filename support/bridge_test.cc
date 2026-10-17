@@ -60,5 +60,22 @@ TEST(BridgeTest, RoundtripStuff) {
   EXPECT_EQ(value, original);
 }
 
+struct [[clang::trivial_abi]] DynamicTrivialAbi {
+  explicit DynamicTrivialAbi(int v) : value(v) {}
+  DynamicTrivialAbi(DynamicTrivialAbi&&) = default;
+  virtual ~DynamicTrivialAbi() = default;
+  int value = 0;
+};
+
+TEST(BridgeTest, RoundtripDynamicTrivialAbi) {
+  using Abi = TransmuteAbi<DynamicTrivialAbi>;
+  static_assert(std::is_default_constructible_v<Abi>);
+
+  unsigned char buf[Abi::kSize];
+  internal::Encode<Abi>(Abi(), buf, DynamicTrivialAbi(123));
+  DynamicTrivialAbi value = internal::Decode<Abi>(Abi(), buf);
+  EXPECT_EQ(value.value, 123);
+}
+
 }  // namespace
 }  // namespace crubit::bridge

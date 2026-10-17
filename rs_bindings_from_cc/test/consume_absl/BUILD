@@ -57,6 +57,37 @@ crubit_rust_test(
     ],
 )
 
+crubit_test_cc_library(
+    name = "any_invocable_alias",
+    hdrs = ["any_invocable_alias.h"],
+    aspect_hints = ["//features:supported"],
+    deps = [
+        "@abseil-cpp//absl/functional:any_invocable",
+    ],
+)
+
+# Depends on the AnyInvocable bridge only through `:any_invocable_alias`. Checks
+# that the generated bindings can include the bridge's support header.
+crubit_test_cc_library(
+    name = "uses_any_invocable_alias",
+    hdrs = ["uses_any_invocable_alias.h"],
+    aspect_hints = ["//features:supported"],
+    deps = [
+        ":any_invocable_alias",
+    ],
+)
+
+crubit_rust_test(
+    name = "uses_any_invocable_alias_test",
+    srcs = ["uses_any_invocable_alias_test.rs"],
+    cc_deps = [
+        ":uses_any_invocable_alias",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+    ],
+)
+
 crubit_rust_test(
     name = "int128_test",
     srcs = ["int128_test.rs"],
