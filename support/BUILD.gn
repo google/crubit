@@ -151,6 +151,9 @@ rust_static_library("ctor") {
   deps = [
     "$crubit_src_dir/support:ctor_proc_macros",
   ]
+  features = [
+    "same_abi",
+  ]
   allow_unsafe = true
   no_clippy = true
 }
@@ -240,6 +243,9 @@ rust_static_library("forward_declare") {
   deps = [
     "$crubit_src_dir/support:cref",
     "$crubit_src_dir/support:forward_declare_proc_macros",
+  ]
+  features = [
+    "unstable",
   ]
   allow_unsafe = true
   no_clippy = true
