@@ -12,7 +12,7 @@
 #include "gtest/gtest.h"
 #include "support/protobuf/test.pb.h"
 
-namespace proto2 {
+namespace google::protobuf {
 namespace {
 
 using ::proto2::crubit_test::DummyMessage;
@@ -63,9 +63,9 @@ TEST(RustWrapperTest, OwnsAndAccessesObject) {
 TEST(RustWrapperTest, ProtoNamespaceAlias) {
   ::proto::Rust<DummyMessage> msg;
   static_assert(std::is_same_v<::proto::Rust<DummyMessage>,
-                               ::proto2::Rust<DummyMessage>>);
+                               ::google::protobuf::Rust<DummyMessage>>);
   EXPECT_NE(msg.get(), nullptr);
 }
 
 }  // namespace
-}  // namespace proto2
+}  // namespace google::protobuf
