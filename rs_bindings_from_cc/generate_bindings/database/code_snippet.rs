@@ -117,8 +117,8 @@ pub struct BindingsTokens {
 pub fn missing_feature_descriptions<'a>(
     db: &BindingsGenerator<'a>,
     item: &Item<'a>,
-) -> Result<Vec<String>> {
-    let mut missing_features = vec![];
+) -> Result<Vec<Error>> {
+    let mut missing_features: Vec<Error> = vec![];
 
     let ir = &db.ir();
 
@@ -146,7 +146,7 @@ pub fn missing_feature_descriptions<'a>(
         true
     };
 
-    let missing_features_of_type = |rs_type_kind: &RsTypeKind<'_>| -> Option<Vec<String>> {
+    let missing_features_of_type = |rs_type_kind: &RsTypeKind<'_>| -> Option<Vec<Error>> {
         for TargetAndFeatures { target, features } in &defining_and_owning_target {
             let descriptions = rs_type_kind.missing_feature_descriptions_of_type(
                 target,
@@ -160,22 +160,23 @@ pub fn missing_feature_descriptions<'a>(
         None
     };
 
-    let missing_features_of_cc_type = |cc_type: ir::CcType| -> Option<Vec<String>> {
+    let missing_features_of_cc_type = |cc_type: ir::CcType| -> Option<Vec<Error>> {
         match db.rs_type_kind(cc_type) {
             Ok(rs_type_kind) => missing_features_of_type(&rs_type_kind),
-            Err(e) => Some(vec![e.to_string()]),
+            Err(e) => Some(vec![e]),
         }
     };
 
-    let join_missing_with_context = |context: &str, missing: &[String]| -> String {
-        let desc = missing.join("\n").replace('\n', "\n  ");
-        format!("{context}:\n  {desc}")
+    let join_missing_with_context = |context: &str, missing: &[Error]| -> Error {
+        let desc = missing.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n");
+        let desc = desc.replace('\n', "\n  ");
+        anyhow!("{context}:\n  {desc}")
     };
 
     if !have_feature(CrubitFeature::Experimental)
         && let Some(unknown_attr) = item.unknown_attr()
     {
-        missing_features.push(format!(
+        missing_features.push(anyhow!(
             "crubit.rs/errors/unknown_attribute: unknown attribute(s): {unknown_attr}"
         ));
     }
@@ -194,7 +195,7 @@ pub fn missing_feature_descriptions<'a>(
                 // don't generally support with that feature set, because in this
                 // particular case, it's safe.
                 if !have_feature(CrubitFeature::Types) {
-                    missing_features.push("destructors".to_string());
+                    missing_features.push(anyhow!("destructors"));
                 }
             } else {
                 for param in func.params() {
@@ -220,17 +221,17 @@ pub fn missing_feature_descriptions<'a>(
                 }
                 if !have_feature(CrubitFeature::Experimental) {
                     if !func.has_c_calling_convention() {
-                        missing_features.push("non-C calling convention".to_string());
+                        missing_features.push(anyhow!("non-C calling convention"));
                     }
                     if func.is_variadic() {
-                        missing_features.push("variadic function".to_string());
+                        missing_features.push(anyhow!("variadic function"));
                     }
                     if func.is_noreturn() {
-                        missing_features.push("[[noreturn]] attribute".to_string());
+                        missing_features.push(anyhow!("[[noreturn]] attribute"));
                     }
                     for param in func.params() {
                         if let Some(unknown_attr) = param.unknown_attr() {
-                            missing_features.push(format!(
+                            missing_features.push(anyhow!(
                                 "crubit.rs/errors/unknown_attribute: param {param} has unknown attribute(s): {unknown_attr}",
                                 param = param.identifier().as_str()
                             ));
@@ -255,7 +256,7 @@ pub fn missing_feature_descriptions<'a>(
         }
         Item::IncompleteRecord(_) => {
             if !have_feature(CrubitFeature::ForwardDeclarations) {
-                missing_features.push("incomplete type".to_string());
+                missing_features.push(anyhow!("incomplete type"));
             }
         }
     }
@@ -311,11 +312,15 @@ pub struct BindingsInfo {
 #[derive(Clone, PartialEq, Eq)]
 pub enum NoBindingsReason {
     MissingRequiredFeatures {
-        missing_features: Vec<String>,
+        missing_features: Vec<Error>,
     },
+    /// The item named `type_name` cannot be bound because something it depends on cannot be
+    /// bound.
     DependencyFailed {
-        type_name: String,
-        reason: String,
+        /// The name of the item that cannot be bound.
+        type_name: Rc<str>,
+        /// Why the dependency cannot be bound.
+        source: Error,
     },
     LeadingDunder {
         name: String,
@@ -356,10 +361,12 @@ impl From<NoBindingsReason> for Error {
     fn from(reason: NoBindingsReason) -> Error {
         match reason {
             NoBindingsReason::MissingRequiredFeatures { missing_features } => {
-                anyhow!(missing_features.join("\n"))
+                let message =
+                    missing_features.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n");
+                anyhow!(message)
             }
-            NoBindingsReason::DependencyFailed { type_name, reason } => {
-                anyhow!("depends on `{type_name}` which cannot be bound because {reason}")
+            NoBindingsReason::DependencyFailed { type_name, source } => {
+                anyhow!("depends on `{type_name}` which cannot be bound because {source}")
             }
             NoBindingsReason::LeadingDunder { name } => {
                 anyhow!("Skipping generating bindings for '{name}' because it has a leading `__`")
