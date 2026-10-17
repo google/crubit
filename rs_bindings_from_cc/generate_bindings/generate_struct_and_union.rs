@@ -217,6 +217,12 @@ fn filter_out_ambiguous_member_functions<'a>(
     func_counter
         .values()
         .filter_map(|(func, count)| if *count == 1 { Some((*func).clone()) } else { None })
+        // `generate_function` doesn't check `has_bindings`: `generate_item` does that after the
+        // fact. If the base class method has no bindings (e.g. because it uses a type from a
+        // target without Crubit), then its thunk is not generated, so the derived class must not
+        // forward to it either. This is checked after counting, so that a method without bindings
+        // still makes its overloads ambiguous.
+        .filter(|func| db.has_bindings(Item::Func(func.clone())).is_ok())
         // Sort by name to make the output deterministic.
         .sorted_by_key(|func| func.rs_name().identifier_as_str().unwrap().to_string())
         .collect()

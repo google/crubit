@@ -131,6 +131,32 @@ impl Default for Base {
 )]
 pub trait BindingFailedFor_ZNK4Base11no_bindingsE10Nonmovable {}
 
+// error: function `Base::takes_not_crubit_enabled` could not be bound
+//   Unsupported parameter type `NotCrubitEnabled* p`:
+//     crubit.rs/errors/unknown_target: the type is defined in
+//       rs_bindings_from_cc/test/struct/inheritance/not_crubit_enabled.h
+//     which is not a public header of any Crubit-enabled target that
+//       //rs_bindings_from_cc/test/struct/inheritance:inherited_methods
+//     depends on directly. Either enable Crubit on the library that provides the header,
+//     add that library as a direct dependency (and `#include` the header directly),
+//     or move the type to a public header.
+
+// error: function `Base::returns_not_crubit_enabled` could not be bound
+//   Unsupported return type `NotCrubitEnabled*`:
+//     crubit.rs/errors/unknown_target: the type is defined in
+//       rs_bindings_from_cc/test/struct/inheritance/not_crubit_enabled.h
+//     which is not a public header of any Crubit-enabled target that
+//       //rs_bindings_from_cc/test/struct/inheritance:inherited_methods
+//     depends on directly. Either enable Crubit on the library that provides the header,
+//     add that library as a direct dependency (and `#include` the header directly),
+//     or move the type to a public header.
+
+// error: function `Base::overloaded` could not be bound
+//   Cannot generate bindings for overloaded function
+
+// error: function `Base::overloaded` could not be bound
+//   Cannot generate bindings for overloaded function
+
 pub mod base {
     #[inline(always)]
     pub(crate) fn has_bindings<'__this>(__this: &'__this crate::Base) -> bool {

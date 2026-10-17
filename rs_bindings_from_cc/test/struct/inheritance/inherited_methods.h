@@ -7,6 +7,8 @@
 
 #pragma clang lifetime_elision
 
+#include "rs_bindings_from_cc/test/struct/inheritance/not_crubit_enabled.h"
+
 struct Nonmovable {
   Nonmovable() = default;
   Nonmovable(Nonmovable&&) = delete;
@@ -16,6 +18,16 @@ struct Nonmovable {
 struct Base {
   bool has_bindings() const { return true; }
   void no_bindings(Nonmovable) const {}
+
+  // Methods using a type from a target without Crubit don't get bindings on
+  // `Base` (no thunk is generated), so they must not be forwarded from
+  // `Derived` either (b/565343531).
+  void takes_not_crubit_enabled(NotCrubitEnabled* p) {}
+  NotCrubitEnabled* returns_not_crubit_enabled() { return nullptr; }
+  // `Base::overloaded` gets no bindings because it is overloaded, even though
+  // only one of the overloads could be bound on its own.
+  void overloaded(int i) {}
+  void overloaded(int i, NotCrubitEnabled* p) {}
 
   // Static member functions are inherited by `Derived`, but unlike instance
   // methods they have no implicit `this` parameter. Parameters naming the

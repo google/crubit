@@ -1,3 +1,4 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 load(
@@ -24,10 +25,16 @@ crubit_rust_test(
     ],
 )
 
+cc_library(
+    name = "not_crubit_enabled",
+    hdrs = ["not_crubit_enabled.h"],
+)
+
 crubit_test_cc_library(
     name = "inherited_methods",
     hdrs = ["inherited_methods.h"],
     aspect_hints = ["//features:oo_casting"],
+    deps = [":not_crubit_enabled"],
 )
 
 golden_test(
