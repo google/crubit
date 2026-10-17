@@ -95,7 +95,12 @@ extern "C" void __rust_thunk___Z12CallVoidVoidN4absl12AnyInvocableIFvvOEEE(
   ::crubit::Decoder __f_decoder(::crubit::AnyInvocableAbi<void() &&>::kSize, f);
   CallVoidVoid(
       ::crubit::AnyInvocableAbi<void() &&>(
-          __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional,
+          [](::absl::internal_any_invocable::FunctionToCall operation,
+             ::absl::internal_any_invocable::TypeErasedState* from,
+             ::absl::internal_any_invocable::TypeErasedState* to) noexcept {
+            __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+                operation, from, to);
+          },
           [](::absl::internal_any_invocable::TypeErasedState* state) noexcept
               -> void {
             __crubit_invoker___CcTemplateInstN4absl12AnyInvocableIFvvOEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
@@ -111,7 +116,12 @@ extern "C" void __rust_thunk___Z15ReturnIntMapperv(
   ::crubit::Encoder __return_encoder(
       ::crubit::AnyInvocableAbi<int(int) const>::kSize, __return_abi_buffer);
   ::crubit::AnyInvocableAbi<int(int) const>(
-      __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional,
+      [](::absl::internal_any_invocable::FunctionToCall operation,
+         ::absl::internal_any_invocable::TypeErasedState* from,
+         ::absl::internal_any_invocable::TypeErasedState* to) noexcept {
+        __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+            operation, from, to);
+      },
       [](::absl::internal_any_invocable::TypeErasedState* state,
          ::absl::internal_any_invocable::ForwardedParameterType<int>
              param_0) noexcept -> int {
@@ -131,7 +141,12 @@ extern "C" void __rust_thunk___Z17MyOptionIntMapperv(
                                     const>::kSize,
       __return_abi_buffer);
   ::crubit::AnyInvocableAbi<struct MyOption<int>(struct MyOption<int>) const>(
-      __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKF8MyOptionIiES2_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional,
+      [](::absl::internal_any_invocable::FunctionToCall operation,
+         ::absl::internal_any_invocable::TypeErasedState* from,
+         ::absl::internal_any_invocable::TypeErasedState* to) noexcept {
+        __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKF8MyOptionIiES2_EEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+            operation, from, to);
+      },
       [](::absl::internal_any_invocable::TypeErasedState* state,
          ::absl::internal_any_invocable::ForwardedParameterType<
              struct MyOption<int>>
@@ -164,7 +179,12 @@ extern "C" void __rust_thunk___Z23ReturnNonConstIntMapperv(
   ::crubit::Encoder __return_encoder(::crubit::AnyInvocableAbi<int(int)>::kSize,
                                      __return_abi_buffer);
   ::crubit::AnyInvocableAbi<int(int)>(
-      __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional,
+      [](::absl::internal_any_invocable::FunctionToCall operation,
+         ::absl::internal_any_invocable::TypeErasedState* from,
+         ::absl::internal_any_invocable::TypeErasedState* to) noexcept {
+        __crubit_manager___CcTemplateInstN4absl12AnyInvocableIFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+            operation, from, to);
+      },
       [](::absl::internal_any_invocable::TypeErasedState* state,
          ::absl::internal_any_invocable::ForwardedParameterType<int>
              param_0) noexcept -> int {
@@ -183,7 +203,12 @@ extern "C" int __rust_thunk___Z13CallIntMapperN4absl12AnyInvocableIKFiiEEEi(
       ::crubit::AnyInvocableAbi<int(int) const>::kSize, f);
   return CallIntMapper(
       ::crubit::AnyInvocableAbi<int(int) const>(
-          __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional,
+          [](::absl::internal_any_invocable::FunctionToCall operation,
+             ::absl::internal_any_invocable::TypeErasedState* from,
+             ::absl::internal_any_invocable::TypeErasedState* to) noexcept {
+            __crubit_manager___CcTemplateInstN4absl12AnyInvocableIKFiiEEE__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fconsume_5fabsl_3aabsl_5ffunctional(
+                operation, from, to);
+          },
           [](::absl::internal_any_invocable::TypeErasedState* state,
              ::absl::internal_any_invocable::ForwardedParameterType<int>
                  param_0) noexcept -> int {

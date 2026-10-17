@@ -103,9 +103,24 @@ pub fn callable_crubit_abi_type<'a>(
             generate_invoker_function_pointer(db, callable, &cpp_param_types, &cpp_return_type)?;
         let manager_ident = &callable.manager_ident;
 
+        // As with the invoker, we cannot pass the Rust manager function pointer directly: C++
+        // calls it indirectly through `ManagerType*`, and the CFI type id that rustc assigns to
+        // the Rust definition does not match the one Clang expects for `ManagerType`. Wrapping it
+        // in a C++ lambda gives the indirect call a C++ target, and the call into Rust becomes a
+        // direct call, which CFI does not check.
+        //
+        // TODO(b/574602051): Once rustc can encode `dyn_callable_rs::FunctionToCall` to match
+        // Clang's `absl::internal_any_invocable::FunctionToCall`, give it a `#[cfi_encoding]` and
+        // pass `#manager_ident` directly instead of wrapping it.
         quote! {
             #cpp_type_tokens(
-                #manager_ident,
+                [](
+                    ::absl::internal_any_invocable::FunctionToCall operation,
+                    ::absl::internal_any_invocable::TypeErasedState* from,
+                    ::absl::internal_any_invocable::TypeErasedState* to
+                ) noexcept {
+                    #manager_ident(operation, from, to);
+                },
                 #invoker_function_pointer
             )
         }
