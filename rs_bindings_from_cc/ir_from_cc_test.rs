@@ -140,6 +140,7 @@ fn test_function() {
                 ],
                 lifetime_params: [],
                 is_inline: false,
+                is_always_inline: false,
                 instance_method_metadata: None,
                 is_extern_c: false,
                 is_noreturn: false,

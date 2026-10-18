@@ -988,14 +988,17 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
   });
 
   bool is_inline = false;
+  bool is_always_inline = false;
   bool is_defined = false;
   for (auto* def : function_decl->redecls()) {
     if (def->isInlined()) is_inline = true;
+    if (def->hasAttr<clang::AlwaysInlineAttr>()) is_always_inline = true;
     if (def->isThisDeclarationADefinition()) is_defined = true;
   }
   if (!is_defined) {
     // Template members may not be defined until instantiation.
     if (auto* pat = function_decl->getTemplateInstantiationPattern()) {
+      if (pat->hasAttr<clang::AlwaysInlineAttr>()) is_always_inline = true;
       if (pat->isThisDeclarationADefinition()) {
         is_defined = true;
       }
@@ -1148,6 +1151,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
     *func->add_lifetime_params() = std::move(l_param);
   }
   func->set_is_inline(is_inline);
+  func->set_is_always_inline(is_always_inline);
   if (instance_metadata.has_value()) {
     *func->mutable_instance_method_metadata() = std::move(*instance_metadata);
   }

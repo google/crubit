@@ -1651,6 +1651,10 @@ derive_debug_partialeq_eq_hash! {
             self.proto.is_inline()
         }
 
+        pub fn is_always_inline(&self) -> bool {
+            self.proto.is_always_inline()
+        }
+
         pub fn instance_method_metadata(&self) -> Option<InstanceMethodMetadata> {
             self.proto.instance_method_metadata_opt().into_option().to_ir()
         }

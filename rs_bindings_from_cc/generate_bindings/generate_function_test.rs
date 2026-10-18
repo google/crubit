@@ -64,6 +64,34 @@ fn test_simple_function() -> Result<()> {
 }
 
 #[gtest]
+fn test_always_inline_function() -> Result<()> {
+    let proto = ir_proto_from_cc(
+        "inline __attribute__((always_inline)) int Add(int a, int b) { return a + b; }",
+    )?;
+
+    let ir = make_test_ir(&proto)?;
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens_for_test(ir)?;
+    assert_rs_matches!(
+        rs_api,
+        quote! {
+            #[inline(always)]
+            pub fn Add(a: ::ffi_11::c_int, b: ::ffi_11::c_int) -> ::ffi_11::c_int {
+                unsafe { crate::detail::...(a, b) }
+            }
+        }
+    );
+    assert_cc_matches!(
+        rs_api_impl,
+        quote! {
+            extern "C" __attribute__((always_inline)) int ...(int a, int b) {
+                return Add(a, b);
+            }
+        }
+    );
+    Ok(())
+}
+
+#[gtest]
 fn test_inline_function() -> Result<()> {
     let proto = ir_proto_from_cc("inline int Add(int a, int b) { return a + b; }")?;
 
