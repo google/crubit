@@ -18,17 +18,17 @@ _NON_PROD_PLATFORMS = {
     "ios_aarch64": [
         "@platforms//cpu:aarch64",
         "@platforms//os:ios",
-        "//third_party/bazel_rules/apple_support/constraints:device",
+        "@apple_support//constraints:device",
     ],
     "ios_aarch64_sim": [
         "@platforms//cpu:aarch64",
         "@platforms//os:ios",
-        "//third_party/bazel_rules/apple_support/constraints:simulator",
+        "@apple_support//constraints:simulator",
     ],
     "ios_x86_64": [
         "@platforms//cpu:x86_64",
         "@platforms//os:ios",
-        "//third_party/bazel_rules/apple_support/constraints:simulator",
+        "@apple_support//constraints:simulator",
     ],
     "android_x86_64": [
         "@platforms//cpu:x86_64",
