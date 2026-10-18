@@ -50,8 +50,13 @@ concept OneOf = (std::same_as<T, Allowed> || ...);
 // `Option<&T>`) are converted to a pointer-sized integer, so e.g. `Option<&T>`
 // has a 64-bit discriminant on 64-bit targets.
 template <typename T>
-concept RustcDiscriminant = OneOf<T, int8_t, uint8_t, int16_t, uint16_t,
-                                  int32_t, uint32_t, int64_t, uint64_t>;
+concept RustcDiscriminant =
+    OneOf<T, int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t,
+          uint64_t,
+          // `isize`/`usize` discriminants. These are distinct types from the
+          // 64-bit ones on some platforms (e.g. `long` vs. `long long` on
+          // macOS).
+          intptr_t, uintptr_t>;
 
 // Concept that checks whether a type `T` implements the tag encoding policy
 // interface: a stateless policy that decodes a discriminant from the object
