@@ -92,10 +92,18 @@ long as `T` is a non-ZST type supported by Crubit. It has a similar API to
 [`std::optional`](https://en.cppreference.com/cpp/utility/optional), and
 implicitly converts to and from `std::optional`.
 
+Unlike `std::optional`, `rs_std::Option` has no `operator bool`, so check for a
+value with `has_value()` rather than `if (myoption)`. Conversion to
+`std::optional` is only available from an rvalue, so either convert the result
+of a call directly or `std::move` an existing `rs_std::Option`:
+
 ```c++
 if (myoption.has_value()) {
   Foo(*myoption);
 }
+
+std::optional<int32_t> converted = std::move(myoption);
+std::optional<int32_t> direct = rust_crate::find_index(name);
 ```
 
 A more complete description of the API is in the common `OptionBase` public base
