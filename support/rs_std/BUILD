@@ -54,7 +54,7 @@ crubit_cc_test(
     srcs = ["int_test.cc"],
     deps = [
         ":int",
-        "@fuzztest//:fuzztest_gtest_main",
+        "@fuzztest//fuzztest:fuzztest_gtest_main",
         "@googletest//:gtest",
     ],
 )
@@ -77,8 +77,8 @@ crubit_cc_test(
         "//support/rs_std/internal:is_utf8",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/types:span",
-        "@fuzztest",
-        "@fuzztest//:fuzztest_gtest_main",
+        "@fuzztest//fuzztest",
+        "@fuzztest//fuzztest:fuzztest_gtest_main",
         "@googletest//:gtest",
     ],
 )
@@ -172,8 +172,8 @@ crubit_cc_test(
     deps = [
         ":slice_ref",
         "@abseil-cpp//absl/types:span",
-        "@fuzztest",
-        "@fuzztest//:fuzztest_gtest_main",
+        "@fuzztest//fuzztest",
+        "@fuzztest//fuzztest:fuzztest_gtest_main",
         "@googletest//:gtest",
     ],
 )
@@ -206,8 +206,8 @@ crubit_cc_test(
         ":str_ref",
         "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
-        "@fuzztest",
-        "@fuzztest//:fuzztest_gtest_main",
+        "@fuzztest//fuzztest",
+        "@fuzztest//fuzztest:fuzztest_gtest_main",
         "@googletest//:gtest",
     ],
 )
@@ -245,7 +245,7 @@ crubit_cc_test(
     deps = [
         ":dyn_callable",
         "@abseil-cpp//absl/functional:any_invocable",
-        "@fuzztest//:fuzztest_gtest_main",
+        "@fuzztest//fuzztest:fuzztest_gtest_main",
         "@googletest//:gtest",
     ],
 )
@@ -263,7 +263,7 @@ crubit_cc_test(
     srcs = ["fn_ref_test.cc"],
     deps = [
         ":fn_ref",
-        "@fuzztest//:fuzztest_gtest_main",
+        "@fuzztest//fuzztest:fuzztest_gtest_main",
         "@googletest//:gtest",
     ],
 )
@@ -282,7 +282,7 @@ crubit_cc_test(
     deps = [
         ":fn",
         "//support:movable",
-        "@fuzztest//:fuzztest_gtest_main",
+        "@fuzztest//fuzztest:fuzztest_gtest_main",
         "@googletest//:gtest",
     ],
 )
@@ -319,7 +319,7 @@ crubit_cc_test(
     srcs = ["iterator_adapter_test.cc"],
     deps = [
         ":iterator_adapter",
-        "@fuzztest//:fuzztest_gtest_main",
+        "@fuzztest//fuzztest:fuzztest_gtest_main",
         "@googletest//:gtest",
     ],
 )
@@ -399,7 +399,7 @@ crubit_cc_test(
     srcs = ["unit_test.cc"],
     deps = [
         ":unit",
-        "@fuzztest//:fuzztest_gtest_main",
+        "@fuzztest//fuzztest:fuzztest_gtest_main",
         "@googletest//:gtest",
     ],
 )
@@ -426,7 +426,7 @@ crubit_cc_test(
     srcs = ["enum_tag_encoding_test.cc"],
     deps = [
         ":enum",
-        "@fuzztest//:fuzztest_gtest_main",
+        "@fuzztest//fuzztest:fuzztest_gtest_main",
         "@googletest//:gtest",
     ],
 )
@@ -436,7 +436,7 @@ crubit_cc_test(
     srcs = ["enum_storage_test.cc"],
     deps = [
         ":enum",
-        "@fuzztest//:fuzztest_gtest_main",
+        "@fuzztest//fuzztest:fuzztest_gtest_main",
         "@googletest//:gtest",
     ],
 )
@@ -450,7 +450,7 @@ crubit_cc_test(
     deps = [
         ":enum",
         "@abseil-cpp//absl/base:core_headers",
-        "@fuzztest//:fuzztest_gtest_main",
+        "@fuzztest//fuzztest:fuzztest_gtest_main",
         "@googletest//:gtest",
     ],
 )
