@@ -1,5 +1,6 @@
 """End-to-end test for operators."""
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_rust_test")
 load("//rs_bindings_from_cc/test:test_bindings.bzl", "crubit_test_cc_library")
 
@@ -80,6 +81,29 @@ crubit_rust_test(
     ],
     deps = [
         "//support:ctor",
+        "@crate_index//:googletest",
+        "@crate_index//:static_assertions",  # v1
+    ],
+)
+
+# Crubit is intentionally not enabled for this library.
+cc_library(
+    name = "operator_mixins",
+    hdrs = ["operator_mixins.h"],
+)
+
+crubit_test_cc_library(
+    name = "inherited_operators",
+    hdrs = ["inherited_operators.h"],
+    aspect_hints = ["//features:experimental"],
+    deps = [":operator_mixins"],
+)
+
+crubit_rust_test(
+    name = "inherited_operators_test",
+    srcs = ["inherited_operators_test.rs"],
+    cc_deps = [":inherited_operators"],
+    deps = [
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
     ],

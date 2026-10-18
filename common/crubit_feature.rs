@@ -112,7 +112,6 @@ flagset::flags! {
         /// Generate C++ bindings for Rust enums with one nested struct per variant, built on
         /// `support/rs_std/enum.h` (crubit.rs-enum-api-v2). Only affects cpp_api_from_rust.
         EnumApiV2,
-
         /// Let rustc infer `Send` and `Sync` for C++ records from their fields, instead of
         /// emitting `impl !Send` / `impl !Sync` for records without an explicit annotation.
         /// Opaque byte blobs which hold C++ data are marked as neither `Send` nor `Sync`.
@@ -122,6 +121,10 @@ flagset::flags! {
         /// `Iterator::Item` and `IntoIterator::Item` associated types. Only affects
         /// cpp_api_from_rust.
         IteratorItemReferences,
+
+        /// Generate bindings for operators that are hidden friends of base classes (e.g. defined by
+        /// CRTP mixins), as if they were hidden friends of the derived class.
+        InheritedFriendOperators,
     }
 }
 
@@ -165,6 +168,7 @@ impl CrubitFeature {
             Self::EnumApiV2 => "enum_api_v2",
             Self::InferSendSync => "infer_send_sync",
             Self::IteratorItemReferences => "iterator_item_references",
+            Self::InheritedFriendOperators => "inherited_friend_operators",
         }
     }
 
@@ -212,6 +216,9 @@ impl CrubitFeature {
             Self::InferSendSync => "//features:infer_send_sync",
             Self::IteratorItemReferences => {
                 "//features:iterator_item_references"
+            }
+            Self::InheritedFriendOperators => {
+                "//features:inherited_friend_operators"
             }
         }
     }
@@ -277,6 +284,7 @@ pub fn named_features(name: &[u8]) -> Option<flagset::FlagSet<CrubitFeature>> {
         b"enum_api_v2" => CrubitFeature::EnumApiV2.into(),
         b"infer_send_sync" => CrubitFeature::InferSendSync.into(),
         b"iterator_item_references" => CrubitFeature::IteratorItemReferences.into(),
+        b"inherited_friend_operators" => CrubitFeature::InheritedFriendOperators.into(),
         _ => return None,
         // importer.cc: make sure the logic for the "all" feature still makes sense: b/530193579
         // LINT.ThenChange(
@@ -465,6 +473,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
+                | CrubitFeature::InheritedFriendOperators
         );
     }
 
@@ -507,6 +516,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
+                | CrubitFeature::InheritedFriendOperators
         );
     }
 
@@ -531,6 +541,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
+                | CrubitFeature::InheritedFriendOperators
         );
     }
 
@@ -556,6 +567,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
+                | CrubitFeature::InheritedFriendOperators
         );
     }
 
@@ -581,6 +593,7 @@ mod tests {
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
                 | CrubitFeature::ImplCxxExternType
+                | CrubitFeature::InheritedFriendOperators
         );
     }
 
@@ -606,6 +619,7 @@ mod tests {
                 | CrubitFeature::CtorPlainValues
                 | CrubitFeature::ReserveStandardMacros
                 | CrubitFeature::ThunklessAccessors
+                | CrubitFeature::InheritedFriendOperators
         );
     }
 }

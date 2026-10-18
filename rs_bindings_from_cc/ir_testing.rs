@@ -154,12 +154,13 @@ pub fn ir_proto_from_cc_dependency_with_lazy_import(
     platform: multiplatform_testing::Platform,
     header_source: &str,
     dependency_header_source: &str,
+    extra_feature: Option<&str>,
 ) -> Result<IRProto> {
     ir_proto_from_cc_dependency_impl(
         platform,
         header_source,
         dependency_header_source,
-        /* extra_feature= */ None,
+        extra_feature,
         /* kythe_annotations= */ false,
         /* carcinize= */ false,
         /* lazy_import_alien_decls= */ true,

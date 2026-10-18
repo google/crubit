@@ -26,6 +26,7 @@ TESTS = [name[:-2] for name in glob(
     exclude = [
         "*namespaces_json.h",
         "not_crubit_exposed.h",
+        "operator_mixins.h",
         "template_def_with_crubit.h",
         "template_fwd_without_crubit.h",
     ],
@@ -58,6 +59,7 @@ DEPS = {
     "definition_of_forward_declaration": [
         "forward_declaration",
     ],
+    "inherited_friend_operators": ["operator_mixins"],
     "uses_not_crubit_exposed": ["not_crubit_exposed"],
     "depends_on_nested_types": ["nested_types"],
     "template_inst": [
@@ -82,6 +84,9 @@ ASPECT_HINTS = {
     ],
     "nodiscard_experimental": [
         "//features:experimental",
+    ],
+    "inherited_friend_operators": [
+        "//features:inherited_friend_operators",
     ],
     "blocklist_template_paths": [
         "//features:template_instantiation",
@@ -205,6 +210,12 @@ bzl_library(
 cc_library(
     name = "not_crubit_exposed",
     hdrs = ["not_crubit_exposed.h"],
+)
+
+# A cc_library without Crubit that defines operators for other types as hidden friends.
+cc_library(
+    name = "operator_mixins",
+    hdrs = ["operator_mixins.h"],
 )
 
 # A cc_library that defines MyTemplate<T>

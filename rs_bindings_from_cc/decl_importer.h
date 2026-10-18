@@ -283,6 +283,26 @@ class ImportContext {
   virtual std::vector<ItemId> GetItemIdsInSourceOrder(
       clang::Decl* absl_nonnull decl) = 0;
 
+  // Imports the hidden friend operators that `record_decl` inherits from its
+  // (direct or indirect) base classes, and returns their item ids.
+  //
+  // Argument-dependent lookup finds the hidden friends of base classes, too.
+  // This is commonly relied upon by CRTP mixins, which define operators such as
+  // `friend bool operator==(const T&, const T&)` for the derived class `T`.
+  // Only operators whose first parameter is (a reference to) `record_decl` are
+  // imported, so that each operator is imported for at most one record. They
+  // are imported as if they were hidden friends of `record_decl`, even if the
+  // base class belongs to another target.
+  //
+  // Returns no ids unless the `inherited_friend_operators` feature is enabled
+  // for the current target.
+  //
+  // `record_decl` must be a complete record from the current target that has
+  // already been marked as successfully imported. The returned ids should be
+  // added to the children of `record_decl`.
+  virtual std::vector<ItemId> ImportInheritedFriendOperators(
+      clang::CXXRecordDecl* absl_nonnull record_decl) = 0;
+
   // Mangles the name of a named decl.
   virtual std::string GetMangledName(
       const clang::NamedDecl& named_decl) const = 0;
