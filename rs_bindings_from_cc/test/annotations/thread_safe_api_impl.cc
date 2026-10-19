@@ -42,6 +42,26 @@ extern "C" int __rust_thunk___ZN6crubit4test16ThreadSafeStruct11NonConstGetEv(
 static_assert((int (::crubit::test::ThreadSafeStruct::*)()) &
               ::crubit::test::ThreadSafeStruct::NonConstGet);
 
+extern "C" int
+__rust_thunk___ZNK6crubit4test16ThreadSafeStruct22MethodTakingThreadSafeERS1_(
+    class crubit::test::ThreadSafeStruct const* __this,
+    class crubit::test::ThreadSafeStruct* other) {
+  return __this->MethodTakingThreadSafe(*other);
+}
+
+static_assert((int (::crubit::test::ThreadSafeStruct::*)(
+                  class crubit::test::ThreadSafeStruct&) const) &
+              ::crubit::test::ThreadSafeStruct::MethodTakingThreadSafe);
+
+extern "C" int
+__rust_thunk___ZN6crubit4test24FreeFuncTakingThreadSafeERNS0_16ThreadSafeStructE(
+    class crubit::test::ThreadSafeStruct* s) {
+  return crubit::test::FreeFuncTakingThreadSafe(*s);
+}
+
+static_assert((int (*)(class crubit::test::ThreadSafeStruct&)) &
+              ::crubit::test::FreeFuncTakingThreadSafe);
+
 static_assert(CRUBIT_SIZEOF(class crubit::test::RegularStruct) == 4);
 static_assert(alignof(class crubit::test::RegularStruct) == 4);
 
@@ -65,6 +85,17 @@ extern "C" int __rust_thunk___ZN6crubit4test13RegularStruct11NonConstGetEv(
 
 static_assert((int (::crubit::test::RegularStruct::*)()) &
               ::crubit::test::RegularStruct::NonConstGet);
+
+extern "C" int
+__rust_thunk___ZNK6crubit4test13RegularStruct22MethodTakingThreadSafeERNS0_16ThreadSafeStructE(
+    class crubit::test::RegularStruct const* __this,
+    class crubit::test::ThreadSafeStruct* s) {
+  return __this->MethodTakingThreadSafe(*s);
+}
+
+static_assert((int (::crubit::test::RegularStruct::*)(
+                  class crubit::test::ThreadSafeStruct&) const) &
+              ::crubit::test::RegularStruct::MethodTakingThreadSafe);
 
 static_assert(sizeof(struct crubit::test::ThreadSafeUnpin) == 1);
 static_assert(alignof(struct crubit::test::ThreadSafeUnpin) == 1);
