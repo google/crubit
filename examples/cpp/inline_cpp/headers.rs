@@ -9,8 +9,8 @@ global_cpp! {
     #include <algorithm>
     #include <cmath>
     #include "support/rs_std/str_ref.h"
-    #include "third_party/absl/strings/str_cat.h"
-    #include "third_party/absl/strings/string_view.h"
+    #include "absl/strings/str_cat.h"
+    #include "absl/strings/string_view.h"
 
     struct Point {
         double x;
