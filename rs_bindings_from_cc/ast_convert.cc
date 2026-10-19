@@ -25,7 +25,7 @@ namespace {
 //
 // Does not traverse to the base classes.
 static clang::CXXConstructorDecl* GetCopyCtor(clang::CXXRecordDecl* record) {
-  for (clang::CXXConstructorDecl* ctor_decl : record->ctors()) {
+  for (clang::CXXConstructorDecl* ctor_decl : GetAllConstructors(*record)) {
     if (ctor_decl->isCopyConstructor()) {
       return ctor_decl;
     }
@@ -37,7 +37,7 @@ static clang::CXXConstructorDecl* GetCopyCtor(clang::CXXRecordDecl* record) {
 //
 // Does not traverse to the base classes.
 static clang::CXXConstructorDecl* GetMoveCtor(clang::CXXRecordDecl* record) {
-  for (clang::CXXConstructorDecl* ctor_decl : record->ctors()) {
+  for (clang::CXXConstructorDecl* ctor_decl : GetAllConstructors(*record)) {
     if (ctor_decl->isMoveConstructor()) {
       return ctor_decl;
     }

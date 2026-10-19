@@ -254,10 +254,8 @@ Identifier FunctionDeclImporter::GetTranslatedParamName(
 namespace {
 
 bool FunctionInStdOrSystemHeaderWithReservedName(
-    const clang::FunctionDecl& function_decl) {
-  bool is_in_system_hdr =
-      function_decl.getASTContext().getSourceManager().isInSystemHeader(
-          function_decl.getLocation());
+    const ImportContext& ictx, const clang::FunctionDecl& function_decl) {
+  bool is_in_system_hdr = ictx.IsInSystemHeader(function_decl.getLocation());
   if (IsInStdNamespace(&function_decl) || is_in_system_hdr) {
     if (clang::IdentifierInfo* id = function_decl.getIdentifier()) {
       llvm::StringRef name = id->getName();
@@ -277,7 +275,8 @@ bool FunctionNameIsIdentifier(clang::FunctionDecl& function_decl) {
          clang::DeclarationName::Identifier;
 }
 
-bool FunctionBodyIsDefinedInHeader(const clang::FunctionDecl* function_decl) {
+bool FunctionBodyIsDefinedInHeader(const ImportContext& ictx,
+                                   const clang::FunctionDecl* function_decl) {
   if (function_decl == nullptr) {
     return false;
   }
@@ -311,7 +310,7 @@ bool FunctionBodyIsDefinedInHeader(const clang::FunctionDecl* function_decl) {
       source_manager.isWrittenInScratchSpace(loc)) {
     return false;
   }
-  if (source_manager.isInSystemHeader(loc)) {
+  if (ictx.IsInSystemHeader(loc)) {
     return true;
   }
   std::optional<llvm::StringRef> filename =
@@ -488,7 +487,7 @@ std::optional<ir_proto::MemberFuncSemantic> GetMemberFuncSemantic(
     }
   }
 
-  if (!FunctionBodyIsDefinedInHeader(def)) {
+  if (!FunctionBodyIsDefinedInHeader(ictx, def)) {
     return std::nullopt;
   }
 
@@ -645,7 +644,7 @@ std::unique_ptr<ir_proto::Item> FunctionDeclImporter::Import(
       FunctionNameIsIdentifier(*function_decl)) {
     return nullptr;
   }
-  if (FunctionInStdOrSystemHeaderWithReservedName(*function_decl)) {
+  if (FunctionInStdOrSystemHeaderWithReservedName(ictx_, *function_decl)) {
     return ictx_.ImportUnsupportedItem(
         *function_decl, std::nullopt,
         {FormattedError::Static("Internal functions from the standard "
