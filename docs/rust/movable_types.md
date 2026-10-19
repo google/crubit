@@ -1,33 +1,25 @@
 # Movable types
 
-Crubit requires types to be "movable" to be passed directly by value: if a Rust
-type does not logically support a C++ move operation, then it can receive
-bindings, but it cannot be passed directly by value (it is passed via the
-[`rs::Movable`](#movable_wrapper) wrapper type).
+Rust types do not need to be movable in C++ to receive bindings. If a Rust type
+does not logically support a C++ move operation, it still receives bindings, but
+its C++ move constructor and move assignment operator are deleted. Such types
+can still be used by reference, returned by value, and passed by value when
+wrapped in [`rs::Movable<T>`](#non_cpp_movable).
 
-A Rust type can be made movable in C++ in one of three ways:
+A Rust type is movable in C++ if any of the following hold, checked in order:
 
-1.  [**Copyable**](#copyable): the Rust type implements `Clone`.
-2.  [**Trivially move-constructible and destructible**](#trivial): the Rust type
+1.  [**Trivially move-constructible and destructible**](#trivial): the Rust type
     does not have a
     [destructor](https://doc.rust-lang.org/reference/destructors.html). (It does
     not implement `Drop`, and nor do any of its fields.)
-3.  [**Non-trivially move-constructible**](#nontrivial): the Rust type has a
-    destructor, but implements `Default`.
+2.  [**Non-trivially move-constructible**](#nontrivial): the Rust type has a
+    destructor, but implements `Default` and is `Unpin`.
+3.  [**Copyable**](#copyable): the Rust type implements `Clone` (or `Copy`).
 
 The easiest way to ensure your type is useful to end users, even if it is
 changed in the future, is to implement `Clone` and `Default`. This makes the
 type default-constructible and copyable[^semiregular], as well as efficiently
 movable.
-
-## Copyable {#copyable}
-
-If the Rust type implements `Clone`, then the C++ type will be copyable:
-
-*   Copy construction has the same behavior as `Clone::clone`.
-*   Copy assignment has the same behavior as `Clone::clone_from`.
-
-Because the type is copyable, it is also movable, at worst by a copy operation.
 
 ## Trivially move-constructible and destructible {#trivial}
 
@@ -50,8 +42,8 @@ behavior of performing any other operation is undefined.
 ## Non-trivially move-constructible {#nontrivial}
 
 If the Rust type is not trivially movable and destructible, but implements
-`Default`, then the resulting C++ type will be (non-trivially) move
-constructible:
+`Default` and is `Unpin`, then the resulting C++ type will be (non-trivially)
+move constructible:
 
 *   Move construction has the same behavior as
     [`std::mem::take()`](https://doc.rust-lang.org/std/mem/fn.take.html): it
@@ -60,7 +52,91 @@ constructible:
 *   Move assignment copies the bytes to the new object, as if by a Rust move,
     and replaces the moved-from object with an unspecified but valid object.
 
-## Why is this required? {#why}
+## Copyable {#copyable}
+
+If the Rust type implements `Clone`, then the C++ type will be copyable:
+
+*   Copy construction has the same behavior as `Clone::clone`.
+*   Copy assignment has the same behavior as `Clone::clone_from`.
+
+Because the type is copyable, it is also movable, at worst by a copy operation:
+if the type has a destructor but does not implement `Default`, C++ move
+construction and assignment fall back to the copy operations, and the moved-from
+object is left unchanged.
+
+## Non-C++-movable types and `rs::Movable<T>` {#non_cpp_movable}
+
+If a Rust type meets none of the criteria above (for example, a type that
+implements `Drop` but implements neither `Default` nor `Clone`), it still
+receives C++ bindings, but its C++ move constructor and move assignment operator
+are deleted:
+
+```c++
+// C++ move operations are unavailable for this type. See
+// http://crubit.rs/rust/movable_types for an explanation of Rust types that
+// are C++ movable.
+MyType(MyType&&) = delete;
+MyType& operator=(MyType&&) = delete;
+```
+
+Non-C++-movable types can still be used across the language boundary:
+
+*   **By reference or pointer**: `const T&`, `T&`, and `T*` parameters and
+    return types work as usual.
+*   **Returned by value**: a Rust function returning `T` becomes a C++ function
+    returning `T`. The value is constructed directly into the caller's storage,
+    so no move is needed. (C++17 guaranteed copy elision lets the caller
+    initialize a local from the return value.)
+*   **Passed by value**: a Rust function taking `T` by value becomes a C++
+    function taking `rs::Movable<T>` (from `crubit/support/movable.h`).
+*   **Inside bridged types**: when `T` appears inside a bridged type such as a
+    tuple, in either a parameter or a return position, it is wrapped as
+    `rs::Movable<T>` (for example, `(T, i32)` becomes
+    `std::tuple<rs::Movable<T>, std::int32_t>`).
+
+`rs::Movable<T>` is a C++-movable wrapper around a `T`. It tracks whether its
+value has been moved out with an explicit `valueless_after_move()` flag, so
+moving it does not require `T` itself to have a moved-from state. It is **not**
+layout-compatible with `T`. Its main operations are:
+
+*   `rs::Movable<T>(std::in_place, args...)`: constructs the `T` in place using
+    one of `T`'s own C++ constructors (for example, the constructor synthesized
+    for a Rust tuple struct).
+*   `rs::Movable<T>::TakeFromSlot(std::move(slot))`: takes ownership of a `T`
+    that was constructed into a `crubit::Slot<T>` (from
+    `crubit/support/internal/slot.h`). Use this to wrap a value returned from
+    Rust, since a non-C++-movable `T` cannot be moved into the wrapper.
+*   `*m` and `m->`: access the contained `T`.
+*   `std::move(m)`: moves the value to the new wrapper and leaves `m` valueless.
+
+For example, given the Rust API:
+
+```rust
+pub struct Point { pub x: i32, pub y: i32 }
+impl Drop for Point { fn drop(&mut self) { /* ... */ } }
+
+pub fn create(x: i32, y: i32) -> Point { Point { x, y } }
+pub fn consume(p: Point) -> i32 { p.x + p.y }
+```
+
+Crubit generates `Point create(std::int32_t, std::int32_t)` and
+`std::int32_t consume(rs::Movable<Point>)`, which C++ callers can use like so:
+
+```c++
+// Returned by value: no move required.
+Point p = create(1, 2);
+
+// Passed by value: construct the value into a slot, then wrap it.
+crubit::Slot<Point> slot;
+new (slot.Get()) Point(create(3, 4));
+std::int32_t sum = consume(rs::Movable<Point>::TakeFromSlot(std::move(slot)));
+```
+
+If you control the Rust type, it is usually simpler to make it C++-movable by
+implementing `Default` or `Clone`, so that callers can write
+`consume(create(3, 4))` directly.
+
+## Why can't every type be moved? {#why}
 
 In general, Crubit needs to be able to move objects as part of the
 implementation of pass-by-value, even in C++17, due to platform ABI
