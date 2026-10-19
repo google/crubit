@@ -75,6 +75,15 @@ fn test_from_str() {
 }
 
 #[gtest]
+#[rstest]
+#[case(b"")]
+#[case(b"Hello\xffworld")]
+fn test_from_string_view(#[case] input: &[u8]) {
+    let s = string_wrapper::from(string_view::from(input));
+    expect_eq!(s.as_slice(), input);
+}
+
+#[gtest]
 fn test_from_slice() {
     let input: &[u8] = b"A string";
     let s = string_wrapper::from(input);
@@ -131,6 +140,15 @@ fn test_debug() {
     let utf8_str: string_wrapper = "array".into();
     let utf8_str_formatted = format!("{:?}", utf8_str);
     expect_eq!(utf8_str_formatted, "cc_std::string_wrapper([97, 114, 114, 97, 121])");
+}
+
+#[gtest]
+#[rstest]
+#[case(b"")]
+#[case(b"Hello\xffworld")]
+fn test_string_construction_from_string_view(#[case] input: &[u8]) {
+    let s = emplace!(string::ctor_new(string_view::from(input)));
+    expect_eq!(s.as_slice(), input);
 }
 
 #[gtest]

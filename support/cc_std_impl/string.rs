@@ -186,6 +186,12 @@ impl From<&str> for string_wrapper {
     }
 }
 
+impl From<string_view<'_>> for string_wrapper {
+    fn from(s: string_view<'_>) -> Self {
+        s.as_bytes().into()
+    }
+}
+
 impl From<&[u8]> for string_wrapper {
     fn from(s: &[u8]) -> Self {
         // SAFETY: Rust slice returns a valid pointer to a buffer of bytes.
@@ -456,6 +462,15 @@ impl<'a> CtorNew<&'a str> for string {
     type Error = Infallible;
 
     fn ctor_new(args: &'a str) -> Self::CtorType {
+        Self::ctor_new(args.as_bytes())
+    }
+}
+
+impl<'a> CtorNew<string_view<'a>> for string {
+    type CtorType = impl Ctor<Output = Self, Error = Infallible> + use<'a>;
+    type Error = Infallible;
+
+    fn ctor_new(args: string_view<'a>) -> Self::CtorType {
         Self::ctor_new(args.as_bytes())
     }
 }
