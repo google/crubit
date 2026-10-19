@@ -421,6 +421,12 @@ class ImportContext {
       clang::SourceLocation loc,
       clang::DeclarationNameInfo* absl_nullable name_info) const = 0;
 
+  // Converts a Clang source location to a structured `DeclLocation`.
+  // `name_info` may be null.
+  virtual ir_proto::DeclLocation ConvertDeclLocation(
+      clang::SourceLocation loc,
+      clang::DeclarationNameInfo* absl_nullable name_info) const = 0;
+
   // Converts the Clang type `qual_type` into an equivalent `CcType`.
   // Lifetimes for the type can optionally be specified using `lifetimes` (pass
   // null otherwise).

@@ -128,6 +128,9 @@ class Importer final : public ImportContext {
   std::string ConvertSourceLocation(
       clang::SourceLocation loc,
       clang::DeclarationNameInfo* absl_nullable name_info) const override;
+  ir_proto::DeclLocation ConvertDeclLocation(
+      clang::SourceLocation loc,
+      clang::DeclarationNameInfo* absl_nullable name_info) const override;
   CcType ConvertQualType(
       clang::QualType qual_type,
       const clang::tidy::lifetimes::ValueLifetimes* absl_nullable lifetimes,
