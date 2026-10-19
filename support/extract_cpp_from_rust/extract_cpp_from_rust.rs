@@ -52,7 +52,49 @@ pub fn lint_bindable_cpp(body_text: &str, file_name: &str, line: usize) -> Vec<S
     warnings
 }
 
-pub fn extract_global_cpp(macros: &[ParsedMacro<'_>], file_name: &str) -> (String, Vec<String>) {
+/// Returns true if `line` is a C++ `#include` directive.
+fn is_include_directive(line: &str) -> bool {
+    line.trim_start().strip_prefix('#').is_some_and(|rest| rest.trim_start().starts_with("include"))
+}
+
+/// Validates that every `#include` directive inside a `global_cpp!` block is on its own line,
+/// i.e. not on the same line as the opening `{` or the closing `}` of the macro body.
+///
+/// `build_cleaner` discovers the C++ dependencies of a `rust_library_with_embedded_cpp` by
+/// scanning its `.rs` sources for lines consisting solely of an `#include` directive. An
+/// `#include` sharing a line with the macro delimiters would therefore be silently ignored.
+fn validate_includes_on_own_line(
+    body_text: &str,
+    file_name: &str,
+    body_line: usize,
+) -> Result<(), String> {
+    // Note: `split('\n')` rather than `lines()`, so that a trailing newline yields a final
+    // (empty) segment; `body_text` begins right after `{` and ends right before `}`, so the
+    // first and last segments are the text sharing a line with those braces.
+    let lines: Vec<&str> = body_text.split('\n').collect();
+    let last_idx = lines.len().saturating_sub(1);
+    for (idx, line) in lines.iter().enumerate() {
+        if !is_include_directive(line) {
+            continue;
+        }
+        if idx == 0 || idx == last_idx {
+            return Err(format!(
+                "{}:{}: `#include` directives inside `global_cpp!` must be on their own line \
+                 (not on the same line as the opening `{{` or closing `}}`), so that \
+                 build_cleaner can detect them. Found: `{}`",
+                file_name,
+                body_line + idx,
+                line.trim()
+            ));
+        }
+    }
+    Ok(())
+}
+
+pub fn extract_global_cpp(
+    macros: &[ParsedMacro<'_>],
+    file_name: &str,
+) -> Result<(String, Vec<String>), String> {
     let mut extracted = String::new();
     let mut lint_warnings = Vec::new();
 
@@ -62,6 +104,7 @@ pub fn extract_global_cpp(macros: &[ParsedMacro<'_>], file_name: &str) -> (Strin
         {
             continue;
         }
+        validate_includes_on_own_line(m.body_text, file_name, m.body_line)?;
         let padding = " ".repeat(m.body_col.saturating_sub(1));
         let _ = write!(
             extracted,
@@ -72,7 +115,7 @@ pub fn extract_global_cpp(macros: &[ParsedMacro<'_>], file_name: &str) -> (Strin
         lint_warnings.extend(warnings);
     }
 
-    (extracted, lint_warnings)
+    Ok((extracted, lint_warnings))
 }
 
 struct LexToken<'a> {
@@ -200,7 +243,11 @@ fn main() {
                 process::exit(1);
             });
 
-        let (scraped_global, warnings) = extract_global_cpp(&macros, &file_name);
+        let (scraped_global, warnings) =
+            extract_global_cpp(&macros, &file_name).unwrap_or_else(|e| {
+                eprintln!("Extraction error: {}", e);
+                process::exit(1);
+            });
         total_warnings.extend(warnings);
         let scraped_inline =
             extract_inline_cpp(&macros, &file_name, &args.target).unwrap_or_else(|e| {
@@ -247,7 +294,7 @@ mod tests {
     fn test_basic_extract() {
         let input = "global_cpp! { int x; }";
         let expected = "#line 1 \"test.rs\"\n              int x; \n";
-        let (extracted, _) = extract_global_cpp(&parse(input, "test.rs"), "test.rs");
+        let (extracted, _) = extract_global_cpp(&parse(input, "test.rs"), "test.rs").unwrap();
         expect_eq!(extracted, expected);
     }
 
@@ -255,7 +302,8 @@ mod tests {
     fn test_do_not_submit_cpp_decl_extract() {
         let input = "DO_NOT_SUBMIT_CPP_DECL! { template <typename T> void Foo(T t); }"; // NOLINT
         let expected = "#line 1 \"test.rs\"\n                          template <typename T> void Foo(T t); \n";
-        let (extracted, warnings) = extract_global_cpp(&parse(input, "test.rs"), "test.rs");
+        let (extracted, warnings) =
+            extract_global_cpp(&parse(input, "test.rs"), "test.rs").unwrap();
         expect_eq!(extracted, expected);
         expect_that!(warnings, is_empty());
     }
@@ -263,7 +311,7 @@ mod tests {
     #[gtest]
     fn test_lint_bindable_cpp_warning() {
         let input = "DO_NOT_SUBMIT_CPP_DECL! { int Add(int a, int b); }"; // NOLINT
-        let (_, warnings) = extract_global_cpp(&parse(input, "test.rs"), "test.rs");
+        let (_, warnings) = extract_global_cpp(&parse(input, "test.rs"), "test.rs").unwrap();
         expect_that!(warnings.len(), eq(1));
         expect_true!(warnings[0].contains("natively bindable"));
     }
@@ -272,7 +320,7 @@ mod tests {
     fn test_nested_braces() {
         let input = "global_cpp! { namespace foo { int x; } }";
         let expected = "#line 1 \"test.rs\"\n              namespace foo { int x; } \n";
-        let (extracted, _) = extract_global_cpp(&parse(input, "test.rs"), "test.rs");
+        let (extracted, _) = extract_global_cpp(&parse(input, "test.rs"), "test.rs").unwrap();
         expect_eq!(extracted, expected);
     }
 
@@ -280,7 +328,7 @@ mod tests {
     fn test_multiple_blocks() {
         let input = "global_cpp! { int x; } some rust code global_cpp! { int y; }";
         let expected = "#line 1 \"test.rs\"\n              int x; \n#line 1 \"test.rs\"\n                                                    int y; \n";
-        let (extracted, _) = extract_global_cpp(&parse(input, "test.rs"), "test.rs");
+        let (extracted, _) = extract_global_cpp(&parse(input, "test.rs"), "test.rs").unwrap();
         expect_eq!(extracted, expected);
     }
 
@@ -308,7 +356,7 @@ mod tests {
             "        template class MyTemplate<int>;\n",
             "    }\n\n"
         );
-        expect_eq!(extract_global_cpp(&parse(input, "test.rs"), "test.rs").0, expected);
+        expect_eq!(extract_global_cpp(&parse(input, "test.rs"), "test.rs").unwrap().0, expected);
     }
 
     #[gtest]
@@ -316,14 +364,48 @@ mod tests {
         let input = "global_cpp! { namespace outer::inner { int x = 10; } }";
         let expected =
             "#line 1 \"test.rs\"\n              namespace outer::inner { int x = 10; } \n";
-        expect_eq!(extract_global_cpp(&parse(input, "test.rs"), "test.rs").0, expected);
+        expect_eq!(extract_global_cpp(&parse(input, "test.rs"), "test.rs").unwrap().0, expected);
     }
 
     #[gtest]
     fn test_extract_global_cpp_multiline_line_number_mapping() {
         let input = "line 1\nline 2\nglobal_cpp! {\n    int x = 42;\n}\n";
         let expected = "#line 3 \"test.rs\"\n             \n    int x = 42;\n\n";
-        expect_eq!(extract_global_cpp(&parse(input, "test.rs"), "test.rs").0, expected);
+        expect_eq!(extract_global_cpp(&parse(input, "test.rs"), "test.rs").unwrap().0, expected);
+    }
+
+    #[gtest]
+    fn test_include_on_own_line_is_accepted() {
+        let input =
+            "global_cpp! {\n    #include \"foo/bar.h\"\n    # include <vector>\n    int x;\n}\n";
+        expect_that!(extract_global_cpp(&parse(input, "test.rs"), "test.rs"), ok(anything()));
+    }
+
+    #[gtest]
+    fn test_include_on_opening_brace_line_is_rejected() {
+        let input = "global_cpp! { #include \"foo/bar.h\"\n    int x;\n}\n";
+        expect_that!(
+            extract_global_cpp(&parse(input, "test.rs"), "test.rs"),
+            err(all!(contains_substring("test.rs:1"), contains_substring("own line")))
+        );
+    }
+
+    #[gtest]
+    fn test_include_on_closing_brace_line_is_rejected() {
+        let input = "global_cpp! {\n    int x;\n    #include \"foo/bar.h\" }\n";
+        expect_that!(
+            extract_global_cpp(&parse(input, "test.rs"), "test.rs"),
+            err(all!(contains_substring("test.rs:3"), contains_substring("own line")))
+        );
+    }
+
+    #[gtest]
+    fn test_single_line_include_is_rejected() {
+        let input = "global_cpp! { #include <vector> }";
+        expect_that!(
+            extract_global_cpp(&parse(input, "test.rs"), "test.rs"),
+            err(contains_substring("own line"))
+        );
     }
 
     #[gtest]

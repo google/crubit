@@ -92,7 +92,11 @@ pub fn inline_cpp(_input: TokenStream) -> TokenStream {
 ///
 /// # Syntax
 /// Accepts arbitrary top-level C++ declarations, including `#include` directives,
-/// struct/class definitions, type aliases, and helper functions:
+/// struct/class definitions, type aliases, and helper functions.
+///
+/// Each `#include` directive must be on its own line (not on the same line as the
+/// macro's opening `{` or closing `}`), so that `build_cleaner` can discover the
+/// corresponding C++ dependency and add it to `deps_of_cc_library`.
 ///
 /// ```ignore
 /// global_cpp! {
