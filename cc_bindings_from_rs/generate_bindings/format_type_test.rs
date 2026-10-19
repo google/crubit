@@ -206,22 +206,22 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "&'static i32",
             cc: "::std :: int32_t const * $static crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static mut i32",
             cc: "::std :: int32_t * $static crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static &'static i32",
             cc: "::std :: int32_t const * $ static crubit_nonnull const * $ static crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>", "<cstdint>"]
         ),
         case!(
             rs: "::std::ptr::NonNull<i32>",
             cc: "::std :: int32_t * crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<cstdint>"]
         ),
         // Pin<&T> and Pin<&mut T>:
         case!(
@@ -232,7 +232,7 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "core::pin::Pin<&'static i32>",
             cc: "::std :: int32_t const * $static crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>", "<cstdint>"]
         ),
         case!(
             rs: "core::pin::Pin<&mut i32>",
@@ -242,7 +242,7 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "core::pin::Pin<&'static mut i32>",
             cc: "::std :: int32_t * $static crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<crubit/support/for/tests/lifetime_annotations.h>", "<cstdint>"]
         ),
         case!(
             rs: "::std::ptr::NonNull<core::ffi::c_void>",
@@ -258,18 +258,18 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "::std::ptr::NonNull<core::mem::MaybeUninit<i32>>",
             cc: "::std :: int32_t * crubit_nonnull",
-            includes: ["<cstdint>", "<crubit/support/for/tests/annotations_internal.h>"]
+            includes: ["<crubit/support/for/tests/annotations_internal.h>", "<cstdint>"]
         ),
         // Slice pointers:
         case!(
             rs: "*const [i8]",
             cc: "::rs::SliceRef< const ::std::int8_t>",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "*mut [i64]",
             cc: "::rs::SliceRef< ::std::int64_t>",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "*mut [SomeStruct]",
@@ -281,12 +281,12 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "&'static [i32]",
             cc: "::rs::SliceRef< const ::std::int32_t>",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static mut [i32]",
             cc: "::rs::SliceRef< ::std::int32_t>",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "*const [*const core::ffi::c_void]",
@@ -331,22 +331,22 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "&'static [*const i32]",
             cc: "::rs::SliceRef< ::std::int32_t const * const >",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static [*mut i32]",
             cc: "::rs::SliceRef< ::std::int32_t * const >",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static mut [*const i32]",
             cc: "::rs::SliceRef< ::std::int32_t const * >",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "&'static mut [*mut i32]",
             cc: "::rs::SliceRef< ::std::int32_t * >",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         case!(
             rs: "*const [ConstVoidPtr]",
@@ -361,7 +361,7 @@ fn test_format_ty_for_cc_successes() {
         case!(
             rs: "&'static [Identity<*const i32>]",
             cc: "::rs::SliceRef< ::std::int32_t const * const >",
-            includes: ["<cstdint>", "<crubit/support/for/tests/rs_std/slice_ref.h>"]
+            includes: ["<crubit/support/for/tests/rs_std/slice_ref.h>", "<cstdint>"]
         ),
         // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
         case!(

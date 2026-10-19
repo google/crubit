@@ -573,7 +573,7 @@ fn clang_format(input: String, clang_format_exe_path: &Path) -> Result<String> {
         input,
         "clang-format",
         clang_format_exe_path,
-        [OsStr::new("--style=google")],
+        [OsStr::new("--style=google"), OsStr::new("--sort-includes=false")],
     )
 }
 
