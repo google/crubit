@@ -32,6 +32,7 @@ source_set("bindings_support") {
     "check_no_mutable_aliasing.cc",
   ]
   deps = [
+    "$crubit_src_dir/support:annotations_internal",
     "$crubit_src_dir/support:unsafe_relocate_tag",
   ]
 }

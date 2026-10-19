@@ -23,6 +23,7 @@ target_include_directories(crubit_support_internal_bindings_support PUBLIC
 )
 
 target_link_libraries(crubit_support_internal_bindings_support PUBLIC
+crubit_support_annotations_internal
 crubit_support_unsafe_relocate_tag
 )
 
