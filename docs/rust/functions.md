@@ -84,28 +84,39 @@ caveats apply.
 
 ## Slice parameters
 
-Rust slice parameters (`&[T]`, `&str`) map to `rs_std::SliceRef<const T>` and
-`rs_std::StrRef` in C++.
+Rust slice parameters (`&[T]`, `&mut [T]`, `&str`) map to
+`rs_std::SliceRef<const T>`, `rs_std::SliceRef<T>`, and `rs_std::StrRef` in C++.
 
-C++ callers can pass string literals (`"hello"`) or `std::string_view` directly
-to satisfy string and byte-slice parameters.
+C++ callers can pass `absl::Span<const T>`, `std::span<const T>`, or contiguous
+containers like `std::vector<T>` and `std::array<T, N>` directly to satisfy
+`&[T]` slice parameters with no conversion boilerplate:
 
 ```rust {.good}
 fn process_text(_: &str) {}     // C++ callers can pass "hello" or std::string_view
-fn process_bytes(_: &[u8]) {}   // C++ callers can pass "hello", std::string_view, or std::span<const uint8_t>
+fn process_bytes(_: &[u8]) {}   // C++ callers can pass absl::Span<const uint8_t>, std::span, "hello", or std::string_view
+fn process_items(_: &[i32]) {}  // C++ callers can pass absl::Span<const int32_t>, std::span, std::vector, etc.
 ```
 
-However, mutable slices cannot be constructed from string literals:
+However, mutable slices cannot be implicitly constructed from read-only views or
+string literals:
 
 ```rust {.bad}
-fn process_mut_bytes(_: &mut [u8]) {}  // Cannot pass string literals to mutable byte slices
+fn process_mut_bytes(_: &mut [u8]) {}  // Cannot pass string literals or const spans to mutable byte slices
 ```
 
+*   **`&[T]`**: Maps to `rs_std::SliceRef<const T>`
+    (`crubit/support/rs_std/slice_ref.h`). Converts implicitly from
+    `absl::Span<const T>`, `absl::Span<T>`, `std::span<const T>`,
+    `std::span<T>`, `std::vector<T>`, and `std::array<T, N>`.
+*   **`&mut [T]`**: Maps to `rs_std::SliceRef<T>`
+    (`crubit/support/rs_std/slice_ref.h`). Converts implicitly from mutable
+    `std::span<T>` and `absl::Span<T>`, or construct via `rs_std::SliceRef(ptr,
+    size)`.
 *   **`&str`**: Maps to `rs_std::StrRef` (`crubit/support/rs_std/str_ref.h`).
     Converts from string literals and `std::string_view`.
-*   **`&[u8]`**: Maps to `rs_std::SliceRef<const uint8_t>`
-    (`crubit/support/rs_std/slice_ref.h`). Converts from string literals,
-    `std::string_view`, `std::vector<uint8_t>`, and `std::array<uint8_t, N>`.
+*   **`&[u8]`**: Maps to `rs_std::SliceRef<const uint8_t>`. In addition to
+    `absl::Span` and `std::span`, also converts from string literals and
+    `std::string_view`.
 
 ## Generic functions
 

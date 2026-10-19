@@ -7,11 +7,13 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <tuple>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/types/span.h"
 #include "support/rs_std/char.h"
 
 namespace crubit {
@@ -140,6 +142,20 @@ TEST(FnParamTyTest, FnPtr) {
 TEST(FnParamTyTest, SumBytes) {
   std::string_view sv = "abc";
   EXPECT_EQ(97 + 98 + 99, fn_param_ty_tests::sum_bytes(sv));
+
+  const std::array<uint8_t, 3> bytes = {97, 98, 99};
+  absl::Span<const uint8_t> absl_const_span(bytes);
+  EXPECT_EQ(97 + 98 + 99, fn_param_ty_tests::sum_bytes(absl_const_span));
+
+  std::array<uint8_t, 3> mut_bytes = {97, 98, 99};
+  absl::Span<uint8_t> absl_mut_span(mut_bytes);
+  EXPECT_EQ(97 + 98 + 99, fn_param_ty_tests::sum_bytes(absl_mut_span));
+
+  std::span<const uint8_t> std_const_span(bytes);
+  EXPECT_EQ(97 + 98 + 99, fn_param_ty_tests::sum_bytes(std_const_span));
+
+  std::span<uint8_t> std_mut_span(mut_bytes);
+  EXPECT_EQ(97 + 98 + 99, fn_param_ty_tests::sum_bytes(std_mut_span));
 }
 
 TEST(OtherFnTest, VoidReturningFunction) {

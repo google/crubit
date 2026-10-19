@@ -62,6 +62,7 @@ crubit_cc_test(
     deps = [
         ":functions_cc_api",
         "//support/rs_std:char",
+        "@abseil-cpp//absl/types:span",
         "@googletest//:gtest_main",
     ],
 )
