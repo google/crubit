@@ -301,10 +301,9 @@ fn func_has_bindings<'a>(
         && *func.rs_name() != ir::UnqualifiedIdentifier::Destructor
         && !enabled_features.contains(CrubitFeature::TemplateInstantiation)
     {
-        missing_features.push(
+        missing_features.push(anyhow!(
             "b/248542210: template instantiation of member function cannot reliably get bindings"
-                .to_string(),
-        );
+        ));
     }
 
     let mut visibility = Visibility::Public;

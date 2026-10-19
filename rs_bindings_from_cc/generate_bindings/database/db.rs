@@ -346,7 +346,10 @@ impl<'db> BindingsGenerator<'db> {
                 enabled_features,
                 ir.current_target(),
             );
-            ensure!(reasons.is_empty(), reasons.join(", "));
+            ensure!(
+                reasons.is_empty(),
+                reasons.iter().map(ToString::to_string).collect::<Vec<_>>().join(", ")
+            );
         }
 
         Ok(type_kind)

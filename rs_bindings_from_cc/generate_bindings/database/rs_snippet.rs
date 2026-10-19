@@ -6,7 +6,7 @@
 
 use crate::code_snippet::{Feature, Visibility};
 use crate::BindingsGenerator;
-use arc_anyhow::{anyhow, Result};
+use arc_anyhow::{anyhow, Error, Result};
 use code_gen_utils::NamespaceQualifier;
 use code_gen_utils::{make_rs_ident, make_rs_lifetime_ident};
 use crubit_feature::CrubitFeature;
@@ -1798,13 +1798,15 @@ impl<'a> RsTypeKind<'a> {
         target: &BazelLabel,
         enabled_features: flagset::FlagSet<CrubitFeature>,
         current_target: &BazelLabel,
-    ) -> Vec<String> {
-        let mut reasons = std::collections::BTreeSet::<String>::new();
+    ) -> Vec<Error> {
+        // Keyed by the error message, to deduplicate and sort the reasons.
+        let mut reasons = std::collections::BTreeMap::<String, Error>::new();
         let mut require_any_feature =
-            |any_required_feature: flagset::FlagSet<CrubitFeature>, reason: std::fmt::Arguments| {
+            |any_required_feature: flagset::FlagSet<CrubitFeature>, reason: &dyn Fn() -> Error| {
                 let missing = any_required_feature & enabled_features;
                 if missing.is_empty() {
-                    reasons.insert(reason.to_string());
+                    let reason = reason();
+                    reasons.entry(reason.to_string()).or_insert(reason);
                 }
             };
 
@@ -1812,8 +1814,9 @@ impl<'a> RsTypeKind<'a> {
             if let Some(header) = target.as_unknown_target_header() {
                 require_any_feature(
                     <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Types),
-                    format_args!(
-                        "crubit.rs/errors/unknown_target: the type is defined in\n  \
+                    &|| {
+                        error_report::anyhow!(
+                            "crubit.rs/errors/unknown_target: the type is defined in\n  \
                         {header}\n\
                         which is not a public header of any Crubit-enabled target that\n  \
                         {current_target}\n\
@@ -1822,12 +1825,17 @@ impl<'a> RsTypeKind<'a> {
                         add that library as a direct dependency (and `#include` the header \
                         directly),\n\
                         or move the type to a public header."
-                    ),
+                        )
+                    },
                 );
             } else {
                 require_any_feature(
                     <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Types),
-                    format_args!("Crubit is not enabled on defining target:\n  {target}"),
+                    &|| {
+                        error_report::anyhow!(
+                            "Crubit is not enabled on defining target:\n  {target}"
+                        )
+                    },
                 );
             }
         }
@@ -1838,27 +1846,29 @@ impl<'a> RsTypeKind<'a> {
                     if visibility_override.is_none() {
                         require_any_feature(
                             <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Wrapper),
-                            format_args!("{error}"),
+                            &|| error.clone(),
                         )
                     }
                 }
                 RsTypeKind::Reference { .. } | RsTypeKind::RvalueReference { .. } => {
                     require_any_feature(
                         <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Experimental),
-                        format_args!("references are not yet supported"),
+                        &|| error_report::anyhow!("references are not yet supported"),
                     );
                 }
                 RsTypeKind::FuncPtr { cc_calling_conv, .. } => {
                     if *cc_calling_conv != CcCallingConv::C {
                         require_any_feature(
                             <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::Experimental),
-                            format_args!("function pointers using a non-`C` calling convention are not yet supported"),
+                            &|| {
+                                error_report::anyhow!("function pointers using a non-`C` calling convention are not yet supported")
+                            },
                         );
                     }
                 }
                 RsTypeKind::IncompleteRecord { .. } => require_any_feature(
                     <flagset::FlagSet<CrubitFeature>>::from(CrubitFeature::ForwardDeclarations),
-                    format_args!("forward declared types are not yet supported"),
+                    &|| error_report::anyhow!("forward declared types are not yet supported"),
                 ),
                 // Here, we can very carefully be non-recursive into the _structure_ of the type.
                 //
@@ -1881,7 +1891,9 @@ impl<'a> RsTypeKind<'a> {
                                 | <flagset::FlagSet<CrubitFeature>>::from(
                                     CrubitFeature::TemplateInstantiation,
                                 ),
-                            format_args!("template instantiation is not yet supported"),
+                            &|| {
+                                error_report::anyhow!("template instantiation is not yet supported")
+                            },
                         );
                     }
                 }
@@ -1894,7 +1906,7 @@ impl<'a> RsTypeKind<'a> {
                 | RsTypeKind::Primitive { .. } => {}
             }
         }
-        reasons.into_iter().collect()
+        reasons.into_values().collect()
     }
 
     // If the type is pointer annotated with CRUBIT_OWNED_POINTER, returns the pointee type.
@@ -3513,6 +3525,7 @@ mod tests {
                 CrubitFeature::Types.into(),
                 &BazelLabel::from("//fake:current"),
             );
+            let reasons: Vec<String> = reasons.iter().map(ToString::to_string).collect();
             assert_eq!(reasons, vec!["references are not yet supported"]);
         }
     }
