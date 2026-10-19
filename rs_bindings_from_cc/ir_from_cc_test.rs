@@ -6998,6 +6998,48 @@ fn test_absl_container_template_specialization_kind() {
 }
 
 #[gtest]
+fn test_absl_optional_ref() {
+    let proto = ir_proto_from_cc(
+        r#"
+        namespace absl {
+        template <typename T>
+        class optional_ref {
+          T* ptr_;
+        };
+        }  // namespace absl
+
+        using IntOptRef = absl::optional_ref<int>;
+        using ConstIntOptRef = absl::optional_ref<const int>;
+        "#,
+    )
+    .unwrap();
+
+    let ir = ir_testing::make_test_ir(&proto).unwrap();
+
+    let record = retrieve_type_alias_record(&ir, "IntOptRef");
+    expect_that!(
+        &record.template_specialization().map(|ts| ts.kind().clone()),
+        some(pat!(TemplateSpecializationKind::AbslOptionalRef {
+            raw_element_type: all!(
+                property!(&CcType.is_const(), eq(false)),
+                property!(&CcType.variant(), pat!(CcTypeVariant::Primitive(eq(&Primitive::Int)))),
+            ),
+        })),
+    );
+
+    let record = retrieve_type_alias_record(&ir, "ConstIntOptRef");
+    expect_that!(
+        &record.template_specialization().map(|ts| ts.kind().clone()),
+        some(pat!(TemplateSpecializationKind::AbslOptionalRef {
+            raw_element_type: all!(
+                property!(&CcType.is_const(), eq(true)),
+                property!(&CcType.variant(), pat!(CcTypeVariant::Primitive(eq(&Primitive::Int)))),
+            ),
+        })),
+    );
+}
+
+#[gtest]
 fn test_impl_debug_default_true() {
     let proto = ir_proto_from_record_impl_debug_cc("struct S {};").unwrap();
 

@@ -524,6 +524,9 @@ message TemplateSpecialization {
   message AbslSpan {
     CcType element_type = 1;
   }
+  message AbslOptionalRef {
+    CcType element_type = 1;
+  }
   message C9Co {
     CcType element_type = 1;
   }
@@ -548,6 +551,7 @@ message TemplateSpecialization {
     StdSharedPtr std_shared_ptr = 11;
     StdUniquePtr std_unique_ptr = 5;
     AbslSpan absl_span = 6;
+    AbslOptionalRef absl_optional_ref = 14;
     AbslFlatHashMap absl_flat_hash_map = 9;
     AbslFlatHashSet absl_flat_hash_set = 10;
     C9Co c9_co = 7;

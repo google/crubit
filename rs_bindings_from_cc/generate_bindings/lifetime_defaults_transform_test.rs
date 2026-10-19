@@ -1875,3 +1875,48 @@ fn test_lifetime_on_class_template_argument_incorrectly_not_bound() -> Result<()
     );
     Ok(())
 }
+
+#[gtest]
+fn test_absl_optional_ref_default_lifetimes() -> Result<()> {
+    let proto = ir_proto_from_assumed_lifetimes_cc(
+        &(with_full_lifetime_macros()
+            + r#"
+      namespace absl {
+      template <typename T> class optional_ref { T* ptr_; };
+      }  // namespace absl
+      absl::optional_ref<const int> f(absl::optional_ref<const int> x);
+      "#),
+    )?;
+
+    let ir = make_test_ir_dependency(&proto, Some("assume_lifetimes"))?;
+    let factory = TestDbFactory::new(ir);
+    let dir = lifetime_defaults_transform(&factory.make_db())?;
+    assert_ir_matches!(
+        dir,
+        quote! {
+            Func {
+                cc_name: "f",
+                rs_name: "f", ...
+                return_type: CcType {
+                    variant: Decl { ... },
+                    ...
+                    explicit_lifetimes: ["x"], ...
+                },
+                params: [
+                    FuncParam {
+                        type_: CcType {
+                            variant: Decl { ... },
+                            ...
+                            explicit_lifetimes: ["x"], ...
+                        },
+                        identifier: "x", ...
+                    }
+                ],
+                ...
+                lifetime_inputs: ["x"],
+                ...
+            }
+        }
+    );
+    Ok(())
+}
