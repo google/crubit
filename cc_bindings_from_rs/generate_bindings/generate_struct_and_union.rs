@@ -17,8 +17,7 @@ use crate::generate_function::{
     generate_thunk_call, Param, ThunkSelfParameter,
 };
 use crate::generate_function_thunk::{
-    generate_ctor_thunk_call, generate_thunk_decl, generate_thunk_impl, make_thunk_name,
-    replace_all_regions_with_static, trait_method_thunk_name, ThunkKind,
+    generate_ctor_thunk_call, replace_all_regions_with_static, trait_method_thunk_name,
 };
 use crate::{
     can_be_made_layout_compatible, does_type_implement_trait, generate_const,
@@ -58,7 +57,7 @@ use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, AssocKind, Ty, TyCtxt, TyKind, TypeFlags, TypingEnv};
 use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
 use rustc_span::symbol::{sym, Symbol};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::iter::once;
 use std::rc::Rc;
 
@@ -753,26 +752,13 @@ fn generate_into_impls<'tcx>(
             // Delay converting this type until we've successfully generated the thunks.
             // We generate thunks for `into` here. This relies on the blanket impls of for `Into` in
             // the stdlib to work.
-            let TraitThunks {
-                method_name_to_cc_thunk_name,
-                cc_thunk_decls,
-                rs_thunk_impls: rs_details,
-            } = generate_trait_thunks(
+            let (thunk_name, cc_thunk_decls, rs_details) = generate_into_trait_thunk(
                 db,
-                into_trait,
-                &[middle_ty],
                 core.common.self_ty,
-                core.def_id,
-                core.rs_fully_qualified_name.clone(),
+                middle_ty,
                 /* is_constructor= */ false,
-                /* within_template= */ false,
             )
             .ok()?;
-
-            let thunk_name = method_name_to_cc_thunk_name
-                .into_values()
-                .exactly_one()
-                .expect("Expecting a single `into` method");
 
             let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
             let doc_comment = generate_doc_comment(db, def_id);
@@ -854,6 +840,45 @@ fn is_newtype_relationship<'tcx>(tcx: TyCtxt<'tcx>, tgt_ty: Ty<'tcx>, src_ty: Ty
     } else {
         false
     }
+}
+
+fn generate_into_trait_thunk<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    src_ty: Ty<'tcx>,
+    dst_ty: Ty<'tcx>,
+    is_constructor: bool,
+) -> Result<(Ident, CcSnippet<'tcx>, RsSnippet)> {
+    let tcx = db.tcx();
+    let into_trait = tcx.get_diagnostic_item(sym::Into).expect("Could not find Into trait");
+    let src_def_id = src_ty.ty_adt_def().map(|adt| adt.did());
+    let (thunk_self_ty, src_rs_name) = match src_def_id {
+        Some(def_id) if !query_compiler::has_non_lifetime_generics(tcx, def_id) => (
+            erase_regions(tcx, src_ty),
+            db.symbol_canonical_name(def_id)
+                .map(|name| name.format_for_rs())
+                .or_else(|_| db.format_ty_for_rs(replace_all_regions_with_static(tcx, src_ty)))?,
+        ),
+        _ => (
+            erase_regions(tcx, src_ty),
+            db.format_ty_for_rs(replace_all_regions_with_static(tcx, src_ty))?,
+        ),
+    };
+    let TraitThunks { method_name_to_cc_thunk_name, cc_thunk_decls, rs_thunk_impls } =
+        generate_trait_thunks(
+            db,
+            into_trait,
+            &[dst_ty],
+            thunk_self_ty,
+            src_def_id,
+            src_rs_name,
+            is_constructor,
+            /* within_template= */ false,
+        )?;
+    let thunk_name = method_name_to_cc_thunk_name
+        .into_values()
+        .exactly_one()
+        .expect("Expecting a single `into` method");
+    Ok((thunk_name, cc_thunk_decls, rs_thunk_impls))
 }
 
 fn generate_constructor_impls<'tcx>(
@@ -1018,69 +1043,13 @@ fn generate_constructor_impls<'tcx>(
                     .expect("Expecting a single `from` method");
                 (thunk_name, cc_thunk_decls, rs_details)
             } else {
-                // Since self is not necessarily the ADT, we need to manually construct the thunk
-                let into_trait =
-                    tcx.get_diagnostic_item(sym::Into).expect("Could not find Into trait");
-                let into_trait_assoc_fn = tcx
-                    .associated_items(into_trait)
-                    .in_definition_order()
-                    .find(|item| matches!(item.kind, ty::AssocKind::Fn { .. }))
-                    .expect("Into should have a method");
-
-                let trait_args = tcx.mk_args_trait(src_ty, once(core.common.self_ty.into()));
-                let sig = tcx.fn_sig(into_trait_assoc_fn.def_id).instantiate(tcx, trait_args);
-
-                let sig = liberate_and_deanonymize_late_bound_regions(
-                    tcx,
-                    sig,
-                    into_trait_assoc_fn.def_id,
-                );
-                let sig = try_normalize(tcx, TypingEnv::fully_monomorphized(), sig).ok()?;
-
-                // Just a small unique name for the custom Into thunk
-                let thunk_name = make_thunk_name(
+                generate_into_trait_thunk(
                     db,
-                    ThunkKind::TraitMethod { method: into_trait_assoc_fn, substs: trait_args },
-                );
-                let thunk_name_cc_ident = format_cc_ident(db, &thunk_name).ok()?;
-                let cc_thunk_decls = generate_thunk_decl(
-                    db,
-                    &sig,
-                    &thunk_name_cc_ident,
-                    /*has_self_param=*/ true,
+                    src_ty,
+                    core.common.self_ty,
                     /*is_constructor=*/ true,
-                    /*within_template=*/ false,
-                    /*is_async=*/ false,
                 )
-                .ok()?;
-                let rs_details = {
-                    let is_src_local_adt = match src_ty.kind() {
-                        ty::TyKind::Adt(adt_def, _) => db
-                            .symbol_canonical_name(adt_def.did())
-                            .map_or(true, |name| name.krate_num == db.source_crate_num()),
-                        _ => false,
-                    };
-                    if is_src_local_adt && does_impl_apply(tcx, impl_id, src_ty).is_some() {
-                        RsSnippet::default()
-                    } else {
-                        let static_src_ty = replace_all_regions_with_static(tcx, src_ty);
-                        let src_rs = db.format_ty_for_rs(static_src_ty).ok()?;
-                        let rs_fully_qualified_name = &core.rs_fully_qualified_name;
-                        let fully_qualified_fn_name =
-                            quote! { <#src_rs as ::core::convert::Into<#rs_fully_qualified_name>>::into };
-                        generate_thunk_impl(
-                            db,
-                            into_trait_assoc_fn.def_id,
-                            &sig,
-                            &thunk_name,
-                            fully_qualified_fn_name,
-                            /*is_constructor=*/ true,
-                            /*is_async=*/ false,
-                        )
-                        .ok()?
-                    }
-                };
-                (thunk_name_cc_ident, cc_thunk_decls, rs_details)
+                .ok()?
             };
             let cc_thunk_decls = cc_thunk_decls.into_tokens(&mut prereqs);
             let doc_comment = generate_doc_comment(db, impl_id);
@@ -2389,19 +2358,16 @@ pub fn generate_adt<'tcx>(
     };
     let rs_details = {
         let adt_rs_name = &core.rs_fully_qualified_name;
-        let mut extern_c_decls = BTreeSet::new();
-        let public_functions_rs_details =
-            public_functions_rs_details.into_tokens(&mut extern_c_decls);
-        let fields_rs_details = fields_rs_details.into_tokens(&mut extern_c_decls);
-        RsSnippet {
-            tokens: quote! {
+        [
+            RsSnippet::new(quote! {
                 const _: () = assert!(::core::mem::size_of::<#adt_rs_name>() == #size);
                 const _: () = assert!(::core::mem::align_of::<#adt_rs_name>() == #alignment);
-                #public_functions_rs_details
-                #fields_rs_details
-            },
-            extern_c_decls,
-        }
+            }),
+            public_functions_rs_details,
+            fields_rs_details,
+        ]
+        .into_iter()
+        .collect()
     };
     ApiSnippets { main_api, cc_details, rs_details }
 }
