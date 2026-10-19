@@ -4,7 +4,7 @@ crubit.rs/overview/cargo_build
 
 <!--*
 # Document freshness: For more information, see <internal link>.
-freshness: { owner: 'lukasza' reviewed: '2025-12-19' }
+freshness: { owner: 'lukasza' reviewed: '2026-10-19' }
 *-->
 
 [TOC]
@@ -26,6 +26,13 @@ the manifest path explicitly:
 
 ```
 $ cargo build -p cc_bindings_from_rs
+```
+
+If you are using a stable Rust toolchain, set the environment variable
+`RUSTC_BOOTSTRAP=1`:
+
+```
+$ RUSTC_BOOTSTRAP=1 cargo build # further args as above
 ```
 
 ## Target Directory
@@ -132,6 +139,20 @@ sources](https://github.com/rust-lang/rust/blob/b889870082dd0b0e3594bbfbebb4545d
     -   `-Clink-args=-Wl,-rpath,@loader_path/../lib`
 *   Windows:
     -   no extra command-line flags needed (TODO: verify this)
+
+#### Unstable features on stable
+
+Crubit uses unstable Rust features that are only available in nightly builds. We
+rely on setting [the `RUSTC_BOOTSTRAP` environment
+variable](https://doc.rust-lang.org/beta/unstable-book/compiler-environment-variables/RUSTC_BOOTSTRAP.html)
+to `1` to tell a stable Rust compiler to act like a nightly compiler.
+
+If you attempt to build `cc_bindings_from_rs` with a stable Rust toolchain and
+do not set this variable, the build will fail with error messages like:
+
+```
+error[E0554]: `#![feature]` may not be used on the stable release channel
+```
 
 ## rs_bindings_from_cc
 
