@@ -15,6 +15,9 @@
 #![allow(unknown_lints, suspicious_runtime_symbol_definitions)]
 #![deny(warnings)]
 pub mod shared_ns {
+    // error: function `shared_ns::StaticSharedFunction` could not be bound
+    //   Cannot generate bindings for overloaded function
+
     /// Ordinary `//` comments are used as doc comments, even though precompiled
     /// header modules don't contain them.
     #[derive(Clone, Copy, ::ctor::MoveAndAssignViaCopy)]
@@ -65,32 +68,6 @@ pub mod shared_ns {
         }
     }
 
-    // A free comment, which isn't attached to any declaration.
-
-    // Clang doesn't merge the declarations below (which have no linkage, or
-    // internal linkage) when it sees them both in a precompiled header module, and
-    // in a textual inclusion of the same header.
-
-    /// An alias of a class template specialization whose arguments are declared in
-    /// this header.
-    pub type Callback = crate::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE;
-
-    pub type IntAlias = ::ffi_11::c_int;
-
-    pub type InfoTypedef = crate::shared_ns::Info;
-
-    pub const kSharedConstant: ::ffi_11::c_int = ::ffi_11::new_c_int(3);
-
-    pub const kAnonymousEnumerator: ::ffi_11::c_uint = ::ffi_11::new_c_uint(5);
-
-    /// With header modules, this isn't bound in `:lib`: like overloads, the two
-    /// copies of this function make taking its address ambiguous in the generated
-    /// C++ code. This checks that the generated C++ code still compiles.
-    #[inline(always)]
-    pub fn StaticSharedFunction() -> ::ffi_11::c_int {
-        unsafe { crate::detail::__rust_thunk___ZN9shared_nsL20StaticSharedFunctionEv() }
-    }
-
     /// Clang does merge the declarations below (which have external linkage).
     #[repr(transparent)]
     #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
@@ -116,6 +93,27 @@ pub mod shared_ns {
     pub fn SharedFunction() -> ::ffi_11::c_int {
         unsafe { crate::detail::__rust_thunk___ZN9shared_ns14SharedFunctionEv() }
     }
+
+    // A free comment, which isn't attached to any declaration.
+
+    // Clang doesn't merge the declarations below (which have no linkage, or
+    // internal linkage) when it sees them both in a precompiled header module, and
+    // in a textual inclusion of the same header.
+
+    /// An alias of a class template specialization whose arguments are declared in
+    /// this header.
+    pub type Callback = crate::__CcTemplateInstNSt3__u8functionIFiRKN9shared_ns4InfoEEEE;
+
+    pub type IntAlias = ::ffi_11::c_int;
+
+    pub type InfoTypedef = crate::shared_ns::Info;
+
+    pub const kSharedConstant: ::ffi_11::c_int = ::ffi_11::new_c_int(3);
+
+    pub const kAnonymousEnumerator: ::ffi_11::c_uint = ::ffi_11::new_c_uint(5);
+
+    // error: function `shared_ns::StaticSharedFunction` could not be bound
+    //   Cannot generate bindings for overloaded function
 }
 
 // namespace shared_ns
@@ -317,8 +315,6 @@ mod detail {
         pub(crate) unsafe fn __rust_thunk___ZN9shared_ns4InfoC1Ev(__this: *mut ::core::ffi::c_void);
         pub(crate) unsafe fn __rust_thunk___ZNK9shared_ns4Info5valueEv<'__this>(
             __this: &'__this crate::shared_ns::Info,
-        ) -> ::ffi_11::c_int;
-        pub(crate) unsafe fn __rust_thunk___ZN9shared_nsL20StaticSharedFunctionEv(
         ) -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN9shared_ns14SharedFunctionEv() -> ::ffi_11::c_int;
         pub(crate) unsafe fn __rust_thunk___ZN6lib_ns11LibFunctionEi(
