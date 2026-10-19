@@ -6,8 +6,8 @@
 
 #include "nullability/test/check_diagnostics.h"
 
-#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest-spi.h"
-#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "gtest/gtest-spi.h"
+#include "gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 namespace {

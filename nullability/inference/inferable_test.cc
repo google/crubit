@@ -18,8 +18,8 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Testing/TestAST.h"
 #include "llvm/ADT/StringRef.h"
-#include "external/llvm-project/third-party/unittest/googlemock/include/gmock/gmock.h"
-#include "external/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace clang::tidy::nullability {
 using ::clang::ast_matchers::anything;
