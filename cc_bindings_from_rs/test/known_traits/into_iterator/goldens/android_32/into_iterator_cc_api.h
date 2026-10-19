@@ -340,7 +340,7 @@ struct rs_std::impl<::into_iterator_rust::MyContainerIter,
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MyContainerIter<'a> as :: core :: iter :: "
-      "Iterator>::Item") = ::std::int32_t const* $a crubit_nonnull;
+      "Iterator>::Item") = ::std::int32_t const& $a;
 
   static rs_std::Option<::std::int32_t const * $static crubit_nonnull> next(
       ::into_iterator_rust::MyContainerIter& self);
@@ -352,7 +352,7 @@ struct rs_std::impl<::into_iterator_rust::MyContainerIterMut,
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<into_iterator_rust_golden::MyContainerIterMut<'a> as :: core :: iter "
-      ":: Iterator>::Item") = ::std::int32_t* $a crubit_nonnull;
+      ":: Iterator>::Item") = ::std::int32_t& $a;
 
   static rs_std::Option<::std::int32_t* $static crubit_nonnull> next(
       ::into_iterator_rust::MyContainerIterMut& self);

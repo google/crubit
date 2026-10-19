@@ -174,7 +174,7 @@ struct rs_std::impl<::stdlib::RefIterator, ::rs::core::iter::Iterator> {
   static constexpr bool kIsImplemented = true;
   using Item CRUBIT_INTERNAL_RUST_TYPE(
       "<stdlib_golden::RefIterator<'a> as :: core :: iter :: Iterator>::Item") =
-      ::std::int32_t const* $a crubit_nonnull;
+      ::std::int32_t const& $a;
 
   static rs_std::Option<::std::int32_t const * $static crubit_nonnull> next(
       ::stdlib::RefIterator& self);

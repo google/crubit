@@ -7,15 +7,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-
-// TODO(b/562051251): Remove this once the iterator_item_references feature has
-// stabilized.
-#ifdef CRUBIT_ITERATOR_ITEM_REFERENCES
-#include "cc_bindings_from_rs/test/known_traits/into_iterator/into_iterator_references_rust.h"
-namespace into_iterator_rust = ::into_iterator_references_rust;
-#else
 #include "cc_bindings_from_rs/test/known_traits/into_iterator/into_iterator_rust.h"
-#endif
 
 namespace {
 
@@ -57,9 +49,6 @@ TEST(IntoIteratorTest, ValueContainer) {
   EXPECT_EQ(sum, 60);
 }
 
-// TODO(b/562051251): Remove this once the iterator_item_references feature has
-// stabilized.
-#ifdef CRUBIT_ITERATOR_ITEM_REFERENCES
 TEST(IntoIteratorTest, SharedRefContainer) {
   MyContainer c = make_container(10, 20, 30);
   const MyContainer& const_c = c;
@@ -87,33 +76,6 @@ TEST(IntoIteratorTest, MutRefContainer) {
   EXPECT_EQ(sum, 120);
   EXPECT_THAT(c, testing::ElementsAre(20, 40, 60));
 }
-#else
-TEST(IntoIteratorTest, SharedRefContainer) {
-  MyContainer c = make_container(10, 20, 30);
-  const MyContainer& const_c = c;
-  int count = 0;
-  int sum = 0;
-  for (const int* x : const_c) {
-    count++;
-    sum += *x;
-  }
-  EXPECT_EQ(count, 3);
-  EXPECT_EQ(sum, 60);
-}
-
-TEST(IntoIteratorTest, MutRefContainer) {
-  MyContainer c = make_container(10, 20, 30);
-  for (int* x : c) {
-    *x *= 2;
-  }
-
-  int sum = 0;
-  for (int* x : c) {
-    sum += *x;
-  }
-  EXPECT_EQ(sum, 120);
-}
-#endif
 
 TEST(IntoIteratorTest, InherentBeginConflict) {
   ContainerWithInherentBegin c = make_inherent_container();

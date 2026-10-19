@@ -83,15 +83,15 @@ static_assert(std::input_iterator<rs::IteratorAdapter<stdlib::RefIterator>>);
 
 using RefIterator = rs::IteratorAdapter<stdlib::RefIterator>;
 using RefTraits = std::iterator_traits<RefIterator>;
-static_assert(std::is_same_v<typename RefTraits::value_type, const int32_t*>);
-static_assert(std::is_same_v<typename RefTraits::reference, const int32_t*&>);
+static_assert(std::is_same_v<typename RefTraits::value_type, int32_t>);
+static_assert(std::is_same_v<typename RefTraits::reference, const int32_t&>);
 
 TEST(StdlibTraitTest, RefIteratorAdapter) {
   std::vector<int32_t> data = {10, 20, 30};
   auto s = stdlib::RefIterator::new_(rs_std::SliceRef<const int32_t>(data));
   std::vector<int32_t> v;
-  for (const int32_t*& ele : s) {
-    v.push_back(*ele);
+  for (const int32_t& ele : s) {
+    v.push_back(ele);
   }
   EXPECT_THAT(v, testing::ElementsAre(10, 20, 30));
 }
