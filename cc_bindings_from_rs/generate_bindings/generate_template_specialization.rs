@@ -2,10 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::generate_function_thunk::replace_all_regions_with_static;
+use crate::format_type::replace_all_regions_with_static;
+use crate::generate_enum::{anonymous_field_ident, scalar_value_to_string};
 use crate::generate_struct_and_union::{
-    anonymous_field_ident, generate_associated_item, generate_fields, generate_relocating_ctor,
-    has_type_or_const_vars, scalar_value_to_string,
+    generate_associated_item, generate_fields, generate_relocating_ctor, has_type_or_const_vars,
 };
 use crate::{
     generate_copy_ctor_and_assignment_operator, generate_default_ctor,

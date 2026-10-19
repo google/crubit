@@ -12,8 +12,6 @@ extern crate rustc_middle;
 extern crate rustc_span;
 extern crate rustc_type_ir;
 
-use crate::generate_function::check_fn_sig;
-use crate::generate_function_thunk::is_thunk_required;
 use crate::{
     check_feature_enabled_on_self_and_all_deps, check_slice_layout, get_layout,
     matches_qualified_name, CcType,
@@ -1041,7 +1039,7 @@ fn format_ty_for_cc_impl<'tcx>(
                 let inner_ty = substs[0].expect_ty();
                 let mut prereqs = db
                     .crubit_abi_type_from_ty(
-                        crate::generate_function_thunk::replace_all_regions_with_static(
+                        replace_all_regions_with_static(
                             db.tcx(),
                             inner_ty,
                         ),
@@ -2344,7 +2342,7 @@ pub fn is_bridged_type<'tcx>(
 ) -> Result<Option<BridgedType>> {
     // The ABI of bridged types is lifetime-independent, and the Crubit thunks replace all
     // lifetimes with static.
-    let ty = crate::generate_function_thunk::replace_all_regions_with_static(db.tcx(), ty);
+    let ty = replace_all_regions_with_static(db.tcx(), ty);
 
     match *ty.kind() {
         ty::TyKind::Ref(_, referent, _) => {
@@ -2438,4 +2436,77 @@ pub fn evaluate_const_as_u64<'tcx>(tcx: ty::TyCtxt<'tcx>, cst: ty::Const<'tcx>) 
         bail!("Unable to get size from normalized type constant ({cst} => {normalized}).")
     };
     Ok(target_u64)
+}
+
+pub fn check_fn_sig(sig: &ty::FnSig) -> Result<()> {
+    #[rustversion::before(2026-04-19)]
+    let is_c_variadic = sig.c_variadic;
+    #[rustversion::since(2026-04-19)]
+    let is_c_variadic = sig.c_variadic();
+    if is_c_variadic {
+        // TODO(b/254097223): Add support for variadic functions.
+        bail!("C variadic functions are not supported (b/254097223)");
+    }
+
+    Ok(())
+}
+
+/// Returns `Ok(())` if no thunk is required.
+/// Otherwise returns an error the describes why the thunk is needed.
+pub fn is_thunk_required<'tcx>(db: &BindingsGenerator<'tcx>, sig: &ty::FnSig<'tcx>) -> Result<()> {
+    #[rustversion::before(2026-04-19)]
+    let abi = sig.abi;
+    #[rustversion::since(2026-04-19)]
+    let abi = sig.abi();
+    match abi {
+        // "C" ABI is okay: since https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html has been
+        // accepted, a Rust panic that "escapes" a "C" ABI function is a defined crash. See
+        // https://doc.rust-lang.org/nomicon/ffi.html#ffi-and-unwinding.
+        rustc_abi::ExternAbi::C { unwind: false } => (),
+
+        // This requires a thunk if the calling C++ frames use `-fno-exceptions`, as it is
+        // UB. However, we leave this to the caller: if you use `extern "C-unwind"`, we assume you
+        // know what you are doing and do not block you from integrating with exception-enabled C++.
+        rustc_abi::ExternAbi::C { unwind: true } => (),
+
+        // All other ABIs trigger thunk generation.  This covers Rust ABI functions, but also
+        // ABIs that theoretically are understood both by C++ and Rust (e.g. see
+        // `format_cc_call_conv_as_clang_attribute` in `rs_bindings_from_cc/src_code_gen.rs`).
+        _ => bail!("Any calling convention other than `extern \"C\"` requires a thunk"),
+    };
+
+    ensure!(is_c_abi_compatible_by_value(db, sig.output()), "Return type requires a thunk");
+    for (i, param_ty) in sig.inputs().iter().enumerate() {
+        ensure!(
+            is_c_abi_compatible_by_value(db, *param_ty),
+            "Type of parameter #{i} requires a thunk"
+        );
+    }
+
+    Ok(())
+}
+
+pub(crate) fn replace_all_regions_with_static<'tcx, T>(tcx: TyCtxt<'tcx>, value: T) -> T
+where
+    T: ty::TypeFoldable<TyCtxt<'tcx>>,
+{
+    struct Staticifier<'tcx> {
+        tcx: TyCtxt<'tcx>,
+        static_region: ty::Region<'tcx>,
+    }
+
+    impl<'tcx> ty::TypeFolder<TyCtxt<'tcx>> for Staticifier<'tcx> {
+        fn cx(&self) -> TyCtxt<'tcx> {
+            self.tcx
+        }
+        fn fold_region(&mut self, r: ty::Region<'tcx>) -> ty::Region<'tcx> {
+            if matches!(r.kind(), ty::RegionKind::ReBound(..)) {
+                r
+            } else {
+                self.static_region
+            }
+        }
+    }
+
+    value.fold_with(&mut Staticifier { tcx, static_region: tcx.lifetimes.re_static })
 }

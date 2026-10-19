@@ -14,7 +14,6 @@ extern crate rustc_abi;
 extern crate rustc_middle;
 extern crate rustc_span;
 
-use crate::generate_struct_and_union::{anonymous_field_ident, scalar_value_to_string};
 use crate::{
     can_be_made_layout_compatible, format_cc_ident, generate_deprecated_tag, generate_doc_comment,
     get_layout, is_copy,
@@ -663,4 +662,83 @@ fn generate_variant<'tcx>(
         };
         __NEWLINE__
     }
+}
+
+/// Returns a string representation of the value of a given numeric Scalar having a given TyKind.
+pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Result<String> {
+    let scalar = match scalar {
+        Scalar::Int(i) => i,
+        Scalar::Ptr(..) => bail!("Pointer values cannot be used as scalar constants."),
+    };
+
+    // Print positive integers directly if they fit in an i64, since `int` is guaranteed to be at
+    // least 16 bits wide.
+    if matches!(kind, TyKind::Uint(_)) {
+        let value: u128 = scalar.to_bits_unchecked();
+        if value < (i16::MAX as u128) {
+            return Ok((value as i16).to_string());
+        }
+    }
+
+    use ty::FloatTy::*;
+    use ty::IntTy::*;
+    use ty::TyKind;
+    use ty::UintTy::*;
+
+    Ok(match kind {
+        TyKind::Bool => scalar.try_to_bool().unwrap().to_string(),
+        TyKind::Int(I8) => scalar.to_i8().to_string(),
+        TyKind::Int(I16) => scalar.to_i16().to_string(),
+        TyKind::Int(I32) => format!("INT32_C({})", scalar.to_i32()),
+        TyKind::Uint(U8) => scalar.to_u8().to_string(),
+        TyKind::Uint(U16) => format!("UINT16_C({})", scalar.to_u16()),
+        TyKind::Uint(U32) => format!("UINT32_C({})", scalar.to_u32()),
+        TyKind::Uint(U64) => format!("UINT64_C({})", scalar.to_u64()),
+        TyKind::Float(F32) => format!("{}f", scalar.to_f32()),
+        TyKind::Float(F64) => format!("{}L", scalar.to_f64()),
+        TyKind::Uint(Usize) => format!("UINT64_C({})", scalar.to_target_usize(tcx)),
+
+        // Signed integer minimums cannot be expressed with literals, as `-<int>` parses as a unary
+        // minus operator applied to an out-of-range (for signed types) integer literal.
+        TyKind::Int(I64) => {
+            let value = scalar.to_i64();
+            if value == i64::MIN {
+                "INT64_MIN".to_string()
+            } else {
+                format!("INT64_C({value})")
+            }
+        }
+        TyKind::Int(ty::IntTy::Isize) => {
+            let value = scalar.to_target_isize(tcx);
+            if value == i64::MIN {
+                "INT64_MIN".to_string()
+            } else {
+                format!("INT64_C({value})")
+            }
+        }
+        // Handle ffi_11 wrapper types.
+        TyKind::Adt(adt, _) if tcx.crate_name(adt.did().krate).as_str() == "ffi_11" => {
+            let name = tcx.item_name(adt.did());
+            match name.as_str() {
+                "c_char" => scalar.to_u8().to_string(),
+                // If ffi_11::c_long is a wrapper type (and not a type alias) it is 32 bit on
+                // LLP64 and ILP32 platforms, but 64 bit on LP64 platforms where `int64_t` is
+                // `long long` (e.g. iOS). Same for c_ulong.
+                "c_long" if scalar.size().bytes() == 8 => format!("INT64_C({})", scalar.to_i64()),
+                "c_long" => format!("INT32_C({})", scalar.to_i32()),
+                "c_ulong" if scalar.size().bytes() == 8 => {
+                    format!("UINT64_C({})", scalar.to_u64())
+                }
+                "c_ulong" => format!("UINT32_C({})", scalar.to_u32()),
+                "c_longlong" => format!("INT64_C({})", scalar.to_i64()),
+                "c_ulonglong" => format!("UINT64_C({})", scalar.to_u64()),
+                _ => bail!("Unsupported ffi_11 type: {:?}", kind),
+            }
+        }
+        _ => bail!("Unsupported constant type: {:?}", kind),
+    })
+}
+
+pub(crate) fn anonymous_field_ident(index: usize) -> Ident {
+    format_ident!("__field{index}")
 }

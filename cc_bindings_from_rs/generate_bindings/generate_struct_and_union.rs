@@ -9,16 +9,15 @@ extern crate rustc_span;
 
 use crate::avoid_colliding_types::{AvoidCollidingTypes, TypeCollisionRisk};
 use crate::format_cc_ident;
-use crate::format_type::{get_cc_template_args, CcParamTy};
+use crate::format_type::{get_cc_template_args, replace_all_regions_with_static, CcParamTy};
 use crate::generate_doc_comment;
 use crate::generate_enum;
+use crate::generate_enum::{anonymous_field_ident, scalar_value_to_string};
 use crate::generate_function::{
     bool_constraint_template_prefix, cc_param_to_c_abi, format_variant_ctor_cc_name,
     generate_thunk_call, Param, ThunkSelfParameter,
 };
-use crate::generate_function_thunk::{
-    generate_ctor_thunk_call, replace_all_regions_with_static, trait_method_thunk_name,
-};
+use crate::generate_function_thunk::{generate_ctor_thunk_call, trait_method_thunk_name};
 use crate::{
     can_be_made_layout_compatible, does_type_implement_trait, generate_const,
     generate_copy_ctor_and_assignment_operator, generate_default_ctor, generate_deprecated_tag,
@@ -119,81 +118,6 @@ pub(crate) fn cpp_enum_cpp_underlying_type<'tcx>(
 ) -> Result<CcSnippet<'tcx>> {
     let field_type = cpp_enum_rust_underlying_type(db.tcx(), def_id)?;
     db.format_ty_for_cc(field_type, TypeLocation::Field)
-}
-
-/// Returns a string representation of the value of a given numeric Scalar having a given TyKind.
-pub fn scalar_value_to_string(tcx: TyCtxt, scalar: Scalar, kind: TyKind) -> Result<String> {
-    let scalar = match scalar {
-        Scalar::Int(i) => i,
-        Scalar::Ptr(..) => bail!("Pointer values cannot be used as scalar constants."),
-    };
-
-    // Print positive integers directly if they fit in an i64, since `int` is guaranteed to be at
-    // least 16 bits wide.
-    if matches!(kind, TyKind::Uint(_)) {
-        let value: u128 = scalar.to_bits_unchecked();
-        if value < (i16::MAX as u128) {
-            return Ok((value as i16).to_string());
-        }
-    }
-
-    use ty::FloatTy::*;
-    use ty::IntTy::*;
-    use ty::TyKind;
-    use ty::UintTy::*;
-
-    Ok(match kind {
-        TyKind::Bool => scalar.try_to_bool().unwrap().to_string(),
-        TyKind::Int(I8) => scalar.to_i8().to_string(),
-        TyKind::Int(I16) => scalar.to_i16().to_string(),
-        TyKind::Int(I32) => format!("INT32_C({})", scalar.to_i32()),
-        TyKind::Uint(U8) => scalar.to_u8().to_string(),
-        TyKind::Uint(U16) => format!("UINT16_C({})", scalar.to_u16()),
-        TyKind::Uint(U32) => format!("UINT32_C({})", scalar.to_u32()),
-        TyKind::Uint(U64) => format!("UINT64_C({})", scalar.to_u64()),
-        TyKind::Float(F32) => format!("{}f", scalar.to_f32()),
-        TyKind::Float(F64) => format!("{}L", scalar.to_f64()),
-        TyKind::Uint(Usize) => format!("UINT64_C({})", scalar.to_target_usize(tcx)),
-
-        // Signed integer minimums cannot be expressed with literals, as `-<int>` parses as a unary
-        // minus operator applied to an out-of-range (for signed types) integer literal.
-        TyKind::Int(I64) => {
-            let value = scalar.to_i64();
-            if value == i64::MIN {
-                "INT64_MIN".to_string()
-            } else {
-                format!("INT64_C({value})")
-            }
-        }
-        TyKind::Int(ty::IntTy::Isize) => {
-            let value = scalar.to_target_isize(tcx);
-            if value == i64::MIN {
-                "INT64_MIN".to_string()
-            } else {
-                format!("INT64_C({value})")
-            }
-        }
-        // Handle ffi_11 wrapper types.
-        TyKind::Adt(adt, _) if tcx.crate_name(adt.did().krate).as_str() == "ffi_11" => {
-            let name = tcx.item_name(adt.did());
-            match name.as_str() {
-                "c_char" => scalar.to_u8().to_string(),
-                // If ffi_11::c_long is a wrapper type (and not a type alias) it is 32 bit on
-                // LLP64 and ILP32 platforms, but 64 bit on LP64 platforms where `int64_t` is
-                // `long long` (e.g. iOS). Same for c_ulong.
-                "c_long" if scalar.size().bytes() == 8 => format!("INT64_C({})", scalar.to_i64()),
-                "c_long" => format!("INT32_C({})", scalar.to_i32()),
-                "c_ulong" if scalar.size().bytes() == 8 => {
-                    format!("UINT64_C({})", scalar.to_u64())
-                }
-                "c_ulong" => format!("UINT32_C({})", scalar.to_u32()),
-                "c_longlong" => format!("INT64_C({})", scalar.to_i64()),
-                "c_ulonglong" => format!("UINT64_C({})", scalar.to_u64()),
-                _ => bail!("Unsupported ffi_11 type: {:?}", kind),
-            }
-        }
-        _ => bail!("Unsupported constant type: {:?}", kind),
-    })
 }
 
 /// Formats a struct that is annotated with the `cpp_enum` attribute.
@@ -2600,10 +2524,6 @@ pub fn generate_adt_core_for_ty<'tcx>(
         def_id: Some(def_id),
         rs_fully_qualified_name,
     }))
-}
-
-pub(crate) fn anonymous_field_ident(index: usize) -> Ident {
-    format_ident!("__field{index}")
 }
 
 /// Generates C++ bindings that are equivalent to using Rust constructors.

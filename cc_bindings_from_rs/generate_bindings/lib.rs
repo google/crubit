@@ -35,6 +35,7 @@ use crate::format_type::{
     format_region_as_cc_lifetime, format_ret_ty_for_cc, format_top_level_ns_for_crate,
     is_bridged_type, BridgedBuiltin, BridgedType, BridgedTypeConversionInfo,
 };
+use crate::generate_enum::scalar_value_to_string;
 use crate::generate_function::{generate_function, must_use_attr_of};
 use crate::generate_function_thunk::{
     generate_ctor_thunk_call, generate_trait_thunks, TraitThunks,
@@ -42,7 +43,7 @@ use crate::generate_function_thunk::{
 use crate::generate_struct_and_union::{
     adt_needs_bindings, cpp_enum_cpp_underlying_type, from_trait_impls_by_argument, generate_adt,
     generate_adt_core, generate_generic_adt_declaration, get_generic_adt_header,
-    into_trait_impls_by_destination, is_struct_aggregate, scalar_value_to_string, GenericAdtHeader,
+    into_trait_impls_by_destination, is_struct_aggregate, GenericAdtHeader,
 };
 use crate::generate_template_specialization::append_trait_impls;
 use arc_anyhow::{Context, Error, Result};

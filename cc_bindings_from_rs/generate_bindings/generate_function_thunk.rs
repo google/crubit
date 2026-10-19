@@ -2,8 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use crate::format_type::{format_ty_for_closure_param_rs, CallableInfo, CallableKind};
-use crate::generate_function::{fn_arg_idents, get_async_future_output_ty};
+use crate::format_type::{
+    alias_ty_as_opaque_def_id, format_ty_for_closure_param_rs, replace_all_regions_with_static,
+    ty_as_alias_ty, CallableInfo, CallableKind,
+};
 use crate::{
     does_type_implement_trait, format_cc_ident, format_param_types_for_cc_thunk, is_bridged_type,
     is_c_abi_compatible_by_value, liberate_and_deanonymize_late_bound_regions, BridgedType,
@@ -15,12 +17,13 @@ use code_gen_utils::make_rs_ident;
 use crubit_abi_type::CrubitAbiTypeToRustExprTokens;
 use database::code_snippet::{CcPrerequisites, CcSnippet, ExternCDecl};
 use database::{AdtCoreBindings, BindingsGenerator};
-use error_report::{anyhow, bail, ensure};
+use error_report::{anyhow, bail};
 use itertools::Itertools;
 use proc_macro2::{Ident, TokenStream};
 use query_compiler::try_normalize;
 use quote::format_ident;
 use quote::quote;
+use rustc_hir::def::DefKind;
 #[rustversion::since(2026-04-22)]
 use rustc_middle::ty::Flags;
 use rustc_middle::ty::{self, Mutability, Ty, TyCtxt, TypingEnv};
@@ -526,31 +529,6 @@ fn write_rs_value_to_c_abi_ptr<'tcx>(
     })
 }
 
-pub(crate) fn replace_all_regions_with_static<'tcx, T>(tcx: TyCtxt<'tcx>, value: T) -> T
-where
-    T: ty::TypeFoldable<TyCtxt<'tcx>>,
-{
-    struct Staticifier<'tcx> {
-        tcx: TyCtxt<'tcx>,
-        static_region: ty::Region<'tcx>,
-    }
-
-    impl<'tcx> ty::TypeFolder<TyCtxt<'tcx>> for Staticifier<'tcx> {
-        fn cx(&self) -> TyCtxt<'tcx> {
-            self.tcx
-        }
-        fn fold_region(&mut self, r: ty::Region<'tcx>) -> ty::Region<'tcx> {
-            if matches!(r.kind(), ty::RegionKind::ReBound(..)) {
-                r
-            } else {
-                self.static_region
-            }
-        }
-    }
-
-    value.fold_with(&mut Staticifier { tcx, static_region: tcx.lifetimes.re_static })
-}
-
 /// Formats a thunk implementation in Rust that provides an `extern "C"` ABI for
 /// calling a Rust function identified by `fn_def_id`.  `generate_thunk_impl`
 /// may panic if `fn_def_id` doesn't identify a function.
@@ -856,41 +834,6 @@ fn format_callable_thunk_arg<'tcx>(
     }
 }
 
-/// Returns `Ok(())` if no thunk is required.
-/// Otherwise returns an error the describes why the thunk is needed.
-pub fn is_thunk_required<'tcx>(db: &BindingsGenerator<'tcx>, sig: &ty::FnSig<'tcx>) -> Result<()> {
-    #[rustversion::before(2026-04-19)]
-    let abi = sig.abi;
-    #[rustversion::since(2026-04-19)]
-    let abi = sig.abi();
-    match abi {
-        // "C" ABI is okay: since https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html has been
-        // accepted, a Rust panic that "escapes" a "C" ABI function is a defined crash. See
-        // https://doc.rust-lang.org/nomicon/ffi.html#ffi-and-unwinding.
-        rustc_abi::ExternAbi::C { unwind: false } => (),
-
-        // This requires a thunk if the calling C++ frames use `-fno-exceptions`, as it is
-        // UB. However, we leave this to the caller: if you use `extern "C-unwind"`, we assume you
-        // know what you are doing and do not block you from integrating with exception-enabled C++.
-        rustc_abi::ExternAbi::C { unwind: true } => (),
-
-        // All other ABIs trigger thunk generation.  This covers Rust ABI functions, but also
-        // ABIs that theoretically are understood both by C++ and Rust (e.g. see
-        // `format_cc_call_conv_as_clang_attribute` in `rs_bindings_from_cc/src_code_gen.rs`).
-        _ => bail!("Any calling convention other than `extern \"C\"` requires a thunk"),
-    };
-
-    ensure!(is_c_abi_compatible_by_value(db, sig.output()), "Return type requires a thunk");
-    for (i, param_ty) in sig.inputs().iter().enumerate() {
-        ensure!(
-            is_c_abi_compatible_by_value(db, *param_ty),
-            "Type of parameter #{i} requires a thunk"
-        );
-    }
-
-    Ok(())
-}
-
 pub struct TraitThunks<'tcx> {
     pub method_name_to_cc_thunk_name: HashMap<Symbol, Ident>,
     pub cc_thunk_decls: CcSnippet<'tcx>,
@@ -1072,7 +1015,7 @@ pub(crate) fn make_thunk_name<'tcx>(db: &BindingsGenerator<'tcx>, kind: ThunkKin
 
     let details = match kind {
         ThunkKind::Function { def_id, export_name, substs } => {
-            crate::generate_function::function_symbol_name(db, def_id, export_name, substs)
+            function_symbol_name(db, def_id, export_name, substs)
         }
         ThunkKind::TraitMethod { method, substs } => {
             if is_golden_test {
@@ -1122,4 +1065,103 @@ pub(crate) fn trait_method_thunk_name<'tcx>(
         })?;
     let substs = tcx.mk_args_trait(self_ty, type_args.iter().copied().map(ty::GenericArg::from));
     Ok(make_thunk_name(db, ThunkKind::TraitMethod { method, substs }))
+}
+
+pub(crate) fn function_symbol_name<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+    export_name: Option<Symbol>,
+    generic_args: ty::GenericArgsRef<'tcx>,
+) -> String {
+    let tcx = db.tcx();
+    if db.is_golden_test() {
+        if let Some(export_name) = export_name {
+            export_name.to_string()
+        } else {
+            let def_name = db
+                .symbol_unqualified_name(def_id)
+                .unwrap_or_else(|| {
+                    panic!(
+                        "Functions are assumed to always have a name {}",
+                        tcx.def_path_str(def_id)
+                    )
+                })
+                .rs_name
+                .to_string();
+            let base_name = tcx
+                .trait_impl_of_assoc(def_id)
+                .map(|impl_id| {
+                    let trait_ref = crate::normalize_ty(
+                        tcx,
+                        tcx.param_env(impl_id),
+                        tcx.impl_trait_ref(impl_id).instantiate_identity(),
+                    );
+                    let trait_id = trait_ref.def_id;
+                    let trait_name = db
+                        .symbol_unqualified_name(trait_id)
+                        .unwrap_or_else(|| {
+                            panic!(
+                                "Traits are assumed to always have a name {}",
+                                tcx.def_path_str(trait_id)
+                            )
+                        })
+                        .rs_name
+                        .to_string();
+                    let trait_args =
+                        trait_ref.args.iter().map(|arg| format!("{}", arg)).collect_vec();
+                    if trait_args.is_empty() {
+                        format!("{}_{}", trait_name, def_name)
+                    } else {
+                        format!("{}_{}_{}", trait_name, def_name, trait_args.join("_"))
+                    }
+                })
+                .unwrap_or(def_name);
+
+            let args = generic_args.iter().map(|arg| format!("{}", arg)).collect_vec();
+            if args.is_empty() {
+                base_name
+            } else {
+                format!("{}_{}", base_name, args.join("_"))
+            }
+        }
+    } else {
+        let typing_env = ty::TypingEnv::non_body_analysis(tcx, def_id);
+        let span = tcx.def_span(def_id);
+        let instance = ty::Instance::expect_resolve(tcx, typing_env, def_id, generic_args, span);
+        tcx.symbol_name(instance).name.to_string()
+    }
+}
+
+pub(crate) fn fn_arg_idents(tcx: TyCtxt, def_id: DefId) -> Vec<Option<rustc_span::Ident>> {
+    match tcx.def_kind(def_id) {
+        DefKind::Ctor { .. } => {
+            // Documentation of `skip_binder` says that accessing generic args in the returned value
+            // is generally incorrect, but specifically points out that it should be okay to use
+            // it to get the number of arguments of an `FnSig`.
+            let arg_count = tcx.fn_sig(def_id).skip_binder().inputs().skip_binder().len();
+            vec![None; arg_count]
+        }
+        _ => tcx.fn_arg_idents(def_id).iter().cloned().collect_vec(),
+    }
+}
+
+/// If `rs_return_type` represents an async future desugared type, extracts and returns its `Output`
+/// type.
+pub fn get_async_future_output_ty<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    rs_return_type: Ty<'tcx>,
+) -> Result<Ty<'tcx>> {
+    let Some(alias_ty) = ty_as_alias_ty(rs_return_type) else {
+        bail!(
+            "async functions should always return a TyKind::Alias (`{rs_return_type}`), this should never happen."
+        );
+    };
+    if alias_ty_as_opaque_def_id(tcx, alias_ty).is_none() {
+        bail!(
+            "crubit.rs-bug: Future::Output alias is not an opaque type (`{rs_return_type}`), this should never happen."
+        );
+    };
+    crate::format_type::get_associated_type(tcx, rs_return_type, sym::Output).ok_or_else(|| {
+        anyhow!("Failed to find Future::Output associated type in bounds of {:?}", rs_return_type)
+    })
 }
