@@ -136,3 +136,40 @@ fn test_pragma_pack_4_array_stride() {
     expect_eq!(size_of::<[PragmaPacked4; 2]>(), kPragmaPacked4Array2Size);
     expect_eq!(size_of::<[PragmaPacked4; 3]>(), kPragmaPacked4Array3Size);
 }
+
+#[gtest]
+fn test_packed_struct_debug() {
+    expect_eq!(
+        format!("{:?}", MakePackedStruct(10, 200, 3000)),
+        "PackedStruct { a: 10, b: 200, c: 3000 }"
+    );
+}
+
+#[gtest]
+fn test_pragma_pack_2_debug() {
+    let s = PragmaPacked2 { a: 1, b: 2 };
+    expect_eq!(format!("{s:?}"), "PragmaPacked2 { a: 1, b: 2 }");
+}
+
+#[gtest]
+fn test_bare_pack_4_debug() {
+    let s = BarePacked4 { a: 1, b: 2 };
+    expect_eq!(format!("{s:?}"), "BarePacked4 { a: 1, b: 2 }");
+}
+
+#[gtest]
+fn test_nested_packed_struct_debug() {
+    let s = PackedOuter { x: 1, inner: MakePackedStruct(10, 200, 3000) };
+    expect_eq!(
+        format!("{s:?}"),
+        "PackedOuter { x: 1, inner: PackedStruct { a: 10, b: 200, c: 3000 } }"
+    );
+}
+
+#[gtest]
+fn test_packed_struct_with_non_trivially_copyable_field_debug() {
+    // `NonTriviallyCopyable` isn't `Copy`, so it can't be copied out of the (possibly unaligned)
+    // field to be printed. Instead, no fields are printed.
+    let s = PackedWithNonTriviallyCopyableField::default();
+    expect_eq!(format!("{s:?}"), "PackedWithNonTriviallyCopyableField { .. }");
+}
