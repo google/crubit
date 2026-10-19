@@ -192,6 +192,7 @@ rust_library(
     deps = [
         ":rustversion",
         "@crate_index//:itertools",  # v0_13
+        "@crate_index//:tempfile",  # v3
         "@rules_rust//tools/runfiles",
     ],
 )
