@@ -2343,7 +2343,8 @@ fn generate_item_impl<'tcx>(
         DefKind::Fn => db.generate_function(def_id, None, None, StaticMethodMode::Infer).map(Some),
         DefKind::TyAlias => generate_type_alias(db, def_id, tcx.item_name(def_id).as_str())
             .map(|snippets| Some(snippets.into_main_api())),
-        DefKind::Const => generate_const(db, def_id, None).map(Some),
+        #[allow(clippy::unneeded_struct_pattern)]
+        DefKind::Const { .. } => generate_const(db, def_id, None).map(Some),
         DefKind::Trait => generate_trait(db, def_id).map(Some),
         DefKind::Impl { .. } => Ok(None), // Handled by `generate_adt`
         DefKind::Mod => Ok(None),         // Handled by `generate_crate`
