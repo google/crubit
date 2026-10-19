@@ -115,3 +115,54 @@ crubit_rust_test(
         "@crate_index//:googletest",
     ],
 )
+
+cc_library(
+    name = "features_lib_types",
+    hdrs = ["features_lib.h"],
+    aspect_hints = [":features_lib_types_rust.hint"],
+)
+
+rust_api_from_cpp(
+    name = "features_lib_types_rust",
+    cpp_target = ":features_lib_types",
+    types_only = True,
+)
+
+cc_library(
+    name = "features_lib_multi",
+    hdrs = ["features_lib.h"],
+    aspect_hints = [":features_lib_multi_rust.hint"],
+)
+
+rust_api_from_cpp(
+    name = "features_lib_multi_rust",
+    cpp_target = ":features_lib_multi",
+    crubit_features = [
+        "infer_send_sync",
+        "record_impl_debug",
+    ],
+)
+
+cc_library(
+    name = "features_lib_srcs",
+    hdrs = ["features_lib.h"],
+    aspect_hints = [":features_lib_srcs_rust.hint"],
+)
+
+rust_api_from_cpp(
+    name = "features_lib_srcs_rust",
+    srcs = ["features_extra_src.rs"],
+    cpp_target = ":features_lib_srcs",
+    types_only = True,
+)
+
+crubit_rust_test(
+    name = "features_test",
+    srcs = ["features_test.rs"],
+    deps = [
+        ":features_lib_multi_rust",
+        ":features_lib_srcs_rust",
+        ":features_lib_types_rust",
+        "@crate_index//:googletest",
+    ],
+)

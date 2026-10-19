@@ -83,6 +83,8 @@ def rust_api_from_cpp(
         root_namespaces = [],
         generated_cpp_support_deps = [],
         unstable_rust_features = [],
+        crubit_features = [],
+        types_only = False,
         aliases = {},
         warn_on_raw_cc_deps = True,
         **kwargs):
@@ -116,6 +118,14 @@ def rust_api_from_cpp(
       root_namespaces: List of C++ namespaces to re-export at the root of the generated Rust bindings.
       generated_cpp_support_deps: C++ dependencies of the generated C++ target (e.g. ABI support libraries required by the generated bindings).
       unstable_rust_features: List of unstable rustc features to enable via `#![feature(...)]`.
+      crubit_features: List of additional Crubit features to enable on top of
+        `supported` for bindings generation (e.g. `["infer_send_sync"]` or
+        `["experimental"]`). Valid features are defined in
+        `//features:BUILD`.
+      types_only: If True, only generates bindings for types
+        (`//features:types`), disabling `supported` features
+        such as named functions and methods. Cannot be combined with
+        `crubit_features`.
       aliases: A dictionary mapping targets (C++ or Rust) to their crate names for renaming.
             The keys can be Rust libraries, or either C++ libraries (e.g. `cc_library`) or their corresponding
             generated Rust bindings (e.g. `rust_api_from_cpp`).
@@ -131,11 +141,28 @@ def rust_api_from_cpp(
     if "testonly" in kwargs:
         hint_kwargs["testonly"] = kwargs["testonly"]
 
+    if "supported" in crubit_features or "//features:supported" in crubit_features:
+        fail("In rust_api_from_cpp target '%s': 'supported' is enabled by default and should not be specified in `crubit_features`." % name)
+    if "types" in crubit_features or "//features:types" in crubit_features:
+        fail("In rust_api_from_cpp target '%s': use `types_only = True` instead of specifying 'types' in `crubit_features`." % name)
+    if types_only and crubit_features:
+        fail("In rust_api_from_cpp target '%s': `types_only = True` cannot be combined with `crubit_features`." % name)
+
+    if types_only:
+        crubit_features = ["//features:types"]
+    elif not crubit_features:
+        crubit_features = ["//features:supported"]
+    else:
+        crubit_features = [
+            f if (f.startswith("//") or f.startswith(":")) else "//features:" + f
+            for f in crubit_features
+        ]
+
     hint_name = name + ".hint"
-    if not srcs and not compile_data and not cpp_srcs and not deps and not link_deps and not root_namespaces:
+    if not srcs and not compile_data and not cpp_srcs and not deps and not link_deps and not root_namespaces and len(crubit_features) == 1:
         native.alias(
             name = hint_name,
-            actual = "//features:supported",
+            actual = crubit_features[0],
             **hint_kwargs
         )
     else:
@@ -150,6 +177,7 @@ def rust_api_from_cpp(
             root_namespaces = root_namespaces,
             generated_cpp_support_deps = generated_cpp_support_deps,
             unstable_rust_features = unstable_rust_features,
+            crubit_features = crubit_features,
             aliases = aliases,
             warn_on_raw_cc_deps = warn_on_raw_cc_deps,
             **hint_kwargs
