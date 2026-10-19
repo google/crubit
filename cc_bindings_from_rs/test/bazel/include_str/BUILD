@@ -18,7 +18,7 @@ rust_library(
     name = "include_str",
     testonly = 1,
     srcs = ["include_str.rs"],
-    data = ["the_answer.md"],
+    compile_data = ["the_answer.md"],
     edition = "2024",
 )
 
