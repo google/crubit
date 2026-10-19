@@ -1,132 +1,106 @@
 # Build System Integrations
 
-crubit.rs/overview/build_systems
+Crubit works in two directions. Each direction has a build rule that you add
+next to the library you want to call:
 
-<!--*
-# Document freshness: For more information, see <internal link>.
-freshness: { owner: 'ethansmith' reviewed: '2026-05-13' }
-*-->
+*   [`cpp_api_from_rust`](../rust/index.md) lets **C++ call Rust**.
+*   [`rust_api_from_cpp`](../cpp/index.md) lets **Rust call C++**.
 
-[TOC]
+Here is where you can use each of them today:
 
-## CMake
+Build system          | `cpp_api_from_rust` (C++ calling Rust)                                   | `rust_api_from_cpp` (Rust calling C++)
+:-------------------- | :----------------------------------------------------------------------- | :-------------------------------------
+[Bazel](bazel.md)     | [Supported](bazel.md#cpp_api_from_rust) ([example](https://github.com/google/crubit/tree/main/examples/build_systems/bazel)) | [Supported](bazel.md#rust_api_from_cpp)
+[CMake](cmake.md)     | [Supported](cmake.md) ([example](https://github.com/google/crubit/tree/main/examples/build_systems/cmake)) | Not yet
+[Other](#other-build-systems) | Through the `cargo cpp_api_from_rust` subcommand                    | Not yet
 
-[cpp_api_from_rust](crubit.rs/rust/index) has support for building with
-[CMake](https://cmake.org/), allowing C++ code built by CMake to call Rust code
-built with Cargo through Crubit generated bindings. This support builds on
-[Corrosion](https://github.com/corrosion-rs/corrosion), the premier marriage
-between Rust and CMake. To set up a CMake project using Crubit you'll need two
-pieces:
+Crubit is used in production inside Google, and we are working towards the same
+level of support for the open-source integrations; see
+[Usage outside of Google](status.md#usage-outside-of-google) for the plan.
+Open-source CI builds the Bazel and CMake examples on Linux x86_64 on every
+change to Crubit.
 
-*   A CMake Project
-*   A Cargo Project (embedded within the CMake project)
+## Toolchain requirements {#toolchain-requirements}
 
-You can find an example setup project at
-[`examples/build_systems/cmake`](https://github.com/google/crubit/tree/main/examples/build_systems/cmake).
-We'll walk through what that project does
-[below](crubit.rs/overview/build_systems#example-setup).
+Crubit is closely tied to particular compiler releases. This is what lets it
+automatically generate bindings using idiomatic language features instead of
+being limited to the C ABI.
 
-### Build Configuration
+### Rust
 
-Crubit uses Cargo to build your Rust library. Modifications to your Cargo.toml
-will be respected and reflected when the Crubit CMake targets are built. We only
-require that your project provides a library package (specifically we need it to
-provide an `.rlib` or `.rmeta` file).
+`cpp_api_from_rust` is built on the Rust compiler's internal APIs, so it must be
+built by the same `rustc` that compiles the crates it generates bindings for,
+and that toolchain must include the `rustc-dev` component. Crubit supports
+recent nightly and stable Rust versions.
 
-On the CMake side, Corrosion provides a suite of options to tune the Cargo
-build. See their [usage
-docs](https://corrosion-rs.github.io/corrosion/usage.html) for details. These
-are threaded through to the underlying cargo build as expected, with some
-notable exceptions:
+A daily test matrix checks that Crubit builds against the last 7 nightly
+toolchains and the 2 most recent stable releases. The badges in the
+[README](../index.md#test-matrix) show the current results, and
+[`nightly.yaml`](https://github.com/google/crubit/blob/test-matrix/.github/workflows/nightly.yaml)
+on the `test-matrix` branch is the workflow that produces them.
 
-*   `CRATES` will not work. **We do not support Cargo Workspaces yet.**
-*   `CRATE_TYPES` -- We always import a lib/rlib with Crubit
-*   `OVERRIDE_CRATE_TYPE` -- We must use `--crate-type=lib`
+How to set up a compatible Rust toolchain depends on your build system and
+channel:
 
-The Corrosion-generated CMake target is an interface library containing the
-generated header and a static library containing the Rust code and generated FFI
-bindings.
+*   **Bazel (nightly):** `crubit_toolchains.configure` in `MODULE.bazel`
+    downloads a pinned nightly toolchain with `rustc-dev` for you; see
+    [Bazel](bazel.md).
+*   **Nightly with `rustup` (CMake or Cargo):** Install a recent nightly with
+    the `rustc-dev` component:
 
-### Example Setup
+    ```sh
+    rustup toolchain install nightly --component rustc-dev
+    ```
 
-To setup Crubit with CMake, first we'll need a CMake project, see their [their
-documentation](https://cmake.org/cmake/help/latest/guide/tutorial/Getting%20Started%20with%20CMake.html)
-for help configuring one. At minimum, you'll need a directory (we'll call ours
-`cmake`) with a `CMakeLists.txt` at its root containing:
+    In a Crubit checkout, `rust-toolchain.toml` selects a nightly toolchain with
+    `rustc-dev` automatically.
+*   **Stable with `rustup` (CMake or Cargo):** Add the `rustc-dev` component to
+    one of the two most recent stable releases, and set `RUSTC_BOOTSTRAP=1` when
+    building Crubit and the crates that use the generated bindings (because they
+    rely on a few [unstable features](unstable_features.md)):
 
-```cmake
-cmake_minimum_required(VERSION 3.22)
+    ```sh
+    rustup component add rustc-dev --toolchain stable
+    export RUSTC_BOOTSTRAP=1
+    ```
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_C_COMPILER clang)
-set(CMAKE_CXX_COMPILER clang++)
+### C++
 
-project(example_project
-  VERSION 0.1.0
-  LANGUAGES CXX)
-```
+`cpp_api_from_rust` generates portable C++20. The examples and CI use Clang,
+but the generated code doesn't depend on a particular compiler or Clang
+version.
 
-From there we'll need a [Cargo
-project](https://doc.rust-lang.org/book/ch01-03-hello-cargo.html). We can create
-one using the shell command:
+`rust_api_from_cpp` parses C++ with Clang's libraries, so the Crubit binary is
+built against a specific LLVM commit. The Bazel integration takes care of this
+for you, and `MODULE.bazel` pins a commit that CI updates regularly. The LLVM
+release that Bazel downloads for compiling C++ needs to be at least as new as
+the LLVM that your Rust toolchain was built with; `crubit_toolchains` checks
+this for you.
 
-```sh
-cmake/$ cargo new --lib rust_lib
-```
+## Versions and releases
 
-Because we're using Crubit to call our Rust code, our cargo project must produce
-a normal Rust library (and not a binary, static library, cdylib, etc.).
+Crubit doesn't publish releases or semantic versions yet. Development happens
+on `main`, and every day a GitHub Action moves the
+[`latest`](https://github.com/google/crubit/tree/latest) tag to the newest
+commit on `main` that passed CI. We recommend that you **pin a specific
+commit**, such as the one `latest` points to, and upgrade on purpose. Binary
+releases are planned; see
+[Usage outside of Google](status.md#usage-outside-of-google).
 
-Our two projects are combined through Corrosion. In our `CMakeLists.txt`, we
-fetch Corrosion and enable it for our Cargo project `rust_lib`:
+## Other build systems
 
-```cmake
-include(FetchContent)
+Crubit's tools are ordinary command-line programs, so you can run them from any
+build system.
 
-FetchContent_Declare(
-  Corrosion
-  # NB: We temporarily require a fork of corrossion as we work to upstream our changes.
-  GIT_REPOSITORY https://github.com/thunderseethe/corrosion
-  GIT_TAG main
-)
+For C++ calling Rust, the `cargo cpp_api_from_rust` subcommand builds a Cargo
+library package, runs Crubit on it, and writes a C++ header and a static library
+that any C++ build system can consume. This is what the CMake integration uses.
+It is built from `cargo/cc_bindings_from_rs/cargo-cpp_api_from_rust` in the
+Crubit repository.
 
-FetchContent_MakeAvailable(Corrosion)
-```
-
-We use [`Corrosion`](https://github.com/corrosion-rs/corrosion), a Cargo CMake
-integration, to add our Cargo project to our CMake project:
-
-```cmake
-corrosion_experimental_crubit(rust_lib)
-corrosion_import_crate(MANIFEST_PATH rust_lib/Cargo.toml)
-```
-
-`rust_lib` is the name of our library package in our Cargo project, which
-defaults to crate name. If we were to rename our package, we'd have to update
-this to reflect the package name rather than the crate or directory name.
-Corrosion takes a path to the Cargo.toml of our project and uses that to extract
-the necessary metadata.
-
-Under the hood, Corrosion generates a CMake library target named `rust_lib`,
-after our Rust package. We can use that target to depend on Rust from our C++
-code. If we have a CMake executable `main`, we can add a dependency on Rust by
-adding the following to our `CMakeLists.txt`:
-
-```cmake
-add_executable(main main.cpp)
-target_link_libraries(main PRIVATE rust_lib)
-```
-
-Crubit generates a C++ header for Rust library based on the library package
-name, as well. In `main.cpp`, we can import our `crubit/rust_lib.h` header:
-
-```
-{{ #include ../../examples/build_systems/cmake/main.cpp }}
-```
-<!--  -->
-
-
-With that we're calling Rust code from C++! Our CMake integration is subject to
-the same [limitations](crubit.rs/overview/limits.md) as our other build
-integrations.
+See [Cargo build of Crubit](cargo_build.md) for how to build the tools
+themselves, and the Bazel rules for
+[`cpp_api_from_rust`](https://github.com/google/crubit/tree/main/cc_bindings_from_rs/bazel_support)
+and
+[`rust_api_from_cpp`](https://github.com/google/crubit/tree/main/rs_bindings_from_cc/bazel_support)
+for how they are invoked.

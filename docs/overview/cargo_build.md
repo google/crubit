@@ -1,32 +1,27 @@
 # Cargo Build of Crubit
 
-crubit.rs/overview/cargo_build
+This page explains how to build Crubit's own tools with Cargo. To use Crubit in
+your project, start with [Build System Integrations](build_systems.md); the
+Bazel and CMake integrations build the tools for you.
 
-<!--*
-# Document freshness: For more information, see <internal link>.
-freshness: { owner: 'lukasza' reviewed: '2026-10-19' }
-*-->
-
-[TOC]
+`cc_bindings_from_rs` uses the Rust compiler's internal APIs (`rustc_private`),
+so it requires a toolchain with the `rustc-dev` component and must be built by
+the same `rustc` that compiles the crates it generates bindings for. See
+[Toolchain requirements](build_systems.md#toolchain-requirements) for supported
+toolchains and setup instructions.
 
 ## cc_bindings_from_rs
 
-`cc_bindings_from_rs` can be built by invoking `cargo` as follows:
+In a Crubit checkout, `rustup` automatically selects the nightly toolchain from
+`rust-toolchain.toml`, and you can build `cc_bindings_from_rs` with Cargo:
 
-```
-$ cargo build --release --verbose --bin cc_bindings_from_rs \
-    --manifest-path \
-    $CRUBIT_ROOT/cargo/cc_bindings_from_rs/cc_bindings_from_rs/Cargo.toml
+```sh
+git clone https://github.com/google/crubit.git
+cd crubit
+cargo build --release -p cc_bindings_from_rs
 ```
 
-This will work from a git checkout of the public project or from Google's
-internal mirror of the repo. If you plan to iterate on a cargo build, it is
-recommended to `cd third_party/crubit` so you can build/test without specifying
-the manifest path explicitly:
-
-```
-$ cargo build -p cc_bindings_from_rs
-```
+Find more details on configuring the target directory and troubleshooting below.
 
 If you are using a stable Rust toolchain, set the environment variable
 `RUSTC_BOOTSTRAP=1`:
@@ -160,7 +155,10 @@ error[E0554]: `#![feature]` may not be used on the stable release channel
 LLVM/Clang LibTooling, and Protobuf). To build it with Cargo in an open-source
 checkout, you first need to build and export these C++ dependencies.
 
-### Building with Bazel Dependencies (OSS Quickstart)
+### Building with C++ dependencies from Bazel
+
+This is how Crubit's CI checks that the tool builds with Cargo. If you can use
+Bazel, prefer the [full Bazel build](../cpp/building.md#bazel) instead.
 
 Crubit provides a helper script `cargo/build/setup_bazel_env.py` that discovers
 prebuilt C++ dependencies in Bazel's output tree, merges them into monolithic

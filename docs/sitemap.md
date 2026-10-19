@@ -6,6 +6,8 @@
 *   [Safety](/docs/overview/safety.md)
 *   [Debugging](/docs/overview/debugging.md)
 *   [Build System Integrations](/docs/overview/build_systems.md)
+    *   [Bazel](/docs/overview/bazel.md)
+    *   [CMake](/docs/overview/cmake.md)
 *   [Mascot](/docs/mascot.md)
 *   Types
 

@@ -3,19 +3,19 @@
 [![rust workflow](https://github.com/google/crubit/actions/workflows/rust.yml/badge.svg)](https://github.com/google/crubit/actions/workflows/rust.yml)
 [![GitHub](https://img.shields.io/badge/github-google%2Fcrubit-blue?logo=github)](https://github.com/google/crubit)
 
-Crubit is a bidirectional bindings generator for C++ and Rust, with the goal of
-integrating the C++ and Rust ecosystems.
+Crubit is a bidirectional bindings generator for C++ and Rust, allowing users
+to:
 
-## Status
-
-See the [status](http://crubit.rs/overview/status) page for an overview of the
-current supported features.
+*   **Automatically reuse existing crates and headers**: no IDL or glue code is
+    necessary.
+*   **Call back and forth between Rust and C++ with no performance cost**: no
+    copies or heap allocations required.
+*   **Use idiomatic types from both Rust and C++**, such as `Vec`, `Result`,
+    `Option`, `std::vector`, `std::unique_ptr`, `std::shared_ptr`, and more!
 
 ## Example
 
-{{#tabs}}
-
-{{#tab name="Calling Rust from C++"}}
+### Calling Rust from C++
 
 Consider the following Rust library:
 
@@ -53,9 +53,7 @@ void demo() {
 }
 ```
 
-{{#endtab}}
-
-{{#tab name="Calling C++ from Rust"}}
+### Calling C++ from Rust
 
 Consider the following C++ header:
 
@@ -90,22 +88,67 @@ if let Some(u) = user {
 let new_user: unique_ptr<User> = CreateUser("Alice".into(), 456);
 ```
 
-{{#endtab}}
+## Why Crubit?
 
-{{#endtabs}}
+*   **No hand-written glue code.** Crubit reads C++ headers and Rust crates
+    directly and generates bindings in both directions. Your signatures can't
+    drift out of sync with the code they wrap, and you don't need to maintain a
+    separate interface file.
+*   **More than the C ABI.** Crubit can call functions that aren't
+    `extern "C"`, pass structs and enums by value, and match the memory layout
+    of Rust structs and enums that aren't `#[repr(C)]`.
+*   **Idiomatic types on both sides.** References, slices, `&str`, `Option`,
+    `Result`, tuples, smart pointers, `std::vector`/`Vec`, callbacks,
+    `absl::Status`, and more map to their natural counterparts. See the
+    [status](http://crubit.rs/overview/status) page for the full table.
+*   **Traits and operators, too.** C++ can call Rust trait implementations,
+    and Rust traits such as `Display`, `Clone`, and `Default` become the
+    matching C++ operators and special member functions. In the other
+    direction, C++ operator overloads and special member functions become the
+    matching Rust traits, such as `PartialEq`, `Add`, `Clone`, and `Drop`.
+*   **Safer than hand-written FFI.** Crubit generates bindings from the real
+    C++ headers and Rust crates at build time, with the same compiler and
+    flags, so mismatched ABIs, struct layouts, and signatures can't creep in.
+    C++ references get Rust lifetimes through lifetime elision and
+    [lifetime annotations](http://crubit.rs/cpp/references_and_lifetimes), so
+    the Rust borrow checker can check them. Slices, strings, `Option`, and
+    other [types](http://crubit.rs/types) carry their bounds and invariants
+    across the boundary instead of degrading to raw pointers. See
+    [Memory Safety](http://crubit.rs/overview/safety) for the details.
 
 ## Getting Started
 
-We have detailed walkthroughs on how to use C++ from Rust, or Rust from C++,
-using Crubit, as well as copy-pastable example code. The example code also
-includes spanshots of what the generated bindings look like.
+### 1. Set up your build
 
-*   Walkthrough: [C++ Bindings for Rust Libraries](http://crubit.rs/rust)
-    *   Examples:
-        [`examples/rust/`](https://github.com/google/crubit/tree/main/examples/rust)
-*   Walkthrough: [Rust Bindings for C++ Libraries](http://crubit.rs/cpp)
-    *   Examples:
-        [`examples/cpp/`](https://github.com/google/crubit/tree/main/examples/cpp)
+Crubit runs as part of your build, so that the bindings always match the code
+they wrap. Pick your build system:
+
+Build system                                    | C++ calling Rust (`cpp_api_from_rust`)                                                                                                       | Rust calling C++ (`rust_api_from_cpp`)
+:---------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------
+[Bazel](http://crubit.rs/overview/bazel)       | [Supported](http://crubit.rs/overview/bazel#cpp_api_from_rust) ([example](https://github.com/google/crubit/tree/main/examples/build_systems/bazel)) | [Supported](http://crubit.rs/overview/bazel#rust_api_from_cpp)
+[CMake](http://crubit.rs/overview/cmake)       | [Supported](http://crubit.rs/overview/cmake) ([example](https://github.com/google/crubit/tree/main/examples/build_systems/cmake))                   | Not yet
+[Other](http://crubit.rs/overview/build_systems#other-build-systems) | Through the `cargo cpp_api_from_rust` subcommand                                                                       | Not yet
+
+Crubit works with nightly Rust toolchains and with the two most recent stable
+releases, as long as the `rustc-dev` component is installed (see the
+[test matrix](#test-matrix) below). There are no binary releases yet; pin a
+commit of this repository.
+[Build System Integrations](http://crubit.rs/overview/build_systems) covers
+toolchain requirements and how to set up each build system.
+
+### 2. Use your Rust and C++ APIs together
+
+Add a `cpp_api_from_rust` or `rust_api_from_cpp` target next to your library,
+and start calling it from the other language. Each direction has a walkthrough
+that explains what the generated API looks like and how to customize it, plus
+copy-pastable examples that include snapshots of the generated bindings:
+
+*   **C++ calling Rust:**
+    [C++ Bindings for Rust Libraries](http://crubit.rs/rust) walkthrough and
+    [`examples/rust/`](https://github.com/google/crubit/tree/main/examples/rust).
+*   **Rust calling C++:**
+    [Rust Bindings for C++ Libraries](http://crubit.rs/cpp) walkthrough and
+    [`examples/cpp/`](https://github.com/google/crubit/tree/main/examples/cpp).
 
 ## Test Matrix
 

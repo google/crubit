@@ -246,16 +246,20 @@ This can be resolved by using rmeta files as inputs, instead of source code.
 
 ### Build System
 
-We currently only support Bazel, though the `cc_bindings_from_rs` binary itself
-can be built with Cargo.
+See [Build System Integrations](build_systems.md) for details. In summary:
+
+*   **Bazel:** `cpp_api_from_rust` and `rust_api_from_cpp` are available
+    through the `rules_crubit` module.
+*   **CMake:** `cpp_api_from_rust` is available through Corrosion.
+*   **Cargo:** The `cargo cpp_api_from_rust` subcommand builds a Cargo library
+    package and outputs a C++ header and static library.
 
 > TODO:
 >
-> *   rs_bindings_from_cc builds using Cargo
+> *   `rust_api_from_cpp` is available in CMake and Cargo builds (b/539627008)
 > *   idl_bindings_from_cc, rs_bindings_from_idl build using Cargo
-> *   Crubit is usable as a Bazel dependency
-> *   Crubit is usable as a Bazel dependency
-> *   Crubit builds against public Rust and Clang releases
+> *   `rules_crubit` is published to the Bazel Central Registry (b/574677342)
+> *   Crubit's Corrosion changes are upstreamed (b/574505417)
+> *   Crubit builds against public Clang releases
 > *   Crubit binary releases
-> *   CMake
 > *   (not planned) Buck2
