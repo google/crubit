@@ -592,6 +592,32 @@ pub(crate) fn is_recursive_specialization<'tcx>(
     is_recursive || type_depth(target_ty) >= 6
 }
 
+#[must_use]
+fn snippets_introduce_recursive_specialization<'tcx>(
+    tcx: TyCtxt<'tcx>,
+    self_ty: Ty<'tcx>,
+    snippets: &ApiSnippets<'tcx>,
+) -> bool {
+    snippets
+        .main_api
+        .prereqs
+        .template_specializations
+        .iter()
+        .chain(snippets.main_api.prereqs.lazy_template_specializations.iter())
+        .chain(snippets.cc_details.prereqs.template_specializations.iter())
+        .chain(snippets.cc_details.prereqs.lazy_template_specializations.iter())
+        .any(|spec| match spec {
+            TemplateSpecialization::Adt(adt_spec) => {
+                // Because we eagerly instantiate all template specializations, we need
+                // to guard against infinite recursion. This can arise from inherent
+                // methods or operator impls that use Self as a template argument of
+                // another specialization, among other things.
+                is_recursive_specialization(tcx, self_ty, adt_spec.self_ty_rs)
+            }
+            _ => false,
+        })
+}
+
 fn trait_impls_by_argument_adt<'tcx>(
     tcx: TyCtxt<'tcx>,
     crate_num: CrateNum,
@@ -1154,6 +1180,8 @@ fn generate_trait_operator_impls<'tcx>(
     core: &AdtCoreBindings<'tcx>,
 ) -> ApiSnippets<'tcx> {
     let tcx = db.tcx();
+    let self_is_generic =
+        core.def_id.is_some_and(|id| query_compiler::has_non_lifetime_generics(tcx, id));
 
     let query_trait_impls = |trait_def_id: DefId,
                              method_name: &str,
@@ -1163,13 +1191,18 @@ fn generate_trait_operator_impls<'tcx>(
 
         operator_impls_for_ty(tcx, trait_def_id, core.common.self_ty)
             .into_iter()
-            .map(|(impl_id, impl_args)| {
+            .filter_map(|(impl_id, impl_args)| {
                 let trait_ref = get_instantiated_trait_ref(tcx, impl_id, impl_args);
                 // For a unary operator (e.g. `Neg` or `Not`) there is no right-hand operand, so
                 // fall back to index 0 of the trait ref - the self type - as a placeholder.
                 let trait_arg_ty =
                     operator_rhs_ty(trait_ref).unwrap_or_else(|| trait_ref.args.type_at(0));
-                (impl_id, impl_args, trait_arg_ty)
+                if self_is_generic
+                    && is_recursive_specialization(tcx, core.common.self_ty, trait_arg_ty)
+                {
+                    return None;
+                }
+                Some((impl_id, impl_args, trait_arg_ty))
             })
             .avoid_colliding_types(tcx, |(_, _, trait_arg_ty)| *trait_arg_ty)
             .into_iter()
@@ -1182,7 +1215,7 @@ fn generate_trait_operator_impls<'tcx>(
                      }| {
                         let err = anyhow!(
                             "{trait_name} implementation for `{key_type}` is not supported when \
-                         `{trait_name}<{preferred_type}>` is implemented as it may overlap."
+                             `{trait_name}<{preferred_type}>` is implemented as it may overlap."
                         );
                         (err, impl_id, impl_args)
                     },
@@ -1191,7 +1224,7 @@ fn generate_trait_operator_impls<'tcx>(
                     if trait_arg_ty.flags().intersects(has_type_or_const_vars()) {
                         let err = anyhow!(
                             "{trait_name} impl has uninstantiated generic parameters, \
-                                   which is not yet supported {trait_arg_ty}"
+                                       which is not yet supported {trait_arg_ty}"
                         );
                         return Err((err, impl_id, impl_args));
                     }
@@ -1215,10 +1248,23 @@ fn generate_trait_operator_impls<'tcx>(
                     )
                     .map_err(|e| (e, assoc_fn_id, impl_args))
                 })
-                .unwrap_or_else(|(err, def_id, impl_args)| {
+            })
+            .filter_map(|res| match res {
+                Ok(snippets) => Some(snippets).filter(|snippets| {
+                    !self_is_generic
+                        || !snippets_introduce_recursive_specialization(
+                            tcx,
+                            core.common.self_ty,
+                            snippets,
+                        )
+                }),
+                Err((err, def_id, impl_args)) => {
                     crate::error_scope!(db, def_id, impl_args);
-                    generate_unsupported_def_with_args(db, def_id, impl_args, err).into_main_api()
-                })
+                    Some(
+                        generate_unsupported_def_with_args(db, def_id, impl_args, err)
+                            .into_main_api(),
+                    )
+                }
             })
             .collect()
     };
@@ -1385,6 +1431,8 @@ fn generate_ord_and_partialord_impls<'tcx>(
         ord_rhs_types.insert(erase_regions(tcx, core.common.self_ty));
     }
 
+    let self_is_generic =
+        core.def_id.is_some_and(|id| query_compiler::has_non_lifetime_generics(tcx, id));
     for (impl_id, impl_args) in
         non_blanket_impls_for_ty(tcx, partial_ord_trait_id, core.common.self_ty)
     {
@@ -1393,6 +1441,9 @@ fn generate_ord_and_partialord_impls<'tcx>(
         let erased_rhs_ty = erase_regions(tcx, rhs_ty);
 
         if ord_rhs_types.contains(&erased_rhs_ty) {
+            continue;
+        }
+        if self_is_generic && is_recursive_specialization(tcx, core.common.self_ty, rhs_ty) {
             continue;
         }
 
@@ -2139,34 +2190,13 @@ pub fn generate_adt<'tcx>(
                 StaticMethodMode::Infer,
             )?;
 
-            if !self_is_not_generic {
-                let self_ty = core.common.self_ty;
-                let introduces_recursive_spec = snippets
-                    .main_api
-                    .prereqs
-                    .template_specializations
-                    .iter()
-                    .chain(snippets.main_api.prereqs.lazy_template_specializations.iter())
-                    .chain(snippets.cc_details.prereqs.template_specializations.iter())
-                    .chain(snippets.cc_details.prereqs.lazy_template_specializations.iter())
-                    .any(|spec| match spec {
-                        TemplateSpecialization::Adt(adt_spec) => {
-                            // Because we eagerly instantiate all template specializations, we need
-                            // to guard against infinite recursion. This
-                            // can arise from inherent methods that use
-                            // Self as template argument of another
-                            // specialization among other things.
-                            is_recursive_specialization(tcx, self_ty, adt_spec.self_ty_rs)
-                        }
-                        _ => false,
-                    });
-
-                if introduces_recursive_spec {
-                    if let Some(unqualified_name) = db.symbol_unqualified_name(assoc_item.def_id) {
-                        member_function_names.remove(unqualified_name.cpp_name.as_str());
-                    }
-                    return None;
+            if !self_is_not_generic
+                && snippets_introduce_recursive_specialization(tcx, core.common.self_ty, &snippets)
+            {
+                if let Some(unqualified_name) = db.symbol_unqualified_name(assoc_item.def_id) {
+                    member_function_names.remove(unqualified_name.cpp_name.as_str());
                 }
+                return None;
             }
 
             Some(snippets)
@@ -2775,7 +2805,12 @@ fn generate_variant_ctor<'tcx>(
                 assert!(was_inserted, "Conflicting names rejected earlier (above)");
             };
             if !main_api_params.is_empty() {
-                let result = db.generate_function(ctor_def_id, None, None, StaticMethodMode::Infer);
+                let result = db.generate_function(
+                    ctor_def_id,
+                    Some(adt_generic_args),
+                    None,
+                    StaticMethodMode::Infer,
+                );
                 if result.is_ok() {
                     mark_method_name_as_used();
                 }
