@@ -9,22 +9,16 @@ load(
     "//bazel:cpp_api_from_rust.bzl",
     "cpp_api_from_rust",
 )
-load("//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl", "cc_bindings_from_rust_library_config")
 load("//common:crubit_wrapper_macros_oss.bzl", "crubit_cc_test")
 
 package(default_applicable_licenses = ["//:license"])
-
-cc_bindings_from_rust_library_config(
-    name = "other_crate_hint",
-    extra_cc_hdrs = ["other_crate_types.h"],
-)
 
 rust_library(
     name = "other_crate",
     testonly = 1,
     srcs = ["other_crate.rs"],
     aspect_hints = [
-        ":other_crate_hint",
+        ":other_crate_cc_api.hint",
     ],
     edition = "2024",
     proc_macro_deps = [
@@ -36,6 +30,7 @@ cpp_api_from_rust(
     name = "other_crate_cc_api",
     testonly = 1,
     crate = ":other_crate",
+    extra_cc_hdrs = ["other_crate_types.h"],
 )
 
 rust_library(
