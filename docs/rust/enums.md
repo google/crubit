@@ -42,10 +42,13 @@ cannot be used to represent a Rust `enum`. Instead, the C++ bindings are a
 
 ## C++ movable {#cpp_movable}
 
-If an `enum` is not [C++ movable](movable_types.md), its C++ move constructor
-and move assignment operator will be `= delete`d, and it will be passed by-value
-via the [`rs::Movable`](movable_types.md#movable_wrapper) wrapper type. See
-[Movable Types](movable_types.md).
+If an `enum` is [C++ movable](movable_types.md) (it implements `Clone`, has no
+destructor, or implements `Default`), the generated C++ class has move
+operations and is passed by value as `T`.
+
+If it is not, its C++ move constructor and move assignment operator are
+`= delete`d. It is still returned by value as `T`, but by-value parameters take
+the [`rs::Movable<T>`](movable_types.md#movable_wrapper) wrapper type instead.
 
 ## Enums with payload
 
