@@ -6,7 +6,7 @@ use inline_cpp_macro::{global_cpp, inline_cpp};
 
 global_cpp! {
     #include "support/rs_std/str_ref.h"
-    #include "third_party/absl/strings/str_cat.h"
+    #include "absl/strings/str_cat.h"
 }
 
 /// Formats a greeting using C++ `absl::StrCat`.
