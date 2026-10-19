@@ -206,6 +206,14 @@ impl From<&[u8]> for string_wrapper {
     }
 }
 
+/// Borrows the string's bytes as a `string_view`, like C++'s implicit
+/// `std::string` to `std::string_view` conversion.
+impl<'a> From<&'a string_wrapper> for string_view<'a> {
+    fn from(s: &'a string_wrapper) -> Self {
+        s.as_slice().into()
+    }
+}
+
 impl Deref for string_wrapper {
     type Target = [u8];
     fn deref(&self) -> &Self::Target {
@@ -579,6 +587,14 @@ impl Deref for string {
 impl core::convert::AsRef<[u8]> for string {
     fn as_ref(&self) -> &[u8] {
         &*self
+    }
+}
+
+/// Borrows the string's bytes as a `string_view`, like C++'s implicit
+/// `std::string` to `std::string_view` conversion.
+impl<'a> From<&'a string> for string_view<'a> {
+    fn from(s: &'a string) -> Self {
+        s.as_slice().into()
     }
 }
 
