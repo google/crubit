@@ -2006,7 +2006,8 @@ fn generate_func_safety_doc<'a>(
     if impl_kind.is_unsafe() &&
         // Skip safety doc for trait impls, since the trait itself
         // should document its safety requirements.
-        !matches!(impl_kind, ImplKind::Trait { .. })
+        (!matches!(impl_kind, ImplKind::Trait { .. }) ||
+         matches!(impl_kind, ImplKind::Trait { trait_name: TraitName::UnsafeCtorNew(_), .. }))
     {
         let mut doc = String::new();
         if let SafetyAnnotation::Unsafe = func.safety_annotation() {

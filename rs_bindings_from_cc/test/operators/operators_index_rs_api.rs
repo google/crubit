@@ -335,6 +335,10 @@ pub mod crubit {
             }
         }
 
+        /// # Safety
+        ///
+        /// The caller must ensure that the following unsafe arguments are not misused by the function:
+        /// * `items`: raw pointer
         impl ::ctor::UnsafeCtorNew<*mut crate::crubit::test::ItemNonUnpin> for ContainerUnpinItemNonUnpin {
             type CtorType = ::ctor::Ctor![Self];
             type Error = ::ctor::Infallible;
