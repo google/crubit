@@ -52,6 +52,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":vec_cc_api",
         "//support/rs_std:rs_alloc",

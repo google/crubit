@@ -51,6 +51,8 @@ crubit_cc_test(
         "android",
         "ios",
     ],
+    # TODO(b/522829368): remove `no_windows` to enable.
+    tags = ["no_windows"],
     deps = [
         ":rs_index_cc_api",
         "@googletest//:gtest_main",

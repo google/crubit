@@ -159,6 +159,8 @@ crubit_cc_test(
         # cross-compilation, but it's mostly uninteresting from a multi-platform POV.
         "not_run:arm",
         "not_run:mac",
+        # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
+        "no_windows",
     ],
     deps = [
         ":cc_ir",
@@ -297,6 +299,8 @@ cc_library(
 crubit_cc_test(
     name = "cmdline_test",
     srcs = ["cmdline_test.cc"],
+    # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
+    tags = ["no_windows"],
     deps = [
         ":bazel_types",
         ":cc_ir",
@@ -749,6 +753,8 @@ cc_library(
 crubit_cc_test(
     name = "cc_collect_instantiations_test",
     srcs = ["collect_instantiations_test.cc"],
+    # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
+    tags = ["no_windows"],
     deps = [
         ":cc_collect_instantiations",
         "//common:status_test_matchers",
@@ -802,6 +808,8 @@ cc_library(
 crubit_cc_test(
     name = "collect_namespaces_test",
     srcs = ["collect_namespaces_test.cc"],
+    # Unit test of Crubit's own C++ tooling: LLVM and //file/base don't build for Windows.
+    tags = ["no_windows"],
     deps = [
         ":cc_ir",
         ":collect_namespaces",

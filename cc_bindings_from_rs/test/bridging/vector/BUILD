@@ -55,6 +55,8 @@ cpp_api_from_rust(
 crubit_cc_test(
     name = "vector_test",
     srcs = ["vector_test.cc"],
+    # `cc_std` (the `rs_bindings_from_cc` aspect) doesn't support Windows yet (b/561578105).
+    tags = ["no_windows"],
     deps = [
         ":test_helpers",
         ":vector_cc_api",
