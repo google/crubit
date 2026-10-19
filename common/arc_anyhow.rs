@@ -83,6 +83,40 @@ impl Error {
     {
         self.0.downcast_ref()
     }
+
+    /// The lower-level source of this error, if any.
+    ///
+    /// Similar to [`std::error::Error::source`].
+    pub fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.0.source()
+    }
+
+    /// Returns the outermost error of type `E` in the chain of causes of this error, including
+    /// this error itself.
+    ///
+    /// Unlike iterating over [`anyhow::Error::chain`], this also finds errors that were wrapped
+    /// by adding context to an `Error`.
+    pub fn find_cause<E>(&self) -> Option<&E>
+    where
+        E: std::error::Error + 'static,
+    {
+        fn find_cause_in<E: std::error::Error + 'static>(error: &anyhow::Error) -> Option<&E> {
+            for cause in error.chain() {
+                if let Some(cause) = cause.downcast_ref::<E>() {
+                    return Some(cause);
+                }
+                // `StdError` hides the outermost error of the `Error` it wraps from the chain.
+                if let Some(cause) = cause
+                    .downcast_ref::<StdError>()
+                    .and_then(|StdError(inner)| find_cause_in(inner))
+                {
+                    return Some(cause);
+                }
+            }
+            None
+        }
+        find_cause_in(&self.0)
+    }
 }
 
 impl PartialEq for Error {
@@ -350,6 +384,30 @@ mod tests {
         })()
         .unwrap_err();
         assert_eq!(&format!("{err}"), "message");
+    }
+
+    #[gtest]
+    fn test_find_cause() {
+        #[derive(Debug)]
+        struct Marker;
+        impl Display for Marker {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str("marker")
+            }
+        }
+        impl std::error::Error for Marker {}
+
+        let marker = Error::from(Marker);
+        assert!(marker.find_cause::<Marker>().is_some());
+        // Context added to an `Error`, both directly and through `Result`.
+        let with_context = marker.clone().context("context 1");
+        assert!(with_context.find_cause::<Marker>().is_some());
+        let result: AAResult<()> = AAResult::Err(with_context);
+        let with_more_context = result.context("context 2").unwrap_err();
+        assert!(with_more_context.find_cause::<Marker>().is_some());
+        assert_eq!(&format!("{with_more_context:#}"), "context 2: context 1: marker");
+
+        assert!(anyhow!("message").find_cause::<Marker>().is_none());
     }
 
     #[gtest]
