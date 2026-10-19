@@ -43,6 +43,7 @@ load(
 load(
     "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl",
     "CcBindingsFromRustLibraryConfigInfo",
+    "cc_bindings_from_rust_library_config",
     "crate_name_to_library_config",
     "get_additional_cc_hdrs_and_srcs",
 )
@@ -339,6 +340,8 @@ def _make_cc_info_for_h_out_file(ctx, h_out_file, extra_cc_hdrs, extra_cc_srcs, 
     Args:
       ctx: The rule context.
       h_out_file: The generated "..._cc_api.h" header file
+      extra_cc_hdrs: Additional C++ header files to include in the CC info.
+      extra_cc_srcs: Additional C++ source files to include in the CC info.
       cc_infos: cc_infos for dependencies of the h_out_file - should include both:
           1) the target `crate` and
           2) the compiled Rust glue crate (`..._cc_api_impl.rs` file).
@@ -440,7 +443,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
         aliases = crate_info.aliases,
     )
 
-    compile_inputs, out_dir, build_env_files, build_flags_files, linkstamp_outs, ambiguous_libs = collect_inputs(
+    compile_inputs, out_dir, build_env_files, _, linkstamp_outs, ambiguous_libs = collect_inputs(
         ctx = ctx,
         file = ctx.file,
         files = ctx.files,
@@ -573,6 +576,7 @@ def _cc_bindings_from_rust_aspect_impl(target, ctx):
                     for dep in dep_bindings_infos
                 ],
             ),
+            config_hint_labels = [hint.label for hint in getattr(ctx.rule.attr, "aspect_hints", []) if CcBindingsFromRustLibraryConfigInfo in hint],
         ),
         bindings_info,
         OutputGroupInfo(out = output_depset, out_compiled = out_compiled),
@@ -683,6 +687,12 @@ cc_bindings_from_rust_aspect = aspect(
 
 def _cc_bindings_from_rust_rule_impl(ctx):
     crate = ctx.attr.crate
+
+    if ctx.attr.config_hint:
+        labels = getattr(crate[CcBindingsFromRustInfo], "config_hint_labels", [])
+        if ctx.attr.config_hint.label not in labels:
+            fail('cpp_api_from_rust(name = "%s") configures the generated C++ API, but "%s" is not attached to %s. Add aspect_hints = ["%s"] to that rust_library.' % (ctx.label.name, ctx.attr.config_hint.label, crate.label, ctx.attr.config_hint.label))
+
     providers = [
         crate[CcBindingsFromRustInfo].cc_info,
         # If we try to generate rust bindings of c++ bindings of this rust crate, we get back
@@ -733,10 +743,73 @@ cc_bindings_from_rust = rule(
             providers = [CcBindingsFromRustInfo],
             aspects = [cc_bindings_from_rust_aspect],
         ),
+        "config_hint": attr.label(
+            doc = "Set by the cpp_api_from_rust macro; the generated config hint that must be attached to `crate`.",
+            mandatory = False,
+        ),
     },
 )
 
-cpp_api_from_rust = cc_bindings_from_rust
+def cpp_api_from_rust(name, crate, namespace = None, extra_cc_hdrs = [], extra_cc_srcs = [], **kwargs):
+    """Generates C++ bindings for a Rust library.
+
+    This macro automatically generates an aspect hint target named `<name>.hint`
+    (e.g., `foo_cc.hint` if `name` is `foo_cc`) which passes the configuration
+    below (`namespace`, `extra_cc_hdrs`, `extra_cc_srcs`) to the bindings
+    generator. Add it to the `aspect_hints` attribute of the `rust_library`
+    specified in `crate`:
+
+    ```python
+    rust_library(
+        name = "foo",
+        aspect_hints = [":foo_cc.hint"],
+    )
+
+    cpp_api_from_rust(
+        name = "foo_cc",
+        crate = ":foo",
+        namespace = "foo",
+    )
+    ```
+
+    If configuration is given but the hint is not attached to `crate`, analysis
+    fails. Crates that only need a configuration for *transitively* generated
+    bindings (no bindings target of their own) can use the standalone
+    `cpp_api_from_rust_library_config` from
+    `//bazel:cpp_api_from_rust_library_config.bzl`.
+
+    Args:
+        name: Name of the bindings target.
+        crate: Rust library to generate bindings for.
+        namespace: The top level C++ namespace of the generated bindings
+            (defaults to the crate name).
+        extra_cc_hdrs: C++ header files to be included in addition to the generated C++ bindings.
+        extra_cc_srcs: C++ source files to be compiled in addition to the generated C++ bindings.
+        **kwargs: Additional arguments to pass to the bindings rule.
+    """
+    hint_name = name + ".hint"
+    hint_kwargs = {
+        k: v
+        for k, v in kwargs.items()
+        if k in ("compatible_with", "restricted_to", "testonly", "visibility")
+    }
+
+    cc_bindings_from_rust_library_config(
+        name = hint_name,
+        namespace = namespace,
+        extra_cc_hdrs = extra_cc_hdrs,
+        extra_cc_srcs = extra_cc_srcs,
+        **hint_kwargs
+    )
+
+    config_hint = ":" + hint_name if (namespace or extra_cc_hdrs or extra_cc_srcs) else None
+
+    cc_bindings_from_rust(
+        name = name,
+        crate = crate,
+        config_hint = config_hint,
+        **kwargs
+    )
 
 cc_bindings_from_rs = cc_bindings_from_rust
 
@@ -759,7 +832,6 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
 
     # This will be a depset of all the .rlib/.rmeta files in the stdlib.
     srcs = toolchain.rust_std
-    deps = ctx.attr.deps
 
     crate_info = rust_common.create_crate_info(
         name = crate_name,
@@ -865,6 +937,7 @@ def _cpp_api_from_rust_toolchain_bindings_impl(ctx):
                 for dep in dep_bindings_infos
             ],
         ),
+        config_hint_labels = [],
     )
 
     return [

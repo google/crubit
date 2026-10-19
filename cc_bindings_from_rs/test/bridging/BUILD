@@ -8,7 +8,6 @@ load(
     "//bazel:cpp_api_from_rust.bzl",
     "cpp_api_from_rust",
 )
-load("//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_library_config_aspect_hint.bzl", "cc_bindings_from_rust_library_config")
 load(
     "//cc_bindings_from_rs/test/golden:golden_test.bzl",
     "golden_test",
@@ -23,7 +22,7 @@ rust_library(
         "rust_type.rs",
     ],
     aspect_hints = [
-        ":cc_type_hint",
+        ":rust_type_cc_api.hint",
     ],
     edition = "2024",
     proc_macro_deps = [
@@ -31,21 +30,17 @@ rust_library(
     ],
 )
 
-cc_bindings_from_rust_library_config(
-    name = "cc_type_hint",
-    extra_cc_hdrs = ["cc_type.h"],
-)
-
 cpp_api_from_rust(
     name = "rust_type_cc_api",
     crate = ":rust_type",
+    extra_cc_hdrs = ["cc_type.h"],
 )
 
 rust_library(
     name = "rust_pointer_types",
     srcs = ["rust_pointer_types.rs"],
     aspect_hints = [
-        ":cc_type_hint",
+        ":rust_pointer_types_cc_api.hint",
     ],
     edition = "2024",
     proc_macro_deps = [
@@ -56,13 +51,14 @@ rust_library(
 cpp_api_from_rust(
     name = "rust_pointer_types_cc_api",
     crate = ":rust_pointer_types",
+    extra_cc_hdrs = ["cc_type.h"],
 )
 
 rust_library(
     name = "layout_equivalent_generics",
     srcs = ["layout_equivalent_generics.rs"],
     aspect_hints = [
-        ":layout_equivalent_generics_hint",
+        ":layout_equivalent_generics_cc_api.hint",
     ],
     edition = "2024",
     proc_macro_deps = [
@@ -70,19 +66,17 @@ rust_library(
     ],
 )
 
-cc_bindings_from_rust_library_config(
-    name = "layout_equivalent_generics_hint",
-    extra_cc_hdrs = ["cc_generics.h"],
-)
-
 cpp_api_from_rust(
     name = "layout_equivalent_generics_cc_api",
     crate = ":layout_equivalent_generics",
+    extra_cc_hdrs = ["cc_generics.h"],
+    namespace = "layout_equivalent_generics",
 )
 
 golden_test(
     name = "layout_equivalent_generics_golden_test",
     basename = "layout_equivalent_generics",
+    custom_namespace = True,
     golden_h = "layout_equivalent_generics_cc_api.h",
     golden_rs = "layout_equivalent_generics_cc_api_impl.rs",
     rust_library = "layout_equivalent_generics",
@@ -137,7 +131,7 @@ rust_library(
     name = "mapped_cpp_type",
     srcs = ["mapped_cpp_type.rs"],
     aspect_hints = [
-        ":mapped_cpp_type_hint",
+        ":mapped_cpp_type_cc_api.hint",
     ],
     edition = "2024",
     proc_macro_deps = [
@@ -145,14 +139,10 @@ rust_library(
     ],
 )
 
-cc_bindings_from_rust_library_config(
-    name = "mapped_cpp_type_hint",
-    extra_cc_hdrs = ["mapped_cpp_type_def.h"],
-)
-
 cpp_api_from_rust(
     name = "mapped_cpp_type_cc_api",
     crate = ":mapped_cpp_type",
+    extra_cc_hdrs = ["mapped_cpp_type_def.h"],
 )
 
 crubit_cc_test(
