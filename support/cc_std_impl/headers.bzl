@@ -71,7 +71,10 @@ LIBCXX_HEADERS = [
 ]
 
 LIBC_HEADERS = [
-    "netinet/in.h",
     "netinet/udp.h",
     "sys/socket.h",
-]
+] + select({
+    "//conditions:default": [
+        "netinet/in.h",
+    ],
+})
