@@ -317,6 +317,29 @@ const clang::ClassTemplateDecl* absl_nullable LookupCanonicalRsStdImpl(
   return impl->getCanonicalDecl();
 }
 
+// Returns true if `type`, as written, contains a typedef that Crubit maps to a
+// distinct primitive type (such as `size_t` or `ptrdiff_t`, which map to
+// `usize` and `isize` rather than their underlying `unsigned long` / `long`).
+bool ContainsPrimitiveTypedef(clang::QualType type) {
+  // `RecursiveASTVisitor` walks the type as written: it descends into
+  // pointees, template arguments, and function parameter and return types,
+  // but not into the underlying type of a typedef.
+  struct PrimitiveTypedefFinder
+      : public clang::RecursiveASTVisitor<PrimitiveTypedefFinder> {
+    bool found = false;
+    bool VisitType(clang::Type* type) {
+      if (GetPrimitive(*type).has_value()) {
+        found = true;
+        return false;
+      }
+      return true;
+    }
+  };
+  PrimitiveTypedefFinder finder;
+  finder.TraverseType(type);
+  return finder.found;
+}
+
 }  // namespace
 
 Importer::Importer(Invocation& invocation, clang::ASTContext& ctx,
@@ -2474,9 +2497,10 @@ CcType Importer::WithAsWrittenTemplateArgs(
     bool assume_lifetimes) {
   // The specialization decl is shared by every use with the same canonical
   // arguments, so it cannot carry anything that differs between uses: e.g.
-  // the nullability in `std::vector<absl_nonnull std::unique_ptr<T>>`, or the
-  // lifetime in `absl::Span<View $a>`. Record the argument as written here,
-  // and let consumers prefer it over the decl's.
+  // the nullability in `std::vector<absl_nonnull std::unique_ptr<T>>`, the
+  // lifetime in `absl::Span<View $a>`, or the typedef sugar in
+  // `std::optional<size_t>`. Record the argument as written here, and let
+  // consumers prefer it over the decl's.
   //
   // Only a single argument, written as a type, is recorded: every consumer of
   // `template_args` today assumes a single type argument (see
@@ -2511,7 +2535,8 @@ CcType Importer::WithAsWrittenTemplateArgs(
   // support headers its generated code includes).
   const bool has_explicit_lifetimes =
       assume_lifetimes && ContainsExplicitLifetimes(arg_type);
-  if (!has_explicit_lifetimes && !ContainsKnownNullability(arg_type)) {
+  if (!has_explicit_lifetimes && !ContainsKnownNullability(arg_type) &&
+      !ContainsPrimitiveTypedef(arg_type)) {
     return converted;
   }
 
