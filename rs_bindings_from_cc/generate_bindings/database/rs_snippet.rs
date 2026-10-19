@@ -340,6 +340,13 @@ pub enum UniformReprTemplateType<'a> {
         // The lifetime for the span, if assumed lifetimes are turned on.
         lifetime: Option<Lifetime>,
     },
+    /// absl::optional_ref<T>
+    AbslOptionalRef {
+        is_const: bool,
+        is_cref: bool,
+        element_type: RsTypeKind<'a>,
+        lifetime: Option<Lifetime>,
+    },
     /// cc_std::string_view<'a>
     StdStringView { in_cc_std: bool, lifetime: Lifetime },
 }
@@ -492,6 +499,23 @@ impl<'a> UniformReprTemplateType<'a> {
                     // Spans returned by a C++ function have an unclear lifetime, and so must be
                     // returned as a raw span.
                     include_lifetime: !options.is_return_type,
+                    element_type: element_type_kind,
+                    lifetime: if lifetimes.is_empty() { None } else { Some(lifetimes[0].clone()) },
+                })))
+            }
+            Some(TemplateSpecializationKind::AbslOptionalRef { raw_element_type }) => {
+                let element_type = choose_one_type(raw_element_type, template_args)?;
+                let element_type_kind = type_arg(&element_type)?;
+                let is_const = element_type.is_const();
+                if lifetimes.len() > 1 {
+                    bail!("Internal error: optional_ref was given too many lifetimes.")
+                }
+                let is_cref = options.assume_lifetimes
+                    && (!element_type_kind.is_complete()
+                        || (options.is_return_type && !options.is_operator));
+                Ok(Some(Rc::new(UniformReprTemplateType::AbslOptionalRef {
+                    is_const,
+                    is_cref,
                     element_type: element_type_kind,
                     lifetime: if lifetimes.is_empty() { None } else { Some(lifetimes[0].clone()) },
                 })))
@@ -660,6 +684,29 @@ impl<'a> UniformReprTemplateType<'a> {
                     }
                 }
             }
+            Self::AbslOptionalRef { is_const, is_cref, element_type, lifetime } => {
+                let element_type_tokens = element_type.to_token_stream(db);
+                if let Some(lifetime) = lifetime {
+                    if *is_cref {
+                        if *is_const {
+                            quote! { ::core::option::Option<::cref::CRef<#lifetime, #element_type_tokens>> }
+                        } else {
+                            quote! { ::core::option::Option<::cref::CMut<#lifetime, #element_type_tokens>> }
+                        }
+                    } else {
+                        let lifetime = lifetime.format_for_reference();
+                        if *is_const {
+                            quote! { ::core::option::Option<& #lifetime #element_type_tokens> }
+                        } else if element_type.is_unpin() {
+                            quote! { ::core::option::Option<& #lifetime mut #element_type_tokens> }
+                        } else {
+                            quote! { ::core::option::Option<::core::pin::Pin<& #lifetime mut #element_type_tokens>> }
+                        }
+                    }
+                } else {
+                    quote! { ::core::option::Option<::core::ptr::NonNull<#element_type_tokens>> }
+                }
+            }
             Self::StdStringView { in_cc_std, lifetime } => {
                 // nb: shows up when we don't use a type alias
                 if *in_cc_std {
@@ -683,6 +730,7 @@ impl<'a> UniformReprTemplateType<'a> {
                 Some(Lifetime::elided())
             }
             Self::AbslSpan { include_lifetime: false, lifetime: None, .. } => None,
+            Self::AbslOptionalRef { lifetime, .. } => lifetime.clone(),
             Self::StdStringView { lifetime, .. } => Some(lifetime.clone()),
         }
     }
@@ -843,6 +891,7 @@ impl<'a> CustomizeMethodsKind<'a> {
                 | TemplateSpecializationKind::C9Co { .. }
                 | TemplateSpecializationKind::AbslFlatHashSet { .. }
                 | TemplateSpecializationKind::AbslSpan { .. }
+                | TemplateSpecializationKind::AbslOptionalRef { .. }
                 | TemplateSpecializationKind::NonSpecial,
             )
             | None => Ok(None),
@@ -2115,6 +2164,17 @@ impl<'a> RsTypeKind<'a> {
                 {
                     return false;
                 }
+                if matches!(
+                    uniform_repr_template_type.as_deref(),
+                    Some(UniformReprTemplateType::AbslOptionalRef {
+                        is_const: false,
+                        is_cref: false,
+                        lifetime: Some(_),
+                        ..
+                    })
+                ) {
+                    return false;
+                }
                 record.should_derive_copy()
             }
             RsTypeKind::Enum { .. } => true,
@@ -2573,6 +2633,19 @@ fn all_static_lifetimes_internal<'a>(
                     } => UniformReprTemplateType::AbslSpan {
                         is_const: *is_const,
                         include_lifetime: *include_lifetime,
+                        element_type: all_static_lifetimes_internal(element_type, strip_aliases)
+                            .as_ref()
+                            .clone(),
+                        lifetime: lifetime.as_ref().map(|_| Lifetime::new("static")),
+                    },
+                    UniformReprTemplateType::AbslOptionalRef {
+                        is_const,
+                        is_cref,
+                        element_type,
+                        lifetime,
+                    } => UniformReprTemplateType::AbslOptionalRef {
+                        is_const: *is_const,
+                        is_cref: *is_cref,
                         element_type: all_static_lifetimes_internal(element_type, strip_aliases)
                             .as_ref()
                             .clone(),

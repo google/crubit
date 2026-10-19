@@ -767,6 +767,20 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
           /*lifetimes=*/nullptr, /*nullable=*/true,
           ictx.AreAssumedLifetimesEnabledForTarget(
               ictx.GetOwningTarget(*specialization_decl))));
+    } else if (templated_decl->getName() == "optional_ref") {
+      if (specialization_decl->getTemplateArgs().size() != 1) {
+        return absl::InvalidArgumentError(
+            "absl::optional_ref template specialization should have 1 "
+            "argument");
+      }
+      clang::QualType t = specialization_decl->getTemplateArgs()[0].getAsType();
+      // TODO(b/454627672): is specialization_decl the right decl to check for
+      // assumed_lifetimes?
+      return TemplateSpecialization::AbslOptionalRef{ictx.ConvertQualType(
+          t,
+          /*lifetimes=*/nullptr, /*nullable=*/true,
+          ictx.AreAssumedLifetimesEnabledForTarget(
+              ictx.GetOwningTarget(*specialization_decl)))};
     } else if (templated_decl->getName() == "flat_hash_map") {
       LOG_IF(FATAL, specialization_decl->getTemplateArgs().size() < 2)
           << "absl::flat_hash_map should have at least two template args";

@@ -19,7 +19,7 @@ use database::db::{BindingsGenerator, CodegenFunctions, Interner};
 use database::intern;
 use database::rs_snippet::{
     resolve_bridge_rust_name, BackingType, BridgeRsTypeKind, Callable, FnTrait, LifetimeOptions,
-    Mutability, PassingConvention, RsTypeKind, RustPtrKind, UnsafeReason,
+    Mutability, PassingConvention, RsTypeKind, RustPtrKind, UniformReprTemplateType, UnsafeReason,
 };
 use dyn_format::Format;
 use error_report::{bail, ErrorReporting, ReportFatalError};
@@ -838,7 +838,16 @@ fn rs_type_kind_safety<'a>(
                 db.rs_type_kind_safety(result_type.as_ref().clone())
             }
         },
-        RsTypeKind::Record { record, lifetimes, .. } => {
+        RsTypeKind::Record { record, uniform_repr_template_type, lifetimes, .. } => {
+            if let Some(UniformReprTemplateType::AbslOptionalRef {
+                element_type, lifetime, ..
+            }) = uniform_repr_template_type.as_deref()
+            {
+                if lifetime.is_none() {
+                    return Some(UnsafeReason(intern!(db.interner(), "raw pointer")));
+                }
+                return db.rs_type_kind_safety(element_type.clone());
+            }
             if !record.is_raw_string_view()
                 && db
                     .ir()

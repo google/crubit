@@ -2297,6 +2297,8 @@ pub enum TemplateSpecializationKind {
     StdAtomic { raw_element_type: CcType },
     /// absl::Span<T>
     AbslSpan { raw_element_type: CcType },
+    /// absl::optional_ref<T>
+    AbslOptionalRef { raw_element_type: CcType },
     /// absl::flat_hash_map<K, V, ...>
     AbslFlatHashMap { raw_key_type: CcType, raw_value_type: CcType },
     /// absl::flat_hash_set<T, ...>
