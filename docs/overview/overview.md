@@ -142,7 +142,7 @@ bindings that Crubit generates:
     standard library can be generated even though `rs_bindings_from_cc` has
     minimal knowledge about this specific type (except for instructing
     `rs_bindings_from_cc` to include `From` trait implementations from
-    `crubit/support/cc_std/string_view.rs`).
+    `crubit/support/cc_std_impl/string_view.rs`).
 
 --------------------------------------------------------------------------------
 
