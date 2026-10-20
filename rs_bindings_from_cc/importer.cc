@@ -3184,19 +3184,34 @@ std::string Importer::GetMangledName(const clang::NamedDecl& named_decl) const {
   // more than one global declaration for a given constructor or destructor!
   //
   //   * (Ctor|Dtor)_Complete is a function which constructs / destroys the
-  //     entire object. This is what we want. :)
+  //     entire object. This is what we want. :)  (Except for destructors in
+  //     the Microsoft C++ ABI - see below.)
   //   * Dtor_Deleting is a function which additionally calls operator delete.
   //   * (Ctor|Dtor)_Base is a function which constructs/destroys the object but
   //     NOT including virtual base class subobjects.
   //   * (Ctor|Dtor)_Comdat: I *believe* this is the identifier used to
   //     deduplicate inline functions, and is not callable.
-  //   * Dtor_(Copying|Default)Closure: These only exist in the MSVC++ ABI,
-  //     which we don't support for now. I don't know when they are used.
+  //   * Ctor_(Copying|Default)Closure: These only exist in the MSVC++ ABI.
+  //     They are compiler-generated wrappers with a simpler signature, for
+  //     constructors with default arguments or a non-default calling
+  //     convention (used for `dllexport` and for copying exception objects).
+  //     Crubit does not call them.
   //
   // It was hard to piece this together, so writing it down here to explain why
   // we magically picked the *_Complete variants.
   if (auto dtor = clang::dyn_cast<clang::CXXDestructorDecl>(&named_decl)) {
-    decl = clang::GlobalDecl(dtor, clang::CXXDtorType::Dtor_Complete);
+    clang::CXXDtorType dtor_type = clang::CXXDtorType::Dtor_Complete;
+    // In the Microsoft C++ ABI, the translation unit that defines a destructor
+    // normally only emits the base destructor (`??1`).  The complete destructor
+    // (`??_D`, "vbase dtor") is emitted on demand by its callers.  For classes
+    // without virtual bases the two variants are equivalent, and Clang also
+    // calls the base destructor in this case (see
+    // `MicrosoftCXXABI::EmitDestructorCall`).
+    if (ctx_.getTargetInfo().getCXXABI().isMicrosoft() &&
+        dtor->getParent()->getNumVBases() == 0) {
+      dtor_type = clang::CXXDtorType::Dtor_Base;
+    }
+    decl = clang::GlobalDecl(dtor, dtor_type);
   } else if (auto ctor =
                  clang::dyn_cast<clang::CXXConstructorDecl>(&named_decl)) {
     decl = clang::GlobalDecl(ctor, clang::CXXCtorType::Ctor_Complete);

@@ -200,6 +200,64 @@ fn test_function_with_asm_label() {
     );
 }
 
+/// Checks the mangled name of the destructor of a class without virtual
+/// bases.  The Rust bindings can link directly to a non-inline destructor,
+/// so the mangled name has to refer to a symbol that the translation unit
+/// that defines the destructor emits.  In the Microsoft C++ ABI, this is
+/// the base destructor.
+#[gtest]
+fn test_mangled_name_of_destructor() {
+    let proto = ir_proto_from_cc("struct Class { ~Class(); };").unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
+    let mangled_name = if test_platform().uses_msvc_cxx_abi() {
+        "??1Class@@QEAA@XZ" // Base destructor.
+    } else {
+        "_ZN5ClassD1Ev" // Complete destructor.
+    };
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                cc_name: Destructor,
+                rs_name: Destructor, ...
+                mangled_name: #mangled_name, ...
+            }
+        }
+    );
+}
+
+/// Checks the mangled name of the destructor of a class with virtual bases.
+/// In the Microsoft C++ ABI, the base destructor does not destroy the
+/// virtual bases.  Therefore the complete destructor ("vbase dtor") is
+/// used, like in the Itanium C++ ABI.
+#[gtest]
+fn test_mangled_name_of_destructor_with_virtual_base() {
+    let proto = ir_proto_from_cc(
+        r#"
+        struct Base {};
+        struct Derived : virtual Base { ~Derived(); }; "#,
+    )
+    .unwrap();
+
+    let ir = make_test_ir(&proto).unwrap();
+    let mangled_name = if test_platform().uses_msvc_cxx_abi() {
+        "??_DDerived@@QEAAXXZ" // Complete destructor.
+    } else {
+        "_ZN7DerivedD1Ev" // Complete destructor.
+    };
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                cc_name: Destructor,
+                rs_name: Destructor, ...
+                mangled_name: #mangled_name, ...
+            }
+        }
+    );
+}
+
 #[gtest]
 fn test_function_with_unnamed_parameters() {
     let proto = ir_proto_from_cc("int f(int, int);").unwrap();

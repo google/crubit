@@ -2038,7 +2038,7 @@ fn test_thunk_ident_special_names() -> Result<()> {
 
     let destructor = ir.get_functions_by_name(&UnqualifiedIdentifier::Destructor).next().unwrap();
     let expected = if uses_msvc_cxx_abi {
-        "__rust_thunk___u63__u63__DClass_u64__u64_QEAAXXZ" // `??_DClass@@QEAAXXZ`
+        "__rust_thunk___u63__u63_1Class_u64__u64_QEAA_u64_XZ" // `??1Class@@QEAA@XZ`
     } else {
         "__rust_thunk___ZN5ClassD1Ev"
     };
