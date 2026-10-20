@@ -10,7 +10,10 @@ extern crate rustc_span;
 use crate::avoid_colliding_types::{AvoidCollidingTypes, TypeCollisionRisk};
 use crate::format_cc_ident;
 use crate::format_type::{get_cc_template_args, replace_all_regions_with_static, CcParamTy};
-use crate::generate_doc_comment;
+use crate::generate_ctor::{
+    generate_copy_ctor_and_assignment_operator, generate_default_ctor,
+    generate_move_ctor_and_assignment_operator,
+};
 use crate::generate_enum;
 use crate::generate_enum::{anonymous_field_ident, scalar_value_to_string};
 use crate::generate_function::{
@@ -19,11 +22,10 @@ use crate::generate_function::{
 };
 use crate::generate_function_thunk::{generate_ctor_thunk_call, trait_method_thunk_name};
 use crate::{
-    can_be_made_layout_compatible, does_type_implement_trait, generate_const,
-    generate_copy_ctor_and_assignment_operator, generate_default_ctor, generate_deprecated_tag,
-    generate_move_ctor_and_assignment_operator, generate_must_use_tag, generate_trait_thunks,
+    can_be_made_layout_compatible, does_type_implement_trait, generate_deprecated_tag,
+    generate_doc_comment, generate_must_use_tag, generate_trait_thunks,
     generate_unsupported_def_with_args, get_layout, get_tag_size_with_padding, is_copy,
-    BridgedBuiltin, RsSnippet, SortedByDef, TraitThunks,
+    matches_qualified_name, normalize_ty, BridgedBuiltin, RsSnippet, SortedByDef, TraitThunks,
 };
 
 use arc_anyhow::{Context, Result};
@@ -338,7 +340,7 @@ pub(crate) fn generate_associated_item<'tcx>(
                     } else {
                         TypeLocation::Other
                     };
-                    crate::create_type_alias_with_rs_type(
+                    create_type_alias_with_rs_type(
                         db,
                         def_id,
                         &rs_type_spelling,
@@ -4077,4 +4079,267 @@ fn generate_into_iterator_impls<'tcx>(
             })
         })
         .collect())
+}
+
+fn format_const_value<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    const_value: ConstValue,
+    ty: Ty<'tcx>,
+) -> Result<CcSnippet<'tcx>> {
+    let tcx = db.tcx();
+    if const_value == ConstValue::ZeroSized {
+        bail!("const of type `{ty}` cannot be generated as zero-sized consts are not supported in C++.");
+    }
+
+    match *ty.kind() {
+        ty::TyKind::Bool | ty::TyKind::Int(_) | ty::TyKind::Uint(_) | ty::TyKind::Float(_) => {
+            let ConstValue::Scalar(scalar) = const_value else {
+                bail!("Expected scalar value for const of type `{ty}`, but found: {const_value:?}");
+            };
+            let val_str = scalar_value_to_string(tcx, scalar, *ty.kind())?;
+            let tokens = val_str
+                .parse::<TokenStream>()
+                .map_err(|e| anyhow!("Failed to parse scalar tokens: {e}"))?;
+            Ok(CcSnippet::new(tokens))
+        }
+        ty::TyKind::Ref(_region, referent_ty, mutability)
+            if matches!(referent_ty.kind(), ty::TyKind::Str) =>
+        {
+            if mutability.is_mut() {
+                bail!("const of type `{ty}` cannot be generated as mutable references are not supported.");
+            }
+            let Some(slice) = const_value.try_get_slice_bytes_for_diagnostics(tcx) else {
+                bail!("Failed to read &str slice bytes for constant of type `{ty}`");
+            };
+            let str_data = std::str::from_utf8(slice)
+                .map_err(|e| anyhow!("Invalid UTF-8 in &str constant: {e}"))?;
+            let tokens = quote! { rs_std::StrRef(#str_data) };
+            Ok(CcSnippet::with_include(tokens, db.support_header("rs_std/str_ref.h")))
+        }
+        ty::TyKind::Adt(adt_def, _) if adt_def.is_struct() => {
+            if tcx.crate_name(adt_def.did().krate).as_str() == "ffi_11"
+                && let ConstValue::Scalar(scalar) = const_value
+            {
+                let val_str = scalar_value_to_string(tcx, scalar, *ty.kind())?;
+                let tokens = val_str
+                    .parse::<TokenStream>()
+                    .map_err(|e| anyhow!("Failed to parse scalar tokens: {e}"))?;
+                return Ok(CcSnippet::new(tokens));
+            }
+
+            if let Err(reason) = is_struct_aggregate(db, Some(adt_def.did()), ty) {
+                bail!("const of type `{ty}` cannot be generated as it is not a C++ aggregate: {reason}");
+            }
+
+            let destructured = tcx
+                .try_destructure_mir_constant_for_user_output(const_value, ty)
+                .ok_or_else(|| anyhow!("Failed to destructure constant of type `{ty}`"))?;
+
+            if destructured.fields.is_empty() {
+                bail!("const of type `{ty}` cannot be generated as zero-sized consts are not supported in C++.");
+            }
+
+            let mut prereqs = CcPrerequisites::default();
+            let mut field_tokens = Vec::with_capacity(destructured.fields.len());
+            let variant = adt_def.non_enum_variant();
+            let features = db.crate_features(db.source_crate_num());
+            for (index, (field_def, &(field_const_val, field_ty))) in
+                variant.fields.iter().zip(destructured.fields.iter()).enumerate()
+            {
+                let field_snippet = format_const_value(db, field_const_val, field_ty)?;
+                let field_value = field_snippet.into_tokens(&mut prereqs);
+                let name = field_def.ident(tcx).to_string();
+                let unkeyworded = code_gen_utils::unkeyword_cpp_ident(&name, features);
+                let field_ident = format_cc_ident(db, unkeyworded.as_ref())
+                    .unwrap_or_else(|_err| format_ident!("__field{index}"));
+                field_tokens.push(quote! { .#field_ident = #field_value });
+            }
+
+            let type_snippet = db.format_ty_for_cc(ty, TypeLocation::Const)?;
+            let cc_type = type_snippet.into_tokens(&mut prereqs);
+
+            let tokens = quote! { #cc_type { #(#field_tokens),* } };
+            Ok(CcSnippet { tokens, prereqs })
+        }
+        ty::TyKind::Array(_element_ty, _len) => {
+            let destructured = tcx
+                .try_destructure_mir_constant_for_user_output(const_value, ty)
+                .ok_or_else(|| anyhow!("Failed to destructure constant of type `{ty}`"))?;
+
+            let mut prereqs = CcPrerequisites::default();
+            let mut elem_tokens = Vec::with_capacity(destructured.fields.len());
+            for &(elem_const_val, elem_ty) in destructured.fields {
+                let elem_snippet = format_const_value(db, elem_const_val, elem_ty)?;
+                elem_tokens.push(elem_snippet.into_tokens(&mut prereqs));
+            }
+
+            let type_snippet = db.format_ty_for_cc(ty, TypeLocation::Const)?;
+            let cc_type = type_snippet.into_tokens(&mut prereqs);
+
+            let tokens = quote! { #cc_type { #(#elem_tokens),* } };
+            Ok(CcSnippet { tokens, prereqs })
+        }
+        _ => {
+            // TODO: b/552616991 - Support more constant types.
+            bail!("const of type `{ty}` cannot be generated as only scalars, string references, and simple aggregate types are supported.");
+        }
+    }
+}
+
+pub(crate) fn generate_const<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+    generic_args: Option<ty::GenericArgsRef<'tcx>>,
+) -> Result<ApiSnippets<'tcx>> {
+    use crate::get_generic_args::GenericClausesExt;
+    let tcx = db.tcx();
+    if !tcx.generics_of(def_id).is_own_empty() {
+        bail!("Generic constants are not supported");
+    }
+    if generic_args.is_some() && tcx.trait_impl_of_assoc(def_id).is_none() {
+        #[cfg_accessible(rustc_middle::ty::GenericPredicates)]
+        let explicit_predicates = tcx.explicit_predicates_of(def_id);
+        #[cfg_accessible(rustc_middle::ty::GenericClauses)]
+        let explicit_predicates = tcx.explicit_clauses_of(def_id);
+        if !explicit_predicates.clauses().is_empty() {
+            bail!("Associated constants with their own predicates are not supported");
+        }
+    }
+    // TODO: b/457843120 - Remove this workaround once we can properly support float constants.
+    let unsupported_consts = [
+        ["core", "f32", "INFINITY"],
+        ["core", "f64", "INFINITY"],
+        ["core", "f32", "NEG_INFINITY"],
+        ["core", "f64", "NEG_INFINITY"],
+        ["core", "f32", "NAN"],
+        ["core", "f64", "NAN"],
+    ];
+    if unsupported_consts.iter().any(|const_path| matches_qualified_name(db, def_id, const_path)) {
+        bail!(
+            "Cannot generate bindings to unsupported constant: {}",
+            tcx.item_name(def_id).as_str()
+        )
+    }
+    let (ty, const_value) = match generic_args {
+        Some(args) => {
+            let typing_env = ty::TypingEnv::fully_monomorphized();
+            #[rustversion::before(2026-04-19)]
+            let raw_ty = tcx.type_of(def_id).instantiate(tcx, args);
+            #[rustversion::since(2026-04-19)]
+            let raw_ty = tcx.type_of(def_id).instantiate(tcx, args).skip_normalization();
+            let ty = query_compiler::try_normalize(tcx, typing_env, raw_ty).map_err(|_| {
+                anyhow!("Failed to normalize const type for {}", tcx.def_path_str(def_id))
+            })?;
+            let const_value = tcx
+                .const_eval_resolve(
+                    typing_env,
+                    rustc_middle::mir::UnevaluatedConst::new(def_id, args),
+                    tcx.def_span(def_id),
+                )
+                .map_err(|err| {
+                    anyhow!("Failed to evaluate constant `{}`: {err:?}", tcx.def_path_str(def_id))
+                })?;
+            (ty, const_value)
+        }
+        None => {
+            let ty = normalize_ty(
+                tcx,
+                tcx.param_env(def_id),
+                tcx.type_of(def_id).instantiate_identity(),
+            );
+            let const_value = tcx.const_eval_poly(def_id).map_err(|err| {
+                anyhow!("Failed to evaluate constant `{}`: {err:?}", tcx.def_path_str(def_id))
+            })?;
+            (ty, const_value)
+        }
+    };
+    let rust_type = ty;
+    let cc_type = db.format_ty_for_cc(rust_type, TypeLocation::Const)?;
+    let cc_name = format_cc_ident(db, tcx.item_name(def_id).as_str())?;
+
+    let cc_value = format_const_value(db, const_value, ty)?;
+
+    let is_self_referential = tcx.inherent_impl_of_assoc(def_id).is_some_and(|impl_id| {
+        let impl_ty = match generic_args {
+            Some(args) => {
+                #[rustversion::before(2026-04-19)]
+                let raw_impl_ty = tcx.type_of(impl_id).instantiate(tcx, args);
+                #[rustversion::since(2026-04-19)]
+                let raw_impl_ty = tcx.type_of(impl_id).instantiate(tcx, args).skip_normalization();
+                query_compiler::try_normalize(
+                    tcx,
+                    ty::TypingEnv::fully_monomorphized(),
+                    raw_impl_ty,
+                )
+                .ok()
+            }
+            None => Some(normalize_ty(
+                tcx,
+                tcx.param_env(impl_id),
+                tcx.type_of(impl_id).instantiate_identity(),
+            )),
+        };
+        impl_ty.is_some_and(|impl_ty| {
+            tcx.erase_and_anonymize_regions(impl_ty) == tcx.erase_and_anonymize_regions(ty)
+        })
+    });
+
+    let cc_type_tokens = cc_type.tokens.clone();
+    let cc_value_tokens = cc_value.tokens.clone();
+    let main_api = [cc_type, cc_value].map_snippets(|[cc_type, cc_value]| {
+        if is_self_referential {
+            quote! {
+                static const #cc_type #cc_name;
+            }
+        } else {
+            quote! {
+                static constexpr #cc_type #cc_name = #cc_value;
+            }
+        }
+    });
+
+    Ok(if is_self_referential {
+        ApiSnippets {
+            main_api,
+            // We know this works because cc_type is Self when is_self_referential is true.
+            cc_details: CcSnippet::new(quote! {
+                constexpr #cc_type_tokens (#cc_type_tokens :: #cc_name) = #cc_value_tokens;
+            }),
+            rs_details: RsSnippet::default(),
+        }
+    } else {
+        main_api.into_main_api()
+    })
+}
+
+pub(crate) fn create_type_alias_with_rs_type<'tcx>(
+    db: &BindingsGenerator<'tcx>,
+    def_id: DefId,
+    rs_type: &str,
+    alias_name: &str,
+    alias_type: Ty<'tcx>,
+    type_location: TypeLocation,
+) -> Result<CcSnippet<'tcx>> {
+    let doc_comment = generate_doc_comment(db, def_id);
+    let cc_bindings = db.format_ty_for_cc(alias_type, type_location)?;
+    let alias_name = format_cc_ident(db, alias_name).context("Error formatting type alias name")?;
+
+    let mut attributes = vec![quote! {CRUBIT_INTERNAL_RUST_TYPE(#rs_type)}];
+    if let Some(cc_deprecated_tag) = generate_deprecated_tag(db.tcx(), def_id) {
+        attributes.push(cc_deprecated_tag);
+    }
+
+    let bracketed_alias_name = if db.kythe_annotations() {
+        quote! { __CAPTURE_BEGIN__ #alias_name __CAPTURE_END__ }
+    } else {
+        quote! { #alias_name }
+    };
+
+    let mut snippet = cc_bindings.map_snippets(|actual_type_name| {
+        quote! { __NEWLINE__ #doc_comment using #bracketed_alias_name #(#attributes)* = #actual_type_name; }
+    });
+    snippet.prereqs.move_defs_to_fwd_decls();
+    snippet.prereqs.includes.insert(db.support_header("annotations_internal.h"));
+
+    Ok(snippet)
 }

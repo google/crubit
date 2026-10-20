@@ -19,6 +19,7 @@ rust_library(
     srcs = [
         "avoid_colliding_types.rs",
         "format_type.rs",
+        "generate_ctor.rs",
         "generate_enum.rs",
         "generate_function.rs",
         "generate_function_thunk.rs",

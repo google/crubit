@@ -3,15 +3,15 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use crate::format_type::replace_all_regions_with_static;
+use crate::generate_ctor::{
+    generate_copy_ctor_and_assignment_operator, generate_default_ctor,
+    generate_move_ctor_and_assignment_operator,
+};
 use crate::generate_enum::{anonymous_field_ident, scalar_value_to_string};
 use crate::generate_struct_and_union::{
     generate_associated_item, generate_fields, generate_relocating_ctor, has_type_or_const_vars,
 };
-use crate::{
-    generate_copy_ctor_and_assignment_operator, generate_default_ctor,
-    generate_move_ctor_and_assignment_operator, generate_unsupported_def,
-    generate_unsupported_def_with_args,
-};
+use crate::{generate_unsupported_def, generate_unsupported_def_with_args};
 use arc_anyhow::{bail, Result};
 use code_gen_utils::{escape_non_identifier_chars, CcInclude};
 use database::code_snippet::{
