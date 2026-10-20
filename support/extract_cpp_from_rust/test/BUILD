@@ -50,7 +50,6 @@ rust_test_with_embedded_cpp(
     name = "rust_test_with_embedded_cpp_test",
     srcs = ["rust_test_with_embedded_cpp_test.rs"],
     deps_of_cc_library = ["@abseil-cpp//absl/strings:string_view"],
-    harness = "libtest",
     deps = [
         "//support:ctor",
         "@crate_index//:googletest",

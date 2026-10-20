@@ -30,7 +30,6 @@ rust_api_from_cpp(
 rust_test(
     name = "user_of_cpp_api",
     srcs = ["user_of_cpp_api.rs"],
-    harness = "libtest",
     deps = [
         ":cpp_api_rust",
         "@crate_index//:googletest",
