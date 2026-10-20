@@ -314,6 +314,11 @@ class Importer final : public ImportContext {
   // to the current target, because it is imported as if it were a hidden
   // friend of a record from the current target.
   const clang::FunctionDecl* absl_nullable inherited_friend_operator_ = nullptr;
+
+  // Number of fresh class template specialization imports currently in
+  // progress on the call stack. Used to prevent unbounded recursive template
+  // instantiation (e.g. `template <class T> struct W { W<W>* p; };`).
+  int specialization_import_depth_ = 0;
 };  // class Importer
 
 }  // namespace crubit
