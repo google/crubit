@@ -2778,12 +2778,13 @@ impl<'pb> Record<'pb> {
     pub fn is_string_view(&self) -> bool {
         match &self.template_specialization {
             Some(TemplateSpecialization { defining_target, kind, .. }) => {
-                let is_in_cc_std = *defining_target
-                    == BazelLabel::from("//support/cc_std:cc_std")
-                    || *defining_target
-                        == BazelLabel::from(
-                            "//third_party/crosstool/rust/stable/crubit/support/cc_std:cc_std",
-                        );
+                let is_in_cc_std = [
+                    "//support/cc_std:cc_std",
+                    "//third_party/crosstool/rust/stable/crubit/support/cc_std:cc_std",
+                    "//third_party/crosstool/rust/stable_nonprod/crubit/support/cc_std:cc_std",
+                ]
+                .into_iter()
+                .any(|label| *defining_target == BazelLabel::from(label));
                 if is_in_cc_std {
                     let is_string_view = *kind == TemplateSpecializationKind::StdStringView
                         || *kind == TemplateSpecializationKind::StdWStringView;
@@ -5075,5 +5076,32 @@ mod tests {
         let ir = proto_to_ir(proto.as_view()).unwrap();
         let crate_ident = rs_imported_crate_name(&"//dep:target".into(), &ir).unwrap();
         assert_eq!(crate_ident.to_string(), "target");
+    }
+
+    #[gtest]
+    fn test_record_is_string_view() {
+        for (defining_target, expected) in [
+            ("//support/cc_std:cc_std", true),
+            ("//third_party/crosstool/rust/stable/crubit/support/cc_std:cc_std", true),
+            ("//third_party/crosstool/rust/stable_nonprod/crubit/support/cc_std:cc_std", true),
+            ("//some/other:target", false),
+        ] {
+            let proto = protobuf::proto!(::ir_rust_proto::Record {
+                rs_name: __ { identifier: "string_view" },
+                trait_derives: __ {
+                    clone: ::ir_rust_proto::TraitImplPolarity::None,
+                    copy: ::ir_rust_proto::TraitImplPolarity::None,
+                    debug: ::ir_rust_proto::TraitImplPolarity::None,
+                    send_polarity: ::ir_rust_proto::TraitImplPolarity::None,
+                    sync_polarity: ::ir_rust_proto::TraitImplPolarity::None,
+                },
+                template_specialization: __ {
+                    defining_target: defining_target,
+                    std_string_view: __ {},
+                },
+            });
+            let record = proto.as_view().to_ir();
+            assert_eq!(record.is_string_view(), expected, "target={defining_target}");
+        }
     }
 }
