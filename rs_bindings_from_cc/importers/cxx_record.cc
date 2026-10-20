@@ -582,70 +582,6 @@ bool HasPrivateOrDeletedOperatorDelete(clang::CXXRecordDecl& record_decl) {
   return false;
 }
 
-// Checks that a ClassTemplateSpecializationDecl has template arguments of the
-// form `<T, std::std_trait_name<T>>`. If so, returns `T`.
-//
-// Examples:
-//
-// ```
-// ParameterizedByTAndStdTraitT(std::vector<T, std::allocator<T>>,
-//                              "allocator") -> T
-// ParameterizedByTAndStdTraitT(std::unique_ptr<T, std::default_delete<T>>,
-//                              "default_delete") -> T
-//
-// ParameterizedByTAndStdTraitT(std::basic_string_view<T, something_else>,
-//                              "char_traits") -> error
-// ```
-absl::StatusOr<clang::QualType> ParameterizedByTAndStdTraitT(
-    ImportContext& ictx,
-    const clang::ClassTemplateSpecializationDecl* spec_decl,
-    llvm::StringRef std_trait_name) {
-  const clang::TemplateArgumentList& args = spec_decl->getTemplateArgs();
-  if (args.size() != 2) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Template specialization '", spec_decl->getNameAsString(),
-                     "' should have two template arguments"));
-  }
-
-  clang::QualType t = args[0].getAsType();
-  clang::QualType std_trait_t = args[1].getAsType();
-
-  const auto* std_trait_spec_decl =
-      clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
-          std_trait_t->getAsCXXRecordDecl());
-  if (std_trait_spec_decl == nullptr ||
-      std_trait_spec_decl->getTemplateArgs().size() != 1) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Template specialization '", std_trait_t.getAsString(),
-                     "' should have one template argument"));
-  }
-
-  const clang::CXXRecordDecl* std_trait_templated_decl =
-      std_trait_spec_decl->getSpecializedTemplate()->getTemplatedDecl();
-  if (std_trait_templated_decl == nullptr ||
-      std_trait_templated_decl->getName() != std_trait_name ||
-      !std_trait_templated_decl->getDeclContext()->isStdNamespace()) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Template specialization '", std_trait_t.getAsString(),
-                     "' is not a specialization of std::",
-                     std::string_view(std_trait_name)));
-  }
-
-  const clang::TemplateArgument& arg =
-      std_trait_spec_decl->getTemplateArgs()[0];
-  LOG_IF(FATAL, arg.getKind() != clang::TemplateArgument::Type)
-      << "Expected type template argument on type trait '"
-      << std::string_view(std_trait_name) << "'";
-  if (!ictx.ctx_.hasSameType(arg.getAsType(), t)) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Template argument '", t.getAsString(),
-                     "' does not match template argument '",
-                     arg.getAsType().getAsString(), "'"));
-  }
-
-  return t;
-}
-
 absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
     ImportContext& ictx,
     const clang::ClassTemplateSpecializationDecl* specialization_decl) {
@@ -656,9 +592,10 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
       AsTopLevelNamespace(templated_decl->getDeclContext());
   if (top_level_namespace == "std") {
     if (templated_decl->getName() == "basic_string_view") {
-      CRUBIT_ASSIGN_OR_RETURN(clang::QualType t,
-                              ParameterizedByTAndStdTraitT(
-                                  ictx, specialization_decl, "char_traits"));
+      CRUBIT_ASSIGN_OR_RETURN(
+          clang::QualType t,
+          ParameterizedByTAndStdTraitT(ictx.ctx_, specialization_decl,
+                                       "char_traits"));
       if (t->isCharType()) {
         return TemplateSpecialization::StdStringView();
       } else if (t->isWideCharType()) {
@@ -666,9 +603,10 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
       }
       // Other character types do not get special support.
     } else if (templated_decl->getName() == "unique_ptr") {
-      CRUBIT_ASSIGN_OR_RETURN(clang::QualType t,
-                              ParameterizedByTAndStdTraitT(
-                                  ictx, specialization_decl, "default_delete"));
+      CRUBIT_ASSIGN_OR_RETURN(
+          clang::QualType t,
+          ParameterizedByTAndStdTraitT(ictx.ctx_, specialization_decl,
+                                       "default_delete"));
       return TemplateSpecialization::StdUniquePtr(
           // TODO(b/454627672): is specialization_decl the right decl to check
           // for assumed_lifetimes?
@@ -703,9 +641,9 @@ absl::StatusOr<TemplateSpecialization::Kind> GetTemplateSpecializationKind(
               ictx.AreAssumedLifetimesEnabledForTarget(
                   ictx.GetOwningTarget(*specialization_decl))));
     } else if (templated_decl->getName() == "vector") {
-      CRUBIT_ASSIGN_OR_RETURN(
-          clang::QualType t,
-          ParameterizedByTAndStdTraitT(ictx, specialization_decl, "allocator"));
+      CRUBIT_ASSIGN_OR_RETURN(clang::QualType t,
+                              ParameterizedByTAndStdTraitT(
+                                  ictx.ctx_, specialization_decl, "allocator"));
       // TODO(b/454627672): is specialization_decl the right decl to check for
       // assumed_lifetimes?
       return TemplateSpecialization::StdVector(ictx.ConvertQualType(

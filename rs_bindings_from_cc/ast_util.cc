@@ -8,10 +8,12 @@
 #include <cstddef>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "absl/container/flat_hash_set.h"
 #include "absl/functional/function_ref.h"
+#include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -81,6 +83,56 @@ std::optional<llvm::StringRef> AsTopLevelNamespace(
     return std::nullopt;
   }
   return identifier_info->getName();
+}
+
+absl::StatusOr<clang::QualType> ParameterizedByTAndStdTraitT(
+    const clang::ASTContext& ast_context,
+    const clang::ClassTemplateSpecializationDecl* spec_decl,
+    llvm::StringRef std_trait_name) {
+  const clang::TemplateArgumentList& args = spec_decl->getTemplateArgs();
+  if (args.size() != 2) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Template specialization '", spec_decl->getNameAsString(),
+                     "' should have two template arguments"));
+  }
+
+  clang::QualType t = args[0].getAsType();
+  clang::QualType std_trait_t = args[1].getAsType();
+
+  const auto* std_trait_spec_decl =
+      clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
+          std_trait_t->getAsCXXRecordDecl());
+  if (std_trait_spec_decl == nullptr ||
+      std_trait_spec_decl->getTemplateArgs().size() != 1) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Template specialization '", std_trait_t.getAsString(),
+                     "' should have one template argument"));
+  }
+
+  const clang::CXXRecordDecl* std_trait_templated_decl =
+      std_trait_spec_decl->getSpecializedTemplate()->getTemplatedDecl();
+  if (std_trait_templated_decl == nullptr ||
+      std_trait_templated_decl->getName() != std_trait_name ||
+      !std_trait_templated_decl->getDeclContext()->isStdNamespace()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Template specialization '", std_trait_t.getAsString(),
+                     "' is not a specialization of std::",
+                     std::string_view(std_trait_name)));
+  }
+
+  const clang::TemplateArgument& arg =
+      std_trait_spec_decl->getTemplateArgs()[0];
+  LOG_IF(FATAL, arg.getKind() != clang::TemplateArgument::Type)
+      << "Expected type template argument on type trait '"
+      << std::string_view(std_trait_name) << "'";
+  if (!ast_context.hasSameType(arg.getAsType(), t)) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Template argument '", t.getAsString(),
+                     "' does not match template argument '",
+                     arg.getAsType().getAsString(), "'"));
+  }
+
+  return t;
 }
 
 bool IsClangLifetimeAnnotation(const clang::Attr& attr) {
@@ -235,14 +287,14 @@ absl::StatusOr<CallingConv> ConvertCcCallConvToSupportedCallingConv(
     case clang::CC_X86_64SysV:  // __attribute__((sysv_abi))
       // TODO(lukasza): Maybe this is "sysv64"?
       break;
-    case clang::CC_X86Pascal:     // __attribute__((pascal))
-    case clang::CC_X86RegCall:    // __attribute__((regcall))
-    case clang::CC_IntelOclBicc:  // __attribute__((intel_ocl_bicc))
-    case clang::CC_DeviceKernel:  // __attribute__((device_kernel))
-    case clang::CC_Swift:         // __attribute__((swiftcall))
-    case clang::CC_SwiftAsync:    // __attribute__((swiftasynccall))
-    case clang::CC_PreserveMost:  // __attribute__((preserve_most))
-    case clang::CC_PreserveAll:   // __attribute__((preserve_all))
+    case clang::CC_X86Pascal:          // __attribute__((pascal))
+    case clang::CC_X86RegCall:         // __attribute__((regcall))
+    case clang::CC_IntelOclBicc:       // __attribute__((intel_ocl_bicc))
+    case clang::CC_DeviceKernel:       // __attribute__((device_kernel))
+    case clang::CC_Swift:              // __attribute__((swiftcall))
+    case clang::CC_SwiftAsync:         // __attribute__((swiftasynccall))
+    case clang::CC_PreserveMost:       // __attribute__((preserve_most))
+    case clang::CC_PreserveAll:        // __attribute__((preserve_all))
     case clang::CC_AArch64VectorCall:  // __attribute__((aarch64_vector_pcs))
       // TODO(hlopko): Uncomment once we integrate the upstream change that
       // introduced it:

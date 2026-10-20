@@ -17,6 +17,7 @@
 #include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/Specifiers.h"
@@ -39,6 +40,25 @@ bool IsClangCoroAnnotation(const clang::Attr& attr);
 // through inline namespaces (e.g. `std::__u`), otherwise std::nullopt.
 std::optional<llvm::StringRef> AsTopLevelNamespace(
     const clang::DeclContext* context);
+
+// Checks that a ClassTemplateSpecializationDecl has template arguments of the
+// form `<T, std::std_trait_name<T>>`. If so, returns `T`.
+//
+// Examples:
+//
+// ```
+// ParameterizedByTAndStdTraitT(std::vector<T, std::allocator<T>>,
+//                              "allocator") -> T
+// ParameterizedByTAndStdTraitT(std::unique_ptr<T, std::default_delete<T>>,
+//                              "default_delete") -> T
+//
+// ParameterizedByTAndStdTraitT(std::basic_string_view<T, something_else>,
+//                              "char_traits") -> error
+// ```
+absl::StatusOr<clang::QualType> ParameterizedByTAndStdTraitT(
+    const clang::ASTContext& ast_context,
+    const clang::ClassTemplateSpecializationDecl* spec_decl,
+    llvm::StringRef std_trait_name);
 
 // Returns the set of ignored attribute names.
 absl::flat_hash_set<absl::string_view> GetIgnoredAttrs(const clang::Decl* decl);

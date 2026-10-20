@@ -202,6 +202,7 @@ cc_library(
         "//common:string_view_conversion",
         "@abseil-cpp//absl/container:flat_hash_set",
         "@abseil-cpp//absl/functional:function_ref",
+        "@abseil-cpp//absl/log",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
@@ -209,6 +210,23 @@ cc_library(
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:sema",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+crubit_cc_test(
+    name = "ast_util_test",
+    srcs = ["ast_util_test.cc"],
+    deps = [
+        ":ast_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:status_matchers",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@googletest//:gtest_main",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:frontend",
+        "@llvm-project//clang:tooling",
         "@llvm-project//llvm:Support",
     ],
 )
