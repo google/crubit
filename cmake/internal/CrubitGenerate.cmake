@@ -132,3 +132,56 @@ unexpected_cfgs = "allow"
   # CRUBIT_CARGO_CONFIG in _crubit_init_toolchain).
   file(APPEND "${CRUBIT_CARGO_CONFIG}" "${crate} = { path = \"${dir}\" }\n")
 endfunction()
+
+# Sets `out_var` to the absolute public headers of `tgt`, a target passed to
+# crubit_rust_bindings: its HEADERS, or else its `HEADERS` file set.
+function(_crubit_public_headers out_var tgt)
+  get_target_property(headers ${tgt} CRUBIT_HEADERS)
+  if(NOT headers)
+    get_target_property(headers ${tgt} HEADER_SET)
+    get_target_property(source_dir ${tgt} SOURCE_DIR)
+  endif()
+  set(result "")
+  foreach(header IN LISTS headers)
+    cmake_path(ABSOLUTE_PATH header BASE_DIRECTORY "${source_dir}" NORMALIZE)
+    list(APPEND result "${header}")
+  endforeach()
+  if(NOT result)
+    get_target_property(crate ${tgt} CRUBIT_CRATE_NAME)
+    message(FATAL_ERROR
+      "crubit_rust_bindings(${crate}): no HEADERS and ${tgt} has no FILE_SET HEADERS")
+  endif()
+  set(${out_var} "${result}" PARENT_SCOPE)
+endfunction()
+
+# Sets `out_var` to the `--target_to_arg` JSON entry of `tgt`, a target passed
+# to crubit_rust_bindings.
+function(_crubit_target_args_json out_var tgt)
+  get_target_property(crate ${tgt} CRUBIT_CRATE_NAME)
+  get_target_property(features ${tgt} CRUBIT_FEATURES)
+  _crubit_public_headers(headers ${tgt})
+  list(JOIN headers "\",\"" headers)
+  list(JOIN features "\",\"" features)
+  set(${out_var}
+    "{\"t\":\"//crubit_cmake:${crate}\",\"h\":[\"${headers}\"],\"f\":[\"${features}\"],\"c\":\"${crate}\"}"
+    PARENT_SCOPE)
+endfunction()
+
+# Generates the bindings crate for `tgt`. Deferred to the end of the configure
+# step (see crubit_rust_bindings), when the target graph is complete.
+function(_crubit_finalize tgt)
+  _crubit_ensure_std()
+  get_target_property(crate ${tgt} CRUBIT_CRATE_NAME)
+  _crubit_public_headers(headers ${tgt})
+  _crubit_target_args_json(own_args ${tgt})
+  get_property(std_args GLOBAL PROPERTY _CRUBIT_STD_TARGET_ARGS)
+  _crubit_clang_args(clang_args ${tgt})
+  _crubit_generate(
+    CRATE ${crate}
+    LABEL "//crubit_cmake:${crate}"
+    CLANG_ARGS ${clang_args}
+    PUBLIC_HEADERS ${headers}
+    TARGET_ARGS_JSON "${own_args}" "${std_args}"
+    LINK ${tgt} crubit::cc_std
+    DEP_CRATES cc_std)
+endfunction()
