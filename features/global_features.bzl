@@ -15,6 +15,7 @@ SUPPORTED_FEATURES = [
     "always_specialize_generics_in_cpp_api_from_rust",
     "forward_declare",
     "iterator_item_references",
+    "nonnull_smart_pointers",
 ]
 
 # Per-feature denylists for features in `SUPPORTED_FEATURES`: maps a feature name to a list of
@@ -57,5 +58,14 @@ SUPPORTED_FEATURE_DENYLISTS = {
     ],
     "always_specialize_generics_in_cpp_api_from_rust": [
         "//cc_bindings_from_rs/test/bridging/composable:composable_bridging",
+    ],
+    # TODO(b/561501001): Migrate these targets to `Nullable<Ptr>` / bare non-null `Ptr`.
+    "nonnull_smart_pointers": [
+        # buildifier: keep sorted <internal link>
+        "//cc_bindings_from_rs/test/bridging/unique_ptr:test_helpers",
+        "//rs_bindings_from_cc/test/manual_bridge_vocabulary_types:optional_lib",
+        "//rs_bindings_from_cc/test/manual_bridge_vocabulary_types:unique_ptr_lib",
+        "//support/cc_std_impl/test/shared_ptr:test_helpers",
+        "//support/cc_std_impl/test/unique_ptr:test_helpers",
     ],
 }
