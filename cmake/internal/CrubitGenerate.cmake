@@ -167,6 +167,34 @@ function(_crubit_target_args_json out_var tgt)
     PARENT_SCOPE)
 endfunction()
 
+# Sets `out_var` to the targets `tgt` transitively links against, resolving
+# aliases. Entries that are not targets (flags, generator expressions, plain
+# library names) are skipped.
+function(_crubit_transitive_deps out_var tgt)
+  set(visited "")
+  set(stack "${tgt}")
+  while(stack)
+    list(POP_BACK stack current)
+    foreach(property IN ITEMS LINK_LIBRARIES INTERFACE_LINK_LIBRARIES)
+      get_target_property(libs ${current} ${property})
+      foreach(lib IN LISTS libs)
+        if(lib MATCHES "^::@" OR NOT TARGET "${lib}")
+          continue()
+        endif()
+        get_target_property(aliased ${lib} ALIASED_TARGET)
+        if(aliased)
+          set(lib "${aliased}")
+        endif()
+        if(NOT lib IN_LIST visited AND NOT lib STREQUAL tgt)
+          list(APPEND visited "${lib}")
+          list(APPEND stack "${lib}")
+        endif()
+      endforeach()
+    endforeach()
+  endwhile()
+  set(${out_var} "${visited}" PARENT_SCOPE)
+endfunction()
+
 # Generates the bindings crate for `tgt`. Deferred to the end of the configure
 # step (see crubit_rust_bindings), when the target graph is complete.
 function(_crubit_finalize tgt)
@@ -175,13 +203,29 @@ function(_crubit_finalize tgt)
   _crubit_public_headers(headers ${tgt})
   _crubit_target_args_json(own_args ${tgt})
   get_property(std_args GLOBAL PROPERTY _CRUBIT_STD_TARGET_ARGS)
+  set(target_args "${own_args}" "${std_args}")
+
+  # Dependencies with bindings own their headers. Headers of other
+  # dependencies belong to no Crubit target, so declarations using them are
+  # skipped.
+  set(dep_crates cc_std)
+  _crubit_transitive_deps(deps ${tgt})
+  foreach(dep IN LISTS deps)
+    get_target_property(dep_crate ${dep} CRUBIT_CRATE_NAME)
+    if(dep_crate)
+      _crubit_target_args_json(dep_args ${dep})
+      list(APPEND target_args "${dep_args}")
+      list(APPEND dep_crates "${dep_crate}")
+    endif()
+  endforeach()
+
   _crubit_clang_args(clang_args ${tgt})
   _crubit_generate(
     CRATE ${crate}
     LABEL "//crubit_cmake:${crate}"
     CLANG_ARGS ${clang_args}
     PUBLIC_HEADERS ${headers}
-    TARGET_ARGS_JSON "${own_args}" "${std_args}"
+    TARGET_ARGS_JSON ${target_args}
     LINK ${tgt} crubit::cc_std
-    DEP_CRATES cc_std)
+    DEP_CRATES ${dep_crates})
 endfunction()
