@@ -33,8 +33,7 @@ and ABI as `uint32_t` (and therefore the same ABI as `rs_std::char_` from
 
 The assumptions are verified by assertions that verify the properties of the
 target architecture when `cc_bindings_from_rs` runs (`layout.align()`,
-`layout.size()`, and `layout.abi()` assertions in `format_ty_for_cc` in
-`cc_bindings_from_rs/bindings.rs`). Similar assertions are verified on C++ side
+`layout.size()`, and `layout.abi()` assertions in `format_type.rs`). Similar assertions are verified on C++ side
 in `support/rs_std/char_test.cc`. These assertions seem unlikely to fail, but if
 they do, then hopefully `char_` can just be tweaked to wrap another of the C++
 integer types.
@@ -52,25 +51,25 @@ references are “represented as a pointer and a length”.
 
 Rust does *not* document the ABI of slice references (i.e. if the pointer comes
 before or after the length in memory). `cc_bindings_from_rs` assumes that `&[T]`
-has the same layout as `rs_std::slice<T>` - a C++ struct with 2 fields: a `T*`
+has the same layout as `rs_std::SliceRef<T>` - a C++ struct with 2 fields: a `T*`
 pointer, and the `size_t` number of slice elements. `check_slice_layout` inside
-`crubit/cc_bindings_from_rs/bindings.rs` verifies the assumptions on the Rust
+`crubit/cc_bindings_from_rs/generate_bindings/lib.rs` verifies the assumptions on the Rust
 slice each time a reference or a pointer to a slice is processed by
-`format_ty_for_cc`. Similar assertions are verified on C++ side in
+`format_type.rs`. Similar assertions are verified on C++ side in
 `support/rs_std/slice_ref_test.cc`. The response to the unlikely failure of
 these assertions can be changing the types from which `rs_std::SliceRef` is
 built to match the Rust side again.
 
-`cc_bindings_from_rs` does *not* assume that `&[T]` and `rs_std::slice<T>` have
+`cc_bindings_from_rs` does *not* assume that `&[T]` and `rs_std::SliceRef<T>` have
 the same ABI as
 [`std::span<T>`](https://en.cppreference.com/w/cpp/container/span) from C++ 20.
 In particular, empty slices have a different representation in C++ and in Rust -
-conversions implemented by `rs_std::slice<T>` will take care of using a null or
+conversions implemented by `rs_std::SliceRef<T>` will take care of using a null or
 non-null pointer as appropriate.
 
 ## Rust built-in `&str` string reference
 
-In the *future* `extern “C”` thunks generated in `..._cc_api_impl.rs` may take
+`extern “C”` thunks generated in `..._cc_api_impl.rs` can take
 `&str` and similar arguments (or return them).
 [Rust documentation says](https://doc.rust-lang.org/std/primitive.str.html) that
 “a &str is made up of two components: a pointer to some bytes, and a length”,
@@ -79,15 +78,14 @@ but no additional ABI guarantees are specified.
 `cc_bindings_from_rs` assumes that `&str` has the same ABI as `&[u8]` (see the
 previous section) with
 [the additional requirement](https://doc.rust-lang.org/std/primitive.str.html)
-that the contents of `[u8]` “are always valid UTF-8”. A future
-`rs_std::str_slice` type will enforce the UTF-8 guarantees. TODO: Add runtime
-assertions to `bindings.rs` to further verify these assumptions. TODO: Specify a
-plan of action when the assertions fail.
+that the contents of `[u8]` “are always valid UTF-8”. The
+`rs_std::StrRef` type enforces the UTF-8 guarantees. Runtime
+assertions (`check_slice_layout`) further verify these ABI layout assumptions.
 
-`cc_bindings_from_rs` does *not* assume that `&str` and `rs_std::str_slice` have
+`cc_bindings_from_rs` does *not* assume that `&str` and `rs_std::StrRef` have
 the same ABI as
 [`std::string_view`](https://en.cppreference.com/w/cpp/string/basic_string_view)
 from C++ 17. In particular, references to empty string slices have a different
 representation in C++ and in Rust - conversions implemented by
-`rs_std::str_slice` will take care of using a null or non-null pointer as
+`rs_std::StrRef` will take care of using a null or non-null pointer as
 appropriate.
