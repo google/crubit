@@ -51,7 +51,6 @@
     *   [Structs](/docs/rust/structs.md)
     *   [Enums](/docs/rust/enums.md)
     *   [Cpp Enums](/docs/rust/cpp_enums.md)
-    *   [Type Aliases](/docs/rust/type_aliases.md)
     *   [`use` Declarations](/docs/rust/use_declarations.md)
     *   [Traits](/docs/rust/traits.md)
     *   <hr>
