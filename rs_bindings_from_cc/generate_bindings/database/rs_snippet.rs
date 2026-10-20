@@ -1077,48 +1077,35 @@ impl<'a> BridgeRsTypeKind<'a> {
                 }
             }
             BridgeType::StdOptional(t) => {
-                // Not a bridge type: `std::optional<T>` is layout-compatible with
-                // `cc_std::std::optional<T>`. Returning `None` makes the caller fall back to
-                // the `RsTypeKind::Record` path, which maps the
-                // `TemplateSpecialization::StdOptional` specialization to a
-                // `UniformReprTemplateType::StdOptional`.
-                //
-                // This is unconditional in positions which cannot hold a bridged type, where
-                // the alternative is opaque padding bytes or no bindings at all. The feature
-                // additionally replaces the composable bridging to `Option<T>` which targets
-                // may already depend on, so it stays opt-in.
-                if options.requires_layout_compatible {
+                // TODO(b/570673464, b/493911621): Eliminate composable bridging fallback once
+                // all inner types support layout-compatible template arguments; see
+                // `bridge_type_args_if_not_layout_compatible`.
+                let Some([inner]) = Self::bridge_type_args_if_not_layout_compatible(
+                    db,
+                    record,
+                    options,
+                    CrubitFeature::LayoutCompatOptional,
+                    [t],
+                )?
+                else {
                     return Ok(None);
-                }
-                let inner = db.rs_type_kind(t.clone());
-                if db
-                    .ir()
-                    .target_crubit_features(db.ir().current_target())
-                    .contains(CrubitFeature::LayoutCompatOptional)
-                {
-                    // `T` can only be a template argument if it is layout-compatible. If it is
-                    // a bridged type with no layout-compatible form (e.g. an owned protobuf
-                    // message, or a `CRUBIT_BRIDGE` type), the layout-compatible
-                    // `std::optional<T>` would have no bindings at all, so keep the composable
-                    // bridging to `Option<T>` instead.
-                    let keeps_bridging = inner.as_ref().is_ok_and(|inner| {
-                        let mut layout_compatible_inner = inner.clone();
-                        layout_compatible_inner.force_layout_compatible();
-                        layout_compatible_inner.pass_by_value_bridges()
-                    });
-                    if !keeps_bridging {
-                        return Ok(None);
-                    }
-                }
-                let inner = inner?;
-                inner.ensure_complete_type_arg(db, record.cc_name())?;
+                };
                 BridgeRsTypeKind::StdOptional(Rc::new(inner))
             }
             BridgeType::StdPair(t1, t2) => {
-                let inner1 = db.rs_type_kind(t1)?;
-                inner1.ensure_complete_type_arg(db, record.cc_name())?;
-                let inner2 = db.rs_type_kind(t2)?;
-                inner2.ensure_complete_type_arg(db, record.cc_name())?;
+                // TODO(b/570673464, b/493911621): Eliminate composable bridging fallback once
+                // all inner types support layout-compatible template arguments; see
+                // `bridge_type_args_if_not_layout_compatible`.
+                let Some([inner1, inner2]) = Self::bridge_type_args_if_not_layout_compatible(
+                    db,
+                    record,
+                    options,
+                    CrubitFeature::LayoutCompatTuple,
+                    [t1, t2],
+                )?
+                else {
+                    return Ok(None);
+                };
                 BridgeRsTypeKind::StdPair(Rc::new(inner1), Rc::new(inner2))
             }
             BridgeType::StdString => {
@@ -1182,6 +1169,61 @@ impl<'a> BridgeRsTypeKind<'a> {
         };
 
         Ok(Some(bridge_rs_type_kind))
+    }
+
+    /// Resolves the template type arguments `type_args` for a vocabulary type (such as
+    /// `std::optional<T>` or `std::pair<T1, T2>`) that has a layout-compatible Rust representation
+    /// gated by `layout_compat_feature`, or returns `Ok(None)` when the type should use its
+    /// layout-compatible representation instead of composable bridging.
+    ///
+    /// Returning `None` makes `BridgeRsTypeKind::new` return `Ok(None)`, so the caller falls back
+    /// to the `RsTypeKind::Record` path, which maps `std::optional<T>` to
+    /// `UniformReprTemplateType::StdOptional` (`cc_std::std::optional<T>` /
+    /// `cc_std::std::trivial_optional<T>`) and `std::pair<T1, T2>` to its layout-compatible C++
+    /// template specialization struct.
+    ///
+    /// This is unconditional in positions which cannot hold a bridged type
+    /// (`options.requires_layout_compatible`), where the alternative is opaque padding bytes or no
+    /// bindings at all. The feature additionally replaces the composable bridging (to `Option<T>`
+    /// or `(T1, T2)`) which targets may already depend on, so it stays opt-in.
+    ///
+    /// TODO(b/570673464, b/493911621): Eliminate the `keeps_bridging` fallback once all bridged
+    /// types can be used as layout-compatible template arguments. Today, a type argument `T` can
+    /// only be a template argument if it is layout-compatible. If any type argument is a bridged
+    /// type with no layout-compatible form (e.g. an owned protobuf message, or a `CRUBIT_BRIDGE`
+    /// type), the layout-compatible wrapper would have no bindings at all, so we keep the
+    /// composable bridging instead.
+    fn bridge_type_args_if_not_layout_compatible<const N: usize>(
+        db: &BindingsGenerator<'a>,
+        record: &Record,
+        options: &LifetimeOptions,
+        layout_compat_feature: CrubitFeature,
+        type_args: [CcType; N],
+    ) -> Result<Option<[RsTypeKind<'a>; N]>> {
+        if options.requires_layout_compatible {
+            return Ok(None);
+        }
+        let inners = type_args.map(|t| db.rs_type_kind(t));
+        if db.ir().target_crubit_features(db.ir().current_target()).contains(layout_compat_feature)
+        {
+            let keeps_bridging = inners.iter().any(|inner| {
+                inner.as_ref().is_ok_and(|inner| {
+                    let mut layout_compatible_inner = inner.clone();
+                    layout_compatible_inner.force_layout_compatible();
+                    layout_compatible_inner.pass_by_value_bridges()
+                })
+            });
+            if !keeps_bridging {
+                return Ok(None);
+            }
+        }
+        let mut resolved = Vec::with_capacity(N);
+        for inner in inners {
+            let inner = inner?;
+            inner.ensure_complete_type_arg(db, record.cc_name())?;
+            resolved.push(inner);
+        }
+        Ok(Some(resolved.try_into().expect("collecting a vec of size N into a same-sized array")))
     }
 
     /// Returns true if a C++ type alias to this bridge type can be bound as a Rust type alias to

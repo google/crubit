@@ -122,6 +122,30 @@ fn test_nested_optional() {
     expect_eq!(o.as_ref().and_then(|inner| inner.as_ref()), Some(&4));
 }
 
+/// With `layout_compat_tuple` enabled, `std::pair` uses its layout-compatible C++ struct
+/// representation (with `.first` and `.second` fields) rather than bridging to a Rust tuple,
+/// allowing `std::optional<std::pair<int, int>>` to bind as `trivial_optional` instead of
+/// falling back to `Option<(i32, i32)>`.
+#[gtest]
+fn test_optional_pair() {
+    let o = MakeOptionalPair(3, 4);
+    let pair = o.as_ref().expect("should be engaged");
+    expect_eq!(pair.first, 3);
+    expect_eq!(pair.second, 4);
+    expect_eq!(unsafe { SumOptionalPairByRef(&o) }, 7);
+
+    let none = trivial_optional::nullopt();
+    expect_eq!(unsafe { SumOptionalPairByRef(&none) }, -1);
+}
+
+#[gtest]
+fn test_pair_with_optional() {
+    let p = MakePairWithOptional(10, 20);
+    let first: &trivial_optional<i32> = &p.first;
+    expect_eq!(first.as_ref(), Some(&10));
+    expect_eq!(p.second, 20);
+}
+
 /// The two types convert into each other whenever `T: Copy`.
 #[gtest]
 fn test_conversions_between_optional_types() {

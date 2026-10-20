@@ -404,7 +404,7 @@ pub fn generate_record<'a>(
         db.errors().add_category(Category::GenericInstantiation);
     }
 
-    let record_rs_type_kind = db.rs_type_kind(record.as_ref().into())?;
+    let mut record_rs_type_kind = db.rs_type_kind(record.as_ref().into())?;
     if matches!(
         &record_rs_type_kind,
         RsTypeKind::Record { uniform_repr_template_type: Some(_), .. }
@@ -413,8 +413,31 @@ pub fn generate_record<'a>(
         return Ok(ApiSnippets::default());
     }
     if record_rs_type_kind.is_bridge_type() {
-        db.errors().add_category(Category::Bridge);
-        return Ok(ApiSnippets::default());
+        // std::pair is a bridge type, but it can fall back to a layout-compatible
+        // C++ struct representation (e.g., inside std::optional). Therefore, its
+        // struct definition must be generated.
+        let is_std_pair = matches!(
+            record_rs_type_kind.unalias(),
+            RsTypeKind::BridgeType {
+                bridge_type: database::rs_snippet::BridgeRsTypeKind::StdPair(..),
+                ..
+            }
+        );
+        if !is_std_pair {
+            db.errors().add_category(Category::Bridge);
+            return Ok(ApiSnippets::default());
+        }
+        // Force the type to be evaluated in a layout-compatible context. This ensures
+        // that its `to_token_stream()` yields the C++ struct name (e.g., `__CcTemplateInst...`)
+        // instead of the bridged type (e.g., `(T1, T2)`), which prevents assertions
+        // (like size, align, or Drop) from failing when tested against the Rust tuple.
+        record_rs_type_kind = db.rs_type_kind_with_lifetime_elision(
+            record.as_ref().into(),
+            database::rs_snippet::LifetimeOptions {
+                requires_layout_compatible: true,
+                ..database::rs_snippet::LifetimeOptions::default()
+            },
+        )?;
     }
 
     let ir = db.ir();

@@ -67,6 +67,30 @@ inline std::optional<std::optional<int>> MakeNestedOptional(int value) {
   return std::optional<int>(value);
 }
 
+// With `layout_compat_tuple` enabled, `std::pair<T1, T2>` uses its
+// layout-compatible C++ `std::pair` struct representation (with `.first` and
+// `.second` fields) instead of bridging to a Rust `(T1, T2)` tuple, so
+// `std::optional<std::pair<int, int>>` maps to `trivial_optional` rather than
+// falling back to composable `Option<(i32, i32)>` bridging.
+CRUBIT_MUST_BIND
+inline std::optional<std::pair<int, int>> MakeOptionalPair(int first,
+                                                           int second) {
+  return std::make_pair(first, second);
+}
+
+CRUBIT_MUST_BIND
+inline int SumOptionalPairByRef(const std::optional<std::pair<int, int>>& p) {
+  return p.has_value() ? p->first + p->second : -1;
+}
+
+// `std::pair<std::optional<int>, int>` also uses its layout-compatible struct
+// representation, with a `trivial_optional<i32>` `.first` field.
+CRUBIT_MUST_BIND
+inline std::pair<std::optional<int>, int> MakePairWithOptional(int first,
+                                                               int second) {
+  return {first, second};
+}
+
 // A non-trivial move constructor makes `NonMovable` non-Rust-movable, and
 // `cc_std::std::optional<NonMovable>` stores it inline, so that is not
 // Rust-movable either: it can only be created in place, via a `Ctor`.

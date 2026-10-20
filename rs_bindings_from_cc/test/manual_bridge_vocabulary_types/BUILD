@@ -202,6 +202,7 @@ cc_library(
     hdrs = ["optional_lib.h"],
     aspect_hints = [
         "//features:layout_compat_optional",
+        "//features:layout_compat_tuple",
     ],
     deps = [
         "//support:annotations",
@@ -219,5 +220,28 @@ crubit_rust_test(
         "//support:ctor",
         "@crate_index//:googletest",
         "@crate_index//:static_assertions",  # v1
+    ],
+)
+
+cc_library(
+    name = "optional_nested_pair_lib",
+    hdrs = ["optional_nested_pair_lib.h"],
+    aspect_hints = [
+        "//features:layout_compat_optional",
+    ],
+    deps = [
+        "//support:annotations",
+    ],
+)
+
+crubit_rust_test(
+    name = "optional_nested_pair_test",
+    srcs = ["optional_nested_pair_test.rs"],
+    cc_deps = [
+        ":optional_nested_pair_lib",
+        "//support/cc_std",
+    ],
+    deps = [
+        "@crate_index//:googletest",
     ],
 )
